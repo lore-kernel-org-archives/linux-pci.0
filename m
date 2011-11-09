@@ -1,64 +1,223 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:34735 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754007Ab1KKRkL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:40:11 -0500
-Date: Fri, 11 Nov 2011 09:40:25 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	joerg.roedel@amd.com, bhelgaas@google.com
-Subject: Re: [PATCH 2/2] PCI: More PRI/PASID cleanup
-Message-ID: <20111111094025.34ad5bc3@jbarnes-desktop>
-In-Reply-To: <20111111170702.32668.50363.stgit@bling.home>
-References: <20111111170319.32668.48479.stgit@bling.home>
-	<20111111170702.32668.50363.stgit@bling.home>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/X3eNqR3X1b1m.Z2W85HOi+t"; protocol="application/pgp-signature"
+Received: from mtv-iport-4.cisco.com ([173.36.130.15]:42422 "EHLO
+	mtv-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924Ab1KIE0l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2011 23:26:41 -0500
+Date: Tue, 08 Nov 2011 20:17:09 -0800
+Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
+From: Aaron Fabbri <aafabbri@cisco.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	<chrisw@sous-sol.org>, <aik@au1.ibm.com>, <pmac@au1.ibm.com>,
+	<dwg@au1.ibm.com>, <joerg.roedel@amd.com>, <agraf@suse.de>,
+	<benve@cisco.com>, <B08248@freescale.com>, <B07421@freescale.com>,
+	<avi@redhat.com>, <konrad.wilk@oracle.com>, <kvm@vger.kernel.org>,
+	<qemu-devel@nongnu.org>, <iommu@lists.linux-foundation.org>,
+	<linux-pci@vger.kernel.org>
+Message-ID: <CADF3EC5.12356%aafabbri@cisco.com>
+In-Reply-To: <20111103195452.21259.93021.stgit@bling.home>
+Mime-version: 1.0
+Content-type: text/plain;
+	charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/X3eNqR3X1b1m.Z2W85HOi+t
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I'm going to send out chunks of comments as I go over this stuff.  Below
+I've covered the documentation file and vfio_iommu.c.  More comments coming
+soon...
 
-On Fri, 11 Nov 2011 10:07:36 -0700
-Alex Williamson <alex.williamson@redhat.com> wrote:
+On 11/3/11 1:12 PM, "Alex Williamson" <alex.williamson@redhat.com> wrote:
 
-> More consistency cleanups.  Drop the _OFF, separate and indent
-> CTRL/CAP/STATUS bit definitions.  This helped find the previous
-> mis-use of bit 0 in the PASID capability register.
->=20
+> VFIO provides a secure, IOMMU based interface for user space
+> drivers, including device assignment to virtual machines.
+> This provides the base management of IOMMU groups, devices,
+> and IOMMU objects.  See Documentation/vfio.txt included in
+> this patch for user and kernel API description.
+> 
+> Note, this implements the new API discussed at KVM Forum
+> 2011, as represented by the drvier version 0.2.  It's hoped
+> that this provides a modular enough interface to support PCI
+> and non-PCI userspace drivers across various architectures
+> and IOMMU implementations.
+> 
 > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 > ---
+<snip>
+> +
+> +Groups, Devices, IOMMUs, oh my
+> +-----------------------------------------------------------------------------
+> --
+> +
+> +A fundamental component of VFIO is the notion of IOMMU groups.  IOMMUs
+> +can't always distinguish transactions from each individual device in
+> +the system.  Sometimes this is because of the IOMMU design, such as with
+> +PEs, other times it's caused by the I/O topology, for instance a
 
-Thanks Alex; Joerg I'll wait for your r-b and tested-bys on these.
+Can you define this acronym the first time you use it, i.e.
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
++ PEs (partitionable endpoints), ...
 
---Sig_/X3eNqR3X1b1m.Z2W85HOi+t
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> +PCIe-to-PCI bridge masking all devices behind it.  We call the sets of
+> +devices created by these restictions IOMMU groups (or just "groups" for
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+restrictions
 
-iQIcBAEBAgAGBQJOvV4JAAoJEIEoDkX4Qk9hw80P/1m30Q+ImyCp7xeGE7Z44Y05
-tdg2yejx4EZyajoxV2aIfeUBffs548FgZJR/nmpUdtFhdFhn+ITJWuerL1Mi1OvW
-IR5Mi/un8d0bzR66KXxNRVmbrNw/MjeKuZLA6UEQrgsvfYmDdbJFjM2yRUgiR5MY
-GyPmHT9RVJVLLu6iHSD+VGm2npOOYRBXkaD998Pohk1eZuRu22wL/quxD2hBy/ba
-Gur0Dind2LVQndiSiXBPXZRzvqvjchFNiwPlzhhdEscbaVy92PeribUT8pQzjZ2e
-i0qi2wYnxMLby7lsPPcqBYU1O//1MA96PlTqyvO1Kx9ydkr5OjCE2IEk6XR4DgH3
-R68wG6eiGSuaLraVJKzf9rijGN9i3338GiUeliYL5C0Dgq+zF4F7brrSBG4uPmqP
-MScQoDunZyLfgaJm2E5sdANi80XOLAj37c1LKDrBnqOC2lN8Q1rKy2eJD4Hjntaf
-nIQE6DZDr6gv9n7ENCLeUK/qB6Btwjf6AV1xv2RBQcTpKvJkNge+UbWEY1mPXLN7
-uFESg0ju1kTFVAydFXid8WK2xaLbVQeZhhNrVRagnVZEgbGOsdAnV9LV5vj1wo5m
-5hcuFnHZfq8gwXzlC87maOrGUd2rWVPv//PqDlG5Q9aA+V/wZNj6A5pen1Lb94p/
-QAo/KtRWcYB0NzY25d07
-=IlQZ
------END PGP SIGNATURE-----
+> +this document).
+> +
+> +The IOMMU cannot distiguish transactions between the individual devices
 
---Sig_/X3eNqR3X1b1m.Z2W85HOi+t--
+distinguish
+
+> +within the group, therefore the group is the basic unit of ownership for
+> +a userspace process.  Because of this, groups are also the primary
+> +interface to both devices and IOMMU domains in VFIO.
+> +
+<snip>
+> +file descriptor referencing the same internal IOMMU object from either
+> +X or Y).  Merged groups can be dissolved either explictly with UNMERGE
+
+explicitly
+
+<snip>
+> +
+> +Device tree devices also invlude ioctls for further defining the
+
+include
+
+<snip>
+> diff --git a/drivers/vfio/vfio_iommu.c b/drivers/vfio/vfio_iommu.c
+> new file mode 100644
+> index 0000000..029dae3
+> --- /dev/null
+> +++ b/drivers/vfio/vfio_iommu.c
+<snip>
+> +static struct dma_map_page *vfio_find_dma(struct vfio_iommu *iommu,
+> +                      dma_addr_t start, size_t size)
+> +{
+> +    struct list_head *pos;
+> +    struct dma_map_page *mlp;
+> +
+> +    list_for_each(pos, &iommu->dm_list) {
+> +        mlp = list_entry(pos, struct dma_map_page, list);
+> +        if (ranges_overlap(mlp->daddr, NPAGE_TO_SIZE(mlp->npage),
+> +                   start, size))
+> +            return mlp;
+> +    }
+> +    return NULL;
+> +}
+> +
+
+This function below should be static.
+
+> +int vfio_remove_dma_overlap(struct vfio_iommu *iommu, dma_addr_t start,
+> +                size_t size, struct dma_map_page *mlp)
+> +{
+> +    struct dma_map_page *split;
+> +    int npage_lo, npage_hi;
+> +
+> +    /* Existing dma region is completely covered, unmap all */
+> +    if (start <= mlp->daddr &&
+> +        start + size >= mlp->daddr + NPAGE_TO_SIZE(mlp->npage)) {
+> +        vfio_dma_unmap(iommu, mlp->daddr, mlp->npage, mlp->rdwr);
+> +        list_del(&mlp->list);
+> +        npage_lo = mlp->npage;
+> +        kfree(mlp);
+> +        return npage_lo;
+> +    }
+> +
+> +    /* Overlap low address of existing range */
+> +    if (start <= mlp->daddr) {
+> +        size_t overlap;
+> +
+> +        overlap = start + size - mlp->daddr;
+> +        npage_lo = overlap >> PAGE_SHIFT;
+> +        npage_hi = mlp->npage - npage_lo;
+
+npage_hi not used.. Delete this line ^
+
+> +
+> +        vfio_dma_unmap(iommu, mlp->daddr, npage_lo, mlp->rdwr);
+> +        mlp->daddr += overlap;
+> +        mlp->vaddr += overlap;
+> +        mlp->npage -= npage_lo;
+> +        return npage_lo;
+> +    }
+> +
+> +    /* Overlap high address of existing range */
+> +    if (start + size >= mlp->daddr + NPAGE_TO_SIZE(mlp->npage)) {
+> +        size_t overlap;
+> +
+> +        overlap = mlp->daddr + NPAGE_TO_SIZE(mlp->npage) - start;
+> +        npage_hi = overlap >> PAGE_SHIFT;
+> +        npage_lo = mlp->npage - npage_hi;
+> +
+> +        vfio_dma_unmap(iommu, start, npage_hi, mlp->rdwr);
+> +        mlp->npage -= npage_hi;
+> +        return npage_hi;
+> +    }
+> +
+> +    /* Split existing */
+> +    npage_lo = (start - mlp->daddr) >> PAGE_SHIFT;
+> +    npage_hi = mlp->npage - (size >> PAGE_SHIFT) - npage_lo;
+> +
+> +    split = kzalloc(sizeof *split, GFP_KERNEL);
+> +    if (!split)
+> +        return -ENOMEM;
+> +
+> +    vfio_dma_unmap(iommu, start, size >> PAGE_SHIFT, mlp->rdwr);
+> +
+> +    mlp->npage = npage_lo;
+> +
+> +    split->npage = npage_hi;
+> +    split->daddr = start + size;
+> +    split->vaddr = mlp->vaddr + NPAGE_TO_SIZE(npage_lo) + size;
+> +    split->rdwr = mlp->rdwr;
+> +    list_add(&split->list, &iommu->dm_list);
+> +    return size >> PAGE_SHIFT;
+> +}
+> +
+
+Function should be static.
+
+> +int vfio_dma_unmap_dm(struct vfio_iommu *iommu, struct vfio_dma_map *dmp)
+> +{
+> +    int ret = 0;
+> +    size_t npage = dmp->size >> PAGE_SHIFT;
+> +    struct list_head *pos, *n;
+> +
+> +    if (dmp->dmaaddr & ~PAGE_MASK)
+> +        return -EINVAL;
+> +    if (dmp->size & ~PAGE_MASK)
+> +        return -EINVAL;
+> +
+> +    mutex_lock(&iommu->dgate);
+> +
+> +    list_for_each_safe(pos, n, &iommu->dm_list) {
+> +        struct dma_map_page *mlp;
+> +
+> +        mlp = list_entry(pos, struct dma_map_page, list);
+> +        if (ranges_overlap(mlp->daddr, NPAGE_TO_SIZE(mlp->npage),
+> +                   dmp->dmaaddr, dmp->size)) {
+> +            ret = vfio_remove_dma_overlap(iommu, dmp->dmaaddr,
+> +                              dmp->size, mlp);
+> +            if (ret > 0)
+> +                npage -= NPAGE_TO_SIZE(ret);
+
+Why NPAGE_TO_SIZE here?
+
+> +            if (ret < 0 || npage == 0)
+> +                break;
+> +        }
+> +    }
+> +    mutex_unlock(&iommu->dgate);
+> +    return ret > 0 ? 0 : ret;
+> +}
+> +
+
+Function should be static.
+
+> +int vfio_dma_map_dm(struct vfio_iommu *iommu, struct vfio_dma_map *dmp)
+> +{
+> +    int npage;
+> +    struct dma_map_page *mlp, *mmlp = NULL;
+> +    dma_addr_t daddr = dmp->dmaaddr;
+
