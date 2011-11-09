@@ -1,75 +1,1411 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:33196 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755503Ab1KKRbx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:31:53 -0500
-Date: Fri, 11 Nov 2011 09:32:12 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai.lu@oracle.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] pciehp: wait 100 ms after Link Training check
-Message-ID: <20111111093212.3cceee91@jbarnes-desktop>
-In-Reply-To: <4EBC21C0.5070806@oracle.com>
-References: <4EB88238.4050409@oracle.com>
-	<4EB8F434.6090003@jp.fujitsu.com>
-	<4EB94A51.6070809@oracle.com>
-	<4EB9A50D.1040302@oracle.com>
-	<4EBB7F9B.8050703@jp.fujitsu.com>
-	<4EBB8058.6090500@jp.fujitsu.com>
-	<4EBC21C0.5070806@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4361 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755894Ab1KISDQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Nov 2011 13:03:16 -0500
+Message-ID: <1320861775.4514.103.camel@bling.home>
+Subject: RE: [RFC PATCH] vfio: VFIO Driver core framework
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Christian Benvenuti (benve)" <benve@cisco.com>
+Cc: chrisw@sous-sol.org, aik@au1.ibm.com, pmac@au1.ibm.com,
+	dwg@au1.ibm.com, joerg.roedel@amd.com, agraf@suse.de,
+	"Aaron Fabbri (aafabbri)" <aafabbri@cisco.com>,
+	B08248@freescale.com, B07421@freescale.com, avi@redhat.com,
+	konrad.wilk@oracle.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
+Date: Wed, 09 Nov 2011 11:02:55 -0700
+In-Reply-To: <184D23435BECB444AB6B9D4630C8EC8302D5FAFB@XMB-RCD-303.cisco.com>
+References: <20111103195452.21259.93021.stgit@bling.home>
+	 <184D23435BECB444AB6B9D4630C8EC8302D5FAFB@XMB-RCD-303.cisco.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Cnb5zmVCq1=OldTwZdAmrd7"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/Cnb5zmVCq1=OldTwZdAmrd7
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2011-11-09 at 02:11 -0600, Christian Benvenuti (benve) wrote:
+> I have not gone through the all patch yet, but here are
+> my first comments/questions about the code in vfio_main.c
+> (and pci/vfio_pci.c).
 
-On Thu, 10 Nov 2011 11:10:56 -0800
-Yinghai Lu <yinghai.lu@oracle.com> wrote:
+Thanks!  Comments inline...
 
-> On 11/09/2011 11:42 PM, Kenji Kaneshige wrote:
->=20
-> > If the port supports Link speeds greater than 5.0 GT/s, we must wait
-> > for 100 ms after Link training completes before sending configuration
-> > request.
-> >=20
-> > Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
->=20
->=20
->=20
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
-> Tested-by: Yinghai Lu <yinghai@kernel.org>
+> > -----Original Message-----
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Thursday, November 03, 2011 1:12 PM
+> > To: chrisw@sous-sol.org; aik@au1.ibm.com; pmac@au1.ibm.com;
+> > dwg@au1.ibm.com; joerg.roedel@amd.com; agraf@suse.de; Christian
+> > Benvenuti (benve); Aaron Fabbri (aafabbri); B08248@freescale.com;
+> > B07421@freescale.com; avi@redhat.com; konrad.wilk@oracle.com;
+> > kvm@vger.kernel.org; qemu-devel@nongnu.org; iommu@lists.linux-
+> > foundation.org; linux-pci@vger.kernel.org
+> > Subject: [RFC PATCH] vfio: VFIO Driver core framework
+> 
+> <snip>
+> 
+> > diff --git a/drivers/vfio/vfio_main.c b/drivers/vfio/vfio_main.c
+> > new file mode 100644
+> > index 0000000..6169356
+> > --- /dev/null
+> > +++ b/drivers/vfio/vfio_main.c
+> > @@ -0,0 +1,1151 @@
+> > +/*
+> > + * VFIO framework
+> > + *
+> > + * Copyright (C) 2011 Red Hat, Inc.  All rights reserved.
+> > + *     Author: Alex Williamson <alex.williamson@redhat.com>
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > modify
+> > + * it under the terms of the GNU General Public License version 2 as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * Derived from original vfio:
+> > + * Copyright 2010 Cisco Systems, Inc.  All rights reserved.
+> > + * Author: Tom Lyon, pugs@cisco.com
+> > + */
+> > +
+> > +#include <linux/cdev.h>
+> > +#include <linux/compat.h>
+> > +#include <linux/device.h>
+> > +#include <linux/file.h>
+> > +#include <linux/anon_inodes.h>
+> > +#include <linux/fs.h>
+> > +#include <linux/idr.h>
+> > +#include <linux/iommu.h>
+> > +#include <linux/mm.h>
+> > +#include <linux/module.h>
+> > +#include <linux/slab.h>
+> > +#include <linux/string.h>
+> > +#include <linux/uaccess.h>
+> > +#include <linux/vfio.h>
+> > +#include <linux/wait.h>
+> > +
+> > +#include "vfio_private.h"
+> > +
+> > +#define DRIVER_VERSION	"0.2"
+> > +#define DRIVER_AUTHOR	"Alex Williamson <alex.williamson@redhat.com>"
+> > +#define DRIVER_DESC	"VFIO - User Level meta-driver"
+> > +
+> > +static int allow_unsafe_intrs;
+> > +module_param(allow_unsafe_intrs, int, 0);
+> > +MODULE_PARM_DESC(allow_unsafe_intrs,
+> > +        "Allow use of IOMMUs which do not support interrupt
+> > remapping");
+> > +
+> > +static struct vfio {
+> > +	dev_t			devt;
+> > +	struct cdev		cdev;
+> > +	struct list_head	group_list;
+> > +	struct mutex		lock;
+> > +	struct kref		kref;
+> > +	struct class		*class;
+> > +	struct idr		idr;
+> > +	wait_queue_head_t	release_q;
+> > +} vfio;
+> > +
+> > +static const struct file_operations vfio_group_fops;
+> > +extern const struct file_operations vfio_iommu_fops;
+> > +
+> > +struct vfio_group {
+> > +	dev_t			devt;
+> > +	unsigned int		groupid;
+> 
+> This groupid is returned by the device_group callback you recently added
+> with a separate (not yet in tree) IOMMU patch.
+> Is it correct to say that the scope of this ID is the bus the iommu
+> belongs too (but you use it as if it was global)?
+> I believe there is nothing right now to ensure the uniqueness of such
+> ID across bus types (assuming there will be other bus drivers in the
+> future besides vfio-pci).
+> If that's the case, the vfio.group_list global list and the __vfio_lookup_dev
+> routine should be changed to account for the bus too?
+> Ops, I just saw the error msg in vfio_group_add_dev about the group id conflict.
+> Is that warning related to what I mentioned above?
 
-Applied these two to my for-linus branch, thanks guys.
+Yeah, this is a concern, but I can't think of a system where we would
+manifest a collision.  The IOMMU driver is expected to provide unique
+groupids for all devices below them, but we could imagine a system that
+implements two different bus_types, each with a different IOMMU driver
+and we have no coordination between them.  Perhaps since we have
+iommu_ops per bus, we should also expose the bus in the vfio group path,
+ie. /dev/vfio/%s/%u, dev->bus->name, iommu_device_group(dev,..).  This
+means userspace would need to do a readlink of the subsystem entry where
+it finds the iommu_group to find the vfio group.  Reasonable?
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+> > +	struct bus_type		*bus;
+> > +	struct vfio_iommu	*iommu;
+> > +	struct list_head	device_list;
+> > +	struct list_head	iommu_next;
+> > +	struct list_head	group_next;
+> > +	int			refcnt;
+> > +};
+> > +
+> > +struct vfio_device {
+> > +	struct device			*dev;
+> > +	const struct vfio_device_ops	*ops;
+> > +	struct vfio_iommu		*iommu;
+> 
+> I wonder if you need to have the 'iommu' field here.
+> vfio_device.iommu is always set and reset together with
+> vfio_group.iommu.
+> Given that a vfio_device instance is always linked to a vfio_group
+> instance, do we need this duplication? Is this duplication there
+> because you do not want the double dereference device->group->iommu?
 
---Sig_/Cnb5zmVCq1=OldTwZdAmrd7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I think that was my initial goal in duplicating the pointer on the
+device.  I believe I was also at one point passing a vfio_device around
+and needed the pointer.  We seem to be getting along fine w/o that and I
+don't see any performance sensitive paths from getting from the device
+to iommu, so I'll see about removing it.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+> > +	struct vfio_group		*group;
+> > +	struct list_head		device_next;
+> > +	bool				attached;
+> > +	int				refcnt;
+> > +	void				*device_data;
+> > +};
+> > +
+> > +/*
+> > + * Helper functions called under vfio.lock
+> > + */
+> > +
+> > +/* Return true if any devices within a group are opened */
+> > +static bool __vfio_group_devs_inuse(struct vfio_group *group)
+> > +{
+> > +	struct list_head *pos;
+> > +
+> > +	list_for_each(pos, &group->device_list) {
+> > +		struct vfio_device *device;
+> > +
+> > +		device = list_entry(pos, struct vfio_device, device_next);
+> > +		if (device->refcnt)
+> > +			return true;
+> > +	}
+> > +	return false;
+> > +}
+> > +
+> > +/* Return true if any of the groups attached to an iommu are opened.
+> > + * We can only tear apart merged groups when nothing is left open. */
+> > +static bool __vfio_iommu_groups_inuse(struct vfio_iommu *iommu)
+> > +{
+> > +	struct list_head *pos;
+> > +
+> > +	list_for_each(pos, &iommu->group_list) {
+> > +		struct vfio_group *group;
+> > +
+> > +		group = list_entry(pos, struct vfio_group, iommu_next);
+> > +		if (group->refcnt)
+> > +			return true;
+> > +	}
+> > +	return false;
+> > +}
+> > +
+> > +/* An iommu is "in use" if it has a file descriptor open or if any of
+> > + * the groups assigned to the iommu have devices open. */
+> > +static bool __vfio_iommu_inuse(struct vfio_iommu *iommu)
+> > +{
+> > +	struct list_head *pos;
+> > +
+> > +	if (iommu->refcnt)
+> > +		return true;
+> > +
+> > +	list_for_each(pos, &iommu->group_list) {
+> > +		struct vfio_group *group;
+> > +
+> > +		group = list_entry(pos, struct vfio_group, iommu_next);
+> > +
+> > +		if (__vfio_group_devs_inuse(group))
+> > +			return true;
+> > +	}
+> > +	return false;
+> > +}
+> 
+> I looked at how you take care of ref counts ...
+> 
+> This is how the tree of vfio_iommu/vfio_group/vfio_device data
+> Structures is organized (I'll use just iommu/group/dev to make
+> the graph smaller):
+> 
+>             iommu
+>            /     \
+>           /       \ 
+>     group   ...     group
+>     /  \           /  \   
+>    /    \         /    \
+> dev  ..  dev   dev  ..  dev
+> 
+> This is how you get a file descriptor for the three kind of objects:
+> 
+> - group : open /dev/vfio/xxx for group xxx
+> - iommu : group ioctl VFIO_GROUP_GET_IOMMU_FD
+> - device: group ioctl VFIO_GROUP_GET_DEVICE_FD
+> 
+> Given the above topology, I would assume that:
+> 
+> (1) an iommu is 'inuse' if : a) iommu refcnt > 0, or
+>                              b) any of its groups is 'inuse'
+> 
+> (2) a  group is 'inuse' if : a) group refcnt > 0, or
+>                              b) any of its devices is 'inuse'
+> 
+> (3) a device is 'inuse' if : a) device refcnt > 0
 
-iQIcBAEBAgAGBQJOvVwcAAoJEIEoDkX4Qk9hQUkP/0x4u3lo3C9dil38Q/jOVqG6
-YA6v9D7um5EHTTZyeeeTGf8ZXrh0ZxOAIlIXC8WUCc4y2z6ilaKWL7yBFQ4q0Od7
-AeVE84So2ZFIHZfHRQfwbrwVExsGVbvbYpdjt7NToUdEJ0GabTMBsq95ilQ6IKMA
-MOk1bSUxsbAAATc5S61EsrqlKPy1VdFW+vTezfjtRjjKx2Um7f8sf8txDCEykJjd
-UdCVIMoNuRzZc/CPpHV2k3JzD0XcfmywXpUBWHJmMUj03ft+CMPcih8b9DRHdkF7
-SIokL47x/PnNkJo3/vgIqO+EXAijhQahrQfdGESjcq5wsRgcK6q0whwqCTjF/av5
-qUq4Nll0+PvsbPTDrDEsCLdiXa4dcw98r9HtBKmiPPpNYIKrHb/xNpuovnje5sgh
-H4GQ9Dcz/6Lk83OTzeKPRN/nJ9rMZeIsM3zcm63BSnghO7dDjxrPiJjB1sF+eqS5
-07KzUFBOrCaFk1bwAQRrfw6JVhxhckgQcXi77BIXLob7IHKhV4gD2cMWLsU7OxIp
-oKanmtEs2erhnZOpRHX8P9txtCw4xvz8klInK18R/yiPFOD0wNUrmlWtSMUuBL1o
-wdGuJJNBmNNehVOFR2zN8X+V1VAlCaub/A1ppe+snzz4BnImo/9M82SdvmSFwNDZ
-yJvVnOumMUyfi2C/lFwq
-=M8YV
------END PGP SIGNATURE-----
+(2) is a bit debatable.  I've wrestled with this one for a while.  The
+vfio_iommu serves two purposes.  First, it is the object we use for
+managing iommu domains, which includes allocating domains and attaching
+devices to domains.  Groups objects aren't involved here, they just
+manage the set of devices.  The second role is to manage merged groups,
+because whether or not groups can be merged is a function of iommu
+domain compatibility.
 
---Sig_/Cnb5zmVCq1=OldTwZdAmrd7--
+So if we look at "is the iommu in use?" ie. can I destroy the mapping
+context, detach devices and free the domain, the reference count on the
+group is irrelevant.  The user has to have a device or iommu file
+descriptor opened somewhere, across the group or merged group, for that
+context to be maintained.  A reasonable requirement, I think.
+
+However, if we ask "is the group in use?" ie. can I not only destroy the
+mappings above, but also automatically tear apart merged groups, then I
+think we need to look at the group refcnt.
+
+There's also a symmetry factor, the group is a benign entry point to
+device access.  It's only when device or iommu access is granted that
+the group gains any real power.  Therefore, shouldn't that power also be
+removed when those access points are closed?
+
+> You have coded the 'inuse' logic with these three routines:
+> 
+>     __vfio_iommu_inuse, which implements (1) above
+> 
+> and
+>     __vfio_iommu_groups_inuse
+
+Implements (2.a)
+
+>     __vfio_group_devs_inuse
+
+Implements (2.b)
+
+> which are used by __vfio_iommu_inuse.
+> Why don't you check the group refcnt in __vfio_iommu_groups_inuse?
+
+Hopefully explained above, but open for discussion.
+
+> Would it make sense (and the code more readable) to structure the
+> nested refcnt/inuse check like this?
+> (The numbers (1)(2)(3) refer to the three 'inuse' conditions above)
+> 
+>    (1)__vfio_iommu_inuse
+>    |
+>    +-> check iommu refcnt
+>    +-> __vfio_iommu_groups_inuse
+>        |
+>        +->LOOP: (2)__vfio_iommu_group_inuse<--MISSING
+>                 |
+>                 +-> check group refcnt<--MISSING
+>                 +-> __vfio_group_devs_inuse()
+>                     |
+>                     +-> LOOP: (3)__vfio_group_dev_inuse<--MISSING
+>                               |
+>                               +-> check device refcnt
+
+We currently do:
+
+   (1)__vfio_iommu_inuse
+    |
+    +-> check iommu refcnt
+    +-> __vfio_group_devs_inuse
+        |
+        +->LOOP: (2.b)__vfio_group_devs_inuse
+                  |
+                  +-> LOOP: (3) check device refcnt
+
+If that passes, the iommu context can be dissolved and we follow up
+with:
+
+    __vfio_iommu_groups_inuse
+    |
+    +-> LOOP: (2.a)__vfio_iommu_groups_inuse
+               |
+               +-> check group refcnt
+
+If that passes, groups can also be umerged.
+
+Is this right?
+
+> > +static void __vfio_group_set_iommu(struct vfio_group *group,
+> > +				   struct vfio_iommu *iommu)
+> > +{
+> > +	struct list_head *pos;
+> > +
+> > +	if (group->iommu)
+> > +		list_del(&group->iommu_next);
+> > +	if (iommu)
+> > +		list_add(&group->iommu_next, &iommu->group_list);
+> > +
+> > +	group->iommu = iommu;
+> 
+> If you remove the vfio_device.iommu field (as suggested above in a previous
+> Comment), the block below would not be needed anymore.
+
+Yep, I'll try removing that and see how it plays out.
+
+> > +	list_for_each(pos, &group->device_list) {
+> > +		struct vfio_device *device;
+> > +
+> > +		device = list_entry(pos, struct vfio_device, device_next);
+> > +		device->iommu = iommu;
+> > +	}
+> > +}
+> > +
+> > +static void __vfio_iommu_detach_dev(struct vfio_iommu *iommu,
+> > +				    struct vfio_device *device)
+> > +{
+> > +	BUG_ON(!iommu->domain && device->attached);
+> > +
+> > +	if (!iommu->domain || !device->attached)
+> > +		return;
+> > +
+> > +	iommu_detach_device(iommu->domain, device->dev);
+> > +	device->attached = false;
+> > +}
+> > +
+> > +static void __vfio_iommu_detach_group(struct vfio_iommu *iommu,
+> > +				      struct vfio_group *group)
+> > +{
+> > +	struct list_head *pos;
+> > +
+> > +	list_for_each(pos, &group->device_list) {
+> > +		struct vfio_device *device;
+> > +
+> > +		device = list_entry(pos, struct vfio_device, device_next);
+> > +		__vfio_iommu_detach_dev(iommu, device);
+> > +	}
+> > +}
+> > +
+> > +static int __vfio_iommu_attach_dev(struct vfio_iommu *iommu,
+> > +				   struct vfio_device *device)
+> > +{
+> > +	int ret;
+> > +
+> > +	BUG_ON(device->attached);
+> > +
+> > +	if (!iommu || !iommu->domain)
+> > +		return -EINVAL;
+> > +
+> > +	ret = iommu_attach_device(iommu->domain, device->dev);
+> > +	if (!ret)
+> > +		device->attached = true;
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static int __vfio_iommu_attach_group(struct vfio_iommu *iommu,
+> > +				     struct vfio_group *group)
+> > +{
+> > +	struct list_head *pos;
+> > +
+> > +	list_for_each(pos, &group->device_list) {
+> > +		struct vfio_device *device;
+> > +		int ret;
+> > +
+> > +		device = list_entry(pos, struct vfio_device, device_next);
+> > +		ret = __vfio_iommu_attach_dev(iommu, device);
+> > +		if (ret) {
+> > +			__vfio_iommu_detach_group(iommu, group);
+> > +			return ret;
+> > +		}
+> > +	}
+> > +	return 0;
+> > +}
+> > +
+> > +/* The iommu is viable, ie. ready to be configured, when all the
+> > devices
+> > + * for all the groups attached to the iommu are bound to their vfio
+> > device
+> > + * drivers (ex. vfio-pci).  This sets the device_data private data
+> > pointer. */
+> > +static bool __vfio_iommu_viable(struct vfio_iommu *iommu)
+> > +{
+> > +	struct list_head *gpos, *dpos;
+> > +
+> > +	list_for_each(gpos, &iommu->group_list) {
+> > +		struct vfio_group *group;
+> > +		group = list_entry(gpos, struct vfio_group, iommu_next);
+> > +
+> > +		list_for_each(dpos, &group->device_list) {
+> > +			struct vfio_device *device;
+> > +			device = list_entry(dpos,
+> > +					    struct vfio_device, device_next);
+> > +
+> > +			if (!device->device_data)
+> > +				return false;
+> > +		}
+> > +	}
+> > +	return true;
+> > +}
+> > +
+> > +static void __vfio_close_iommu(struct vfio_iommu *iommu)
+> > +{
+> > +	struct list_head *pos;
+> > +
+> > +	if (!iommu->domain)
+> > +		return;
+> > +
+> > +	list_for_each(pos, &iommu->group_list) {
+> > +		struct vfio_group *group;
+> > +		group = list_entry(pos, struct vfio_group, iommu_next);
+> > +
+> > +		__vfio_iommu_detach_group(iommu, group);
+> > +	}
+> > +
+> > +	vfio_iommu_unmapall(iommu);
+> > +
+> > +	iommu_domain_free(iommu->domain);
+> > +	iommu->domain = NULL;
+> > +	iommu->mm = NULL;
+> > +}
+> > +
+> > +/* Open the IOMMU.  This gates all access to the iommu or device file
+> > + * descriptors and sets current->mm as the exclusive user. */
+> 
+> Given the fn  vfio_group_open (ie, 1st object, 2nd operation), I would have
+> called this one __vfio_iommu_open (instead of __vfio_open_iommu).
+> Is it named __vfio_open_iommu to avoid a conflict with the namespace in vfio_iommu.c?      
+
+I would have expected that too, I'll look at renaming these.
+
+> > +static int __vfio_open_iommu(struct vfio_iommu *iommu)
+> > +{
+> > +	struct list_head *pos;
+> > +	int ret;
+> > +
+> > +	if (!__vfio_iommu_viable(iommu))
+> > +		return -EBUSY;
+> > +
+> > +	if (iommu->domain)
+> > +		return -EINVAL;
+> > +
+> > +	iommu->domain = iommu_domain_alloc(iommu->bus);
+> > +	if (!iommu->domain)
+> > +		return -EFAULT;
+> > +
+> > +	list_for_each(pos, &iommu->group_list) {
+> > +		struct vfio_group *group;
+> > +		group = list_entry(pos, struct vfio_group, iommu_next);
+> > +
+> > +		ret = __vfio_iommu_attach_group(iommu, group);
+> > +		if (ret) {
+> > +			__vfio_close_iommu(iommu);
+> > +			return ret;
+> > +		}
+> > +	}
+> > +
+> > +	if (!allow_unsafe_intrs &&
+> > +	    !iommu_domain_has_cap(iommu->domain, IOMMU_CAP_INTR_REMAP)) {
+> > +		__vfio_close_iommu(iommu);
+> > +		return -EFAULT;
+> > +	}
+> > +
+> > +	iommu->cache = (iommu_domain_has_cap(iommu->domain,
+> > +					     IOMMU_CAP_CACHE_COHERENCY) != 0);
+> > +	iommu->mm = current->mm;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/* Actively try to tear down the iommu and merged groups.  If there
+> > are no
+> > + * open iommu or device fds, we close the iommu.  If we close the
+> > iommu and
+> > + * there are also no open group fds, we can futher dissolve the group
+> > to
+> > + * iommu association and free the iommu data structure. */
+> > +static int __vfio_try_dissolve_iommu(struct vfio_iommu *iommu)
+> > +{
+> > +
+> > +	if (__vfio_iommu_inuse(iommu))
+> > +		return -EBUSY;
+> > +
+> > +	__vfio_close_iommu(iommu);
+> > +
+> > +	if (!__vfio_iommu_groups_inuse(iommu)) {
+> > +		struct list_head *pos, *ppos;
+> > +
+> > +		list_for_each_safe(pos, ppos, &iommu->group_list) {
+> > +			struct vfio_group *group;
+> > +
+> > +			group = list_entry(pos, struct vfio_group,
+> > iommu_next);
+> > +			__vfio_group_set_iommu(group, NULL);
+> > +		}
+> > +
+> > +
+> > +		kfree(iommu);
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static struct vfio_device *__vfio_lookup_dev(struct device *dev)
+> > +{
+> > +	struct list_head *gpos;
+> > +	unsigned int groupid;
+> > +
+> > +	if (iommu_device_group(dev, &groupid))
+> > +		return NULL;
+> > +
+> > +	list_for_each(gpos, &vfio.group_list) {
+> > +		struct vfio_group *group;
+> > +		struct list_head *dpos;
+> > +
+> > +		group = list_entry(gpos, struct vfio_group, group_next);
+> > +
+> > +		if (group->groupid != groupid)
+> > +			continue;
+> > +
+> > +		list_for_each(dpos, &group->device_list) {
+> > +			struct vfio_device *device;
+> > +
+> > +			device = list_entry(dpos,
+> > +					    struct vfio_device, device_next);
+> > +
+> > +			if (device->dev == dev)
+> > +				return device;
+> > +		}
+> > +	}
+> > +	return NULL;
+> > +}
+> > +
+> > +/* All release paths simply decrement the refcnt, attempt to teardown
+> > + * the iommu and merged groups, and wakeup anything that might be
+> > + * waiting if we successfully dissolve anything. */
+> > +static int vfio_do_release(int *refcnt, struct vfio_iommu *iommu)
+> > +{
+> > +	bool wake;
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	(*refcnt)--;
+> > +	wake = (__vfio_try_dissolve_iommu(iommu) == 0);
+> > +
+> > +	mutex_unlock(&vfio.lock);
+> > +
+> > +	if (wake)
+> > +		wake_up(&vfio.release_q);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> > + * Device fops - passthrough to vfio device driver w/ device_data
+> > + */
+> > +static int vfio_device_release(struct inode *inode, struct file
+> > *filep)
+> > +{
+> > +	struct vfio_device *device = filep->private_data;
+> > +
+> > +	vfio_do_release(&device->refcnt, device->iommu);
+> > +
+> > +	device->ops->put(device->device_data);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static long vfio_device_unl_ioctl(struct file *filep,
+> > +				  unsigned int cmd, unsigned long arg)
+> > +{
+> > +	struct vfio_device *device = filep->private_data;
+> > +
+> > +	return device->ops->ioctl(device->device_data, cmd, arg);
+> > +}
+> > +
+> > +static ssize_t vfio_device_read(struct file *filep, char __user *buf,
+> > +				size_t count, loff_t *ppos)
+> > +{
+> > +	struct vfio_device *device = filep->private_data;
+> > +
+> > +	return device->ops->read(device->device_data, buf, count, ppos);
+> > +}
+> > +
+> > +static ssize_t vfio_device_write(struct file *filep, const char __user
+> > *buf,
+> > +				 size_t count, loff_t *ppos)
+> > +{
+> > +	struct vfio_device *device = filep->private_data;
+> > +
+> > +	return device->ops->write(device->device_data, buf, count, ppos);
+> > +}
+> > +
+> > +static int vfio_device_mmap(struct file *filep, struct vm_area_struct
+> > *vma)
+> > +{
+> > +	struct vfio_device *device = filep->private_data;
+> > +
+> > +	return device->ops->mmap(device->device_data, vma);
+> > +}
+> > +
+> > +#ifdef CONFIG_COMPAT
+> > +static long vfio_device_compat_ioctl(struct file *filep,
+> > +				     unsigned int cmd, unsigned long arg)
+> > +{
+> > +	arg = (unsigned long)compat_ptr(arg);
+> > +	return vfio_device_unl_ioctl(filep, cmd, arg);
+> > +}
+> > +#endif	/* CONFIG_COMPAT */
+> > +
+> > +const struct file_operations vfio_device_fops = {
+> > +	.owner		= THIS_MODULE,
+> > +	.release	= vfio_device_release,
+> > +	.read		= vfio_device_read,
+> > +	.write		= vfio_device_write,
+> > +	.unlocked_ioctl	= vfio_device_unl_ioctl,
+> > +#ifdef CONFIG_COMPAT
+> > +	.compat_ioctl	= vfio_device_compat_ioctl,
+> > +#endif
+> > +	.mmap		= vfio_device_mmap,
+> > +};
+> > +
+> > +/*
+> > + * Group fops
+> > + */
+> > +static int vfio_group_open(struct inode *inode, struct file *filep)
+> > +{
+> > +	struct vfio_group *group;
+> > +	int ret = 0;
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	group = idr_find(&vfio.idr, iminor(inode));
+> > +
+> > +	if (!group) {
+> > +		ret = -ENODEV;
+> > +		goto out;
+> > +	}
+> > +
+> > +	filep->private_data = group;
+> > +
+> > +	if (!group->iommu) {
+> > +		struct vfio_iommu *iommu;
+> > +
+> > +		iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> > +		if (!iommu) {
+> > +			ret = -ENOMEM;
+> > +			goto out;
+> > +		}
+> > +		INIT_LIST_HEAD(&iommu->group_list);
+> > +		INIT_LIST_HEAD(&iommu->dm_list);
+> > +		mutex_init(&iommu->dgate);
+> > +		iommu->bus = group->bus;
+> > +		__vfio_group_set_iommu(group, iommu);
+> > +	}
+> > +	group->refcnt++;
+> > +
+> > +out:
+> > +	mutex_unlock(&vfio.lock);
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static int vfio_group_release(struct inode *inode, struct file *filep)
+> > +{
+> > +	struct vfio_group *group = filep->private_data;
+> > +
+> > +	return vfio_do_release(&group->refcnt, group->iommu);
+> > +}
+> > +
+> > +/* Attempt to merge the group pointed to by fd into group.  The merge-
+> > ee
+> > + * group must not have an iommu or any devices open because we cannot
+> > + * maintain that context across the merge.  The merge-er group can be
+> > + * in use. */
+> > +static int vfio_group_merge(struct vfio_group *group, int fd)
+> 
+> The documentation in vfio.txt explains clearly the logic implemented by
+> the merge/unmerge group ioctls.
+> However, what you are doing is not merging groups, but rather adding/removing
+> groups to/from iommus (and creating flat lists of groups).
+> For example, when you do
+> 
+>   merge(A,B)
+> 
+> you actually mean to say "merge B to the list of groups assigned to the
+> same iommu as group A".
+
+It's actually a little more than that.  After you've merged B into A,
+you can close the file descriptor for B and access all of the devices
+for the merged group from A.
+
+> For the same reason, you do not really need to provide the group you want
+> to unmerge from, which means that instead of
+> 
+>   unmerge(A,B) 
+> 
+> you would just need
+> 
+>   unmerge(B)
+
+Good point, we can avoid the awkward reference via file descriptor for
+the unmerge.
+
+> I understand the reason why it is not a real merge/unmerge (ie, to keep the
+> original groups so that you can unmerge later)
+
+Right, we still need to have visibility of the groups comprising the
+merged group, but the abstraction provided to the user seems to be
+deeper than you're thinking.
+
+>  ... however I just wonder if
+> it wouldn't be more natural to implement the VFIO_IOMMU_ADD_GROUP/DEL_GROUP
+> iommu ioctls instead? (the relationships between the data structure would
+> remain the same)
+> I guess you already discarded this option for some reasons, right? What was
+> the reason?
+
+It's a possibility, I'm not sure it was discussed or really what
+advantage it provides.  It seems like we'd logically lose the ability to
+access devices from other groups, whether that's good or bad, I don't
+know.  I think the notion of "merge" promotes the idea that the groups
+are peers and an iommu_add/del feels a bit more hierarchical.
+
+> > +{
+> > +	struct vfio_group *new;
+> > +	struct vfio_iommu *old_iommu;
+> > +	struct file *file;
+> > +	int ret = 0;
+> > +	bool opened = false;
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	file = fget(fd);
+> > +	if (!file) {
+> > +		ret = -EBADF;
+> > +		goto out_noput;
+> > +	}
+> > +
+> > +	/* Sanity check, is this really our fd? */
+> > +	if (file->f_op != &vfio_group_fops) {
+> > +		ret = -EINVAL;
+> > +		goto out;
+> > +	}
+> > +
+> > +	new = file->private_data;
+> > +
+> > +	if (!new || new == group || !new->iommu ||
+> > +	    new->iommu->domain || new->bus != group->bus) {
+> > +		ret = -EINVAL;
+> > +		goto out;
+> > +	}
+> > +
+> > +	/* We need to attach all the devices to each domain separately
+> > +	 * in order to validate that the capabilities match for both.  */
+> > +	ret = __vfio_open_iommu(new->iommu);
+> > +	if (ret)
+> > +		goto out;
+> > +
+> > +	if (!group->iommu->domain) {
+> > +		ret = __vfio_open_iommu(group->iommu);
+> > +		if (ret)
+> > +			goto out;
+> > +		opened = true;
+> > +	}
+> > +
+> > +	/* If cache coherency doesn't match we'd potentialy need to
+> > +	 * remap existing iommu mappings in the merge-er domain.
+> > +	 * Poor return to bother trying to allow this currently. */
+> > +	if (iommu_domain_has_cap(group->iommu->domain,
+> > +				 IOMMU_CAP_CACHE_COHERENCY) !=
+> > +	    iommu_domain_has_cap(new->iommu->domain,
+> > +				 IOMMU_CAP_CACHE_COHERENCY)) {
+> > +		__vfio_close_iommu(new->iommu);
+> > +		if (opened)
+> > +			__vfio_close_iommu(group->iommu);
+> > +		ret = -EINVAL;
+> > +		goto out;
+> > +	}
+> > +
+> > +	/* Close the iommu for the merge-ee and attach all its devices
+> > +	 * to the merge-er iommu. */
+> > +	__vfio_close_iommu(new->iommu);
+> > +
+> > +	ret = __vfio_iommu_attach_group(group->iommu, new);
+> > +	if (ret)
+> > +		goto out;
+> > +
+> > +	/* set_iommu unlinks new from the iommu, so save a pointer to it
+> > */
+> > +	old_iommu = new->iommu;
+> > +	__vfio_group_set_iommu(new, group->iommu);
+> > +	kfree(old_iommu);
+> > +
+> > +out:
+> > +	fput(file);
+> > +out_noput:
+> > +	mutex_unlock(&vfio.lock);
+> > +	return ret;
+> > +}
+> > +
+> > +/* Unmerge the group pointed to by fd from group. */
+> > +static int vfio_group_unmerge(struct vfio_group *group, int fd)
+> > +{
+> > +	struct vfio_group *new;
+> > +	struct vfio_iommu *new_iommu;
+> > +	struct file *file;
+> > +	int ret = 0;
+> > +
+> > +	/* Since the merge-out group is already opened, it needs to
+> > +	 * have an iommu struct associated with it. */
+> > +	new_iommu = kzalloc(sizeof(*new_iommu), GFP_KERNEL);
+> > +	if (!new_iommu)
+> > +		return -ENOMEM;
+> > +
+> > +	INIT_LIST_HEAD(&new_iommu->group_list);
+> > +	INIT_LIST_HEAD(&new_iommu->dm_list);
+> > +	mutex_init(&new_iommu->dgate);
+> > +	new_iommu->bus = group->bus;
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	file = fget(fd);
+> > +	if (!file) {
+> > +		ret = -EBADF;
+> > +		goto out_noput;
+> > +	}
+> > +
+> > +	/* Sanity check, is this really our fd? */
+> > +	if (file->f_op != &vfio_group_fops) {
+> > +		ret = -EINVAL;
+> > +		goto out;
+> > +	}
+> > +
+> > +	new = file->private_data;
+> > +	if (!new || new == group || new->iommu != group->iommu) {
+> > +		ret = -EINVAL;
+> > +		goto out;
+> > +	}
+> > +
+> > +	/* We can't merge-out a group with devices still in use. */
+> > +	if (__vfio_group_devs_inuse(new)) {
+> > +		ret = -EBUSY;
+> > +		goto out;
+> > +	}
+> > +
+> > +	__vfio_iommu_detach_group(group->iommu, new);
+> > +	__vfio_group_set_iommu(new, new_iommu);
+> > +
+> > +out:
+> > +	fput(file);
+> > +out_noput:
+> > +	if (ret)
+> > +		kfree(new_iommu);
+> > +	mutex_unlock(&vfio.lock);
+> > +	return ret;
+> > +}
+> > +
+> > +/* Get a new iommu file descriptor.  This will open the iommu, setting
+> > + * the current->mm ownership if it's not already set. */
+> > +static int vfio_group_get_iommu_fd(struct vfio_group *group)
+> > +{
+> > +	int ret = 0;
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	if (!group->iommu->domain) {
+> > +		ret = __vfio_open_iommu(group->iommu);
+> > +		if (ret)
+> > +			goto out;
+> > +	}
+> > +
+> > +	ret = anon_inode_getfd("[vfio-iommu]", &vfio_iommu_fops,
+> > +			       group->iommu, O_RDWR);
+> > +	if (ret < 0)
+> > +		goto out;
+> > +
+> > +	group->iommu->refcnt++;
+> > +out:
+> > +	mutex_unlock(&vfio.lock);
+> > +	return ret;
+> > +}
+> > +
+> > +/* Get a new device file descriptor.  This will open the iommu,
+> > setting
+> > + * the current->mm ownership if it's not already set.  It's difficult
+> > to
+> > + * specify the requirements for matching a user supplied buffer to a
+> > + * device, so we use a vfio driver callback to test for a match.  For
+> > + * PCI, dev_name(dev) is unique, but other drivers may require
+> > including
+> > + * a parent device string. */
+> > +static int vfio_group_get_device_fd(struct vfio_group *group, char
+> > *buf)
+> > +{
+> > +	struct vfio_iommu *iommu = group->iommu;
+> > +	struct list_head *gpos;
+> > +	int ret = -ENODEV;
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	if (!iommu->domain) {
+> > +		ret = __vfio_open_iommu(iommu);
+> > +		if (ret)
+> > +			goto out;
+> > +	}
+> > +
+> > +	list_for_each(gpos, &iommu->group_list) {
+> > +		struct list_head *dpos;
+> > +
+> > +		group = list_entry(gpos, struct vfio_group, iommu_next);
+> > +
+> > +		list_for_each(dpos, &group->device_list) {
+> > +			struct vfio_device *device;
+> > +
+> > +			device = list_entry(dpos,
+> > +					    struct vfio_device, device_next);
+> > +
+> > +			if (device->ops->match(device->dev, buf)) {
+> > +				struct file *file;
+> > +
+> > +				if (device->ops->get(device->device_data)) {
+> > +					ret = -EFAULT;
+> > +					goto out;
+> > +				}
+> > +
+> > +				/* We can't use anon_inode_getfd(), like above
+> > +				 * because we need to modify the f_mode flags
+> > +				 * directly to allow more than just ioctls */
+> > +				ret = get_unused_fd();
+> > +				if (ret < 0) {
+> > +					device->ops->put(device->device_data);
+> > +					goto out;
+> > +				}
+> > +
+> > +				file = anon_inode_getfile("[vfio-device]",
+> > +							  &vfio_device_fops,
+> > +							  device, O_RDWR);
+> > +				if (IS_ERR(file)) {
+> > +					put_unused_fd(ret);
+> > +					ret = PTR_ERR(file);
+> > +					device->ops->put(device->device_data);
+> > +					goto out;
+> > +				}
+> > +
+> > +				/* Todo: add an anon_inode interface to do
+> > +				 * this.  Appears to be missing by lack of
+> > +				 * need rather than explicitly prevented.
+> > +				 * Now there's need. */
+> > +				file->f_mode |= (FMODE_LSEEK |
+> > +						 FMODE_PREAD |
+> > +						 FMODE_PWRITE);
+> > +
+> > +				fd_install(ret, file);
+> > +
+> > +				device->refcnt++;
+> > +				goto out;
+> > +			}
+> > +		}
+> > +	}
+> > +out:
+> > +	mutex_unlock(&vfio.lock);
+> > +	return ret;
+> > +}
+> > +
+> > +static long vfio_group_unl_ioctl(struct file *filep,
+> > +				 unsigned int cmd, unsigned long arg)
+> > +{
+> > +	struct vfio_group *group = filep->private_data;
+> > +
+> > +	if (cmd == VFIO_GROUP_GET_FLAGS) {
+> > +		u64 flags = 0;
+> > +
+> > +		mutex_lock(&vfio.lock);
+> > +		if (__vfio_iommu_viable(group->iommu))
+> > +			flags |= VFIO_GROUP_FLAGS_VIABLE;
+> > +		mutex_unlock(&vfio.lock);
+> > +
+> > +		if (group->iommu->mm)
+> > +			flags |= VFIO_GROUP_FLAGS_MM_LOCKED;
+> > +
+> > +		return put_user(flags, (u64 __user *)arg);
+> > +	}
+> > +
+> > +	/* Below commands are restricted once the mm is set */
+> > +	if (group->iommu->mm && group->iommu->mm != current->mm)
+> > +		return -EPERM;
+> > +	if (cmd == VFIO_GROUP_MERGE || cmd == VFIO_GROUP_UNMERGE) {
+> > +		int fd;
+> > +
+> > +		if (get_user(fd, (int __user *)arg))
+> > +			return -EFAULT;
+> > +		if (fd < 0)
+> > +			return -EINVAL;
+> > +
+> > +		if (cmd == VFIO_GROUP_MERGE)
+> > +			return vfio_group_merge(group, fd);
+> > +		else
+> > +			return vfio_group_unmerge(group, fd);
+> > +	} else if (cmd == VFIO_GROUP_GET_IOMMU_FD) {
+> > +		return vfio_group_get_iommu_fd(group);
+> > +	} else if (cmd == VFIO_GROUP_GET_DEVICE_FD) {
+> > +		char *buf;
+> > +		int ret;
+> > +
+> > +		buf = strndup_user((const char __user *)arg, PAGE_SIZE);
+> > +		if (IS_ERR(buf))
+> > +			return PTR_ERR(buf);
+> > +
+> > +		ret = vfio_group_get_device_fd(group, buf);
+> > +		kfree(buf);
+> > +		return ret;
+> > +	}
+> > +
+> > +	return -ENOSYS;
+> > +}
+> > +
+> > +#ifdef CONFIG_COMPAT
+> > +static long vfio_group_compat_ioctl(struct file *filep,
+> > +				    unsigned int cmd, unsigned long arg)
+> > +{
+> > +	arg = (unsigned long)compat_ptr(arg);
+> > +	return vfio_group_unl_ioctl(filep, cmd, arg);
+> > +}
+> > +#endif	/* CONFIG_COMPAT */
+> > +
+> > +static const struct file_operations vfio_group_fops = {
+> > +	.owner		= THIS_MODULE,
+> > +	.open		= vfio_group_open,
+> > +	.release	= vfio_group_release,
+> > +	.unlocked_ioctl	= vfio_group_unl_ioctl,
+> > +#ifdef CONFIG_COMPAT
+> > +	.compat_ioctl	= vfio_group_compat_ioctl,
+> > +#endif
+> > +};
+> > +
+> > +/* iommu fd release hook */
+> 
+> Given vfio_device_release and
+>       vfio_group_release (ie, 1st object, 2nd operation), I was
+> going to suggest renaming the fn below to vfio_iommu_release, but
+> then I saw the latter name being already used in vfio_iommu.c ...
+> a bit confusing but I guess it's ok then.
+
+Right, this one was definitely because of naming collision.
+
+> > +int vfio_release_iommu(struct vfio_iommu *iommu)
+> > +{
+> > +	return vfio_do_release(&iommu->refcnt, iommu);
+> > +}
+> > +
+> > +/*
+> > + * VFIO driver API
+> > + */
+> > +
+> > +/* Add a new device to the vfio framework with associated vfio driver
+> > + * callbacks.  This is the entry point for vfio drivers to register
+> > devices. */
+> > +int vfio_group_add_dev(struct device *dev, const struct
+> > vfio_device_ops *ops)
+> > +{
+> > +	struct list_head *pos;
+> > +	struct vfio_group *group = NULL;
+> > +	struct vfio_device *device = NULL;
+> > +	unsigned int groupid;
+> > +	int ret = 0;
+> > +	bool new_group = false;
+> > +
+> > +	if (!ops)
+> > +		return -EINVAL;
+> > +
+> > +	if (iommu_device_group(dev, &groupid))
+> > +		return -ENODEV;
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	list_for_each(pos, &vfio.group_list) {
+> > +		group = list_entry(pos, struct vfio_group, group_next);
+> > +		if (group->groupid == groupid)
+> > +			break;
+> > +		group = NULL;
+> > +	}
+> > +
+> > +	if (!group) {
+> > +		int minor;
+> > +
+> > +		if (unlikely(idr_pre_get(&vfio.idr, GFP_KERNEL) == 0)) {
+> > +			ret = -ENOMEM;
+> > +			goto out;
+> > +		}
+> > +
+> > +		group = kzalloc(sizeof(*group), GFP_KERNEL);
+> > +		if (!group) {
+> > +			ret = -ENOMEM;
+> > +			goto out;
+> > +		}
+> > +
+> > +		group->groupid = groupid;
+> > +		INIT_LIST_HEAD(&group->device_list);
+> > +
+> > +		ret = idr_get_new(&vfio.idr, group, &minor);
+> > +		if (ret == 0 && minor > MINORMASK) {
+> > +			idr_remove(&vfio.idr, minor);
+> > +			kfree(group);
+> > +			ret = -ENOSPC;
+> > +			goto out;
+> > +		}
+> > +
+> > +		group->devt = MKDEV(MAJOR(vfio.devt), minor);
+> > +		device_create(vfio.class, NULL, group->devt,
+> > +			      group, "%u", groupid);
+> > +
+> > +		group->bus = dev->bus;
+> > +		list_add(&group->group_next, &vfio.group_list);
+> > +		new_group = true;
+> > +	} else {
+> > +		if (group->bus != dev->bus) {
+> > +			printk(KERN_WARNING
+> > +			       "Error: IOMMU group ID conflict.  Group ID %u
+> > "
+> > +				"on both bus %s and %s\n", groupid,
+> > +				group->bus->name, dev->bus->name);
+> > +			ret = -EFAULT;
+> > +			goto out;
+> > +		}
+> > +
+> > +		list_for_each(pos, &group->device_list) {
+> > +			device = list_entry(pos,
+> > +					    struct vfio_device, device_next);
+> > +			if (device->dev == dev)
+> > +				break;
+> > +			device = NULL;
+> > +		}
+> > +	}
+> > +
+> > +	if (!device) {
+> > +		if (__vfio_group_devs_inuse(group) ||
+> > +		    (group->iommu && group->iommu->refcnt)) {
+> > +			printk(KERN_WARNING
+> > +			       "Adding device %s to group %u while group is
+> > already in use!!\n",
+> > +			       dev_name(dev), group->groupid);
+> > +			/* XXX How to prevent other drivers from claiming? */
+> 
+> Here we are adding a device (not yet assigned to a vfio bus) to a group
+> that is already in use.
+> Given that it would not be acceptable for this device to get assigned
+> to a non vfio driver, why not forcing such assignment here then?
+
+Exactly, I just don't know the mechanics of how to make that happen and
+was hoping for suggestions...
+
+> I am not sure though what the best way to do it would be.
+> What about something like this:
+> 
+> - when the bus vfio-pci processes the BUS_NOTIFY_ADD_DEVICE
+>   notification it assigns to the device a PCI ID that will make sure
+>   the vfio-pci's probe routine will be invoked (and no other driver can
+>   therefore claim the device). That PCI ID would have to be added
+>   to the vfio_pci_driver's id_table (it would be the exception to the
+>   "only dynamic IDs" rule). Too hackish?
+
+Presumably some other driver also has the ID in it's id_table, how do we
+make sure we win?
+
+> > +		}
+> > +
+> > +		device = kzalloc(sizeof(*device), GFP_KERNEL);
+> > +		if (!device) {
+> > +			/* If we just created this group, tear it down */
+> > +			if (new_group) {
+> > +				list_del(&group->group_next);
+> > +				device_destroy(vfio.class, group->devt);
+> > +				idr_remove(&vfio.idr, MINOR(group->devt));
+> > +				kfree(group);
+> > +			}
+> > +			ret = -ENOMEM;
+> > +			goto out;
+> > +		}
+> > +
+> > +		list_add(&device->device_next, &group->device_list);
+> > +		device->dev = dev;
+> > +		device->ops = ops;
+> > +		device->iommu = group->iommu; /* NULL if new */
+> 
+> Shouldn't you check the return code of __vfio_iommu_attach_dev?
+
+Yep, looks like I did this because the expected use case has a NULL
+iommu here, so I need to distiguish that error from an actual
+iommu_attach_device() error.
+
+> > +		__vfio_iommu_attach_dev(group->iommu, device);
+> > +	}
+> > +out:
+> > +	mutex_unlock(&vfio.lock);
+> > +	return ret;
+> > +}
+> > +EXPORT_SYMBOL_GPL(vfio_group_add_dev);
+> > +
+> > +/* Remove a device from the vfio framework */
+> 
+> This fn below does not return any error code. Ok ...
+> However, there are a number of errors case that you test, for example
+> - device that does not belong to any group (according to iommu API)
+> - device that belongs to a group but that does not appear in the list
+>   of devices of the vfio_group structure.
+> Are the above two errors checks just paranoia or are those errors actually possible?
+> If they were possible, shouldn't we generate a warning (most probably
+> it would be a bug in the code)?
+
+They're all vfio-bus driver bugs of some sort, so it's just a matter of
+how much we want to scream about them.  I'll comments on each below.
+
+> > +void vfio_group_del_dev(struct device *dev)
+> > +{
+> > +	struct list_head *pos;
+> > +	struct vfio_group *group = NULL;
+> > +	struct vfio_device *device = NULL;
+> > +	unsigned int groupid;
+> > +
+> > +	if (iommu_device_group(dev, &groupid))
+> > +		return;
+
+Here the bus driver is probably just sitting on a notifier list for
+their bus_type and a device is getting removed.  Unless we want to
+require the bus driver to track everything it's attempted to add and
+whether it worked, we can just ignore this.
+
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	list_for_each(pos, &vfio.group_list) {
+> > +		group = list_entry(pos, struct vfio_group, group_next);
+> > +		if (group->groupid == groupid)
+> > +			break;
+> > +		group = NULL;
+> > +	}
+> > +
+> > +	if (!group)
+> > +		goto out;
+
+We don't even have a group for the device, we could BUG_ON here.  The
+bus driver failed to tell us about something that was then removed.
+
+> > +
+> > +	list_for_each(pos, &group->device_list) {
+> > +		device = list_entry(pos, struct vfio_device, device_next);
+> > +		if (device->dev == dev)
+> > +			break;
+> > +		device = NULL;
+> > +	}
+> > +
+> > +	if (!device)
+> > +		goto out;
+
+Same here.
+
+> > +
+> > +	BUG_ON(device->refcnt);
+> > +
+> > +	if (device->attached)
+> > +		__vfio_iommu_detach_dev(group->iommu, device);
+> > +
+> > +	list_del(&device->device_next);
+> > +	kfree(device);
+> > +
+> > +	/* If this was the only device in the group, remove the group.
+> > +	 * Note that we intentionally unmerge empty groups here if the
+> > +	 * group fd isn't opened. */
+> > +	if (list_empty(&group->device_list) && group->refcnt == 0) {
+> > +		struct vfio_iommu *iommu = group->iommu;
+> > +
+> > +		if (iommu) {
+> > +			__vfio_group_set_iommu(group, NULL);
+> > +			__vfio_try_dissolve_iommu(iommu);
+> > +		}
+> > +
+> > +		device_destroy(vfio.class, group->devt);
+> > +		idr_remove(&vfio.idr, MINOR(group->devt));
+> > +		list_del(&group->group_next);
+> > +		kfree(group);
+> > +	}
+> > +out:
+> > +	mutex_unlock(&vfio.lock);
+> > +}
+> > +EXPORT_SYMBOL_GPL(vfio_group_del_dev);
+> > +
+> > +/* When a device is bound to a vfio device driver (ex. vfio-pci), this
+> > + * entry point is used to mark the device usable (viable).  The vfio
+> > + * device driver associates a private device_data struct with the
+> > device
+> > + * here, which will later be return for vfio_device_fops callbacks. */
+> > +int vfio_bind_dev(struct device *dev, void *device_data)
+> > +{
+> > +	struct vfio_device *device;
+> > +	int ret = -EINVAL;
+> > +
+> > +	BUG_ON(!device_data);
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	device = __vfio_lookup_dev(dev);
+> > +
+> > +	BUG_ON(!device);
+> > +
+> > +	ret = dev_set_drvdata(dev, device);
+> > +	if (!ret)
+> > +		device->device_data = device_data;
+> > +
+> > +	mutex_unlock(&vfio.lock);
+> > +	return ret;
+> > +}
+> > +EXPORT_SYMBOL_GPL(vfio_bind_dev);
+> > +
+> > +/* A device is only removeable if the iommu for the group is not in
+> > use. */
+> > +static bool vfio_device_removeable(struct vfio_device *device)
+> > +{
+> > +	bool ret = true;
+> > +
+> > +	mutex_lock(&vfio.lock);
+> > +
+> > +	if (device->iommu && __vfio_iommu_inuse(device->iommu))
+> > +		ret = false;
+> > +
+> > +	mutex_unlock(&vfio.lock);
+> > +	return ret;
+> > +}
+> > +
+> > +/* Notify vfio that a device is being unbound from the vfio device
+> > driver
+> > + * and return the device private device_data pointer.  If the group is
+> > + * in use, we need to block or take other measures to make it safe for
+> > + * the device to be removed from the iommu. */
+> > +void *vfio_unbind_dev(struct device *dev)
+> > +{
+> > +	struct vfio_device *device = dev_get_drvdata(dev);
+> > +	void *device_data;
+> > +
+> > +	BUG_ON(!device);
+> > +
+> > +again:
+> > +	if (!vfio_device_removeable(device)) {
+> > +		/* XXX signal for all devices in group to be removed or
+> > +		 * resort to killing the process holding the device fds.
+> > +		 * For now just block waiting for releases to wake us. */
+> > +		wait_event(vfio.release_q, vfio_device_removeable(device));
+> 
+> Any new idea/proposal on how to handle this situation?
+> The last one I remember was to leave the soft/hard/etc timeout handling in
+> userspace and implement it as a sort of policy. Is that one still the most
+> likely candidate solution to handle this situation?
+
+I haven't heard any new proposals.  I think we need the hard timeout
+handling in the kernel.  We can't leave it to userspace to decide they
+get to keep the device.  We could have this tunable via an ioctl, but I
+don't see how we wouldn't require CAP_SYS_ADMIN (or similar) to tweak
+it.  I was intending to re-implement the netlink interface to signal the
+removal, but expect to get allergic reactions to that.
+
+Thanks for the comments!
+
+Alex
+
+
