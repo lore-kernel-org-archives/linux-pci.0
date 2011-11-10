@@ -1,73 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:36500 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756508Ab1K2XNv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2011 18:13:51 -0500
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id B3B5022903
-	for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2011 18:13:50 -0500 (EST)
-Date: Wed, 30 Nov 2011 07:55:52 +0900
-From: Greg KH <greg@kroah.com>
-To: Anand Kanaginhal <anand_dk@hotmail.com>
-Cc: Linux PCI mailing <linux-pci@vger.kernel.org>,
-	linux kernel mailing <linux-kernel@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>
-Subject: Re: PCIe Hotplugging not working
-Message-ID: <20111129225552.GB27909@kroah.com>
-References: <BAY163-W52E309F419E3588206D889FBB30@phx.gbl>
- <BAY163-W47DD39095DA3EB108AA3F2FBB30@phx.gbl>
- <20111129142214.GC14845@kroah.com>
- <BAY163-W63C79C972B0F87A46B0FDCFBB30@phx.gbl>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:46808 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494Ab1KJHkx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2011 02:40:53 -0500
+Message-ID: <4EBB7FF5.1040109@jp.fujitsu.com>
+Date: Thu, 10 Nov 2011 16:40:37 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BAY163-W63C79C972B0F87A46B0FDCFBB30@phx.gbl>
+To: Yinghai Lu <yinghai.lu@oracle.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [PATCH 1/2] pciehp: wait 1000 ms before Link Training check
+References: <4EB88238.4050409@oracle.com> <4EB8F434.6090003@jp.fujitsu.com> <4EB94A51.6070809@oracle.com> <4EB9A50D.1040302@oracle.com> <4EBB7F9B.8050703@jp.fujitsu.com>
+In-Reply-To: <4EBB7F9B.8050703@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 29, 2011 at 09:50:41AM -0800, Anand Kanaginhal wrote:
-> 
-> Resending as earlier sends failed
+We need to wait for 1000 ms after Data Link Layer Link Active (DLLLA)
+bit reads 1b before sending configuration request. Currently pciehp
+does this wait after checking Link Training (LT) bit. But we need it
+before checking LT bit because LT is still set even after DLLLA bit is
+set on some platforms.
 
-You can not send html messages to vger.kernel.org mailing lists.
+Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c |    3 ---
+ drivers/pci/hotplug/pciehp_hpc.c  |    8 ++++++++
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-> > Why is a pci driver a "char" driver?  Do you have a pointer to the
-> > source of this?
-> 
-> I am doing an test before putting it in its right place. Another
-> reason is that I am treating it as character device and using IOCTLs
-> for various operations.  I have attached the framework code here.
-
-Just a note, but your framework is backwards, you should allocate your
-character device in your probe function, not in the module init
-function.
-
-Also, what type of driver is this, why do you need ioctls for it?
-
-> > > 2. I run depmod and "modules.pcimap" also got updated with my module. 
-> > > 
-> > > However
-> > >  if I unplug and plug in the endpoint, my driver .probe and .remove functions
-> > >  are not being invoked. Is there something more to be done at the bus 
-> > > level to get the driver to hot plug ?
-> > 
-> > You need a pci hotplug controller driver, is that loaded?  That is what
-> > is responsible for eventually calling your remove function.
-> 
-> How do I figure out if a pci hotplug controller driver is installed? 
-
-How do you know that your hardware supports PCI hotplugging at all?
-
-You need a PCI hotplug controller in the system, generally if you have
-one, the driver will be loaded for it, but if you are using a custom
-kernel, you might have to build and install it yourself.
-
-> > > I have tried various kernel version, Currently I am trying on 2.6.38.12 (UBUNTU flavor).
-> > 
-> > We can't help you with distro-specific kernels, please use a kernel.org
-> > kernel and we will be glad to help you out.
-> 
-> I have tried with vanilla kernel as well with the same results.
-
-What release did you try?
-
-greg k-h
+Index: linux-3.1/drivers/pci/hotplug/pciehp_ctrl.c
+===================================================================
+--- linux-3.1.orig/drivers/pci/hotplug/pciehp_ctrl.c
++++ linux-3.1/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -213,9 +213,6 @@ static int board_added(struct slot *p_sl
+ 		goto err_exit;
+ 	}
+ 
+-	/* Wait for 1 second after checking link training status */
+-	msleep(1000);
+-
+ 	/* Check for a power fault */
+ 	if (ctrl->power_fault_detected || pciehp_query_power_fault(p_slot)) {
+ 		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(p_slot));
+Index: linux-3.1/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-3.1.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-3.1/drivers/pci/hotplug/pciehp_hpc.c
+@@ -280,6 +280,14 @@ int pciehp_check_link_status(struct cont
+         else
+                 msleep(1000);
+ 
++	/*
++	 * Need to wait for 1000 ms after Data Link Layer Link Active
++	 * (DLLLA) bit reads 1b before sending configuration request.
++	 * We need it before checking Link Training (LT) bit becuase
++	 * LT is still set even after DLLLA bit is set on some platform.
++	 */
++	msleep(1000);
++
+ 	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status);
+ 	if (retval) {
+ 		ctrl_err(ctrl, "Cannot read LNKSTATUS register\n");
