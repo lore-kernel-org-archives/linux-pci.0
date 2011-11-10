@@ -1,72 +1,32 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 30 Nov 2011 13:59:58 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Chris Metcalf <cmetcalf@tilera.com>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
-Message-ID: <20111130115956.GA21413@redhat.com>
-References: <cover.1322592494.git.mst@redhat.com>
- <201111292205.11544.arnd@arndb.de>
- <20111130071321.GB17781@redhat.com>
- <201111300909.18431.arnd@arndb.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:28546 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696Ab1KJTLR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2011 14:11:17 -0500
+Message-ID: <4EBC21C0.5070806@oracle.com>
+Date: Thu, 10 Nov 2011 11:10:56 -0800
+From: Yinghai Lu <yinghai.lu@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201111300909.18431.arnd@arndb.de>
-Sender: linux-arch-owner@vger.kernel.org
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] pciehp: wait 100 ms after Link Training check
+References: <4EB88238.4050409@oracle.com> <4EB8F434.6090003@jp.fujitsu.com> <4EB94A51.6070809@oracle.com> <4EB9A50D.1040302@oracle.com> <4EBB7F9B.8050703@jp.fujitsu.com> <4EBB8058.6090500@jp.fujitsu.com>
+In-Reply-To: <4EBB8058.6090500@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-2022-JP
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 30, 2011 at 09:09:18AM +0000, Arnd Bergmann wrote:
-> On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
-> > 
-> > On Tue, Nov 29, 2011 at 10:05:11PM +0000, Arnd Bergmann wrote:
-> > > On Tuesday 29 November 2011, Michael S. Tsirkin wrote:
-> > > > diff --git a/arch/tile/include/asm/io.h b/arch/tile/include/asm/io.h
-> > > > index c9ea165..be6090d 100644
-> > > > --- a/arch/tile/include/asm/io.h
-> > > > +++ b/arch/tile/include/asm/io.h
-> > > > @@ -204,7 +204,8 @@ static inline long ioport_panic(void)
-> > > >  
-> > > >  static inline void __iomem *ioport_map(unsigned long port, unsigned int len)
-> > > >  {
-> > > > -       return (void __iomem *) ioport_panic();
-> > > > +       pr_info("Trying to map an IO resource - it does not exit on tile.\n");
-> > > > +       return NULL;
-> > > >  }
-> > > 
-> > > Why not just set CONFIG_NO_IOPORT and make this unavailable at compile time?
-> > > 
-> > >       Arnd
-> > 
-> > Well I think CONFIG_NO_IOPORT only has effect if you pull in asm-generic/io.h.
-> > This might work but I have no idea.
+On 11/09/2011 11:42 PM, Kenji Kaneshige wrote:
+
+> If the port supports Link speeds greater than 5.0 GT/s, we must wait
+> for 100 ms after Link training completes before sending configuration
+> request.
 > 
-> NO_IOPORT ha nothing to do with asm-generic, it just makes lib/iomap.c leave out
-> the calls to ioport_map, and prevent all drivers that call ioport_map from being
-> built.
-
-Yes. But lib/iomap.c isn't even linked unless GENERIC_IOMAP is set.
-
-> > Presumably whoever wrote that architecture considered and discarded setting GENERIC_IOMAP.
-> 
-> The tile PCI controller is apparently special in that it does not map the
-> PIO region into MMIO space, or make it available in any other way, so generic
-> iomap with IOCOND is pointless. Setting NO_IPORT will still mean that drivers
-> using ioport_map will not be built. This mostly impacts the legacy (non-AHCI)
-> ATA controllers, which I assume are not used on tile anyway.
-> 
-> 	Arnd
+> Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 
 
-I don't object to setting NO_IPORT at all, but this won't help address
-the problem this patch is fixing, which is to use a generic pci_iomap
-on tile.
 
--- 
-MST
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Yinghai Lu <yinghai@kernel.org>
