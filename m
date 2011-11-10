@@ -1,32 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:50226 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753626Ab1K2TU0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Nov 2011 14:20:26 -0500
-From: James Bottomley <jbottomley@parallels.com>
-To: Joerg Roedel <joerg.roedel@amd.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: pci: fix ats compile failure
-Date: Tue, 29 Nov 2011 19:20:23 +0000
-Message-ID: <1322594422.11875.47.camel@dabdike.int.hansenpartnership.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:57188 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494Ab1KJHma (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2011 02:42:30 -0500
+Message-ID: <4EBB8058.6090500@jp.fujitsu.com>
+Date: Thu, 10 Nov 2011 16:42:16 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 MIME-Version: 1.0
+To: Yinghai Lu <yinghai.lu@oracle.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [PATCH 2/2] pciehp: wait 100 ms after Link Training check
+References: <4EB88238.4050409@oracle.com> <4EB8F434.6090003@jp.fujitsu.com> <4EB94A51.6070809@oracle.com> <4EB9A50D.1040302@oracle.com> <4EBB7F9B.8050703@jp.fujitsu.com>
+In-Reply-To: <4EBB7F9B.8050703@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SSBnZXQgdGhpcyBjb21waWxlIGZhaWx1cmUgb24gcGFyaXNjOg0KDQpkcml2ZXJzL3BjaS9hdHMu
-YzogSW4gZnVuY3Rpb24gJ2F0c19hbGxvY19vbmUnOg0KZHJpdmVycy9wY2kvYXRzLmM6Mjk6IGVy
-cm9yOiBpbXBsaWNpdCBkZWNsYXJhdGlvbiBvZiBmdW5jdGlvbiAna3phbGxvYycNCmRyaXZlcnMv
-cGNpL2F0cy5jOjI5OiB3YXJuaW5nOiBhc3NpZ25tZW50IG1ha2VzIHBvaW50ZXIgZnJvbSBpbnRl
-Z2VyIHdpdGhvdXQgYSBjYXN0DQpkcml2ZXJzL3BjaS9hdHMuYzogSW4gZnVuY3Rpb24gJ2F0c19m
-cmVlX29uZSc6DQpkcml2ZXJzL3BjaS9hdHMuYzo0NTogZXJyb3I6IGltcGxpY2l0IGRlY2xhcmF0
-aW9uIG9mIGZ1bmN0aW9uICdrZnJlZScNCg0KQmVjYXVzZSBhdHMuYyBpcyBtaXNzaW5nIGxpbnV4
-L3NsYWIuaCBhcyBhbiBpbmNsdWRlLiAgVGhpcyBwYXRjaCBmaXhlcyBpdA0KDQpTaWduZWQtb2Zm
-LWJ5OiBKYW1lcyBCb3R0b21sZXkgPEpCb3R0b21sZXlAUGFyYWxsZWxzLmNvbT4NCg0KLS0tDQoN
-CmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9hdHMuYyBiL2RyaXZlcnMvcGNpL2F0cy5jDQppbmRl
-eCA3ZWM1NmZiLi5iMGRkMDhlIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvYXRzLmMNCisrKyBi
-L2RyaXZlcnMvcGNpL2F0cy5jDQpAQCAtMTMsNiArMTMsNyBAQA0KICNpbmNsdWRlIDxsaW51eC9l
-eHBvcnQuaD4NCiAjaW5jbHVkZSA8bGludXgvcGNpLWF0cy5oPg0KICNpbmNsdWRlIDxsaW51eC9w
-Y2kuaD4NCisjaW5jbHVkZSA8bGludXgvc2xhYi5oPg0KIA0KICNpbmNsdWRlICJwY2kuaCINCiAN
-Cg0K
+If the port supports Link speeds greater than 5.0 GT/s, we must wait
+for 100 ms after Link training completes before sending configuration
+request.
+
+Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+Index: linux-3.1/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-3.1.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-3.1/drivers/pci/hotplug/pciehp_hpc.c
+@@ -302,6 +302,14 @@ int pciehp_check_link_status(struct cont
+ 		return retval;
+ 	}
+ 
++	/*
++	 * If the port supports Link speeds greater than 5.0 GT/s, we
++	 * must wait for 100 ms after Link training completes before
++	 * sending configuration request.
++	 */
++	if (ctrl->pcie->port->subordinate->max_bus_speed > PCIE_SPEED_5_0GT)
++		msleep(100);
++
+ 	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
+ 
+ 	return retval;
