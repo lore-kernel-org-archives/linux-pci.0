@@ -1,60 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:44768 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934935Ab1KJObF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2011 09:31:05 -0500
-Date: Thu, 10 Nov 2011 07:31:02 -0700
-From: Matthew Wilcox <matthew@wil.cx>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-pci@vger.kernel.org, mstowe@redhat.com, ddutile@redhat.com,
-	jparadis@redhat.com, matthew.wilcox@linux.intel.com,
-	jbarnes@virtuousgeek.org
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-Message-ID: <20111110143102.GP22937@parisc-linux.org>
-References: <1320933613-25909-1-git-send-email-prarit@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 2/3] PCI: Maintain a list of FW-assigned BIOS BAR values
+To: jbarnes@virtuousgeek.org
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org
+Date: Wed, 09 Nov 2011 17:43:51 -0700
+Message-ID: <20111110004351.5866.40960.stgit@amt.stowe>
+In-Reply-To: <20111110004339.5866.28478.stgit@amt.stowe>
+References: <20111110004339.5866.28478.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1320933613-25909-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 10, 2011 at 09:00:13AM -0500, Prarit Bhargava wrote:
-> Stratus systems have a hierarchy that includes a PCIE Downstream bridge
-> connected to a PCIE Upstream bridge and a PCI Downstream bridge.  The system
-> boots with this wrong hierarchy into a crippled mode (USB doesn't work,
-> network doesn't work ...).  Avoiding the Downstream bridge check in
-> only_one_child() causes all the bridges to be enumerated and the system
-> to function properly.
+From: Myron Stowe <mstowe@redhat.com>
 
-> @@ -1275,7 +1276,15 @@ static int only_one_child(struct pci_bus *bus)
->  	struct pci_dev *parent = bus->self;
->  	if (!parent || !pci_is_pcie(parent))
->  		return 0;
-> -	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
-> +	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
-> +		return 1;
-> +	/*
-> +	 * Stratus/NEC ftServer systems have a broken PCIE hierarchy in which
-> +	 * one upstream and one downstream port are plugged into a downstream
-> +	 * port.  Avoiding the downstream port check here results in a
-> +	 * functional system.
-> +	 */
-> +	if (!dmi_name_in_vendors("ftServer") &&
->  	    parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
->  		return 1;
->  	return 0;
+Commit 58c84eda075 introduced functionality to try and reinstate the
+original BIOS BAR addresses of a PCI device when normal resource
+assignment attempts fail.  To keep track of the BIOS BAR addresses,
+struct pci_dev was augmented with an array to hold the BAR addresses
+of the PCI device: 'resource_size_t fw_addr[DEVICE_COUNT_RESOURCE]'.
 
-dmi_name_in_vendors is relatively expensive, so the order of these two
-should be swapped, at least:
+The reinstatement of BAR addresses is an uncommon event leaving the
+'fw_addr' array unused normally.  As the use of struct pci_dev is so
+prevalent, this seems wasteful.
 
-> 	if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM &&
->  	    !dmi_name_in_vendors("ftServer"))
+This patch introduces a stand alone data structure and corresponding set
+of interfacing routines for maintaining a list of FW-assigned BIOS BAR
+value temporary entries.
 
-Plus, this gets called for every PCI bridge.  We should be caching it
-somewhere, so it's only called once.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+ drivers/pci/setup-res.c |   73 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h     |    1 +
+ 2 files changed, 74 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index ad8c4ae..ab45c11 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -26,6 +26,79 @@
+ #include "pci.h"
+ 
+ 
++/*
++ * This list of dynamic mappings is for temporarly maintaining
++ * original BIOS BAR addresses for possbile reinstatement.
++ */
++struct pci_fwaddrmap {
++	struct list_head list;
++	struct pci_dev *dev;
++	resource_size_t fw_addr[DEVICE_COUNT_RESOURCE];
++	unsigned long refcount;
++};
++
++static LIST_HEAD(pci_fwaddrmappings);
++static DEFINE_SPINLOCK(pci_fwaddrmap_lock);
++
++/* Must be called with 'pci_fwaddrmap_lock' lock held. */
++static struct pci_fwaddrmap *pci_fwaddrmap_lookup(struct pci_dev *dev)
++{
++	struct pci_fwaddrmap *map;
++
++	list_for_each_entry(map, &pci_fwaddrmappings, list)
++		if (map->dev == dev)
++			return map;
++
++	return NULL;
++}
++
++void pci_save_fw_addr(struct pci_dev *dev, int idx, resource_size_t fw_addr)
++{
++	unsigned long flags;
++	struct pci_fwaddrmap *map;
++
++	spin_lock_irqsave(&pci_fwaddrmap_lock, flags);
++	map = pci_fwaddrmap_lookup(dev);
++	if (!map) {
++		spin_unlock_irqrestore(&pci_fwaddrmap_lock, flags);
++		map = kzalloc(sizeof(*map), GFP_KERNEL);
++		if (!map)
++			return;
++
++		INIT_LIST_HEAD(&map->list);
++		map->dev = dev;
++		map->fw_addr[idx] = fw_addr;
++
++		spin_lock_irqsave(&pci_fwaddrmap_lock, flags);
++		list_add_tail(&map->list, &pci_fwaddrmappings);
++	} else {
++		map->fw_addr[idx] = fw_addr;
++	}
++	map->refcount++;
++	spin_unlock_irqrestore(&pci_fwaddrmap_lock, flags);
++}
++
++static resource_size_t pci_retrieve_fw_addr(struct pci_dev *dev, int idx)
++{
++	unsigned long flags;
++	resource_size_t fw_addr = 0;
++	struct pci_fwaddrmap *map;
++
++	spin_lock_irqsave(&pci_fwaddrmap_lock, flags);
++	map = pci_fwaddrmap_lookup(dev);
++	if (map) {
++		fw_addr = map->fw_addr[idx];
++
++		if (!--map->refcount) {
++			list_del(&map->list);
++			kfree(map);
++		}
++	}
++	spin_unlock_irqrestore(&pci_fwaddrmap_lock, flags);
++
++	return fw_addr;
++}
++
+ void pci_update_resource(struct pci_dev *dev, int resno)
+ {
+ 	struct pci_bus_region region;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 84225c7..14f2492 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -889,6 +889,7 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+ int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+ 
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
++void pci_save_fw_addr(struct pci_dev *dev, int idx, resource_size_t fw_addr);
+ void pci_bus_assign_resources(const struct pci_bus *bus);
+ void pci_bus_size_bridges(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+
