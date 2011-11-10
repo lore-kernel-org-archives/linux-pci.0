@@ -1,88 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 11 Nov 2011 09:28:11 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Matthew Garrett <mjg@redhat.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Rework ASPM disable code
-Message-ID: <20111111092811.54a03027@jbarnes-desktop>
-In-Reply-To: <CACna6rwxWUtfa2uz1hXVUthSpJF6SKP3V-ERt0=3oVQ2KKEo=g@mail.gmail.com>
-References: <1320961113-5050-1-git-send-email-mjg@redhat.com>
-	<CACna6rwxWUtfa2uz1hXVUthSpJF6SKP3V-ERt0=3oVQ2KKEo=g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.MBNHS/g+64/X46UHts1VUw"; protocol="application/pgp-signature"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:7513 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751498Ab1KJOCX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Nov 2011 09:02:23 -0500
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>, mstowe@redhat.com,
+	ddutile@redhat.com, jparadis@redhat.com,
+	matthew.wilcox@linux.intel.com, jbarnes@virtuousgeek.org
+Subject: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+Date: Thu, 10 Nov 2011 09:00:13 -0500
+Message-Id: <1320933613-25909-1-git-send-email-prarit@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/.MBNHS/g+64/X46UHts1VUw
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Stratus systems have a hierarchy that includes a PCIE Downstream bridge
+connected to a PCIE Upstream bridge and a PCI Downstream bridge.  The system
+boots with this wrong hierarchy into a crippled mode (USB doesn't work,
+network doesn't work ...).  Avoiding the Downstream bridge check in
+only_one_child() causes all the bridges to be enumerated and the system
+to function properly.
 
-On Fri, 11 Nov 2011 10:49:02 +0100
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+Unfortunately this hardware is currently available so we should at least
+keep it functional.
 
-> 2011/11/10 Matthew Garrett <mjg@redhat.com>:
-> > Right now we forcibly clear ASPM state on all devices if the BIOS indic=
-ates
-> > that the feature isn't supported. Based on the Microsoft presentation
-> > "PCI Express In Depth for Windows Vista and Beyond", I'm starting to th=
-ink
-> > that this may be an error. The implication is that unless the platform
-> > grants full control via _OSC, Windows will not touch any PCIe features -
-> > including ASPM. In that case clearing ASPM state would be an error unle=
-ss
-> > the platform has granted us that control.
-> >
-> > This patch reworks the ASPM disabling code such that the actual clearing
-> > of state is triggered by a successful handoff of PCIe control to the OS.
-> > The general ASPM code undergoes some changes in order to ensure that the
-> > ability to clear the bits isn't overridden by ASPM having already been
-> > disabled. Further, this theoretically now allows for situations where
-> > only a subset of PCIe roots hand over control, leaving the others in the
-> > BIOS state.
-> >
-> > It's difficult to know for sure that this is the right thing to do -
-> > there's zero public documentation on the interaction between all of the=
-se
-> > components. But enough vendors enable ASPM on platforms and then set th=
-is
-> > bit that it seems likely that they're expecting the OS to leave them al=
-one.
-> >
-> > Measured to save around 5W on an idle Thinkpad X220.
-> >
-> > Signed-off-by: Matthew Garrett <mjg@redhat.com>
->=20
-> Does it make sense to CC stable? To get it into 2.6.38+?
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
-It's a pretty serious change that affects a lot of platforms, so I'd be
-nervous about sticking it in stable right away.  Maybe after some soak
-time upstream and/or broad testing in distros.
+Cc: mstowe@redhat.com
+Cc: ddutile@redhat.com
+Cc: jparadis@redhat.com
+Cc: matthew.wilcox@linux.intel.com
+Cc: jbarnes@virtuousgeek.org
+---
+ drivers/pci/probe.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 04e74f4..bc76812 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -10,6 +10,7 @@
+ #include <linux/module.h>
+ #include <linux/cpumask.h>
+ #include <linux/pci-aspm.h>
++#include <linux/dmi.h>
+ #include "pci.h"
+ 
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+@@ -1275,7 +1276,15 @@ static int only_one_child(struct pci_bus *bus)
+ 	struct pci_dev *parent = bus->self;
+ 	if (!parent || !pci_is_pcie(parent))
+ 		return 0;
+-	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
++	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
++		return 1;
++	/*
++	 * Stratus/NEC ftServer systems have a broken PCIE hierarchy in which
++	 * one upstream and one downstream port are plugged into a downstream
++	 * port.  Avoiding the downstream port check here results in a
++	 * functional system.
++	 */
++	if (!dmi_name_in_vendors("ftServer") &&
+ 	    parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
+ 		return 1;
+ 	return 0;
+-- 
+1.7.1
 
---Sig_/.MBNHS/g+64/X46UHts1VUw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJOvVsrAAoJEIEoDkX4Qk9hABcP/1eENSG0J1UOQx6hdVL6BHOt
-aKFD88odJqb12rQ3G0pvvf5pygBFHTgFMYMbrixyxLOCiiFDZ64oyV+przAlkpn9
-zW9vcb6q0VonwhdhpapiPcwQfZfTSQVQqQ8sdoqYg6+JiTizgtaBqFhEKyelcIIl
-OrybBKUr+5d480OJQ2Z9wLm3ggDuMlfDqGQfiHpvkTHdbYqPCtU2vwfL+wJ/z63L
-wcGIGm27x0Ttv7V7MqvP0iF/saa7mmDGldxlaxkPqrU7HtRWQ26t8d8hsWrv2cww
-qtuQXloeeioxXYKdfNATB2Gr+6YumMKl3WG7z4xwLlH3p7EdCNiBchHEOuZ1uM7C
-uKeCDN3ttd0P2LpMKkd3laDzJlv9NZ4is4iZ/sirbuPrkOQy1o3hC1uhnSUeXjLf
-sdWrvw1TG/vV7srm6FyvusdXD8w97CG6o0Nt7Ja1wOMJUYMwo+KGh8vzAK96gUTl
-4QyHoCTE5JImbTaE5GwbBMOK9j9eGxFZ107bQshTp5H41oOV2XD2hnIlds2omzRA
-b/9ZCOz0xCpxODgbNuNikyWYDYGQsiA0m3rix9g5ikX1mF3gPT4F4skkE2ArBPgp
-eSXO6ewyFLmd2MVKDuPOg2X+Z/NXoAjjkQ5l5Grx289vfD2XABe9DjOKg3OwyjKU
-6Xh7XjQjzjAprnIEcx4M
-=VUiW
------END PGP SIGNATURE-----
-
---Sig_/.MBNHS/g+64/X46UHts1VUw--
