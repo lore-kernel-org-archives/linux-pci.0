@@ -1,39 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:47158 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab1KKNLt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 08:11:49 -0500
-Date: Fri, 11 Nov 2011 13:11:44 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Vasiliy Averin <vvs@parallels.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	Adaptec OEM Raid Solutions <aacraid@adaptec.com>,
-	Mark Salyzyn <mark_salyzyn@us.xyratex.com>,
-	Shaohua Li <shaohua.li@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: aacraid controller hangs if kernel uses non-default ASPM policy
-Message-ID: <20111111131144.GB10242@srcf.ucam.org>
-References: <4EBCEDED.7030907@parallels.com>
- <1321014474.5161.10.camel@dabdike.int.hansenpartnership.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:44768 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934935Ab1KJObF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2011 09:31:05 -0500
+Date: Thu, 10 Nov 2011 07:31:02 -0700
+From: Matthew Wilcox <matthew@wil.cx>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-pci@vger.kernel.org, mstowe@redhat.com, ddutile@redhat.com,
+	jparadis@redhat.com, matthew.wilcox@linux.intel.com,
+	jbarnes@virtuousgeek.org
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+Message-ID: <20111110143102.GP22937@parisc-linux.org>
+References: <1320933613-25909-1-git-send-email-prarit@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1321014474.5161.10.camel@dabdike.int.hansenpartnership.com>
+In-Reply-To: <1320933613-25909-1-git-send-email-prarit@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 11, 2011 at 12:27:55PM +0000, James Bottomley wrote:
+On Thu, Nov 10, 2011 at 09:00:13AM -0500, Prarit Bhargava wrote:
+> Stratus systems have a hierarchy that includes a PCIE Downstream bridge
+> connected to a PCIE Upstream bridge and a PCI Downstream bridge.  The system
+> boots with this wrong hierarchy into a crippled mode (USB doesn't work,
+> network doesn't work ...).  Avoiding the Downstream bridge check in
+> only_one_child() causes all the bridges to be enumerated and the system
+> to function properly.
 
-> The next question is: is the driver the correct place?  This sounds like
-> a PCIe Link Power Management blacklist set ... which might need updating
-> on the fly ... might we need a user knob for this (like we have for the
-> SCSI black/white list)?
+> @@ -1275,7 +1276,15 @@ static int only_one_child(struct pci_bus *bus)
+>  	struct pci_dev *parent = bus->self;
+>  	if (!parent || !pci_is_pcie(parent))
+>  		return 0;
+> -	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
+> +		return 1;
+> +	/*
+> +	 * Stratus/NEC ftServer systems have a broken PCIE hierarchy in which
+> +	 * one upstream and one downstream port are plugged into a downstream
+> +	 * port.  Avoiding the downstream port check here results in a
+> +	 * functional system.
+> +	 */
+> +	if (!dmi_name_in_vendors("ftServer") &&
+>  	    parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
+>  		return 1;
+>  	return 0;
 
-The only thing that knows whether any given piece of hardware is broken 
-here is the hardware-specific driver. There's already a user knob for 
-this, but some devices will fall over the moment the hardware is enabled 
-if the ASPM state is broken which makes it more difficult to fix up that 
-way.
+dmi_name_in_vendors is relatively expensive, so the order of these two
+should be swapped, at least:
+
+> 	if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM &&
+>  	    !dmi_name_in_vendors("ftServer"))
+
+Plus, this gets called for every PCI bridge.  We should be caching it
+somewhere, so it's only called once.
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
