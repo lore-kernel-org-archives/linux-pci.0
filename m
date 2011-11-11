@@ -1,38 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35319 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35008 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755110Ab1KPQYR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Nov 2011 11:24:17 -0500
+	id S1753386Ab1KKRG0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Nov 2011 12:06:26 -0500
 From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH] PCI: Fix PCI_EXP_TYPE_RC_EC value
-To: linux-pci@vger.kernel.org, jbarnes@virtuousgeek.org
-Cc: linux-kernel@vger.kernel.org, alex.williamson@redhat.com
-Date: Wed, 16 Nov 2011 09:24:16 -0700
-Message-ID: <20111116162350.7705.28083.stgit@bling.home>
+Subject: [PATCH 0/2] PCI: PRI/PASSID cleanup and fix
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jbarnes@virtuousgeek.org,
+	joerg.roedel@amd.com, bhelgaas@google.com
+Date: Fri, 11 Nov 2011 10:06:23 -0700
+Message-ID: <20111111170319.32668.48479.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Spec shows this as 1010b = 0xa
+As suggested by Joerg, here's a split patch, separating a bug
+fix in the PASID code incorrectly using a reserved bit in
+the capability register from the renaming consistency changes
+that found the bug.  Thanks,
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Alex
+
 ---
 
- include/linux/pci_regs.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Alex Williamson (2):
+      PCI: More PRI/PASID cleanup
+      PCI: Enable is not exposed as a PASID capability
 
-diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-index 090d3a9..9e37250 100644
---- a/include/linux/pci_regs.h
-+++ b/include/linux/pci_regs.h
-@@ -392,7 +392,7 @@
- #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
- #define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
- #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
--#define  PCI_EXP_TYPE_RC_EC	0x10	/* Root Complex Event Collector */
-+#define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
- #define PCI_EXP_FLAGS_SLOT	0x0100	/* Slot implemented */
- #define PCI_EXP_FLAGS_IRQ	0x3e00	/* Interrupt message number */
- #define PCI_EXP_DEVCAP		4	/* Device capabilities */
 
+ drivers/pci/ats.c        |   70 +++++++++++++++++++++++-----------------------
+ include/linux/pci_regs.h |   30 +++++++++++---------
+ 2 files changed, 51 insertions(+), 49 deletions(-)
