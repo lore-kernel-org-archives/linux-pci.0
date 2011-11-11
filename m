@@ -1,75 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:35007 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750784Ab1KKR7O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:59:14 -0500
-Date: Fri, 11 Nov 2011 09:59:30 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
-	vapier@gentoo.org, dhowells@redhat.com, ysato@users.sourceforge.jp,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, benh@kernel.crashing.org, paulus@samba.org,
-	lethal@linux-sh.org, davem@davemloft.net, cmetcalf@tilera.com,
-	gxt@mprc.pku.edu.cn, tglx@linutronix.de, mingo@redhat.com,
-	chris@zankel.net, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -v2 00/16] PCI: Re-factor PCI's 'latency timer' setup
-Message-ID: <20111111095930.22abd773@jbarnes-desktop>
-In-Reply-To: <20111028214726.20088.30551.stgit@amt.stowe>
-References: <20111028214726.20088.30551.stgit@amt.stowe>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/jzaX_Ov.C2e6LC6GO32+y9r"; protocol="application/pgp-signature"
+Received: from mx1.redhat.com ([209.132.183.28]:35776 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752848Ab1KKWuG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Nov 2011 17:50:06 -0500
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH] intel-iommu: Default to non-coherent for domains unattached
+ to iommus
+To: dwmw2@infradead.org
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chrisw@sous-sol.org,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Fri, 11 Nov 2011 15:49:56 -0700
+Message-ID: <20111111224849.9756.13368.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/jzaX_Ov.C2e6LC6GO32+y9r
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+domain_update_iommu_coherency() currently default to setting domains
+as coherent when the domain is not attached to any iommus.  This
+allows for a window in domain_context_mapping_one() where such a
+domain can update context entries non-coherenty, and only after
+update the domain capability to clear iommu_coherency.
 
-On Fri, 28 Oct 2011 15:47:26 -0600
-Myron Stowe <myron.stowe@redhat.com> wrote:
+This can be seen using KVM device assignment on VT-d systems that
+do not support coherency in the ecap register.  When a device is
+added to a guest, a domain is created (iommu_coherency = 0), the
+device is attached, and ranges are mapped.  If we then hot unplug
+the device, the coherency is updated and set to the default (1)
+since no iommus are attached to the domain.  A subsequenct attach
+of a device makes use of the same dmar domain (now marked coherent)
+updates context entries with cohrency enabled, and only disables
+coherency as the last step in the process.
 
-> The 'latency timer' of PCI devices, both Type 0 and Type 1,
-> is setup in architecture-specific code [see: pcibios_set_master()].
-> There are two approaches being taken by all the architectures - check
-> if the 'latency timer' is currently set between 16 and 255 and if not
-> bring it within bounds, or, do nothing (and then there is the
-> gratuitously different parisc implementation).
->=20
-> There is nothing architecture-specific about PCI's 'latency timer' so
-> this patch pulls the setup functionality up into the PCI core by
-> creating a generic 'pcibios_set_master()' function using the '__weak'
-> attribute which can be used by all architectures as a default which,
-> if necessary, can then be over-ridden by architecture-specific code.
+To fix this, switch domain_update_iommu_coherency() to use the
+safer, non-coherent default for domains not attached to iommus.
 
-I have acks from Chris, Ralf, and Mike.  Any other arch maintainers
-want to ack or nack this before it goes into my -next branch?
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Tested-by: Donald Dutile <ddutile@redhat.com>
+Acked-by: Donald Dutile <ddutile@redhat.com>
+---
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+ drivers/iommu/intel-iommu.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
---Sig_/jzaX_Ov.C2e6LC6GO32+y9r
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index c0c7820..6b9d8c1 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -560,7 +560,9 @@ static void domain_update_iommu_coherency(struct dmar_domain *domain)
+ {
+ 	int i;
+ 
+-	domain->iommu_coherency = 1;
++	i = find_first_bit(&domain->iommu_bmp, g_num_of_iommus);
++
++	domain->iommu_coherency = i < g_num_of_iommus ? 1 : 0;
+ 
+ 	for_each_set_bit(i, &domain->iommu_bmp, g_num_of_iommus) {
+ 		if (!ecap_coherent(g_iommus[i]->ecap)) {
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJOvWKCAAoJEIEoDkX4Qk9hz2YQALHY1AS+YiPeEERuESPfkbzY
-MYkg8/d+NP0bMRfwNCJxlIgh5iUy9vlfjyJ4gQkhx9TwTeAbnQ/5SXjP7tXUXAss
-ZFY3VaONy93vqgHWB5Jo9RChedSjM9bPF3n58CiVNN/hg4XAd1qXLG/QGauR+Opb
-YDpNO3Adk4SrkmgXlJZTQnH8ZS07g2p4TW0JdNg5QeKk16avXpGzvUS30xR0oaDN
-3LMFiTdDecU0RuouSpQ/7U/4q/+t2jIRk7OaahXLQhw3JyQB4GppI4cmrrt5Pk4R
-fUsX0nuvO1l6KyKOV0O4VLd1INhRW+1kaRShqFrzefEGO/vla3BFM2NyZ1SjtuBQ
-pCch97w9uM7h8cP8os82RzScp+GlSv+jvlN5OaCYLzr8S5xjfGWoKB5GWTHQHGr/
-wPJ2vS5CG2jonjkxLCabpk0yPLrffmgnoJhDarzXLL1NSOCockuqyX9zIgHCbWFo
-a3E75UZQA2XCzX+4XWPNGaV/KlhWSMUCjxS33NCWPR60EVT1wwpMptKlSlJtUkKO
-0w9gMMZQ3cEJ4agTyFs/pYX9bTBHmCEUUZCCYcawpgjr4HKUMCL6QsVvEPsfCCbF
-1ssuUHolRWiOefOcVCqZCzHUI+WGUeYY9rXG+LDGCV6bQUPHJF/kaozhnhVBuKEN
-rA7aryoIdXG+HcE42X/S
-=Mu6a
------END PGP SIGNATURE-----
-
---Sig_/jzaX_Ov.C2e6LC6GO32+y9r--
