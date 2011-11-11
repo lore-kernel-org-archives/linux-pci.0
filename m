@@ -1,61 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <20111109213149.749917727@clark.kroah.org>
-Date: Wed, 09 Nov 2011 13:32:03 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [076/264] xen-pcifront: Update warning comment to use e820_host option.
-In-Reply-To: <20111109213508.GA3476@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:38148 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753210Ab1KKRcs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:32:48 -0500
+Date: Fri, 11 Nov 2011 09:33:07 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: Rework ASPM disable code
+Message-ID: <20111111093307.3072ce80@jbarnes-desktop>
+In-Reply-To: <1320961113-5050-1-git-send-email-mjg@redhat.com>
+References: <1320961113-5050-1-git-send-email-mjg@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/r0St16k.wJdPI9cNAnTP/eh"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-3.1-stable review patch.  If anyone has any objections, please let me know.
+--Sig_/r0St16k.wJdPI9cNAnTP/eh
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-------------------
+On Thu, 10 Nov 2011 16:38:33 -0500
+Matthew Garrett <mjg@redhat.com> wrote:
 
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Right now we forcibly clear ASPM state on all devices if the BIOS indicat=
+es
+> that the feature isn't supported. Based on the Microsoft presentation
+> "PCI Express In Depth for Windows Vista and Beyond", I'm starting to think
+> that this may be an error. The implication is that unless the platform
+> grants full control via _OSC, Windows will not touch any PCIe features -
+> including ASPM. In that case clearing ASPM state would be an error unless
+> the platform has granted us that control.
+>=20
+> This patch reworks the ASPM disabling code such that the actual clearing
+> of state is triggered by a successful handoff of PCIe control to the OS.
+> The general ASPM code undergoes some changes in order to ensure that the
+> ability to clear the bits isn't overridden by ASPM having already been
+> disabled. Further, this theoretically now allows for situations where
+> only a subset of PCIe roots hand over control, leaving the others in the
+> BIOS state.
+>=20
+> It's difficult to know for sure that this is the right thing to do -
+> there's zero public documentation on the interaction between all of these
+> components. But enough vendors enable ASPM on platforms and then set this
+> bit that it seems likely that they're expecting the OS to leave them alon=
+e.
+>=20
+> Measured to save around 5W on an idle Thinkpad X220.
+>=20
 
-commit 917e3e65c35459d52f0d0b890aa5df0cad07a051 upstream.
+Applied to linux-next, thanks.
 
-With Xen changeset 23428 "libxl: Add 'e820_host' option to config file"
-the E820 as seen from the host can now be passed into the guest.
-This means that a PV guest can now:
- - Use the correct PCI I/O gap. Before these patches, Linux guest would
-   boot up and would tell:
-   [    0.000000] Allocating PCI resources starting at 40000000 (gap: 40000000:c0000000)
-   while in actuality the PCI I/O gap should have been:
-   [    0.000000] Allocating PCI resources starting at b0000000 (gap: b0000000:4c000000)
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
- - The PV domain with PCI devices was limited to 3GB. It now can be booted
-   with 4GB, 8GB, or whatever number you want. The PCI devices will now _not_ conflict
-   with System RAM. Meaning the drivers can load.
+--Sig_/r0St16k.wJdPI9cNAnTP/eh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: linux-pci@vger.kernel.org
-[v2: Made the string less broken up. Suggested by Joe Perches]
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
----
- drivers/pci/xen-pcifront.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+iQIcBAEBAgAGBQJOvVxTAAoJEIEoDkX4Qk9hiKIQALTMeSwgIeQ2G9z7J+0/f7Rw
+dpnIiyR5BMEQpaaoLnXgv8GCuSfF5hhc0m/WGZlgN79eLhrYIHieqNLAkKDuwdGM
+K6i3/i7igm11bu+92t5045aTyHQk2VAZc4eSUEj7lZdBgIcLYBlXKgECfgS+2rGO
+CuhobcM0iSzvwjz9y4Z5+2dcGg6NPVn0fKRyVW8iLzrCbyZoCviGjwTGYlXSsyad
+Eo67JFjylQkGRKRn1uWPqqlFr+DjRLjrvXI2Fq4A4ak4ZRtHimLwYLUOkUetMYEC
+aq2SxEkORA3MJLtHgeUMVNoe1VwN3tOAflQ/CbYheXCcFTPi7yEzS4fnhNq/87rx
+G2+r12DGAsjxP9PbU5Uk/UPB6Bcd4Avgu4WrEUsKbT/ZrMerXs7/224lyXtKROqs
+KcxOedUgocNwljWVHDr1z+MMz6iqK3Dp+YAGmYl4Xjx4jjhWuUrTswIj2AWEU7M5
+rpwWiWfyg5v6YCe194sokFpqSmL0MWhSyp8cJVMUqrY1VgX3QPC2G5ZIL/u0R46c
+csk2zhvIxCioVNki2QPig24T3ZxDEuivZsXbis1cWKRqPu5cKbIBYWM1gcy+t1Hp
+yxU7OYUR1LA0FytHOTY8G8Nx7GVdQffHqGnvMduVb3X4sr5a0QWw+zarqVZBJZB3
+foi94HROk/Q0UYada//y
+=2nAz
+-----END PGP SIGNATURE-----
 
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -400,9 +400,8 @@ static int pcifront_claim_resource(struc
- 			dev_info(&pdev->xdev->dev, "claiming resource %s/%d\n",
- 				pci_name(dev), i);
- 			if (pci_claim_resource(dev, i)) {
--				dev_err(&pdev->xdev->dev, "Could not claim "
--					"resource %s/%d! Device offline. Try "
--					"giving less than 4GB to domain.\n",
-+				dev_err(&pdev->xdev->dev, "Could not claim resource %s/%d! "
-+					"Device offline. Try using e820_host=1 in the guest config.\n",
- 					pci_name(dev), i);
- 			}
- 		}
-
-
+--Sig_/r0St16k.wJdPI9cNAnTP/eh--
