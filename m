@@ -1,52 +1,87 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 30 Nov 2011 17:59:25 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Chris Metcalf <cmetcalf@tilera.com>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
-Message-ID: <20111130155925.GA25812@redhat.com>
-References: <cover.1322592494.git.mst@redhat.com>
- <201111301404.41544.arnd@arndb.de>
- <20111130143122.GC21413@redhat.com>
- <201111301549.57430.arnd@arndb.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:60048 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765Ab1KKRl7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:41:59 -0500
+Date: Fri, 11 Nov 2011 12:41:58 -0500 (EST)
+From: James Paradis <jparadis@redhat.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
+	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+Message-ID: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <4EBC00DD.4010009@redhat.com>
+Content-Type: text/plain; charset=utf-8
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201111301549.57430.arnd@arndb.de>
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 30, 2011 at 03:49:57PM +0000, Arnd Bergmann wrote:
-> On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
-> > On Wed, Nov 30, 2011 at 02:04:41PM +0000, Arnd Bergmann wrote:
+Hmmm... would it be better to do this as a quirk or as a boot
+parameter?  I've heard reports that other systems may be running
+into similar issues... if we don't know exactly which systems
+these are then maybe a boot parameter would be a more flexible
+approach...
+
+--jim
+
+----- Original Message -----
+> On 11/10/2011 09:31 AM, Matthew Wilcox wrote:
+> > On Thu, Nov 10, 2011 at 09:00:13AM -0500, Prarit Bhargava wrote:
+> >> Stratus systems have a hierarchy that includes a PCIE Downstream
+> >> bridge
+> >> connected to a PCIE Upstream bridge and a PCI Downstream bridge.
+> >>  The system
+> >> boots with this wrong hierarchy into a crippled mode (USB doesn't
+> >> work,
+> >> network doesn't work ...).  Avoiding the Downstream bridge check
+> >> in
+> >> only_one_child() causes all the bridges to be enumerated and the
+> >> system
+> >> to function properly.
 > >
-> > > Ah, right. I didn't realize that the generic pci_iomap still attempts
-> > > to call ioport_map(). It would probably make sense to enclose
-> > > the ioport_map() call in pci_iomap() inside of #ifdef CONFIG_HAS_IOPORT.
-> > > It's not exactly beautiful, but probably the most correct solution
-> > > so that we can make any call to ioport_map() a build-time error on
-> > > architectures that set CONFIG_NO_IOPORT.
-> > 
-> > I'm not sure why do you want to do that.
-> > 
+> >> @@ -1275,7 +1276,15 @@ static int only_one_child(struct pci_bus
+> >> *bus)
+> >>   	struct pci_dev *parent = bus->self;
+> >>   	if (!parent || !pci_is_pcie(parent))
+> >>   		return 0;
+> >> -	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+> >> +	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
+> >> +		return 1;
+> >> +	/*
+> >> +	 * Stratus/NEC ftServer systems have a broken PCIE hierarchy in
+> >> which
+> >> +	 * one upstream and one downstream port are plugged into a
+> >> downstream
+> >> +	 * port.  Avoiding the downstream port check here results in a
+> >> +	 * functional system.
+> >> +	 */
+> >> +	if (!dmi_name_in_vendors("ftServer")&&
+> >>   	parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
+> >>   		return 1;
+> >>   	return 0;
+> >
+> > dmi_name_in_vendors is relatively expensive, so the order of these
+> > two
+> > should be swapped, at least:
+> >
+> >> 	if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM&&
+> >>   	!dmi_name_in_vendors("ftServer"))
+> >
+> > Plus, this gets called for every PCI bridge.  We should be caching
+> > it
+> > somewhere, so it's only called once.
+> >
+> Then i recommend a dmi_name_in_vendors() check at init; stick result
+> in
+> global (or local static), and then it's not exec'd on each bridge,
+> just
+> a simple flag check.
+> If that's the case, I'd re-cast my vote for putting the code in
+> pci_quirks
+> with an export, so it is tracked as a quirk.  that may get messy
+> wrt other arches though (the export in common code; not sure if
+> quirks is
+> included on all arches).
 > 
-> The problem is that any definition of ioport_map on architectures
-> that can't do it is potentially harmful. Calling panic() is
-> bad style as you pointed out, but simply returning NULL can
-> also be harmful because it's likely that some drivers are written
-> under the (false) assumption that ioport_map can never fail.
-> Getting a build-time error would be more helpful here IMHO.
 > 
-> 	Arnd
-
-Yes but uglifying these users is also bad, ifdefs in code are incredibly
-fragile. Isn't it enough to declare ioport_map __must_check?
-
--- 
-MST
