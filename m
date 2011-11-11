@@ -1,49 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37805 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752119Ab1KKUff (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Nov 2011 15:35:35 -0500
-Message-ID: <4EBD8714.30401@redhat.com>
-Date: Fri, 11 Nov 2011 15:35:32 -0500
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:34913 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753301Ab1KKQk3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 11:40:29 -0500
+Received: by ggnb2 with SMTP id b2so4347384ggn.19
+        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2011 08:40:28 -0800 (PST)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: James Paradis <jparadis@redhat.com>,
-	Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
-	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
-	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com> <4EBD73C8.8070407@redhat.com> <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com>
-In-Reply-To: <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAErSpo5X00LFs6XUcnqoogZEZhR2H4G7AJvh9+FAsvr3vMHkeA@mail.gmail.com>
+References: <20111028222432.30729.8431.stgit@bhelgaas.mtv.corp.google.com> <CAErSpo5X00LFs6XUcnqoogZEZhR2H4G7AJvh9+FAsvr3vMHkeA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 11 Nov 2011 09:40:07 -0700
+Message-ID: <CAErSpo5xAJowmEfLXnGkTXXF-4fbNMW2+JYg=5yPK3e-PZWsrw@mail.gmail.com>
+Subject: Re: [PATCH v3 00/34] Create PCI root buses with correct resources
+To: linux-pci@vger.kernel.org
+Cc: linux-arch@vger.kernel.org,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Deng-Cheng Zhu <dengcheng.zhu@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/11/2011 03:29 PM, Bjorn Helgaas wrote:
-> On Fri, Nov 11, 2011 at 12:13 PM, Don Dutile<ddutile@redhat.com>  wrote:
->> On 11/11/2011 12:41 PM, James Paradis wrote:
->>>
->>> Hmmm... would it be better to do this as a quirk or as a boot
->>> parameter?  I've heard reports that other systems may be running
->>
->> Hearsay?  if you have definite cases, then please share them,
->> so folks know when to flip the boot parameter on.  note: it would have to be
->> an early boot param as well.
+On Sat, Oct 29, 2011 at 10:25 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Oct 28, 2011 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> The most generic way to create a PCI root bus is with pci_scan_bus(), but that
+>> doesn't allow you to specify what resources are available on the bus, i.e.,
+>> what the host bridge apertures are.  This series fixes the problem by adding
+>> a new pci_scan_root_bus() interface that takes a list of bus resources.
 >
-> It'd definitely be good to know all the specific cases.
->
-> But merely sharing them so folks will know when to use the parameter
-> is a broken model.  We should make it work automatically, either with
-> some sort of machine-dependent quirk, or (preferably) with a change to
-> the generic algorithm so it can handle these "broken" topologies along
-> with all the correct ones.
->
-> Bjorn
+> These patches are also available here:
+> git://github.com/bjorn-helgaas/linux.git on
+> the "pci-scan-v3" branch.
 
-In this case, doing a check that the parent is downstream PPB and the child is
-downstream PPB could be done to identify the broken topology and automatically
-scan dev nums > 0.
+This series touches 13 architectures.  Most of the changes are fairly
+simple, but some (arm, parisc, powerpc) are more involved, so I'd
+appreciate any feedback you have.
 
+Since the 3.2 merge window is closed, I'm targeting these for 3.3.
+They don't all have to be merged at once, though we can't remove
+pci_create_bus() (patch 34/34) until all the arch patches are in.
 
-
-
+Bjorn
