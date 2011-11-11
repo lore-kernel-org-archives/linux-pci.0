@@ -1,39 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sous-sol.org ([216.99.217.87]:41073 "EHLO sequoia.sous-sol.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755854Ab1KPK2r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Nov 2011 05:28:47 -0500
-Date: Wed, 16 Nov 2011 02:28:29 -0800
-From: Chris Wright <chrisw@sous-sol.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: dwmw2@infradead.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chrisw@sous-sol.org, ddutile@redhat.com
-Subject: Re: [PATCH] intel-iommu: Manage iommu_coherency globally
-Message-ID: <20111116102829.GA3477@sequoia.sous-sol.org>
-References: <20111116040752.11878.18642.stgit@bling.home>
+Received: from cavan.codon.org.uk ([93.93.128.6]:56865 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757873Ab1KKNxD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 08:53:03 -0500
+Date: Fri, 11 Nov 2011 13:53:00 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Vasily Averin <vvs@parallels.com>
+Cc: James Bottomley <jbottomley@parallels.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	Adaptec OEM Raid Solutions <aacraid@adaptec.com>,
+	Mark Salyzyn <mark_salyzyn@us.xyratex.com>,
+	Shaohua Li <shaohua.li@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: aacraid controller hangs if kernel uses non-default ASPM policy
+Message-ID: <20111111135300.GA10798@srcf.ucam.org>
+References: <4EBCEDED.7030907@parallels.com>
+ <1321014474.5161.10.camel@dabdike.int.hansenpartnership.com>
+ <20111111131144.GB10242@srcf.ucam.org>
+ <4EBD278B.6050707@parallels.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111116040752.11878.18642.stgit@bling.home>
+In-Reply-To: <4EBD278B.6050707@parallels.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Alex Williamson (alex.williamson@redhat.com) wrote:
-> We currently manage iommu_coherency on a per domain basis,
-> choosing the safest setting across the iommus attached to a
-> particular domain.  This unfortunately has a bug that when
-> no iommus are attached, the domain defaults to coherent.
-> If we fall into this mode, then later add a device behind a
-> non-coherent iommu to that domain, the context entry is
-> updated using the wrong coherency setting, and we get dmar
-> faults.
-> 
-> Since we expect chipsets to be consistent in their coherency
-> setting, we can instead determine the coherency once and use
-> it globally.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+On Fri, Nov 11, 2011 at 05:47:55PM +0400, Vasily Averin wrote:
 
-Looks good to me.
+> It's quite hard to identify all affected hardware, as far as I understand in all cases it was various controllers.
+> Probably hardware vendor could do it, but I doubt that it is possible in current situation.
 
-Acked-by: Chris Wright <chrisw@sous-sol.org>
+Yeah, without assistance from the vendor it becomes much harder to do. 
+It's worth noting that there are (as far as I know) no situations in 
+which we'll enable ASPM when Windows won't if the "Maximum power 
+savings" option is enabled, so hardware that's broken on Linux should 
+also be broken on Windows. In theory ASPM should be blacklisted in the 
+Windows driver .inf, but it turns out that some vendors do it directly 
+in the drivers instead.
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
