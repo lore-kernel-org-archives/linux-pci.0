@@ -1,54 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([88.198.83.132]:42773 "EHLO 8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753047Ab1KTMAp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 20 Nov 2011 07:00:45 -0500
-Date: Sun, 20 Nov 2011 13:00:43 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <Joerg.Roedel@amd.com>, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org, dwmw2@infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iommu: Include MSI susceptibility to DMA in creating
-	iommu groups
-Message-ID: <20111120120043.GB20535@8bytes.org>
-References: <20111117170800.3125.84150.stgit@bling.home> <20111118104651.GJ5627@amd.com> <1321628190.26410.63.camel@bling.home> <20111118152710.GA5098@amd.com> <1321633956.26410.126.camel@bling.home>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62254 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754267Ab1KKJtE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 04:49:04 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1321633956.26410.126.camel@bling.home>
+In-Reply-To: <1320961113-5050-1-git-send-email-mjg@redhat.com>
+References: <1320961113-5050-1-git-send-email-mjg@redhat.com>
+Date: Fri, 11 Nov 2011 10:49:02 +0100
+Message-ID: <CACna6rwxWUtfa2uz1hXVUthSpJF6SKP3V-ERt0=3oVQ2KKEo=g@mail.gmail.com>
+Subject: Re: [PATCH] pci: Rework ASPM disable code
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 09:32:36AM -0700, Alex Williamson wrote:
-> I guess I fail to see the difference.  We group devices behind certain
-> bridges together because we can't distinguish DMA from those devices.
-> MSI presents an address window across all devices for which we
-> potentially can't distinguish between any of them.
+2011/11/10 Matthew Garrett <mjg@redhat.com>:
+> Right now we forcibly clear ASPM state on all devices if the BIOS indicates
+> that the feature isn't supported. Based on the Microsoft presentation
+> "PCI Express In Depth for Windows Vista and Beyond", I'm starting to think
+> that this may be an error. The implication is that unless the platform
+> grants full control via _OSC, Windows will not touch any PCIe features -
+> including ASPM. In that case clearing ASPM state would be an error unless
+> the platform has granted us that control.
+>
+> This patch reworks the ASPM disabling code such that the actual clearing
+> of state is triggered by a successful handoff of PCIe control to the OS.
+> The general ASPM code undergoes some changes in order to ensure that the
+> ability to clear the bits isn't overridden by ASPM having already been
+> disabled. Further, this theoretically now allows for situations where
+> only a subset of PCIe roots hand over control, leaving the others in the
+> BIOS state.
+>
+> It's difficult to know for sure that this is the right thing to do -
+> there's zero public documentation on the interaction between all of these
+> components. But enough vendors enable ASPM on platforms and then set this
+> bit that it seems likely that they're expecting the OS to leave them alone.
+>
+> Measured to save around 5W on an idle Thinkpad X220.
+>
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
 
-With an IOMMU the address window is per-device and not shared between
-all devices. A MSI message is nothing more than a DMA write transaction
-to a specific address. This message has a requestor-id so an IOMMU can
-distinguish between devices. The AMD IOMMU for example uses that to
-implement per-device remapping tables.
+Does it make sense to CC stable? To get it into 2.6.38+?
 
-> The trouble is that interrupt remapping closing a hole in DMA isolation
-> is a platform issue.  Is vfio supposed to know that on architecture foo
-> we don't have such a hole and we don't need to look for interrupt
-> remapping.  Or maybe that platform bar solved it differently and we need
-> to instead check flag MSI_OK.  Current KVM doesn't care about this
-> because it only does device assignment on x86.
-
->From device standpoint a MSI transaction is always a DMA memory write
-to a given address range. The IOMMU-API should export a feature flag
-whether it supports filtering on those transaction or not. We have that
-today with the IOMMU_CAP_INTR_REMAP. I agree that the interface to get
-this information is ugly because a domain is needed. But the interface
-can be fixed. While doing this I suggest to rename that feature
-IOMMU_CAP_INTR_ISOLATION or something like that.
-VFIO can then check for this flag on module-load and refuse to load if
-it is not available.
-
-Regards,
-
-	Joerg
-
+-- 
+Rafał
