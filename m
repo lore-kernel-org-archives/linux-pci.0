@@ -1,51 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51211 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37805 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751460Ab1K0N5n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 27 Nov 2011 08:57:43 -0500
-Date: Sun, 27 Nov 2011 15:59:16 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-next@vger.kernel.org, sfr@canb.auug.org.au,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: (repost) vhost tree for linux-next
-Message-ID: <20111127135916.GB23302@redhat.com>
-References: <20111124203843.GC4873@redhat.com>
- <20111127124816.GA23270@redhat.com>
- <1322401139.2992.1.camel@dabdike.int.hansenpartnership.com>
+	id S1752119Ab1KKUff (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Nov 2011 15:35:35 -0500
+Message-ID: <4EBD8714.30401@redhat.com>
+Date: Fri, 11 Nov 2011 15:35:32 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1322401139.2992.1.camel@dabdike.int.hansenpartnership.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: James Paradis <jparadis@redhat.com>,
+	Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
+	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com> <4EBD73C8.8070407@redhat.com> <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com>
+In-Reply-To: <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Nov 27, 2011 at 07:38:59AM -0600, James Bottomley wrote:
-> On Sun, 2011-11-27 at 14:48 +0200, Michael S. Tsirkin wrote:
-> > I normally merge things through Dave, Rusty, Jesse or Jens,
-> > not directly to Linus. However, sometimes there's a large change
-> > (for example, my recent RFC for pci_iomap changes)
-> > where estimating how it interacts with other platforms and planned
-> > changes in the next kernel would be beneficial.
-> > 
-> > For this purpose, it would be helpful if my tree were added to linux-next.
-> > The tree is:
-> > git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
-> > 
-> > Could you do this please?
-> > (The current contents of that tree was posted for review/feedback
-> > for the first time today.   It might make sense to give it a few days
-> > for any responses ...)
-> 
-> I'm a little confused by your to: field.  This is a linux-arch issue,
-> isn't it, since it's altering architecture implementations of a PCI
-> function rather than altering anything in SCSI or net?
-> 
-> James
+On 11/11/2011 03:29 PM, Bjorn Helgaas wrote:
+> On Fri, Nov 11, 2011 at 12:13 PM, Don Dutile<ddutile@redhat.com>  wrote:
+>> On 11/11/2011 12:41 PM, James Paradis wrote:
+>>>
+>>> Hmmm... would it be better to do this as a quirk or as a boot
+>>> parameter?  I've heard reports that other systems may be running
+>>
+>> Hearsay?  if you have definite cases, then please share them,
+>> so folks know when to flip the boot parameter on.  note: it would have to be
+>> an early boot param as well.
+>
+> It'd definitely be good to know all the specific cases.
+>
+> But merely sharing them so folks will know when to use the parameter
+> is a broken model.  We should make it work automatically, either with
+> some sort of machine-dependent quirk, or (preferably) with a change to
+> the generic algorithm so it can handle these "broken" topologies along
+> with all the correct ones.
+>
+> Bjorn
 
-Yes. Stephen Rothwell asked me to Cc widely to see if anyone
-objects to picking this stuff in linux-next.
-Sorry about any confusion.
+In this case, doing a check that the parent is downstream PPB and the child is
+downstream PPB could be done to identify the broken topology and automatically
+scan dev nums > 0.
 
--- 
-MST
+
+
+
