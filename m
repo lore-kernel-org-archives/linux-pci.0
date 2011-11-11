@@ -1,89 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:40690 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408Ab1KOSPL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 13:15:11 -0500
-Received: by yenq3 with SMTP id q3so923841yen.19
-        for <linux-pci@vger.kernel.org>; Tue, 15 Nov 2011 10:15:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <af06626e34e32043e3c4974290270ec1.squirrel@webmail.sf-mail.de>
-References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com>
- <4EBD73C8.8070407@redhat.com> <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com>
- <4EBD8714.30401@redhat.com> <4EC12962.2040105@redhat.com> <20111114181418.GE4387@parisc-linux.org>
- <4EC28B93.1060101@redhat.com> <af06626e34e32043e3c4974290270ec1.squirrel@webmail.sf-mail.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 Nov 2011 11:14:50 -0700
-Message-ID: <CAErSpo5=YFNMcDt59JU2HQJV2EZpy1khLLCxyPAf49w8m4=kOA@mail.gmail.com>
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Matthew Wilcox <matthew@wil.cx>,
-	Don Dutile <ddutile@redhat.com>,
-	James Paradis <jparadis@redhat.com>, linux-pci@vger.kernel.org,
-	mstowe@redhat.com, jbarnes@virtuousgeek.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 11 Nov 2011 09:28:11 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Matthew Garrett <mjg@redhat.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: Rework ASPM disable code
+Message-ID: <20111111092811.54a03027@jbarnes-desktop>
+In-Reply-To: <CACna6rwxWUtfa2uz1hXVUthSpJF6SKP3V-ERt0=3oVQ2KKEo=g@mail.gmail.com>
+References: <1320961113-5050-1-git-send-email-mjg@redhat.com>
+	<CACna6rwxWUtfa2uz1hXVUthSpJF6SKP3V-ERt0=3oVQ2KKEo=g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/.MBNHS/g+64/X46UHts1VUw"; protocol="application/pgp-signature"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 15, 2011 at 9:08 AM, Rolf Eike Beer <eike-kernel@sf-tec.de> wrote:
->> Trying [v2]....
->>
->>
->> pci: Workaround Stratus broken PCIE hierarchy
->>
->> Stratus systems have a hierarchy that includes a PCIE Downstream bridge
->> connected to a PCIE Upstream bridge and a PCI Downstream bridge.  The
->> system
->> boots with this wrong hierarchy into a crippled mode (USB doesn't work,
->> network doesn't work ...).  Avoiding the Downstream bridge check in
->> only_one_child() causes all the bridges to be enumerated and the system
->> to function properly.
->>
->> Unfortunately this hardware is currently available so we should at least
->> keep it functional.
->>
->> [v2]
->> - ddutile@redhat.com requested drivers/pci/quirks.c code
->> - matthew@will.cx requested that dmi_name_in_vendors() be called only once
->> with a static var check
->> - added a kernel parameter to enable scanning of all PCIE devices.
->>
->> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 6f45a73..f478bd5 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3589,6 +3589,9 @@ static int __init pci_setup(char *str)
->>                               pcie_bus_config = PCIE_BUS_PERFORMANCE;
->>                       } else if (!strncmp(str, "pcie_bus_peer2peer", 18)) {
->>                               pcie_bus_config = PCIE_BUS_PEER2PEER;
->> +                     } else if (!strncmp(str, "pcie_scan_all", 13)) {
->> +                             printk(KERN_ERR HW_ERR "PCIE: Scanning all devices.\n");
->> +                             pcie_scan_all = 1;
->>                       } else {
->>                               printk(KERN_ERR "PCI: Unknown option `%s'\n",
->>                                               str);
->
-> To scan all devices isn't an error, is it? The user has requested this, so
-> KERN_INFO should be enough.
->
-> Eike
+--Sig_/.MBNHS/g+64/X46UHts1VUw
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Is this problem a regression?  If so, what commit caused it?
-f07852d6442, which introduced only_one_child()?
+On Fri, 11 Nov 2011 10:49:02 +0100
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-Does Windows work on this system?
+> 2011/11/10 Matthew Garrett <mjg@redhat.com>:
+> > Right now we forcibly clear ASPM state on all devices if the BIOS indic=
+ates
+> > that the feature isn't supported. Based on the Microsoft presentation
+> > "PCI Express In Depth for Windows Vista and Beyond", I'm starting to th=
+ink
+> > that this may be an error. The implication is that unless the platform
+> > grants full control via _OSC, Windows will not touch any PCIe features -
+> > including ASPM. In that case clearing ASPM state would be an error unle=
+ss
+> > the platform has granted us that control.
+> >
+> > This patch reworks the ASPM disabling code such that the actual clearing
+> > of state is triggered by a successful handoff of PCIe control to the OS.
+> > The general ASPM code undergoes some changes in order to ensure that the
+> > ability to clear the bits isn't overridden by ASPM having already been
+> > disabled. Further, this theoretically now allows for situations where
+> > only a subset of PCIe roots hand over control, leaving the others in the
+> > BIOS state.
+> >
+> > It's difficult to know for sure that this is the right thing to do -
+> > there's zero public documentation on the interaction between all of the=
+se
+> > components. But enough vendors enable ASPM on platforms and then set th=
+is
+> > bit that it seems likely that they're expecting the OS to leave them al=
+one.
+> >
+> > Measured to save around 5W on an idle Thinkpad X220.
+> >
+> > Signed-off-by: Matthew Garrett <mjg@redhat.com>
+>=20
+> Does it make sense to CC stable? To get it into 2.6.38+?
 
-Is this something that could be fixed by a firmware upgrade?  If so,
-is there a Stratus/NEC bug report?
+It's a pretty serious change that affects a lot of platforms, so I'd be
+nervous about sticking it in stable right away.  Maybe after some soak
+time upstream and/or broad testing in distros.
 
-Is there a Red Hat bugzilla URL you could include?
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-What bad things would happen if we just turned on this
-Stratus-specific behavior all the time on all systems?  It looks like
-f07852d6442 is basically an optimization that makes pci_scan_slot()
-faster, so I assume one effect would be to slow down PCI enumeration
-for everybody.  By how much?
+--Sig_/.MBNHS/g+64/X46UHts1VUw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Bjorn
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOvVsrAAoJEIEoDkX4Qk9hABcP/1eENSG0J1UOQx6hdVL6BHOt
+aKFD88odJqb12rQ3G0pvvf5pygBFHTgFMYMbrixyxLOCiiFDZ64oyV+przAlkpn9
+zW9vcb6q0VonwhdhpapiPcwQfZfTSQVQqQ8sdoqYg6+JiTizgtaBqFhEKyelcIIl
+OrybBKUr+5d480OJQ2Z9wLm3ggDuMlfDqGQfiHpvkTHdbYqPCtU2vwfL+wJ/z63L
+wcGIGm27x0Ttv7V7MqvP0iF/saa7mmDGldxlaxkPqrU7HtRWQ26t8d8hsWrv2cww
+qtuQXloeeioxXYKdfNATB2Gr+6YumMKl3WG7z4xwLlH3p7EdCNiBchHEOuZ1uM7C
+uKeCDN3ttd0P2LpMKkd3laDzJlv9NZ4is4iZ/sirbuPrkOQy1o3hC1uhnSUeXjLf
+sdWrvw1TG/vV7srm6FyvusdXD8w97CG6o0Nt7Ja1wOMJUYMwo+KGh8vzAK96gUTl
+4QyHoCTE5JImbTaE5GwbBMOK9j9eGxFZ107bQshTp5H41oOV2XD2hnIlds2omzRA
+b/9ZCOz0xCpxODgbNuNikyWYDYGQsiA0m3rix9g5ikX1mF3gPT4F4skkE2ArBPgp
+eSXO6ewyFLmd2MVKDuPOg2X+Z/NXoAjjkQ5l5Grx289vfD2XABe9DjOKg3OwyjKU
+6Xh7XjQjzjAprnIEcx4M
+=VUiW
+-----END PGP SIGNATURE-----
+
+--Sig_/.MBNHS/g+64/X46UHts1VUw--
