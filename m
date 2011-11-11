@@ -1,60 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Nov 2011 09:32:50 -0800
-From: Greg KH <greg@kroah.com>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Rework ASPM disable code
-Message-ID: <20111111173250.GA8679@kroah.com>
-References: <1320961113-5050-1-git-send-email-mjg@redhat.com>
- <CACna6rwxWUtfa2uz1hXVUthSpJF6SKP3V-ERt0=3oVQ2KKEo=g@mail.gmail.com>
- <20111111092811.54a03027@jbarnes-desktop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20111111092811.54a03027@jbarnes-desktop>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:33196 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755503Ab1KKRbx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:31:53 -0500
+Date: Fri, 11 Nov 2011 09:32:12 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai.lu@oracle.com>
+Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] pciehp: wait 100 ms after Link Training check
+Message-ID: <20111111093212.3cceee91@jbarnes-desktop>
+In-Reply-To: <4EBC21C0.5070806@oracle.com>
+References: <4EB88238.4050409@oracle.com>
+	<4EB8F434.6090003@jp.fujitsu.com>
+	<4EB94A51.6070809@oracle.com>
+	<4EB9A50D.1040302@oracle.com>
+	<4EBB7F9B.8050703@jp.fujitsu.com>
+	<4EBB8058.6090500@jp.fujitsu.com>
+	<4EBC21C0.5070806@oracle.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Cnb5zmVCq1=OldTwZdAmrd7"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 11, 2011 at 09:28:11AM -0800, Jesse Barnes wrote:
-> On Fri, 11 Nov 2011 10:49:02 +0100
-> Rafał Miłecki <zajec5@gmail.com> wrote:
-> 
-> > 2011/11/10 Matthew Garrett <mjg@redhat.com>:
-> > > Right now we forcibly clear ASPM state on all devices if the BIOS indicates
-> > > that the feature isn't supported. Based on the Microsoft presentation
-> > > "PCI Express In Depth for Windows Vista and Beyond", I'm starting to think
-> > > that this may be an error. The implication is that unless the platform
-> > > grants full control via _OSC, Windows will not touch any PCIe features -
-> > > including ASPM. In that case clearing ASPM state would be an error unless
-> > > the platform has granted us that control.
-> > >
-> > > This patch reworks the ASPM disabling code such that the actual clearing
-> > > of state is triggered by a successful handoff of PCIe control to the OS.
-> > > The general ASPM code undergoes some changes in order to ensure that the
-> > > ability to clear the bits isn't overridden by ASPM having already been
-> > > disabled. Further, this theoretically now allows for situations where
-> > > only a subset of PCIe roots hand over control, leaving the others in the
-> > > BIOS state.
-> > >
-> > > It's difficult to know for sure that this is the right thing to do -
-> > > there's zero public documentation on the interaction between all of these
-> > > components. But enough vendors enable ASPM on platforms and then set this
-> > > bit that it seems likely that they're expecting the OS to leave them alone.
-> > >
-> > > Measured to save around 5W on an idle Thinkpad X220.
-> > >
-> > > Signed-off-by: Matthew Garrett <mjg@redhat.com>
-> > 
-> > Does it make sense to CC stable? To get it into 2.6.38+?
-> 
-> It's a pretty serious change that affects a lot of platforms, so I'd be
-> nervous about sticking it in stable right away.  Maybe after some soak
-> time upstream and/or broad testing in distros.
+--Sig_/Cnb5zmVCq1=OldTwZdAmrd7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I agree.
+On Thu, 10 Nov 2011 11:10:56 -0800
+Yinghai Lu <yinghai.lu@oracle.com> wrote:
 
-I'll watch what happens with this patch before being willing to stick it
-into the stable releases.
+> On 11/09/2011 11:42 PM, Kenji Kaneshige wrote:
+>=20
+> > If the port supports Link speeds greater than 5.0 GT/s, we must wait
+> > for 100 ms after Link training completes before sending configuration
+> > request.
+> >=20
+> > Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+>=20
+>=20
+>=20
+> Acked-by: Yinghai Lu <yinghai@kernel.org>
+> Tested-by: Yinghai Lu <yinghai@kernel.org>
 
-greg k-h
+Applied these two to my for-linus branch, thanks guys.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/Cnb5zmVCq1=OldTwZdAmrd7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOvVwcAAoJEIEoDkX4Qk9hQUkP/0x4u3lo3C9dil38Q/jOVqG6
+YA6v9D7um5EHTTZyeeeTGf8ZXrh0ZxOAIlIXC8WUCc4y2z6ilaKWL7yBFQ4q0Od7
+AeVE84So2ZFIHZfHRQfwbrwVExsGVbvbYpdjt7NToUdEJ0GabTMBsq95ilQ6IKMA
+MOk1bSUxsbAAATc5S61EsrqlKPy1VdFW+vTezfjtRjjKx2Um7f8sf8txDCEykJjd
+UdCVIMoNuRzZc/CPpHV2k3JzD0XcfmywXpUBWHJmMUj03ft+CMPcih8b9DRHdkF7
+SIokL47x/PnNkJo3/vgIqO+EXAijhQahrQfdGESjcq5wsRgcK6q0whwqCTjF/av5
+qUq4Nll0+PvsbPTDrDEsCLdiXa4dcw98r9HtBKmiPPpNYIKrHb/xNpuovnje5sgh
+H4GQ9Dcz/6Lk83OTzeKPRN/nJ9rMZeIsM3zcm63BSnghO7dDjxrPiJjB1sF+eqS5
+07KzUFBOrCaFk1bwAQRrfw6JVhxhckgQcXi77BIXLob7IHKhV4gD2cMWLsU7OxIp
+oKanmtEs2erhnZOpRHX8P9txtCw4xvz8klInK18R/yiPFOD0wNUrmlWtSMUuBL1o
+wdGuJJNBmNNehVOFR2zN8X+V1VAlCaub/A1ppe+snzz4BnImo/9M82SdvmSFwNDZ
+yJvVnOumMUyfi2C/lFwq
+=M8YV
+-----END PGP SIGNATURE-----
+
+--Sig_/Cnb5zmVCq1=OldTwZdAmrd7--
