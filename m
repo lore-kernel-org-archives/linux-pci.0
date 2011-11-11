@@ -1,55 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17929 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:26903 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754135Ab1KVRil (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Nov 2011 12:38:41 -0500
-Date: Tue, 22 Nov 2011 19:40:02 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Jean-Francois Dagenais <jeff.dagenais@gmail.com>,
-	"Hans J. Koch" <hjk@hansjkoch.de>, Greg KH <gregkh@suse.de>,
-	tglx@linutronix.de, linux-pci@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Message-ID: <20111122174001.GB29068@redhat.com>
-References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
- <20111118220849.GA25205@suse.de>
- <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
- <20111121173620.GA5028@suse.de>
- <20111121181724.GB12011@local>
- <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
- <20111122153525.GB17268@redhat.com>
- <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
- <20111122172725.GK4387@parisc-linux.org>
+	id S1758164Ab1KKTNO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Nov 2011 14:13:14 -0500
+Message-ID: <4EBD73C8.8070407@redhat.com>
+Date: Fri, 11 Nov 2011 14:13:12 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111122172725.GK4387@parisc-linux.org>
+To: James Paradis <jparadis@redhat.com>
+CC: Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
+	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 10:27:25AM -0700, Matthew Wilcox wrote:
-> On Tue, Nov 22, 2011 at 11:54:22AM -0500, Jean-Francois Dagenais wrote:
-> > That is quite interesting. It really seems like my VT-d recipe to create 128MB for my PCI-e
-> > FPGA to write into is covered by this patch.
-> > 
-> > My problem is that our FPGA is connected to one of the atom E6XX's PCI-e links, so no
-> > iommu :( Since our first product had VT-d, the FPGA, uio based module and userspace
-> > code is designed such that the device sees a huge contiguous memory chunk. This is key
-> > to the performance of the FPGA, which is essentially decoupled from the CPU for it's real-time
-> > acquisition.
-> 
-> Is it really key?  If you supported, ohidon'tknow, 2MB pages, you'd
-> need 64 entries in the FPGA to store the addresses of those 2MB pages,
-> which doesn't sound like a huge burden.
+On 11/11/2011 12:41 PM, James Paradis wrote:
+> Hmmm... would it be better to do this as a quirk or as a boot
+> parameter?  I've heard reports that other systems may be running
+Hearsay?  if you have definite cases, then please share them,
+so folks know when to flip the boot parameter on.  
+note: it would have to be an early boot param as well.
+> into similar issues... if we don't know exactly which systems
+> these are then maybe a boot parameter would be a more flexible
+> approach...
+>
+> --jim
+>
+> ----- Original Message -----
+>> On 11/10/2011 09:31 AM, Matthew Wilcox wrote:
+>>> On Thu, Nov 10, 2011 at 09:00:13AM -0500, Prarit Bhargava wrote:
+>>>> Stratus systems have a hierarchy that includes a PCIE Downstream
+>>>> bridge
+>>>> connected to a PCIE Upstream bridge and a PCI Downstream bridge.
+>>>>   The system
+>>>> boots with this wrong hierarchy into a crippled mode (USB doesn't
+>>>> work,
+>>>> network doesn't work ...).  Avoiding the Downstream bridge check
+>>>> in
+>>>> only_one_child() causes all the bridges to be enumerated and the
+>>>> system
+>>>> to function properly.
+>>>
+>>>> @@ -1275,7 +1276,15 @@ static int only_one_child(struct pci_bus
+>>>> *bus)
+>>>>    	struct pci_dev *parent = bus->self;
+>>>>    	if (!parent || !pci_is_pcie(parent))
+>>>>    		return 0;
+>>>> -	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+>>>> +	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
+>>>> +		return 1;
+>>>> +	/*
+>>>> +	 * Stratus/NEC ftServer systems have a broken PCIE hierarchy in
+>>>> which
+>>>> +	 * one upstream and one downstream port are plugged into a
+>>>> downstream
+>>>> +	 * port.  Avoiding the downstream port check here results in a
+>>>> +	 * functional system.
+>>>> +	 */
+>>>> +	if (!dmi_name_in_vendors("ftServer")&&
+>>>>    	parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
+>>>>    		return 1;
+>>>>    	return 0;
+>>>
+>>> dmi_name_in_vendors is relatively expensive, so the order of these
+>>> two
+>>> should be swapped, at least:
+>>>
+>>>> 	if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM&&
+>>>>    	!dmi_name_in_vendors("ftServer"))
+>>>
+>>> Plus, this gets called for every PCI bridge.  We should be caching
+>>> it
+>>> somewhere, so it's only called once.
+>>>
+>> Then i recommend a dmi_name_in_vendors() check at init; stick result
+>> in
+>> global (or local static), and then it's not exec'd on each bridge,
+>> just
+>> a simple flag check.
+>> If that's the case, I'd re-cast my vote for putting the code in
+>> pci_quirks
+>> with an export, so it is tracked as a quirk.  that may get messy
+>> wrt other arches though (the export in common code; not sure if
+>> quirks is
+>> included on all arches).
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Ah yes, we have this support for on-device IOMMUs. Maybe a generic
-access driver will work if you implement an IOMMU in FPGA.
-You would need to separate the programming of the IOMMU
-from the rest of the functionality of the device,
-protecting it from a malicious driver, somehow.
-
-> -- 
-> Matthew Wilcox				Intel Open Source Technology Centre
-> "Bill, look, we understand that you're interested in selling us this
-> operating system, but compare it to ours.  We can't possibly take such
-> a retrograde step."
