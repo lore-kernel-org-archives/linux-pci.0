@@ -1,57 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44661 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751460Ab1K0OAL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Nov 2011 09:00:11 -0500
-Subject: Re: (repost) vhost tree for linux-next
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-next@vger.kernel.org, sfr@canb.auug.org.au,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-In-Reply-To: <20111127135916.GB23302@redhat.com>
-References: <20111124203843.GC4873@redhat.com>
-	 <20111127124816.GA23270@redhat.com>
-	 <1322401139.2992.1.camel@dabdike.int.hansenpartnership.com>
-	 <20111127135916.GB23302@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 27 Nov 2011 08:00:08 -0600
-Message-ID: <1322402408.2992.4.camel@dabdike.int.hansenpartnership.com>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:56529 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756484Ab1KKRts (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:49:48 -0500
+Date: Fri, 11 Nov 2011 09:50:09 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] pciehp: Handle push button event asynchronously
+Message-ID: <20111111095009.163e4275@jbarnes-desktop>
+In-Reply-To: <4EB7C782.7060101@jp.fujitsu.com>
+References: <4EB7C703.6020504@jp.fujitsu.com>
+	<4EB7C782.7060101@jp.fujitsu.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/gT2gTTUm_1NQNwGrtld+5kj"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2011-11-27 at 15:59 +0200, Michael S. Tsirkin wrote:
-> On Sun, Nov 27, 2011 at 07:38:59AM -0600, James Bottomley wrote:
-> > On Sun, 2011-11-27 at 14:48 +0200, Michael S. Tsirkin wrote:
-> > > I normally merge things through Dave, Rusty, Jesse or Jens,
-> > > not directly to Linus. However, sometimes there's a large change
-> > > (for example, my recent RFC for pci_iomap changes)
-> > > where estimating how it interacts with other platforms and planned
-> > > changes in the next kernel would be beneficial.
-> > > 
-> > > For this purpose, it would be helpful if my tree were added to linux-next.
-> > > The tree is:
-> > > git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
-> > > 
-> > > Could you do this please?
-> > > (The current contents of that tree was posted for review/feedback
-> > > for the first time today.   It might make sense to give it a few days
-> > > for any responses ...)
-> > 
-> > I'm a little confused by your to: field.  This is a linux-arch issue,
-> > isn't it, since it's altering architecture implementations of a PCI
-> > function rather than altering anything in SCSI or net?
-> > 
-> > James
-> 
-> Yes. Stephen Rothwell asked me to Cc widely to see if anyone
-> objects to picking this stuff in linux-next.
-> Sorry about any confusion.
+--Sig_/gT2gTTUm_1NQNwGrtld+5kj
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I;m fine with that, but the fact that you didn't send it to linux-arch
-was more my point ...
+On Mon, 07 Nov 2011 20:56:50 +0900
+Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com> wrote:
 
-James
+> Use non-ordered workqueue for attention button events.
+>=20
+> Attention button events on each slot can be handled asynchronously. So
+> we should use non-ordered workqueue. This patch also removes ordered
+> workqueue in pciehp as a result.
+>=20
+> Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 
+Applied these two to -next, thanks.
 
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/gT2gTTUm_1NQNwGrtld+5kj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOvWBRAAoJEIEoDkX4Qk9hKGYQALXyzHCY6aM3oZWWSP2lHgfu
+TzZzs0x+jty40BLGhOQnYiXg0Nl5QawUwQG9JM7lMqk8xDBvoBO1Em7c4T4QcBBA
+FL/mNDbMMYyo1RVRaTIIVLnyTwI+c3Mmo4o8YrL4UOndBnxMw1w/l1CkwMxtrNU9
+qpZT69CaCGiGBkrIGsSbRMqb4BrLvIOBlAY9qZ0xrY5vFyK0cAEq0+A1cvEW0duj
+ftaW7tzYGyhhN9AiWEA+LtajuwciljPQllDi1bxMRMjGaj95gyQuBZR1SK43HJDs
+uTc00I2Iqam1v7VNrlAkQk0xf5WAKIegClgZuAvVBZoO7InufzVqO/Yj9ZyCZBsT
+kX39WFZDGHJO6COzNHYVYE7vaTf5mF/ZgrYhO4Z5O1U8RXU5F9b4nt6cRyZLDv6D
+bSa5TaNrmayQL073xeVF15iE7QTS4eM6DeAhp+cIocj1Qn7qc+VZ4CdI1CWOm6Tl
+aFRmDif8L+qYEtlmGFpYjuINLjhMwjlHPq8iF1CkId/0tv9iytvFw9HIjzNcpZji
+lx2V63goavfomsVO4UCOA2p/BQDJh4sPcaSk9klD9YQ8cwNsuQ5UbRWnTdubA0G9
+/7meK3IDZrIDayC7UjVe59DXOg6H35PyIOOdRcgEUeIA0JLddUXorJfh2JQz2mfE
+oFZYeaQFrYJE3iqCT4m3
+=OLtb
+-----END PGP SIGNATURE-----
+
+--Sig_/gT2gTTUm_1NQNwGrtld+5kj--
