@@ -1,44 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:34913 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753301Ab1KKQk3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 11:40:29 -0500
-Received: by ggnb2 with SMTP id b2so4347384ggn.19
-        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2011 08:40:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5X00LFs6XUcnqoogZEZhR2H4G7AJvh9+FAsvr3vMHkeA@mail.gmail.com>
-References: <20111028222432.30729.8431.stgit@bhelgaas.mtv.corp.google.com> <CAErSpo5X00LFs6XUcnqoogZEZhR2H4G7AJvh9+FAsvr3vMHkeA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 11 Nov 2011 09:40:07 -0700
-Message-ID: <CAErSpo5xAJowmEfLXnGkTXXF-4fbNMW2+JYg=5yPK3e-PZWsrw@mail.gmail.com>
-Subject: Re: [PATCH v3 00/34] Create PCI root buses with correct resources
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org,
-	James Bottomley <James.Bottomley@hansenpartnership.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Deng-Cheng Zhu <dengcheng.zhu@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:44143 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751092Ab1KKR5x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:57:53 -0500
+Date: Fri, 11 Nov 2011 09:58:14 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: ebiederm@xmission.com (Eric W. Biederman)
+Cc: <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] msi:  Disable msi interrupts when we initialize a pci
+ device
+Message-ID: <20111111095814.4c3fc3c9@jbarnes-desktop>
+In-Reply-To: <m1y5wj4ftd.fsf@fess.ebiederm.org>
+References: <m1y5wj4ftd.fsf@fess.ebiederm.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/C_X3jJI6YJxKbD2.R09VDj_"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 29, 2011 at 10:25 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Oct 28, 2011 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> The most generic way to create a PCI root bus is with pci_scan_bus(), but that
->> doesn't allow you to specify what resources are available on the bus, i.e.,
->> what the host bridge apertures are.  This series fixes the problem by adding
->> a new pci_scan_root_bus() interface that takes a list of bus resources.
->
-> These patches are also available here:
-> git://github.com/bjorn-helgaas/linux.git on
-> the "pci-scan-v3" branch.
+--Sig_/C_X3jJI6YJxKbD2.R09VDj_
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This series touches 13 architectures.  Most of the changes are fairly
-simple, but some (arm, parisc, powerpc) are more involved, so I'd
-appreciate any feedback you have.
+On Mon, 17 Oct 2011 11:46:06 -0700
+ebiederm@xmission.com (Eric W. Biederman) wrote:
 
-Since the 3.2 merge window is closed, I'm targeting these for 3.3.
-They don't all have to be merged at once, though we can't remove
-pci_create_bus() (patch 34/34) until all the arch patches are in.
+>=20
+> I traced a nasty kexec on panic boot failure to the fact that we had
+> screaming msi interrupts and we were not disabling the msi messages at
+> kernel startup.  The booting kernel had not enabled those interupts so
+> was not prepared to handle them.
+>=20
+> I can see no reason why we would ever want to leave the msi interrupts
+> enabled at boot if something else has enabled those interrupts.  The pci
+> spec specifies that msi interrupts should be off by default.  Drivers
+> are expected to enable the msi interrupts if they want to use them.  Our
+> interrupt handling code reprograms the interrupt handlers at boot and
+> will not be be able to do anything useful with an unexpected interrupt.
+>=20
+> This patch applies cleanly all of the way back to 2.6.32 where I noticed
+> the problem.
+>=20
+> Cc: stable@kernel.org
+>=20
 
-Bjorn
+Applied to -next because I'm a chicken.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/C_X3jJI6YJxKbD2.R09VDj_
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOvWI2AAoJEIEoDkX4Qk9hWt0P/2QTRVNyZSiMnLMqK3ZBduAG
+5wXV/+zijfBnN4kQidhKmB9UvLkUFbUHWa7AcAm39BtKarEKUsNGqkRVBMoenz2l
+hjPsxzTYRtXMmf4V3ozOzDFlwJIE32mxnJfmJ212V+9VuAkw72s9693xsc0rJeIZ
+bcMWM/XIOuODrwI0Z1HZchZPjrCnVa/+BzqibMxFTYAfuFCCojI44RFOJUoKubow
+FdZofHZMXC0/XweKWDZeWYQXKR7Kq0IJ5D5EjnJNoTyJ+gBaV2Lfsa2Z5yKt5Ttg
+HnhuhqpDMui5pCwpYWLBbTB94PoOYBcT/M3gJ/fsrCrrA5ZaV6wdSGbGMSrn+/+w
+eGZdRQADVElxtJEpmin4/b3OkBM4VQSuxuvEhimlMGF+eZdhbkz9J26hNKJEI5p+
+RAbxAcciYP/hJJEWeLlYYfwoLwjDN+Sa6zE2g16IotiPHy4gdSsbWIxrrZrczOcf
+GNabTp1JzRUZQcvRAyaPyNbbtnJU3yG7+JQCIxt2i+DNEl4ASSF2B+yAn2NczCUU
+AxjsSwjYYQrSKRTxQdZiGkHkOWn2F37Eu3h6OXPfWan/IY3dQx+5AsjRi0ULTChG
+4qttL8s8QYfFqdM9w/eQX4Rw280akoWBR3anabDUW/yIigUA6q1llNjOXwd/N6CS
+n/JJN749B6MPTQvHAYY/
+=DTQW
+-----END PGP SIGNATURE-----
+
+--Sig_/C_X3jJI6YJxKbD2.R09VDj_--
