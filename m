@@ -1,58 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33601 "EHLO mx1.redhat.com"
+Received: from mx2.parallels.com ([64.131.90.16]:53149 "EHLO mx2.parallels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754585Ab1KNOpT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Nov 2011 09:45:19 -0500
-Message-ID: <4EC12962.2040105@redhat.com>
-Date: Mon, 14 Nov 2011 09:44:50 -0500
-From: Prarit Bhargava <prarit@redhat.com>
+	id S1752594Ab1KKM15 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Nov 2011 07:27:57 -0500
+From: James Bottomley <jbottomley@parallels.com>
+To: Vasiliy Averin <vvs@parallels.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	Adaptec OEM Raid Solutions <aacraid@adaptec.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Mark Salyzyn <mark_salyzyn@us.xyratex.com>,
+	Shaohua Li <shaohua.li@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: aacraid controller hangs if kernel uses non-default ASPM policy
+Date: Fri, 11 Nov 2011 12:27:55 +0000
+Message-ID: <1321014474.5161.10.camel@dabdike.int.hansenpartnership.com>
+References: <4EBCEDED.7030907@parallels.com>
+In-Reply-To: <4EBCEDED.7030907@parallels.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	James Paradis <jparadis@redhat.com>, linux-pci@vger.kernel.org,
-	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
-	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com> <4EBD73C8.8070407@redhat.com> <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com> <4EBD8714.30401@redhat.com>
-In-Reply-To: <4EBD8714.30401@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 11/11/2011 03:35 PM, Don Dutile wrote:
-> On 11/11/2011 03:29 PM, Bjorn Helgaas wrote:
->> On Fri, Nov 11, 2011 at 12:13 PM, Don Dutile<ddutile@redhat.com>  wrote:
->>> On 11/11/2011 12:41 PM, James Paradis wrote:
->>>>
->>>> Hmmm... would it be better to do this as a quirk or as a boot
->>>> parameter?  I've heard reports that other systems may be running
->>>
->>> Hearsay?  if you have definite cases, then please share them,
->>> so folks know when to flip the boot parameter on.  note: it would have to be
->>> an early boot param as well.
->>
->> It'd definitely be good to know all the specific cases.
->>
->> But merely sharing them so folks will know when to use the parameter
->> is a broken model. 
-
-Yeah -- I'd rather do something that "works", but I'm not sure we can without dropping the only_one_child() check.
-
- We should make it work automatically, either with
->> some sort of machine-dependent quirk, or (preferably) with a change to
->> the generic algorithm so it can handle these "broken" topologies along
->> with all the correct ones.
-
-The problem is when I'm examining "this" PCIE bridge I have no knowledge of the remaining hierarchy below it.  In order to find the broken topology we need to do a two pass enumeration (NO.) or minimally query all possible devices immediately connected to it.  If we do that then what is the purpose of the only_one_child() check?
-
-> In this case, doing a check that the parent is downstream PPB and the child is
-> downstream PPB could be done to identify the broken topology and automatically
-> scan dev nums > 0.
-
-I'm in favor of adding a kernel parameter that in addition to implementing the workaround Stratus will have, will also dump out a HW_ERR broken message of some sort.  I don't want to see a stack trace.
-
-... maybe we need to add in a pci_bridge_quirk() or something?
-
-P.
+T24gRnJpLCAyMDExLTExLTExIGF0IDEzOjQyICswNDAwLCBWYXNpbHkgQXZlcmluIHdyb3RlOg0K
+PiBBYWNyYWlkIGNvbnRyb2xsZXIgY2FuIGhhbmcgb24gc29tZSBub2RlcyBpZiBrZXJuZWwgdXNl
+cyBub24tZGVmYXVsdA0KPiAocG93ZXJzYXZlKSBBU1BNIHBvbGljeS4NCj4gQ29udHJvbGxlciBo
+YW5ncyBzaG9ydGx5IGFmdGVyIHN1Y2Nlc3NmdWwgbG9hZCBhbmQgaGFyZHdhcmUgZGV0ZWN0aW9u
+Lg0KPiBTY3NpIGVycm9yIGhhbmRsZXIgZGV0ZWN0cyB0aGlzIGhhbmcgYW5kIHRyaWVzIHRvIHJl
+c3RhcnQgaGFyZHdhcmUgYnV0DQo+IGl0IGRvZXMgbm90IGhlbHAuDQo+IA0KPiBJbml0aWFsbHkg
+aXQgd2FzIG5vdGljZWQgb24gUkhFTDYtYmFzZWQgb3BlblZaIGtlcm5lbCBhZnRlcg0KPiBiYWNr
+cG9ydGluZyBhYWNyYWlkIGRyaXZlciBmcm9tIG1haW5saW5lIChSSEVMNiBrZXJuZWwgd2l0aCBv
+cmlnaW5hbA0KPiBkcml2ZXIgd29ya3Mgd2VsbCkNCj4gaHR0cDovL2J1Z3ppbGxhLm9wZW52ei5v
+cmcvc2hvd19idWcuY2dpP2lkPTIwNDMNCj4gDQo+IFRoaXMgaXNzdWUgaGFwcGVucyBiZWNhdXNl
+IGRlZmF1bHQgQVNQTSBwb2xpY3kgd2FzIGNoYW5nZWQgaW4gUmVkIEhhdA0KPiBrZXJuZWxzLiBU
+aGVyZWZvcmUgZ3V5cyBmcm9tIFJlZCBIYXQgaGF2ZSBub3RpY2VkIHRoaXMgcHJvYmxlbSBsb25n
+DQo+IHRpbWUgYWdvOg0KPiBvbiBGZWRvcmEgMTINCj4gIGh0dHBzOi8vYnVnemlsbGEucmVkaGF0
+LmNvbS9zaG93X2J1Zy5jZ2k/aWQ9NTQwNDc4DQo+IG9uIEZlZG9yYSAxNA0KPiAgaHR0cHM6Ly9i
+dWd6aWxsYS5yZWRoYXQuY29tL3Nob3dfYnVnLmNnaT9pZD02NzkzODUNCj4gDQo+IEluIFJIRUw2
+IGtlcm5lbCB0aGlzIGlzc3VlIHdhcyBmaXhlZCwgQVNQTSB3YXMgZGlzYWJsZWQgaW4gYWFjcmFp
+ZA0KPiBkcml2ZXIuIEluIGtlcm5lbCBjaGFuZ2Vsb2cgSSd2ZSBmb3VuZCB0aGF0IHNlZW1zIGl0
+IHdhcyBkb25lIGJ5DQo+IE1hdHRoZXcgR2FycmV0dDogDQo+IC0gW3Njc2ldIGFhY3JhaWQ6IERp
+c2FibGUgQVNQTSBieSBkZWZhdWx0IChNYXR0aGV3IEdhcnJldHQpIFs1OTk3MzVdDQo+IA0KPiBI
+b3dldmVyIHNlZW1zIHRoaXMgcGF0Y2ggd2FzIG5vdCBzdWJtaXR0ZWQgdG8gbWFpbmxpbmUuIEkn
+dmUNCj4gcmVwcm9kdWNlZCB0aGlzIGlzc3VlIG9uIHZhbmlsbGEgMy4xLjAga2VybmVsIGJvb3Rl
+ZCB3aXRoDQo+ICJwY2llX2FzcG0ucG9saWN5PXBvd2Vyc2F2ZSIgb3B0aW9uLA0KPiBTbyBJIGJl
+bGlldmUgaXQgbWFrZXMgc2Vuc2UgdG8gZG8gaXQgbm93Lg0KPiANCj4gSSd2ZSByZXZpZXdlZCBz
+aW1pbGFyIGlzc3VlcyBhbmQgZm91bmQgdGhhdCBzaW1pbGFyIHRyb3VibGVzIGhhcHBlbg0KPiB3
+aXRoIGFub3RoZXIgaGFyZHdhcmUgdG9vLiBGb3IgZXhhbXBsZSBzaW1pbGFyIHBhdGNoIGNhbiBi
+ZSBmb3VuZCBpbg0KPiBlMTAwMCBkcml2ZXIuDQoNCkRvIHlvdSBoYXZlIGEgY29tcHJlaGVuc2l2
+ZSBsaXN0PyAgSWYgaXQncyBqdXN0IGEgY291cGxlIG9mIGRyaXZlcnMgaW4NCmVhY2ggc3Vic3lz
+dGVtLCB0aGVuIGFkZGluZyB3aGF0IGFtb3VudCB0byBkZXZpY2UgcXVpcmtzIGluIHRoZSBkcml2
+ZXINCnNlZW1zIHRvIGJlIGFwcHJvcHJpYXRlLiAgSWYgaXQncyBhIGh1Z2UgbnVtYmVyLCB3ZSBt
+aWdodCBoYXZlIHRvDQpyZXRoaW5rIGhvdyB0aGlzIGZlYXR1cmUgaXMgaW1wbGVtZW50ZWQuDQoN
+ClRoZSBuZXh0IHF1ZXN0aW9uIGlzOiBpcyB0aGUgZHJpdmVyIHRoZSBjb3JyZWN0IHBsYWNlPyAg
+VGhpcyBzb3VuZHMgbGlrZQ0KYSBQQ0llIExpbmsgUG93ZXIgTWFuYWdlbWVudCBibGFja2xpc3Qg
+c2V0IC4uLiB3aGljaCBtaWdodCBuZWVkIHVwZGF0aW5nDQpvbiB0aGUgZmx5IC4uLiBtaWdodCB3
+ZSBuZWVkIGEgdXNlciBrbm9iIGZvciB0aGlzIChsaWtlIHdlIGhhdmUgZm9yIHRoZQ0KU0NTSSBi
+bGFjay93aGl0ZSBsaXN0KT8NCg0KSmFtZXMNCg0K
