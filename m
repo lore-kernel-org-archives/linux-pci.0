@@ -1,53 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-va3.bigfish.com ([216.32.180.10]:52577 "EHLO
-	VA3EHSOBE010.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753807Ab1KRP1U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 10:27:20 -0500
-Date: Fri, 18 Nov 2011 16:27:10 +0100
-From: Joerg Roedel <Joerg.Roedel@amd.com>
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:34735 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754007Ab1KKRkL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:40:11 -0500
+Date: Fri, 11 Nov 2011 09:40:25 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
 To: Alex Williamson <alex.williamson@redhat.com>
-CC: <iommu@lists.linux-foundation.org>, <dwmw2@infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iommu: Include MSI susceptibility to DMA in creating
- iommu groups
-Message-ID: <20111118152710.GA5098@amd.com>
-References: <20111117170800.3125.84150.stgit@bling.home>
- <20111118104651.GJ5627@amd.com>
- <1321628190.26410.63.camel@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1321628190.26410.63.camel@bling.home>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	joerg.roedel@amd.com, bhelgaas@google.com
+Subject: Re: [PATCH 2/2] PCI: More PRI/PASID cleanup
+Message-ID: <20111111094025.34ad5bc3@jbarnes-desktop>
+In-Reply-To: <20111111170702.32668.50363.stgit@bling.home>
+References: <20111111170319.32668.48479.stgit@bling.home>
+	<20111111170702.32668.50363.stgit@bling.home>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/X3eNqR3X1b1m.Z2W85HOi+t"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 07:56:30AM -0700, Alex Williamson wrote:
-> As you say, the interface is to tell userspace what devices the IOMMU
-> can safely distinguish between.  On x86, the IOMMU cannot distinguish
-> DMA to the interrupt region between devices without interrupt remapping.
-> Therefore, to only expose devices we can safely distinguish between, we
-> shouldn't expose any devices by default if we don't provide this
-> isolation.  The interrupt remapping capability of the IOMMU isn't
-> exposed to userspace, nor should userspace need to make the leap in
-> understanding how MSIs are generated on a specific platform and whether
-> interrupt remapping is required to provide isolation.
+--Sig_/X3eNqR3X1b1m.Z2W85HOi+t
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-But the isolation domains are different. The iommu-group interface is
-about device isolation and interrupt remapping is about DMA address
-space isolation (MSI range vs. the rest). The iommu can still
-distinguish between devices when it can not distinguish between DMA and
-MSI interrupts.
-So what you want to do belongs to the VFIO driver or (as it is today)
-into the KVM device assignment code and not into the iommu-group
-interface.
+On Fri, 11 Nov 2011 10:07:36 -0700
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-Regards,
+> More consistency cleanups.  Drop the _OFF, separate and indent
+> CTRL/CAP/STATUS bit definitions.  This helped find the previous
+> mis-use of bit 0 in the PASID capability register.
+>=20
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
 
-	Joerg
+Thanks Alex; Joerg I'll wait for your r-b and tested-bys on these.
 
--- 
-AMD Operating System Research Center
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo, Andrew Bowd
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+--Sig_/X3eNqR3X1b1m.Z2W85HOi+t
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOvV4JAAoJEIEoDkX4Qk9hw80P/1m30Q+ImyCp7xeGE7Z44Y05
+tdg2yejx4EZyajoxV2aIfeUBffs548FgZJR/nmpUdtFhdFhn+ITJWuerL1Mi1OvW
+IR5Mi/un8d0bzR66KXxNRVmbrNw/MjeKuZLA6UEQrgsvfYmDdbJFjM2yRUgiR5MY
+GyPmHT9RVJVLLu6iHSD+VGm2npOOYRBXkaD998Pohk1eZuRu22wL/quxD2hBy/ba
+Gur0Dind2LVQndiSiXBPXZRzvqvjchFNiwPlzhhdEscbaVy92PeribUT8pQzjZ2e
+i0qi2wYnxMLby7lsPPcqBYU1O//1MA96PlTqyvO1Kx9ydkr5OjCE2IEk6XR4DgH3
+R68wG6eiGSuaLraVJKzf9rijGN9i3338GiUeliYL5C0Dgq+zF4F7brrSBG4uPmqP
+MScQoDunZyLfgaJm2E5sdANi80XOLAj37c1LKDrBnqOC2lN8Q1rKy2eJD4Hjntaf
+nIQE6DZDr6gv9n7ENCLeUK/qB6Btwjf6AV1xv2RBQcTpKvJkNge+UbWEY1mPXLN7
+uFESg0ju1kTFVAydFXid8WK2xaLbVQeZhhNrVRagnVZEgbGOsdAnV9LV5vj1wo5m
+5hcuFnHZfq8gwXzlC87maOrGUd2rWVPv//PqDlG5Q9aA+V/wZNj6A5pen1Lb94p/
+QAo/KtRWcYB0NzY25d07
+=IlQZ
+-----END PGP SIGNATURE-----
+
+--Sig_/X3eNqR3X1b1m.Z2W85HOi+t--
