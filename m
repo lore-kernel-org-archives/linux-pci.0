@@ -1,43 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:60774 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487Ab1KKU3y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 15:29:54 -0500
-Received: by gyc15 with SMTP id 15so3272293gyc.19
-        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2011 12:29:53 -0800 (PST)
+Received: from sous-sol.org ([216.99.217.87]:47579 "EHLO sequoia.sous-sol.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755227Ab1KLAyx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Nov 2011 19:54:53 -0500
+Date: Fri, 11 Nov 2011 16:17:05 -0800
+From: Chris Wright <chrisw@sous-sol.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: dwmw2@infradead.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chrisw@sous-sol.org, ddutile@redhat.com
+Subject: Re: [PATCH] intel-iommu: Default to non-coherent for domains
+ unattached to iommus
+Message-ID: <20111112001705.GM14486@sequoia.sous-sol.org>
+References: <20111111224849.9756.13368.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <4EBD73C8.8070407@redhat.com>
-References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com>
- <4EBD73C8.8070407@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 11 Nov 2011 13:29:32 -0700
-Message-ID: <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com>
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-To: Don Dutile <ddutile@redhat.com>
-Cc: James Paradis <jparadis@redhat.com>,
-	Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
-	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
-	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111111224849.9756.13368.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 11, 2011 at 12:13 PM, Don Dutile <ddutile@redhat.com> wrote:
-> On 11/11/2011 12:41 PM, James Paradis wrote:
->>
->> Hmmm... would it be better to do this as a quirk or as a boot
->> parameter?  I've heard reports that other systems may be running
->
-> Hearsay?  if you have definite cases, then please share them,
-> so folks know when to flip the boot parameter on.  note: it would have to be
-> an early boot param as well.
+* Alex Williamson (alex.williamson@redhat.com) wrote:
+> domain_update_iommu_coherency() currently default to setting domains
+> as coherent when the domain is not attached to any iommus.  This
+> allows for a window in domain_context_mapping_one() where such a
+> domain can update context entries non-coherenty, and only after
+> update the domain capability to clear iommu_coherency.
+> 
+> This can be seen using KVM device assignment on VT-d systems that
+> do not support coherency in the ecap register.  When a device is
+> added to a guest, a domain is created (iommu_coherency = 0), the
+> device is attached, and ranges are mapped.  If we then hot unplug
+> the device, the coherency is updated and set to the default (1)
+> since no iommus are attached to the domain.  A subsequenct attach
+> of a device makes use of the same dmar domain (now marked coherent)
+> updates context entries with cohrency enabled, and only disables
+> coherency as the last step in the process.
 
-It'd definitely be good to know all the specific cases.
+Specifically, in domain_context_mapping_one():
 
-But merely sharing them so folks will know when to use the parameter
-is a broken model.  We should make it work automatically, either with
-some sort of machine-dependent quirk, or (preferably) with a change to
-the generic algorithm so it can handle these "broken" topologies along
-with all the correct ones.
+  context_set_translation_type(context, translation);
+  context_set_fault_enable(context);
+  context_set_present(context);
+  domain_flush_cache(domain, context, sizeof(*context));  <-- noop
 
-Bjorn
+This does not update context entry, leaving IOMMU w/ a non-present
+context entry, and therefore subsequent DMA generates DMAR faults:
+
+DMAR:[DMA Read] Request device [08:10.0] fault addr 37298000
+DMAR:[fault reason 02] Present bit in context entry is clear
+ 
+> To fix this, switch domain_update_iommu_coherency() to use the
+> safer, non-coherent default for domains not attached to iommus.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Tested-by: Donald Dutile <ddutile@redhat.com>
+> Acked-by: Donald Dutile <ddutile@redhat.com>
+
+Acked-by: Chris Wright <chrisw@sous-sol.org>
+
+thanks,
+-chris
