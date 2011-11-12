@@ -1,48 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46184 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757567Ab1KRRPW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Nov 2011 12:15:22 -0500
-Message-ID: <1321636512.26410.132.camel@bling.home>
-Subject: Re: [PATCH] intel-iommu: Manage iommu_coherency globally
-From: Alex Williamson <alex.williamson@redhat.com>
+Received: from sous-sol.org ([216.99.217.87]:42913 "EHLO sequoia.sous-sol.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754197Ab1KLAp0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Nov 2011 19:45:26 -0500
+Date: Fri, 11 Nov 2011 16:45:13 -0800
+From: Chris Wright <chrisw@sous-sol.org>
 To: David Woodhouse <dwmw2@infradead.org>
-Cc: rajesh.sankaran@intel.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chrisw@sous-sol.org, ddutile@redhat.com
-Date: Fri, 18 Nov 2011 10:15:12 -0700
-In-Reply-To: <1321635658.15493.55.camel@shinybook.infradead.org>
-References: <20111116040752.11878.18642.stgit@bling.home>
-	 <1321617817.15493.33.camel@shinybook.infradead.org>
-	 <1321632197.26410.104.camel@bling.home>
-	 <1321635658.15493.55.camel@shinybook.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Alex Williamson <alex.williamson@redhat.com>, chrisw@sous-sol.org,
+	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] intel-iommu: Default to non-coherent for domains
+ unattached to iommus
+Message-ID: <20111112004513.GP14486@sequoia.sous-sol.org>
+References: <20111111224849.9756.13368.stgit@bling.home>
+ <1321058267.2006.21.camel@shinybook.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1321058267.2006.21.camel@shinybook.infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2011-11-18 at 17:00 +0000, David Woodhouse wrote:
-> On Fri, 2011-11-18 at 09:03 -0700, Alex Williamson wrote:
-> > I can't help but thinking we're just taking the easy, lazy path for VM
-> > domains when it sounds like we really would prefer to keep the coherency
-> > set to the least common denominator of the domain rather than the
-> > platform.  Couldn't we instead force a flush of the domain when we
-> > transition from coherent to non-coherent?  Not sure I'm qualified to
-> > write that, but seems like it would keep the efficiency of VM domains
-> > with no effect to native DMA domains since they'd never trigger such a
-> > transition.  The below appears as if it would work and probably be OK
-> > since the unnecessary cache flushes are rare, but they're still
-> > unnecessary... and the comments/commit log are now wrong.  Thanks,
+* David Woodhouse (dwmw2@infradead.org) wrote:
+> On Fri, 2011-11-11 at 15:49 -0700, Alex Williamson wrote:
+> > To fix this, switch domain_update_iommu_coherency() to use the
+> > safer, non-coherent default for domains not attached to iommus. 
 > 
-> Yeah, that would make some sense. I was about to knock up some code
-> which would walk the page tables and use clflush to flush every one...
-> but wouldn't it be saner just to use wbinvd?
+> That isn't a fix for the problem you described.
+> 
+> The problem is that changing a domain from coherent to non-coherent is
+> *broken*. It probably needs to flush the cache for the *entire* set of
+> page tables — not just the new context entry it adds.
 
-A bit heavy handed, but obviously easier.  It feels like we could safely
-be more strategic, but maybe we'd end up trashing the cache anyway in a
-drawn out attempt to flush the context and all page tables.  However, do
-we actually need a wbinvd_on_all_cpus()?  Probably better to trash one
-cache than all of them.  Thanks,
+For a guest domain, the page tables aren't actually changing.
+And for the snoop mode change, we remap the pages.
 
-Alex
+> You might have removed the *common* case where we trigger that bug, but
+> it certainly isn't a fix.
+> 
+> However, I'd be receptive to an argument that the situation you describe
+> is in fact the *only* time we'd have to switch from coherent to
+> non-coherent at run time, because the coherency is an all-or-nothing
+> characteristic of the chipset. Either all the IOMMUs are coherent, or
+> none of them, right? This brain-damage only affects the first chipsets
+> from before we worked out that cache incoherency was a *really* f*cking
+> stupid idea, doesn't it?
 
+Dunno if it exists going forward (I've stopped being surprised by the
+brain damage in this area ;), but those machines are still out there.
+
+> So if you were to ditch the whole idea of a per-domain runtime update,
+> and instead calculate a global value for 'iommu_coherency' at boot time,
+> by iterating over for_each_active_iommu()¹, I think that would be a
+> better way to deal with the issue. And you *could* really call that a
+> 'fix'.
+> 
+> Make sense?
+
+Ideally, yes.  Not sure we can practically do it though.  Would have to
+be sure we force incoherent access mode for the busted hw.
+
+thanks,
+-chris
