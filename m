@@ -1,197 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:60748 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756757Ab1KRGUx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 01:20:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <1321594811.26410.54.camel@bling.home>
-References: <20111117170800.3125.84150.stgit@bling.home>
-	<CANqQZNHN_XkNmkMcUjZfqW_8F2X1cPg6O=EpdW-Emq9rRrwZmA@mail.gmail.com>
-	<1321594811.26410.54.camel@bling.home>
-Date: Fri, 18 Nov 2011 14:20:51 +0800
-Message-ID: <CANqQZNEAW7Vepk6JAY=AZFyvX=AK8xK63BMaP+r-M7pN+NvAvg@mail.gmail.com>
-Subject: Re: [PATCH] iommu: Include MSI susceptibility to DMA in creating
- iommu groups
-From: Kai Huang <mail.kai.huang@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg.Roedel@amd.com, iommu@lists.linux-foundation.org,
-	dwmw2@infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from casper.infradead.org ([85.118.1.10]:42586 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755227Ab1KLAzt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 19:55:49 -0500
+Message-ID: <1321059340.2006.27.camel@shinybook.infradead.org>
+Subject: Re: [PATCH] intel-iommu: Default to non-coherent for domains
+ unattached to iommus
+From: David Woodhouse <dwmw2@infradead.org>
+To: Chris Wright <chrisw@sous-sol.org>
+Cc: Roland Dreier <roland@purestorage.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com
+Date: Sat, 12 Nov 2011 00:55:40 +0000
+In-Reply-To: <20111112005100.GR14486@sequoia.sous-sol.org>
+References: <20111111224849.9756.13368.stgit@bling.home>
+	 <1321058267.2006.21.camel@shinybook.infradead.org>
+	 <CAL1RGDXZjKhA++3eFVPbazixaM7Q_JfBJyLKE0xjBs+sK55idg@mail.gmail.com>
+	 <20111112005100.GR14486@sequoia.sous-sol.org>
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
+	boundary="=-rtJ6wcVtiAYmD3vKI96U"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 1:40 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Fri, 2011-11-18 at 12:37 +0800, Kai Huang wrote:
->> On Fri, Nov 18, 2011 at 1:09 AM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > IOMMU drivers should account for the platform's susceptibility to
->> > DMA triggered MSI interrupts in creating IOMMU groups.  Skip
->> > devices when the IOMMU can't isolate MSI from DMA, but allow
->> > an iommu=group_unsafe_msi option for opt-in.  This removes the
->> > leap in logic for users that IOMMU_CAP_INTR_REMAP is required for
->> > interrupt security when they may be running on a non-x86 platform
->> > that does not have this dependency.
->> >
->> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->> > ---
->> >
->> >  Documentation/kernel-parameters.txt |    9 ++++++---
->> >  arch/ia64/include/asm/iommu.h       |    2 ++
->> >  arch/ia64/kernel/pci-dma.c          |    1 +
->> >  arch/x86/include/asm/iommu.h        |    1 +
->> >  arch/x86/kernel/pci-dma.c           |   12 ++++++++++++
->> >  drivers/iommu/amd_iommu.c           |    7 +++++++
->> >  drivers/iommu/intel-iommu.c         |    7 +++++++
->> >  7 files changed, 36 insertions(+), 3 deletions(-)
->> >
->> > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->> > index 9d5ac6c..ffa43b7 100644
->> > --- a/Documentation/kernel-parameters.txt
->> > +++ b/Documentation/kernel-parameters.txt
->> > @@ -1059,9 +1059,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->> >                nomerge
->> >                forcesac
->> >                soft
->> > -               pt              [x86, IA-64]
->> > -               group_mf        [x86, IA-64]
->> > -
->> > +               pt                      [x86, IA-64]
->> > +               group_mf                [x86, IA-64]
->> > +                       Group multifunction devices together in IOMMU API.
->> > +               group_unsafe_msi        [x86, IA-64]
->> > +                       Allow grouping of devices even when the platfom
->> > +                       does not provide MSI isolation in IOMMU API.
->> >
->> >        io7=            [HW] IO7 for Marvel based alpha systems
->> >                        See comment before marvel_specify_io7 in
->> > diff --git a/arch/ia64/include/asm/iommu.h b/arch/ia64/include/asm/iommu.h
->> > index b6a809f..b726572 100644
->> > --- a/arch/ia64/include/asm/iommu.h
->> > +++ b/arch/ia64/include/asm/iommu.h
->> > @@ -12,11 +12,13 @@ extern int force_iommu, no_iommu;
->> >  extern int iommu_pass_through;
->> >  extern int iommu_detected;
->> >  extern int iommu_group_mf;
->> > +extern int iommu_group_unsafe_msi;
->> >  #else
->> >  #define iommu_pass_through     (0)
->> >  #define no_iommu               (1)
->> >  #define iommu_detected         (0)
->> >  #define iommu_group_mf         (0)
->> > +#define iommu_group_unsafe_msi (0)
->> >  #endif
->> >  extern void iommu_dma_init(void);
->> >  extern void machvec_init(const char *name);
->> > diff --git a/arch/ia64/kernel/pci-dma.c b/arch/ia64/kernel/pci-dma.c
->> > index eb11757..63721ce 100644
->> > --- a/arch/ia64/kernel/pci-dma.c
->> > +++ b/arch/ia64/kernel/pci-dma.c
->> > @@ -34,6 +34,7 @@ int force_iommu __read_mostly;
->> >
->> >  int iommu_pass_through;
->> >  int iommu_group_mf;
->> > +int iommu_group_unsafe_msi;
->> >
->> >  /* Dummy device used for NULL arguments (normally ISA). Better would
->> >    be probably a smaller DMA mask, but this is bug-to-bug compatible
->> > diff --git a/arch/x86/include/asm/iommu.h b/arch/x86/include/asm/iommu.h
->> > index dffc38e..e3d289c 100644
->> > --- a/arch/x86/include/asm/iommu.h
->> > +++ b/arch/x86/include/asm/iommu.h
->> > @@ -6,6 +6,7 @@ extern int force_iommu, no_iommu;
->> >  extern int iommu_detected;
->> >  extern int iommu_pass_through;
->> >  extern int iommu_group_mf;
->> > +extern int iommu_group_unsafe_msi;
->> >
->> >  /* 10 seconds */
->> >  #define DMAR_OPERATION_TIMEOUT ((cycles_t) tsc_khz*10*1000)
->> > diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
->> > index 1c4d769..80eb6b6 100644
->> > --- a/arch/x86/kernel/pci-dma.c
->> > +++ b/arch/x86/kernel/pci-dma.c
->> > @@ -54,6 +54,16 @@ int iommu_pass_through __read_mostly;
->> >  */
->> >  int iommu_group_mf __read_mostly;
->> >
->> > +/*
->> > + * For the iommu_device_group interface, we not only need to be concerned
->> > + * with DMA isolation between devices, but also DMA isolation that could
->> > + * affect the platform, including MSI isolation.  If a platform is
->> > + * susceptible to malicious DMA writes triggering MSI interrupts, the
->> > + * IOMMU driver can't reasonably group devices.  This allows the iommu
->> > + * driver to ignore MSI isolation when creating groups.
->> > + */
->> > +int iommu_group_unsafe_msi __read_mostly;
->> > +
->> >  extern struct iommu_table_entry __iommu_table[], __iommu_table_end[];
->> >
->> >  /* Dummy device used for NULL arguments (normally ISA). */
->> > @@ -180,6 +190,8 @@ static __init int iommu_setup(char *p)
->> >                        iommu_pass_through = 1;
->> >                if (!strncmp(p, "group_mf", 8))
->> >                        iommu_group_mf = 1;
->> > +               if (!strncmp(p, "group_unsafe_msi", 16))
->> > +                       iommu_group_unsafe_msi = 1;
->> >
->> >                gart_parse_options(p);
->> >
->> > diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
->> > index ad074dc..5f55e7a 100644
->> > --- a/drivers/iommu/amd_iommu.c
->> > +++ b/drivers/iommu/amd_iommu.c
->> > @@ -2794,6 +2794,13 @@ static int amd_iommu_device_group(struct device *dev, unsigned int *groupid)
->> >        struct pci_dev *pdev = to_pci_dev(dev);
->> >        u16 devid;
->> >
->> > +       if (!iommu_group_unsafe_msi) {
->> > +               printk_once(KERN_NOTICE "%s: "
->> > +                           "IOMMU device group disabled without interrupt remapping support",
->> > +                           pci_bus_type.name);
->> > +               return -ENODEV;
->> > +       }
->> > +
->> >        if (!dev_data)
->> >                return -ENODEV;
->> >
->> > diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
->> > index e918f72..f3fcd69 100644
->> > --- a/drivers/iommu/intel-iommu.c
->> > +++ b/drivers/iommu/intel-iommu.c
->> > @@ -4094,6 +4094,13 @@ static int intel_iommu_device_group(struct device *dev, unsigned int *groupid)
->> >                u32 group;
->> >        } id;
->> >
->> > +       if (!intr_remapping_enabled && !iommu_group_unsafe_msi) {
->> > +               printk_once(KERN_NOTICE "%s: "
->> > +                           "IOMMU device group disabled without interrupt remapping support",
->> > +                           pci_bus_type.name);
->> > +               return -ENODEV;
->> > +       }
->> > +
->>
->> When intr_remapping_enabled == 0 and iommu_group_unsafe_msi == 1, is
->> it better to add an print msg that notice user we enabled the group by
->> allowing unsafe msi but without hardware interrupt remapping support?
->> Or have we added such msg at some other place?
->
-> My system prints "Enabled IRQ remapping in xapic mode" when interrupt
-> remapping is enabled.  So there is some evidence in the messages when
-> interrupt remapping is actually present.  The command line option to
-> opt-in to the override will also appear in "Kernel command line: ...
-> iommu=group_unsafe_msi ...".  So while there's not some kind of
-> "Enabling IOMMU device groups against the better judgment of the
-> hardware..." message, there are clues.  Do you think it's necessary to
-> be more verbose?  Thanks,
 
-More verbose will not bring any harm:)  Anyway it's just an
-suggestion, I am OK with current patch.
+--=-rtJ6wcVtiAYmD3vKI96U
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--cody
+On Fri, 2011-11-11 at 16:51 -0800, Chris Wright wrote:
+> * Roland Dreier (roland@purestorage.com) wrote:
+> > On Fri, Nov 11, 2011 at 4:37 PM, David Woodhouse <dwmw2@infradead.org> =
+wrote:
+> > > This brain-damage only affects the first chipsets
+> > > from before we worked out that cache incoherency was a *really* f*cki=
+ng
+> > > stupid idea, doesn't it?
+> >=20
+> > As we talked about at KS, I have some Westmere EP (ie latest
+> > and greatest server platform) systems where the BIOS exposes
+> > an option that allows choosing VT-d coherency on or off, and
+> > defaults it to "off".
+>=20
+> That's just more brain damage AFAICT.  Esp. if you do performance
+> testing (and choose not to use passthrough mode)... have and it's
+> quite measurable.  I switched default to on long time ago, w/out
+> issue.
+>=20
+> > What is the "official" Intel line on coherency with Westmere and
+> > Tylersburg -- because as I also mentioned, I was seeing some
+> > problems with VT-d and the default "coherency off" setting that
+> > looked like the IOMMU HW is getting stale PTEs (ie a missing
+> > or not working cache flush).
+>=20
+> That sounds like sw bugs more than official recommendation issue.
 
->
-> Alex
->
->
+Although the cache-flushing has been tested on the original chipsets
+fairly well, and it's one of the parts I've mostly rewritten when doing
+performance work since I inherited the code, so that might not be my
+first suspicion. I would be more inclined to suspect that there's some
+chipset buffering that we aren't correctly flushing (which might in
+itself be a hardware issue, since the way to flush the cache is supposed
+to be well-defined).
+
+--=20
+dwmw2
+
+--=-rtJ6wcVtiAYmD3vKI96U
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITvzCCBi0w
+ggQVoAMCAQICAwCtOTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwG
+A1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290
+MB4XDTEwMDYxMjEwMDMwMFoXDTEyMDYxMTEwMDMwMFowgegxGDAWBgNVBAMTD0RhdmlkIFdvb2Ro
+b3VzZTEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzEfMB0GCSqGSIb3DQEJARYQ
+ZGF2aWRAd29vZGhvdS5zZTEoMCYGCSqGSIb3DQEJARYZZGF2aWQud29vZGhvdXNlQGludGVsLmNv
+bTEkMCIGCSqGSIb3DQEJARYVZHdtdzJAbGludXguaW50ZWwuY29tMTcwNQYJKoZIhvcNAQkBFigx
+MDg3MmEwN2Y2ZDdlMWUwN2Y1NWZmMTcyYTAzYjMwMGVlYWFkMjAzMIIBIjANBgkqhkiG9w0BAQEF
+AAOCAQ8AMIIBCgKCAQEA29OPhNvMxBMW83psWdVhZDtmJvgN+tBEp1r6MZamONsR0k81a6fDFwJz
+M0fEzEbV/bDG102QyX/xXC/0IpKV4acnqESC+sTHUmRwxfRKGNmR6t2iwEs2Y5kQDF31JxbCt49w
+AlhLMAa+e1MBZ7vO0uDmRuJpS7+ZdHboq7cdk6dyoeumGv5sl6U/SPK9rL4KzULtqQaw6Wucd6MJ
+irIggEHfCNqeT5a+TyuH4zKCwv9nblIGXq9wt+yqu5t/RicGaKPnXSqo/WpJAGggaO8g92mnYlVl
+Wu/b9bYVISwQ8LI0sEtjN1WnP5AQO2f59bdPAVk4Rn25HceOO4NvlG47LwIDAQABo4IBcTCCAW0w
+DAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRl
+IGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYI
+KwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYI
+KwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIGOBgNVHREE
+gYYwgYOBE2R3bXcyQGluZnJhZGVhZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2WBGWRhdmlkLndvb2Ro
+b3VzZUBpbnRlbC5jb22BFWR3bXcyQGxpbnV4LmludGVsLmNvbYEoMTA4NzJhMDdmNmQ3ZTFlMDdm
+NTVmZjE3MmEwM2IzMDBlZWFhZDIwMzANBgkqhkiG9w0BAQUFAAOCAgEAXm+SUO1/TSeGJK0D9pAm
+E9LTFkdlgbaD6HXGbS0TNUDyfLFkacc2F1JLoWcoFwcL6Rup5o/Rt4QYDBPWgF9EXFvqsc9SLrSe
+X6VwRj7vI40x19ThE2A1Y8DzBJ9+2MzIR6hd5n9axATCOIRhmZVjX1cRkwshEGvAn8mTYGhWttkx
+WhBcaAuCd9OOQqUwfxTUXiSfVumPUNrrbuvaH6MjrNjDrXdvicL26Y+AzFSJn3o8DShjjMhkUx9l
+qV46BpjSGIuvkHhcLkGJ3Y1YmtOX1hwT+Z+d/10WJh8ZG2FqIlJtPtqvHK5ol/KvdzMwmMBd4qFj
+YAO32vf7zde+jdTHNp2Mb15bJHhNdGOsZicpGue42fg3deZQFe1E2KBl9VO09fjncjt9YdhCUtxO
+buDnoOixY6YSJgSmGJB2Xs+TE5gps4UiiOYen+NeJkuwg5x9vmyraU061Uc0csfc/E5IoxhTX/Pc
+H+zXiER8aSjA/9MXQfrJM2xkY6UNKlDbCYSLKnH/O02eu7Hma6lB4wtcY8ECu7LJuFY2448Quolv
+SQfQLRvKauGFGUAhbPClOxObuv/fNzA+lfg8DX2y5jXDutnpvBGgsplKxoah01SZfR9zNqxodPx2
+srKhujBNB+WiAZntMf0xp4e0JPMlTFxm3tbY9wuBSyTJyueO9hUkbN4wggYtMIIEFaADAgECAgMA
+rTkwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdDAeFw0xMDA2MTIx
+MDAzMDBaFw0xMjA2MTExMDAzMDBaMIHoMRgwFgYDVQQDEw9EYXZpZCBXb29kaG91c2UxIjAgBgkq
+hkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcxHzAdBgkqhkiG9w0BCQEWEGRhdmlkQHdvb2Ro
+b3Uuc2UxKDAmBgkqhkiG9w0BCQEWGWRhdmlkLndvb2Rob3VzZUBpbnRlbC5jb20xJDAiBgkqhkiG
+9w0BCQEWFWR3bXcyQGxpbnV4LmludGVsLmNvbTE3MDUGCSqGSIb3DQEJARYoMTA4NzJhMDdmNmQ3
+ZTFlMDdmNTVmZjE3MmEwM2IzMDBlZWFhZDIwMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBANvTj4TbzMQTFvN6bFnVYWQ7Zib4DfrQRKda+jGWpjjbEdJPNWunwxcCczNHxMxG1f2wxtdN
+kMl/8Vwv9CKSleGnJ6hEgvrEx1JkcMX0ShjZkerdosBLNmOZEAxd9ScWwrePcAJYSzAGvntTAWe7
+ztLg5kbiaUu/mXR26Ku3HZOncqHrphr+bJelP0jyvay+Cs1C7akGsOlrnHejCYqyIIBB3wjank+W
+vk8rh+MygsL/Z25SBl6vcLfsqrubf0YnBmij510qqP1qSQBoIGjvIPdpp2JVZVrv2/W2FSEsEPCy
+NLBLYzdVpz+QEDtn+fW3TwFZOEZ9uR3HjjuDb5RuOy8CAwEAAaOCAXEwggFtMAwGA1UdEwEB/wQC
+MAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBo
+ZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggr
+BgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
+JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzCBjgYDVR0RBIGGMIGDgRNkd213
+MkBpbmZyYWRlYWQub3JngRBkYXZpZEB3b29kaG91LnNlgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
+Y29tgRVkd213MkBsaW51eC5pbnRlbC5jb22BKDEwODcyYTA3ZjZkN2UxZTA3ZjU1ZmYxNzJhMDNi
+MzAwZWVhYWQyMDMwDQYJKoZIhvcNAQEFBQADggIBAF5vklDtf00nhiStA/aQJhPS0xZHZYG2g+h1
+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
+AAAAAA==
+
+
+--=-rtJ6wcVtiAYmD3vKI96U--
+
