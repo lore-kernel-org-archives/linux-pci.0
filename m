@@ -1,48 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sous-sol.org ([216.99.217.87]:60917 "EHLO sequoia.sous-sol.org"
+Received: from sous-sol.org ([216.99.217.87]:57655 "EHLO sequoia.sous-sol.org"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751087Ab1KOEyO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Nov 2011 23:54:14 -0500
-Date: Mon, 14 Nov 2011 20:54:04 -0800
+	id S1754890Ab1KLAvL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Nov 2011 19:51:11 -0500
+Date: Fri, 11 Nov 2011 16:51:00 -0800
 From: Chris Wright <chrisw@sous-sol.org>
-To: cody <mail.kai.huang@gmail.com>
+To: Roland Dreier <roland@purestorage.com>
 Cc: David Woodhouse <dwmw2@infradead.org>,
-	Roland Dreier <roland@purestorage.com>,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	linux-kernel@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>
+	Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chrisw@sous-sol.org,
+	ddutile@redhat.com
 Subject: Re: [PATCH] intel-iommu: Default to non-coherent for domains
  unattached to iommus
-Message-ID: <20111115045404.GC30247@sequoia.sous-sol.org>
+Message-ID: <20111112005100.GR14486@sequoia.sous-sol.org>
 References: <20111111224849.9756.13368.stgit@bling.home>
  <1321058267.2006.21.camel@shinybook.infradead.org>
  <CAL1RGDXZjKhA++3eFVPbazixaM7Q_JfBJyLKE0xjBs+sK55idg@mail.gmail.com>
- <20111112005100.GR14486@sequoia.sous-sol.org>
- <1321059340.2006.27.camel@shinybook.infradead.org>
- <20111112010850.GT14486@sequoia.sous-sol.org>
- <1321060841.2006.35.camel@shinybook.infradead.org>
- <4EC210CB.1010409@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4EC210CB.1010409@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL1RGDXZjKhA++3eFVPbazixaM7Q_JfBJyLKE0xjBs+sK55idg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* cody (mail.kai.huang@gmail.com) wrote:
-> On 11/11/2011 05:20 PM, David Woodhouse wrote:
-> >On Fri, 2011-11-11 at 17:08 -0800, Chris Wright wrote:
-> >>On a slightly separate, but performance related note...have you ever
-> >>tried using the hw queue?  Currently we only have a sw queue, but the
-> >>submission path for invalidations doesn't really queue (unless I missed
-> >>it).  It seems to pull from the software queue and submit/wait,
-> >>submit/wait...Seems simple enough to submit the whole queue and then
-> >>issue the wait.
-> >I have a feeling we trigger errata if we do that — although if we're
-> >only doing it for an emulated IOMMU that shouldn't be an issue.
-> >
-> What does the emulated IOMMU here? Does it mean the emulated IOMMU
-> exposed to guest VM?
+* Roland Dreier (roland@purestorage.com) wrote:
+> On Fri, Nov 11, 2011 at 4:37 PM, David Woodhouse <dwmw2@infradead.org> wrote:
+> > This brain-damage only affects the first chipsets
+> > from before we worked out that cache incoherency was a *really* f*cking
+> > stupid idea, doesn't it?
+> 
+> As we talked about at KS, I have some Westmere EP (ie latest
+> and greatest server platform) systems where the BIOS exposes
+> an option that allows choosing VT-d coherency on or off, and
+> defaults it to "off".
 
-Yes.  So for KVM, the IOMMU emulation would be in QEMU.
+That's just more brain damage AFAICT.  Esp. if you do performance
+testing (and choose not to use passthrough mode)... have and it's
+quite measurable.  I switched default to on long time ago, w/out
+issue.
+
+> What is the "official" Intel line on coherency with Westmere and
+> Tylersburg -- because as I also mentioned, I was seeing some
+> problems with VT-d and the default "coherency off" setting that
+> looked like the IOMMU HW is getting stale PTEs (ie a missing
+> or not working cache flush).
+
+That sounds like sw bugs more than official recommendation issue.
 
 thanks,
 -chris
