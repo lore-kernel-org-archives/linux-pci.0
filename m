@@ -1,58 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20596 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755880Ab1KWShh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Nov 2011 13:37:37 -0500
-Message-ID: <1322073444.484.140.camel@bling.home>
-Subject: Re: [PATCH] iommu: Include MSI susceptibility to DMA in creating
- iommu groups
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Chris Wright <chrisw@sous-sol.org>
-Cc: Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
-	dwmw2@infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Wed, 23 Nov 2011 11:37:24 -0700
-In-Reply-To: <20111121233505.GG3344@sequoia.sous-sol.org>
-References: <20111117170800.3125.84150.stgit@bling.home>
-	 <20111118104651.GJ5627@amd.com> <1321628190.26410.63.camel@bling.home>
-	 <20111118152710.GA5098@amd.com> <1321633956.26410.126.camel@bling.home>
-	 <20111120120043.GB20535@8bytes.org>
-	 <20111121233505.GG3344@sequoia.sous-sol.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:35953 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751898Ab1KNE4x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2011 23:56:53 -0500
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [202.81.31.247])
+	by e23smtp07.au.ibm.com (8.14.4/8.13.1) with ESMTP id pAE4uhrK021739
+	for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2011 15:56:43 +1100
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id pAE4raaR1556538
+	for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2011 15:53:36 +1100
+Received: from d23av02.au.ibm.com (loopback [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id pAE4ufON010248
+	for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2011 15:56:43 +1100
+Message-ID: <4EC09F86.5090900@linux.vnet.ibm.com>
+Date: Mon, 14 Nov 2011 12:56:38 +0800
+From: Michael Wang <wangyun@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: Ram Pai <linuxram@us.ibm.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+References: <1317970100.29415.305.camel@pasglop> <CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com> <20111007232516.GF2980@ram-ThinkPad-T61> <1318057168.29415.333.camel@pasglop> <20111008075353.GK2980@ram-ThinkPad-T61> <1318060793.29415.347.camel@pasglop> <20111102140325.004b9dad@jbarnes-desktop> <20111103013014.GB393@ram-ThinkPad-T61> <20111106023310.GA2383@ram-ThinkPad-T61> <20111111100143.545ead31@jbarnes-desktop> <20111114043318.GA2435@ram-ThinkPad-T61>
+In-Reply-To: <20111114043318.GA2435@ram-ThinkPad-T61>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2011-11-21 at 15:35 -0800, Chris Wright wrote:
-> * Joerg Roedel (joro@8bytes.org) wrote:
-> > >From device standpoint a MSI transaction is always a DMA memory write
-> > to a given address range. The IOMMU-API should export a feature flag
-> > whether it supports filtering on those transaction or not. We have that
-> > today with the IOMMU_CAP_INTR_REMAP. I agree that the interface to get
-> > this information is ugly because a domain is needed. But the interface
-> > can be fixed. While doing this I suggest to rename that feature
-> > IOMMU_CAP_INTR_ISOLATION or something like that.
-> > VFIO can then check for this flag on module-load and refuse to load if
-> > it is not available.
-> 
-> I can see that the native grouping (the typical pci bridge type) is
-> really more a property of the topology.
-> 
-> The isolation properties of a group (arguably the whole point of the
-> group) is subtly different.
+On 11/14/2011 12:33 PM, Ram Pai wrote:
+> On Fri, Nov 11, 2011 at 10:01:43AM -0800, Jesse Barnes wrote:
+>> On Sun, 6 Nov 2011 10:33:10 +0800
+>> Ram Pai<linuxram@us.ibm.com>  wrote:
+>>
+>>>    All the PCI BARs of a device are enabled when the device is enabled using
+>>>    pci_enable_device().  This unnecessarily enables SRIOV BARs of the device.
+>>>
+>>>    On some platforms, which do not support SRIOV as yet, the pci_enable_device()
+>>>    fails to enable the device if its SRIOV BARs are not allocated resources
+>>>    correctly.
+>>>
+>>>    The following patch fixes the above problem. The SRIOV BARs are now enabled
+>>>    when IOV capability of the device is enabled in sriov_enable().
+>>>
+>>>    NOTE: Note, there is subtle change in the pci_enable_device() API.
+>>>    Any driver that depends on SRIOV BARS to be enabled in pci_enable_device()
+>>>    can fail.
+>>>
+>>>    The patch has been touch tested on power and x86 platform.
+>>>
+>>>    Signed-off-by: Ram Pai<linuxram@us.ibm.com>
+>>> ---
+>> I think this is a good direction, but I'd like to get a tested-by or
+>> two from people using SR-IOV...
+> I have people within IBM who have tested this patch successfully.
+> Michael Wang/Nish: Can you provide us a tested-by for this patch?
+Hi
 
-Yes, there is a subtle difference there, maybe that's what we're
-tripping over.  I see the group as an assertion by the iommu driver that
-it can distinguish and isolate the set of devices within that group from
-other groups and shared resources.  For instance, numerous systems
-include hardware iommus that provide only translation and not isolation
-(DMA is translated through the IOVA window or allowed direct to memory).
-That doesn't mean they should implement a device_group callback that
-statically returns a single groupid, that means they should not
-implement device_group.  I'm afraid the meaning of a group will be lost
-if we allow iommus to define groups, but then add flags saying "oh, but
-we don't isolate ________".  I much prefer we enable a user to opt-in at
-the iommu driver level than weaken the definition of a group.  Thanks,
+I have tested both patches with Fedora16 KVM kernel on a power machine.
+My original issue is that the be2net module failed to be loaded, and the 
+patch
+fixes it.
+After applied the patch, the be2net module can be loaded normally and new
+network interfaces appeared.
 
-Alex
+Tested-by: Michael Wang <wangyun@linux.vnet.ibm.com>
+
+Thanks,
+Michael Wang
+> Prarit: Can you give this patch and the other patch a try?
+> the other patch is: [RFC PATCH 1/1] PCI:delay configuration of SRIOV capability
+>
+> RP
 
