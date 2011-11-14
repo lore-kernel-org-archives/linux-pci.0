@@ -1,74 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:43161 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754257Ab1KRTET (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 14:04:19 -0500
-Received: by bke17 with SMTP id 17so4552824bke.0
-        for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2011 11:04:17 -0800 (PST)
-Date: Fri, 18 Nov 2011 21:04:14 +0200
-From: Felipe Balbi <balbi@ti.com>
-To: Greg KH <greg@kroah.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Lars-Peter Clausen <lars@metafoo.de>,
-	Felipe Balbi <balbi@ti.com>
-Subject: Re: [PATCH] DWC3: use module_pci_driver
-Message-ID: <20111118190413.GA11736@legolas.emea.dhcp.ti.com>
-Reply-To: balbi@ti.com
-References: <20111118181249.GA29495@kroah.com>
- <20111118181424.GB29495@kroah.com>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:52208 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644Ab1KNXm0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2011 18:42:26 -0500
+Received: from /spool/local
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <garyhade@us.ibm.com>;
+	Mon, 14 Nov 2011 16:42:26 -0700
+Date: Mon, 14 Nov 2011 15:42:16 -0800
+From: Gary Hade <garyhade@us.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, stable@kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Renninger <trenn@novell.com>,
+	Gary Hade <garyhade@us.ibm.com>
+Subject: [PATCH] x86/PCI: Ignore CPU non-addressable _CRS reserved memory
+	resources
+Message-ID: <20111114234216.GA16000@us.ibm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="M9NhX3UHpAaciwkO"
-In-Reply-To: <20111118181424.GB29495@kroah.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---M9NhX3UHpAaciwkO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Gary Hade <garyhade@us.ibm.com>
 
-Hi,
+This assures that a _CRS reserved host bridge window or 
+window region is not used if it is not addressable by
+the CPU.  The new code either trims the window to exclude
+the non-addressable portion or totally ignores the window
+if the entire window is non-addressable.
 
-On Fri, Nov 18, 2011 at 10:14:24AM -0800, Greg KH wrote:
-> From: Greg Kroah-Hartman <gregkh@suse.de>
->=20
-> This cuts down on the boilerplate code.
->=20
->=20
-> Cc: Lars-Peter Clausen <lars@metafoo.de>
-> Cc: Felipe Balbi <balbi@ti.com>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+The current code has been shown to be problematic with
+32-bit non-PAE kernels on systems where _CRS reserves
+resources above 4GB.
 
-Looks good to me. It would be nice to see a similar patch for
-dwc3-omap.c moving the platform_driver_register to this new macro :-)
+Signed-off-by: Gary Hade <garyhade@us.ibm.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Renninger <trenn@novell.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: stable@kernel.org
+---
 
-Acked-by: Felipe Balbi <balbi@ti.com>
+ arch/x86/pci/acpi.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
 
---=20
-balbi
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 404f21a..3557af7 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -149,7 +149,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	struct acpi_resource_address64 addr;
+ 	acpi_status status;
+ 	unsigned long flags;
+-	u64 start, end;
++	u64 start, orig_end, end;
+ 
+ 	status = resource_to_addr(acpi_res, &addr);
+ 	if (!ACPI_SUCCESS(status))
+@@ -165,7 +165,21 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 		return AE_OK;
+ 
+ 	start = addr.minimum + addr.translation_offset;
+-	end = addr.maximum + addr.translation_offset;
++	orig_end = end = addr.maximum + addr.translation_offset;
++
++	/* Exclude non-addressable range or non-addressable portion of range */
++	end = min(end, (u64)iomem_resource.end);
++	if (end <= start) {
++		dev_info(&info->bridge->dev,
++			"host bridge window [%#llx-%#llx] "
++			"(ignored, not CPU addressable)\n", start, orig_end);
++		return AE_OK;
++	} else if (orig_end != end) {
++		dev_info(&info->bridge->dev,
++			"host bridge window [%#llx-%#llx] "
++			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
++			start, orig_end, end + 1, orig_end);
++	}
+ 
+ 	res = &info->res[info->res_num];
+ 	res->name = info->name;
 
---M9NhX3UHpAaciwkO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJOxqwtAAoJEIaOsuA1yqREgMgP/1GRE2e/w3JvSaZcfCVqBE+F
-8qaAxuHITkIpK8i/Pnc0+lg+Ax4aN1OxJZllSYX6mVAnewNo5G/nw6qvBaTRx+GX
-02y5Fs/fYV0G5B2y/RuMSSFA/bp2/Wy5DQEjXNxhWh9JOOatN81mEZ4RVG1rFdso
-vH7IM1B1Fy3XxRpkV53L+2NS4vCwoLvLpXj5P541+XuYThSIZnMVuKUca2ojAfIg
-+ZnCiTVJQ4yCHZOEkj4bjsS/CKi8OT0jkLMvKtIt3B3sTpqWUmdL43v/9y4PSApQ
-XMCAg+70A330ZUconNW5UTPe8mMAwv8zbcB2gdyX4dvznRos6RNXEggF/2+QiCRs
-54Q5NkaMcCdA0SNFGwJaBZ8NZC69ajaXicdMv08L83vz/TbKx+OnKLFiKSEA3fkC
-jEo8GjH8IpNSVYy1AS5pRnlJcYKoRPIEF6VMrv832spr5HyI02JuKhZuQ0SadhWf
-XUFzaBzNqEFSDJthJOb3d8gvcUTQLjovrl07JvLV+f5KMeJwrqz6YTJL86arKWZt
-LnyMyLE+e4wNYwZ6a+LfgyGAQAihN5TR+rbBZH+yj4ZZY6ZHZqFxFD8plePzkMpG
-OD3shNAlW2JpV2Es6e3IkmU7Qs1vtKewedzh/k/74TlTL888eRTGS6hcADfRvWnE
-QzvZOhX51sFU6Tcvq8Vm
-=YQCR
------END PGP SIGNATURE-----
-
---M9NhX3UHpAaciwkO--
