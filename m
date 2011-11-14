@@ -1,116 +1,205 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:15754
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752752Ab1KRVJ5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 16:09:57 -0500
-Date: Fri, 18 Nov 2011 15:09:52 -0600
-From: Scott Wood <scottwood@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: David Gibson <dwg@au1.ibm.com>, <chrisw@sous-sol.org>,
-	<aik@au1.ibm.com>, <pmac@au1.ibm.com>, <joerg.roedel@amd.com>,
-	<agraf@suse.de>, <benve@cisco.com>, <aafabbri@cisco.com>,
-	<B08248@freescale.com>, <B07421@freescale.com>, <avi@redhat.com>,
-	<konrad.wilk@oracle.com>, <kvm@vger.kernel.org>,
-	<qemu-devel@nongnu.org>, <iommu@lists.linux-foundation.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
-Message-ID: <20111118210952.GA28979@schlenkerla.am.freescale.net>
+Received: from mx1.redhat.com ([209.132.183.28]:29647 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751089Ab1KNW7S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Nov 2011 17:59:18 -0500
+Message-ID: <1321311540.17169.122.camel@bling.home>
+Subject: RE: [RFC PATCH] vfio: VFIO Driver core framework
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Christian Benvenuti (benve)" <benve@cisco.com>
+Cc: chrisw@sous-sol.org, aik@au1.ibm.com, pmac@au1.ibm.com,
+	dwg@au1.ibm.com, joerg.roedel@amd.com, agraf@suse.de,
+	"Aaron Fabbri (aafabbri)" <aafabbri@cisco.com>,
+	B08248@freescale.com, B07421@freescale.com, avi@redhat.com,
+	konrad.wilk@oracle.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
+Date: Mon, 14 Nov 2011 15:59:00 -0700
+In-Reply-To: <184D23435BECB444AB6B9D4630C8EC8302D603A9@XMB-RCD-303.cisco.com>
 References: <20111103195452.21259.93021.stgit@bling.home>
- <20111115063431.GA4921@truffala.fritz.box>
- <1321380088.17169.282.camel@bling.home>
- <20111117000218.GB5411@truffala.fritz.box>
- <1321648376.26410.238.camel@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1321648376.26410.238.camel@bling.home>
+	 <184D23435BECB444AB6B9D4630C8EC8302D5FE38@XMB-RCD-303.cisco.com>
+	 <1321034647.2682.98.camel@bling.home>
+	 <184D23435BECB444AB6B9D4630C8EC8302D603A9@XMB-RCD-303.cisco.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 01:32:56PM -0700, Alex Williamson wrote:
-> Hmm, that might be cleaner than eliminating the size with just using
-> _IO().  So we might have something like:
-> 
-> #define VFIO_IOMMU_MAP_DMA              _IOWR(';', 106, struct vfio_dma_map)
-> #define VFIO_IOMMU_MAP_DMA_V2           _IOWR(';', 106, struct vfio_dma_map_v2)
-> 
-> For which the driver might do:
-> 
-> case VFIO_IOMMU_MAP_DMA:
-> case VFIO_IOMMU_MAP_DMA_V2:
-> {
-> 	struct vfio_dma_map map;
-> 
-> 	/* We don't care about the extra v2 bits */
-> 	if (copy_from_user(&map, (void __user *)arg, sizeof map))
-> 		return -EFAULT;
-
-That won't work if you have an old kernel that doesn't know about v2, and
-a new user that uses v2.  To make this work you'd have to strip out the
-size from the ioctl number before switching (but still use it when
-considering whether to access the v2 fields).  Simpler to just leave it
-out of the ioctl number and put it in the struct field as currently
-planned.
-
-> > > I think all our structure sizes are independent of host width.  If I'm
-> > > missing something, let me know.
+On Fri, 2011-11-11 at 16:22 -0600, Christian Benvenuti (benve) wrote:
+> > -----Original Message-----
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Friday, November 11, 2011 10:04 AM
+> > To: Christian Benvenuti (benve)
+> > Cc: chrisw@sous-sol.org; aik@au1.ibm.com; pmac@au1.ibm.com;
+> > dwg@au1.ibm.com; joerg.roedel@amd.com; agraf@suse.de; Aaron Fabbri
+> > (aafabbri); B08248@freescale.com; B07421@freescale.com; avi@redhat.com;
+> > konrad.wilk@oracle.com; kvm@vger.kernel.org; qemu-devel@nongnu.org;
+> > iommu@lists.linux-foundation.org; linux-pci@vger.kernel.org
+> > Subject: RE: [RFC PATCH] vfio: VFIO Driver core framework
 > > 
-> > Ah, for structures, that might be true.  I was seeing the bunch of
-> > ioctl()s that take ints.
+> > On Wed, 2011-11-09 at 18:57 -0600, Christian Benvenuti (benve) wrote:
+> > > Here are few minor comments on vfio_iommu.c ...
+> > 
+> > Sorry, I've been poking sticks at trying to figure out a clean way to
+> > solve the force vfio driver attach problem.
 > 
-> Ugh, I suppose you're thinking of an ILP64 platform with ILP32 compat
-> mode.
+> Attach o detach?
 
-Does Linux support ILP64?  There are "int" ioctls all over the place, and
-I don't think we do compat wrappers for them.  In fact, some of the
-ioctls in linux/fs.h use "int" for the compatible version of ioctls
-originally defined as "long".
+Attach.  For the case when a new device appears that belongs to a group
+that already in use.  I'll probably add a claim() operation to the
+vfio_device_ops that tells the driver to grab it.  I was hoping for pci
+this would just add it to the dynamic ids, but that hits device lock
+problems.
 
-It's cleaner to always use the fixed types, though.
+> > > > diff --git a/drivers/vfio/vfio_iommu.c b/drivers/vfio/vfio_iommu.c
+> > > > new file mode 100644
+> > > > index 0000000..029dae3
+> > > > --- /dev/null
+> > > > +++ b/drivers/vfio/vfio_iommu.c
+> > <snip>
+> > > > +
+> > > > +#include "vfio_private.h"
+> > >
+> > > Doesn't the 'dma_'  prefix belong to the generic DMA code?
+> > 
+> > Sure, we could these more vfio-centric.
+> 
+> Like vfio_dma_map_page?
 
-> Darn it, guess we need to make everything 64bit, including file
-> descriptors.
+Something like that, though _page doesn't seem appropriate as it tracks
+a region.
 
-What's wrong with __u32/__s32 (or uint32_t/int32_t)?
+> > 
+> > > > +struct dma_map_page {
+> > > > +	struct list_head	list;
+> > > > +	dma_addr_t		daddr;
+> > > > +	unsigned long		vaddr;
+> > > > +	int			npage;
+> > > > +	int			rdwr;
+> > > > +};
+> > > > +
+> > > > +/*
+> > > > + * This code handles mapping and unmapping of user data buffers
+> > > > + * into DMA'ble space using the IOMMU
+> > > > + */
+> > > > +
+> > > > +#define NPAGE_TO_SIZE(npage)	((size_t)(npage) << PAGE_SHIFT)
+> > > > +
+> > > > +struct vwork {
+> > > > +	struct mm_struct	*mm;
+> > > > +	int			npage;
+> > > > +	struct work_struct	work;
+> > > > +};
+> > > > +
+> > > > +/* delayed decrement for locked_vm */
+> > > > +static void vfio_lock_acct_bg(struct work_struct *work)
+> > > > +{
+> > > > +	struct vwork *vwork = container_of(work, struct vwork, work);
+> > > > +	struct mm_struct *mm;
+> > > > +
+> > > > +	mm = vwork->mm;
+> > > > +	down_write(&mm->mmap_sem);
+> > > > +	mm->locked_vm += vwork->npage;
+> > > > +	up_write(&mm->mmap_sem);
+> > > > +	mmput(mm);		/* unref mm */
+> > > > +	kfree(vwork);
+> > > > +}
+> > > > +
+> > > > +static void vfio_lock_acct(int npage)
+> > > > +{
+> > > > +	struct vwork *vwork;
+> > > > +	struct mm_struct *mm;
+> > > > +
+> > > > +	if (!current->mm) {
+> > > > +		/* process exited */
+> > > > +		return;
+> > > > +	}
+> > > > +	if (down_write_trylock(&current->mm->mmap_sem)) {
+> > > > +		current->mm->locked_vm += npage;
+> > > > +		up_write(&current->mm->mmap_sem);
+> > > > +		return;
+> > > > +	}
+> > > > +	/*
+> > > > +	 * Couldn't get mmap_sem lock, so must setup to decrement
+> > >                                                       ^^^^^^^^^
+> > >
+> > > Increment?
+> > 
+> > Yep
 
-I really do not see Linux supporting an ABI that has no 32-bit type at
-all, especially in a situation where userspace compatibility is needed. 
-If that does happen, the ABI breakage will go well beyond VFIO.
+Actually, side note, this is increment/decrement depending on the sign
+of the parameter.  So "update" may be more appropriate.  I think Tom
+originally used increment in one place and decrement in another to show
+it's dual use.
 
-> The point of the group is to provide a unit of ownership.  We can't let
-> $userA open $groupid and fetch a device, then have $userB do the same,
-> grabbing a different device.  The mappings will step on each other and
-> the devices have no isolation.  We can't restrict that purely by file
-> permissions or we'll have the same problem with sudo.
+> > <snip>
+> > > > +int vfio_remove_dma_overlap(struct vfio_iommu *iommu, dma_addr_t
+> > > > start,
+> > > > +			    size_t size, struct dma_map_page *mlp)
+> > > > +{
+> > > > +	struct dma_map_page *split;
+> > > > +	int npage_lo, npage_hi;
+> > > > +
+> > > > +	/* Existing dma region is completely covered, unmap all */
+> > >
+> > > This works. However, given how vfio_dma_map_dm implements the merging
+> > > logic, I think it is impossible to have
+> > >
+> > >     (start < mlp->daddr &&
+> > >      start + size > mlp->daddr + NPAGE_TO_SIZE(mlp->npage))
+> > 
+> > It's quite possible.  This allows userspace to create a sparse mapping,
+> > then blow it all away with a single unmap from 0 to ~0.
+> 
+> I would prefer the user to use exact ranges in the unmap operations
+> because it would make it easier to detect bugs/leaks in the map/unmap
+> logic used by the callers.
+> My assumptions are that:
+> 
+> - the user always keeps track of the mappings
 
-What is the problem with sudo?  If you're running processes as the same
-user, regardless of how, they're going to be able to mess with each
-other.
+My qemu code plays a little on the loose side here, acting as a
+passthrough for the internal memory client.  But even there, worst case
+would probably be trying to unmap a non-existent entry, not unmapping a
+sparse range.
 
-Is it possible to expose access to only specific groups via an
-individually-permissionable /dev/device, so only the entity handing out
-access to devices needs access to everything?
+> - the user either unmaps one specific mapping or 'all of them'.
+>   The 'all of them' case would also take care of those cases where
+>   the user does _not_ keep track of mappings and simply uses
+>   the "unmap from 0 to ~0" each time.
+> 
+> Because of this you could still provide an exact map/unmap logic
+> and allow such "unmap from 0 to ~0" by making the latter a special
+> case.
+> However, if we want to allow any arbitrary/inexact unmap request, then OK.
 
-> At one point we discussed a single open instance, but that
-> unnecessarily limits the user, so we settled on the mm.  Thanks,
+I can't think of any good reasons we shouldn't be more strict.  I think
+it was primarily just convenient to hit all the corner cases since we
+merge all the requests together for tracking and need to be able to
+split them back apart.  It does feel a little awkward to have a 0/~0
+special case though, but I don't think it's worth adding another ioctl
+to handle it.
 
-It would be nice if this limitation weren't excessively integrated into
-the design -- in the embedded space we've got unusual partitioning
-setups, including failover arrangements where partitions share devices. 
-The device may be configured with the IOMMU pointing only at regions that
-are shared by both mms, or the non-shared regions may be reconfigured as
-active ownership of the device gets handed around.
+<snip>
+> > > > +        if (cmd == VFIO_IOMMU_GET_FLAGS) {
+> > > > +                u64 flags = VFIO_IOMMU_FLAGS_MAP_ANY;
+> > > > +
+> > > > +                ret = put_user(flags, (u64 __user *)arg);
+> > > > +
+> > > > +        } else if (cmd == VFIO_IOMMU_MAP_DMA) {
+> > > > +		struct vfio_dma_map dm;
+> > > > +
+> > > > +		if (copy_from_user(&dm, (void __user *)arg, sizeof dm))
+> > > > +			return -EFAULT;
+> > >
+> > > What does the "_dm" suffix stand for?
+> > 
+> > Inherited from Tom, but I figure _dma_map_dm = action(dma map),
+> > object(dm), which is a vfio_Dma_Map.
+> 
+> OK. The reason why I asked is that '_dm' does not add anything to 'vfio_dma_map'.
 
-It would be up to userspace code to make sure that the mappings don't
-"step on each other".  The mapping could be done with whichever mm issued
-the map call for a given region.
+Yep.  Thanks,
 
-For this use case, there is unlikely to be an issue with ownership
-because there will not be separate privilege domains creating partitions
--- other use cases could refrain from enabling multiple-mm support unless
-ownership issues are resolved.
+Alex
 
-This doesn't need to be supported initially, but we should try to avoid
-letting the assumption permeate the code.
-
--Scott
 
