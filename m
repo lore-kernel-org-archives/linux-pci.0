@@ -1,65 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:46808 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab1KJHkx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2011 02:40:53 -0500
-Message-ID: <4EBB7FF5.1040109@jp.fujitsu.com>
-Date: Thu, 10 Nov 2011 16:40:37 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:35480 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755709Ab1KNSOV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2011 13:14:21 -0500
+Date: Mon, 14 Nov 2011 11:14:19 -0700
+From: Matthew Wilcox <matthew@wil.cx>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	James Paradis <jparadis@redhat.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
+	jbarnes@virtuousgeek.org
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+Message-ID: <20111114181418.GE4387@parisc-linux.org>
+References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com> <4EBD73C8.8070407@redhat.com> <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com> <4EBD8714.30401@redhat.com> <4EC12962.2040105@redhat.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai.lu@oracle.com>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: [PATCH 1/2] pciehp: wait 1000 ms before Link Training check
-References: <4EB88238.4050409@oracle.com> <4EB8F434.6090003@jp.fujitsu.com> <4EB94A51.6070809@oracle.com> <4EB9A50D.1040302@oracle.com> <4EBB7F9B.8050703@jp.fujitsu.com>
-In-Reply-To: <4EBB7F9B.8050703@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4EC12962.2040105@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to wait for 1000 ms after Data Link Layer Link Active (DLLLA)
-bit reads 1b before sending configuration request. Currently pciehp
-does this wait after checking Link Training (LT) bit. But we need it
-before checking LT bit because LT is still set even after DLLLA bit is
-set on some platforms.
+On Mon, Nov 14, 2011 at 09:44:50AM -0500, Prarit Bhargava wrote:
+> On 11/11/2011 03:35 PM, Don Dutile wrote:
+>  We should make it work automatically, either with
+> >> some sort of machine-dependent quirk, or (preferably) with a change to
+> >> the generic algorithm so it can handle these "broken" topologies along
+> >> with all the correct ones.
+> 
+> The problem is when I'm examining "this" PCIE bridge I have no knowledge of the remaining hierarchy below it.  In order to find the broken topology we need to do a two pass enumeration (NO.) or minimally query all possible devices immediately connected to it.  If we do that then what is the purpose of the only_one_child() check?
 
-Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
----
- drivers/pci/hotplug/pciehp_ctrl.c |    3 ---
- drivers/pci/hotplug/pciehp_hpc.c  |    8 ++++++++
- 2 files changed, 8 insertions(+), 3 deletions(-)
+We have enough information to do this quirk.
 
-Index: linux-3.1/drivers/pci/hotplug/pciehp_ctrl.c
-===================================================================
---- linux-3.1.orig/drivers/pci/hotplug/pciehp_ctrl.c
-+++ linux-3.1/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -213,9 +213,6 @@ static int board_added(struct slot *p_sl
- 		goto err_exit;
- 	}
- 
--	/* Wait for 1 second after checking link training status */
--	msleep(1000);
--
- 	/* Check for a power fault */
- 	if (ctrl->power_fault_detected || pciehp_query_power_fault(p_slot)) {
- 		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(p_slot));
-Index: linux-3.1/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-3.1.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-3.1/drivers/pci/hotplug/pciehp_hpc.c
-@@ -280,6 +280,14 @@ int pciehp_check_link_status(struct cont
-         else
-                 msleep(1000);
- 
-+	/*
-+	 * Need to wait for 1000 ms after Data Link Layer Link Active
-+	 * (DLLLA) bit reads 1b before sending configuration request.
-+	 * We need it before checking Link Training (LT) bit becuase
-+	 * LT is still set even after DLLLA bit is set on some platform.
-+	 */
-+	msleep(1000);
-+
- 	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status);
- 	if (retval) {
- 		ctrl_err(ctrl, "Cannot read LNKSTATUS register\n");
+pci_scan_slot calls pci_scan_single_device() for the devfn 0.
+We can look at the device we found and quirk the parent device.
+Something like this ...
+
+ int pci_scan_slot(struct pci_bus *bus, int devfn)
+[...]
+ 	dev = pci_scan_single_device(bus, devfn);
+	if (!dev)
+		return 0;
+	if (!dev->is_added)
+		nr++;
++	/* Quirk to fix NEC/Stratus broken PCIe topologies */
++	if ((dev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM) &&
++	    (bus->self->pcie_type == PCI_EXP_TYPE_DOWNSTREAM))
++		bus->self->pcie_type = PCI_EXP_TYPE_UPSTREAM;
+
+	if (pci_ari_enabled(bus))
+		next_fn = next_ari_fn;
+[...]
+
+As an aside, I'm quite shocked that this patch has been in the kernel
+for almost two years and this is the first time anybody's tested it on
+one of these systems.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
