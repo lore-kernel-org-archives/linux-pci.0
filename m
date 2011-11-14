@@ -1,54 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48367 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753588Ab1KTW2h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 20 Nov 2011 17:28:37 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: David Fries <david@fries.net>
-Subject: Re: [PATH] pci_has_legacy_pm_support add driver and device to WARN
-Date: Sun, 20 Nov 2011 23:31:00 +0100
-Cc: linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-References: <20111120212945.GA1781@spacedout.fries.net>
-In-Reply-To: <20111120212945.GA1781@spacedout.fries.net>
+Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:10366 "EHLO
+	TX2EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752663Ab1KNW04 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2011 17:26:56 -0500
+Message-ID: <4EC195AB.60007@freescale.com>
+Date: Mon, 14 Nov 2011 16:26:51 -0600
+From: Scott Wood <scottwood@freescale.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201111202331.00548.rjw@sisk.pl>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: <chrisw@sous-sol.org>, <aik@au1.ibm.com>, <pmac@au1.ibm.com>,
+	<dwg@au1.ibm.com>, <joerg.roedel@amd.com>, <agraf@suse.de>,
+	<benve@cisco.com>, <aafabbri@cisco.com>, <B08248@freescale.com>,
+	<B07421@freescale.com>, <avi@redhat.com>, <konrad.wilk@oracle.com>,
+	<kvm@vger.kernel.org>, <qemu-devel@nongnu.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
+References: <20111103195452.21259.93021.stgit@bling.home>  <4EBDBA50.3070801@freescale.com> <1321304079.17169.74.camel@bling.home>
+In-Reply-To: <1321304079.17169.74.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, November 20, 2011, David Fries wrote:
-> From: David Fries <David@Fries.net>
+On 11/14/2011 02:54 PM, Alex Williamson wrote:
+> On Fri, 2011-11-11 at 18:14 -0600, Scott Wood wrote:
+>> What are the semantics of "desired and/or returned dma address"?
 > 
-> Include the driver name and device in warning when a pci driver
-> supports both legacy pm and new framework as just the stack trace
-> gives no way to identify the driver.
-> 
-> Signed-off-by: David Fries <David@Fries.net>
+> I believe the original intention was that a user could leave dmaaddr
+> clear and let the iommu layer provide an iova address.  The iommu api
+> has since evolved and that mapping scheme really isn't present anymore.
+> We'll currently fail if we can map the requested address.  I'll update
+> the docs to make that be the definition.
 
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+OK... if there is any desire in the future to have the kernel pick an
+address (which could be useful for IOMMUs that don't set
+VFIO_IOMMU_FLAGS_MAP_ANY), there should be an explicit flag for this,
+since zero could be a valid address to request (doesn't mean "clear").
 
-> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/pci-driver.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
+>> Note that the "length of structure" approach means that ioctl numbers
+>> will change whenever this grows -- perhaps we should avoid encoding the
+>> struct size into these ioctls?
 > 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 12d1e81..3623d65 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -604,7 +604,8 @@ static bool pci_has_legacy_pm_support(struct pci_dev *pci_dev)
->  	 * supported as well.  Drivers are supposed to support either the
->  	 * former, or the latter, but not both at the same time.
->  	 */
-> -	WARN_ON(ret && drv->driver.pm);
-> +	WARN(ret && drv->driver.pm, "driver %s device %04x:%04x\n",
-> +		drv->name, pci_dev->vendor, pci_dev->device);
->  
->  	return ret;
->  }
+> How so?  What's described here is effectively the base size.  If we
+> later add feature foo requiring additional fields, we set a flag, change
+> the size, and tack those fields onto the end.  The kernel side should
+> balk if the size doesn't match what it expects from the flags it
+> understands (which I think I probably need to be more strict about).
+
+The size of the struct is encoded into the ioctl number via the _IOWR()
+macro.  If we want the struct to be growable in the future, we should
+leave that out and just use _IO().  Otherwise if the size of the struct
+changes, the ioctl number changes.  This is annoying for old userspace
+plus new kernel (have to add compat entries to the switch), and broken
+for old kernel plus new userspace.
+
+>> Can we limit the IOMMU_API dependency to the IOMMU parts of VFIO?  It
+>> would still be useful for devices which don't do DMA, or where we accept
+>> the lack of protection/translation (e.g. we have a customer that wants
+>> to do KVM device assignment on one of our lower-end chips that lacks an
+>> IOMMU).
 > 
+> Ugh.  I'm not really onboard with it given that we're trying to sell
+> vfio as a secure user space driver interface with iommu-based
+> protection.
+
+That's its main use case, but it doesn't make much sense to duplicate
+the non-iommu-related bits for other use cases.
+
+This applies at runtime too, some devices don't do DMA at all (and thus
+may not be part of an IOMMU group, even if there is an IOMMU present for
+other devices -- could be considered a standalone group of one device,
+with a null IOMMU backend).  Support for such devices can wait, but it's
+good to keep the possibility in mind.
+
+-Scott
 
