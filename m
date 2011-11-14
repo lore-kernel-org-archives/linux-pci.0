@@ -1,65 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 11 Nov 2011 09:49:05 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] PCI / ACPI: Make acpiphp ignore root bridges using SHPC
- native hotplug
-Message-ID: <20111111094905.1bc3be9d@jbarnes-desktop>
-In-Reply-To: <4EB737A8.3000208@jp.fujitsu.com>
-References: <201110220043.38635.rjw@sisk.pl>
-	<201110261342.51843.rjw@sisk.pl>
-	<4EAA1762.1060207@jp.fujitsu.com>
-	<201111062311.28913.rjw@sisk.pl>
-	<4EB737A8.3000208@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/m0B4Vl1TV/R9l11O/qhQcJT"; protocol="application/pgp-signature"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33601 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754585Ab1KNOpT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Nov 2011 09:45:19 -0500
+Message-ID: <4EC12962.2040105@redhat.com>
+Date: Mon, 14 Nov 2011 09:44:50 -0500
+From: Prarit Bhargava <prarit@redhat.com>
+MIME-Version: 1.0
+To: Don Dutile <ddutile@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	James Paradis <jparadis@redhat.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
+	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com> <4EBD73C8.8070407@redhat.com> <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com> <4EBD8714.30401@redhat.com>
+In-Reply-To: <4EBD8714.30401@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/m0B4Vl1TV/R9l11O/qhQcJT
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, 07 Nov 2011 10:43:04 +0900
-Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com> wrote:
 
-> Thank you for doing this.
-> Looks good to me.
->=20
-> Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+On 11/11/2011 03:35 PM, Don Dutile wrote:
+> On 11/11/2011 03:29 PM, Bjorn Helgaas wrote:
+>> On Fri, Nov 11, 2011 at 12:13 PM, Don Dutile<ddutile@redhat.com>  wrote:
+>>> On 11/11/2011 12:41 PM, James Paradis wrote:
+>>>>
+>>>> Hmmm... would it be better to do this as a quirk or as a boot
+>>>> parameter?  I've heard reports that other systems may be running
+>>>
+>>> Hearsay?  if you have definite cases, then please share them,
+>>> so folks know when to flip the boot parameter on.  note: it would have to be
+>>> an early boot param as well.
+>>
+>> It'd definitely be good to know all the specific cases.
+>>
+>> But merely sharing them so folks will know when to use the parameter
+>> is a broken model. 
 
-Applied to my -next branch, thanks.
+Yeah -- I'd rather do something that "works", but I'm not sure we can without dropping the only_one_child() check.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+ We should make it work automatically, either with
+>> some sort of machine-dependent quirk, or (preferably) with a change to
+>> the generic algorithm so it can handle these "broken" topologies along
+>> with all the correct ones.
 
---Sig_/m0B4Vl1TV/R9l11O/qhQcJT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+The problem is when I'm examining "this" PCIE bridge I have no knowledge of the remaining hierarchy below it.  In order to find the broken topology we need to do a two pass enumeration (NO.) or minimally query all possible devices immediately connected to it.  If we do that then what is the purpose of the only_one_child() check?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+> In this case, doing a check that the parent is downstream PPB and the child is
+> downstream PPB could be done to identify the broken topology and automatically
+> scan dev nums > 0.
 
-iQIcBAEBAgAGBQJOvWARAAoJEIEoDkX4Qk9hxFMP/AnMEDRdiELZvkdcO/RG8jJy
-fu+DaCY6257ElogtriS9yL/V9xDVs5DEkq3ta+fDWomtzxGGHqczuGYx21LI71KH
-cp1oC+6fs79KWj9OYJdb6ko2JuyuZvt+n1zvcvhCOJZzA7P0Ylj+0ortyJLww7kn
-xL0XD97SPheqHPqZfiR6Bzmn/sZpb2Zbc1sDanCsq2SsjNvdQhDKy2MdhC94NWSe
-A4OFQ/e25GXZ9tJPQHcptpotDOiE8VUKSMJ2VbZd6nVVjMGlDi62M71s0GKp1UaA
-hHg9+zvo62GeCFSikIpJfwiSbNdmU7o6DMlrhBCR4wxuSAEPMr5w7JBPWKEMk4ux
-i4lU/d48gty+MZrY6b8NvZ8mKRUX4/xYEWBtK2IIA/szFMAXDrMpZRsYD8DjdZve
-RHEX5+LTIXuUChKZdymv3RAQkAckbOzOOHl8c/H/CUZmWZdX9+9rjbMm+vQTa+ty
-b9QSjk/h5yuUTPAhlH0QR2dIHtw3IHlk8M9+quHzysDCYKTjTfDkmDEDWwmG52bl
-03eSuaTXiWmfZjMY44gGijz+QjC0AL7khdnRZVgCe9iOnylCp+GqhGKQn8g5KClO
-i9+FYubu8yQK/T5pESJQ8YIiEMOeFoFe+K23RIXKwN7ptdQZgvVEmwCck3989X6i
-Mn+pnhoI1wCLr2Hcm/n/
-=CWqU
------END PGP SIGNATURE-----
+I'm in favor of adding a kernel parameter that in addition to implementing the workaround Stratus will have, will also dump out a HW_ERR broken message of some sort.  I don't want to see a stack trace.
 
---Sig_/m0B4Vl1TV/R9l11O/qhQcJT--
+... maybe we need to add in a pci_bridge_quirk() or something?
+
+P.
