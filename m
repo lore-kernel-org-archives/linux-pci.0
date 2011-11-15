@@ -1,48 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22164 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57636 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756797Ab1KRO4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Nov 2011 09:56:37 -0500
-Message-ID: <1321628190.26410.63.camel@bling.home>
-Subject: Re: [PATCH] iommu: Include MSI susceptibility to DMA in creating
- iommu groups
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Joerg Roedel <Joerg.Roedel@amd.com>
-Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 18 Nov 2011 07:56:30 -0700
-In-Reply-To: <20111118104651.GJ5627@amd.com>
-References: <20111117170800.3125.84150.stgit@bling.home>
-	 <20111118104651.GJ5627@amd.com>
+	id S1753897Ab1KOVw5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Nov 2011 16:52:57 -0500
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+From: Myron Stowe <mstowe@redhat.com>
+To: James Paradis <jparadis@redhat.com>
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	Rolf Eike Beer <eike-kernel@sf-tec.de>,
+	Matthew Wilcox <matthew@wil.cx>,
+	Don Dutile <ddutile@redhat.com>, linux-pci@vger.kernel.org,
+	jbarnes@virtuousgeek.org, Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <00c3e8bb-bb13-41e4-a3a9-65d21bc8defa@zmail15.collab.prod.int.phx2.redhat.com>
+References: <00c3e8bb-bb13-41e4-a3a9-65d21bc8defa@zmail15.collab.prod.int.phx2.redhat.com>
 Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Nov 2011 14:52:28 -0700
+Message-ID: <1321393949.2417.181.camel@zim.stowe>
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2011-11-18 at 11:46 +0100, Joerg Roedel wrote:
-> On Thu, Nov 17, 2011 at 10:09:26AM -0700, Alex Williamson wrote:
-> > IOMMU drivers should account for the platform's susceptibility to
-> > DMA triggered MSI interrupts in creating IOMMU groups.  Skip
-> > devices when the IOMMU can't isolate MSI from DMA, but allow
-> > an iommu=group_unsafe_msi option for opt-in.  This removes the
-> > leap in logic for users that IOMMU_CAP_INTR_REMAP is required for
-> > interrupt security when they may be running on a non-x86 platform
-> > that does not have this dependency.
+On Tue, 2011-11-15 at 16:08 -0500, James Paradis wrote:
+> > Bjorn,
+> > 
+> > > 
+> > > Is this problem a regression?  If so, what commit caused it?
+> > > f07852d6442, which introduced only_one_child()?
+> > 
+> > That's a tough question to answer.  AFAICT the broken (HARDWARE
+> > broken) Stratus systems only enumerated properly by chance.  Did
+> > they work prior to f07852d6?  From what jparadis told me, yes.  Is
+> > it a regression? ... depends on how you look at it.
 > 
-> I actually don't see the point in this. The iommu-group thing is to tell
-> user-space what devices the IOMMU can safely distinguish between. The
-> absence of interrupt-remapping changes nothing to that grouping. So why
-> remove it when interrupt remapping is not enabled?
+> Yes, that is the commit that caused the problem.  
+> 
+> > > Does Windows work on this system?
+> > 
+> > I don't know.  jparadis?  Any clue?
+> 
+> Windows works just fine on this system, probably because they 
+> don't optimize the PCIE scan in this way...
+> 
+> > > Is this something that could be fixed by a firmware upgrade?  If
+> > > so,
+> > > is there a Stratus/NEC bug report?
+> > 
+> > Hmmm, the idea of a FW upgrade somehow fixing this never occurred to
+> > me.  jparadis?  Is that possible?
+> 
+> I seriously doubt it, but I can ask the hardware folks at Stratus.
+> I believe that at least some of this topology is baked in...
 
-As you say, the interface is to tell userspace what devices the IOMMU
-can safely distinguish between.  On x86, the IOMMU cannot distinguish
-DMA to the interrupt region between devices without interrupt remapping.
-Therefore, to only expose devices we can safely distinguish between, we
-shouldn't expose any devices by default if we don't provide this
-isolation.  The interrupt remapping capability of the IOMMU isn't
-exposed to userspace, nor should userspace need to make the leap in
-understanding how MSIs are generated on a specific platform and whether
-interrupt remapping is required to provide isolation.  Thanks,
+James,
 
-Alex
+I think a lot of people are wondering why this is only now coming up as
+the patch in question has been upstream for a couple of years.
+
+While the system has been in the field for awhile - has the I/O
+subsystem that exhibits this issue been there since the introduction of
+this type of system -or- is there a new, PCI Express based, I/O
+subsystem now being introduced that can be used with the original
+platform and this is why we are just now seeing the issue?
+
+Myron
+> 
+> > > Is there a Red Hat bugzilla URL you could include?
+> > 
+> > Only happens upstream.
+> 
+> Well, to be fair, we actually saw this behavior beginning with 
+> Fedora 14, but never pursued the matter until now.  I suppose
+> we could have filed a Fedora bug, but we wanted to root-cause the
+> problem first.
+> 
+> --jim
+> 
+
 
