@@ -1,44 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:43763 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753152Ab1KRVMY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 16:12:24 -0500
-Subject: extra large DMA buffer for PCI-E device under UIO
-From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
-Date: Fri, 18 Nov 2011 16:16:23 -0500
-Cc: linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
-To: hjk@hansjkoch.de, gregkh@suse.de, tglx@linutronix.de
-Mime-Version: 1.0 (Apple Message framework v1084)
+Received: from mx1.redhat.com ([209.132.183.28]:50139 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757138Ab1KOS0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Nov 2011 13:26:35 -0500
+Message-ID: <4EC2AE9A.1030208@redhat.com>
+Date: Tue, 15 Nov 2011 13:25:30 -0500
+From: Prarit Bhargava <prarit@redhat.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rolf Eike Beer <eike-kernel@sf-tec.de>,
+	Matthew Wilcox <matthew@wil.cx>,
+	Don Dutile <ddutile@redhat.com>,
+	James Paradis <jparadis@redhat.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, jbarnes@virtuousgeek.org
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com> <4EBD73C8.8070407@redhat.com> <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com> <4EBD8714.30401@redhat.com> <4EC12962.2040105@redhat.com> <20111114181418.GE4387@parisc-linux.org> <4EC28B93.1060101@redhat.com> <af06626e34e32043e3c4974290270ec1.squirrel@webmail.sf-mail.de> <CAErSpo5=YFNMcDt59JU2HQJV2EZpy1khLLCxyPAf49w8m4=kOA@mail.gmail.com>
+In-Reply-To: <CAErSpo5=YFNMcDt59JU2HQJV2EZpy1khLLCxyPAf49w8m4=kOA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello fellow hackers.
+Bjorn,
 
-I am maintaining a UIO based driver for a PCI-E data acquisition device.
+> 
+> Is this problem a regression?  If so, what commit caused it?
+> f07852d6442, which introduced only_one_child()?
 
-I map BAR0 of the device to userspace. I also map two memory areas, one is used to feed instructions to the acquisition device, the other is used autonomously by the PCI device to write the acquired data.
+That's a tough question to answer.  AFAICT the broken (HARDWARE broken) Stratus systems only enumerated properly by chance.  Did they work prior to f07852d6?  From what jparadis told me, yes.  Is it a regression? ... depends on how you look at it.
 
-The strategy we have been using for those two share memory areas has historically been using pci_alloc_coherent on v2.6.35 x86_64 (limited to 4MB based on my trials) and later, I made use of the VT-d (intel_iommu) to allocate as much as 128MB (an arbitrary limit) which appear contiguous to the PCI device. I use vmalloc_user to allocate 128M, then write all the physically continuous segments in a scatterlist, then use pci_map_sg which works it's way to intel_iommu. The device DMA addresses I get back are contiguous over the whole 128M. Neat! Our VT-d capable devices still use this strategy.
+> 
+> Does Windows work on this system?
 
-This large memory is mission-critical in making the acquisition device autonomous (real-time), yet keep the DMA implementation very simple. Today, we are re-using this device on a CPU architecture that has no IOMMU (intel E6XX/EG20T) and want to avoid creating a scatter-gather scheme between my driver and the FPGA (PCI device).
+I don't know.  jparadis?  Any clue?
 
-So I went back to the old pci_alloc_coherent method, which although limited to 4 MB, will do for early development phases. Instead of 2.6.35, we are doing preliminary development using 2.6.37 and will probably use 3.1 or more later.  The cpu/device shared memory maps (1MB and 4MB) are allocated using pci_alloc_coherent and handed to UIO as physical memory using the dma_addr_t returned by the pci_alloc func.
+> 
+> Is this something that could be fixed by a firmware upgrade?  If so,
+> is there a Stratus/NEC bug report?
 
-The 1st memory map is written to by CPU and read from device.
-The 2nd memory map is typically written by the device and read by the CPU, but future features may have the device also read this memory.
+Hmmm, the idea of a FW upgrade somehow fixing this never occurred to me.  jparadis?  Is that possible?
 
-My initial testing on the atom E6XX show the PCI device failing when trying to read from the first memory map. I suspect PCI-E payload sizes which may be somewhat hardcoded in the FPGA firmware... we will confirm this soon.
+> 
+> Is there a Red Hat bugzilla URL you could include?
 
-Now from the get go I have felt lucky to have made this work because of my limited research into the intricacies of the kernel's memory management. So I ask two things:
+Only happens upstream.
 
-- Is this kosher?
-- Is there a better/easier/safer way to achieve this? (remember that for the second map, the more memory I have, the better. We have a gig of ram, if I take, say 256MB, that would be OK too.
+> 
+> What bad things would happen if we just turned on this
+> Stratus-specific behavior all the time on all systems?  It looks like
+> f07852d6442 is basically an optimization that makes pci_scan_slot()
+> faster, so I assume one effect would be to slow down PCI enumeration
+> for everybody.  By how much?
 
-I had thought about cutting out a chunk of ram from the kernel's boot args, but had always feared cache/snooping errors. Not to mention I had no idea how to "claim" or setup this memory once my driver's probe function. Maybe I would still be lucky and it would just work? mmmh...
+Not a huge amount -- estimated lt 0.5 seconds on this Stratus system.  As for other systems, it obviously depends on how complicated the PCIE hierarchy is.
 
-Thanks for the help!!
-/jfd
-
-Cheers Linus!
+P.
