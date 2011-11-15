@@ -1,39 +1,63 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: "Michael S. Tsirkin" <mst@redhat.com>,
-	Chris Metcalf <cmetcalf@tilera.com>
-Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
-Date: Tue, 29 Nov 2011 22:05:11 +0000
-Cc: Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <cover.1322592494.git.mst@redhat.com> <a3bc9cb56040258dabc7b466ea217f4515b68b7d.1322592495.git.mst@redhat.com>
-In-Reply-To: <a3bc9cb56040258dabc7b466ea217f4515b68b7d.1322592495.git.mst@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:32958 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932298Ab1KOVJA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 16:09:00 -0500
+Date: Tue, 15 Nov 2011 16:08:50 -0500 (EST)
+From: James Paradis <jparadis@redhat.com>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>,
+	Matthew Wilcox <matthew@wil.cx>,
+	Don Dutile <ddutile@redhat.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, jbarnes@virtuousgeek.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+Message-ID: <00c3e8bb-bb13-41e4-a3a9-65d21bc8defa@zmail15.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <4EC2AE9A.1030208@redhat.com>
+Content-Type: text/plain; charset=utf-8
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201111292205.11544.arnd@arndb.de>
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 29 November 2011, Michael S. Tsirkin wrote:
-> diff --git a/arch/tile/include/asm/io.h b/arch/tile/include/asm/io.h
-> index c9ea165..be6090d 100644
-> --- a/arch/tile/include/asm/io.h
-> +++ b/arch/tile/include/asm/io.h
-> @@ -204,7 +204,8 @@ static inline long ioport_panic(void)
->  
->  static inline void __iomem *ioport_map(unsigned long port, unsigned int len)
->  {
-> -       return (void __iomem *) ioport_panic();
-> +       pr_info("Trying to map an IO resource - it does not exit on tile.\n");
-> +       return NULL;
->  }
 
-Why not just set CONFIG_NO_IOPORT and make this unavailable at compile time?
+> Bjorn,
+> 
+> > 
+> > Is this problem a regression?  If so, what commit caused it?
+> > f07852d6442, which introduced only_one_child()?
+> 
+> That's a tough question to answer.  AFAICT the broken (HARDWARE
+> broken) Stratus systems only enumerated properly by chance.  Did
+> they work prior to f07852d6?  From what jparadis told me, yes.  Is
+> it a regression? ... depends on how you look at it.
 
-	Arnd
+Yes, that is the commit that caused the problem.  
+
+> > Does Windows work on this system?
+> 
+> I don't know.  jparadis?  Any clue?
+
+Windows works just fine on this system, probably because they 
+don't optimize the PCIE scan in this way...
+
+> > Is this something that could be fixed by a firmware upgrade?  If
+> > so,
+> > is there a Stratus/NEC bug report?
+> 
+> Hmmm, the idea of a FW upgrade somehow fixing this never occurred to
+> me.  jparadis?  Is that possible?
+
+I seriously doubt it, but I can ask the hardware folks at Stratus.
+I believe that at least some of this topology is baked in...
+
+> > Is there a Red Hat bugzilla URL you could include?
+> 
+> Only happens upstream.
+
+Well, to be fair, we actually saw this behavior beginning with 
+Fedora 14, but never pursued the matter until now.  I suppose
+we could have filed a Fedora bug, but we wanted to root-cause the
+problem first.
+
+--jim
+
