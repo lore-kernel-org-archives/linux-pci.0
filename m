@@ -1,102 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:59800 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430Ab1K2H7Z convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:2:1>);
-	Tue, 29 Nov 2011 02:59:25 -0500
-Message-Id: <4ED49EEA0200007800063F75@nat28.tlf.novell.com>
-Date: Tue, 29 Nov 2011 07:59:22 +0000
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Jesse Barnes" <jbarnes@virtuousgeek.org>
-Cc: "Bjorn Helgaas" <bjorn.helgaas@hp.com>, <linux-pci@vger.kernel.org>
-Subject: [PATCH] PCI/IO-APIC: allow PCI_IOAPIC to be user configurable
- on x86
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:36734 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755826Ab1KOW1D convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 17:27:03 -0500
+Date: Tue, 15 Nov 2011 17:27:01 -0500 (EST)
+From: James Paradis <jparadis@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
+	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>,
+	Don Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+Message-ID: <7913c5e8-ea95-4f6f-aa21-33b84e8b931f@zmail15.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adjusts PCI_IOAPIC to be user configurable (possibly as a module)
-on x86, since the base architecture code for adding IO-APICs
-dynamically isn't there yet (and hence having the code present
-everywhere is pretty pointless).
 
-To make this consistent, a MODULE_DEVICE_TABLE() declaration gets
-added, the class specifications get corrected (by properly using
-PCI_DEVICE_CLASS() intended for purposes like this), and the probe and
-remove functions get their sections adjusted.
+BTW - for everyone's edification, here is a report on fedoraforum.org
+that looks suspiciously like the same problem we're dealing with:
 
-Signed-off-by: Jan Beulich <jbeulich@suse.com>
-Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>
+http://forums.fedoraforum.org/showthread.php?t=255025
 
----
- drivers/pci/Kconfig  |    4 ++--
- drivers/pci/ioapic.c |   15 +++++++--------
- 2 files changed, 9 insertions(+), 10 deletions(-)
+The mobo worked with F13, broke with F14, nothing he did seemed to
+bring the keyboard back, ended up fixing it by getting another
+brand of motherboard.  I'm going to see if I can find a copy of
+that motherboard for testing...
 
---- 3.2-rc3/drivers/pci/Kconfig
-+++ 3.2-rc3-pci-ioapic/drivers/pci/Kconfig
-@@ -98,11 +98,11 @@ config PCI_PASID
- 	  If unsure, say N.
- 
- config PCI_IOAPIC
--	bool
-+	tristate "PCI IO-APIC hotplug support" if X86
- 	depends on PCI
- 	depends on ACPI
- 	depends on HOTPLUG
--	default y
-+	default !X86
- 
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
---- 3.2-rc3/drivers/pci/ioapic.c
-+++ 3.2-rc3-pci-ioapic/drivers/pci/ioapic.c
-@@ -17,7 +17,7 @@
-  */
- 
- #include <linux/pci.h>
--#include <linux/export.h>
-+#include <linux/module.h>
- #include <linux/acpi.h>
- #include <linux/slab.h>
- #include <acpi/acpi_bus.h>
-@@ -27,7 +27,7 @@ struct ioapic {
- 	u32		gsi_base;
- };
- 
--static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
-+static int __devinit ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
- {
- 	acpi_handle handle;
- 	acpi_status status;
-@@ -88,7 +88,7 @@ exit_free:
- 	return -ENODEV;
- }
- 
--static void ioapic_remove(struct pci_dev *dev)
-+static void __devexit ioapic_remove(struct pci_dev *dev)
- {
- 	struct ioapic *ioapic = pci_get_drvdata(dev);
- 
-@@ -99,13 +99,12 @@ static void ioapic_remove(struct pci_dev
- }
- 
- 
--static struct pci_device_id ioapic_devices[] = {
--	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--	  PCI_CLASS_SYSTEM_PIC_IOAPIC << 8, 0xffff00, },
--	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--	  PCI_CLASS_SYSTEM_PIC_IOXAPIC << 8, 0xffff00, },
-+static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
-+	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
-+	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
- 	{ }
- };
-+MODULE_DEVICE_TABLE(pci, ioapic_devices);
- 
- static struct pci_driver ioapic_driver = {
- 	.name		= "ioapic",
+--jim
 
-
-
+----- Original Message -----
+> On Fri, Nov 11, 2011 at 12:13 PM, Don Dutile <ddutile@redhat.com>
+> wrote:
+> > On 11/11/2011 12:41 PM, James Paradis wrote:
+> >>
+> >> Hmmm... would it be better to do this as a quirk or as a boot
+> >> parameter?  I've heard reports that other systems may be running
+> >
+> > Hearsay?  if you have definite cases, then please share them,
+> > so folks know when to flip the boot parameter on.  note: it would
+> > have to be
+> > an early boot param as well.
+> 
+> It'd definitely be good to know all the specific cases.
+> 
+> But merely sharing them so folks will know when to use the parameter
+> is a broken model.  We should make it work automatically, either with
+> some sort of machine-dependent quirk, or (preferably) with a change
+> to
+> the generic algorithm so it can handle these "broken" topologies
+> along
+> with all the correct ones.
+> 
+> Bjorn
+> 
