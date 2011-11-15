@@ -1,20 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from imr-ma03.mx.aol.com ([64.12.206.41]:58293 "EHLO
-	imr-ma03.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752916Ab1KPFui convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2011 00:50:38 -0500
-To: linux-mtd@lists.infradead.org, linux-pci@vger.kernel.org,
-	majordomo@vger.kernel.org, netfilter@vger.kernel.org,
-	oprofile-list@lists.sourceforge.net, patthurston@kgoradio.com
-Subject: Fwd: 
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:56577 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757273Ab1KOVyA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 16:54:00 -0500
+Date: Tue, 15 Nov 2011 16:53:59 -0500 (EST)
+From: James Paradis <jparadis@redhat.com>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	mstowe@redhat.com, jbarnes@virtuousgeek.org,
+	Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
+Message-ID: <99c3207c-1d5a-4185-992a-6338ae012771@zmail15.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <4EC28B93.1060101@redhat.com>
+Content-Type: text/plain; charset=utf-8
 MIME-Version: 1.0
-From: jobhunts02@aol.com
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <8CE723ABD7B3EA5-2990-A608E@webmail-m137.sysops.aol.com>
-Date: Wed, 16 Nov 2011 00:50:11 -0500 (EST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-http://nitwarangal.net/best2012.php?id=24&top=22&page=34
+Prarit,
 
+FYI, this patch does the trick on Draco.  I'll try it in the 
+Stratus lab as well, but I'm 99.99% sure that it will work there
+too.
 
+There was one concern when we had a meeting at Stratus to talk 
+about this: we're not sure if the NEC-branded systems have the 
+same DMI string or not... I'm trying to find out.
+
+--jim
+
+----- Original Message -----
+> Trying [v2]....
+> 
+> 
+> pci: Workaround Stratus broken PCIE hierarchy
+> 
+> Stratus systems have a hierarchy that includes a PCIE Downstream
+> bridge
+> connected to a PCIE Upstream bridge and a PCI Downstream bridge.  The
+> system
+> boots with this wrong hierarchy into a crippled mode (USB doesn't
+> work,
+> network doesn't work ...).  Avoiding the Downstream bridge check in
+> only_one_child() causes all the bridges to be enumerated and the
+> system
+> to function properly.
+> 
+> Unfortunately this hardware is currently available so we should at
+> least
+> keep it functional.
+> 
+> [v2]
+> - ddutile@redhat.com requested drivers/pci/quirks.c code
+> - matthew@will.cx requested that dmi_name_in_vendors() be called only
+> once with a static var check
+> - added a kernel parameter to enable scanning of all PCIE devices.
+> 
+> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+> 
+> diff --git a/Documentation/kernel-parameters.txt
+> b/Documentation/kernel-parameters.txt
+> index a0c5c5f..7af458f 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2069,6 +2069,7 @@ bytes respectively. Such letter suffixes can
+> also be entirely omitted.
+>  				on: Turn ECRC on.
+>  		realloc		reallocate PCI resources if allocations done by BIOS
+>  				are erroneous.
+> +		pcie_scan_all	Scan all possible PCIE devices.
+>  
+>  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State
+>  	Power
+>  			Management.
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6f45a73..f478bd5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3589,6 +3589,9 @@ static int __init pci_setup(char *str)
+>  				pcie_bus_config = PCIE_BUS_PERFORMANCE;
+>  			} else if (!strncmp(str, "pcie_bus_peer2peer", 18)) {
+>  				pcie_bus_config = PCIE_BUS_PEER2PEER;
+> +			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+> +				printk(KERN_ERR HW_ERR "PCIE: Scanning all devices.\n");
+> +				pcie_scan_all = 1;
+>  			} else {
+>  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+>  						str);
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index b74084e..5a07895 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -309,11 +309,16 @@ struct pci_dev_reset_methods {
+>  
+>  #ifdef CONFIG_PCI_QUIRKS
+>  extern int pci_dev_specific_reset(struct pci_dev *dev, int probe);
+> +extern int is_broken_pcie_port(void);
+>  #else
+>  static inline int pci_dev_specific_reset(struct pci_dev *dev, int
+>  probe)
+>  {
+>  	return -ENOTTY;
+>  }
+> +static inline int is_broken_pcie_port(void)
+> +{
+> +	return 0;
+> +}
+>  #endif
+>  
+>  #endif /* DRIVERS_PCI_H */
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 04e74f4..fc88a9b 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1270,13 +1270,18 @@ static unsigned no_next_fn(struct pci_dev
+> *dev, unsigned fn)
+>  	return 0;
+>  }
+>  
+> +int pcie_scan_all = 0; /* set via pci=pcie_scan_all */
+>  static int only_one_child(struct pci_bus *bus)
+>  {
+>  	struct pci_dev *parent = bus->self;
+> +	if (pcie_scan_all)
+> +		return 0;
+>  	if (!parent || !pci_is_pcie(parent))
+>  		return 0;
+> -	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+> -	    parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
+> +	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
+> +		return 1;
+> +	if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM &&
+> +	    !is_broken_pcie_port())
+>  		return 1;
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 7285145..ef4d0e7 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3092,3 +3092,21 @@ int pci_dev_specific_reset(struct pci_dev
+> *dev, int probe)
+>  
+>  	return -ENOTTY;
+>  }
+> +
+> +static int _is_broken_pcie_port = -1;
+> +int is_broken_pcie_port(void)
+> +{
+> +	if (_is_broken_pcie_port >= 0)
+> +		return _is_broken_pcie_port;
+> +	/*
+> +	 * Stratus/NEC ftServer systems have a broken PCIE hierarchy in
+> which
+> +	 * one upstream and one downstream port are plugged into a
+> downstream
+> +	 * port.  Avoiding the downstream port check in only_one_child()
+> results
+> +	 * in a functional system.
+> +	 */
+> +	if (dmi_name_in_vendors("ftServer"))
+> +		_is_broken_pcie_port = 1;
+> +	else
+> +		_is_broken_pcie_port = 0;
+> +	return _is_broken_pcie_port;
+> +}
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 337df0d..745b98e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1647,5 +1647,7 @@ static inline void
+> pci_release_bus_of_node(struct pci_bus *bus) { }
+>   */
+>  struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+>  
+> +/* set via pci=pcie_scan_all in order to enumerate all possible PCIE
+> busses */
+> +extern int pcie_scan_all;
+>  #endif /* __KERNEL__ */
+>  #endif /* LINUX_PCI_H */
+> 
