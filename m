@@ -1,39 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:61205 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406Ab1KNRhg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2011 12:37:36 -0500
-Received: by vws1 with SMTP id 1so5282396vws.19
-        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2011 09:37:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110826142424.4757cfe9@jbarnes-desktop>
-References: <20110823161643.27268.89203.stgit@bhelgaas.mtv.corp.google.com> <20110826142424.4757cfe9@jbarnes-desktop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 14 Nov 2011 10:37:14 -0700
-Message-ID: <CAErSpo6KSYqyj_oOVLo=rQFPZhE=CawZrhcF3TJT4sjnev9G+g@mail.gmail.com>
-Subject: Re: [PATCH] PCI hotplug: shpchp: don't blindly claim non-AMD 0x7450
- device IDs
+Received: from gate.crashing.org ([63.228.1.57]:50028 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932629Ab1KOWpF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Nov 2011 17:45:05 -0500
+Message-ID: <1321397030.3170.15.camel@pasglop>
+Subject: Re: [PATCH -v2 00/16] PCI: Re-factor PCI's 'latency timer' setup
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, Ralf Jung <ralfjung-e@gmx.de>,
-	Joerg Roedel <joerg.roedel@amd.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	linux@arm.linux.org.uk, vapier@gentoo.org, dhowells@redhat.com,
+	ysato@users.sourceforge.jp, tony.luck@intel.com,
+	fenghua.yu@intel.com, monstr@monstr.eu, ralf@linux-mips.org,
+	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
+	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
+	mingo@redhat.com, chris@zankel.net, linux-kernel@vger.kernel.org
+Date: Wed, 16 Nov 2011 09:43:50 +1100
+In-Reply-To: <20111111095930.22abd773@jbarnes-desktop>
+References: <20111028214726.20088.30551.stgit@amt.stowe>
+	 <20111111095930.22abd773@jbarnes-desktop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 26, 2011 at 3:24 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Tue, 23 Aug 2011 10:16:43 -0600
-> Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> Previously we claimed device ID 0x7450, regardless of the vendor, which is
->> clearly wrong.  Now we'll claim that device ID only for AMD.
->>
->> I suspect this was just a typo in the original code, but it's possible this
->> change will break shpchp on non-7450 AMD bridges.  If so, we'll have to fix
->> them as we find them.
->
-> Applied to my for-linus branch, thanks.
+On Fri, 2011-11-11 at 09:59 -0800, Jesse Barnes wrote:
+> On Fri, 28 Oct 2011 15:47:26 -0600
+> Myron Stowe <myron.stowe@redhat.com> wrote:
+> 
+> > The 'latency timer' of PCI devices, both Type 0 and Type 1,
+> > is setup in architecture-specific code [see: pcibios_set_master()].
+> > There are two approaches being taken by all the architectures - check
+> > if the 'latency timer' is currently set between 16 and 255 and if not
+> > bring it within bounds, or, do nothing (and then there is the
+> > gratuitously different parisc implementation).
+> > 
+> > There is nothing architecture-specific about PCI's 'latency timer' so
+> > this patch pulls the setup functionality up into the PCI core by
+> > creating a generic 'pcibios_set_master()' function using the '__weak'
+> > attribute which can be used by all architectures as a default which,
+> > if necessary, can then be over-ridden by architecture-specific code.
+> 
+> I have acks from Chris, Ralf, and Mike.  Any other arch maintainers
+> want to ack or nack this before it goes into my -next branch?
 
-Jesse, I think this one got lost (at least, I don't see it in the
-current upstream tree).
+I somewhat missed the original patch. As long as it's a nop for ppc, I
+don't care tho :-)
 
-Bjorn
+Cheers,
+Ben.
+
+
