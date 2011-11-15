@@ -1,48 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44459 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:65021 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756651Ab1KJAnl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Nov 2011 19:43:41 -0500
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 0/3] PCI: Convert maintaining FW-assigned BIOS BAR values to a
-	list of temporary entries
-To: jbarnes@virtuousgeek.org
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org
-Date: Wed, 09 Nov 2011 17:43:39 -0700
-Message-ID: <20111110004339.5866.28478.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1755059Ab1KOCaI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Nov 2011 21:30:08 -0500
+Message-ID: <1321324188.17169.129.camel@bling.home>
+Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Scott Wood <scottwood@freescale.com>
+Cc: chrisw@sous-sol.org, aik@au1.ibm.com, pmac@au1.ibm.com,
+	dwg@au1.ibm.com, joerg.roedel@amd.com, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
+Date: Mon, 14 Nov 2011 19:29:48 -0700
+In-Reply-To: <1321304079.17169.74.camel@bling.home>
+References: <20111103195452.21259.93021.stgit@bling.home>
+	 <4EBDBA50.3070801@freescale.com> <1321304079.17169.74.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In commit 58c84eda075 functionality was introduced that tries to reinstate
-the original, FW-assigned, BAR addresses of a PCI device when normal
-resource assignment attempts fail.  To keep track of the BIOS BAR
-addresses, struct pci_dev was augmented with an array to hold the BAR
-addresses of the PCI device: 'resource_size_t
-fw_addr[DEVICE_COUNT_RESOURCE]'.
+On Mon, 2011-11-14 at 13:54 -0700, Alex Williamson wrote:
+> On Fri, 2011-11-11 at 18:14 -0600, Scott Wood wrote:
+> > On 11/03/2011 03:12 PM, Alex Williamson wrote:
+> > > +	int			(*get)(void *);
+> > > +	void			(*put)(void *);
+> > > +	ssize_t			(*read)(void *, char __user *,
+> > > +					size_t, loff_t *);
+> > > +	ssize_t			(*write)(void *, const char __user *,
+> > > +					 size_t, loff_t *);
+> > > +	long			(*ioctl)(void *, unsigned int, unsigned long);
+> > > +	int			(*mmap)(void *, struct vm_area_struct *);
+> > > +};
+> > 
+> > When defining an API, please do not omit parameter names.
+> 
+> ok
+> 
+> > Should specify what the driver is supposed to do with get/put -- I guess
+> > not try to unbind when the count is nonzero?  Races could still lead the
+> > unbinder to be blocked, but I guess it lets the driver know when it's
+> > likely to succeed.
+> 
+> Right, for the pci bus driver, it's mainly for reference counting,
+> including the module_get to prevent vfio-pci from being unloaded.  On
+> the first get for a device, we also do a pci_enable() and pci_disable()
+> on last put.  I'll try to clarify in the docs.
 
-The reinstatement of BAR addresses is an uncommon event leaving the
-'fw_addr' array unused normally.  As the use of struct pci_dev is so
-prevalent, this seems wasteful.
+Looking at these again, I should just rename them to open/release.  That
+matches the points when they're called.  I suspect I started with just
+reference counting and it grew to more of a full blown open/release.
+Thanks,
 
-This patch series introduces a stand alone data structure and
-corresponding set of interfacing routines, converting the underlying
-aspects of the existing maintanence scheme to a list of temporary BIOS
-BAR value entries instead.
+Alex
 
----
-
-Myron Stowe (3):
-      x86/PCI: Convert maintaining FW-assigned BIOS BAR values to use a list
-      PCI: Maintain a list of FW-assigned BIOS BAR values
-      PCI: Fix starting basis for resource requests
-
-
- arch/x86/pci/i386.c     |    2 -
- drivers/pci/setup-res.c |  100 ++++++++++++++++++++++++++++++++++++++++++-----
- include/linux/pci.h     |    2 -
- 3 files changed, 92 insertions(+), 12 deletions(-)
-
--- 
