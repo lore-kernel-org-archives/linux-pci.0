@@ -1,58 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:53149 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752594Ab1KKM15 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Nov 2011 07:27:57 -0500
-From: James Bottomley <jbottomley@parallels.com>
-To: Vasiliy Averin <vvs@parallels.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	Adaptec OEM Raid Solutions <aacraid@adaptec.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Mark Salyzyn <mark_salyzyn@us.xyratex.com>,
-	Shaohua Li <shaohua.li@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: aacraid controller hangs if kernel uses non-default ASPM policy
-Date: Fri, 11 Nov 2011 12:27:55 +0000
-Message-ID: <1321014474.5161.10.camel@dabdike.int.hansenpartnership.com>
-References: <4EBCEDED.7030907@parallels.com>
-In-Reply-To: <4EBCEDED.7030907@parallels.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:37013 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932125Ab1KOANC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2011 19:13:02 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <dwg@au1.ibm.com>;
+	Tue, 15 Nov 2011 00:11:32 +1000
+Date: Tue, 15 Nov 2011 11:00:50 +1100
+From: David Gibson <dwg@au1.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	chrisw@sous-sol.org, aik@au1.ibm.com, pmac@au1.ibm.com,
+	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
+Message-ID: <20111115000050.GA4882@truffala.fritz.box>
+References: <20111103195452.21259.93021.stgit@bling.home>
+ <20111111175118.GA6946@phenom.dumpdata.com>
+ <1321049456.2682.220.camel@bling.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1321049456.2682.220.camel@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCAyMDExLTExLTExIGF0IDEzOjQyICswNDAwLCBWYXNpbHkgQXZlcmluIHdyb3RlOg0K
-PiBBYWNyYWlkIGNvbnRyb2xsZXIgY2FuIGhhbmcgb24gc29tZSBub2RlcyBpZiBrZXJuZWwgdXNl
-cyBub24tZGVmYXVsdA0KPiAocG93ZXJzYXZlKSBBU1BNIHBvbGljeS4NCj4gQ29udHJvbGxlciBo
-YW5ncyBzaG9ydGx5IGFmdGVyIHN1Y2Nlc3NmdWwgbG9hZCBhbmQgaGFyZHdhcmUgZGV0ZWN0aW9u
-Lg0KPiBTY3NpIGVycm9yIGhhbmRsZXIgZGV0ZWN0cyB0aGlzIGhhbmcgYW5kIHRyaWVzIHRvIHJl
-c3RhcnQgaGFyZHdhcmUgYnV0DQo+IGl0IGRvZXMgbm90IGhlbHAuDQo+IA0KPiBJbml0aWFsbHkg
-aXQgd2FzIG5vdGljZWQgb24gUkhFTDYtYmFzZWQgb3BlblZaIGtlcm5lbCBhZnRlcg0KPiBiYWNr
-cG9ydGluZyBhYWNyYWlkIGRyaXZlciBmcm9tIG1haW5saW5lIChSSEVMNiBrZXJuZWwgd2l0aCBv
-cmlnaW5hbA0KPiBkcml2ZXIgd29ya3Mgd2VsbCkNCj4gaHR0cDovL2J1Z3ppbGxhLm9wZW52ei5v
-cmcvc2hvd19idWcuY2dpP2lkPTIwNDMNCj4gDQo+IFRoaXMgaXNzdWUgaGFwcGVucyBiZWNhdXNl
-IGRlZmF1bHQgQVNQTSBwb2xpY3kgd2FzIGNoYW5nZWQgaW4gUmVkIEhhdA0KPiBrZXJuZWxzLiBU
-aGVyZWZvcmUgZ3V5cyBmcm9tIFJlZCBIYXQgaGF2ZSBub3RpY2VkIHRoaXMgcHJvYmxlbSBsb25n
-DQo+IHRpbWUgYWdvOg0KPiBvbiBGZWRvcmEgMTINCj4gIGh0dHBzOi8vYnVnemlsbGEucmVkaGF0
-LmNvbS9zaG93X2J1Zy5jZ2k/aWQ9NTQwNDc4DQo+IG9uIEZlZG9yYSAxNA0KPiAgaHR0cHM6Ly9i
-dWd6aWxsYS5yZWRoYXQuY29tL3Nob3dfYnVnLmNnaT9pZD02NzkzODUNCj4gDQo+IEluIFJIRUw2
-IGtlcm5lbCB0aGlzIGlzc3VlIHdhcyBmaXhlZCwgQVNQTSB3YXMgZGlzYWJsZWQgaW4gYWFjcmFp
-ZA0KPiBkcml2ZXIuIEluIGtlcm5lbCBjaGFuZ2Vsb2cgSSd2ZSBmb3VuZCB0aGF0IHNlZW1zIGl0
-IHdhcyBkb25lIGJ5DQo+IE1hdHRoZXcgR2FycmV0dDogDQo+IC0gW3Njc2ldIGFhY3JhaWQ6IERp
-c2FibGUgQVNQTSBieSBkZWZhdWx0IChNYXR0aGV3IEdhcnJldHQpIFs1OTk3MzVdDQo+IA0KPiBI
-b3dldmVyIHNlZW1zIHRoaXMgcGF0Y2ggd2FzIG5vdCBzdWJtaXR0ZWQgdG8gbWFpbmxpbmUuIEkn
-dmUNCj4gcmVwcm9kdWNlZCB0aGlzIGlzc3VlIG9uIHZhbmlsbGEgMy4xLjAga2VybmVsIGJvb3Rl
-ZCB3aXRoDQo+ICJwY2llX2FzcG0ucG9saWN5PXBvd2Vyc2F2ZSIgb3B0aW9uLA0KPiBTbyBJIGJl
-bGlldmUgaXQgbWFrZXMgc2Vuc2UgdG8gZG8gaXQgbm93Lg0KPiANCj4gSSd2ZSByZXZpZXdlZCBz
-aW1pbGFyIGlzc3VlcyBhbmQgZm91bmQgdGhhdCBzaW1pbGFyIHRyb3VibGVzIGhhcHBlbg0KPiB3
-aXRoIGFub3RoZXIgaGFyZHdhcmUgdG9vLiBGb3IgZXhhbXBsZSBzaW1pbGFyIHBhdGNoIGNhbiBi
-ZSBmb3VuZCBpbg0KPiBlMTAwMCBkcml2ZXIuDQoNCkRvIHlvdSBoYXZlIGEgY29tcHJlaGVuc2l2
-ZSBsaXN0PyAgSWYgaXQncyBqdXN0IGEgY291cGxlIG9mIGRyaXZlcnMgaW4NCmVhY2ggc3Vic3lz
-dGVtLCB0aGVuIGFkZGluZyB3aGF0IGFtb3VudCB0byBkZXZpY2UgcXVpcmtzIGluIHRoZSBkcml2
-ZXINCnNlZW1zIHRvIGJlIGFwcHJvcHJpYXRlLiAgSWYgaXQncyBhIGh1Z2UgbnVtYmVyLCB3ZSBt
-aWdodCBoYXZlIHRvDQpyZXRoaW5rIGhvdyB0aGlzIGZlYXR1cmUgaXMgaW1wbGVtZW50ZWQuDQoN
-ClRoZSBuZXh0IHF1ZXN0aW9uIGlzOiBpcyB0aGUgZHJpdmVyIHRoZSBjb3JyZWN0IHBsYWNlPyAg
-VGhpcyBzb3VuZHMgbGlrZQ0KYSBQQ0llIExpbmsgUG93ZXIgTWFuYWdlbWVudCBibGFja2xpc3Qg
-c2V0IC4uLiB3aGljaCBtaWdodCBuZWVkIHVwZGF0aW5nDQpvbiB0aGUgZmx5IC4uLiBtaWdodCB3
-ZSBuZWVkIGEgdXNlciBrbm9iIGZvciB0aGlzIChsaWtlIHdlIGhhdmUgZm9yIHRoZQ0KU0NTSSBi
-bGFjay93aGl0ZSBsaXN0KT8NCg0KSmFtZXMNCg0K
+On Fri, Nov 11, 2011 at 03:10:56PM -0700, Alex Williamson wrote:
+> Thanks Konrad!  Comments inline.
+> On Fri, 2011-11-11 at 12:51 -0500, Konrad Rzeszutek Wilk wrote:
+> > On Thu, Nov 03, 2011 at 02:12:24PM -0600, Alex Williamson wrote:
+[snip]
+> > > +The GET_NUM_REGIONS ioctl tells us how many regions the device supports:
+> > > +
+> > > +#define VFIO_DEVICE_GET_NUM_REGIONS     _IOR(';', 109, int)
+> > 
+> > Don't want __u32?
+> 
+> It could be, not sure if it buys us anything maybe even restricts us.
+> We likely don't need 2^32 regions (famous last words?), so we could
+> later define <0 to something?
+
+As a rule, it's best to use explicit fixed width types for all ioctl()
+arguments, to avoid compat hell for 32-bit userland on 64-bit kernel
+setups.
+
+[snip]
+> > > +Again, zero count entries are allowed (vfio-pci uses a static interrupt
+> > > +type to index mapping).
+> > 
+> > I am not really sure what that means.
+> 
+> This is so PCI can expose:
+> 
+> enum {
+>         VFIO_PCI_INTX_IRQ_INDEX,
+>         VFIO_PCI_MSI_IRQ_INDEX,
+>         VFIO_PCI_MSIX_IRQ_INDEX,
+>         VFIO_PCI_NUM_IRQS
+> };
+> 
+> So like regions it always exposes 3 IRQ indexes where count=0 if the
+> device doesn't actually support that type of interrupt.  I just want to
+> spell out that bus drivers have this kind of flexibility.
+
+I knew what you were aiming for, so I could see what you meant here,
+but I don't think the doco is very clearly expressed at all.
+
+-- 
+David Gibson			| I'll have my music baroque, and my code
+david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
+				| _way_ _around_!
+http://www.ozlabs.org/~dgibson
+
