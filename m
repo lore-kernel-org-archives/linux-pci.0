@@ -1,125 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 29 Nov 2011 21:35:05 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: David Howells <dhowells@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH-RFC v2] frv: switch to GENERIC_PCI_IOMAP
-Message-ID: <20111129193503.GA2960@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63484 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472Ab1KOFz3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 00:55:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20111115045404.GC30247@sequoia.sous-sol.org>
+References: <20111111224849.9756.13368.stgit@bling.home>
+	<1321058267.2006.21.camel@shinybook.infradead.org>
+	<CAL1RGDXZjKhA++3eFVPbazixaM7Q_JfBJyLKE0xjBs+sK55idg@mail.gmail.com>
+	<20111112005100.GR14486@sequoia.sous-sol.org>
+	<1321059340.2006.27.camel@shinybook.infradead.org>
+	<20111112010850.GT14486@sequoia.sous-sol.org>
+	<1321060841.2006.35.camel@shinybook.infradead.org>
+	<4EC210CB.1010409@gmail.com>
+	<20111115045404.GC30247@sequoia.sous-sol.org>
+Date: Tue, 15 Nov 2011 13:55:27 +0800
+Message-ID: <CANqQZNEvSBQgtR_ZDUWEDUVqscGFVuCtZYSzc+SRK4a_Vzjdhg@mail.gmail.com>
+Subject: Re: [PATCH] intel-iommu: Default to non-coherent for domains
+ unattached to iommus
+From: Kai Huang <mail.kai.huang@gmail.com>
+To: Chris Wright <chrisw@sous-sol.org>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Roland Dreier <roland@purestorage.com>,
+	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-frv uses a version of pci_iomap that simply
-casts and returns back the start address.
-Looking closely, both ioremap and ioport_map seem to
-do this on this platform, so the generic pci_iomap
-will DTRT automatically.
+On Tue, Nov 15, 2011 at 12:54 PM, Chris Wright <chrisw@sous-sol.org> wrote:
+> * cody (mail.kai.huang@gmail.com) wrote:
+>> On 11/11/2011 05:20 PM, David Woodhouse wrote:
+>> >On Fri, 2011-11-11 at 17:08 -0800, Chris Wright wrote:
+>> >>On a slightly separate, but performance related note...have you ever
+>> >>tried using the hw queue?  Currently we only have a sw queue, but the
+>> >>submission path for invalidations doesn't really queue (unless I missed
+>> >>it).  It seems to pull from the software queue and submit/wait,
+>> >>submit/wait...Seems simple enough to submit the whole queue and then
+>> >>issue the wait.
+>> >I have a feeling we trigger errata if we do that — although if we're
+>> >only doing it for an emulated IOMMU that shouldn't be an issue.
+>> >
+>> What does the emulated IOMMU here? Does it mean the emulated IOMMU
+>> exposed to guest VM?
+>
+> Yes.  So for KVM, the IOMMU emulation would be in QEMU.
+>
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
+What will emulated IOMMU be used for to the guest VM? To provide
+another layer of address translation (in guest VM) that allows guest
+VM to allocate large contiguous DVMA space for device? Does this mean
+we need to keep something like *shadow page table* for the real IOMMU?
 
-Changes from v1:
-	add a missing include for asm-generic/pci_iomap.h
-	in asm/io.h
+And this will be only used for direct IO, correct?
 
-This is a completely untested patch to switch frv
-over to the new pci_iomap (in -mm).
-
-This is on top of pci: use generic pci_iomap in most architectures,
-and converts just the frvc architecture.
-
-
-
- arch/frv/Kconfig                  |    1 +
- arch/frv/include/asm/io.h         |    2 +-
- arch/frv/mb93090-mb00/Makefile    |    2 +-
- arch/frv/mb93090-mb00/pci-iomap.c |   29 -----------------------------
- 4 files changed, 3 insertions(+), 31 deletions(-)
- delete mode 100644 arch/frv/mb93090-mb00/pci-iomap.c
-
-diff --git a/arch/frv/Kconfig b/arch/frv/Kconfig
-index bad27a6..dfde78b 100644
---- a/arch/frv/Kconfig
-+++ b/arch/frv/Kconfig
-@@ -317,6 +317,7 @@ config PCI
- 	bool "Use PCI"
- 	depends on MB93090_MB00
- 	default y
-+	select GENERIC_PCI_IOMAP
- 	help
- 	  Some FR-V systems (such as the MB93090-MB00 VDK) have PCI
- 	  onboard. If you have one of these boards and you wish to use the PCI
-diff --git a/arch/frv/include/asm/io.h b/arch/frv/include/asm/io.h
-index ca7475e..8cb50a2 100644
---- a/arch/frv/include/asm/io.h
-+++ b/arch/frv/include/asm/io.h
-@@ -21,6 +21,7 @@
- #include <asm/virtconvert.h>
- #include <asm/string.h>
- #include <asm/mb-regs.h>
-+#include <asm-generic/pci_iomap.h>
- #include <linux/delay.h>
- 
- /*
-@@ -370,7 +371,6 @@ static inline void iowrite32_rep(void __iomem *p, const void *src, unsigned long
- 
- /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
- struct pci_dev;
--extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
- static inline void pci_iounmap(struct pci_dev *dev, void __iomem *p)
- {
- }
-diff --git a/arch/frv/mb93090-mb00/Makefile b/arch/frv/mb93090-mb00/Makefile
-index b73b542..21f1df1 100644
---- a/arch/frv/mb93090-mb00/Makefile
-+++ b/arch/frv/mb93090-mb00/Makefile
-@@ -3,7 +3,7 @@
- #
- 
- ifeq "$(CONFIG_PCI)" "y"
--obj-y := pci-frv.o pci-irq.o pci-vdk.o pci-iomap.o
-+obj-y := pci-frv.o pci-irq.o pci-vdk.o
- 
- ifeq "$(CONFIG_MMU)" "y"
- obj-y += pci-dma.o
-diff --git a/arch/frv/mb93090-mb00/pci-iomap.c b/arch/frv/mb93090-mb00/pci-iomap.c
-deleted file mode 100644
-index 35f6df2..0000000
---- a/arch/frv/mb93090-mb00/pci-iomap.c
-+++ /dev/null
-@@ -1,29 +0,0 @@
--/* pci-iomap.c: description
-- *
-- * Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
-- * Written by David Howells (dhowells@redhat.com)
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version
-- * 2 of the License, or (at your option) any later version.
-- */
--#include <linux/pci.h>
--#include <linux/module.h>
--
--void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
--{
--	resource_size_t start = pci_resource_start(dev, bar);
--	resource_size_t len = pci_resource_len(dev, bar);
--	unsigned long flags = pci_resource_flags(dev, bar);
--
--	if (!len || !start)
--		return NULL;
--
--	if ((flags & IORESOURCE_IO) || (flags & IORESOURCE_MEM))
--		return (void __iomem *) start;
--
--	return NULL;
--}
--
--EXPORT_SYMBOL(pci_iomap);
--- 
-1.7.5.53.gc233e
+> thanks,
+> -chris
+>
