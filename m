@@ -1,74 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:44143 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751092Ab1KKR5x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:57:53 -0500
-Date: Fri, 11 Nov 2011 09:58:14 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: ebiederm@xmission.com (Eric W. Biederman)
-Cc: <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] msi:  Disable msi interrupts when we initialize a pci
- device
-Message-ID: <20111111095814.4c3fc3c9@jbarnes-desktop>
-In-Reply-To: <m1y5wj4ftd.fsf@fess.ebiederm.org>
-References: <m1y5wj4ftd.fsf@fess.ebiederm.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/C_X3jJI6YJxKbD2.R09VDj_"; protocol="application/pgp-signature"
+Received: from mx1.redhat.com ([209.132.183.28]:37277 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751586Ab1KPELQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Nov 2011 23:11:16 -0500
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH] intel-iommu: Manage iommu_coherency globally
+To: dwmw2@infradead.org
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chrisw@sous-sol.org,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Tue, 15 Nov 2011 21:11:09 -0700
+Message-ID: <20111116040752.11878.18642.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/C_X3jJI6YJxKbD2.R09VDj_
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+We currently manage iommu_coherency on a per domain basis,
+choosing the safest setting across the iommus attached to a
+particular domain.  This unfortunately has a bug that when
+no iommus are attached, the domain defaults to coherent.
+If we fall into this mode, then later add a device behind a
+non-coherent iommu to that domain, the context entry is
+updated using the wrong coherency setting, and we get dmar
+faults.
 
-On Mon, 17 Oct 2011 11:46:06 -0700
-ebiederm@xmission.com (Eric W. Biederman) wrote:
+Since we expect chipsets to be consistent in their coherency
+setting, we can instead determine the coherency once and use
+it globally.
 
->=20
-> I traced a nasty kexec on panic boot failure to the fact that we had
-> screaming msi interrupts and we were not disabling the msi messages at
-> kernel startup.  The booting kernel had not enabled those interupts so
-> was not prepared to handle them.
->=20
-> I can see no reason why we would ever want to leave the msi interrupts
-> enabled at boot if something else has enabled those interrupts.  The pci
-> spec specifies that msi interrupts should be off by default.  Drivers
-> are expected to enable the msi interrupts if they want to use them.  Our
-> interrupt handling code reprograms the interrupt handlers at boot and
-> will not be be able to do anything useful with an unexpected interrupt.
->=20
-> This patch applies cleanly all of the way back to 2.6.32 where I noticed
-> the problem.
->=20
-> Cc: stable@kernel.org
->=20
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-Applied to -next because I'm a chicken.
+As suggested, here's an updated patch to which sets the
+coherency once at initalization time instead of changing
+the default coherency for orphaned domains.  Thanks,
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Alex
 
---Sig_/C_X3jJI6YJxKbD2.R09VDj_
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+ drivers/iommu/intel-iommu.c |   40 +++++++++++++++++-----------------------
+ 1 files changed, 17 insertions(+), 23 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index c0c7820..79e103a 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -353,7 +353,6 @@ struct dmar_domain {
+ 
+ 	int		flags;		/* flags to find out type of domain */
+ 
+-	int		iommu_coherency;/* indicate coherency of iommu access */
+ 	int		iommu_snooping; /* indicate snooping control feature*/
+ 	int		iommu_count;	/* reference count of iommu */
+ 	int		iommu_superpage;/* Level of superpages supported:
+@@ -419,6 +418,8 @@ static LIST_HEAD(device_domain_list);
+ 
+ static struct iommu_ops intel_iommu_ops;
+ 
++static int iommu_coherency __read_mostly = 1;
++
+ static int __init intel_iommu_setup(char *str)
+ {
+ 	if (!str)
+@@ -556,20 +557,6 @@ static struct intel_iommu *domain_get_iommu(struct dmar_domain *domain)
+ 	return g_iommus[iommu_id];
+ }
+ 
+-static void domain_update_iommu_coherency(struct dmar_domain *domain)
+-{
+-	int i;
+-
+-	domain->iommu_coherency = 1;
+-
+-	for_each_set_bit(i, &domain->iommu_bmp, g_num_of_iommus) {
+-		if (!ecap_coherent(g_iommus[i]->ecap)) {
+-			domain->iommu_coherency = 0;
+-			break;
+-		}
+-	}
+-}
+-
+ static void domain_update_iommu_snooping(struct dmar_domain *domain)
+ {
+ 	int i;
+@@ -608,7 +595,6 @@ static void domain_update_iommu_superpage(struct dmar_domain *domain)
+ /* Some capabilities may be different across iommus */
+ static void domain_update_iommu_cap(struct dmar_domain *domain)
+ {
+-	domain_update_iommu_coherency(domain);
+ 	domain_update_iommu_snooping(domain);
+ 	domain_update_iommu_superpage(domain);
+ }
+@@ -646,7 +632,7 @@ static struct intel_iommu *device_to_iommu(int segment, u8 bus, u8 devfn)
+ static void domain_flush_cache(struct dmar_domain *domain,
+ 			       void *addr, int size)
+ {
+-	if (!domain->iommu_coherency)
++	if (!iommu_coherency)
+ 		clflush_cache_range(addr, size);
+ }
+ 
+@@ -1459,11 +1445,6 @@ static int domain_init(struct dmar_domain *domain, int guest_width)
+ 	domain->agaw = agaw;
+ 	INIT_LIST_HEAD(&domain->devices);
+ 
+-	if (ecap_coherent(iommu->ecap))
+-		domain->iommu_coherency = 1;
+-	else
+-		domain->iommu_coherency = 0;
+-
+ 	if (ecap_sc_support(iommu->ecap))
+ 		domain->iommu_snooping = 1;
+ 	else
+@@ -3583,6 +3564,8 @@ static struct notifier_block device_nb = {
+ 
+ int __init intel_iommu_init(void)
+ {
++	struct dmar_drhd_unit *drhd;
++	struct intel_iommu *iommu;
+ 	int ret = 0;
+ 
+ 	/* VT-d is required for a TXT/tboot launch, so enforce that */
+@@ -3643,6 +3626,18 @@ int __init intel_iommu_init(void)
+ 
+ 	init_iommu_pm_ops();
+ 
++	/*
++	 * Check for coherency support across all iommus.  If unsupported
++	 * by any, force cache flushes.  Expected to be consistent across
++	 * all iommus in the system.
++	 */
++	for_each_active_iommu(iommu, drhd) {
++		if (!ecap_coherent(iommu->ecap)) {
++			iommu_coherency = 0;
++			break;
++		}
++	}
++
+ 	bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
+ 
+ 	bus_register_notifier(&pci_bus_type, &device_nb);
+@@ -3820,7 +3815,6 @@ static int md_domain_init(struct dmar_domain *domain, int guest_width)
+ 	INIT_LIST_HEAD(&domain->devices);
+ 
+ 	domain->iommu_count = 0;
+-	domain->iommu_coherency = 0;
+ 	domain->iommu_snooping = 0;
+ 	domain->iommu_superpage = 0;
+ 	domain->max_addr = 0;
 
-iQIcBAEBAgAGBQJOvWI2AAoJEIEoDkX4Qk9hWt0P/2QTRVNyZSiMnLMqK3ZBduAG
-5wXV/+zijfBnN4kQidhKmB9UvLkUFbUHWa7AcAm39BtKarEKUsNGqkRVBMoenz2l
-hjPsxzTYRtXMmf4V3ozOzDFlwJIE32mxnJfmJ212V+9VuAkw72s9693xsc0rJeIZ
-bcMWM/XIOuODrwI0Z1HZchZPjrCnVa/+BzqibMxFTYAfuFCCojI44RFOJUoKubow
-FdZofHZMXC0/XweKWDZeWYQXKR7Kq0IJ5D5EjnJNoTyJ+gBaV2Lfsa2Z5yKt5Ttg
-HnhuhqpDMui5pCwpYWLBbTB94PoOYBcT/M3gJ/fsrCrrA5ZaV6wdSGbGMSrn+/+w
-eGZdRQADVElxtJEpmin4/b3OkBM4VQSuxuvEhimlMGF+eZdhbkz9J26hNKJEI5p+
-RAbxAcciYP/hJJEWeLlYYfwoLwjDN+Sa6zE2g16IotiPHy4gdSsbWIxrrZrczOcf
-GNabTp1JzRUZQcvRAyaPyNbbtnJU3yG7+JQCIxt2i+DNEl4ASSF2B+yAn2NczCUU
-AxjsSwjYYQrSKRTxQdZiGkHkOWn2F37Eu3h6OXPfWan/IY3dQx+5AsjRi0ULTChG
-4qttL8s8QYfFqdM9w/eQX4Rw280akoWBR3anabDUW/yIigUA6q1llNjOXwd/N6CS
-n/JJN749B6MPTQvHAYY/
-=DTQW
------END PGP SIGNATURE-----
-
---Sig_/C_X3jJI6YJxKbD2.R09VDj_--
