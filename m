@@ -1,147 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25529 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752824Ab1KUSyQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Nov 2011 13:54:16 -0500
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH -v2 2/3] x86/PCI: Infrastructure to maintain a list of
-	FW-assigned BIOS BAR values
-To: jbarnes@virtuousgeek.org
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org
-Date: Mon, 21 Nov 2011 11:54:13 -0700
-Message-ID: <20111121185413.9603.12314.stgit@amt.stowe>
-In-Reply-To: <20111121185401.9603.34587.stgit@amt.stowe>
-References: <20111121185401.9603.34587.stgit@amt.stowe>
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:44375 "EHLO
+	TX2EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752697Ab1KPRrz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2011 12:47:55 -0500
+Message-ID: <4EC3F746.4010408@freescale.com>
+Date: Wed, 16 Nov 2011 11:47:50 -0600
+From: Scott Wood <scottwood@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<chrisw@sous-sol.org>, <aik@au1.ibm.com>, <pmac@au1.ibm.com>,
+	<dwg@au1.ibm.com>, <joerg.roedel@amd.com>, <agraf@suse.de>,
+	<benve@cisco.com>, <aafabbri@cisco.com>, <B08248@freescale.com>,
+	<B07421@freescale.com>, <avi@redhat.com>, <kvm@vger.kernel.org>,
+	<qemu-devel@nongnu.org>, <iommu@lists.linux-foundation.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
+References: <20111103195452.21259.93021.stgit@bling.home>  <20111111175118.GA6946@phenom.dumpdata.com> <1321049456.2682.220.camel@bling.home>
+In-Reply-To: <1321049456.2682.220.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Myron Stowe <mstowe@redhat.com>
+On 11/11/2011 04:10 PM, Alex Williamson wrote:
+> 
+> Thanks Konrad!  Comments inline.
+> 
+> On Fri, 2011-11-11 at 12:51 -0500, Konrad Rzeszutek Wilk wrote:
+>> On Thu, Nov 03, 2011 at 02:12:24PM -0600, Alex Williamson wrote:
+>>> +When supported, as indicated by the device flags, reset the device.
+>>> +
+>>> +#define VFIO_DEVICE_RESET               _IO(';', 116)
+>>
+>> Does it disable the 'count'? Err, does it disable the IRQ on the
+>> device after this and one should call VFIO_DEVICE_SET_IRQ_EVENTFDS
+>> to set new eventfds? Or does it re-use the eventfds and the device
+>> is enabled after this?
+> 
+> It doesn't affect the interrupt programming.  Should it?
 
-Commit 58c84eda075 introduced functionality to try and reinstate the
-original BIOS BAR addresses of a PCI device when normal resource
-assignment attempts fail.  To keep track of the BIOS BAR addresses,
-struct pci_dev was augmented with an array to hold the BAR addresses
-of the PCI device: 'resource_size_t fw_addr[DEVICE_COUNT_RESOURCE]'.
+It should probably clear any currently pending interrupts, as if the
+unmask IOCTL were called.
 
-The reinstatement of BAR addresses is an uncommon event leaving the
-'fw_addr' array unused under normal circumstances.  This functionality
-is also currently architecture specific with an implementation limited
-to x86.  As the use of struct pci_dev is so prevalent, having the
-'fw_addr' array residing within such seems somewhat wasteful.
+>>> +device tree properties of the device:
+>>> +
+>>> +struct vfio_dtpath {
+>>> +        __u32   len;            /* length of structure */
+>>> +        __u32   index;
+>>
+>> 0 based I presume?
+> 
+> Everything else is, I would assume so/
 
-This patch introduces a stand alone data structure and interfacing
-routines for maintaining a list of FW-assigned BIOS BAR value entries.
+Yes, it should be zero-based -- this matches how such indices are done
+in the kernel device tree APIs.
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+>>> +        __u64   flags;
+>>> +#define VFIO_DTPATH_FLAGS_REGION        (1 << 0)
+>>
+>> What is region in this context?? Or would this make much more sense
+>> if I knew what Device Tree actually is.
+> 
+> Powerpc guys, any comments?  This was their suggestion.  These are
+> effectively the first device specific extension, available when
+> VFIO_DEVICE_FLAGS_DT is set.
 
- arch/x86/pci/i386.c |   79 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 80 insertions(+), 0 deletions(-)
+An assigned device may consist of an entire subtree of the device tree,
+and both register banks and interrupts can come from any node in the
+tree.  Region versus IRQ here indicates the context in which to
+interpret index, in order to retrieve the path of the node that supplied
+this particular region or IRQ.
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 494f2e7..bfb9d6a 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -38,6 +38,85 @@
- #include <asm/io_apic.h>
- 
- 
-+/*
-+ * This list of dynamic mappings is for temporarily maintaining
-+ * original BIOS BAR addresses for possible reinstatement.
-+ */
-+struct pcibios_fwaddrmap {
-+	struct list_head list;
-+	struct pci_dev *dev;
-+	resource_size_t fw_addr[DEVICE_COUNT_RESOURCE];
-+};
-+
-+static LIST_HEAD(pcibios_fwaddrmappings);
-+static DEFINE_SPINLOCK(pcibios_fwaddrmap_lock);
-+
-+/* Must be called with 'pcibios_fwaddrmap_lock' lock held. */
-+static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
-+{
-+	struct pcibios_fwaddrmap *map;
-+
-+	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
-+		if (map->dev == dev)
-+			return map;
-+
-+	return NULL;
-+}
-+
-+static void
-+pcibios_save_fw_addr(struct pci_dev *dev, int idx, resource_size_t fw_addr)
-+{
-+	unsigned long flags;
-+	struct pcibios_fwaddrmap *map;
-+
-+	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
-+	map = pcibios_fwaddrmap_lookup(dev);
-+	if (!map) {
-+		spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
-+		map = kzalloc(sizeof(*map), GFP_KERNEL);
-+		if (!map)
-+			return;
-+
-+		map->dev = pci_dev_get(dev);
-+		map->fw_addr[idx] = fw_addr;
-+		INIT_LIST_HEAD(&map->list);
-+
-+		spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
-+		list_add_tail(&map->list, &pcibios_fwaddrmappings);
-+	} else
-+		map->fw_addr[idx] = fw_addr;
-+	spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
-+}
-+
-+resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx)
-+{
-+	unsigned long flags;
-+	struct pcibios_fwaddrmap *map;
-+	resource_size_t fw_addr = 0;
-+
-+	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
-+	map = pcibios_fwaddrmap_lookup(dev);
-+	if (map)
-+		fw_addr = map->fw_addr[idx];
-+	spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
-+
-+	return fw_addr;
-+}
-+
-+static void pcibios_fw_addr_list_del(void)
-+{
-+	unsigned long flags;
-+	struct pcibios_fwaddrmap *entry, *next;
-+
-+	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
-+	list_for_each_entry_safe(entry, next, &pcibios_fwaddrmappings, list) {
-+		list_del(&entry->list);
-+		pci_dev_put(entry->dev);
-+		kfree(entry);
-+	}
-+	spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
-+}
-+
- static int
- skip_isa_ioresource_align(struct pci_dev *dev) {
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 84225c7..4545d23 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -889,6 +889,7 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
- int pci_vpd_truncate(struct pci_dev *dev, size_t size);
- 
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
-+resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
- void pci_bus_assign_resources(const struct pci_bus *bus);
- void pci_bus_size_bridges(struct pci_bus *bus);
- int pci_claim_resource(struct pci_dev *, int);
+>>> +};
+>>> +#define VFIO_DEVICE_GET_DTPATH          _IOWR(';', 117, struct vfio_dtpath)
+>>> +
+>>> +struct vfio_dtindex {
+>>> +        __u32   len;            /* length of structure */
+>>> +        __u32   index;
+>>> +        __u32   prop_type;
+>>
+>> Is that an enum type? Is this definied somewhere?
+>>> +        __u32   prop_index;
+>>
+>> What is the purpose of this field?
+> 
+> Need input from powerpc folks here
+
+To identify what this resource (register bank or IRQ) this is, we need
+both the path to the node and the index into the reg or interrupts
+property within the node.
+
+We also need to distinguish reg from ranges, and interrupts from
+interrupt-map.  As you suggested elsewhere in the thread, the device
+tree API should probably be left out for now, and added later along with
+the device tree "bus" driver.
+
+>>> +static void __vfio_iommu_detach_dev(struct vfio_iommu *iommu,
+>>> +				    struct vfio_device *device)
+>>> +{
+>>> +	BUG_ON(!iommu->domain && device->attached);
+>>
+>> Whoa. Heavy hammer there.
+>>
+>> Perhaps WARN_ON as you do check it later on.
+> 
+> I think it's warranted, internal consistency is broken if we have a
+> device that thinks it's attached to an iommu domain that doesn't exist.
+> It should, of course, never happen and this isn't a performance path.
+> 
+[snip]
+>>> +static int __vfio_iommu_attach_dev(struct vfio_iommu *iommu,
+>>> +				   struct vfio_device *device)
+>>> +{
+>>> +	int ret;
+>>> +
+>>> +	BUG_ON(device->attached);
+>>
+>> How about:
+>>
+>> WARN_ON(device->attached, "The engineer who wrote the user-space device driver is trying to register
+>> the device again! Tell him/her to stop please.\n");
+> 
+> I would almost demote this one to a WARN_ON, but userspace isn't in
+> control of attaching and detaching devices from the iommu.  That's a
+> side effect of getting the iommu or device file descriptor.  So again,
+> this is an internal consistency check and it should never happen,
+> regardless of userspace.
+
+The rule isn't to use BUG for internal consistency checks and WARN for
+stuff userspace can trigger, but rather to use BUG if you cannot
+reasonably continue, WARN for "significant issues that need prompt
+attention" that are reasonably recoverable.  Most instances of WARN are
+internal consistency checks.
+
+>From include/asm-generic/bug.h:
+> If you're tempted to BUG(), think again:  is completely giving up
+> really the *only* solution?  There are usually better options, where
+> users don't need to reboot ASAP and can mostly shut down cleanly.
+
+-Scott
 
