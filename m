@@ -1,169 +1,342 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4EC429DC.9020607@oracle.com>
-Date: Wed, 16 Nov 2011 13:23:40 -0800
-From: Yinghai Lu <yinghai.lu@oracle.com>
-MIME-Version: 1.0
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RESEND PATCH] PCI: Make sriov work with hotplug remove
-References: <4E9A3092.4080309@oracle.com> <4E9A3408.9080905@oracle.com> <CAErSpo5XdM+1OFmoU+rN_QNWCJ0Wzv1VwKxsTo9hTq=2=7KEHA@mail.gmail.com> <4E9C6F0E.40501@oracle.com> <CAErSpo7ofdVixyGR74_mc6ND5C3LROiR9PVzwNZaDe23ptJ2=Q@mail.gmail.com> <4E9CAB21.2020302@oracle.com> <CAErSpo4PLDfapndXJp-sXS-SJtv0a7PaD=UKX0HV0OV34an3kQ@mail.gmail.com> <4E9DB11A.7030505@oracle.com> <4EBD8D09.9060903@oracle.com> <4EC35024.8090004@jp.fujitsu.com>
-In-Reply-To: <4EC35024.8090004@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44047 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755266Ab1KQUXB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Nov 2011 15:23:01 -0500
+Message-ID: <1321561337.2633.40.camel@x201.home>
+Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: chrisw@sous-sol.org, aik@au1.ibm.com, pmac@au1.ibm.com,
+	dwg@au1.ibm.com, joerg.roedel@amd.com, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org
+Date: Thu, 17 Nov 2011 13:22:17 -0700
+In-Reply-To: <20111116165227.GB2793@phenom.dumpdata.com>
+References: <20111103195452.21259.93021.stgit@bling.home>
+	 <20111111175118.GA6946@phenom.dumpdata.com>
+	 <1321049456.2682.220.camel@bling.home>
+	 <20111116165227.GB2793@phenom.dumpdata.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/15/2011 09:54 PM, Kenji Kaneshige wrote:
-
-> Sorry for the delayed comment.
+On Wed, 2011-11-16 at 11:52 -0500, Konrad Rzeszutek Wilk wrote:
+> On Fri, Nov 11, 2011 at 03:10:56PM -0700, Alex Williamson wrote:
+<snip>
+> > > > +
+> > > > +Regions are described by a struct vfio_region_info, which is retrieved by
+> > > > +using the GET_REGION_INFO ioctl with vfio_region_info.index field set to
+> > > > +the desired region (0 based index).  Note that devices may implement zero
+> > > > 
+> > > +sized regions (vfio-pci does this to provide a 1:1 BAR to region index
+> > > > +mapping).
+> > > 
+> > > Huh?
+> > 
+> > PCI has the following static mapping:
+> > 
+> > enum {
+> >         VFIO_PCI_BAR0_REGION_INDEX,
+> >         VFIO_PCI_BAR1_REGION_INDEX,
+> >         VFIO_PCI_BAR2_REGION_INDEX,
+> >         VFIO_PCI_BAR3_REGION_INDEX,
+> >         VFIO_PCI_BAR4_REGION_INDEX,
+> >         VFIO_PCI_BAR5_REGION_INDEX,
+> >         VFIO_PCI_ROM_REGION_INDEX,
+> >         VFIO_PCI_CONFIG_REGION_INDEX,
+> >         VFIO_PCI_NUM_REGIONS
+> > };
+> > 
+> > So 8 regions are always reported regardless of whether the device
+> > implements all the BARs and the ROM.  Then we have a fixed bar:index
+> > mapping so we don't have to create a region_info field to describe the
+> > bar number for the index.
 > 
-> I don't think allocating new memory for device removal is good idea. And
-> your code doesn't seem to work if memory allocation failed. What about
-> something like below? Note that it is not tested at all, sorry.
+> OK. Is that a problem if the real device actually has a zero sized BAR?
+> Or is zero sized BAR in PCI spec equal to "disabled, not in use" ? Just
+> wondering whether (-1ULL) should be used instead? (Which seems the case
+> in QEMU code).
+
+Yes, PCI spec defines that unimplemented BARs are hardwired to zero, so
+the sizing operation returns zero for the size.
+
+<snip>
+> > > > +struct vfio_irq_info {
+> > > > +        __u32   len;            /* length of structure */
+> > > > +        __u32   index;          /* IRQ number */
+> > > > +        __u32   count;          /* number of individual IRQs */
+> > > > +        __u64   flags;
+> > > > +#define VFIO_IRQ_INFO_FLAG_LEVEL                (1 << 0)
+> > > > +};
+> > > > +
+> > > > +Again, zero count entries are allowed (vfio-pci uses a static interrupt
+> > > > +type to index mapping).
+> > > 
+> > > I am not really sure what that means.
+> > 
+> > This is so PCI can expose:
+> > 
+> > enum {
+> >         VFIO_PCI_INTX_IRQ_INDEX,
+> >         VFIO_PCI_MSI_IRQ_INDEX,
+> >         VFIO_PCI_MSIX_IRQ_INDEX,
+> >         VFIO_PCI_NUM_IRQS
+> > };
+> > 
+> > So like regions it always exposes 3 IRQ indexes where count=0 if the
+> > device doesn't actually support that type of interrupt.  I just want to
+> > spell out that bus drivers have this kind of flexibility.
 > 
+> I think you should change the comment that  says 'IRQ number', as the
+> first thing that comes in my mind is 'GSI' or MSI/MSI-x vector.
+> Perhaps '/* index to be used with return value from GET_NUM_IRQS ioctl.
+> Order of structures can be unsorted. */
 
-Yes, it should work.
+Ah, yes.  I see the confusion.  They can't really be unsorted though,
+the user needs some point of reference.  For PCI they will be strictly
+ordered.  For Device Tree, I assume there will be a path referencing the
+index.  I'll update the doc to clarify.
 
-I updated the patch, use list_entry_for_each directly. also remove VF checking.
+<snip>
+> > > > +
+> > > > +When a level triggered interrupt is signaled, the interrupt is masked
+> > > > +on the host.  This prevents an unresponsive userspace driver from
+> > > > +continuing to interrupt the host system.  After servicing the interrupt,
+> > > > +UNMASK_IRQ is used to allow the interrupt to retrigger.  Note that level
+> > > > +triggered interrupts implicitly have a count of 1 per index.
+> > > 
+> > > So they are enabled automatically? Meaning you don't even hav to do
+> > > SET_IRQ_EVENTFDS b/c the count is set to 1?
+> > 
+> > I suppose that should be "no more than 1 per index" (ie. PCI would
+> > report a count of 0 for VFIO_PCI_INTX_IRQ_INDEX if the device doesn't
+> > support INTx).  I think you might be confusing VFIO_DEVICE_GET_IRQ_INFO
+> > which tells how many are available with VFIO_DEVICE_SET_IRQ_EVENTFDS
+> > which does the enabling/disabling.  All interrupts are disabled by
+> > default because userspace needs to give us a way to signal them via
+> > eventfds.  It will be device dependent whether multiple index can be
+> > enabled simultaneously.  Hmm, is that another flag on the irq_info
+> > struct or do we expect drivers to implicitly have that kind of
+> > knowledge?
+> 
+> Right, that was what I was wondering. Not sure how the PowerPC
+> world works with this.
 
-Please check it.
+On second thought, I think an exclusive flag isn't appropriate.  VFIO is
+not meant to abstract the device to the level that a user could write a
+generic "vfio driver".  The user will always need to understand the type
+of device, VFIO just provides the conduit to make use of it.  There's
+too much left undefined with a simplistic exclusive flag.
 
-Thanks
+<snip>
+> > > > +SET_UNMASK_IRQ_EVENTFD to set the file descriptor for this.
+> > > 
+> > > So only level triggered? Hmm, how do I know whether the device is
+> > > level or edge? Or is that edge (MSI) can also be unmaked using the
+> > > eventfs
+> > 
+> > Yes, only for level.  Isn't a device going to know what type of
+> > interrupt it uses?  MSI masking is PCI specific, not handled by this.
+> 
+> I certainly hope it knows, but you know buggy drivers do exist.
+> 
+> What would be the return value if somebody tried to unmask an edge one?
+> Should that be documented here? -ENOSPEC?
 
-Yinghai
+I would assume EINVAL or EFAULT since the user is providing an invalid
+argument/bad address.
 
-Subject: [PATCH -v3] PCI: Make sriov work with hotplug remove
+> > > > +
+> > > > +/* Set unmask eventfd, arg[0] = index, arg[1] = eventfd */
+> > > > +#define VFIO_DEVICE_SET_UNMASK_IRQ_EVENTFD      _IOW(';', 115, int)
+> > > > +
+> > > > +When supported, as indicated by the device flags, reset the device.
+> > > > +
+> > > > +#define VFIO_DEVICE_RESET               _IO(';', 116)
+> > > 
+> > > Does it disable the 'count'? Err, does it disable the IRQ on the
+> > > device after this and one should call VFIO_DEVICE_SET_IRQ_EVENTFDS
+> > > to set new eventfds? Or does it re-use the eventfds and the device
+> > > is enabled after this?
+> > 
+> > It doesn't affect the interrupt programming.  Should it?
+> 
+> I would hope not, but I am trying to think of ways one could screw this up.
+> Perhaps just saying that - "No need to call VFIO_DEVICE_SET_IRQ_EVENTFDS
+> as the kernel (and the device) will retain the interrupt.".
 
-When hot remove pci express module that have pcie switch and support SRIOV, got
+Ok, I added some words around this in the doc.
 
-[ 5918.610127] pciehp 0000:80:02.2:pcie04: pcie_isr: intr_loc 1
-[ 5918.615779] pciehp 0000:80:02.2:pcie04: Attention button interrupt received
-[ 5918.622730] pciehp 0000:80:02.2:pcie04: Button pressed on Slot(3)
-[ 5918.629002] pciehp 0000:80:02.2:pcie04: pciehp_get_power_status: SLOTCTRL a8 value read 1f9
-[ 5918.637416] pciehp 0000:80:02.2:pcie04: PCI slot #3 - powering off due to button press.
-[ 5918.647125] pciehp 0000:80:02.2:pcie04: pcie_isr: intr_loc 10
-[ 5918.653039] pciehp 0000:80:02.2:pcie04: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
-[ 5918.661229] pciehp 0000:80:02.2:pcie04: pciehp_set_attention_status: SLOTCTRL a8 write cmd c0
-[ 5924.667627] pciehp 0000:80:02.2:pcie04: Disabling domain:bus:device=0000:b0:00
-[ 5924.674909] pciehp 0000:80:02.2:pcie04: pciehp_get_power_status: SLOTCTRL a8 value read 2f9
-[ 5924.683262] pciehp 0000:80:02.2:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:b0:00
-[ 5924.693976] libfcoe_device_notification: NETDEV_UNREGISTER eth6
-[ 5924.764979] libfcoe_device_notification: NETDEV_UNREGISTER eth14
-[ 5924.873539] libfcoe_device_notification: NETDEV_UNREGISTER eth15
-[ 5924.995209] libfcoe_device_notification: NETDEV_UNREGISTER eth16
-[ 5926.114407] sxge 0000:b2:00.0: PCI INT A disabled
-[ 5926.119342] BUG: unable to handle kernel NULL pointer dereference at (null)
-[ 5926.127189] IP: [<ffffffff81353a3b>] pci_stop_bus_device+0x33/0x83
-[ 5926.133377] PGD 0
-[ 5926.135402] Oops: 0000 [#1] SMP
-[ 5926.138659] CPU 2
-[ 5926.140499] Modules linked in:
-...
-[ 5926.143754]
-[ 5926.275823] Call Trace:
-[ 5926.278267]  [<ffffffff81353a38>] pci_stop_bus_device+0x30/0x83
-[ 5926.284180]  [<ffffffff81353af4>] pci_remove_bus_device+0x1a/0xba
-[ 5926.290264]  [<ffffffff81366311>] pciehp_unconfigure_device+0x110/0x17b
-[ 5926.296866]  [<ffffffff81365dd9>] ? pciehp_disable_slot+0x188/0x188
-[ 5926.303123]  [<ffffffff81365d6f>] pciehp_disable_slot+0x11e/0x188
-[ 5926.309206]  [<ffffffff81365e68>] pciehp_power_thread+0x8f/0xe0
-...
+> .. snip..
+> > > I am not really sure what this section purpose is? Could this be part
+> > > of the header file or the code? It does not look to be part of the
+> > > ioctl API?
+> > 
+> > We've passed into the "VFIO bus driver API" section of the document, to
+> > explain the interaction between vfio-core and vfio bus drivers.
+> 
+> Perhaps a different file?
 
- +-[0000:80]-+-00.0-[81-8f]--
- |           +-01.0-[90-9f]--
- |           +-02.0-[a0-af]--
- |           +-02.2-[b0-bf]----00.0-[b1-b3]--+-02.0-[b2]--+-00.0 Device
- |           |                               |            +-00.1 Device
- |           |                               |            +-00.2 Device
- |           |                               |            \-00.3 Device
- |           |                               \-03.0-[b3]--+-00.0 Device
- |           |                                            +-00.1 Device
- |           |                                            +-00.2 Device
- |           |                                            \-00.3 Device
+The entire file is ~300 lines.  Seems excessive to split.
 
-root complex: 80:02.2
-pci express modules: have pcie switch and are listed as b0:00.0, b1:02.0 and b1:03.0.
-                end devices  are b2:00.0 and b3.00.0.
-                VFs are: b2:00.1,... b2:00.3, and b3:00.1,...,b3:00.3
+<snip>
+> > > > +static void __vfio_iommu_detach_dev(struct vfio_iommu *iommu,
+> > > > +				    struct vfio_device *device)
+> > > > +{
+> > > > +	BUG_ON(!iommu->domain && device->attached);
+> > > 
+> > > Whoa. Heavy hammer there.
+> > > 
+> > > Perhaps WARN_ON as you do check it later on.
+> > 
+> > I think it's warranted, internal consistency is broken if we have a
+> > device that thinks it's attached to an iommu domain that doesn't exist.
+> > It should, of course, never happen and this isn't a performance path.
+> > 
+> > > > +
+> > > > +	if (!iommu->domain || !device->attached)
+> > > > +		return;
+> 
+> Well, the deal is that you BUG_ON earlier, but you check for it here.
+> But the BUG_ON will stop execution , so the check 'if ..' is actually
+> not needed.
 
-Root cause: when doing pci_stop_bus_device() with phys fn, it will stop virt fn and
-remove the fn, so
-	list_for_each_safe(l, n, &bus->devices)
-will have problem to refer freed n that is pointed to vf entry.
+The BUG_ON is a subtly different check:
 
-Solution is just replacing list_for_each_safe() with list_for_each().
-	pci_stop_bus_device(dev) will not remove dev from bus->devices list,
-	so We only need use for_each here.
+domain | attached
+-------+---------
+   0   |   0     Nothing to do
+   0   |   1     <--- BUG_ON, we're broken
+   1   |   0     Nothing to do
+   1   |   1     Do stuff
 
-During reviewing the patch, Bjorn said:
-|   The PCI hot-remove path calls pci_stop_bus_devices() via
-|   pci_remove_bus_device().
-|
-|   pci_stop_bus_devices() traverses the bus->devices list (point A below),
-|   stopping each device in turn, which calls the driver remove() method.  When
-|   the device is an SR-IOV PF, the driver calls pci_disable_sriov(), which
-|   also uses pci_remove_bus_device() to remove the VF devices from the
-|   bus->devices list (point B).
-|
-|       pci_remove_bus_device
-|         pci_stop_bus_device
-|           pci_stop_bus_devices(subordinate)
-|             list_for_each(bus->devices)             <-- A
-|               pci_stop_bus_device(PF)
-|                 ...
-|                   driver->remove
-|                     pci_disable_sriov
-|                       ...
-|                         pci_remove_bus_device(VF)
-|                             <remove from bus_list>  <-- B
-|
-|   At B, we're changing the same list we're iterating through at A, so when
-|   the driver remove() method returns, the pci_stop_bus_devices() iterator has
-|   a pointer to a list entry that has already been freed.
+Writing out the truth table, I see now I could just make this:
+   if (!attached) {return;}
+since the BUG_ON takes care of the other case.
 
-Discussion thread can be found : https://lkml.org/lkml/2011/10/15/141
+The reason for the laziness of allowing this to simply return is that if
+we hit an error attaching an individual device within a group, we just
+push the whole group back through __vfio_iommu_detach_group(), so some
+devices may have never been attached.
 
--v2: updated changelog.
--v3: According to Kenji, do not allocate another list for PF.
-     Also We don't need to check dev->is_virtfn anymore, because PF should come first
-	in the list, and even VF come first, it is still ok.
+> > > > +
+> > > > +	iommu_detach_device(iommu->domain, device->dev);
+> > > > +	device->attached = false;
+> > > > +}
+> > > > +
+> > > > +static void __vfio_iommu_detach_group(struct vfio_iommu *iommu,
+> > > > +				      struct vfio_group *group)
+> > > > +{
+> > > > +	struct list_head *pos;
+> > > > +
+> > > > +	list_for_each(pos, &group->device_list) {
+> > > > +		struct vfio_device *device;
+> > > > +
+> > > > +		device = list_entry(pos, struct vfio_device, device_next);
+> > > > +		__vfio_iommu_detach_dev(iommu, device);
+> > > > +	}
+> > > > +}
+> > > > +
+> > > > +static int __vfio_iommu_attach_dev(struct vfio_iommu *iommu,
+> > > > +				   struct vfio_device *device)
+> > > > +{
+> > > > +	int ret;
+> > > > +
+> > > > +	BUG_ON(device->attached);
+> > > 
+> > > How about:
+> > > 
+> > > WARN_ON(device->attached, "The engineer who wrote the user-space device driver is trying to register
+> > > the device again! Tell him/her to stop please.\n");
+> > 
+> > I would almost demote this one to a WARN_ON, but userspace isn't in
+> > control of attaching and detaching devices from the iommu.  That's a
+> > side effect of getting the iommu or device file descriptor.  So again,
+> > this is an internal consistency check and it should never happen,
+> > regardless of userspace.
+> > 
+> 
+> Ok, then you might want to expand it to
+> 
+> BUG_ON(!device  || device->attached);
+> 
+> In case something has gone horribly wrong.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Impressive, that exceeds even my paranoia ;)  For that we would have had
+to walk the group->device_list and come up with a NULL device pointer.
+I think we can assume that won't happen.  I've also got this though:
 
----
- drivers/pci/remove.c |   17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+        if (!iommu || !iommu->domain)
+                return -EINVAL;
 
-Index: linux-2.6/drivers/pci/remove.c
-===================================================================
---- linux-2.6.orig/drivers/pci/remove.c
-+++ linux-2.6/drivers/pci/remove.c
-@@ -122,11 +122,24 @@ void pci_remove_behind_bridge(struct pci
- 
- static void pci_stop_bus_devices(struct pci_bus *bus)
- {
--	struct list_head *l, *n;
-+	struct list_head *l;
- 
--	list_for_each_safe(l, n, &bus->devices) {
-+	/*
-+	 * pci_stop_bus_device(dev) will not remove dev from bus->devices list,
-+	 *  so We don't need use _safe version for_each here.
-+	 * Also _safe version has problem when pci_stop_bus_device() for PF try
-+	 *  to remove VFs.
-+	 */
-+	list_for_each(l, &bus->devices) {
- 		struct pci_dev *dev = pci_dev_b(l);
- 		pci_stop_bus_device(dev);
-+		/*
-+		 * VFs are removed by pci_remove_bus_device() in the
-+		 *  pci_stop_bus_devices() code path for PF.
-+		 *  aka, bus->devices get updated in the process.
-+		 * barrier() will make sure we get right next from that list.
-+		 */
-+		barrier();
- 	}
- }
- 
+Which is effectively just being lazy without a good excuse like above.
+That could probably be folded into the BUG_ON.
+> 
+> .. snip..
+> > > > +		group->devt = MKDEV(MAJOR(vfio.devt), minor);
+> > > > +		device_create(vfio.class, NULL, group->devt,
+> > > > +			      group, "%u", groupid);
+> > > > +
+> > > > +		group->bus = dev->bus;
+> > > 
+> > > 
+> > > Oh, so that is how the IOMMU iommu_ops get copied! You might
+> > > want to mention that - I was not sure where the 'handoff' is
+> > > was done to insert a device so that it can do iommu_ops properly.
+> > > 
+> > > Ok, so the time when a device is detected whether it can do
+> > > IOMMU is when we try to open it - as that is when iommu_domain_alloc
+> > > is called which can return NULL if the iommu_ops is not set.
+> > > 
+> > > So what about devices that don't have an iommu_ops? Say they
+> > > are using SWIOTLB? (like the AMD-Vi sometimes does if the
+> > > device is not on its list).
+> > > 
+> > > Can we use iommu_present?
+> > 
+> > I'm not sure I'm following your revelation ;)  Take a look at the
+> 
+> I am trying to figure out who sets the iommu_ops call on the devices.
+
+The iommu driver registers ops with bus_set_iommu, so then we just need
+to pass the bus pointer and iommu_ops figures out the rest.  If there's
+no iommu_ops for a device or the iommu_ops doesn't implement the
+device_group callback, it gets skipped by vfio and therefore won't be
+usable by this interface.
+
+> > pointer to iommu_device_group I pasted above, or these:
+> > 
+> > https://github.com/awilliam/linux-vfio/commit/37dd08c90d149caaed7779d4f38850a8f7ed0fa5
+> > https://github.com/awilliam/linux-vfio/commit/63ca8543533d8130db23d7949133e548c3891c97
+> > https://github.com/awilliam/linux-vfio/commit/8d7d70eb8e714fbf8710848a06f8cab0c741631e
+> > 
+> > That call includes an iommu_present() check, so if there's no iommu or
+> > the iommu can't provide a groupid, the device is skipped over from vfio
+> > (can't be used).
+> > 
+> > So the ordering is:
+> > 
+> >  - bus driver registers device
+> >    - if it has an iommu group, add it to the vfio device/group tracking
+> > 
+> >  - group gets opened
+> >    - user gets iommu or device fd results in iommu_domain_alloc
+> > 
+> > Devices without iommu_ops don't get to play in the vfio world.
+> 
+> Right, and I think the answer of which devices get iommu_ops is done via
+> bus_set_iommu.
+
+Exactly.
+
+> (Thinking in long-term of what would be required to make this work
+> with Xen and it sounds like I will need to implement a Xen IOMMU driver)
+
+Yeah, that would make sense.  Thanks!
+
+Alex
+
