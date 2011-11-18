@@ -1,75 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50257 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:61646 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752275Ab1KRQcm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Nov 2011 11:32:42 -0500
-Message-ID: <1321633956.26410.126.camel@bling.home>
+	id S1750956Ab1KRFkV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Nov 2011 00:40:21 -0500
+Message-ID: <1321594811.26410.54.camel@bling.home>
 Subject: Re: [PATCH] iommu: Include MSI susceptibility to DMA in creating
  iommu groups
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Joerg Roedel <Joerg.Roedel@amd.com>
-Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 18 Nov 2011 09:32:36 -0700
-In-Reply-To: <20111118152710.GA5098@amd.com>
+To: Kai Huang <mail.kai.huang@gmail.com>
+Cc: Joerg.Roedel@amd.com, iommu@lists.linux-foundation.org,
+	dwmw2@infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 17 Nov 2011 22:40:11 -0700
+In-Reply-To: <CANqQZNHN_XkNmkMcUjZfqW_8F2X1cPg6O=EpdW-Emq9rRrwZmA@mail.gmail.com>
 References: <20111117170800.3125.84150.stgit@bling.home>
-	 <20111118104651.GJ5627@amd.com> <1321628190.26410.63.camel@bling.home>
-	 <20111118152710.GA5098@amd.com>
+	 <CANqQZNHN_XkNmkMcUjZfqW_8F2X1cPg6O=EpdW-Emq9rRrwZmA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2011-11-18 at 16:27 +0100, Joerg Roedel wrote:
-> On Fri, Nov 18, 2011 at 07:56:30AM -0700, Alex Williamson wrote:
-> > As you say, the interface is to tell userspace what devices the IOMMU
-> > can safely distinguish between.  On x86, the IOMMU cannot distinguish
-> > DMA to the interrupt region between devices without interrupt remapping.
-> > Therefore, to only expose devices we can safely distinguish between, we
-> > shouldn't expose any devices by default if we don't provide this
-> > isolation.  The interrupt remapping capability of the IOMMU isn't
-> > exposed to userspace, nor should userspace need to make the leap in
-> > understanding how MSIs are generated on a specific platform and whether
-> > interrupt remapping is required to provide isolation.
+On Fri, 2011-11-18 at 12:37 +0800, Kai Huang wrote:
+> On Fri, Nov 18, 2011 at 1:09 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > IOMMU drivers should account for the platform's susceptibility to
+> > DMA triggered MSI interrupts in creating IOMMU groups.  Skip
+> > devices when the IOMMU can't isolate MSI from DMA, but allow
+> > an iommu=group_unsafe_msi option for opt-in.  This removes the
+> > leap in logic for users that IOMMU_CAP_INTR_REMAP is required for
+> > interrupt security when they may be running on a non-x86 platform
+> > that does not have this dependency.
+> >
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >
+> >  Documentation/kernel-parameters.txt |    9 ++++++---
+> >  arch/ia64/include/asm/iommu.h       |    2 ++
+> >  arch/ia64/kernel/pci-dma.c          |    1 +
+> >  arch/x86/include/asm/iommu.h        |    1 +
+> >  arch/x86/kernel/pci-dma.c           |   12 ++++++++++++
+> >  drivers/iommu/amd_iommu.c           |    7 +++++++
+> >  drivers/iommu/intel-iommu.c         |    7 +++++++
+> >  7 files changed, 36 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> > index 9d5ac6c..ffa43b7 100644
+> > --- a/Documentation/kernel-parameters.txt
+> > +++ b/Documentation/kernel-parameters.txt
+> > @@ -1059,9 +1059,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+> >                nomerge
+> >                forcesac
+> >                soft
+> > -               pt              [x86, IA-64]
+> > -               group_mf        [x86, IA-64]
+> > -
+> > +               pt                      [x86, IA-64]
+> > +               group_mf                [x86, IA-64]
+> > +                       Group multifunction devices together in IOMMU API.
+> > +               group_unsafe_msi        [x86, IA-64]
+> > +                       Allow grouping of devices even when the platfom
+> > +                       does not provide MSI isolation in IOMMU API.
+> >
+> >        io7=            [HW] IO7 for Marvel based alpha systems
+> >                        See comment before marvel_specify_io7 in
+> > diff --git a/arch/ia64/include/asm/iommu.h b/arch/ia64/include/asm/iommu.h
+> > index b6a809f..b726572 100644
+> > --- a/arch/ia64/include/asm/iommu.h
+> > +++ b/arch/ia64/include/asm/iommu.h
+> > @@ -12,11 +12,13 @@ extern int force_iommu, no_iommu;
+> >  extern int iommu_pass_through;
+> >  extern int iommu_detected;
+> >  extern int iommu_group_mf;
+> > +extern int iommu_group_unsafe_msi;
+> >  #else
+> >  #define iommu_pass_through     (0)
+> >  #define no_iommu               (1)
+> >  #define iommu_detected         (0)
+> >  #define iommu_group_mf         (0)
+> > +#define iommu_group_unsafe_msi (0)
+> >  #endif
+> >  extern void iommu_dma_init(void);
+> >  extern void machvec_init(const char *name);
+> > diff --git a/arch/ia64/kernel/pci-dma.c b/arch/ia64/kernel/pci-dma.c
+> > index eb11757..63721ce 100644
+> > --- a/arch/ia64/kernel/pci-dma.c
+> > +++ b/arch/ia64/kernel/pci-dma.c
+> > @@ -34,6 +34,7 @@ int force_iommu __read_mostly;
+> >
+> >  int iommu_pass_through;
+> >  int iommu_group_mf;
+> > +int iommu_group_unsafe_msi;
+> >
+> >  /* Dummy device used for NULL arguments (normally ISA). Better would
+> >    be probably a smaller DMA mask, but this is bug-to-bug compatible
+> > diff --git a/arch/x86/include/asm/iommu.h b/arch/x86/include/asm/iommu.h
+> > index dffc38e..e3d289c 100644
+> > --- a/arch/x86/include/asm/iommu.h
+> > +++ b/arch/x86/include/asm/iommu.h
+> > @@ -6,6 +6,7 @@ extern int force_iommu, no_iommu;
+> >  extern int iommu_detected;
+> >  extern int iommu_pass_through;
+> >  extern int iommu_group_mf;
+> > +extern int iommu_group_unsafe_msi;
+> >
+> >  /* 10 seconds */
+> >  #define DMAR_OPERATION_TIMEOUT ((cycles_t) tsc_khz*10*1000)
+> > diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
+> > index 1c4d769..80eb6b6 100644
+> > --- a/arch/x86/kernel/pci-dma.c
+> > +++ b/arch/x86/kernel/pci-dma.c
+> > @@ -54,6 +54,16 @@ int iommu_pass_through __read_mostly;
+> >  */
+> >  int iommu_group_mf __read_mostly;
+> >
+> > +/*
+> > + * For the iommu_device_group interface, we not only need to be concerned
+> > + * with DMA isolation between devices, but also DMA isolation that could
+> > + * affect the platform, including MSI isolation.  If a platform is
+> > + * susceptible to malicious DMA writes triggering MSI interrupts, the
+> > + * IOMMU driver can't reasonably group devices.  This allows the iommu
+> > + * driver to ignore MSI isolation when creating groups.
+> > + */
+> > +int iommu_group_unsafe_msi __read_mostly;
+> > +
+> >  extern struct iommu_table_entry __iommu_table[], __iommu_table_end[];
+> >
+> >  /* Dummy device used for NULL arguments (normally ISA). */
+> > @@ -180,6 +190,8 @@ static __init int iommu_setup(char *p)
+> >                        iommu_pass_through = 1;
+> >                if (!strncmp(p, "group_mf", 8))
+> >                        iommu_group_mf = 1;
+> > +               if (!strncmp(p, "group_unsafe_msi", 16))
+> > +                       iommu_group_unsafe_msi = 1;
+> >
+> >                gart_parse_options(p);
+> >
+> > diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> > index ad074dc..5f55e7a 100644
+> > --- a/drivers/iommu/amd_iommu.c
+> > +++ b/drivers/iommu/amd_iommu.c
+> > @@ -2794,6 +2794,13 @@ static int amd_iommu_device_group(struct device *dev, unsigned int *groupid)
+> >        struct pci_dev *pdev = to_pci_dev(dev);
+> >        u16 devid;
+> >
+> > +       if (!iommu_group_unsafe_msi) {
+> > +               printk_once(KERN_NOTICE "%s: "
+> > +                           "IOMMU device group disabled without interrupt remapping support",
+> > +                           pci_bus_type.name);
+> > +               return -ENODEV;
+> > +       }
+> > +
+> >        if (!dev_data)
+> >                return -ENODEV;
+> >
+> > diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> > index e918f72..f3fcd69 100644
+> > --- a/drivers/iommu/intel-iommu.c
+> > +++ b/drivers/iommu/intel-iommu.c
+> > @@ -4094,6 +4094,13 @@ static int intel_iommu_device_group(struct device *dev, unsigned int *groupid)
+> >                u32 group;
+> >        } id;
+> >
+> > +       if (!intr_remapping_enabled && !iommu_group_unsafe_msi) {
+> > +               printk_once(KERN_NOTICE "%s: "
+> > +                           "IOMMU device group disabled without interrupt remapping support",
+> > +                           pci_bus_type.name);
+> > +               return -ENODEV;
+> > +       }
+> > +
 > 
-> But the isolation domains are different. The iommu-group interface is
-> about device isolation and interrupt remapping is about DMA address
-> space isolation (MSI range vs. the rest). The iommu can still
-> distinguish between devices when it can not distinguish between DMA and
-> MSI interrupts.
+> When intr_remapping_enabled == 0 and iommu_group_unsafe_msi == 1, is
+> it better to add an print msg that notice user we enabled the group by
+> allowing unsafe msi but without hardware interrupt remapping support?
+> Or have we added such msg at some other place?
 
-I guess I fail to see the difference.  We group devices behind certain
-bridges together because we can't distinguish DMA from those devices.
-MSI presents an address window across all devices for which we
-potentially can't distinguish between any of them.  If instead of MSI
-the window was VGA and the IOMMU could differentiate all devices, so
-long as they don't do DMA to 0xa0000-0xc0000, what would we do?  I think
-we'd have to exclude such an IOMMU from providing grouping information.
-
-> So what you want to do belongs to the VFIO driver or (as it is today)
-> into the KVM device assignment code and not into the iommu-group
-> interface.
-
-The trouble is that interrupt remapping closing a hole in DMA isolation
-is a platform issue.  Is vfio supposed to know that on architecture foo
-we don't have such a hole and we don't need to look for interrupt
-remapping.  Or maybe that platform bar solved it differently and we need
-to instead check flag MSI_OK.  Current KVM doesn't care about this
-because it only does device assignment on x86.
-
-Another way to solve this might be to expose a more generic capability
-for the IOMMU.  Instead of exposing "interrupt remapping support" it
-could expose "full DMA isolation", then amd_iommu/intel-iommu could set
-it based on interrupt remapping capability.  The trouble is that then we
-expose grouping information for devices, but can't figure out the domain
-capabilities until we actually create a domain and attach those devices,
-which is kind of a crappy experience for a vfio user to find out they
-don't actually get to use those device.
-
-Instead, it seems like the device-group interface should only provide
-grouping information for devices with full DMA isolation, and hide the
-rest.  Then we know that if iommu_device_group() returns an error, we
-can't safely use that device.  Thanks,
+My system prints "Enabled IRQ remapping in xapic mode" when interrupt
+remapping is enabled.  So there is some evidence in the messages when
+interrupt remapping is actually present.  The command line option to
+opt-in to the override will also appear in "Kernel command line: ...
+iommu=group_unsafe_msi ...".  So while there's not some kind of
+"Enabling IOMMU device groups against the better judgment of the
+hardware..." message, there are clues.  Do you think it's necessary to
+be more verbose?  Thanks,
 
 Alex
 
