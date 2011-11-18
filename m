@@ -1,67 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:38341 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753348Ab1KWWnm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2011 17:43:42 -0500
-Date: Wed, 23 Nov 2011 14:45:10 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Joerg Roedel <joerg.roedel@amd.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<bhelgaas@google.com>
-Subject: Re: [PATCH 0/2] PCI: PRI/PASSID cleanup and fix
-Message-ID: <20111123144510.56ff6d1d@jbarnes-desktop>
-In-Reply-To: <20111123104705.GC11876@amd.com>
-References: <20111111170319.32668.48479.stgit@bling.home>
-	<20111123104705.GC11876@amd.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Y3FjEVf1w=WCINjDE.lVzy0"; protocol="application/pgp-signature"
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:35545 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755256Ab1KRTW0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 14:22:26 -0500
+Received: by mail-fx0-f47.google.com with SMTP id t2so4845783faa.6
+        for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2011 11:22:25 -0800 (PST)
+Date: Fri, 18 Nov 2011 21:22:22 +0200
+From: Felipe Balbi <balbi@ti.com>
+To: Greg KH <greg@kroah.com>
+Cc: Felipe Balbi <balbi@ti.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>
+Subject: Re: [PATCH] DWC3: use module_pci_driver
+Message-ID: <20111118192220.GC11736@legolas.emea.dhcp.ti.com>
+Reply-To: balbi@ti.com
+References: <20111118181249.GA29495@kroah.com>
+ <20111118181424.GB29495@kroah.com>
+ <20111118190413.GA11736@legolas.emea.dhcp.ti.com>
+ <20111118191117.GA25016@kroah.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="adJ1OR3c6QgCpb/j"
+In-Reply-To: <20111118191117.GA25016@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/Y3FjEVf1w=WCINjDE.lVzy0
-Content-Type: text/plain; charset=US-ASCII
+
+--adJ1OR3c6QgCpb/j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 23 Nov 2011 11:47:05 +0100
-Joerg Roedel <joerg.roedel@amd.com> wrote:
-
-> On Fri, Nov 11, 2011 at 10:06:23AM -0700, Alex Williamson wrote:
-> > Alex Williamson (2):
-> >       PCI: More PRI/PASID cleanup
-> >       PCI: Enable is not exposed as a PASID capability
+On Fri, Nov 18, 2011 at 11:11:17AM -0800, Greg KH wrote:
+> On Fri, Nov 18, 2011 at 09:04:14PM +0200, Felipe Balbi wrote:
+> > Hi,
+> >=20
+> > On Fri, Nov 18, 2011 at 10:14:24AM -0800, Greg KH wrote:
+> > > From: Greg Kroah-Hartman <gregkh@suse.de>
+> > >=20
+> > > This cuts down on the boilerplate code.
+> > >=20
+> > >=20
+> > > Cc: Lars-Peter Clausen <lars@metafoo.de>
+> > > Cc: Felipe Balbi <balbi@ti.com>
+> > > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> >=20
+> > Looks good to me. It would be nice to see a similar patch for
+> > dwc3-omap.c moving the platform_driver_register to this new macro :-)
 >=20
-> For both:
->=20
-> Reviewed-by: Joerg Roedel <joerg.roedel@amd.com>
-> Tested-by: Joerg Roedel <joerg.roedel@amd.com>
+> We already have a platform driver macro in the tree, feel free to move
+> it to use it now if you want :)
 
-Ok, thanks guys.  I'll queue these up after Thanksgiving.
+great, will do for 3.3 merge window.
 
 --=20
-Jesse Barnes, Intel Open Source Technology Center
+balbi
 
---Sig_/Y3FjEVf1w=WCINjDE.lVzy0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+--adJ1OR3c6QgCpb/j
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQIcBAEBAgAGBQJOzXd2AAoJEIEoDkX4Qk9h6N0QALQ0D+PkshQ7x/2dBdSbAOv3
-Y4/cCrd5g1I+Z1t7NMVWtj6RUCSVNhCtFYKCRx9phPzhqe8HjxQ0L+OWrkJssHB8
-tq9DcZC+cjfh0rIJdxj9yhYNZPyyQkjsUAAf7C5jHyJsBZ3U6CjCCqwdtHkXwGHH
-iG1f3QZCiS8W5dw8OinxPgkITNFLjiJbemRXs8ZJcvy5oUsIqZ9TdExBiJLoPUqX
-59QKskaNCCd7hBqGrL7c7GpKpYLsGOwBxi5FJgutv6rztIrpMOzm6H9kcdwTDEXg
-eH/Kwsx1wn5PjgA0gJkDUyFQR+xkEFBc5C2FoHk/ogP5YSHn4KkmgIeFn2q3sDXi
-ZpOAOHpy20gFHQ7vKg46UG33E+ZqDzqKc87msS+eL2jwS82COshGVWW0HUeMcWc8
-jrXZpv12FcG4/T14U62jLu7y9kl956f3zZk90Bow32hpIJmkRH4+wywSr+MHhJkf
-RYSxcJQU/qd9bV53hLrwFF47K4V41a8sU6PcqqXTFcPLgZGb8OzZpixdiIT48pv+
-CFia1zLvFUsuABzB/l/gxu2gURZ1sdKty9DaaFdUNoGOv7/1lYSY9v6+L7vdJM2j
-lvP55zN7t/4SkMF4urFphwFmGq9T0VIaD+44ApRB0EVknIlhxOs9syuEjaw1K87d
-tp3qS8RS3QKP2MkAkdUE
-=pVz3
+iQIcBAEBAgAGBQJOxrBsAAoJEIaOsuA1yqRECGMP/1JBdZgpoJjOmBjUV5QfT72t
+lyROYEsgpKwQyrEbU/k5+6q9gmna8XMfDiEg+/apE1a8I/xKrkxVLdv/bmOywDCz
+qtLIJ/i6oPJVNMBcIhXo6rZv1UWimke6EbvAuYch3SthVK3c3eti0nPBvSW2Q6PK
+d7EeWaUBT24XufUbBM67VWZqqxBa2MmzggeRkjLJuE04ZDS6zotjFFRm9gJnf7C8
+hborq8hxL7wptXnXJxHgmEH75JOYqGK23iPPT5pFx+C/Yl/26xVgjbKbZmvPtDot
+dE0dKNWVDvxYYaw54Z4dc/G9F82eHN6aA47QXAr2k7SMQ9CnUSah2ZKaUXQIACG9
+snTFrPZxc4jnHwEIlAQVX2lU4+1UaE1lzu0tEqCxjeIEzUYA28JH+KsF1xaZtD5Z
+BvyW3b0g5ObSvxvBGypRL0jBkRU/2+JP/Pnfo89B6kjThBFSxdgg+YXVSDK/a/KS
+RN0fTXH+7IdUTVGa2DHCktknnOKAE6FR+QETuecgzzn+83FPUKEDCYIfKCVNGaKU
+DDvGxdMSpQcT/AEmjJ2zO+sulSHg/t3w8jOSwGSd/mvFg68ghp8ZvKjXjkMKa8Fy
+kgvJKu3ZE1WuCGvrZ0geYI2/reJKMBN4ZqK1oT1HDYS4Yo5i/7v08dkA7JoH02dT
+AOgYuFaXFtONXBIKz4bw
+=B1pE
 -----END PGP SIGNATURE-----
 
---Sig_/Y3FjEVf1w=WCINjDE.lVzy0--
+--adJ1OR3c6QgCpb/j--
