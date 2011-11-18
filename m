@@ -1,69 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7513 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751498Ab1KJOCX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Nov 2011 09:02:23 -0500
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>, mstowe@redhat.com,
-	ddutile@redhat.com, jparadis@redhat.com,
-	matthew.wilcox@linux.intel.com, jbarnes@virtuousgeek.org
-Subject: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-Date: Thu, 10 Nov 2011 09:00:13 -0500
-Message-Id: <1320933613-25909-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 18 Nov 2011 23:27:18 +0100
+From: "Hans J. Koch" <hjk@hansjkoch.de>
+To: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
+Cc: hjk@hansjkoch.de, gregkh@suse.de, tglx@linutronix.de,
+	linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Message-ID: <20111118222718.GF22904@local>
+References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Stratus systems have a hierarchy that includes a PCIE Downstream bridge
-connected to a PCIE Upstream bridge and a PCI Downstream bridge.  The system
-boots with this wrong hierarchy into a crippled mode (USB doesn't work,
-network doesn't work ...).  Avoiding the Downstream bridge check in
-only_one_child() causes all the bridges to be enumerated and the system
-to function properly.
+On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
+> Hello fellow hackers.
 
-Unfortunately this hardware is currently available so we should at least
-keep it functional.
+Hi. Could you please limit the line length of your mails to something less
+than 80 chars?
 
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+> 
+> I am maintaining a UIO based driver for a PCI-E data acquisition device.
 
-Cc: mstowe@redhat.com
-Cc: ddutile@redhat.com
-Cc: jparadis@redhat.com
-Cc: matthew.wilcox@linux.intel.com
-Cc: jbarnes@virtuousgeek.org
----
- drivers/pci/probe.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+Can you post it? No point in discussing non-existent code...
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 04e74f4..bc76812 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -10,6 +10,7 @@
- #include <linux/module.h>
- #include <linux/cpumask.h>
- #include <linux/pci-aspm.h>
-+#include <linux/dmi.h>
- #include "pci.h"
- 
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
-@@ -1275,7 +1276,15 @@ static int only_one_child(struct pci_bus *bus)
- 	struct pci_dev *parent = bus->self;
- 	if (!parent || !pci_is_pcie(parent))
- 		return 0;
--	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
-+	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
-+		return 1;
-+	/*
-+	 * Stratus/NEC ftServer systems have a broken PCIE hierarchy in which
-+	 * one upstream and one downstream port are plugged into a downstream
-+	 * port.  Avoiding the downstream port check here results in a
-+	 * functional system.
-+	 */
-+	if (!dmi_name_in_vendors("ftServer") &&
- 	    parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
- 		return 1;
- 	return 0;
--- 
-1.7.1
+> 
+> I map BAR0 of the device to userspace. I also map two memory areas, one is used to feed instructions to the acquisition device, the other is used autonomously by the PCI device to write the acquired data.
+> 
+> The strategy we have been using for those two share memory areas has historically been using pci_alloc_coherent on v2.6.35 x86_64 (limited to 4MB based on my trials) and later, I made use of the VT-d (intel_iommu) to allocate as much as 128MB (an arbitrary limit) which appear contiguous to the PCI device. I use vmalloc_user to allocate 128M, then write all the physically continuous segments in a scatterlist, then use pci_map_sg which works it's way to intel_iommu. The device DMA addresses I get back are contiguous over the whole 128M. Neat! Our VT-d capable devices still use this strategy.
+> 
+> This large memory is mission-critical in making the acquisition device autonomous (real-time), yet keep the DMA implementation very simple. Today, we are re-using this device on a CPU architecture that has no IOMMU (intel E6XX/EG20T) and want to avoid creating a scatter-gather scheme between my driver and the FPGA (PCI device).
+> 
+> So I went back to the old pci_alloc_coherent method, which although limited to 4 MB, will do for early development phases. Instead of 2.6.35, we are doing preliminary development using 2.6.37 and will probably use 3.1 or more later.  The cpu/device shared memory maps (1MB and 4MB) are allocated using pci_alloc_coherent and handed to UIO as physical memory using the dma_addr_t returned by the pci_alloc func.
+> 
+> The 1st memory map is written to by CPU and read from device.
+> The 2nd memory map is typically written by the device and read by the CPU, but future features may have the device also read this memory.
+> 
+> My initial testing on the atom E6XX show the PCI device failing when trying to read from the first memory map.
 
+Any kernel messages in the logs that could help?
+
+[...]
+
+Thanks,
+Hans
