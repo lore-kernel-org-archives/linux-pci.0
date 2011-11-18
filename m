@@ -1,55 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:39676 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755947Ab1K2XUE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2011 18:20:04 -0500
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:48930 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752743Ab1KRSOa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 13:14:30 -0500
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 68CEC20A8B
+	for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2011 13:14:30 -0500 (EST)
+Date: Fri, 18 Nov 2011 10:14:24 -0800
+From: Greg KH <greg@kroah.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>,
+	Felipe Balbi <balbi@ti.com>
+Subject: [PATCH] DWC3: use module_pci_driver
+Message-ID: <20111118181424.GB29495@kroah.com>
+References: <20111118181249.GA29495@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <1322594768.19120.194.camel@bling.home>
-References: <20111103195452.21259.93021.stgit@bling.home>
-	<4ED43AD9.5090509@au1.ibm.com>
-	<4ED43CFE.8040009@au1.ibm.com>
-	<1322538856.19120.126.camel@bling.home>
-	<1322594768.19120.194.camel@bling.home>
-Date: Tue, 29 Nov 2011 17:20:02 -0600
-Message-ID: <CALRxmdDEGwA787gEgC3d_yU99TqOZOtWeDJ9N-QCQ3gxV8yyMw@mail.gmail.com>
-Subject: Re: [Qemu-devel] [RFC PATCH] vfio: VFIO Driver core framework
-From: Stuart Yoder <b08248@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Alexey Kardashevskiy <aik@au1.ibm.com>, aafabbri@cisco.com,
-	kvm@vger.kernel.org, pmac@au1.ibm.com, qemu-devel@nongnu.org,
-	joerg.roedel@amd.com, konrad.wilk@oracle.com, agraf@suse.de,
-	dwg@au1.ibm.com, chrisw@sous-sol.org, B08248@freescale.com,
-	iommu@lists.linux-foundation.org, avi@redhat.com,
-	linux-pci@vger.kernel.org, B07421@freescale.com, benve@cisco.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111118181249.GA29495@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->
-> BTW, github now has updated trees:
->
-> git://github.com/awilliam/linux-vfio.git vfio-next-20111129
-> git://github.com/awilliam/qemu-vfio.git vfio-ng
+From: Greg Kroah-Hartman <gregkh@suse.de>
 
-Hi Alex,
+This cuts down on the boilerplate code.
 
-Have been looking at vfio a bit.   A few observations and things
-we'll need to figure out as it relates to the Freescale iommu.
 
-__vfio_dma_map() assumes that mappings are broken into
-4KB pages.   That will not be true for us.   We normally will be mapping
-much larger physically contiguous chunks for our guests.  Guests will
-get hugetlbfs backed memory with very large pages (e.g. 16MB,
-64MB) or very large chunks allocated by some proprietary
-means.
+Cc: Lars-Peter Clausen <lars@metafoo.de>
+Cc: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-Also, mappings will have additional Freescale-specific attributes
-that need to get passed through to dma_map somehow.   For
-example, the iommu can stash directly into a CPU's cache
-and we have iommu mapping properties like the cache stash
-target id and an operation mapping attribute.
+---
 
-How do you envision handling proprietary attributes
-in struct vfio_dma_map?
+Here's an example of how this works, it ends up deleting a ton of
+duplicated code all over the kernel, and it also has the very nice side
+affect of deleting a bunch of "this module is now loading" printks that
+are just cluttering up our kernel logs, making the overall kernel size
+smaller, which is good thing.
 
-Stuart
+
+ drivers/usb/dwc3/dwc3-pci.c |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -206,14 +206,4 @@ MODULE_AUTHOR("Felipe Balbi <balbi@ti.com>");
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_DESCRIPTION("DesignWare USB3 PCI Glue Layer");
+ 
+-static int __devinit dwc3_pci_init(void)
+-{
+-	return pci_register_driver(&dwc3_pci_driver);
+-}
+-module_init(dwc3_pci_init);
+-
+-static void __exit dwc3_pci_exit(void)
+-{
+-	pci_unregister_driver(&dwc3_pci_driver);
+-}
+-module_exit(dwc3_pci_exit);
++module_pci_driver(dwc3_pci_driver);
