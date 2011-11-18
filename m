@@ -1,151 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37277 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751586Ab1KPELQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Nov 2011 23:11:16 -0500
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH] intel-iommu: Manage iommu_coherency globally
-To: dwmw2@infradead.org
-Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chrisw@sous-sol.org,
-	ddutile@redhat.com, alex.williamson@redhat.com
-Date: Tue, 15 Nov 2011 21:11:09 -0700
-Message-ID: <20111116040752.11878.18642.stgit@bling.home>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:60623 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751205Ab1KRSO3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 13:14:29 -0500
+Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id E589820C76
+	for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2011 13:14:28 -0500 (EST)
+Date: Fri, 18 Nov 2011 10:12:49 -0800
+From: Greg KH <greg@kroah.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>,
+	Felipe Balbi <balbi@ti.com>
+Subject: [PATCH] PCI: Add helper macro for pci_register_driver boilerplate
+Message-ID: <20111118181249.GA29495@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We currently manage iommu_coherency on a per domain basis,
-choosing the safest setting across the iommus attached to a
-particular domain.  This unfortunately has a bug that when
-no iommus are attached, the domain defaults to coherent.
-If we fall into this mode, then later add a device behind a
-non-coherent iommu to that domain, the context entry is
-updated using the wrong coherency setting, and we get dmar
-faults.
+From: Greg Kroah-Hartman <gregkh@suse.de>
 
-Since we expect chipsets to be consistent in their coherency
-setting, we can instead determine the coherency once and use
-it globally.
+This patch introduces the module_pci_driver macro which is a convenience
+macro for PCI driver modules similar to module_platform_driver. It is
+intended to be used by drivers which init/exit section does nothing but
+register/unregister the PCI driver. By using this macro it is possible
+to eliminate a few lines of boilerplate code per PCI driver.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Based on work done by Lars-Peter Clausen <lars@metafoo.de> for other
+busses (i2c and spi).
+
+Cc: Lars-Peter Clausen <lars@metafoo.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
 ---
 
-As suggested, here's an updated patch to which sets the
-coherency once at initalization time instead of changing
-the default coherency for orphaned domains.  Thanks,
+Jesse, I've added the same type of macros for i2c, spi, and usb to my
+driver-core tree, and converted a number of drivers to these new macros.
+If you give me the ack, I can add this patch to my tree as well.
 
-Alex
+I'll follow up this patch with an example showing how it works.
 
- drivers/iommu/intel-iommu.c |   40 +++++++++++++++++-----------------------
- 1 files changed, 17 insertions(+), 23 deletions(-)
+Comments?
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index c0c7820..79e103a 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -353,7 +353,6 @@ struct dmar_domain {
+ include/linux/pci.h |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -941,6 +941,19 @@ int __must_check __pci_register_driver(struct pci_driver *, struct module *,
+ 	__pci_register_driver(driver, THIS_MODULE, KBUILD_MODNAME)
  
- 	int		flags;		/* flags to find out type of domain */
- 
--	int		iommu_coherency;/* indicate coherency of iommu access */
- 	int		iommu_snooping; /* indicate snooping control feature*/
- 	int		iommu_count;	/* reference count of iommu */
- 	int		iommu_superpage;/* Level of superpages supported:
-@@ -419,6 +418,8 @@ static LIST_HEAD(device_domain_list);
- 
- static struct iommu_ops intel_iommu_ops;
- 
-+static int iommu_coherency __read_mostly = 1;
+ void pci_unregister_driver(struct pci_driver *dev);
 +
- static int __init intel_iommu_setup(char *str)
- {
- 	if (!str)
-@@ -556,20 +557,6 @@ static struct intel_iommu *domain_get_iommu(struct dmar_domain *domain)
- 	return g_iommus[iommu_id];
- }
- 
--static void domain_update_iommu_coherency(struct dmar_domain *domain)
--{
--	int i;
--
--	domain->iommu_coherency = 1;
--
--	for_each_set_bit(i, &domain->iommu_bmp, g_num_of_iommus) {
--		if (!ecap_coherent(g_iommus[i]->ecap)) {
--			domain->iommu_coherency = 0;
--			break;
--		}
--	}
--}
--
- static void domain_update_iommu_snooping(struct dmar_domain *domain)
- {
- 	int i;
-@@ -608,7 +595,6 @@ static void domain_update_iommu_superpage(struct dmar_domain *domain)
- /* Some capabilities may be different across iommus */
- static void domain_update_iommu_cap(struct dmar_domain *domain)
- {
--	domain_update_iommu_coherency(domain);
- 	domain_update_iommu_snooping(domain);
- 	domain_update_iommu_superpage(domain);
- }
-@@ -646,7 +632,7 @@ static struct intel_iommu *device_to_iommu(int segment, u8 bus, u8 devfn)
- static void domain_flush_cache(struct dmar_domain *domain,
- 			       void *addr, int size)
- {
--	if (!domain->iommu_coherency)
-+	if (!iommu_coherency)
- 		clflush_cache_range(addr, size);
- }
- 
-@@ -1459,11 +1445,6 @@ static int domain_init(struct dmar_domain *domain, int guest_width)
- 	domain->agaw = agaw;
- 	INIT_LIST_HEAD(&domain->devices);
- 
--	if (ecap_coherent(iommu->ecap))
--		domain->iommu_coherency = 1;
--	else
--		domain->iommu_coherency = 0;
--
- 	if (ecap_sc_support(iommu->ecap))
- 		domain->iommu_snooping = 1;
- 	else
-@@ -3583,6 +3564,8 @@ static struct notifier_block device_nb = {
- 
- int __init intel_iommu_init(void)
- {
-+	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
- 	int ret = 0;
- 
- 	/* VT-d is required for a TXT/tboot launch, so enforce that */
-@@ -3643,6 +3626,18 @@ int __init intel_iommu_init(void)
- 
- 	init_iommu_pm_ops();
- 
-+	/*
-+	 * Check for coherency support across all iommus.  If unsupported
-+	 * by any, force cache flushes.  Expected to be consistent across
-+	 * all iommus in the system.
-+	 */
-+	for_each_active_iommu(iommu, drhd) {
-+		if (!ecap_coherent(iommu->ecap)) {
-+			iommu_coherency = 0;
-+			break;
-+		}
-+	}
++/**
++ * module_pci_driver() - Helper macro for registering a PCI driver
++ * @__pci_driver: pci_driver struct
++ *
++ * Helper macro for PCI drivers which do not do anything special in module
++ * init/exit. This eliminates a lot of boilerplate. Each module may only
++ * use this macro once, and calling it replaces module_init() and module_exit()
++ */
++#define module_pci_driver(__pci_driver) \
++	module_driver(__pci_driver, pci_register_driver, \
++		       pci_unregister_driver)
 +
- 	bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
- 
- 	bus_register_notifier(&pci_bus_type, &device_nb);
-@@ -3820,7 +3815,6 @@ static int md_domain_init(struct dmar_domain *domain, int guest_width)
- 	INIT_LIST_HEAD(&domain->devices);
- 
- 	domain->iommu_count = 0;
--	domain->iommu_coherency = 0;
- 	domain->iommu_snooping = 0;
- 	domain->iommu_superpage = 0;
- 	domain->max_addr = 0;
-
+ void pci_remove_behind_bridge(struct pci_dev *dev);
+ struct pci_driver *pci_dev_driver(const struct pci_dev *dev);
+ int pci_add_dynid(struct pci_driver *drv,
