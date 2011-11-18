@@ -1,47 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 19 Nov 2011 18:21:27 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Matthew Wilcox <matthew@wil.cx>,
-	Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	linux-pci@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-	linux-kernel@vger.kernel.org,
-	Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: DMAR:[fault reason 02] Present bit in context entry is clear
-	(firewire-ohci)
-Message-ID: <20111119172127.GA31915@nomi.cz>
-References: <4BF7B147.9020502@s5r6.in-berlin.de> <20100522121212.GQ10452@parisc-linux.org> <1274553643.11551.17300.camel@macbook.infradead.org> <20100522120905.154ff932@jbarnes-x201>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59872 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751554Ab1KRWK3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Nov 2011 17:10:29 -0500
+Date: Fri, 18 Nov 2011 14:08:49 -0800
+From: Greg KH <gregkh@suse.de>
+To: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
+Cc: hjk@hansjkoch.de, tglx@linutronix.de, linux-pci@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Message-ID: <20111118220849.GA25205@suse.de>
+References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20100522120905.154ff932@jbarnes-x201>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello guys,
-
-On Sat, May 22, 2010 at 12:09:05PM -0700, Jesse Barnes wrote:
-> On Sat, 22 May 2010 19:40:43 +0100
-> David Woodhouse <dwmw2@infradead.org> wrote:
-> > [...]
-> > Yeah, the DMAR looks at the source-id in the PCIe transactions, and it
-> > sounds like those are all 04:00.0. But we've probably set up the DMAR to
-> > allow the transactions from 04:00.4, and then it naturally faults when a
-> > "different" device actually ends up doing the transaction.
-> > 
-> > If you make the pci_find_upstream_pcie_bridge() function do the
-> > appropriate thing for this device, does it then work as expected?
-> > 
-> > Whether that's a _sane_ thing to do or not is possibly more of a Jesse
-> > question...
+On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
+> Hello fellow hackers.
 > 
-> Well, if cardbus bridges tend to behave this way in general it would
-> make sense to simply use the cardbus bride id everywhere, rather than
-> the specific functions of the device.  Cc'ing Dominik.
+> I am maintaining a UIO based driver for a PCI-E data acquisition device.
+> 
+> I map BAR0 of the device to userspace. I also map two memory areas,
+> one is used to feed instructions to the acquisition device, the other
+> is used autonomously by the PCI device to write the acquired data.
 
-Any news on this one? It is still an issue with current kernel on current
-hardware (like my ThinkPad T420). :-(
+Nice, have a pointer to your driver anywhere so we can include it in the
+main kernel tree to make your life easier?
 
-Regards,
--- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+> The strategy we have been using for those two share memory areas has
+> historically been using pci_alloc_coherent on v2.6.35 x86_64 (limited
+> to 4MB based on my trials) and later, I made use of the VT-d
+> (intel_iommu) to allocate as much as 128MB (an arbitrary limit) which
+> appear contiguous to the PCI device. I use vmalloc_user to allocate
+> 128M, then write all the physically continuous segments in a
+> scatterlist, then use pci_map_sg which works it's way to intel_iommu.
+> The device DMA addresses I get back are contiguous over the whole
+> 128M. Neat! Our VT-d capable devices still use this strategy.
+> 
+> This large memory is mission-critical in making the acquisition device
+> autonomous (real-time), yet keep the DMA implementation very simple.
+> Today, we are re-using this device on a CPU architecture that has no
+> IOMMU (intel E6XX/EG20T) and want to avoid creating a scatter-gather
+> scheme between my driver and the FPGA (PCI device).
+> 
+> So I went back to the old pci_alloc_coherent method, which although
+> limited to 4 MB, will do for early development phases. Instead of
+> 2.6.35, we are doing preliminary development using 2.6.37 and will
+> probably use 3.1 or more later.  The cpu/device shared memory maps
+> (1MB and 4MB) are allocated using pci_alloc_coherent and handed to UIO
+> as physical memory using the dma_addr_t returned by the pci_alloc
+> func.
+> 
+> The 1st memory map is written to by CPU and read from device.
+> The 2nd memory map is typically written by the device and read by the
+> CPU, but future features may have the device also read this memory.
+> 
+> My initial testing on the atom E6XX show the PCI device failing when
+> trying to read from the first memory map. I suspect PCI-E payload
+> sizes which may be somewhat hardcoded in the FPGA firmware... we will
+> confirm this soon.
+
+That would be good to find out.
+
+> Now from the get go I have felt lucky to have made this work because
+> of my limited research into the intricacies of the kernel's memory
+> management. So I ask two things:
+> 
+> - Is this kosher?
+
+I think so, yes, but others who know the DMA subsystem better than I
+should chime in here, as I might be totally wrong.
+
+> - Is there a better/easier/safer way to achieve this? (remember that
+> for the second map, the more memory I have, the better. We have a gig
+> of ram, if I take, say 256MB, that would be OK too.
+> 
+> I had thought about cutting out a chunk of ram from the kernel's boot
+> args, but had always feared cache/snooping errors. Not to mention I
+> had no idea how to "claim" or setup this memory once my driver's probe
+> function. Maybe I would still be lucky and it would just work? mmmh...
+
+Yeah, don't do that, it might not work out well.
+
+greg k-h
