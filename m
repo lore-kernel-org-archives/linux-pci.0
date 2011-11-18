@@ -1,33 +1,43 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 29 Nov 2011 20:54:05 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Chris Metcalf <cmetcalf@tilera.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH-RFC 0/2] tile: switch to generic pci_iomap
-Message-ID: <cover.1322592494.git.mst@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:8553
+	"EHLO AM1EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750753Ab1KRKru (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 05:47:50 -0500
+Date: Fri, 18 Nov 2011 11:46:51 +0100
+From: Joerg Roedel <Joerg.Roedel@amd.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: <iommu@lists.linux-foundation.org>, <dwmw2@infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iommu: Include MSI susceptibility to DMA in creating
+ iommu groups
+Message-ID: <20111118104651.GJ5627@amd.com>
+References: <20111117170800.3125.84150.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-To: unlisted-recipients:; (no To-header on input)
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20111117170800.3125.84150.stgit@bling.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here's a completely untested patch to switch tile
-over to the new pci_iomap (in -mm).
+On Thu, Nov 17, 2011 at 10:09:26AM -0700, Alex Williamson wrote:
+> IOMMU drivers should account for the platform's susceptibility to
+> DMA triggered MSI interrupts in creating IOMMU groups.  Skip
+> devices when the IOMMU can't isolate MSI from DMA, but allow
+> an iommu=group_unsafe_msi option for opt-in.  This removes the
+> leap in logic for users that IOMMU_CAP_INTR_REMAP is required for
+> interrupt security when they may be running on a non-x86 platform
+> that does not have this dependency.
 
-This is on top of pci: use generic pci_iomap in most architectures,
-and converts just the tile architecture.
+I actually don't see the point in this. The iommu-group thing is to tell
+user-space what devices the IOMMU can safely distinguish between. The
+absence of interrupt-remapping changes nothing to that grouping. So why
+remove it when interrupt remapping is not enabled?
 
-Seems straightforward enough but completely untested - could someone
-with access to appropriate systems respond and say whether
-the first patch in the series is OK?
-The second one should then be trivial.
+	Joerg
 
 -- 
-1.7.5.53.gc233e
+AMD Operating System Research Center
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+
