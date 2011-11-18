@@ -1,87 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59872 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751554Ab1KRWK3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Nov 2011 17:10:29 -0500
-Date: Fri, 18 Nov 2011 14:08:49 -0800
-From: Greg KH <gregkh@suse.de>
-To: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
-Cc: hjk@hansjkoch.de, tglx@linutronix.de, linux-pci@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Message-ID: <20111118220849.GA25205@suse.de>
-References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:43161 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754257Ab1KRTET (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 14:04:19 -0500
+Received: by bke17 with SMTP id 17so4552824bke.0
+        for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2011 11:04:17 -0800 (PST)
+Date: Fri, 18 Nov 2011 21:04:14 +0200
+From: Felipe Balbi <balbi@ti.com>
+To: Greg KH <greg@kroah.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	Lars-Peter Clausen <lars@metafoo.de>,
+	Felipe Balbi <balbi@ti.com>
+Subject: Re: [PATCH] DWC3: use module_pci_driver
+Message-ID: <20111118190413.GA11736@legolas.emea.dhcp.ti.com>
+Reply-To: balbi@ti.com
+References: <20111118181249.GA29495@kroah.com>
+ <20111118181424.GB29495@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="M9NhX3UHpAaciwkO"
+In-Reply-To: <20111118181424.GB29495@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
-> Hello fellow hackers.
-> 
-> I am maintaining a UIO based driver for a PCI-E data acquisition device.
-> 
-> I map BAR0 of the device to userspace. I also map two memory areas,
-> one is used to feed instructions to the acquisition device, the other
-> is used autonomously by the PCI device to write the acquired data.
 
-Nice, have a pointer to your driver anywhere so we can include it in the
-main kernel tree to make your life easier?
+--M9NhX3UHpAaciwkO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> The strategy we have been using for those two share memory areas has
-> historically been using pci_alloc_coherent on v2.6.35 x86_64 (limited
-> to 4MB based on my trials) and later, I made use of the VT-d
-> (intel_iommu) to allocate as much as 128MB (an arbitrary limit) which
-> appear contiguous to the PCI device. I use vmalloc_user to allocate
-> 128M, then write all the physically continuous segments in a
-> scatterlist, then use pci_map_sg which works it's way to intel_iommu.
-> The device DMA addresses I get back are contiguous over the whole
-> 128M. Neat! Our VT-d capable devices still use this strategy.
-> 
-> This large memory is mission-critical in making the acquisition device
-> autonomous (real-time), yet keep the DMA implementation very simple.
-> Today, we are re-using this device on a CPU architecture that has no
-> IOMMU (intel E6XX/EG20T) and want to avoid creating a scatter-gather
-> scheme between my driver and the FPGA (PCI device).
-> 
-> So I went back to the old pci_alloc_coherent method, which although
-> limited to 4 MB, will do for early development phases. Instead of
-> 2.6.35, we are doing preliminary development using 2.6.37 and will
-> probably use 3.1 or more later.  The cpu/device shared memory maps
-> (1MB and 4MB) are allocated using pci_alloc_coherent and handed to UIO
-> as physical memory using the dma_addr_t returned by the pci_alloc
-> func.
-> 
-> The 1st memory map is written to by CPU and read from device.
-> The 2nd memory map is typically written by the device and read by the
-> CPU, but future features may have the device also read this memory.
-> 
-> My initial testing on the atom E6XX show the PCI device failing when
-> trying to read from the first memory map. I suspect PCI-E payload
-> sizes which may be somewhat hardcoded in the FPGA firmware... we will
-> confirm this soon.
+Hi,
 
-That would be good to find out.
+On Fri, Nov 18, 2011 at 10:14:24AM -0800, Greg KH wrote:
+> From: Greg Kroah-Hartman <gregkh@suse.de>
+>=20
+> This cuts down on the boilerplate code.
+>=20
+>=20
+> Cc: Lars-Peter Clausen <lars@metafoo.de>
+> Cc: Felipe Balbi <balbi@ti.com>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-> Now from the get go I have felt lucky to have made this work because
-> of my limited research into the intricacies of the kernel's memory
-> management. So I ask two things:
-> 
-> - Is this kosher?
+Looks good to me. It would be nice to see a similar patch for
+dwc3-omap.c moving the platform_driver_register to this new macro :-)
 
-I think so, yes, but others who know the DMA subsystem better than I
-should chime in here, as I might be totally wrong.
+Acked-by: Felipe Balbi <balbi@ti.com>
 
-> - Is there a better/easier/safer way to achieve this? (remember that
-> for the second map, the more memory I have, the better. We have a gig
-> of ram, if I take, say 256MB, that would be OK too.
-> 
-> I had thought about cutting out a chunk of ram from the kernel's boot
-> args, but had always feared cache/snooping errors. Not to mention I
-> had no idea how to "claim" or setup this memory once my driver's probe
-> function. Maybe I would still be lucky and it would just work? mmmh...
+--=20
+balbi
 
-Yeah, don't do that, it might not work out well.
+--M9NhX3UHpAaciwkO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-greg k-h
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOxqwtAAoJEIaOsuA1yqREgMgP/1GRE2e/w3JvSaZcfCVqBE+F
+8qaAxuHITkIpK8i/Pnc0+lg+Ax4aN1OxJZllSYX6mVAnewNo5G/nw6qvBaTRx+GX
+02y5Fs/fYV0G5B2y/RuMSSFA/bp2/Wy5DQEjXNxhWh9JOOatN81mEZ4RVG1rFdso
+vH7IM1B1Fy3XxRpkV53L+2NS4vCwoLvLpXj5P541+XuYThSIZnMVuKUca2ojAfIg
++ZnCiTVJQ4yCHZOEkj4bjsS/CKi8OT0jkLMvKtIt3B3sTpqWUmdL43v/9y4PSApQ
+XMCAg+70A330ZUconNW5UTPe8mMAwv8zbcB2gdyX4dvznRos6RNXEggF/2+QiCRs
+54Q5NkaMcCdA0SNFGwJaBZ8NZC69ajaXicdMv08L83vz/TbKx+OnKLFiKSEA3fkC
+jEo8GjH8IpNSVYy1AS5pRnlJcYKoRPIEF6VMrv832spr5HyI02JuKhZuQ0SadhWf
+XUFzaBzNqEFSDJthJOb3d8gvcUTQLjovrl07JvLV+f5KMeJwrqz6YTJL86arKWZt
+LnyMyLE+e4wNYwZ6a+LfgyGAQAihN5TR+rbBZH+yj4ZZY6ZHZqFxFD8plePzkMpG
+OD3shNAlW2JpV2Es6e3IkmU7Qs1vtKewedzh/k/74TlTL888eRTGS6hcADfRvWnE
+QzvZOhX51sFU6Tcvq8Vm
+=YQCR
+-----END PGP SIGNATURE-----
+
+--M9NhX3UHpAaciwkO--
