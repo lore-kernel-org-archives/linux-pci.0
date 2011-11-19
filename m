@@ -1,33 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:40295 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756515Ab1KOUQr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 15:16:47 -0500
-Date: Tue, 15 Nov 2011 13:16:46 -0700
-From: Matthew Wilcox <matthew@wil.cx>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	James Paradis <jparadis@redhat.com>, linux-pci@vger.kernel.org,
-	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
-	jbarnes@virtuousgeek.org
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-Message-ID: <20111115201646.GG4387@parisc-linux.org>
-References: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com> <4EBD73C8.8070407@redhat.com> <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com> <4EBD8714.30401@redhat.com> <4EC12962.2040105@redhat.com> <20111114181418.GE4387@parisc-linux.org> <4EC170E8.4070600@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 19 Nov 2011 18:21:27 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Matthew Wilcox <matthew@wil.cx>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	linux-pci@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+	linux-kernel@vger.kernel.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: DMAR:[fault reason 02] Present bit in context entry is clear
+	(firewire-ohci)
+Message-ID: <20111119172127.GA31915@nomi.cz>
+References: <4BF7B147.9020502@s5r6.in-berlin.de> <20100522121212.GQ10452@parisc-linux.org> <1274553643.11551.17300.camel@macbook.infradead.org> <20100522120905.154ff932@jbarnes-x201>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EC170E8.4070600@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20100522120905.154ff932@jbarnes-x201>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 14, 2011 at 02:50:00PM -0500, Prarit Bhargava wrote:
-> This only works if there is a single Down bridge connected to a single Down bridge.  What Stratus/NEC has is a single Up bridge (02:00.0) connected to a Up bridge (03:00.0) and a Down bridge (03:01.0), which we know to be illegal in PCIE.  So the scan of the first bridge, 03:00.0 works and no fixup is done.  The code still misses the second bridge, 03:01.0.
+Hello guys,
 
-I'd forgotten that the Down - Down link was at slot 1; I thought it was
-at slot 0.  So this won't help.
+On Sat, May 22, 2010 at 12:09:05PM -0700, Jesse Barnes wrote:
+> On Sat, 22 May 2010 19:40:43 +0100
+> David Woodhouse <dwmw2@infradead.org> wrote:
+> > [...]
+> > Yeah, the DMAR looks at the source-id in the PCIe transactions, and it
+> > sounds like those are all 04:00.0. But we've probably set up the DMAR to
+> > allow the transactions from 04:00.4, and then it naturally faults when a
+> > "different" device actually ends up doing the transaction.
+> > 
+> > If you make the pci_find_upstream_pcie_bridge() function do the
+> > appropriate thing for this device, does it then work as expected?
+> > 
+> > Whether that's a _sane_ thing to do or not is possibly more of a Jesse
+> > question...
+> 
+> Well, if cardbus bridges tend to behave this way in general it would
+> make sense to simply use the cardbus bride id everywhere, rather than
+> the specific functions of the device.  Cc'ing Dominik.
 
+Any news on this one? It is still an issue with current kernel on current
+hardware (like my ThinkPad T420). :-(
+
+Regards,
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
