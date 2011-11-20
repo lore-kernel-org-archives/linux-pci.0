@@ -1,102 +1,45 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 3/3] x86/PCI: Convert maintaining FW-assigned BIOS BAR values
-	to use a list
-To: jbarnes@virtuousgeek.org
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org
-Date: Wed, 09 Nov 2011 17:43:57 -0700
-Message-ID: <20111110004357.5866.557.stgit@amt.stowe>
-In-Reply-To: <20111110004339.5866.28478.stgit@amt.stowe>
-References: <20111110004339.5866.28478.stgit@amt.stowe>
+Date: Sun, 20 Nov 2011 15:29:46 -0600
+From: David Fries <david@fries.net>
+To: linux-kernel@vger.kernel.org
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATH] pci_has_legacy_pm_support add driver and device to WARN
+Message-ID: <20111120212945.GA1781@spacedout.fries.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Myron Stowe <mstowe@redhat.com>
+From: David Fries <David@Fries.net>
 
-This patch converts the underlying maintenance aspects of FW-assigned
-BIOS BAR values from a statically allocated array within struct pci_dev
-to a list of temporary, stand alone, entries.
+Include the driver name and device in warning when a pci driver
+supports both legacy pm and new framework as just the stack trace
+gives no way to identify the driver.
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: David Fries <David@Fries.net>
+Cc: Rafael J. Wysocki <rjw@sisk.pl>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org
 ---
+ drivers/pci/pci-driver.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
- arch/x86/pci/i386.c     |    2 +-
- drivers/pci/setup-res.c |   14 +++++++++-----
- include/linux/pci.h     |    1 -
- 3 files changed, 10 insertions(+), 7 deletions(-)
-
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 494f2e7..99ba108 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -181,7 +181,7 @@ static void __init pcibios_allocate_resources(int pass)
- 					idx, r, disabled, pass);
- 				if (pci_claim_resource(dev, idx) < 0) {
- 					/* We'll assign a new address later */
--					dev->fw_addr[idx] = r->start;
-+					pci_save_fw_addr(dev, idx, r->start);
- 					r->end -= r->start;
- 					r->start = 0;
- 				}
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index ab45c11..7e4711e 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -231,7 +231,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 12d1e81..3623d65 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -604,7 +604,8 @@ static bool pci_has_legacy_pm_support(struct pci_dev *pci_dev)
+ 	 * supported as well.  Drivers are supposed to support either the
+ 	 * former, or the latter, but not both at the same time.
+ 	 */
+-	WARN_ON(ret && drv->driver.pm);
++	WARN(ret && drv->driver.pm, "driver %s device %04x:%04x\n",
++		drv->name, pci_dev->vendor, pci_dev->device);
+ 
+ 	return ret;
  }
- 
- static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev, 
--		int resno, resource_size_t size)
-+		int resno, resource_size_t fw_addr, resource_size_t size)
- {
- 	struct resource *root, *conflict;
- 	resource_size_t start, end;
-@@ -239,7 +239,7 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
- 
- 	start = res->start;
- 	end = res->end;
--	res->start = dev->fw_addr[resno];
-+	res->start = fw_addr;
- 	res->end = res->start + size - 1;
- 
- 	root = pci_find_parent_resource(dev, res);
-@@ -322,7 +322,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- int pci_assign_resource(struct pci_dev *dev, int resno)
- {
- 	struct resource *res = dev->resource + resno;
--	resource_size_t align, size;
-+	resource_size_t align, fw_addr, size;
- 	struct pci_bus *bus;
- 	int ret;
- 
-@@ -342,8 +342,12 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 	 * where firmware left it.  That at least has a chance of
- 	 * working, which is better than just leaving it disabled.
- 	 */
--	if (ret < 0 && dev->fw_addr[resno])
--		ret = pci_revert_fw_address(res, dev, resno, size);
-+	if (ret < 0) {
-+		fw_addr = pci_retrieve_fw_addr(dev, resno);
-+		if (fw_addr)
-+			ret = pci_revert_fw_address(res, dev, resno, fw_addr,
-+						    size);
-+	}
- 
- 	if (!ret) {
- 		res->flags &= ~IORESOURCE_STARTALIGN;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 14f2492..5a5d2fc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -299,7 +299,6 @@ struct pci_dev {
- 	 */
- 	unsigned int	irq;
- 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
--	resource_size_t	fw_addr[DEVICE_COUNT_RESOURCE]; /* FW-assigned addr */
- 
- 	/* These fields are used by common fixups */
- 	unsigned int	transparent:1;	/* Transparent PCI bridge */
+-- 
+1.7.7.1
 
