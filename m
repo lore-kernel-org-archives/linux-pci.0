@@ -1,59 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:36057 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752663Ab1KXEgJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2011 23:36:09 -0500
+Received: from www.hansjkoch.de ([178.63.77.200]:45498 "EHLO www.hansjkoch.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751815Ab1KUSRd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Nov 2011 13:17:33 -0500
+Date: Mon, 21 Nov 2011 19:17:24 +0100
+From: "Hans J. Koch" <hjk@hansjkoch.de>
+To: Greg KH <gregkh@suse.de>
+Cc: Jean-Francois Dagenais <jeff.dagenais@gmail.com>, hjk@hansjkoch.de,
+	tglx@linutronix.de, linux-pci@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Message-ID: <20111121181724.GB12011@local>
+References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
+ <20111118220849.GA25205@suse.de>
+ <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
+ <20111121173620.GA5028@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <CAOS58YPM29xi4Jq5L16fjDQDRzv-yc67tp_yqSwoiFBBbtCZkw@mail.gmail.com>
-References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
-	<CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
-	<20111122150613.GA322@google.com>
-	<CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
-	<20111123162937.GF25780@google.com>
-	<20111123144735.64dc9f05@jbarnes-desktop>
-	<CAOS58YPM29xi4Jq5L16fjDQDRzv-yc67tp_yqSwoiFBBbtCZkw@mail.gmail.com>
-Date: Thu, 24 Nov 2011 10:06:08 +0530
-Message-ID: <CAHM4w1k-uA1CpbvDAz4ZhETf9_RN1kxf6btXNbxEAvNw6M57rw@mail.gmail.com>
-Subject: Re: Crash with sata_sil24 driver
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	linux-ide@vger.kernel.org, Russell King <linux@arm.linux.org.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111121173620.GA5028@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 24, 2011 at 7:18 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Wed, Nov 23, 2011 at 2:47 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
->>> Weird, that basically means that somehow pci_iomap() isn't
->>> synchronous.  ie. you need to way some time after pci_iomap() before
->>> being able to access the mapped address.  Seems like arch / pci
->>> weirdness.  Jesse, Russell, any ideas?
->>
->> As Russel said, pci_iomap shouldn't be async.  But maybe something else
->> in the init function is doing a chip reset or causing the chip to go
->> off into the weeds for a short time?  That's generally the cause of
->> target timeouts for PCI devices.
->
-> Yeah, that's much more plausible. Weird that it doesn't happen on x86
-> tho. Maybe different timeouts? Pratyush, can you look at bus trace and
-> see what's going on?
+On Mon, Nov 21, 2011 at 09:36:20AM -0800, Greg KH wrote:
+> On Mon, Nov 21, 2011 at 10:31:07AM -0500, Jean-Francois Dagenais wrote:
+> > Hi Greg, thanks for your answer...
+> > 
+> > On Nov 18, 2011, at 17:08, Greg KH wrote:
+> > 
+> > > On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
+> > >> Hello fellow hackers.
+> > >> 
+> > >> I am maintaining a UIO based driver for a PCI-E data acquisition device.
+> > >> 
+> > >> I map BAR0 of the device to userspace. I also map two memory areas,
+> > >> one is used to feed instructions to the acquisition device, the other
+> > >> is used autonomously by the PCI device to write the acquired data.
+> > > 
+> > > Nice, have a pointer to your driver anywhere so we can include it in the
+> > > main kernel tree to make your life easier?
+> > As I said in a parallel answer from "Hans J. Koch" <hjk@hansjkoch.de>,
+> > the driver, although GPL'ed, is quite uninteresting except for us here at
+> > Sonatest.
+> 
+> I really doubt that,
 
-It also does not happen always with ARM too.  As said earlier only
-when I run the system at increased CPU frequency.
-Do you suggest to trace PCIe bus using PCIe bus analyser. I can arange
-analyser to do that. But I do not see any kind of abort (like PCIe
-host/target abort) in this case. So will it really help?
-Is it possible to share datasheet of SIL3531?
+So do I. We never had a driver allocating so much memory.
 
-Regards
-Pratyush
+> and you should submit it anyway to allow us to
+> change it when the in-kernel apis change in the future.  It will save
+> you time in the long run and make things easier for you (look, your
+> driver is automatically included in all distros!, people fix your bugs,
+> etc.)
 
->
-> Thanks.
->
-> --
-> tejun
->
+Exactly.
+
+> 
+> > About merging the driver to mainline, I guess it would only be interesting for
+> > the recipe I demonstrate. Please advise.
+> 
+> That is a recipe that I'm sure others will use, and need help on in the
+> future.
+
+They already needed it in the past, and they usually try to get it by
+writing me private mail.
+
+> 
+> So please submit a patch, that will make it easier to help you out.
+
+Yes, please do. The more different drivers we have under /drivers/uio, the
+better. Didn't you use one of the existing drivers as a template for yours?
+
+Thanks,
+Hans
