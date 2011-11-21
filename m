@@ -1,60 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35501 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751275Ab1K0KHh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Nov 2011 05:07:37 -0500
-Received: from compute2.internal (compute2.nyi.mail.srv.osa [10.202.2.42])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 0355821A28
-	for <linux-pci@vger.kernel.org>; Sun, 27 Nov 2011 05:07:37 -0500 (EST)
-Date: Sat, 26 Nov 2011 19:25:44 -0800
-From: Greg KH <greg@kroah.com>
-To: Yinghai Lu <yinghai.lu@oracle.com>
-Cc: Greg KH <gregkh@suse.de>, stable@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: pciehp for stable
-Message-ID: <20111127032544.GB2369@kroah.com>
-References: <4EB8F434.6090003@jp.fujitsu.com>
- <4EB94A51.6070809@oracle.com>
- <4EB9A50D.1040302@oracle.com>
- <4EBB7F9B.8050703@jp.fujitsu.com>
- <4EBB8058.6090500@jp.fujitsu.com>
- <4EBC21C0.5070806@oracle.com>
- <20111111093212.3cceee91@jbarnes-desktop>
- <4EBD5C6C.9010606@oracle.com>
- <20111111174053.GA27014@suse.de>
- <4ECDA602.9060103@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:25529 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752824Ab1KUSyQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Nov 2011 13:54:16 -0500
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH -v2 2/3] x86/PCI: Infrastructure to maintain a list of
+	FW-assigned BIOS BAR values
+To: jbarnes@virtuousgeek.org
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org
+Date: Mon, 21 Nov 2011 11:54:13 -0700
+Message-ID: <20111121185413.9603.12314.stgit@amt.stowe>
+In-Reply-To: <20111121185401.9603.34587.stgit@amt.stowe>
+References: <20111121185401.9603.34587.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4ECDA602.9060103@oracle.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 06:03:46PM -0800, Yinghai Lu wrote:
-> On 11/11/2011 09:40 AM, Greg KH wrote:
-> 
-> >> Thanks, We may need to put them into stable too.
-> > 
-> > Then send stable@vger.kernel.org the git commit ids once they show up in
-> > Linus's tree.
-> > 
-> 
-> 
-> >From 0027cb3e1947d0f453fece40ed16764fb362bac6 Mon Sep 17 00:00:00 2001
-> From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-> Date: Thu, 10 Nov 2011 16:40:37 +0900
-> Subject: [PATCH] PCI: pciehp: wait 1000 ms before Link Training check
-> 
-> 
-> >From b3c004542229099e18198061c737e13eafc8d4d6 Mon Sep 17 00:00:00 2001
-> From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-> Date: Thu, 10 Nov 2011 16:42:16 +0900
-> Subject: [PATCH] PCI: pciehp: wait 100 ms after Link Training check
+From: Myron Stowe <mstowe@redhat.com>
 
-Are you sure these patches are correct?  Linus complained about them,
-and I will to :)
+Commit 58c84eda075 introduced functionality to try and reinstate the
+original BIOS BAR addresses of a PCI device when normal resource
+assignment attempts fail.  To keep track of the BIOS BAR addresses,
+struct pci_dev was augmented with an array to hold the BAR addresses
+of the PCI device: 'resource_size_t fw_addr[DEVICE_COUNT_RESOURCE]'.
 
-Please get Jesse to ack them and I'll apply them.
+The reinstatement of BAR addresses is an uncommon event leaving the
+'fw_addr' array unused under normal circumstances.  This functionality
+is also currently architecture specific with an implementation limited
+to x86.  As the use of struct pci_dev is so prevalent, having the
+'fw_addr' array residing within such seems somewhat wasteful.
 
-thanks,
+This patch introduces a stand alone data structure and interfacing
+routines for maintaining a list of FW-assigned BIOS BAR value entries.
 
-greg k-h
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ arch/x86/pci/i386.c |   79 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    1 +
+ 2 files changed, 80 insertions(+), 0 deletions(-)
+
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 494f2e7..bfb9d6a 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -38,6 +38,85 @@
+ #include <asm/io_apic.h>
+ 
+ 
++/*
++ * This list of dynamic mappings is for temporarily maintaining
++ * original BIOS BAR addresses for possible reinstatement.
++ */
++struct pcibios_fwaddrmap {
++	struct list_head list;
++	struct pci_dev *dev;
++	resource_size_t fw_addr[DEVICE_COUNT_RESOURCE];
++};
++
++static LIST_HEAD(pcibios_fwaddrmappings);
++static DEFINE_SPINLOCK(pcibios_fwaddrmap_lock);
++
++/* Must be called with 'pcibios_fwaddrmap_lock' lock held. */
++static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
++{
++	struct pcibios_fwaddrmap *map;
++
++	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
++		if (map->dev == dev)
++			return map;
++
++	return NULL;
++}
++
++static void
++pcibios_save_fw_addr(struct pci_dev *dev, int idx, resource_size_t fw_addr)
++{
++	unsigned long flags;
++	struct pcibios_fwaddrmap *map;
++
++	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
++	map = pcibios_fwaddrmap_lookup(dev);
++	if (!map) {
++		spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
++		map = kzalloc(sizeof(*map), GFP_KERNEL);
++		if (!map)
++			return;
++
++		map->dev = pci_dev_get(dev);
++		map->fw_addr[idx] = fw_addr;
++		INIT_LIST_HEAD(&map->list);
++
++		spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
++		list_add_tail(&map->list, &pcibios_fwaddrmappings);
++	} else
++		map->fw_addr[idx] = fw_addr;
++	spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
++}
++
++resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx)
++{
++	unsigned long flags;
++	struct pcibios_fwaddrmap *map;
++	resource_size_t fw_addr = 0;
++
++	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
++	map = pcibios_fwaddrmap_lookup(dev);
++	if (map)
++		fw_addr = map->fw_addr[idx];
++	spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
++
++	return fw_addr;
++}
++
++static void pcibios_fw_addr_list_del(void)
++{
++	unsigned long flags;
++	struct pcibios_fwaddrmap *entry, *next;
++
++	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
++	list_for_each_entry_safe(entry, next, &pcibios_fwaddrmappings, list) {
++		list_del(&entry->list);
++		pci_dev_put(entry->dev);
++		kfree(entry);
++	}
++	spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
++}
++
+ static int
+ skip_isa_ioresource_align(struct pci_dev *dev) {
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 84225c7..4545d23 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -889,6 +889,7 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+ int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+ 
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
++resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+ void pci_bus_assign_resources(const struct pci_bus *bus);
+ void pci_bus_size_bridges(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+
