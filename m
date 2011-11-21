@@ -1,61 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:48930 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752743Ab1KRSOa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2011 13:14:30 -0500
-Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 68CEC20A8B
-	for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2011 13:14:30 -0500 (EST)
-Date: Fri, 18 Nov 2011 10:14:24 -0800
-From: Greg KH <greg@kroah.com>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>,
-	Felipe Balbi <balbi@ti.com>
-Subject: [PATCH] DWC3: use module_pci_driver
-Message-ID: <20111118181424.GB29495@kroah.com>
-References: <20111118181249.GA29495@kroah.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 21 Nov 2011 15:35:05 -0800
+From: Chris Wright <chrisw@sous-sol.org>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org, dwmw2@infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] iommu: Include MSI susceptibility to DMA in creating
+ iommu groups
+Message-ID: <20111121233505.GG3344@sequoia.sous-sol.org>
+References: <20111117170800.3125.84150.stgit@bling.home>
+ <20111118104651.GJ5627@amd.com>
+ <1321628190.26410.63.camel@bling.home>
+ <20111118152710.GA5098@amd.com>
+ <1321633956.26410.126.camel@bling.home>
+ <20111120120043.GB20535@8bytes.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111118181249.GA29495@kroah.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20111120120043.GB20535@8bytes.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Greg Kroah-Hartman <gregkh@suse.de>
+* Joerg Roedel (joro@8bytes.org) wrote:
+> >From device standpoint a MSI transaction is always a DMA memory write
+> to a given address range. The IOMMU-API should export a feature flag
+> whether it supports filtering on those transaction or not. We have that
+> today with the IOMMU_CAP_INTR_REMAP. I agree that the interface to get
+> this information is ugly because a domain is needed. But the interface
+> can be fixed. While doing this I suggest to rename that feature
+> IOMMU_CAP_INTR_ISOLATION or something like that.
+> VFIO can then check for this flag on module-load and refuse to load if
+> it is not available.
 
-This cuts down on the boilerplate code.
+I can see that the native grouping (the typical pci bridge type) is
+really more a property of the topology.
 
+The isolation properties of a group (arguably the whole point of the
+group) is subtly different.
 
-Cc: Lars-Peter Clausen <lars@metafoo.de>
-Cc: Felipe Balbi <balbi@ti.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Leaves the questions:
 
----
+What is the value of a group w/out complete isolation?
+Is there a practical problem w/ conflating the subtleties above?
 
-Here's an example of how this works, it ends up deleting a ton of
-duplicated code all over the kernel, and it also has the very nice side
-affect of deleting a bunch of "this module is now loading" printks that
-are just cluttering up our kernel logs, making the overall kernel size
-smaller, which is good thing.
-
-
- drivers/usb/dwc3/dwc3-pci.c |   12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
-
---- a/drivers/usb/dwc3/dwc3-pci.c
-+++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -206,14 +206,4 @@ MODULE_AUTHOR("Felipe Balbi <balbi@ti.com>");
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_DESCRIPTION("DesignWare USB3 PCI Glue Layer");
- 
--static int __devinit dwc3_pci_init(void)
--{
--	return pci_register_driver(&dwc3_pci_driver);
--}
--module_init(dwc3_pci_init);
--
--static void __exit dwc3_pci_exit(void)
--{
--	pci_unregister_driver(&dwc3_pci_driver);
--}
--module_exit(dwc3_pci_exit);
-+module_pci_driver(dwc3_pci_driver);
+thanks,
+-chris
