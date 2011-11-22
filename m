@@ -1,75 +1,40 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 30 Nov 2011 09:04:17 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chris Metcalf <cmetcalf@tilera.com>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
-Message-ID: <20111130070417.GA17781@redhat.com>
-References: <cover.1322592494.git.mst@redhat.com>
- <a3bc9cb56040258dabc7b466ea217f4515b68b7d.1322592495.git.mst@redhat.com>
- <CAErSpo4N8drqe5bHVjzXy_h0HTC8Reye4+8viN4c6TtmwFheXA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:35428 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898Ab1KVR12 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2011 12:27:28 -0500
+Date: Tue, 22 Nov 2011 10:27:25 -0700
+From: Matthew Wilcox <matthew@wil.cx>
+To: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+	"Hans J. Koch" <hjk@hansjkoch.de>, Greg KH <gregkh@suse.de>,
+	tglx@linutronix.de, linux-pci@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Message-ID: <20111122172725.GK4387@parisc-linux.org>
+References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com> <20111118220849.GA25205@suse.de> <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com> <20111121173620.GA5028@suse.de> <20111121181724.GB12011@local> <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com> <20111122153525.GB17268@redhat.com> <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAErSpo4N8drqe5bHVjzXy_h0HTC8Reye4+8viN4c6TtmwFheXA@mail.gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 29, 2011 at 01:04:12PM -0800, Bjorn Helgaas wrote:
-> On Tue, Nov 29, 2011 at 10:54 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> > I think panic on iomap is there just for debugging.
-> > If we return NULL instead, the generic pci_iomap will
-> > DTRT so we don't need to roll our own.
+On Tue, Nov 22, 2011 at 11:54:22AM -0500, Jean-Francois Dagenais wrote:
+> That is quite interesting. It really seems like my VT-d recipe to create 128MB for my PCI-e
+> FPGA to write into is covered by this patch.
 > 
-> Just to be explicit about what "doing the right thing" means, here's
-> what I think is changing (I think the new behavior is OK, but it *is*
-> different):
+> My problem is that our FPGA is connected to one of the atom E6XX's PCI-e links, so no
+> iommu :( Since our first product had VT-d, the FPGA, uio based module and userspace
+> code is designed such that the device sees a huge contiguous memory chunk. This is key
+> to the performance of the FPGA, which is essentially decoupled from the CPU for it's real-time
+> acquisition.
 
-I think the change is that anyone calling ioport_map *directly*
-will fail. pci_iomap callers are mostly unaffected.
-
-> 
-> Old behavior: Caller calls pci_iomap(), which panics in ioport_map().
-
-Not really, the old pci_iomap simply returned NULL in this case, it
-did not call ioport_map.
-
-> New behavior: Caller calls pci_iomap(), ioport_map() returns NULL,
-> pci_iomap() returns NULL (failure), caller may check for failure.  If
-> caller does not check for failure and passes the NULL to
-> ioread()/iowrite(), we WARN in bad_io_access().
-> 
-> >  static inline void __iomem *ioport_map(unsigned long port, unsigned int len)
-> >  {
-> > -       return (void __iomem *) ioport_panic();
-> > +       pr_info("Trying to map an IO resource - it does not exit on tile.\n");
-> > +       return NULL;
-> 
-> s/exit/exist/
-> 
-> Since we only expect to see this message during debugging, maybe it
-> could be more informative, e.g., use dump_stack() to identify the
-> offending driver?  I don't think either the "Trying to map" message or
-> the "Bad IO access" message is enough to actually make progress in
-> debugging.
-> 
-> Bjorn
-
-As explained above, only direct callers of ioport_map get a changed
-behaviour. If we start dumping stack there we will hurt users of
-pci_iomap which used to get a graceful failure and will start getting
-scary messages. Is does not seem to be worth doing to simplify debugging, right?
-How about sticking the function name in the pr_info message?
-A simple grep for ioport_map will then get you the culprit ...
-Like this:
-+       pr_info("ioport_map: mapping IO resources is unsupported on tile.\n");
-?
+Is it really key?  If you supported, ohidon'tknow, 2MB pages, you'd
+need 64 entries in the FPGA to store the addresses of those 2MB pages,
+which doesn't sound like a huge burden.
 
 -- 
-MST
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
