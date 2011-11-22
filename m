@@ -1,52 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50028 "EHLO gate.crashing.org"
+Received: from www.hansjkoch.de ([178.63.77.200]:45567 "EHLO www.hansjkoch.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932629Ab1KOWpF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Nov 2011 17:45:05 -0500
-Message-ID: <1321397030.3170.15.camel@pasglop>
-Subject: Re: [PATCH -v2 00/16] PCI: Re-factor PCI's 'latency timer' setup
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
-	linux@arm.linux.org.uk, vapier@gentoo.org, dhowells@redhat.com,
-	ysato@users.sourceforge.jp, tony.luck@intel.com,
-	fenghua.yu@intel.com, monstr@monstr.eu, ralf@linux-mips.org,
-	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
-	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
-	mingo@redhat.com, chris@zankel.net, linux-kernel@vger.kernel.org
-Date: Wed, 16 Nov 2011 09:43:50 +1100
-In-Reply-To: <20111111095930.22abd773@jbarnes-desktop>
-References: <20111028214726.20088.30551.stgit@amt.stowe>
-	 <20111111095930.22abd773@jbarnes-desktop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751873Ab1KVSw5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Nov 2011 13:52:57 -0500
+Date: Tue, 22 Nov 2011 19:52:45 +0100
+From: "Hans J. Koch" <hjk@hansjkoch.de>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Hans J. Koch" <hjk@hansjkoch.de>,
+	Jean-Francois Dagenais <jeff.dagenais@gmail.com>,
+	Greg KH <gregkh@suse.de>, tglx@linutronix.de,
+	linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Message-ID: <20111122185244.GD15508@local>
+References: <20111118220849.GA25205@suse.de>
+ <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
+ <20111121173620.GA5028@suse.de>
+ <20111121181724.GB12011@local>
+ <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
+ <20111122153525.GB17268@redhat.com>
+ <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
+ <20111122173722.GA29068@redhat.com>
+ <20111122175402.GC15508@local>
+ <20111122184040.GB5235@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111122184040.GB5235@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2011-11-11 at 09:59 -0800, Jesse Barnes wrote:
-> On Fri, 28 Oct 2011 15:47:26 -0600
-> Myron Stowe <myron.stowe@redhat.com> wrote:
-> 
-> > The 'latency timer' of PCI devices, both Type 0 and Type 1,
-> > is setup in architecture-specific code [see: pcibios_set_master()].
-> > There are two approaches being taken by all the architectures - check
-> > if the 'latency timer' is currently set between 16 and 255 and if not
-> > bring it within bounds, or, do nothing (and then there is the
-> > gratuitously different parisc implementation).
+On Tue, Nov 22, 2011 at 08:40:40PM +0200, Michael S. Tsirkin wrote:
+> On Tue, Nov 22, 2011 at 06:54:02PM +0100, Hans J. Koch wrote:
+> > On Tue, Nov 22, 2011 at 07:37:23PM +0200, Michael S. Tsirkin wrote:
+> > [...]
+> > > > Or am I better off with a UIO solution?
+> > > 
+> > > You should probably write a proper kernel driver, not a UIO one.
+> > > your kernel driver would have to prevent the device fom DMA into memory
+> > > outside the allocated range, even if userspace is malicious.
+> > > That's why UIO is generally not recommended for PCI devices that do DMA.
 > > 
-> > There is nothing architecture-specific about PCI's 'latency timer' so
-> > this patch pulls the setup functionality up into the PCI core by
-> > creating a generic 'pcibios_set_master()' function using the '__weak'
-> > attribute which can be used by all architectures as a default which,
-> > if necessary, can then be over-ridden by architecture-specific code.
+> > When UIO was designed, the main goal was the ability to handle interrupts
+> > from userspace. There was no requirement for DMA. In fact, in five years I
+> > didn't get one real world device on my desk that needed it. That doesn't
+> > mean there are no such devices. Adding DMA support to the UIO core was
+> > discussed several times but noone ever did it. Ideas are still welcome...
+> > 
+> > If parts of the driver should be in userspace, you should really try
+> > to extend the UIO core instead of re-implementing UIO functionality in
+> > a "proper kernel driver".
+> > 
+> > Thanks,
+> > Hans
 > 
-> I have acks from Chris, Ralf, and Mike.  Any other arch maintainers
-> want to ack or nack this before it goes into my -next branch?
+> Right, I really meant put all of the driver in the kernel.
+> If parts are in userspace, and device can do DMA,
+> you are faced with the problem as userspace suddenly
+> can access arbitrary memory through the device.
 
-I somewhat missed the original patch. As long as it's a nop for ppc, I
-don't care tho :-)
+That's nothing UIO specific. You have the same problem with /dev/mem
+or graphic cards. If you're root, you can do lots of things that can
+compromise security or crash your system.
 
-Cheers,
-Ben.
-
-
+Thanks,
+Hans
