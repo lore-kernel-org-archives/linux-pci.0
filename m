@@ -1,32 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:28546 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696Ab1KJTLR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2011 14:11:17 -0500
-Message-ID: <4EBC21C0.5070806@oracle.com>
-Date: Thu, 10 Nov 2011 11:10:56 -0800
-From: Yinghai Lu <yinghai.lu@oracle.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:60716 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752996Ab1KVPGj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2011 10:06:39 -0500
+Date: Tue, 22 Nov 2011 07:06:13 -0800
+From: Tejun Heo <tj@kernel.org>
+To: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: Crash with sata_sil24 driver
+Message-ID: <20111122150613.GA322@google.com>
+References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
+ <CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
 MIME-Version: 1.0
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] pciehp: wait 100 ms after Link Training check
-References: <4EB88238.4050409@oracle.com> <4EB8F434.6090003@jp.fujitsu.com> <4EB94A51.6070809@oracle.com> <4EB9A50D.1040302@oracle.com> <4EBB7F9B.8050703@jp.fujitsu.com> <4EBB8058.6090500@jp.fujitsu.com>
-In-Reply-To: <4EBB8058.6090500@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/09/2011 11:42 PM, Kenji Kaneshige wrote:
+Hello,
 
-> If the port supports Link speeds greater than 5.0 GT/s, we must wait
-> for 100 ms after Link training completes before sending configuration
-> request.
-> 
-> Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+(cc'ing Jesse)
 
+On Tue, Nov 22, 2011 at 04:40:40PM +0530, Pratyush Anand wrote:
+> > I am using various PCIe card based on Silicon Image 3124/3132 to
+> > test my PCIe host. This card is working with most of my host controler.
+> > I use sata_sil24 driver to enable the card, with one modification of
+> > commenting line [pcie_set_readrq(pdev, 4096);]
+> >
+> > I had sent a patch for it , which is still unanswered.
+> > http://comments.gmane.org/gmane.linux.kernel.pci/10300
 
+Yeah, that's something lifted from proprietary driver and it's
+likely to be wrong.  Jesse, is there a way to find out the safe
+maximum value for readrq?  I'm a bit reluctant to drop it as pcie
+variants of these chips are bottlenecked on the host bus pretty badly.
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Yinghai Lu <yinghai@kernel.org>
+> > Anyway, this mail is regarding another issue.
+> >
+> > I am still having problem when I use above driver (with above patch),
+> > in following
+> > situation.
+> >
+> > My SOC is having cortex-a9 dual core. When I work with CPU freq 500
+> > MHz, it works
+> > well. But with 600 MHz it crashes. Crash log is at the end of mail.
+> >
+> > I did further debugging. I found that if I put some delay after
+> > calling of sil24_init_controller(host); in function sil24_init_one, it
+> > works well.
+> >
+> > My question is.
+> > does sil24_init_controller insure perfact initilization?
+> > or we missing to check some status register which might be needed
+> > before ata_host_activate.
+> > ----------------------------------------------------------------------------------------------------------------
+> > Modules linked in:
+> > CPU: 0    Not tainted  (2.6.37-lsp-3.2.2-rc-dirty #7)
+> > PC is at sil24_scr_read+0x38/0x50
+> > LR is at sil24_port_base+0x14/0x2c
+> > pc : [<80255e10>]    lr : [<80255d44>]    psr: 80000013
+
+Hmm... this is weird.  All init happens in the same thread.  There's
+no race condition involved here.  I'm not too familiar with arm.  Can
+you please track down what is causing the crash?  ie. is it memory
+access to kernel data structure or io region?
+
+Thanks.
+
+-- 
+tejun
