@@ -1,56 +1,133 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com> <20111118220849.GA25205@suse.de> <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com> <20111121173620.GA5028@suse.de> <20111121181724.GB12011@local> <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com> <20111122153525.GB17268@redhat.com>
+In-Reply-To: <20111122153525.GB17268@redhat.com>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
+Cc: "Hans J. Koch" <hjk@hansjkoch.de>, Greg KH <gregkh@suse.de>,
+	tglx@linutronix.de, linux-pci@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Date: Tue, 22 Nov 2011 11:54:22 -0500
 To: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
-Date: Wed, 30 Nov 2011 18:32:11 +0000
-Cc: Chris Metcalf <cmetcalf@tilera.com>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <cover.1322592494.git.mst@redhat.com> <201111301549.57430.arnd@arndb.de> <20111130155925.GA25812@redhat.com>
-In-Reply-To: <20111130155925.GA25812@redhat.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201111301832.11578.arnd@arndb.de>
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
-> On Wed, Nov 30, 2011 at 03:49:57PM +0000, Arnd Bergmann wrote:
-> > On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
-> > > On Wed, Nov 30, 2011 at 02:04:41PM +0000, Arnd Bergmann wrote:
-> > >
-> > > > Ah, right. I didn't realize that the generic pci_iomap still attempts
-> > > > to call ioport_map(). It would probably make sense to enclose
-> > > > the ioport_map() call in pci_iomap() inside of #ifdef CONFIG_HAS_IOPORT.
-> > > > It's not exactly beautiful, but probably the most correct solution
-> > > > so that we can make any call to ioport_map() a build-time error on
-> > > > architectures that set CONFIG_NO_IOPORT.
-> > > 
-> > > I'm not sure why do you want to do that.
-> > > 
-> > 
-> > The problem is that any definition of ioport_map on architectures
-> > that can't do it is potentially harmful. Calling panic() is
-> > bad style as you pointed out, but simply returning NULL can
-> > also be harmful because it's likely that some drivers are written
-> > under the (false) assumption that ioport_map can never fail.
-> > Getting a build-time error would be more helpful here IMHO.
+
+On Nov 22, 2011, at 10:35, Michael S. Tsirkin wrote:
+
+> On Tue, Nov 22, 2011 at 10:24:17AM -0500, Jean-Francois Dagenais wrote:
+>> 
+>> On Nov 21, 2011, at 13:17, Hans J. Koch wrote:
+>> 
+>>> On Mon, Nov 21, 2011 at 09:36:20AM -0800, Greg KH wrote:
+>>>> On Mon, Nov 21, 2011 at 10:31:07AM -0500, Jean-Francois Dagenais wrote:
+>>>>> Hi Greg, thanks for your answer...
+>>>>> 
+>>>>> On Nov 18, 2011, at 17:08, Greg KH wrote:
+>>>>> 
+>>>>>> On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
+>>>>>>> Hello fellow hackers.
+>>>>>>> 
+>>>>>>> I am maintaining a UIO based driver for a PCI-E data acquisition device.
+>>>>>>> 
+>>>>>>> I map BAR0 of the device to userspace. I also map two memory areas,
+>>>>>>> one is used to feed instructions to the acquisition device, the other
+>>>>>>> is used autonomously by the PCI device to write the acquired data.
+>>>>>> 
+>>>>>> Nice, have a pointer to your driver anywhere so we can include it in the
+>>>>>> main kernel tree to make your life easier?
+>>>>> As I said in a parallel answer from "Hans J. Koch" <hjk@hansjkoch.de>,
+>>>>> the driver, although GPL'ed, is quite uninteresting except for us here at
+>>>>> Sonatest.
+>>>> 
+>>>> I really doubt that,
+>>> 
+>>> So do I. We never had a driver allocating so much memory.
+>>> 
+>>>> and you should submit it anyway to allow us to
+>>>> change it when the in-kernel apis change in the future.  It will save
+>>>> you time in the long run and make things easier for you (look, your
+>>>> driver is automatically included in all distros!, people fix your bugs,
+>>>> etc.)
+>>> 
+>>> Exactly.
+>>> 
+>>>> 
+>>>>> About merging the driver to mainline, I guess it would only be interesting for
+>>>>> the recipe I demonstrate. Please advise.
+>>>> 
+>>>> That is a recipe that I'm sure others will use, and need help on in the
+>>>> future.
+>>> 
+>>> They already needed it in the past, and they usually try to get it by
+>>> writing me private mail.
+>>> 
+>>>> 
+>>>> So please submit a patch, that will make it easier to help you out.
+>>> 
+>>> Yes, please do. The more different drivers we have under /drivers/uio, the
+>>> better. Didn't you use one of the existing drivers as a template for yours?
+>> Of course, and I am making contributions to the kernel as well (ds1wm,  w1_ds2408,
+>> ad714x, and more to be merged contribs to blackfin list drivers) because I strongly
+>> believe in the community aspect of Linux.
+>> 
+>> So in the spirit of making the driver more generic, I would like to make this patch
+>> something along the lines of a generic uio/pci based large DMA acquisition device
+>> driver. Or maybe even complementing the existing uio_generic_pci.c?
+>> 
+>> The problem is that there are device specific aspects that the "generic" driver would
+>> need to take into account, e.g. to map BARx or not, or in our case, there are MFDs
+>> embedded in the firmware (xilinx's ds1wm core, and soon, xilinx's spi core). Furthermore,
+>> I want the FPGA to be an irq expander since the cores generate interrupts, and a
+>> couple of balls on the FPGA are irq signals from external i2c chips.
+>> 
+>> I don't yet see any way to specify like a setup callback function that could reach a
+>> platform module when uio_pci_generic is probing.
+>> 
+>> I am thinking this through as I write here...
+>> 
+>> My other persona (C++ programmer) suggests that conceptually, uio_pci_generic is
+>> a "base class" and the other more firmware specific items would be in a derived module.
+>> In that sense, maybe uio_pci_generic could export it's symbols? So it can be used as
+>> uio core functionnality?
+>> 
+>> So I would still have a module which would contain the specific MFD registration and IRQ
+>> functionnality, but the BARx and large DMA mapping would reside in uio_pci_generic...
+>> 
+>> Any thoughts?
+>>> 
+>>> Thanks,
+>>> Hans
+>> Cheers,
+>> /jfd
 > 
-> Yes but uglifying these users is also bad, ifdefs in code are incredibly
-> fragile. Isn't it enough to declare ioport_map __must_check?
+> BARx can be mapped through sysfs, right?
+> DMA into userspace really needs registration with an iommu and
+> locking userspace memory. This was discussed in the past but
+> no patch surfaced. You can copy some bits from 'VFIO' prototypes,
+> maybe - search for them.
+That is quite interesting. It really seems like my VT-d recipe to create 128MB for my PCI-e
+FPGA to write into is covered by this patch.
 
-I guess we already wasted too many electrons over this triviality,
-I don't actually care all that much, and will probably have to
-touch the same code again when I get to submit my patch to make
-inb/outb optional for architectures. Just pick any solution (including
-your original one). I'll revisit this when I'm bothered by the
-presence of the ioport_map function and will keep you in the loop
-on those patches.
+My problem is that our FPGA is connected to one of the atom E6XX's PCI-e links, so no
+iommu :( Since our first product had VT-d, the FPGA, uio based module and userspace
+code is designed such that the device sees a huge contiguous memory chunk. This is key
+to the performance of the FPGA, which is essentially decoupled from the CPU for it's real-time
+acquisition.
 
-	Arnd
+Can VFIO work without an IOMMU? Or am I better off with a UIO solution?
+
+If it can, I know my current UIO based solution is un-useable without an IOMMU as well. The
+problem I have is that my fallback to using IOMMU mapping, pci_alloc_consistent (i.e. dma_alloc_coherent),
+still will only succeed at 4MB tops, and that's when the module loads from the init scripts. The
+success rate drops rapidly after this moment. Could I get more at arch_init moment maybe?
+
+And are there any other thoughts about ripping out like 256MB from the kernel boot args and
+initializing it later and use it as userspace mapped DMA buffer?
+
+> 
+> -- 
+> MST
+
