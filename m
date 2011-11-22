@@ -1,87 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:52208 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644Ab1KNXm0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2011 18:42:26 -0500
-Received: from /spool/local
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <garyhade@us.ibm.com>;
-	Mon, 14 Nov 2011 16:42:26 -0700
-Date: Mon, 14 Nov 2011 15:42:16 -0800
-From: Gary Hade <garyhade@us.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, stable@kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Renninger <trenn@novell.com>,
-	Gary Hade <garyhade@us.ibm.com>
-Subject: [PATCH] x86/PCI: Ignore CPU non-addressable _CRS reserved memory
-	resources
-Message-ID: <20111114234216.GA16000@us.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:63784 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754076Ab1KVPeR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Nov 2011 10:34:17 -0500
+Date: Tue, 22 Nov 2011 17:35:26 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
+Cc: "Hans J. Koch" <hjk@hansjkoch.de>, Greg KH <gregkh@suse.de>,
+	tglx@linutronix.de, linux-pci@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Message-ID: <20111122153525.GB17268@redhat.com>
+References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
+ <20111118220849.GA25205@suse.de>
+ <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
+ <20111121173620.GA5028@suse.de>
+ <20111121181724.GB12011@local>
+ <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Nov 22, 2011 at 10:24:17AM -0500, Jean-Francois Dagenais wrote:
+> 
+> On Nov 21, 2011, at 13:17, Hans J. Koch wrote:
+> 
+> > On Mon, Nov 21, 2011 at 09:36:20AM -0800, Greg KH wrote:
+> >> On Mon, Nov 21, 2011 at 10:31:07AM -0500, Jean-Francois Dagenais wrote:
+> >>> Hi Greg, thanks for your answer...
+> >>> 
+> >>> On Nov 18, 2011, at 17:08, Greg KH wrote:
+> >>> 
+> >>>> On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
+> >>>>> Hello fellow hackers.
+> >>>>> 
+> >>>>> I am maintaining a UIO based driver for a PCI-E data acquisition device.
+> >>>>> 
+> >>>>> I map BAR0 of the device to userspace. I also map two memory areas,
+> >>>>> one is used to feed instructions to the acquisition device, the other
+> >>>>> is used autonomously by the PCI device to write the acquired data.
+> >>>> 
+> >>>> Nice, have a pointer to your driver anywhere so we can include it in the
+> >>>> main kernel tree to make your life easier?
+> >>> As I said in a parallel answer from "Hans J. Koch" <hjk@hansjkoch.de>,
+> >>> the driver, although GPL'ed, is quite uninteresting except for us here at
+> >>> Sonatest.
+> >> 
+> >> I really doubt that,
+> > 
+> > So do I. We never had a driver allocating so much memory.
+> > 
+> >> and you should submit it anyway to allow us to
+> >> change it when the in-kernel apis change in the future.  It will save
+> >> you time in the long run and make things easier for you (look, your
+> >> driver is automatically included in all distros!, people fix your bugs,
+> >> etc.)
+> > 
+> > Exactly.
+> > 
+> >> 
+> >>> About merging the driver to mainline, I guess it would only be interesting for
+> >>> the recipe I demonstrate. Please advise.
+> >> 
+> >> That is a recipe that I'm sure others will use, and need help on in the
+> >> future.
+> > 
+> > They already needed it in the past, and they usually try to get it by
+> > writing me private mail.
+> > 
+> >> 
+> >> So please submit a patch, that will make it easier to help you out.
+> > 
+> > Yes, please do. The more different drivers we have under /drivers/uio, the
+> > better. Didn't you use one of the existing drivers as a template for yours?
+> Of course, and I am making contributions to the kernel as well (ds1wm,  w1_ds2408,
+> ad714x, and more to be merged contribs to blackfin list drivers) because I strongly
+> believe in the community aspect of Linux.
+> 
+> So in the spirit of making the driver more generic, I would like to make this patch
+> something along the lines of a generic uio/pci based large DMA acquisition device
+> driver. Or maybe even complementing the existing uio_generic_pci.c?
+> 
+> The problem is that there are device specific aspects that the "generic" driver would
+> need to take into account, e.g. to map BARx or not, or in our case, there are MFDs
+> embedded in the firmware (xilinx's ds1wm core, and soon, xilinx's spi core). Furthermore,
+> I want the FPGA to be an irq expander since the cores generate interrupts, and a
+> couple of balls on the FPGA are irq signals from external i2c chips.
+> 
+> I don't yet see any way to specify like a setup callback function that could reach a
+> platform module when uio_pci_generic is probing.
+> 
+> I am thinking this through as I write here...
+> 
+> My other persona (C++ programmer) suggests that conceptually, uio_pci_generic is
+> a "base class" and the other more firmware specific items would be in a derived module.
+> In that sense, maybe uio_pci_generic could export it's symbols? So it can be used as
+> uio core functionnality?
+> 
+> So I would still have a module which would contain the specific MFD registration and IRQ
+> functionnality, but the BARx and large DMA mapping would reside in uio_pci_generic...
+> 
+> Any thoughts?
+> > 
+> > Thanks,
+> > Hans
+> Cheers,
+> /jfd
 
-From: Gary Hade <garyhade@us.ibm.com>
+BARx can be mapped through sysfs, right?
+DMA into userspace really needs registration with an iommu and
+locking userspace memory. This was discussed in the past but
+no patch surfaced. You can copy some bits from 'VFIO' prototypes,
+maybe - search for them.
 
-This assures that a _CRS reserved host bridge window or 
-window region is not used if it is not addressable by
-the CPU.  The new code either trims the window to exclude
-the non-addressable portion or totally ignores the window
-if the entire window is non-addressable.
-
-The current code has been shown to be problematic with
-32-bit non-PAE kernels on systems where _CRS reserves
-resources above 4GB.
-
-Signed-off-by: Gary Hade <garyhade@us.ibm.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Renninger <trenn@novell.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: stable@kernel.org
----
-
- arch/x86/pci/acpi.c |   18 ++++++++++++++++--
- 1 files changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 404f21a..3557af7 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -149,7 +149,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
- 	struct acpi_resource_address64 addr;
- 	acpi_status status;
- 	unsigned long flags;
--	u64 start, end;
-+	u64 start, orig_end, end;
- 
- 	status = resource_to_addr(acpi_res, &addr);
- 	if (!ACPI_SUCCESS(status))
-@@ -165,7 +165,21 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
- 		return AE_OK;
- 
- 	start = addr.minimum + addr.translation_offset;
--	end = addr.maximum + addr.translation_offset;
-+	orig_end = end = addr.maximum + addr.translation_offset;
-+
-+	/* Exclude non-addressable range or non-addressable portion of range */
-+	end = min(end, (u64)iomem_resource.end);
-+	if (end <= start) {
-+		dev_info(&info->bridge->dev,
-+			"host bridge window [%#llx-%#llx] "
-+			"(ignored, not CPU addressable)\n", start, orig_end);
-+		return AE_OK;
-+	} else if (orig_end != end) {
-+		dev_info(&info->bridge->dev,
-+			"host bridge window [%#llx-%#llx] "
-+			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
-+			start, orig_end, end + 1, orig_end);
-+	}
- 
- 	res = &info->res[info->res_num];
- 	res->name = info->name;
-
+-- 
+MST
