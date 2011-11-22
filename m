@@ -1,50 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33788 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751891Ab1KOAuq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Nov 2011 19:50:46 -0500
-Message-ID: <1321318169.21206.72.camel@pasglop>
-Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: David Gibson <dwg@au1.ibm.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"Christian Benvenuti (benve)" <benve@cisco.com>,
-	chrisw@sous-sol.org, aik@au1.ibm.com, pmac@au1.ibm.com,
-	joerg.roedel@amd.com, agraf@suse.de,
-	"Aaron Fabbri (aafabbri)" <aafabbri@cisco.com>,
-	B08248@freescale.com, B07421@freescale.com, avi@redhat.com,
-	konrad.wilk@oracle.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
-Date: Tue, 15 Nov 2011 11:49:29 +1100
-In-Reply-To: <20111115000505.GA5035@truffala.fritz.box>
-References: <20111103195452.21259.93021.stgit@bling.home>
-	 <184D23435BECB444AB6B9D4630C8EC8302D5FE38@XMB-RCD-303.cisco.com>
-	 <1321034647.2682.98.camel@bling.home>
-	 <184D23435BECB444AB6B9D4630C8EC8302D603A9@XMB-RCD-303.cisco.com>
-	 <1321311540.17169.122.camel@bling.home>
-	 <20111115000505.GA5035@truffala.fritz.box>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+References: <20111118220849.GA25205@suse.de> <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com> <20111121173620.GA5028@suse.de> <20111121181724.GB12011@local> <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com> <20111122153525.GB17268@redhat.com> <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com> <20111122173722.GA29068@redhat.com> <20111122175402.GC15508@local> <20111122184040.GB5235@redhat.com> <20111122185244.GD15508@local>
+In-Reply-To: <20111122185244.GD15508@local>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <CCF15D66-9712-40DF-8B0F-6EB5CEEFCA20@gmail.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Greg KH <gregkh@suse.de>,
+	tglx@linutronix.de, linux-pci@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Date: Tue, 22 Nov 2011 14:50:32 -0500
+To: "Hans J. Koch" <hjk@hansjkoch.de>, Matthew Wilcox <matthew@wil.cx>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2011-11-15 at 11:05 +1100, David Gibson wrote:
-> Being strict, or at least enforcing strictness, requires that the
-> infrastructure track all the maps, so that the unmaps can be
-> matching.  This is not a natural thing with the data structures you
-> want for all IOMMUs.  For example on POWER, the IOMMU (aka TCE table)
-> is a simple 1-level pagetable.  One pointer with a couple of
-> permission bits per IOMMU page.  Handling oddly overlapping operations
-> on that data structure is natural, enforcing strict matching of maps
-> and unmaps is not and would require extra information to be stored by
-> vfio.  On POWER, the IOMMU operations often *are* a hot path, so
-> manipulating those structures would have a real cost, too. 
 
-In fact they are a very hot path even. There's no way we can afford the
-cost of tracking per page mapping/unmapping (other than bumping the page
-count on a page that's currently mapped or via some debug-only feature).
+On Nov 22, 2011, at 13:52, Hans J. Koch wrote:
 
-Cheers,
-Ben.
+> On Tue, Nov 22, 2011 at 08:40:40PM +0200, Michael S. Tsirkin wrote:
+>> On Tue, Nov 22, 2011 at 06:54:02PM +0100, Hans J. Koch wrote:
+>>> On Tue, Nov 22, 2011 at 07:37:23PM +0200, Michael S. Tsirkin wrote:
+>>> [...]
+>>>>> Or am I better off with a UIO solution?
+>>>> 
+>>>> You should probably write a proper kernel driver, not a UIO one.
+>>>> your kernel driver would have to prevent the device fom DMA into memory
+>>>> outside the allocated range, even if userspace is malicious.
+>>>> That's why UIO is generally not recommended for PCI devices that do DMA.
+>>> 
+>>> When UIO was designed, the main goal was the ability to handle interrupts
+>>> from userspace. There was no requirement for DMA. In fact, in five years I
+>>> didn't get one real world device on my desk that needed it. That doesn't
+>>> mean there are no such devices. Adding DMA support to the UIO core was
+>>> discussed several times but noone ever did it. Ideas are still welcome...
+>>> 
+>>> If parts of the driver should be in userspace, you should really try
+>>> to extend the UIO core instead of re-implementing UIO functionality in
+>>> a "proper kernel driver".
+>>> 
+>>> Thanks,
+>>> Hans
+>> 
+>> Right, I really meant put all of the driver in the kernel.
+>> If parts are in userspace, and device can do DMA,
+>> you are faced with the problem as userspace suddenly
+>> can access arbitrary memory through the device.
+> 
+> That's nothing UIO specific. You have the same problem with /dev/mem
+> or graphic cards. If you're root, you can do lots of things that can
+> compromise security or crash your system.
+Exactly, and remember, this is a closed, embedded and controlled system, with a
+"kiosk" application running.
 
+As a product supporter, if the end-user decides to temper with his unit and read/write 
+anywhere in the system, it would surely qualify as un-supported use of the system
+and so my design should not account for this.
 
+Since this FPGA-PCI-e device is the reason for being of the product, it rules over
+any other factor as priority 1. I mean, as long as the system doesn't swap, we're
+happy.
+
+Matthew Wilcox <matthew@wil.cx> wrote:
+> Is it really key?  If you supported, ohidon'tknow, 2MB pages, you'd
+> need 64 entries in the FPGA to store the addresses of those 2MB pages,
+> which doesn't sound like a huge burden.
+This is an excellent idea, and thank you for bringing me back to earth. It is definitely
+doable and would solve my 4MB cap problem. It would require work on
+the FPGA side as well as mods to my uio driver to manage the memory and
+override uio's page_fault implementation (if I am correct), but the rest of our code
+base would be unaffected.
+
+What would be completely ideal for me is the idea to cut out a chunk of physical ram
+from the kernel though, like those integrated graphic chips do. 
+
+"Michael S. Tsirkin" <mst@redhat.com> wrote:
+> You can use alloc_bootmem I guess.
+That sounds like something I could use, any idea how to do this elegantly? Meaning,
+where is the earliest point I can successfully call alloc_bootmem(128MB) successfully?
+How do I communicate this cleanly to my pci probe function so I can hand it to uio?
+Using plain old global exported symbols?
+
+Would I encounter cache problems or the like? Or is snooping guaranteed on modern
+Intel platforms (Atom E6XX)?
+
+> 
+> Thanks,
+> Hans
+Super thanks again for all the help guys, making real progress here.
+/jfd
