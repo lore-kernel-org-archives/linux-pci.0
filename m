@@ -1,58 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65021 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39857 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755059Ab1KOCaI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Nov 2011 21:30:08 -0500
-Message-ID: <1321324188.17169.129.camel@bling.home>
-Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Scott Wood <scottwood@freescale.com>
-Cc: chrisw@sous-sol.org, aik@au1.ibm.com, pmac@au1.ibm.com,
-	dwg@au1.ibm.com, joerg.roedel@amd.com, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
-Date: Mon, 14 Nov 2011 19:29:48 -0700
-In-Reply-To: <1321304079.17169.74.camel@bling.home>
-References: <20111103195452.21259.93021.stgit@bling.home>
-	 <4EBDBA50.3070801@freescale.com> <1321304079.17169.74.camel@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751366Ab1KVSjT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Nov 2011 13:39:19 -0500
+Date: Tue, 22 Nov 2011 20:40:40 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Hans J. Koch" <hjk@hansjkoch.de>
+Cc: Jean-Francois Dagenais <jeff.dagenais@gmail.com>,
+	Greg KH <gregkh@suse.de>, tglx@linutronix.de,
+	linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Message-ID: <20111122184040.GB5235@redhat.com>
+References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
+ <20111118220849.GA25205@suse.de>
+ <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
+ <20111121173620.GA5028@suse.de>
+ <20111121181724.GB12011@local>
+ <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
+ <20111122153525.GB17268@redhat.com>
+ <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
+ <20111122173722.GA29068@redhat.com>
+ <20111122175402.GC15508@local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111122175402.GC15508@local>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2011-11-14 at 13:54 -0700, Alex Williamson wrote:
-> On Fri, 2011-11-11 at 18:14 -0600, Scott Wood wrote:
-> > On 11/03/2011 03:12 PM, Alex Williamson wrote:
-> > > +	int			(*get)(void *);
-> > > +	void			(*put)(void *);
-> > > +	ssize_t			(*read)(void *, char __user *,
-> > > +					size_t, loff_t *);
-> > > +	ssize_t			(*write)(void *, const char __user *,
-> > > +					 size_t, loff_t *);
-> > > +	long			(*ioctl)(void *, unsigned int, unsigned long);
-> > > +	int			(*mmap)(void *, struct vm_area_struct *);
-> > > +};
+On Tue, Nov 22, 2011 at 06:54:02PM +0100, Hans J. Koch wrote:
+> On Tue, Nov 22, 2011 at 07:37:23PM +0200, Michael S. Tsirkin wrote:
+> [...]
+> > > Or am I better off with a UIO solution?
 > > 
-> > When defining an API, please do not omit parameter names.
+> > You should probably write a proper kernel driver, not a UIO one.
+> > your kernel driver would have to prevent the device fom DMA into memory
+> > outside the allocated range, even if userspace is malicious.
+> > That's why UIO is generally not recommended for PCI devices that do DMA.
 > 
-> ok
+> When UIO was designed, the main goal was the ability to handle interrupts
+> from userspace. There was no requirement for DMA. In fact, in five years I
+> didn't get one real world device on my desk that needed it. That doesn't
+> mean there are no such devices. Adding DMA support to the UIO core was
+> discussed several times but noone ever did it. Ideas are still welcome...
 > 
-> > Should specify what the driver is supposed to do with get/put -- I guess
-> > not try to unbind when the count is nonzero?  Races could still lead the
-> > unbinder to be blocked, but I guess it lets the driver know when it's
-> > likely to succeed.
+> If parts of the driver should be in userspace, you should really try
+> to extend the UIO core instead of re-implementing UIO functionality in
+> a "proper kernel driver".
 > 
-> Right, for the pci bus driver, it's mainly for reference counting,
-> including the module_get to prevent vfio-pci from being unloaded.  On
-> the first get for a device, we also do a pci_enable() and pci_disable()
-> on last put.  I'll try to clarify in the docs.
+> Thanks,
+> Hans
 
-Looking at these again, I should just rename them to open/release.  That
-matches the points when they're called.  I suspect I started with just
-reference counting and it grew to more of a full blown open/release.
-Thanks,
+Right, I really meant put all of the driver in the kernel.
+If parts are in userspace, and device can do DMA,
+you are faced with the problem as userspace suddenly
+can access arbitrary memory through the device.
 
-Alex
-
+-- 
+MST
