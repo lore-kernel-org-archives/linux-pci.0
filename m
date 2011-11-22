@@ -1,166 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:42533 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755038Ab1KLAvx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 19:51:53 -0500
-Message-ID: <1321059108.2006.24.camel@shinybook.infradead.org>
-Subject: Re: [PATCH] intel-iommu: Default to non-coherent for domains
- unattached to iommus
-From: David Woodhouse <dwmw2@infradead.org>
-To: Chris Wright <chrisw@sous-sol.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	linux-kernel@vger.kernel.org
-Date: Sat, 12 Nov 2011 00:51:48 +0000
-In-Reply-To: <20111112004513.GP14486@sequoia.sous-sol.org>
-References: <20111111224849.9756.13368.stgit@bling.home>
-	 <1321058267.2006.21.camel@shinybook.infradead.org>
-	 <20111112004513.GP14486@sequoia.sous-sol.org>
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
-	boundary="=-jn+6h4dSrPy1Hm91ae4G"
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46666 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884Ab1KVTQi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2011 14:16:38 -0500
+MIME-Version: 1.0
+In-Reply-To: <20111118210952.GA28979@schlenkerla.am.freescale.net>
+References: <20111103195452.21259.93021.stgit@bling.home>
+	<20111115063431.GA4921@truffala.fritz.box>
+	<1321380088.17169.282.camel@bling.home>
+	<20111117000218.GB5411@truffala.fritz.box>
+	<1321648376.26410.238.camel@bling.home>
+	<20111118210952.GA28979@schlenkerla.am.freescale.net>
+Date: Tue, 22 Nov 2011 12:16:32 -0700
+Message-ID: <CAEMbtc+2bs9WDqacyVZQKPkbpxX-mBb_w6S85jL2wHpMacX47Q@mail.gmail.com>
+Subject: Re: [Qemu-devel] [RFC PATCH] vfio: VFIO Driver core framework
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Scott Wood <scottwood@freescale.com>
+Cc: aafabbri@cisco.com, aik@au1.ibm.com, kvm@vger.kernel.org,
+	pmac@au1.ibm.com, qemu-devel@nongnu.org, joerg.roedel@amd.com,
+	konrad.wilk@oracle.com, agraf@suse.de,
+	David Gibson <dwg@au1.ibm.com>, chrisw@sous-sol.org,
+	B08248@freescale.com, iommu@lists.linux-foundation.org,
+	avi@redhat.com, linux-pci@vger.kernel.org, B07421@freescale.com,
+	benve@cisco.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Nov 18, 2011 at 2:09 PM, Scott Wood <scottwood@freescale.com> wrote:
+> On Fri, Nov 18, 2011 at 01:32:56PM -0700, Alex Williamson wrote:
+>> Hmm, that might be cleaner than eliminating the size with just using
+>> _IO().  So we might have something like:
+>>
+>> #define VFIO_IOMMU_MAP_DMA              _IOWR(';', 106, struct vfio_dma_map)
+>> #define VFIO_IOMMU_MAP_DMA_V2           _IOWR(';', 106, struct vfio_dma_map_v2)
+>>
+>> For which the driver might do:
+>>
+>> case VFIO_IOMMU_MAP_DMA:
+>> case VFIO_IOMMU_MAP_DMA_V2:
+>> {
+>>       struct vfio_dma_map map;
+>>
+>>       /* We don't care about the extra v2 bits */
+>>       if (copy_from_user(&map, (void __user *)arg, sizeof map))
+>>               return -EFAULT;
+>
+> That won't work if you have an old kernel that doesn't know about v2, and
+> a new user that uses v2.  To make this work you'd have to strip out the
+> size from the ioctl number before switching (but still use it when
+> considering whether to access the v2 fields).  Simpler to just leave it
+> out of the ioctl number and put it in the struct field as currently
+> planned.
 
---=-jn+6h4dSrPy1Hm91ae4G
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Ok, _IO for all ioctls passing structs then.
 
-On Fri, 2011-11-11 at 16:45 -0800, Chris Wright wrote:
-> > So if you were to ditch the whole idea of a per-domain runtime update,
-> > and instead calculate a global value for 'iommu_coherency' at boot time=
-,
-> > by iterating over for_each_active_iommu()=C2=B9, I think that would be =
-a
-> > better way to deal with the issue. And you *could* really call that a
-> > 'fix'.
-> >=20
-> > Make sense?
->=20
-> Ideally, yes.  Not sure we can practically do it though.  Would have to
-> be sure we force incoherent access mode for the busted hw.=20
+>> > > I think all our structure sizes are independent of host width.  If I'm
+>> > > missing something, let me know.
+>> >
+>> > Ah, for structures, that might be true.  I was seeing the bunch of
+>> > ioctl()s that take ints.
+>>
+>> Ugh, I suppose you're thinking of an ILP64 platform with ILP32 compat
+>> mode.
+>
+> Does Linux support ILP64?  There are "int" ioctls all over the place, and
+> I don't think we do compat wrappers for them.  In fact, some of the
+> ioctls in linux/fs.h use "int" for the compatible version of ioctls
+> originally defined as "long".
+>
+> It's cleaner to always use the fixed types, though.
 
-Why's it not practical? You do the *same* loop we currently have in
-domain_update_iommu_coherency(), except that you do it just *once*, over
-all active IOMMUs, at boot time. And then you just use that result
-forever more.
+I've updated anything that passes data to use a structure and will
+make use of __s32 in place of ints.  If there ever exists an ILP64
+system, we can use a flag bit of the structure to indicate 64bit file
+descriptor support.
 
-So if *any* IOMMU in the system is non-coherent, you run them all that
-way.
+>> Darn it, guess we need to make everything 64bit, including file
+>> descriptors.
+>
+> What's wrong with __u32/__s32 (or uint32_t/int32_t)?
+>
+> I really do not see Linux supporting an ABI that has no 32-bit type at
+> all, especially in a situation where userspace compatibility is needed.
+> If that does happen, the ABI breakage will go well beyond VFIO.
 
---=20
-dwmw2
+Yep, I think the structs fix this and still leave room for the impossible.
 
---=-jn+6h4dSrPy1Hm91ae4G
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
+>> The point of the group is to provide a unit of ownership.  We can't let
+>> $userA open $groupid and fetch a device, then have $userB do the same,
+>> grabbing a different device.  The mappings will step on each other and
+>> the devices have no isolation.  We can't restrict that purely by file
+>> permissions or we'll have the same problem with sudo.
+>
+> What is the problem with sudo?  If you're running processes as the same
+> user, regardless of how, they're going to be able to mess with each
+> other.
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITvzCCBi0w
-ggQVoAMCAQICAwCtOTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwG
-A1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290
-MB4XDTEwMDYxMjEwMDMwMFoXDTEyMDYxMTEwMDMwMFowgegxGDAWBgNVBAMTD0RhdmlkIFdvb2Ro
-b3VzZTEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzEfMB0GCSqGSIb3DQEJARYQ
-ZGF2aWRAd29vZGhvdS5zZTEoMCYGCSqGSIb3DQEJARYZZGF2aWQud29vZGhvdXNlQGludGVsLmNv
-bTEkMCIGCSqGSIb3DQEJARYVZHdtdzJAbGludXguaW50ZWwuY29tMTcwNQYJKoZIhvcNAQkBFigx
-MDg3MmEwN2Y2ZDdlMWUwN2Y1NWZmMTcyYTAzYjMwMGVlYWFkMjAzMIIBIjANBgkqhkiG9w0BAQEF
-AAOCAQ8AMIIBCgKCAQEA29OPhNvMxBMW83psWdVhZDtmJvgN+tBEp1r6MZamONsR0k81a6fDFwJz
-M0fEzEbV/bDG102QyX/xXC/0IpKV4acnqESC+sTHUmRwxfRKGNmR6t2iwEs2Y5kQDF31JxbCt49w
-AlhLMAa+e1MBZ7vO0uDmRuJpS7+ZdHboq7cdk6dyoeumGv5sl6U/SPK9rL4KzULtqQaw6Wucd6MJ
-irIggEHfCNqeT5a+TyuH4zKCwv9nblIGXq9wt+yqu5t/RicGaKPnXSqo/WpJAGggaO8g92mnYlVl
-Wu/b9bYVISwQ8LI0sEtjN1WnP5AQO2f59bdPAVk4Rn25HceOO4NvlG47LwIDAQABo4IBcTCCAW0w
-DAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRl
-IGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYI
-KwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYI
-KwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIGOBgNVHREE
-gYYwgYOBE2R3bXcyQGluZnJhZGVhZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2WBGWRhdmlkLndvb2Ro
-b3VzZUBpbnRlbC5jb22BFWR3bXcyQGxpbnV4LmludGVsLmNvbYEoMTA4NzJhMDdmNmQ3ZTFlMDdm
-NTVmZjE3MmEwM2IzMDBlZWFhZDIwMzANBgkqhkiG9w0BAQUFAAOCAgEAXm+SUO1/TSeGJK0D9pAm
-E9LTFkdlgbaD6HXGbS0TNUDyfLFkacc2F1JLoWcoFwcL6Rup5o/Rt4QYDBPWgF9EXFvqsc9SLrSe
-X6VwRj7vI40x19ThE2A1Y8DzBJ9+2MzIR6hd5n9axATCOIRhmZVjX1cRkwshEGvAn8mTYGhWttkx
-WhBcaAuCd9OOQqUwfxTUXiSfVumPUNrrbuvaH6MjrNjDrXdvicL26Y+AzFSJn3o8DShjjMhkUx9l
-qV46BpjSGIuvkHhcLkGJ3Y1YmtOX1hwT+Z+d/10WJh8ZG2FqIlJtPtqvHK5ol/KvdzMwmMBd4qFj
-YAO32vf7zde+jdTHNp2Mb15bJHhNdGOsZicpGue42fg3deZQFe1E2KBl9VO09fjncjt9YdhCUtxO
-buDnoOixY6YSJgSmGJB2Xs+TE5gps4UiiOYen+NeJkuwg5x9vmyraU061Uc0csfc/E5IoxhTX/Pc
-H+zXiER8aSjA/9MXQfrJM2xkY6UNKlDbCYSLKnH/O02eu7Hma6lB4wtcY8ECu7LJuFY2448Quolv
-SQfQLRvKauGFGUAhbPClOxObuv/fNzA+lfg8DX2y5jXDutnpvBGgsplKxoah01SZfR9zNqxodPx2
-srKhujBNB+WiAZntMf0xp4e0JPMlTFxm3tbY9wuBSyTJyueO9hUkbN4wggYtMIIEFaADAgECAgMA
-rTkwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6
-Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdDAeFw0xMDA2MTIx
-MDAzMDBaFw0xMjA2MTExMDAzMDBaMIHoMRgwFgYDVQQDEw9EYXZpZCBXb29kaG91c2UxIjAgBgkq
-hkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcxHzAdBgkqhkiG9w0BCQEWEGRhdmlkQHdvb2Ro
-b3Uuc2UxKDAmBgkqhkiG9w0BCQEWGWRhdmlkLndvb2Rob3VzZUBpbnRlbC5jb20xJDAiBgkqhkiG
-9w0BCQEWFWR3bXcyQGxpbnV4LmludGVsLmNvbTE3MDUGCSqGSIb3DQEJARYoMTA4NzJhMDdmNmQ3
-ZTFlMDdmNTVmZjE3MmEwM2IzMDBlZWFhZDIwMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBANvTj4TbzMQTFvN6bFnVYWQ7Zib4DfrQRKda+jGWpjjbEdJPNWunwxcCczNHxMxG1f2wxtdN
-kMl/8Vwv9CKSleGnJ6hEgvrEx1JkcMX0ShjZkerdosBLNmOZEAxd9ScWwrePcAJYSzAGvntTAWe7
-ztLg5kbiaUu/mXR26Ku3HZOncqHrphr+bJelP0jyvay+Cs1C7akGsOlrnHejCYqyIIBB3wjank+W
-vk8rh+MygsL/Z25SBl6vcLfsqrubf0YnBmij510qqP1qSQBoIGjvIPdpp2JVZVrv2/W2FSEsEPCy
-NLBLYzdVpz+QEDtn+fW3TwFZOEZ9uR3HjjuDb5RuOy8CAwEAAaOCAXEwggFtMAwGA1UdEwEB/wQC
-MAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBo
-ZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggr
-BgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
-JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzCBjgYDVR0RBIGGMIGDgRNkd213
-MkBpbmZyYWRlYWQub3JngRBkYXZpZEB3b29kaG91LnNlgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
-Y29tgRVkd213MkBsaW51eC5pbnRlbC5jb22BKDEwODcyYTA3ZjZkN2UxZTA3ZjU1ZmYxNzJhMDNi
-MzAwZWVhYWQyMDMwDQYJKoZIhvcNAQEFBQADggIBAF5vklDtf00nhiStA/aQJhPS0xZHZYG2g+h1
-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
-AAAAAA==
+Just trying to indicate that file permissions are easy to bypass and
+privileged users can inadvertently do stupid stuff.  Kind of like
+request_region() in the kernel.   Kernel drivers are privileged, but
+we still want to enforce an owner of that region.  VFIO extends the
+ownership of a device to a single entity in userspace.  How do we
+identify that entity and keep others out?
 
+> Is it possible to expose access to only specific groups via an
+> individually-permissionable /dev/device, so only the entity handing out
+> access to devices needs access to everything?
 
---=-jn+6h4dSrPy1Hm91ae4G--
+Yes, that's fundamental to vfio.  vfio-bus drivers enumerate devices
+to the vfio-core.  Privileged users bind devices to the vfio-bus
+driver creating viable groups.  Groups are represented as chardevs
+under /dev/vfio.  If a user has permission to access the chardev, they
+have the ability to use the devices.  Once they get a device or iommu
+descriptor the group is tied to them via the struct mm and only they
+are permitted to access the other devices in the group.
 
+>> At one point we discussed a single open instance, but that
+>> unnecessarily limits the user, so we settled on the mm.  Thanks,
+>
+> It would be nice if this limitation weren't excessively integrated into
+> the design -- in the embedded space we've got unusual partitioning
+> setups, including failover arrangements where partitions share devices.
+> The device may be configured with the IOMMU pointing only at regions that
+> are shared by both mms, or the non-shared regions may be reconfigured as
+> active ownership of the device gets handed around.
+>
+> It would be up to userspace code to make sure that the mappings don't
+> "step on each other".  The mapping could be done with whichever mm issued
+> the map call for a given region.
+>
+> For this use case, there is unlikely to be an issue with ownership
+> because there will not be separate privilege domains creating partitions
+> -- other use cases could refrain from enabling multiple-mm support unless
+> ownership issues are resolved.
+>
+> This doesn't need to be supported initially, but we should try to avoid
+> letting the assumption permeate the code.
+
+So I'm hearing "we want to use this driver you're developing that's
+centered around using the iommu to securely provide access to a device
+from userspace, but can we do it without the iommu and can we loosen
+up the security a bit?"  Is that about right?  ;)  Thanks,
+
+Alex
