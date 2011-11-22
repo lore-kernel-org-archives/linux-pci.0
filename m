@@ -1,91 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-am1.bigfish.com ([213.199.180.138]:3154 "EHLO
-	AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752763Ab1KOUKJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 15:10:09 -0500
-Message-ID: <4EC2C71A.9020609@freescale.com>
-Date: Tue, 15 Nov 2011 14:10:02 -0600
-From: Scott Wood <scottwood@freescale.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	<chrisw@sous-sol.org>, <aik@au1.ibm.com>, <pmac@au1.ibm.com>,
-	<joerg.roedel@amd.com>, <agraf@suse.de>, <benve@cisco.com>,
-	<aafabbri@cisco.com>, <B08248@freescale.com>,
-	<B07421@freescale.com>, <avi@redhat.com>, <konrad.wilk@oracle.com>,
-	<kvm@vger.kernel.org>, <qemu-devel@nongnu.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
-References: <20111103195452.21259.93021.stgit@bling.home> <20111115063431.GA4921@truffala.fritz.box>
-In-Reply-To: <20111115063431.GA4921@truffala.fritz.box>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:65243 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753367Ab1KVTx4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2011 14:53:56 -0500
+References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com> <20111118220849.GA25205@suse.de>
+In-Reply-To: <20111118220849.GA25205@suse.de>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <EDE518F3-0E59-49A4-A5B1-A013A91C319F@gmail.com>
+Cc: hjk@hansjkoch.de, tglx@linutronix.de, linux-pci@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
+Subject: Re: extra large DMA buffer for PCI-E device under UIO
+Date: Tue, 22 Nov 2011 14:57:58 -0500
+To: Greg KH <gregkh@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/15/2011 12:34 AM, David Gibson wrote:
-> I think we need to pin exactly what "MAP_ANY" means down better.  Now,
-> VFIO is pretty much a lost cause if you can't map any normal process
-> memory page into the IOMMU, so I think the only thing that is really
-> covered is IOVAs.  But saying "can map any IOVA" is not clear, because
-> if you can't map it, it's not a (valid) IOVA.  Better to say that
-> IOVAs can be any 64-bit value, which I think is what you really mean
-> here.
 
-It also means that there are no restrictions on what the IOVA can be
-within that range (other than page alignment), which isn't true on our
-IOMMU.
+On Nov 18, 2011, at 17:08, Greg KH wrote:
 
-We'll also need a way to communicate the desired geometry of the overall
-IOMMU table (for this group) to the kernel, which determines what the
-restrictions will be (we can't determine it automatically until we know
-what all the translation requests will be, and even then it's awkward).
-
-> On Thu, Nov 03, 2011 at 02:12:24PM -0600, Alex Williamson wrote:
->> +When a level triggered interrupt is signaled, the interrupt is masked
->> +on the host.  This prevents an unresponsive userspace driver from
->> +continuing to interrupt the host system.  After servicing the interrupt,
->> +UNMASK_IRQ is used to allow the interrupt to retrigger.  Note that level
->> +triggered interrupts implicitly have a count of 1 per index.
+> On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
+>> Hello fellow hackers.
+>> 
+>> I am maintaining a UIO based driver for a PCI-E data acquisition device.
+>> 
+>> I map BAR0 of the device to userspace. I also map two memory areas,
+>> one is used to feed instructions to the acquisition device, the other
+>> is used autonomously by the PCI device to write the acquired data.
 > 
-> This is a silly restriction.  Even PCI devices can have up to 4 LSIs
-> on a function in theory, though no-one ever does.  Embedded devices
-> can and do have multiple level interrupts.
-
-Those interrupts would each have their own index.  This is necessary for
-level-triggered interrupts since they'll need to be individually
-identifiable to VFIO_DEVICE_UNMASK_IRQ -- doesn't seem worth adding
-another parameter to UNMASK.
-
->> +#ifdef CONFIG_COMPAT
->> +static long vfio_iommu_compat_ioctl(struct file *filep,
->> +				    unsigned int cmd, unsigned long arg)
->> +{
->> +	arg = (unsigned long)compat_ptr(arg);
->> +	return vfio_iommu_unl_ioctl(filep, cmd, arg);
+> Nice, have a pointer to your driver anywhere so we can include it in the
+> main kernel tree to make your life easier?
 > 
-> Um, this only works if the structures are exactly compatible between
-> 32-bit and 64-bit ABIs.  I don't think that is always true.
-
-These are new structs, we can make it true.
-
->> +static int allow_unsafe_intrs;
->> +module_param(allow_unsafe_intrs, int, 0);
->> +MODULE_PARM_DESC(allow_unsafe_intrs,
->> +        "Allow use of IOMMUs which do not support interrupt remapping");
+>> The strategy we have been using for those two share memory areas has
+>> historically been using pci_alloc_coherent on v2.6.35 x86_64 (limited
+>> to 4MB based on my trials) and later, I made use of the VT-d
+>> (intel_iommu) to allocate as much as 128MB (an arbitrary limit) which
+>> appear contiguous to the PCI device. I use vmalloc_user to allocate
+>> 128M, then write all the physically continuous segments in a
+>> scatterlist, then use pci_map_sg which works it's way to intel_iommu.
+>> The device DMA addresses I get back are contiguous over the whole
+>> 128M. Neat! Our VT-d capable devices still use this strategy.
+>> 
+>> This large memory is mission-critical in making the acquisition device
+>> autonomous (real-time), yet keep the DMA implementation very simple.
+>> Today, we are re-using this device on a CPU architecture that has no
+>> IOMMU (intel E6XX/EG20T) and want to avoid creating a scatter-gather
+>> scheme between my driver and the FPGA (PCI device).
+>> 
+>> So I went back to the old pci_alloc_coherent method, which although
+>> limited to 4 MB, will do for early development phases. Instead of
+>> 2.6.35, we are doing preliminary development using 2.6.37 and will
+>> probably use 3.1 or more later.  The cpu/device shared memory maps
+>> (1MB and 4MB) are allocated using pci_alloc_coherent and handed to UIO
+>> as physical memory using the dma_addr_t returned by the pci_alloc
+>> func.
+>> 
+>> The 1st memory map is written to by CPU and read from device.
+>> The 2nd memory map is typically written by the device and read by the
+>> CPU, but future features may have the device also read this memory.
+>> 
+>> My initial testing on the atom E6XX show the PCI device failing when
+>> trying to read from the first memory map. I suspect PCI-E payload
+>> sizes which may be somewhat hardcoded in the FPGA firmware... we will
+>> confirm this soon.
 > 
-> This should not be a global option, but part of the AMD/Intel IOMMU
-> specific code.  In general it's a question of how strict the IOMMU
-> driver is about isolation when it determines what the groups are, and
-> only the IOMMU driver can know what the possibilities are for its
-> class of hardware.
+> That would be good to find out.
+Just FYI,
+To close the loop on the right above issue... The problem we had was that the
+FPGA was using 64-bit formatted TLPs for it's read and write requests to the
+system's <4Gig RAM, which is said by PCI-E to be unsupported.
 
-It's also a concern that is specific to MSIs.  In any case, I'm not sure
-that the ability to cause a spurious IRQ is bad enough to warrant
-disabling the entire subsystem by default on certain hardware.
-
-Probably best to just print a warning on module init if there are any
-known isolation holes, and let the admin decide whom (if anyone) to let
-use this.  If the hole is bad enough that it must be confirmed, it
-should require at most a sysfs poke.
-
--Scott
+This has never been a problem on the other systems we used, i.e.
+Core2/ICH9M, and Atom-Z5xx/SCH-US15W.
+> 
+>> Now from the get go I have felt lucky to have made this work because
+>> of my limited research into the intricacies of the kernel's memory
+>> management. So I ask two things:
+>> 
+>> - Is this kosher?
+> 
+> I think so, yes, but others who know the DMA subsystem better than I
+> should chime in here, as I might be totally wrong.
+> 
+>> - Is there a better/easier/safer way to achieve this? (remember that
+>> for the second map, the more memory I have, the better. We have a gig
+>> of ram, if I take, say 256MB, that would be OK too.
+>> 
+>> I had thought about cutting out a chunk of ram from the kernel's boot
+>> args, but had always feared cache/snooping errors. Not to mention I
+>> had no idea how to "claim" or setup this memory once my driver's probe
+>> function. Maybe I would still be lucky and it would just work? mmmh...
+> 
+> Yeah, don't do that, it might not work out well.
+> 
+> greg k-h
 
