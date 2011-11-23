@@ -1,86 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.hansjkoch.de ([178.63.77.200]:45552 "EHLO www.hansjkoch.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757237Ab1KVQFv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Nov 2011 11:05:51 -0500
-Date: Tue, 22 Nov 2011 17:05:38 +0100
-From: "Hans J. Koch" <hjk@hansjkoch.de>
-To: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
-Cc: "Hans J. Koch" <hjk@hansjkoch.de>, mst@redhat.com,
-	Greg KH <gregkh@suse.de>, tglx@linutronix.de,
-	linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Message-ID: <20111122160538.GB15508@local>
-References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
- <20111118220849.GA25205@suse.de>
- <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
- <20111121173620.GA5028@suse.de>
- <20111121181724.GB12011@local>
- <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:38341 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753348Ab1KWWnm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2011 17:43:42 -0500
+Date: Wed, 23 Nov 2011 14:45:10 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Joerg Roedel <joerg.roedel@amd.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<bhelgaas@google.com>
+Subject: Re: [PATCH 0/2] PCI: PRI/PASSID cleanup and fix
+Message-ID: <20111123144510.56ff6d1d@jbarnes-desktop>
+In-Reply-To: <20111123104705.GC11876@amd.com>
+References: <20111111170319.32668.48479.stgit@bling.home>
+	<20111123104705.GC11876@amd.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Y3FjEVf1w=WCINjDE.lVzy0"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 10:24:17AM -0500, Jean-Francois Dagenais wrote:
-[...]
-> >> 
-> >> So please submit a patch, that will make it easier to help you out.
-> > 
-> > Yes, please do. The more different drivers we have under /drivers/uio, the
-> > better. Didn't you use one of the existing drivers as a template for yours?
-> Of course, and I am making contributions to the kernel as well (ds1wm,  w1_ds2408,
-> ad714x, and more to be merged contribs to blackfin list drivers) because I strongly
-> believe in the community aspect of Linux.
+--Sig_/Y3FjEVf1w=WCINjDE.lVzy0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I don't doubt that, sorry if I gave that impression. My only concern is that in the
-past few years (UIO is in mainline since 2.6.23) less than 1% of the drivers ever
-appeared on LKML. That means that, with quite high probability, everybody writing
-a new UIO driver will reinvent the wheel. Over the years, I met lots of people
-(e.g. at conferences) who wrote a UIO driver for all kinds of devices, even with
-different sorts of DMA handling. All of them said "oh, my driver is of no interest
-to the public", and never posted it although I strongly encouraged them to do so.
+On Wed, 23 Nov 2011 11:47:05 +0100
+Joerg Roedel <joerg.roedel@amd.com> wrote:
 
-Consequently, everybody has to do the same work again and again, which is just a
-waste of rare engineering powers.
+> On Fri, Nov 11, 2011 at 10:06:23AM -0700, Alex Williamson wrote:
+> > Alex Williamson (2):
+> >       PCI: More PRI/PASID cleanup
+> >       PCI: Enable is not exposed as a PASID capability
+>=20
+> For both:
+>=20
+> Reviewed-by: Joerg Roedel <joerg.roedel@amd.com>
+> Tested-by: Joerg Roedel <joerg.roedel@amd.com>
 
-> 
-> So in the spirit of making the driver more generic, I would like to make this patch
-> something along the lines of a generic uio/pci based large DMA acquisition device
-> driver. Or maybe even complementing the existing uio_generic_pci.c?
+Ok, thanks guys.  I'll queue these up after Thanksgiving.
 
-Adding DMA requires changes to the UIO core to be something more than a crude
-workaround. Probably a new device like /dev/uio_dma0 for a /dev/uio0. Feel free
-to make suggestions.
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-> 
-> The problem is that there are device specific aspects that the "generic" driver would
-> need to take into account, e.g. to map BARx or not, or in our case, there are MFDs
-> embedded in the firmware (xilinx's ds1wm core, and soon, xilinx's spi core). Furthermore,
-> I want the FPGA to be an irq expander since the cores generate interrupts, and a
-> couple of balls on the FPGA are irq signals from external i2c chips.
+--Sig_/Y3FjEVf1w=WCINjDE.lVzy0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-That should not be much of a problem, unless the FPGA generates more than one
-physical interrupt.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-> 
-> I don't yet see any way to specify like a setup callback function that could reach a
-> platform module when uio_pci_generic is probing.
-> 
-> I am thinking this through as I write here...
-> 
-> My other persona (C++ programmer) suggests that conceptually, uio_pci_generic is
-> a "base class" and the other more firmware specific items would be in a derived module.
-> In that sense, maybe uio_pci_generic could export it's symbols? So it can be used as
-> uio core functionnality?
-> 
-> So I would still have a module which would contain the specific MFD registration and IRQ
-> functionnality, but the BARx and large DMA mapping would reside in uio_pci_generic...
+iQIcBAEBAgAGBQJOzXd2AAoJEIEoDkX4Qk9h6N0QALQ0D+PkshQ7x/2dBdSbAOv3
+Y4/cCrd5g1I+Z1t7NMVWtj6RUCSVNhCtFYKCRx9phPzhqe8HjxQ0L+OWrkJssHB8
+tq9DcZC+cjfh0rIJdxj9yhYNZPyyQkjsUAAf7C5jHyJsBZ3U6CjCCqwdtHkXwGHH
+iG1f3QZCiS8W5dw8OinxPgkITNFLjiJbemRXs8ZJcvy5oUsIqZ9TdExBiJLoPUqX
+59QKskaNCCd7hBqGrL7c7GpKpYLsGOwBxi5FJgutv6rztIrpMOzm6H9kcdwTDEXg
+eH/Kwsx1wn5PjgA0gJkDUyFQR+xkEFBc5C2FoHk/ogP5YSHn4KkmgIeFn2q3sDXi
+ZpOAOHpy20gFHQ7vKg46UG33E+ZqDzqKc87msS+eL2jwS82COshGVWW0HUeMcWc8
+jrXZpv12FcG4/T14U62jLu7y9kl956f3zZk90Bow32hpIJmkRH4+wywSr+MHhJkf
+RYSxcJQU/qd9bV53hLrwFF47K4V41a8sU6PcqqXTFcPLgZGb8OzZpixdiIT48pv+
+CFia1zLvFUsuABzB/l/gxu2gURZ1sdKty9DaaFdUNoGOv7/1lYSY9v6+L7vdJM2j
+lvP55zN7t/4SkMF4urFphwFmGq9T0VIaD+44ApRB0EVknIlhxOs9syuEjaw1K87d
+tp3qS8RS3QKP2MkAkdUE
+=pVz3
+-----END PGP SIGNATURE-----
 
-If we want more UIO core functionality, we should integrate it into the UIO core,
-and not just hack a driver.
-
-Thanks,
-Hans
-
+--Sig_/Y3FjEVf1w=WCINjDE.lVzy0--
