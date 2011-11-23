@@ -1,44 +1,165 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
-Date: Wed, 30 Nov 2011 15:49:57 +0000
-Cc: Chris Metcalf <cmetcalf@tilera.com>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <cover.1322592494.git.mst@redhat.com> <201111301404.41544.arnd@arndb.de> <20111130143122.GC21413@redhat.com>
-In-Reply-To: <20111130143122.GC21413@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:63822 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750728Ab1KWFCF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2011 00:02:05 -0500
+Message-ID: <4ECC7E21.8060805@oracle.com>
+Date: Tue, 22 Nov 2011 21:01:21 -0800
+From: Yinghai Lu <yinghai.lu@oracle.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201111301549.57430.arnd@arndb.de>
-Sender: linux-arch-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH -v4] PCI: Make sriov work with hotplug remove
+References: <4E9A3092.4080309@oracle.com> <4E9A3408.9080905@oracle.com> <CAErSpo5XdM+1OFmoU+rN_QNWCJ0Wzv1VwKxsTo9hTq=2=7KEHA@mail.gmail.com> <4E9C6F0E.40501@oracle.com> <CAErSpo7ofdVixyGR74_mc6ND5C3LROiR9PVzwNZaDe23ptJ2=Q@mail.gmail.com> <4E9CAB21.2020302@oracle.com> <CAErSpo4PLDfapndXJp-sXS-SJtv0a7PaD=UKX0HV0OV34an3kQ@mail.gmail.com> <4E9DB11A.7030505@oracle.com> <4EBD8D09.9060903@oracle.com> <4EC35024.8090004@jp.fujitsu.com> <4EC429DC.9020607@oracle.com> <4ECC5328.40406@jp.fujitsu.com>
+In-Reply-To: <4ECC5328.40406@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
-> On Wed, Nov 30, 2011 at 02:04:41PM +0000, Arnd Bergmann wrote:
->
-> > Ah, right. I didn't realize that the generic pci_iomap still attempts
-> > to call ioport_map(). It would probably make sense to enclose
-> > the ioport_map() call in pci_iomap() inside of #ifdef CONFIG_HAS_IOPORT.
-> > It's not exactly beautiful, but probably the most correct solution
-> > so that we can make any call to ioport_map() a build-time error on
-> > architectures that set CONFIG_NO_IOPORT.
-> 
-> I'm not sure why do you want to do that.
-> 
 
-The problem is that any definition of ioport_map on architectures
-that can't do it is potentially harmful. Calling panic() is
-bad style as you pointed out, but simply returning NULL can
-also be harmful because it's likely that some drivers are written
-under the (false) assumption that ioport_map can never fail.
+When hot remove pci express module that have pcie switch and support SRIOV, got
 
-Getting a build-time error would be more helpful here IMHO.
+[ 5918.610127] pciehp 0000:80:02.2:pcie04: pcie_isr: intr_loc 1
+[ 5918.615779] pciehp 0000:80:02.2:pcie04: Attention button interrupt received
+[ 5918.622730] pciehp 0000:80:02.2:pcie04: Button pressed on Slot(3)
+[ 5918.629002] pciehp 0000:80:02.2:pcie04: pciehp_get_power_status: SLOTCTRL a8 value read 1f9
+[ 5918.637416] pciehp 0000:80:02.2:pcie04: PCI slot #3 - powering off due to button press.
+[ 5918.647125] pciehp 0000:80:02.2:pcie04: pcie_isr: intr_loc 10
+[ 5918.653039] pciehp 0000:80:02.2:pcie04: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
+[ 5918.661229] pciehp 0000:80:02.2:pcie04: pciehp_set_attention_status: SLOTCTRL a8 write cmd c0
+[ 5924.667627] pciehp 0000:80:02.2:pcie04: Disabling domain:bus:device=0000:b0:00
+[ 5924.674909] pciehp 0000:80:02.2:pcie04: pciehp_get_power_status: SLOTCTRL a8 value read 2f9
+[ 5924.683262] pciehp 0000:80:02.2:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:b0:00
+[ 5924.693976] libfcoe_device_notification: NETDEV_UNREGISTER eth6
+[ 5924.764979] libfcoe_device_notification: NETDEV_UNREGISTER eth14
+[ 5924.873539] libfcoe_device_notification: NETDEV_UNREGISTER eth15
+[ 5924.995209] libfcoe_device_notification: NETDEV_UNREGISTER eth16
+[ 5926.114407] sxge 0000:b2:00.0: PCI INT A disabled
+[ 5926.119342] BUG: unable to handle kernel NULL pointer dereference at (null)
+[ 5926.127189] IP: [<ffffffff81353a3b>] pci_stop_bus_device+0x33/0x83
+[ 5926.133377] PGD 0
+[ 5926.135402] Oops: 0000 [#1] SMP
+[ 5926.138659] CPU 2
+[ 5926.140499] Modules linked in:
+...
+[ 5926.143754]
+[ 5926.275823] Call Trace:
+[ 5926.278267]  [<ffffffff81353a38>] pci_stop_bus_device+0x30/0x83
+[ 5926.284180]  [<ffffffff81353af4>] pci_remove_bus_device+0x1a/0xba
+[ 5926.290264]  [<ffffffff81366311>] pciehp_unconfigure_device+0x110/0x17b
+[ 5926.296866]  [<ffffffff81365dd9>] ? pciehp_disable_slot+0x188/0x188
+[ 5926.303123]  [<ffffffff81365d6f>] pciehp_disable_slot+0x11e/0x188
+[ 5926.309206]  [<ffffffff81365e68>] pciehp_power_thread+0x8f/0xe0
+...
 
-	Arnd
+ +-[0000:80]-+-00.0-[81-8f]--
+ |           +-01.0-[90-9f]--
+ |           +-02.0-[a0-af]--
+ |           +-02.2-[b0-bf]----00.0-[b1-b3]--+-02.0-[b2]--+-00.0 Device
+ |           |                               |            +-00.1 Device
+ |           |                               |            +-00.2 Device
+ |           |                               |            \-00.3 Device
+ |           |                               \-03.0-[b3]--+-00.0 Device
+ |           |                                            +-00.1 Device
+ |           |                                            +-00.2 Device
+ |           |                                            \-00.3 Device
+
+root complex: 80:02.2
+pci express modules: have pcie switch and are listed as b0:00.0, b1:02.0 and b1:03.0.
+                end devices  are b2:00.0 and b3.00.0.
+                VFs are: b2:00.1,... b2:00.3, and b3:00.1,...,b3:00.3
+
+Root cause: when doing pci_stop_bus_device() with phys fn, it will stop virt fn and
+remove the fn, so
+	list_for_each_safe(l, n, &bus->devices)
+will have problem to refer freed n that is pointed to vf entry.
+
+Solution is just replacing list_for_each_safe() with list_for_each().
+	pci_stop_bus_device(dev) will not remove dev from bus->devices list,
+	so We only need use for_each here.
+
+During reviewing the patch, Bjorn said:
+|   The PCI hot-remove path calls pci_stop_bus_devices() via
+|   pci_remove_bus_device().
+|
+|   pci_stop_bus_devices() traverses the bus->devices list (point A below),
+|   stopping each device in turn, which calls the driver remove() method.  When
+|   the device is an SR-IOV PF, the driver calls pci_disable_sriov(), which
+|   also uses pci_remove_bus_device() to remove the VF devices from the
+|   bus->devices list (point B).
+|
+|       pci_remove_bus_device
+|         pci_stop_bus_device
+|           pci_stop_bus_devices(subordinate)
+|             list_for_each(bus->devices)             <-- A
+|               pci_stop_bus_device(PF)
+|                 ...
+|                   driver->remove
+|                     pci_disable_sriov
+|                       ...
+|                         pci_remove_bus_device(VF)
+|                             <remove from bus_list>  <-- B
+|
+|   At B, we're changing the same list we're iterating through at A, so when
+|   the driver remove() method returns, the pci_stop_bus_devices() iterator has
+|   a pointer to a list entry that has already been freed.
+
+Discussion thread can be found : https://lkml.org/lkml/2011/10/15/141
+
+-v2: updated changelog.
+-v3: According to Kenji, do not allocate another list for PF.
+     Also We don't need to check dev->is_virtfn anymore, because PF should come
+	first in the list, and even VF come first, it is still ok.
+-v4: According to Kenji, expand list_for_each(), and add is_virtfn checking
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/remove.c |   28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
+
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -123,10 +123,36 @@ void pci_remove_behind_bridge(struct pci
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+ {
+ 	struct list_head *l, *n;
++	struct list_head *head = &bus->devices;
+ 
++	/*
++	 * pci_stop_bus_device(dev) will not remove dev from bus->devices list,
++	 *  so We don't need use _safe version for_each here.
++	 * Also _safe version has problem when pci_stop_bus_device() for PF try
++	 *  to remove VFs.
++	 */
++	for (l = head->next; l != head;) {
++		struct pci_dev *dev = pci_dev_b(l);
++
++		/*
++		 * VFs are removed by pci_remove_bus_device() in the
++		 *  pci_stop_bus_devices() code path for PF.
++		 *  aka, bus->devices get updated in the process.
++		 * barrier() will make sure we get right next from that list.
++		 */
++		if (!dev->is_virtfn) {
++			pci_stop_bus_device(dev);
++			barrier();
++		}
++		l = l->next;
++	}
++
++	/* For left over VFs in case */
+ 	list_for_each_safe(l, n, &bus->devices) {
+ 		struct pci_dev *dev = pci_dev_b(l);
+-		pci_stop_bus_device(dev);
++
++		if (dev->is_virtfn)
++			pci_stop_bus_device(dev);
+ 	}
+ }
+ 
