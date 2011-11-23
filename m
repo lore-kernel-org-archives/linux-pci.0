@@ -1,52 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:60916 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477Ab1KUP5A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2011 10:57:00 -0500
-References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com> <20111118222718.GF22904@local> <C27E2EE4-3534-4FC2-997A-0F090BF2AAF5@gmail.com> <8be4650484e8827410219db85531ecaf.squirrel@webmail.sf-mail.de>
-In-Reply-To: <8be4650484e8827410219db85531ecaf.squirrel@webmail.sf-mail.de>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <A8A9A42D-B960-4188-9C81-83FB25E1106D@gmail.com>
-Cc: "Hans J. Koch" <hjk@hansjkoch.de>, Greg KH <gregkh@suse.de>,
-	tglx@linutronix.de, linux-pci@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>,
-	Simon Goyette <goyettes@sonatest.com>
-From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:23384 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752576Ab1KWITI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Nov 2011 03:19:08 -0500
+Date: Wed, 23 Nov 2011 10:20:21 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Hans J. Koch" <hjk@hansjkoch.de>
+Cc: Jean-Francois Dagenais <jeff.dagenais@gmail.com>,
+	Greg KH <gregkh@suse.de>, tglx@linutronix.de,
+	linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Date: Mon, 21 Nov 2011 11:01:01 -0500
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Message-ID: <20111123082020.GA22734@redhat.com>
+References: <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
+ <20111121173620.GA5028@suse.de>
+ <20111121181724.GB12011@local>
+ <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
+ <20111122153525.GB17268@redhat.com>
+ <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
+ <20111122173722.GA29068@redhat.com>
+ <20111122175402.GC15508@local>
+ <20111122184040.GB5235@redhat.com>
+ <20111122185244.GD15508@local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111122185244.GD15508@local>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-On Nov 21, 2011, at 10:47, Rolf Eike Beer wrote:
-
->> The pci ID we use is not registered, and except for this driver, which
->> is a non-driver really (UIO), the FPGA firmware and the userspace code is
->> proprietary.
+On Tue, Nov 22, 2011 at 07:52:45PM +0100, Hans J. Koch wrote:
+> On Tue, Nov 22, 2011 at 08:40:40PM +0200, Michael S. Tsirkin wrote:
+> > On Tue, Nov 22, 2011 at 06:54:02PM +0100, Hans J. Koch wrote:
+> > > On Tue, Nov 22, 2011 at 07:37:23PM +0200, Michael S. Tsirkin wrote:
+> > > [...]
+> > > > > Or am I better off with a UIO solution?
+> > > > 
+> > > > You should probably write a proper kernel driver, not a UIO one.
+> > > > your kernel driver would have to prevent the device fom DMA into memory
+> > > > outside the allocated range, even if userspace is malicious.
+> > > > That's why UIO is generally not recommended for PCI devices that do DMA.
+> > > 
+> > > When UIO was designed, the main goal was the ability to handle interrupts
+> > > from userspace. There was no requirement for DMA. In fact, in five years I
+> > > didn't get one real world device on my desk that needed it. That doesn't
+> > > mean there are no such devices. Adding DMA support to the UIO core was
+> > > discussed several times but noone ever did it. Ideas are still welcome...
+> > > 
+> > > If parts of the driver should be in userspace, you should really try
+> > > to extend the UIO core instead of re-implementing UIO functionality in
+> > > a "proper kernel driver".
+> > > 
+> > > Thanks,
+> > > Hans
+> > 
+> > Right, I really meant put all of the driver in the kernel.
+> > If parts are in userspace, and device can do DMA,
+> > you are faced with the problem as userspace suddenly
+> > can access arbitrary memory through the device.
 > 
-> Why keep people doing this? This is just asking for future trouble. And it
-> gives bad karma.
-This is a bit off topic...
-
-Still, to address it:
-... because when developing a complex product with limited staff, you prioritize.
-
-Unless I am mistaken, my use of PCI ids is to match our HW device with our
-driver (which is yet not meant to be merged to mainline) in our completely controlled
-system (hw, kernel, software) made into a product. So we didn't feel it necessary
-to assign guaranteed unique IDs. If there are any ID conflicts one day, I assume
-it would be because of a new kernel version we put in, or a new hardware
-device we put in and in any case, a new release of the product which is 
-thoroughly tested before released. Furthermore, in the unlikely event we do
-encounter a collision, we can change both the FPGA and the driver on a dime.
-
-Am I missing something? What kind of future trouble are you referring to?
+> That's nothing UIO specific. You have the same problem with /dev/mem
+> or graphic cards. If you're root, you can do lots of things that can
+> compromise security or crash your system.
 > 
-> Go and ask your FPGA vendor to assign a device id to you. At least for
-> Xilinx this has worked.
-Thanks for the tip, we could look into this if we need to.
-> 
-> Eike
+> Thanks,
+> Hans
 
+With an appropriate security policy, you might not be able to,
+or your attempt to do so might be logged. Even without, people
+can use permissions to give non-root access to devices.
+One doesn't normally expect chown mst /dev/foobar
+to give mst full root on a box.
+
+-- 
+MST
