@@ -1,66 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63559 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753897Ab1KOXHy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Nov 2011 18:07:54 -0500
-Message-ID: <4EC2F0C7.9040804@redhat.com>
-Date: Tue, 15 Nov 2011 18:07:51 -0500
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:34068 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098Ab1KWFTD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2011 00:19:03 -0500
 MIME-Version: 1.0
-To: James Paradis <jparadis@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
-	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
-	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-References: <7913c5e8-ea95-4f6f-aa21-33b84e8b931f@zmail15.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <7913c5e8-ea95-4f6f-aa21-33b84e8b931f@zmail15.collab.prod.int.phx2.redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20111122150613.GA322@google.com>
+References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
+	<CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
+	<20111122150613.GA322@google.com>
+Date: Wed, 23 Nov 2011 10:49:00 +0530
+Message-ID: <CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
+Subject: Re: Crash with sata_sil24 driver
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/15/2011 05:27 PM, James Paradis wrote:
->
-> BTW - for everyone's edification, here is a report on fedoraforum.org
-> that looks suspiciously like the same problem we're dealing with:
->
-> http://forums.fedoraforum.org/showthread.php?t=255025
->
-> The mobo worked with F13, broke with F14, nothing he did seemed to
-> bring the keyboard back, ended up fixing it by getting another
-> brand of motherboard.  I'm going to see if I can find a copy of
-> that motherboard for testing...
->
-> --jim
->
-No, the original mobo worked on F13; new mobo broken on f13 & f14.
-It sounds like an intr-rewiring problem; note, that he got it booted once,
-(in the thread) and it took 30mins to do so.
+Hello Tejun,
 
 
-> ----- Original Message -----
->> On Fri, Nov 11, 2011 at 12:13 PM, Don Dutile<ddutile@redhat.com>
->> wrote:
->>> On 11/11/2011 12:41 PM, James Paradis wrote:
->>>>
->>>> Hmmm... would it be better to do this as a quirk or as a boot
->>>> parameter?  I've heard reports that other systems may be running
->>>
->>> Hearsay?  if you have definite cases, then please share them,
->>> so folks know when to flip the boot parameter on.  note: it would
->>> have to be
->>> an early boot param as well.
->>
->> It'd definitely be good to know all the specific cases.
->>
->> But merely sharing them so folks will know when to use the parameter
->> is a broken model.  We should make it work automatically, either with
->> some sort of machine-dependent quirk, or (preferably) with a change
->> to
->> the generic algorithm so it can handle these "broken" topologies
->> along
->> with all the correct ones.
->>
->> Bjorn
->>
+On Tue, Nov 22, 2011 at 8:36 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
+>
+> (cc'ing Jesse)
+>
+> On Tue, Nov 22, 2011 at 04:40:40PM +0530, Pratyush Anand wrote:
+>> > I am using various PCIe card based on Silicon Image 3124/3132 to
+>> > test my PCIe host. This card is working with most of my host controler.
+>> > I use sata_sil24 driver to enable the card, with one modification of
+>> > commenting line [pcie_set_readrq(pdev, 4096);]
+>> >
+>> > I had sent a patch for it , which is still unanswered.
+>> > http://comments.gmane.org/gmane.linux.kernel.pci/10300
+>
+> Yeah, that's something lifted from proprietary driver and it's
+> likely to be wrong.  Jesse, is there a way to find out the safe
+> maximum value for readrq?  I'm a bit reluctant to drop it as pcie
+> variants of these chips are bottlenecked on the host bus pretty badly.
+>
+>> > Anyway, this mail is regarding another issue.
+>> >
+>> > I am still having problem when I use above driver (with above patch),
+>> > in following
+>> > situation.
+>> >
+>> > My SOC is having cortex-a9 dual core. When I work with CPU freq 500
+>> > MHz, it works
+>> > well. But with 600 MHz it crashes. Crash log is at the end of mail.
+>> >
+>> > I did further debugging. I found that if I put some delay after
+>> > calling of sil24_init_controller(host); in function sil24_init_one, it
+>> > works well.
+>> >
+>> > My question is.
+>> > does sil24_init_controller insure perfact initilization?
+>> > or we missing to check some status register which might be needed
+>> > before ata_host_activate.
+>> > ----------------------------------------------------------------------------------------------------------------
+>> > Modules linked in:
+>> > CPU: 0    Not tainted  (2.6.37-lsp-3.2.2-rc-dirty #7)
+>> > PC is at sil24_scr_read+0x38/0x50
+>> > LR is at sil24_port_base+0x14/0x2c
+>> > pc : [<80255e10>]    lr : [<80255d44>]    psr: 80000013
+>
+> Hmm... this is weird.  All init happens in the same thread.  There's
+> no race condition involved here.  I'm not too familiar with arm.  Can
+> you please track down what is causing the crash?  ie. is it memory
+> access to kernel data structure or io region?
 
+It  is accessing SATA Controller registers rather kerenl data struct
+at the time of crash.
+It crashes when it tries to read SCR_CONTROL register.
+Its really strage that same register become accesible if a delay of 10us is
+put after sil24_init_controller.
+
+Regards
+Pratyush
+
+> Thanks.
+>
+> --
+> tejun
+>
