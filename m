@@ -1,52 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23014 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750809Ab1K3HLz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Nov 2011 02:11:55 -0500
-Date: Wed, 30 Nov 2011 09:13:21 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Chris Metcalf <cmetcalf@tilera.com>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
-Message-ID: <20111130071321.GB17781@redhat.com>
-References: <cover.1322592494.git.mst@redhat.com>
- <a3bc9cb56040258dabc7b466ea217f4515b68b7d.1322592495.git.mst@redhat.com>
- <201111292205.11544.arnd@arndb.de>
+Received: from acsinet15.oracle.com ([141.146.126.227]:49826 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810Ab1KWFH3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2011 00:07:29 -0500
+Message-ID: <4ECC7F6D.6090802@oracle.com>
+Date: Tue, 22 Nov 2011 21:06:53 -0800
+From: Yinghai Lu <yinghai.lu@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201111292205.11544.arnd@arndb.de>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [PATCH] PCI: Only call pci_stop_bus_device() one time for children
+ devices during removing
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 29, 2011 at 10:05:11PM +0000, Arnd Bergmann wrote:
-> On Tuesday 29 November 2011, Michael S. Tsirkin wrote:
-> > diff --git a/arch/tile/include/asm/io.h b/arch/tile/include/asm/io.h
-> > index c9ea165..be6090d 100644
-> > --- a/arch/tile/include/asm/io.h
-> > +++ b/arch/tile/include/asm/io.h
-> > @@ -204,7 +204,8 @@ static inline long ioport_panic(void)
-> >  
-> >  static inline void __iomem *ioport_map(unsigned long port, unsigned int len)
-> >  {
-> > -       return (void __iomem *) ioport_panic();
-> > +       pr_info("Trying to map an IO resource - it does not exit on tile.\n");
-> > +       return NULL;
-> >  }
-> 
-> Why not just set CONFIG_NO_IOPORT and make this unavailable at compile time?
-> 
-> 	Arnd
 
-Well I think CONFIG_NO_IOPORT only has effect if you pull in asm-generic/io.h.
-This might work but I have no idea. Presumably whoever wrote that architecture
-considered and discarded setting GENERIC_IOMAP.
+During debugging pcie hotplug with SRIOV with pcie switch, found
+pci_stop_bus_device() are called several times for some children devices.
 
--- 
-MST
+Current pci_remove_bus_device() will call pci_stop_bus_device() at first.
+and then use remove_behind_bridge() to call pci_stop_bus_device() for children
+devices. But pci_stop_bus_device() already include depth first to stop children.
+So We can remove unnecessary calling in pci_remove_behind_bridge() for children.
+
+The patch change original pci_remove_bus_device() to __pci_remove_bus_device(), and
+it only do remove work, and new pci_remove_bus_device will call
+pci_stop_bus_device() one time, and then call __pci_remove_bus_device().
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/remove.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -89,9 +89,8 @@ EXPORT_SYMBOL(pci_remove_bus);
+  * device lists, remove the /proc entry, and notify userspace
+  * (/sbin/hotplug).
+  */
+-void pci_remove_bus_device(struct pci_dev *dev)
++static void __pci_remove_bus_device(struct pci_dev *dev)
+ {
+-	pci_stop_bus_device(dev);
+ 	if (dev->subordinate) {
+ 		struct pci_bus *b = dev->subordinate;
+ 
+@@ -102,6 +101,11 @@ void pci_remove_bus_device(struct pci_de
+ 
+ 	pci_destroy_dev(dev);
+ }
++void pci_remove_bus_device(struct pci_dev *dev)
++{
++	pci_stop_bus_device(dev);
++	__pci_remove_bus_device(dev);
++}
+ 
+ /**
+  * pci_remove_behind_bridge - remove all devices behind a PCI bridge
+@@ -117,7 +121,7 @@ void pci_remove_behind_bridge(struct pci
+ 
+ 	if (dev->subordinate)
+ 		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			pci_remove_bus_device(pci_dev_b(l));
++			__pci_remove_bus_device(pci_dev_b(l));
+ }
+ 
+ static void pci_stop_bus_devices(struct pci_bus *bus)
