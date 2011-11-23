@@ -1,74 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23384 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752576Ab1KWITI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Nov 2011 03:19:08 -0500
-Date: Wed, 23 Nov 2011 10:20:21 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: "Hans J. Koch" <hjk@hansjkoch.de>
-Cc: Jean-Francois Dagenais <jeff.dagenais@gmail.com>,
-	Greg KH <gregkh@suse.de>, tglx@linutronix.de,
-	linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Message-ID: <20111123082020.GA22734@redhat.com>
-References: <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
- <20111121173620.GA5028@suse.de>
- <20111121181724.GB12011@local>
- <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
- <20111122153525.GB17268@redhat.com>
- <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
- <20111122173722.GA29068@redhat.com>
- <20111122175402.GC15508@local>
- <20111122184040.GB5235@redhat.com>
- <20111122185244.GD15508@local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111122185244.GD15508@local>
+Received: from oproxy9.bluehost.com ([69.89.24.6]:33273 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752438Ab1KWWmz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2011 17:42:55 -0500
+Date: Wed, 23 Nov 2011 14:44:17 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [git pull] PCI fixes
+Message-ID: <20111123144417.2da5958c@jbarnes-desktop>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/d+ylh1iReJ.d=yqJl4HmXps"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 07:52:45PM +0100, Hans J. Koch wrote:
-> On Tue, Nov 22, 2011 at 08:40:40PM +0200, Michael S. Tsirkin wrote:
-> > On Tue, Nov 22, 2011 at 06:54:02PM +0100, Hans J. Koch wrote:
-> > > On Tue, Nov 22, 2011 at 07:37:23PM +0200, Michael S. Tsirkin wrote:
-> > > [...]
-> > > > > Or am I better off with a UIO solution?
-> > > > 
-> > > > You should probably write a proper kernel driver, not a UIO one.
-> > > > your kernel driver would have to prevent the device fom DMA into memory
-> > > > outside the allocated range, even if userspace is malicious.
-> > > > That's why UIO is generally not recommended for PCI devices that do DMA.
-> > > 
-> > > When UIO was designed, the main goal was the ability to handle interrupts
-> > > from userspace. There was no requirement for DMA. In fact, in five years I
-> > > didn't get one real world device on my desk that needed it. That doesn't
-> > > mean there are no such devices. Adding DMA support to the UIO core was
-> > > discussed several times but noone ever did it. Ideas are still welcome...
-> > > 
-> > > If parts of the driver should be in userspace, you should really try
-> > > to extend the UIO core instead of re-implementing UIO functionality in
-> > > a "proper kernel driver".
-> > > 
-> > > Thanks,
-> > > Hans
-> > 
-> > Right, I really meant put all of the driver in the kernel.
-> > If parts are in userspace, and device can do DMA,
-> > you are faced with the problem as userspace suddenly
-> > can access arbitrary memory through the device.
-> 
-> That's nothing UIO specific. You have the same problem with /dev/mem
-> or graphic cards. If you're root, you can do lots of things that can
-> compromise security or crash your system.
-> 
-> Thanks,
-> Hans
+--Sig_/d+ylh1iReJ.d=yqJl4HmXps
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-With an appropriate security policy, you might not be able to,
-or your attempt to do so might be logged. Even without, people
-can use permissions to give non-root access to devices.
-One doesn't normally expect chown mst /dev/foobar
-to give mst full root on a box.
+The following changes since commit
+839d8810747bbf39e0a5a7f223b67bffa7945f8d:
 
--- 
-MST
+  Merge branch 'i2c-for-linus' of git://git.kernel.org/pub/scm/linux/kernel=
+/git/jdelvare/staging (2011-10-30 15:54:59 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci for-linus
+
+Nothing too exciting this time, mostly some minor fixes for things
+normal people don't really hit.  Happy Thanksgiving.
+
+Bjorn Helgaas (1):
+      PCI hotplug: shpchp: don't blindly claim non-AMD 0x7450 device IDs
+
+Joerg Roedel (2):
+      PCI: Fix compile errors with PCI_ATS and !PCI_IOV
+      PCI: Let PCI_PRI depend on PCI
+
+Kenji Kaneshige (2):
+      PCI: pciehp: wait 1000 ms before Link Training check
+      PCI: pciehp: wait 100 ms after Link Training check
+
+Rafael J. Wysocki (1):
+      PCI / ACPI: Make acpiphp ignore root bridges using PCIe native hotplug
+
+Yinghai Lu (1):
+      PCI: pciehp: Retrieve link speed after link is trained
+
+ drivers/pci/Kconfig                |    1 +
+ drivers/pci/hotplug/acpiphp_glue.c |   29 ++++++++++++++++++++++++-----
+ drivers/pci/hotplug/pciehp_ctrl.c  |    3 ---
+ drivers/pci/hotplug/pciehp_hpc.c   |   27 ++++++++++++++++++---------
+ drivers/pci/hotplug/shpchp_core.c  |    4 ++--
+ drivers/pci/hotplug/shpchp_hpc.c   |    4 ++--
+ include/linux/pci-ats.h            |    6 +++---
+ include/linux/pci.h                |    2 +-
+ 8 files changed, 51 insertions(+), 25 deletions(-)
+
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/d+ylh1iReJ.d=yqJl4HmXps
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOzXdBAAoJEIEoDkX4Qk9hw70P/RLjV0R+wAJhB2EIDJjA1iGr
+jQhoU6dFAC6Y+u77ay2ZxnahbXMR3GJp3cp+L5xPRAJaP8CgEZGoM912p7lslPhe
+alvp36J4TOp09jYXFOPKcar7pwXW4gebu0Os+tN6sSP7Z1EBYnm9Tw01P3UoMs0x
+DPWlVe4QLsPKwyXjLELc5FsKDtG0MxIcWNgUd5g+f6vGZlevU4OD6FDdfDFobhBX
+y9BqTs33HMQuqBtUALpp2UyRi1I0WziovxCsx9YwlwD7yFqlCCT0up5VH9je5Toj
+0yzFHvAr02ibVvdUr1NabdUTjlZfTjfji/za7y0pd0sGrdfw2gbiPT7f+pyOsJ7G
+JiF8uO4yZONN3VO6UXTFMyNSkE7UEGNK/88M2q8qiODtFuLtHvqj+xUOlPHxAOWW
+sqav2L0bg98kr/NHNjcT3HnhTp/ISSrTqLZIVtmCc0xPz6H25NC/2qNmBYPh49vh
+59egFOWh2NDkcsoN0a6V8RW9j121On+YIN+jR5xEiucAQ7qFMH5hd5RpmJyMgkVo
+6H/XmOQxhTIq6E+7bv3XZECL81NxbKb96E8uCJPgYhnwbCan7dwE67cE2ZNVQEGs
+Rq7VGLQ2VhZcnxAXMp487uLrGr6lWgzvEpSjFDl1CoEBF2ay4gIo3aO8LV2wPV4i
+7Wz9awFsyBYdNHtJBXLd
+=GPYh
+-----END PGP SIGNATURE-----
+
+--Sig_/d+ylh1iReJ.d=yqJl4HmXps--
