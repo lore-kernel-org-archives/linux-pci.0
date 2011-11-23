@@ -1,59 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63484 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751472Ab1KOFz3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 00:55:29 -0500
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:53130 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756042Ab1KWELE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2011 23:11:04 -0500
+Message-ID: <4ECC7244.8060302@jp.fujitsu.com>
+Date: Wed, 23 Nov 2011 13:10:44 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <20111115045404.GC30247@sequoia.sous-sol.org>
-References: <20111111224849.9756.13368.stgit@bling.home>
-	<1321058267.2006.21.camel@shinybook.infradead.org>
-	<CAL1RGDXZjKhA++3eFVPbazixaM7Q_JfBJyLKE0xjBs+sK55idg@mail.gmail.com>
-	<20111112005100.GR14486@sequoia.sous-sol.org>
-	<1321059340.2006.27.camel@shinybook.infradead.org>
-	<20111112010850.GT14486@sequoia.sous-sol.org>
-	<1321060841.2006.35.camel@shinybook.infradead.org>
-	<4EC210CB.1010409@gmail.com>
-	<20111115045404.GC30247@sequoia.sous-sol.org>
-Date: Tue, 15 Nov 2011 13:55:27 +0800
-Message-ID: <CANqQZNEvSBQgtR_ZDUWEDUVqscGFVuCtZYSzc+SRK4a_Vzjdhg@mail.gmail.com>
-Subject: Re: [PATCH] intel-iommu: Default to non-coherent for domains
- unattached to iommus
-From: Kai Huang <mail.kai.huang@gmail.com>
-To: Chris Wright <chrisw@sous-sol.org>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Roland Dreier <roland@purestorage.com>,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Oliver Neukum <oneukum@suse.de>
+Subject: Re: [PATCH] PCI / Hotplug: Fix the ordering of operations in pcied_cleanup()
+References: <201111222305.16077.rjw@sisk.pl>
+In-Reply-To: <201111222305.16077.rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 15, 2011 at 12:54 PM, Chris Wright <chrisw@sous-sol.org> wrote:
-> * cody (mail.kai.huang@gmail.com) wrote:
->> On 11/11/2011 05:20 PM, David Woodhouse wrote:
->> >On Fri, 2011-11-11 at 17:08 -0800, Chris Wright wrote:
->> >>On a slightly separate, but performance related note...have you ever
->> >>tried using the hw queue?  Currently we only have a sw queue, but the
->> >>submission path for invalidations doesn't really queue (unless I missed
->> >>it).  It seems to pull from the software queue and submit/wait,
->> >>submit/wait...Seems simple enough to submit the whole queue and then
->> >>issue the wait.
->> >I have a feeling we trigger errata if we do that — although if we're
->> >only doing it for an emulated IOMMU that shouldn't be an issue.
->> >
->> What does the emulated IOMMU here? Does it mean the emulated IOMMU
->> exposed to guest VM?
->
-> Yes.  So for KVM, the IOMMU emulation would be in QEMU.
->
+I've sent the patch to fix the problem a few weeks ago, and it is in
+Jesse's -next tree.
 
-What will emulated IOMMU be used for to the guest VM? To provide
-another layer of address translation (in guest VM) that allows guest
-VM to allocate large contiguous DVMA space for device? Does this mean
-we need to keep something like *shadow page table* for the real IOMMU?
+Regards,
+Kenji Kaneshige
 
-And this will be only used for direct IO, correct?
 
-> thanks,
-> -chris
->
+(2011/11/23 7:05), Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki<rjw@sisk.pl>
+> 
+> Make pcied_cleanup() unregister the port service before
+> destroying workqueues that are flushed during the port service
+> unregistration.
+> 
+> Reported-by: Oliver Neukum<oneukum@suse.de>
+> Signed-off-by: Rafael J. Wysocki<rjw@sisk.pl>
+> ---
+>   drivers/pci/hotplug/pciehp_core.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux/drivers/pci/hotplug/pciehp_core.c
+> ===================================================================
+> --- linux.orig/drivers/pci/hotplug/pciehp_core.c
+> +++ linux/drivers/pci/hotplug/pciehp_core.c
+> @@ -366,9 +366,9 @@ static int __init pcied_init(void)
+>   static void __exit pcied_cleanup(void)
+>   {
+>   	dbg("unload_pciehpd()\n");
+> +	pcie_port_service_unregister(&hpdriver_portdrv);
+>   	destroy_workqueue(pciehp_ordered_wq);
+>   	destroy_workqueue(pciehp_wq);
+> -	pcie_port_service_unregister(&hpdriver_portdrv);
+>   	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+>   }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
