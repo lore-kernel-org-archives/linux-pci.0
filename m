@@ -1,40 +1,38 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <4ED69DD4.3060403@tilera.com>
-Date: Wed, 30 Nov 2011 16:19:16 -0500
-From: Chris Metcalf <cmetcalf@tilera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:28662 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754956Ab1K0Mqn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 27 Nov 2011 07:46:43 -0500
+Date: Sun, 27 Nov 2011 14:48:17 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-next@vger.kernel.org
+Cc: sfr@canb.auug.org.au, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: (repost) vhost tree for linux-next
+Message-ID: <20111127124816.GA23270@redhat.com>
+References: <20111124203843.GC4873@redhat.com>
 MIME-Version: 1.0
-To: "Michael S. Tsirkin" <mst@redhat.com>
-CC: Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH-RFC 2/2] tile: switch to GENERIC_PCI_IOMAP
-References: <cover.1322592494.git.mst@redhat.com> <c5893cb30ae99a7e3c48b3fd209c770cd55c87ef.1322592495.git.mst@redhat.com>
-In-Reply-To: <c5893cb30ae99a7e3c48b3fd209c770cd55c87ef.1322592495.git.mst@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111124203843.GC4873@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/29/2011 1:54 PM, Michael S. Tsirkin wrote:
-> tile now has working stubs for ioport_map and ioremap
-> such that the generic pci_iomap will DTRT: cast to
-> pointer on memory and return NULL and log message on IO map.
->
-> Switch it over to GENERIC_PCI_IOMAP.
->
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  arch/tile/Kconfig           |    1 +
->  arch/tile/include/asm/pci.h |    2 +-
->  arch/tile/kernel/pci.c      |   21 ---------------------
->  3 files changed, 2 insertions(+), 22 deletions(-)
+I normally merge things through Dave, Rusty, Jesse or Jens,
+not directly to Linus. However, sometimes there's a large change
+(for example, my recent RFC for pci_iomap changes)
+where estimating how it interacts with other platforms and planned
+changes in the next kernel would be beneficial.
 
-Acked-by: Chris Metcalf <cmetcalf@tilera.com>
+For this purpose, it would be helpful if my tree were added to linux-next.
+The tree is:
+git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
+
+Could you do this please?
+(The current contents of that tree was posted for review/feedback
+for the first time today.   It might make sense to give it a few days
+for any responses ...)
+
+Thanks!
 
 -- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
-
+MST
