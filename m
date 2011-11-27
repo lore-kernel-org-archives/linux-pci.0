@@ -1,51 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.hansjkoch.de ([178.63.77.200]:45559 "EHLO www.hansjkoch.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751766Ab1KVRyO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Nov 2011 12:54:14 -0500
-Date: Tue, 22 Nov 2011 18:54:02 +0100
-From: "Hans J. Koch" <hjk@hansjkoch.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44661 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751460Ab1K0OAL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Nov 2011 09:00:11 -0500
+Subject: Re: (repost) vhost tree for linux-next
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Jean-Francois Dagenais <jeff.dagenais@gmail.com>,
-	"Hans J. Koch" <hjk@hansjkoch.de>, Greg KH <gregkh@suse.de>,
-	tglx@linutronix.de, linux-pci@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Message-ID: <20111122175402.GC15508@local>
-References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com>
- <20111118220849.GA25205@suse.de>
- <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
- <20111121173620.GA5028@suse.de>
- <20111121181724.GB12011@local>
- <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
- <20111122153525.GB17268@redhat.com>
- <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
- <20111122173722.GA29068@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111122173722.GA29068@redhat.com>
+Cc: linux-next@vger.kernel.org, sfr@canb.auug.org.au,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+In-Reply-To: <20111127135916.GB23302@redhat.com>
+References: <20111124203843.GC4873@redhat.com>
+	 <20111127124816.GA23270@redhat.com>
+	 <1322401139.2992.1.camel@dabdike.int.hansenpartnership.com>
+	 <20111127135916.GB23302@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 27 Nov 2011 08:00:08 -0600
+Message-ID: <1322402408.2992.4.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 07:37:23PM +0200, Michael S. Tsirkin wrote:
-[...]
-> > Or am I better off with a UIO solution?
+On Sun, 2011-11-27 at 15:59 +0200, Michael S. Tsirkin wrote:
+> On Sun, Nov 27, 2011 at 07:38:59AM -0600, James Bottomley wrote:
+> > On Sun, 2011-11-27 at 14:48 +0200, Michael S. Tsirkin wrote:
+> > > I normally merge things through Dave, Rusty, Jesse or Jens,
+> > > not directly to Linus. However, sometimes there's a large change
+> > > (for example, my recent RFC for pci_iomap changes)
+> > > where estimating how it interacts with other platforms and planned
+> > > changes in the next kernel would be beneficial.
+> > > 
+> > > For this purpose, it would be helpful if my tree were added to linux-next.
+> > > The tree is:
+> > > git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
+> > > 
+> > > Could you do this please?
+> > > (The current contents of that tree was posted for review/feedback
+> > > for the first time today.   It might make sense to give it a few days
+> > > for any responses ...)
+> > 
+> > I'm a little confused by your to: field.  This is a linux-arch issue,
+> > isn't it, since it's altering architecture implementations of a PCI
+> > function rather than altering anything in SCSI or net?
+> > 
+> > James
 > 
-> You should probably write a proper kernel driver, not a UIO one.
-> your kernel driver would have to prevent the device fom DMA into memory
-> outside the allocated range, even if userspace is malicious.
-> That's why UIO is generally not recommended for PCI devices that do DMA.
+> Yes. Stephen Rothwell asked me to Cc widely to see if anyone
+> objects to picking this stuff in linux-next.
+> Sorry about any confusion.
 
-When UIO was designed, the main goal was the ability to handle interrupts
-from userspace. There was no requirement for DMA. In fact, in five years I
-didn't get one real world device on my desk that needed it. That doesn't
-mean there are no such devices. Adding DMA support to the UIO core was
-discussed several times but noone ever did it. Ideas are still welcome...
+I;m fine with that, but the fact that you didn't send it to linux-arch
+was more my point ...
 
-If parts of the driver should be in userspace, you should really try
-to extend the UIO core instead of re-implementing UIO functionality in
-a "proper kernel driver".
+James
 
-Thanks,
-Hans
 
