@@ -1,102 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from calzone.tip.net.au ([203.10.76.15]:38119 "EHLO
-	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755354Ab1K1Xgd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Nov 2011 18:36:33 -0500
-Date: Tue, 29 Nov 2011 10:36:23 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-next@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: (repost) vhost tree for linux-next
-Message-Id: <20111129103623.50fb58ac94d90f11c675fff5@canb.auug.org.au>
-In-Reply-To: <20111127124816.GA23270@redhat.com>
-References: <20111124203843.GC4873@redhat.com>
-	<20111127124816.GA23270@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Tue__29_Nov_2011_10_36_23_+1100_DZZuYPv9K9S6e_gn"
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:36674 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752592Ab1K0USY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Nov 2011 15:18:24 -0500
+Received: by bke11 with SMTP id 11so7464254bke.19
+        for <linux-pci@vger.kernel.org>; Sun, 27 Nov 2011 12:18:22 -0800 (PST)
+Message-ID: <4ED29B09.10701@gmail.com>
+Date: Sun, 27 Nov 2011 23:18:17 +0300
+From: Alex <alex.vizor@gmail.com>
+MIME-Version: 1.0
+To: linux-pci@vger.kernel.org
+Subject: WARNING: at drivers/pci/pci-driver.c:607 pci_has_legacy_pm_support+0x57/0x5d()
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Signature=_Tue__29_Nov_2011_10_36_23_+1100_DZZuYPv9K9S6e_gn
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi guys,
 
-Hi Michael,
+Since bugzilla.kernel.org is in down I'm writing this letter. On every 
+resume I get following warnings in kernel log:
+Nov 25 22:09:43 alex kernel: [  702.991779] ------------[ cut here 
+]------------
+Nov 25 22:09:43 alex kernel: [  702.991790] WARNING: at 
+drivers/pci/pci-driver.c:607 pci_has_legacy_pm_support+0x57/0x5d()
+Nov 25 22:09:43 alex kernel: [  702.991792] Hardware name: 4170CTO
+Nov 25 22:09:43 alex kernel: [  702.991797] Modules linked in: fcoe 
+libfcoe 8021q lockd libfc scsi_transport_fc garp stp llc scsi_tgt
+  ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 nf_conntrack_ipv4 
+nf_defrag_ipv4 ip6table_filter xt_state nf_conntrack ip6_tables hdaps
+(O) thinkpad_ec(O) snd_hda_codec_hdmi snd_hda_codec_conexant 
+snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device arc4 iwlwif
+i uvcvideo videodev mac80211 media snd_pcm e1000e snd_timer 
+snd_page_alloc iTCO_wdt iTCO_vendor_support v4l2_compat_ioctl32 cfg80211
+thinkpad_acpi snd wmi rfkill i2c_i801 soundcore pcspkr joydev microcode 
+uinput sunrpc sdhci_pci sdhci mmc_core [last unloaded: scsi_w
+ait_scan]
+Nov 25 22:09:43 alex kernel: [  702.991857] Pid: 3107, comm: kworker/u:0 
+Tainted: G           O 3.2.0-0.rc3.git0.1.fc16.x86_64 #1
+Nov 25 22:09:43 alex kernel: [  702.991859] Call Trace:
+Nov 25 22:09:43 alex kernel: [  702.991867]  [<ffffffff810589c2>] 
+warn_slowpath_common+0x83/0x9b
+Nov 25 22:09:43 alex kernel: [  702.991872]  [<ffffffff810589f4>] 
+warn_slowpath_null+0x1a/0x1c
+Nov 25 22:09:43 alex kernel: [  702.991876]  [<ffffffff81249682>] 
+pci_has_legacy_pm_support+0x57/0x5d
+Nov 25 22:09:43 alex kernel: [  702.991881] ehci_hcd 0000:00:1d.0: PCI 
+INT A disabled
+Nov 25 22:09:43 alex kernel: [  702.991884]  [<ffffffff81249c19>] 
+pci_pm_suspend+0x39/0x100
+Nov 25 22:09:43 alex kernel: [  702.991891]  [<ffffffff8134193c>] 
+pm_op+0x8b/0x149
+Nov 25 22:09:43 alex kernel: [  702.991895]  [<ffffffff81341bec>] 
+__device_suspend+0x194/0x247
+Nov 25 22:09:43 alex kernel: [  702.991897] ehci_hcd 0000:00:1a.0: PCI 
+INT A disabled
+Nov 25 22:09:43 alex kernel: [  702.991900]  [<ffffffff81341cbe>] 
+async_suspend+0x1f/0x5d
+Nov 25 22:09:43 alex kernel: [  702.991905]  [<ffffffff810790cd>] 
+async_run_entry_fn+0x9e/0x131
+Nov 25 22:09:43 alex kernel: [  702.991909]  [<ffffffff8107902f>] ? 
+async_schedule+0x17/0x17
+Nov 25 22:09:43 alex kernel: [  702.991916]  [<ffffffff8106efa8>] 
+process_one_work+0x176/0x2a9
+Nov 25 22:09:43 alex kernel: [  702.991920]  [<ffffffff8106d040>] ? 
+need_to_create_worker+0x12/0x26
+Nov 25 22:09:43 alex kernel: [  702.991925]  [<ffffffff8106fab6>] 
+worker_thread+0xda/0x15d
+Nov 25 22:09:43 alex kernel: [  702.991929]  [<ffffffff8106f9dc>] ? 
+manage_workers+0x176/0x176
+Nov 25 22:09:43 alex kernel: [  702.991933]  [<ffffffff810731b3>] 
+kthread+0x84/0x8c
+Nov 25 22:09:43 alex kernel: [  702.991938]  [<ffffffff815281b4>] 
+kernel_thread_helper+0x4/0x10
+Nov 25 22:09:43 alex kernel: [  702.991943]  [<ffffffff8107312f>] ? 
+kthread_worker_fn+0x148/0x148
+Nov 25 22:09:43 alex kernel: [  702.991947]  [<ffffffff815281b0>] ? 
+gs_change+0x13/0x13
+Nov 25 22:09:43 alex kernel: [  702.991950] ---[ end trace 
+6d1eab899804323c ]---
 
-On Sun, 27 Nov 2011 14:48:17 +0200 "Michael S. Tsirkin" <mst@redhat.com> wr=
-ote:
->
-> I normally merge things through Dave, Rusty, Jesse or Jens,
-> not directly to Linus. However, sometimes there's a large change
-> (for example, my recent RFC for pci_iomap changes)
-> where estimating how it interacts with other platforms and planned
-> changes in the next kernel would be beneficial.
->=20
-> For this purpose, it would be helpful if my tree were added to linux-next.
-> The tree is:
-> git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
->=20
-> Could you do this please?
-
-I have added this tree from today with just you as the contact.
-
-Thanks for adding your subsystem tree as a participant of linux-next.  As
-you may know, this is not a judgment of your code.  The purpose of
-linux-next is for integration testing and to lower the impact of
-conflicts between subsystems in the next merge window.=20
-
-You will need to ensure that the patches/commits in your tree/series have
-been:
-     * submitted under GPL v2 (or later) and include the Contributor's
-	Signed-off-by,
-     * posted to the relevant mailing list,
-     * reviewed by you (or another maintainer of your subsystem tree),
-     * successfully unit tested, and=20
-     * destined for the current or next Linux merge window.
-
-Basically, this should be just what you would send to Linus (or ask him
-to fetch).  It is allowed to be rebased if you deem it necessary.
-
---=20
-Cheers,
-Stephen Rothwell=20
-sfr@canb.auug.org.au
-
-Legal Stuff:
-By participating in linux-next, your subsystem tree contributions are
-public and will be included in the linux-next trees.  You may be sent
-e-mail messages indicating errors or other issues when the
-patches/commits from your subsystem tree are merged and tested in
-linux-next.  These messages may also be cross-posted to the linux-next
-mailing list, the linux-kernel mailing list, etc.  The linux-next tree
-project and IBM (my employer) make no warranties regarding the linux-next
-project, the testing procedures, the results, the e-mails, etc.  If you
-don't agree to these ground rules, let me know and I'll remove your tree
-from participation in linux-next.
-
---Signature=_Tue__29_Nov_2011_10_36_23_+1100_DZZuYPv9K9S6e_gn
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBCAAGBQJO1Br3AAoJEECxmPOUX5FE5BMP/RvTlwmnqb+v6CXWp3EGteq/
-uMSfJQie9u1Jir7hfaNFdkCutHSfESyXBwisV4UcQTiWtal6+MxGLaQihsOxzuFY
-IiTn8ShxQFNtq07klCk4bV/PW3qN0JQUA1huasDZp2ZY2DuO+KQw+4tdic77lXlJ
-fnZjIFuj80nuMKCqXFd7Vx89a9jW3EPfvgMpK+phbAcO2uhqpAIRQ7mRsLXWlUJ3
-81xeOb1rSRqfPJDlfGuP7JOflTbyW96Y3C9Dg18Qf93PvU97N4qfZXsROicD6nbH
-DxoFBrD4wVWUh7Oyr8RoCCA0cQnrVmI9Z4H0oLgF1k7MiLPiDMuo9YxpozfD9fjF
-v4j+fLVikziNC4Sy+IRoKC/T0EKL5zZgt0sSo5DlSErrQ4Foa6IwmOJtATRx4Ae8
-mJOU/3wYB/4sxALh6z+F1oBuzWqn7WFt7WI3p3WHOSy/IEOLYu6flQIA93B99Oum
-bAGCTTaHh1BdFBd5aAnCS9VDhXO+SvlVicLs75+vgegRcc1u7T5DI6uPOYRNa8qE
-Em+2aHY1iOTxZrjf4rMTKGzv75AklJgPsE+uOpBScG+dglKWbiC/Jw+G6q6Bt9r0
-wfH2hygHr/Mtl5SnEy/PXbUSt1rqwX4TXOElSuSLK1/OkMIz+Y5V3+lfPJC5veBz
-6f1dQMF1nXj+g6coPgDA
-=tO7r
------END PGP SIGNATURE-----
-
---Signature=_Tue__29_Nov_2011_10_36_23_+1100_DZZuYPv9K9S6e_gn--
+Could you please fix this?
