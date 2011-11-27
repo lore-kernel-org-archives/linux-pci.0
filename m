@@ -1,87 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:60048 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765Ab1KKRl7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:41:59 -0500
-Date: Fri, 11 Nov 2011 12:41:58 -0500 (EST)
-From: James Paradis <jparadis@redhat.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
-	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
-	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-Message-ID: <bd3514f0-1a80-45ac-a08e-b327a367b276@zmail15.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <4EBC00DD.4010009@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:51211 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751460Ab1K0N5n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 27 Nov 2011 08:57:43 -0500
+Date: Sun, 27 Nov 2011 15:59:16 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-next@vger.kernel.org, sfr@canb.auug.org.au,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: (repost) vhost tree for linux-next
+Message-ID: <20111127135916.GB23302@redhat.com>
+References: <20111124203843.GC4873@redhat.com>
+ <20111127124816.GA23270@redhat.com>
+ <1322401139.2992.1.camel@dabdike.int.hansenpartnership.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1322401139.2992.1.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hmmm... would it be better to do this as a quirk or as a boot
-parameter?  I've heard reports that other systems may be running
-into similar issues... if we don't know exactly which systems
-these are then maybe a boot parameter would be a more flexible
-approach...
-
---jim
-
------ Original Message -----
-> On 11/10/2011 09:31 AM, Matthew Wilcox wrote:
-> > On Thu, Nov 10, 2011 at 09:00:13AM -0500, Prarit Bhargava wrote:
-> >> Stratus systems have a hierarchy that includes a PCIE Downstream
-> >> bridge
-> >> connected to a PCIE Upstream bridge and a PCI Downstream bridge.
-> >>  The system
-> >> boots with this wrong hierarchy into a crippled mode (USB doesn't
-> >> work,
-> >> network doesn't work ...).  Avoiding the Downstream bridge check
-> >> in
-> >> only_one_child() causes all the bridges to be enumerated and the
-> >> system
-> >> to function properly.
-> >
-> >> @@ -1275,7 +1276,15 @@ static int only_one_child(struct pci_bus
-> >> *bus)
-> >>   	struct pci_dev *parent = bus->self;
-> >>   	if (!parent || !pci_is_pcie(parent))
-> >>   		return 0;
-> >> -	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
-> >> +	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
-> >> +		return 1;
-> >> +	/*
-> >> +	 * Stratus/NEC ftServer systems have a broken PCIE hierarchy in
-> >> which
-> >> +	 * one upstream and one downstream port are plugged into a
-> >> downstream
-> >> +	 * port.  Avoiding the downstream port check here results in a
-> >> +	 * functional system.
-> >> +	 */
-> >> +	if (!dmi_name_in_vendors("ftServer")&&
-> >>   	parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
-> >>   		return 1;
-> >>   	return 0;
-> >
-> > dmi_name_in_vendors is relatively expensive, so the order of these
-> > two
-> > should be swapped, at least:
-> >
-> >> 	if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM&&
-> >>   	!dmi_name_in_vendors("ftServer"))
-> >
-> > Plus, this gets called for every PCI bridge.  We should be caching
-> > it
-> > somewhere, so it's only called once.
-> >
-> Then i recommend a dmi_name_in_vendors() check at init; stick result
-> in
-> global (or local static), and then it's not exec'd on each bridge,
-> just
-> a simple flag check.
-> If that's the case, I'd re-cast my vote for putting the code in
-> pci_quirks
-> with an export, so it is tracked as a quirk.  that may get messy
-> wrt other arches though (the export in common code; not sure if
-> quirks is
-> included on all arches).
+On Sun, Nov 27, 2011 at 07:38:59AM -0600, James Bottomley wrote:
+> On Sun, 2011-11-27 at 14:48 +0200, Michael S. Tsirkin wrote:
+> > I normally merge things through Dave, Rusty, Jesse or Jens,
+> > not directly to Linus. However, sometimes there's a large change
+> > (for example, my recent RFC for pci_iomap changes)
+> > where estimating how it interacts with other platforms and planned
+> > changes in the next kernel would be beneficial.
+> > 
+> > For this purpose, it would be helpful if my tree were added to linux-next.
+> > The tree is:
+> > git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
+> > 
+> > Could you do this please?
+> > (The current contents of that tree was posted for review/feedback
+> > for the first time today.   It might make sense to give it a few days
+> > for any responses ...)
 > 
+> I'm a little confused by your to: field.  This is a linux-arch issue,
+> isn't it, since it's altering architecture implementations of a PCI
+> function rather than altering anything in SCSI or net?
 > 
+> James
+
+Yes. Stephen Rothwell asked me to Cc widely to see if anyone
+objects to picking this stuff in linux-next.
+Sorry about any confusion.
+
+-- 
+MST
