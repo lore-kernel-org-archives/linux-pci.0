@@ -1,81 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:38148 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753210Ab1KKRcs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2011 12:32:48 -0500
-Date: Fri, 11 Nov 2011 09:33:07 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Rework ASPM disable code
-Message-ID: <20111111093307.3072ce80@jbarnes-desktop>
-In-Reply-To: <1320961113-5050-1-git-send-email-mjg@redhat.com>
-References: <1320961113-5050-1-git-send-email-mjg@redhat.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44607 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751460Ab1K0NjB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Nov 2011 08:39:01 -0500
+Subject: Re: (repost) vhost tree for linux-next
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-next@vger.kernel.org, sfr@canb.auug.org.au,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+In-Reply-To: <20111127124816.GA23270@redhat.com>
+References: <20111124203843.GC4873@redhat.com>
+	 <20111127124816.GA23270@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 27 Nov 2011 07:38:59 -0600
+Message-ID: <1322401139.2992.1.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/r0St16k.wJdPI9cNAnTP/eh"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/r0St16k.wJdPI9cNAnTP/eh
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sun, 2011-11-27 at 14:48 +0200, Michael S. Tsirkin wrote:
+> I normally merge things through Dave, Rusty, Jesse or Jens,
+> not directly to Linus. However, sometimes there's a large change
+> (for example, my recent RFC for pci_iomap changes)
+> where estimating how it interacts with other platforms and planned
+> changes in the next kernel would be beneficial.
+> 
+> For this purpose, it would be helpful if my tree were added to linux-next.
+> The tree is:
+> git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
+> 
+> Could you do this please?
+> (The current contents of that tree was posted for review/feedback
+> for the first time today.   It might make sense to give it a few days
+> for any responses ...)
 
-On Thu, 10 Nov 2011 16:38:33 -0500
-Matthew Garrett <mjg@redhat.com> wrote:
+I'm a little confused by your to: field.  This is a linux-arch issue,
+isn't it, since it's altering architecture implementations of a PCI
+function rather than altering anything in SCSI or net?
 
-> Right now we forcibly clear ASPM state on all devices if the BIOS indicat=
-es
-> that the feature isn't supported. Based on the Microsoft presentation
-> "PCI Express In Depth for Windows Vista and Beyond", I'm starting to think
-> that this may be an error. The implication is that unless the platform
-> grants full control via _OSC, Windows will not touch any PCIe features -
-> including ASPM. In that case clearing ASPM state would be an error unless
-> the platform has granted us that control.
->=20
-> This patch reworks the ASPM disabling code such that the actual clearing
-> of state is triggered by a successful handoff of PCIe control to the OS.
-> The general ASPM code undergoes some changes in order to ensure that the
-> ability to clear the bits isn't overridden by ASPM having already been
-> disabled. Further, this theoretically now allows for situations where
-> only a subset of PCIe roots hand over control, leaving the others in the
-> BIOS state.
->=20
-> It's difficult to know for sure that this is the right thing to do -
-> there's zero public documentation on the interaction between all of these
-> components. But enough vendors enable ASPM on platforms and then set this
-> bit that it seems likely that they're expecting the OS to leave them alon=
-e.
->=20
-> Measured to save around 5W on an idle Thinkpad X220.
->=20
+James
 
-Applied to linux-next, thanks.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/r0St16k.wJdPI9cNAnTP/eh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJOvVxTAAoJEIEoDkX4Qk9hiKIQALTMeSwgIeQ2G9z7J+0/f7Rw
-dpnIiyR5BMEQpaaoLnXgv8GCuSfF5hhc0m/WGZlgN79eLhrYIHieqNLAkKDuwdGM
-K6i3/i7igm11bu+92t5045aTyHQk2VAZc4eSUEj7lZdBgIcLYBlXKgECfgS+2rGO
-CuhobcM0iSzvwjz9y4Z5+2dcGg6NPVn0fKRyVW8iLzrCbyZoCviGjwTGYlXSsyad
-Eo67JFjylQkGRKRn1uWPqqlFr+DjRLjrvXI2Fq4A4ak4ZRtHimLwYLUOkUetMYEC
-aq2SxEkORA3MJLtHgeUMVNoe1VwN3tOAflQ/CbYheXCcFTPi7yEzS4fnhNq/87rx
-G2+r12DGAsjxP9PbU5Uk/UPB6Bcd4Avgu4WrEUsKbT/ZrMerXs7/224lyXtKROqs
-KcxOedUgocNwljWVHDr1z+MMz6iqK3Dp+YAGmYl4Xjx4jjhWuUrTswIj2AWEU7M5
-rpwWiWfyg5v6YCe194sokFpqSmL0MWhSyp8cJVMUqrY1VgX3QPC2G5ZIL/u0R46c
-csk2zhvIxCioVNki2QPig24T3ZxDEuivZsXbis1cWKRqPu5cKbIBYWM1gcy+t1Hp
-yxU7OYUR1LA0FytHOTY8G8Nx7GVdQffHqGnvMduVb3X4sr5a0QWw+zarqVZBJZB3
-foi94HROk/Q0UYada//y
-=2nAz
------END PGP SIGNATURE-----
-
---Sig_/r0St16k.wJdPI9cNAnTP/eh--
