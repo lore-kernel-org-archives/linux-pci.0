@@ -1,90 +1,126 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-References: <20111118220849.GA25205@suse.de> <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com> <20111121173620.GA5028@suse.de> <20111121181724.GB12011@local> <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com> <20111122153525.GB17268@redhat.com> <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com> <20111122173722.GA29068@redhat.com> <20111122175402.GC15508@local> <20111122184040.GB5235@redhat.com> <20111122185244.GD15508@local>
-In-Reply-To: <20111122185244.GD15508@local>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <CCF15D66-9712-40DF-8B0F-6EB5CEEFCA20@gmail.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, Greg KH <gregkh@suse.de>,
-	tglx@linutronix.de, linux-pci@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>
-From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Date: Tue, 22 Nov 2011 14:50:32 -0500
-To: "Hans J. Koch" <hjk@hansjkoch.de>, Matthew Wilcox <matthew@wil.cx>
+MIME-Version: 1.0
+In-Reply-To: <201109212029.38899.rjw@sisk.pl>
+References: <CAP_ceTyXLO=mv1Ott=g3mG0y+Q+VUM3N8CA-Fqa-_=uj7LTbmw@mail.gmail.com>
+ <1316628308-32580-1-git-send-email-vpalatin@chromium.org> <201109212029.38899.rjw@sisk.pl>
+From: Vincent Palatin <vpalatin@chromium.org>
+Date: Mon, 28 Nov 2011 11:15:43 -0800
+Message-ID: <CAP_ceTzQ45tJQq0Vd+jR1t1Cf+AAL_wAJXpNjPKOmZ2tFkPWKg@mail.gmail.com>
+Subject: Re: [PATCH] PM / Runtime: make PCI traces quieter
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Olof Johansson <olofj@chromium.org>,
+	Sameer Nanda <snanda@chromium.org>,
+	Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Jesse,
+Any comment on that patch ?
+On Wed, Sep 21, 2011 at 11:29, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+> On Wednesday, September 21, 2011, Vincent Palatin wrote:
+> > When the runtime PM is activated on PCI, if a device switches state frequently
+> > (e.g. an EHCI controller with autosuspending USB devices connected)
+> > the PCI configuration traces might be very verbose in the kernel log.
+> > Let's guard those traces with DEBUG condition.
+> >
+> > Signed-off-by: Vincent Palatin <vpalatin@chromium.org>
+>
+> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+>
+> > ---
+> >  arch/x86/pci/i386.c     |    2 +-
+> >  drivers/acpi/pci_irq.c  |   10 +++++-----
+> >  drivers/pci/pci.c       |    5 ++---
+> >  drivers/pci/setup-res.c |    6 +++---
+> >  4 files changed, 11 insertions(+), 12 deletions(-)
+> >
+> > diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+> > index 494f2e7..eb5d20b 100644
+> > --- a/arch/x86/pci/i386.c
+> > +++ b/arch/x86/pci/i386.c
+> > @@ -269,7 +269,7 @@ void pcibios_set_master(struct pci_dev *dev)
+> >               lat = pcibios_max_latency;
+> >       else
+> >               return;
+> > -     dev_printk(KERN_DEBUG, &dev->dev, "setting latency timer to %d\n", lat);
+> > +     dev_dbg(&dev->dev, "setting latency timer to %d\n", lat);
+> >       pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+> >  }
+> >
+> > diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> > index 7f9eba9..0eefa12 100644
+> > --- a/drivers/acpi/pci_irq.c
+> > +++ b/drivers/acpi/pci_irq.c
+> > @@ -487,10 +487,10 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+> >       else
+> >               link_desc[0] = '\0';
+> >
+> > -     dev_info(&dev->dev, "PCI INT %c%s -> GSI %u (%s, %s) -> IRQ %d\n",
+> > -              pin_name(pin), link_desc, gsi,
+> > -              (triggering == ACPI_LEVEL_SENSITIVE) ? "level" : "edge",
+> > -              (polarity == ACPI_ACTIVE_LOW) ? "low" : "high", dev->irq);
+> > +     dev_dbg(&dev->dev, "PCI INT %c%s -> GSI %u (%s, %s) -> IRQ %d\n",
+> > +             pin_name(pin), link_desc, gsi,
+> > +             (triggering == ACPI_LEVEL_SENSITIVE) ? "level" : "edge",
+> > +             (polarity == ACPI_ACTIVE_LOW) ? "low" : "high", dev->irq);
+> >
+> >       return 0;
+> >  }
+> > @@ -524,6 +524,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+> >        * (e.g. PCI_UNDEFINED_IRQ).
+> >        */
+> >
+> > -     dev_info(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+> > +     dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+> >       acpi_unregister_gsi(gsi);
+> >  }
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 0ce6742..d339c30 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -964,7 +964,7 @@ void pci_restore_state(struct pci_dev *dev)
+> >       for (i = 15; i >= 0; i--) {
+> >               pci_read_config_dword(dev, i * 4, &val);
+> >               if (val != dev->saved_config_space[i]) {
+> > -                     dev_printk(KERN_DEBUG, &dev->dev, "restoring config "
+> > +                     dev_dbg(&dev->dev, "restoring config "
+> >                               "space at offset %#x (was %#x, writing %#x)\n",
+> >                               i, val, (int)dev->saved_config_space[i]);
+> >                       pci_write_config_dword(dev,i * 4,
+> > @@ -1531,8 +1531,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+> >       }
+> >
+> >  out:
+> > -     dev_printk(KERN_DEBUG, &dev->dev, "PME# %s\n",
+> > -                     enable ? "enabled" : "disabled");
+> > +     dev_dbg(&dev->dev, "PME# %s\n", enable ? "enabled" : "disabled");
+> >  }
+> >
+> >  /**
+> > diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> > index 51a9095..3878fe9 100644
+> > --- a/drivers/pci/setup-res.c
+> > +++ b/drivers/pci/setup-res.c
+> > @@ -84,9 +84,9 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+> >               }
+> >       }
+> >       res->flags &= ~IORESOURCE_UNSET;
+> > -     dev_info(&dev->dev, "BAR %d: set to %pR (PCI address [%#llx-%#llx])\n",
+> > -              resno, res, (unsigned long long)region.start,
+> > -              (unsigned long long)region.end);
+> > +     dev_dbg(&dev->dev, "BAR %d: set to %pR (PCI address [%#llx-%#llx])\n",
+> > +             resno, res, (unsigned long long)region.start,
+> > +             (unsigned long long)region.end);
+> >  }
+> >
+> >  int pci_claim_resource(struct pci_dev *dev, int resource)
+> >
+>
 
-On Nov 22, 2011, at 13:52, Hans J. Koch wrote:
-
-> On Tue, Nov 22, 2011 at 08:40:40PM +0200, Michael S. Tsirkin wrote:
->> On Tue, Nov 22, 2011 at 06:54:02PM +0100, Hans J. Koch wrote:
->>> On Tue, Nov 22, 2011 at 07:37:23PM +0200, Michael S. Tsirkin wrote:
->>> [...]
->>>>> Or am I better off with a UIO solution?
->>>> 
->>>> You should probably write a proper kernel driver, not a UIO one.
->>>> your kernel driver would have to prevent the device fom DMA into memory
->>>> outside the allocated range, even if userspace is malicious.
->>>> That's why UIO is generally not recommended for PCI devices that do DMA.
->>> 
->>> When UIO was designed, the main goal was the ability to handle interrupts
->>> from userspace. There was no requirement for DMA. In fact, in five years I
->>> didn't get one real world device on my desk that needed it. That doesn't
->>> mean there are no such devices. Adding DMA support to the UIO core was
->>> discussed several times but noone ever did it. Ideas are still welcome...
->>> 
->>> If parts of the driver should be in userspace, you should really try
->>> to extend the UIO core instead of re-implementing UIO functionality in
->>> a "proper kernel driver".
->>> 
->>> Thanks,
->>> Hans
->> 
->> Right, I really meant put all of the driver in the kernel.
->> If parts are in userspace, and device can do DMA,
->> you are faced with the problem as userspace suddenly
->> can access arbitrary memory through the device.
-> 
-> That's nothing UIO specific. You have the same problem with /dev/mem
-> or graphic cards. If you're root, you can do lots of things that can
-> compromise security or crash your system.
-Exactly, and remember, this is a closed, embedded and controlled system, with a
-"kiosk" application running.
-
-As a product supporter, if the end-user decides to temper with his unit and read/write 
-anywhere in the system, it would surely qualify as un-supported use of the system
-and so my design should not account for this.
-
-Since this FPGA-PCI-e device is the reason for being of the product, it rules over
-any other factor as priority 1. I mean, as long as the system doesn't swap, we're
-happy.
-
-Matthew Wilcox <matthew@wil.cx> wrote:
-> Is it really key?  If you supported, ohidon'tknow, 2MB pages, you'd
-> need 64 entries in the FPGA to store the addresses of those 2MB pages,
-> which doesn't sound like a huge burden.
-This is an excellent idea, and thank you for bringing me back to earth. It is definitely
-doable and would solve my 4MB cap problem. It would require work on
-the FPGA side as well as mods to my uio driver to manage the memory and
-override uio's page_fault implementation (if I am correct), but the rest of our code
-base would be unaffected.
-
-What would be completely ideal for me is the idea to cut out a chunk of physical ram
-from the kernel though, like those integrated graphic chips do. 
-
-"Michael S. Tsirkin" <mst@redhat.com> wrote:
-> You can use alloc_bootmem I guess.
-That sounds like something I could use, any idea how to do this elegantly? Meaning,
-where is the earliest point I can successfully call alloc_bootmem(128MB) successfully?
-How do I communicate this cleanly to my pci probe function so I can hand it to uio?
-Using plain old global exported symbols?
-
-Would I encounter cache problems or the like? Or is snooping guaranteed on modern
-Intel platforms (Atom E6XX)?
-
-> 
-> Thanks,
-> Hans
-Super thanks again for all the help guys, making real progress here.
-/jfd
+--
+Vincent
