@@ -1,141 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:45471 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753926Ab1KWWqI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2011 17:46:08 -0500
-Date: Wed, 23 Nov 2011 14:47:35 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>
-Subject: Re: Crash with sata_sil24 driver
-Message-ID: <20111123144735.64dc9f05@jbarnes-desktop>
-In-Reply-To: <20111123162937.GF25780@google.com>
-References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
-	<CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
-	<20111122150613.GA322@google.com>
-	<CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
-	<20111123162937.GF25780@google.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/sp5Z2wuOEZ3yjaNUeOKh6uo"; protocol="application/pgp-signature"
+Received: from iolanthe.rowland.org ([192.131.102.54]:37340 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753369Ab1K1WPi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Nov 2011 17:15:38 -0500
+Date: Mon, 28 Nov 2011 17:15:37 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+cc: linux-pci@vger.kernel.org
+Subject: Xorg intel server not finding the graphics device
+Message-ID: <Pine.LNX.4.44L0.1111281639090.1405-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/sp5Z2wuOEZ3yjaNUeOKh6uo
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Jesse:
 
-On Wed, 23 Nov 2011 08:29:37 -0800
-Tejun Heo <tj@kernel.org> wrote:
+After an upgrade to Fedora-16, my Xorg server has a problem.  It no 
+longer binds to the intel driver to the 865G graphics chip.
 
-> (cc'ing Russell, hello)
->=20
-> The original thread can be read from
->=20
->   http://thread.gmane.org/gmane.linux.usb.general/54878/
->=20
-> On Wed, Nov 23, 2011 at 10:49:00AM +0530, Pratyush Anand wrote:
-> > Hello Tejun,
-> >=20
-> >=20
-> > On Tue, Nov 22, 2011 at 8:36 PM, Tejun Heo <tj@kernel.org> wrote:
-> > > Hello,
-> > >
-> > > (cc'ing Jesse)
-> > >
-> > > On Tue, Nov 22, 2011 at 04:40:40PM +0530, Pratyush Anand wrote:
-> > >> > I am using various PCIe card based on Silicon Image 3124/3132 to
-> > >> > test my PCIe host. This card is working with most of my host contr=
-oler.
-> > >> > I use sata_sil24 driver to enable the card, with one modification =
-of
-> > >> > commenting line [pcie_set_readrq(pdev, 4096);]
-> > >> >
-> > >> > I had sent a patch for it , which is still unanswered.
-> > >> > http://comments.gmane.org/gmane.linux.kernel.pci/10300
-> > >
-> > > Yeah, that's something lifted from proprietary driver and it's
-> > > likely to be wrong. =A0Jesse, is there a way to find out the safe
-> > > maximum value for readrq? =A0I'm a bit reluctant to drop it as pcie
-> > > variants of these chips are bottlenecked on the host bus pretty badly.
-> > >
-> > >> > Anyway, this mail is regarding another issue.
-> > >> >
-> > >> > I am still having problem when I use above driver (with above patc=
-h),
-> > >> > in following
-> > >> > situation.
-> > >> >
-> > >> > My SOC is having cortex-a9 dual core. When I work with CPU freq 500
-> > >> > MHz, it works
-> > >> > well. But with 600 MHz it crashes. Crash log is at the end of mail.
-> > >> >
-> > >> > I did further debugging. I found that if I put some delay after
-> > >> > calling of sil24_init_controller(host); in function sil24_init_one=
-, it
-> > >> > works well.
-> > >> >
-> > >> > My question is.
-> > >> > does sil24_init_controller insure perfact initilization?
-> > >> > or we missing to check some status register which might be needed
-> > >> > before ata_host_activate.
-> > >> > ------------------------------------------------------------------=
----
-> > >> > Modules linked in:
-> > >> > CPU: 0 =A0 =A0Not tainted =A0(2.6.37-lsp-3.2.2-rc-dirty #7)
-> > >> > PC is at sil24_scr_read+0x38/0x50
-> > >> > LR is at sil24_port_base+0x14/0x2c
-> > >> > pc : [<80255e10>] =A0 =A0lr : [<80255d44>] =A0 =A0psr: 80000013
-> > >
-> > > Hmm... this is weird. =A0All init happens in the same thread. =A0Ther=
-e's
-> > > no race condition involved here. =A0I'm not too familiar with arm. =
-=A0Can
-> > > you please track down what is causing the crash? =A0ie. is it memory
-> > > access to kernel data structure or io region?
-> >=20
-> > It  is accessing SATA Controller registers rather kerenl data struct
-> > at the time of crash.
-> > It crashes when it tries to read SCR_CONTROL register.
-> > Its really strage that same register become accesible if a delay of 10u=
-s is
-> > put after sil24_init_controller.
->=20
-> Weird, that basically means that somehow pci_iomap() isn't
-> synchronous.  ie. you need to way some time after pci_iomap() before
-> being able to access the mapped address.  Seems like arch / pci
-> weirdness.  Jesse, Russell, any ideas?
+Here's the relevant portion of the Xorg log:
 
-As Russel said, pci_iomap shouldn't be async.  But maybe something else
-in the init function is doing a chip reset or causing the chip to go
-off into the weeds for a short time?  That's generally the cause of
-target timeouts for PCI devices.
+--------------------------------------------------------------------
+X.Org X Server 1.11.2
+Release Date: 2011-11-04
+...
+[   672.192] (--) PCI:*(0:0:2:0) 8086:2572:14a4:2181 rev 2, Mem @ 0xf0000000/134217728, 0xfe780000/524288, I/O @ 0x0000ec00/8, BIOS @ 0x????????/131072
+...
+[   672.331] (II) Loading /usr/lib/xorg/modules/drivers/intel_drv.so
+[   672.426] (II) Module intel: vendor="X.Org Foundation"
+[   672.426] 	compiled for 1.11.2, module version = 2.17.0
+[   672.426] 	Module class: X.Org Video Driver
+[   672.426] 	ABI class: X.Org Video Driver, version 11.0
+[   672.426] (II) intel: Driver for Intel Integrated Graphics Chipsets: i810,
+	i810-dc100, i810e, i815, i830M, 845G, 854, 852GM/855GM, 865G, 915G,
+	E7221 (i915), 915GM, 945G, 945GM, 945GME, Pineview GM, Pineview G,
+	965G, G35, 965Q, 946GZ, 965GM, 965GME/GLE, G33, Q35, Q33, GM45,
+	4 Series, G45/G43, Q45/Q43, G41, B43, B43, Clarkdale, Arrandale,
+	Sandybridge Desktop (GT1), Sandybridge Desktop (GT2),
+	Sandybridge Desktop (GT2+), Sandybridge Mobile (GT1),
+	Sandybridge Mobile (GT2), Sandybridge Mobile (GT2+),
+	Sandybridge Server, Ivybridge Mobile (GT1), Ivybridge Mobile (GT2),
+	Ivybridge Desktop (GT1), Ivybridge Desktop (GT2), Ivybridge Server
+[   672.426] (--) using VT number 7
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+[   672.444] (EE) No devices detected.
+[   672.444] 
+Fatal server error:
+[   672.444] no screens found
+--------------------------------------------------------------------
 
---Sig_/sp5Z2wuOEZ3yjaNUeOKh6uo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Here's the equivalent part of the log from before I upgraded:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+--------------------------------------------------------------------
+X.Org X Server 1.9.5
+Release Date: 2011-03-17
+...
+[    80.575] (--) PCI:*(0:0:2:0) 8086:2572:14a4:2181 rev 2, Mem @ 0xf0000000/134217728, 0xfe780000/524288, I/O @ 0x0000ec00/8, BIOS @ 0x????????/131072
+...
+[    81.003] (II) intel: Driver for Intel Integrated Graphics Chipsets: i810,
+	i810-dc100, i810e, i815, i830M, 845G, 852GM/855GM, 865G, 915G,
+	E7221 (i915), 915GM, 945G, 945GM, 945GME, Pineview GM, Pineview G,
+	965G, G35, 965Q, 946GZ, 965GM, 965GME/GLE, G33, Q35, Q33, GM45,
+	4 Series, G45/G43, Q45/Q43, G41, B43, Clarkdale, Arrandale
+[    81.004] (--) using VT number 7
 
-iQIcBAEBAgAGBQJOzXgHAAoJEIEoDkX4Qk9hzDsQAMJZAWJlf86u+oEguwMB7fDq
-Uvli/yxYE/mbzJoeBxnEbXlCstJP/rqvPctHjG+tsaIwRSvPshnAE8S94xfIn/RW
-BWdeU3TowVb0Y6aYO/5B9azrnSy17DjBKLOc9bkQSGoHyI0pE6z+/x+6I6vLBhJX
-qpvvC/h3iYGvNhlfHpjI2x4qPbCtEGjrFTKHQuNHJDnKA4TyQ1xxQLw8U/tHFo8H
-iS66phni1m7l5Rcu8Q0SH0UEx3B1iZtIoQ9TeQrgFIyLKlzEHOaJv+BiyrkZ2DeE
-07y5SrYRH66m20cMxJ2Ruv7YA5/ixajJEuzmTDFqYQPAr96+Wib+dt0QXcB61XND
-60GKHNawl7nBHtpCNcj1OQ5sAiHBVcD1sxP1s5MuKKyOEvA32hP+gCcL0Uwc/nWY
-EDT+/sNdhKzwfOU061W7gF5TULCOCHmiuztEYFN2dYb9zL08wa2H9nVbYqFiVdz1
-pGbwxOGAWz58ZCjXpWd8RAfNxbRf5e/FcDCvjl0DcYg1ADr4EkLPHDf3NN3gSdwo
-MVEzEJu/Jwb9yzQk7K2IE6qMBqIlTXbOXQiHdouyChE42nchkgUBm0WyDKzyuFbc
-GX/+yggsHsTQAjJg/Ax0aKxFcan8w3cb7PkTBq4Kmev4kBBNlyZJLmEai1wVbOKI
-2AJee/E1D25mmLGoUtiu
-=nTtA
------END PGP SIGNATURE-----
+[    81.014] drmOpenDevice: node name is /dev/dri/card0
+[    81.014] drmOpenDevice: open result is 9, (OK)
+[    81.014] drmOpenByBusid: Searching for BusID pci:0000:00:02.0
+[    81.014] drmOpenDevice: node name is /dev/dri/card0
+[    81.014] drmOpenDevice: open result is 9, (OK)
+[    81.014] drmOpenByBusid: drmOpenMinor returns 9
+[    81.014] drmOpenByBusid: Interface 1.4 failed, trying 1.1
+[    81.014] drmOpenByBusid: drmGetBusid reports pci:0000:00:02.0
+[    81.014] (==) intel(0): Depth 24, (--) framebuffer bpp 32
+[    81.014] (==) intel(0): RGB weight 888
+[    81.014] (==) intel(0): Default visual is TrueColor
+[    81.050] (II) intel(0): Integrated Graphics Chipset: Intel(R) 865G
+[    81.050] (--) intel(0): Chipset: "865G"
+--------------------------------------------------------------------
 
---Sig_/sp5Z2wuOEZ3yjaNUeOKh6uo--
+In both cases, the dri and dri2 extensions were loaded correctly.
+
+Here's the part of the boot-up log showing the graphics detection:
+
+[    1.304112] Linux agpgart interface v0.103
+[    1.304405] agpgart-intel 0000:00:00.0: Intel 865 Chipset
+[    1.304581] agpgart-intel 0000:00:00.0: detected gtt size: 131072K total, 131072K mappable
+[    1.304960] agpgart-intel 0000:00:00.0: detected 8192K stolen memory
+[    1.305364] agpgart-intel 0000:00:00.0: AGP aperture is 128M @ 0xf0000000
+
+The /dev/dri directory does exist:
+
+$ ls -l /dev/dri
+total 0
+crw-rw----+ 1 root video 226, 0 Nov 28 16:12 card0
+
+There is no controlD64 file; I noticed that it is present in the Fedora
+graphical installation environment (which _does_ work).  Is it
+important?  If it is, what driver creates that file?  Or is some udev
+rule messed up?
+
+The Xorg configuration is slightly different from what it was before, 
+but not much.  Here is the relevant section (which hasn't changed):
+
+Section "Device"
+	Identifier  "card0"
+	Driver      "intel"
+	VendorName  "Intel Corporation"
+	BusID       "PCI:0:2:0"
+	Option      "NoAccel" "yes"
+	Option      "BackingStore"      "on"
+EndSection
+
+Do you have any idea what's going wrong and how I can fix it?  Life 
+without a GUI is rather inconvenient.  :-(
+
+Thanks,
+
+Alan Stern
+
