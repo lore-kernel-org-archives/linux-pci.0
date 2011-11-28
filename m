@@ -1,133 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com> <20111118220849.GA25205@suse.de> <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com> <20111121173620.GA5028@suse.de> <20111121181724.GB12011@local> <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com> <20111122153525.GB17268@redhat.com>
-In-Reply-To: <20111122153525.GB17268@redhat.com>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <40906F5E-5E97-44CF-AB95-40355204B63F@gmail.com>
-Cc: "Hans J. Koch" <hjk@hansjkoch.de>, Greg KH <gregkh@suse.de>,
-	tglx@linutronix.de, linux-pci@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>
-From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Date: Tue, 22 Nov 2011 11:54:22 -0500
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:12494
+	"EHLO VA3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751608Ab1K1KlC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Nov 2011 05:41:02 -0500
+Date: Mon, 28 Nov 2011 11:40:55 +0100
+From: Joerg Roedel <joerg.roedel@amd.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<bhelgaas@google.com>
+Subject: Re: [PATCH 0/2] PCI: PRI/PASSID cleanup and fix
+Message-ID: <20111128104055.GI11876@amd.com>
+References: <20111111170319.32668.48479.stgit@bling.home>
+ <20111123104705.GC11876@amd.com>
+ <20111123144510.56ff6d1d@jbarnes-desktop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20111123144510.56ff6d1d@jbarnes-desktop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-On Nov 22, 2011, at 10:35, Michael S. Tsirkin wrote:
-
-> On Tue, Nov 22, 2011 at 10:24:17AM -0500, Jean-Francois Dagenais wrote:
->> 
->> On Nov 21, 2011, at 13:17, Hans J. Koch wrote:
->> 
->>> On Mon, Nov 21, 2011 at 09:36:20AM -0800, Greg KH wrote:
->>>> On Mon, Nov 21, 2011 at 10:31:07AM -0500, Jean-Francois Dagenais wrote:
->>>>> Hi Greg, thanks for your answer...
->>>>> 
->>>>> On Nov 18, 2011, at 17:08, Greg KH wrote:
->>>>> 
->>>>>> On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
->>>>>>> Hello fellow hackers.
->>>>>>> 
->>>>>>> I am maintaining a UIO based driver for a PCI-E data acquisition device.
->>>>>>> 
->>>>>>> I map BAR0 of the device to userspace. I also map two memory areas,
->>>>>>> one is used to feed instructions to the acquisition device, the other
->>>>>>> is used autonomously by the PCI device to write the acquired data.
->>>>>> 
->>>>>> Nice, have a pointer to your driver anywhere so we can include it in the
->>>>>> main kernel tree to make your life easier?
->>>>> As I said in a parallel answer from "Hans J. Koch" <hjk@hansjkoch.de>,
->>>>> the driver, although GPL'ed, is quite uninteresting except for us here at
->>>>> Sonatest.
->>>> 
->>>> I really doubt that,
->>> 
->>> So do I. We never had a driver allocating so much memory.
->>> 
->>>> and you should submit it anyway to allow us to
->>>> change it when the in-kernel apis change in the future.  It will save
->>>> you time in the long run and make things easier for you (look, your
->>>> driver is automatically included in all distros!, people fix your bugs,
->>>> etc.)
->>> 
->>> Exactly.
->>> 
->>>> 
->>>>> About merging the driver to mainline, I guess it would only be interesting for
->>>>> the recipe I demonstrate. Please advise.
->>>> 
->>>> That is a recipe that I'm sure others will use, and need help on in the
->>>> future.
->>> 
->>> They already needed it in the past, and they usually try to get it by
->>> writing me private mail.
->>> 
->>>> 
->>>> So please submit a patch, that will make it easier to help you out.
->>> 
->>> Yes, please do. The more different drivers we have under /drivers/uio, the
->>> better. Didn't you use one of the existing drivers as a template for yours?
->> Of course, and I am making contributions to the kernel as well (ds1wm,  w1_ds2408,
->> ad714x, and more to be merged contribs to blackfin list drivers) because I strongly
->> believe in the community aspect of Linux.
->> 
->> So in the spirit of making the driver more generic, I would like to make this patch
->> something along the lines of a generic uio/pci based large DMA acquisition device
->> driver. Or maybe even complementing the existing uio_generic_pci.c?
->> 
->> The problem is that there are device specific aspects that the "generic" driver would
->> need to take into account, e.g. to map BARx or not, or in our case, there are MFDs
->> embedded in the firmware (xilinx's ds1wm core, and soon, xilinx's spi core). Furthermore,
->> I want the FPGA to be an irq expander since the cores generate interrupts, and a
->> couple of balls on the FPGA are irq signals from external i2c chips.
->> 
->> I don't yet see any way to specify like a setup callback function that could reach a
->> platform module when uio_pci_generic is probing.
->> 
->> I am thinking this through as I write here...
->> 
->> My other persona (C++ programmer) suggests that conceptually, uio_pci_generic is
->> a "base class" and the other more firmware specific items would be in a derived module.
->> In that sense, maybe uio_pci_generic could export it's symbols? So it can be used as
->> uio core functionnality?
->> 
->> So I would still have a module which would contain the specific MFD registration and IRQ
->> functionnality, but the BARx and large DMA mapping would reside in uio_pci_generic...
->> 
->> Any thoughts?
->>> 
->>> Thanks,
->>> Hans
->> Cheers,
->> /jfd
+On Wed, Nov 23, 2011 at 02:45:10PM -0800, Jesse Barnes wrote:
+> On Wed, 23 Nov 2011 11:47:05 +0100
+> Joerg Roedel <joerg.roedel@amd.com> wrote:
 > 
-> BARx can be mapped through sysfs, right?
-> DMA into userspace really needs registration with an iommu and
-> locking userspace memory. This was discussed in the past but
-> no patch surfaced. You can copy some bits from 'VFIO' prototypes,
-> maybe - search for them.
-That is quite interesting. It really seems like my VT-d recipe to create 128MB for my PCI-e
-FPGA to write into is covered by this patch.
-
-My problem is that our FPGA is connected to one of the atom E6XX's PCI-e links, so no
-iommu :( Since our first product had VT-d, the FPGA, uio based module and userspace
-code is designed such that the device sees a huge contiguous memory chunk. This is key
-to the performance of the FPGA, which is essentially decoupled from the CPU for it's real-time
-acquisition.
-
-Can VFIO work without an IOMMU? Or am I better off with a UIO solution?
-
-If it can, I know my current UIO based solution is un-useable without an IOMMU as well. The
-problem I have is that my fallback to using IOMMU mapping, pci_alloc_consistent (i.e. dma_alloc_coherent),
-still will only succeed at 4MB tops, and that's when the module loads from the init scripts. The
-success rate drops rapidly after this moment. Could I get more at arch_init moment maybe?
-
-And are there any other thoughts about ripping out like 256MB from the kernel boot args and
-initializing it later and use it as userspace mapped DMA buffer?
-
+> > On Fri, Nov 11, 2011 at 10:06:23AM -0700, Alex Williamson wrote:
+> > > Alex Williamson (2):
+> > >       PCI: More PRI/PASID cleanup
+> > >       PCI: Enable is not exposed as a PASID capability
+> > 
+> > For both:
+> > 
+> > Reviewed-by: Joerg Roedel <joerg.roedel@amd.com>
+> > Tested-by: Joerg Roedel <joerg.roedel@amd.com>
+> 
+> Ok, thanks guys.  I'll queue these up after Thanksgiving.
 > 
 > -- 
-> MST
+> Jesse Barnes, Intel Open Source Technology Center
+
+Great. Can you provide a seperate branch with these changes that I can
+pull into my tree, please? I have upcoming changes that will conflict
+with these patches. And I would like to solve them before merge.
+
+
+	Joerg
+
+-- 
+AMD Operating System Research Center
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
 
