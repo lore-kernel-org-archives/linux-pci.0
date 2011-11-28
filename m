@@ -1,72 +1,264 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bay0-omc1-s16.bay0.hotmail.com ([65.54.190.27]:36891 "EHLO
-	bay0-omc1-s16.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754966Ab1K2Rum convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Nov 2011 12:50:42 -0500
-Message-ID: <BAY163-W63C79C972B0F87A46B0FDCFBB30@phx.gbl>
-From: Anand Kanaginhal <anand_dk@hotmail.com>
-To: <greg@kroah.com>
-CC: Linux PCI mailing <linux-pci@vger.kernel.org>,
-	linux kernel mailing <linux-kernel@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>
-Subject: RE: PCIe Hotplugging not working
-Date: Tue, 29 Nov 2011 09:50:41 -0800
-In-Reply-To: <20111129142214.GC14845@kroah.com>
-References: <BAY163-W52E309F419E3588206D889FBB30@phx.gbl>,<BAY163-W47DD39095DA3EB108AA3F2FBB30@phx.gbl>,<20111129142214.GC14845@kroah.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 28 Nov 2011 21:21:44 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Lasse Collin <lasse.collin@tukaani.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Jonas Bonn <jonas@southpole.se>, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH-RFC 02/10 v2] lib: add GENERIC_PCI_IOMAP
+Message-ID: <20111128192143.GA16459@redhat.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b5a1327dd8bb38f87cba7ae10b308ec3b63de66a.1322163031.git.mst@redhat.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Many architectures want a generic pci_iomap but
+not the rest of iomap.c. Split that to a separate .c
+file and add a new config symbol. select automatically
+by GENERIC_IOMAP.
 
-Resending as earlier sends failed
-> Date: Tue, 29 Nov 2011 23:22:14 +0900
-> From: greg@kroah.com
-> To: anand_dk@hotmail.com
-> CC: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-hotplug@vger.kernel.org
-> Subject: Re: PCIe Hotplugging not working
-> 
-> On Tue, Nov 29, 2011 at 03:56:12AM -0800, Anand Kanaginhal wrote:
-> > 
-> > 
-> > I am trying to get PCIe endpoint hot - plugging working
-> > 
->
- > The Set up is such that there is one endpoint (our custom device) 
-connected to PCI  switch PLX 8609 8 port 8 lane switch. 
-> > 1. I have my driver module compiled, copied into /lib/modules/`uname -r`/kernel/drivers/char/
-> 
-> Why is a pci driver a "char" driver?  Do you have a pointer to the
-> source of this?
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
 
-I
- am doing an test before putting it in its right place. Another reason 
-is that I am treating it as character device and using IOCTLs for 
-various operations.
-I have attached the framework code here.
-
-> > 2. I run depmod and "modules.pcimap" also got updated with my module. 
-> > 
-> > However
-> >  if I unplug and plug in the endpoint, my driver .probe and .remove functions
-> >  are not being invoked. Is there something more to be done at the bus 
-> > level to get the driver to hot plug ?
-> 
-> You need a pci hotplug controller driver, is that loaded?  That is what
-> is responsible for eventually calling your remove function.
-
-How do I figure out if a pci hotplug controller driver is installed? 
+Here's an updated version (just this one patch was changed).
+Changes from v1:
+	minor tweaks to address comments by Stephen Rothwell 
 
 
-> > I have tried various kernel version, Currently I am trying on 2.6.38.12 (UBUNTU flavor).
-> 
-> We can't help you with distro-specific kernels, please use a kernel.org
-> kernel and we will be glad to help you out.
+ include/asm-generic/io.h        |    4 +-
+ include/asm-generic/iomap.h     |    9 ++-----
+ include/asm-generic/pci_iomap.h |   25 ++++++++++++++++++++
+ lib/Kconfig                     |    4 +++
+ lib/Makefile                    |    1 +
+ lib/iomap.c                     |   38 +-----------------------------
+ lib/pci_iomap.c                 |   48 +++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 85 insertions(+), 44 deletions(-)
+ create mode 100644 include/asm-generic/pci_iomap.h
+ create mode 100644 lib/pci_iomap.c
 
-I have tried with vanilla kernel as well with the same results.
-
-> greg k-h
-
-Thanks
-Anand 		 	   		  
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index 9120887..dddc61d 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -19,6 +19,8 @@
+ #include <asm-generic/iomap.h>
+ #endif
+ 
++#include <asm-generic/pci_iomap.h>
++
+ #ifndef mmiowb
+ #define mmiowb() do {} while (0)
+ #endif
+@@ -283,9 +285,7 @@ static inline void writesb(const void __iomem *addr, const void *buf, int len)
+ #define __io_virt(x) ((void __force *) (x))
+ 
+ #ifndef CONFIG_GENERIC_IOMAP
+-/* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
+ struct pci_dev;
+-extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
+ static inline void pci_iounmap(struct pci_dev *dev, void __iomem *p)
+ {
+ }
+diff --git a/include/asm-generic/iomap.h b/include/asm-generic/iomap.h
+index 98dcd76..8a3d4fd 100644
+--- a/include/asm-generic/iomap.h
++++ b/include/asm-generic/iomap.h
+@@ -67,18 +67,15 @@ extern void ioport_unmap(void __iomem *);
+ #endif
+ 
+ #ifdef CONFIG_PCI
+-/* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
++/* Destroy a virtual mapping cookie for a PCI BAR (memory or IO) */
+ struct pci_dev;
+-extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
+ extern void pci_iounmap(struct pci_dev *dev, void __iomem *);
+ #else
+ struct pci_dev;
+-static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max)
+-{
+-	return NULL;
+-}
+ static inline void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
+ { }
+ #endif
+ 
++#include <asm-generic/pci_iomap.h>
++
+ #endif
+diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
+new file mode 100644
+index 0000000..8de4b73
+--- /dev/null
++++ b/include/asm-generic/pci_iomap.h
+@@ -0,0 +1,25 @@
++/* Generic I/O port emulation, based on MN10300 code
++ *
++ * Copyright (C) 2007 Red Hat, Inc. All Rights Reserved.
++ * Written by David Howells (dhowells@redhat.com)
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public Licence
++ * as published by the Free Software Foundation; either version
++ * 2 of the Licence, or (at your option) any later version.
++ */
++#ifndef __ASM_GENERIC_PCI_IOMAP_H
++#define __ASM_GENERIC_PCI_IOMAP_H
++
++struct pci_dev;
++#ifdef CONFIG_PCI
++/* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
++extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
++#else
++static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max)
++{
++	return NULL;
++}
++#endif
++
++#endif /* __ASM_GENERIC_IO_H */
+diff --git a/lib/Kconfig b/lib/Kconfig
+index 0058927..36884b4 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -19,8 +19,12 @@ config RATIONAL
+ config GENERIC_FIND_FIRST_BIT
+ 	bool
+ 
++config GENERIC_PCI_IOMAP
++	bool
++
+ config GENERIC_IOMAP
+ 	bool
++	select GENERIC_PCI_IOMAP
+ 
+ config CRC_CCITT
+ 	tristate "CRC-CCITT functions"
+diff --git a/lib/Makefile b/lib/Makefile
+index a4da283..609b2adc 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -33,6 +33,7 @@ endif
+ 
+ lib-$(CONFIG_HOTPLUG) += kobject_uevent.o
+ obj-$(CONFIG_GENERIC_IOMAP) += iomap.o
++obj-$(CONFIG_GENERIC_PCI_IOMAP) += pci_iomap.o
+ obj-$(CONFIG_HAS_IOMEM) += iomap_copy.o devres.o
+ obj-$(CONFIG_CHECK_SIGNATURE) += check_signature.o
+ obj-$(CONFIG_DEBUG_LOCKING_API_SELFTESTS) += locking-selftest.o
+diff --git a/lib/iomap.c b/lib/iomap.c
+index 5dbcb4b..ada922a 100644
+--- a/lib/iomap.c
++++ b/lib/iomap.c
+@@ -242,45 +242,11 @@ EXPORT_SYMBOL(ioport_unmap);
+ #endif /* CONFIG_HAS_IOPORT */
+ 
+ #ifdef CONFIG_PCI
+-/**
+- * pci_iomap - create a virtual mapping cookie for a PCI BAR
+- * @dev: PCI device that owns the BAR
+- * @bar: BAR number
+- * @maxlen: length of the memory to map
+- *
+- * Using this function you will get a __iomem address to your device BAR.
+- * You can access it using ioread*() and iowrite*(). These functions hide
+- * the details if this is a MMIO or PIO address space and will just do what
+- * you expect from them in the correct way.
+- *
+- * @maxlen specifies the maximum length to map. If you want to get access to
+- * the complete BAR without checking for its length first, pass %0 here.
+- * */
+-void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+-{
+-	resource_size_t start = pci_resource_start(dev, bar);
+-	resource_size_t len = pci_resource_len(dev, bar);
+-	unsigned long flags = pci_resource_flags(dev, bar);
+-
+-	if (!len || !start)
+-		return NULL;
+-	if (maxlen && len > maxlen)
+-		len = maxlen;
+-	if (flags & IORESOURCE_IO)
+-		return ioport_map(start, len);
+-	if (flags & IORESOURCE_MEM) {
+-		if (flags & IORESOURCE_CACHEABLE)
+-			return ioremap(start, len);
+-		return ioremap_nocache(start, len);
+-	}
+-	/* What? */
+-	return NULL;
+-}
+-
++/* Hide the details if this is a MMIO or PIO address space and just do what
++ * you expect in the correct way. */
+ void pci_iounmap(struct pci_dev *dev, void __iomem * addr)
+ {
+ 	IO_COND(addr, /* nothing */, iounmap(addr));
+ }
+-EXPORT_SYMBOL(pci_iomap);
+ EXPORT_SYMBOL(pci_iounmap);
+ #endif /* CONFIG_PCI */
+diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
+new file mode 100644
+index 0000000..4b0fdc2
+--- /dev/null
++++ b/lib/pci_iomap.c
+@@ -0,0 +1,48 @@
++/*
++ * Implement the default iomap interfaces
++ *
++ * (C) Copyright 2004 Linus Torvalds
++ */
++#include <linux/pci.h>
++#include <linux/io.h>
++
++#include <linux/export.h>
++
++#ifdef CONFIG_PCI
++/**
++ * pci_iomap - create a virtual mapping cookie for a PCI BAR
++ * @dev: PCI device that owns the BAR
++ * @bar: BAR number
++ * @maxlen: length of the memory to map
++ *
++ * Using this function you will get a __iomem address to your device BAR.
++ * You can access it using ioread*() and iowrite*(). These functions hide
++ * the details if this is a MMIO or PIO address space and will just do what
++ * you expect from them in the correct way.
++ *
++ * @maxlen specifies the maximum length to map. If you want to get access to
++ * the complete BAR without checking for its length first, pass %0 here.
++ * */
++void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
++{
++	resource_size_t start = pci_resource_start(dev, bar);
++	resource_size_t len = pci_resource_len(dev, bar);
++	unsigned long flags = pci_resource_flags(dev, bar);
++
++	if (!len || !start)
++		return NULL;
++	if (maxlen && len > maxlen)
++		len = maxlen;
++	if (flags & IORESOURCE_IO)
++		return ioport_map(start, len);
++	if (flags & IORESOURCE_MEM) {
++		if (flags & IORESOURCE_CACHEABLE)
++			return ioremap(start, len);
++		return ioremap_nocache(start, len);
++	}
++	/* What? */
++	return NULL;
++}
++
++EXPORT_SYMBOL(pci_iomap);
++#endif /* CONFIG_PCI */
+-- 
+1.7.5.53.gc233e
