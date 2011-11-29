@@ -1,58 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:36734 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755826Ab1KOW1D convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2011 17:27:03 -0500
-Date: Tue, 15 Nov 2011 17:27:01 -0500 (EST)
-From: James Paradis <jparadis@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
-	mstowe@redhat.com, matthew wilcox <matthew.wilcox@linux.intel.com>,
-	jbarnes@virtuousgeek.org, Matthew Wilcox <matthew@wil.cx>,
-	Don Dutile <ddutile@redhat.com>
-Subject: Re: [PATCH] pci: Workaround Stratus broken PCIE hierarchy
-Message-ID: <7913c5e8-ea95-4f6f-aa21-33b84e8b931f@zmail15.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <CAErSpo5eZ=4yqnMFpFjTOqGvK6p4mOmsppJbodeGe+vkjfKdbw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:65128 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827Ab1K2Dyf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Nov 2011 22:54:35 -0500
+Message-ID: <1322538856.19120.126.camel@bling.home>
+Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexey Kardashevskiy <aik@au1.ibm.com>
+Cc: chrisw@sous-sol.org, pmac@au1.ibm.com, dwg@au1.ibm.com,
+	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org
+Date: Mon, 28 Nov 2011 20:54:16 -0700
+In-Reply-To: <4ED43CFE.8040009@au1.ibm.com>
+References: <20111103195452.21259.93021.stgit@bling.home>
+	 <4ED43AD9.5090509@au1.ibm.com> <4ED43CFE.8040009@au1.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-BTW - for everyone's edification, here is a report on fedoraforum.org
-that looks suspiciously like the same problem we're dealing with:
-
-http://forums.fedoraforum.org/showthread.php?t=255025
-
-The mobo worked with F13, broke with F14, nothing he did seemed to
-bring the keyboard back, ended up fixing it by getting another
-brand of motherboard.  I'm going to see if I can find a copy of
-that motherboard for testing...
-
---jim
-
------ Original Message -----
-> On Fri, Nov 11, 2011 at 12:13 PM, Don Dutile <ddutile@redhat.com>
-> wrote:
-> > On 11/11/2011 12:41 PM, James Paradis wrote:
-> >>
-> >> Hmmm... would it be better to do this as a quirk or as a boot
-> >> parameter?  I've heard reports that other systems may be running
-> >
-> > Hearsay?  if you have definite cases, then please share them,
-> > so folks know when to flip the boot parameter on.  note: it would
-> > have to be
-> > an early boot param as well.
+On Tue, 2011-11-29 at 13:01 +1100, Alexey Kardashevskiy wrote:
+> Hi all,
 > 
-> It'd definitely be good to know all the specific cases.
+> Another problem I hit on POWER - MSI interrupts allocation. The existing VFIO does not expect a PBH
+> to support less interrupts that a device might request. In my case, PHB's limit is 8 interrupts
+> while my test card (10Gb ethernet CXGB3) wants 9. Below are the patches to demonstrate the idea.
+
+Seems reasonable.  I assume we'd need similar for vfio_pci_setup_msi,
+though I haven't seen anything use more than a single MSI interrupt.
+Thanks,
+
+Alex
+
+> KERNEL patch:
 > 
-> But merely sharing them so folks will know when to use the parameter
-> is a broken model.  We should make it work automatically, either with
-> some sort of machine-dependent quirk, or (preferably) with a change
-> to
-> the generic algorithm so it can handle these "broken" topologies
-> along
-> with all the correct ones.
+> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+> index 7d45c6b..d44b9bf 100644
+> --- a/drivers/vfio/pci/vfio_pci_intrs.c
+> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
+> @@ -458,17 +458,32 @@ int vfio_pci_setup_msix(struct vfio_pci_device *vdev, int nvec, int __user *inta
+>  		vdev->msix[i].entry = i;
+>  		vdev->ev_msix[i] = ctx;
+>  	}
+> -	if (!ret)
+> +	if (!ret) {
+>  		ret = pci_enable_msix(pdev, vdev->msix, nvec);
+> +		/*
+> +		   The kernel is unable to allocate requested number of IRQs
+> +		   and returned the available number.
+> +		 */
+> +		if (0 < ret) {
+> +			ret = pci_enable_msix(pdev, vdev->msix, ret);
+> +		}
+> +	}
+>  	vdev->msix_nvec = 0;
+> -	for (i = 0; i < nvec && !ret; i++) {
+> -		ret = request_irq(vdev->msix[i].vector, msihandler, 0,
+> -				  "vfio", vdev->ev_msix[i]);
+> -		if (ret)
+> -			break;
+> -		vdev->msix_nvec = i+1;
+> +	if (0 == ret) {
+> +		vdev->msix_nvec = 0;
+> +		ret = 0;
+> +		for (i = 0; i < nvec && !ret; i++) {
+> +			ret = request_irq(vdev->msix[i].vector, msihandler, 0,
+> +					"vfio", vdev->ev_msix[i]);
+> +			if (ret)
+> +				break;
+> +			vdev->msix_nvec = i+1;
+> +		}
+> +		if ((0 == vdev->msix_nvec) && (0 != ret))
+> +			vfio_pci_drop_msix(vdev);
+> +		else
+> +			ret = vdev->msix_nvec;
+>  	}
+> -	if (ret)
+> -		vfio_pci_drop_msix(vdev);
+> +
+>  	return ret;
+>  }
 > 
-> Bjorn
+> === end ===
 > 
+> 
+> QEMU patch:
+> 
+> diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
+> index 020961a..980eec7 100644
+> --- a/hw/vfio_pci.c
+> +++ b/hw/vfio_pci.c
+> @@ -341,7 +341,8 @@ static void vfio_enable_msi(VFIODevice *vdev, bool msix)
+>          }
+>      }
+> 
+> -    if (ioctl(vdev->fd, VFIO_DEVICE_SET_IRQ_EVENTFDS, fds)) {
+> +    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQ_EVENTFDS, fds);
+> +    if (0 > ret) {
+>          fprintf(stderr, "vfio: Error: Failed to setup MSI/X fds %s\n",
+>                  strerror(errno));
+>          for (i = 0; i < vdev->nr_vectors; i++) {
+> @@ -355,6 +356,8 @@ static void vfio_enable_msi(VFIODevice *vdev, bool msix)
+>          qemu_free(vdev->msi_vectors);
+>          vdev->nr_vectors = 0;
+>          return;
+> +    } else if (0 < ret) {
+> +        vdev->nr_vectors = ret;
+>      }
+> 
+>      vdev->interrupt = msix ? INT_MSIX : INT_MSI;
+> 
+> 
+> === end ===
+
+
