@@ -1,44 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:38037
-	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751520Ab1KQU4j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Nov 2011 15:56:39 -0500
-Date: Thu, 17 Nov 2011 14:56:33 -0600
-From: Scott Wood <scottwood@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<chrisw@sous-sol.org>, <aik@au1.ibm.com>, <pmac@au1.ibm.com>,
-	<dwg@au1.ibm.com>, <joerg.roedel@amd.com>, <agraf@suse.de>,
-	<benve@cisco.com>, <aafabbri@cisco.com>, <B08248@freescale.com>,
-	<B07421@freescale.com>, <avi@redhat.com>, <kvm@vger.kernel.org>,
-	<qemu-devel@nongnu.org>, <iommu@lists.linux-foundation.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
-Message-ID: <20111117205633.GA16468@schlenkerla.am.freescale.net>
-References: <20111103195452.21259.93021.stgit@bling.home>
- <20111111175118.GA6946@phenom.dumpdata.com>
- <1321049456.2682.220.camel@bling.home>
- <20111116165227.GB2793@phenom.dumpdata.com>
- <1321561337.2633.40.camel@x201.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 29 Nov 2011 20:54:22 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Chris Metcalf <cmetcalf@tilera.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH-RFC 2/2] tile: switch to GENERIC_PCI_IOMAP
+Message-ID: <c5893cb30ae99a7e3c48b3fd209c770cd55c87ef.1322592495.git.mst@redhat.com>
+References: <cover.1322592494.git.mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1321561337.2633.40.camel@x201.home>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1322592494.git.mst@redhat.com>
+To: unlisted-recipients:; (no To-header on input)
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 17, 2011 at 01:22:17PM -0700, Alex Williamson wrote:
-> On Wed, 2011-11-16 at 11:52 -0500, Konrad Rzeszutek Wilk wrote:
-> > On Fri, Nov 11, 2011 at 03:10:56PM -0700, Alex Williamson wrote:
-> > What would be the return value if somebody tried to unmask an edge one?
-> > Should that be documented here? -ENOSPEC?
-> 
-> I would assume EINVAL or EFAULT since the user is providing an invalid
-> argument/bad address.
+tile now has working stubs for ioport_map and ioremap
+such that the generic pci_iomap will DTRT: cast to
+pointer on memory and return NULL and log message on IO map.
 
-EINVAL.  EFAULT is normally only used for when the user passes a bad
-virtual memory address to the kernel.  This isn't an address at all, it's
-an index that points to an object for which this operation does not make
-sense.
+Switch it over to GENERIC_PCI_IOMAP.
 
--Scott
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ arch/tile/Kconfig           |    1 +
+ arch/tile/include/asm/pci.h |    2 +-
+ arch/tile/kernel/pci.c      |   21 ---------------------
+ 3 files changed, 2 insertions(+), 22 deletions(-)
 
+diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
+index 70a0de4..11270ca 100644
+--- a/arch/tile/Kconfig
++++ b/arch/tile/Kconfig
+@@ -321,6 +321,7 @@ config PCI
+ 	bool "PCI support"
+ 	default y
+ 	select PCI_DOMAINS
++	select GENERIC_PCI_IOMAP
+ 	---help---
+ 	  Enable PCI root complex support, so PCIe endpoint devices can
+ 	  be attached to the Tile chip.  Many, but not all, PCI devices
+diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
+index 7f03cef..1d25fea 100644
+--- a/arch/tile/include/asm/pci.h
++++ b/arch/tile/include/asm/pci.h
+@@ -16,6 +16,7 @@
+ #define _ASM_TILE_PCI_H
+ 
+ #include <linux/pci.h>
++#include <asm-generic/pci_iomap.h>
+ 
+ /*
+  * Structure of a PCI controller (host bridge)
+@@ -49,7 +50,6 @@ struct pci_controller {
+ int __devinit tile_pci_init(void);
+ int __devinit pcibios_init(void);
+ 
+-void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
+ static inline void pci_iounmap(struct pci_dev *dev, void __iomem *addr) {}
+ 
+ void __devinit pcibios_fixup_bus(struct pci_bus *bus);
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 2a8014c..1b6244e 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -465,27 +465,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return 0;
+ }
+ 
+-void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max)
+-{
+-	unsigned long start = pci_resource_start(dev, bar);
+-	unsigned long len = pci_resource_len(dev, bar);
+-	unsigned long flags = pci_resource_flags(dev, bar);
+-
+-	if (!len)
+-		return NULL;
+-	if (max && len > max)
+-		len = max;
+-
+-	if (!(flags & IORESOURCE_MEM)) {
+-		pr_info("PCI: Trying to map invalid resource %#lx\n", flags);
+-		start = 0;
+-	}
+-
+-	return (void __iomem *)start;
+-}
+-EXPORT_SYMBOL(pci_iomap);
+-
+-
+ /****************************************************************
+  *
+  * Tile PCI config space read/write routines
+-- 
+1.7.5.53.gc233e
