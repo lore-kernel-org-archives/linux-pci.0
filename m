@@ -1,67 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 1/3] PCI: Fix starting basis for resource requests
-To: jbarnes@virtuousgeek.org
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org
-Date: Wed, 09 Nov 2011 17:43:45 -0700
-Message-ID: <20111110004345.5866.80803.stgit@amt.stowe>
-In-Reply-To: <20111110004339.5866.28478.stgit@amt.stowe>
-References: <20111110004339.5866.28478.stgit@amt.stowe>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <a3bc9cb56040258dabc7b466ea217f4515b68b7d.1322592495.git.mst@redhat.com>
+References: <cover.1322592494.git.mst@redhat.com> <a3bc9cb56040258dabc7b466ea217f4515b68b7d.1322592495.git.mst@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 Nov 2011 13:04:12 -0800
+Message-ID: <CAErSpo4N8drqe5bHVjzXy_h0HTC8Reye4+8viN4c6TtmwFheXA@mail.gmail.com>
+Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Chris Metcalf <cmetcalf@tilera.com>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Myron Stowe <mstowe@redhat.com>
+On Tue, Nov 29, 2011 at 10:54 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> I think panic on iomap is there just for debugging.
+> If we return NULL instead, the generic pci_iomap will
+> DTRT so we don't need to roll our own.
 
-pci_revert_fw_address() is used to reinstate a PCI device's original
-FW-assigned BIOS BAR value(s) if normal resource assignment fails.
+Just to be explicit about what "doing the right thing" means, here's
+what I think is changing (I think the new behavior is OK, but it *is*
+different):
 
-When attempting to reinstate an address, the point within the resource
-tree from which to attempt the new resource request should be the parent
-resource corresponding to the device, not the base of the resource tree
-(ioport_resource or iomem_resource).  For PCI devices this would
-typically be the resource corresponding to the upstream PCI host bridge
-or P2P bridge aperture.
+Old behavior: Caller calls pci_iomap(), which panics in ioport_map().
 
-This patch sets the point within the resource tree to attempt a new
-resource assignment request to the PCI device's parent resource and only
-if that fails does it fall back to the base ioport_resource or
-iomem_resource.
+New behavior: Caller calls pci_iomap(), ioport_map() returns NULL,
+pci_iomap() returns NULL (failure), caller may check for failure.  If
+caller does not check for failure and passes the NULL to
+ioread()/iowrite(), we WARN in bad_io_access().
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+>  static inline void __iomem *ioport_map(unsigned long port, unsigned int len)
+>  {
+> -       return (void __iomem *) ioport_panic();
+> +       pr_info("Trying to map an IO resource - it does not exit on tile.\n");
+> +       return NULL;
 
- drivers/pci/setup-res.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+s/exit/exist/
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 51a9095..ad8c4ae 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -164,15 +164,18 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
- 	resource_size_t start, end;
- 	int ret = 0;
- 
--	if (res->flags & IORESOURCE_IO)
--		root = &ioport_resource;
--	else
--		root = &iomem_resource;
--
- 	start = res->start;
- 	end = res->end;
- 	res->start = dev->fw_addr[resno];
- 	res->end = res->start + size - 1;
-+
-+	root = pci_find_parent_resource(dev, res);
-+	if (!root)
-+		if (res->flags & IORESOURCE_IO)
-+			root = &ioport_resource;
-+		else
-+			root = &iomem_resource;
-+
- 	dev_info(&dev->dev, "BAR %d: trying firmware assignment %pR\n",
- 		 resno, res);
- 	conflict = request_resource_conflict(root, res);
+Since we only expect to see this message during debugging, maybe it
+could be more informative, e.g., use dump_stack() to identify the
+offending driver?  I don't think either the "Trying to map" message or
+the "Bad IO access" message is enough to actually make progress in
+debugging.
 
+Bjorn
