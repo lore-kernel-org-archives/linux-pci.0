@@ -1,82 +1,370 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:36674 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592Ab1K0USY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Nov 2011 15:18:24 -0500
-Received: by bke11 with SMTP id 11so7464254bke.19
-        for <linux-pci@vger.kernel.org>; Sun, 27 Nov 2011 12:18:22 -0800 (PST)
-Message-ID: <4ED29B09.10701@gmail.com>
-Date: Sun, 27 Nov 2011 23:18:17 +0300
-From: Alex <alex.vizor@gmail.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:49309 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827Ab1K2EeQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Nov 2011 23:34:16 -0500
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <aik@au1.ibm.com>;
+	Tue, 29 Nov 2011 04:28:57 +1000
+Message-ID: <4ED460BE.1070504@au1.ibm.com>
+Date: Tue, 29 Nov 2011 15:34:06 +1100
+From: Alexey Kardashevskiy <aik@au1.ibm.com>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: WARNING: at drivers/pci/pci-driver.c:607 pci_has_legacy_pm_support+0x57/0x5d()
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: chrisw@sous-sol.org, pmac@au1.ibm.com, dwg@au1.ibm.com,
+	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
+References: <20111103195452.21259.93021.stgit@bling.home>  <4ED43AD9.5090509@au1.ibm.com> <1322538366.19120.122.camel@bling.home>
+In-Reply-To: <1322538366.19120.122.camel@bling.home>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi guys,
+Hi!
 
-Since bugzilla.kernel.org is in down I'm writing this letter. On every 
-resume I get following warnings in kernel log:
-Nov 25 22:09:43 alex kernel: [  702.991779] ------------[ cut here 
-]------------
-Nov 25 22:09:43 alex kernel: [  702.991790] WARNING: at 
-drivers/pci/pci-driver.c:607 pci_has_legacy_pm_support+0x57/0x5d()
-Nov 25 22:09:43 alex kernel: [  702.991792] Hardware name: 4170CTO
-Nov 25 22:09:43 alex kernel: [  702.991797] Modules linked in: fcoe 
-libfcoe 8021q lockd libfc scsi_transport_fc garp stp llc scsi_tgt
-  ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 nf_conntrack_ipv4 
-nf_defrag_ipv4 ip6table_filter xt_state nf_conntrack ip6_tables hdaps
-(O) thinkpad_ec(O) snd_hda_codec_hdmi snd_hda_codec_conexant 
-snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device arc4 iwlwif
-i uvcvideo videodev mac80211 media snd_pcm e1000e snd_timer 
-snd_page_alloc iTCO_wdt iTCO_vendor_support v4l2_compat_ioctl32 cfg80211
-thinkpad_acpi snd wmi rfkill i2c_i801 soundcore pcspkr joydev microcode 
-uinput sunrpc sdhci_pci sdhci mmc_core [last unloaded: scsi_w
-ait_scan]
-Nov 25 22:09:43 alex kernel: [  702.991857] Pid: 3107, comm: kworker/u:0 
-Tainted: G           O 3.2.0-0.rc3.git0.1.fc16.x86_64 #1
-Nov 25 22:09:43 alex kernel: [  702.991859] Call Trace:
-Nov 25 22:09:43 alex kernel: [  702.991867]  [<ffffffff810589c2>] 
-warn_slowpath_common+0x83/0x9b
-Nov 25 22:09:43 alex kernel: [  702.991872]  [<ffffffff810589f4>] 
-warn_slowpath_null+0x1a/0x1c
-Nov 25 22:09:43 alex kernel: [  702.991876]  [<ffffffff81249682>] 
-pci_has_legacy_pm_support+0x57/0x5d
-Nov 25 22:09:43 alex kernel: [  702.991881] ehci_hcd 0000:00:1d.0: PCI 
-INT A disabled
-Nov 25 22:09:43 alex kernel: [  702.991884]  [<ffffffff81249c19>] 
-pci_pm_suspend+0x39/0x100
-Nov 25 22:09:43 alex kernel: [  702.991891]  [<ffffffff8134193c>] 
-pm_op+0x8b/0x149
-Nov 25 22:09:43 alex kernel: [  702.991895]  [<ffffffff81341bec>] 
-__device_suspend+0x194/0x247
-Nov 25 22:09:43 alex kernel: [  702.991897] ehci_hcd 0000:00:1a.0: PCI 
-INT A disabled
-Nov 25 22:09:43 alex kernel: [  702.991900]  [<ffffffff81341cbe>] 
-async_suspend+0x1f/0x5d
-Nov 25 22:09:43 alex kernel: [  702.991905]  [<ffffffff810790cd>] 
-async_run_entry_fn+0x9e/0x131
-Nov 25 22:09:43 alex kernel: [  702.991909]  [<ffffffff8107902f>] ? 
-async_schedule+0x17/0x17
-Nov 25 22:09:43 alex kernel: [  702.991916]  [<ffffffff8106efa8>] 
-process_one_work+0x176/0x2a9
-Nov 25 22:09:43 alex kernel: [  702.991920]  [<ffffffff8106d040>] ? 
-need_to_create_worker+0x12/0x26
-Nov 25 22:09:43 alex kernel: [  702.991925]  [<ffffffff8106fab6>] 
-worker_thread+0xda/0x15d
-Nov 25 22:09:43 alex kernel: [  702.991929]  [<ffffffff8106f9dc>] ? 
-manage_workers+0x176/0x176
-Nov 25 22:09:43 alex kernel: [  702.991933]  [<ffffffff810731b3>] 
-kthread+0x84/0x8c
-Nov 25 22:09:43 alex kernel: [  702.991938]  [<ffffffff815281b4>] 
-kernel_thread_helper+0x4/0x10
-Nov 25 22:09:43 alex kernel: [  702.991943]  [<ffffffff8107312f>] ? 
-kthread_worker_fn+0x148/0x148
-Nov 25 22:09:43 alex kernel: [  702.991947]  [<ffffffff815281b0>] ? 
-gs_change+0x13/0x13
-Nov 25 22:09:43 alex kernel: [  702.991950] ---[ end trace 
-6d1eab899804323c ]---
+On 29/11/11 14:46, Alex Williamson wrote:
+> On Tue, 2011-11-29 at 12:52 +1100, Alexey Kardashevskiy wrote:
+>> Hi!
+>>
+>> I tried (successfully) to run it on POWER and while doing that I found some issues. I'll try to
+>> explain them in separate mails.
+> 
+> Great!
+> 
+>> IOMMU domain setup. On POWER, the linux drivers capable of DMA transfer want to know
+>> a DMA window, i.e. its start and length in the PHB address space. This comes from
+>> hardware. On X86 (correct if I am wrong), every device driver in the guest allocates
+>> memory from the same pool.
+> 
+> Yes, current VT-d/AMD-Vi provide independent IOVA spaces for each
+> device.
+> 
+>>  On POWER, device drivers get DMA window and allocate pages
+>> for DMA within this window. In the case of VFIO, that means that QEMU has to
+>> preallocate this DMA window before running a quest, pass it to a guest (via
+>> device tree) and then a guest tells the host what pages are taken/released by
+>> calling map/unmap callbacks of iommu_ops. Deallocation is made in a device detach
+>> callback as I did not want to add more ioctls.
+>> So, there are 2 patches:
+>>
+>> - new VFIO_IOMMU_SETUP ioctl introduced which allocates a DMA window via IOMMU API on
+>> POWER.
+>> btw do we need an additional capability bit for it?
+>>
+>> KERNEL PATCH:
+>>
+>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+>> index 10615ad..a882e08 100644
+>> --- a/drivers/iommu/iommu.c
+>> +++ b/drivers/iommu/iommu.c
+>> @@ -247,3 +247,12 @@ int iommu_device_group(struct device *dev, unsigned int *groupid)
+>>  	return -ENODEV;
+>>  }
+>>  EXPORT_SYMBOL_GPL(iommu_device_group);
+>> +
+>> +int iommu_setup(struct iommu_domain *domain,
+>> +		size_t requested_size, size_t *allocated_size,
+>> +		phys_addr_t *start_address)
+>> +{
+>> +	return domain->ops->setup(domain, requested_size, allocated_size,
+>> +			start_address);
+>> +}
+>> +EXPORT_SYMBOL_GPL(iommu_setup);
+> 
+> requested_size seems redundant both here and in struct vfio_setup.  We
+> can just pre-load size/start with desired values.  I assume x86 IOMMUs
+> would ignore requested values and return start = 0 and size = hardware
+> decoder address bits.  The IOMMU API currently allows:
+> 
+> iommu_domain_alloc
+> [iommu_attach_device]
+> [iommu_map]
+> [iommu_unmap]
+> [iommu_detach_device]
+> iommu_domain_free
+> 
+> where everything between alloc and free can be called in any order.  How
+> does setup fit into that model?
 
-Could you please fix this?
+This is why I posted a QEMU patch :)
+
+> For this it seems like we'd almost want
+> to combine alloc, setup, and the first attach into a single call (ie.
+> create a domain with this initial device and these parameters), then
+> subsequent attaches would only allow compatible devices.
+
+
+Not exactly. This setup is more likely to get combined with domain alloc only.
+On POWER, we have iommu_table per DMA window which can be or can be not shared
+between devices. At the moment there is one window per PCIe _device_ (so multiple
+functions of multiport network adapter share one DMA window) and one window for
+all the devices behind PCIe-to-PCI bridge. It is more or less so.
+
+
+> I'm a little confused though, is the window determined by hardware or is
+> it configurable via requested_size?
+
+
+The window parameters are calculated by software and then written to hardware so
+hardware does filtering and prevents bad devices from memory corruption.
+
+
+> David had suggested that we could
+> implement a VFIO_IOMMU_GET_INFO ioctl that returns something like:
+> 
+> struct vfio_iommu_info {
+>         __u32   argsz;
+>         __u32   flags;
+>         __u64   iova_max;       /* Maximum IOVA address */
+>         __u64   iova_min;       /* Minimum IOVA address */
+>         __u64   pgsize_bitmap;  /* Bitmap of supported page sizes */
+> };
+> 
+> The thought being a TBD IOMMU API interface reports the hardware
+> determined IOVA range and we could fudge it on x86 for now reporting
+> 0/~0.  Maybe we should replace iova_max/iova_min with
+> iova_base/iova_size and allow the caller to request a size by setting
+> iova_size and matching bit in the flags.
+
+
+No, we need some sort of SET_INFO, not GET as we want QEMU to decide on a DMA
+window size.
+
+Or simply add these parameters to domain allocation callback.
+
+
+>> diff --git a/drivers/vfio/vfio_iommu.c b/drivers/vfio/vfio_iommu.c
+>> index 029dae3..57fb70d 100644
+>> --- a/drivers/vfio/vfio_iommu.c
+>> +++ b/drivers/vfio/vfio_iommu.c
+>> @@ -507,6 +507,23 @@ static long vfio_iommu_unl_ioctl(struct file *filep,
+>>
+>>  		if (!ret && copy_to_user((void __user *)arg, &dm, sizeof dm))
+>>  			ret = -EFAULT;
+>> +
+>> +	} else if (cmd == VFIO_IOMMU_SETUP) {
+>> +		struct vfio_setup setup;
+>> +		size_t allocated_size = 0;
+>> +		phys_addr_t start_address = 0;
+>> +
+>> +		if (copy_from_user(&setup, (void __user *)arg, sizeof setup))
+>> +			return -EFAULT;
+>> +
+>> +		printk("udomain %p, priv=%p\n", iommu->domain, iommu->domain->priv);
+>> +		ret = iommu_setup(iommu->domain, setup.requested_size,
+>> +				&allocated_size, &start_address);
+>> +		setup.allocated_size = allocated_size;
+>> +		setup.start_address = start_address;
+>> +
+>> +		if (!ret && copy_to_user((void __user *)arg, &setup, sizeof setup))
+>> +			ret = -EFAULT;
+>>  	}
+>>  	return ret;
+>>  }
+>> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+>> index 93617e7..355cf8b 100644
+>> --- a/include/linux/iommu.h
+>> +++ b/include/linux/iommu.h
+>> @@ -45,6 +45,7 @@ struct iommu_domain {
+>>
+>>  #define IOMMU_CAP_CACHE_COHERENCY	0x1
+>>  #define IOMMU_CAP_INTR_REMAP		0x2	/* isolates device intrs */
+>> +#define IOMMU_CAP_SETUP_REQUIRED	0x3	/* requires setup to be called */
+>>
+>>  #ifdef CONFIG_IOMMU_API
+>>
+>> @@ -62,6 +63,9 @@ struct iommu_ops {
+>>  	int (*domain_has_cap)(struct iommu_domain *domain,
+>>  			      unsigned long cap);
+>>  	int (*device_group)(struct device *dev, unsigned int *groupid);
+>> +	int (*setup)(struct iommu_domain *domain,
+>> +		     size_t requested_size, size_t *allocated_size,
+>> +		     phys_addr_t *start_address);
+>>  };
+>>
+>>  extern int bus_set_iommu(struct bus_type *bus, struct iommu_ops *ops);
+>> @@ -80,6 +84,9 @@ extern phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain,
+>>  				      unsigned long iova);
+>>  extern int iommu_domain_has_cap(struct iommu_domain *domain,
+>>  				unsigned long cap);
+>> +extern int iommu_setup(struct iommu_domain *domain,
+>> +		       size_t requested_size, size_t *allocated_size,
+>> +		       phys_addr_t *start_address);
+>>  extern void iommu_set_fault_handler(struct iommu_domain *domain,
+>>  					iommu_fault_handler_t handler);
+>>  extern int iommu_device_group(struct device *dev, unsigned int *groupid);
+>> diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+>> index 971e3b1..5e0ee75 100644
+>> --- a/include/linux/vfio.h
+>> +++ b/include/linux/vfio.h
+>> @@ -26,6 +26,7 @@
+>>   * Author: Michael S. Tsirkin <mst@redhat.com>
+>>   */
+>>  #include <linux/types.h>
+>> +#include <linux/ioctl.h>
+>>
+>>  #ifndef VFIO_H
+>>  #define VFIO_H
+>> @@ -172,4 +173,13 @@ enum {
+>>  	VFIO_PCI_NUM_IRQS
+>>  };
+>>
+>> +/* Setup domain */
+>> +#define VFIO_IOMMU_SETUP		_IOWR(';', 150, struct vfio_setup)
+>> +
+>> +struct vfio_setup {
+>> +	__u64	requested_size;
+>> +	__u64	allocated_size;
+>> +	__u64	start_address;
+>> +};
+>> +
+>>   #endif /* VFIO_H */
+>>
+>> === end ===
+>>
+>>
+>> QEMU PATCH:
+>>
+>> diff --git a/hw/linux-vfio.h b/hw/linux-vfio.h
+>> index ac48d85..a2c719f 100644
+>> --- a/hw/linux-vfio.h
+>> +++ b/hw/linux-vfio.h
+>> @@ -172,4 +172,13 @@ enum {
+>>  	VFIO_PCI_NUM_IRQS
+>>  };
+>>
+>> +/* Setup domain */
+>> +#define VFIO_IOMMU_SETUP                _IOWR(';', 150, struct vfio_setup)
+>> +
+>> +struct vfio_setup {
+>> +	__u64   requested_size;
+>> +	__u64   allocated_size;
+>> +	__u64   start_address;
+>> +};
+>> +
+>>  #endif /* VFIO_H */
+>> diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
+>> index 1c97c35..b438bbe 100644
+>> --- a/hw/vfio_pci.c
+>> +++ b/hw/vfio_pci.c
+>> @@ -1501,6 +1503,17 @@ static int vfio_initfn(struct PCIDevice *pdev)
+>>      if (vfio_map_resources(vdev))
+>>          goto out_disable_msi;
+>>
+>> +    struct vfio_setup setup = { 1 << 26, 0, 0 };
+> 
+> How will qemu decide how much to ask for?
+
+
+It is done by some heuristic. Like "usb controller needs 16mb" and "10Gb card
+needs more than 100mbit". I'd think that POWER-specific code in QEMU would decide.
+As POWER supports multiple PCI domains, it can afford spending addresses :)
+
+
+
+>> +    if ((ret =  ioctl(vdev->group->iommu->fd, VFIO_IOMMU_SETUP, &setup))) {
+>> +        return ret;
+>> +    }
+>> +    printf("SETUP: requested %lluMB, allocated %lluMB at %llx\n",
+>> +        (unsigned long long)setup.requested_size,
+>> +        (unsigned long long)setup.allocated_size,
+>> +        (unsigned long long)setup.start_address);
+>> +    vdev->start_address = setup.start_address;
+>> +    vdev->window_size = setup.allocated_size;
+>> +
+>>      if (vfio_enable_intx(vdev))
+>>          goto out_unmap_resources;
+>>
+>> diff --git a/hw/vfio_pci.h b/hw/vfio_pci.h
+>> index 96b09bb..6b7ab6f 100644
+>> --- a/hw/vfio_pci.h
+>> +++ b/hw/vfio_pci.h
+>> @@ -79,6 +79,10 @@ typedef struct VFIODevice {
+>>      bool msix;
+>>      uint8_t msix_bar;
+>>      uint16_t msix_entries;
+>> +#ifdef TARGET_PPC
+>> +    uint64_t start_address;
+>> +    uint32_t window_size;
+>> +#endif
+>>  } VFIODevice;
+>>
+>>  typedef struct VFIOGroup {
+>>
+>> === end ===
+>>
+>>
+>>
+>> - changed __vfio_close_iommu function to do unmapall first and detach devices then
+>> as actual deallocation happens on device detach callback of IOMMU ops.
+>>
+>> diff --git a/drivers/vfio/vfio_main.c b/drivers/vfio/vfio_main.c
+>> index 6169356..f78f411 100644
+>> --- a/drivers/vfio/vfio_main.c
+>> +++ b/drivers/vfio/vfio_main.c
+>> @@ -28,6 +28,7 @@
+>>  #include <linux/uaccess.h>
+>>  #include <linux/vfio.h>
+>>  #include <linux/wait.h>
+>> +#include <linux/pci.h>
+>>
+>>  #include "vfio_private.h"
+>>
+>> @@ -242,6 +243,13 @@ static void __vfio_close_iommu(struct vfio_iommu *iommu)
+>>  	if (!iommu->domain)
+>>  		return;
+>>
+>> +	/*
+>> +	 * On POWER, device detaching (which is done by __vfio_iommu_detach_group)
+>> +	 * should happen after all pages unmapped because
+>> +	 * the only way to do actual iommu_unmap_page a device detach callback
+>> +	 */
+>> +	vfio_iommu_unmapall(iommu);
+>> +
+> 
+> The unmapall/detach vs detach/unmapall shouldn't matter for x86.  Though
+> I wonder if we should be proactively resetting devices before either to
+> avoid spurious IOVA faults.
+
+
+Then we need some to "shutdown" a device.
+
+I am not sure about x86, but on POWER a host allocates DMA window (SETUP does iommu_alloc
+so the _whole_ DMA window gets allocated), and then a guest allocates pages within this
+window itself but it only updates the host's IOMMU table with pairs of addresses, a host
+does not do any no actual map/unmap while guest is running.
+
+Oooor, we could release the whole window in the domain close callback of iommu_ops...
+
+
+
+>>  	list_for_each(pos, &iommu->group_list) {
+>>  		struct vfio_group *group;
+>>  		group = list_entry(pos, struct vfio_group, iommu_next);
+>> @@ -249,7 +257,7 @@ static void __vfio_close_iommu(struct vfio_iommu *iommu)
+>>  		__vfio_iommu_detach_group(iommu, group);
+>>  	}
+>>
+>> -	vfio_iommu_unmapall(iommu);
+>> +	/* vfio_iommu_unmapall(iommu); */
+>>
+>>  	iommu_domain_free(iommu->domain);
+>>  	iommu->domain = NULL;
+> 
+> Thanks,
+> 
+> Alex
+
+
+-- 
+Alexey Kardashevskiy
+IBM OzLabs, LTC Team
+
+e-mail: aik@au1.ibm.com
+notes: Alexey Kardashevskiy/Australia/IBM
+
