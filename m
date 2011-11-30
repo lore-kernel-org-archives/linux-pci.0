@@ -1,70 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58748 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755362Ab1KNVq5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Nov 2011 16:46:57 -0500
-Message-ID: <1321307200.17169.90.camel@bling.home>
-Subject: Re: [RFC PATCH] vfio: VFIO Driver core framework
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Scott Wood <scottwood@freescale.com>
-Cc: chrisw@sous-sol.org, aik@au1.ibm.com, pmac@au1.ibm.com,
-	dwg@au1.ibm.com, joerg.roedel@amd.com, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
-Date: Mon, 14 Nov 2011 14:46:40 -0700
-In-Reply-To: <1321304079.17169.74.camel@bling.home>
-References: <20111103195452.21259.93021.stgit@bling.home>
-	 <4EBDBA50.3070801@freescale.com> <1321304079.17169.74.camel@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 30 Nov 2011 13:59:58 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Chris Metcalf <cmetcalf@tilera.com>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
+Message-ID: <20111130115956.GA21413@redhat.com>
+References: <cover.1322592494.git.mst@redhat.com>
+ <201111292205.11544.arnd@arndb.de>
+ <20111130071321.GB17781@redhat.com>
+ <201111300909.18431.arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201111300909.18431.arnd@arndb.de>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2011-11-14 at 13:54 -0700, Alex Williamson wrote:
-> On Fri, 2011-11-11 at 18:14 -0600, Scott Wood wrote:
-> > On 11/03/2011 03:12 PM, Alex Williamson wrote: 
-> > > +	for (i = 0; i < npage; i++, iova += PAGE_SIZE, vaddr += PAGE_SIZE) {
-> > > +		unsigned long pfn = 0;
-> > > +
-> > > +		ret = vaddr_get_pfn(vaddr, rdwr, &pfn);
-> > > +		if (ret) {
-> > > +			__vfio_dma_unmap(iommu, start, i, rdwr);
-> > > +			return ret;
-> > > +		}
-> > > +
-> > > +		/* Only add actual locked pages to accounting */
-> > > +		if (!is_invalid_reserved_pfn(pfn))
-> > > +			locked++;
-> > > +
-> > > +		ret = iommu_map(iommu->domain, iova,
-> > > +				(phys_addr_t)pfn << PAGE_SHIFT, 0, prot);
-> > > +		if (ret) {
-> > > +			/* Back out mappings on error */
-> > > +			put_pfn(pfn, rdwr);
-> > > +			__vfio_dma_unmap(iommu, start, i, rdwr);
-> > > +			return ret;
-> > > +		}
-> > > +	}
+On Wed, Nov 30, 2011 at 09:09:18AM +0000, Arnd Bergmann wrote:
+> On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
 > > 
-> > There's no way to hand this stuff to the IOMMU driver in chunks larger
-> > than a page?  That's going to be a problem for our IOMMU, which wants to
-> > deal with large windows.
+> > On Tue, Nov 29, 2011 at 10:05:11PM +0000, Arnd Bergmann wrote:
+> > > On Tuesday 29 November 2011, Michael S. Tsirkin wrote:
+> > > > diff --git a/arch/tile/include/asm/io.h b/arch/tile/include/asm/io.h
+> > > > index c9ea165..be6090d 100644
+> > > > --- a/arch/tile/include/asm/io.h
+> > > > +++ b/arch/tile/include/asm/io.h
+> > > > @@ -204,7 +204,8 @@ static inline long ioport_panic(void)
+> > > >  
+> > > >  static inline void __iomem *ioport_map(unsigned long port, unsigned int len)
+> > > >  {
+> > > > -       return (void __iomem *) ioport_panic();
+> > > > +       pr_info("Trying to map an IO resource - it does not exit on tile.\n");
+> > > > +       return NULL;
+> > > >  }
+> > > 
+> > > Why not just set CONFIG_NO_IOPORT and make this unavailable at compile time?
+> > > 
+> > >       Arnd
+> > 
+> > Well I think CONFIG_NO_IOPORT only has effect if you pull in asm-generic/io.h.
+> > This might work but I have no idea.
 > 
-> There is, this is just a simple implementation that maps individual
-> pages.  We "just" need to determine physically contiguous chunks and
-> mlock them instead of using get_user_pages.  The current implementation
-> is much like how KVM maps iommu pages, but there shouldn't be a user API
-> change to try to use larger chinks.  We want this for IOMMU large page
-> support too.
+> NO_IOPORT ha nothing to do with asm-generic, it just makes lib/iomap.c leave out
+> the calls to ioport_map, and prevent all drivers that call ioport_map from being
+> built.
 
-Also, at one point intel-iommu didn't allow sub-ranges to be unmapped;
-an unmap of a single page would unmap the entire original mapping that
-contained that page.  That made it easier to map each page individually
-for the flexibility it provided on unmap.  I need to see if we still
-have that restriction.  Thanks,
+Yes. But lib/iomap.c isn't even linked unless GENERIC_IOMAP is set.
 
-Alex
+> > Presumably whoever wrote that architecture considered and discarded setting GENERIC_IOMAP.
+> 
+> The tile PCI controller is apparently special in that it does not map the
+> PIO region into MMIO space, or make it available in any other way, so generic
+> iomap with IOCOND is pointless. Setting NO_IPORT will still mean that drivers
+> using ioport_map will not be built. This mostly impacts the legacy (non-AHCI)
+> ATA controllers, which I assume are not used on tile anyway.
+> 
+> 	Arnd
 
 
+I don't object to setting NO_IPORT at all, but this won't help address
+the problem this patch is fixing, which is to use a generic pci_iomap
+on tile.
+
+-- 
+MST
