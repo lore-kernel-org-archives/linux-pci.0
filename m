@@ -1,38 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28662 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754956Ab1K0Mqn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 27 Nov 2011 07:46:43 -0500
-Date: Sun, 27 Nov 2011 14:48:17 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-next@vger.kernel.org
-Cc: sfr@canb.auug.org.au, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: (repost) vhost tree for linux-next
-Message-ID: <20111127124816.GA23270@redhat.com>
-References: <20111124203843.GC4873@redhat.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
+Date: Wed, 30 Nov 2011 18:32:11 +0000
+Cc: Chris Metcalf <cmetcalf@tilera.com>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <cover.1322592494.git.mst@redhat.com> <201111301549.57430.arnd@arndb.de> <20111130155925.GA25812@redhat.com>
+In-Reply-To: <20111130155925.GA25812@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111124203843.GC4873@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201111301832.11578.arnd@arndb.de>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I normally merge things through Dave, Rusty, Jesse or Jens,
-not directly to Linus. However, sometimes there's a large change
-(for example, my recent RFC for pci_iomap changes)
-where estimating how it interacts with other platforms and planned
-changes in the next kernel would be beneficial.
+On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
+> On Wed, Nov 30, 2011 at 03:49:57PM +0000, Arnd Bergmann wrote:
+> > On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
+> > > On Wed, Nov 30, 2011 at 02:04:41PM +0000, Arnd Bergmann wrote:
+> > >
+> > > > Ah, right. I didn't realize that the generic pci_iomap still attempts
+> > > > to call ioport_map(). It would probably make sense to enclose
+> > > > the ioport_map() call in pci_iomap() inside of #ifdef CONFIG_HAS_IOPORT.
+> > > > It's not exactly beautiful, but probably the most correct solution
+> > > > so that we can make any call to ioport_map() a build-time error on
+> > > > architectures that set CONFIG_NO_IOPORT.
+> > > 
+> > > I'm not sure why do you want to do that.
+> > > 
+> > 
+> > The problem is that any definition of ioport_map on architectures
+> > that can't do it is potentially harmful. Calling panic() is
+> > bad style as you pointed out, but simply returning NULL can
+> > also be harmful because it's likely that some drivers are written
+> > under the (false) assumption that ioport_map can never fail.
+> > Getting a build-time error would be more helpful here IMHO.
+> 
+> Yes but uglifying these users is also bad, ifdefs in code are incredibly
+> fragile. Isn't it enough to declare ioport_map __must_check?
 
-For this purpose, it would be helpful if my tree were added to linux-next.
-The tree is:
-git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
+I guess we already wasted too many electrons over this triviality,
+I don't actually care all that much, and will probably have to
+touch the same code again when I get to submit my patch to make
+inb/outb optional for architectures. Just pick any solution (including
+your original one). I'll revisit this when I'm bothered by the
+presence of the ioport_map function and will keep you in the loop
+on those patches.
 
-Could you do this please?
-(The current contents of that tree was posted for review/feedback
-for the first time today.   It might make sense to give it a few days
-for any responses ...)
-
-Thanks!
-
--- 
-MST
+	Arnd
