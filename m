@@ -1,105 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:60491 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792Ab1KUP1H convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2011 10:27:07 -0500
-References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com> <20111118220849.GA25205@suse.de>
-In-Reply-To: <20111118220849.GA25205@suse.de>
-Mime-Version: 1.0 (Apple Message framework v1084)
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 30 Nov 2011 17:59:25 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Chris Metcalf <cmetcalf@tilera.com>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
+Message-ID: <20111130155925.GA25812@redhat.com>
+References: <cover.1322592494.git.mst@redhat.com>
+ <201111301404.41544.arnd@arndb.de>
+ <20111130143122.GC21413@redhat.com>
+ <201111301549.57430.arnd@arndb.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-Id: <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com>
-Cc: hjk@hansjkoch.de, tglx@linutronix.de, linux-pci@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>
-From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Date: Mon, 21 Nov 2011 10:31:07 -0500
-To: Greg KH <gregkh@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <201111301549.57430.arnd@arndb.de>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg, thanks for your answer...
+On Wed, Nov 30, 2011 at 03:49:57PM +0000, Arnd Bergmann wrote:
+> On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
+> > On Wed, Nov 30, 2011 at 02:04:41PM +0000, Arnd Bergmann wrote:
+> >
+> > > Ah, right. I didn't realize that the generic pci_iomap still attempts
+> > > to call ioport_map(). It would probably make sense to enclose
+> > > the ioport_map() call in pci_iomap() inside of #ifdef CONFIG_HAS_IOPORT.
+> > > It's not exactly beautiful, but probably the most correct solution
+> > > so that we can make any call to ioport_map() a build-time error on
+> > > architectures that set CONFIG_NO_IOPORT.
+> > 
+> > I'm not sure why do you want to do that.
+> > 
+> 
+> The problem is that any definition of ioport_map on architectures
+> that can't do it is potentially harmful. Calling panic() is
+> bad style as you pointed out, but simply returning NULL can
+> also be harmful because it's likely that some drivers are written
+> under the (false) assumption that ioport_map can never fail.
+> Getting a build-time error would be more helpful here IMHO.
+> 
+> 	Arnd
 
-On Nov 18, 2011, at 17:08, Greg KH wrote:
+Yes but uglifying these users is also bad, ifdefs in code are incredibly
+fragile. Isn't it enough to declare ioport_map __must_check?
 
-> On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
->> Hello fellow hackers.
->> 
->> I am maintaining a UIO based driver for a PCI-E data acquisition device.
->> 
->> I map BAR0 of the device to userspace. I also map two memory areas,
->> one is used to feed instructions to the acquisition device, the other
->> is used autonomously by the PCI device to write the acquired data.
-> 
-> Nice, have a pointer to your driver anywhere so we can include it in the
-> main kernel tree to make your life easier?
-As I said in a parallel answer from "Hans J. Koch" <hjk@hansjkoch.de>,
-the driver, although GPL'ed, is quite uninteresting except for us here at
-Sonatest. (BTW, sorry I use my gmail for my kernel dealings because it works better
-than the company's exchange server. You can lookup my name in the mainline
-or in the blackfin-device-devel archives and find the two e-mails though,
-I have fixed my kernel's git config to be gmail only now).
-
-About merging the driver to mainline, I guess it would only be interesting for
-the recipe I demonstrate. Please advise.
-> 
->> The strategy we have been using for those two share memory areas has
->> historically been using pci_alloc_coherent on v2.6.35 x86_64 (limited
->> to 4MB based on my trials) and later, I made use of the VT-d
->> (intel_iommu) to allocate as much as 128MB (an arbitrary limit) which
->> appear contiguous to the PCI device. I use vmalloc_user to allocate
->> 128M, then write all the physically continuous segments in a
->> scatterlist, then use pci_map_sg which works it's way to intel_iommu.
->> The device DMA addresses I get back are contiguous over the whole
->> 128M. Neat! Our VT-d capable devices still use this strategy.
->> 
->> This large memory is mission-critical in making the acquisition device
->> autonomous (real-time), yet keep the DMA implementation very simple.
->> Today, we are re-using this device on a CPU architecture that has no
->> IOMMU (intel E6XX/EG20T) and want to avoid creating a scatter-gather
->> scheme between my driver and the FPGA (PCI device).
->> 
->> So I went back to the old pci_alloc_coherent method, which although
->> limited to 4 MB, will do for early development phases. Instead of
->> 2.6.35, we are doing preliminary development using 2.6.37 and will
->> probably use 3.1 or more later.  The cpu/device shared memory maps
->> (1MB and 4MB) are allocated using pci_alloc_coherent and handed to UIO
->> as physical memory using the dma_addr_t returned by the pci_alloc
->> func.
->> 
->> The 1st memory map is written to by CPU and read from device.
->> The 2nd memory map is typically written by the device and read by the
->> CPU, but future features may have the device also read this memory.
->> 
->> My initial testing on the atom E6XX show the PCI device failing when
->> trying to read from the first memory map. I suspect PCI-E payload
->> sizes which may be somewhat hardcoded in the FPGA firmware... we will
->> confirm this soon.
-> 
-> That would be good to find out.
-> 
->> Now from the get go I have felt lucky to have made this work because
->> of my limited research into the intricacies of the kernel's memory
->> management. So I ask two things:
->> 
->> - Is this kosher?
-> 
-> I think so, yes, but others who know the DMA subsystem better than I
-> should chime in here, as I might be totally wrong.
-> 
->> - Is there a better/easier/safer way to achieve this? (remember that
->> for the second map, the more memory I have, the better. We have a gig
->> of ram, if I take, say 256MB, that would be OK too.
->> 
->> I had thought about cutting out a chunk of ram from the kernel's boot
->> args, but had always feared cache/snooping errors. Not to mention I
->> had no idea how to "claim" or setup this memory once my driver's probe
->> function. Maybe I would still be lucky and it would just work? mmmh...
-> 
-> Yeah, don't do that, it might not work out well.
-Other ways, anyone? 4MB is really not enough in the end for me. Maybe I could trace the
-dma_alloc_coherent call, figure out where the limit is and patch the kernel for my needs?
-> 
-> greg k-h
-Thanks for your precious time. Cheers.
-/jfd
-
+-- 
+MST
