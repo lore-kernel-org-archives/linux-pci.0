@@ -1,103 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:41744 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753129Ab1KVPUQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Nov 2011 10:20:16 -0500
-References: <B458B2F0-2DDA-461F-A125-8C6C4CDEB6C5@gmail.com> <20111118220849.GA25205@suse.de> <9E9C8A95-723C-427A-AD01-17284EDF7E4F@gmail.com> <20111121173620.GA5028@suse.de> <20111121181724.GB12011@local>
-In-Reply-To: <20111121181724.GB12011@local>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <4498E0C9-B5E9-44B5-8868-140D6416100E@gmail.com>
-Cc: Greg KH <gregkh@suse.de>, tglx@linutronix.de,
-	linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
-From: Jean-Francois Dagenais <jeff.dagenais@gmail.com>
-Subject: Re: extra large DMA buffer for PCI-E device under UIO
-Date: Tue, 22 Nov 2011 10:24:17 -0500
-To: "Hans J. Koch" <hjk@hansjkoch.de>, mst@redhat.com
+Received: from moutng.kundenserver.de ([212.227.17.8]:55514 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756459Ab1K3JJe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Nov 2011 04:09:34 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
+Date: Wed, 30 Nov 2011 09:09:18 +0000
+Cc: Chris Metcalf <cmetcalf@tilera.com>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <cover.1322592494.git.mst@redhat.com> <201111292205.11544.arnd@arndb.de> <20111130071321.GB17781@redhat.com>
+In-Reply-To: <20111130071321.GB17781@redhat.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201111300909.18431.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-On Nov 21, 2011, at 13:17, Hans J. Koch wrote:
-
-> On Mon, Nov 21, 2011 at 09:36:20AM -0800, Greg KH wrote:
->> On Mon, Nov 21, 2011 at 10:31:07AM -0500, Jean-Francois Dagenais wrote:
->>> Hi Greg, thanks for your answer...
->>> 
->>> On Nov 18, 2011, at 17:08, Greg KH wrote:
->>> 
->>>> On Fri, Nov 18, 2011 at 04:16:23PM -0500, Jean-Francois Dagenais wrote:
->>>>> Hello fellow hackers.
->>>>> 
->>>>> I am maintaining a UIO based driver for a PCI-E data acquisition device.
->>>>> 
->>>>> I map BAR0 of the device to userspace. I also map two memory areas,
->>>>> one is used to feed instructions to the acquisition device, the other
->>>>> is used autonomously by the PCI device to write the acquired data.
->>>> 
->>>> Nice, have a pointer to your driver anywhere so we can include it in the
->>>> main kernel tree to make your life easier?
->>> As I said in a parallel answer from "Hans J. Koch" <hjk@hansjkoch.de>,
->>> the driver, although GPL'ed, is quite uninteresting except for us here at
->>> Sonatest.
->> 
->> I really doubt that,
+On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
 > 
-> So do I. We never had a driver allocating so much memory.
+> On Tue, Nov 29, 2011 at 10:05:11PM +0000, Arnd Bergmann wrote:
+> > On Tuesday 29 November 2011, Michael S. Tsirkin wrote:
+> > > diff --git a/arch/tile/include/asm/io.h b/arch/tile/include/asm/io.h
+> > > index c9ea165..be6090d 100644
+> > > --- a/arch/tile/include/asm/io.h
+> > > +++ b/arch/tile/include/asm/io.h
+> > > @@ -204,7 +204,8 @@ static inline long ioport_panic(void)
+> > >  
+> > >  static inline void __iomem *ioport_map(unsigned long port, unsigned int len)
+> > >  {
+> > > -       return (void __iomem *) ioport_panic();
+> > > +       pr_info("Trying to map an IO resource - it does not exit on tile.\n");
+> > > +       return NULL;
+> > >  }
+> > 
+> > Why not just set CONFIG_NO_IOPORT and make this unavailable at compile time?
+> > 
+> >       Arnd
 > 
->> and you should submit it anyway to allow us to
->> change it when the in-kernel apis change in the future.  It will save
->> you time in the long run and make things easier for you (look, your
->> driver is automatically included in all distros!, people fix your bugs,
->> etc.)
-> 
-> Exactly.
-> 
->> 
->>> About merging the driver to mainline, I guess it would only be interesting for
->>> the recipe I demonstrate. Please advise.
->> 
->> That is a recipe that I'm sure others will use, and need help on in the
->> future.
-> 
-> They already needed it in the past, and they usually try to get it by
-> writing me private mail.
-> 
->> 
->> So please submit a patch, that will make it easier to help you out.
-> 
-> Yes, please do. The more different drivers we have under /drivers/uio, the
-> better. Didn't you use one of the existing drivers as a template for yours?
-Of course, and I am making contributions to the kernel as well (ds1wm,  w1_ds2408,
-ad714x, and more to be merged contribs to blackfin list drivers) because I strongly
-believe in the community aspect of Linux.
+> Well I think CONFIG_NO_IOPORT only has effect if you pull in asm-generic/io.h.
+> This might work but I have no idea.
 
-So in the spirit of making the driver more generic, I would like to make this patch
-something along the lines of a generic uio/pci based large DMA acquisition device
-driver. Or maybe even complementing the existing uio_generic_pci.c?
+NO_IOPORT ha nothing to do with asm-generic, it just makes lib/iomap.c leave out
+the calls to ioport_map, and prevent all drivers that call ioport_map from being
+built.
 
-The problem is that there are device specific aspects that the "generic" driver would
-need to take into account, e.g. to map BARx or not, or in our case, there are MFDs
-embedded in the firmware (xilinx's ds1wm core, and soon, xilinx's spi core). Furthermore,
-I want the FPGA to be an irq expander since the cores generate interrupts, and a
-couple of balls on the FPGA are irq signals from external i2c chips.
+> Presumably whoever wrote that architecture considered and discarded setting GENERIC_IOMAP.
 
-I don't yet see any way to specify like a setup callback function that could reach a
-platform module when uio_pci_generic is probing.
+The tile PCI controller is apparently special in that it does not map the
+PIO region into MMIO space, or make it available in any other way, so generic
+iomap with IOCOND is pointless. Setting NO_IPORT will still mean that drivers
+using ioport_map will not be built. This mostly impacts the legacy (non-AHCI)
+ATA controllers, which I assume are not used on tile anyway.
 
-I am thinking this through as I write here...
-
-My other persona (C++ programmer) suggests that conceptually, uio_pci_generic is
-a "base class" and the other more firmware specific items would be in a derived module.
-In that sense, maybe uio_pci_generic could export it's symbols? So it can be used as
-uio core functionnality?
-
-So I would still have a module which would contain the specific MFD registration and IRQ
-functionnality, but the BARx and large DMA mapping would reside in uio_pci_generic...
-
-Any thoughts?
-> 
-> Thanks,
-> Hans
-Cheers,
-/jfd
+	Arnd
