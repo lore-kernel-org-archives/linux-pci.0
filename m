@@ -1,133 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53418 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:21073 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751235Ab1KYG4D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 Nov 2011 01:56:03 -0500
-From: Amos Kong <akong@redhat.com>
-To: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Cc: mst@redhat.com, jasowang@redhat.com, scott@spiteful.org,
-	jbarnes@virtuousgeek.org, mtosatti@redhat.com,
-	Amos Kong <akong@redhat.com>
-Subject: [PATCH] PCI: Can continually add funcs after adding func0
-Date: Fri, 25 Nov 2011 15:03:07 +0800
-Message-Id: <1322204587-3636-1-git-send-email-akong@redhat.com>
+	id S1752377Ab1K3O37 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Nov 2011 09:29:59 -0500
+Date: Wed, 30 Nov 2011 16:31:24 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Chris Metcalf <cmetcalf@tilera.com>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH-RFC 1/2] tile: don't panic on iomap
+Message-ID: <20111130143122.GC21413@redhat.com>
+References: <cover.1322592494.git.mst@redhat.com>
+ <201111300909.18431.arnd@arndb.de>
+ <20111130115956.GA21413@redhat.com>
+ <201111301404.41544.arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201111301404.41544.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Boot up a KVM guest, and hotplug multifunction
-devices(func1,func2,func0,func3) to guest.
+On Wed, Nov 30, 2011 at 02:04:41PM +0000, Arnd Bergmann wrote:
+> On Wednesday 30 November 2011, Michael S. Tsirkin wrote:
+> > > > Presumably whoever wrote that architecture considered and discarded setting GENERIC_IOMAP.
+> > > 
+> > > The tile PCI controller is apparently special in that it does not map the
+> > > PIO region into MMIO space, or make it available in any other way, so generic
+> > > iomap with IOCOND is pointless. Setting NO_IPORT will still mean that drivers
+> > > using ioport_map will not be built. This mostly impacts the legacy (non-AHCI)
+> > > ATA controllers, which I assume are not used on tile anyway.
+> > 
+> > I don't object to setting NO_IPORT at all, but this won't help address
+> > the problem this patch is fixing, which is to use a generic pci_iomap
+> > on tile.
+> 
+> Ah, right. I didn't realize that the generic pci_iomap still attempts
+> to call ioport_map(). It would probably make sense to enclose
+> the ioport_map() call in pci_iomap() inside of #ifdef CONFIG_HAS_IOPORT.
+> It's not exactly beautiful, but probably the most correct solution
+> so that we can make any call to ioport_map() a build-time error on
+> architectures that set CONFIG_NO_IOPORT.
+> 
+> 	Arnd
 
-for i in 1 2 0 3;do
-qemu-img create /tmp/resize$i.qcow2 1G -f qcow2
-(qemu) drive_add 0x11.$i id=drv11$i,if=none,file=/tmp/resize$i.qcow2
-(qemu) device_add virtio-blk-pci,id=dev11$i,drive=drv11$i,addr=0x11.$i,multifunction=on
-done
+I'm not sure why do you want to do that.
 
-In linux kernel, when func0 of the slot is hot-added, the whole
-slot will be marked as 'enabled', then driver will ignore other new
-hotadded funcs.
-But in Win7 & WinXP, we can continaully add other funcs after adding
-func0, all funcs will be added in guest.
-
-drivers/pci/hotplug/acpiphp_glue.c:
-static int acpiphp_check_bridge(struct acpiphp_bridge *bridge)
-{
-....
-        for (slot = bridge->slots; slot; slot = slot->next) {
-                if (slot->flags & SLOT_ENABLED) {
-                        acpiphp_disable_slot()
-                else
-                        acpiphp_enable_slot()
-....                              |
-}                                 v
-                            enable_device()
-                                  |
-                                  v
-        //only don't enable slot if func0 is not added
-	list_for_each_entry(func, &slot->funcs, sibling) {
-               ...
-        }
-       slot->flags |= SLOT_ENABLED; //mark slot to 'enabled'
-
-This patch just make pci driver can continaully add funcs after adding
-func 0. Only mark slot to 'enabled' when all funcs are added.
-
-For pci multifunction hotplug, we can add functions one by one(func 0 is
-necessary), and all functions will be removed in one time.
-
-Signed-off-by: Amos Kong <akong@redhat.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   29 +++++++++++++----------------
- 1 files changed, 13 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 596172b..a1b0afc 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -789,20 +789,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 	if (slot->flags & SLOT_ENABLED)
- 		goto err_exit;
- 
--	/* sanity check: dev should be NULL when hot-plugged in */
--	dev = pci_get_slot(bus, PCI_DEVFN(slot->device, 0));
--	if (dev) {
--		/* This case shouldn't happen */
--		err("pci_dev structure already exists.\n");
--		pci_dev_put(dev);
--		retval = -1;
--		goto err_exit;
--	}
--
- 	num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
- 	if (num == 0) {
--		err("No new device found\n");
--		retval = -1;
-+		/* Maybe only part of funcs are added. */
-+		dbg("No new device found\n");
- 		goto err_exit;
- 	}
- 
-@@ -837,11 +827,16 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 
- 	pci_bus_add_devices(bus);
- 
-+	slot->flags |= SLOT_ENABLED;
- 	list_for_each_entry(func, &slot->funcs, sibling) {
- 		dev = pci_get_slot(bus, PCI_DEVFN(slot->device,
- 						  func->function));
--		if (!dev)
-+		if (!dev) {
-+			/* Do not set SLOT_ENABLED flag if some funcs
-+			   are not added. */
-+			slot->flags &= (~SLOT_ENABLED);
- 			continue;
-+		}
- 
- 		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE &&
- 		    dev->hdr_type != PCI_HEADER_TYPE_CARDBUS) {
-@@ -856,7 +851,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 		pci_dev_put(dev);
- 	}
- 
--	slot->flags |= SLOT_ENABLED;
- 
-  err_exit:
- 	return retval;
-@@ -881,9 +875,12 @@ static int disable_device(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
- 	struct pci_dev *pdev;
-+	struct pci_bus *bus = slot->bridge->pci_bus;
- 
--	/* is this slot already disabled? */
--	if (!(slot->flags & SLOT_ENABLED))
-+	/* The slot will be enabled when func 0 is added, so check
-+	   func 0 before disable the slot. */
-+	pdev = pci_get_slot(bus, PCI_DEVFN(slot->device, 0));
-+	if (!pdev)
- 		goto err_exit;
- 
- 	list_for_each_entry(func, &slot->funcs, sibling) {
 -- 
-1.7.7.3
-
+MST
