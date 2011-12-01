@@ -1,115 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:24157 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795Ab1LBXK7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2011 18:10:59 -0500
-Message-ID: <4ED95AD0.7090003@oracle.com>
-Date: Fri, 02 Dec 2011 15:10:08 -0800
-From: Yinghai Lu <yinghai.lu@oracle.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Chris Metcalf <cmetcalf@tilera.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org, Rolf Eike Beer <eike-kernel@sf-tec.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Maxin B. John" <maxin.john@gmail.com>, Tejun Heo <tj@kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH] lib/devres.c: allow specifying NO_IOPORT while using PCI
+Date: Thu, 01 Dec 2011 23:47:43 +0100
+Message-ID: <1616727.0BYPKXtoA0@wuerfel>
+In-Reply-To: <201112011815.pB1IFGZe004948@farm-0002.internal.tilera.com>
+References: <cover.1322592494.git.mst@redhat.com> <201111301549.57430.arnd@arndb.de> <201112011815.pB1IFGZe004948@farm-0002.internal.tilera.com>
 MIME-Version: 1.0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] pciehp: Disable/enable link during slot power off/on
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday 01 December 2011 12:59:19 Chris Metcalf wrote:
+> The tile architecture does not support IOPORT, but it does support
+> PCI and IOMEM.  We were not specifying NO_IOPORT, though, because it
+> was causing a couple of functions (pcim_iomap_regions and pcim_iomap_table)
+> that are needed to not get provided.  Moving the #ifdef fixes this
+> so that those functions and some related ones are now always provided
+> if CONFIG_PCI is true.
+> 
+> Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
 
-One system have repeater in system board to support gen2 hotplug.
+Hmm, I'm sure that Al Viro intentionally did it the way it is, but I'm
+not sure exactly why that would be.
 
-Found when EM is removed from some slots, /var/log/message will be full of
-"card present/not present" warning.
+Any driver using the functions you now expose for NO_IOPORT is probably
+prepared to handle both MMIO and PIO BARs on PCI, which you can consider
+broken in the case where a card actually requires PIO.
 
-It turns out root complex still try to train the link to repeater because
-repeater is not reset.
+On tile, it would be just as broken as other drivers that directly use
+inb/outb to do the port access, but on platforms that actually have
+PIO but are not able to map them (like arm/mach-rpc), you would now
+enable people to write silently broken drivers.
 
-This patch will disable link to make repeater could reset properly.
-Also could kill AER during EM removal.
+However, assuming they check the return value of the *iomap, the
+drivers could still easily detect this case at runtime. Also, at
+least on tile, you already provide a pci_iomap function, which
+has the exact same problem as the devres functions.
 
-Recently when testing hotplug on one system under development, found if boot
-the system without EM, and later hotplug does not work with Linux.
-But other OS is ok.
-The root cause is that bios left link disabled when slot is empty,
-and other OS is playing link disable bit in link ctrl during power on/off.
+One area where your patch might actually break existing code is
+architectures that allow the devres functions to be built *and*
+have PCI support but don't provide a pci_iomap function, because
+they do not support mapping the PIO range into addresses. I'm
+not sure if that's actually still the case anywhere after Michael's
+recent patches, but it used to be the case on RPC and probably others.
 
-So We could do the same thing to disable/enable link during power off/on.
-
-Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
-
----
- drivers/pci/hotplug/pciehp_hpc.c |   46 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
-
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -315,6 +315,42 @@ int pciehp_check_link_status(struct cont
- 	return retval;
- }
- 
-+static int __pciehp_link_set(struct controller *ctrl, bool enable)
-+{
-+	u16 lnk_ctrl;
-+	int retval = 0;
-+
-+	retval = pciehp_readw(ctrl, PCI_EXP_LNKCTL, &lnk_ctrl);
-+	if (retval) {
-+		ctrl_err(ctrl, "Cannot read LNKCTRL register\n");
-+		return retval;
-+	}
-+
-+	if (enable)
-+		lnk_ctrl &= ~PCI_EXP_LNKCTL_LD;
-+	else
-+		lnk_ctrl |= PCI_EXP_LNKCTL_LD;
-+
-+	retval = pciehp_writew(ctrl, PCI_EXP_LNKCTL, lnk_ctrl);
-+	if (retval) {
-+		ctrl_err(ctrl, "Cannot write LNKCTRL register\n");
-+		return retval;
-+	}
-+	ctrl_dbg(ctrl, "%s: lnk_ctrl = %x\n", __func__, lnk_ctrl);
-+
-+	return retval;
-+}
-+
-+static int pciehp_link_enable(struct controller *ctrl)
-+{
-+	return __pciehp_link_set(ctrl, true);
-+}
-+
-+static int pciehp_link_disable(struct controller *ctrl)
-+{
-+	return __pciehp_link_set(ctrl, false);
-+}
-+
- int pciehp_get_attention_status(struct slot *slot, u8 *status)
- {
- 	struct controller *ctrl = slot->ctrl;
-@@ -533,6 +569,12 @@ int pciehp_power_on_slot(struct slot * s
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
- 
-+	/* Need to wait before enabling link */
-+	msleep(100);
-+	retval = pciehp_link_enable(ctrl);
-+	if (retval)
-+		ctrl_err(ctrl, "%s: Can not enable the link!\n", __func__);
-+
- 	return retval;
- }
- 
-@@ -543,6 +585,10 @@ int pciehp_power_off_slot(struct slot *
- 	u16 cmd_mask;
- 	int retval;
- 
-+	/* Disable the link at first */
-+	pciehp_link_disable(ctrl);
-+	msleep(100);
-+
- 	slot_cmd = POWER_OFF;
- 	cmd_mask = PCI_EXP_SLTCTL_PCC;
- 	retval = pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
+	Arnd
