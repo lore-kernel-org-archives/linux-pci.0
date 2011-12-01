@@ -1,79 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:33169 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753419Ab1LINpH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Dec 2011 08:45:07 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1RZ0l5-00017O-6J
-	for linux-pci@vger.kernel.org; Fri, 09 Dec 2011 14:45:05 +0100
-Received: from AES-Static-041.2.22.125.airtel.in ([AES-Static-041.2.22.125.airtel.in])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Fri, 09 Dec 2011 14:45:03 +0100
-Received: from pratyush.anand by AES-Static-041.2.22.125.airtel.in with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Fri, 09 Dec 2011 14:45:03 +0100
-To: linux-pci@vger.kernel.org
-From: Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: Problem in reading cfg space of device connected below a bridge
-Date: Fri, 9 Dec 2011 13:39:04 +0000 (UTC)
-Message-ID: <loom.20111209T143404-436@post.gmane.org>
-References: <AANLkTin7itjGUuyzFP2=NxGyvU2qv24Rt24wnNLEC+gN@mail.gmail.com> <20101021122526.GG2447@parisc-linux.org> <AANLkTinFpwRfKaN8W2R+F3-QnEA_ZMgGbcgXvpM+UyKZ@mail.gmail.com> <20101024055405.GC25607@lackof.org> <AANLkTimpBkGjVUGcuWp93swyyCPJ6OEYVD6UKmZ8yiS8@mail.gmail.com> <20101028044411.GA32200@lackof.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <201112011815.pB1IFGZe004948@farm-0002.internal.tilera.com>
+From: Chris Metcalf <cmetcalf@tilera.com>
+Date: Thu, 1 Dec 2011 12:59:19 -0500
+Subject: [PATCH] lib/devres.c: allow specifying NO_IOPORT while using PCI
+To: linux-kernel@vger.kernel.org, <linux-pci@vger.kernel.org>,
+	<linux-arch@vger.kernel.org>,
+	Rolf Eike Beer <eike-kernel@sf-tec.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Maxin B. John" <maxin.john@gmail.com>, Tejun Heo <tj@kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	"Lucas De Marchi" <lucas.demarchi@profusion.mobi>,
+	"Paul Mundt" <lethal@linux-sh.org>,
+	"Jesse Barnes" <jbarnes@virtuousgeek.org>,
+	"David S. Miller" <davem@davemloft.net>
+References: <cover.1322592494.git.mst@redhat.com> <201111301404.41544.arnd@arndb.de> <20111130143122.GC21413@redhat.com> <201111301549.57430.arnd@arndb.de>
+In-Reply-To: <201111301549.57430.arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Grant Grundler <grundler <at> parisc-linux.org> writes:
+The tile architecture does not support IOPORT, but it does support
+PCI and IOMEM.  We were not specifying NO_IOPORT, though, because it
+was causing a couple of functions (pcim_iomap_regions and pcim_iomap_table)
+that are needed to not get provided.  Moving the #ifdef fixes this
+so that those functions and some related ones are now always provided
+if CONFIG_PCI is true.
 
-After a long time , I am back to this issue again. I have taken log from 
-analyser, and I can see that my host controller is correctly generating cfgrd1.
-What could be wrong?
+Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+---
+This commit was inspired by the recent linux-arch discussion about
+what to do with ioport_map on architectures that can't do it, so I went
+back to figure out why I hadn't set NO_IOPORT in the first place.
+I'm willing to take this into the tile tree if the PCI folks are OK
+with it, or if someone else can pick it up, that's fine too.
 
-This is text exported log of lecroy PCIe analyser.
+ arch/tile/Kconfig |    2 +-
+ lib/devres.c      |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Packet(951428) Downstream 2.5(x1) TLP(97) Cfg 
-_______| CfgWr0(10:00100) Length(1) RequesterID(002:00:0) Tag(0) 
-_______| DeviceID(003:00:0) Register(0x018) 1st BE(1111) 
-_______| Secondary Latency Timer(0x00) Subordinate Bus Number(0xFF) 
-_______| Secondary Bus Number(0x04) Primary Bus Number(0x03) LCRC(0x564084DF) 
-_______| Time Stamp(0047 . 793 106 288 s) 
-_______|_______________________________________________________________________
-Filtered Traffic 
-Packet(951429) Upstream 2.5(x1) TLP(96) Cpl Cpl(00:01010) 
-_______| Length(0) RequesterID(002:00:0) Tag(0) CompleterID(003:00:0) Status
-(SC) 
-_______| BCM(0) Byte Cnt(4) Lwr Addr(0x00) LCRC(0x502279E4) 
-_______| Time Stamp(0047 . 793 106 552 s) 
-_______|_______________________________________________________________________
-Filtered Traffic 
-Packet(951430) Upstream 2.5(x1) DLLP ACK 
-_______| AckNak_Seq_Num(97) CRC 16(0x1425) Time Stamp(0047 . 793 107 004 s) 
-_______|_______________________________________________________________________
-Packet(951431) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(96) 
-_______| CRC 16(0xB53E) Time Stamp(0047 . 793 108 056 s) 
-_______|_______________________________________________________________________
-Filtered Traffic 
-Packet(951432) Downstream 2.5(x1) TLP(98) Cfg 
-_______| CfgRd1(00:00101) Length(1) RequesterID(002:00:0) Tag(1) 
-_______| DeviceID(004:00:0) Register(0x000) 1st BE(1111) LCRC(0xDFA187B4) 
-_______| Time Stamp(0047 . 793 110 456 s) 
-_______|_______________________________________________________________________
-Filtered Traffic 
-Packet(951433) Upstream 2.5(x1) TLP(97) Cpl Cpl(00:01010) 
-_______| Length(0) RequesterID(002:00:0) Tag(1) CompleterID(004:00:0) 
-_______| Status(UR)-BAD BCM(0) Byte Cnt(4) Lwr Addr(0x00) LCRC(0xBBC69D2D) 
-_______| Time Stamp(0047 . 793 110 960 s) 
-_______|_______________________________________________________________________
-Packet(951434) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(98) CRC 16(0xF709) 
-_______| Time Stamp(0047 . 793 111 148 s) 
-_______|_______________________________________________________________________
-Packet(951435) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(97) 
-_______| CRC 16(0x1425) Time Stamp(0047 . 793 112 488 s) 
-_______|______________________________________________________________________
-
-
-regards
-Pratyush
+diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
+index 70a0de4..e7b1e07 100644
+--- a/arch/tile/Kconfig
++++ b/arch/tile/Kconfig
+@@ -333,7 +333,7 @@ config NO_IOMEM
+ 	def_bool !PCI
+ 
+ config NO_IOPORT
+-	def_bool !PCI
++	def_bool y
+ 
+ source "drivers/pci/Kconfig"
+ 
+diff --git a/lib/devres.c b/lib/devres.c
+index 7c0e953..5f36cfd 100644
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -144,6 +144,7 @@ void devm_ioport_unmap(struct device *dev, void __iomem *addr)
+ 			       devm_ioport_map_match, (void *)addr));
+ }
+ EXPORT_SYMBOL(devm_ioport_unmap);
++#endif
+ 
+ #ifdef CONFIG_PCI
+ /*
+@@ -349,4 +350,3 @@ void pcim_iounmap_regions(struct pci_dev *pdev, u16 mask)
+ }
+ EXPORT_SYMBOL(pcim_iounmap_regions);
+ #endif
+-#endif
+-- 
+1.6.5.2
 
