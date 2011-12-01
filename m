@@ -1,76 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Dec 2011 11:06:39 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
-	vapier@gentoo.org, dhowells@redhat.com, ysato@users.sourceforge.jp,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, benh@kernel.crashing.org, paulus@samba.org,
-	lethal@linux-sh.org, davem@davemloft.net, cmetcalf@tilera.com,
-	gxt@mprc.pku.edu.cn, tglx@linutronix.de, mingo@redhat.com,
-	chris@zankel.net, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -v2 01/16] PCI: add declaration for pcibios_set_master()
- to pci core
-Message-ID: <20111205110639.479a6e8e@jbarnes-desktop>
-In-Reply-To: <20111028214735.20088.19168.stgit@amt.stowe>
-References: <20111028214726.20088.30551.stgit@amt.stowe>
-	<20111028214735.20088.19168.stgit@amt.stowe>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/DSe3th4XPaWhByCfG_A7OoH"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ackle.nomi.cz ([81.31.33.35]:43723 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751064Ab1LAJOp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Dec 2011 04:14:45 -0500
+Date: Thu, 1 Dec 2011 10:14:41 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Clemens Ladisch <clemens@ladisch.de>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	linux1394-devel@lists.sourceforge.net,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: DMAR:[fault reason 02] Present bit in context entry is clear
+	(firewire-ohci)
+Message-ID: <20111201091441.GA32731@nomi.cz>
+References: <4BF7B147.9020502@s5r6.in-berlin.de> <20100522121212.GQ10452@parisc-linux.org> <1274553643.11551.17300.camel@macbook.infradead.org> <20100522120905.154ff932@jbarnes-x201> <20111119172127.GA31915@nomi.cz> <4ED656F6.4080709@ladisch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4ED656F6.4080709@ladisch.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/DSe3th4XPaWhByCfG_A7OoH
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Fri, 28 Oct 2011 15:47:35 -0600
-Myron Stowe <myron.stowe@redhat.com> wrote:
+On Wed, Nov 30, 2011 at 05:16:54PM +0100, Clemens Ladisch wrote:
+> Try the patch in <https://bugzilla.redhat.com/show_bug.cgi?id=605888>
+> that is intended to work around the bug in your Ricoh chip.  Alternatively,
+> disable VT-d or FireWire in the BIOS, or add the kernel parameter
+> "intel_iommu=off".
 
-> From: Myron Stowe <mstowe@redhat.com>
->=20
-> Currently, pcibios_set_master() is implemented in architecture-
-> specific code.  There is nothing architecture-specific about PCI's
-> 'latency timer'.
->=20
-> This patch adds a declaration for pcibios_set_master() to PCI's core
-> in preperation for pulling the function itself up into the core.
-> Without the addition of this declaration, subsequent patches that
-> remove inline definitions of pcibios_set_master() would be removing
-> the only declaration of such.
->=20
-> No functional change.
->=20
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> ---
+Yeah, I guess that would work, I was just concerned with a fix not being in
+the mainline. Surely we don't expect every ThinkPad user who wants to use
+firewire and VT-d to apply the patch himself (the Fedora fix was to forcefully
+disable IOMMU in presence of that Ricoh device). :-)
 
-Ok this series is in -next.  Let's see what breaks this time. :)
-
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/DSe3th4XPaWhByCfG_A7OoH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO3RY/AAoJEIEoDkX4Qk9hxmUQAJB7f32Jn6j/KKvHA3ONU81B
-DJUnfedHpLTg8vqUDYxCF1JQDblPst7P2xzLn5BxvCHkwNTeYU/9is5/QhKzJlSZ
-mTPbLJOnnad5JwyTsAHQySQTVJTeW1vRlqfYDajVUI0l3zrRakJD4DLi41B+obFm
-dy0Nz2aT3v0rWjYcrjniYdF4FcbSs3pmWGMqM7YRzwTmzNIk42LltsZvsa6O1aRS
-6YKT/NpiNMq87s9iH5hIXCYNs40P3EZnYVHWF+XKDUodBbsyJUGNmoqlEFNULqbS
-iTbs+UdmBFjTrlmwniJfr4yPEjDLcb2cXuR703qjCNYpWreTPS77jDjaz9f1S6/I
-IjBOA38aL4quvAqxh2H10rif/ZWwmSAm0kQPKKANJEyMCGKgcCeHBw9+vIrHVrX2
-B7QOTabxko9z9eVn8tq/KfWK6DE7MUSGRnYoZ8o3TvDvxK/vZUjzI/GwtXphsXWZ
-SZqddyT6DFQqQRGlr7voB1EVOrSXW4Xnmm6BnhpHNGlyXJ+DuqvwQM67LnHRoxHj
-5XKCw/R+v3hePvJIkqKeMh09tV8NwknObf0kGtW3+t3tP4ya0MxroIAiUUZmT24J
-5rCPmh8aLGVZVUzqphPed9xQsVs77Qg2bvJRUTbwWtA7Neu9Y4wY7K3T9CplxR3g
-zw3W+YM/ydVmkok4puCp
-=vvhO
------END PGP SIGNATURE-----
-
---Sig_/DSe3th4XPaWhByCfG_A7OoH--
+Regards,
+-- 
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
