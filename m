@@ -1,74 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Dec 2011 11:07:05 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Zac Storer <zac.3.14159@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 31/31] Drivers: pci: probe: fixed a brace coding style
- issue
-Message-ID: <20111205110705.401d2a3d@jbarnes-desktop>
-In-Reply-To: <1321596469-11180-1-git-send-email-zac.3.14159@gmail.com>
-References: <1321596469-11180-1-git-send-email-zac.3.14159@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/re/KzJCa2Ix0E0ySXS_hXcF"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from am1ehsobe003.messaging.microsoft.com ([213.199.154.206]:5033
+	"EHLO AM1EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932066Ab1LBSV1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2011 13:21:27 -0500
+Message-ID: <4ED9171B.8060500@freescale.com>
+Date: Fri, 2 Dec 2011 12:21:15 -0600
+From: Scott Wood <scottwood@freescale.com>
+MIME-Version: 1.0
+To: Stuart Yoder <b08248@gmail.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Alexey Kardashevskiy <aik@au1.ibm.com>, <aafabbri@cisco.com>,
+	<kvm@vger.kernel.org>, <pmac@au1.ibm.com>, <qemu-devel@nongnu.org>,
+	<joerg.roedel@amd.com>, <konrad.wilk@oracle.com>, <agraf@suse.de>,
+	<dwg@au1.ibm.com>, <chrisw@sous-sol.org>, <B08248@freescale.com>,
+	<iommu@lists.linux-foundation.org>, <avi@redhat.com>,
+	<linux-pci@vger.kernel.org>, <B07421@freescale.com>,
+	<benve@cisco.com>
+Subject: Re: [Qemu-devel] [RFC PATCH] vfio: VFIO Driver core framework
+References: <20111103195452.21259.93021.stgit@bling.home> <4ED43AD9.5090509@au1.ibm.com> <4ED43CFE.8040009@au1.ibm.com> <1322538856.19120.126.camel@bling.home> <1322594768.19120.194.camel@bling.home> <CALRxmdDEGwA787gEgC3d_yU99TqOZOtWeDJ9N-QCQ3gxV8yyMw@mail.gmail.com> <1322610273.19120.209.camel@bling.home> <CALRxmdBaguEZD8CnogHv+mSPuLx9et1CGRAa8oO_182Pjjp6-Q@mail.gmail.com> <1322672293.19120.232.camel@bling.home> <CALRxmdAjeyyM3Ta+DCTxtdc_J69fnVko_9hzmjcLUCe8SskNnQ@mail.gmail.com> <1322774717.26545.118.camel@bling.home> <CALRxmdDZjFGjdrEC5e1ANGV+PYd5Mz7j3zeaKNiEUwLdNzmiEA@mail.gmail.com>
+In-Reply-To: <CALRxmdDZjFGjdrEC5e1ANGV+PYd5Mz7j3zeaKNiEUwLdNzmiEA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/re/KzJCa2Ix0E0ySXS_hXcF
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 12/02/2011 08:40 AM, Stuart Yoder wrote:
+> On Thu, Dec 1, 2011 at 3:25 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+>> On Thu, 2011-12-01 at 14:58 -0600, Stuart Yoder wrote:
+>>> One other mechanism we need as well is the ability to
+>>> enable/disable a domain.
+>>>
+>>> For example-- suppose a device is assigned to a VM, the
+>>> device is in use when the VM is abruptly terminated.  The
+>>> VM terminate would shut off DMA at the IOMMU, but now
+>>> the device is in an indeterminate state.   Some devices
+>>> have no simple reset bit and getting the device back into
+>>> a sane state could be complicated-- something the hypervisor
+>>> doesn't want to do.
+>>>
+>>> So now KVM restarts the VM, vfio init happens for the device
+>>> and  the IOMMU for that device is re-configured,
+>>> etc, but we really can't re-enable DMA until the guest OS tells us
+>>> (via an hcall) that it is ready.   The guest needs to get the
+>>> assigned device in a sane state before DMA is enabled.
+>>
+>> Giant red flag.  We need to paravirtualize the guest?  Not on x86.
+> 
+> It's the reality we have to deal with, but doing this would obviously
+> only apply to platforms that need it.
 
-On Thu, 17 Nov 2011 23:07:49 -0700
-Zac Storer <zac.3.14159@gmail.com> wrote:
+By "x86" I assume you mean "PCI" and thus a bus-master enable flag that
+you rely on the guest not setting until the device has been reset or
+otherwise quiesced from any previous activity, in the absence of
+function-level reset.
 
-> Fixed a brace coding style issue.
->=20
-> Signed-off-by: Zac Storer <zac.3.14159@gmail.com>
-> ---
->  drivers/pci/probe.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 04e74f4..d5d0ab8 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1534,7 +1534,7 @@ struct pci_bus * pci_create_bus(struct device *pare=
-nt,
->  		return NULL;
-> =20
->  	dev =3D kzalloc(sizeof(*dev), GFP_KERNEL);
-> -	if (!dev){
-> +	if (!dev) {
->  		kfree(b);
->  		return NULL;
->  	}
+We don't have such a thing on our non-PCI devices.
 
-Applied to linux-next, thanks.  Would be even better if you found a
-32/31 with an actual bug fix in it though. :)
+>> Some
+>> devices are better for assignment than others.  PCI devices are moving
+>> towards supporting standard reset mechanisms.
+>>
+>>> Does this warrant a new domain enable/disable API, or should
+>>> we make this part of the setup API we are discussing
+>>> here?
+>>
+>> What's wrong with simply not adding any DMA mapping entries until you
+>> think your guest is ready?  Isn't that effectively the same thing?
+>> Unmap ~= disable.  If the IOMMU API had a mechanism to toggle the iommu
+>> domain on and off, I wouldn't be opposed to adding an ioctl to do it,
+>> but it really seems like just a shortcut vs map/unmap.  Thanks,
+> 
+> Yes, we could do something like that I guess.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+It would mean that we don't see any errors relating to impossible map
+requests until after the guest is running and decides to enable DMA.
+Depending on how PAMU table allocation is handled, it could introduce a
+risk of failing even later when a guest reboots and we need to
+temporarily disable DMA (e.g. if another vfio user consumes the same
+table space for another group in the meantime).
 
---Sig_/re/KzJCa2Ix0E0ySXS_hXcF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+It would add latency to failovers -- some customers have somewhat tight
+requirements there.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+-Scott
 
-iQIcBAEBAgAGBQJO3RZZAAoJEIEoDkX4Qk9hozMP/R29rgIfQ/yR+Hl7FIBP+uT0
-xrDxP5xa0afQUlngs8+MIJjOZ8YlbENvqkXaIONDmdxPQa7KeCZitT0xrTKa8BCs
-uC2iS2IoZkU3AqAD33bhEMIwzV0Nu7XKM1yvs3t1WOOI2PWIUM935/U2lOmVkoI5
-D1GMndVziWJMenH/hPfUdw/KUPL60l/uYs642UidT1ifnn45D9XHsLOAi1W03LVT
-IGCe08erqjbOMwQTZx836dVsdB4o5ZSKanHsYrE15lyokZvMx7pOxzXaRzQVO/iq
-G5dwDIznxBGGDDogNi1fnL38QyrdULBIx6fMNc6M64PmV+tY8vsSJkoIQ2CFuXF+
-sBY7+iTnbnxNFU9Ckx4VY2Hh8l2gK9KAIUMtdcA3UNfChcYZvyRllhUsYN/CBy89
-MagSB3OsKtZRwGztm3z5/EhnRhcgsmiaY63XV4ZJ4/5ymk4S9cuahvjouRIsNWGz
-Y3QtvWkZn+wETRslvTrd5QhnMdZMEIskZ0rmbuW6aZeQG6VPShAkzxpKdKSKV3/l
-y8XzRrxaSFgIxvwEpzrFuDAz+z1oLsKxtJHWUmv6pdL5bG/RN6D2Uo4taa/VPvkM
-ScGtemmFjTU7+LMDOmChV6oWM53hBRAAuXnE98yPK4O6S0rsxy5h19/Yw9p6AB1v
-CKz5W1yhG//8p9MGa3LH
-=7iAe
------END PGP SIGNATURE-----
-
---Sig_/re/KzJCa2Ix0E0ySXS_hXcF--
