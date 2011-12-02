@@ -1,62 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f202.google.com ([209.85.213.202]:44687 "EHLO
-	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760898Ab1LPWbu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2011 17:31:50 -0500
-Received: by yenm5 with SMTP id m5so459948yen.1
-        for <linux-pci@vger.kernel.org>; Fri, 16 Dec 2011 14:31:50 -0800 (PST)
-Subject: [PATCH 4/6] sunhme/PCI: use list_for_each_entry() for bus->devices
-	traversal
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	netdev@vger.kernel.org
-Date: Fri, 16 Dec 2011 15:31:49 -0700
-Message-ID: <20111216223149.5963.61942.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
-References: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-qw0-f53.google.com ([209.85.216.53]:43779 "EHLO
+	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756742Ab1LBOkx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2011 09:40:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1322774717.26545.118.camel@bling.home>
+References: <20111103195452.21259.93021.stgit@bling.home>
+	<4ED43AD9.5090509@au1.ibm.com>
+	<4ED43CFE.8040009@au1.ibm.com>
+	<1322538856.19120.126.camel@bling.home>
+	<1322594768.19120.194.camel@bling.home>
+	<CALRxmdDEGwA787gEgC3d_yU99TqOZOtWeDJ9N-QCQ3gxV8yyMw@mail.gmail.com>
+	<1322610273.19120.209.camel@bling.home>
+	<CALRxmdBaguEZD8CnogHv+mSPuLx9et1CGRAa8oO_182Pjjp6-Q@mail.gmail.com>
+	<1322672293.19120.232.camel@bling.home>
+	<CALRxmdAjeyyM3Ta+DCTxtdc_J69fnVko_9hzmjcLUCe8SskNnQ@mail.gmail.com>
+	<1322774717.26545.118.camel@bling.home>
+Date: Fri, 2 Dec 2011 08:40:52 -0600
+Message-ID: <CALRxmdDZjFGjdrEC5e1ANGV+PYd5Mz7j3zeaKNiEUwLdNzmiEA@mail.gmail.com>
+Subject: Re: [Qemu-devel] [RFC PATCH] vfio: VFIO Driver core framework
+From: Stuart Yoder <b08248@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Alexey Kardashevskiy <aik@au1.ibm.com>, aafabbri@cisco.com,
+	kvm@vger.kernel.org, pmac@au1.ibm.com, qemu-devel@nongnu.org,
+	joerg.roedel@amd.com, konrad.wilk@oracle.com, agraf@suse.de,
+	dwg@au1.ibm.com, chrisw@sous-sol.org, B08248@freescale.com,
+	iommu@lists.linux-foundation.org, avi@redhat.com,
+	linux-pci@vger.kernel.org, B07421@freescale.com, benve@cisco.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace open-coded list traversal with list_for_each_entry().
+On Thu, Dec 1, 2011 at 3:25 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Thu, 2011-12-01 at 14:58 -0600, Stuart Yoder wrote:
+>> One other mechanism we need as well is the ability to
+>> enable/disable a domain.
+>>
+>> For example-- suppose a device is assigned to a VM, the
+>> device is in use when the VM is abruptly terminated.  The
+>> VM terminate would shut off DMA at the IOMMU, but now
+>> the device is in an indeterminate state.   Some devices
+>> have no simple reset bit and getting the device back into
+>> a sane state could be complicated-- something the hypervisor
+>> doesn't want to do.
+>>
+>> So now KVM restarts the VM, vfio init happens for the device
+>> and  the IOMMU for that device is re-configured,
+>> etc, but we really can't re-enable DMA until the guest OS tells us
+>> (via an hcall) that it is ready.   The guest needs to get the
+>> assigned device in a sane state before DMA is enabled.
+>
+> Giant red flag.  We need to paravirtualize the guest?  Not on x86.
 
-CC: David S. Miller <davem@davemloft.net>
-CC: netdev@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/net/ethernet/sun/sunhme.c |    9 ++-------
- 1 files changed, 2 insertions(+), 7 deletions(-)
+It's the reality we have to deal with, but doing this would obviously
+only apply to platforms that need it.
 
-diff --git a/drivers/net/ethernet/sun/sunhme.c b/drivers/net/ethernet/sun/sunhme.c
-index cf14ab9..1d00a4c 100644
---- a/drivers/net/ethernet/sun/sunhme.c
-+++ b/drivers/net/ethernet/sun/sunhme.c
-@@ -2849,7 +2849,7 @@ err_out:
- static int is_quattro_p(struct pci_dev *pdev)
- {
- 	struct pci_dev *busdev = pdev->bus->self;
--	struct list_head *tmp;
-+	struct pci_dev *this_pdev;
- 	int n_hmes;
- 
- 	if (busdev == NULL ||
-@@ -2858,15 +2858,10 @@ static int is_quattro_p(struct pci_dev *pdev)
- 		return 0;
- 
- 	n_hmes = 0;
--	tmp = pdev->bus->devices.next;
--	while (tmp != &pdev->bus->devices) {
--		struct pci_dev *this_pdev = pci_dev_b(tmp);
--
-+	list_for_each_entry(this_pdev, &pdev->bus->devices, bus_list) {
- 		if (this_pdev->vendor == PCI_VENDOR_ID_SUN &&
- 		    this_pdev->device == PCI_DEVICE_ID_SUN_HAPPYMEAL)
- 			n_hmes++;
--
--		tmp = tmp->next;
- 	}
- 
- 	if (n_hmes != 4)
+> Some
+> devices are better for assignment than others.  PCI devices are moving
+> towards supporting standard reset mechanisms.
+>
+>> Does this warrant a new domain enable/disable API, or should
+>> we make this part of the setup API we are discussing
+>> here?
+>
+> What's wrong with simply not adding any DMA mapping entries until you
+> think your guest is ready?  Isn't that effectively the same thing?
+> Unmap ~= disable.  If the IOMMU API had a mechanism to toggle the iommu
+> domain on and off, I wouldn't be opposed to adding an ioctl to do it,
+> but it really seems like just a shortcut vs map/unmap.  Thanks,
 
+Yes, we could do something like that I guess.
+
+Stuart
