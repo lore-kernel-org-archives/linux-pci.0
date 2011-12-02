@@ -1,33 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g6t0184.atlanta.hp.com ([15.193.32.61]:44223 "EHLO
-	g6t0184.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752806Ab1LFUfs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2011 15:35:48 -0500
-Message-ID: <4EDE7A88.7080304@hp.com>
-Date: Tue, 06 Dec 2011 14:26:48 -0600
-From: Mike Miller <mike.miller@hp.com>
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:23982
+	"EHLO VA3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932309Ab1LBSpc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 2 Dec 2011 13:45:32 -0500
+From: Bhushan Bharat-R65777 <R65777@freescale.com>
+To: Wood Scott-B07421 <B07421@freescale.com>
+CC: Stuart Yoder <b08248@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Alexey Kardashevskiy <aik@au1.ibm.com>,
+	"aafabbri@cisco.com" <aafabbri@cisco.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"pmac@au1.ibm.com" <pmac@au1.ibm.com>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"joerg.roedel@amd.com" <joerg.roedel@amd.com>,
+	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+	"agraf@suse.de" <agraf@suse.de>,
+	"dwg@au1.ibm.com" <dwg@au1.ibm.com>,
+	"chrisw@sous-sol.org" <chrisw@sous-sol.org>,
+	Yoder Stuart-B08248 <B08248@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"avi@redhat.com" <avi@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"benve@cisco.com" <benve@cisco.com>
+Subject: RE: [Qemu-devel] [RFC PATCH] vfio: VFIO Driver core framework
+Date: Fri, 2 Dec 2011 18:45:27 +0000
+Message-ID: <B8D6CA50DACE9E4AAADE9A4D56FBAAE62BCAE8@039-SN1MPN1-004.039d.mgd.msft.net>
+References: <20111103195452.21259.93021.stgit@bling.home>
+ <4ED43AD9.5090509@au1.ibm.com>	<4ED43CFE.8040009@au1.ibm.com>
+ <1322538856.19120.126.camel@bling.home>
+ <1322594768.19120.194.camel@bling.home>
+ <CALRxmdDEGwA787gEgC3d_yU99TqOZOtWeDJ9N-QCQ3gxV8yyMw@mail.gmail.com>
+ <1322610273.19120.209.camel@bling.home>
+ <CALRxmdBaguEZD8CnogHv+mSPuLx9et1CGRAa8oO_182Pjjp6-Q@mail.gmail.com>
+ <1322672293.19120.232.camel@bling.home>
+ <CALRxmdAjeyyM3Ta+DCTxtdc_J69fnVko_9hzmjcLUCe8SskNnQ@mail.gmail.com>
+ <1322774717.26545.118.camel@bling.home>
+ <CALRxmdDZjFGjdrEC5e1ANGV+PYd5Mz7j3zeaKNiEUwLdNzmiEA@mail.gmail.com>
+ <B8D6CA50DACE9E4AAADE9A4D56FBAAE62BC98C@039-SN1MPN1-004.039d.mgd.msft.net>
+ <4ED91876.2030408@freescale.com>
+In-Reply-To: <4ED91876.2030408@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Martin Mares <mj@ucw.cz>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/1] pciutils: add 8TB/s to link capabilities
-References: <20111206191605.GA11235@beardog.cce.hp.com> <mj+md-20111206.195256.30852.nikam@ucw.cz>
-In-Reply-To: <mj+md-20111206.195256.30852.nikam@ucw.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/06/2011 01:53 PM, Martin Mares wrote:
-> Hello!
->
->> Right now lspci shows "Speed unknown" for PCIe Gen3 links. This two liner
->> adds 8GT/s to fix that. I don't think the next link rate has yet been
->> decided. So I only go to Gen3.
->
-> I already have this one in my current Git tree (also available on kernel.org).
-> It seems I really should push out a new release :-)
->
-> 		Thanks anyway
-> 					Martin
-Thank you.
 
--- mikem
+
+> -----Original Message-----
+> From: Wood Scott-B07421
+> Sent: Friday, December 02, 2011 11:57 PM
+> To: Bhushan Bharat-R65777
+> Cc: Stuart Yoder; Alex Williamson; Alexey Kardashevskiy;
+> aafabbri@cisco.com; kvm@vger.kernel.org; pmac@au1.ibm.com; qemu-
+> devel@nongnu.org; joerg.roedel@amd.com; konrad.wilk@oracle.com;
+> agraf@suse.de; dwg@au1.ibm.com; chrisw@sous-sol.org; Yoder Stuart-B08248;
+> iommu@lists.linux-foundation.org; avi@redhat.com; linux-
+> pci@vger.kernel.org; Wood Scott-B07421; benve@cisco.com
+> Subject: Re: [Qemu-devel] [RFC PATCH] vfio: VFIO Driver core framework
+> 
+> On 12/02/2011 12:11 PM, Bhushan Bharat-R65777 wrote:
+> > How do we determine whether guest is ready or not? There can be
+> multiple device get ready at different time.
+> 
+> The guest makes a hypercall with a device handle -- at least that's how
+> we do it in Topaz.
+> 
+> > Further if guest have given the device to it user level process or its
+> guest. Should not there be some mechanism for a guest to enable/disable
+> on per device or group?
+> 
+> Yes, the same mechanism can be used for that -- though in that case we'll
+> also want the ability for the guest to be able to control another layer
+> of mapping (which will get quite tricky with PAMU's limitations).
+>  This isn't really VFIO's concern, though (unless you're talking about
+> the VFIO implementation in the guest).
+
+Scott, I am not sure if there is any real use case where device needed to assigned beyond 2 level (host + immediate guest) in nested virtualization.
+
+But if there any exists then will not it be better to virtualizes the iommu (PAMU for Freescale)?
+
+Thanks
+-Bharat 
+
+
+
