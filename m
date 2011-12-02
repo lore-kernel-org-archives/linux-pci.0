@@ -1,31 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:59044 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412Ab1LSVOD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2011 16:14:03 -0500
-Date: Mon, 19 Dec 2011 16:13:54 -0500 (EST)
-Message-Id: <20111219.161354.690295963350650107.davem@davemloft.net>
-To: bhelgaas@google.com
-Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	grundler@parisc-linux.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 5/6] de4x5/PCI: use list_for_each_entry() for
- bus->devices traversal
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111216223154.5963.39965.stgit@bhelgaas.mtv.corp.google.com>
-References: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
-	<20111216223154.5963.39965.stgit@bhelgaas.mtv.corp.google.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from acsinet15.oracle.com ([141.146.126.227]:24157 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751795Ab1LBXK7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2011 18:10:59 -0500
+Message-ID: <4ED95AD0.7090003@oracle.com>
+Date: Fri, 02 Dec 2011 15:10:08 -0800
+From: Yinghai Lu <yinghai.lu@oracle.com>
+MIME-Version: 1.0
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] pciehp: Disable/enable link during slot power off/on
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 16 Dec 2011 15:31:54 -0700
 
-> Replace open-coded list traversal with list_for_each_entry().
-> 
-> CC: Grant Grundler <grundler@parisc-linux.org>
-> CC: netdev@vger.kernel.org
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+One system have repeater in system board to support gen2 hotplug.
 
-Applied.
+Found when EM is removed from some slots, /var/log/message will be full of
+"card present/not present" warning.
+
+It turns out root complex still try to train the link to repeater because
+repeater is not reset.
+
+This patch will disable link to make repeater could reset properly.
+Also could kill AER during EM removal.
+
+Recently when testing hotplug on one system under development, found if boot
+the system without EM, and later hotplug does not work with Linux.
+But other OS is ok.
+The root cause is that bios left link disabled when slot is empty,
+and other OS is playing link disable bit in link ctrl during power on/off.
+
+So We could do the same thing to disable/enable link during power off/on.
+
+Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
+
+---
+ drivers/pci/hotplug/pciehp_hpc.c |   46 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+@@ -315,6 +315,42 @@ int pciehp_check_link_status(struct cont
+ 	return retval;
+ }
+ 
++static int __pciehp_link_set(struct controller *ctrl, bool enable)
++{
++	u16 lnk_ctrl;
++	int retval = 0;
++
++	retval = pciehp_readw(ctrl, PCI_EXP_LNKCTL, &lnk_ctrl);
++	if (retval) {
++		ctrl_err(ctrl, "Cannot read LNKCTRL register\n");
++		return retval;
++	}
++
++	if (enable)
++		lnk_ctrl &= ~PCI_EXP_LNKCTL_LD;
++	else
++		lnk_ctrl |= PCI_EXP_LNKCTL_LD;
++
++	retval = pciehp_writew(ctrl, PCI_EXP_LNKCTL, lnk_ctrl);
++	if (retval) {
++		ctrl_err(ctrl, "Cannot write LNKCTRL register\n");
++		return retval;
++	}
++	ctrl_dbg(ctrl, "%s: lnk_ctrl = %x\n", __func__, lnk_ctrl);
++
++	return retval;
++}
++
++static int pciehp_link_enable(struct controller *ctrl)
++{
++	return __pciehp_link_set(ctrl, true);
++}
++
++static int pciehp_link_disable(struct controller *ctrl)
++{
++	return __pciehp_link_set(ctrl, false);
++}
++
+ int pciehp_get_attention_status(struct slot *slot, u8 *status)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+@@ -533,6 +569,12 @@ int pciehp_power_on_slot(struct slot * s
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
+ 
++	/* Need to wait before enabling link */
++	msleep(100);
++	retval = pciehp_link_enable(ctrl);
++	if (retval)
++		ctrl_err(ctrl, "%s: Can not enable the link!\n", __func__);
++
+ 	return retval;
+ }
+ 
+@@ -543,6 +585,10 @@ int pciehp_power_off_slot(struct slot *
+ 	u16 cmd_mask;
+ 	int retval;
+ 
++	/* Disable the link at first */
++	pciehp_link_disable(ctrl);
++	msleep(100);
++
+ 	slot_cmd = POWER_OFF;
+ 	cmd_mask = PCI_EXP_SLTCTL_PCC;
+ 	retval = pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
