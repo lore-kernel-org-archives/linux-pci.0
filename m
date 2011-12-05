@@ -1,59 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:54455 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750790Ab1LLXGQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Dec 2011 18:06:16 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH][Regression fix] PCI / Hotplug: Always allow acpiphp to handle non-PCIe bridges
-Date: Tue, 13 Dec 2011 00:09:12 +0100
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-References: <201112130002.28907.rjw@sisk.pl>
-In-Reply-To: <201112130002.28907.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201112130009.13088.rjw@sisk.pl>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:55992 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755113Ab1LES32 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 13:29:28 -0500
+Date: Mon, 5 Dec 2011 10:32:02 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+Message-ID: <20111205103202.29faf6e1@jbarnes-desktop>
+In-Reply-To: <20111106023310.GA2383@ram-ThinkPad-T61>
+References: <20111006210320.GA14959@us.ibm.com>
+	<CAErSpo7b_6_AaZXW9XBx5p3-0PZJk-1jeCork__KePdzCS89OA@mail.gmail.com>
+	<1317970100.29415.305.camel@pasglop>
+	<CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>
+	<20111007232516.GF2980@ram-ThinkPad-T61>
+	<1318057168.29415.333.camel@pasglop>
+	<20111008075353.GK2980@ram-ThinkPad-T61>
+	<1318060793.29415.347.camel@pasglop>
+	<20111102140325.004b9dad@jbarnes-desktop>
+	<20111103013014.GB393@ram-ThinkPad-T61>
+	<20111106023310.GA2383@ram-ThinkPad-T61>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/4Yccy_+1EUL0_Q0kZAGP0g1"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jesse,
+--Sig_/4Yccy_+1EUL0_Q0kZAGP0g1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Tuesday, December 13, 2011, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
-> 
-> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make
-> acpiphp ignore root bridges using PCIe native hotplug) added code
-> that made the acpiphp driver completely ignore PCIe root complexes
-> for which the kernel had been granted control of the native PCIe
-> hotplug feature by the BIOS through _OSC.  Unfortunately, however,
-> this was a mistake, because on some systems there were PCI bridges
-> supporting PCI (non-PCIe) hotplug under such root complexes and
-> those bridges should have been handled by acpiphp.
-> 
-> For this reason, revert the changes made by the commit mentioned
-> above and make register_slot() in drivers/pci/hotplug/acpiphp_glue.c
-> avoid registering hotplug slots for PCIe ports that belong to
-> root complexes with native PCIe hotplug enabled (which means that
-> the BIOS has granted the kernel control of this feature for the
-> given root complex).  This is reported to address the original
-> issue fixed by commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a and
-> to work on the system where that commit broke things.
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+On Sun, 6 Nov 2011 10:33:10 +0800
+Ram Pai <linuxram@us.ibm.com> wrote:
+
+>   All the PCI BARs of a device are enabled when the device is enabled usi=
+ng
+>   pci_enable_device().  This unnecessarily enables SRIOV BARs of the devi=
+ce.
+>=20
+>   On some platforms, which do not support SRIOV as yet, the pci_enable_de=
+vice()
+>   fails to enable the device if its SRIOV BARs are not allocated resources
+>   correctly.
+>=20
+>   The following patch fixes the above problem. The SRIOV BARs are now ena=
+bled
+>   when IOV capability of the device is enabled in sriov_enable().
+>=20
+>   NOTE: Note, there is subtle change in the pci_enable_device() API.
+>   Any driver that depends on SRIOV BARS to be enabled in pci_enable_devic=
+e()
+>   can fail.
+>=20
+>   The patch has been touch tested on power and x86 platform.
+>=20
+>   Signed-off-by: Ram Pai <linuxram@us.ibm.com>
 > ---
 
-Sorry for the breakage, I clearly should have been more careful here.
+Applied to my for-linus branch, thanks.
 
-Please also revert this commit from your linux-next branch:
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-http://git.kernel.org/?p=linux/kernel/git/jbarnes/pci.git;a=commit;h=71c50ab7a32968b73b533dd27620eef563ace6b7
+--Sig_/4Yccy_+1EUL0_Q0kZAGP0g1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-as it makes the same mistake and depends on the code being removed by this
-patch.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-Thanks,
-Rafael
+iQIcBAEBAgAGBQJO3Q4iAAoJEIEoDkX4Qk9hiCkP/A5XJSGJWNx9+zK52LYnJkHJ
+h6vDplEY9PLCzAcDXjUipPAno4iePwUKFlxiIr+8EkZojEZYWW4Aj111MLNcv2Cc
+mWe+N3d6eO+zmRq0OxNsvNjrSPz8ki7AgW4rkJ0KGFMj6nEAPw09v6iXXNypy3Az
+hX5ep5ezmlJ1iiLd0zWGlPybV5Z+YYgZHNr4tpxE5cBs4HeccKESe07/zaBRU+Wd
+CmE7i5R825D1DXjD4dKmMIlAZqDriAvLOVp6UiZm2dmmz6mqnQxesdkIzHy5Y7ZM
+ao2NZoyrh5NPr/TyDyjDCZJNRG08+FmmhvIwMMaoin0N466WGKFHyKFE22gBHc6W
+BezckNykMbAqOQXMKGbaLRfy51wo+xYSm5y3fKL6oX5c/2QcE+HTil662/hocKj7
+Bfsp/9cQUwMcw05g317zehbU1Orp4atSz0/T0zTGGtk67kGYaytwJlzmBWJToWNR
+Kf6uAfC7QpqEsYee3/3F+wLZLfXY97tB+V8QM8HxvixFZbkpkrZCPz76aMSyWVb6
+2eaWgop94e45mYMK2OiG2kBudbVZbTBP0SG0lp0bkad4nMcYozPph2xd5gcqYZuB
+nQTtGFBjf+4+3Y/mV16jWLBQ7UaTGlGKsWvCBkLIgvfwzRGDTxbtt1Aj24z91Eou
+h8MtrnJWHBOMbwubhp0P
+=5W60
+-----END PGP SIGNATURE-----
+
+--Sig_/4Yccy_+1EUL0_Q0kZAGP0g1--
