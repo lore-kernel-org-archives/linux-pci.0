@@ -1,70 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Dec 2011 11:06:23 -0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:39161 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932126Ab1LET0U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:26:20 -0500
+Date: Mon, 5 Dec 2011 11:28:54 -0800
 From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Hans J. Koch" <hjk@hansjkoch.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] pci: Rework config space blocking services
-Message-ID: <20111205110623.0eeaa2ec@jbarnes-desktop>
-In-Reply-To: <693bbd2bcf55f839d6dc4b7b002dd1827214bf1f.1320396359.git.jan.kiszka@siemens.com>
-References: <cover.1320396359.git.jan.kiszka@siemens.com>
-	<693bbd2bcf55f839d6dc4b7b002dd1827214bf1f.1320396359.git.jan.kiszka@siemens.com>
+To: "Jan Beulich" <JBeulich@suse.com>
+Cc: "Bjorn Helgaas" <bjorn.helgaas@hp.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI/IO-APIC: allow PCI_IOAPIC to be user configurable
+ on x86
+Message-ID: <20111205112854.10aceb75@jbarnes-desktop>
+In-Reply-To: <4ED49EEA0200007800063F75@nat28.tlf.novell.com>
+References: <4ED49EEA0200007800063F75@nat28.tlf.novell.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/_tyQgg6dL2ArbgXgVwdS6X/"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+ boundary="Sig_/FXOfgPchDg2cS1Izg09G7ka"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/_tyQgg6dL2ArbgXgVwdS6X/
+--Sig_/FXOfgPchDg2cS1Izg09G7ka
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri,  4 Nov 2011 09:45:59 +0100
-Jan Kiszka <jan.kiszka@siemens.com> wrote:
+On Tue, 29 Nov 2011 07:59:22 +0000
+"Jan Beulich" <JBeulich@suse.com> wrote:
 
-> pci_block_user_cfg_access was designed for the use case that a single
-> context, the IPR driver, temporarily delays user space accesses to the
-> config space via sysfs. This assumption became invalid by the time
-> pci_dev_reset was added as locking instance. Today, if you run two loops
-> in parallel that reset the same device via sysfs, you end up with a
-> kernel BUG as pci_block_user_cfg_access detect the broken assumption.
+> This adjusts PCI_IOAPIC to be user configurable (possibly as a module)
+> on x86, since the base architecture code for adding IO-APICs
+> dynamically isn't there yet (and hence having the code present
+> everywhere is pretty pointless).
 >=20
-> This reworks the pci_block_user_cfg_access to a sleeping service
-> pci_cfg_access_lock and an atomic-compatible variant called
-> pci_cfg_access_trylock. The former not only blocks user space access as
-> before but also waits if access was already locked. The latter service
-> just returns false in this case, allowing the caller to resolve the
-> conflict instead of raising a BUG.
+> To make this consistent, a MODULE_DEVICE_TABLE() declaration gets
+> added, the class specifications get corrected (by properly using
+> PCI_DEVICE_CLASS() intended for purposes like this), and the probe and
+> remove functions get their sections adjusted.
 >=20
-> Adaptions of the ipr driver were originally written by Brian King.
+> Signed-off-by: Jan Beulich <jbeulich@suse.com>
+> Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>
+>=20
 
-Applied this series to linux-next, thanks.
+Oooh, fancy.  Should go through the x86 tree though since the APIC code
+is really x86 specific (and they're the experts in that anyway).
 
+Thanks,
 --=20
 Jesse Barnes, Intel Open Source Technology Center
 
---Sig_/_tyQgg6dL2ArbgXgVwdS6X/
+--Sig_/FXOfgPchDg2cS1Izg09G7ka
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAEBAgAGBQJO3RYvAAoJEIEoDkX4Qk9hZyIP/i1yZ0JftIAUlTuroMlyKwzh
-bG4apRW7//sp4FTJvLYn5btZfN44uxtgFyxYxRFGEWUwtzLO5HYgJop1PNVPL57t
-HrQewqmNDQhWFhK+tR/7SXdxo7XICHMlGcZcX6OCet22m62PZRnY8A3O1TKoN1We
-wMJGY//rPh5/SK6nfkmHuwbP3rJTUJSlNZklV1MHN5gp91angikF4qanMhj0KTjD
-tqILYffBItd/Qrv494q6RnlMMIrASBY9Y/kzQJE6aHPowIx49cwj9wZUQohjSKf7
-cOV5aRUaWbyZ2tb43XjrC5yE+LlQK7YdW2+b2goea8iQeHL+BcZWErhJw23JAFq/
-3F2IcGwIYizBGVit3NxArjFNagki6oOYBGUslXl6me5tDjFWadZGUP+aSzgTGO80
-y9CPGrhnnWBlQ84o6Fx8wN2n/N7RMNsmkF9XgbunO5Hb3WtjDUL2aApF8pnBf4tr
-Rc9Ml/50YPZrtbiwbtlMYlt1EmyvP+92nA8fNY6bSL/txGZ36PV85PFxr9FkaTfo
-7TN6MFZPm4vo4JediCsLPBwK0vTwyFgRkOappoLE/kcqAhrZjGckgEzh/+sUPGp0
-tzsv3C42t+HBJRXBZwhud3A3L8wgMR3xPg1wTpVMO8hjGfLitQX6pFofWV988Duh
-xVkFXN6rRTKIKW15h1J5
-=m5Tj
+iQIcBAEBAgAGBQJO3Rt2AAoJEIEoDkX4Qk9hhGEP/2SIZ74Udvx0Vr778y2/toUe
+NMB1thbk33Vs1jk1vdAANRkEJe/95B3aUY8eopTgcmAQIyh1qDmR5PS6io0Dl473
+syaqxPt05DQPdoQnZMfe0CD6woh+ygxXhBL49bHiuoQvAIT0NFcxUxZHgABhzykD
+eTQVf5sdx94QOgONJg+1MCtwLVMZIbec0XEMrD6psn3qvgyRklK38xxE64IKqdYh
+Z9fltbKwqGzD69hRUYApS6jtNIt/Zu4fF2of04lAuxg9OrWCWoeAKeh0Kv++ibMQ
+GpI1JHSfRviCEiG/Lv8Biqs7cfBnWaeNr1aPlMBVTrm+qzk5iFZ/FhMTPlnug0e1
+a4narAzftr1fkb9kMW3g6j9y8L9tSsOD1lkA0/j7Q4DsqLxqARSDmZE5AVSu7MSS
+x0IQyPbjLYBlUvE4axKscC/70gIHqzoiqumf5f7vNAyobdK9Lc9++84+400vkRIc
++iq4rI4DmtqQ2q11PUKIVI+vzajOVeiUwvL8ru0DWMntmsbJ65DPGxzItZZO3oPl
+yBWP+k12ZYriyMdL4curwjxIqLv+0rMdkk9m2NWplLI7PylAzFOh0wmnOc9a/I2b
+ip1+nzIBrZr8oA74zWlI+ulIlSc7tWetwFT1Um3V6fAoC5GW38NSER2dwOxzWudH
+0nuyd7N57Wf8iVoOde9O
+=0UKT
 -----END PGP SIGNATURE-----
 
---Sig_/_tyQgg6dL2ArbgXgVwdS6X/--
+--Sig_/FXOfgPchDg2cS1Izg09G7ka--
