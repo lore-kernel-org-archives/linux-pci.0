@@ -1,103 +1,63 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4EDDCD6D.1010907@jp.fujitsu.com>
-Date: Tue, 06 Dec 2011 17:08:13 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [git pull] PCI fixes
-References: <20111123144417.2da5958c@jbarnes-desktop> <CA+55aFyaiJBYmgVCLfPA7q3hqtPHYh9wwsmVTCewbBoxMsDE8A@mail.gmail.com> <20111205112256.68e59434@jbarnes-desktop>
-In-Reply-To: <20111205112256.68e59434@jbarnes-desktop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Mon, 5 Dec 2011 11:19:06 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Vincent Palatin <vpalatin@chromium.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Olof Johansson <olofj@chromium.org>,
+	Sameer Nanda <snanda@chromium.org>,
+	Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] PM / Runtime: make PCI traces quieter
+Message-ID: <20111205111906.7cae2946@jbarnes-desktop>
+In-Reply-To: <CAP_ceTzQ45tJQq0Vd+jR1t1Cf+AAL_wAJXpNjPKOmZ2tFkPWKg@mail.gmail.com>
+References: <CAP_ceTyXLO=mv1Ott=g3mG0y+Q+VUM3N8CA-Fqa-_=uj7LTbmw@mail.gmail.com>
+	<1316628308-32580-1-git-send-email-vpalatin@chromium.org>
+	<201109212029.38899.rjw@sisk.pl>
+	<CAP_ceTzQ45tJQq0Vd+jR1t1Cf+AAL_wAJXpNjPKOmZ2tFkPWKg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/DE8/5XY/8q5JwUjwrnCKR=."; protocol="application/pgp-signature"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2011/12/06 4:22), Jesse Barnes wrote:
-> On Wed, 23 Nov 2011 15:02:01 -0800
-> Linus Torvalds<torvalds@linux-foundation.org>  wrote:
->
->> On Wed, Nov 23, 2011 at 2:44 PM, Jesse Barnes<jbarnes@virtuousgeek.org>  wrote:
->>>
->>> Nothing too exciting this time, mostly some minor fixes for things
->>> normal people don't really hit.  Happy Thanksgiving.
->>
->> Ugh. This looks bogus:
->>
->>> Kenji Kaneshige (2):
->>>       PCI: pciehp: wait 1000 ms before Link Training check
->>
->> Look at that patch more closely. After the patch, the code looks like this:
->>
->>
->>           if (ctrl->link_active_reporting)
->>                   pcie_wait_link_active(ctrl);
->>           else
->>                   msleep(1000);
->>
->> +	/*
->> +	 * Need to wait for 1000 ms after Data Link Layer Link Active
->> +	 * (DLLLA) bit reads 1b before sending configuration request.
->> +	 * We need it before checking Link Training (LT) bit becuase
->> +	 * LT is still set even after DLLLA bit is set on some platform.
->> +	 */
->> +	msleep(1000);
->>
->> and I'm pretty sure you should remove the "else msleep(1000)" there.
->> Doing the 1s wait *twice* seems entirely bogus, even if you are
->> missing link_active_reporting. No?
->>
->> I pulled it since I can't test it, but it really smells fishy to me.
->
-> Sure looks like it... Kenji-san, you went back and forth on this one a
-> little, can you confirm (and preferably test)?
->
-> Thanks,
+--Sig_/DE8/5XY/8q5JwUjwrnCKR=.
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I'm very sorry for the long delay.
+On Mon, 28 Nov 2011 11:15:43 -0800
+Vincent Palatin <vpalatin@chromium.org> wrote:
 
-Each 1000 ms wait has defferent meaning. But as Linus pointed out, the
-first one ("else msleep(1000)") can be removed. I'll work on this.
-Though the patch is not clean, I tested it from the regression point of
-view. And Yinghai also confirmed it fix his problem.
+> Hi Jesse,
+> Any comment on that patch ?
 
-Here are explanation for each 1000 ms with history.
+Yeah making these into debug statements is ok with me, but I don't see
+the original in my inbox.  Bounce it over and I'll apply.
 
->>           if (ctrl->link_active_reporting)
->>                   pcie_wait_link_active(ctrl);
->>           else
->>                   msleep(1000);
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-This chunk is to wait for Link Active. After PCIe specification 1.1,
-downstream port with hotplug slots needs to support link active reporting.
-But older specification PCIe 1.0a doesn't have link active reporting. The
-"else msleep(1000)" is for PCIe 1.0a. It wait for 1 sec instead of polling
-data link layer link active bit. In PCIe 1.0a spec, the bit corresponding
-to the data link layer link active bit in PCIe 1.1 or later is defined
-reserved zero. So as Linus pointed out, we can remove "else msleep(1000)".
-The reason why I added "if (crtl->link_active_reporting)" here was that I
-didn't want to change the behavior for old hot-plug controller (PCIe 1.0a),
-but I think it was too much.
+--Sig_/DE8/5XY/8q5JwUjwrnCKR=.
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
->> +	/*
->> +	 * Need to wait for 1000 ms after Data Link Layer Link Active
->> +	 * (DLLLA) bit reads 1b before sending configuration request.
->> +	 * We need it before checking Link Training (LT) bit becuase
->> +	 * LT is still set even after DLLLA bit is set on some platform.
->> +	 */
->> +	msleep(1000);
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-In the past, pciehp waits 100 ms instead of 1 sec after checking the link
-state. This 100 ms was based on PCIe spec. But we encountered the problem
-that configuration access to some HBA card doesn't return the proper value.
-To fix this problem, we replaced this 100 ms wait with 1 sec wait. This is
-based on the PCIe description "software must allow 1 second after the Data
-Link Layer Link Active bit reads 1b before it is permitted to determine
-that a hot plugged device which fails to return a Successful Completion for
-a Valid Configuration Request is a broken device". Then, another problem
-was reported by Yinghai Lu. The problem is that LT bit is still set even
-after DLLLA bit is set on his platform. To fix the problem 1 sec wait was
-moved to before LT check, which was placed after LT check.
+iQIcBAEBAgAGBQJO3RkqAAoJEIEoDkX4Qk9hRh8QAIbxKanS6ygRlYYOjAc1HL/w
++hvnVy1OKakskpwKe3368tAF5F48BUlk31XBoEzYA2oCXTW1ZRbL8B6TCoza+PUg
+4cuWDCpmNL3/YWctjQfDuDG9O5Lg8g/h/bebN6/bGhLBZ8w+T5CfRS1vAuGjIpzh
+RJLTwxlTrA6OSB1lRDRqdmu85ckw/jSbCKvFhjXu8ccI4YZ8x+hpUpYUu1e8GCx4
+999Ia833EH8TK0Ndq4aQphc6cAZgG5jnqaJgjwQIEDY725wqpJmTeOgd3uzsncV2
+p+OXp2ke0aBffy02HlKyod4Zjif91vBVmF7oOSRhlKa4sgyPmbd2t7gFvn9TuTez
+m/Vp+i3toKA0LOXEE8YXLgqtxipzRjezemxRf166ciCqFZJPfw4oBFzQcTHnRLLQ
+RpuLU0AC/xYEv+hhYebVdnBx3jGX9vaVTu9KIpaDWfURnuBUEKzlDh9Y0tplQPzY
+wetPPj+32Hdjcw/+1jB710JU97d2/LWHiCyxoWPb9GDBcpn2n6XhCHq8UmLEwVif
+Z6e0UZt/b/modqXnO640stFD4acB6t6YkcuZniRjN4n/t07aCkmD/ZBDtdBzG2LN
+/sdzKORDhnxD94brTigz4aPceqp11ccCxM/8f6Vk+zKY71ueCvFbZNvWyYJ+D2OQ
+hTBeIGKetynehP6Xz5z1
+=achh
+-----END PGP SIGNATURE-----
 
-Regards,
-Kenji Kaneshige
+--Sig_/DE8/5XY/8q5JwUjwrnCKR=.--
