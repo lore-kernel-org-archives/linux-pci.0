@@ -1,121 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:37538 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756675Ab1LGTdi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Dec 2011 14:33:38 -0500
-Received: by yenm11 with SMTP id m11so380974yen.19
-        for <linux-pci@vger.kernel.org>; Wed, 07 Dec 2011 11:33:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20111207092531.GF19129@ram-ThinkPad-T61>
-References: <CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>
-	<20111007232516.GF2980@ram-ThinkPad-T61>
-	<1318057168.29415.333.camel@pasglop>
-	<20111008075353.GK2980@ram-ThinkPad-T61>
-	<1318060793.29415.347.camel@pasglop>
-	<20111102140325.004b9dad@jbarnes-desktop>
-	<20111103013014.GB393@ram-ThinkPad-T61>
-	<20111106023310.GA2383@ram-ThinkPad-T61>
-	<20111205103202.29faf6e1@jbarnes-desktop>
-	<CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
-	<20111207092531.GF19129@ram-ThinkPad-T61>
-Date: Wed, 7 Dec 2011 11:33:37 -0800
-Message-ID: <CAE9FiQXb3HPmpYrDCe90_3LYw-wQx2y=YtQCz-YsEnn-fA1=6A@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
-	brking@linux.vnet.ibm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-yw0-f74.google.com ([209.85.213.74]:42510 "EHLO
+	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932397Ab1LETvj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:51:39 -0500
+Received: by ywb26 with SMTP id 26so716872ywb.1
+        for <linux-pci@vger.kernel.org>; Mon, 05 Dec 2011 11:51:38 -0800 (PST)
+From: Vincent Palatin <vpalatin@chromium.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Olof Johansson <olofj@chromium.org>,
+	Sameer Nanda <snanda@chromium.org>,
+	Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Vincent Palatin <vpalatin@chromium.org>
+Subject: [PATCH] PM / Runtime: make PCI traces quieter
+Date: Mon,  5 Dec 2011 11:51:18 -0800
+Message-Id: <1323114678-28750-1-git-send-email-vpalatin@chromium.org>
+In-Reply-To: <20111205111906.7cae2946@jbarnes-desktop>
+References: <20111205111906.7cae2946@jbarnes-desktop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 7, 2011 at 1:25 AM, Ram Pai <linuxram@us.ibm.com> wrote:
-> On Wed, Dec 07, 2011 at 12:22:47AM -0800, Yinghai Lu wrote:
->> On Mon, Dec 5, 2011 at 10:32 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
->> > On Sun, 6 Nov 2011 10:33:10 +0800
->> > Ram Pai <linuxram@us.ibm.com> wrote:
->> >
->> >>
->> >>   NOTE: Note, there is subtle change in the pci_enable_device() API.
->> >>   Any driver that depends on SRIOV BARS to be enabled in pci_enable_device()
->> >>   can fail.
->> >>
->> >> ---
->> >
->> > Applied to my for-linus branch, thanks.
->> >
->>
->> please don't push to linus now.
->>
->> this one causes regression.
->>
->> please check attached patch.
->>
->> Thanks
->>
->> Yinghai
->
->> [PATCH] pci: Fix hotplug of Express Module with pci bridges
->>
->> Found hotplug of one setup does not work with recent change in pci tree.
->>
->> After checking the bridge conf setup, found bridges get assigned, but not get enabled.
->>
->> Finally found following commit, simplely ignore bridge resource when enabling pci device.
->>
->> | commit bbef98ab0f019f1b0c25c1acdf1683c68933d41b
->> | Author: Ram Pai <linuxram@us.ibm.com>
->> | Date:   Sun Nov 6 10:33:10 2011 +0800
->> |
->> |    PCI: defer enablement of SRIOV BARS
->> |...
->> |    NOTE: Note, there is subtle change in the pci_enable_device() API.  Any
->> |    driver that depends on SRIOV BARS to be enabled in pci_enable_device()
->> |    can fail.
->>
->> Put back bridge resource and ROM resource checking to fix the problem.
->>
->> That should fix regression like BIOS does not assign correct resource to bridge.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>
->> ---
->>  drivers/pci/pci.c |    6 +++++-
->>  1 file changed, 5 insertions(+), 1 deletion(-)
->>
->> Index: linux-2.6/drivers/pci/pci.c
->> ===================================================================
->> --- linux-2.6.orig/drivers/pci/pci.c
->> +++ linux-2.6/drivers/pci/pci.c
->> @@ -1139,7 +1139,11 @@ static int __pci_enable_device_flags(str
->>       if (atomic_add_return(1, &dev->enable_cnt) > 1)
->>               return 0;               /* already enabled */
->>
->> -     for (i = 0; i < PCI_ROM_RESOURCE; i++)
->> +     /* only skip sriov related */
->> +     for (i = 0; i <= PCI_ROM_RESOURCE; i++)
->> +             if (dev->resource[i].flags & flags)
->> +                     bars |= (1 << i);
->> +     for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++)
->>               if (dev->resource[i].flags & flags)
->>                       bars |= (1 << i);
->>
->
-> Oops. My patch inadvertently dropped ROM and BRIDGE resources.
->
-> This patch is right. However would it help if we did something like this
-> to avoid some code duplication?
->
->        for (i = 0; i < DEVICE_COUNT_RESOURCE;
->                i == PCI_ROM_RESOURCE ? PCI_BRIDGE_RESOURCES: i++)
->                if (dev->resource[i].flags & flags)
->                        bars |= (1 << i);
+When the runtime PM is activated on PCI, if a device switches state frequently
+(e.g. an EHCI controller with autosuspending USB devices connected)
+the PCI configuration traces might be very verbose in the kernel log.
+Let's guard those traces with DEBUG condition.
 
-just don't want to make for () too big.
+Signed-off-by: Vincent Palatin <vpalatin@chromium.org>
+---
+ arch/x86/pci/i386.c     |    2 +-
+ drivers/acpi/pci_irq.c  |   10 +++++-----
+ drivers/pci/pci.c       |    5 ++---
+ drivers/pci/setup-res.c |    6 +++---
+ 4 files changed, 11 insertions(+), 12 deletions(-)
 
-Thanks
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 794b092..e215a9b 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -270,7 +270,7 @@ void pcibios_set_master(struct pci_dev *dev)
+ 		lat = pcibios_max_latency;
+ 	else
+ 		return;
+-	dev_printk(KERN_DEBUG, &dev->dev, "setting latency timer to %d\n", lat);
++	dev_dbg(&dev->dev, "setting latency timer to %d\n", lat);
+ 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+ }
+ 
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 7f9eba9..0eefa12 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -487,10 +487,10 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 	else
+ 		link_desc[0] = '\0';
+ 
+-	dev_info(&dev->dev, "PCI INT %c%s -> GSI %u (%s, %s) -> IRQ %d\n",
+-		 pin_name(pin), link_desc, gsi,
+-		 (triggering == ACPI_LEVEL_SENSITIVE) ? "level" : "edge",
+-		 (polarity == ACPI_ACTIVE_LOW) ? "low" : "high", dev->irq);
++	dev_dbg(&dev->dev, "PCI INT %c%s -> GSI %u (%s, %s) -> IRQ %d\n",
++		pin_name(pin), link_desc, gsi,
++		(triggering == ACPI_LEVEL_SENSITIVE) ? "level" : "edge",
++		(polarity == ACPI_ACTIVE_LOW) ? "low" : "high", dev->irq);
+ 
+ 	return 0;
+ }
+@@ -524,6 +524,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	 * (e.g. PCI_UNDEFINED_IRQ).
+ 	 */
+ 
+-	dev_info(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
++	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+ 	acpi_unregister_gsi(gsi);
+ }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6f45a73..8119757 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -964,7 +964,7 @@ void pci_restore_state(struct pci_dev *dev)
+ 	for (i = 15; i >= 0; i--) {
+ 		pci_read_config_dword(dev, i * 4, &val);
+ 		if (val != dev->saved_config_space[i]) {
+-			dev_printk(KERN_DEBUG, &dev->dev, "restoring config "
++			dev_dbg(&dev->dev, "restoring config "
+ 				"space at offset %#x (was %#x, writing %#x)\n",
+ 				i, val, (int)dev->saved_config_space[i]);
+ 			pci_write_config_dword(dev,i * 4,
+@@ -1529,8 +1529,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+ 	}
+ 
+ out:
+-	dev_printk(KERN_DEBUG, &dev->dev, "PME# %s\n",
+-			enable ? "enabled" : "disabled");
++	dev_dbg(&dev->dev, "PME# %s\n", enable ? "enabled" : "disabled");
+ }
+ 
+ /**
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 5717509b..b66bfdb 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -85,9 +85,9 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 		}
+ 	}
+ 	res->flags &= ~IORESOURCE_UNSET;
+-	dev_info(&dev->dev, "BAR %d: set to %pR (PCI address [%#llx-%#llx])\n",
+-		 resno, res, (unsigned long long)region.start,
+-		 (unsigned long long)region.end);
++	dev_dbg(&dev->dev, "BAR %d: set to %pR (PCI address [%#llx-%#llx])\n",
++		resno, res, (unsigned long long)region.start,
++		(unsigned long long)region.end);
+ }
+ 
+ int pci_claim_resource(struct pci_dev *dev, int resource)
+-- 
+1.7.3.1
 
-Yinghai
