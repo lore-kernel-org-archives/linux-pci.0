@@ -1,204 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bay0-omc3-s7.bay0.hotmail.com ([65.54.190.145]:23144 "EHLO
-	bay0-omc3-s7.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752189Ab1LIMlT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Dec 2011 07:41:19 -0500
-Message-ID: <BAY163-W600D6D6A04D4BAE8278907FBB90@phx.gbl>
-From: Anand Kanaginhal <anand_dk@hotmail.com>
-To: <bhelgaas@google.com>, <mjg59@srcf.ucam.org>, <greg@kroah.com>
-CC: Linux PCI mailing <linux-pci@vger.kernel.org>,
-	linux kernel mailing <linux-kernel@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>
-Subject: RE: PCIe Hotplugging not working
-Date: Fri, 9 Dec 2011 04:41:18 -0800
-In-Reply-To: <CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>
-References: <BAY163-W52E309F419E3588206D889FBB30@phx.gbl>
- <BAY163-W47DD39095DA3EB108AA3F2FBB30@phx.gbl>,<20111130154022.GA1411@srcf.ucam.org>
- <BAY163-W80F10350D24162EFC3699FBB00@phx.gbl>,<20111130182423.GA4831@srcf.ucam.org>,<CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from oproxy9.bluehost.com ([69.89.24.6]:44505 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932126Ab1LET1q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:27:46 -0500
+Date: Mon, 5 Dec 2011 11:30:21 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: Xorg intel server not finding the graphics device
+Message-ID: <20111205113021.7841a4b2@jbarnes-desktop>
+In-Reply-To: <Pine.LNX.4.44L0.1111281639090.1405-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1111281639090.1405-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hGfVq_SrrL/sYfAhvY=6dvM"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+--Sig_/hGfVq_SrrL/sYfAhvY=6dvM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I am afraid this issue is not resolved, however to give 
-complete picture and my understanding so far, I have the following description:
-In the diagram:
----------------
-p1, p8 p9 are downstream hotplug slots(ports) on switch 8533.  
-c1, c2 are the custom designed pcie cards for which I have my driver.
+Hm, afaik the 865G should still work, maybe Fedora blacklisted the
+kernel support for it in newer bits?  If so, you'll need to use the
+vesa driver instead of the intel driver...
 
+Jesse
 
-    +----------+
-    |          |
-    |          |
-    |  CPUS    |
-    |          |
-    |          |
-    +----+-----+
-         |
-         |
-         |
-         |
-    +----+-----+                    +-------------+               
-    |          |                    |             | 
-    |          |                    |  PEX 8533   |
-    |  ROOT    |--------------------|  switch     |
-    |  CMPLX   |                    | (10b5:8533) |
-    |          |                    |             |
-    +----------+                    +-------------+
-                                      |    |    |
-                                    p1|  p8|  p9|
-                                      |    |    |
-                                      c1   c2   |
-                                                |
-                                                |
-                                                |
-                                                |
-                                       +-------------+               
-                                       |             | 
-                                       |   Another   |
-                                       |   switch    |
-                                       |   (chain)   |
-                                       |             |
-                                       +-------------+
+On Mon, 28 Nov 2011 17:15:37 -0500 (EST)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
+> Jesse:
+>=20
+> After an upgrade to Fedora-16, my Xorg server has a problem.  It no=20
+> longer binds to the intel driver to the 865G graphics chip.
+>=20
+> Here's the relevant portion of the Xorg log:
+>=20
+> --------------------------------------------------------------------
+> X.Org X Server 1.11.2
+> Release Date: 2011-11-04
+> ...
+> [   672.192] (--) PCI:*(0:0:2:0) 8086:2572:14a4:2181 rev 2, Mem @ 0xf0000=
+000/134217728, 0xfe780000/524288, I/O @ 0x0000ec00/8, BIOS @ 0x????????/131=
+072
+> ...
+> [   672.331] (II) Loading /usr/lib/xorg/modules/drivers/intel_drv.so
+> [   672.426] (II) Module intel: vendor=3D"X.Org Foundation"
+> [   672.426] 	compiled for 1.11.2, module version =3D 2.17.0
+> [   672.426] 	Module class: X.Org Video Driver
+> [   672.426] 	ABI class: X.Org Video Driver, version 11.0
+> [   672.426] (II) intel: Driver for Intel Integrated Graphics Chipsets: i=
+810,
+> 	i810-dc100, i810e, i815, i830M, 845G, 854, 852GM/855GM, 865G, 915G,
+> 	E7221 (i915), 915GM, 945G, 945GM, 945GME, Pineview GM, Pineview G,
+> 	965G, G35, 965Q, 946GZ, 965GM, 965GME/GLE, G33, Q35, Q33, GM45,
+> 	4 Series, G45/G43, Q45/Q43, G41, B43, B43, Clarkdale, Arrandale,
+> 	Sandybridge Desktop (GT1), Sandybridge Desktop (GT2),
+> 	Sandybridge Desktop (GT2+), Sandybridge Mobile (GT1),
+> 	Sandybridge Mobile (GT2), Sandybridge Mobile (GT2+),
+> 	Sandybridge Server, Ivybridge Mobile (GT1), Ivybridge Mobile (GT2),
+> 	Ivybridge Desktop (GT1), Ivybridge Desktop (GT2), Ivybridge Server
+> [   672.426] (--) using VT number 7
+>=20
+> [   672.444] (EE) No devices detected.
+> [   672.444]=20
+> Fatal server error:
+> [   672.444] no screens found
+> --------------------------------------------------------------------
+>=20
+> Here's the equivalent part of the log from before I upgraded:
+>=20
+> --------------------------------------------------------------------
+> X.Org X Server 1.9.5
+> Release Date: 2011-03-17
+> ...
+> [    80.575] (--) PCI:*(0:0:2:0) 8086:2572:14a4:2181 rev 2, Mem @ 0xf0000=
+000/134217728, 0xfe780000/524288, I/O @ 0x0000ec00/8, BIOS @ 0x????????/131=
+072
+> ...
+> [    81.003] (II) intel: Driver for Intel Integrated Graphics Chipsets: i=
+810,
+> 	i810-dc100, i810e, i815, i830M, 845G, 852GM/855GM, 865G, 915G,
+> 	E7221 (i915), 915GM, 945G, 945GM, 945GME, Pineview GM, Pineview G,
+> 	965G, G35, 965Q, 946GZ, 965GM, 965GME/GLE, G33, Q35, Q33, GM45,
+> 	4 Series, G45/G43, Q45/Q43, G41, B43, Clarkdale, Arrandale
+> [    81.004] (--) using VT number 7
+>=20
+> [    81.014] drmOpenDevice: node name is /dev/dri/card0
+> [    81.014] drmOpenDevice: open result is 9, (OK)
+> [    81.014] drmOpenByBusid: Searching for BusID pci:0000:00:02.0
+> [    81.014] drmOpenDevice: node name is /dev/dri/card0
+> [    81.014] drmOpenDevice: open result is 9, (OK)
+> [    81.014] drmOpenByBusid: drmOpenMinor returns 9
+> [    81.014] drmOpenByBusid: Interface 1.4 failed, trying 1.1
+> [    81.014] drmOpenByBusid: drmGetBusid reports pci:0000:00:02.0
+> [    81.014] (=3D=3D) intel(0): Depth 24, (--) framebuffer bpp 32
+> [    81.014] (=3D=3D) intel(0): RGB weight 888
+> [    81.014] (=3D=3D) intel(0): Default visual is TrueColor
+> [    81.050] (II) intel(0): Integrated Graphics Chipset: Intel(R) 865G
+> [    81.050] (--) intel(0): Chipset: "865G"
+> --------------------------------------------------------------------
+>=20
+> In both cases, the dri and dri2 extensions were loaded correctly.
+>=20
+> Here's the part of the boot-up log showing the graphics detection:
+>=20
+> [    1.304112] Linux agpgart interface v0.103
+> [    1.304405] agpgart-intel 0000:00:00.0: Intel 865 Chipset
+> [    1.304581] agpgart-intel 0000:00:00.0: detected gtt size: 131072K tot=
+al, 131072K mappable
+> [    1.304960] agpgart-intel 0000:00:00.0: detected 8192K stolen memory
+> [    1.305364] agpgart-intel 0000:00:00.0: AGP aperture is 128M @ 0xf0000=
+000
+>=20
+> The /dev/dri directory does exist:
+>=20
+> $ ls -l /dev/dri
+> total 0
+> crw-rw----+ 1 root video 226, 0 Nov 28 16:12 card0
+>=20
+> There is no controlD64 file; I noticed that it is present in the Fedora
+> graphical installation environment (which _does_ work).  Is it
+> important?  If it is, what driver creates that file?  Or is some udev
+> rule messed up?
+>=20
+> The Xorg configuration is slightly different from what it was before,=20
+> but not much.  Here is the relevant section (which hasn't changed):
+>=20
+> Section "Device"
+> 	Identifier  "card0"
+> 	Driver      "intel"
+> 	VendorName  "Intel Corporation"
+> 	BusID       "PCI:0:2:0"
+> 	Option      "NoAccel" "yes"
+> 	Option      "BackingStore"      "on"
+> EndSection
+>=20
+> Do you have any idea what's going wrong and how I can fix it?  Life=20
+> without a GUI is rather inconvenient.  :-(
+>=20
+> Thanks,
+>=20
+> Alan Stern
+>=20
+>=20
 
+--Sig_/hGfVq_SrrL/sYfAhvY=6dvM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-I have built 2.6.38.13 linux kernel with following options set:
-CONFIG_HOTPLUG=y
-CONFIG_HOTPLUG_CPU=y
-CONFIG_HOTPLUG_PCI_PCIE=y
-CONFIG_HOTPLUG_PCI=y
-CONFIG_HOTPLUG_PCI_FAKE=y
-CONFIG_HOTPLUG_PCI_COMPAQ=m
-CONFIG_HOTPLUG_PCI_COMPAQ_NVRAM=y
-CONFIG_HOTPLUG_PCI_IBM=m
-CONFIG_HOTPLUG_PCI_ACPI=y
-CONFIG_HOTPLUG_PCI_ACPI_IBM=y
-CONFIG_HOTPLUG_PCI_CPCI=y
-CONFIG_HOTPLUG_PCI_CPCI_ZT5550=m
-CONFIG_HOTPLUG_PCI_CPCI_GENERIC=m
-CONFIG_HOTPLUG_PCI_SHPC=y
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
---------------------------------------------------------------------------------
-Please correct me if any of my understanding below is incorrect:
-1. With the above setup, If I hotplug card c1 and/or c2, will my driver probe 
-get invoked. 
-2. I dont have to add any rules for in /etc/udev/rules.d/*.rules for my driver
- to work. 
-3. The standard hotplug controller driver would get the hotplug event from the
- switch and handle it. 
-4. The standard hotplug controller driver will be responsible for invoking 
-.probe and .remove functions of my driver.
----
-My simplified version of driver is pasted below, I understand that I create a char dev before any of the device is found, however my main concern is detection of card insertion and removal.
------------
+iQIcBAEBAgAGBQJO3RvNAAoJEIEoDkX4Qk9hM1sP/RHQ1Em1hVbgLxU/PyY3DK9a
+UpuntPPgeaRK+T+MIAL1sTs4gfzSMbdjbiV9etvGXY5cESt4vfuoPassUGxBMf/E
+6oMgUKdZ2N2TdUUEgSIAxS/v2fdKe/NJXxoJ7qavdGJzaqrvanbNP3bF/9jJzncu
+ZcVyQJcMFifPQFMU3Cv/feAzY1vTCKq1xeVFd+Thfh38SvKY/TNcxKATdq8/i9Ww
+HaEX0WGmcxJDw02FMB8saLBSQOI3Lqa4PTV+7iwI/lqa6Ib2uoHIT14lYrZXyGwF
+I8TtO71Z3VLwWgJ4QzqKz7Ur35eHpeahvCKkhvGsIYZAWnmYBgh4mkfjiByPo4wY
+uPdYL3iyY47bn4DRGKf4Ft2dKoJ3DSXgfHOpdVdNHhPgoKx2XYteqXDTRwWJL33H
+NKowhQfF2omp5kBDL95XIrHz5GV36WQ3YAkfvkaGIJR9SowG7ancB5XnWYbHAb/3
+KCW7wv5ZOfLXqkFe+PQQneS682J/pKwwQzEJK6BUnfTZGHdbRrYlDcQonIw03xnu
+DmdgMCRIV/VMaLaz43MrCHXW/AMfVF6LJMPmWge31iTAFzk+7tssTvt0SsfGztLl
+dBXkx15aMM8d0HIn7mohu/u02Wn/dhK3UDIAhLyrax5Gu1ClILM54nEmGc1QZ/Uo
+3wZY3mI8EYQS8JjPx0bg
+=VJIv
+-----END PGP SIGNATURE-----
 
-
-
-static struct pci_device_id my_pci_tbl[] = {
-       { PCI_DEVICE (0x174a, 0x0701) },
-       { PCI_DEVICE (0x174a, 0x0801) },
-       { 0, }
-       };
-
-
-MODULE_DEVICE_TABLE(pci, my_pci_tbl);
-
-static struct pci_driver my_pci_driver =
-{
-    .name       = DRV_NAME,
-    .probe      = my_pci_device_init,
-    .remove     = __devexit_p(my_pci_device_remove),
-    .id_table   = my_pci_tbl,
-};
-
-
-/*******************************************************************************
-    module init 
-******************************************************************************/
-static int __init my_pci_module_init(void)
-{
-
-#ifdef MODULE
-    printk(version);
-#endif
-    major = register_chrdev(0, DRV_NAME, &pcie_fops);
-    if (major <= 0) {
-        return -1;
-    }
-
-    /* Now register the PCI drivers */
-    return pci_register_driver(&my_pci_driver);
-
-}
-/*******************************************************************************
-    module_cleanup
- ******************************************************************************/
-static void __exit my_pci_module_cleanup(void)
-{
-
-    if (major) {
-        unregister_chrdev(major, DRV_NAME);
-    }
-
-    /* delete IO memory allocated */
-    /* unregister pci driver */
-    pci_unregister_driver (&my_pci_driver);
-}
-
-/*******************************************************************************
-probe 
-******************************************************************************/
-static int my_pci_device_init (struct          pci_dev       *pdev, 
-                               const struct    pci_device_id *ent )
-{
-    /* probe and device inits */
-} 
-
-/*******************************************************************************
-remove
- ******************************************************************************/
-static void __devexit my_pci_device_remove (struct pci_dev *pdev)
-{
-    /* remove operation */
-}
-
-/*******************************************************************************
- ******************************************************************************/
-module_init(my_pci_module_init);
-module_exit(my_pci_module_cleanup);
-
-Thanks 
-Anand
-
-----------------------------------------
-> From: bhelgaas@google.com
-> Date: Wed, 7 Dec 2011 10:23:26 -0700
-> Subject: Re: PCIe Hotplugging not working
-> To: mjg59@srcf.ucam.org
-> CC: anand_dk@hotmail.com; greg@kroah.com; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-hotplug@vger.kernel.org
->
-> On Wed, Nov 30, 2011 at 11:24 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> > On Wed, Nov 30, 2011 at 09:18:39AM -0800, Anand Kanaginhal wrote:
-> >>
-> >> Hi Mathew,
-> >> I have following options set
-> >>
-> >> CONFIG_HOTPLUG_PCI_PCIE=y
-> >> CONFIG_HOTPLUG_PCI_ACPI=m
-> >
-> > Please try with this built in, not as a module. What kind of board are
-> > you using?
->
-> Is this resolved? If not, a complete dmesg log would be interesting.
-> You might also try current upstream in case there were relevant
-> changes since 2.6.38.12.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at http://www.tux.org/lkml/
- 		 	   		  
+--Sig_/hGfVq_SrrL/sYfAhvY=6dvM--
