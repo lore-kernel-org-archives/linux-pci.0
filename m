@@ -1,89 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:43239 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753779Ab1LFWgh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2011 17:36:37 -0500
-MIME-Version: 1.0
-In-Reply-To: <CA+55aFwuZxGZhXyhj+cb5WLnFPDh45Dy6BwgmvEQKAM5swaM6w@mail.gmail.com>
-References: <20111123144417.2da5958c@jbarnes-desktop>
-	<CA+55aFyaiJBYmgVCLfPA7q3hqtPHYh9wwsmVTCewbBoxMsDE8A@mail.gmail.com>
-	<20111205112256.68e59434@jbarnes-desktop>
-	<4EDDCD6D.1010907@jp.fujitsu.com>
-	<CA+55aFwuZxGZhXyhj+cb5WLnFPDh45Dy6BwgmvEQKAM5swaM6w@mail.gmail.com>
-Date: Tue, 6 Dec 2011 14:36:37 -0800
-Message-ID: <CAE9FiQXwTcvfH21QZ87rU2vgf-xo8OT8L3f5gYwtbxJUDkDatQ@mail.gmail.com>
-Subject: Re: [git pull] PCI fixes
-From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary=20cf303f6d4c72148e04b374110f
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:50172 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932446Ab1LET5W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:57:22 -0500
+Date: Mon, 5 Dec 2011 11:59:56 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Vincent Palatin <vpalatin@chromium.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Olof Johansson <olofj@chromium.org>,
+	Sameer Nanda <snanda@chromium.org>,
+	Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] PM / Runtime: make PCI traces quieter
+Message-ID: <20111205115956.4d6920c1@jbarnes-desktop>
+In-Reply-To: <1323114678-28750-1-git-send-email-vpalatin@chromium.org>
+References: <20111205111906.7cae2946@jbarnes-desktop>
+	<1323114678-28750-1-git-send-email-vpalatin@chromium.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/2K/cIJSy0XHTb8XDIh+fBIz"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---20cf303f6d4c72148e04b374110f
-Content-Type: text/plain; charset=ISO-8859-1
+--Sig_/2K/cIJSy0XHTb8XDIh+fBIz
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Dec 6, 2011 at 8:14 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> Please try to make something like that work. Instead of always waiting
-> for one second, wait for up to one second only for failure cases. Any
-> possibility of that?
+On Mon,  5 Dec 2011 11:51:18 -0800
+Vincent Palatin <vpalatin@chromium.org> wrote:
 
-i had another version that was not send out. that worked on my test setups too.
-it will try to read pci conf several times in 1s.
+> When the runtime PM is activated on PCI, if a device switches state frequ=
+ently
+> (e.g. an EHCI controller with autosuspending USB devices connected)
+> the PCI configuration traces might be very verbose in the kernel log.
+> Let's guard those traces with DEBUG condition.
+>=20
+> Signed-off-by: Vincent Palatin <vpalatin@chromium.org>
+> ---
 
-please check refreshed version against your tree.
+Applied to linux-next, thanks.  The latency timer message is gone now
+though, so it didn't need to be fixed. :)
 
-Thanks
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-Yinghai
+--Sig_/2K/cIJSy0XHTb8XDIh+fBIz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
---20cf303f6d4c72148e04b374110f
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="pciehp_debug_x_3_1_access_pci_conf.patch"
-Content-Disposition: attachment;
-	filename="pciehp_debug_x_3_1_access_pci_conf.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gvvhim9v0
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-LS0tCiBkcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYyB8ICAgNDcgKysrKysrKysrKysr
-KysrKysrKysrKysrKystLS0tLS0tLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgMzIgaW5zZXJ0aW9u
-cygrKSwgMTUgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL2hvdHBs
-dWcvcGNpZWhwX2hwYy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNp
-L2hvdHBsdWcvcGNpZWhwX2hwYy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvaG90cGx1Zy9w
-Y2llaHBfaHBjLmMKQEAgLTI2NSw2ICsyNjUsMzUgQEAgc3RhdGljIHZvaWQgcGNpZV93YWl0X2xp
-bmtfYWN0aXZlKHN0cnVjdAogCWN0cmxfZGJnKGN0cmwsICJEYXRhIExpbmsgTGF5ZXIgTGluayBB
-Y3RpdmUgbm90IHNldCBpbiAxMDAwIG1zZWNcbiIpOwogfQogCitzdGF0aWMgYm9vbCBwY2lfYnVz
-X2NoZWNrX2RldihzdHJ1Y3QgcGNpX2J1cyAqYnVzLCBpbnQgZGV2Zm4pCit7CisJdTMyIGw7CisJ
-aW50IGRlbGF5ID0gMTAwMDsKKworYWdhaW46CisJaWYgKHBjaV9idXNfcmVhZF9jb25maWdfZHdv
-cmQoYnVzLCBkZXZmbiwgUENJX1ZFTkRPUl9JRCwgJmwpKQorCQlnb3RvIHdhaXQ7CisKKwkvKiBz
-b21lIGJyb2tlbiBib2FyZHMgcmV0dXJuIDAgb3IgfjAgaWYgYSBzbG90IGlzIGVtcHR5OiAqLwor
-CWlmIChsID09IDB4ZmZmZmZmZmYgfHwgbCA9PSAweDAwMDAwMDAwIHx8CisJICAgIGwgPT0gMHgw
-MDAwZmZmZiB8fCBsID09IDB4ZmZmZjAwMDApCisJCWdvdG8gd2FpdDsKKworCS8qIENvbmZpZ3Vy
-YXRpb24gcmVxdWVzdCBSZXRyeSBTdGF0dXMgKi8KKwlpZiAobCA9PSAweGZmZmYwMDAxKQorCQln
-b3RvIHdhaXQ7CisKKwlyZXR1cm4gdHJ1ZTsKKword2FpdDoKKwltZGVsYXkoMTAwKTsKKwlkZWxh
-eSAtPSAxMDA7CisJaWYgKGRlbGF5ID4gMCkKKwkJZ290byBhZ2FpbjsKKworCXJldHVybiBmYWxz
-ZTsKK30KKwogaW50IHBjaWVocF9jaGVja19saW5rX3N0YXR1cyhzdHJ1Y3QgY29udHJvbGxlciAq
-Y3RybCkKIHsKIAl1MTYgbG5rX3N0YXR1czsKQEAgLTI4MCwxMyArMzA5LDkgQEAgaW50IHBjaWVo
-cF9jaGVja19saW5rX3N0YXR1cyhzdHJ1Y3QgY29udAogICAgICAgICBlbHNlCiAgICAgICAgICAg
-ICAgICAgbXNsZWVwKDEwMDApOwogCi0JLyoKLQkgKiBOZWVkIHRvIHdhaXQgZm9yIDEwMDAgbXMg
-YWZ0ZXIgRGF0YSBMaW5rIExheWVyIExpbmsgQWN0aXZlCi0JICogKERMTExBKSBiaXQgcmVhZHMg
-MWIgYmVmb3JlIHNlbmRpbmcgY29uZmlndXJhdGlvbiByZXF1ZXN0LgotCSAqIFdlIG5lZWQgaXQg
-YmVmb3JlIGNoZWNraW5nIExpbmsgVHJhaW5pbmcgKExUKSBiaXQgYmVjdWFzZQotCSAqIExUIGlz
-IHN0aWxsIHNldCBldmVuIGFmdGVyIERMTExBIGJpdCBpcyBzZXQgb24gc29tZSBwbGF0Zm9ybS4K
-LQkgKi8KLQltc2xlZXAoMTAwMCk7CisJLyogd2FpdCAxMDBtcyBiZWZvcmUgcmVhZCBwY2kgY29u
-ZiwgYW5kIHRyeSBpbiAxcyAqLworCW1zbGVlcCgxMDApOworCXBjaV9idXNfY2hlY2tfZGV2KGN0
-cmwtPnBjaWUtPnBvcnQtPnN1Ym9yZGluYXRlLCBQQ0lfREVWRk4oMCwgMCkpOwogCiAJcmV0dmFs
-ID0gcGNpZWhwX3JlYWR3KGN0cmwsIFBDSV9FWFBfTE5LU1RBLCAmbG5rX3N0YXR1cyk7CiAJaWYg
-KHJldHZhbCkgewpAQCAtMzAyLDE0ICszMjcsNiBAQCBpbnQgcGNpZWhwX2NoZWNrX2xpbmtfc3Rh
-dHVzKHN0cnVjdCBjb250CiAJCXJldHVybiByZXR2YWw7CiAJfQogCi0JLyoKLQkgKiBJZiB0aGUg
-cG9ydCBzdXBwb3J0cyBMaW5rIHNwZWVkcyBncmVhdGVyIHRoYW4gNS4wIEdUL3MsIHdlCi0JICog
-bXVzdCB3YWl0IGZvciAxMDAgbXMgYWZ0ZXIgTGluayB0cmFpbmluZyBjb21wbGV0ZXMgYmVmb3Jl
-Ci0JICogc2VuZGluZyBjb25maWd1cmF0aW9uIHJlcXVlc3QuCi0JICovCi0JaWYgKGN0cmwtPnBj
-aWUtPnBvcnQtPnN1Ym9yZGluYXRlLT5tYXhfYnVzX3NwZWVkID4gUENJRV9TUEVFRF81XzBHVCkK
-LQkJbXNsZWVwKDEwMCk7Ci0KIAlwY2llX3VwZGF0ZV9saW5rX3NwZWVkKGN0cmwtPnBjaWUtPnBv
-cnQtPnN1Ym9yZGluYXRlLCBsbmtfc3RhdHVzKTsKIAogCXJldHVybiByZXR2YWw7Cg==
---20cf303f6d4c72148e04b374110f--
+iQIcBAEBAgAGBQJO3SK8AAoJEIEoDkX4Qk9hqXQP/1hFmk77cVsQoKl0+ZQEb+c5
+/2VGuYFHRu2bC4NUncU/RBLQyokSQs6ECxfxjfiX1PKF1BHqJ5jnKZUYwjG1B8OO
+l7Ms+4DYyyVAFIkgsDFNFHoAsiUPU6K38m45LLboL1Xmifj51J8MbcWVh2MT2zff
+RoDxVTVUlR5piLqG9KmfGNse1rSJHsDrLHCMw44H9anepDCpQxbLx9Rk3QFF9Zio
+pi3Jsqn6ajC6YUS6m4GQLGSsC0ToN7koEViRa67HS6oMpa7jRWOVFv52si1Q/Tt/
+lnuszj+CBCLRm+jjEvddIDjoyjxGDhAPOyCdJdWysGWnrAsJ2yKpqZmZp7smvUi1
+3AObvNzyrnyT5fj5WlKY0hsQDA9Hh7ObBdWFmpQ1iT4Sm5DL0ZBAsWvc44PBVC2b
++J6XjFnH4RuXVBDXKVnvO6iXvKCZESU0vb334TINhaEjWwxCVXEznO1bD+j0FiA4
+dMVVZhQyomYK1dvIDxYbnsr1nDtbwyZbphxgLwvH5EPjcmKlTTIFkEL3C1h0RvJd
+KOIfFSYvcUih2I/AHOMXKn0/uiFPfdigVvCauPF5ZdPKIpNQcPz5H8bLJsp4drje
+27fS5QmWDf81cW1TyUpQKREnqYDZOSybAyCSMr7Zz+9c7+DJuRTvwKrx9VuDdcc/
+ptrzhx2iEeQ23FifVfAk
+=Gu2M
+-----END PGP SIGNATURE-----
+
+--Sig_/2K/cIJSy0XHTb8XDIh+fBIz--
