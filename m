@@ -1,48 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4EDD24CA.2020906@tilera.com>
-Date: Mon, 5 Dec 2011 15:08:42 -0500
-From: Chris Metcalf <cmetcalf@tilera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:56001 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756446Ab1LESjD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 13:39:03 -0500
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 4130420AE2
+	for <linux-pci@vger.kernel.org>; Mon,  5 Dec 2011 13:39:02 -0500 (EST)
+Date: Mon, 5 Dec 2011 10:38:22 -0800
+From: Greg KH <greg@kroah.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>,
+	Felipe Balbi <balbi@ti.com>
+Subject: Re: [PATCH] PCI: Add helper macro for pci_register_driver boilerplate
+Message-ID: <20111205183822.GA7193@kroah.com>
+References: <20111118181249.GA29495@kroah.com>
+ <20111205102829.1a98d25d@jbarnes-desktop>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>,
-	Rolf Eike Beer <eike-kernel@sf-tec.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Maxin B. John" <maxin.john@gmail.com>, Tejun Heo <tj@kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH] lib/devres.c: allow specifying NO_IOPORT while using
- PCI
-References: <cover.1322592494.git.mst@redhat.com> <1616727.0BYPKXtoA0@wuerfel> <4ED91D95.6040601@tilera.com> <201112051514.02360.arnd@arndb.de>
-In-Reply-To: <201112051514.02360.arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111205102829.1a98d25d@jbarnes-desktop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/5/2011 10:14 AM, Arnd Bergmann wrote:
-> On Friday 02 December 2011, Chris Metcalf wrote:
->> The specific issue I saw was calls to pcim_iomap_{regions,table} from
->> drivers/ata/libata-sff.c and drivers/ata/sata_sil24.c; we use the
->> sata_sil24 in one of our platforms (TILEmpower).
-> Hmm, so sata_sil24 does not actually use PIO, so we can probably find a
-> way to make that work.
+On Mon, Dec 05, 2011 at 10:28:29AM -0800, Jesse Barnes wrote:
+> On Fri, 18 Nov 2011 10:12:49 -0800
+> Greg KH <greg@kroah.com> wrote:
+> 
+> > From: Greg Kroah-Hartman <gregkh@suse.de>
+> > 
+> > This patch introduces the module_pci_driver macro which is a convenience
+> > macro for PCI driver modules similar to module_platform_driver. It is
+> > intended to be used by drivers which init/exit section does nothing but
+> > register/unregister the PCI driver. By using this macro it is possible
+> > to eliminate a few lines of boilerplate code per PCI driver.
+> > 
+> > Based on work done by Lars-Peter Clausen <lars@metafoo.de> for other
+> > busses (i2c and spi).
+> > 
+> > Cc: Lars-Peter Clausen <lars@metafoo.de>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> > 
+> > ---
+> > 
+> > Jesse, I've added the same type of macros for i2c, spi, and usb to my
+> > driver-core tree, and converted a number of drivers to these new macros.
+> > If you give me the ack, I can add this patch to my tree as well.
+> > 
+> > I'll follow up this patch with an example showing how it works.
+> > 
+> > Comments?
+> > 
+> 
+> Yeah, I have no problem with it.  You can queue it up with the other
+> changes and add my acked-by to keep dependencies to a minimum.
 
-OK, that would be good.  I'm not familiar enough with the driver (or indeed
-the devres stuff) to really take an effective swing at this myself, though.
+Wonderful, will do.
 
-> Why do you have to build libata-sff? Shouldn't
-> that only be needed if you actually have an sff-type controller?
-
-Yes, I think this is an accidental legacy of the original development work
-for PCI root complex three years ago.  I disabled ATA_SFF and booted up a
-number of our inhouse platforms, and all the devices appear to work fine
-without it.  I've now turned it off in our standard configuration.
-
--- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
-
+greg k-h
