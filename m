@@ -1,30 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:36962 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932372Ab1LEUdk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 15:33:40 -0500
-Date: Mon, 5 Dec 2011 15:33:39 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-cc: linux-pci@vger.kernel.org
-Subject: Re: Xorg intel server not finding the graphics device
-In-Reply-To: <20111205113021.7841a4b2@jbarnes-desktop>
-Message-ID: <Pine.LNX.4.44L0.1112051444570.5138-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 5 Dec 2011 11:06:39 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
+	vapier@gentoo.org, dhowells@redhat.com, ysato@users.sourceforge.jp,
+	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
+	ralf@linux-mips.org, benh@kernel.crashing.org, paulus@samba.org,
+	lethal@linux-sh.org, davem@davemloft.net, cmetcalf@tilera.com,
+	gxt@mprc.pku.edu.cn, tglx@linutronix.de, mingo@redhat.com,
+	chris@zankel.net, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -v2 01/16] PCI: add declaration for pcibios_set_master()
+ to pci core
+Message-ID: <20111205110639.479a6e8e@jbarnes-desktop>
+In-Reply-To: <20111028214735.20088.19168.stgit@amt.stowe>
+References: <20111028214726.20088.30551.stgit@amt.stowe>
+	<20111028214735.20088.19168.stgit@amt.stowe>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/DSe3th4XPaWhByCfG_A7OoH"; protocol="application/pgp-signature"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 5 Dec 2011, Jesse Barnes wrote:
+--Sig_/DSe3th4XPaWhByCfG_A7OoH
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> Hm, afaik the 865G should still work, maybe Fedora blacklisted the
-> kernel support for it in newer bits?  If so, you'll need to use the
-> vesa driver instead of the intel driver...
+On Fri, 28 Oct 2011 15:47:35 -0600
+Myron Stowe <myron.stowe@redhat.com> wrote:
 
-Never mind, I found the problem.  For some reason the Fedora installer 
-added "nomodeset" to GRUB's kernel command line, and that prevented the 
-intel driver from registering with the DRM infrastructure.  I changed 
-it to "video=VGA-1:640x480" and now X is working.
+> From: Myron Stowe <mstowe@redhat.com>
+>=20
+> Currently, pcibios_set_master() is implemented in architecture-
+> specific code.  There is nothing architecture-specific about PCI's
+> 'latency timer'.
+>=20
+> This patch adds a declaration for pcibios_set_master() to PCI's core
+> in preperation for pulling the function itself up into the core.
+> Without the addition of this declaration, subsequent patches that
+> remove inline definitions of pcibios_set_master() would be removing
+> the only declaration of such.
+>=20
+> No functional change.
+>=20
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
 
-Alan Stern
+Ok this series is in -next.  Let's see what breaks this time. :)
 
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/DSe3th4XPaWhByCfG_A7OoH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO3RY/AAoJEIEoDkX4Qk9hxmUQAJB7f32Jn6j/KKvHA3ONU81B
+DJUnfedHpLTg8vqUDYxCF1JQDblPst7P2xzLn5BxvCHkwNTeYU/9is5/QhKzJlSZ
+mTPbLJOnnad5JwyTsAHQySQTVJTeW1vRlqfYDajVUI0l3zrRakJD4DLi41B+obFm
+dy0Nz2aT3v0rWjYcrjniYdF4FcbSs3pmWGMqM7YRzwTmzNIk42LltsZvsa6O1aRS
+6YKT/NpiNMq87s9iH5hIXCYNs40P3EZnYVHWF+XKDUodBbsyJUGNmoqlEFNULqbS
+iTbs+UdmBFjTrlmwniJfr4yPEjDLcb2cXuR703qjCNYpWreTPS77jDjaz9f1S6/I
+IjBOA38aL4quvAqxh2H10rif/ZWwmSAm0kQPKKANJEyMCGKgcCeHBw9+vIrHVrX2
+B7QOTabxko9z9eVn8tq/KfWK6DE7MUSGRnYoZ8o3TvDvxK/vZUjzI/GwtXphsXWZ
+SZqddyT6DFQqQRGlr7voB1EVOrSXW4Xnmm6BnhpHNGlyXJ+DuqvwQM67LnHRoxHj
+5XKCw/R+v3hePvJIkqKeMh09tV8NwknObf0kGtW3+t3tP4ya0MxroIAiUUZmT24J
+5rCPmh8aLGVZVUzqphPed9xQsVs77Qg2bvJRUTbwWtA7Neu9Y4wY7K3T9CplxR3g
+zw3W+YM/ydVmkok4puCp
+=vvhO
+-----END PGP SIGNATURE-----
+
+--Sig_/DSe3th4XPaWhByCfG_A7OoH--
