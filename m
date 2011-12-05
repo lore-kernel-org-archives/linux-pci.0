@@ -1,71 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:33998 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751721Ab1LIXpx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Dec 2011 18:45:53 -0500
-Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 1313621357
-	for <linux-pci@vger.kernel.org>; Fri,  9 Dec 2011 18:45:53 -0500 (EST)
-Date: Fri, 9 Dec 2011 15:45:22 -0800
-From: Greg KH <greg@kroah.com>
-To: Anand Kanaginhal <anand_dk@hotmail.com>
-Cc: mjg59@srcf.ucam.org, bhelgaas@google.com,
-	Linux PCI mailing <linux-pci@vger.kernel.org>,
-	linux kernel mailing <linux-kernel@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>
-Subject: Re: PCIe Hotplugging not working
-Message-ID: <20111209234522.GA6413@kroah.com>
-References: <20111130182423.GA4831@srcf.ucam.org>
- <CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>
- <BAY163-W600D6D6A04D4BAE8278907FBB90@phx.gbl>
- <20111209124524.GA3488@srcf.ucam.org>
- <BAY163-W45C53B9E3E9E0B8629B683FBB90@phx.gbl>
- <20111209180708.GA10768@kroah.com>
- <BAY163-W154A24444BB398F609767CFBB90@phx.gbl>
- <20111209222520.GA24786@kroah.com>
- <BAY163-W582FC4C5828B20E9487D3EFBB90@phx.gbl>
- <BAY163-W61A8DF92159F5C3E26103FBB90@phx.gbl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <BAY163-W61A8DF92159F5C3E26103FBB90@phx.gbl>
+Received: from oproxy9.bluehost.com ([69.89.24.6]:38067 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932126Ab1LETW5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:22:57 -0500
+Date: Mon, 5 Dec 2011 11:25:30 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Ingo Molnar <mingo@elte.hu>,
+	Andreas Herrmann <andreas.herrmann3@amd.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [herrmann.der.user@googlemail.com: [PATCH] x86, amd: Kill
+ misleading message about enablement of IO access to PCI ECS]
+Message-ID: <20111205112530.7cbf403e@jbarnes-desktop>
+In-Reply-To: <20111205171228.GH25909@elte.hu>
+References: <20111205171228.GH25909@elte.hu>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/qeTD9A_d7JDLLwzocEowbEt"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 09, 2011 at 03:24:00PM -0800, Anand Kanaginhal wrote:
-> > Please make sure your pci hotplug driver is working first.  Try turning
-> > on and off the power to the card slot (in the sysfs directory for the
-> > slot) and see if that's working.
-> When I do this, my driver probe and remove gets invoked. 
+--Sig_/qeTD9A_d7JDLLwzocEowbEt
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Then part of the pci hotplug controller driver is working, good.
+Yep, thanks.  Applied.
 
-> > You also have failed to say exactly what pci hotplug controller you have
-> > in your system, what is it?  You have to have one, and the driver loaded
-> > for it, for any of this to work at all.
-> 
-> We are using plx 8533 in our system,
+Jesse
 
-What exactly is that?
+On Mon, 5 Dec 2011 18:12:28 +0100
+Ingo Molnar <mingo@elte.hu> wrote:
 
-> it hasnt provided controller driver for linux, however the support
-> team insists that any hotplug controller driver which is compliant to
-> PCI SIG, should work fine.My assumption was shpc in linux would work
-> just fine. 
+>=20
+> i think this would be yours? Wrong Cc:s it appears.
+>=20
+>=20
+> I suspect the original 24d9b70b commit should have gone via the=20
+> PCI tree too ...
+>=20
+> Thanks,
+>=20
+> 	Ingo
+>=20
+> ----- Forwarded message from Andreas Herrmann <herrmann.der.user@googlema=
+il.com> -----
+>=20
+> Date: Fri, 2 Dec 2011 08:27:53 +0100
+> From: Andreas Herrmann <herrmann.der.user@googlemail.com>
+> To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>, "H=
+. Peter Anvin"
+> 	<hpa@zytor.com>
+> Cc: linux-kernel@vger.kernel.org, Robert Richter <robert.richter@amd.com>=
+, Jan Beulich
+> 	<jbeulich@novell.com>, Borislav Petkov <borislav.petkov@amd.com>, Frank =
+Arnold
+> 	<frank.arnold@amd.com>
+> Subject: [PATCH] x86, amd: Kill misleading message about enablement of IO=
+ access to PCI ECS
+>=20
+> From: Andreas Herrmann <andreas.herrmann3@amd.com>
+>=20
+> Commit 24d9b70b8c679264756a6980e668b96b3f964826 (x86: Use PCI method
+> for enabling AMD extended config space before MSR method) added a
+> message when IO access to PCI ECS was enabled via access to the NB_CFG
+> PCI register.  This can lead to a bogus message like
+>=20
+> [    0.365177] Extended Config Space enabled on 0 nodes
+>=20
+> which is misleading because IO ECS access is subsequently enabled for
+> AMD CPUs (that support this) by modifying the corresponding NB_CFG
+> MSR.
+>=20
+> Furthermore it's not "Extended Config Space" that is enabled by this
+> register setting. It's the IO access that is enabled for extended
+> configruation space.
+>=20
+> IMHO the ambiguous message needs to be cancelled.
+>=20
+> Cc: Jan Beulich <jbeulich@novell.com>
+> Cc: Robert Richter <robert.richter@amd.com>
+> Signed-off-by: Andreas Herrmann <andreas.herrmann3@amd.com>
+> ---
+>  arch/x86/pci/amd_bus.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+> index 026e493..7b7a897 100644
+> --- a/arch/x86/pci/amd_bus.c
+> +++ b/arch/x86/pci/amd_bus.c
+> @@ -403,7 +403,6 @@ static void __init pci_enable_pci_io_ecs(void)
+>  			++n;
+>  		}
+>  	}
+> -	pr_info("Extended Config Space enabled on %u nodes\n", n);
+>  #endif
+>  }
+> =20
 
-The PCI Hotplug SIG said that ACPI would be the way forward for "PCI"
-hotplug capabilities.
 
-For PCI Express, the pciehp driver should work for you, as that follows
-the spec for PCI Express devices.
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-So it depends on your hardware, what pci hotplug driver do you have
-loaded, and what does the kernel log messages say when you load it, and
-then what does it say when you remove your device?
+--Sig_/qeTD9A_d7JDLLwzocEowbEt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Remember, PCI devices are not supposed to be hot-removed, you have to
-tell the OS ahead of time it is going to go away.  PCI Express is a bit
-different, depending on the type of device (ExpressCard is allowed to be
-removed without notifying the OS ahead of time, some other PCI Express
-devices are not, see the spec for details.)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-greg k-h
+iQIcBAEBAgAGBQJO3RqqAAoJEIEoDkX4Qk9herYQAMB9d3y0XGopACEi7yGwzxYe
+xVTA6K6P8yL4XUkjJyXOVRitBS8gyLfObgXu7YzQtRz0Cs4q5lSG/6UBcyanQ0vI
+jB8/OtT4NZTrZh1ArtfEcVYetfuUpXtoCGHkop989LkPh4cQcemvY76wj7pj/yD1
+6LK++drVAw1M4qT2ZW/5zcP9IsY33DKrV0jGMQsF7lgG2Fd+mQzJ+5NJv9D1QX/b
+nBfeUrjqBgdmgwo7VQAwbZw0tDHiRIwLF0rY5xTx2x96fUI5EFn8WFghE3bPaaX3
+m2tX7nAACaXI+o3mgWN47FFiNaKjLLQlJQ+Tk5TWDqjlyDRbUGdwf38uN3/+BH6T
+TTPasFMWyY/OzOBirJS5hNyOsBuWu82aJ60s7xbCehVDPsIc0qMEZJXhJXuXIa50
+89/MBOMWXHr7Qi9OHg77gj0vcCE/UFJy9vYywijij/iMkj2983y3ODhmHqmxFzOP
+DgwSrtB367gNzIUhnxj0qieHxYlrXGZIpUFuhd0lBbt3vvQS//8GaWhJP+mUZ4Df
+H2dmya8/du1yQ+nqLmFR9B9Xva3NO9tV+fn7W4MpXhEqfAKEo9o9ERazlVcrN1ay
+ZqK6pNUbXFDraRNyS8L+GKFNrQxdee8ZSn3t3HpsIZTEbh6FBImzbutazv1w93MF
+wlhL2qflMqsnD0JrW2QY
+=HjbO
+-----END PGP SIGNATURE-----
+
+--Sig_/qeTD9A_d7JDLLwzocEowbEt--
