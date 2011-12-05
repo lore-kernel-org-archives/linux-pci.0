@@ -1,67 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:40476 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750863Ab1LIWZi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Dec 2011 17:25:38 -0500
-Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id DCFC321358
-	for <linux-pci@vger.kernel.org>; Fri,  9 Dec 2011 17:25:37 -0500 (EST)
-Date: Fri, 9 Dec 2011 14:25:20 -0800
-From: Greg KH <greg@kroah.com>
-To: Anand Kanaginhal <anand_dk@hotmail.com>
-Cc: mjg59@srcf.ucam.org, bhelgaas@google.com,
-	Linux PCI mailing <linux-pci@vger.kernel.org>,
-	linux kernel mailing <linux-kernel@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>
-Subject: Re: PCIe Hotplugging not working
-Message-ID: <20111209222520.GA24786@kroah.com>
-References: <BAY163-W47DD39095DA3EB108AA3F2FBB30@phx.gbl>
- <20111130154022.GA1411@srcf.ucam.org>
- <BAY163-W80F10350D24162EFC3699FBB00@phx.gbl>
- <20111130182423.GA4831@srcf.ucam.org>
- <CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>
- <BAY163-W600D6D6A04D4BAE8278907FBB90@phx.gbl>
- <20111209124524.GA3488@srcf.ucam.org>
- <BAY163-W45C53B9E3E9E0B8629B683FBB90@phx.gbl>
- <20111209180708.GA10768@kroah.com>
- <BAY163-W154A24444BB398F609767CFBB90@phx.gbl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BAY163-W154A24444BB398F609767CFBB90@phx.gbl>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1323117157.660.22.camel@pasglop>
+Subject: Re: [PATCH -v2 01/16] PCI: add declaration for pcibios_set_master()
+ to pci core
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	linux@arm.linux.org.uk, vapier@gentoo.org, dhowells@redhat.com,
+	ysato@users.sourceforge.jp, tony.luck@intel.com,
+	fenghua.yu@intel.com, monstr@monstr.eu, ralf@linux-mips.org,
+	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
+	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
+	mingo@redhat.com, chris@zankel.net, linux-kernel@vger.kernel.org
+Date: Tue, 06 Dec 2011 07:32:37 +1100
+In-Reply-To: <20111205110639.479a6e8e@jbarnes-desktop>
+References: <20111028214726.20088.30551.stgit@amt.stowe>
+	 <20111028214735.20088.19168.stgit@amt.stowe>
+	 <20111205110639.479a6e8e@jbarnes-desktop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 09, 2011 at 01:17:53PM -0800, Anand Kanaginhal wrote:
+On Mon, 2011-12-05 at 11:06 -0800, Jesse Barnes wrote:
+> On Fri, 28 Oct 2011 15:47:35 -0600
+> Myron Stowe <myron.stowe@redhat.com> wrote:
 > 
+> > From: Myron Stowe <mstowe@redhat.com>
+> > 
+> > Currently, pcibios_set_master() is implemented in architecture-
+> > specific code.  There is nothing architecture-specific about PCI's
+> > 'latency timer'.
+> > 
+> > This patch adds a declaration for pcibios_set_master() to PCI's core
+> > in preperation for pulling the function itself up into the core.
+> > Without the addition of this declaration, subsequent patches that
+> > remove inline definitions of pcibios_set_master() would be removing
+> > the only declaration of such.
+> > 
+> > No functional change.
+> > 
+> > Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> > ---
 > 
-> > Date: Fri, 9 Dec 2011 10:07:08 -0800
-> > From: greg@kroah.com
-> > To: anand_dk@hotmail.com
-> > CC: mjg59@srcf.ucam.org; bhelgaas@google.com; linux-pci@vger.kernel.org;
-> linux-kernel@vger.kernel.org; linux-hotplug@vger.kernel.org
-> > Subject: Re: PCIe Hotplugging not working
-> >
-> > On Fri, Dec 09, 2011 at 09:19:39AM -0800, Anand Kanaginhal wrote:
-> > > 1. With the above setup, If I hotplug card c1 and/or c2, will my driver
-> probe
-> > > get invoked.
-> >
-> > Stop right here. Please get your pci hotplug controller driver working
-> > first, for your platform. That seems to be the problem. After that,
-> > the rest of your questions should just resolve themselves.
-> Thank you Greg for your assistance, perhaps it would be little more helpful, if
-> you could tell me the basis on which you drew the conclusion. I am no kernel
-> expert :( 
+> Ok this series is in -next.  Let's see what breaks this time. :)
 
-As your driver's callbacks aren't being called, that's probably why this
-isn't working.
+On the other hand...
 
-Please make sure your pci hotplug driver is working first.  Try turning
-on and off the power to the card slot (in the sysfs directory for the
-slot) and see if that's working.
+One thing that annoys the sh*it out of me is that I cannot use
+pcibios_set_master() to establish the DMA/iommu resources for a device,
+because set_dma_mask() will be called -after- set_master(), thus I need
+to provision every device with 32-bit DMA resources (which can be quite
+scarse) just in case the driver doesn't later call set_dma_mask(64-bit).
 
-You also have failed to say exactly what pci hotplug controller you have
-in your system, what is it?  You have to have one, and the driver loaded
-for it, for any of this to work at all.
+If only we could reverse the call order... lots of drivers to fix
+unfortunately.
 
-greg k-h
+In which case I -would- hook into pcibios_set_master()...
+
+Cheers,
+Ben.
+
+
