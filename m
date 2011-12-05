@@ -1,89 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f74.google.com ([209.85.215.74]:35495 "EHLO
-	mail-lpp01m010-f74.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760936Ab1LPWjq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2011 17:39:46 -0500
-Received: by lagu2 with SMTP id u2so115360lag.1
-        for <linux-pci@vger.kernel.org>; Fri, 16 Dec 2011 14:39:44 -0800 (PST)
-Subject: [PATCH 6/6] parisc/PCI: use list_for_each_entry() for bus->devices
-	traversal
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-parisc@vger.kernel.org
-Date: Fri, 16 Dec 2011 15:32:00 -0700
-Message-ID: <20111216223200.5963.79616.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
-References: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:33676 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755586Ab1LETfb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:35:31 -0500
+Date: Mon, 5 Dec 2011 11:38:03 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai.lu@oracle.com>
+Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Only call pci_stop_bus_device() one time for
+ children devices during removing
+Message-ID: <20111205113803.37cc5d4c@jbarnes-desktop>
+In-Reply-To: <4ECC7F6D.6090802@oracle.com>
+References: <4ECC7F6D.6090802@oracle.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/zOu9lkd8t/.46BhH4gW1vum"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace open-coded list traversal with list_for_each_entry().
+--Sig_/zOu9lkd8t/.46BhH4gW1vum
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Note that parisc lba_fixup_bus() previously enabled FBB/PERR/SERR
-repeatedly on the same device instead of doing it on all devices on
-the bus.
+On Tue, 22 Nov 2011 21:06:53 -0800
+Yinghai Lu <yinghai.lu@oracle.com> wrote:
 
-CC: linux-parisc@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/parisc/dino.c    |    6 ++----
- drivers/parisc/lba_pci.c |    7 +++----
- 2 files changed, 5 insertions(+), 8 deletions(-)
+>=20
+> During debugging pcie hotplug with SRIOV with pcie switch, found
+> pci_stop_bus_device() are called several times for some children devices.
+>=20
+> Current pci_remove_bus_device() will call pci_stop_bus_device() at first.
+> and then use remove_behind_bridge() to call pci_stop_bus_device() for chi=
+ldren
+> devices. But pci_stop_bus_device() already include depth first to stop ch=
+ildren.
+> So We can remove unnecessary calling in pci_remove_behind_bridge() for ch=
+ildren.
+>=20
+> The patch change original pci_remove_bus_device() to __pci_remove_bus_dev=
+ice(), and
+> it only do remove work, and new pci_remove_bus_device will call
+> pci_stop_bus_device() one time, and then call __pci_remove_bus_device().
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index 7ff10c1..6f5bf3e 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -478,14 +478,12 @@ dino_card_setup(struct pci_bus *bus, void __iomem *base_addr)
- 	if (ccio_allocate_resource(dino_dev->hba.dev, res, _8MB,
- 				F_EXTEND(0xf0000000UL) | _8MB,
- 				F_EXTEND(0xffffffffUL) &~ _8MB, _8MB) < 0) {
--		struct list_head *ln, *tmp_ln;
-+		struct pci_dev *dev, *tmp;
- 
- 		printk(KERN_ERR "Dino: cannot attach bus %s\n",
- 		       dev_name(bus->bridge));
- 		/* kill the bus, we can't do anything with it */
--		list_for_each_safe(ln, tmp_ln, &bus->devices) {
--			struct pci_dev *dev = pci_dev_b(ln);
--
-+		list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
- 			list_del(&dev->bus_list);
- 		}
- 			
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index d5f3d75..f0b00f8 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -630,7 +630,7 @@ truncate_pat_collision(struct resource *root, struct resource *new)
- static void
- lba_fixup_bus(struct pci_bus *bus)
- {
--	struct list_head *ln;
-+	struct pci_dev *dev;
- #ifdef FBB_SUPPORT
- 	u16 status;
- #endif
-@@ -712,9 +712,8 @@ lba_fixup_bus(struct pci_bus *bus)
- 
- 	}
- 
--	list_for_each(ln, &bus->devices) {
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
--		struct pci_dev *dev = pci_dev_b(ln);
- 
- 		DBG("lba_fixup_bus() %s\n", pci_name(dev));
- 
-@@ -793,7 +792,7 @@ lba_fixup_bus(struct pci_bus *bus)
- 	}
- 
- 	/* Lastly enable FBB/PERR/SERR on all devices too */
--	list_for_each(ln, &bus->devices) {
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		(void) pci_read_config_word(dev, PCI_COMMAND, &status);
- 		status |= PCI_COMMAND_PARITY | PCI_COMMAND_SERR | fbb_enable;
- 		(void) pci_write_config_word(dev, PCI_COMMAND, status);
+applied to linux-next, thanks.
 
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/zOu9lkd8t/.46BhH4gW1vum
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO3R2bAAoJEIEoDkX4Qk9hBz0P/RTnsxsrktzh/K+siypJwG6l
+ZSHaWzCNoGhBfzuJqJbN2FAsOu4fFjiDCkcXLFtT21/v5tpE/VwJQzArmYTrhnLf
+IHZ83hWZoDIkbTHzNw0CyljUU7Ejijn9fwJfotngAKzH2s/UjG3CnaTQVVdQ0IL0
+jwu8UHxkv9ezWBh2JQ4RvHNG0gFwK2kc+MCNBtJGhUaE9APsIrQihe4XV1vRht69
+61duC4sf0466fcRBD0ECCGhk4E4jH1EYVKvJvx1gpE9S13nnj3KsZlw0bZ9iuyCn
+GsQATRfA215XtYS+KjPjmVLsFxGbPE2ZBvyHMQsHiYOvReTvB/rHN3H2BlDRvgxP
+4vMA7S8zY2grln2e6OePfu1RJwGfT+2MgWNyJFUQghy0ePllQm2e37iHbtQmLvgo
+1fB6fs41pJs2Vt4LHJXAXh+T/KNAPkWsj/E0hW0nArkOrxpJIBR5LYNNnJ6DTiBn
+UeIOVank9RiGzgQglkMaUDrqP7OM8oo7wMYpPCdAhAenrno+jz+jP8v91+Vr/Y6t
+hWgq/fm2ZSmXUXE4gDeaxzIucRmNhGqX/U2yzvsxDlohod+4m6qQ5Z/WAEkKzLDY
+GBvUUHz8u9mSLp91qSzZDob1VwQRB1GqrZZ4JT/eo+9n80ZooYhe8gYCmgXoPxzO
+IFpxIfgi+WgANW2o7jsO
+=tZ0v
+-----END PGP SIGNATURE-----
+
+--Sig_/zOu9lkd8t/.46BhH4gW1vum--
