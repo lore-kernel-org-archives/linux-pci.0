@@ -1,70 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:50172 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932446Ab1LET5W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:57:22 -0500
-Date: Mon, 5 Dec 2011 11:59:56 -0800
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:59157 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755511Ab1LES3O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 13:29:14 -0500
+Date: Mon, 5 Dec 2011 10:31:46 -0800
 From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Vincent Palatin <vpalatin@chromium.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Olof Johansson <olofj@chromium.org>,
-	Sameer Nanda <snanda@chromium.org>,
-	Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] PM / Runtime: make PCI traces quieter
-Message-ID: <20111205115956.4d6920c1@jbarnes-desktop>
-In-Reply-To: <1323114678-28750-1-git-send-email-vpalatin@chromium.org>
-References: <20111205111906.7cae2946@jbarnes-desktop>
-	<1323114678-28750-1-git-send-email-vpalatin@chromium.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Joerg Roedel <joerg.roedel@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: pci: fix ats compile failure
+Message-ID: <20111205103146.39cc9f2a@jbarnes-desktop>
+In-Reply-To: <1322594422.11875.47.camel@dabdike.int.hansenpartnership.com>
+References: <1322594422.11875.47.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2K/cIJSy0XHTb8XDIh+fBIz"; protocol="application/pgp-signature"
+ boundary="Sig_/Nkt_stZ7Zp4GxZT8qQNaPkI"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/2K/cIJSy0XHTb8XDIh+fBIz
+--Sig_/Nkt_stZ7Zp4GxZT8qQNaPkI
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon,  5 Dec 2011 11:51:18 -0800
-Vincent Palatin <vpalatin@chromium.org> wrote:
+On Tue, 29 Nov 2011 19:20:23 +0000
+James Bottomley <jbottomley@parallels.com> wrote:
 
-> When the runtime PM is activated on PCI, if a device switches state frequ=
-ently
-> (e.g. an EHCI controller with autosuspending USB devices connected)
-> the PCI configuration traces might be very verbose in the kernel log.
-> Let's guard those traces with DEBUG condition.
+> I get this compile failure on parisc:
 >=20
-> Signed-off-by: Vincent Palatin <vpalatin@chromium.org>
+> drivers/pci/ats.c: In function 'ats_alloc_one':
+> drivers/pci/ats.c:29: error: implicit declaration of function 'kzalloc'
+> drivers/pci/ats.c:29: warning: assignment makes pointer from integer with=
+out a cast
+> drivers/pci/ats.c: In function 'ats_free_one':
+> drivers/pci/ats.c:45: error: implicit declaration of function 'kfree'
+>=20
+> Because ats.c is missing linux/slab.h as an include.  This patch fixes it
+>=20
+> Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+>=20
 > ---
+>=20
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index 7ec56fb..b0dd08e 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -13,6 +13,7 @@
+>  #include <linux/export.h>
+>  #include <linux/pci-ats.h>
+>  #include <linux/pci.h>
+> +#include <linux/slab.h>
+> =20
+>  #include "pci.h"
 
-Applied to linux-next, thanks.  The latency timer message is gone now
-though, so it didn't need to be fixed. :)
+Applied to  my for-linus branch, thanks.
 
 --=20
 Jesse Barnes, Intel Open Source Technology Center
 
---Sig_/2K/cIJSy0XHTb8XDIh+fBIz
+--Sig_/Nkt_stZ7Zp4GxZT8qQNaPkI
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAEBAgAGBQJO3SK8AAoJEIEoDkX4Qk9hqXQP/1hFmk77cVsQoKl0+ZQEb+c5
-/2VGuYFHRu2bC4NUncU/RBLQyokSQs6ECxfxjfiX1PKF1BHqJ5jnKZUYwjG1B8OO
-l7Ms+4DYyyVAFIkgsDFNFHoAsiUPU6K38m45LLboL1Xmifj51J8MbcWVh2MT2zff
-RoDxVTVUlR5piLqG9KmfGNse1rSJHsDrLHCMw44H9anepDCpQxbLx9Rk3QFF9Zio
-pi3Jsqn6ajC6YUS6m4GQLGSsC0ToN7koEViRa67HS6oMpa7jRWOVFv52si1Q/Tt/
-lnuszj+CBCLRm+jjEvddIDjoyjxGDhAPOyCdJdWysGWnrAsJ2yKpqZmZp7smvUi1
-3AObvNzyrnyT5fj5WlKY0hsQDA9Hh7ObBdWFmpQ1iT4Sm5DL0ZBAsWvc44PBVC2b
-+J6XjFnH4RuXVBDXKVnvO6iXvKCZESU0vb334TINhaEjWwxCVXEznO1bD+j0FiA4
-dMVVZhQyomYK1dvIDxYbnsr1nDtbwyZbphxgLwvH5EPjcmKlTTIFkEL3C1h0RvJd
-KOIfFSYvcUih2I/AHOMXKn0/uiFPfdigVvCauPF5ZdPKIpNQcPz5H8bLJsp4drje
-27fS5QmWDf81cW1TyUpQKREnqYDZOSybAyCSMr7Zz+9c7+DJuRTvwKrx9VuDdcc/
-ptrzhx2iEeQ23FifVfAk
-=Gu2M
+iQIcBAEBAgAGBQJO3Q4SAAoJEIEoDkX4Qk9hhLsP/1N/xfRygB3lYP9KRoDOWBb3
+JE3JjDJb6QhJ4yurkP/vfh1VU8BDLo7Ep+ZpeVKcr02kgt67ASUNwR/WZ6jnQ+dg
+jScHQwwtIUjp4+K/sJzZxuetharFBEmZf6EYmej3I+jIg7jC9PDfVpRb+Qjn564k
+VfB27+cJwWyq7Kddjnt1bns6vm7+4nJMoimURHKEu5NUpYxKT1X665ZYn5ru6RMH
+NLJ3MZAMh5rqJmIZ2uGdfdjfwAC8pKiCvCGu10A9Y1qjqo3MwcjXmOvmNuJRwoxD
+BYA27sb1NDYhRnPYsG1pEJAWz/3e2SvQr3C/09ETI3xoFmFD/UAzIyvNpboQ38jH
+sTRdZCeekuZQalKB3houi15zRJce5W6E0xUVQ0FxPCldjBKZrgg/gProqVpJj6A8
+BrwKGjfWi7PjdDzB3hFbyTzmifSURhYN8p90I6xxZzOz8ZTXNSZ7O8SI8GY2SlVe
+LMsS+6NSzp9IT4bqMuPviRARX9K3ixgD+0o6QTp9f+a2LA+LZ3i48Hd0/B6JV75O
+kIN3lZUMUfQmbe58LtgLKzEa909QU/oqlqTxltOm5siaMjD5CV2M5xntWE6pL3o4
+RSYq0uRgMJKZM2ZZ40M6E0RdMadzWljHLrDlQljhCGBfPzkce7GDNYngLyPnE5q7
+TnDdCI/49vzblKAk4ZMK
+=F9T2
 -----END PGP SIGNATURE-----
 
---Sig_/2K/cIJSy0XHTb8XDIh+fBIz--
+--Sig_/Nkt_stZ7Zp4GxZT8qQNaPkI--
