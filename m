@@ -1,78 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:55588 "HELO
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:43859 "HELO
 	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755914Ab1LETCs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:02:48 -0500
-Date: Mon, 5 Dec 2011 11:05:22 -0800
+	with SMTP id S1755586Ab1LETUz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:20:55 -0500
+Date: Mon, 5 Dec 2011 11:23:27 -0800
 From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix PCI_EXP_TYPE_RC_EC value
-Message-ID: <20111205110522.223ff7d2@jbarnes-desktop>
-In-Reply-To: <20111116162350.7705.28083.stgit@bling.home>
-References: <20111116162350.7705.28083.stgit@bling.home>
+To: Yinghai Lu <yinghai.lu@oracle.com>
+Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pciehp: Disable/enable link during slot power off/on
+Message-ID: <20111205112327.24102fc8@jbarnes-desktop>
+In-Reply-To: <4ED95AD0.7090003@oracle.com>
+References: <4ED95AD0.7090003@oracle.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RsAavryYXOb0CVGpCuytDEM"; protocol="application/pgp-signature"
+ boundary="Sig_/Uqsm4X8GNDWcZbBjciLb3D3"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/RsAavryYXOb0CVGpCuytDEM
+--Sig_/Uqsm4X8GNDWcZbBjciLb3D3
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 16 Nov 2011 09:24:16 -0700
-Alex Williamson <alex.williamson@redhat.com> wrote:
+On Fri, 02 Dec 2011 15:10:08 -0800
+Yinghai Lu <yinghai.lu@oracle.com> wrote:
 
-> Spec shows this as 1010b =3D 0xa
 >=20
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
+> One system have repeater in system board to support gen2 hotplug.
 >=20
->  include/linux/pci_regs.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> Found when EM is removed from some slots, /var/log/message will be full of
+> "card present/not present" warning.
 >=20
-> diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-> index 090d3a9..9e37250 100644
-> --- a/include/linux/pci_regs.h
-> +++ b/include/linux/pci_regs.h
-> @@ -392,7 +392,7 @@
->  #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
->  #define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
->  #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
-> -#define  PCI_EXP_TYPE_RC_EC	0x10	/* Root Complex Event Collector */
-> +#define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
->  #define PCI_EXP_FLAGS_SLOT	0x0100	/* Slot implemented */
->  #define PCI_EXP_FLAGS_IRQ	0x3e00	/* Interrupt message number */
->  #define PCI_EXP_DEVCAP		4	/* Device capabilities */
+> It turns out root complex still try to train the link to repeater because
+> repeater is not reset.
 >=20
+> This patch will disable link to make repeater could reset properly.
+> Also could kill AER during EM removal.
+>=20
+> Recently when testing hotplug on one system under development, found if b=
+oot
+> the system without EM, and later hotplug does not work with Linux.
+> But other OS is ok.
+> The root cause is that bios left link disabled when slot is empty,
+> and other OS is playing link disable bit in link ctrl during power on/off.
+>=20
+> So We could do the same thing to disable/enable link during power off/on.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
 >=20
 
-Applied to linux-next, thanks.
+Kenji-san, any comment or chance to test?
 
+Thanks,
 --=20
 Jesse Barnes, Intel Open Source Technology Center
 
---Sig_/RsAavryYXOb0CVGpCuytDEM
+--Sig_/Uqsm4X8GNDWcZbBjciLb3D3
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAEBAgAGBQJO3RXyAAoJEIEoDkX4Qk9hAMwQAJylBqNpmgM9yy7cAWdnFyg5
-QNVPlJtvzjLZnjYKJbvKaMnzI4eIo+CldnNGHudO6dwatEN2iQzbb8Xv3vNsQHoo
-tfDb4SGTlJYzWlV319Y5pYXV4u875Ogdt2K5X+nPrnC5FK7stHNZDmpmgAcwd/Ol
-P+VDfbBYJ5yhO329PUbM8RSoHbf6wZnMA+ivEXCA/mky4GmSJ6Yvto4M5OSPaEKQ
-nARAKmApt6hUJpjd+ccMlC6EMn71UHCDTB4K+xm2zUNme4zGcZ6vgPomwrSI1d/j
-k5ZO2YMk8oSPabv32PsfJ/X2cJ796U2qoIuS/vLS5BBiV2Nd8RJcEbBUxGDnX+r7
-4dTbPunOm9NgGmPSwCGIlVOXPtTXlNK04WI/FQhGxC6BHBToCmoOBi16ao5RVz+P
-wv8xt+Ab0ArHCHgLy3ESAH/Fn6lH6LR0mmGPDd50/DLGiAWYOy9CLTt4fGR2163Q
-dQ6uLgI3pY9V9Q4QgpIIKS2PxfaCulRv+eIXz0Aq313cO/dbRMbm7DD0XkVXQIJ7
-CJveZKnhHAXTmg2nf+JdPP2hH7+pKKSR5+NnDokAj8/pQUjwSpZj9Qf5hIv7F2Kr
-7dmRCr4w91cqghBYajRcOc/mELsLQIQibgN0uALY+HqxuRxBdPNUXJP5Cgn56JtU
-dMWJioVDkWE+OW+PWNWE
-=fnut
+iQIcBAEBAgAGBQJO3RovAAoJEIEoDkX4Qk9hnkoP/iG7pO4I0DXRoFKLoAnpNJLH
+z5mpdcP9NakHheNO1h5BG5O5tYsQ16Vqwv5fiGgyd5feQGd0oRBXbXppUARWzOf+
+S756KrmdZus30tWnvtT+m3WVEXHhkK7d8X5xJo8qW01lkGH4XwqBIXNpLCtYn4h2
+ZHiaeZFVY9zWh17x63TMrgawq9hQA0ujcKB9fZGEUClUvr1W7xSIrqX+dz99bPJQ
+Cng4iLc3ZoBjdVY7OGV8FFfOOJ+9cbkw4nTIMPOr5NL6vmOh0az6KmHYLSN3AiqK
+zudl3TMs7/wI6onS54IIQ2tFz2fJ9laQU2q1chCBI86Oeqrj9zf8npombxeSMjU0
+o6pJYUr2Sc5unpxwWeKRs7O65/YuZa/U+KvwzPdxN96QCDuvYfet0CImdriDwAZx
+W2dS3vXHriCIBIqXbfP/ZsmJLpzhKrPSQV9uL3Hu78Zqb1p0RrzxaCV5rizOoHMu
+1nZ+EW/ITBm2lAfw7XIbmcNk3qbNZAvQm5F6S3LlWzcNO1IMHz5Qo0bcMArSEeZg
+CjNNDUEIB6zw7Gd0JoUx4UiXwTvZXeh4ZKY21jaST2nj8k2ZQIidFRYAYrHVRC9P
++g2fH9SDDUBZBdFRqx/Ib9p3p9zmk02KUfNn5wj8NMrlWsLnKDFBY7OXugsGYDEA
+VehSPii/iiz5L9jtF58i
+=Vyoc
 -----END PGP SIGNATURE-----
 
---Sig_/RsAavryYXOb0CVGpCuytDEM--
+--Sig_/Uqsm4X8GNDWcZbBjciLb3D3--
