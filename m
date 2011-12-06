@@ -1,51 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe001.messaging.microsoft.com ([213.199.154.204]:23239
-	"EHLO AM1EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751028Ab1LBSwp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2011 13:52:45 -0500
-Message-ID: <4ED91E72.9040303@freescale.com>
-Date: Fri, 2 Dec 2011 12:52:34 -0600
-From: Scott Wood <scottwood@freescale.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:61014 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770Ab1LFQOk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2011 11:14:40 -0500
 MIME-Version: 1.0
-To: Bhushan Bharat-R65777 <R65777@freescale.com>
-CC: Wood Scott-B07421 <B07421@freescale.com>,
-	Stuart Yoder <b08248@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Alexey Kardashevskiy <aik@au1.ibm.com>,
-	"aafabbri@cisco.com" <aafabbri@cisco.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"pmac@au1.ibm.com" <pmac@au1.ibm.com>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"joerg.roedel@amd.com" <joerg.roedel@amd.com>,
-	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-	"agraf@suse.de" <agraf@suse.de>,
-	"dwg@au1.ibm.com" <dwg@au1.ibm.com>,
-	"chrisw@sous-sol.org" <chrisw@sous-sol.org>,
-	Yoder Stuart-B08248 <B08248@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"avi@redhat.com" <avi@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"benve@cisco.com" <benve@cisco.com>
-Subject: Re: [Qemu-devel] [RFC PATCH] vfio: VFIO Driver core framework
-References: <20111103195452.21259.93021.stgit@bling.home> <4ED43AD9.5090509@au1.ibm.com>	<4ED43CFE.8040009@au1.ibm.com> <1322538856.19120.126.camel@bling.home> <1322594768.19120.194.camel@bling.home> <CALRxmdDEGwA787gEgC3d_yU99TqOZOtWeDJ9N-QCQ3gxV8yyMw@mail.gmail.com> <1322610273.19120.209.camel@bling.home> <CALRxmdBaguEZD8CnogHv+mSPuLx9et1CGRAa8oO_182Pjjp6-Q@mail.gmail.com> <1322672293.19120.232.camel@bling.home> <CALRxmdAjeyyM3Ta+DCTxtdc_J69fnVko_9hzmjcLUCe8SskNnQ@mail.gmail.com> <1322774717.26545.118.camel@bling.home> <CALRxmdDZjFGjdrEC5e1ANGV+PYd5Mz7j3zeaKNiEUwLdNzmiEA@mail.gmail.com> <B8D6CA50DACE9E4AAADE9A4D56FBAAE62BC98C@039-SN1MPN1-004.039d.mgd.msft.net> <4ED91876.2030408@freescale.com> <B8D6CA50DACE9E4AAADE9A4D56FBAAE62BCAE8@039-SN1MPN1-004.039d.mgd.msft.net>
-In-Reply-To: <B8D6CA50DACE9E4AAADE9A4D56FBAAE62BCAE8@039-SN1MPN1-004.039d.mgd.msft.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <4EDDCD6D.1010907@jp.fujitsu.com>
+References: <20111123144417.2da5958c@jbarnes-desktop> <CA+55aFyaiJBYmgVCLfPA7q3hqtPHYh9wwsmVTCewbBoxMsDE8A@mail.gmail.com>
+ <20111205112256.68e59434@jbarnes-desktop> <4EDDCD6D.1010907@jp.fujitsu.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 6 Dec 2011 08:14:17 -0800
+Message-ID: <CA+55aFwuZxGZhXyhj+cb5WLnFPDh45Dy6BwgmvEQKAM5swaM6w@mail.gmail.com>
+Subject: Re: [git pull] PCI fixes
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/02/2011 12:45 PM, Bhushan Bharat-R65777 wrote:
-> Scott, I am not sure if there is any real use case where device needed to assigned beyond 2 level (host + immediate guest) in nested virtualization.
+On Tue, Dec 6, 2011 at 12:08 AM, Kenji Kaneshige
+<kaneshige.kenji@jp.fujitsu.com> wrote:
+>
+> In the past, pciehp waits 100 ms instead of 1 sec after checking the link
+> state. This 100 ms was based on PCIe spec.
 
-Userspace drivers in the guest is a more likely scenario than nested
-virtualization, at least for us.  Our hardware doesn't support nested
-virtualization, so it would have to be some slow emulation-based
-approach (worse than e500v2, since we don't have multiple PID registers).
+I would like to point out that these kinds of delays are *really*
+annoying to users. And they add up.
 
-> But if there any exists then will not it be better to virtualizes the iommu (PAMU for Freescale)?
+One second per se is not a huge problem, but imagine that you're
+hotplugging some regular user device (think thunderbolt or something
+that we'd expect normal users to see). First one second for the kernel
+to even see it, then some random udev rules, then some disk spinup
+times or whatever, and soon a few delays here and a few delays there,
+and it takes say three seconds for the folder to show up on the
+desktop (or whatever acknowledgement of "yes, I see your device now").
 
-We can't virtualize the PAMU in any sort of transparent manner.  It's
-not flexible enough to handle arbitrary mappings.  The guest will need
-to cooperate with the host to figure out what mappings it can do.
+That's a *long* time, and it's irritating to the user. It makes the
+user think "the machine is slow".
 
--Scott
+We used to have this exact problem with USB hotplugging with slow
+devices, so I know. It's still not necessarily immediate, but it's
+better than it has been.
 
+One second *total* is what people will consider pretty much immediate.
+Any more than that is "thumb twiddling time".
+
+And quite frankly, an unconditional one-second delay here seems bad.
+Two seconds was unacceptable, one second is just bad.
+
+>                                                              This is
+> based on the PCIe description "software must allow 1 second after the Data
+> Link Layer Link Active bit reads 1b before it is permitted to determine
+> that a hot plugged device which fails to return a Successful Completion for
+> a Valid Configuration Request is a broken device".
+
+Quite frankly, the way that reads to me says "you must wait at most 1s
+before you consider a device broken".
+
+But a *successful* read of the LT bit should abort the wait early. So
+that good devices that aren't broken can complete setup much faster.
+
+Please try to make something like that work. Instead of always waiting
+for one second, wait for up to one second only for failure cases. Any
+possibility of that?
+
+Clearly most devices are perfectly fine almost immediately. It's sad
+to wait for good devices for no good reason.
+
+                       Linus
