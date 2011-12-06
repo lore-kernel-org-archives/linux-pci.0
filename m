@@ -1,181 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:59091 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755419Ab1LMSxb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2011 13:53:31 -0500
-Date: Tue, 13 Dec 2011 10:53:27 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>,
-	linux-pci@vger.kernel.org
-Cc: Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
-	Yinghai Lu <yhlu.kernel@gmail.com>
-Subject: Re: [PATCH] PCI: Set device power state to PCI_D0 for device
- without native PM support
-Message-ID: <20111213105327.55c6e098@jbarnes-desktop>
-In-Reply-To: <4EE5BAF8.4000303@oracle.com>
-References: <4EE5BAF8.4000303@oracle.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/z13y.u08.XAxORlxHwn05Lh"; protocol="application/pgp-signature"
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57114 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752010Ab1LFSJf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2011 13:09:35 -0500
+Received: by faar15 with SMTP id r15so11259faa.19
+        for <linux-pci@vger.kernel.org>; Tue, 06 Dec 2011 10:09:33 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20111028222743.30729.97632.stgit@bhelgaas.mtv.corp.google.com>
+References: <20111028222432.30729.8431.stgit@bhelgaas.mtv.corp.google.com> <20111028222743.30729.97632.stgit@bhelgaas.mtv.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 6 Dec 2011 11:09:11 -0700
+Message-ID: <CAErSpo4y4A7SXEhB087hNxUSoW18BvjKD5StmPTUgC5uErubgw@mail.gmail.com>
+Subject: Re: [PATCH v3 26/34] powerpc/PCI: convert to pci_create_root_bus()
+To: linux-pci@vger.kernel.org
+Cc: linux-arch@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Content-Type: multipart/mixed; boundary=f46d04447e1f5d44b604b37056b3
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/z13y.u08.XAxORlxHwn05Lh
-Content-Type: text/plain; charset=US-ASCII
+--f46d04447e1f5d44b604b37056b3
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-Ok I applied this to for-linus, but git am didn't like it so I had to
-merge it by hand.  Please check it out and make sure it still works for
-you.
-
-Thanks,
-jesse
-
-On Mon, 12 Dec 2011 13:57:36 +0530
-Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com> wrote:
-
-> Hi Jesse,
->=20
-> Have following query, please point me to correct person if I am asking=20
-> this to wrong person:
-> Any particular reason, why this is not checked in yet? Is something=20
-> missing here?
->=20
-> Thanks,
-> Ajay
->=20
-> -------- Original Message --------
-> Subject: 	Re: [PATCH] PCI: Set device power state to PCI_D0 for device=20
-> without native PM support
-> Date: 	Fri, 28 Oct 2011 17:36:43 +0530
-> From: 	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
-> To: 	Jesse Barnes <jbarnes@virtuousgeek.org>,=20
-> "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,=20
-> "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-> CC: 	Stefano Stabellini <stefano.stabellini@eu.citrix.com>, Yinghai Lu=20
-> <yhlu.kernel@gmail.com>
->=20
->=20
->=20
-> On 10/27/2011 08:31 PM, Stefano Stabellini wrote:
-> >  On Thu, 27 Oct 2011, Ajaykumar Hotchandani wrote:
-> >>>  BTW I am OK with your patch.
-> >>  Should we revert 47e9037ac16637cd7f12b8790ea7ce6680e42168 (your chang=
-es
-> >>  in register_slot() )
-> >>  I think, after this change, it's not needed. Or, am I missing some sc=
-enario?
-> >>
-> >  I think you are right, 47e9037ac16637cd7f12b8790ea7ce6680e42168 is not
-> >  needed anymore, so I am OK with reverting it.
->=20
-> Thanks, following is updated patch.
->=20
-> [PATCH -v2] PCI: Set device power state to PCI_D0 for device without
-> native PM support
->=20
-> During test of one IB card with guest VM, found that, msi is not
-> initialized properly.
->=20
-> It turns out __write_msi_msg will do nothing if device current_state is
-> not PCI_D0.
-> And, that pci device does not have pm_cap in guest VM.
->=20
-> There is an error in setting of power state to PCI_D0 in
-> pci_enable_device(), but error is not returned for this.
-> Following is code flow:
-> pci_enable_device() -->   __pci_enable_device_flags() -->
-> do_pci_enable_device() -->   pci_set_power_state() -->
-> __pci_start_power_transition()
-> We have following condition inside __pci_start_power_transition():
->          if (platform_pci_power_manageable(dev)) {
->                  error =3D platform_pci_set_power_state(dev, state);
->                  if (!error)
->                          pci_update_current_state(dev, state);
->          } else {
->                  error =3D -ENODEV;
->                  /* Fall back to PCI_D0 if native PM is not supported */
->                  if (!dev->pm_cap)
->                          dev->current_state =3D PCI_D0;
->          }
->=20
-> Here, from platform_pci_set_power_state(), acpi_pci_set_power_state() is
-> getting called and that is failing with ENODEV because of following
-> condition:
->          if (!handle || ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0",&tmp)=
-))
->                  return -ENODEV;
->=20
-> Because of that, pci_update_current_state() is not getting called.
->=20
-> With this patch, if device power state can not be set via
-> platform_pci_set_power_state and that device does not have native pm
-> support, then PCI device power state will be set to PCI_D0.
->=20
-> -v2: This also reverts 47e9037ac16637cd7f12b8790ea7ce6680e42168, as it's
-> not needed after this change.
->=20
-> Signed-off-by: Ajaykumar Hotchandani<ajaykumar.hotchandani@oracle.com>
-> Signed-off-by: Yinghai Lu<yinghai.lu@oracle.com>
+On Fri, Oct 28, 2011 at 4:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Convert from pci_create_bus() to pci_create_root_bus(). =A0This way the r=
+oot
+> bus resources are correct immediately. =A0This patch doesn't fix a proble=
+m
+> because powerpc fixed the resources before scanning the bus, but it makes
+> powerpc more consistent with other architectures.
+>
+> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->   drivers/pci/hotplug/acpiphp_glue.c |    1 -
->   drivers/pci/pci.c                  |    3 +++
->   2 files changed, 3 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c
-> b/drivers/pci/hotplug/acpiphp_glue.c
-> index 2202857..11431c1 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -212,7 +212,6 @@ register_slot(acpi_handle handle, u32 lvl, void
-> *context, void **rv)
->=20
->          pdev =3D pci_get_slot(pbus, PCI_DEVFN(device, function));
->          if (pdev) {
-> -               pdev->current_state =3D PCI_D0;
->                  slot->flags |=3D (SLOT_ENABLED | SLOT_POWEREDON);
->                  pci_dev_put(pdev);
->          }
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e9651f0..6866937 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -664,6 +664,9 @@ static int pci_platform_power_transition(struct
-> pci_dev *dev, pci_power_t state)
->                  error =3D platform_pci_set_power_state(dev, state);
->                  if (!error)
->                          pci_update_current_state(dev, state);
-> +               /* Fall back to PCI_D0 if native PM is not supported */
-> +               if (!dev->pm_cap)
-> +                       dev->current_state =3D PCI_D0;
->          } else {
->                  error =3D -ENODEV;
->                  /* Fall back to PCI_D0 if native PM is not supported */
+> =A0arch/powerpc/kernel/pci-common.c | =A0 25 ++++++++++++++-----------
+> =A01 files changed, 14 insertions(+), 11 deletions(-)
+>
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-c=
+ommon.c
+> index 942ced2..8c47c57 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -1554,14 +1554,13 @@ int pcibios_enable_device(struct pci_dev *dev, in=
+t mask)
+> =A0 =A0 =A0 =A0return pci_enable_resources(dev, mask);
+> =A0}
+>
+> -static void __devinit pcibios_setup_phb_resources(struct pci_controller =
+*hose)
+> +static void __devinit pcibios_setup_phb_resources(struct pci_controller =
+*hose, struct list_head *resources)
+> =A0{
+> - =A0 =A0 =A0 struct pci_bus *bus =3D hose->bus;
+> =A0 =A0 =A0 =A0struct resource *res;
+> =A0 =A0 =A0 =A0int i;
+>
+> =A0 =A0 =A0 =A0/* Hookup PHB IO resource */
+> - =A0 =A0 =A0 bus->resource[0] =3D res =3D &hose->io_resource;
+> + =A0 =A0 =A0 res =3D &hose->io_resource;
+>
+> =A0 =A0 =A0 =A0if (!res->flags) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0printk(KERN_WARNING "PCI: I/O resource not=
+ set for host"
+> @@ -1579,6 +1578,7 @@ static void __devinit pcibios_setup_phb_resources(s=
+truct pci_controller *hose)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (unsigned long long)res->start,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (unsigned long long)res->end,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (unsigned long)res->flags);
+> + =A0 =A0 =A0 pci_add_resource(resources, res);
+>
+> =A0 =A0 =A0 =A0/* Hookup PHB Memory resources */
+> =A0 =A0 =A0 =A0for (i =3D 0; i < 3; ++i) {
+> @@ -1596,12 +1596,12 @@ static void __devinit pcibios_setup_phb_resources=
+(struct pci_controller *hose)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0res->flags =3D IORESOURCE_=
+MEM;
+> =A0#endif /* CONFIG_PPC32 */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bus->resource[i+1] =3D res;
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pr_debug("PCI: PHB MEM resource %d =3D %01=
+6llx-%016llx [%lx]\n", i,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (unsigned long long)res->=
+start,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (unsigned long long)res->=
+end,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (unsigned long)res->flags=
+);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pci_add_resource(resources, res);
+> =A0 =A0 =A0 =A0}
+>
+> =A0 =A0 =A0 =A0pr_debug("PCI: PHB MEM offset =A0 =A0 =3D %016llx\n",
+> @@ -1695,6 +1695,7 @@ struct device_node *pcibios_get_phb_of_node(struct =
+pci_bus *bus)
+> =A0*/
+> =A0void __devinit pcibios_scan_phb(struct pci_controller *hose)
+> =A0{
+> + =A0 =A0 =A0 LIST_HEAD(resources);
+> =A0 =A0 =A0 =A0struct pci_bus *bus;
+> =A0 =A0 =A0 =A0struct device_node *node =3D hose->dn;
+> =A0 =A0 =A0 =A0int mode;
+> @@ -1702,22 +1703,24 @@ void __devinit pcibios_scan_phb(struct pci_contro=
+ller *hose)
+> =A0 =A0 =A0 =A0pr_debug("PCI: Scanning PHB %s\n",
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 node ? node->full_name : "<NO NAME>");
+>
+> + =A0 =A0 =A0 /* Get some IO space for the new PHB */
+> + =A0 =A0 =A0 pcibios_setup_phb_io_space(hose);
+> +
+> + =A0 =A0 =A0 /* Wire up PHB bus resources */
+> + =A0 =A0 =A0 pcibios_setup_phb_resources(hose, &resources);
+> +
+> =A0 =A0 =A0 =A0/* Create an empty bus for the toplevel */
+> - =A0 =A0 =A0 bus =3D pci_create_bus(hose->parent, hose->first_busno, hos=
+e->ops, hose);
+> + =A0 =A0 =A0 bus =3D pci_create_root_bus(hose->parent, hose->first_busno=
+,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 hose->o=
+ps, hose, resources);
 
+Typo here ("resources" should be "&resources") broke the build,
+corrected patch attached.  (Also available
+at git://github.com/bjorn-helgaas/linux.git on the "pci-scan-v4"
+branch as 481c96ef546fd0a1ebd9254771f24d136aaff7cc)
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+--f46d04447e1f5d44b604b37056b3
+Content-Type: application/octet-stream;
+	name="patch.convert-to-pci_create_root_bus"
+Content-Disposition: attachment;
+	filename="patch.convert-to-pci_create_root_bus"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gvv83qok0
 
---Sig_/z13y.u08.XAxORlxHwn05Lh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO558nAAoJEIEoDkX4Qk9hh60P/0xaC5az67Voj0aOUsdlAHgf
-bs7Tn//qFiTlBJBOxkM3Fx+BZhr69YG1xVUMQhXxLqxY21qNrhNWWAXuf/vqWobS
-apQxnXV9Jdt4hH6/Erl3U+ticbAKmkTCsrcsQBu0+XOQTGh8gEITa9CeSaDx1Qd4
-aUM5AtmoPMCJd1PqSIsoF3VECw715+LiE2VOpxy/Q0+IawGxo8Hv7H6kWzihNtw6
-G6xRhw8HTMsKYBXU3IvnGED9H/qUQfqxtEw57FSrGwefhn9jhYQUqU+TI9UM/bmI
-hnFiXrcaBMHss2PKWKW4rYXhgBB5RazltGLvtbQ96mXqbBxMWgUOpLdr5mhUULvG
-/Ligtze792BE9BHU3mTMTxvzrmr0z1haQdGyOTVSO8mpwGsiyIhjPzuerH4OU15u
-d9h+IlE5BM/BNdtwX7gIr7Bz94MLifPtaN4G0SKw+IVLj3PQ2hHGYQc+OWSR+/Ix
-9baWIHr+N0oRrrTYDuAjvWdF3PzmO0biqecsXoQFtZ2Myvo9B1vgOX2Q4Z1qruuX
-yKBcGlg8QjCr3r+aelVtL4+5N0STPPm2m3iE8heHbZEA0ODyjn9F/ClQ+Rsg1XCH
-8F7xnkjfcMr4v52MxelIU+VMS3tDKIGpEg+CMTOfI7luaMrTZTEpNFwdz1cx2DT+
-FEgBwhR8UMz9j+QW/nOy
-=8u0i
------END PGP SIGNATURE-----
-
---Sig_/z13y.u08.XAxORlxHwn05Lh--
+Y29tbWl0IDQ4MWM5NmVmNTQ2ZmQwYTFlYmQ5MjU0NzcxZjI0ZDEzNmFhZmY3Y2MKQXV0aG9yOiBC
+am9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPgpEYXRlOiAgIE1vbiBPY3QgMTAgMTY6
+MTc6NDYgMjAxMSAtMDYwMAoKICAgIHBvd2VycGMvUENJOiBjb252ZXJ0IHRvIHBjaV9jcmVhdGVf
+cm9vdF9idXMoKQogICAgCiAgICBDb252ZXJ0IGZyb20gcGNpX2NyZWF0ZV9idXMoKSB0byBwY2lf
+Y3JlYXRlX3Jvb3RfYnVzKCkuICBUaGlzIHdheSB0aGUgcm9vdAogICAgYnVzIHJlc291cmNlcyBh
+cmUgY29ycmVjdCBpbW1lZGlhdGVseS4gIFRoaXMgcGF0Y2ggZG9lc24ndCBmaXggYSBwcm9ibGVt
+CiAgICBiZWNhdXNlIHBvd2VycGMgZml4ZWQgdGhlIHJlc291cmNlcyBiZWZvcmUgc2Nhbm5pbmcg
+dGhlIGJ1cywgYnV0IGl0IG1ha2VzCiAgICBwb3dlcnBjIG1vcmUgY29uc2lzdGVudCB3aXRoIG90
+aGVyIGFyY2hpdGVjdHVyZXMuCiAgICAKICAgIENDOiBCZW5qYW1pbiBIZXJyZW5zY2htaWR0IDxi
+ZW5oQGtlcm5lbC5jcmFzaGluZy5vcmc+CiAgICBTaWduZWQtb2ZmLWJ5OiBCam9ybiBIZWxnYWFz
+IDxiaGVsZ2Fhc0Bnb29nbGUuY29tPgoKZGlmZiAtLWdpdCBhL2FyY2gvcG93ZXJwYy9rZXJuZWwv
+cGNpLWNvbW1vbi5jIGIvYXJjaC9wb3dlcnBjL2tlcm5lbC9wY2ktY29tbW9uLmMKaW5kZXggMjQ4
+Yjc4OC4uMmFhNzA3YiAxMDA2NDQKLS0tIGEvYXJjaC9wb3dlcnBjL2tlcm5lbC9wY2ktY29tbW9u
+LmMKKysrIGIvYXJjaC9wb3dlcnBjL2tlcm5lbC9wY2ktY29tbW9uLmMKQEAgLTE1NTUsMTQgKzE1
+NTUsMTMgQEAgaW50IHBjaWJpb3NfZW5hYmxlX2RldmljZShzdHJ1Y3QgcGNpX2RldiAqZGV2LCBp
+bnQgbWFzaykKIAlyZXR1cm4gcGNpX2VuYWJsZV9yZXNvdXJjZXMoZGV2LCBtYXNrKTsKIH0KIAot
+c3RhdGljIHZvaWQgX19kZXZpbml0IHBjaWJpb3Nfc2V0dXBfcGhiX3Jlc291cmNlcyhzdHJ1Y3Qg
+cGNpX2NvbnRyb2xsZXIgKmhvc2UpCitzdGF0aWMgdm9pZCBfX2RldmluaXQgcGNpYmlvc19zZXR1
+cF9waGJfcmVzb3VyY2VzKHN0cnVjdCBwY2lfY29udHJvbGxlciAqaG9zZSwgc3RydWN0IGxpc3Rf
+aGVhZCAqcmVzb3VyY2VzKQogewotCXN0cnVjdCBwY2lfYnVzICpidXMgPSBob3NlLT5idXM7CiAJ
+c3RydWN0IHJlc291cmNlICpyZXM7CiAJaW50IGk7CiAKIAkvKiBIb29rdXAgUEhCIElPIHJlc291
+cmNlICovCi0JYnVzLT5yZXNvdXJjZVswXSA9IHJlcyA9ICZob3NlLT5pb19yZXNvdXJjZTsKKwly
+ZXMgPSAmaG9zZS0+aW9fcmVzb3VyY2U7CiAKIAlpZiAoIXJlcy0+ZmxhZ3MpIHsKIAkJcHJpbnRr
+KEtFUk5fV0FSTklORyAiUENJOiBJL08gcmVzb3VyY2Ugbm90IHNldCBmb3IgaG9zdCIKQEAgLTE1
+ODAsNiArMTU3OSw3IEBAIHN0YXRpYyB2b2lkIF9fZGV2aW5pdCBwY2liaW9zX3NldHVwX3BoYl9y
+ZXNvdXJjZXMoc3RydWN0IHBjaV9jb250cm9sbGVyICpob3NlKQogCQkgKHVuc2lnbmVkIGxvbmcg
+bG9uZylyZXMtPnN0YXJ0LAogCQkgKHVuc2lnbmVkIGxvbmcgbG9uZylyZXMtPmVuZCwKIAkJICh1
+bnNpZ25lZCBsb25nKXJlcy0+ZmxhZ3MpOworCXBjaV9hZGRfcmVzb3VyY2UocmVzb3VyY2VzLCBy
+ZXMpOwogCiAJLyogSG9va3VwIFBIQiBNZW1vcnkgcmVzb3VyY2VzICovCiAJZm9yIChpID0gMDsg
+aSA8IDM7ICsraSkgewpAQCAtMTU5NywxMiArMTU5NywxMiBAQCBzdGF0aWMgdm9pZCBfX2Rldmlu
+aXQgcGNpYmlvc19zZXR1cF9waGJfcmVzb3VyY2VzKHN0cnVjdCBwY2lfY29udHJvbGxlciAqaG9z
+ZSkKIAkJCXJlcy0+ZmxhZ3MgPSBJT1JFU09VUkNFX01FTTsKICNlbmRpZiAvKiBDT05GSUdfUFBD
+MzIgKi8KIAkJfQotCQlidXMtPnJlc291cmNlW2krMV0gPSByZXM7CiAKIAkJcHJfZGVidWcoIlBD
+STogUEhCIE1FTSByZXNvdXJjZSAlZCA9ICUwMTZsbHgtJTAxNmxseCBbJWx4XVxuIiwgaSwKIAkJ
+CSAodW5zaWduZWQgbG9uZyBsb25nKXJlcy0+c3RhcnQsCiAJCQkgKHVuc2lnbmVkIGxvbmcgbG9u
+ZylyZXMtPmVuZCwKIAkJCSAodW5zaWduZWQgbG9uZylyZXMtPmZsYWdzKTsKKwkJcGNpX2FkZF9y
+ZXNvdXJjZShyZXNvdXJjZXMsIHJlcyk7CiAJfQogCiAJcHJfZGVidWcoIlBDSTogUEhCIE1FTSBv
+ZmZzZXQgICAgID0gJTAxNmxseFxuIiwKQEAgLTE2OTYsNiArMTY5Niw3IEBAIHN0cnVjdCBkZXZp
+Y2Vfbm9kZSAqcGNpYmlvc19nZXRfcGhiX29mX25vZGUoc3RydWN0IHBjaV9idXMgKmJ1cykKICAq
+Lwogdm9pZCBfX2RldmluaXQgcGNpYmlvc19zY2FuX3BoYihzdHJ1Y3QgcGNpX2NvbnRyb2xsZXIg
+Kmhvc2UpCiB7CisJTElTVF9IRUFEKHJlc291cmNlcyk7CiAJc3RydWN0IHBjaV9idXMgKmJ1czsK
+IAlzdHJ1Y3QgZGV2aWNlX25vZGUgKm5vZGUgPSBob3NlLT5kbjsKIAlpbnQgbW9kZTsKQEAgLTE3
+MDMsMjIgKzE3MDQsMjQgQEAgdm9pZCBfX2RldmluaXQgcGNpYmlvc19zY2FuX3BoYihzdHJ1Y3Qg
+cGNpX2NvbnRyb2xsZXIgKmhvc2UpCiAJcHJfZGVidWcoIlBDSTogU2Nhbm5pbmcgUEhCICVzXG4i
+LAogCQkgbm9kZSA/IG5vZGUtPmZ1bGxfbmFtZSA6ICI8Tk8gTkFNRT4iKTsKIAorCS8qIEdldCBz
+b21lIElPIHNwYWNlIGZvciB0aGUgbmV3IFBIQiAqLworCXBjaWJpb3Nfc2V0dXBfcGhiX2lvX3Nw
+YWNlKGhvc2UpOworCisJLyogV2lyZSB1cCBQSEIgYnVzIHJlc291cmNlcyAqLworCXBjaWJpb3Nf
+c2V0dXBfcGhiX3Jlc291cmNlcyhob3NlLCAmcmVzb3VyY2VzKTsKKwogCS8qIENyZWF0ZSBhbiBl
+bXB0eSBidXMgZm9yIHRoZSB0b3BsZXZlbCAqLwotCWJ1cyA9IHBjaV9jcmVhdGVfYnVzKGhvc2Ut
+PnBhcmVudCwgaG9zZS0+Zmlyc3RfYnVzbm8sIGhvc2UtPm9wcywgaG9zZSk7CisJYnVzID0gcGNp
+X2NyZWF0ZV9yb290X2J1cyhob3NlLT5wYXJlbnQsIGhvc2UtPmZpcnN0X2J1c25vLAorCQkJCSAg
+aG9zZS0+b3BzLCBob3NlLCAmcmVzb3VyY2VzKTsKIAlpZiAoYnVzID09IE5VTEwpIHsKIAkJcHJf
+ZXJyKCJGYWlsZWQgdG8gY3JlYXRlIGJ1cyBmb3IgUENJIGRvbWFpbiAlMDR4XG4iLAogCQkJaG9z
+ZS0+Z2xvYmFsX251bWJlcik7CisJCXBjaV9mcmVlX3Jlc291cmNlX2xpc3QoJnJlc291cmNlcyk7
+CiAJCXJldHVybjsKIAl9CiAJYnVzLT5zZWNvbmRhcnkgPSBob3NlLT5maXJzdF9idXNubzsKIAlo
+b3NlLT5idXMgPSBidXM7CiAKLQkvKiBHZXQgc29tZSBJTyBzcGFjZSBmb3IgdGhlIG5ldyBQSEIg
+Ki8KLQlwY2liaW9zX3NldHVwX3BoYl9pb19zcGFjZShob3NlKTsKLQotCS8qIFdpcmUgdXAgUEhC
+IGJ1cyByZXNvdXJjZXMgKi8KLQlwY2liaW9zX3NldHVwX3BoYl9yZXNvdXJjZXMoaG9zZSk7Ci0K
+IAkvKiBHZXQgcHJvYmUgbW9kZSBhbmQgcGVyZm9ybSBzY2FuICovCiAJbW9kZSA9IFBDSV9QUk9C
+RV9OT1JNQUw7CiAJaWYgKG5vZGUgJiYgcHBjX21kLnBjaV9wcm9iZV9tb2RlKQo=
+--f46d04447e1f5d44b604b37056b3--
