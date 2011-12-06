@@ -1,127 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:18940 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187Ab1LMJG5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2011 04:06:57 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] pciehp: Checking pci conf reading to new added device instead of sleep 1s
-Date: Tue, 13 Dec 2011 01:05:54 -0800
-Message-Id: <1323767154-6859-1-git-send-email-yinghai@kernel.org>
+Received: from g6t0184.atlanta.hp.com ([15.193.32.61]:44223 "EHLO
+	g6t0184.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752806Ab1LFUfs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2011 15:35:48 -0500
+Message-ID: <4EDE7A88.7080304@hp.com>
+Date: Tue, 06 Dec 2011 14:26:48 -0600
+From: Mike Miller <mike.miller@hp.com>
+MIME-Version: 1.0
+To: Martin Mares <mj@ucw.cz>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/1] pciutils: add 8TB/s to link capabilities
+References: <20111206191605.GA11235@beardog.cce.hp.com> <mj+md-20111206.195256.30852.nikam@ucw.cz>
+In-Reply-To: <mj+md-20111206.195256.30852.nikam@ucw.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During reviewing
-|	PCI: pciehp: wait 1000 ms before Link Training check
-Linus said:
->...
-> That's a *long* time, and it's irritating to the user. It makes the
-> user think "the machine is slow".
->...
-> And quite frankly, an unconditional one-second delay here seems bad.
->Two seconds was unacceptable, one second is just bad.
+On 12/06/2011 01:53 PM, Martin Mares wrote:
+> Hello!
+>
+>> Right now lspci shows "Speed unknown" for PCIe Gen3 links. This two liner
+>> adds 8GT/s to fix that. I don't think the next link rate has yet been
+>> decided. So I only go to Gen3.
+>
+> I already have this one in my current Git tree (also available on kernel.org).
+> It seems I really should push out a new release :-)
+>
+> 		Thanks anyway
+> 					Martin
+Thank you.
 
-Try to access the pci conf of pci device that is supposed to show up in 1s,
-if could read back valid vender/device id, could bail out early.
-
-Related discussion could be found:
-	https://lkml.org/lkml/2011/12/6/339
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/hotplug/pciehp_hpc.c |   63 +++++++++++++++++++++++++++++----------
- 1 file changed, 48 insertions(+), 15 deletions(-)
-
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -265,6 +265,51 @@ static void pcie_wait_link_active(struct
- 	ctrl_dbg(ctrl, "Data Link Layer Link Active not set in 1000 msec\n");
- }
- 
-+static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
-+{
-+	u32 l;
-+	int count = 0;
-+	u32 lx[50];
-+	int delay = 1000, step = 20;
-+	bool found = false;
-+
-+again:
-+	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, &l))
-+		goto wait;
-+
-+	lx[count++] = l;
-+
-+	/* some broken boards return 0 or ~0 if a slot is empty: */
-+	if (l == 0xffffffff || l == 0x00000000 ||
-+	    l == 0x0000ffff || l == 0xffff0000)
-+		goto wait;
-+
-+	/* Configuration request Retry Status */
-+	if (l == 0xffff0001)
-+		goto wait;
-+
-+	found = true;
-+	goto printout;
-+
-+wait:
-+	msleep(step);
-+	delay -= step;
-+	if (delay > 0)
-+		goto again;
-+
-+printout:
-+	if (count > 1) {
-+		int i;
-+		printk(KERN_DEBUG "pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms\n",
-+			pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
-+			PCI_FUNC(devfn), count, step);
-+		for (i = 0; i < count; i++)
-+			printk(KERN_DEBUG "  [%02d]=%08x\n", i, lx[i]);
-+	}
-+
-+	return found;
-+}
-+
- int pciehp_check_link_status(struct controller *ctrl)
- {
- 	u16 lnk_status;
-@@ -280,13 +325,9 @@ int pciehp_check_link_status(struct cont
-         else
-                 msleep(1000);
- 
--	/*
--	 * Need to wait for 1000 ms after Data Link Layer Link Active
--	 * (DLLLA) bit reads 1b before sending configuration request.
--	 * We need it before checking Link Training (LT) bit becuase
--	 * LT is still set even after DLLLA bit is set on some platform.
--	 */
--	msleep(1000);
-+	/* wait 100ms before read pci conf, and try in 1s */
-+	msleep(100);
-+	pci_bus_check_dev(ctrl->pcie->port->subordinate, PCI_DEVFN(0, 0));
- 
- 	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status);
- 	if (retval) {
-@@ -302,14 +343,6 @@ int pciehp_check_link_status(struct cont
- 		return retval;
- 	}
- 
--	/*
--	 * If the port supports Link speeds greater than 5.0 GT/s, we
--	 * must wait for 100 ms after Link training completes before
--	 * sending configuration request.
--	 */
--	if (ctrl->pcie->port->subordinate->max_bus_speed > PCIE_SPEED_5_0GT)
--		msleep(100);
--
- 	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
- 
- 	return retval;
+-- mikem
