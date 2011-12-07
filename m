@@ -1,118 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:45424 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751455Ab1LEVe7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 16:34:59 -0500
-Date: Mon, 5 Dec 2011 13:37:26 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
-	brking@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH 1/1] PCI:delay configuration of SRIOV capability
-Message-ID: <20111205133726.0bea7383@jbarnes-desktop>
-In-Reply-To: <20111106023357.GB2383@ram-ThinkPad-T61>
-References: <20111006210320.GA14959@us.ibm.com>
-	<CAErSpo7b_6_AaZXW9XBx5p3-0PZJk-1jeCork__KePdzCS89OA@mail.gmail.com>
-	<1317970100.29415.305.camel@pasglop>
-	<CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>
-	<20111007232516.GF2980@ram-ThinkPad-T61>
-	<1318057168.29415.333.camel@pasglop>
-	<20111008075353.GK2980@ram-ThinkPad-T61>
-	<1318060793.29415.347.camel@pasglop>
-	<20111102140325.004b9dad@jbarnes-desktop>
-	<20111103013014.GB393@ram-ThinkPad-T61>
-	<20111106023357.GB2383@ram-ThinkPad-T61>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/3zEsOp4Mb1fuJ=x7JDh=HoP"; protocol="application/pgp-signature"
+Received: from acsinet15.oracle.com ([141.146.126.227]:32044 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754930Ab1LGIx4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Dec 2011 03:53:56 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/5] PCI: Make rescan bus could increase bridge resource size if needed
+Date: Wed,  7 Dec 2011 00:53:03 -0800
+Message-Id: <1323247984-15281-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
+References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/3zEsOp4Mb1fuJ=x7JDh=HoP
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Current rescan will not touch bridge MMIO and IO.
 
-On Sun, 6 Nov 2011 10:33:57 +0800
-Ram Pai <linuxram@us.ibm.com> wrote:
+Try to reuse pci_assign_unassigned_bridge_resources(bridge) to update bridge
+resource, if child devices need more resource.
 
->       The SRIOV capability, namely page size and total_vfs of a device are
->       configured during enumeration phase of the device.
->       This can potentially interfere with the PCI operations of the platf=
-orm,
->       if the IOV capability of the device is not enabled.
->=20
->       The following patch postpones the configuration of the IOV capabili=
-ty of the
->       device to a later point, when the IOV capability is explicitly enab=
-led
->       by the device driver.
->=20
->       The patch is tested on x86 and power platform.
->=20
->       Signed-off-by: Ram Pai <linuxram@us.ibm.com>
-> ---
->  drivers/pci/iov.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index b0446dd..c1a6f5c 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -346,6 +346,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_v=
-irtfn)
->  			return rc;
->  	}
-> =20
-> +	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
-> +
->  	iov->ctrl |=3D PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->  	pci_block_user_cfg_access(dev);
->  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> @@ -451,7 +453,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> =20
->  found:
->  	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
-> -	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, total);
->  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
->  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
->  	if (!offset || (total > 1 && !stride))
-> @@ -464,7 +465,6 @@ found:
->  		return -EIO;
-> =20
->  	pgsz &=3D ~(pgsz - 1);
-> -	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
-> =20
->  	nres =3D 0;
->  	for (i =3D 0; i < PCI_SRIOV_NUM_BARS; i++) {
+only do that for bridges that all children get removed before. So do not
+release resources that could already be used by drivers of child devices.
 
-Ok applied to linux-next with Don's tested by.  Thanks guys.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+---
+ drivers/pci/pci-sysfs.c |    5 ++++-
+ drivers/pci/probe.c     |   24 ++++++++++++++++++++++++
+ include/linux/pci.h     |    1 +
+ 3 files changed, 29 insertions(+), 1 deletion(-)
 
---Sig_/3zEsOp4Mb1fuJ=x7JDh=HoP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO3TmWAAoJEIEoDkX4Qk9hMkcQAJLeLotihZ+HzWdkvx0l8dfW
-VpYGQWaTnqnz20/VYUhi60WyeGyb3GZhM1d+oO3VRD4H7z/Uhl/aAwyv2SI/NvhN
-T+tzT6wj/ImYpRXuJ7XFCnfDE0KlNCQfhvnpkT+u7ib9eFVE88b852GdtEYEblCP
-CxnszP71Ks2K+U0LA4QWrI4IP1XpYj9bLQvzBRNhfVFS48HpzbCMp6kKSIsP4xld
-8d0upT1f9zv/TMxf3BhpZJIwxyDR5rSeare8mVSANJ22NsbZQ5vQX6ySHL2VsTlk
-ZOxZiFIeipAmMor+4IMM/pL7oIZrUQG8GTC4wey1llRsoSXcZQTepEpDRcrawEZQ
-zgDkMHBNkGFSAfFkx52tHVcHQQs4hTn4PFgbA9tuUi7JTRFvzYzmMAExPh6+UKmO
-++Uz1iN+VJDikPE8sNvQjh63TUV7PPr9oM/dqW7uq/fwncaQL2/tgNU8OfLrAFtI
-jGJiwOlUVLmv015XYIOjKhiMSXvko44vXoJOJiX/5OeC0r97FKMy/7eBiCiFbtUa
-2uS0U0MFOfImuVXvOuNYRWlATRVlxjqoi8+fD5VR2HDYj//wI7eLvJk2Y1XMv/7S
-gKyIKf1ba+5awadrzxYU744NbzsKuCnVi41e7Lk1kGzQgY8x7dPKhp/7stco5o7q
-qOKBdqebab1FpYHx53f1
-=4JXK
------END PGP SIGNATURE-----
-
---Sig_/3zEsOp4Mb1fuJ=x7JDh=HoP--
+Index: linux-2.6/drivers/pci/pci-sysfs.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci-sysfs.c
++++ linux-2.6/drivers/pci/pci-sysfs.c
+@@ -366,7 +366,10 @@ dev_bus_rescan_store(struct device *dev,
+ 
+ 	if (val) {
+ 		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus(bus);
++		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
++			pci_rescan_bus_bridge_resize(bus->self);
++		else
++			pci_rescan_bus(bus);
+ 		mutex_unlock(&pci_remove_rescan_mutex);
+ 	}
+ 	return count;
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1661,6 +1661,30 @@ struct pci_bus * __devinit pci_scan_bus(
+ 
+ #ifdef CONFIG_HOTPLUG
+ /**
++ * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
++ * @bridge: PCI bridge for the bus to scan
++ *
++ * Scan a PCI bus and child buses for new devices, adds them,
++ * and enables them, it will resize bridge mmio/io resource if it is possible
++ * for safe, caller should make sure that children get removed already.
++ *
++ * Returns the max number of subordinate bus discovered.
++ */
++unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
++{
++	unsigned int max;
++	struct pci_bus *bus = bridge->subordinate;
++
++	max = pci_scan_child_bus(bus);
++
++	pci_assign_unassigned_bridge_resources(bridge);
++
++	pci_bus_add_devices(bus);
++
++	return max;
++}
++
++/**
+  * pci_rescan_bus - scan a PCI bus for devices.
+  * @bus: PCI bus to scan
+  *
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -882,6 +882,7 @@ void set_pcie_hotplug_bridge(struct pci_
+ /* Functions for PCI Hotplug drivers to use */
+ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap);
+ #ifdef CONFIG_HOTPLUG
++unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge);
+ unsigned int pci_rescan_bus(struct pci_bus *bus);
+ #endif
+ 
