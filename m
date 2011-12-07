@@ -1,126 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62108 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757048Ab1LGWef (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Dec 2011 17:34:35 -0500
-Message-ID: <4EDFE9F2.40108@redhat.com>
-Date: Wed, 07 Dec 2011 17:34:26 -0500
-From: Don Dutile <ddutile@redhat.com>
+Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:34963
+	"EHLO VA3EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757711Ab1LGS7m convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Dec 2011 13:59:42 -0500
+Message-ID: <4EDFB792.3040302@freescale.com>
+Date: Wed, 7 Dec 2011 12:59:30 -0600
+From: Scott Wood <scottwood@freescale.com>
 MIME-Version: 1.0
-To: Nishanth Aravamudan <nacc@us.ibm.com>
-CC: Ram Pai <linuxram@us.ibm.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, prarit@redhat.com,
-	brking@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
-References: <1318057168.29415.333.camel@pasglop> <20111008075353.GK2980@ram-ThinkPad-T61> <1318060793.29415.347.camel@pasglop> <20111102140325.004b9dad@jbarnes-desktop> <20111103013014.GB393@ram-ThinkPad-T61> <20111106023310.GA2383@ram-ThinkPad-T61> <20111205103202.29faf6e1@jbarnes-desktop> <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com> <20111207092531.GF19129@ram-ThinkPad-T61> <4EDFCB4A.60106@redhat.com> <20111207203517.GB6431@us.ibm.com>
-In-Reply-To: <20111207203517.GB6431@us.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Joerg Roedel <joerg.roedel@amd.com>
+CC: Stuart Yoder <b08248@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Alexey Kardashevskiy <aik@au1.ibm.com>, <aafabbri@cisco.com>,
+	<kvm@vger.kernel.org>, <pmac@au1.ibm.com>, <qemu-devel@nongnu.org>,
+	<konrad.wilk@oracle.com>, <agraf@suse.de>, <dwg@au1.ibm.com>,
+	<chrisw@sous-sol.org>, <B08248@freescale.com>,
+	<iommu@lists.linux-foundation.org>, <avi@redhat.com>,
+	<linux-pci@vger.kernel.org>, <B07421@freescale.com>,
+	<benve@cisco.com>, <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>
+Subject: Re: vfio / iommu domain attributes
+References: <CALRxmdDS4qas9fyHXeDVw2e_yMCTqzMi6VXUF-q+eYwgMwg7tw@mail.gmail.com> <20111207163842.GC29680@amd.com>
+In-Reply-To: <20111207163842.GC29680@amd.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/07/2011 03:35 PM, Nishanth Aravamudan wrote:
-> On 07.12.2011 [15:23:38 -0500], Don Dutile wrote:
->> On 12/07/2011 04:25 AM, Ram Pai wrote:
->>> On Wed, Dec 07, 2011 at 12:22:47AM -0800, Yinghai Lu wrote:
->>>> On Mon, Dec 5, 2011 at 10:32 AM, Jesse Barnes<jbarnes@virtuousgeek.org>   wrote:
->>>>> On Sun, 6 Nov 2011 10:33:10 +0800
->>>>> Ram Pai<linuxram@us.ibm.com>   wrote:
->>>>>
->>>>>>
->>>>>>    NOTE: Note, there is subtle change in the pci_enable_device() API.
->>>>>>    Any driver that depends on SRIOV BARS to be enabled in pci_enable_device()
->>>>>>    can fail.
->>>>>>
->>>>>> ---
->>>>>
->>>>> Applied to my for-linus branch, thanks.
->>>>>
->>>>
->>>> please don't push to linus now.
->>>>
->>>> this one causes regression.
->>>>
->>>> please check attached patch.
->>>>
->>>> Thanks
->>>>
->>>> Yinghai
->>>
->>>> [PATCH] pci: Fix hotplug of Express Module with pci bridges
->>>>
->>>> Found hotplug of one setup does not work with recent change in pci tree.
->>>>
->>>> After checking the bridge conf setup, found bridges get assigned, but not get enabled.
->>>>
->>>> Finally found following commit, simplely ignore bridge resource when enabling pci device.
->>>>
->>>> | commit bbef98ab0f019f1b0c25c1acdf1683c68933d41b
->>>> | Author: Ram Pai<linuxram@us.ibm.com>
->>>> | Date:   Sun Nov 6 10:33:10 2011 +0800
->>>> |
->>>> |    PCI: defer enablement of SRIOV BARS
->>>> |...
->>>> |    NOTE: Note, there is subtle change in the pci_enable_device() API.  Any
->>>> |    driver that depends on SRIOV BARS to be enabled in pci_enable_device()
->>>> |    can fail.
->>>>
->>>> Put back bridge resource and ROM resource checking to fix the problem.
->>>>
->>>> That should fix regression like BIOS does not assign correct resource to bridge.
->>>>
->>>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
->>>>
->>>> ---
->>>>   drivers/pci/pci.c |    6 +++++-
->>>>   1 file changed, 5 insertions(+), 1 deletion(-)
->>>>
->>>> Index: linux-2.6/drivers/pci/pci.c
->>>> ===================================================================
->>>> --- linux-2.6.orig/drivers/pci/pci.c
->>>> +++ linux-2.6/drivers/pci/pci.c
->>>> @@ -1139,7 +1139,11 @@ static int __pci_enable_device_flags(str
->>>>   	if (atomic_add_return(1,&dev->enable_cnt)>   1)
->>>>   		return 0;		/* already enabled */
->>>>
->>>> -	for (i = 0; i<   PCI_ROM_RESOURCE; i++)
->>>> +	/* only skip sriov related */
->>>> +	for (i = 0; i<= PCI_ROM_RESOURCE; i++)
->>>> +		if (dev->resource[i].flags&   flags)
->>>> +			bars |= (1<<   i);
->>>> +	for (i = PCI_BRIDGE_RESOURCES; i<   DEVICE_COUNT_RESOURCE; i++)
->>>>   		if (dev->resource[i].flags&   flags)
->>>>   			bars |= (1<<   i);
->>>>
->>>
->>> Oops. My patch inadvertently dropped ROM and BRIDGE resources.
->>>
->>> This patch is right. However would it help if we did something like this
->>> to avoid some code duplication?
->>>
->>> 	for (i = 0; i<   DEVICE_COUNT_RESOURCE;
->>> 		i == PCI_ROM_RESOURCE ? PCI_BRIDGE_RESOURCES: i++)
->>> 		if (dev->resource[i].flags&   flags)
->>> 			bars |= (1<<   i);
->>>
+On 12/07/2011 10:38 AM, Joerg Roedel wrote:
+> On Wed, Dec 07, 2011 at 09:54:39AM -0600, Stuart Yoder wrote:
+>> Alex, Alexey I'm wondering if you've had any new thoughts on this over
+>> the last week.
 >>
->> why not something more explicit like:
->>
->> 	for (i = 0; i<  DEVICE_COUNT_RESOURCE; i++) {
->> 		if ((i>=  PCI_IOV_RESOURCES)&&  (i<= PCI_IOV_RESOURCE_END))
->> 			continue; /* skip sriov related resources */
->>                  if (dev->resource[i].flags&  flags)
->>                          bars |= (1<<  i);
->> 	}
->
-> I agree with the more explicit approach, self-commenting and easier to
-> read. Although, you may want to add a comment as to *why* we're skipping
-> IOV BARs here.
->
-+1  for those not living it, yes, good for historical (& noobie) understanding
+>> For Freescale, our iommu domain attributes would look something like:
+>>     -domain iova base address
+>>     -domain iova window size
+> 
+> I agree with that.
+> 
+>>     -domain enable/disable
+>>     -number of subwindows
+>>     -operation mapping table index
+>>     -stash destination CPU
+>>     -stash target (cache– L1, L2, L3)
+> 
+> Why does the user of the IOMMU-API need to have control over these
+> things?
 
-> -Nish
->
+Stash configuration needs to match what the user of the device is doing
+(in particular, which CPU(s) it is accessing the device's ring buffer
+from).  Operation mapping table is related to stashing, and while
+perhaps not as critical to be controlled by the driver (though I'm not
+too familiar with the details here), it seems better than hardcoding
+this knowledge elsewhere in the system -- it does relate to the kind of
+things that the specific device is doing.
+
+Domain enable/disable is something we'd use when we reset a KVM or
+userspace device user (or reassign the device).  We need the device to
+not be able to DMA until it has been quiesced from previous activity,
+and we don't have anything like PCIe function-level reset or the PCI
+bus-master enable bit.  The driver needs to let us know when it's safe
+to enable DMA.  This *could* be done via map/unmap, but in
+configurations where maps are static, we'd like to not risk the map
+failing post-init.  Plus, it's simpler to just have a toggle rather than
+need to tear down and rebuild the maps, and guest reset/failover is a
+performance-critical path for some of our customers.
+
+Number of subwindows goes along with iova base/size.  It affects which
+mappings will be valid.  If you're using large pages and a small iova
+window, a smaller number of subwindows may suffice.  We could just
+always use the maximum number of subwindows, but that has a good chance
+of thrashing the IOMMU's cache.  On p4080, max subwindows per device is
+256 and the cache can hold 128 entries globally.  Lower-end chips may
+have a smaller cache.
+
+-Scott
 
