@@ -1,121 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:42250 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754893Ab1LGIx5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Dec 2011 03:53:57 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 5/5] PCI: Make pci_rescan_bus handle add_list
-Date: Wed,  7 Dec 2011 00:53:04 -0800
-Message-Id: <1323247984-15281-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
-References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:46129 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757892Ab1LGVaI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Dec 2011 16:30:08 -0500
+Date: Wed, 7 Dec 2011 13:30:00 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Charlie Suffin <charlie.suffin@stratus.com>, stable@kernel.org
+Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel
+ Sandy Bridge GPUs
+Message-ID: <20111207133000.69051c59@jbarnes-desktop>
+In-Reply-To: <4EDFD5BB.1050906@intra2net.com>
+References: <4EDFD5BB.1050906@intra2net.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/0ByMDOVCuVxrmuH.GTdPv1S"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So it will allocate resource to hotplug bridge during remove/rescan.
+--Sig_/0ByMDOVCuVxrmuH.GTdPv1S
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Need to move that function to setup-bus.c so it could use
-  __pci_bus_size_bridges and __pci_bus_assign_resources
-directly to take add_list.
+On Wed, 07 Dec 2011 22:08:11 +0100
+Thomas Jarosch <thomas.jarosch@intra2net.com> wrote:
+> +#define I915_DEIER_REG 0x4400c
+> +static void __devinit disable_igfx_irq(struct pci_dev *dev)
+> +{
+> +	void __iomem *regs =3D pci_iomap(dev, 0, 0);
+> +	if (regs =3D=3D NULL) {
+> +		dev_warn(&dev->dev, "igfx quirk: Can't iomap PCI device\n");
+> +		return;
+> +	}
+> +
+> +	/* Check if any interrupt line is still enabled */
+> +	if (readl(regs + I915_DEIER_REG) !=3D 0) {
+> +		dev_warn(&dev->dev, "BIOS left Intel GPU interrupts enabled; "
+> +			"disabling\n");
+> +
+> +		writel(0, regs + I915_DEIER_REG);
+> +	}
+> +
+> +	pci_iounmap(dev, regs);
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+> +
+>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>  			  struct pci_fixup *end)
+>  {
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Could really be dev_dbg, I think this will be fairly common.  I think we
+also need to ack any outstanding interrupts after disabling them in IER
+by writing IIR back on itself. Can you test that?
 
----
- drivers/pci/probe.c     |   32 --------------------------------
- drivers/pci/setup-bus.c |   39 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 39 insertions(+), 32 deletions(-)
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1684,38 +1684,6 @@ unsigned int __ref pci_rescan_bus_bridge
- 	return max;
- }
- 
--/**
-- * pci_rescan_bus - scan a PCI bus for devices.
-- * @bus: PCI bus to scan
-- *
-- * Scan a PCI bus and child buses for new devices, adds them,
-- * and enables them.
-- *
-- * Returns the max number of subordinate bus discovered.
-- */
--unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
--{
--	unsigned int max;
--	struct pci_dev *dev;
--
--	max = pci_scan_child_bus(bus);
--
--	down_read(&pci_bus_sem);
--	list_for_each_entry(dev, &bus->devices, bus_list)
--		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
--		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
--			if (dev->subordinate)
--				pci_bus_size_bridges(dev->subordinate);
--	up_read(&pci_bus_sem);
--
--	pci_bus_assign_resources(bus);
--	pci_enable_bridges(bus);
--	pci_bus_add_devices(bus);
--
--	return max;
--}
--EXPORT_SYMBOL_GPL(pci_rescan_bus);
--
- EXPORT_SYMBOL(pci_add_new_bus);
- EXPORT_SYMBOL(pci_scan_slot);
- EXPORT_SYMBOL(pci_scan_bridge);
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1354,3 +1354,42 @@ enable_all:
- 	pci_enable_bridges(parent);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
-+
-+#ifdef CONFIG_HOTPLUG
-+/**
-+ * pci_rescan_bus - scan a PCI bus for devices.
-+ * @bus: PCI bus to scan
-+ *
-+ * Scan a PCI bus and child buses for new devices, adds them,
-+ * and enables them.
-+ *
-+ * Returns the max number of subordinate bus discovered.
-+ */
-+unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
-+{
-+	unsigned int max;
-+	struct pci_dev *dev;
-+	struct resource_list_x add_list; /* list of resources that
-+					want additional resources */
-+
-+	max = pci_scan_child_bus(bus);
-+
-+	add_list.next = NULL;
-+	down_read(&pci_bus_sem);
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-+		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
-+			if (dev->subordinate)
-+				__pci_bus_size_bridges(dev->subordinate,
-+							 &add_list);
-+	up_read(&pci_bus_sem);
-+	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	BUG_ON(add_list.next);
-+
-+	pci_enable_bridges(bus);
-+	pci_bus_add_devices(bus);
-+
-+	return max;
-+}
-+EXPORT_SYMBOL_GPL(pci_rescan_bus);
-+#endif
+--Sig_/0ByMDOVCuVxrmuH.GTdPv1S
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO39rYAAoJEIEoDkX4Qk9hg0gP/01oPKIQsSnMCJwpU02fGTQ5
+/9PPGsKtzUTMN4KjRP8CHOyTGORHyCaKro9OiIq2ZLptCnCB/FxSd4ltRNxun8PD
+eHCigcV5f9p1Ha+8HceFihayNP/GXvGwSYvFT3iUF8Cp+NXTxFbTNfkXefNog+hs
+UBLo4ifYT7WYiMeMMqdhTDsoeXE87j9vk4c3wW/a0QJcEF0QOtygRh5FrmQrk4vJ
+csWroGhBORP6tF88LaVtes/scBM0XPLMfEQgUJ1aeP3jUizzmc4JzwkOBulsUSuj
+kAvzsx42OzDNJMIV0kZnY/5Fpm+tvVPXAcpW+PaLev9U7zZnxdq8NQKjp1i+1/oJ
+qzQeUCjTAPokR3PMvSziGOG7tzeir5TQPhlTTPgLbpfxrwSLBpSW+tbtfAyqFaLG
+yHDy5XQL8uig8oaWdkCYBoz9o4KyufU3umz3IQ5V7HP2vYnJP984+vnrmHppmKAu
+5S7IkwEPahmwXJuEeYMgTfQq+hJzI1clFiTqjPAY0aW4bbP14KnuDMy8Fo6mIoSU
+XKyNB4teBIPMxO74NmkoSXScXRnBwsiVZ62JiRgJO5AOPfXm8ySoY3PyYR7IXQd8
+aYEHUCsPiDAVZU9LgDvmbAnYpdXBHhAMwGFanUqfNs8wbkdZucPFuBHOTPMvUFgs
+PaqPDG3iLrFvYuk8H+vo
+=HchF
+-----END PGP SIGNATURE-----
+
+--Sig_/0ByMDOVCuVxrmuH.GTdPv1S--
