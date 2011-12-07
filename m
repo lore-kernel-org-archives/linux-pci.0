@@ -1,51 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:34412
-	"EHLO VA3EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932066Ab1LBS1I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2011 13:27:08 -0500
-Message-ID: <4ED91876.2030408@freescale.com>
-Date: Fri, 2 Dec 2011 12:27:02 -0600
-From: Scott Wood <scottwood@freescale.com>
+Received: from mx1.redhat.com ([209.132.183.28]:62108 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757048Ab1LGWef (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Dec 2011 17:34:35 -0500
+Message-ID: <4EDFE9F2.40108@redhat.com>
+Date: Wed, 07 Dec 2011 17:34:26 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-To: Bhushan Bharat-R65777 <R65777@freescale.com>
-CC: Stuart Yoder <b08248@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Alexey Kardashevskiy <aik@au1.ibm.com>,
-	"aafabbri@cisco.com" <aafabbri@cisco.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"pmac@au1.ibm.com" <pmac@au1.ibm.com>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"joerg.roedel@amd.com" <joerg.roedel@amd.com>,
-	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-	"agraf@suse.de" <agraf@suse.de>,
-	"dwg@au1.ibm.com" <dwg@au1.ibm.com>,
-	"chrisw@sous-sol.org" <chrisw@sous-sol.org>,
-	Yoder Stuart-B08248 <B08248@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"avi@redhat.com" <avi@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Wood Scott-B07421 <B07421@freescale.com>,
-	"benve@cisco.com" <benve@cisco.com>
-Subject: Re: [Qemu-devel] [RFC PATCH] vfio: VFIO Driver core framework
-References: <20111103195452.21259.93021.stgit@bling.home> <4ED43AD9.5090509@au1.ibm.com>	<4ED43CFE.8040009@au1.ibm.com> <1322538856.19120.126.camel@bling.home> <1322594768.19120.194.camel@bling.home> <CALRxmdDEGwA787gEgC3d_yU99TqOZOtWeDJ9N-QCQ3gxV8yyMw@mail.gmail.com> <1322610273.19120.209.camel@bling.home> <CALRxmdBaguEZD8CnogHv+mSPuLx9et1CGRAa8oO_182Pjjp6-Q@mail.gmail.com> <1322672293.19120.232.camel@bling.home> <CALRxmdAjeyyM3Ta+DCTxtdc_J69fnVko_9hzmjcLUCe8SskNnQ@mail.gmail.com> <1322774717.26545.118.camel@bling.home> <CALRxmdDZjFGjdrEC5e1ANGV+PYd5Mz7j3zeaKNiEUwLdNzmiEA@mail.gmail.com> <B8D6CA50DACE9E4AAADE9A4D56FBAAE62BC98C@039-SN1MPN1-004.039d.mgd.msft.net>
-In-Reply-To: <B8D6CA50DACE9E4AAADE9A4D56FBAAE62BC98C@039-SN1MPN1-004.039d.mgd.msft.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Nishanth Aravamudan <nacc@us.ibm.com>
+CC: Ram Pai <linuxram@us.ibm.com>, Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+References: <1318057168.29415.333.camel@pasglop> <20111008075353.GK2980@ram-ThinkPad-T61> <1318060793.29415.347.camel@pasglop> <20111102140325.004b9dad@jbarnes-desktop> <20111103013014.GB393@ram-ThinkPad-T61> <20111106023310.GA2383@ram-ThinkPad-T61> <20111205103202.29faf6e1@jbarnes-desktop> <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com> <20111207092531.GF19129@ram-ThinkPad-T61> <4EDFCB4A.60106@redhat.com> <20111207203517.GB6431@us.ibm.com>
+In-Reply-To: <20111207203517.GB6431@us.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/02/2011 12:11 PM, Bhushan Bharat-R65777 wrote:
-> How do we determine whether guest is ready or not? There can be multiple device get ready at different time.
+On 12/07/2011 03:35 PM, Nishanth Aravamudan wrote:
+> On 07.12.2011 [15:23:38 -0500], Don Dutile wrote:
+>> On 12/07/2011 04:25 AM, Ram Pai wrote:
+>>> On Wed, Dec 07, 2011 at 12:22:47AM -0800, Yinghai Lu wrote:
+>>>> On Mon, Dec 5, 2011 at 10:32 AM, Jesse Barnes<jbarnes@virtuousgeek.org>   wrote:
+>>>>> On Sun, 6 Nov 2011 10:33:10 +0800
+>>>>> Ram Pai<linuxram@us.ibm.com>   wrote:
+>>>>>
+>>>>>>
+>>>>>>    NOTE: Note, there is subtle change in the pci_enable_device() API.
+>>>>>>    Any driver that depends on SRIOV BARS to be enabled in pci_enable_device()
+>>>>>>    can fail.
+>>>>>>
+>>>>>> ---
+>>>>>
+>>>>> Applied to my for-linus branch, thanks.
+>>>>>
+>>>>
+>>>> please don't push to linus now.
+>>>>
+>>>> this one causes regression.
+>>>>
+>>>> please check attached patch.
+>>>>
+>>>> Thanks
+>>>>
+>>>> Yinghai
+>>>
+>>>> [PATCH] pci: Fix hotplug of Express Module with pci bridges
+>>>>
+>>>> Found hotplug of one setup does not work with recent change in pci tree.
+>>>>
+>>>> After checking the bridge conf setup, found bridges get assigned, but not get enabled.
+>>>>
+>>>> Finally found following commit, simplely ignore bridge resource when enabling pci device.
+>>>>
+>>>> | commit bbef98ab0f019f1b0c25c1acdf1683c68933d41b
+>>>> | Author: Ram Pai<linuxram@us.ibm.com>
+>>>> | Date:   Sun Nov 6 10:33:10 2011 +0800
+>>>> |
+>>>> |    PCI: defer enablement of SRIOV BARS
+>>>> |...
+>>>> |    NOTE: Note, there is subtle change in the pci_enable_device() API.  Any
+>>>> |    driver that depends on SRIOV BARS to be enabled in pci_enable_device()
+>>>> |    can fail.
+>>>>
+>>>> Put back bridge resource and ROM resource checking to fix the problem.
+>>>>
+>>>> That should fix regression like BIOS does not assign correct resource to bridge.
+>>>>
+>>>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+>>>>
+>>>> ---
+>>>>   drivers/pci/pci.c |    6 +++++-
+>>>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>>>>
+>>>> Index: linux-2.6/drivers/pci/pci.c
+>>>> ===================================================================
+>>>> --- linux-2.6.orig/drivers/pci/pci.c
+>>>> +++ linux-2.6/drivers/pci/pci.c
+>>>> @@ -1139,7 +1139,11 @@ static int __pci_enable_device_flags(str
+>>>>   	if (atomic_add_return(1,&dev->enable_cnt)>   1)
+>>>>   		return 0;		/* already enabled */
+>>>>
+>>>> -	for (i = 0; i<   PCI_ROM_RESOURCE; i++)
+>>>> +	/* only skip sriov related */
+>>>> +	for (i = 0; i<= PCI_ROM_RESOURCE; i++)
+>>>> +		if (dev->resource[i].flags&   flags)
+>>>> +			bars |= (1<<   i);
+>>>> +	for (i = PCI_BRIDGE_RESOURCES; i<   DEVICE_COUNT_RESOURCE; i++)
+>>>>   		if (dev->resource[i].flags&   flags)
+>>>>   			bars |= (1<<   i);
+>>>>
+>>>
+>>> Oops. My patch inadvertently dropped ROM and BRIDGE resources.
+>>>
+>>> This patch is right. However would it help if we did something like this
+>>> to avoid some code duplication?
+>>>
+>>> 	for (i = 0; i<   DEVICE_COUNT_RESOURCE;
+>>> 		i == PCI_ROM_RESOURCE ? PCI_BRIDGE_RESOURCES: i++)
+>>> 		if (dev->resource[i].flags&   flags)
+>>> 			bars |= (1<<   i);
+>>>
+>>
+>> why not something more explicit like:
+>>
+>> 	for (i = 0; i<  DEVICE_COUNT_RESOURCE; i++) {
+>> 		if ((i>=  PCI_IOV_RESOURCES)&&  (i<= PCI_IOV_RESOURCE_END))
+>> 			continue; /* skip sriov related resources */
+>>                  if (dev->resource[i].flags&  flags)
+>>                          bars |= (1<<  i);
+>> 	}
+>
+> I agree with the more explicit approach, self-commenting and easier to
+> read. Although, you may want to add a comment as to *why* we're skipping
+> IOV BARs here.
+>
++1  for those not living it, yes, good for historical (& noobie) understanding
 
-The guest makes a hypercall with a device handle -- at least that's how
-we do it in Topaz.
-
-> Further if guest have given the device to it user level process or its guest. Should not there be some mechanism for a guest to enable/disable on per device or group?
-
-Yes, the same mechanism can be used for that -- though in that case
-we'll also want the ability for the guest to be able to control another
-layer of mapping (which will get quite tricky with PAMU's limitations).
- This isn't really VFIO's concern, though (unless you're talking about
-the VFIO implementation in the guest).
-
--Scott
+> -Nish
+>
 
