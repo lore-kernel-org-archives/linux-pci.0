@@ -1,67 +1,145 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 5 Dec 2011 11:54:54 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Subject: Re: [PATCH v3 01/34] PCI: add helpers for building PCI bus resource
- lists
-Message-ID: <20111205115454.2429d34b@jbarnes-desktop>
-In-Reply-To: <20111028222535.30729.73281.stgit@bhelgaas.mtv.corp.google.com>
-References: <20111028222432.30729.8431.stgit@bhelgaas.mtv.corp.google.com>
-	<20111028222535.30729.73281.stgit@bhelgaas.mtv.corp.google.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/KW3pHAloar8sRfja/wCKDpJ"; protocol="application/pgp-signature"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:59316 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757719Ab1LGUfk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Dec 2011 15:35:40 -0500
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <nacc@us.ibm.com>;
+	Wed, 7 Dec 2011 15:35:39 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id pB7KZNiH3231882
+	for <linux-pci@vger.kernel.org>; Wed, 7 Dec 2011 15:35:23 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id pB7KZKi8024778
+	for <linux-pci@vger.kernel.org>; Wed, 7 Dec 2011 18:35:22 -0200
+Date: Wed, 7 Dec 2011 12:35:17 -0800
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Ram Pai <linuxram@us.ibm.com>, Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+Message-ID: <20111207203517.GB6431@us.ibm.com>
+References: <1318057168.29415.333.camel@pasglop>
+ <20111008075353.GK2980@ram-ThinkPad-T61>
+ <1318060793.29415.347.camel@pasglop>
+ <20111102140325.004b9dad@jbarnes-desktop>
+ <20111103013014.GB393@ram-ThinkPad-T61>
+ <20111106023310.GA2383@ram-ThinkPad-T61>
+ <20111205103202.29faf6e1@jbarnes-desktop>
+ <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
+ <20111207092531.GF19129@ram-ThinkPad-T61>
+ <4EDFCB4A.60106@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4EDFCB4A.60106@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/KW3pHAloar8sRfja/wCKDpJ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 07.12.2011 [15:23:38 -0500], Don Dutile wrote:
+> On 12/07/2011 04:25 AM, Ram Pai wrote:
+> >On Wed, Dec 07, 2011 at 12:22:47AM -0800, Yinghai Lu wrote:
+> >>On Mon, Dec 5, 2011 at 10:32 AM, Jesse Barnes<jbarnes@virtuousgeek.org>  wrote:
+> >>>On Sun, 6 Nov 2011 10:33:10 +0800
+> >>>Ram Pai<linuxram@us.ibm.com>  wrote:
+> >>>
+> >>>>
+> >>>>   NOTE: Note, there is subtle change in the pci_enable_device() API.
+> >>>>   Any driver that depends on SRIOV BARS to be enabled in pci_enable_device()
+> >>>>   can fail.
+> >>>>
+> >>>>---
+> >>>
+> >>>Applied to my for-linus branch, thanks.
+> >>>
+> >>
+> >>please don't push to linus now.
+> >>
+> >>this one causes regression.
+> >>
+> >>please check attached patch.
+> >>
+> >>Thanks
+> >>
+> >>Yinghai
+> >
+> >>[PATCH] pci: Fix hotplug of Express Module with pci bridges
+> >>
+> >>Found hotplug of one setup does not work with recent change in pci tree.
+> >>
+> >>After checking the bridge conf setup, found bridges get assigned, but not get enabled.
+> >>
+> >>Finally found following commit, simplely ignore bridge resource when enabling pci device.
+> >>
+> >>| commit bbef98ab0f019f1b0c25c1acdf1683c68933d41b
+> >>| Author: Ram Pai<linuxram@us.ibm.com>
+> >>| Date:   Sun Nov 6 10:33:10 2011 +0800
+> >>|
+> >>|    PCI: defer enablement of SRIOV BARS
+> >>|...
+> >>|    NOTE: Note, there is subtle change in the pci_enable_device() API.  Any
+> >>|    driver that depends on SRIOV BARS to be enabled in pci_enable_device()
+> >>|    can fail.
+> >>
+> >>Put back bridge resource and ROM resource checking to fix the problem.
+> >>
+> >>That should fix regression like BIOS does not assign correct resource to bridge.
+> >>
+> >>Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+> >>
+> >>---
+> >>  drivers/pci/pci.c |    6 +++++-
+> >>  1 file changed, 5 insertions(+), 1 deletion(-)
+> >>
+> >>Index: linux-2.6/drivers/pci/pci.c
+> >>===================================================================
+> >>--- linux-2.6.orig/drivers/pci/pci.c
+> >>+++ linux-2.6/drivers/pci/pci.c
+> >>@@ -1139,7 +1139,11 @@ static int __pci_enable_device_flags(str
+> >>  	if (atomic_add_return(1,&dev->enable_cnt)>  1)
+> >>  		return 0;		/* already enabled */
+> >>
+> >>-	for (i = 0; i<  PCI_ROM_RESOURCE; i++)
+> >>+	/* only skip sriov related */
+> >>+	for (i = 0; i<= PCI_ROM_RESOURCE; i++)
+> >>+		if (dev->resource[i].flags&  flags)
+> >>+			bars |= (1<<  i);
+> >>+	for (i = PCI_BRIDGE_RESOURCES; i<  DEVICE_COUNT_RESOURCE; i++)
+> >>  		if (dev->resource[i].flags&  flags)
+> >>  			bars |= (1<<  i);
+> >>
+> >
+> >Oops. My patch inadvertently dropped ROM and BRIDGE resources.
+> >
+> >This patch is right. However would it help if we did something like this
+> >to avoid some code duplication?
+> >
+> >	for (i = 0; i<  DEVICE_COUNT_RESOURCE;
+> >		i == PCI_ROM_RESOURCE ? PCI_BRIDGE_RESOURCES: i++)
+> >		if (dev->resource[i].flags&  flags)
+> >			bars |= (1<<  i);
+> >
+> 
+> why not something more explicit like:
+> 
+> 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> 		if ((i >=  PCI_IOV_RESOURCES) && (i <= PCI_IOV_RESOURCE_END))
+> 			continue; /* skip sriov related resources */
+>                 if (dev->resource[i].flags & flags)
+>                         bars |= (1 << i);
+> 	}
 
-On Fri, 28 Oct 2011 16:25:35 -0600
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+I agree with the more explicit approach, self-commenting and easier to
+read. Although, you may want to add a comment as to *why* we're skipping
+IOV BARs here.
 
-> We'd like to supply a list of resources when we create a new PCI bus,
-> e.g., the root bus under a PCI host bridge.  These are helpers for
-> constructing that list.
->=20
-> These are exported because the plan is to replace this exported interface:
->     pci_scan_bus_parented()
-> with this one:
->     pci_add_resource(resources, ...)
->     pci_scan_root_bus(..., resources)
->=20
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
+-Nish
 
-Applied this series.  Arch maintainers, please check these out and give
-a shout if there's an issue.  Current bits are in my linux-next branch.
+-- 
+Nishanth Aravamudan <nacc@us.ibm.com>
+IBM Linux Technology Center
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/KW3pHAloar8sRfja/wCKDpJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO3SGOAAoJEIEoDkX4Qk9hNCYQAIG/RErpLKguaMr5M3PNfR4v
-KNXZhiNflUuR52JBTerQn2bczRWl8+cK9HbtfNqOI2poo48Bvqx4ky3kpIo+tFGa
-brIEaNCqHetdGSCRGdvglGOYR3XdChuws8TQkzhRlf2qkqnMGkGBQxT1VNtmvyKd
-4AX5GWQBZIvYIVR6z5gUrovjQ8Tp5/3CmI2Gcg2HT49Metw3QPpC3UDtzbOKdP5Y
-jHKq9nMO64DtHbW2m67AtnBHR74IOjch3Jy53oE9zUQweyomJnOjlCKtCDjdq8TY
-5yY5djsPVabeWRh3FEMRp2ixFwLVXnGOzDe4v0k9mhJhEnn4dghJ9ihPqiQ9MdSx
-kEL8QCUYAV/KnY7KAZXkTTWfWEa5C03MdKmNzQ7opNNFGnyhLRyRJ82IIwWABMCn
-GkvLqYN3cFMd1k7v+sUfBfmAe2omeQN4E+yIY0rDtnLsZhyDPErdC8E1AWJ87wHZ
-JyFC1ldQFjiKJVWoO8w9EGftdGM9Bd1bb69ohkg74Soo62d4uy7KcaUQAuTlEZjb
-yvPWfVjipIAUnX3dCQsyy9HcvzxrdejRIBH/ft88XusQorsO2mFdPKNiTn7ppyFR
-fWIHTx2zvZWXyA4lRge1WhlHE7FJDyopzrGACOERQVk/LyMOh/PvKjQwo+6KrFuD
-O5TVA3CjIyZZ7yUFPwVD
-=M7yo
------END PGP SIGNATURE-----
-
---Sig_/KW3pHAloar8sRfja/wCKDpJ--
