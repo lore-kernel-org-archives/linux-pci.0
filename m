@@ -1,104 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32800 "EHLO mx1.redhat.com"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:58828 "EHLO e6.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754235Ab1LUVmx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Dec 2011 16:42:53 -0500
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 5/5] vfio: VFIO core Kconfig and Makefile
-To: chrisw@sous-sol.org, aik@ozlabs.ru, david@gibson.dropbear.id.au,
-	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 21 Dec 2011 14:42:39 -0700
-Message-ID: <20111221214239.27028.99601.stgit@bling.home>
-In-Reply-To: <20111221213019.27028.26890.stgit@bling.home>
-References: <20111221213019.27028.26890.stgit@bling.home>
+	id S1751319Ab1LGJZl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Dec 2011 04:25:41 -0500
+Received: from /spool/local
+	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Wed, 7 Dec 2011 04:25:40 -0500
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id pB79Pb21287778
+	for <linux-pci@vger.kernel.org>; Wed, 7 Dec 2011 04:25:37 -0500
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id pB79Pa7g012508
+	for <linux-pci@vger.kernel.org>; Wed, 7 Dec 2011 04:25:37 -0500
+Date: Wed, 7 Dec 2011 17:25:31 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+Message-ID: <20111207092531.GF19129@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>
+ <20111007232516.GF2980@ram-ThinkPad-T61>
+ <1318057168.29415.333.camel@pasglop>
+ <20111008075353.GK2980@ram-ThinkPad-T61>
+ <1318060793.29415.347.camel@pasglop>
+ <20111102140325.004b9dad@jbarnes-desktop>
+ <20111103013014.GB393@ram-ThinkPad-T61>
+ <20111106023310.GA2383@ram-ThinkPad-T61>
+ <20111205103202.29faf6e1@jbarnes-desktop>
+ <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable the base code.
+On Wed, Dec 07, 2011 at 12:22:47AM -0800, Yinghai Lu wrote:
+> On Mon, Dec 5, 2011 at 10:32 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> > On Sun, 6 Nov 2011 10:33:10 +0800
+> > Ram Pai <linuxram@us.ibm.com> wrote:
+> >
+> >>
+> >>   NOTE: Note, there is subtle change in the pci_enable_device() API.
+> >>   Any driver that depends on SRIOV BARS to be enabled in pci_enable_device()
+> >>   can fail.
+> >>
+> >> ---
+> >
+> > Applied to my for-linus branch, thanks.
+> >
+> 
+> please don't push to linus now.
+> 
+> this one causes regression.
+> 
+> please check attached patch.
+> 
+> Thanks
+> 
+> Yinghai
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+> [PATCH] pci: Fix hotplug of Express Module with pci bridges
+> 
+> Found hotplug of one setup does not work with recent change in pci tree.
+> 
+> After checking the bridge conf setup, found bridges get assigned, but not get enabled.
+> 
+> Finally found following commit, simplely ignore bridge resource when enabling pci device.
+> 
+> | commit bbef98ab0f019f1b0c25c1acdf1683c68933d41b
+> | Author: Ram Pai <linuxram@us.ibm.com>
+> | Date:   Sun Nov 6 10:33:10 2011 +0800
+> |
+> |    PCI: defer enablement of SRIOV BARS
+> |...
+> |    NOTE: Note, there is subtle change in the pci_enable_device() API.  Any
+> |    driver that depends on SRIOV BARS to be enabled in pci_enable_device()
+> |    can fail.
+> 
+> Put back bridge resource and ROM resource checking to fix the problem.
+> 
+> That should fix regression like BIOS does not assign correct resource to bridge.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/pci.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> Index: linux-2.6/drivers/pci/pci.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.c
+> +++ linux-2.6/drivers/pci/pci.c
+> @@ -1139,7 +1139,11 @@ static int __pci_enable_device_flags(str
+>  	if (atomic_add_return(1, &dev->enable_cnt) > 1)
+>  		return 0;		/* already enabled */
+>  
+> -	for (i = 0; i < PCI_ROM_RESOURCE; i++)
+> +	/* only skip sriov related */
+> +	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+> +		if (dev->resource[i].flags & flags)
+> +			bars |= (1 << i);
+> +	for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++)
+>  		if (dev->resource[i].flags & flags)
+>  			bars |= (1 << i);
+>  
 
- MAINTAINERS           |    8 ++++++++
- drivers/Kconfig       |    2 ++
- drivers/Makefile      |    1 +
- drivers/vfio/Kconfig  |    8 ++++++++
- drivers/vfio/Makefile |    3 +++
- 5 files changed, 22 insertions(+), 0 deletions(-)
- create mode 100644 drivers/vfio/Kconfig
- create mode 100644 drivers/vfio/Makefile
+Oops. My patch inadvertently dropped ROM and BRIDGE resources.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9f7b469..b1f7230 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7142,6 +7142,14 @@ S:	Maintained
- F:	Documentation/filesystems/vfat.txt
- F:	fs/fat/
- 
-+VFIO DRIVER
-+M:	Alex Williamson <alex.williamson@redhat.com>
-+L:	kvm@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/vfio.txt
-+F:	drivers/vfio/
-+F:	include/linux/vfio.h
-+
- VIDEOBUF2 FRAMEWORK
- M:	Pawel Osciak <pawel@osciak.com>
- M:	Marek Szyprowski <m.szyprowski@samsung.com>
-diff --git a/drivers/Kconfig b/drivers/Kconfig
-index d5138e6..f168bf3 100644
---- a/drivers/Kconfig
-+++ b/drivers/Kconfig
-@@ -114,6 +114,8 @@ source "drivers/auxdisplay/Kconfig"
- 
- source "drivers/uio/Kconfig"
- 
-+source "drivers/vfio/Kconfig"
-+
- source "drivers/vlynq/Kconfig"
- 
- source "drivers/virtio/Kconfig"
-diff --git a/drivers/Makefile b/drivers/Makefile
-index 4ef810e..f715919 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -59,6 +59,7 @@ obj-$(CONFIG_ATM)		+= atm/
- obj-$(CONFIG_FUSION)		+= message/
- obj-y				+= firewire/
- obj-$(CONFIG_UIO)		+= uio/
-+obj-$(CONFIG_VFIO)		+= vfio/
- obj-y				+= cdrom/
- obj-y				+= auxdisplay/
- obj-$(CONFIG_PCCARD)		+= pcmcia/
-diff --git a/drivers/vfio/Kconfig b/drivers/vfio/Kconfig
-new file mode 100644
-index 0000000..9acb1e7
---- /dev/null
-+++ b/drivers/vfio/Kconfig
-@@ -0,0 +1,8 @@
-+menuconfig VFIO
-+	tristate "VFIO Non-Privileged userspace driver framework"
-+	depends on IOMMU_API
-+	help
-+	  VFIO provides a framework for secure userspace device drivers.
-+	  See Documentation/vfio.txt for more details.
-+
-+	  If you don't know what to do here, say N.
-diff --git a/drivers/vfio/Makefile b/drivers/vfio/Makefile
-new file mode 100644
-index 0000000..088faf1
---- /dev/null
-+++ b/drivers/vfio/Makefile
-@@ -0,0 +1,3 @@
-+vfio-y := vfio_main.o vfio_iommu.o
-+
-+obj-$(CONFIG_VFIO) := vfio.o
+This patch is right. However would it help if we did something like this
+to avoid some code duplication?
+
+	for (i = 0; i < DEVICE_COUNT_RESOURCE;
+		i == PCI_ROM_RESOURCE ? PCI_BRIDGE_RESOURCES: i++)
+		if (dev->resource[i].flags & flags)
+			bars |= (1 << i);
+
+RP
 
