@@ -1,34 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 9 Dec 2011 10:07:08 -0800
-From: Greg KH <greg@kroah.com>
-To: Anand Kanaginhal <anand_dk@hotmail.com>
-Cc: mjg59@srcf.ucam.org, bhelgaas@google.com,
-	Linux PCI mailing <linux-pci@vger.kernel.org>,
-	linux kernel mailing <linux-kernel@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>
-Subject: Re: PCIe Hotplugging not working
-Message-ID: <20111209180708.GA10768@kroah.com>
-References: <BAY163-W52E309F419E3588206D889FBB30@phx.gbl>
- <BAY163-W47DD39095DA3EB108AA3F2FBB30@phx.gbl>
- <20111130154022.GA1411@srcf.ucam.org>
- <BAY163-W80F10350D24162EFC3699FBB00@phx.gbl>
- <20111130182423.GA4831@srcf.ucam.org>
- <CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>
- <BAY163-W600D6D6A04D4BAE8278907FBB90@phx.gbl>
- <20111209124524.GA3488@srcf.ucam.org>
- <BAY163-W45C53B9E3E9E0B8629B683FBB90@phx.gbl>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:43895 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754485Ab1LGXL5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Dec 2011 18:11:57 -0500
+Received: by ghbz2 with SMTP id z2so995321ghb.19
+        for <linux-pci@vger.kernel.org>; Wed, 07 Dec 2011 15:11:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BAY163-W45C53B9E3E9E0B8629B683FBB90@phx.gbl>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <4EDFCB4A.60106@redhat.com>
+References: <CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>
+	<20111007232516.GF2980@ram-ThinkPad-T61>
+	<1318057168.29415.333.camel@pasglop>
+	<20111008075353.GK2980@ram-ThinkPad-T61>
+	<1318060793.29415.347.camel@pasglop>
+	<20111102140325.004b9dad@jbarnes-desktop>
+	<20111103013014.GB393@ram-ThinkPad-T61>
+	<20111106023310.GA2383@ram-ThinkPad-T61>
+	<20111205103202.29faf6e1@jbarnes-desktop>
+	<CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
+	<20111207092531.GF19129@ram-ThinkPad-T61>
+	<4EDFCB4A.60106@redhat.com>
+Date: Wed, 7 Dec 2011 15:11:56 -0800
+Message-ID: <CAE9FiQXOhn2HkqCh3DiSNUw7RwgAAk2Xe62z11AB=L+pcG__Qg@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+From: Yinghai Lu <yinghai@kernel.org>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 09, 2011 at 09:19:39AM -0800, Anand Kanaginhal wrote:
-> 1. With the above setup, If I hotplug card c1 and/or c2, will my driver probe 
-> get invoked. 
+On Wed, Dec 7, 2011 at 12:23 PM, Don Dutile <ddutile@redhat.com> wrote:
+> why not something more explicit like:
+>
+>        for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+>                if ((i >=  PCI_IOV_RESOURCES) && (i <= PCI_IOV_RESOURCE_END))
+>                        continue; /* skip sriov related resources */
+>
+>                if (dev->resource[i].flags & flags)
+>                        bars |= (1 << i);
+>        }
 
-Stop right here.  Please get your pci hotplug controller driver working
-first, for your platform.  That seems to be the problem.  After that,
-the rest of your questions should just resolve themselves.
+no, we should not put checking in the loop.
 
-greg k-h
+also you will have problem when CONFIG_PCI_IOV is not defined.
+
+Thanks
+
+Yinghai
