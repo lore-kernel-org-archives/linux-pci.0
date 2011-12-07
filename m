@@ -1,78 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Dec 2011 11:06:09 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Gary Hade <garyhade@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Renninger <trenn@novell.com>
-Subject: Re: [PATCH] x86/PCI: Ignore CPU non-addressable _CRS reserved
- memory resources
-Message-ID: <20111205110609.7f4fa6e0@jbarnes-desktop>
-In-Reply-To: <20111114234216.GA16000@us.ibm.com>
-References: <20111114234216.GA16000@us.ibm.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/IUxP=WniClYJsuWnyRQ9ZwK"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:41970 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757933Ab1LGTL7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Dec 2011 14:11:59 -0500
+MIME-Version: 1.0
+In-Reply-To: <20111207163842.GC29680@amd.com>
+References: <CALRxmdDS4qas9fyHXeDVw2e_yMCTqzMi6VXUF-q+eYwgMwg7tw@mail.gmail.com>
+	<20111207163842.GC29680@amd.com>
+Date: Wed, 7 Dec 2011 13:11:58 -0600
+Message-ID: <CALRxmdDgfzZOPCnJeN2vOTkvpqFbyPEeCF4bbq5QW2iCoVKgCw@mail.gmail.com>
+Subject: Re: vfio / iommu domain attributes
+From: Stuart Yoder <b08248@gmail.com>
+To: Joerg Roedel <joerg.roedel@amd.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Alexey Kardashevskiy <aik@au1.ibm.com>, aafabbri@cisco.com,
+	kvm@vger.kernel.org, pmac@au1.ibm.com, qemu-devel@nongnu.org,
+	konrad.wilk@oracle.com, agraf@suse.de, dwg@au1.ibm.com,
+	chrisw@sous-sol.org, B08248@freescale.com,
+	iommu@lists.linux-foundation.org, avi@redhat.com,
+	linux-pci@vger.kernel.org, B07421@freescale.com, benve@cisco.com,
+	benh@kernel.crashing.org,
+	David Gibson <david@gibson.dropbear.id.au>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/IUxP=WniClYJsuWnyRQ9ZwK
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Dec 7, 2011 at 10:38 AM, Joerg Roedel <joerg.roedel@amd.com> wrote:
+> On Wed, Dec 07, 2011 at 09:54:39AM -0600, Stuart Yoder wrote:
+>> Alex, Alexey I'm wondering if you've had any new thoughts on this over
+>> the last week.
+>>
+>> For Freescale, our iommu domain attributes would look something like:
+>>     -domain iova base address
+>>     -domain iova window size
+>
+> I agree with that.
+>
+>>     -domain enable/disable
+>>     -number of subwindows
+>>     -operation mapping table index
+>>     -stash destination CPU
+>>     -stash target (cache– L1, L2, L3)
+>
+> Why does the user of the IOMMU-API need to have control over these
+> things?
 
-On Mon, 14 Nov 2011 15:42:16 -0800
-Gary Hade <garyhade@us.ibm.com> wrote:
+Our IOMMU complicates things in that it is used for more than just
+memory protection
+and address translation.  It has a concept of operation translation as well.
+Some devices could do a 'write' transaction that when passing through the
+iommu gets translated to a a 'write-with-stash'.   Stashed transactions
+get pushed directly into some cache.
 
->=20
-> From: Gary Hade <garyhade@us.ibm.com>
->=20
-> This assures that a _CRS reserved host bridge window or=20
-> window region is not used if it is not addressable by
-> the CPU.  The new code either trims the window to exclude
-> the non-addressable portion or totally ignores the window
-> if the entire window is non-addressable.
->=20
-> The current code has been shown to be problematic with
-> 32-bit non-PAE kernels on systems where _CRS reserves
-> resources above 4GB.
->=20
-> Signed-off-by: Gary Hade <garyhade@us.ibm.com>
-> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Thomas Renninger <trenn@novell.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: stable@kernel.org
-> ---
+It's the entity creating and setting up the domain that will have the knowledge
+of what cache is to be stashed to.    Right now software that uses stashing
+is pinned to a CPU, but if in the future it's possible that we'll want to
+work without pinning and may need to update stashing attributes on the
+fly.
 
-Applied to linux-next (don't want to send something this fundamental to
-Linus at this late stage).  It can land in stable if it turns out ok in
--rc1.
+The overall iova window for the domain can be divided into a configurable
+number of subwindows (a power of 2, up to 256), which means we can have
+a contiguous iova region backed by up to 256 physically dis-contiguous
+subwindows.    The creator of the iommu domain is in the best position
+to know how many subwindows are needed (the fewer the better for
+performance reasons).
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+So, in short, the above list of attributes are the attributes of our
+iommu hardware
+and  the knowlege of how they should be set is with the domain creator.
 
---Sig_/IUxP=WniClYJsuWnyRQ9ZwK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+>> These are all things that need to be set by the creator of the domain.
+>>
+>> Since the domain attributes are going to be so different for each platform does
+>> it make sense to define a new iommu_ops call back that just takes a void pointer
+>> that can be implemented in a platform specific way?   For example:
+>>
+>>     struct iommu_ops {
+>>         [cut]
+>>         int (*domain_set_attrs)(struct iommu_domain *domain,
+>>                               void *attrs);
+>>         int (*domain_get_attrs)(struct iommu_domain *domain,
+>>                               void *attrs);
+>>     }
+>
+> A void pointer is certainly the worst choice for an interface. I think
+> it is better to have at least a set of common attributes. Somthing like
+> this:
+>
+> iommu_domain_set_attr(struct iommu_domain *domain, enum attr_type, void *data)
+> iommu_domain_get_attr(struct iommu_domain *domain, enum attr_type, void *data)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+That would be fine.
 
-iQIcBAEBAgAGBQJO3RYhAAoJEIEoDkX4Qk9hPnsP/itN2IrfeFI3xVYt0hXN9iIo
-Y7KSlW/yime32zS3AFM2v55jQXxTq8TngV/KTUU5y4wO8Y0RLRLgtJHpZ5m9f+w6
-315nCaQ4tp7W7cIhK3Zm3udIAv3kIqGzKMwLLGjZKM8Gm5WrPrKKpB9LucE0GuUO
-wR/hHAkxaFCC3ejcxCWDJYxXNrH7YszA2C1e5w3jWoezHIo+1Bw40G6OoZQu5lux
-jEylmAIJ18GlKMO5tF7FftYlSu/oDTIHKX8bSPfKRRIth9sZtLQqRUyc0Kh3tt1O
-KUyMjOiAMmljw973DwCNhj/ta+bfEPiU/GLddUQTx1wM5qqQf3wxcwk3YfQHkePV
-k1gpUTuggLfeqFIkw/OUl/tSg7rHBXcKGx5+BlYnXIP3kA8AWfn2Zvq7bJDmfRcb
-mvWDjgqLy9Z75W43JjJieo75c8vQN25VssdPUiO5wIQGx08/Jvc6q3h3JgqXLG+P
-Lt0app6O6YAcIp88vAJiGtMBiznosfAfQ1vTM46aqGmx3aLsNg3+CNzUxMIm/KdC
-1aSd3XV9YRH35tMRmZgTTITptYz+HG57/QpjRGkktQEDIvmSBSlwNJ7Vb6jba/06
-+rYm1zV88tPiM9McrPUcyJjZtzyB8H0U3UEl64V4krIoaE55WcAfgvDjlaHOYBiU
-udof09ttbZi0DHIvqBjT
-=2ASo
------END PGP SIGNATURE-----
-
---Sig_/IUxP=WniClYJsuWnyRQ9ZwK--
+Stuart
