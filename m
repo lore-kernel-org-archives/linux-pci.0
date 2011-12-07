@@ -1,48 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59910 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752942Ab1LWAd6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Dec 2011 19:33:58 -0500
-Received: by qadc12 with SMTP id c12so4696863qad.19
-        for <linux-pci@vger.kernel.org>; Thu, 22 Dec 2011 16:33:58 -0800 (PST)
-Message-ID: <4EF3CC64.40705@gmail.com>
-Date: Fri, 23 Dec 2011 01:33:40 +0100
-From: Christian Inci <chris.pcguy.inci@gmail.com>
-MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: [PATCH] fix for a bash issue regarding a variable in update-pciids
-Content-Type: text/plain; charset=UTF-8
+Received: from rcsinet15.oracle.com ([148.87.113.117]:42211 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754910Ab1LGIxy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Dec 2011 03:53:54 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/5] PCI: Using add_list in pcie hotplug path.
+Date: Wed,  7 Dec 2011 00:53:02 -0800
+Message-Id: <1323247984-15281-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
+References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From f9d728aa77fc53189f750286b327361a707f0533 Mon Sep 17 00:00:00 2001
-From: Christian Inci <chris.pcguy.inci@gmail.com>
-Date: Fri, 23 Dec 2011 01:13:16 +0100
-Subject: [PATCH] fix for a bash issue regarding a variable in update-pciids
- At least some bash versions can and will complain about an
- empty PCI_COMPRESSED_IDS variable, when it get used in the
- 'if'-statement.
+We need add size for hot plug path when pluging in hotplug chassis without cards.
+-v2: change descriptions. make it can be applied after
+	pci: Check bridge resources after resource allocation.
 
-e.g. with a message like:
-  "/usr/sbin/update-pciids: line 18: [: : integer expression expected"
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Signed-off-by: Christian Inci <chris.pcguy.inci@gmail.com>
 ---
- update-pciids.sh |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/pci/setup-bus.c |   18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/update-pciids.sh b/update-pciids.sh
-index 5e77109..708e3b3 100755
---- a/update-pciids.sh
-+++ b/update-pciids.sh
-@@ -5,7 +5,7 @@
- set -e
- SRC="http://pciids.sourceforge.net/v2.2/pci.ids"
- DEST=pci.ids
--PCI_COMPRESSED_IDS=
-+PCI_COMPRESSED_IDS=0
- GREP=grep
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -327,13 +327,14 @@ requested_and_reassign:
+ }
  
- # if pci.ids is read-only (because the filesystem is read-only),
--- 
-1.7.7.4
+ static void pdev_assign_resources_sorted(struct pci_dev *dev,
++				 struct resource_list_x *add_head,
+ 				 struct resource_list_x *fail_head)
+ {
+ 	struct resource_list head;
+ 
+ 	head.next = NULL;
+ 	__dev_sort_resources(dev, &head);
+-	__assign_resources_sorted(&head, NULL, fail_head);
++	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+ 
+@@ -1003,17 +1004,19 @@ void __ref pci_bus_assign_resources(cons
+ EXPORT_SYMBOL(pci_bus_assign_resources);
+ 
+ static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
++					 struct resource_list_x *add_head,
+ 					 struct resource_list_x *fail_head)
+ {
+ 	struct pci_bus *b;
+ 
+-	pdev_assign_resources_sorted((struct pci_dev *)bridge, fail_head);
++	pdev_assign_resources_sorted((struct pci_dev *)bridge,
++					 add_head, fail_head);
+ 
+ 	b = bridge->subordinate;
+ 	if (!b)
+ 		return;
+ 
+-	__pci_bus_assign_resources(b, NULL, fail_head);
++	__pci_bus_assign_resources(b, add_head, fail_head);
+ 
+ 	switch (bridge->class >> 8) {
+ 	case PCI_CLASS_BRIDGE_PCI:
+@@ -1288,6 +1291,8 @@ enable_and_dump:
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ {
+ 	struct pci_bus *parent = bridge->subordinate;
++	struct resource_list_x add_list; /* list of resources that
++					want additional resources */
+ 	int tried_times = 0;
+ 	struct resource_list_x head, *list;
+ 	int retval;
+@@ -1295,11 +1300,12 @@ void pci_assign_unassigned_bridge_resour
+ 				  IORESOURCE_PREFETCH;
+ 
+ 	head.next = NULL;
++	add_list.next = NULL;
+ 
+ again:
+-	pci_bus_size_bridges(parent);
+-	__pci_bridge_assign_resources(bridge, &head);
+-
++	__pci_bus_size_bridges(parent, &add_list);
++	__pci_bridge_assign_resources(bridge, &add_list, &head);
++	BUG_ON(add_list.next);
+ 	tried_times++;
+ 
+ 	if (!head.next)
