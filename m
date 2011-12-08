@@ -1,153 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:54948 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760938Ab1LPWnX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2011 17:43:23 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: linux-kernel@vger.kernel.org, rjw@sisk.pl, x86@kernel.org,
-	len.brown@intel.com, joseph.cihula@intel.com,
-	linux-pm@lists.linux-foundation.org,
-	tboot-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
-	liang.tang@oracle.com
-Cc: hpa@zytor.com, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 6/7] x86: Expand the x86_msi_ops to have a restore MSIs.
-Date: Fri, 16 Dec 2011 17:38:18 -0500
-Message-Id: <1324075099-11397-7-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1324075099-11397-1-git-send-email-konrad.wilk@oracle.com>
-References: <1324075099-11397-1-git-send-email-konrad.wilk@oracle.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:60616 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752337Ab1LHQ7m convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Dec 2011 11:59:42 -0500
+Received: by yenm11 with SMTP id m11so1270805yen.19
+        for <linux-pci@vger.kernel.org>; Thu, 08 Dec 2011 08:59:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20111208055355.19c346a8@jbarnes-desktop>
+References: <20111008075353.GK2980@ram-ThinkPad-T61>
+	<1318060793.29415.347.camel@pasglop>
+	<20111102140325.004b9dad@jbarnes-desktop>
+	<20111103013014.GB393@ram-ThinkPad-T61>
+	<20111106023310.GA2383@ram-ThinkPad-T61>
+	<20111205103202.29faf6e1@jbarnes-desktop>
+	<CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
+	<20111207092531.GF19129@ram-ThinkPad-T61>
+	<4EDFCB4A.60106@redhat.com>
+	<CAE9FiQXOhn2HkqCh3DiSNUw7RwgAAk2Xe62z11AB=L+pcG__Qg@mail.gmail.com>
+	<20111208025039.GH19129@ram-ThinkPad-T61>
+	<20111208055355.19c346a8@jbarnes-desktop>
+Date: Thu, 8 Dec 2011 08:59:41 -0800
+Message-ID: <CAE9FiQXnS4Q0qj6gWGjEBgqGFN-wSUn6FnnRnbQvg8d3wMbtEw@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>, Don Dutile <ddutile@redhat.com>,
+	linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The MSI restore function will become a function pointer in an
-x86_msi_ops struct. It defaults to the implementation in the
-io_apic.c and msi.c. We piggyback on the indirection mechanism
-introduced by "x86: Introduce x86_msi_ops".
+On Thu, Dec 8, 2011 at 5:53 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Thu, 8 Dec 2011 10:50:39 +0800
+> Ram Pai <linuxram@us.ibm.com> wrote:
+>
+>> On Wed, Dec 07, 2011 at 03:11:56PM -0800, Yinghai Lu wrote:
+>> > On Wed, Dec 7, 2011 at 12:23 PM, Don Dutile <ddutile@redhat.com> wrote:
+>> > > why not something more explicit like:
+>> > >
+>> > >        for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+>> > >                if ((i >=  PCI_IOV_RESOURCES) && (i <= PCI_IOV_RESOURCE_END))
+>> > >                        continue; /* skip sriov related resources */
+>> > >
+>> > >                if (dev->resource[i].flags & flags)
+>> > >                        bars |= (1 << i);
+>> > >        }
+>>
+>> I like this approach too. Offcourse the SRIOV skipping has to be one under #ifdef CONFIG_PCI_IOV.
 
-Cc: x86@kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- arch/x86/include/asm/pci.h      |    9 +++++++++
- arch/x86/include/asm/x86_init.h |    1 +
- arch/x86/kernel/x86_init.c      |    1 +
- drivers/pci/msi.c               |   29 +++++++++++++++++++++++++++--
- 4 files changed, 38 insertions(+), 2 deletions(-)
+I was always told:
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index d498943..df75d07 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -112,19 +112,28 @@ static inline void x86_teardown_msi_irq(unsigned int irq)
- {
- 	x86_msi.teardown_msi_irq(irq);
- }
-+static inline void x86_restore_msi_irqs(struct pci_dev *dev, int irq)
-+{
-+	x86_msi.restore_msi_irqs(dev, irq);
-+}
- #define arch_setup_msi_irqs x86_setup_msi_irqs
- #define arch_teardown_msi_irqs x86_teardown_msi_irqs
- #define arch_teardown_msi_irq x86_teardown_msi_irq
-+#define arch_restore_msi_irqs x86_restore_msi_irqs
- /* implemented in arch/x86/kernel/apic/io_apic. */
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void native_teardown_msi_irq(unsigned int irq);
-+void native_restore_msi_irqs(struct pci_dev *dev, int irq);
- /* default to the implementation in drivers/lib/msi.c */
- #define HAVE_DEFAULT_MSI_TEARDOWN_IRQS
-+#define HAVE_DEFAULT_MSI_RESTORE_IRQS
- void default_teardown_msi_irqs(struct pci_dev *dev);
-+void default_restore_msi_irqs(struct pci_dev *dev, int irq);
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
- #define default_teardown_msi_irqs	NULL
-+#define default_restore_msi_irqs	NULL
- #endif
- 
- #define PCI_DMA_BUS_IS_PHYS (dma_ops->is_phys)
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 1971e65..cd52084 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -177,6 +177,7 @@ struct x86_msi_ops {
- 	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
- 	void (*teardown_msi_irq)(unsigned int irq);
- 	void (*teardown_msi_irqs)(struct pci_dev *dev);
-+	void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
- };
- 
- extern struct x86_init_ops x86_init;
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index c1d6cd5..83b05ad 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -114,4 +114,5 @@ struct x86_msi_ops x86_msi = {
- 	.setup_msi_irqs = native_setup_msi_irqs,
- 	.teardown_msi_irq = native_teardown_msi_irq,
- 	.teardown_msi_irqs = default_teardown_msi_irqs,
-+	.restore_msi_irqs = default_restore_msi_irqs,
- };
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 0e6d04d..ba2ea4e 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -86,6 +86,31 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
- }
- #endif
- 
-+#ifndef arch_restore_msi_irqs
-+# define arch_restore_msi_irqs default_restore_msi_irqs
-+# define HAVE_DEFAULT_MSI_RESTORE_IRQS
-+#endif
-+
-+#ifdef HAVE_DEFAULT_MSI_RESTORE_IRQS
-+void default_restore_msi_irqs(struct pci_dev *dev, int irq)
-+{
-+	struct msi_desc *entry;
-+
-+	entry = NULL;
-+	if (dev->msix_enabled) {
-+		list_for_each_entry(entry, &dev->msi_list, list) {
-+			if (irq == entry->irq)
-+				break;
-+		}
-+	} else if (dev->msi_enabled)  {
-+		entry = irq_get_msi_desc(irq);
-+	}
-+
-+	if (entry)
-+		write_msi_msg(irq, &entry->msg);
-+}
-+#endif
-+
- static void msi_set_enable(struct pci_dev *dev, int pos, int enable)
- {
- 	u16 control;
-@@ -360,7 +385,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 
- 	pci_intx_for_msi(dev, 0);
- 	msi_set_enable(dev, pos, 0);
--	write_msi_msg(dev->irq, &entry->msg);
-+	arch_restore_msi_irqs(dev, dev->irq);
- 
- 	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
- 	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
-@@ -388,7 +413,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 	pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
--		write_msi_msg(entry->irq, &entry->msg);
-+		arch_restore_msi_irqs(dev, entry->irq);
- 		msix_mask_irq(entry, entry->masked);
- 	}
- 
--- 
-1.7.7.4
+#ifdef is ugly. Try to avoid it.
 
+>>
+>> Yinghai/Jesse, do you want to make a patch on top of the current jesse's to-linus
+>> tree or want to revert my patch and apply your fix? If it is the former, do you want me
+>> to make the patch?
+>
+> I like the above best as well with the comment.
+>
+> Can you send me a replacement patch?  I'd rather have that than some
+> breakage in the patches I have in my for-linus branch.
+
+yes, update your patch.
+
+We should not break the bisecting if possible before it hit linus tree.
+
+Thanks
+
+Yinghai
