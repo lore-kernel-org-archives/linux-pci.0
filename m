@@ -1,88 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Dec 2011 11:22:56 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Subject: Re: [git pull] PCI fixes
-Message-ID: <20111205112256.68e59434@jbarnes-desktop>
-In-Reply-To: <CA+55aFyaiJBYmgVCLfPA7q3hqtPHYh9wwsmVTCewbBoxMsDE8A@mail.gmail.com>
-References: <20111123144417.2da5958c@jbarnes-desktop>
-	<CA+55aFyaiJBYmgVCLfPA7q3hqtPHYh9wwsmVTCewbBoxMsDE8A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/22HaF6ZG3v03x=U.UpeUOMw"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:43355 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756637Ab1LHCut (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Dec 2011 21:50:49 -0500
+Received: from /spool/local
+	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Wed, 7 Dec 2011 21:50:48 -0500
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id pB82ojHP298106
+	for <linux-pci@vger.kernel.org>; Wed, 7 Dec 2011 21:50:45 -0500
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id pB82oiqq015237
+	for <linux-pci@vger.kernel.org>; Wed, 7 Dec 2011 19:50:45 -0700
+Date: Thu, 8 Dec 2011 10:50:39 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Don Dutile <ddutile@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+Message-ID: <20111208025039.GH19129@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <20111008075353.GK2980@ram-ThinkPad-T61>
+ <1318060793.29415.347.camel@pasglop>
+ <20111102140325.004b9dad@jbarnes-desktop>
+ <20111103013014.GB393@ram-ThinkPad-T61>
+ <20111106023310.GA2383@ram-ThinkPad-T61>
+ <20111205103202.29faf6e1@jbarnes-desktop>
+ <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
+ <20111207092531.GF19129@ram-ThinkPad-T61>
+ <4EDFCB4A.60106@redhat.com>
+ <CAE9FiQXOhn2HkqCh3DiSNUw7RwgAAk2Xe62z11AB=L+pcG__Qg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQXOhn2HkqCh3DiSNUw7RwgAAk2Xe62z11AB=L+pcG__Qg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/22HaF6ZG3v03x=U.UpeUOMw
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 23 Nov 2011 15:02:01 -0800
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
-
-> On Wed, Nov 23, 2011 at 2:44 PM, Jesse Barnes <jbarnes@virtuousgeek.org> =
-wrote:
+On Wed, Dec 07, 2011 at 03:11:56PM -0800, Yinghai Lu wrote:
+> On Wed, Dec 7, 2011 at 12:23 PM, Don Dutile <ddutile@redhat.com> wrote:
+> > why not something more explicit like:
 > >
-> > Nothing too exciting this time, mostly some minor fixes for things
-> > normal people don't really hit. =A0Happy Thanksgiving.
->=20
-> Ugh. This looks bogus:
->=20
-> > Kenji Kaneshige (2):
-> > =A0 =A0 =A0PCI: pciehp: wait 1000 ms before Link Training check
->=20
-> Look at that patch more closely. After the patch, the code looks like thi=
-s:
->=20
->=20
->          if (ctrl->link_active_reporting)
->                  pcie_wait_link_active(ctrl);
->          else
->                  msleep(1000);
->=20
-> +	/*
-> +	 * Need to wait for 1000 ms after Data Link Layer Link Active
-> +	 * (DLLLA) bit reads 1b before sending configuration request.
-> +	 * We need it before checking Link Training (LT) bit becuase
-> +	 * LT is still set even after DLLLA bit is set on some platform.
-> +	 */
-> +	msleep(1000);
->=20
-> and I'm pretty sure you should remove the "else msleep(1000)" there.
-> Doing the 1s wait *twice* seems entirely bogus, even if you are
-> missing link_active_reporting. No?
->=20
-> I pulled it since I can't test it, but it really smells fishy to me.
+> >        for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> >                if ((i >=  PCI_IOV_RESOURCES) && (i <= PCI_IOV_RESOURCE_END))
+> >                        continue; /* skip sriov related resources */
+> >
+> >                if (dev->resource[i].flags & flags)
+> >                        bars |= (1 << i);
+> >        }
 
-Sure looks like it... Kenji-san, you went back and forth on this one a
-little, can you confirm (and preferably test)?
+I like this approach too. Offcourse the SRIOV skipping has to be one under #ifdef CONFIG_PCI_IOV.
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Yinghai/Jesse, do you want to make a patch on top of the current jesse's to-linus
+tree or want to revert my patch and apply your fix? If it is the former, do you want me
+to make the patch?
 
---Sig_/22HaF6ZG3v03x=U.UpeUOMw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+RP
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO3RoQAAoJEIEoDkX4Qk9hVKQQAIxWTLpY6Ebg7L38ZyGmXW8n
-g4G/YQd/VnSUcWY33PKNH3qi/vUtUfNo1RDdpRBrWUQCq/VADRPoceKUOcddKRzq
-yBlGrwcDr9+FBFzrI4Sm3RlUcL/wQ0Lq9Ftb0sGe5/qrhZ8TQEQJVCg6ezQBmuJo
-ULffC9sU2LeItKlNw4iuqsRdG9G8+Z8Om1znOp3abwmJMMzG03WmhcWMI8x1ywiy
-X/MajhFS1w3cOONy/XZer+48/9neZA5wLw0li2LOGzoeE0a9XCGBnYkLaqKXCjQG
-byEXZfGHvIuZc+c/ERA1Xf5N470H07eZi2HIuKEZIyxd82iDTm+UUqhZpOI36w3F
-jTpWCP5kAD8T3/MkW/4xLLWJn3U1OSnU3vrhDnVX5L5fiugrvJ069RdZeGGAZGig
-adqTeY+T/94WnSMO2LtYUQ4P9Pj9Pnbb9FISX0xKmGXY1rwTUu4MNFjTLXimy2//
-WqCVvhErrOpCqfQVkhiXARTbn3O0fQyML2OPkB3Y2kxS9MZhPMEZtQGpOKVd/Dz3
-Bd/0xzAthTOmGqIuqhw9CzADJjcJlJofrD6DIdb0R5oXNzdwlWcja2nqtsFcHH/U
-Cqpf5CNKTooSb/4LbrkycHantYeCxlDTM/0w89Ny4n8zbysVgkS373Imu9tDKVGn
-AoFSWVnNA3aZbmnNx4Bv
-=QlPY
------END PGP SIGNATURE-----
-
---Sig_/22HaF6ZG3v03x=U.UpeUOMw--
