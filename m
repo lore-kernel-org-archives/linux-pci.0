@@ -1,32 +1,53 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 22 Dec 2011 13:59:11 -0500 (EST)
-Message-Id: <20111222.135911.584309149966835644.davem@davemloft.net>
-To: bhelgaas@google.com
-Cc: James.Bottomley@hansenpartnership.com, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 00/29] Create PCI root buses with correct resources
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAErSpo7yoWOg8P1NAi70HJX=OMyO6XUwnUBxVq3P0YK87eP5tw@mail.gmail.com>
-References: <CAErSpo7d3hHeJU87zYo=yJoG3eqOZ4QggkOyNnu7xuJe8oG9Qg@mail.gmail.com>
-	<1318607132.3018.30.camel@dabdike.int.hansenpartnership.com>
-	<CAErSpo7yoWOg8P1NAi70HJX=OMyO6XUwnUBxVq3P0YK87eP5tw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:32809 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751382Ab1LHQWO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Dec 2011 11:22:14 -0500
+Message-ID: <4EE0E42E.9000200@redhat.com>
+Date: Thu, 08 Dec 2011 11:22:06 -0500
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Ram Pai <linuxram@us.ibm.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
+	brking@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+References: <20111008075353.GK2980@ram-ThinkPad-T61> <1318060793.29415.347.camel@pasglop> <20111102140325.004b9dad@jbarnes-desktop> <20111103013014.GB393@ram-ThinkPad-T61> <20111106023310.GA2383@ram-ThinkPad-T61> <20111205103202.29faf6e1@jbarnes-desktop> <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com> <20111207092531.GF19129@ram-ThinkPad-T61> <4EDFCB4A.60106@redhat.com> <CAE9FiQXOhn2HkqCh3DiSNUw7RwgAAk2Xe62z11AB=L+pcG__Qg@mail.gmail.com> <20111208025039.GH19129@ram-ThinkPad-T61>
+In-Reply-To: <20111208025039.GH19129@ram-ThinkPad-T61>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 20 Dec 2011 08:55:53 -0700
+On 12/07/2011 09:50 PM, Ram Pai wrote:
+> On Wed, Dec 07, 2011 at 03:11:56PM -0800, Yinghai Lu wrote:
+>> On Wed, Dec 7, 2011 at 12:23 PM, Don Dutile<ddutile@redhat.com>  wrote:
+>>> why not something more explicit like:
+>>>
+>>>         for (i = 0; i<  DEVICE_COUNT_RESOURCE; i++) {
+>>>                 if ((i>=  PCI_IOV_RESOURCES)&&  (i<= PCI_IOV_RESOURCE_END))
+>>>                         continue; /* skip sriov related resources */
+>>>
+>>>                 if (dev->resource[i].flags&  flags)
+>>>                         bars |= (1<<  i);
+>>>         }
+>
+> I like this approach too. Offcourse the SRIOV skipping has to be one under #ifdef CONFIG_PCI_IOV.
+>
++1. Sorry, I forgot that the kernel can be built w/o SRIOV support.
 
-> This series has been in linux-next for a while now (via Jesse's PCI
-> tree), so this would be a good time to try it out if you haven't
-> already.
-> 
-> I know ia64 has been exercised a bit (thanks, Tony), but I haven't
-> heard anything about arm, mips, parisc, powerpc, sparc, etc.
-> 
-> There is one outstanding bug fix for alpha that Jesse hasn't
-> integrated yet, but as far as I know, everything else is in good
-> shape.
 
-I'll give it a quick test on sparc64 today.
+> Yinghai/Jesse, do you want to make a patch on top of the current jesse's to-linus
+> tree or want to revert my patch and apply your fix? If it is the former, do you want me
+> to make the patch?
+>
+> RP
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
