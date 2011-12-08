@@ -1,97 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11472 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752047Ab1LTKQW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Dec 2011 05:16:22 -0500
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: "jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Date: Tue, 20 Dec 2011 18:15:42 +0800
-Subject: RE: [PATCH] PCI: Enable ATS at the device state restore 
-Message-ID: <BC00F5384FCFC9499AF06F92E8B78A9E28904877DA@shsmsx502.ccr.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from re04.intra2net.com ([82.165.46.26]:51429 "EHLO
+	re04.intra2net.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752445Ab1LHI1K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Dec 2011 03:27:10 -0500
+From: Thomas Jarosch <thomas.jarosch@intra2net.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel Sandy Bridge GPUs
+Date: Thu, 8 Dec 2011 09:27:06 +0100
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Charlie Suffin <charlie.suffin@stratus.com>, stable@kernel.org
+References: <4EDFD5BB.1050906@intra2net.com> <20111207133000.69051c59@jbarnes-desktop>
+In-Reply-To: <20111207133000.69051c59@jbarnes-desktop>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201112080927.07063.thomas.jarosch@intra2net.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Jesse
-Do you have any comments for this fix patch?
+Hi Jesse,
+
+On Wednesday, 7. December 2011 22:30:00 Jesse Barnes wrote:
+> > +	/* Check if any interrupt line is still enabled */
+> > +	if (readl(regs + I915_DEIER_REG) != 0) {
+> > +		dev_warn(&dev->dev, "BIOS left Intel GPU interrupts enabled; "
+> > +			"disabling\n");
+> >  {
+> 
+> Could really be dev_dbg, I think this will be fairly common. 
+
+Thanks for your review.
+
+I prefer dev_warn() or dev_info() for two reasons:
+
+1. This is new code. If a system crashes in the unlikely event
+because of this change, the user will have a better chance
+to see the message before we tweak around the registers.
+
+2. All other quirks either use dev_warn() (like the Intel e100 quirk
+which is similar to this fix, see quirk_e100_interrupt()) or dev_info().
+
+If there is something wrong and we activate a workaround,
+let the user know about it, at least for now.
+
+User impact is minimal and users with graphical boot up don't see
+kernel messages anyway.
+
+> I think we also need to ack any outstanding interrupts after disabling
+> them in IER by writing IIR back on itself. Can you test that?
+
+Can you go into more detail why we need this?
+
+Looking at the logic diagram at page 23 of this document
+http://intellinuxgraphics.org/documentation/SNB/IHD_OS_Vol3_Part2.pdf
+
+tells me we don't necessarily need this, no interrupt should slip through.
+
+Also the i915 driver first disables IER and then clears IIR
+in drivers/gpu/drm/i915/i915_irq.c: ivybridge_irq_handler()
+or ironlake_irq_handler(). So it always initializes the GPU to
+a sane state before enabling the interrupts.
 
 Thanks,
--Xudong
-
-> -----Original Message-----
-> From: Hao, Xudong
-> Sent: Saturday, December 17, 2011 9:25 PM
-> To: 'jbarnes@virtuousgeek.org'; 'linux-pci@vger.kernel.org'
-> Cc: linux-kernel@vger.kernel.org; kvm@vger.kernel.org; Zhang, Xiantao
-> Subject: [PATCH] PCI: Enable ATS at the device state restore
-> 
-> When system go to S3 or S4 sleep and then return, some register of PCI device
-> does not be restored correctly, such as ATS capability. The same problem
-> happen on pci reset function.
-> 
-> This patch enables ATS at the device state restore if PCI device has ATS
-> capability.
-> 
-> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-> Signed-off-by: Xiantao Zhang <xiantao.zhang@intel.com>
-> ---
->  drivers/pci/ats.c |   17 +++++++++++++++++
->  drivers/pci/pci.c |    1 +
->  drivers/pci/pci.h |    8 ++++++++
->  3 files changed, 26 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c index 7ec56fb..a6c2b35 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -127,6 +127,23 @@ void pci_disable_ats(struct pci_dev *dev)  }
-> EXPORT_SYMBOL_GPL(pci_disable_ats);
-> 
-> +void pci_restore_ats_state(struct pci_dev *dev) {
-> +	u16 ctrl;
-> +
-> +	if (!pci_ats_enabled(dev))
-> +		return;
-> +	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS))
-> +		BUG();
-> +
-> +	ctrl = PCI_ATS_CTRL_ENABLE;
-> +	if (!dev->is_virtfn)
-> +		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
-> +
-> +	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl); }
-> +EXPORT_SYMBOL_GPL(pci_restore_ats_state);
-> +
->  /**
->   * pci_ats_queue_depth - query the ATS Invalidate Queue Depth
->   * @dev: the PCI device
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c index 6f45a73..6dafc1d 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -956,6 +956,7 @@ void pci_restore_state(struct pci_dev *dev)
-> 
->  	/* PCI Express register must be restored first */
->  	pci_restore_pcie_state(dev);
-> +	pci_restore_ats_state(dev);
-> 
->  	/*
->  	 * The Base Address register should be programmed before the command
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h index b74084e..a4f3140 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -249,6 +249,14 @@ struct pci_sriov {
->  	u8 __iomem *mstate;	/* VF Migration State Array */
->  };
-> 
-> +#ifdef CONFIG_PCI_ATS
-> +extern void pci_restore_ats_state(struct pci_dev *dev); #else static
-> +inline void pci_restore_ats_state(struct pci_dev *dev) { } #endif /*
-> +CONFIG_PCI_ATS */
-> +
->  #ifdef CONFIG_PCI_IOV
->  extern int pci_iov_init(struct pci_dev *dev);  extern void
-> pci_iov_release(struct pci_dev *dev);
+Thomas
