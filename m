@@ -1,105 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49175 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933195Ab1LFOOE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Dec 2011 09:14:04 -0500
-Message-ID: <4EDDDCE9.7010600@redhat.com>
-Date: Tue, 06 Dec 2011 04:14:17 -0500
-From: Don Dutile <ddutile@redhat.com>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:33998 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751721Ab1LIXpx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Dec 2011 18:45:53 -0500
+Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 1313621357
+	for <linux-pci@vger.kernel.org>; Fri,  9 Dec 2011 18:45:53 -0500 (EST)
+Date: Fri, 9 Dec 2011 15:45:22 -0800
+From: Greg KH <greg@kroah.com>
+To: Anand Kanaginhal <anand_dk@hotmail.com>
+Cc: mjg59@srcf.ucam.org, bhelgaas@google.com,
+	Linux PCI mailing <linux-pci@vger.kernel.org>,
+	linux kernel mailing <linux-kernel@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>
+Subject: Re: PCIe Hotplugging not working
+Message-ID: <20111209234522.GA6413@kroah.com>
+References: <20111130182423.GA4831@srcf.ucam.org>
+ <CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>
+ <BAY163-W600D6D6A04D4BAE8278907FBB90@phx.gbl>
+ <20111209124524.GA3488@srcf.ucam.org>
+ <BAY163-W45C53B9E3E9E0B8629B683FBB90@phx.gbl>
+ <20111209180708.GA10768@kroah.com>
+ <BAY163-W154A24444BB398F609767CFBB90@phx.gbl>
+ <20111209222520.GA24786@kroah.com>
+ <BAY163-W582FC4C5828B20E9487D3EFBB90@phx.gbl>
+ <BAY163-W61A8DF92159F5C3E26103FBB90@phx.gbl>
 MIME-Version: 1.0
-To: Ram Pai <linuxram@us.ibm.com>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
-	brking@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH 1/1] PCI:delay configuration of SRIOV capability
-References: <CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com> <20111007232516.GF2980@ram-ThinkPad-T61> <1318057168.29415.333.camel@pasglop> <20111008075353.GK2980@ram-ThinkPad-T61> <1318060793.29415.347.camel@pasglop> <20111102140325.004b9dad@jbarnes-desktop> <20111103013014.GB393@ram-ThinkPad-T61> <20111106023357.GB2383@ram-ThinkPad-T61> <20111205101756.7bccfbae@jbarnes-desktop> <4EDD36AE.8060208@redhat.com> <20111206075143.GB31480@ram-ThinkPad-T61>
-In-Reply-To: <20111206075143.GB31480@ram-ThinkPad-T61>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <BAY163-W61A8DF92159F5C3E26103FBB90@phx.gbl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/06/2011 02:51 AM, Ram Pai wrote:
-> On Mon, Dec 05, 2011 at 04:25:02PM -0500, Don Dutile wrote:
->> On 12/05/2011 01:17 PM, Jesse Barnes wrote:
->>> On Sun, 6 Nov 2011 10:33:57 +0800
->>> Ram Pai<linuxram@us.ibm.com>   wrote:
->>>
->>>>        The SRIOV capability, namely page size and total_vfs of a device are
->>>>        configured during enumeration phase of the device.
->>>>        This can potentially interfere with the PCI operations of the platform,
->>>>        if the IOV capability of the device is not enabled.
->>>>
->>>>        The following patch postpones the configuration of the IOV capability of the
->>>>        device to a later point, when the IOV capability is explicitly enabled
->>>>        by the device driver.
->>>>
->>>>        The patch is tested on x86 and power platform.
->>>>
->>>>        Signed-off-by: Ram Pai<linuxram@us.ibm.com>
->>>> ---
->>>>   drivers/pci/iov.c |    4 ++--
->>>>   1 files changed, 2 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>> index b0446dd..c1a6f5c 100644
->>>> --- a/drivers/pci/iov.c
->>>> +++ b/drivers/pci/iov.c
->>>> @@ -346,6 +346,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>>>   			return rc;
->>>>   	}
->>>>
->>>> +	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
->>>> +
->>>>   	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->>>>   	pci_block_user_cfg_access(dev);
->>>>   	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>>> @@ -451,7 +453,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
->>>>
->>>>   found:
->>>>   	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
->>>> -	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, total);
->>>>   	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET,&offset);
->>>>   	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE,&stride);
->>>>   	if (!offset || (total>   1&&   !stride))
->>>> @@ -464,7 +465,6 @@ found:
->>>>   		return -EIO;
->>>>
->>>>   	pgsz&= ~(pgsz - 1);
->>>> -	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
->>>>
->>>>   	nres = 0;
->>>>   	for (i = 0; i<   PCI_SRIOV_NUM_BARS; i++) {
->>>
->>> Anyone want to volunteer a tested-by for this one?
->>>
->>> Thanks,
->>
->> I tested this patch along with Ram's other recent patch for SRIOV:
->> [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
->>
->> With or without this patch, device assignment to a KVM guest
->> using these patches worked for me.  I used one PF in a quad-function
->> i350, configuring 2 VFs per i350.  I did 4 assign/deassigns to make
->> sure multiple enable/disables worked.
->>
->> So, the patch doesn't correct any error I was seeing,
->> but it doesn't cause any regression either.
->
-> Thanks Don for your tested-by.
->
-> I recollect you had a  issue, which I thought were not related or
-> addressed by my patches. If I can get a dmesg of your machine, I probably will
-> be able to see the relation.
->
-> RP
->
+On Fri, Dec 09, 2011 at 03:24:00PM -0800, Anand Kanaginhal wrote:
+> > Please make sure your pci hotplug driver is working first.  Try turning
+> > on and off the power to the card slot (in the sysfs directory for the
+> > slot) and see if that's working.
+> When I do this, my driver probe and remove gets invoked. 
 
-My issue was more RHEL specific.  Your patches appear to resolve the issues
-in a more general manner, and one that saner (to me... delay SRIOV resource allocation
-and setup until a driver is actually enabled with it, instead of always on no matter
-what the system use of SRIOV is).
+Then part of the pci hotplug controller driver is working, good.
 
-- Don
+> > You also have failed to say exactly what pci hotplug controller you have
+> > in your system, what is it?  You have to have one, and the driver loaded
+> > for it, for any of this to work at all.
+> 
+> We are using plx 8533 in our system,
 
+What exactly is that?
+
+> it hasnt provided controller driver for linux, however the support
+> team insists that any hotplug controller driver which is compliant to
+> PCI SIG, should work fine.My assumption was shpc in linux would work
+> just fine. 
+
+The PCI Hotplug SIG said that ACPI would be the way forward for "PCI"
+hotplug capabilities.
+
+For PCI Express, the pciehp driver should work for you, as that follows
+the spec for PCI Express devices.
+
+So it depends on your hardware, what pci hotplug driver do you have
+loaded, and what does the kernel log messages say when you load it, and
+then what does it say when you remove your device?
+
+Remember, PCI devices are not supposed to be hot-removed, you have to
+tell the OS ahead of time it is going to go away.  PCI Express is a bit
+different, depending on the type of device (ExpressCard is allowed to be
+removed without notifying the OS ahead of time, some other PCI Express
+devices are not, see the spec for details.)
+
+greg k-h
