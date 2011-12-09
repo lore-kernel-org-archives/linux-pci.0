@@ -1,81 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:43859 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755586Ab1LETUz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:20:55 -0500
-Date: Mon, 5 Dec 2011 11:23:27 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai.lu@oracle.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pciehp: Disable/enable link during slot power off/on
-Message-ID: <20111205112327.24102fc8@jbarnes-desktop>
-In-Reply-To: <4ED95AD0.7090003@oracle.com>
-References: <4ED95AD0.7090003@oracle.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Uqsm4X8GNDWcZbBjciLb3D3"; protocol="application/pgp-signature"
+Received: from bay0-omc2-s25.bay0.hotmail.com ([65.54.190.100]:21981 "EHLO
+	bay0-omc2-s25.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753849Ab1LIPDs convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Dec 2011 10:03:48 -0500
+Message-ID: <BAY163-W58A0B068C3EEAC0D484E8EFBB90@phx.gbl>
+From: Anand Kanaginhal <anand_dk@hotmail.com>
+To: <mjg59@srcf.ucam.org>
+CC: <bhelgaas@google.com>, <greg@kroah.com>,
+	Linux PCI mailing <linux-pci@vger.kernel.org>,
+	linux kernel mailing <linux-kernel@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>
+Subject: RE: PCIe Hotplugging not working
+Date: Fri, 9 Dec 2011 07:03:48 -0800
+In-Reply-To: <20111209124524.GA3488@srcf.ucam.org>
+References: <BAY163-W52E309F419E3588206D889FBB30@phx.gbl>,<BAY163-W47DD39095DA3EB108AA3F2FBB30@phx.gbl>,<20111130154022.GA1411@srcf.ucam.org>,<BAY163-W80F10350D24162EFC3699FBB00@phx.gbl>,<20111130182423.GA4831@srcf.ucam.org>,<CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>,<BAY163-W600D6D6A04D4BAE8278907FBB90@phx.gbl>,<20111209124524.GA3488@srcf.ucam.org>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/Uqsm4X8GNDWcZbBjciLb3D3
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 02 Dec 2011 15:10:08 -0800
-Yinghai Lu <yinghai.lu@oracle.com> wrote:
+$ ls /sys/class/pci_bus
+0000:00  0000:02  0000:04  0000:06  0000:08
+0000:01  0000:03  0000:05  0000:07  0000:09
 
->=20
-> One system have repeater in system board to support gen2 hotplug.
->=20
-> Found when EM is removed from some slots, /var/log/message will be full of
-> "card present/not present" warning.
->=20
-> It turns out root complex still try to train the link to repeater because
-> repeater is not reset.
->=20
-> This patch will disable link to make repeater could reset properly.
-> Also could kill AER during EM removal.
->=20
-> Recently when testing hotplug on one system under development, found if b=
-oot
-> the system without EM, and later hotplug does not work with Linux.
-> But other OS is ok.
-> The root cause is that bios left link disabled when slot is empty,
-> and other OS is playing link disable bit in link ctrl during power on/off.
->=20
-> So We could do the same thing to disable/enable link during power off/on.
->=20
-> Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
->=20
+The card doesn't show up in lspci after hotplugging ( or doesnt disappear when pulled out), 
+However the card shows up if the card is plugged in while booting up the PC. 
 
-Kenji-san, any comment or chance to test?
+Below is the lspci output when the cards are connected at booting.
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+$ lspci 
+...
+02:00.0 PCI bridge: PLX Technology, Inc. PEX 8533 32-lane, 6-port PCI Express Switch (rev aa)
+03:01.0 PCI bridge: PLX Technology, Inc. PEX 8533 32-lane, 6-port PCI Express Switch (rev aa)
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8533 32-lane, 6-port PCI Express Switch (rev aa)
+03:09.0 PCI bridge: PLX Technology, Inc. PEX 8533 32-lane, 6-port PCI Express Switch (rev aa)
 
---Sig_/Uqsm4X8GNDWcZbBjciLb3D3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+anand card c1>>>>>>>>04:00.0 Memory controller: Device 174a:0701  
+anand card c2>>>>>>>>05:00.0 Ethernet controller: Agere Systems ET-131x PCI-E Ethernet Controller (rev 02) 
+....
+$ 
+Also wanted to know if my assumptions below are correct ?
+--------------------------------------------------------------------------------
+Please correct me if any of my understanding below is incorrect:
+1. With the above setup, If I hotplug card c1 and/or c2, will my driver probe 
+get invoked. 
+2. I dont have to add any rules for in /etc/udev/rules.d/*.rules for my driver
+ to work. 
+3. The standard hotplug controller driver would get the hotplug event from the
+ switch and handle it. 
+4. The standard hotplug controller driver will be responsible for invoking 
+.probe and .remove functions of my driver.
+---
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAEBAgAGBQJO3RovAAoJEIEoDkX4Qk9hnkoP/iG7pO4I0DXRoFKLoAnpNJLH
-z5mpdcP9NakHheNO1h5BG5O5tYsQ16Vqwv5fiGgyd5feQGd0oRBXbXppUARWzOf+
-S756KrmdZus30tWnvtT+m3WVEXHhkK7d8X5xJo8qW01lkGH4XwqBIXNpLCtYn4h2
-ZHiaeZFVY9zWh17x63TMrgawq9hQA0ujcKB9fZGEUClUvr1W7xSIrqX+dz99bPJQ
-Cng4iLc3ZoBjdVY7OGV8FFfOOJ+9cbkw4nTIMPOr5NL6vmOh0az6KmHYLSN3AiqK
-zudl3TMs7/wI6onS54IIQ2tFz2fJ9laQU2q1chCBI86Oeqrj9zf8npombxeSMjU0
-o6pJYUr2Sc5unpxwWeKRs7O65/YuZa/U+KvwzPdxN96QCDuvYfet0CImdriDwAZx
-W2dS3vXHriCIBIqXbfP/ZsmJLpzhKrPSQV9uL3Hu78Zqb1p0RrzxaCV5rizOoHMu
-1nZ+EW/ITBm2lAfw7XIbmcNk3qbNZAvQm5F6S3LlWzcNO1IMHz5Qo0bcMArSEeZg
-CjNNDUEIB6zw7Gd0JoUx4UiXwTvZXeh4ZKY21jaST2nj8k2ZQIidFRYAYrHVRC9P
-+g2fH9SDDUBZBdFRqx/Ib9p3p9zmk02KUfNn5wj8NMrlWsLnKDFBY7OXugsGYDEA
-VehSPii/iiz5L9jtF58i
-=Vyoc
------END PGP SIGNATURE-----
+Thanks
+Anand
 
---Sig_/Uqsm4X8GNDWcZbBjciLb3D3--
+
+
+> Date: Fri, 9 Dec 2011 12:45:25 +0000
+> From: mjg59@srcf.ucam.org
+> To: anand_dk@hotmail.com
+> CC: bhelgaas@google.com; greg@kroah.com; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-hotplug@vger.kernel.org
+> Subject: Re: PCIe Hotplugging not working
+> 
+> Do you have anything in /sys/class/pci/slots ? Does your card show up in 
+> lspci when you hotplug it?
+> 
+> -- 
+> Matthew Garrett | mjg59@srcf.ucam.org
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+ 		 	   		  
