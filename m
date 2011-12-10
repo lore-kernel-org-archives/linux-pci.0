@@ -1,81 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:47588
-	"EHLO DB3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758020Ab1LGQjA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Dec 2011 11:39:00 -0500
-Date: Wed, 7 Dec 2011 17:38:42 +0100
-From: Joerg Roedel <joerg.roedel@amd.com>
-To: Stuart Yoder <b08248@gmail.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Alexey Kardashevskiy <aik@au1.ibm.com>, <aafabbri@cisco.com>,
-	<kvm@vger.kernel.org>, <pmac@au1.ibm.com>, <qemu-devel@nongnu.org>,
-	<konrad.wilk@oracle.com>, <agraf@suse.de>, <dwg@au1.ibm.com>,
-	<chrisw@sous-sol.org>, <B08248@freescale.com>,
-	<iommu@lists.linux-foundation.org>, <avi@redhat.com>,
-	<linux-pci@vger.kernel.org>, <B07421@freescale.com>,
-	<benve@cisco.com>, <benh@kernel.crashing.org>,
-	David Gibson <david@gibson.dropbear.id.au>
-Subject: Re: vfio / iommu domain attributes
-Message-ID: <20111207163842.GC29680@amd.com>
-References: <CALRxmdDS4qas9fyHXeDVw2e_yMCTqzMi6VXUF-q+eYwgMwg7tw@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <CALRxmdDS4qas9fyHXeDVw2e_yMCTqzMi6VXUF-q+eYwgMwg7tw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20195.46240.112741.353593@quad.stoffel.home>
+Date: Sat, 10 Dec 2011 14:36:00 -0500
+From: "John Stoffel" <john@stoffel.org>
+To: Greg KH <greg@kroah.com>
+Cc: Anand Kanaginhal <anand_dk@hotmail.com>, mjg59@srcf.ucam.org,
+	bhelgaas@google.com, Linux PCI mailing <linux-pci@vger.kernel.org>,
+	linux kernel mailing <linux-kernel@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>
+Subject: Re: PCIe Hotplugging not working
+In-Reply-To: <20111209222520.GA24786@kroah.com>
+References: <BAY163-W47DD39095DA3EB108AA3F2FBB30@phx.gbl>
+	<20111130154022.GA1411@srcf.ucam.org>
+	<BAY163-W80F10350D24162EFC3699FBB00@phx.gbl>
+	<20111130182423.GA4831@srcf.ucam.org>
+	<CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>
+	<BAY163-W600D6D6A04D4BAE8278907FBB90@phx.gbl>
+	<20111209124524.GA3488@srcf.ucam.org>
+	<BAY163-W45C53B9E3E9E0B8629B683FBB90@phx.gbl>
+	<20111209180708.GA10768@kroah.com>
+	<BAY163-W154A24444BB398F609767CFBB90@phx.gbl>
+	<20111209222520.GA24786@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 07, 2011 at 09:54:39AM -0600, Stuart Yoder wrote:
-> Alex, Alexey I'm wondering if you've had any new thoughts on this over
-> the last week.
-> 
-> For Freescale, our iommu domain attributes would look something like:
->     -domain iova base address
->     -domain iova window size
+>>>>> "Greg" == Greg KH <greg@kroah.com> writes:
 
-I agree with that.
+Greg> On Fri, Dec 09, 2011 at 01:17:53PM -0800, Anand Kanaginhal wrote:
+>> 
+>> 
+>> > Date: Fri, 9 Dec 2011 10:07:08 -0800
+>> > From: greg@kroah.com
+>> > To: anand_dk@hotmail.com
+>> > CC: mjg59@srcf.ucam.org; bhelgaas@google.com; linux-pci@vger.kernel.org;
+>> linux-kernel@vger.kernel.org; linux-hotplug@vger.kernel.org
+>> > Subject: Re: PCIe Hotplugging not working
+>> >
+>> > On Fri, Dec 09, 2011 at 09:19:39AM -0800, Anand Kanaginhal wrote:
+>> > > 1. With the above setup, If I hotplug card c1 and/or c2, will my driver
+>> probe
+>> > > get invoked.
+>> >
+>> > Stop right here. Please get your pci hotplug controller driver working
+>> > first, for your platform. That seems to be the problem. After that,
+>> > the rest of your questions should just resolve themselves.
+>> Thank you Greg for your assistance, perhaps it would be little more helpful, if
+>> you could tell me the basis on which you drew the conclusion. I am no kernel
+>> expert :( 
 
->     -domain enable/disable
->     -number of subwindows
->     -operation mapping table index
->     -stash destination CPU
->     -stash target (cache– L1, L2, L3)
+Greg> As your driver's callbacks aren't being called, that's probably why this
+Greg> isn't working.
 
-Why does the user of the IOMMU-API need to have control over these
-things?
+Greg> Please make sure your pci hotplug driver is working first.  Try turning
+Greg> on and off the power to the card slot (in the sysfs directory for the
+Greg> slot) and see if that's working.
 
-> These are all things that need to be set by the creator of the domain.
-> 
-> Since the domain attributes are going to be so different for each platform does
-> it make sense to define a new iommu_ops call back that just takes a void pointer
-> that can be implemented in a platform specific way?   For example:
-> 
->     struct iommu_ops {
->         [cut]
->         int (*domain_set_attrs)(struct iommu_domain *domain,
->                               void *attrs);
->         int (*domain_get_attrs)(struct iommu_domain *domain,
->                               void *attrs);
->     }
-
-A void pointer is certainly the worst choice for an interface. I think
-it is better to have at least a set of common attributes. Somthing like
-this:
-
-iommu_domain_set_attr(struct iommu_domain *domain, enum attr_type, void *data)
-iommu_domain_get_attr(struct iommu_domain *domain, enum attr_type, void *data)
-
-The iova base/size options make sense for more IOMMUs than just
-Freescale. For example it would allow to manage GART-like IOMMUs with
-the IOMMU-API too.
+Greg> You also have failed to say exactly what pci hotplug controller
+Greg> you have in your system, what is it?  You have to have one, and
+Greg> the driver loaded for it, for any of this to work at all.
 
 
-	Joerg
+And it would make sense to test your hotplug setup with a known
+working card that *does* support hotplugging properly already.  Then
+you know your setup works and you can then concentrate on getting your
+new card working.  
 
--- 
-AMD Operating System Research Center
-
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo, Andrew Bowd
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
-
+John
