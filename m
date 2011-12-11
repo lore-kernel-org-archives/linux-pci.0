@@ -1,80 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:40921 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752389Ab1LQR3l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 17 Dec 2011 12:29:41 -0500
-Date: Sat, 17 Dec 2011 09:29:35 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [git pull] PCI fixes
-Message-ID: <20111217092935.2c2e075e@jbarnes-desktop>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Jqot3q7I0bAoN0p2nzClItU"; protocol="application/pgp-signature"
+Received: from palinux.external.hp.com ([192.25.206.14]:56891 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628Ab1LKWxo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 11 Dec 2011 17:53:44 -0500
+Date: Sun, 11 Dec 2011 15:53:43 -0700
+From: Matthew Wilcox <matthew@wil.cx>
+To: Helge Deller <deller@gmx.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: pci_is_pcie() returns true for PCI-cards?
+Message-ID: <20111211225342.GA20129@parisc-linux.org>
+References: <4EE5220B.1090207@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4EE5220B.1090207@gmx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/Jqot3q7I0bAoN0p2nzClItU
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sun, Dec 11, 2011 at 10:35:07PM +0100, Helge Deller wrote:
+> In my machine I'm running two dual-DVI PCI video cards (NVidia GeForce 7300 LE PCI, ATI FireMV 2200 PCI).
+> Both are PCI and not PCI-Express cards.
+> 
+> Somewhere after kernel 2.6.34 the nouveau and the radeon DRM drivers switched their
+> initialization code to set the GART/aperture size to 64MB (for PCI) or 512MB (for PCIE),
+> and the pci_is_pcie() function is used to determine if the graphics card is PCI or PCIE.
+> 
+> Now my question:
+> My assumption is, that pci_is_pcie() should return true for PCI-E cards only.
+> PCI-only cards should return false. Is this assumption correct?
 
-The following changes since commit
-8e8da023f5af71662867729db5547dc54786093c:
+Yes.
 
-  x86: Fix boot failures on older AMD CPU's (2011-12-04 11:57:09 -0800)
+> If yes, there is probably a bug somewhere and maybe someone here has an idea what I could test to fix this bug?
+> If not, then the nouveau and radeon drivers should not use pci_is_pcie() to determine if this is a PCI or PCI-E card...
+> 
+> I did some testing with kernel 3.1.5.
+> For the nVidia card (PCI 01:00.0) I got:
+> - pci_is_pcie(dev->pdev) = 1
+> - pci_find_capability(dev->pdev, PCI_CAP_ID_EXP) = 120
+> 
+> lspci output:
+> 00:00.0 Host bridge: Intel Corporation 4 Series Chipset DRAM Controller (rev 03)
+> 00:01.0 PCI bridge: Intel Corporation 4 Series Chipset PCI Express Root Port (rev 03)
+> 00:1b.0 Audio device: Intel Corporation N10/ICH 7 Family High Definition Audio Controller (rev 01)
+> 00:1c.0 PCI bridge: Intel Corporation N10/ICH 7 Family PCI Express Port 1 (rev 01)
+> 00:1c.1 PCI bridge: Intel Corporation N10/ICH 7 Family PCI Express Port 2 (rev 01)
+> 00:1d.0 USB Controller: Intel Corporation N10/ICH7 Family USB UHCI Controller #1 (rev 01)
+> 00:1d.1 USB Controller: Intel Corporation N10/ICH 7 Family USB UHCI Controller #2 (rev 01)
+> 00:1d.2 USB Controller: Intel Corporation N10/ICH 7 Family USB UHCI Controller #3 (rev 01)
+> 00:1d.3 USB Controller: Intel Corporation N10/ICH 7 Family USB UHCI Controller #4 (rev 01)
+> 00:1d.7 USB Controller: Intel Corporation N10/ICH 7 Family USB2 EHCI Controller (rev 01)
+> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev e1)
+> 00:1f.0 ISA bridge: Intel Corporation 82801GB/GR (ICH7 Family) LPC Interface Bridge (rev 01)
+> 00:1f.1 IDE interface: Intel Corporation 82801G (ICH7 Family) IDE Controller (rev 01)
+> 00:1f.2 IDE interface: Intel Corporation N10/ICH7 Family SATA IDE Controller (rev 01)
+> 01:00.0 VGA compatible controller: nVidia Corporation G72 [GeForce 7300 LE] (rev a1)
+> 02:00.0 Ethernet controller: Atheros Communications AR8121/AR8113/AR8114 Gigabit or Fast Ethernet (rev b0)
+> 04:01.0 VGA compatible controller: ATI Technologies Inc RV280 [FireMV 2200 PCI] (rev 01)
+> 04:01.1 Display controller: ATI Technologies Inc RV280 [FireMV 2200 PCI] (secondary) (rev 01)
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci for-linus
+Can you send
+lspci -xxxxs01:00.0
+lspci -xxxxs04:01.0
+lspci -xxxxs04:01.1
 
-Just a few regression fixes.  We have a fix for the extra msleep you
-pointed out last time as well, but I was saving it for -next since it
-took awhile for Kenji-san and Yinghai to settle on something, and it
-changes a core behavior.
+(that is four 'x' characters).
 
-Ajaykumar Hotchandani (1):
-      PCI: Set device power state to PCI_D0 for device without native PM su=
-pport
-
-James Bottomley (1):
-      PCI: fix ats compile failure
-
-Rafael J. Wysocki (1):
-      PCI hotplug: Always allow acpiphp to handle non-PCIe bridges
-
-Ram Pai (1):
-      PCI: defer enablement of SRIOV BARS
-
- drivers/pci/ats.c                  |    1 +
- drivers/pci/hotplug/acpiphp_glue.c |   30 ++++++++++++------------------
- drivers/pci/iov.c                  |    7 +++++++
- drivers/pci/pci.c                  |    5 ++++-
- 4 files changed, 24 insertions(+), 19 deletions(-)
-
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/Jqot3q7I0bAoN0p2nzClItU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO7NF/AAoJEIEoDkX4Qk9hwTwP/RFGF084QRkSNWHh8MKOyyHk
-GvK/WsJqzk+XnBNHsBMMWUrnDchctWhoSnVAC3gnpeq+AReJRbTfjWKMSCwsyRkB
-Fs8xeahL/nxUBRPph99cU6d8e1dGHos9ap3a4xU1nH2FgDUNffuzKYRXk0uYCzGn
-WktLI9g6gWOSbT/dCp3WOAMh9fL9qCPpXsjzEOphWFx89CLxQHmZjtdrCMsOte9S
-sv+0uAdEvmG5mjXRscB5p4O9npvVNqXqQXeZO+5ekRQbfRWIy9M1V64x6KQOc1NZ
-r9uiXqJ4kEx7NhLWrV3VAD9DJh9oT4ebfEVGf8mZW2TuWDKmxWxzuDqFkJ9lu4+u
-b/2qomFENf6FvVAw9xIoWFzgTzMPkDa6nsra+C/ohnX/9nGcxA2BL7cfry9Zy1ba
-gxKpsi5AThdihOvL/yU4l+tiHsXG961F+ULyyWiG6LbtqQRa1UO9Se8Wv7xb7mL2
-TshuhvmhmzdcLezJq7E62Oo5qErb//zlacLTKiiLwmB0X6GX1B3l6vSpEesTLHY/
-O914vZTcIyu9ENxftOzFiWa4bocN/NOawlIHrQU9CbdRFnOQvDdKAftlK6qYJRpT
-uRz9xFmBfoXe9GsKmMttxizbMgN2Adt5Gvqz8+RLU136LgdCKF2MupBvMg+d9Mmr
-T3C7T3mE3E1zL/cf5reH
-=KAh2
------END PGP SIGNATURE-----
-
---Sig_/Jqot3q7I0bAoN0p2nzClItU--
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
