@@ -1,104 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from imr-da03.mx.aol.com ([205.188.105.145]:57332 "EHLO
-	imr-da03.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150Ab1LMPuG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2011 10:50:06 -0500
-Message-Id: <201112131549.pBDFn25F007115@imr-da03.mx.aol.com>
-Reply-To: <jimmyzakky30@yahoo.com.hk>
-From: "J. Zakia" <downsyl4@aol.com>
-Subject: Confirmation from Libyan embassy
-Date: Tue, 13 Dec 2011 07:47:13 -0800
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0117_01C2A75B.27CB505A"
-To: unlisted-recipients:; (no To-header on input)
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:59091 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755419Ab1LMSxb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2011 13:53:31 -0500
+Date: Tue, 13 Dec 2011 10:53:27 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>,
+	linux-pci@vger.kernel.org
+Cc: Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+	Yinghai Lu <yhlu.kernel@gmail.com>
+Subject: Re: [PATCH] PCI: Set device power state to PCI_D0 for device
+ without native PM support
+Message-ID: <20111213105327.55c6e098@jbarnes-desktop>
+In-Reply-To: <4EE5BAF8.4000303@oracle.com>
+References: <4EE5BAF8.4000303@oracle.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/z13y.u08.XAxORlxHwn05Lh"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
+--Sig_/z13y.u08.XAxORlxHwn05Lh
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-------=_NextPart_000_0117_01C2A75B.27CB505A
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Ok I applied this to for-linus, but git am didn't like it so I had to
+merge it by hand.  Please check it out and make sure it still works for
+you.
 
-In a brief introduction, I am an embassy attaché with the Libyan Government in the Hague, Netherlands.
-Please kindly see the attachment for more details and respond immediately
+Thanks,
+jesse
 
-------=_NextPart_000_0117_01C2A75B.27CB505A
-Content-Type: application/octet-stream;
-	name="attachment.rtf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="attachment.rtf"
+On Mon, 12 Dec 2011 13:57:36 +0530
+Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com> wrote:
 
-e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcZGVmbGFuZzEwMzN7XGZv
-bnR0Ymx7XGYwXGZzd2lzc1xmY2hhcnNldDAgQXJpYWw7fX0NCntcKlxnZW5l
-cmF0b3IgTXNmdGVkaXQgNS40MS4yMS4yNTAwO31cdmlld2tpbmQ0XHVjMVxw
-YXJkXGYwXGZzMjAgSmltbXkgWmFraWEgU2FobGlccGFyDQpFbWJhc3N5IG9m
-IExpYnlhXHBhcg0KUGFya3dlZyAxNSwgMjU4NUpIXHBhcg0KVGhlIEhhZ3Vl
-LCBUaGUgTmV0aGVybGFuZHMgIFxwYXINClxwYXINCjEzdGggRGVjLiAyMDEx
-XHBhcg0KIFxwYXINCkVtYmFzc3kgb2YgTGlieWEsIFRoZSBIYWd1ZSwgTmV0
-aGVybGFuZHM7IEZ1bmQgVHJhbnNmZXIgQXNzaXN0YW5jZVxwYXINCiBccGFy
-DQpEZWFyIFNpcixccGFyDQogXHBhcg0KSSBoYXZlIGRlY2lkZWQgdG8gY29u
-dGFjdCB5b3UgdG8gYXNzaXN0IHVzIHRyYW5zZmVyIGFuZCBkZXBvc2l0IHRo
-aXMgc3VtIG9mIG1vbmV5IG1lbnRpb25lZCBiZWxvdyBpbnRvIHlvdXIgcGVy
-c29uYWwgYWNjb3VudCBvciBhbnkgb3RoZXIgYWNjb3VudCB5b3UgZGVjaWRl
-IHNhZmUuXHBhcg0KIFxwYXINCkluIGEgYnJpZWYgaW50cm9kdWN0aW9uLCBJ
-IGFtIGFuIGVtYmFzc3kgYXR0YWNoXCdlOSB3aXRoIHRoZSBMaWJ5YW4gR292
-ZXJubWVudCBpbiBUaGUgSGFndWUsIE5ldGhlcmxhbmRzLiBXZSBhcmUgY3Vy
-cmVudGx5IGF1ZGl0aW5nIGFuZCByZWN0aWZ5aW5nIHRoZSBhY2NvdW50IG9m
-IG91ciBGb3JlaWduIE1pc3Npb25zIGFuZCBFbWJhc3NpZXMgYWJyb2FkIGFu
-ZCBpbiBwYXJ0aWN1bGFyIGluIEV1cm9wZS4gVGhpcyBleGNpc2UgaXMgbmVj
-ZXNzaXRhdGVkIGJ5IHRoZSBvbi1nb2luZyBwb2xpdGljYWwgY2hhbmdlIGlu
-IG15IGNvdW50cnkgdW5kZXIgdGhlIE5hdGlvbmFsIFRyYW5zaXRpb25hbCBD
-b3VuY2lsIChOVEMpLiBJdCBpcyBleHBlY3RlZCB0aGF0IHRoZXJlIHdpbGwg
-YmUgbmV3IEFtYmFzc2Fkb3JpYWwgcG9zdGluZyBpbiB0aGUgY29taW5nIG1v
-bnRocyB3aGljaCB3aWxsIGRlZmluaXRlbHkgYWZmZWN0IHRoZSBwcmVzZW50
-IEFtYmFzc2Fkb3IgYW5kIGFsbCBzdGFmZiBvZiBMaWJ5YSBFbWJhc3N5IGlu
-IFRoZSBOZXRoZXJsYW5kcy5ccGFyDQogXHBhcg0KSG93ZXZlciwgaW4gdGhl
-IGNvdXJzZSBvZiBvdXIgYXVkaXRpbmcsIHdlIGhhdmUgaHVnZSBzdW0gb2Yg
-ZXhjZXNzIG1vbmV5IGluIHRoZSB0dW5lIG9mIFVTJDgsNTAwLDAwMC4wMCAo
-RWlnaHQgTWlsbGlvbiwgRml2ZSBIdW5kcmVkIFRob3VzYW5kIFUuUyBEb2xs
-YXJzKSB3aGljaCBpcyBseWluZyBsb29zZSBhbmQgdW5jbGFpbWVkIGluIG9u
-ZSBvZiB0aGUgbG9jYWwgYmFua3MgaGVyZSBpbiBUaGUgTmV0aGVybGFuZHMu
-IFdlIGhhdmUgcXVpY2tseSBhbmQgc21hcnRseSBpbiBjb2xsYWJvcmF0aW9u
-IHdpdGggdGhlIEFtYmFzc2Fkb3IgYW5kIHNvbWUgYXV0aG9yaXRpZXMgaW4g
-dGhlIE5hdGlvbmFsIFRyYW5zaXRpb25hbCBDb3VuY2lsIChOVEMpIGRlY2lk
-ZWQgdG8ga2VlcCB0aGlzIG1vbmV5IHRvIG91cnNlbHZlcy4gV2UgYXJlIHRh
-a2luZyBhZHZhbnRhZ2Ugb2Ygb3VyIHBvc2l0aW9uIGFuZCB0aGF0IG9mIHRo
-ZSBwb2xpdGljYWwgaW5zdGFiaWxpdHkgaW4gbXkgY291bnRyeSB0byBkbyB0
-aGlzIGtub3dpbmcgdGhhdCBub2JvZHkgd2lsbCBmaW5kIG91dC4gSG93ZXZl
-ciwgd2Ugd291bGQgbGlrZSB0byBtb3ZlIHRoaXMgbW9uZXkgZnVydGhlciB0
-byBhbm90aGVyIGZvcmVpZ24gYWNjb3VudCwgcHJlZmVyYWJseSBvdXRzaWRl
-IFRoZSBOZXRoZXJsYW5kcy5ccGFyDQogXHBhcg0KVG8gdGhpcyBlZmZlY3Qs
-IGFuZCBmb3IgcmVhc29uIG9mIGFub255bWl0eSwgd2UgaGF2ZSBjaG9zZW4g
-eW91IHRocm91Z2ggdGhlIGludGVybmF0aW9uYWwgc2VhcmNoIGRpcmVjdG9y
-eSB0byBhc3Npc3QgdXMgaW4gdHJhbnNmZXJyaW5nIGFuZCBkZXBvc2l0aW5n
-IHRoaXMgbW9uZXkgaW4geW91ciBwZXJzb25hbCBiYW5rIGFjY291bnQgb3Ig
-YW55IG90aGVyIGFjY291bnQgeW91IGRlZW1lZCBzYWZlci4gVGhpcyByZWNv
-bW1lbmRhdGlvbiBpcyBiYXNlZCBvbiB0aGUgZmFjdCB0aGF0IHlvdSB3aWxs
-IG5vdCBiZXRyYXkgdGhlIHRydXN0IGFuZCBjb25maWRlbmNlIHdlIGFyZSBy
-ZXBvc2luZyBvbiB5b3UuIFdlIGhhdmUgZGVjaWRlZCB0aGVyZWFmdGVyLCB0
-byBnaXZlIHlvdSAzMCUgb2YgdGhlIFVTJDgsNTAwLDAwMC4wMCBmb3IgeW91
-ciBhc3Npc3RhbmNlIGFuZCBjb3Jyb2JvcmF0aW9uIHdoaWxlIHRoZSByZXN0
-IDcwJSB3aWxsIGJlIHNhZmVseSBrZXB0IGZvciB1cy5ccGFyDQogXHBhcg0K
-UGxlYXNlIGtpbmRseSBpbmRpY2F0ZSB5b3VyIGludGVyZXN0IHRvIGFzc2lz
-dCB1cyBrZWVwIHRoaXMgbW9uZXkgaW4geW91ciBhY2NvdW50IGFzIHNvb24g
-YXMgcG9zc2libGUuIEl0IGlzIGFsc28gbXkgcGxlYXN1cmUgdG8gaW5mb3Jt
-IHlvdSB0aGF0IGV2ZXJ5IGFycmFuZ2VtZW50IHRvIHJlbGVhc2UgdGhlIG1v
-bmV5IGZyb20gdGhlIGJhbmsgaGVyZSBoYXMgYmVlbiBjb25jbHVkZWQuIFRo
-aXMgYnVzaW5lc3MgaXMgdG90YWxseSByaXNrIGZyZWUuXHBhcg0KIFxwYXIN
-CkZpbmFsbHksIHdlIGV4cGVjdCB5b3UgaW4gY29uZmlkZW5jZSBhbmQgdHJ1
-c3QgdG8ga2VlcCBldmVyeSBhc3BlY3Qgb2YgdGhpcyB0cmFuc2FjdGlvbiBz
-ZWNyZXQgYW5kIGNvbmZpZGVudGlhbCBhcyBhbnkgbWlzdGFrZSB3aWxsIHB1
-dCBteSBmdXR1cmUgY2FyZWVyIGluIGplb3BhcmR5LiBJIG1heSBpbnZpdGUg
-eW91IG9yIHZpc2l0IHlvdSBmb3Igb25lIG9uIG9uZSBkaXNjdXNzaW9uIGFu
-ZCBwZXJmZWN0aW9uIG9mIHRoZSBkZWFsIGFzIHNvb24gSSBjb25maXJtIHRo
-YXQgeW91IGNhbiBoYW5kbGUgdGhlIHRyYW5zYWN0aW9uLlxwYXINCiBccGFy
-DQpUaGFua3MgZm9yIHlvdXIgYW50aWNpcGF0ZWQgY28tb3BlcmF0aW9uLCB3
-aGlsZSB3YWl0aW5nIGZvciB5b3VyIGFjY2VwdGFuY2UgdG8gYXNzaXN0IHVz
-LiBccGFyDQogXHBhcg0KWW91cnMgc2luY2VyZWx5LFxwYXINCiAgXHBhcg0K
-SmltbXkgWmFraWEgU2FobGlccGFyDQp9DQoA
+> Hi Jesse,
+>=20
+> Have following query, please point me to correct person if I am asking=20
+> this to wrong person:
+> Any particular reason, why this is not checked in yet? Is something=20
+> missing here?
+>=20
+> Thanks,
+> Ajay
+>=20
+> -------- Original Message --------
+> Subject: 	Re: [PATCH] PCI: Set device power state to PCI_D0 for device=20
+> without native PM support
+> Date: 	Fri, 28 Oct 2011 17:36:43 +0530
+> From: 	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
+> To: 	Jesse Barnes <jbarnes@virtuousgeek.org>,=20
+> "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,=20
+> "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+> CC: 	Stefano Stabellini <stefano.stabellini@eu.citrix.com>, Yinghai Lu=20
+> <yhlu.kernel@gmail.com>
+>=20
+>=20
+>=20
+> On 10/27/2011 08:31 PM, Stefano Stabellini wrote:
+> >  On Thu, 27 Oct 2011, Ajaykumar Hotchandani wrote:
+> >>>  BTW I am OK with your patch.
+> >>  Should we revert 47e9037ac16637cd7f12b8790ea7ce6680e42168 (your chang=
+es
+> >>  in register_slot() )
+> >>  I think, after this change, it's not needed. Or, am I missing some sc=
+enario?
+> >>
+> >  I think you are right, 47e9037ac16637cd7f12b8790ea7ce6680e42168 is not
+> >  needed anymore, so I am OK with reverting it.
+>=20
+> Thanks, following is updated patch.
+>=20
+> [PATCH -v2] PCI: Set device power state to PCI_D0 for device without
+> native PM support
+>=20
+> During test of one IB card with guest VM, found that, msi is not
+> initialized properly.
+>=20
+> It turns out __write_msi_msg will do nothing if device current_state is
+> not PCI_D0.
+> And, that pci device does not have pm_cap in guest VM.
+>=20
+> There is an error in setting of power state to PCI_D0 in
+> pci_enable_device(), but error is not returned for this.
+> Following is code flow:
+> pci_enable_device() -->   __pci_enable_device_flags() -->
+> do_pci_enable_device() -->   pci_set_power_state() -->
+> __pci_start_power_transition()
+> We have following condition inside __pci_start_power_transition():
+>          if (platform_pci_power_manageable(dev)) {
+>                  error =3D platform_pci_set_power_state(dev, state);
+>                  if (!error)
+>                          pci_update_current_state(dev, state);
+>          } else {
+>                  error =3D -ENODEV;
+>                  /* Fall back to PCI_D0 if native PM is not supported */
+>                  if (!dev->pm_cap)
+>                          dev->current_state =3D PCI_D0;
+>          }
+>=20
+> Here, from platform_pci_set_power_state(), acpi_pci_set_power_state() is
+> getting called and that is failing with ENODEV because of following
+> condition:
+>          if (!handle || ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0",&tmp)=
+))
+>                  return -ENODEV;
+>=20
+> Because of that, pci_update_current_state() is not getting called.
+>=20
+> With this patch, if device power state can not be set via
+> platform_pci_set_power_state and that device does not have native pm
+> support, then PCI device power state will be set to PCI_D0.
+>=20
+> -v2: This also reverts 47e9037ac16637cd7f12b8790ea7ce6680e42168, as it's
+> not needed after this change.
+>=20
+> Signed-off-by: Ajaykumar Hotchandani<ajaykumar.hotchandani@oracle.com>
+> Signed-off-by: Yinghai Lu<yinghai.lu@oracle.com>
+> ---
+>   drivers/pci/hotplug/acpiphp_glue.c |    1 -
+>   drivers/pci/pci.c                  |    3 +++
+>   2 files changed, 3 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c
+> b/drivers/pci/hotplug/acpiphp_glue.c
+> index 2202857..11431c1 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -212,7 +212,6 @@ register_slot(acpi_handle handle, u32 lvl, void
+> *context, void **rv)
+>=20
+>          pdev =3D pci_get_slot(pbus, PCI_DEVFN(device, function));
+>          if (pdev) {
+> -               pdev->current_state =3D PCI_D0;
+>                  slot->flags |=3D (SLOT_ENABLED | SLOT_POWEREDON);
+>                  pci_dev_put(pdev);
+>          }
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e9651f0..6866937 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -664,6 +664,9 @@ static int pci_platform_power_transition(struct
+> pci_dev *dev, pci_power_t state)
+>                  error =3D platform_pci_set_power_state(dev, state);
+>                  if (!error)
+>                          pci_update_current_state(dev, state);
+> +               /* Fall back to PCI_D0 if native PM is not supported */
+> +               if (!dev->pm_cap)
+> +                       dev->current_state =3D PCI_D0;
+>          } else {
+>                  error =3D -ENODEV;
+>                  /* Fall back to PCI_D0 if native PM is not supported */
 
-------=_NextPart_000_0117_01C2A75B.27CB505A--
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/z13y.u08.XAxORlxHwn05Lh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO558nAAoJEIEoDkX4Qk9hh60P/0xaC5az67Voj0aOUsdlAHgf
+bs7Tn//qFiTlBJBOxkM3Fx+BZhr69YG1xVUMQhXxLqxY21qNrhNWWAXuf/vqWobS
+apQxnXV9Jdt4hH6/Erl3U+ticbAKmkTCsrcsQBu0+XOQTGh8gEITa9CeSaDx1Qd4
+aUM5AtmoPMCJd1PqSIsoF3VECw715+LiE2VOpxy/Q0+IawGxo8Hv7H6kWzihNtw6
+G6xRhw8HTMsKYBXU3IvnGED9H/qUQfqxtEw57FSrGwefhn9jhYQUqU+TI9UM/bmI
+hnFiXrcaBMHss2PKWKW4rYXhgBB5RazltGLvtbQ96mXqbBxMWgUOpLdr5mhUULvG
+/Ligtze792BE9BHU3mTMTxvzrmr0z1haQdGyOTVSO8mpwGsiyIhjPzuerH4OU15u
+d9h+IlE5BM/BNdtwX7gIr7Bz94MLifPtaN4G0SKw+IVLj3PQ2hHGYQc+OWSR+/Ix
+9baWIHr+N0oRrrTYDuAjvWdF3PzmO0biqecsXoQFtZ2Myvo9B1vgOX2Q4Z1qruuX
+yKBcGlg8QjCr3r+aelVtL4+5N0STPPm2m3iE8heHbZEA0ODyjn9F/ClQ+Rsg1XCH
+8F7xnkjfcMr4v52MxelIU+VMS3tDKIGpEg+CMTOfI7luaMrTZTEpNFwdz1cx2DT+
+FEgBwhR8UMz9j+QW/nOy
+=8u0i
+-----END PGP SIGNATURE-----
+
+--Sig_/z13y.u08.XAxORlxHwn05Lh--
