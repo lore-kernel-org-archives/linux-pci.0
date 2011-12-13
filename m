@@ -1,76 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:33676 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755586Ab1LETfb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:35:31 -0500
-Date: Mon, 5 Dec 2011 11:38:03 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai.lu@oracle.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Only call pci_stop_bus_device() one time for
- children devices during removing
-Message-ID: <20111205113803.37cc5d4c@jbarnes-desktop>
-In-Reply-To: <4ECC7F6D.6090802@oracle.com>
-References: <4ECC7F6D.6090802@oracle.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/zOu9lkd8t/.46BhH4gW1vum"; protocol="application/pgp-signature"
+Received: from rcsinet15.oracle.com ([148.87.113.117]:32448 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036Ab1LMGmn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2011 01:42:43 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 6/5] pci: Fixing multiple retrying with pci resource optional resources allocation under multi bridges
+Date: Mon, 12 Dec 2011 22:41:53 -0800
+Message-Id: <1323758513-18611-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/zOu9lkd8t/.46BhH4gW1vum
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+this one is addon to 5 patches that i resent 12/7/2011.
 
-On Tue, 22 Nov 2011 21:06:53 -0800
-Yinghai Lu <yinghai.lu@oracle.com> wrote:
+One system has devices that support sriov and those devices
+are connected to pcie switch to pcie root port.
 
->=20
-> During debugging pcie hotplug with SRIOV with pcie switch, found
-> pci_stop_bus_device() are called several times for some children devices.
->=20
-> Current pci_remove_bus_device() will call pci_stop_bus_device() at first.
-> and then use remove_behind_bridge() to call pci_stop_bus_device() for chi=
-ldren
-> devices. But pci_stop_bus_device() already include depth first to stop ch=
-ildren.
-> So We can remove unnecessary calling in pci_remove_behind_bridge() for ch=
-ildren.
->=20
-> The patch change original pci_remove_bus_device() to __pci_remove_bus_dev=
-ice(), and
-> it only do remove work, and new pci_remove_bus_device will call
-> pci_stop_bus_device() one time, and then call __pci_remove_bus_device().
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+ +-[0000:80]-+-00.0-[81-8f]--
+ |           +-01.0-[90-9f]--
+ |           +-02.0-[a0-af]----00.0-[a1-a3]--+-02.0-[a2]--+-00.0 Oracle Corporation Device 207a
+ |           |                               \-03.0-[a3]--+-00.0 Oracle Corporation Device 207a
+ |           +-02.2-[b0-bf]----00.0-[b1-b3]--+-02.0-[b2]--+-00.0 Oracle Corporation Device 207a
+ |           |                               \-03.0-[b3]--+-00.0 Oracle Corporation Device 207a
 
-applied to linux-next, thanks.
+When BIOS does not assign resource for sriov bar, kernel pci reallocation
+ony go up to one bridge and then failed to get resource to all sriov bar.
+even We have big enough range in peer root bus for allocation.
+Specifically, only bridge a1:02.0 level get cleared, and reallocated. kernel does not
+go up to clear bridge 80:02.0 level.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+To make it go upper levels, during retring, We need to treat good to have
+as must have.
 
---Sig_/zOu9lkd8t/.46BhH4gW1vum
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Only last try will treat good to have as optional, at that time, parent
+bridges resource already released so it will have chance to get assigned
+with must_have plus good_to_have for all children devices.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   46 ++++++++++++++++++++++++++++------------------
+ 1 file changed, 28 insertions(+), 18 deletions(-)
 
-iQIcBAEBAgAGBQJO3R2bAAoJEIEoDkX4Qk9hBz0P/RTnsxsrktzh/K+siypJwG6l
-ZSHaWzCNoGhBfzuJqJbN2FAsOu4fFjiDCkcXLFtT21/v5tpE/VwJQzArmYTrhnLf
-IHZ83hWZoDIkbTHzNw0CyljUU7Ejijn9fwJfotngAKzH2s/UjG3CnaTQVVdQ0IL0
-jwu8UHxkv9ezWBh2JQ4RvHNG0gFwK2kc+MCNBtJGhUaE9APsIrQihe4XV1vRht69
-61duC4sf0466fcRBD0ECCGhk4E4jH1EYVKvJvx1gpE9S13nnj3KsZlw0bZ9iuyCn
-GsQATRfA215XtYS+KjPjmVLsFxGbPE2ZBvyHMQsHiYOvReTvB/rHN3H2BlDRvgxP
-4vMA7S8zY2grln2e6OePfu1RJwGfT+2MgWNyJFUQghy0ePllQm2e37iHbtQmLvgo
-1fB6fs41pJs2Vt4LHJXAXh+T/KNAPkWsj/E0hW0nArkOrxpJIBR5LYNNnJ6DTiBn
-UeIOVank9RiGzgQglkMaUDrqP7OM8oo7wMYpPCdAhAenrno+jz+jP8v91+Vr/Y6t
-hWgq/fm2ZSmXUXE4gDeaxzIucRmNhGqX/U2yzvsxDlohod+4m6qQ5Z/WAEkKzLDY
-GBvUUHz8u9mSLp91qSzZDob1VwQRB1GqrZZ4JT/eo+9n80ZooYhe8gYCmgXoPxzO
-IFpxIfgi+WgANW2o7jsO
-=tZ0v
------END PGP SIGNATURE-----
-
---Sig_/zOu9lkd8t/.46BhH4gW1vum--
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -940,7 +940,8 @@ void __ref __pci_bus_size_bridges(struct
+ 		 * Follow thru
+ 		 */
+ 	default:
+-		pbus_size_io(bus, 0, additional_io_size, realloc_head);
++		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
++			     additional_io_size, realloc_head);
+ 		/* If the bridge supports prefetchable range, size it
+ 		   separately. If it doesn't, or its prefetchable window
+ 		   has already been allocated by arch code, try
+@@ -948,11 +949,15 @@ void __ref __pci_bus_size_bridges(struct
+ 		   resources. */
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (pbus_size_mem(bus, prefmask, prefmask, 0, additional_mem_size, realloc_head))
++		if (pbus_size_mem(bus, prefmask, prefmask,
++				  realloc_head ? 0 : additional_mem_size,
++				  additional_mem_size, realloc_head))
+ 			mask = prefmask; /* Success, size non-prefetch only. */
+ 		else
+ 			additional_mem_size += additional_mem_size;
+-		pbus_size_mem(bus, mask, IORESOURCE_MEM, 0, additional_mem_size, realloc_head);
++		pbus_size_mem(bus, mask, IORESOURCE_MEM,
++				realloc_head ? 0 : additional_mem_size,
++				additional_mem_size, realloc_head);
+ 		break;
+ 	}
+ }
+@@ -1191,45 +1196,50 @@ pci_assign_unassigned_resources(void)
+ 	struct pci_bus *bus;
+ 	struct resource_list_x realloc_list; /* list of resources that
+ 					want additional resources */
++	struct resource_list_x *add_list = NULL;
+ 	int tried_times = 0;
+ 	enum release_type rel_type = leaf_only;
+ 	struct resource_list_x head, *list;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 	unsigned long failed_type;
+-	int max_depth = pci_get_max_depth();
+-	int pci_try_num;
+-
++	int pci_try_num = 1;
+ 
+ 	head.next = NULL;
+ 	realloc_list.next = NULL;
+ 
+-	pci_try_num = max_depth + 1;
+-	printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
+-		 max_depth, pci_try_num);
++	/* don't realloc if asked to do so */
++	if (pci_realloc_enabled()) {
++		int max_depth = pci_get_max_depth();
++
++		pci_try_num = max_depth + 1;
++		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
++			 max_depth, pci_try_num);
++	}
+ 
+ again:
++	/*
++	 * last try will use add_list, otherwise will try good to have as
++	 * must have, so can realloc parent bridge resource
++	 */
++	if (tried_times + 1 == pci_try_num)
++		add_list = &realloc_list;
+ 	/* Depth first, calculate sizes and alignments of all
+ 	   subordinate buses. */
+ 	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_size_bridges(bus, &realloc_list);
++		__pci_bus_size_bridges(bus, add_list);
+ 
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_assign_resources(bus, &realloc_list, &head);
+-	BUG_ON(realloc_list.next);
++		__pci_bus_assign_resources(bus, add_list, &head);
++	if (add_list)
++		BUG_ON(add_list->next);
+ 	tried_times++;
+ 
+ 	/* any device complain? */
+ 	if (!head.next)
+ 		goto enable_and_dump;
+ 
+-	/* don't realloc if asked to do so */
+-	if (!pci_realloc_enabled()) {
+-		free_list(resource_list_x, &head);
+-		goto enable_and_dump;
+-	}
+-
+ 	failed_type = 0;
+ 	for (list = head.next; list;) {
+ 		failed_type |= list->flags;
