@@ -1,116 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:41173 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932414Ab1LFHvv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2011 02:51:51 -0500
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Tue, 6 Dec 2011 00:51:51 -0700
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id pB67pnki087660
-	for <linux-pci@vger.kernel.org>; Tue, 6 Dec 2011 00:51:49 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id pB67plvh010792
-	for <linux-pci@vger.kernel.org>; Tue, 6 Dec 2011 00:51:48 -0700
-Date: Tue, 6 Dec 2011 15:51:43 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
-	brking@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH 1/1] PCI:delay configuration of SRIOV capability
-Message-ID: <20111206075143.GB31480@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>
- <20111007232516.GF2980@ram-ThinkPad-T61>
- <1318057168.29415.333.camel@pasglop>
- <20111008075353.GK2980@ram-ThinkPad-T61>
- <1318060793.29415.347.camel@pasglop>
- <20111102140325.004b9dad@jbarnes-desktop>
- <20111103013014.GB393@ram-ThinkPad-T61>
- <20111106023357.GB2383@ram-ThinkPad-T61>
- <20111205101756.7bccfbae@jbarnes-desktop>
- <4EDD36AE.8060208@redhat.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:52757 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754163Ab1LNEbQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2011 23:31:16 -0500
+Date: Tue, 13 Dec 2011 21:31:13 -0700
+From: Matthew Wilcox <matthew@wil.cx>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pciehp: Checking pci conf reading to new added device
+	instead of sleep 1s
+Message-ID: <20111214043113.GC20129@parisc-linux.org>
+References: <1323767154-6859-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EDD36AE.8060208@redhat.com>
+In-Reply-To: <1323767154-6859-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 05, 2011 at 04:25:02PM -0500, Don Dutile wrote:
-> On 12/05/2011 01:17 PM, Jesse Barnes wrote:
-> >On Sun, 6 Nov 2011 10:33:57 +0800
-> >Ram Pai<linuxram@us.ibm.com>  wrote:
-> >
-> >>       The SRIOV capability, namely page size and total_vfs of a device are
-> >>       configured during enumeration phase of the device.
-> >>       This can potentially interfere with the PCI operations of the platform,
-> >>       if the IOV capability of the device is not enabled.
-> >>
-> >>       The following patch postpones the configuration of the IOV capability of the
-> >>       device to a later point, when the IOV capability is explicitly enabled
-> >>       by the device driver.
-> >>
-> >>       The patch is tested on x86 and power platform.
-> >>
-> >>       Signed-off-by: Ram Pai<linuxram@us.ibm.com>
-> >>---
-> >>  drivers/pci/iov.c |    4 ++--
-> >>  1 files changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> >>index b0446dd..c1a6f5c 100644
-> >>--- a/drivers/pci/iov.c
-> >>+++ b/drivers/pci/iov.c
-> >>@@ -346,6 +346,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> >>  			return rc;
-> >>  	}
-> >>
-> >>+	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
-> >>+
-> >>  	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
-> >>  	pci_block_user_cfg_access(dev);
-> >>  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> >>@@ -451,7 +453,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> >>
-> >>  found:
-> >>  	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
-> >>-	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, total);
-> >>  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET,&offset);
-> >>  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE,&stride);
-> >>  	if (!offset || (total>  1&&  !stride))
-> >>@@ -464,7 +465,6 @@ found:
-> >>  		return -EIO;
-> >>
-> >>  	pgsz&= ~(pgsz - 1);
-> >>-	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
-> >>
-> >>  	nres = 0;
-> >>  	for (i = 0; i<  PCI_SRIOV_NUM_BARS; i++) {
-> >
-> >Anyone want to volunteer a tested-by for this one?
-> >
-> >Thanks,
-> 
-> I tested this patch along with Ram's other recent patch for SRIOV:
-> [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
-> 
-> With or without this patch, device assignment to a KVM guest
-> using these patches worked for me.  I used one PF in a quad-function
-> i350, configuring 2 VFs per i350.  I did 4 assign/deassigns to make
-> sure multiple enable/disables worked.
-> 
-> So, the patch doesn't correct any error I was seeing,
-> but it doesn't cause any regression either.
+On Tue, Dec 13, 2011 at 01:05:54AM -0800, Yinghai Lu wrote:
+> +static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+> +{
+> +	u32 l;
+> +	int count = 0;
+> +	u32 lx[50];
+> +	int delay = 1000, step = 20;
+> +	bool found = false;
+> +
+> +again:
+> +	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, &l))
+> +		goto wait;
+> +
+> +	lx[count++] = l;
+> +
+> +	/* some broken boards return 0 or ~0 if a slot is empty: */
+> +	if (l == 0xffffffff || l == 0x00000000 ||
+> +	    l == 0x0000ffff || l == 0xffff0000)
+> +		goto wait;
+> +
+> +	/* Configuration request Retry Status */
+> +	if (l == 0xffff0001)
+> +		goto wait;
+> +
+> +	found = true;
+> +	goto printout;
+> +
+> +wait:
+> +	msleep(step);
+> +	delay -= step;
+> +	if (delay > 0)
+> +		goto again;
 
-Thanks Don for your tested-by.
+This code looks similar to (but not identical to) the code in
+pci_scan_device().  Please make that code a common function that can be
+called from all PCI hotplug drivers, not just this one.
 
-I recollect you had a  issue, which I thought were not related or
-addressed by my patches. If I can get a dmesg of your machine, I probably will
-be able to see the relation.
+> +printout:
+> +	if (count > 1) {
+> +		int i;
+> +		printk(KERN_DEBUG "pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms\n",
+> +			pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
+> +			PCI_FUNC(devfn), count, step);
+> +		for (i = 0; i < count; i++)
+> +			printk(KERN_DEBUG "  [%02d]=%08x\n", i, lx[i]);
+> +	}
+> +
+> +	return found;
+> +}
+> +
+>  int pciehp_check_link_status(struct controller *ctrl)
+>  {
+>  	u16 lnk_status;
+> @@ -280,13 +325,9 @@ int pciehp_check_link_status(struct cont
+>          else
+>                  msleep(1000);
+>  
+> -	/*
+> -	 * Need to wait for 1000 ms after Data Link Layer Link Active
+> -	 * (DLLLA) bit reads 1b before sending configuration request.
+> -	 * We need it before checking Link Training (LT) bit becuase
+> -	 * LT is still set even after DLLLA bit is set on some platform.
+> -	 */
+> -	msleep(1000);
+> +	/* wait 100ms before read pci conf, and try in 1s */
+> +	msleep(100);
+> +	pci_bus_check_dev(ctrl->pcie->port->subordinate, PCI_DEVFN(0, 0));
+>  
+>  	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status);
+>  	if (retval) {
+> @@ -302,14 +343,6 @@ int pciehp_check_link_status(struct cont
+>  		return retval;
+>  	}
+>  
+> -	/*
+> -	 * If the port supports Link speeds greater than 5.0 GT/s, we
+> -	 * must wait for 100 ms after Link training completes before
+> -	 * sending configuration request.
+> -	 */
+> -	if (ctrl->pcie->port->subordinate->max_bus_speed > PCIE_SPEED_5_0GT)
+> -		msleep(100);
+> -
+>  	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
+>  
+>  	return retval;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-RP
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
