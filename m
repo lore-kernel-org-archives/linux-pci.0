@@ -1,125 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:58828 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751319Ab1LGJZl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Dec 2011 04:25:41 -0500
-Received: from /spool/local
-	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Wed, 7 Dec 2011 04:25:40 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id pB79Pb21287778
-	for <linux-pci@vger.kernel.org>; Wed, 7 Dec 2011 04:25:37 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id pB79Pa7g012508
-	for <linux-pci@vger.kernel.org>; Wed, 7 Dec 2011 04:25:37 -0500
-Date: Wed, 7 Dec 2011 17:25:31 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
-	brking@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
-Message-ID: <20111207092531.GF19129@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>
- <20111007232516.GF2980@ram-ThinkPad-T61>
- <1318057168.29415.333.camel@pasglop>
- <20111008075353.GK2980@ram-ThinkPad-T61>
- <1318060793.29415.347.camel@pasglop>
- <20111102140325.004b9dad@jbarnes-desktop>
- <20111103013014.GB393@ram-ThinkPad-T61>
- <20111106023310.GA2383@ram-ThinkPad-T61>
- <20111205103202.29faf6e1@jbarnes-desktop>
- <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:54772 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753513Ab1LNAl3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2011 19:41:29 -0500
+Received: by wgbdr13 with SMTP id dr13so465941wgb.1
+        for <linux-pci@vger.kernel.org>; Tue, 13 Dec 2011 16:41:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQXx_nkOFP2S=hXKyjcFHh4R4f5c+J-aCiDoYS=3Tgdmqw@mail.gmail.com>
+In-Reply-To: <4EE637F3.7070606@xenotime.net>
+References: <20111209163247.1de15dcb5b735ca5e1ad030b@canb.auug.org.au>
+ <d4bdd33396b823c5241c4939b981e8a6.squirrel@xenotime.net> <4EE637F3.7070606@xenotime.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 13 Dec 2011 17:41:08 -0700
+Message-ID: <CAErSpo5dbAJiJ4FhR4bso+4MnJ9mk45T2Z+spmdzRr95w8jAZg@mail.gmail.com>
+Subject: Re: linux-next: Tree for Dec 9 (ibmphp)
+To: Randy Dunlap <rdunlap@xenotime.net>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary=0016e6d784ffda375a04b402a040
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 07, 2011 at 12:22:47AM -0800, Yinghai Lu wrote:
-> On Mon, Dec 5, 2011 at 10:32 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> > On Sun, 6 Nov 2011 10:33:10 +0800
-> > Ram Pai <linuxram@us.ibm.com> wrote:
-> >
-> >>
-> >>   NOTE: Note, there is subtle change in the pci_enable_device() API.
-> >>   Any driver that depends on SRIOV BARS to be enabled in pci_enable_device()
-> >>   can fail.
-> >>
-> >> ---
-> >
-> > Applied to my for-linus branch, thanks.
-> >
-> 
-> please don't push to linus now.
-> 
-> this one causes regression.
-> 
-> please check attached patch.
-> 
-> Thanks
-> 
-> Yinghai
+--0016e6d784ffda375a04b402a040
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> [PATCH] pci: Fix hotplug of Express Module with pci bridges
-> 
-> Found hotplug of one setup does not work with recent change in pci tree.
-> 
-> After checking the bridge conf setup, found bridges get assigned, but not get enabled.
-> 
-> Finally found following commit, simplely ignore bridge resource when enabling pci device.
-> 
-> | commit bbef98ab0f019f1b0c25c1acdf1683c68933d41b
-> | Author: Ram Pai <linuxram@us.ibm.com>
-> | Date:   Sun Nov 6 10:33:10 2011 +0800
-> |
-> |    PCI: defer enablement of SRIOV BARS
-> |...
-> |    NOTE: Note, there is subtle change in the pci_enable_device() API.  Any
-> |    driver that depends on SRIOV BARS to be enabled in pci_enable_device()
-> |    can fail.
-> 
-> Put back bridge resource and ROM resource checking to fix the problem.
-> 
-> That should fix regression like BIOS does not assign correct resource to bridge.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  drivers/pci/pci.c |    6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> Index: linux-2.6/drivers/pci/pci.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci.c
-> +++ linux-2.6/drivers/pci/pci.c
-> @@ -1139,7 +1139,11 @@ static int __pci_enable_device_flags(str
->  	if (atomic_add_return(1, &dev->enable_cnt) > 1)
->  		return 0;		/* already enabled */
->  
-> -	for (i = 0; i < PCI_ROM_RESOURCE; i++)
-> +	/* only skip sriov related */
-> +	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
-> +		if (dev->resource[i].flags & flags)
-> +			bars |= (1 << i);
-> +	for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++)
->  		if (dev->resource[i].flags & flags)
->  			bars |= (1 << i);
->  
+On Mon, Dec 12, 2011 at 10:20 AM, Randy Dunlap <rdunlap@xenotime.net> wrote=
+:
+> On 12/09/2011 10:51 AM, Randy Dunlap wrote:
+>>
+>> On Thu, December 8, 2011 9:32 pm, Stephen Rothwell wrote:
+>>> Hi all,
+>>>
+>>> Changes since 20111208:
+>>
+>> (This build error =A0was first seen in 20111208.)
+>>
+>>
+>> ERROR: "pci_scan_bus" [drivers/pci/hotplug/ibmphp.ko] undefined!
+>>
+>> Full randconfig file is attached.
+>
+>
+> Same for 20111212.
 
-Oops. My patch inadvertently dropped ROM and BRIDGE resources.
+I changed pci_scan_bus() from an inline function (visible to modules)
+to a normal function (by default, not visible to modules), which broke
+the ibmphp.ko build.
 
-This patch is right. However would it help if we did something like this
-to avoid some code duplication?
+The updated patch is attached, as well as the incremental change (just
+adding "EXPORT_SYMBOL(pci_scan_bus);".
 
-	for (i = 0; i < DEVICE_COUNT_RESOURCE;
-		i == PCI_ROM_RESOURCE ? PCI_BRIDGE_RESOURCES: i++)
-		if (dev->resource[i].flags & flags)
-			bars |= (1 << i);
+(Also available at git://github.com/bjorn-helgaas/linux.git on the "pci-sca=
+n-v6"
+branch as bef4a9eefaa69dd9bc998e29d619127d1653683d)
 
-RP
+Bjorn
 
+--0016e6d784ffda375a04b402a040
+Content-Type: application/octet-stream; name="patch.convert-pci_scan_bus"
+Content-Disposition: attachment; filename="patch.convert-pci_scan_bus"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gw5m5wr01
+
+Y29tbWl0IDNhZTRhYjgxM2I2MGQ5YzQyZmJkZmM3OTQ3M2M1NWM1M2NiODU0NDcKQXV0aG9yOiBC
+am9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPgpEYXRlOiAgIFRodSBPY3QgMjcgMTE6
+NDU6MzggMjAxMSAtMDYwMAoKICAgIFBDSTogY29udmVydCBwY2lfc2Nhbl9idXMoKSB0byB1c2Ug
+cGNpX2NyZWF0ZV9yb290X2J1cygpCiAgICAKICAgIEkgcGxhbiB0byBkZXByZWNhdGUgcGNpX3Nj
+YW5fYnVzX3BhcmVudGVkKCksIHNvIHVzZSBwY2lfY3JlYXRlX3Jvb3RfYnVzKCkKICAgIGRpcmVj
+dGx5IGluc3RlYWQuICBwY2lfc2Nhbl9idXMoKSBpdHNlbGYgd2lsbCBiZSByZW1vdmVkIGFzIHNv
+b24gYXMgYWxsCiAgICBjYWxsZXJzIGFyZSBnb25lLCBzbyB0aGlzIGlzIGp1c3QgYW4gaW50ZXJp
+bSBzdGVwLgogICAgCiAgICBTaWduZWQtb2ZmLWJ5OiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bn
+b29nbGUuY29tPgoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3Byb2JlLmMgYi9kcml2ZXJzL3Bj
+aS9wcm9iZS5jCmluZGV4IDlmNGIwMGMuLmYwNjZjOWIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvcGNp
+L3Byb2JlLmMKKysrIGIvZHJpdmVycy9wY2kvcHJvYmUuYwpAQCAtMTY0OSw2ICsxNjQ5LDI1IEBA
+IHN0cnVjdCBwY2lfYnVzICogX19kZXZpbml0IHBjaV9zY2FuX2J1c19wYXJlbnRlZChzdHJ1Y3Qg
+ZGV2aWNlICpwYXJlbnQsCiB9CiBFWFBPUlRfU1lNQk9MKHBjaV9zY2FuX2J1c19wYXJlbnRlZCk7
+CiAKK3N0cnVjdCBwY2lfYnVzICogX19kZXZpbml0IHBjaV9zY2FuX2J1cyhpbnQgYnVzLCBzdHJ1
+Y3QgcGNpX29wcyAqb3BzLAorCQkJCQl2b2lkICpzeXNkYXRhKQoreworCUxJU1RfSEVBRChyZXNv
+dXJjZXMpOworCXN0cnVjdCBwY2lfYnVzICpiOworCisJcGNpX2FkZF9yZXNvdXJjZSgmcmVzb3Vy
+Y2VzLCAmaW9wb3J0X3Jlc291cmNlKTsKKwlwY2lfYWRkX3Jlc291cmNlKCZyZXNvdXJjZXMsICZp
+b21lbV9yZXNvdXJjZSk7CisJYiA9IHBjaV9jcmVhdGVfcm9vdF9idXMoTlVMTCwgYnVzLCBvcHMs
+IHN5c2RhdGEsICZyZXNvdXJjZXMpOworCWlmIChiKSB7CisJCWItPnN1Ym9yZGluYXRlID0gcGNp
+X3NjYW5fY2hpbGRfYnVzKGIpOworCQlwY2lfYnVzX2FkZF9kZXZpY2VzKGIpOworCX0gZWxzZSB7
+CisJCXBjaV9mcmVlX3Jlc291cmNlX2xpc3QoJnJlc291cmNlcyk7CisJfQorCXJldHVybiBiOwor
+fQorRVhQT1JUX1NZTUJPTChwY2lfc2Nhbl9idXMpOworCiAjaWZkZWYgQ09ORklHX0hPVFBMVUcK
+IC8qKgogICogcGNpX3Jlc2Nhbl9idXMgLSBzY2FuIGEgUENJIGJ1cyBmb3IgZGV2aWNlcy4KZGlm
+ZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvcGNpLmggYi9pbmNsdWRlL2xpbnV4L3BjaS5oCmluZGV4
+IDMyMzdjYzguLmEwODI1OTMgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGIv
+aW5jbHVkZS9saW51eC9wY2kuaApAQCAtNjYwLDE1ICs2NjAsNyBAQCBleHRlcm4gc3RydWN0IHBj
+aV9idXMgKnBjaV9maW5kX2J1cyhpbnQgZG9tYWluLCBpbnQgYnVzbnIpOwogdm9pZCBwY2lfYnVz
+X2FkZF9kZXZpY2VzKGNvbnN0IHN0cnVjdCBwY2lfYnVzICpidXMpOwogc3RydWN0IHBjaV9idXMg
+KnBjaV9zY2FuX2J1c19wYXJlbnRlZChzdHJ1Y3QgZGV2aWNlICpwYXJlbnQsIGludCBidXMsCiAJ
+CQkJICAgICAgc3RydWN0IHBjaV9vcHMgKm9wcywgdm9pZCAqc3lzZGF0YSk7Ci1zdGF0aWMgaW5s
+aW5lIHN0cnVjdCBwY2lfYnVzICogX19kZXZpbml0IHBjaV9zY2FuX2J1cyhpbnQgYnVzLCBzdHJ1
+Y3QgcGNpX29wcyAqb3BzLAotCQkJCQkgICB2b2lkICpzeXNkYXRhKQotewotCXN0cnVjdCBwY2lf
+YnVzICpyb290X2J1czsKLQlyb290X2J1cyA9IHBjaV9zY2FuX2J1c19wYXJlbnRlZChOVUxMLCBi
+dXMsIG9wcywgc3lzZGF0YSk7Ci0JaWYgKHJvb3RfYnVzKQotCQlwY2lfYnVzX2FkZF9kZXZpY2Vz
+KHJvb3RfYnVzKTsKLQlyZXR1cm4gcm9vdF9idXM7Ci19CitzdHJ1Y3QgcGNpX2J1cyAqcGNpX3Nj
+YW5fYnVzKGludCBidXMsIHN0cnVjdCBwY2lfb3BzICpvcHMsIHZvaWQgKnN5c2RhdGEpOwogc3Ry
+dWN0IHBjaV9idXMgKnBjaV9jcmVhdGVfcm9vdF9idXMoc3RydWN0IGRldmljZSAqcGFyZW50LCBp
+bnQgYnVzLAogCQkJCSAgICBzdHJ1Y3QgcGNpX29wcyAqb3BzLCB2b2lkICpzeXNkYXRhLAogCQkJ
+CSAgICBzdHJ1Y3QgbGlzdF9oZWFkICpyZXNvdXJjZXMpOwo=
+--0016e6d784ffda375a04b402a040
+Content-Type: application/octet-stream; name="patch.export"
+Content-Disposition: attachment; filename="patch.export"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gw5m663f2
+
+ZGlmZiAtLWdpdCBhLzAxYzEzODJkMzpkcml2ZXJzL3BjaS9wcm9iZS5jIGIvYmVmNGE5ZWVmOmRy
+aXZlcnMvcGNpL3Byb2JlLmMKaW5kZXggODE4MmQ2OS4uZjAxYTAxYSAxMDA2NDQKLS0tIGEvMDFj
+MTM4MmQzOmRyaXZlcnMvcGNpL3Byb2JlLmMKKysrIGIvYmVmNGE5ZWVmOmRyaXZlcnMvcGNpL3By
+b2JlLmMKQEAgLTE2NTgsNiArMTY1OCw3IEBAIHN0cnVjdCBwY2lfYnVzICogX19kZXZpbml0IHBj
+aV9zY2FuX2J1cyhpbnQgYnVzLCBzdHJ1Y3QgcGNpX29wcyAqb3BzLAogCX0KIAlyZXR1cm4gYjsK
+IH0KK0VYUE9SVF9TWU1CT0wocGNpX3NjYW5fYnVzKTsKIAogI2lmZGVmIENPTkZJR19IT1RQTFVH
+CiAvKioK
+--0016e6d784ffda375a04b402a040--
