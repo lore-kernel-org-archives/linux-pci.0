@@ -1,117 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52757 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754163Ab1LNEbQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Dec 2011 23:31:16 -0500
-Date: Tue, 13 Dec 2011 21:31:13 -0700
-From: Matthew Wilcox <matthew@wil.cx>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pciehp: Checking pci conf reading to new added device
-	instead of sleep 1s
-Message-ID: <20111214043113.GC20129@parisc-linux.org>
-References: <1323767154-6859-1-git-send-email-yinghai@kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:34498 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755889Ab1LODoQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Dec 2011 22:44:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1323767154-6859-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <CAHM4w1k-uA1CpbvDAz4ZhETf9_RN1kxf6btXNbxEAvNw6M57rw@mail.gmail.com>
+References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
+	<CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
+	<20111122150613.GA322@google.com>
+	<CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
+	<20111123162937.GF25780@google.com>
+	<20111123144735.64dc9f05@jbarnes-desktop>
+	<CAOS58YPM29xi4Jq5L16fjDQDRzv-yc67tp_yqSwoiFBBbtCZkw@mail.gmail.com>
+	<CAHM4w1k-uA1CpbvDAz4ZhETf9_RN1kxf6btXNbxEAvNw6M57rw@mail.gmail.com>
+Date: Thu, 15 Dec 2011 09:14:15 +0530
+Message-ID: <CAHM4w1kvz5BXf=7+QgibV3gY5wqOpJXSgd0_X+2_0DGhkSGgKg@mail.gmail.com>
+Subject: Re: Crash with sata_sil24 driver
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, Russell King <linux@arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 13, 2011 at 01:05:54AM -0800, Yinghai Lu wrote:
-> +static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
-> +{
-> +	u32 l;
-> +	int count = 0;
-> +	u32 lx[50];
-> +	int delay = 1000, step = 20;
-> +	bool found = false;
-> +
-> +again:
-> +	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, &l))
-> +		goto wait;
-> +
-> +	lx[count++] = l;
-> +
-> +	/* some broken boards return 0 or ~0 if a slot is empty: */
-> +	if (l == 0xffffffff || l == 0x00000000 ||
-> +	    l == 0x0000ffff || l == 0xffff0000)
-> +		goto wait;
-> +
-> +	/* Configuration request Retry Status */
-> +	if (l == 0xffff0001)
-> +		goto wait;
-> +
-> +	found = true;
-> +	goto printout;
-> +
-> +wait:
-> +	msleep(step);
-> +	delay -= step;
-> +	if (delay > 0)
-> +		goto again;
+Hi Tejun,
 
-This code looks similar to (but not identical to) the code in
-pci_scan_device().  Please make that code a common function that can be
-called from all PCI hotplug drivers, not just this one.
+Any suugestion to resolve this issue?
 
-> +printout:
-> +	if (count > 1) {
-> +		int i;
-> +		printk(KERN_DEBUG "pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms\n",
-> +			pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
-> +			PCI_FUNC(devfn), count, step);
-> +		for (i = 0; i < count; i++)
-> +			printk(KERN_DEBUG "  [%02d]=%08x\n", i, lx[i]);
-> +	}
-> +
-> +	return found;
-> +}
-> +
->  int pciehp_check_link_status(struct controller *ctrl)
->  {
->  	u16 lnk_status;
-> @@ -280,13 +325,9 @@ int pciehp_check_link_status(struct cont
->          else
->                  msleep(1000);
->  
-> -	/*
-> -	 * Need to wait for 1000 ms after Data Link Layer Link Active
-> -	 * (DLLLA) bit reads 1b before sending configuration request.
-> -	 * We need it before checking Link Training (LT) bit becuase
-> -	 * LT is still set even after DLLLA bit is set on some platform.
-> -	 */
-> -	msleep(1000);
-> +	/* wait 100ms before read pci conf, and try in 1s */
-> +	msleep(100);
-> +	pci_bus_check_dev(ctrl->pcie->port->subordinate, PCI_DEVFN(0, 0));
->  
->  	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status);
->  	if (retval) {
-> @@ -302,14 +343,6 @@ int pciehp_check_link_status(struct cont
->  		return retval;
->  	}
->  
-> -	/*
-> -	 * If the port supports Link speeds greater than 5.0 GT/s, we
-> -	 * must wait for 100 ms after Link training completes before
-> -	 * sending configuration request.
-> -	 */
-> -	if (ctrl->pcie->port->subordinate->max_bus_speed > PCIE_SPEED_5_0GT)
-> -		msleep(100);
-> -
->  	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
->  
->  	return retval;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards
+Pratyush
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+On Thu, Nov 24, 2011 at 10:06 AM, Pratyush Anand
+<pratyush.anand@gmail.com> wrote:
+> On Thu, Nov 24, 2011 at 7:18 AM, Tejun Heo <tj@kernel.org> wrote:
+>> Hello,
+>>
+>> On Wed, Nov 23, 2011 at 2:47 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+>>>> Weird, that basically means that somehow pci_iomap() isn't
+>>>> synchronous.  ie. you need to way some time after pci_iomap() before
+>>>> being able to access the mapped address.  Seems like arch / pci
+>>>> weirdness.  Jesse, Russell, any ideas?
+>>>
+>>> As Russel said, pci_iomap shouldn't be async.  But maybe something else
+>>> in the init function is doing a chip reset or causing the chip to go
+>>> off into the weeds for a short time?  That's generally the cause of
+>>> target timeouts for PCI devices.
+>>
+>> Yeah, that's much more plausible. Weird that it doesn't happen on x86
+>> tho. Maybe different timeouts? Pratyush, can you look at bus trace and
+>> see what's going on?
+>
+> It also does not happen always with ARM too.  As said earlier only
+> when I run the system at increased CPU frequency.
+> Do you suggest to trace PCIe bus using PCIe bus analyser. I can arange
+> analyser to do that. But I do not see any kind of abort (like PCIe
+> host/target abort) in this case. So will it really help?
+> Is it possible to share datasheet of SIL3531?
+>
+> Regards
+> Pratyush
+>
+>>
+>> Thanks.
+>>
+>> --
+>> tejun
+>>
