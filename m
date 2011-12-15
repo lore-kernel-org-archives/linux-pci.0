@@ -1,65 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from re04.intra2net.com ([82.165.46.26]:51429 "EHLO
-	re04.intra2net.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752445Ab1LHI1K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Dec 2011 03:27:10 -0500
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel Sandy Bridge GPUs
-Date: Thu, 8 Dec 2011 09:27:06 +0100
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Charlie Suffin <charlie.suffin@stratus.com>, stable@kernel.org
-References: <4EDFD5BB.1050906@intra2net.com> <20111207133000.69051c59@jbarnes-desktop>
-In-Reply-To: <20111207133000.69051c59@jbarnes-desktop>
+Received: from mga02.intel.com ([134.134.136.20]:8572 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753687Ab1LOAQi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Dec 2011 19:16:38 -0500
+Date: Wed, 14 Dec 2011 16:16:36 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Vick <weasalandme@yahoo.com>
+Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: xhci errors when hotplugging a NEC uPD720200 USB hub.
+Message-ID: <20111215001636.GA7840@xanatos>
+References: <loom.20111214T205055-477@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201112080927.07063.thomas.jarosch@intra2net.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <loom.20111214T205055-477@post.gmane.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jesse,
-
-On Wednesday, 7. December 2011 22:30:00 Jesse Barnes wrote:
-> > +	/* Check if any interrupt line is still enabled */
-> > +	if (readl(regs + I915_DEIER_REG) != 0) {
-> > +		dev_warn(&dev->dev, "BIOS left Intel GPU interrupts enabled; "
-> > +			"disabling\n");
-> >  {
+On Wed, Dec 14, 2011 at 08:03:57PM +0000, Vick wrote:
+> Hello,
 > 
-> Could really be dev_dbg, I think this will be fairly common. 
+> I have a Sony Vaio VPC-Z series laptop that has an external dock connected via
+> the new Light Peak/Thunderbolt interface. The dock and laptop have a NEC
+> uPD720200 USB hub. lspci when dock is connected:
+> 
+> 04:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller 
+> (rev 04)
+> 1b:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller 
+> (rev 04)
 
-Thanks for your review.
+Woah, that's cool.  I've never seen a USB 3.0 host connected behind a
+Lightpeak interface before.  I thought light peak was only available in
+Macs.
 
-I prefer dev_warn() or dev_info() for two reasons:
+> If I boot the laptop with the dock connected the hub in the dock works fine.
+> I can connect devices and they all work. 
+> If I connect the dock while the laptop is running the USB hub in the dock does
+>  not work. The other devices in the dock (cdrom and network interface) work 
+> just fine after connecting. I see the following errors in dmesg:
+> 
+> pci 0000:1b:00.0: [1033:0194] type 0 class 0x000c03
+> pci 0000:1b:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
+> pci 0000:1b:00.0: PME# supported from D0 D3hot D3cold
+> pci 0000:1b:00.0: PME# disabled
+> ...
+> pci 0000:1b:00.0: BAR 0: can't assign mem (size 0x2000)
+> ...
+> xhci_hcd 0000:1b:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+> xhci_hcd 0000:1b:00.0: PCI INT A disabled
+> xhci_hcd 0000:1b:00.0: init 0000:1b:00.0 fail, -16
+> xhci_hcd: probe of 0000:1b:00.0 failed with error -16
+> 
+> related to the 1b:00 device.
+> I looked at the ACPI code for the laptop and it seems that the moment the dock
+> is plugged in the devices in it are enabled and ready for use and judging by 
+> the working ethernet and cdrom devices I would think that is true.
+> 
+> I'm running a Debian Sid with 3.1.0-1-amd64 kernel.
+> 
+> Any ideas what's wrong? Anything I can do to help fix it?
 
-1. This is new code. If a system crashes in the unlikely event
-because of this change, the user will have a better chance
-to see the message before we tweak around the registers.
+Can you compile a custom kernel with CONFIG_USB_XHCI_HCD_DEBUGGING and
+CONFIG_USB_DEBUG turned on?  We need to figure out whether it's an issue
+with the xHCI driver, or PCI hotplug.  Send the full dmesg, please.
 
-2. All other quirks either use dev_warn() (like the Intel e100 quirk
-which is similar to this fix, see quirk_e100_interrupt()) or dev_info().
-
-If there is something wrong and we activate a workaround,
-let the user know about it, at least for now.
-
-User impact is minimal and users with graphical boot up don't see
-kernel messages anyway.
-
-> I think we also need to ack any outstanding interrupts after disabling
-> them in IER by writing IIR back on itself. Can you test that?
-
-Can you go into more detail why we need this?
-
-Looking at the logic diagram at page 23 of this document
-http://intellinuxgraphics.org/documentation/SNB/IHD_OS_Vol3_Part2.pdf
-
-tells me we don't necessarily need this, no interrupt should slip through.
-
-Also the i915 driver first disables IER and then clears IIR
-in drivers/gpu/drm/i915/i915_irq.c: ivybridge_irq_handler()
-or ironlake_irq_handler(). So it always initializes the GPU to
-a sane state before enabling the interrupts.
-
-Thanks,
-Thomas
+Sarah Sharp
