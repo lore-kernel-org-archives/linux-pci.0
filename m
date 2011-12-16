@@ -1,90 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63136 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756127Ab1LEVZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Dec 2011 16:25:08 -0500
-Message-ID: <4EDD36AE.8060208@redhat.com>
-Date: Mon, 05 Dec 2011 16:25:02 -0500
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
+Received: from mail-lpp01m010-f74.google.com ([209.85.215.74]:35495 "EHLO
+	mail-lpp01m010-f74.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760936Ab1LPWjq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2011 17:39:46 -0500
+Received: by lagu2 with SMTP id u2so115360lag.1
+        for <linux-pci@vger.kernel.org>; Fri, 16 Dec 2011 14:39:44 -0800 (PST)
+Subject: [PATCH 6/6] parisc/PCI: use list_for_each_entry() for bus->devices
+	traversal
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: Ram Pai <linuxram@us.ibm.com>, linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
-	brking@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH 1/1] PCI:delay configuration of SRIOV capability
-References: <20111006210320.GA14959@us.ibm.com>	<CAErSpo7b_6_AaZXW9XBx5p3-0PZJk-1jeCork__KePdzCS89OA@mail.gmail.com>	<1317970100.29415.305.camel@pasglop>	<CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>	<20111007232516.GF2980@ram-ThinkPad-T61>	<1318057168.29415.333.camel@pasglop>	<20111008075353.GK2980@ram-ThinkPad-T61>	<1318060793.29415.347.camel@pasglop>	<20111102140325.004b9dad@jbarnes-desktop>	<20111103013014.GB393@ram-ThinkPad-T61>	<20111106023357.GB2383@ram-ThinkPad-T61> <20111205101756.7bccfbae@jbarnes-desktop>
-In-Reply-To: <20111205101756.7bccfbae@jbarnes-desktop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-parisc@vger.kernel.org
+Date: Fri, 16 Dec 2011 15:32:00 -0700
+Message-ID: <20111216223200.5963.79616.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+References: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/05/2011 01:17 PM, Jesse Barnes wrote:
-> On Sun, 6 Nov 2011 10:33:57 +0800
-> Ram Pai<linuxram@us.ibm.com>  wrote:
->
->>        The SRIOV capability, namely page size and total_vfs of a device are
->>        configured during enumeration phase of the device.
->>        This can potentially interfere with the PCI operations of the platform,
->>        if the IOV capability of the device is not enabled.
->>
->>        The following patch postpones the configuration of the IOV capability of the
->>        device to a later point, when the IOV capability is explicitly enabled
->>        by the device driver.
->>
->>        The patch is tested on x86 and power platform.
->>
->>        Signed-off-by: Ram Pai<linuxram@us.ibm.com>
->> ---
->>   drivers/pci/iov.c |    4 ++--
->>   1 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index b0446dd..c1a6f5c 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -346,6 +346,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>   			return rc;
->>   	}
->>
->> +	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
->> +
->>   	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->>   	pci_block_user_cfg_access(dev);
->>   	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->> @@ -451,7 +453,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
->>
->>   found:
->>   	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
->> -	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, total);
->>   	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET,&offset);
->>   	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE,&stride);
->>   	if (!offset || (total>  1&&  !stride))
->> @@ -464,7 +465,6 @@ found:
->>   		return -EIO;
->>
->>   	pgsz&= ~(pgsz - 1);
->> -	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
->>
->>   	nres = 0;
->>   	for (i = 0; i<  PCI_SRIOV_NUM_BARS; i++) {
->
-> Anyone want to volunteer a tested-by for this one?
->
-> Thanks,
+Replace open-coded list traversal with list_for_each_entry().
 
-I tested this patch along with Ram's other recent patch for SRIOV:
-[RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
+Note that parisc lba_fixup_bus() previously enabled FBB/PERR/SERR
+repeatedly on the same device instead of doing it on all devices on
+the bus.
 
-With or without this patch, device assignment to a KVM guest
-using these patches worked for me.  I used one PF in a quad-function
-i350, configuring 2 VFs per i350.  I did 4 assign/deassigns to make
-sure multiple enable/disables worked.
+CC: linux-parisc@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/parisc/dino.c    |    6 ++----
+ drivers/parisc/lba_pci.c |    7 +++----
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
-So, the patch doesn't correct any error I was seeing,
-but it doesn't cause any regression either.
-
-Tested-by: Donald Dutile <ddutile@redhat.com>
-
+diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+index 7ff10c1..6f5bf3e 100644
+--- a/drivers/parisc/dino.c
++++ b/drivers/parisc/dino.c
+@@ -478,14 +478,12 @@ dino_card_setup(struct pci_bus *bus, void __iomem *base_addr)
+ 	if (ccio_allocate_resource(dino_dev->hba.dev, res, _8MB,
+ 				F_EXTEND(0xf0000000UL) | _8MB,
+ 				F_EXTEND(0xffffffffUL) &~ _8MB, _8MB) < 0) {
+-		struct list_head *ln, *tmp_ln;
++		struct pci_dev *dev, *tmp;
+ 
+ 		printk(KERN_ERR "Dino: cannot attach bus %s\n",
+ 		       dev_name(bus->bridge));
+ 		/* kill the bus, we can't do anything with it */
+-		list_for_each_safe(ln, tmp_ln, &bus->devices) {
+-			struct pci_dev *dev = pci_dev_b(ln);
+-
++		list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
+ 			list_del(&dev->bus_list);
+ 		}
+ 			
+diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+index d5f3d75..f0b00f8 100644
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -630,7 +630,7 @@ truncate_pat_collision(struct resource *root, struct resource *new)
+ static void
+ lba_fixup_bus(struct pci_bus *bus)
+ {
+-	struct list_head *ln;
++	struct pci_dev *dev;
+ #ifdef FBB_SUPPORT
+ 	u16 status;
+ #endif
+@@ -712,9 +712,8 @@ lba_fixup_bus(struct pci_bus *bus)
+ 
+ 	}
+ 
+-	list_for_each(ln, &bus->devices) {
++	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+-		struct pci_dev *dev = pci_dev_b(ln);
+ 
+ 		DBG("lba_fixup_bus() %s\n", pci_name(dev));
+ 
+@@ -793,7 +792,7 @@ lba_fixup_bus(struct pci_bus *bus)
+ 	}
+ 
+ 	/* Lastly enable FBB/PERR/SERR on all devices too */
+-	list_for_each(ln, &bus->devices) {
++	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		(void) pci_read_config_word(dev, PCI_COMMAND, &status);
+ 		status |= PCI_COMMAND_PARITY | PCI_COMMAND_SERR | fbb_enable;
+ 		(void) pci_write_config_word(dev, PCI_COMMAND, status);
 
