@@ -1,72 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201112011815.pB1IFGZe004948@farm-0002.internal.tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Thu, 1 Dec 2011 12:59:19 -0500
-Subject: [PATCH] lib/devres.c: allow specifying NO_IOPORT while using PCI
-To: linux-kernel@vger.kernel.org, <linux-pci@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>,
-	Rolf Eike Beer <eike-kernel@sf-tec.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Maxin B. John" <maxin.john@gmail.com>, Tejun Heo <tj@kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	"Lucas De Marchi" <lucas.demarchi@profusion.mobi>,
-	"Paul Mundt" <lethal@linux-sh.org>,
-	"Jesse Barnes" <jbarnes@virtuousgeek.org>,
-	"David S. Miller" <davem@davemloft.net>
-References: <cover.1322592494.git.mst@redhat.com> <201111301404.41544.arnd@arndb.de> <20111130143122.GC21413@redhat.com> <201111301549.57430.arnd@arndb.de>
-In-Reply-To: <201111301549.57430.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:44687 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760898Ab1LPWbu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2011 17:31:50 -0500
+Received: by yenm5 with SMTP id m5so459948yen.1
+        for <linux-pci@vger.kernel.org>; Fri, 16 Dec 2011 14:31:50 -0800 (PST)
+Subject: [PATCH 4/6] sunhme/PCI: use list_for_each_entry() for bus->devices
+	traversal
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	netdev@vger.kernel.org
+Date: Fri, 16 Dec 2011 15:31:49 -0700
+Message-ID: <20111216223149.5963.61942.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+References: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The tile architecture does not support IOPORT, but it does support
-PCI and IOMEM.  We were not specifying NO_IOPORT, though, because it
-was causing a couple of functions (pcim_iomap_regions and pcim_iomap_table)
-that are needed to not get provided.  Moving the #ifdef fixes this
-so that those functions and some related ones are now always provided
-if CONFIG_PCI is true.
+Replace open-coded list traversal with list_for_each_entry().
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+CC: David S. Miller <davem@davemloft.net>
+CC: netdev@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-This commit was inspired by the recent linux-arch discussion about
-what to do with ioport_map on architectures that can't do it, so I went
-back to figure out why I hadn't set NO_IOPORT in the first place.
-I'm willing to take this into the tile tree if the PCI folks are OK
-with it, or if someone else can pick it up, that's fine too.
+ drivers/net/ethernet/sun/sunhme.c |    9 ++-------
+ 1 files changed, 2 insertions(+), 7 deletions(-)
 
- arch/tile/Kconfig |    2 +-
- lib/devres.c      |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-index 70a0de4..e7b1e07 100644
---- a/arch/tile/Kconfig
-+++ b/arch/tile/Kconfig
-@@ -333,7 +333,7 @@ config NO_IOMEM
- 	def_bool !PCI
+diff --git a/drivers/net/ethernet/sun/sunhme.c b/drivers/net/ethernet/sun/sunhme.c
+index cf14ab9..1d00a4c 100644
+--- a/drivers/net/ethernet/sun/sunhme.c
++++ b/drivers/net/ethernet/sun/sunhme.c
+@@ -2849,7 +2849,7 @@ err_out:
+ static int is_quattro_p(struct pci_dev *pdev)
+ {
+ 	struct pci_dev *busdev = pdev->bus->self;
+-	struct list_head *tmp;
++	struct pci_dev *this_pdev;
+ 	int n_hmes;
  
- config NO_IOPORT
--	def_bool !PCI
-+	def_bool y
+ 	if (busdev == NULL ||
+@@ -2858,15 +2858,10 @@ static int is_quattro_p(struct pci_dev *pdev)
+ 		return 0;
  
- source "drivers/pci/Kconfig"
+ 	n_hmes = 0;
+-	tmp = pdev->bus->devices.next;
+-	while (tmp != &pdev->bus->devices) {
+-		struct pci_dev *this_pdev = pci_dev_b(tmp);
+-
++	list_for_each_entry(this_pdev, &pdev->bus->devices, bus_list) {
+ 		if (this_pdev->vendor == PCI_VENDOR_ID_SUN &&
+ 		    this_pdev->device == PCI_DEVICE_ID_SUN_HAPPYMEAL)
+ 			n_hmes++;
+-
+-		tmp = tmp->next;
+ 	}
  
-diff --git a/lib/devres.c b/lib/devres.c
-index 7c0e953..5f36cfd 100644
---- a/lib/devres.c
-+++ b/lib/devres.c
-@@ -144,6 +144,7 @@ void devm_ioport_unmap(struct device *dev, void __iomem *addr)
- 			       devm_ioport_map_match, (void *)addr));
- }
- EXPORT_SYMBOL(devm_ioport_unmap);
-+#endif
- 
- #ifdef CONFIG_PCI
- /*
-@@ -349,4 +350,3 @@ void pcim_iounmap_regions(struct pci_dev *pdev, u16 mask)
- }
- EXPORT_SYMBOL(pcim_iounmap_regions);
- #endif
--#endif
--- 
-1.6.5.2
+ 	if (n_hmes != 4)
 
