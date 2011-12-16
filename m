@@ -1,109 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:63865 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932947Ab1LFHsv convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:4:1>);
-	Tue, 6 Dec 2011 02:48:51 -0500
-Message-Id: <4EDDD71A02000078000659F1@nat28.tlf.novell.com>
-Date: Tue, 06 Dec 2011 07:49:30 +0000
-From: "Jan Beulich" <JBeulich@suse.com>
-To: <mingo@elte.hu>, <tglx@linutronix.de>, <hpa@zytor.com>
-Cc: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	"Jesse Barnes" <jbarnes@virtuousgeek.org>
-Subject: [PATCH] PCI/IO-APIC: allow PCI_IOAPIC to be user configurable
- on x86
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:57883 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932694Ab1LPWeY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2011 17:34:24 -0500
+Received: by ggdk6 with SMTP id k6so3152500ggd.19
+        for <linux-pci@vger.kernel.org>; Fri, 16 Dec 2011 14:34:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20111216223154.5963.39965.stgit@bhelgaas.mtv.corp.google.com>
+References: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+	<20111216223154.5963.39965.stgit@bhelgaas.mtv.corp.google.com>
+Date: Fri, 16 Dec 2011 14:34:24 -0800
+Message-ID: <CANEJEGsm-vz767_98uaDT48mYwG_dJnUOmhqkgGPRqJpHhiFDA@mail.gmail.com>
+Subject: Re: [PATCH 5/6] de4x5/PCI: use list_for_each_entry() for bus->devices traversal
+From: Grant Grundler <grantgrundler@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	Grant Grundler <grundler@parisc-linux.org>,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jesse asked for this to go through the x86 tree, so I'm re-sending it
-this way. Also correcting Bjorn's email address.
+On Fri, Dec 16, 2011 at 2:31 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Replace open-coded list traversal with list_for_each_entry().
 
-******************************************************
+Hi Bjorn,
 
-This adjusts PCI_IOAPIC to be user configurable (possibly as a module)
-on x86, since the base architecture code for adding IO-APICs
-dynamically isn't there yet (and hence having the code present
-everywhere is pretty pointless).
+I don't have any de4x5 devices to test this but it looks correct to me.
 
-To make this consistent, a MODULE_DEVICE_TABLE() declaration gets
-added, the class specifications get corrected (by properly using
-PCI_DEVICE_CLASS() intended for purposes like this), and the probe and
-remove functions get their sections adjusted.
+Thanks!
+grant
 
-Signed-off-by: Jan Beulich <jbeulich@suse.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-
----
- drivers/pci/Kconfig  |    4 ++--
- drivers/pci/ioapic.c |   15 +++++++--------
- 2 files changed, 9 insertions(+), 10 deletions(-)
-
---- 3.2-rc3/drivers/pci/Kconfig
-+++ 3.2-rc3-pci-ioapic/drivers/pci/Kconfig
-@@ -98,11 +98,11 @@ config PCI_PASID
- 	  If unsure, say N.
- 
- config PCI_IOAPIC
--	bool
-+	tristate "PCI IO-APIC hotplug support" if X86
- 	depends on PCI
- 	depends on ACPI
- 	depends on HOTPLUG
--	default y
-+	default !X86
- 
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
---- 3.2-rc3/drivers/pci/ioapic.c
-+++ 3.2-rc3-pci-ioapic/drivers/pci/ioapic.c
-@@ -17,7 +17,7 @@
-  */
- 
- #include <linux/pci.h>
--#include <linux/export.h>
-+#include <linux/module.h>
- #include <linux/acpi.h>
- #include <linux/slab.h>
- #include <acpi/acpi_bus.h>
-@@ -27,7 +27,7 @@ struct ioapic {
- 	u32		gsi_base;
- };
- 
--static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
-+static int __devinit ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
- {
- 	acpi_handle handle;
- 	acpi_status status;
-@@ -88,7 +88,7 @@ exit_free:
- 	return -ENODEV;
- }
- 
--static void ioapic_remove(struct pci_dev *dev)
-+static void __devexit ioapic_remove(struct pci_dev *dev)
- {
- 	struct ioapic *ioapic = pci_get_drvdata(dev);
- 
-@@ -99,13 +99,12 @@ static void ioapic_remove(struct pci_dev
- }
- 
- 
--static struct pci_device_id ioapic_devices[] = {
--	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--	  PCI_CLASS_SYSTEM_PIC_IOAPIC << 8, 0xffff00, },
--	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--	  PCI_CLASS_SYSTEM_PIC_IOXAPIC << 8, 0xffff00, },
-+static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
-+	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
-+	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
- 	{ }
- };
-+MODULE_DEVICE_TABLE(pci, ioapic_devices);
- 
- static struct pci_driver ioapic_driver = {
- 	.name		= "ioapic",
-
-
-
+>
+> CC: Grant Grundler <grundler@parisc-linux.org>
+> CC: netdev@vger.kernel.org
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/net/ethernet/dec/tulip/de4x5.c |    9 ++-------
+>  1 files changed, 2 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/dec/tulip/de4x5.c b/drivers/net/ethernet/dec/tulip/de4x5.c
+> index 871bcaa..3f5d3b9 100644
+> --- a/drivers/net/ethernet/dec/tulip/de4x5.c
+> +++ b/drivers/net/ethernet/dec/tulip/de4x5.c
+> @@ -2127,14 +2127,9 @@ srom_search(struct net_device *dev, struct pci_dev *pdev)
+>     u_long iobase = 0;                     /* Clear upper 32 bits in Alphas */
+>     int i, j;
+>     struct de4x5_private *lp = netdev_priv(dev);
+> -    struct list_head *walk;
+> -
+> -    list_for_each(walk, &pdev->bus_list) {
+> -       struct pci_dev *this_dev = pci_dev_b(walk);
+> -
+> -       /* Skip the pci_bus list entry */
+> -       if (list_entry(walk, struct pci_bus, devices) == pdev->bus) continue;
+> +    struct pci_dev *this_dev;
+>
+> +    list_for_each_entry(this_dev, &pdev->bus->devices, bus_list) {
+>        vendor = this_dev->vendor;
+>        device = this_dev->device << 8;
+>        if (!(is_DC21040 || is_DC21041 || is_DC21140 || is_DC2114x)) continue;
+>
