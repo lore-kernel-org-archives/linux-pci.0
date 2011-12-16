@@ -1,83 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:54541 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751140Ab1LESVw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 13:21:52 -0500
-Date: Mon, 5 Dec 2011 10:24:23 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Joerg Roedel <joerg.roedel@amd.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<bhelgaas@google.com>
-Subject: Re: [PATCH 0/2] PCI: PRI/PASSID cleanup and fix
-Message-ID: <20111205102423.476b7ce4@jbarnes-desktop>
-In-Reply-To: <20111128104055.GI11876@amd.com>
-References: <20111111170319.32668.48479.stgit@bling.home>
-	<20111123104705.GC11876@amd.com>
-	<20111123144510.56ff6d1d@jbarnes-desktop>
-	<20111128104055.GI11876@amd.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/T5RUGONncNLHnK9XpBg_vvN"; protocol="application/pgp-signature"
+Received: from mail-yw0-f74.google.com ([209.85.213.74]:55238 "EHLO
+	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760899Ab1LPWba (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2011 17:31:30 -0500
+Received: by yhjj51 with SMTP id j51so578074yhj.1
+        for <linux-pci@vger.kernel.org>; Fri, 16 Dec 2011 14:31:29 -0800 (PST)
+Subject: [PATCH 0/6] use list_for_each_entry() for bus->devices traversal
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 16 Dec 2011 15:31:29 -0700
+Message-ID: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/T5RUGONncNLHnK9XpBg_vvN
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+These are pretty trivial; just replacing open-coded or list_for_each()
+traversals with list_for_each_entry().
 
-On Mon, 28 Nov 2011 11:40:55 +0100
-Joerg Roedel <joerg.roedel@amd.com> wrote:
+Most don't change any behavior, but parisc had what looks like a bug:
+it enabled FBB/PERR/SERR repeatedly on the same device instead of on all
+devices on the bus.
 
-> On Wed, Nov 23, 2011 at 02:45:10PM -0800, Jesse Barnes wrote:
-> > On Wed, 23 Nov 2011 11:47:05 +0100
-> > Joerg Roedel <joerg.roedel@amd.com> wrote:
-> >=20
-> > > On Fri, Nov 11, 2011 at 10:06:23AM -0700, Alex Williamson wrote:
-> > > > Alex Williamson (2):
-> > > >       PCI: More PRI/PASID cleanup
-> > > >       PCI: Enable is not exposed as a PASID capability
-> > >=20
-> > > For both:
-> > >=20
-> > > Reviewed-by: Joerg Roedel <joerg.roedel@amd.com>
-> > > Tested-by: Joerg Roedel <joerg.roedel@amd.com>
-> >=20
-> > Ok, thanks guys.  I'll queue these up after Thanksgiving.
-> >=20
-> > --=20
-> > Jesse Barnes, Intel Open Source Technology Center
->=20
-> Great. Can you provide a seperate branch with these changes that I can
-> pull into my tree, please? I have upcoming changes that will conflict
-> with these patches. And I would like to solve them before merge.
+I finally built some cross-compilers, so these have all been compiled.
 
-Ok, I pushed these to a 'pri-changes' branch, which is a superset of my
-current linux-next branch.
+---
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Bjorn Helgaas (6):
+      frv/PCI: use list_for_each_entry() for bus->devices traversal
+      MIPS: PCI: use list_for_each_entry() for bus->devices traversal
+      sh/PCI: use list_for_each_entry() for bus->devices traversal
+      sunhme/PCI: use list_for_each_entry() for bus->devices traversal
+      de4x5/PCI: use list_for_each_entry() for bus->devices traversal
+      parisc/PCI: use list_for_each_entry() for bus->devices traversal
 
---Sig_/T5RUGONncNLHnK9XpBg_vvN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+ arch/frv/mb93090-mb00/pci-vdk.c        |    4 +---
+ arch/mips/pci/pci.c                    |    5 +----
+ arch/mips/pmc-sierra/yosemite/ht-irq.c |   10 ----------
+ arch/sh/drivers/pci/pci.c              |    5 +----
+ drivers/net/ethernet/dec/tulip/de4x5.c |    9 ++-------
+ drivers/net/ethernet/sun/sunhme.c      |    9 ++-------
+ drivers/parisc/dino.c                  |    6 ++----
+ drivers/parisc/lba_pci.c               |    7 +++----
+ 8 files changed, 12 insertions(+), 43 deletions(-)
 
-iQIcBAEBAgAGBQJO3QxXAAoJEIEoDkX4Qk9hBnwQAIiUBlknLHytvLdJAQfQXxF/
-ikH239OpEpTYzaTxWIo7WI0MRuKOtfroMtZUXG/u0lo+vvF1d7bx9MfPdpSGUpzj
-VQ18/kTLBnaqmKAeSX4rCaUI2bc5w00dJn0+UCW1tdDxJbYpwar1keNLxRSEULvJ
-2Dj5Uo3zVtqe8Je3To8/6uAxq5vP0R7vm3DEo4MGhczT8Nr0vALk1WnZxSJRUK9M
-CLIE6mHrkEQeAMkvbh7SW2vjSQIzPATiBjPg/cf0GVaTXv8EIuvvadFOaqlr3Ga4
-qdMc866T5RPp8FigplDzf0UdgVd/c8DWlndz8glIBjYPaPqI5GsrsFIZMA+0SLVn
-Kd/QyOjgN8ah19bNfiTG3pJ4ISN6aVPnvx4Nqkg5OFAvUMxbOO+CWcsDGVUmMnbx
-E23GpIW4PRPw4gzBc6CWqt+oRz7/ZvkC2oyr8ue/ioXKMszI/EleYJm6fwkkg+ey
-05FgYMiKLonpgG/XOZEZy6cTGVsTyJk3I6muQ62rtoG+Q/jYKFWKZa0szCtKH31N
-D08uq1uMbkFgTHp2Rq4FkGuO3n2CrRmdFLxLwPImUJm8Uq7Rju/EpMkscoJzYEWI
-ns7dmr1ZxEO8ECdsQcr50uxRNJTr8J6jVKx1yMO1lTGxCDXW0iKq/ixLPvJVP4J/
-eqzAcVxxKFVYDHWXfVTE
-=a5zJ
------END PGP SIGNATURE-----
-
---Sig_/T5RUGONncNLHnK9XpBg_vvN--
+-- 
+Bjorn
