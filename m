@@ -1,171 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy9.bluehost.com ([69.89.24.6]:44505 "HELO
-	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932126Ab1LET1q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 14:27:46 -0500
-Date: Mon, 5 Dec 2011 11:30:21 -0800
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:40921 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752389Ab1LQR3l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 17 Dec 2011 12:29:41 -0500
+Date: Sat, 17 Dec 2011 09:29:35 -0800
 From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: Xorg intel server not finding the graphics device
-Message-ID: <20111205113021.7841a4b2@jbarnes-desktop>
-In-Reply-To: <Pine.LNX.4.44L0.1111281639090.1405-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1111281639090.1405-100000@iolanthe.rowland.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [git pull] PCI fixes
+Message-ID: <20111217092935.2c2e075e@jbarnes-desktop>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hGfVq_SrrL/sYfAhvY=6dvM"; protocol="application/pgp-signature"
+ boundary="Sig_/Jqot3q7I0bAoN0p2nzClItU"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/hGfVq_SrrL/sYfAhvY=6dvM
+--Sig_/Jqot3q7I0bAoN0p2nzClItU
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-Hm, afaik the 865G should still work, maybe Fedora blacklisted the
-kernel support for it in newer bits?  If so, you'll need to use the
-vesa driver instead of the intel driver...
+The following changes since commit
+8e8da023f5af71662867729db5547dc54786093c:
 
-Jesse
+  x86: Fix boot failures on older AMD CPU's (2011-12-04 11:57:09 -0800)
 
-On Mon, 28 Nov 2011 17:15:37 -0500 (EST)
-Alan Stern <stern@rowland.harvard.edu> wrote:
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci for-linus
 
-> Jesse:
->=20
-> After an upgrade to Fedora-16, my Xorg server has a problem.  It no=20
-> longer binds to the intel driver to the 865G graphics chip.
->=20
-> Here's the relevant portion of the Xorg log:
->=20
-> --------------------------------------------------------------------
-> X.Org X Server 1.11.2
-> Release Date: 2011-11-04
-> ...
-> [   672.192] (--) PCI:*(0:0:2:0) 8086:2572:14a4:2181 rev 2, Mem @ 0xf0000=
-000/134217728, 0xfe780000/524288, I/O @ 0x0000ec00/8, BIOS @ 0x????????/131=
-072
-> ...
-> [   672.331] (II) Loading /usr/lib/xorg/modules/drivers/intel_drv.so
-> [   672.426] (II) Module intel: vendor=3D"X.Org Foundation"
-> [   672.426] 	compiled for 1.11.2, module version =3D 2.17.0
-> [   672.426] 	Module class: X.Org Video Driver
-> [   672.426] 	ABI class: X.Org Video Driver, version 11.0
-> [   672.426] (II) intel: Driver for Intel Integrated Graphics Chipsets: i=
-810,
-> 	i810-dc100, i810e, i815, i830M, 845G, 854, 852GM/855GM, 865G, 915G,
-> 	E7221 (i915), 915GM, 945G, 945GM, 945GME, Pineview GM, Pineview G,
-> 	965G, G35, 965Q, 946GZ, 965GM, 965GME/GLE, G33, Q35, Q33, GM45,
-> 	4 Series, G45/G43, Q45/Q43, G41, B43, B43, Clarkdale, Arrandale,
-> 	Sandybridge Desktop (GT1), Sandybridge Desktop (GT2),
-> 	Sandybridge Desktop (GT2+), Sandybridge Mobile (GT1),
-> 	Sandybridge Mobile (GT2), Sandybridge Mobile (GT2+),
-> 	Sandybridge Server, Ivybridge Mobile (GT1), Ivybridge Mobile (GT2),
-> 	Ivybridge Desktop (GT1), Ivybridge Desktop (GT2), Ivybridge Server
-> [   672.426] (--) using VT number 7
->=20
-> [   672.444] (EE) No devices detected.
-> [   672.444]=20
-> Fatal server error:
-> [   672.444] no screens found
-> --------------------------------------------------------------------
->=20
-> Here's the equivalent part of the log from before I upgraded:
->=20
-> --------------------------------------------------------------------
-> X.Org X Server 1.9.5
-> Release Date: 2011-03-17
-> ...
-> [    80.575] (--) PCI:*(0:0:2:0) 8086:2572:14a4:2181 rev 2, Mem @ 0xf0000=
-000/134217728, 0xfe780000/524288, I/O @ 0x0000ec00/8, BIOS @ 0x????????/131=
-072
-> ...
-> [    81.003] (II) intel: Driver for Intel Integrated Graphics Chipsets: i=
-810,
-> 	i810-dc100, i810e, i815, i830M, 845G, 852GM/855GM, 865G, 915G,
-> 	E7221 (i915), 915GM, 945G, 945GM, 945GME, Pineview GM, Pineview G,
-> 	965G, G35, 965Q, 946GZ, 965GM, 965GME/GLE, G33, Q35, Q33, GM45,
-> 	4 Series, G45/G43, Q45/Q43, G41, B43, Clarkdale, Arrandale
-> [    81.004] (--) using VT number 7
->=20
-> [    81.014] drmOpenDevice: node name is /dev/dri/card0
-> [    81.014] drmOpenDevice: open result is 9, (OK)
-> [    81.014] drmOpenByBusid: Searching for BusID pci:0000:00:02.0
-> [    81.014] drmOpenDevice: node name is /dev/dri/card0
-> [    81.014] drmOpenDevice: open result is 9, (OK)
-> [    81.014] drmOpenByBusid: drmOpenMinor returns 9
-> [    81.014] drmOpenByBusid: Interface 1.4 failed, trying 1.1
-> [    81.014] drmOpenByBusid: drmGetBusid reports pci:0000:00:02.0
-> [    81.014] (=3D=3D) intel(0): Depth 24, (--) framebuffer bpp 32
-> [    81.014] (=3D=3D) intel(0): RGB weight 888
-> [    81.014] (=3D=3D) intel(0): Default visual is TrueColor
-> [    81.050] (II) intel(0): Integrated Graphics Chipset: Intel(R) 865G
-> [    81.050] (--) intel(0): Chipset: "865G"
-> --------------------------------------------------------------------
->=20
-> In both cases, the dri and dri2 extensions were loaded correctly.
->=20
-> Here's the part of the boot-up log showing the graphics detection:
->=20
-> [    1.304112] Linux agpgart interface v0.103
-> [    1.304405] agpgart-intel 0000:00:00.0: Intel 865 Chipset
-> [    1.304581] agpgart-intel 0000:00:00.0: detected gtt size: 131072K tot=
-al, 131072K mappable
-> [    1.304960] agpgart-intel 0000:00:00.0: detected 8192K stolen memory
-> [    1.305364] agpgart-intel 0000:00:00.0: AGP aperture is 128M @ 0xf0000=
-000
->=20
-> The /dev/dri directory does exist:
->=20
-> $ ls -l /dev/dri
-> total 0
-> crw-rw----+ 1 root video 226, 0 Nov 28 16:12 card0
->=20
-> There is no controlD64 file; I noticed that it is present in the Fedora
-> graphical installation environment (which _does_ work).  Is it
-> important?  If it is, what driver creates that file?  Or is some udev
-> rule messed up?
->=20
-> The Xorg configuration is slightly different from what it was before,=20
-> but not much.  Here is the relevant section (which hasn't changed):
->=20
-> Section "Device"
-> 	Identifier  "card0"
-> 	Driver      "intel"
-> 	VendorName  "Intel Corporation"
-> 	BusID       "PCI:0:2:0"
-> 	Option      "NoAccel" "yes"
-> 	Option      "BackingStore"      "on"
-> EndSection
->=20
-> Do you have any idea what's going wrong and how I can fix it?  Life=20
-> without a GUI is rather inconvenient.  :-(
->=20
-> Thanks,
->=20
-> Alan Stern
->=20
->=20
+Just a few regression fixes.  We have a fix for the extra msleep you
+pointed out last time as well, but I was saving it for -next since it
+took awhile for Kenji-san and Yinghai to settle on something, and it
+changes a core behavior.
 
---Sig_/hGfVq_SrrL/sYfAhvY=6dvM
+Ajaykumar Hotchandani (1):
+      PCI: Set device power state to PCI_D0 for device without native PM su=
+pport
+
+James Bottomley (1):
+      PCI: fix ats compile failure
+
+Rafael J. Wysocki (1):
+      PCI hotplug: Always allow acpiphp to handle non-PCIe bridges
+
+Ram Pai (1):
+      PCI: defer enablement of SRIOV BARS
+
+ drivers/pci/ats.c                  |    1 +
+ drivers/pci/hotplug/acpiphp_glue.c |   30 ++++++++++++------------------
+ drivers/pci/iov.c                  |    7 +++++++
+ drivers/pci/pci.c                  |    5 ++++-
+ 4 files changed, 24 insertions(+), 19 deletions(-)
+
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/Jqot3q7I0bAoN0p2nzClItU
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAEBAgAGBQJO3RvNAAoJEIEoDkX4Qk9hM1sP/RHQ1Em1hVbgLxU/PyY3DK9a
-UpuntPPgeaRK+T+MIAL1sTs4gfzSMbdjbiV9etvGXY5cESt4vfuoPassUGxBMf/E
-6oMgUKdZ2N2TdUUEgSIAxS/v2fdKe/NJXxoJ7qavdGJzaqrvanbNP3bF/9jJzncu
-ZcVyQJcMFifPQFMU3Cv/feAzY1vTCKq1xeVFd+Thfh38SvKY/TNcxKATdq8/i9Ww
-HaEX0WGmcxJDw02FMB8saLBSQOI3Lqa4PTV+7iwI/lqa6Ib2uoHIT14lYrZXyGwF
-I8TtO71Z3VLwWgJ4QzqKz7Ur35eHpeahvCKkhvGsIYZAWnmYBgh4mkfjiByPo4wY
-uPdYL3iyY47bn4DRGKf4Ft2dKoJ3DSXgfHOpdVdNHhPgoKx2XYteqXDTRwWJL33H
-NKowhQfF2omp5kBDL95XIrHz5GV36WQ3YAkfvkaGIJR9SowG7ancB5XnWYbHAb/3
-KCW7wv5ZOfLXqkFe+PQQneS682J/pKwwQzEJK6BUnfTZGHdbRrYlDcQonIw03xnu
-DmdgMCRIV/VMaLaz43MrCHXW/AMfVF6LJMPmWge31iTAFzk+7tssTvt0SsfGztLl
-dBXkx15aMM8d0HIn7mohu/u02Wn/dhK3UDIAhLyrax5Gu1ClILM54nEmGc1QZ/Uo
-3wZY3mI8EYQS8JjPx0bg
-=VJIv
+iQIcBAEBAgAGBQJO7NF/AAoJEIEoDkX4Qk9hwTwP/RFGF084QRkSNWHh8MKOyyHk
+GvK/WsJqzk+XnBNHsBMMWUrnDchctWhoSnVAC3gnpeq+AReJRbTfjWKMSCwsyRkB
+Fs8xeahL/nxUBRPph99cU6d8e1dGHos9ap3a4xU1nH2FgDUNffuzKYRXk0uYCzGn
+WktLI9g6gWOSbT/dCp3WOAMh9fL9qCPpXsjzEOphWFx89CLxQHmZjtdrCMsOte9S
+sv+0uAdEvmG5mjXRscB5p4O9npvVNqXqQXeZO+5ekRQbfRWIy9M1V64x6KQOc1NZ
+r9uiXqJ4kEx7NhLWrV3VAD9DJh9oT4ebfEVGf8mZW2TuWDKmxWxzuDqFkJ9lu4+u
+b/2qomFENf6FvVAw9xIoWFzgTzMPkDa6nsra+C/ohnX/9nGcxA2BL7cfry9Zy1ba
+gxKpsi5AThdihOvL/yU4l+tiHsXG961F+ULyyWiG6LbtqQRa1UO9Se8Wv7xb7mL2
+TshuhvmhmzdcLezJq7E62Oo5qErb//zlacLTKiiLwmB0X6GX1B3l6vSpEesTLHY/
+O914vZTcIyu9ENxftOzFiWa4bocN/NOawlIHrQU9CbdRFnOQvDdKAftlK6qYJRpT
+uRz9xFmBfoXe9GsKmMttxizbMgN2Adt5Gvqz8+RLU136LgdCKF2MupBvMg+d9Mmr
+T3C7T3mE3E1zL/cf5reH
+=KAh2
 -----END PGP SIGNATURE-----
 
---Sig_/hGfVq_SrrL/sYfAhvY=6dvM--
+--Sig_/Jqot3q7I0bAoN0p2nzClItU--
