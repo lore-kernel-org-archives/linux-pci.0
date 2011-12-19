@@ -1,29 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64764 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753185Ab1L1Dp1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2011 22:45:27 -0500
-Received: by vcbfk14 with SMTP id fk14so9287300vcb.19
-        for <linux-pci@vger.kernel.org>; Tue, 27 Dec 2011 19:45:26 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 28 Dec 2011 11:45:26 +0800
-Message-ID: <CAEH94LjSjBvXYABrh+W7kcp3z3h5JyFqsZpNv0zB0v1XZZ1+cQ@mail.gmail.com>
-Subject: PCI: where pci_user_read_config_byte{word, dword}() is defined?
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Ram Pai <linuxram@us.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from shards.monkeyblade.net ([198.137.202.13]:59044 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412Ab1LSVOD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2011 16:14:03 -0500
+Date: Mon, 19 Dec 2011 16:13:54 -0500 (EST)
+Message-Id: <20111219.161354.690295963350650107.davem@davemloft.net>
+To: bhelgaas@google.com
+Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
+	grundler@parisc-linux.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 5/6] de4x5/PCI: use list_for_each_entry() for
+ bus->devices traversal
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111216223154.5963.39965.stgit@bhelgaas.mtv.corp.google.com>
+References: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+	<20111216223154.5963.39965.stgit@bhelgaas.mtv.corp.google.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-HI,
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 16 Dec 2011 15:31:54 -0700
 
-I want to take a look at how pci_user_read_config_byte{word, dword}()
-is implemented, but can not find their definitions. Can anyone let me
-know where their definitions locate?
+> Replace open-coded list traversal with list_for_each_entry().
+> 
+> CC: Grant Grundler <grundler@parisc-linux.org>
+> CC: netdev@vger.kernel.org
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-
--- 
-Regards,
-
-Zhi Yong Wu
+Applied.
