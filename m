@@ -1,57 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:56145 "EHLO ogre.sisk.pl"
+Received: from mga09.intel.com ([134.134.136.24]:11472 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753324Ab1LMVGD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Dec 2011 16:06:03 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH][Regression fix] PCI / Hotplug: Always allow acpiphp to handle non-PCIe bridges
-Date: Tue, 13 Dec 2011 22:09:04 +0100
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-References: <201112130002.28907.rjw@sisk.pl> <20111213104220.5cfb78b2@jbarnes-desktop>
-In-Reply-To: <20111213104220.5cfb78b2@jbarnes-desktop>
+	id S1752047Ab1LTKQW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Dec 2011 05:16:22 -0500
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: "jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Date: Tue, 20 Dec 2011 18:15:42 +0800
+Subject: RE: [PATCH] PCI: Enable ATS at the device state restore 
+Message-ID: <BC00F5384FCFC9499AF06F92E8B78A9E28904877DA@shsmsx502.ccr.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201112132209.04185.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 13, 2011, Jesse Barnes wrote:
-> On Tue, 13 Dec 2011 00:02:28 +0100
-> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> 
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make
-> > acpiphp ignore root bridges using PCIe native hotplug) added code
-> > that made the acpiphp driver completely ignore PCIe root complexes
-> > for which the kernel had been granted control of the native PCIe
-> > hotplug feature by the BIOS through _OSC.  Unfortunately, however,
-> > this was a mistake, because on some systems there were PCI bridges
-> > supporting PCI (non-PCIe) hotplug under such root complexes and
-> > those bridges should have been handled by acpiphp.
-> > 
-> > For this reason, revert the changes made by the commit mentioned
-> > above and make register_slot() in drivers/pci/hotplug/acpiphp_glue.c
-> > avoid registering hotplug slots for PCIe ports that belong to
-> > root complexes with native PCIe hotplug enabled (which means that
-> > the BIOS has granted the kernel control of this feature for the
-> > given root complex).  This is reported to address the original
-> > issue fixed by commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a and
-> > to work on the system where that commit broke things.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > ---
-> 
-> Applied to my for-linus branch.  I'll probably send to Linus on Thu. or
-> so.
-> 
-> I also rebased the breakage out of linux-next.
+Hi, Jesse
+Do you have any comments for this fix patch?
 
-Thanks a lot!
+Thanks,
+-Xudong
 
-Rafael
+> -----Original Message-----
+> From: Hao, Xudong
+> Sent: Saturday, December 17, 2011 9:25 PM
+> To: 'jbarnes@virtuousgeek.org'; 'linux-pci@vger.kernel.org'
+> Cc: linux-kernel@vger.kernel.org; kvm@vger.kernel.org; Zhang, Xiantao
+> Subject: [PATCH] PCI: Enable ATS at the device state restore
+> 
+> When system go to S3 or S4 sleep and then return, some register of PCI device
+> does not be restored correctly, such as ATS capability. The same problem
+> happen on pci reset function.
+> 
+> This patch enables ATS at the device state restore if PCI device has ATS
+> capability.
+> 
+> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+> Signed-off-by: Xiantao Zhang <xiantao.zhang@intel.com>
+> ---
+>  drivers/pci/ats.c |   17 +++++++++++++++++
+>  drivers/pci/pci.c |    1 +
+>  drivers/pci/pci.h |    8 ++++++++
+>  3 files changed, 26 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c index 7ec56fb..a6c2b35 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -127,6 +127,23 @@ void pci_disable_ats(struct pci_dev *dev)  }
+> EXPORT_SYMBOL_GPL(pci_disable_ats);
+> 
+> +void pci_restore_ats_state(struct pci_dev *dev) {
+> +	u16 ctrl;
+> +
+> +	if (!pci_ats_enabled(dev))
+> +		return;
+> +	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS))
+> +		BUG();
+> +
+> +	ctrl = PCI_ATS_CTRL_ENABLE;
+> +	if (!dev->is_virtfn)
+> +		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
+> +
+> +	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl); }
+> +EXPORT_SYMBOL_GPL(pci_restore_ats_state);
+> +
+>  /**
+>   * pci_ats_queue_depth - query the ATS Invalidate Queue Depth
+>   * @dev: the PCI device
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c index 6f45a73..6dafc1d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -956,6 +956,7 @@ void pci_restore_state(struct pci_dev *dev)
+> 
+>  	/* PCI Express register must be restored first */
+>  	pci_restore_pcie_state(dev);
+> +	pci_restore_ats_state(dev);
+> 
+>  	/*
+>  	 * The Base Address register should be programmed before the command
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h index b74084e..a4f3140 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -249,6 +249,14 @@ struct pci_sriov {
+>  	u8 __iomem *mstate;	/* VF Migration State Array */
+>  };
+> 
+> +#ifdef CONFIG_PCI_ATS
+> +extern void pci_restore_ats_state(struct pci_dev *dev); #else static
+> +inline void pci_restore_ats_state(struct pci_dev *dev) { } #endif /*
+> +CONFIG_PCI_ATS */
+> +
+>  #ifdef CONFIG_PCI_IOV
+>  extern int pci_iov_init(struct pci_dev *dev);  extern void
+> pci_iov_release(struct pci_dev *dev);
