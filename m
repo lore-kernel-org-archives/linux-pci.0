@@ -1,92 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:55992 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755113Ab1LES32 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2011 13:29:28 -0500
-Date: Mon, 5 Dec 2011 10:32:02 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nishanth Aravamudan <nacc@us.ibm.com>, prarit@redhat.com,
-	brking@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH 1/1]PCI: defer enablement of SRIOV BARS
-Message-ID: <20111205103202.29faf6e1@jbarnes-desktop>
-In-Reply-To: <20111106023310.GA2383@ram-ThinkPad-T61>
-References: <20111006210320.GA14959@us.ibm.com>
-	<CAErSpo7b_6_AaZXW9XBx5p3-0PZJk-1jeCork__KePdzCS89OA@mail.gmail.com>
-	<1317970100.29415.305.camel@pasglop>
-	<CAErSpo58okGsDW4dOK4i0g_RUejkuQa=iw2uQ5HAJJZCwFtsbw@mail.gmail.com>
-	<20111007232516.GF2980@ram-ThinkPad-T61>
-	<1318057168.29415.333.camel@pasglop>
-	<20111008075353.GK2980@ram-ThinkPad-T61>
-	<1318060793.29415.347.camel@pasglop>
-	<20111102140325.004b9dad@jbarnes-desktop>
-	<20111103013014.GB393@ram-ThinkPad-T61>
-	<20111106023310.GA2383@ram-ThinkPad-T61>
+Received: from shards.monkeyblade.net ([198.137.202.13]:37209 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752448Ab1LVTPm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Dec 2011 14:15:42 -0500
+Date: Thu, 22 Dec 2011 14:15:37 -0500 (EST)
+Message-Id: <20111222.141537.1513319029738355747.davem@davemloft.net>
+To: bhelgaas@google.com
+Cc: James.Bottomley@hansenpartnership.com, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/29] Create PCI root buses with correct resources
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111222.135911.584309149966835644.davem@davemloft.net>
+References: <1318607132.3018.30.camel@dabdike.int.hansenpartnership.com>
+	<CAErSpo7yoWOg8P1NAi70HJX=OMyO6XUwnUBxVq3P0YK87eP5tw@mail.gmail.com>
+	<20111222.135911.584309149966835644.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/4Yccy_+1EUL0_Q0kZAGP0g1"; protocol="application/pgp-signature"
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/4Yccy_+1EUL0_Q0kZAGP0g1
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: David Miller <davem@davemloft.net>
+Date: Thu, 22 Dec 2011 13:59:11 -0500 (EST)
 
-On Sun, 6 Nov 2011 10:33:10 +0800
-Ram Pai <linuxram@us.ibm.com> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> Date: Tue, 20 Dec 2011 08:55:53 -0700
+> 
+>> This series has been in linux-next for a while now (via Jesse's PCI
+>> tree), so this would be a good time to try it out if you haven't
+>> already.
+>> 
+>> I know ia64 has been exercised a bit (thanks, Tony), but I haven't
+>> heard anything about arm, mips, parisc, powerpc, sparc, etc.
+>> 
+>> There is one outstanding bug fix for alpha that Jesse hasn't
+>> integrated yet, but as far as I know, everything else is in good
+>> shape.
+> 
+> I'll give it a quick test on sparc64 today.
 
->   All the PCI BARs of a device are enabled when the device is enabled usi=
-ng
->   pci_enable_device().  This unnecessarily enables SRIOV BARs of the devi=
-ce.
->=20
->   On some platforms, which do not support SRIOV as yet, the pci_enable_de=
-vice()
->   fails to enable the device if its SRIOV BARs are not allocated resources
->   correctly.
->=20
->   The following patch fixes the above problem. The SRIOV BARs are now ena=
-bled
->   when IOV capability of the device is enabled in sriov_enable().
->=20
->   NOTE: Note, there is subtle change in the pci_enable_device() API.
->   Any driver that depends on SRIOV BARS to be enabled in pci_enable_devic=
-e()
->   can fail.
->=20
->   The patch has been touch tested on power and x86 platform.
->=20
->   Signed-off-by: Ram Pai <linuxram@us.ibm.com>
-> ---
+Jesse's linux-next GIT branch boots up fine, but I get tons of
+warnings that kobject_put() is being performed on an uninitialized
+kobject.
 
-Applied to my for-linus branch, thanks.
+It looks like populate_msi_sysfs() is where these kobjects are
+supposed to be initialized.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Anyways, two examples:
 
---Sig_/4Yccy_+1EUL0_Q0kZAGP0g1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+[2766595.475642] mpt2sas1: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (7767632 kB)
+[2766595.491604] ------------[ cut here ]------------
+[2766595.500986] WARNING: at lib/kobject.c:595 kobject_put+0x48/0x80()
+[2766595.513482] kobject: '(null)' (fffff801f9b7a620): is not initialized, yet kobject_put() is being called.
+[2766595.532762] Modules linked in:
+[2766595.539152] Call Trace:
+[2766595.544391]  [000000000046944c] warn_slowpath_fmt+0x2c/0x40
+[2766595.555837]  [00000000005ed188] kobject_put+0x48/0x80
+[2766595.566261]  [0000000000622b68] free_msi_irqs+0xc8/0x120
+[2766595.577196]  [0000000000623870] pci_enable_msix+0x270/0x420
+[2766595.588665]  [00000000006a9fe8] mpt2sas_base_map_resources+0x2c8/0x480
+[2766595.602023]  [00000000006acb8c] mpt2sas_base_attach+0xac/0x1280
+[2766595.614166]  [00000000006b5c20] _scsih_probe+0x2a0/0x480
+[2766595.625113]  [000000000061d048] pci_device_probe+0x108/0x120
+[2766595.636746]  [0000000000671464] driver_probe_device+0x64/0x180
+[2766595.648716]  [0000000000671600] __driver_attach+0x80/0xa0
+[2766595.659838]  [0000000000670570] bus_for_each_dev+0x50/0x80
+[2766595.671115]  [0000000000670cdc] bus_add_driver+0x9c/0x260
+[2766595.682217]  [000000000067190c] driver_register+0x6c/0x160
+[2766595.693508]  [000000000061d4d4] __pci_register_driver+0x34/0xc0
+[2766595.705652]  [000000000096912c] _scsih_init+0x150/0x17c
+[2766595.716413]  [0000000000426ad8] do_one_initcall+0x18/0x160
+[2766595.727697] ---[ end trace 1cc904a40b8d2c88 ]---
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+--------------------
 
-iQIcBAEBAgAGBQJO3Q4iAAoJEIEoDkX4Qk9hiCkP/A5XJSGJWNx9+zK52LYnJkHJ
-h6vDplEY9PLCzAcDXjUipPAno4iePwUKFlxiIr+8EkZojEZYWW4Aj111MLNcv2Cc
-mWe+N3d6eO+zmRq0OxNsvNjrSPz8ki7AgW4rkJ0KGFMj6nEAPw09v6iXXNypy3Az
-hX5ep5ezmlJ1iiLd0zWGlPybV5Z+YYgZHNr4tpxE5cBs4HeccKESe07/zaBRU+Wd
-CmE7i5R825D1DXjD4dKmMIlAZqDriAvLOVp6UiZm2dmmz6mqnQxesdkIzHy5Y7ZM
-ao2NZoyrh5NPr/TyDyjDCZJNRG08+FmmhvIwMMaoin0N466WGKFHyKFE22gBHc6W
-BezckNykMbAqOQXMKGbaLRfy51wo+xYSm5y3fKL6oX5c/2QcE+HTil662/hocKj7
-Bfsp/9cQUwMcw05g317zehbU1Orp4atSz0/T0zTGGtk67kGYaytwJlzmBWJToWNR
-Kf6uAfC7QpqEsYee3/3F+wLZLfXY97tB+V8QM8HxvixFZbkpkrZCPz76aMSyWVb6
-2eaWgop94e45mYMK2OiG2kBudbVZbTBP0SG0lp0bkad4nMcYozPph2xd5gcqYZuB
-nQTtGFBjf+4+3Y/mV16jWLBQ7UaTGlGKsWvCBkLIgvfwzRGDTxbtt1Aj24z91Eou
-h8MtrnJWHBOMbwubhp0P
-=5W60
------END PGP SIGNATURE-----
+[2766607.786504] ------------[ cut here ]------------
+[2766607.786519] WARNING: at lib/kobject.c:595 kobject_put+0x48/0x80()
+[2766607.786529] kobject: '(null)' (fffff801fbec1280): is not initialized, yet kobject_put() is being called.
+[2766607.786540] Modules linked in: igb(+) ehci_hcd(+) n2_rng rng_core
+[2766607.786554] Call Trace:
+[2766607.786568]  [000000000046944c] warn_slowpath_fmt+0x2c/0x40
+[2766607.786581]  [00000000005ed188] kobject_put+0x48/0x80
+[2766607.786596]  [0000000000622b68] free_msi_irqs+0xc8/0x120
+[2766607.786610]  [0000000000622e1c] pci_enable_msi_block+0x25c/0x2c0
+[2766607.786644]  [0000000010054b78] igb_probe+0x514/0xfc0 [igb]
+[2766607.786658]  [000000000061d048] pci_device_probe+0x108/0x120
+[2766607.786672]  [0000000000671464] driver_probe_device+0x64/0x180
+[2766607.786683]  [0000000000671600] __driver_attach+0x80/0xa0
+[2766607.786694]  [0000000000670570] bus_for_each_dev+0x50/0x80
+[2766607.786707]  [0000000000670cdc] bus_add_driver+0x9c/0x260
+[2766607.786718]  [000000000067190c] driver_register+0x6c/0x160
+[2766607.786730]  [000000000061d4d4] __pci_register_driver+0x34/0xc0
+[2766607.786743]  [0000000000426ad8] do_one_initcall+0x18/0x160
+[2766607.786756]  [00000000004a33ec] SyS_init_module+0x6c/0x1c0
+[2766607.786771]  [0000000000406194] linux_sparc_syscall32+0x34/0x40
+[2766607.786779] ---[ end trace 1cc904a40b8d2c9d ]---
 
---Sig_/4Yccy_+1EUL0_Q0kZAGP0g1--
+--------------------
