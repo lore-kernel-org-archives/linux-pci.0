@@ -1,83 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:46129 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757892Ab1LGVaI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Dec 2011 16:30:08 -0500
-Date: Wed, 7 Dec 2011 13:30:00 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Charlie Suffin <charlie.suffin@stratus.com>, stable@kernel.org
-Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel
- Sandy Bridge GPUs
-Message-ID: <20111207133000.69051c59@jbarnes-desktop>
-In-Reply-To: <4EDFD5BB.1050906@intra2net.com>
-References: <4EDFD5BB.1050906@intra2net.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/0ByMDOVCuVxrmuH.GTdPv1S"; protocol="application/pgp-signature"
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:42222 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848Ab1L1Fdf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Dec 2011 00:33:35 -0500
+Received: by vcbfk14 with SMTP id fk14so9318455vcb.19
+        for <linux-pci@vger.kernel.org>; Tue, 27 Dec 2011 21:33:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4EFAA11F.8060007@windriver.com>
+References: <CAEH94LjSjBvXYABrh+W7kcp3z3h5JyFqsZpNv0zB0v1XZZ1+cQ@mail.gmail.com>
+	<4EFAA11F.8060007@windriver.com>
+Date: Wed, 28 Dec 2011 13:33:34 +0800
+Message-ID: <CAEH94Lij6N9Uhiz2AnveJF4y2NcwFvuig-oEteMLu=YFaaELcQ@mail.gmail.com>
+Subject: Re: PCI: where pci_user_read_config_byte{word, dword}() is defined?
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
+To: "tiejun.chen" <tiejun.chen@windriver.com>
+Cc: linux-pci@vger.kernel.org, Ram Pai <linuxram@us.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/0ByMDOVCuVxrmuH.GTdPv1S
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Dec 28, 2011 at 12:54 PM, tiejun.chen <tiejun.chen@windriver.com> wrote:
+> Zhi Yong Wu wrote:
+>> HI,
+>>
+>> I want to take a look at how pci_user_read_config_byte{word, dword}()
+>> is implemented, but can not find their definitions. Can anyone let me
+>> know where their definitions locate?
+>
+> Refer to drivers/pci/access.c.
+I have got this, anyway, thanks.
 
-On Wed, 07 Dec 2011 22:08:11 +0100
-Thomas Jarosch <thomas.jarosch@intra2net.com> wrote:
-> +#define I915_DEIER_REG 0x4400c
-> +static void __devinit disable_igfx_irq(struct pci_dev *dev)
-> +{
-> +	void __iomem *regs =3D pci_iomap(dev, 0, 0);
-> +	if (regs =3D=3D NULL) {
-> +		dev_warn(&dev->dev, "igfx quirk: Can't iomap PCI device\n");
-> +		return;
-> +	}
-> +
-> +	/* Check if any interrupt line is still enabled */
-> +	if (readl(regs + I915_DEIER_REG) !=3D 0) {
-> +		dev_warn(&dev->dev, "BIOS left Intel GPU interrupts enabled; "
-> +			"disabling\n");
-> +
-> +		writel(0, regs + I915_DEIER_REG);
-> +	}
-> +
-> +	pci_iounmap(dev, regs);
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
-> +
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->  			  struct pci_fixup *end)
->  {
+>
+> Tiejun
 
-Could really be dev_dbg, I think this will be fairly common.  I think we
-also need to ack any outstanding interrupts after disabling them in IER
-by writing IIR back on itself. Can you test that?
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
 
---Sig_/0ByMDOVCuVxrmuH.GTdPv1S
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+-- 
+Regards,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO39rYAAoJEIEoDkX4Qk9hg0gP/01oPKIQsSnMCJwpU02fGTQ5
-/9PPGsKtzUTMN4KjRP8CHOyTGORHyCaKro9OiIq2ZLptCnCB/FxSd4ltRNxun8PD
-eHCigcV5f9p1Ha+8HceFihayNP/GXvGwSYvFT3iUF8Cp+NXTxFbTNfkXefNog+hs
-UBLo4ifYT7WYiMeMMqdhTDsoeXE87j9vk4c3wW/a0QJcEF0QOtygRh5FrmQrk4vJ
-csWroGhBORP6tF88LaVtes/scBM0XPLMfEQgUJ1aeP3jUizzmc4JzwkOBulsUSuj
-kAvzsx42OzDNJMIV0kZnY/5Fpm+tvVPXAcpW+PaLev9U7zZnxdq8NQKjp1i+1/oJ
-qzQeUCjTAPokR3PMvSziGOG7tzeir5TQPhlTTPgLbpfxrwSLBpSW+tbtfAyqFaLG
-yHDy5XQL8uig8oaWdkCYBoz9o4KyufU3umz3IQ5V7HP2vYnJP984+vnrmHppmKAu
-5S7IkwEPahmwXJuEeYMgTfQq+hJzI1clFiTqjPAY0aW4bbP14KnuDMy8Fo6mIoSU
-XKyNB4teBIPMxO74NmkoSXScXRnBwsiVZ62JiRgJO5AOPfXm8ySoY3PyYR7IXQd8
-aYEHUCsPiDAVZU9LgDvmbAnYpdXBHhAMwGFanUqfNs8wbkdZucPFuBHOTPMvUFgs
-PaqPDG3iLrFvYuk8H+vo
-=HchF
------END PGP SIGNATURE-----
-
---Sig_/0ByMDOVCuVxrmuH.GTdPv1S--
+Zhi Yong Wu
