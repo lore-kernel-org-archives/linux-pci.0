@@ -1,30 +1,28 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 22 Dec 2011 17:02:27 -0500 (EST)
-Message-Id: <20111222.170227.1906514601375643135.davem@davemloft.net>
-To: bhelgaas@google.com
-Cc: James.Bottomley@hansenpartnership.com, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jbarnes@virtuousgeek.org
-Subject: Re: [PATCH v2 00/29] Create PCI root buses with correct resources
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111222.145629.505018474228371646.davem@davemloft.net>
-References: <20111222.135911.584309149966835644.davem@davemloft.net>
-	<20111222.141537.1513319029738355747.davem@davemloft.net>
-	<20111222.145629.505018474228371646.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.windriver.com ([147.11.1.11]:33030 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279Ab1L1EzA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2011 23:55:00 -0500
+Message-ID: <4EFAA11F.8060007@windriver.com>
+Date: Wed, 28 Dec 2011 12:54:55 +0800
+From: "tiejun.chen" <tiejun.chen@windriver.com>
+MIME-Version: 1.0
+To: Zhi Yong Wu <zwu.kernel@gmail.com>
+CC: <linux-pci@vger.kernel.org>, Ram Pai <linuxram@us.ibm.com>
+Subject: Re: PCI: where pci_user_read_config_byte{word, dword}() is defined?
+References: <CAEH94LjSjBvXYABrh+W7kcp3z3h5JyFqsZpNv0zB0v1XZZ1+cQ@mail.gmail.com>
+In-Reply-To: <CAEH94LjSjBvXYABrh+W7kcp3z3h5JyFqsZpNv0zB0v1XZZ1+cQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Thu, 22 Dec 2011 14:56:29 -0500 (EST)
+Zhi Yong Wu wrote:
+> HI,
+> 
+> I want to take a look at how pci_user_read_config_byte{word, dword}()
+> is implemented, but can not find their definitions. Can anyone let me
+> know where their definitions locate?
 
-> In my case arch_setup_msi_irqs() is failing simply because MSI has
-> not been enabled on these PCI host bridges.  It should, and I'm
-> trying to figure out if this is some strange interaction with the
-> new resource code.
+Refer to drivers/pci/access.c.
 
-It wasn't a problem with the resource changes, it's a sparc64 problem
-that only triggers on more recent systems.
-
-The MSI SYSFS error handling is, of course, still needing to be fixed.
+Tiejun
