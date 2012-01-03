@@ -1,185 +1,79 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [RFC PATCH v1 12/18] mn10300/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, David Howells <dhowells@redhat.com>
-Date: Mon, 30 Jan 2012 09:58:10 -0700
-Message-ID: <20120130165810.3231.2507.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:26759 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752854Ab2ACPWL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Jan 2012 10:22:11 -0500
+Message-ID: <1325604092.3124.17.camel@bling.home>
+Subject: Re: [Qemu-devel] [PATCH 1/5] vfio: Introduce documentation for VFIO
+ driver
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ronen Hod <rhod@redhat.com>
+Cc: chrisw@sous-sol.org, aik@ozlabs.ru, david@gibson.dropbear.id.au,
+	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 03 Jan 2012 08:21:32 -0700
+In-Reply-To: <4EFB4EFD.4080706@redhat.com>
+References: <20111221213019.27028.26890.stgit@bling.home>
+	 <20111221214212.27028.78947.stgit@bling.home> <4EFB4EFD.4080706@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+On Wed, 2011-12-28 at 19:16 +0200, Ronen Hod wrote:
+> On 12/21/2011 11:42 PM, Alex Williamson wrote:
+> > +The final aspect of VFIO is the notion of merging groups.  In both the
+> > +assignment of devices to virtual machines and the pure userspace
+> > +driver model, it's expect that a single user instance is likely to
+> > +have multiple groups in use simultaneously.  If these groups are all
+> > +using the same set of IOMMU mappings, the overhead of userspace
+> > +setting up and tearing down the mappings, as well as the internal
+> > +IOMMU driver overhead of managing those mappings can be non-trivial.
+> > +Some IOMMU implementations are able to easily reduce this overhead by
+> > +simply using the same set of page tables across multiple groups.
+> > +VFIO allows users to take advantage of this option by merging groups
+> > +together, effectively creating a super group (IOMMU groups only define
+> > +the minimum granularity).
+> > +
+> > +A user can attempt to merge groups together by calling the merge ioctl
+> > +on one group (the "merger") and passing a file descriptor for the
+> > +group to be merged in (the "mergee").  Note that existing DMA mappings
+> > +cannot be atomically merged between groups, it's therefore a
+> > +requirement that the mergee group is not in use.  This is enforced by
+> > +not allowing open device or iommu file descriptors on the mergee group
+> > +at the time of merging.  The merger group can be actively in use at
+> > +the time of merging.  Likewise, to unmerge a group, none of the device
+> > +file descriptors for the group being removed can be in use.  The
+> > +remaining merged group can be actively in use.
+> > +
+> 
+> Can you elaborate on the scenario that led a user to merge groups?
 
-N.B. I'm replacing some masking and boolean OR with simple addition.  I
-think this will work, but verification/testing would be good.  For example,
-with a PCI MMIO resource [mem 0xb8000000-0xbbffffff] (CPU addresses) and
-MEM_PAGING_REG of 0xe8000000, we currently convert to a bus address like
-this:
+Anytime a user is managing multiple groups with the same set of iommu
+mappings, they probably wants to try to merge the groups so they only
+have to program the iommu once, instead of once per group.  This works
+well in the qemu/x86 device assignment model where we map full guest
+memory into the iommu to allow transparent device assignment, ie. the
+guest doesn't need to be enlightened or forced to use a specific DMA
+mechanism.  If instead we exposed an emulated or paravirtualized iommu
+and expected the guest to make use of it to limit the number of pinned
+guest pages, it might make sense to expose that per group, especially if
+the I/O virtual address window is small or lives at different offsets,
+so merging wouldn't make sense then.  I'll add something to this effect
+in the documentation.
 
-    bus_addr(0xb8000000) = (0xb8000000 & 0x03ffffff) | MEM_PAGING_REG
-                         = (0xb8000000 & 0x03ffffff) | 0xe8000000
-                         =  0xe8000000
+> Does it make sense to try to "automatically" merge a (new) group with 
+> all the existing groups sometime prior to its first device open?
 
-    cpu_addr(0xe8000000) = (0xe8000000 & 0x03ffffff) | 0xb8000000
-                         =  0xb8000000
+I don't think so.  As above, it would assume a usage model.
 
-I computed a mem offset as:
+> As always, it is a pleasure to read your documentation.
 
-    mem_offset = pci_iomem_resource.start -
-        ((pci_iomem_resource.start & 0x03ffffff) | MEM_PAGING_REG);
-    mem_offset = 0xb8000000 - ((0xb8000000 & 0x03ffffff) | 0xe8000000)
-               = 0xd0000000
+Thanks!
 
-And then convert with addition:
+Alex
 
-    bus_addr(0xb8000000) = 0xb8000000 - mem_offset
-                         = 0xb8000000 - 0xd0000000
-                         = 0xe8000000
-
-    cpu_addr(0xe8000000) = 0xe8000000 + mem_offset
-                         = 0xe8000000 + 0xd0000000
-                         = 0xb8000000
-
-If resource_size_t is a u64, the offset works out to 0xffffffffd0000000,
-but the bus/resource conversions still work correctly.
-
-CC: David Howells <dhowells@redhat.com>
----
- arch/mn10300/include/asm/pci.h  |   16 +---------
- arch/mn10300/unit-asb2305/pci.c |   62 ++++++---------------------------------
- 2 files changed, 10 insertions(+), 68 deletions(-)
-
-diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
-index 6095a28..dfe1581 100644
---- a/arch/mn10300/include/asm/pci.h
-+++ b/arch/mn10300/include/asm/pci.h
-@@ -85,21 +85,7 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- /* implement the pci_ DMA API in terms of the generic device dma_ one */
- #include <asm-generic/pci-dma-compat.h>
- 
--/**
-- * pcibios_resource_to_bus - convert resource to PCI bus address
-- * @dev: device which owns this resource
-- * @region: converted bus-centric region (start,end)
-- * @res: resource to convert
-- *
-- * Convert a resource to a PCI device bus address or bus window.
-- */
--extern void pcibios_resource_to_bus(struct pci_dev *dev,
--				    struct pci_bus_region *region,
--				    struct resource *res);
--
--extern void pcibios_bus_to_resource(struct pci_dev *dev,
--				    struct resource *res,
--				    struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline struct resource *
- pcibios_select_root(struct pci_dev *pdev, struct resource *res)
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index a7c5f08..6dce9fc 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -32,8 +32,7 @@ struct pci_ops *pci_root_ops;
-  * insert specific PCI bus resources instead of using the platform-level bus
-  * resources directly for the PCI root bus.
-  *
-- * These are configured and inserted by pcibios_init() and are attached to the
-- * root bus by pcibios_fixup_bus().
-+ * These are configured and inserted by pcibios_init().
-  */
- static struct resource pci_ioport_resource = {
- 	.name	= "PCI IO",
-@@ -78,52 +77,6 @@ static inline int __query(const struct pci_bus *bus, unsigned int devfn)
- }
- 
- /*
-- * translate Linuxcentric addresses to PCI bus addresses
-- */
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	if (res->flags & IORESOURCE_IO) {
--		region->start = (res->start & 0x00ffffff);
--		region->end   = (res->end   & 0x00ffffff);
--	}
--
--	if (res->flags & IORESOURCE_MEM) {
--		region->start = (res->start & 0x03ffffff) | MEM_PAGING_REG;
--		region->end   = (res->end   & 0x03ffffff) | MEM_PAGING_REG;
--	}
--
--#if 0
--	printk(KERN_DEBUG "RES->BUS: %lx-%lx => %lx-%lx\n",
--	       res->start, res->end, region->start, region->end);
--#endif
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--/*
-- * translate PCI bus addresses to Linuxcentric addresses
-- */
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	if (res->flags & IORESOURCE_IO) {
--		res->start = (region->start & 0x00ffffff) | 0xbe000000;
--		res->end   = (region->end   & 0x00ffffff) | 0xbe000000;
--	}
--
--	if (res->flags & IORESOURCE_MEM) {
--		res->start = (region->start & 0x03ffffff) | 0xb8000000;
--		res->end   = (region->end   & 0x03ffffff) | 0xb8000000;
--	}
--
--#if 0
--	printk(KERN_INFO "BUS->RES: %lx-%lx => %lx-%lx\n",
--	       region->start, region->end, res->start, res->end);
--#endif
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
--/*
-  *
-  */
- static int pci_ampci_read_config_byte(struct pci_bus *bus, unsigned int devfn,
-@@ -364,9 +317,6 @@ static void __devinit pcibios_fixup_device_resources(struct pci_dev *dev)
- 		if (!dev->resource[i].flags)
- 			continue;
- 
--		region.start = dev->resource[i].start;
--		region.end = dev->resource[i].end;
--		pcibios_bus_to_resource(dev, &dev->resource[i], &region);
- 		if (is_valid_resource(dev, i))
- 			pci_claim_resource(dev, i);
- 	}
-@@ -397,6 +347,7 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
-  */
- static int __init pcibios_init(void)
- {
-+	resource_size_t io_offset, mem_offset;
- 	LIST_HEAD(resources);
- 
- 	ioport_resource.start	= 0xA0000000;
-@@ -420,8 +371,13 @@ static int __init pcibios_init(void)
- 	printk(KERN_INFO "PCI: Probing PCI hardware [mempage %08x]\n",
- 	       MEM_PAGING_REG);
- 
--	pci_add_resource(&resources, &pci_ioport_resource);
--	pci_add_resource(&resources, &pci_iomem_resource);
-+	io_offset = pci_ioport_resource.start -
-+	    (pci_ioport_resource.start & 0x00ffffff);
-+	mem_offset = pci_iomem_resource.start -
-+	    ((pci_iomem_resource.start & 0x03ffffff) | MEM_PAGING_REG);
-+
-+	pci_add_resource_offset(&resources, &pci_ioport_resource, io_offset);
-+	pci_add_resource_offset(&resources, &pci_iomem_resource, mem_offset);
- 	pci_root_bus = pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL,
- 					 &resources);
- 
 
