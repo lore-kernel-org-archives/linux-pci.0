@@ -1,38 +1,104 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo54k=pL1P1z7OetC1qJbsH9LH0GY4QFy-=PPKR0vF14SA@mail.gmail.com>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo54k=pL1P1z7OetC1qJbsH9LH0GY4QFy-=PPKR0vF14SA@mail.gmail.com>
-Date: Tue, 31 Jan 2012 10:56:54 -0800
-Message-ID: <CAE9FiQUYYsfUAi-jy1uQ0V8W0mHF1eTRnHQPK46cajLvPgmR5A@mail.gmail.com>
-Subject: Re: [PATCH -v3 0/14] PCI: allocate pci bus num range for unassigned
- bridge busn
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41313 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570Ab2ACPaO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2012 10:30:14 -0500
+From: Neil Horman <nhorman@tuxdriver.com>
+To: linux-kernel@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org
+Subject: [PATCH] msi: fix imbalanced refcount of msi irq sysfs objects
+Date: Tue,  3 Jan 2012 10:29:54 -0500
+Message-Id: <1325604594-7184-1-git-send-email-nhorman@tuxdriver.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2012 at 9:49 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jan 30, 2012 at 11:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> could be found at:
->>        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
->>
->> -v2: according to Jesse, split to more small patches.
->> -v3: address some request from Bjorn. like make use %pR for busn_res debug print
->>        out, and move the comment change with code change.
->
-> I don't see v3 in that git tree; maybe it needs to be pushed?
+This warning was recently reported to me:
 
-yeah. forgot to push.
+------------[ cut here ]------------
+WARNING: at lib/kobject.c:595 kobject_put+0x50/0x60()
+Hardware name: VMware Virtual Platform
+kobject: '(null)' (ffff880027b0df40): is not initialized, yet kobject_put() is
+being called.
+Modules linked in: vmxnet3(+) vmw_balloon i2c_piix4 i2c_core shpchp raid10
+vmw_pvscsi
+Pid: 630, comm: modprobe Tainted: G        W   3.1.6-1.fc16.x86_64 #1
+Call Trace:
+ [<ffffffff8106b73f>] warn_slowpath_common+0x7f/0xc0
+ [<ffffffff8106b836>] warn_slowpath_fmt+0x46/0x50
+ [<ffffffff810da293>] ? free_desc+0x63/0x70
+ [<ffffffff812a9aa0>] kobject_put+0x50/0x60
+ [<ffffffff812e4c25>] free_msi_irqs+0xd5/0x120
+ [<ffffffff812e524c>] pci_enable_msi_block+0x24c/0x2c0
+ [<ffffffffa017c273>] vmxnet3_alloc_intr_resources+0x173/0x240 [vmxnet3]
+ [<ffffffffa0182e94>] vmxnet3_probe_device+0x615/0x834 [vmxnet3]
+ [<ffffffff812d141c>] local_pci_probe+0x5c/0xd0
+ [<ffffffff812d2cb9>] pci_device_probe+0x109/0x130
+ [<ffffffff8138ba2c>] driver_probe_device+0x9c/0x2b0
+ [<ffffffff8138bceb>] __driver_attach+0xab/0xb0
+ [<ffffffff8138bc40>] ? driver_probe_device+0x2b0/0x2b0
+ [<ffffffff8138bc40>] ? driver_probe_device+0x2b0/0x2b0
+ [<ffffffff8138a8ac>] bus_for_each_dev+0x5c/0x90
+ [<ffffffff8138b63e>] driver_attach+0x1e/0x20
+ [<ffffffff8138b240>] bus_add_driver+0x1b0/0x2a0
+ [<ffffffffa0188000>] ? 0xffffffffa0187fff
+ [<ffffffff8138c246>] driver_register+0x76/0x140
+ [<ffffffff815ca414>] ? printk+0x51/0x53
+ [<ffffffffa0188000>] ? 0xffffffffa0187fff
+ [<ffffffff812d2996>] __pci_register_driver+0x56/0xd0
+ [<ffffffffa018803a>] vmxnet3_init_module+0x3a/0x3c [vmxnet3]
+ [<ffffffff81002042>] do_one_initcall+0x42/0x180
+ [<ffffffff810aad71>] sys_init_module+0x91/0x200
+ [<ffffffff815dccc2>] system_call_fastpath+0x16/0x1b
+---[ end trace 44593438a59a9558 ]---
+Using INTx interrupt, #Rx queues: 1.
 
-should be there now.
+It occurs when populate_msi_sysfs fails, which in turn causes free_msi_irqs to
+be called.  Because populate_msi_sysfs fails, we never registered any of the
+msi irq sysfs objects, but free_msi_irqs still calls kobject_del and kobject_put
+on each of them, which gets flagged in the above stack trace.
 
-Yinghai
+The fix is pretty straightforward.  We can key of the parent pointer in the
+kobject.  It is only set if the kobject_init_and_add succededs in
+populate_msi_sysfs.  If anything fails there, each kobject has its parent reset
+to NULL
+
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Greg Kroah-Hartman <gregkh@suse.de>
+CC: linux-pci@vger.kernel.org
+---
+ drivers/pci/msi.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 337e16a..82de95e 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -323,8 +323,18 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 			if (list_is_last(&entry->list, &dev->msi_list))
+ 				iounmap(entry->mask_base);
+ 		}
+-		kobject_del(&entry->kobj);
+-		kobject_put(&entry->kobj);
++
++		/*
++		 * Its possible that we get into this path
++		 * When populate_msi_sysfs fails, which means the entries
++		 * were not registered with sysfs.  In that case don't
++		 * unregister them.
++		 */
++		if (entry->kobj.parent) {
++			kobject_del(&entry->kobj);
++			kobject_put(&entry->kobj);
++		}
++
+ 		list_del(&entry->list);
+ 		kfree(entry);
+ 	}
+-- 
+1.7.7.5
+
