@@ -1,66 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 11/14] PCI: Strict checking of valid range for bridge
-Date: Mon, 30 Jan 2012 23:42:49 -0800
-Message-Id: <1327995772-11388-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 3 Jan 2012 15:33:57 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: "ustc.mail" <backyes@mail.ustc.edu.cn>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: =?utf-8?B?44CQUXVlc3Rpb27jgJFXaGV0aGVy?=
+ =?utf-8?Q?_it's_legal_to_enabl?= =?utf-8?Q?e?= same physical DMA memory
+ mapped for different NIC device?
+Message-ID: <20120103203357.GD17472@phenom.dumpdata.com>
+References: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-children bridges busn range should be able to be allocated from parent bus range.
+On Wed, Dec 07, 2011 at 10:16:40PM +0800, ustc.mail wrote:
+> Dear all,
+> 
+> In NIC driver, to eliminate the  overhead of dma_map_single() for DMA
+> packet data,  we have statically allocated huge DMA memory buffer ring
+> at once instead of calling dma_map_single() per packet.  Considering
+> to further reduce the copy overhead between different NIC(port) ring
+> while forwarding, one packet from a input NIC(port) will be
+> transferred to output NIC(port) with no any copy action.
+> 
+> To satisfy this requirement, the packet memory should be mapped into
+> input port and unmapped when leaving input port, then mapped into
+> output port and unmapped later.
+> 
+> Whether it's legal to map the same DMA memory into input and output
+> port simultaneously? If it's not, then the zero-copy for packet
+> forwarding is not feasible?
+> 
 
-to avoid overlapping between sibling bridges on same bus.
+Did you ever a get a response about this?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+Is the output/input port on a seperate device function? Or is it
+just a specific MMIO BAR in your PCI device?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 10aa6d1..b9459c5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -784,6 +784,31 @@ reduce_needed_size:
- 	return ret;
- }
- 
-+static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
-+				struct pci_dev *dev,
-+				int secondary, int subordinate)
-+{
-+	int broken = 0;
-+
-+	struct resource busn_res;
-+	int ret;
-+
-+	memset(&busn_res, 0, sizeof(struct resource));
-+	dev_printk(KERN_DEBUG, &dev->dev,
-+		 "check if busn %02x-%02x is in busn_res: %pR\n",
-+		 secondary, subordinate, &bus->busn_res);
-+	ret = allocate_resource(&bus->busn_res, &busn_res,
-+			 (subordinate - secondary + 1),
-+			 (pci_domain_nr(bus)<<8) | secondary,
-+			 (pci_domain_nr(bus)<<8) | subordinate,
-+			 1, NULL, NULL);
-+	if (ret)
-+		broken = 1;
-+	else
-+		release_resource(&busn_res);
-+
-+	return broken;
-+}
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
--- 
-1.7.7
-
+> Hope PCI expert to post your suggestion.
+> 
+> Thanks!
+> 
+> --Yanfei
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
