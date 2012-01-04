@@ -1,62 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:38143 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757135Ab2ARUgY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 15:36:24 -0500
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 08F8F21498
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 15:36:23 -0500 (EST)
-Date: Wed, 18 Jan 2012 12:35:36 -0800
-From: Greg KH <greg@kroah.com>
-To: Martin Burnicki <martin.burnicki@meinberg.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PCI card not accessible; I/O ports at <ignored>
-Message-ID: <20120118203536.GB2671@kroah.com>
-References: <4F16EA07.4000607@meinberg.de>
- <20120118162858.GB22156@kroah.com>
- <4F170DDB.3010105@meinberg.de>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35617 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756952Ab2ADVZt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 16:25:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F170DDB.3010105@meinberg.de>
+In-Reply-To: <CA+5PVA4=j_pXQ0L9NBoaGGGhEWFhga_LxVG-oi11vSrm4UG3Sg@mail.gmail.com>
+References: <20120103185304.GA25184@hmsreliant.think-freely.org>
+	<20120104091952.7cc5316d@jbarnes-desktop>
+	<20120104195134.GB24324@hmsreliant.think-freely.org>
+	<20120104.145619.1728971973635198635.davem@davemloft.net>
+	<20120104120248.4f4747bf@jbarnes-desktop>
+	<CA+5PVA4=j_pXQ0L9NBoaGGGhEWFhga_LxVG-oi11vSrm4UG3Sg@mail.gmail.com>
+Date: Wed, 4 Jan 2012 16:25:47 -0500
+Message-ID: <CA+5PVA4-Xofs3AKq3L2UjtmVLa4HpjMwv0_rMdXO5ku8uFvfkg@mail.gmail.com>
+Subject: Re: [PATCH] msi: fix imbalanced refcount of msi irq sysfs objects
+From: Josh Boyer <jwboyer@gmail.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: David Miller <davem@davemloft.net>, nhorman@tuxdriver.com,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com, gregkh@suse.de,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 18, 2012 at 07:22:19PM +0100, Martin Burnicki wrote:
-> Greg KH wrote:
-> >On Wed, Jan 18, 2012 at 04:49:27PM +0100, Martin Burnicki wrote:
-> >>Hi folks,
-> >>
-> >>I'm maintaining the driver software for the PCI cards manufactured
-> >>by our company, Meinberg Funkuhren in Germany. Basically our Linux
-> >>driver supports all our PCI cards on all Linux kernels 2.6.x and
-> >>3.x. The PCI cards are e.g. GPS receivers, radio clocks, or IRIG
-> >>time code receivers.
-> >
-> >Nice, any reason why these drivers aren't in the main kernel.org tree?
-> 
-> Yes, you wouldn't like the coding style of our driver ;-)
-> 
-> Seriously, I have discussed this with some Linux guys before, and
-> also with some folks from *BSD who also wanted to pick up the driver
-> into their *BSD source trees.
-> 
-> 
-> The disadvantages of this approach were:
+On Wed, Jan 4, 2012 at 4:18 PM, Josh Boyer <jwboyer@gmail.com> wrote:
+>>> The bug only exists in the PCI -next code I thought.
+>>
+>> Oh yeah, looks like it.  Lost track of my -next vs master branches
+>> there...
+>
+> Er... Neil's commit log in the patch itself has an oops from 3.1.6 in
+> it.  If the bug the patch fixes is only present in -next PCI code, how
+> did it get hit on that release?
+>
+> Did we switch to talking about some other patch here and I'm just confused?
 
-<snip>
+I'm just confused.  I forgot Neil backported that upstream code to the
+F16 3.1.6 kernel.  Sorry for the noise.
 
-That all makes sense, thanks.  It's your decision, but note, everyone
-who has ever taken the time to get their code into the main kernel tree,
-FreeBSD included, has had less time and energy maintaining it over the
-long-run.
-
-Plus, you get support for your customers from Red Hat and SUSE and
-others, and you don't void their warranty by loading unsupported kernels
-:)
-
-But it's your business decision, if this is what you want to do, great,
-best of luck.
-
-thanks,
-
-greg k-h
+josh
