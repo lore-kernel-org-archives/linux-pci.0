@@ -1,104 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:17450 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754594Ab2AUKY1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:24:27 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [RFC PATCH 3/3] PCI: kill pci_fixup_parent_subordinate_busnr()
-Date: Sat, 21 Jan 2012 02:24:08 -0800
-Message-Id: <1327141448-15281-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327141448-15281-1-git-send-email-yinghai@kernel.org>
-References: <1327141448-15281-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <1325692766.2758.22.camel@dabdike.int.hansenpartnership.com>
+Subject: Re: =?UTF-8?Q?=E3=80=90Question=E3=80=91Whether?= it's legal to
+ enable same physical DMA memory mapped for different NIC device?
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Yanfei Wang <backyes@mail.ustc.edu.cn>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 04 Jan 2012 09:59:26 -0600
+In-Reply-To: <CAJULongKix3QXmcoUcraQxCyLN0wz6oe6p5Efg2A7S_r3nO6Fg@mail.gmail.com>
+References: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
+	 <20120103203357.GD17472@phenom.dumpdata.com>
+	 <CAJULongKix3QXmcoUcraQxCyLN0wz6oe6p5Efg2A7S_r3nO6Fg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can safely extend parent top and shrink them according iobusn_resource tree.
+On Wed, 2012-01-04 at 10:44 +0800, Yanfei Wang wrote:
+> On Wed, Jan 4, 2012 at 4:33 AM, Konrad Rzeszutek Wilk
+> <konrad.wilk@oracle.com> wrote:
+> > On Wed, Dec 07, 2011 at 10:16:40PM +0800, ustc.mail wrote:
+> >> Dear all,
+> >>
+> >> In NIC driver, to eliminate the  overhead of dma_map_single() for DMA
+> >> packet data,  we have statically allocated huge DMA memory buffer ring
+> >> at once instead of calling dma_map_single() per packet.  Considering
+> >> to further reduce the copy overhead between different NIC(port) ring
+> >> while forwarding, one packet from a input NIC(port) will be
+> >> transferred to output NIC(port) with no any copy action.
+> >>
+> >> To satisfy this requirement, the packet memory should be mapped into
+> >> input port and unmapped when leaving input port, then mapped into
+> >> output port and unmapped later.
+> >>
+> >> Whether it's legal to map the same DMA memory into input and output
+> >> port simultaneously? If it's not, then the zero-copy for packet
+> >> forwarding is not feasible?
+> >>
+> >
+> > Did you ever a get a response about this?
+> No.
 
-Don't need that any more.
+This is probably because no-one really understands what you're asking.
+As far as mapping memory to PCI devices goes, it's the job of the bridge
+(or the iommu which may or may not be part of the bridge).  A standard
+iommu tends not to care about devices and functions, so a range once
+mapped is available to everything behind the bridge.  A more secure
+virtualisation based iommu (like the on in VT-D) does, and tends to map
+ranges per device.  I know of none that map per device and function, but
+maybe there are.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   45 +++++++++------------------------------------
- 1 files changed, 9 insertions(+), 36 deletions(-)
+Your question reads like you have a range of memory mapped to a PCI
+device that you want to use for two different purposes, can you do this?
+to which the answer is that a standard PCI bridge really doesn't care
+and it all depends on the mechanics of the actual device.  The only
+wrinkle might be if the two different purposes are on two separate PCI
+functions of the device and the iommu does care.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e20fe45..85cb6d0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -608,22 +608,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
- 	return child;
- }
- 
--static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
--{
--	struct pci_bus *parent = child->parent;
--
--	/* Attempts to fix that up are really dangerous unless
--	   we're going to re-assign all bus numbers. */
--	if (!pcibios_assign_all_busses())
--		return;
--
--	while (parent->parent && parent->subordinate < max) {
--		parent->subordinate = max;
--		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
--		parent = parent->parent;
--	}
--}
--
- static void __devinit pci_bus_extend_top(struct pci_bus *parent,
- 		 resource_size_t needed_size, struct resource *parent_res)
- {
-@@ -866,6 +850,13 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 		/* Clear errors */
- 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
- 
-+		/*
-+		 * For CardBus bridges, we leave 4 bus numbers
-+		 * as cards with a PCI-to-PCI bridge can be
-+		 * inserted later.
-+		 * other just allocate 8 bus to avoid we fall into
-+		 *  small hole in the middle.
-+		 */
- 		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
- 				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
- 				&parent_res);
-@@ -907,29 +898,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 
- 		if (!is_cardbus) {
- 			child->bridge_ctl = bctl;
--			/*
--			 * Adjust subordinate busnr in parent buses.
--			 * We do this before scanning for children because
--			 * some devices may not be detected if the bios
--			 * was lazy.
--			 */
--			pci_fixup_parent_subordinate_busnr(child, max);
-+
- 			/* Now we can scan all subordinate buses... */
- 			max = pci_scan_child_bus(child);
--			/*
--			 * now fix it up again since we have found
--			 * the real value of max.
--			 */
--			pci_fixup_parent_subordinate_busnr(child, max);
--
--		} else {
--			/*
--			 * For CardBus bridges, we leave 4 bus numbers
--			 * as cards with a PCI-to-PCI bridge can be
--			 * inserted later.
--			 */
--			pci_fixup_parent_subordinate_busnr(child, max);
- 		}
-+
- 		/*
- 		 * Set the subordinate bus number to its real value.
- 		 */
--- 
-1.7.7
+> >
+> > Is the output/input port on a seperate device function? Or is it
+> > just a specific MMIO BAR in your PCI device?
+> >
+> Platform: x86, intel nehalem 8Core NUMA, linux 2.6.39, 10G
+> 82599NIC(two ports per NIC card);
+> Function: Forwarding packets between different ports.
+> Targets: Forwarding packets with Zero-Overhead, despite other obstacles.
+
+This still doesn't really provide the information needed to elucidate
+the question.
+
+James
+
 
