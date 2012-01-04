@@ -1,211 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:58281 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752739Ab2ASXlK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2012 18:41:10 -0500
-Received: by ggnb1 with SMTP id b1so360546ggn.19
-        for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 15:41:09 -0800 (PST)
+Received: from eu1sys200aog104.obsmtp.com ([207.126.144.117]:44247 "EHLO
+	eu1sys200aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751954Ab2ADLB7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 06:01:59 -0500
+Message-ID: <4F043190.70405@st.com>
+Date: Wed, 4 Jan 2012 16:31:36 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
 MIME-Version: 1.0
-In-Reply-To: <20120119223221.15239.6758.sendpatchset@dhcp-189-101.bos.redhat.com>
-References: <20120119223221.15239.6758.sendpatchset@dhcp-189-101.bos.redhat.com>
-Date: Thu, 19 Jan 2012 15:41:09 -0800
-Message-ID: <CAE9FiQWKRxZcm2FBhP2SxaBGYpROc4grJQtE68OyayPhjQHdsA@mail.gmail.com>
-Subject: Re: [PATCH v4] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp driver
-From: Yinghai Lu <yinghai@kernel.org>
-To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, greg@kroah.com,
-	kaneshige.kenji@jp.fujitsu.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: "e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	Deepak SIKRI <deepak.sikri@st.com>,
+	Bhavna YADAV <bhavna.yadav@st.com>, <linux-pci@vger.kernel.org>
+Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
+References: <CAHM4w1=i5dYy+ReqMO=m6W96CNaQ+O=jw+pKQok0nmjb5-fNAw@mail.gmail.com>
+In-Reply-To: <CAHM4w1=i5dYy+ReqMO=m6W96CNaQ+O=jw+pKQok0nmjb5-fNAw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 19, 2012 at 2:32 PM, MUNEDA Takahiro
-<muneda.takahiro@jp.fujitsu.com> wrote:
-> Not to use MSI/MSI-X for pciehp, add a kernel parameter, pcie_hp=nomsi.
->
-> In my environment, while shutting down, following stack trace is shown
-> sometimes.
->
->  irq 16: nobody cared (try booting with the "irqpoll" option)
->  Pid: 1081, comm: reboot Not tainted 3.2.0 #1
->  Call Trace:
->   <IRQ>  [<ffffffff810cec1d>] __report_bad_irq+0x3d/0xe0
->   [<ffffffff810cee1c>] note_interrupt+0x15c/0x210
->   [<ffffffff810cc485>] handle_irq_event_percpu+0xb5/0x210
->   [<ffffffff810cc621>] handle_irq_event+0x41/0x70
->   [<ffffffff810cf675>] handle_fasteoi_irq+0x55/0xc0
->   [<ffffffff81015356>] handle_irq+0x46/0xb0
->   [<ffffffff814fbe9d>] do_IRQ+0x5d/0xe0
->   [<ffffffff814f146e>] common_interrupt+0x6e/0x6e
->   [<ffffffff8106b040>] ? __do_softirq+0x60/0x210
->   [<ffffffff8108aeb1>] ? hrtimer_interrupt+0x151/0x240
->   [<ffffffff814fb5ec>] call_softirq+0x1c/0x30
->   [<ffffffff810152d5>] do_softirq+0x65/0xa0
->   [<ffffffff8106ae9d>] irq_exit+0xbd/0xe0
->   [<ffffffff814fbf8e>] smp_apic_timer_interrupt+0x6e/0x99
->   [<ffffffff814f9e5e>] apic_timer_interrupt+0x6e/0x80
->   <EOI>  [<ffffffff814f0fb1>] ? _raw_spin_unlock_irqrestore+0x11/0x20
->   [<ffffffff812629fc>] pci_bus_write_config_word+0x6c/0x80
->   [<ffffffff81266fc2>] pci_intx+0x52/0xa0
->   [<ffffffff8127de3d>] pci_intx_for_msi+0x1d/0x30
->  [<ffffffff8127e4fb>] pci_msi_shutdown+0x7b/0x110
->   [<ffffffff81269d34>] pci_device_shutdown+0x34/0x50
->   [<ffffffff81326c4f>] device_shutdown+0x2f/0x140
->   [<ffffffff8107b981>] kernel_restart_prepare+0x31/0x40
->   [<ffffffff8107b9e6>] kernel_restart+0x16/0x60
->   [<ffffffff8107bbfd>] sys_reboot+0x1ad/0x220
->   [<ffffffff814f4b90>] ? do_page_fault+0x1e0/0x460
->   [<ffffffff811942d0>] ? __sync_filesystem+0x90/0x90
->   [<ffffffff8105c9aa>] ? __cond_resched+0x2a/0x40
->   [<ffffffff814ef090>] ? _cond_resched+0x30/0x40
->   [<ffffffff81169e17>] ? iterate_supers+0xb7/0xd0
->   [<ffffffff814f9382>] system_call_fastpath+0x16/0x1b
->  handlers:
->  [<ffffffff8138a0f0>] usb_hcd_irq
->  [<ffffffff8138a0f0>] usb_hcd_irq
->  [<ffffffff8138a0f0>] usb_hcd_irq
->  Disabling IRQ #16
->
-> An un-wanted interrupt is generated when PCI driver switches from
-> MSI/MSI-X to INTx while shutting down the device.  The interrupt does
-> not happen if MSI/MSI-X is not used on the device.
-> I confirmed that this problem does not happen if pcie_hp=nomsi was
-> specified and hotplug operation worked fine as usual.
-> (From v2, the pcie_hp=nomsi does not need any more against the device
->  111d:807f, since MSI/MSI-X is disabled automatically)
->
-> v2: Automatically disable MSI/MSI-X against following device:
->    PCI bridge: Integrated Device Technology, Inc. Device 807f (rev 02)
-> v3: Based on the review comment, combile the if statements.
-> v4: Removed module parameter.
->    Move some code to build pciehp as a module.
->    Move device specific code to driver/pci/quirks.c.
->
-> Signed-off-by: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
->
-> ---
->  Documentation/kernel-parameters.txt |    4 ++++
->  drivers/pci/pcie/portdrv.h          |   12 ++++++++++++
->  drivers/pci/pcie/portdrv_core.c     |   16 ++++++++++++++--
->  drivers/pci/quirks.c                |   29 +++++++++++++++++++++++++++++
->  4 files changed, 59 insertions(+), 2 deletions(-)
->
-> Index: linux-3.2/drivers/pci/pcie/portdrv.h
-> ===================================================================
-> --- linux-3.2.orig/drivers/pci/pcie/portdrv.h
-> +++ linux-3.2/drivers/pci/pcie/portdrv.h
-> @@ -34,6 +34,18 @@ struct pci_dev;
->
->  extern void pcie_clear_root_pme_status(struct pci_dev *dev);
->
-> +#ifdef CONFIG_HOTPLUG_PCI_PCIE
-> +extern bool pciehp_msi_disabled;
-> +
-> +static inline bool pciehp_no_msi(void)
-> +{
-> +       return pciehp_msi_disabled;
-> +}
-> +
-> +#else  /* !CONFIG_HOTPLUG_PCI_PCIE */
-> +static inline bool pciehp_no_msi(void) { return false; }
-> +#endif /* !CONFIG_HOTPLUG_PCI_PCIE */
-> +
->  #ifdef CONFIG_PCIE_PME
->  extern bool pcie_pme_msi_disabled;
->
-> Index: linux-3.2/drivers/pci/pcie/portdrv_core.c
-> ===================================================================
-> --- linux-3.2.orig/drivers/pci/pcie/portdrv_core.c
-> +++ linux-3.2/drivers/pci/pcie/portdrv_core.c
-> @@ -19,6 +19,17 @@
->  #include "../pci.h"
->  #include "portdrv.h"
->
-> +bool pciehp_msi_disabled;
-> +
-> +static int __init pciehp_setup(char *str)
-> +{
-> +       if (!strncmp(str, "nomsi", 5))
-> +               pciehp_msi_disabled = true;
-> +
-> +       return 1;
-> +}
-> +__setup("pcie_hp=", pciehp_setup);
-> +
->  /**
->  * release_pcie_device - free PCI Express port service device structure
->  * @dev: Port service device to release
-> @@ -189,8 +200,9 @@ static int init_service_irqs(struct pci_
->  {
->        int i, irq = -1;
->
-> -       /* We have to use INTx if MSI cannot be used for PCIe PME. */
-> -       if ((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) {
-> +       /* We have to use INTx if MSI cannot be used for PCIe PME or pciehp. */
-> +       if (((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) ||
-> +           ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
->                if (dev->pin)
->                        irq = dev->irq;
->                goto no_msi;
-> Index: linux-3.2/Documentation/kernel-parameters.txt
-> ===================================================================
-> --- linux-3.2.orig/Documentation/kernel-parameters.txt
-> +++ linux-3.2/Documentation/kernel-parameters.txt
-> @@ -2076,6 +2076,10 @@ bytes respectively. Such letter suffixes
->                force   Enable ASPM even on devices that claim not to support it.
->                        WARNING: Forcing ASPM on may cause system lockups.
->
-> +       pcie_hp=        [PCIE] PCI Express Hotplug driver options:
-> +               nomsi   Do not use MSI for PCI Express Native Hotplug (this
-> +                       makes all PCIe ports use INTx for hotplug services).
-> +
->        pcie_ports=     [PCIE] PCIe ports handling:
->                auto    Ask the BIOS whether or not to use native PCIe services
->                        associated with PCIe ports (PME, hot-plug, AER).  Use
-> Index: linux-3.2/drivers/pci/quirks.c
-> ===================================================================
-> --- linux-3.2.orig/drivers/pci/quirks.c
-> +++ linux-3.2/drivers/pci/quirks.c
-> @@ -2665,6 +2665,35 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AT
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4375,
->                        quirk_msi_intx_disable_bug);
->
-> +/*
-> + * The PCI bridge from Integrated Device Technology(IDT) has a problem
-> + * with MSI/MSI-X.
-> + * An un-wanted interrupt is generated when PCI driver switches from
-> + * MSI/MSI-X to INTx while shutting down the PCI Express port, if it
-> + * provides the Native Hotplug service.  The interrupt does not happen
-> + * if MSI/MSI-X is not used on it.  Therefore, turn off MSI/MSI-X for
-> + * this device.
-> + */
-> +static void __devinit idt_bridge_msi_disable(struct pci_dev *dev)
-> +{
-> +       int pos;
-> +       u16 reg16;
-> +       u32 reg32;
-> +
-> +       pos = pci_pcie_cap(dev);
-> +       if (!pos)
-> +               return;
-> +       pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &reg16);
-> +       if (!(reg16 & PCI_EXP_FLAGS_SLOT))
-> +               return;
-> +       pci_read_config_dword(dev, pos + PCI_EXP_SLTCAP, &reg32);
-> +       if (reg32 & PCI_EXP_SLTCAP_HPC) {
-> +               pci_msi_off(dev);
-> +               dev->no_msi = 1;
-> +       }
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IDT, 0x807f, idt_bridge_msi_disable);
+Adding PCI mailing list too, as problem is coming only when MSI is enabled.
 
-do you have statement for IDT, says that is chipset problem ?
+If I connect an PCIe analyzer, I see that at the time of issue MRd(64) 
+for 32 words has been issued with a wrong 64 bit address from ethernet 
+card to my RC.
+In the normal course it always issues MRd(32) only.
 
-it could be your platform fw problem.
+Regards
+Pratyush
 
-if that is the case, you will disable MSI/MSIX for other platform that
-do not have fw problem.
+On 1/4/2012 3:18 PM, Pratyush Anand wrote:
+> Hi All,
+>
+> I am trying to use PCIe based Intel PRO/1000 PT Server Adapter card on
+> an ARM Corterx A-9 based platform.
+> I am using linux 2.6.37.
+>
+> I am trying to mount my rootfile system on NFS using interface of this card.
+>
+> I see follwing issue while nfs mount
+> ----------------------------------------------------------------------------------------------------------------------------------------------------------
+> IP-Config: Complete:
+>       device=eth0, addr=192.168.1.10, mask=255.255.255.0, gw=255.255.255.255,
+>       host=192.168.1.10, domain=, nis-domain=(none),
+>       bootserver=192.168.1.1, rootserver=192.168.1.1, rootpath=
+> NFS:1. attempt to mount rootVFS: Mounted root (nfs filesystem) on device 0:13.
+> Freeing init memory: 184K
+> nfs: server 192.168.1.1 not responding, still trying
+> e1000e 0000:03:00.0: eth0: Detected Hardware Unit Hang:
+>    TDH<40>
+>    TDT<43>
+>    next_to_use<43>
+>    next_to_clean<3f>
+> buffer_info[next_to_clean]:
+>    time_stamp<ffff984a>
+>    next_to_watch<40>
+>    jiffies<ffff9948>
+>    next_to_watch.status<0>
+> MAC Status<80383>
+> PHY Status<792d>
+> PHY 1000BASE-T Status<3800>
+> PHY Extended Status<3000>
+> PCI Status<4010>
+> e1000e 0000:03:00.0: eth0: Detected Hardware Unit Hang:
+>    TDH<40>
+>    TDT<43>
+>    next_to_use<43>
+>    next_to_clean<3f>
+> buffer_info[next_to_clean]:
+>    time_stamp<ffff984a>
+>    next_to_watch<40>
+>    jiffies<ffff9a10>
+>    next_to_watch.status<0>
+> MAC Status<80383>
+> PHY Status<792d>
+> PHY 1000BASE-T Status<3800>
+> PHY Extended Status<3000>
+> PCI Status<4010>
+> e1000e 0000:03:00.0: eth0: Detected Hardware Unit Hang:
+>    TDH<40>
+>    TDT<43>
+>    next_to_use<43>
+>    next_to_clean<3f>
+> buffer_info[next_to_clean]:
+>    time_stamp<ffff984a>
+>    next_to_watch<40>
+>    jiffies<ffff9ba0>
+>    next_to_watch.status<0>
+> MAC Status<80383>
+> PHY Status<792d>
+> PHY 1000BASE-T Status<3800>
+> PHY Extended Status<3000>
+> PCI Status<4010>
+> e1000e 0000:03:00.0: eth0: Detected Hardware Unit Hang:
+>    TDH<40>
+>    TDT<43>
+>    next_to_use<43>
+>    next_to_clean<3f>
+> buffer_info[next_to_clean]:
+>    time_stamp<ffff984a>
+>    next_to_watch<40>
+>    jiffies<ffff9c68>
+>    next_to_watch.status<0>
+> MAC Status<80383>
+> PHY Status<792d>
+> PHY 1000BASE-T Status<3800>
+> PHY Extended Status<3000>
+> PCI Status<4010>
+> ------------[ cut here ]------------
+> WARNING: at /data/csd_sw/spear/drives_os/pratyusha/spear/kernel/linux-2.6/net/sched/sch_generic.c:258
+> dev_watchdog+0x168/0x280()
+> NETDEV WATCHDOG: eth0 (e1000e): transmit queue 0 timed out
+> Modules linked in:
+> Backtrace:
+> [<8003f9fc>] (dump_backtrace+0x0/0x10c) from [<803ede3c>] (dump_stack+0x18/0x1c)
+>   r6:804f3833 r5:00000102 r4:8e83dc18 r3:60000113
+> [<803ede24>] (dump_stack+0x0/0x1c) from [<8005e2b8>]
+> (warn_slowpath_common+0x54/0x6c)
+> [<8005e264>] (warn_slowpath_common+0x0/0x6c) from [<8005e374>]
+> (warn_slowpath_fmt+0x38/0x40)
+>   r8:00000001 r7:00000000 r6:807164c0 r5:8eaf01d4 r4:8eaf0000
+> r3:00000009
+> [<8005e33c>] (warn_slowpath_fmt+0x0/0x40) from [<8036d7bc>]
+> (dev_watchdog+0x168/0x280)
+>   r3:8eaf0000 r2:804f3889
+> [<8036d654>] (dev_watchdog+0x0/0x280) from [<80069680>]
+> (run_timer_softirq+0x158/0x210)
+> [<80069528>] (run_timer_softirq+0x0/0x210) from [<80063cb8>]
+> (__do_softirq+0xb8/0x160)
+>   r8:0000000a r7:00000100 r6:80525044 r5:00000141 r4:8e83c000
+> [<80063c00>] (__do_softirq+0x0/0x160) from [<80064144>] (irq_exit+0x4c/0x54)
+> [<800640f8>] (irq_exit+0x0/0x54) from [<80040e2c>] (ipi_timer+0x40/0x4c)
+> [<80040dec>] (ipi_timer+0x0/0x4c) from [<80036260>] (do_local_timer+0x5c/0x88)
+>   r4:800348b4 r3:00001179
+> [<80036204>] (do_local_timer+0x0/0x88) from [<8003b714>] (__irq_svc+0x34/0xc0)
+> Exception stack(0x8e83dd68 to 0x8e83ddb0)
+> dd60:                   8054d648 60000093 8054d640 60000013 00000206 00000001
+> dd80: 80585216 00000000 8054d5b8 8e83de3c 804ca994 8e83de1c 8e83dd88 8e83ddb0
+> dda0: 8005f0b0 8005f588 60000013 ffffffff
+>   r6:0000001d r5:fec80100 r4:ffffffff r3:60000013
+> [<8005f1f4>] (vprintk+0x0/0x3f0) from [<803edfe0>] (printk+0x24/0x2c)
+> [<803edfbc>] (printk+0x0/0x2c) from [<8020db74>] (__dev_printk+0x58/0x68)
+>   r3:8e886dc0 r2:8056e0fc r1:804b70c9 r0:804ca994
+> [<8020db1c>] (__dev_printk+0x0/0x68) from [<8020ddb0>] (dev_printk+0x34/0x3c)
+>   r6:00000040 r5:ffff984a r4:8eaf0360
+> [<8020dd7c>] (dev_printk+0x0/0x3c) from [<803589fc>] (__netdev_printk+0x4c/0x94)
+>   r3:8eaf0000 r2:804ca999
+> [<803589b0>] (__netdev_printk+0x0/0x94) from [<80358b58>] (netdev_err+0x3c/0x48)
+>   r4:8eaf0360
+> [<80358b1c>] (netdev_err+0x0/0x48) from [<8028cb34>]
+> (e1000_print_hw_hang+0x124/0x134)
+>   r3:00000043 r2:00000040 r1:804d85ab
+> [<8028ca10>] (e1000_print_hw_hang+0x0/0x134) from [<80072d6c>]
+> (process_one_work+0x1f0/0x324)
+> [<80072b7c>] (process_one_work+0x0/0x324) from [<800733a4>]
+> (worker_thread+0x1c0/0x300)
+> [<800731e4>] (worker_thread+0x0/0x300) from [<80076e04>] (kthread+0x90/0x98)
+> [<80076d74>] (kthread+0x0/0x98) from [<8006169c>] (do_exit+0x0/0x5f8)
+>   r6:8006169c r5:80076d74 r4:8e831ee0
+> ---[ end trace ea1efd5a579b2b9e ]---
+> e1000e 0000:03:00.0: eth0: Reset adapter
+> e1000e: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
+> nfs: server 192.168.1.1 not responding, still trying
+> nfs: server 192.168.1.1 not responding, still trying
+> ----------------------------------------------------------------------------------------------------------------------------------------------------------
+>
+> However, If I pass pci=nomsi in bootargs then it works fine.
+>
+> I see similar issue discussed earlier at following link:
+> http://sourceforge.net/tracker/index.php?func=detail&aid=2896629&group_id=42302&atid=447449
+>
+> Reading above link, it seems that bug should have been resolved in linux 2.6.32.
+> But I still see it in 2.6.37.
+> Any suggestion to resolve?
+>
+> Regards
+> Pratyush
+> .
+>
 
-Thanks
-
-Yinghai
