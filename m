@@ -1,149 +1,147 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 14/14] PCI: Seperate child bus scanning to two passes overall
-Date: Mon, 30 Jan 2012 23:42:52 -0800
-Message-Id: <1327995772-11388-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:53168 "HELO
+	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751549Ab2ADRii (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 12:38:38 -0500
+Date: Wed, 4 Jan 2012 09:38:34 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-alpha@vger.kernel.org
+Subject: Re: [PATCH v3 08/34] alpha/PCI: convert to pci_scan_root_bus() for
+ correct root bus resources
+Message-ID: <20120104093834.39614a85@jbarnes-desktop>
+In-Reply-To: <CAErSpo7WHixAQL2=ptHj+JUsE8W6PTG0ZEM1T0fYQAixqjm=pQ@mail.gmail.com>
+References: <20111028222432.30729.8431.stgit@bhelgaas.mtv.corp.google.com>
+	<20111028222611.30729.46284.stgit@bhelgaas.mtv.corp.google.com>
+	<CAErSpo7WHixAQL2=ptHj+JUsE8W6PTG0ZEM1T0fYQAixqjm=pQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/uNKaQfjkhe.5DZ+.7SP5mGx"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In extreme case: Two bridges are properly setup.
-       bridge A
-               bridge AA
-               bridge AB
-       bridge B
-	       bridge BA
-	       bridge BB
-   but AA, AB are not setup properly.
-   bridge A has small range, and bridge AB could need more, when do the
-       first pass0 for bridge A, it will do pass0 and pass1 for AA and AB,
-	during that process, it will extend range of A for AB blindly.
-	because bridge B is not registered yet.
-       that could overlap range that is used by bridge B.
+--Sig_/uNKaQfjkhe.5DZ+.7SP5mGx
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Right way should be:
-       do pass0 for all good bridges at first.
-So we could do pass0 for bridge B before pass1 for bridge AB.
+On Fri, 16 Dec 2011 14:24:01 -0700
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   50 ++++++++++++++++++++++++++++++++++----------------
- 1 files changed, 34 insertions(+), 16 deletions(-)
+> On Fri, Oct 28, 2011 at 4:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrot=
+e:
+> > Convert from pci_scan_bus() to pci_scan_root_bus() and remove root bus
+> > resource fixups. =A0This fixes the problem of "early" and "header" quir=
+ks
+> > seeing incorrect root bus resources.
+> >
+> > CC: linux-alpha@vger.kernel.org
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> > =A0arch/alpha/kernel/pci.c | =A0 37 ++++++++++++++++++++---------------=
+--
+> > =A01 files changed, 20 insertions(+), 17 deletions(-)
+> >
+> > diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+> > index c9ab94e..e9e78a2 100644
+> > --- a/arch/alpha/kernel/pci.c
+> > +++ b/arch/alpha/kernel/pci.c
+> > @@ -286,22 +286,7 @@ pcibios_fixup_bus(struct pci_bus *bus)
+> > =A0 =A0 =A0 =A0struct pci_controller *hose =3D bus->sysdata;
+> > =A0 =A0 =A0 =A0struct pci_dev *dev =3D bus->self;
+> >
+> > - =A0 =A0 =A0 if (!dev) {
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Root bus. */
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 u32 pci_mem_end;
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 u32 sg_base =3D hose->sg_pci ? hose->sg_p=
+ci->dma_base : ~0;
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned long end;
+> > -
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bus->resource[0] =3D hose->io_space;
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bus->resource[1] =3D hose->mem_space;
+> > -
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Adjust hose mem_space limit to prevent=
+ PCI allocations
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0in the iommu windows. */
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 pci_mem_end =3D min((u32)__direct_map_bas=
+e, sg_base) - 1;
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 end =3D hose->mem_space->start + pci_mem_=
+end;
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (hose->mem_space->end > end)
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 hose->mem_space->end =3D =
+end;
+> > - =A0 =A0 =A0 } else if (pci_probe_only &&
+> > + =A0 =A0 =A0 if (pci_probe_only && dev &&
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (dev->class >> 8) =3D=3D PCI_CLASS_=
+BRIDGE_PCI) {
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pci_read_bridge_bases(bus);
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pcibios_fixup_device_resources(dev, bus);
+> > @@ -414,13 +399,31 @@ void __init
+> > =A0common_init_pci(void)
+> > =A0{
+> > =A0 =A0 =A0 =A0struct pci_controller *hose;
+> > + =A0 =A0 =A0 struct list_head resources;
+> > =A0 =A0 =A0 =A0struct pci_bus *bus;
+> > =A0 =A0 =A0 =A0int next_busno;
+> > =A0 =A0 =A0 =A0int need_domain_info =3D 0;
+> > + =A0 =A0 =A0 u32 pci_mem_end;
+> > + =A0 =A0 =A0 u32 sg_base;
+> > + =A0 =A0 =A0 unsigned long end;
+> >
+> > =A0 =A0 =A0 =A0/* Scan all of the recorded PCI controllers. =A0*/
+> > =A0 =A0 =A0 =A0for (next_busno =3D 0, hose =3D hose_head; hose; hose =
+=3D hose->next) {
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bus =3D pci_scan_bus(next_busno, alpha_mv=
+.pci_ops, hose);
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sg_base =3D hose->sg_pci ? hose->sg_pci->=
+dma_base : ~0;
+> > +
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Adjust hose mem_space limit to prevent=
+ PCI allocations
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0in the iommu windows. */
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pci_mem_end =3D min((u32)__direct_map_bas=
+e, sg_base) - 1;
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 end =3D hose->mem_space->start + pci_mem_=
+end;
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (hose->mem_space->end > end)
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 hose->mem_space->end =3D =
+end;
+> > +
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 INIT_LIST_HEAD(&resources);
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pci_add_resource(&resources, &hose->io_sp=
+ace);
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pci_add_resource(&resources, &hose->mem_s=
+pace);
+>=20
+> These two lines are errors: hose->io_space is already a struct
+> resource pointer, so we shouldn't take the pointer's address.  Updated
+> patch and incremental patch attached.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 86a4402..2907b74 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -793,6 +793,9 @@ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
- 
- 	return broken;
- }
-+
-+static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
-+						 int pass);
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
-@@ -844,11 +847,10 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 	    !is_cardbus && !broken) {
- 		unsigned int cmax;
- 		/*
--		 * Bus already configured by firmware, process it in the first
--		 * pass and just note the configuration.
-+		 * Bus already configured by firmware, still process it in two
-+		 * passes in extreme case like two adjaced bridges have children
-+		 * bridges that are not setup properly.
- 		 */
--		if (pass)
--			goto out;
- 
- 		/*
- 		 * If we already got to this bus through a different bridge,
-@@ -869,7 +871,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			pci_bus_insert_busn_res(child, secondary, subordinate);
- 		}
- 
--		cmax = pci_scan_child_bus(child);
-+		cmax = __pci_scan_child_bus(child, pass);
- 		if (cmax > max)
- 			max = cmax;
- 		if (child->subordinate > max)
-@@ -1659,12 +1661,13 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- }
- EXPORT_SYMBOL_GPL(pcie_bus_configure_settings);
- 
--unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
-+static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
-+						 int pass)
- {
--	unsigned int devfn, pass, max = bus->secondary;
-+	unsigned int devfn, max = bus->secondary;
- 	struct pci_dev *dev;
- 
--	dev_dbg(&bus->dev, "scanning bus\n");
-+	dev_dbg(&bus->dev, "scanning bus pass %d\n", pass);
- 
- 	/* Go find them, Rover! */
- 	for (devfn = 0; devfn < 0x100; devfn += 8)
-@@ -1678,18 +1681,16 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- 	 * all PCI-to-PCI bridges on this bus.
- 	 */
- 	if (!bus->is_added) {
--		dev_dbg(&bus->dev, "fixups for bus\n");
-+		dev_dbg(&bus->dev, "fixups for bus pass %d\n", pass);
- 		pcibios_fixup_bus(bus);
- 		if (pci_is_root_bus(bus))
- 			bus->is_added = 1;
- 	}
- 
--	for (pass=0; pass < 2; pass++)
--		list_for_each_entry(dev, &bus->devices, bus_list) {
--			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
--			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
--				max = pci_scan_bridge(bus, dev, max, pass);
--		}
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-+		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
-+			max = pci_scan_bridge(bus, dev, max, pass);
- 
- 	/*
- 	 * We've scanned the bus and so we know all about what's on
-@@ -1698,7 +1699,24 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- 	 *
- 	 * Return how far we've got finding sub-buses.
- 	 */
--	dev_dbg(&bus->dev, "bus scan returning with max=%02x\n", max);
-+	dev_dbg(&bus->dev, "bus scan returning with max=%02x pass %d\n",
-+			max, pass);
-+
-+	return max;
-+}
-+
-+unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
-+{
-+	int pass;
-+	unsigned int max = 0, tmp;
-+
-+	for (pass = 0; pass < 2;  pass++) {
-+		tmp = __pci_scan_child_bus(bus, pass);
-+
-+		if (tmp > max)
-+			max = tmp;
-+	}
-+
- 	return max;
- }
- 
--- 
-1.7.7
+Squashed into the original alpha patch, thanks.
 
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/uNKaQfjkhe.5DZ+.7SP5mGx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPBI6bAAoJEIEoDkX4Qk9h8gAP/R98tLfsl/POjIu2JE0HpjnL
+RTIXhiLRH2LBswS8P5lSCLptWDEbqwPz6H+suKGkzvFoKYaBw4gZ9bc58+SmNEEJ
+bavF1kpNOmOwkXbrTe2QSytkOjjE30e8s52gi8hqz1V7AIDgQwZWFyq9kJeyLOIN
+szPqXdKbtidb+51zc1HxNywymT8zDwC5iDW9LYBfSOYR4L8n17o2wEkRVPeaxGq/
+Wa7gR5vPaMcHV096Ev4ORjQBZrueDHbPqin+34yc4H5BgTQPOec/Ro64VC+bEWyx
+nHmSXO3oQviK+X4sgDEkSlOcx8I2M+lgc6JXgYrO0Z/l8ND7iPgIO8fnKxrYxHe7
+514w8eh/Ue/3QjwK3gQ6svLl74CZXOWu91Cthufz/mVvYSjJqdhPcvDUgfS4P6dl
+Wy0TnT9G9bcRo5vVJt9R2SmtN+USWLbYqO8O8lftNlmpr7ysuFJ99MR4WhPZfbkg
+eSnGSAJqsm1nB5uWqo9z/EeE4jcYtdwNWXPETeRaLyim9zBNbVRqUD3n1+g+KFDv
+58TCokw0EmbhJwu/6x1CsTisWu+MlwqT/E5Svsm+3qGOfVfXy7ZoBW7z01CPo50Z
+SngwDts0CqMLNdDiXsMPu/MqVPWFMZN2phEsVXc7QmBYQoN+yEKOTEmbMVhqPypt
+gIIYBBdljVj22va+5gga
+=egEV
+-----END PGP SIGNATURE-----
+
+--Sig_/uNKaQfjkhe.5DZ+.7SP5mGx--
