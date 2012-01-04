@@ -1,172 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ey0-f202.google.com ([209.85.215.202]:56646 "EHLO
-	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755880Ab2AIWn5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 17:43:57 -0500
-Received: by eaak10 with SMTP id k10so135079eaa.1
-        for <linux-pci@vger.kernel.org>; Mon, 09 Jan 2012 14:43:55 -0800 (PST)
-Subject: [PATCH v2 2/3] x86, amd: factor out MMCONFIG discovery
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, stable@kernel.org#2.6.34+,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <borislav.petkov@amd.com>
-Date: Mon, 09 Jan 2012 15:43:54 -0700
-Message-ID: <20120109224354.24913.79060.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120109224349.24913.23010.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120109224349.24913.23010.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:51292 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750805Ab2ADRfq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 12:35:46 -0500
+Date: Wed, 4 Jan 2012 09:35:42 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: "Hao, Xudong" <xudong.hao@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Subject: Re: [PATCH] PCI: Enable ATS at the device state restore
+Message-ID: <20120104093542.1f498a30@jbarnes-desktop>
+In-Reply-To: <BC00F5384FCFC9499AF06F92E8B78A9E28904877DA@shsmsx502.ccr.corp.intel.com>
+References: <BC00F5384FCFC9499AF06F92E8B78A9E28904877DA@shsmsx502.ccr.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Ob6Cp_FqKLZr5XsK/26gkW5"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This factors out the AMD native MMCONFIG discovery so we can use it
-outside amd_bus.c.
+--Sig_/Ob6Cp_FqKLZr5XsK/26gkW5
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-amd_bus.c reads AMD MSRs so it can remove the MMCONFIG area from the
-PCI resources.  We may also need the MMCONFIG information to work
-around BIOS defects in the ACPI MCFG table.
+No looks fine, just applied to my linux-next branch.  Thanks.
 
-Cc: Borislav Petkov <borislav.petkov@amd.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@kernel.org       # 2.6.34+
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/include/asm/amd_nb.h |    2 ++
- arch/x86/kernel/amd_nb.c      |   31 ++++++++++++++++++++++++++++++
- arch/x86/pci/amd_bus.c        |   42 +++++++++++------------------------------
- 3 files changed, 44 insertions(+), 31 deletions(-)
+Jesse
 
-diff --git a/arch/x86/include/asm/amd_nb.h b/arch/x86/include/asm/amd_nb.h
-index 8e41071..49ad773 100644
---- a/arch/x86/include/asm/amd_nb.h
-+++ b/arch/x86/include/asm/amd_nb.h
-@@ -1,6 +1,7 @@
- #ifndef _ASM_X86_AMD_NB_H
- #define _ASM_X86_AMD_NB_H
- 
-+#include <linux/ioport.h>
- #include <linux/pci.h>
- 
- struct amd_nb_bus_dev_range {
-@@ -13,6 +14,7 @@ extern const struct pci_device_id amd_nb_misc_ids[];
- extern const struct amd_nb_bus_dev_range amd_nb_bus_dev_ranges[];
- 
- extern bool early_is_amd_nb(u32 value);
-+extern struct resource *amd_get_mmconfig_range(struct resource *res);
- extern int amd_cache_northbridges(void);
- extern void amd_flush_garts(void);
- extern int amd_numa_init(void);
-diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-index 4c39baa..bae1efe 100644
---- a/arch/x86/kernel/amd_nb.c
-+++ b/arch/x86/kernel/amd_nb.c
-@@ -119,6 +119,37 @@ bool __init early_is_amd_nb(u32 device)
- 	return false;
- }
- 
-+struct resource *amd_get_mmconfig_range(struct resource *res)
-+{
-+	u32 address;
-+	u64 base, msr;
-+	unsigned segn_busn_bits;
-+
-+	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
-+		return NULL;
-+
-+	/* assume all cpus from fam10h have mmconfig */
-+        if (boot_cpu_data.x86 < 0x10)
-+		return NULL;
-+
-+	address = MSR_FAM10H_MMIO_CONF_BASE;
-+	rdmsrl(address, msr);
-+
-+	/* mmconfig is not enabled */
-+	if (!(msr & FAM10H_MMIO_CONF_ENABLE))
-+		return NULL;
-+
-+	base = msr & (FAM10H_MMIO_CONF_BASE_MASK<<FAM10H_MMIO_CONF_BASE_SHIFT);
-+
-+	segn_busn_bits = (msr >> FAM10H_MMIO_CONF_BUSRANGE_SHIFT) &
-+			 FAM10H_MMIO_CONF_BUSRANGE_MASK;
-+
-+	res->flags = IORESOURCE_MEM;
-+	res->start = base;
-+	res->end = base + (1ULL<<(segn_busn_bits + 20)) - 1;
-+	return res;
-+}
-+
- int amd_get_subcaches(int cpu)
- {
- 	struct pci_dev *link = node_to_amd_nb(amd_get_nb_id(cpu))->link;
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index 026e493..385a940 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -30,34 +30,6 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
- 	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
- };
- 
--static u64 __initdata fam10h_mmconf_start;
--static u64 __initdata fam10h_mmconf_end;
--static void __init get_pci_mmcfg_amd_fam10h_range(void)
--{
--	u32 address;
--	u64 base, msr;
--	unsigned segn_busn_bits;
--
--	/* assume all cpus from fam10h have mmconf */
--        if (boot_cpu_data.x86 < 0x10)
--		return;
--
--	address = MSR_FAM10H_MMIO_CONF_BASE;
--	rdmsrl(address, msr);
--
--	/* mmconfig is not enable */
--	if (!(msr & FAM10H_MMIO_CONF_ENABLE))
--		return;
--
--	base = msr & (FAM10H_MMIO_CONF_BASE_MASK<<FAM10H_MMIO_CONF_BASE_SHIFT);
--
--	segn_busn_bits = (msr >> FAM10H_MMIO_CONF_BUSRANGE_SHIFT) &
--			 FAM10H_MMIO_CONF_BUSRANGE_MASK;
--
--	fam10h_mmconf_start = base;
--	fam10h_mmconf_end = base + (1ULL<<(segn_busn_bits + 20)) - 1;
--}
--
- #define RANGE_NUM 16
- 
- /**
-@@ -85,6 +57,9 @@ static int __init early_fill_mp_bus_info(void)
- 	u64 val;
- 	u32 address;
- 	bool found;
-+	struct resource fam10h_mmconf_res, *fam10h_mmconf;
-+	u64 fam10h_mmconf_start;
-+	u64 fam10h_mmconf_end;
- 
- 	if (!early_pci_allowed())
- 		return -1;
-@@ -211,12 +186,17 @@ static int __init early_fill_mp_bus_info(void)
- 		subtract_range(range, RANGE_NUM, 0, end);
- 
- 	/* get mmconfig */
--	get_pci_mmcfg_amd_fam10h_range();
-+	fam10h_mmconf = amd_get_mmconfig_range(&fam10h_mmconf_res);
- 	/* need to take out mmconf range */
--	if (fam10h_mmconf_end) {
--		printk(KERN_DEBUG "Fam 10h mmconf [%llx, %llx]\n", fam10h_mmconf_start, fam10h_mmconf_end);
-+	if (fam10h_mmconf) {
-+		printk(KERN_DEBUG "Fam 10h mmconf %pR\n", fam10h_mmconf);
-+		fam10h_mmconf_start = fam10h_mmconf->start;
-+		fam10h_mmconf_end = fam10h_mmconf->end;
- 		subtract_range(range, RANGE_NUM, fam10h_mmconf_start,
- 				 fam10h_mmconf_end + 1);
-+	} else {
-+		fam10h_mmconf_start = 0;
-+		fam10h_mmconf_end = 0;
- 	}
- 
- 	/* mmio resource */
+On Tue, 20 Dec 2011 18:15:42 +0800
+"Hao, Xudong" <xudong.hao@intel.com> wrote:
 
+> Hi, Jesse
+> Do you have any comments for this fix patch?
+>=20
+> Thanks,
+> -Xudong
+>=20
+> > -----Original Message-----
+> > From: Hao, Xudong
+> > Sent: Saturday, December 17, 2011 9:25 PM
+> > To: 'jbarnes@virtuousgeek.org'; 'linux-pci@vger.kernel.org'
+> > Cc: linux-kernel@vger.kernel.org; kvm@vger.kernel.org; Zhang, Xiantao
+> > Subject: [PATCH] PCI: Enable ATS at the device state restore
+> >=20
+> > When system go to S3 or S4 sleep and then return, some register of PCI =
+device
+> > does not be restored correctly, such as ATS capability. The same problem
+> > happen on pci reset function.
+> >=20
+> > This patch enables ATS at the device state restore if PCI device has ATS
+> > capability.
+> >=20
+> > Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+> > Signed-off-by: Xiantao Zhang <xiantao.zhang@intel.com>
+> > ---
+> >  drivers/pci/ats.c |   17 +++++++++++++++++
+> >  drivers/pci/pci.c |    1 +
+> >  drivers/pci/pci.h |    8 ++++++++
+> >  3 files changed, 26 insertions(+), 0 deletions(-)
+> >=20
+> > diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c index 7ec56fb..a6c2b=
+35 100644
+> > --- a/drivers/pci/ats.c
+> > +++ b/drivers/pci/ats.c
+> > @@ -127,6 +127,23 @@ void pci_disable_ats(struct pci_dev *dev)  }
+> > EXPORT_SYMBOL_GPL(pci_disable_ats);
+> >=20
+> > +void pci_restore_ats_state(struct pci_dev *dev) {
+> > +	u16 ctrl;
+> > +
+> > +	if (!pci_ats_enabled(dev))
+> > +		return;
+> > +	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS))
+> > +		BUG();
+> > +
+> > +	ctrl =3D PCI_ATS_CTRL_ENABLE;
+> > +	if (!dev->is_virtfn)
+> > +		ctrl |=3D PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
+> > +
+> > +	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl); }
+> > +EXPORT_SYMBOL_GPL(pci_restore_ats_state);
+> > +
+> >  /**
+> >   * pci_ats_queue_depth - query the ATS Invalidate Queue Depth
+> >   * @dev: the PCI device
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c index 6f45a73..6dafc=
+1d 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -956,6 +956,7 @@ void pci_restore_state(struct pci_dev *dev)
+> >=20
+> >  	/* PCI Express register must be restored first */
+> >  	pci_restore_pcie_state(dev);
+> > +	pci_restore_ats_state(dev);
+> >=20
+> >  	/*
+> >  	 * The Base Address register should be programmed before the command
+> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h index b74084e..a4f31=
+40 100644
+> > --- a/drivers/pci/pci.h
+> > +++ b/drivers/pci/pci.h
+> > @@ -249,6 +249,14 @@ struct pci_sriov {
+> >  	u8 __iomem *mstate;	/* VF Migration State Array */
+> >  };
+> >=20
+> > +#ifdef CONFIG_PCI_ATS
+> > +extern void pci_restore_ats_state(struct pci_dev *dev); #else static
+> > +inline void pci_restore_ats_state(struct pci_dev *dev) { } #endif /*
+> > +CONFIG_PCI_ATS */
+> > +
+> >  #ifdef CONFIG_PCI_IOV
+> >  extern int pci_iov_init(struct pci_dev *dev);  extern void
+> > pci_iov_release(struct pci_dev *dev);
+>=20
+
+
+
+--Sig_/Ob6Cp_FqKLZr5XsK/26gkW5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPBI3uAAoJEIEoDkX4Qk9hDLYP/3KOUwPXVKMIWwdZNJPMX/F3
+gmC8O20AHC0YQzhF5IFPe5bjLx48H0PHAzReKsTeXjbDN4Uo8kytNiOwsHVrlVBf
+86X5l/HZ+N8PutbRudsjIk9GBabRVKFlwjKKD9MuOGpfYwOkQqtmxEem69AUxdrL
+a6CIliOhZFGzYfbuazMhuHbl0UkeINpDVjhzq9Ed/qz2C3Rovupo9YqNbbcfJHmD
+JTHe4A/xMCQpoL9n8KkB3Fau3Xa52tKKligVdJ3JH/1MXXvjfNuYkjqBcVvuLVPZ
+FeN7fp3YLRF3O6t7/sG6nAzroFUzmAZBKTG7521CYfm6KOtx+aJttA+taVo7I0oO
+sShJ+w0X8UYYNNRSrQ+NC5sGBZuWgDsgZae9GwnSwkTtADskUhW7cjdLcrqTzh1u
+6EbKwOgBsZOhdePkXtp5Kh120joWrrZHLfryKn3FtZ9pyzxmtJQj3MV65rxGjhtV
+UDhH6nHk4OYSJMMhEwxaIpWH6/cWqAxTMlIGkXcUoc8xPxW84CWi5p+0au1LIN1A
+c25/tNOChr7FeyzpkRWhAmh0q9WjtnixFrQJBDRzYUyU6d7Hm2bQZ5MuemAc1fnS
+MOvMR65U5dal+GpeETfNCh096ROt2J/OLdxWifu3izPi7PadaJCQ1tHqKR4L/IcL
+v5+VwAXU87WOHUHjYmuw
+=1sL7
+-----END PGP SIGNATURE-----
+
+--Sig_/Ob6Cp_FqKLZr5XsK/26gkW5--
