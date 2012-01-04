@@ -1,98 +1,38 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:45335 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752506Ab2ADTX6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 14:23:58 -0500
+Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 10E3620ED9
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jan 2012 14:23:58 -0500 (EST)
+Date: Wed, 4 Jan 2012 11:22:34 -0800
+From: Greg KH <greg@kroah.com>
+To: Pratyush Anand <pratyush.anand@st.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	Deepak SIKRI <deepak.sikri@st.com>,
+	Bhavna YADAV <bhavna.yadav@st.com>, linux-pci@vger.kernel.org
+Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
+Message-ID: <20120104192234.GC18214@kroah.com>
+References: <CAHM4w1=i5dYy+ReqMO=m6W96CNaQ+O=jw+pKQok0nmjb5-fNAw@mail.gmail.com>
+ <4F043190.70405@st.com>
 MIME-Version: 1.0
-In-Reply-To: <1327718971-9598-9-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org> <1327718971-9598-9-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Jan 2012 07:50:17 -0800
-Message-ID: <CAErSpo6dihCWme3bgVV0AjHXnKd78BskLVj2LZqHocoAp83h+Q@mail.gmail.com>
-Subject: Re: [PATCH 08/13] PCI: Add pci_bus_extend/shrink_top()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F043190.70405@st.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 27, 2012 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> extend or shrink bus and parent buses top (subordinate)
->
-> extended range is verified safe range, and stop at recorded parent_res.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/probe.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 50 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 55404c3..3e62f45 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -624,6 +624,56 @@ static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
->        }
->  }
->
-> +static void __devinit pci_bus_extend_top(struct pci_bus *parent,
-> +                resource_size_t size, struct resource *parent_res)
-> +{
-> +       struct resource *res;
-> +
-> +       if (!size)
-> +               return;
-> +
-> +       while (parent) {
-> +               res = &parent->busn_res;
-> +               if (res == parent_res)
-> +                       break;
-> +               res->end += size;
-> +               parent->subordinate += size;
+On Wed, Jan 04, 2012 at 04:31:36PM +0530, Pratyush Anand wrote:
+> Adding PCI mailing list too, as problem is coming only when MSI is enabled.
+> 
+> If I connect an PCIe analyzer, I see that at the time of issue
+> MRd(64) for 32 words has been issued with a wrong 64 bit address
+> from ethernet card to my RC.
+> In the normal course it always issues MRd(32) only.
 
-This makes me nervous for the same reason as
-pci_bus_update_busn_res_end() -- we're changing res->end for resources
-already in a tree.  How do we know the tree remains consistent?
+Bug in your pcie firmware controller?
 
-> +               pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-> +                                        parent->subordinate);
-> +               dev_printk(KERN_DEBUG, &parent->dev,
-> +                               "busn_res: extended %02llx to %06llx-%06llx\n",
-> +                               (unsigned long long)size,
-> +                               (unsigned long long)res->start,
-> +                               (unsigned long long)res->end);
-> +               parent = parent->parent;
-> +       }
-> +}
-> +
-> +static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
-> +                resource_size_t size, struct resource *parent_res)
-> +{
-> +       struct resource *res;
-> +
-> +       if (!size)
-> +               return;
-> +
-> +       while (parent) {
-> +               res = &parent->busn_res;
-> +               if (res == parent_res)
-> +                       break;
-> +               res->end -= size;
-> +               parent->subordinate -= size;
-> +               pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-> +                                        parent->subordinate);
-> +               dev_printk(KERN_DEBUG, &parent->dev,
-> +                               "busn_res: shrunk %02llx to %06llx-%06llx\n",
-> +                               (unsigned long long)size,
-> +                               (unsigned long long)res->start,
-> +                               (unsigned long long)res->end);
-> +               parent = parent->parent;
-> +       }
-> +}
-> +
->  /*
->  * If it's a bridge, configure it and scan the bus behind it.
->  * For CardBus bridges, we don't scan behind as the devices will
-> --
-> 1.7.7
->
