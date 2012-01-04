@@ -1,90 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58836 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750890Ab2AWRVQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Jan 2012 12:21:16 -0500
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 0/5] VFIO core framework
-To: chrisw@sous-sol.org, aik@ozlabs.ru, david@gibson.dropbear.id.au,
-	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 23 Jan 2012 10:20:05 -0700
-Message-ID: <20120123165620.26865.51875.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:33247 "HELO
+	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756606Ab2ADR2L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 12:28:11 -0500
+Date: Wed, 4 Jan 2012 09:28:04 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v3 09/34] arm/PCI: convert to pci_scan_root_bus() for
+ correct root bus resources
+Message-ID: <20120104092804.686d17d3@jbarnes-desktop>
+In-Reply-To: <CAErSpo4MEYHUVsHywnRfYFU18Ly=48gFRZJK_35v=WMj0HHqHw@mail.gmail.com>
+References: <20111028222432.30729.8431.stgit@bhelgaas.mtv.corp.google.com>
+	<20111028222616.30729.96687.stgit@bhelgaas.mtv.corp.google.com>
+	<CAErSpo4MEYHUVsHywnRfYFU18Ly=48gFRZJK_35v=WMj0HHqHw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/+4_6H_bowoh+IbGhEEpWUpC"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series includes the core framework for the VFIO driver.
-VFIO is a userspace driver interface meant to replace both the
-KVM device assignment code as well as interfaces like UIO.  Please
-see patch 1/5 for a complete description of VFIO, what it can do,
-and how it's designed.
+--Sig_/+4_6H_bowoh+IbGhEEpWUpC
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This series can also be found here:
+On Thu, 22 Dec 2011 18:10:43 -0700
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-git://github.com/awilliam/linux-vfio.git vfio-next
+> Working through this with a cross-compiler, I found a build bug in
+> this patch.  Updated patch and incremental patch (from commit
+> 9a1d98b3a0d8621 in your linux-next branch) attached.
+>=20
+> My cross-compiler can only build about half of the ARM configs, but
+> better than nothing, I guess.
 
-This plus the PCI VFIO bus driver for exposing PCI devices to
-userspace can be found here:
+Merged this into the existing ARM patch, thanks.
 
-git://github.com/awilliam/linux-vfio.git vfio-next-staging
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-or here for a linux-2.6.git based tree:
+--Sig_/+4_6H_bowoh+IbGhEEpWUpC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-git://github.com/awilliam/linux-vfio.git vfio-linux-staging
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-A fully functional qemu driver for doing non-KVM based PCI
-device assignment can be found here:
+iQIcBAEBAgAGBQJPBIwkAAoJEIEoDkX4Qk9h1JwP/jvvIUYx9/UFx2xOY0A1ozPO
+q/HkkCR4XVRi11wWlILhBF/fJuGVkGO4/aR+hCbDe583bGt0AzahwwFYYLs/bVgA
+xCskeRvZJVEXshz5jMoGfJHrmDyLv3XCkkL/nljP3yd+EbLMYcoUCGysb+dyGxqJ
+X+4z3GVtfYPMJS2wRTotTqExhswNvBaR4SXyC4MW/s76Lt+8vb73DWSQ13XooJUK
+wKSoXlNUfpWr0CMuKVcouJIXsTgoNI6+TCLN8xjo5FzxHOZHNo+os8SHozbMfXMH
+O3PeLNgpn/T+df6Vd4sp4HP6xNmt2Tj5E0ZhqxY/nzHadYfSVGtvg2Dksnng3d71
+GL9b+Rp5tJlqAklyZcKHRp4+e+ukMSCunVddPKah2Y8IzzNYvIkyHvdq5363jqlf
+0HAaufwS5tkA5fbkhgplyN9u7kQ8eX6CCjLS//A+aFOVmStkAAcTIMqJL72zRPdD
+/G4N5DXtKbMQFrJ8fL8DKecHXBrotype4Ip0gE9HcirTAs///5NUH83f01NgEH8c
+Ajny7iHslqtyGkBOAtQ9BCj3+FwqQqnz9cX9MhrzffF9OKZl5+XQAtoXfG4mfhjh
+rP52/t3L5qj3g4AcF3rFFjO99KYqIqayyZ504z9ZbPYQB28zr3IVmtcymvJfd9aC
+PUyyO8IquPotpMF9zyA0
+=GVXY
+-----END PGP SIGNATURE-----
 
-git://github.com/awilliam/qemu-vfio.git vfio-ng
-
-I'd like to propose VFIO for inclusion in Linux 3.4, starting with
-this core framework series.  Once we have agreement on these, I'll
-split up and post the VFIO PCI bus driver for inclusion as well.
-I can also host the above vfio-next branch for inclusion in
-linux-next.  Please review and comment.  Thanks,
-
-Alex
-
-v2: Interrupt setup ioctl rework based on comments by Konrad.
-    The interrupt ioctls are no longer exclusively targeted
-    at eventfds, allowing for more flexibility of other vfio
-    bus drivers making use of alternate mechanisms.  Also
-    updated vfio_iommu_info to report common IOMMU geometry
-    fields that we know we're going to need for Freescale
-    PAMU.  Additional ioctls and fields to be added via flags
-    as they're implemented in the IOMMU API.
-
----
-
-Alex Williamson (5):
-      vfio: VFIO core Kconfig and Makefile
-      vfio: VFIO core IOMMU mapping support
-      vfio: VFIO core group interface
-      vfio: VFIO core header
-      vfio: Introduce documentation for VFIO driver
-
-
- Documentation/ioctl/ioctl-number.txt |    1 
- Documentation/vfio.txt               |  359 ++++++++++
- MAINTAINERS                          |    8 
- drivers/Kconfig                      |    2 
- drivers/Makefile                     |    1 
- drivers/vfio/Kconfig                 |    8 
- drivers/vfio/Makefile                |    3 
- drivers/vfio/vfio_iommu.c            |  611 +++++++++++++++++
- drivers/vfio/vfio_main.c             | 1248 ++++++++++++++++++++++++++++++++++
- drivers/vfio/vfio_private.h          |   36 +
- include/linux/vfio.h                 |  395 +++++++++++
- 11 files changed, 2672 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/vfio.txt
- create mode 100644 drivers/vfio/Kconfig
- create mode 100644 drivers/vfio/Makefile
- create mode 100644 drivers/vfio/vfio_iommu.c
- create mode 100644 drivers/vfio/vfio_main.c
- create mode 100644 drivers/vfio/vfio_private.h
- create mode 100644 include/linux/vfio.h
+--Sig_/+4_6H_bowoh+IbGhEEpWUpC--
