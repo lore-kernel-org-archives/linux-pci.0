@@ -1,251 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 13/21] PCI: Rename dev_res_x to add_res or fail_res
-Date: Sat, 21 Jan 2012 02:08:29 -0800
-Message-Id: <1327140517-14811-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46657 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757613Ab2AEQUS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2012 11:20:18 -0500
+Message-ID: <1325780417.2775.6.camel@dabdike.Larkspurhotels.com>
+Subject: Re: =?UTF-8?Q?=E3=80=90Question=E3=80=91Whether?= it's legal to
+ enable same physical DMA memory mapped for different NIC device?
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Yanfei Wang <backyes@gmail.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 05 Jan 2012 08:20:17 -0800
+In-Reply-To: <CAJULoniAdLbyNUyrCYWbxOWAdB-Re-BxSNb0xfuFD8w6pDETWA@mail.gmail.com>
+References: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
+	 <20120103203357.GD17472@phenom.dumpdata.com>
+	 <CAJULongKix3QXmcoUcraQxCyLN0wz6oe6p5Efg2A7S_r3nO6Fg@mail.gmail.com>
+	 <1325692766.2758.22.camel@dabdike.int.hansenpartnership.com>
+	 <CAJULoniAdLbyNUyrCYWbxOWAdB-Re-BxSNb0xfuFD8w6pDETWA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to Linus, don't use dev_res_x.
-Replace them with add_res, fail_res etc according to context.
+On Thu, 2012-01-05 at 20:40 +0800, Yanfei Wang wrote:
+> On Wed, Jan 4, 2012 at 11:59 PM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Wed, 2012-01-04 at 10:44 +0800, Yanfei Wang wrote:
+> >> On Wed, Jan 4, 2012 at 4:33 AM, Konrad Rzeszutek Wilk
+> >> <konrad.wilk@oracle.com> wrote:
+> >> > On Wed, Dec 07, 2011 at 10:16:40PM +0800, ustc.mail wrote:
+> >> >> Dear all,
+> >> >>
+> >> >> In NIC driver, to eliminate the  overhead of dma_map_single() for DMA
+> >> >> packet data,  we have statically allocated huge DMA memory buffer ring
+> >> >> at once instead of calling dma_map_single() per packet.  Considering
+> >> >> to further reduce the copy overhead between different NIC(port) ring
+> >> >> while forwarding, one packet from a input NIC(port) will be
+> >> >> transferred to output NIC(port) with no any copy action.
+> >> >>
+> >> >> To satisfy this requirement, the packet memory should be mapped into
+> >> >> input port and unmapped when leaving input port, then mapped into
+> >> >> output port and unmapped later.
+> >> >>
+> >> >> Whether it's legal to map the same DMA memory into input and output
+> >> >> port simultaneously? If it's not, then the zero-copy for packet
+> >> >> forwarding is not feasible?
+> >> >>
+> >> >
+> >> > Did you ever a get a response about this?
+> >> No.
+> >
+> > This is probably because no-one really understands what you're asking.
+> > As far as mapping memory to PCI devices goes, it's the job of the bridge
+> > (or the iommu which may or may not be part of the bridge).  A standard
+> > iommu tends not to care about devices and functions, so a range once
+> > mapped is available to everything behind the bridge.  A more secure
+> > virtualisation based iommu (like the on in VT-D) does, and tends to map
+> > ranges per device.  I know of none that map per device and function, but
+> > maybe there are.
+> >
+> > Your question reads like you have a range of memory mapped to a PCI
+> > device that you want to use for two different purposes, can you do this?
+> > to which the answer is that a standard PCI bridge really doesn't care
+> > and it all depends on the mechanics of the actual device.  The only
+> > wrinkle might be if the two different purposes are on two separate PCI
+> > functions of the device and the iommu does care.
+> >
+> >> >
+> >> > Is the output/input port on a seperate device function? Or is it
+> >> > just a specific MMIO BAR in your PCI device?
+> >> >
+> >> Platform: x86, intel nehalem 8Core NUMA, linux 2.6.39, 10G
+> >> 82599NIC(two ports per NIC card);
+> >> Function: Forwarding packets between different ports.
+> >> Targets: Forwarding packets with Zero-Overhead, despite other obstacles.
+> Besides hardware and OS presented above, more detailed descriptions as follows,
+> 
+> When IXGBE driver do initialization, DMA Descriptors Ring Buffers are
+> allocated statically and mapped as cache coherent. Instead of
+> dynamically allocating skb buffers for packet data, to reduce the huge
+> overhead from skb memory allocation, huge Packet data buffers are
+> pre-allocated and mapped  when driver is loaded. The same strategy  is
+> done for RX end and TX end.
+> For simple packet forwarding application, one packet from RX should be
+> replicated from kernel space to userspace, then copied TX end. Here,
+> One packet at least, should be copied twice to accomplish forwarding.
+> When doing high performance network application,  the copy action want
+> to be reduced. If Zero-copy can be done, that's better. (May be you
+> will find that Zero-copy will bring other obstacles, such as memory
+> management overhead with high performance. We do not care about it
+> temporally.)
+> To achieve this goal, a alternative approach is that,  unmapping the
+> packets buffer after receiving it from A device, then mapping this
+> packet buffer to B device. We hope to reduce the two mapping
+> operation, so one packet DMA buffer should be mapped to A device(NIC
+> port) as well as B device simultaneously.
+> Q: Can this come to ture? Is it legal for mmaping operation at this platform?
 
-Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |  110 +++++++++++++++++++++++-----------------------
- 1 files changed, 55 insertions(+), 55 deletions(-)
+But you still haven't answered the question upon which all this depends.
+Let me make it simple.  In PCI terms are A and B
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index af2a98a..a6e427a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -95,32 +95,32 @@ static void add_to_failed_list(struct list_head *head,
- 			0 /* dont care */);
- }
- 
--static void remove_from_list(struct list_head *realloc_head,
-+static void remove_from_list(struct list_head *head,
- 				 struct resource *res)
- {
--	struct pci_dev_resource *dev_res_x, *tmp;
-+	struct pci_dev_resource *dev_res, *tmp;
- 
--	list_for_each_entry_safe(dev_res_x, tmp, realloc_head, list) {
--		if (dev_res_x->res == res) {
--			list_del(&dev_res_x->list);
--			kfree(dev_res_x);
-+	list_for_each_entry_safe(dev_res, tmp, head, list) {
-+		if (dev_res->res == res) {
-+			list_del(&dev_res->list);
-+			kfree(dev_res);
- 			break;
- 		}
- 	}
- }
- 
--static resource_size_t get_res_add_size(struct list_head *realloc_head,
-+static resource_size_t get_res_add_size(struct list_head *head,
- 					struct resource *res)
- {
--	struct pci_dev_resource *dev_res_x;
-+	struct pci_dev_resource *dev_res;
- 
--	list_for_each_entry(dev_res_x, realloc_head, list) {
--		if (dev_res_x->res == res) {
--			dev_printk(KERN_DEBUG, &dev_res_x->dev->dev,
-+	list_for_each_entry(dev_res, head, list) {
-+		if (dev_res->res == res) {
-+			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
- 				 "%pR get_res_add_size  add_size %llx\n",
--				 dev_res_x->res,
--				 (unsigned long long)dev_res_x->add_size);
--			return dev_res_x->add_size;
-+				 dev_res->res,
-+				 (unsigned long long)dev_res->add_size);
-+			return dev_res->add_size;
- 		}
- 	}
- 
-@@ -221,15 +221,15 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 		struct list_head *head)
- {
- 	struct resource *res;
--	struct pci_dev_resource *dev_res_x, *tmp;
-+	struct pci_dev_resource *add_res, *tmp;
- 	struct pci_dev_resource *dev_res;
- 	resource_size_t add_size;
- 	int idx;
- 
--	list_for_each_entry_safe(dev_res_x, tmp, realloc_head, list) {
-+	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
- 		bool found_match = false;
- 
--		res = dev_res_x->res;
-+		res = add_res->res;
- 		/* skip resource that has been reset */
- 		if (!res->flags)
- 			goto out;
-@@ -244,26 +244,26 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 		if (!found_match)/* just skip */
- 			continue;
- 
--		idx = res - &dev_res_x->dev->resource[0];
--		add_size = dev_res_x->add_size;
-+		idx = res - &add_res->dev->resource[0];
-+		add_size = add_res->add_size;
- 		if (!resource_size(res)) {
--			res->start = dev_res_x->start;
-+			res->start = add_res->start;
- 			res->end = res->start + add_size - 1;
--			if (pci_assign_resource(dev_res_x->dev, idx))
-+			if (pci_assign_resource(add_res->dev, idx))
- 				reset_resource(res);
- 		} else {
--			resource_size_t align = dev_res_x->min_align;
--			res->flags |= dev_res_x->flags &
-+			resource_size_t align = add_res->min_align;
-+			res->flags |= add_res->flags &
- 				 (IORESOURCE_STARTALIGN|IORESOURCE_SIZEALIGN);
--			if (pci_reassign_resource(dev_res_x->dev, idx,
-+			if (pci_reassign_resource(add_res->dev, idx,
- 						  add_size, align))
--				dev_printk(KERN_DEBUG, &dev_res_x->dev->dev,
-+				dev_printk(KERN_DEBUG, &add_res->dev->dev,
- 				   "failed to add optional resources res=%pR\n",
- 							res);
- 		}
- out:
--		list_del(&dev_res_x->list);
--		kfree(dev_res_x);
-+		list_del(&add_res->list);
-+		kfree(add_res);
- 	}
- }
- 
-@@ -319,7 +319,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 */
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
--	struct pci_dev_resource *dev_res_x;
-+	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res;
- 
- 	/* Check if optional add_size is there */
-@@ -358,12 +358,12 @@ static void __assign_resources_sorted(struct list_head *head,
- 		if (dev_res->res->parent)
- 			release_resource(dev_res->res);
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(dev_res_x, &save_head, list) {
--		struct resource *res = dev_res_x->res;
-+	list_for_each_entry(save_res, &save_head, list) {
-+		struct resource *res = save_res->res;
- 
--		res->start = dev_res_x->start;
--		res->end = dev_res_x->end;
--		res->flags = dev_res_x->flags;
-+		res->start = save_res->start;
-+		res->end = save_res->end;
-+		res->flags = save_res->flags;
- 	}
- 	free_list(pci_dev_resource, &save_head);
- 
-@@ -1250,7 +1250,7 @@ pci_assign_unassigned_resources(void)
- 	int tried_times = 0;
- 	enum release_type rel_type = leaf_only;
- 	LIST_HEAD(fail_head);
--	struct pci_dev_resource *dev_res_x;
-+	struct pci_dev_resource *fail_res;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 	unsigned long failed_type;
-@@ -1289,8 +1289,8 @@ again:
- 		goto enable_and_dump;
- 
- 	failed_type = 0;
--	list_for_each_entry(dev_res_x, &fail_head, list)
--		failed_type |= dev_res_x->flags;
-+	list_for_each_entry(fail_res, &fail_head, list)
-+		failed_type |= fail_res->flags;
- 
- 	/*
- 	 * io port are tight, don't try extra
-@@ -1313,20 +1313,20 @@ again:
- 	 * Try to release leaf bridge's resources that doesn't fit resource of
- 	 * child device under that bridge
- 	 */
--	list_for_each_entry(dev_res_x, &fail_head, list) {
--		bus = dev_res_x->dev->bus;
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		bus = fail_res->dev->bus;
- 		pci_bus_release_bridge_resources(bus,
--						 dev_res_x->flags & type_mask,
-+						 fail_res->flags & type_mask,
- 						 rel_type);
- 	}
- 	/* restore size and flags */
--	list_for_each_entry(dev_res_x, &fail_head, list) {
--		struct resource *res = dev_res_x->res;
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		struct resource *res = fail_res->res;
- 
--		res->start = dev_res_x->start;
--		res->end = dev_res_x->end;
--		res->flags = dev_res_x->flags;
--		if (dev_res_x->dev->subordinate)
-+		res->start = fail_res->start;
-+		res->end = fail_res->end;
-+		res->flags = fail_res->flags;
-+		if (fail_res->dev->subordinate)
- 			res->flags = 0;
- 	}
- 	free_list(pci_dev_resource, &fail_head);
-@@ -1350,7 +1350,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 					want additional resources */
- 	int tried_times = 0;
- 	LIST_HEAD(fail_head);
--	struct pci_dev_resource *dev_res_x;
-+	struct pci_dev_resource *fail_res;
- 	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
-@@ -1377,21 +1377,21 @@ again:
- 	 * Try to release leaf bridge's resources that doesn't fit resource of
- 	 * child device under that bridge
- 	 */
--	list_for_each_entry(dev_res_x, &fail_head, list) {
--		struct pci_bus *bus = dev_res_x->dev->bus;
--		unsigned long flags = dev_res_x->flags;
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		struct pci_bus *bus = fail_res->dev->bus;
-+		unsigned long flags = fail_res->flags;
- 
- 		pci_bus_release_bridge_resources(bus, flags & type_mask,
- 						 whole_subtree);
- 	}
- 	/* restore size and flags */
--	list_for_each_entry(dev_res_x, &fail_head, list) {
--		struct resource *res = dev_res_x->res;
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		struct resource *res = fail_res->res;
- 
--		res->start = dev_res_x->start;
--		res->end = dev_res_x->end;
--		res->flags = dev_res_x->flags;
--		if (dev_res_x->dev->subordinate)
-+		res->start = fail_res->start;
-+		res->end = fail_res->end;
-+		res->flags = fail_res->flags;
-+		if (fail_res->dev->subordinate)
- 			res->flags = 0;
- 	}
- 	free_list(pci_dev_resource, &fail_head);
--- 
-1.7.7
+     I. Same Device, Same Function
+    II. Same Device, Different Function
+   III. Different Devices
+
+?
+
+James
+
 
