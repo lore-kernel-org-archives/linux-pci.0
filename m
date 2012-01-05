@@ -1,57 +1,69 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 07/14] PCI, powerpc: Register busn_res for root buses
-Date: Mon, 30 Jan 2012 23:42:45 -0800
-Message-Id: <1327995772-11388-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: linux-kernel@vger.kernel.org, jbarnes@virtuousgeek.org,
+	linux-pci@vger.kernel.org
+Cc: xen-devel@lists.xensource.com,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH 3/5] xen/pciback: Move the PCI_DEV_FLAGS_ASSIGNED ops to the "[un|]bind"
+Date: Wed,  4 Jan 2012 19:46:41 -0500
+Message-Id: <1325724403-29642-4-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci-common.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+operation instead of doing it per guest creation/disconnection. Without
+this we could have potentially unloaded the vf driver from the
+xen pciback control even if the driver was binded to the xen-pciback.
+This will hold on to it until the user "unbind"s the PCI device using
+SysFS.
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index cce98d7..501f29b 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1732,6 +1732,8 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	bus->secondary = hose->first_busno;
- 	hose->bus = bus;
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ drivers/xen/xen-pciback/pci_stub.c |    2 ++
+ drivers/xen/xen-pciback/xenbus.c   |    2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 0ce0dc6..d66328e 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -114,6 +114,7 @@ static void pcistub_device_release(struct kref *kref)
+ 	xen_pcibk_config_free_dyn_fields(psdev->dev);
+ 	xen_pcibk_config_free_dev(psdev->dev);
  
-+	pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
-+
- 	/* Get probe mode and perform scan */
- 	mode = PCI_PROBE_NORMAL;
- 	if (node && ppc_md.pci_probe_mode)
-@@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		of_scan_bus(node, bus);
++	psdev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+ 	pci_dev_put(psdev->dev);
+ 
+ 	kfree(psdev);
+@@ -366,6 +367,7 @@ static int __devinit pcistub_init_device(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "reset device\n");
+ 	xen_pcibk_reset_device(dev);
+ 
++	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+ 	return 0;
+ 
+ config_release:
+diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+index 0755259..474d52e 100644
+--- a/drivers/xen/xen-pciback/xenbus.c
++++ b/drivers/xen/xen-pciback/xenbus.c
+@@ -241,7 +241,6 @@ static int xen_pcibk_export_device(struct xen_pcibk_device *pdev,
+ 		goto out;
+ 
+ 	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
+-	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+ 	if (xen_register_device_domain_owner(dev,
+ 					     pdev->xdev->otherend_id) != 0) {
+ 		dev_err(&dev->dev, "device has been assigned to another " \
+@@ -281,7 +280,6 @@ static int xen_pcibk_remove_device(struct xen_pcibk_device *pdev,
  	}
  
--	if (mode == PCI_PROBE_NORMAL)
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
- 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, bus->subordinate);
-+	}
+ 	dev_dbg(&dev->dev, "unregistering for %d\n", pdev->xdev->otherend_id);
+-	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+ 	xen_unregister_device_domain_owner(dev);
  
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
+ 	xen_pcibk_release_pci_dev(pdev, dev);
 -- 
-1.7.7
+1.7.7.4
 
