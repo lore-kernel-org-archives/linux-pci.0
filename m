@@ -1,88 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:40321 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758077Ab2ARTBd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 14:01:33 -0500
-Received: by ghbg16 with SMTP id g16so3141713ghb.19
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 11:01:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6GF_QyXbwMt9xUpdrtm27MEqz2N4GV3RdZPvMFM4dGcw@mail.gmail.com>
-References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
-	<20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
-	<CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
-	<CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
-	<CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
-	<CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com>
-	<CAE9FiQWTE2fqe7q1KepBNT9MwW0z9+FoJeN8=caYsZ6RYj_QJw@mail.gmail.com>
-	<CAErSpo6GF_QyXbwMt9xUpdrtm27MEqz2N4GV3RdZPvMFM4dGcw@mail.gmail.com>
-Date: Wed, 18 Jan 2012 11:01:33 -0800
-Message-ID: <CAE9FiQXEus3iDTFUT0CW4Y4fww-1iE4f7gTcdZ9Z9LexuCwkhA@mail.gmail.com>
-Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
- via host bridge
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from acsinet15.oracle.com ([141.146.126.227]:64876 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757264Ab2AEAsW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 19:48:22 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: linux-kernel@vger.kernel.org, jbarnes@virtuousgeek.org,
+	linux-pci@vger.kernel.org
+Cc: xen-devel@lists.xensource.com,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH 2/5] xen/pciback: Support pci_reset_function, aka FLR or D3 support.
+Date: Wed,  4 Jan 2012 19:46:40 -0500
+Message-Id: <1325724403-29642-3-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 18, 2012 at 10:30 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jan 18, 2012 at 11:07 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Wed, Jan 18, 2012 at 9:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> your patches should be ok, only exception should be considered: some
->>>> default link root bus could access
->>>> out of bus range state with _CRS stating.  some kind of transparent
->>>> bridge concept.
->>>
->>> I'm afraid I couldn't make any sense out of the paragraph above.  If
->>> we don't have any information about host bridge bus number windows
->>> (for example, for bridges not described in ACPI), I think we'll have
->>> to default to [bus 00-ff].  That's effectively what these patches
->>> already do.  We only build the struct pci_host_bridge for ACPI
->>> bridges, so the check I added in pci_add_new_bus() does nothing for
->>> non-ACPI bridges.
->>>
->>> If you're suggesting that we need to add some exception (a
->>> "transparent bridge concept"?), can you clarify or suggest a patch?
->>
->> for example: acpi said one peer root bus should be in [0,20) : the default link.
->> other peer root bus could be [80,a0).
->> chipset will route bus other than [80,a0) all to default link.
->>
->> One transparent bridge 00:1c.0 will have 10:00.0 and 10:01.0
->>
->> 10:01.0 is cardbus bridge, if it states with bus [1e-22).
->>
->> bus  20-22 still can be accessible.
->
-> I think you're suggesting that a host bridge bus number aperture might
-> be larger than ACPI reports, and that we should somehow accommodate
-> that, i.e., something like this:
->
->  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-1f])
->  pci 0000:00:1c.0: PCI bridge to [bus [10-22]
->  pci 0000:10:01.0: CardBus bridge to [bus 1e-22]
->  pci 0000:1e:00.0: PCI bridge to [bus 20]
->  pci 0000:20:00.0:
->
-> With my patches, we'd refuse to scan behind the bridge at 1e:00.0, and
-> I think you're suggesting that we *should* scan behind it.
+We use the __pci_reset_function_locked to perform the action.
+Also on attaching ("bind") and detaching ("unbind") we save and
+restore the configuration states. When the device is disconnected
+from a guest we use the "pci_reset_function" to also reset the
+device before being passed to another guest.
 
-could extend pci_host_bridge to have secondary resource list to take
-more than bus range.
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ drivers/xen/xen-pciback/pci_stub.c |   41 +++++++++++++++++++++++++++++++++--
+ drivers/xen/xen-pciback/pciback.h  |    1 +
+ 2 files changed, 39 insertions(+), 3 deletions(-)
 
-and later could use those range to find valid bus range for children
-bridges. or even transparent bridge chain.
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 8f06e1e..0ce0dc6 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -85,19 +85,34 @@ static struct pcistub_device *pcistub_device_alloc(struct pci_dev *dev)
+ static void pcistub_device_release(struct kref *kref)
+ {
+ 	struct pcistub_device *psdev;
++	struct xen_pcibk_dev_data *dev_data;
+ 
+ 	psdev = container_of(kref, struct pcistub_device, kref);
++	dev_data = pci_get_drvdata(psdev->dev);
+ 
+ 	dev_dbg(&psdev->dev->dev, "pcistub_device_release\n");
+ 
+ 	xen_unregister_device_domain_owner(psdev->dev);
+ 
+-	/* Clean-up the device */
++	/* Call the reset function which does not take lock as this
++	 * is called from "unbind" which takes a device_lock mutex.
++	 */
++	__pci_reset_function_locked(psdev->dev);
++	if (pci_load_and_free_saved_state(psdev->dev,
++					  &dev_data->pci_saved_state)) {
++		dev_dbg(&psdev->dev->dev, "Could not reload PCI state\n");
++	} else
++		pci_restore_state(psdev->dev);
++
++	/* Disable the device */
+ 	xen_pcibk_reset_device(psdev->dev);
++
++	kfree(dev_data);
++	pci_set_drvdata(psdev->dev, NULL);
++
++	/* Clean-up the device */
+ 	xen_pcibk_config_free_dyn_fields(psdev->dev);
+ 	xen_pcibk_config_free_dev(psdev->dev);
+-	kfree(pci_get_drvdata(psdev->dev));
+-	pci_set_drvdata(psdev->dev, NULL);
+ 
+ 	pci_dev_put(psdev->dev);
+ 
+@@ -230,7 +245,17 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	/* Cleanup our device
+ 	 * (so it's ready for the next domain)
+ 	 */
++
++	/* This is OK - we are running from workqueue context
++	 * and want to inhibit the user from fiddling with 'reset'
++	 */
++	pci_reset_function(dev);
++	pci_restore_state(psdev->dev);
++
++	/* This disables the device. */
+ 	xen_pcibk_reset_device(found_psdev->dev);
++
++	/* And cleanup up our emulated fields. */
+ 	xen_pcibk_config_free_dyn_fields(found_psdev->dev);
+ 	xen_pcibk_config_reset_dev(found_psdev->dev);
+ 
+@@ -325,6 +350,16 @@ static int __devinit pcistub_init_device(struct pci_dev *dev)
+ 	if (err)
+ 		goto config_release;
+ 
++	dev_dbg(&dev->dev, "reseting (FLR, D3, etc) the device\n");
++	__pci_reset_function_locked(dev);
++
++	/* We need the device active to save the state. */
++	dev_dbg(&dev->dev, "save state of device\n");
++	pci_save_state(dev);
++	dev_data->pci_saved_state = pci_store_saved_state(dev);
++	if (!dev_data->pci_saved_state)
++		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
++
+ 	/* Now disable the device (this also ensures some private device
+ 	 * data is setup before we export)
+ 	 */
+diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
+index e9b4011..a7def01 100644
+--- a/drivers/xen/xen-pciback/pciback.h
++++ b/drivers/xen/xen-pciback/pciback.h
+@@ -41,6 +41,7 @@ struct xen_pcibk_device {
+ 
+ struct xen_pcibk_dev_data {
+ 	struct list_head config_fields;
++	struct pci_saved_state *pci_saved_state;
+ 	unsigned int permissive:1;
+ 	unsigned int warned_on_write:1;
+ 	unsigned int enable_intx:1;
+-- 
+1.7.7.4
 
->
-> I'm dubious.  How do you propose to identify a "default" host bridge
-> where we should ignore the bus range from _CRS?  Is there a real
-> machine like this?  If so, how does Windows handle this?
-
-AMD HT chain have this default link setting.
-
-i don't know how other os is doing this.
-
-Thanks
-
-Yinghai
