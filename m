@@ -1,65 +1,55 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:47739 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932437Ab2AEVgI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2012 16:36:08 -0500
+Date: Thu, 5 Jan 2012 16:34:23 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Ian Campbell <Ian.Campbell@citrix.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
+Subject: Re: [Xen-devel] [PATCH 2/5] xen/pciback: Support pci_reset_function,
+ aka FLR or D3 support.
+Message-ID: <20120105213423.GC5180@phenom.dumpdata.com>
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
+ <1325724403-29642-3-git-send-email-konrad.wilk@oracle.com>
+ <1325759051.25206.361.camel@zakaz.uk.xensource.com>
+ <4F05F2EA.5030502@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20120103203357.GD17472@phenom.dumpdata.com>
-References: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
-	<20120103203357.GD17472@phenom.dumpdata.com>
-Date: Wed, 4 Jan 2012 10:44:11 +0800
-Message-ID: <CAJULongKix3QXmcoUcraQxCyLN0wz6oe6p5Efg2A7S_r3nO6Fg@mail.gmail.com>
-Subject: =?UTF-8?Q?Re=3A_=E3=80=90Question=E3=80=91Whether_it=27s_legal_to_enable_same_?=
-	=?UTF-8?Q?physical_DMA_memory_mapped_for_different_NIC_device=3F?=
-From: Yanfei Wang <backyes@mail.ustc.edu.cn>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F05F2EA.5030502@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 4, 2012 at 4:33 AM, Konrad Rzeszutek Wilk
-<konrad.wilk@oracle.com> wrote:
-> On Wed, Dec 07, 2011 at 10:16:40PM +0800, ustc.mail wrote:
->> Dear all,
->>
->> In NIC driver, to eliminate the  overhead of dma_map_single() for DMA
->> packet data,  we have statically allocated huge DMA memory buffer ring
->> at once instead of calling dma_map_single() per packet.  Considering
->> to further reduce the copy overhead between different NIC(port) ring
->> while forwarding, one packet from a input NIC(port) will be
->> transferred to output NIC(port) with no any copy action.
->>
->> To satisfy this requirement, the packet memory should be mapped into
->> input port and unmapped when leaving input port, then mapped into
->> output port and unmapped later.
->>
->> Whether it's legal to map the same DMA memory into input and output
->> port simultaneously? If it's not, then the zero-copy for packet
->> forwarding is not feasible?
->>
->
-> Did you ever a get a response about this?
-No.
->
-> Is the output/input port on a seperate device function? Or is it
-> just a specific MMIO BAR in your PCI device?
->
-Platform: x86, intel nehalem 8Core NUMA, linux 2.6.39, 10G
-82599NIC(two ports per NIC card);
-Function: Forwarding packets between different ports.
-Targets: Forwarding packets with Zero-Overhead, despite other obstacles.
+On Thu, Jan 05, 2012 at 01:58:50PM -0500, Don Dutile wrote:
+> On 01/05/2012 05:24 AM, Ian Campbell wrote:
+> >On Thu, 2012-01-05 at 00:46 +0000, Konrad Rzeszutek Wilk wrote:
+> >>We use the __pci_reset_function_locked to perform the action.
+> >>Also on attaching ("bind") and detaching ("unbind") we save and
+> >>restore the configuration states. When the device is disconnected
+> >>from a guest we use the "pci_reset_function" to also reset the
+> >>device before being passed to another guest.
+> >
+> >Currently I thought the toolstack was supposed to do the reset (by
+> >writing to the reset node in sysfs) as it was (de)assigning devices
+> >to/from guests. That's not to say that there isn't an argument for
+> >preferring to do it kernels side but it would be interesting to make
+> >that argument explicitly.
+> >
+> >I guess the toolstack doesn't currently save/restore the configuration
+> >state, could it though? I guess the state is all available in sysfs. On
+> pci_reset_function() saves the config state before doing a fcn-level reset.
+> 
+> the libvirt toolstack handles the unbind/reset/bind functionality
+> and is used by kvm for it's device assignment.
 
---Yanfei
->> Hope PCI expert to post your suggestion.
->>
->> Thanks!
->>
->> --Yanfei
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The KVM assigned PCI module does the call as well via the ioctls when
+assigning/de-assigning the PCI device. Look in 'kvm_free_assigned_device'
+and in 'kvm_vm_ioctl_assign_device'.
+
+Is that what you mean by the unbind/reset/bind functionality - the ioctl
+call?
 
