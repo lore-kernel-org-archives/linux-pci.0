@@ -1,47 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:64132 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003Ab2ALFeR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2012 00:34:17 -0500
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:62945 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756832Ab2AERKY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Jan 2012 12:10:24 -0500
+Received: by lahd3 with SMTP id d3so233926lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 05 Jan 2012 09:10:22 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120111103408.30cfa338@jbarnes-desktop>
-References: <20120111103408.30cfa338@jbarnes-desktop>
-Date: Wed, 11 Jan 2012 21:34:14 -0800
-Message-ID: <CAE9FiQVXaABZvjFdmkcu9kKtwTTaAqyE2Q0HZm5nOJPrieU8eg@mail.gmail.com>
-Subject: Re: [git pull] PCI changes
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <a2507aff2913b402cfb2d3e2a0bb887a.squirrel@webmail.sf-mail.de>
+References: <1325721002-6094-1-git-send-email-yinghai@kernel.org> <a2507aff2913b402cfb2d3e2a0bb887a.squirrel@webmail.sf-mail.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 5 Jan 2012 10:10:01 -0700
+Message-ID: <CAErSpo7JJBx9QQ13HKm9dX3H8YdrztW7baHfeF-_Joyv1gt7CQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Increase resource array mask bit size in pcim_iomap_regions()
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 11, 2012 at 10:34 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> The following changes since commit
-> f423fc627b05f47bc9305f9661630fce30f208f9:
+On Thu, Jan 5, 2012 at 1:43 AM, Rolf Eike Beer <eike-kernel@sf-tec.de> wrote:
+>> DEVICE_COUNT_RESOURCE will be bigger than 16 when SRIOV supported is
+>> enabled.
+>>
+>> Let them pass with int just like pci_enable_resources().
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>
+>> ---
+>>  include/linux/pci.h |    6 +++---
+>>  lib/devres.c        |    6 +++---
+>>  2 files changed, 6 insertions(+), 6 deletions(-)
+>>
+>> Index: linux-2.6/include/linux/pci.h
+>> ===================================================================
+>> --- linux-2.6.orig/include/linux/pci.h
+>> +++ linux-2.6/include/linux/pci.h
+>> @@ -1433,10 +1433,10 @@ static inline void pci_fixup_device(enum
+>>  void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long
+>> maxlen);
+>>  void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr);
+>>  void __iomem * const *pcim_iomap_table(struct pci_dev *pdev);
+>> -int pcim_iomap_regions(struct pci_dev *pdev, u16 mask, const char *name);
+>> -int pcim_iomap_regions_request_all(struct pci_dev *pdev, u16 mask,
+>> +int pcim_iomap_regions(struct pci_dev *pdev, int mask, const char *name);
+>> +int pcim_iomap_regions_request_all(struct pci_dev *pdev, int mask,
+>>                                  const char *name);
+> [...]
 >
->  Revert "rtc: Expire alarms after the time is set." (2012-01-04 07:57:22 -0800)
->
-> are available in the git repository at:
->  git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci linux-next
->
-> There's a fix pending for a build problem when CONFIG_AMD_NB=n, but I
-> didn't want to delay the pull request any longer; I'll include it in
-> the next fixes pull.
->
-> This one doesn't include Yinghai's resource management stuff either,
-> I'll put that in my -next tree for the next merge window when Yinghai
-> has it ready.  That might be a good time to revert 12c22d6ef299 (the
-> revert of the transparent bridge sizing code we talked about), unless
-> you want to try it now.
+> You are switching from unsigned to signed here, is this intentional? In my
+> feeling such masks should end up in an unsigned int, no?
 
-Can you please push following patch to linus in this merging window?
+I agree masks should generally be unsigned, but I think it makes sense
+to first follow pci_enable_resources() (which uses "int") , and maybe
+in the future, convert both to being unsigned.
 
-https://lkml.org/lkml/2011/11/23/2
-
-[PATCH -v4] PCI: Make sriov work with hotplug remove
-
-Thanks
-
-Yinghai
+Bjorn
