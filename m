@@ -1,165 +1,152 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [RFC PATCH v1 03/18] PCI: add struct pci_host_bridge_window with
-	CPU/bus address offset
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org
-Date: Mon, 30 Jan 2012 09:57:24 -0700
-Message-ID: <20120130165724.3231.19165.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36854 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751615Ab2AES65 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Jan 2012 13:58:57 -0500
+Message-ID: <4F05F2EA.5030502@redhat.com>
+Date: Thu, 05 Jan 2012 13:58:50 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+To: Ian Campbell <Ian.Campbell@citrix.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
+Subject: Re: [Xen-devel] [PATCH 2/5] xen/pciback: Support pci_reset_function,
+ aka FLR or D3 support.
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>	 <1325724403-29642-3-git-send-email-konrad.wilk@oracle.com> <1325759051.25206.361.camel@zakaz.uk.xensource.com>
+In-Reply-To: <1325759051.25206.361.camel@zakaz.uk.xensource.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some PCI host bridges apply an address offset, so bus addresses on PCI are
-different from CPU addresses.  This patch adds a way for architectures to
-tell the PCI core about this offset.  For example:
+On 01/05/2012 05:24 AM, Ian Campbell wrote:
+> On Thu, 2012-01-05 at 00:46 +0000, Konrad Rzeszutek Wilk wrote:
+>> We use the __pci_reset_function_locked to perform the action.
+>> Also on attaching ("bind") and detaching ("unbind") we save and
+>> restore the configuration states. When the device is disconnected
+>> from a guest we use the "pci_reset_function" to also reset the
+>> device before being passed to another guest.
+>
+> Currently I thought the toolstack was supposed to do the reset (by
+> writing to the reset node in sysfs) as it was (de)assigning devices
+> to/from guests. That's not to say that there isn't an argument for
+> preferring to do it kernels side but it would be interesting to make
+> that argument explicitly.
+>
+> I guess the toolstack doesn't currently save/restore the configuration
+> state, could it though? I guess the state is all available in sysfs. On
+pci_reset_function() saves the config state before doing a fcn-level reset.
 
-    LIST_HEAD(resources);
-    pci_add_resource_offset(&resources, host->io_space, host->io_offset);
-    pci_add_resource_offset(&resources, host->mem_space, host->mem_offset);
-    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
----
- drivers/pci/bus.c   |   30 +++++++++++++++++++-----------
- drivers/pci/probe.c |   26 ++++++++++++++++----------
- include/linux/pci.h |    9 +++++++++
- 3 files changed, 44 insertions(+), 21 deletions(-)
+the libvirt toolstack handles the unbind/reset/bind functionality
+and is used by kvm for it's device assignment.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 398f5d8..4ce5ef2 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -18,28 +18,36 @@
- 
- #include "pci.h"
- 
--void pci_add_resource(struct list_head *resources, struct resource *res)
-+void pci_add_resource_offset(struct list_head *resources, struct resource *res,
-+			     resource_size_t offset)
- {
--	struct pci_bus_resource *bus_res;
-+	struct pci_host_bridge_window *window;
- 
--	bus_res = kzalloc(sizeof(struct pci_bus_resource), GFP_KERNEL);
--	if (!bus_res) {
--		printk(KERN_ERR "PCI: can't add bus resource %pR\n", res);
-+	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
-+	if (!window) {
-+		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
- 		return;
- 	}
- 
--	bus_res->res = res;
--	list_add_tail(&bus_res->list, resources);
-+	window->res = res;
-+	window->offset = offset;
-+	list_add_tail(&window->list, resources);
-+}
-+EXPORT_SYMBOL(pci_add_resource_offset);
-+
-+void pci_add_resource(struct list_head *resources, struct resource *res)
-+{
-+	pci_add_resource_offset(resources, res, 0);
- }
- EXPORT_SYMBOL(pci_add_resource);
- 
- void pci_free_resource_list(struct list_head *resources)
- {
--	struct pci_bus_resource *bus_res, *tmp;
-+	struct pci_host_bridge_window *window, *tmp;
- 
--	list_for_each_entry_safe(bus_res, tmp, resources, list) {
--		list_del(&bus_res->list);
--		kfree(bus_res);
-+	list_for_each_entry_safe(window, tmp, resources, list) {
-+		list_del(&window->list);
-+		kfree(window);
- 	}
- }
- EXPORT_SYMBOL(pci_free_resource_list);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2ffe8a3..4c28aec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1544,12 +1544,12 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
--	int error, i;
-+	int error;
- 	struct pci_host_bridge *bridge;
- 	struct pci_bus *b, *b2;
- 	struct device *dev;
--	struct pci_bus_resource *bus_res, *n;
--	struct resource *res;
-+	struct pci_host_bridge_window *window, *n;
-+	char offset_text[40];
- 
- 	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
- 	if (!bridge)
-@@ -1599,19 +1599,25 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->number = b->secondary = bus;
- 
- 	bridge->bus = b;
--
--	/* Add initial resources to the bus */
--	list_for_each_entry_safe(bus_res, n, resources, list)
--		list_move_tail(&bus_res->list, &b->resources);
-+	INIT_LIST_HEAD(&bridge->windows);
- 
- 	if (parent)
- 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 	else
- 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 
--	pci_bus_for_each_resource(b, res, i) {
--		if (res)
--			dev_info(&b->dev, "root bus resource %pR\n", res);
-+	/* Add initial resources to the bus */
-+	list_for_each_entry_safe(window, n, resources, list) {
-+		list_move_tail(&window->list, &bridge->windows);
-+		pci_bus_add_resource(b, window->res, 0);
-+		if (window->offset)
-+			snprintf(offset_text, sizeof(offset_text),
-+				 " (bus offset %#llx)",
-+				 (unsigned long long) window->offset);
-+		else
-+			offset_text[0] = '\0';
-+		dev_info(&b->dev, "root bus resource %pR%s\n", window->res,
-+			 offset_text);
- 	}
- 
- 	down_write(&pci_bus_sem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index dfb2b64..35ef2d1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -388,9 +388,16 @@ static inline void pci_add_saved_cap(struct pci_dev *pci_dev,
- 	hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
- }
- 
-+struct pci_host_bridge_window {
-+	struct list_head list;
-+	struct resource *res;		/* host bridge aperture (CPU address) */
-+	resource_size_t offset;		/* bus address + offset = CPU address */
-+};
-+
- struct pci_host_bridge {
- 	struct list_head list;
- 	struct pci_bus *bus;		/* root bus */
-+	struct list_head windows;	/* pci_host_bridge_windows */
- };
- 
- /*
-@@ -919,6 +926,8 @@ void pci_release_selected_regions(struct pci_dev *, int);
- 
- /* drivers/pci/bus.c */
- void pci_add_resource(struct list_head *resources, struct resource *res);
-+void pci_add_resource_offset(struct list_head *resources, struct resource *res,
-+			     resource_size_t offset);
- void pci_free_resource_list(struct list_head *resources);
- void pci_bus_add_resource(struct pci_bus *bus, struct resource *res, unsigned int flags);
- struct resource *pci_bus_resource_n(const struct pci_bus *bus, int n);
+> the other hand the kernel provides us with a very handy function which
+> Just Does It...
+>
+> Ian.
+>
+>>
+>> Signed-off-by: Konrad Rzeszutek Wilk<konrad.wilk@oracle.com>
+>> ---
+>>   drivers/xen/xen-pciback/pci_stub.c |   41 +++++++++++++++++++++++++++++++++--
+>>   drivers/xen/xen-pciback/pciback.h  |    1 +
+>>   2 files changed, 39 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+>> index 8f06e1e..0ce0dc6 100644
+>> --- a/drivers/xen/xen-pciback/pci_stub.c
+>> +++ b/drivers/xen/xen-pciback/pci_stub.c
+>> @@ -85,19 +85,34 @@ static struct pcistub_device *pcistub_device_alloc(struct pci_dev *dev)
+>>   static void pcistub_device_release(struct kref *kref)
+>>   {
+>>   	struct pcistub_device *psdev;
+>> +	struct xen_pcibk_dev_data *dev_data;
+>>
+>>   	psdev = container_of(kref, struct pcistub_device, kref);
+>> +	dev_data = pci_get_drvdata(psdev->dev);
+>>
+>>   	dev_dbg(&psdev->dev->dev, "pcistub_device_release\n");
+>>
+>>   	xen_unregister_device_domain_owner(psdev->dev);
+>>
+>> -	/* Clean-up the device */
+>> +	/* Call the reset function which does not take lock as this
+>> +	 * is called from "unbind" which takes a device_lock mutex.
+>> +	 */
+>> +	__pci_reset_function_locked(psdev->dev);
+>> +	if (pci_load_and_free_saved_state(psdev->dev,
+>> +					&dev_data->pci_saved_state)) {
+>> +		dev_dbg(&psdev->dev->dev, "Could not reload PCI state\n");
+>> +	} else
+>> +		pci_restore_state(psdev->dev);
+>> +
+>> +	/* Disable the device */
+>>   	xen_pcibk_reset_device(psdev->dev);
+>> +
+>> +	kfree(dev_data);
+>> +	pci_set_drvdata(psdev->dev, NULL);
+>> +
+>> +	/* Clean-up the device */
+>>   	xen_pcibk_config_free_dyn_fields(psdev->dev);
+>>   	xen_pcibk_config_free_dev(psdev->dev);
+>> -	kfree(pci_get_drvdata(psdev->dev));
+>> -	pci_set_drvdata(psdev->dev, NULL);
+>>
+>>   	pci_dev_put(psdev->dev);
+>>
+>> @@ -230,7 +245,17 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+>>   	/* Cleanup our device
+>>   	 * (so it's ready for the next domain)
+>>   	 */
+>> +
+>> +	/* This is OK - we are running from workqueue context
+>> +	 * and want to inhibit the user from fiddling with 'reset'
+>> +	 */
+>> +	pci_reset_function(dev);
+>> +	pci_restore_state(psdev->dev);
+>> +
+>> +	/* This disables the device. */
+>>   	xen_pcibk_reset_device(found_psdev->dev);
+>> +
+>> +	/* And cleanup up our emulated fields. */
+>>   	xen_pcibk_config_free_dyn_fields(found_psdev->dev);
+>>   	xen_pcibk_config_reset_dev(found_psdev->dev);
+>>
+>> @@ -325,6 +350,16 @@ static int __devinit pcistub_init_device(struct pci_dev *dev)
+>>   	if (err)
+>>   		goto config_release;
+>>
+>> +	dev_dbg(&dev->dev, "reseting (FLR, D3, etc) the device\n");
+>> +	__pci_reset_function_locked(dev);
+>> +
+>> +	/* We need the device active to save the state. */
+>> +	dev_dbg(&dev->dev, "save state of device\n");
+>> +	pci_save_state(dev);
+>> +	dev_data->pci_saved_state = pci_store_saved_state(dev);
+>> +	if (!dev_data->pci_saved_state)
+>> +		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
+>> +
+>>   	/* Now disable the device (this also ensures some private device
+>>   	 * data is setup before we export)
+>>   	 */
+>> diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
+>> index e9b4011..a7def01 100644
+>> --- a/drivers/xen/xen-pciback/pciback.h
+>> +++ b/drivers/xen/xen-pciback/pciback.h
+>> @@ -41,6 +41,7 @@ struct xen_pcibk_device {
+>>
+>>   struct xen_pcibk_dev_data {
+>>   	struct list_head config_fields;
+>> +	struct pci_saved_state *pci_saved_state;
+>>   	unsigned int permissive:1;
+>>   	unsigned int warned_on_write:1;
+>>   	unsigned int enable_intx:1;
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
