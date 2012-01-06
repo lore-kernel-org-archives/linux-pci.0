@@ -1,65 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:41676 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753355Ab2ALJzd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Jan 2012 04:55:33 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: kernel-janitors@vger.kernel.org, linux-pci@vger.kernel.org,
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:48112 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759112Ab2AFUq4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 15:46:56 -0500
+Date: Fri, 6 Jan 2012 12:46:49 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 14/15] drivers/pci/hotplug/ibmphp_ebda.c: add missing iounmap
-Date: Thu, 12 Jan 2012 10:55:16 +0100
-Message-Id: <1326362117-29371-14-git-send-email-Julia.Lawall@lip6.fr>
+Subject: Re: [git pull] PCI fixes
+Message-ID: <20120106124649.146001d6@jbarnes-desktop>
+In-Reply-To: <CA+55aFz7j8ipEn7e0dGnrG4dskyRiBOx0-ExAx3qnH_cR5mLQw@mail.gmail.com>
+References: <20111217092935.2c2e075e@jbarnes-desktop>
+	<CAE9FiQWueS=9aSAH4fLz=EpE=A_WanKU6pbfnR2a4gsymWjnDA@mail.gmail.com>
+	<dfbb748b-b9de-4390-bb8d-138fc4c5734f@email.android.com>
+	<CA+55aFz7j8ipEn7e0dGnrG4dskyRiBOx0-ExAx3qnH_cR5mLQw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/FpCkH/x/=WSxyVX_t5/_6UZ"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+--Sig_/FpCkH/x/=WSxyVX_t5/_6UZ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Add missing iounmap in error handling code, in a case where the function
-already preforms iounmap on some other execution path.
+On Sun, 18 Dec 2011 14:14:13 -0800
+Linus Torvalds <torvalds@linux-foundation.org> wrote:
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+> On Sat, Dec 17, 2011 at 9:52 PM, Jesse Barnes <jbarnes@virtuousgeek.org> =
+wrote:
+> >
+> > Crap, and after you guys spent so long coming up with a clean version.
+> >
+> > Linus, can you just apply this one on top? I think it's the one Yinghai=
+ and Ram agreed to.
+>=20
+> Ok, applied, but I have to say that I hate it.
+>=20
+> Why don't we just move the stupid iov indexes to the end, and then
+> ignore them by not counting through them in
+> __pci_enable_device_flags()? So the regular PCI code would always walk
+> through the resources 0 .. PCI_BRIDGE_RESOURCES_END or something. And
+> then the magic IOV code could look at its own ones that the generic
+> code apparently doesn't even want to know about.
+>=20
+> Hmm?
 
-// <smpl>
-@@
-expression e;
-statement S,S1;
-int ret;
-@@
-e = \(ioremap\|ioremap_nocache\)(...)
-... when != iounmap(e)
-if (<+...e...+>) S
-... when any
-    when != iounmap(e)
-*if (...)
-   { ... when != iounmap(e)
-     return ...; }
-... when any
-iounmap(e);
-// </smpl>
+There was some talk awhile back of pulling the SR-IOV resources out of
+the pci_dev resource array (adding a separate member to track them only
+if CONFIG_PCI_IOV is enabled), that would probably be the way to go.
+Then fix up whatever resource walking code that cares about IOV BARs
+(there isn't much I think).
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Any thoughts Yinghai?
 
----
- drivers/pci/hotplug/ibmphp_ebda.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
-index 2850e64..714ca5c 100644
---- a/drivers/pci/hotplug/ibmphp_ebda.c
-+++ b/drivers/pci/hotplug/ibmphp_ebda.c
-@@ -368,8 +368,10 @@ int __init ibmphp_access_ebda (void)
- 			debug ("rio blk id: %x\n", blk_id);
- 
- 			rio_table_ptr = kzalloc(sizeof(struct rio_table_hdr), GFP_KERNEL);
--			if (!rio_table_ptr)
--				return -ENOMEM; 
-+			if (!rio_table_ptr) {
-+				rc = -ENOMEM;
-+				goto out;
-+			}
- 			rio_table_ptr->ver_num = readb (io_mem + offset);
- 			rio_table_ptr->scal_count = readb (io_mem + offset + 1);
- 			rio_table_ptr->riodev_count = readb (io_mem + offset + 2);
+--Sig_/FpCkH/x/=WSxyVX_t5/_6UZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPB125AAoJEIEoDkX4Qk9hAw4P/1f9b22hEWv/dlQG+sFO3vga
+j+g3S9aK0RWYwtc+GXgDYZIzqpwgCSHcCptpQKJlmI3uvTPX6v7B1KjU/HHLPyJ9
+8RdtFAeP+iVo8dQWrked1BVdQRMh39Tc8k2byyBr7t5FLyQh7Uu4BLDNxw7WmSPK
+UALkRUdtuJcnvtI9hnDFG+MeHZaf6nIrwksQwKX5MzXBh1YflgfjuL6lwhtrEgxq
+LO2yzPDzbRAYAt0Yo+2WIwYpk4sA5Yp52k0PXFR+IA6saY+ZvsSfeqHSnWBTu2lq
+gu9KqoZIL4xtzycwS8FWVVPRSCvZ1PBIuIsEbWUQJ1mGtDsJHopi3B4CUsRPmhi0
+TbhWwPltbG4dU7oKleHW0u3QBxzxBFwxBCZKNdXGyAcUXzNW0u39AddgHk+ssrBn
+h0wUHtfurtfw6hlFYxsc3sDUVsmpXfvNV2LYCPhkvTfdPnLB1lFdwX2ZPtf1/NOe
+8JNskSHfEQ3w1Vg8CbAvw+Yser//IiI6gPwgG1mlo/tE3eSymLj8ddaaBkyPi08U
+TI8VOKiPtq5LDgy0/P9EFkfz+332bvlRFL+/ZZexlmmgNxkh0cOqQleU6DHSO89n
+ZIvCnaN7HOeffPa6fOpwyPGwsaAmIrgsqIOTKe6TX4DQMtTvwWpBgCg889c++xS8
+YyKxd7C76UG36mZv3UU8
+=BNoN
+-----END PGP SIGNATURE-----
+
+--Sig_/FpCkH/x/=WSxyVX_t5/_6UZ--
