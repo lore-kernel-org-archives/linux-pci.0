@@ -1,38 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:39968 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753603Ab2AWTMa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Jan 2012 14:12:30 -0500
-Received: by lahc1 with SMTP id c1so1832571lah.19
-        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2012 11:12:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6B=NYZvCGJDLmYC=KoT0fBp7zkAyw6bEnmUaY4nXD==w@mail.gmail.com>
-References: <bug-42606-41252@https.bugzilla.kernel.org/> <CAErSpo5r8J9DAwkzAD2zJr1qp01XwCa_X2odQCB98zOU==Derw@mail.gmail.com>
- <CAErSpo7Gpd4OwbRPRd8ePdKDRQpZKT6E-UyEVL92as6C1Tqj7Q@mail.gmail.com>
- <4F1D9582.4030705@meinberg.de> <CAErSpo6B=NYZvCGJDLmYC=KoT0fBp7zkAyw6bEnmUaY4nXD==w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 23 Jan 2012 12:12:08 -0700
-Message-ID: <CAErSpo6RBvuq+j9Sab=V9Gbq6fYFpCAwdZsmFQoKOdPT8ZkTRg@mail.gmail.com>
-Subject: Re: Fwd: [Bug 42606] New: PCI I/O range not assigned under newer kernels
-To: Martin Burnicki <martin.burnicki@meinberg.de>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 6 Jan 2012 13:05:23 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: DEVICE_COUNT_RESOURCE should be equal to
+ PCI_NUM_RESOURCES
+Message-ID: <20120106130523.2a904776@jbarnes-desktop>
+In-Reply-To: <1325720985-6051-1-git-send-email-yinghai@kernel.org>
+References: <1325720985-6051-1-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/2mwAQqExp68Vbf3BTLA0lk7"; protocol="application/pgp-signature"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 23, 2012 at 10:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Windows shows the [io  0xf000-0xffff] range as being available under
-> both host bridges, and the fact that those ports actually work under
-> both bridges means they must actually be routed both places.
+--Sig_/2mwAQqExp68Vbf3BTLA0lk7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Oops, this is wrong.  We can't tell whether the [io  0xf000-0xffff]
-range is routed to PCI0, because when the card under that bridge, the
-BIOS puts it at [io  0xdc00-0xdcff] instead.
+On Wed,  4 Jan 2012 15:49:45 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-This is probably a BIOS bug (the resource assignment part puts the
-card in the right area, but the ACPI _CRS doesn't match).  But the
-fact remains that Windows does accept this _CRS and Linux doesn't but
-probably should.
+> Save some bytes for device resource array.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>=20
+> ---
+>  include/linux/pci.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> Index: linux-2.6/include/linux/pci.h
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.orig/include/linux/pci.h
+> +++ linux-2.6/include/linux/pci.h
+> @@ -111,7 +111,7 @@ enum {
+>  	PCI_NUM_RESOURCES,
+> =20
+>  	/* preserve this for compatibility */
+> -	DEVICE_COUNT_RESOURCE
+> +	DEVICE_COUNT_RESOURCE =3D PCI_NUM_RESOURCES,
+>  };
+> =20
+>  typedef int __bitwise pci_power_t;
 
-Bjorn
+Not sure what this buys us by itself, but it's applied in preparation
+for any upcoming cleanups.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/2mwAQqExp68Vbf3BTLA0lk7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPB2ITAAoJEIEoDkX4Qk9hay8QAK1iVFB+3e4WgDefioNNHmAP
+nCu9ntqu0TUkbVdyzqjeVe04hn7e6e8DEMuAlSQD37tPQPEQuLCoXkii7/GV0/1T
+ePSqRth6fq1LW3omNP6EVcY36Z+y0Di4x3hgd6JQbU3AiR+qCpfGTeJ6TAZg7yKb
+jzBDPhRvZMZqp2gnNq+8yienS+2lsQZejzOLXnWmDLmI4WYRMeUde/I3Ircg+dCk
+WOVDKgQTtFxnMvJmOi3sdOyRUy+OSlvDubV0H7g7mqlWWQtHIGv1FT0q4BFbb/FU
+grboQ0jswYDJTM+tZkPHWE+IXEYdNEapSVjuDI07n7lqAX9dcKr18gNugPW0ry9q
+H3GXQD71CBONrCgDiGWmSZOMShfFPB9oOv5bCoVrcXiDXoOXafIklqdhA8HYKvkB
+RHIlT8W+f3BmQGYmyV+1x9qoyGWPlLHTjEYipgOPuPJmZrkxB+mZRrJbqdR9Syrp
+5TVhXKfFvUwSHtey4gEJ0caSBIAuZC8b/xlb41zc0p9mv/6lsLh1aafPa3I7TK1w
++ZlmW1VEuWdtM7EZkv8X6cjA8x/9lp9l/XTriuKp+Um4HUzxjiJ5SNUPyfkwlb1c
+5MW4pYY5/JY+wMxk1lcxzxI4G8Upp9S0wtWipoxQhK48ZXJnWhsqyO47cZ4dyaGh
+bYWvlGd7Hg7kFzNYnTB+
+=zRJh
+-----END PGP SIGNATURE-----
+
+--Sig_/2mwAQqExp68Vbf3BTLA0lk7--
