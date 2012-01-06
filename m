@@ -1,35 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:57935 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753701Ab2AXBOg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 20:14:36 -0500
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 87731214AB
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2012 20:14:35 -0500 (EST)
-Date: Mon, 23 Jan 2012 17:14:30 -0800
-From: Greg KH <greg@kroah.com>
-To: Seth Heasley <seth.heasley@intel.com>
-Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, james.d.ralston@intel.com
-Subject: Re: [PATCH 6/6] pci: irq and pci_ids patch for Intel Lynx Point
- DeviceIDs
-Message-ID: <20120124011430.GA13171@kroah.com>
-References: <201201231646.24194.seth.heasley@intel.com>
+Received: from smtp.eu.citrix.com ([62.200.22.115]:39111 "EHLO
+	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030357Ab2AFPv1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 10:51:27 -0500
+Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
+ to include domain id.
+From: Ian Campbell <Ian.Campbell@citrix.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Jan Beulich <JBeulich@suse.com>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>
+Date: Fri, 6 Jan 2012 15:51:25 +0000
+In-Reply-To: <20120106150338.GB5855@phenom.dumpdata.com>
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
+	 <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
+	 <4F06C101020000780006AC32@nat28.tlf.novell.com>
+	 <20120106150338.GB5855@phenom.dumpdata.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1325865086.25206.512.camel@zakaz.uk.xensource.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201201231646.24194.seth.heasley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 23, 2012 at 04:46:24PM -0800, Seth Heasley wrote:
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2800,6 +2800,8 @@
->  #define PCI_DEVICE_ID_INTEL_82454NX     0x84cb
->  #define PCI_DEVICE_ID_INTEL_84460GX	0x84ea
->  #define PCI_DEVICE_ID_INTEL_IXP4XX	0x8500
-> +#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN	0x8c40
-> +#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX	0x8c5f
+On Fri, 2012-01-06 at 15:03 +0000, Konrad Rzeszutek Wilk wrote:
+> On Fri, Jan 06, 2012 at 08:38:09AM +0000, Jan Beulich wrote:
+> > >>> On 05.01.12 at 01:46, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
+> > > When a PCI device is transferred to another domain and it is still
+> > > in usage (from the internal perspective), mention which other
+> > > domain is using it to aid in debugging.
+> > > 
+> > > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > > ---
+> > >  drivers/xen/xen-pciback/xenbus.c |    6 ++++--
+> > >  1 files changed, 4 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> > > index 474d52e..fa130bd 100644
+> > > --- a/drivers/xen/xen-pciback/xenbus.c
+> > > +++ b/drivers/xen/xen-pciback/xenbus.c
+> > > @@ -243,8 +243,10 @@ static int xen_pcibk_export_device(struct 
+> > > xen_pcibk_device *pdev,
+> > >  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
+> > >  	if (xen_register_device_domain_owner(dev,
+> > >  					     pdev->xdev->otherend_id) != 0) {
+> > > -		dev_err(&dev->dev, "device has been assigned to another " \
+> > > -			"domain! Over-writting the ownership, but beware.\n");
+> > > +		int other_domain = xen_find_device_domain_owner(dev);
+> > > +		dev_err(&dev->dev, "device has been assigned to %d " \
+> > > +			"domain! Over-writting the ownership, but beware.\n",
+> > > +			other_domain);
+> > 
+> > As you're touching this anyway, how about fixing the other minor
+> > issues with it too? E.g.
+> > 
+> > 		dev_err(&dev->dev, "Device appears to be assigned to dom%d!"
+> > 			" Overwriting the ownership, but beware.\n",
+> > 			xen_find_device_domain_owner(dev));
+> > 
+> > (a native English speaker may want to comment the "but beware"
+> > part - it reads odd for me).
+> 
+> Hm, lets ask the English speakers. Ian?
 
-You forgot to read the top of this file.
+I think you underestimate a native speakers ability to mangle a
+language. Especially this one ;-)
+
+Anyway, I think it's unnecessary, so you may as well drop it and just
+have:
+
+ 		dev_err(&dev->dev, "Device appears to be assigned to dom%d!"
+ 			" Overwriting the ownership.\n",
+ 			xen_find_device_domain_owner(dev));
+
+I suppose you might want "Overriding ownership to dom%d".
+
+Ian.
 
