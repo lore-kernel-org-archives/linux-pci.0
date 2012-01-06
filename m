@@ -1,97 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 02/13] PCI: Add busn_res operation functions
-Date: Fri, 27 Jan 2012 18:49:20 -0800
-Message-Id: <1327718971-9598-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:54209 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030430Ab2AFQCZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 11:02:25 -0500
+Date: Fri, 6 Jan 2012 11:00:11 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Ian Campbell <Ian.Campbell@citrix.com>
+Cc: Jan Beulich <JBeulich@suse.com>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>
+Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
+ to include domain id.
+Message-ID: <20120106160011.GD6125@phenom.dumpdata.com>
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
+ <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
+ <4F06C101020000780006AC32@nat28.tlf.novell.com>
+ <20120106150338.GB5855@phenom.dumpdata.com>
+ <1325865086.25206.512.camel@zakaz.uk.xensource.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1325865086.25206.512.camel@zakaz.uk.xensource.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will use them insert/update busn res in pci_bus
+On Fri, Jan 06, 2012 at 03:51:25PM +0000, Ian Campbell wrote:
+> On Fri, 2012-01-06 at 15:03 +0000, Konrad Rzeszutek Wilk wrote:
+> > On Fri, Jan 06, 2012 at 08:38:09AM +0000, Jan Beulich wrote:
+> > > >>> On 05.01.12 at 01:46, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
+> > > > When a PCI device is transferred to another domain and it is still
+> > > > in usage (from the internal perspective), mention which other
+> > > > domain is using it to aid in debugging.
+> > > > 
+> > > > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > > > ---
+> > > >  drivers/xen/xen-pciback/xenbus.c |    6 ++++--
+> > > >  1 files changed, 4 insertions(+), 2 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> > > > index 474d52e..fa130bd 100644
+> > > > --- a/drivers/xen/xen-pciback/xenbus.c
+> > > > +++ b/drivers/xen/xen-pciback/xenbus.c
+> > > > @@ -243,8 +243,10 @@ static int xen_pcibk_export_device(struct 
+> > > > xen_pcibk_device *pdev,
+> > > >  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
+> > > >  	if (xen_register_device_domain_owner(dev,
+> > > >  					     pdev->xdev->otherend_id) != 0) {
+> > > > -		dev_err(&dev->dev, "device has been assigned to another " \
+> > > > -			"domain! Over-writting the ownership, but beware.\n");
+> > > > +		int other_domain = xen_find_device_domain_owner(dev);
+> > > > +		dev_err(&dev->dev, "device has been assigned to %d " \
+> > > > +			"domain! Over-writting the ownership, but beware.\n",
+> > > > +			other_domain);
+> > > 
+> > > As you're touching this anyway, how about fixing the other minor
+> > > issues with it too? E.g.
+> > > 
+> > > 		dev_err(&dev->dev, "Device appears to be assigned to dom%d!"
+> > > 			" Overwriting the ownership, but beware.\n",
+> > > 			xen_find_device_domain_owner(dev));
+> > > 
+> > > (a native English speaker may want to comment the "but beware"
+> > > part - it reads odd for me).
+> > 
+> > Hm, lets ask the English speakers. Ian?
+> 
+> I think you underestimate a native speakers ability to mangle a
+> language. Especially this one ;-)
+> 
+> Anyway, I think it's unnecessary, so you may as well drop it and just
+> have:
+> 
+>  		dev_err(&dev->dev, "Device appears to be assigned to dom%d!"
+>  			" Overwriting the ownership.\n",
+>  			xen_find_device_domain_owner(dev));
+> 
+> I suppose you might want "Overriding ownership to dom%d".
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 47 insertions(+), 0 deletions(-)
+OK. To the point and potentially can fit in 80 lines :-).
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index a114173..71261da 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1622,6 +1622,50 @@ err_out:
- 	return NULL;
- }
- 
-+void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
-+{
-+	struct resource *res = &b->busn_res;
-+	struct resource *parent_res = &iobusn_resource;
-+	int ret;
-+
-+	res->start = (pci_domain_nr(b) << 8) | bus;
-+	res->end = (pci_domain_nr(b) << 8) | bus_max;
-+	res->flags = IORESOURCE_BUS;
-+
-+	if (!pci_is_root_bus(b))
-+		parent_res = &b->parent->busn_res;
-+
-+	ret = insert_resource(parent_res, res);
-+
-+	dev_printk(KERN_DEBUG, &b->dev,
-+	 "busn_res: %06llx-%06llx %s inserted under %06llx-%06llx\n",
-+			(unsigned long long)res->start,
-+			(unsigned long long)res->end,
-+			 ret ? "can not be" : "is",
-+			(unsigned long long)parent_res->start,
-+			(unsigned long long)parent_res->end);
-+}
-+
-+void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
-+{
-+	struct resource *res = &b->busn_res;
-+	unsigned long long old_end = res->end;
-+
-+	res->end &= ~0xff;
-+	res->end |= bus_max;
-+	dev_printk(KERN_DEBUG, &b->dev,
-+		 "busn_res: %06llx-%06llx end updated to %06llx-%06llx\n",
-+			(unsigned long long)res->start,
-+			old_end,
-+			(unsigned long long)res->start,
-+			(unsigned long long)res->end);
-+}
-+
-+void pci_bus_release_busn_res(struct pci_bus *b)
-+{
-+	release_resource(&b->busn_res);
-+}
-+
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 94ad468..3da935c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -665,6 +665,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
-+void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
-+void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
-+void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
--- 
-1.7.7
-
+Will spin out the patch next week-sih.
