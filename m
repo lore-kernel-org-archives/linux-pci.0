@@ -1,51 +1,63 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 3 Jan 2012 15:33:57 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: "ustc.mail" <backyes@mail.ustc.edu.cn>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: =?utf-8?B?44CQUXVlc3Rpb27jgJFXaGV0aGVy?=
- =?utf-8?Q?_it's_legal_to_enabl?= =?utf-8?Q?e?= same physical DMA memory
- mapped for different NIC device?
-Message-ID: <20120103203357.GD17472@phenom.dumpdata.com>
-References: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:46881 "HELO
+	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759142Ab2AFVFG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 16:05:06 -0500
+Date: Fri, 6 Jan 2012 13:05:01 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Increase resource array mask bit size in
+ pcim_iomap_regions()
+Message-ID: <20120106130501.5922f688@jbarnes-desktop>
+In-Reply-To: <1325721002-6094-1-git-send-email-yinghai@kernel.org>
+References: <1325721002-6094-1-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/1+rr2BI_NoDwLJoDfZ18Jhe"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 07, 2011 at 10:16:40PM +0800, ustc.mail wrote:
-> Dear all,
-> 
-> In NIC driver, to eliminate the  overhead of dma_map_single() for DMA
-> packet data,  we have statically allocated huge DMA memory buffer ring
-> at once instead of calling dma_map_single() per packet.  Considering
-> to further reduce the copy overhead between different NIC(port) ring
-> while forwarding, one packet from a input NIC(port) will be
-> transferred to output NIC(port) with no any copy action.
-> 
-> To satisfy this requirement, the packet memory should be mapped into
-> input port and unmapped when leaving input port, then mapped into
-> output port and unmapped later.
-> 
-> Whether it's legal to map the same DMA memory into input and output
-> port simultaneously? If it's not, then the zero-copy for packet
-> forwarding is not feasible?
-> 
+--Sig_/1+rr2BI_NoDwLJoDfZ18Jhe
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Did you ever a get a response about this?
+On Wed,  4 Jan 2012 15:50:02 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Is the output/input port on a seperate device function? Or is it
-just a specific MMIO BAR in your PCI device?
+> DEVICE_COUNT_RESOURCE will be bigger than 16 when SRIOV supported is enab=
+led.
+>=20
+> Let them pass with int just like pci_enable_resources().
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>=20
 
-> Hope PCI expert to post your suggestion.
-> 
-> Thanks!
-> 
-> --Yanfei
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Applied, thanks.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/1+rr2BI_NoDwLJoDfZ18Jhe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPB2H9AAoJEIEoDkX4Qk9hk/4P/jNlsINAJMY7bwDEKLJN8whh
+DVTBTJNe+piSpC5yn9dG+mZBtyY9hh/irCqzLp7U5WyjjI4tQnzwxoA7pnsALqed
+U5M7BvqZSobHvkIwqObG1fMyDYRJy1ABAe6b6tjV2A4ktt59kqdqtRyvUKszgIw0
+iLn+uRODOLkMcG+bC6Fwjm8ILpST5YY+fTVOPDlh57BEXJWpXVgfA4NiEiH60zob
+re39Im5YARqM0yqBO842zJzwDpB1NOWpXRyjznsvZhrGZwrrbc/kz6psG88Sma+2
+xEabL9nHeinki/BpIF26Lm+IiWwrZ4F+Bk8qdyksNUjC/GI7hRezCkzZfNEthT3J
+4/uY0l5cswmbCdqPEnMEkm2xPoWE7CYol4YAWjxomRjY8GM7Qp6mi0nCKBzf7Mmp
+6qJeNWgUMwrY63dKhvCLXSNR67GSy3WwPzfCBXJEpAGgAYx0W7CQh8sVdh6iypa4
+4Qb3UThEenDOSnVbP/DDA1NSCTkkHRQ6Bw0uFNgUlAHgvVR3MNusAmGKR8gy1YFB
+KTeSRj6MH0Fxy2mrW+l3xprc5gHE+2dLuPIWZuLx+qi198E/4UTxaVs35sLPTxyw
+CsbBCt78+RAZKnHwAAmrIpEKnqmZIQlSk4G+t2SHoYpDYLzz4Ye5ZUXvhPU+HWny
+EIfPZcjkoFijRMNqDUI4
+=z9qV
+-----END PGP SIGNATURE-----
+
+--Sig_/1+rr2BI_NoDwLJoDfZ18Jhe--
