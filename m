@@ -1,66 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 27 Jan 2012 10:00:04 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 06/21] PCI: Make rescan bus could increase bridge
- resource size if needed
-Message-ID: <20120127100004.18ffff4d@jbarnes-desktop>
-In-Reply-To: <1327140517-14811-7-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-	<1327140517-14811-7-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/VmAONftPwpCtTQByuQSNPRq"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:45213 "EHLO
+	out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751090Ab2AFNZM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 08:25:12 -0500
+Received: from compute2.internal (compute2.nyi.mail.srv.osa [10.202.2.42])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 1ABA720B66
+	for <linux-pci@vger.kernel.org>; Fri,  6 Jan 2012 08:25:12 -0500 (EST)
+Date: Fri, 6 Jan 2012 05:24:08 -0800
+From: Greg KH <greg@kroah.com>
+To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Add pcie_hp=nomsi to disable MSI for pciehp driver
+Message-ID: <20120106132408.GB8989@kroah.com>
+References: <20120106095637.16292.29895.sendpatchset@dhcp-189-101.bos.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120106095637.16292.29895.sendpatchset@dhcp-189-101.bos.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/VmAONftPwpCtTQByuQSNPRq
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Jan 06, 2012 at 04:56:37AM -0500, MUNEDA Takahiro wrote:
+> Not to use MSI/MSI-X for pciehp, add a kernel parameter, pcie_hp=nomsi.
+> 
+> In my environment, while shutting down, following stack trace is shown
+> sometimes.
+> 
+>   irq 16: nobody cared (try booting with the "irqpoll" option)
+>   Pid: 1081, comm: reboot Not tainted 3.2.0 #1
+>   Call Trace:
+>    <IRQ>  [<ffffffff810cec1d>] __report_bad_irq+0x3d/0xe0
+>    [<ffffffff810cee1c>] note_interrupt+0x15c/0x210
+>    [<ffffffff810cc485>] handle_irq_event_percpu+0xb5/0x210
+>    [<ffffffff810cc621>] handle_irq_event+0x41/0x70
+>    [<ffffffff810cf675>] handle_fasteoi_irq+0x55/0xc0
+>    [<ffffffff81015356>] handle_irq+0x46/0xb0
+>    [<ffffffff814fbe9d>] do_IRQ+0x5d/0xe0
+>    [<ffffffff814f146e>] common_interrupt+0x6e/0x6e
+>    [<ffffffff8106b040>] ? __do_softirq+0x60/0x210
+>    [<ffffffff8108aeb1>] ? hrtimer_interrupt+0x151/0x240
+>    [<ffffffff814fb5ec>] call_softirq+0x1c/0x30
+>    [<ffffffff810152d5>] do_softirq+0x65/0xa0
+>    [<ffffffff8106ae9d>] irq_exit+0xbd/0xe0
+>    [<ffffffff814fbf8e>] smp_apic_timer_interrupt+0x6e/0x99
+>    [<ffffffff814f9e5e>] apic_timer_interrupt+0x6e/0x80
+>    <EOI>  [<ffffffff814f0fb1>] ? _raw_spin_unlock_irqrestore+0x11/0x20
+>    [<ffffffff812629fc>] pci_bus_write_config_word+0x6c/0x80
+>    [<ffffffff81266fc2>] pci_intx+0x52/0xa0
+>    [<ffffffff8127de3d>] pci_intx_for_msi+0x1d/0x30
+>   [<ffffffff8127e4fb>] pci_msi_shutdown+0x7b/0x110
+>    [<ffffffff81269d34>] pci_device_shutdown+0x34/0x50
+>    [<ffffffff81326c4f>] device_shutdown+0x2f/0x140
+>    [<ffffffff8107b981>] kernel_restart_prepare+0x31/0x40
+>    [<ffffffff8107b9e6>] kernel_restart+0x16/0x60
+>    [<ffffffff8107bbfd>] sys_reboot+0x1ad/0x220
+>    [<ffffffff814f4b90>] ? do_page_fault+0x1e0/0x460
+>    [<ffffffff811942d0>] ? __sync_filesystem+0x90/0x90
+>    [<ffffffff8105c9aa>] ? __cond_resched+0x2a/0x40
+>    [<ffffffff814ef090>] ? _cond_resched+0x30/0x40
+>    [<ffffffff81169e17>] ? iterate_supers+0xb7/0xd0
+>    [<ffffffff814f9382>] system_call_fastpath+0x16/0x1b
+>   handlers:
+>   [<ffffffff8138a0f0>] usb_hcd_irq
+>   [<ffffffff8138a0f0>] usb_hcd_irq
+>   [<ffffffff8138a0f0>] usb_hcd_irq
+>   Disabling IRQ #16
+> 
+> An un-wanted interrupt is generated when PCI driver switches from
+> MSI/MSI-X to INTx while shutting down the device.  The interrupt does
+> not happen if MSI/MSI-X is not used on the device.
+> I confirmed that this problem does not happen if pcie_hp=nomsi was
+> specified and hotplug operation worked fine as usual.
+> 
+> Signed-off-by: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
 
-On Sat, 21 Jan 2012 02:08:22 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+There's no way to figure this out automatically?  How about just doing
+this for the PCI ids of your hardware?
 
-> Current rescan will not touch bridge MMIO and IO.
->=20
-> Try to reuse pci_assign_unassigned_bridge_resources(bridge) to update bri=
-dge
-> resource, if child devices need more resource.
->=20
-> only do that for bridges that all children get removed before. So do not
-> release resources that could already be used by drivers of child devices.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
+Adding a boot option is a pain, as users will not know they need to do
+it, and distros will not know they need to add it to their images.
+Please try to do this in an automated way if at all possible.
 
-Applied, but I fixed up the comment; please check for accuracy.
+thanks,
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/VmAONftPwpCtTQByuQSNPRq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIuYkAAoJEIEoDkX4Qk9hO+kP/ijfFNTqc48GJoNsDSm5i8B2
-cSYZ3yfMvpU+L7kqI1TU81C4+LyKs5l73XWKjFvFzRy8wJ8dSazbDprs1/l0oxYe
-AEdjXJQo+SGsLlYgTaiQDnxTYyfFeA568LfOUOyy7+v1AW/DUyr+q5q2RExXsFbK
-xuYCv1mhF36UBsP/ZrMFjttmrpO+kexT+RAxeniEhEoR/vGvRRP2ipD/MQuXx2Zh
-LaSl/P/UJWvtlH/R3JR0coNR19yJwIQgQsLZr3MQrKsUBF//2hrgYPvs53ltmxo0
-za/hUZL0TaNM6MybHeaY6DkPIfxrPSqzJx6wolS8Rtvu5LcrFCLp79Rxfmk3fu7i
-npwrPP/oLE5nTp87SkEtC6ClOpHGBg/eIjFJAL8sga5TsCF9X3djzxlas8iC04aV
-8yn1QK2jNXKy8yStP4KFA+mHr5/z8H6HbAI7LkUsJ/LsCGn1qlNrDN6UBtLVrd0x
-2lShYiQBDdT6Cr7r71V5K3Ty1+rUBviMCMzrsvbedFW8CD9Pk7N1lqx5QvAE4eoq
-XJMCXBI+dexHRsVBAc2ixfoXH9vsa19ikHwkzqFs53FeCXIYoAgIWE4mB/85ly5j
-alnYVQlA1RwIBwSZ0NnNFMLcyJdGQDrcq75qlYjj22kTo+1i35oJr5T+5/hF/kSf
-8zH7owYgLakemKmkHUde
-=N4Y1
------END PGP SIGNATURE-----
-
---Sig_/VmAONftPwpCtTQByuQSNPRq--
+greg k-h
