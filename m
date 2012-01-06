@@ -1,44 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:35682 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753535Ab2AMX23 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2012 18:28:29 -0500
-Received: by ghbg16 with SMTP id g16so1160221ghb.19
-        for <linux-pci@vger.kernel.org>; Fri, 13 Jan 2012 15:28:29 -0800 (PST)
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:46596 "EHLO
+	out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759152Ab2AFXty (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 18:49:54 -0500
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 487C520A4A
+	for <linux-pci@vger.kernel.org>; Fri,  6 Jan 2012 18:49:54 -0500 (EST)
+Date: Fri, 6 Jan 2012 15:49:14 -0800
+From: Greg KH <greg@kroah.com>
+To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] Add pcie_hp=nomsi to disable MSI for pciehp driver
+Message-ID: <20120106234914.GB14926@kroah.com>
+References: <20120106170422.17595.31912.sendpatchset@dhcp-189-101.bos.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20120113163922.GH7380@ram-ThinkPad-T61>
-References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
-	<1323247984-15281-3-git-send-email-yinghai@kernel.org>
-	<20120113163922.GH7380@ram-ThinkPad-T61>
-Date: Fri, 13 Jan 2012 15:28:29 -0800
-Message-ID: <CAE9FiQWTVA=LDViVyfSXX6thgGv4TzOpqidVyG6FAdWQqAMWEg@mail.gmail.com>
-Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120106170422.17595.31912.sendpatchset@dhcp-189-101.bos.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 13, 2012 at 8:39 AM, Ram Pai <linuxram@us.ibm.com> wrote:
-> On Wed, Dec 07, 2011 at 12:53:01AM -0800, Yinghai Lu wrote:
->
->        I am worried that this approach will resurface old bug
-> https://bugzilla.kernel.org/show_bug.cgi?id=15960
+On Fri, Jan 06, 2012 at 12:04:22PM -0500, MUNEDA Takahiro wrote:
+> --- linux-3.2.orig/drivers/pci/pcie/portdrv_core.c
+> +++ linux-3.2/drivers/pci/pcie/portdrv_core.c
+> @@ -189,8 +189,20 @@ static int init_service_irqs(struct pci_
+>  {
+>  	int i, irq = -1;
+>  
+> -	/* We have to use INTx if MSI cannot be used for PCIe PME. */
+> -	if ((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) {
+> +	/* We have to use INTx if MSI cannot be used for PCIe PME or pciehp. */
+> +	if (((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) ||
+> +	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
+> +		if (dev->pin)
+> +			irq = dev->irq;
+> +		goto no_msi;
+> +	}
+> +
+> +	/*
+> +	 * Disable MSI/MSI-X to prevent un-wanted interrupts while
+> +	 * device shutting down
+> +	 */
+> +	if ((mask & PCIE_PORT_SERVICE_HP) &&
+> +	    dev->vendor == PCI_VENDOR_ID_IDT && dev->device == 0x807f) {
+>  		if (dev->pin)
+>  			irq = dev->irq;
+>  		goto no_msi;
 
-will ask them to test for-pci2 branch.
+Why not combine the if statements, you are doing the same thing in them,
+right?
 
->
->        With your approach; on a system with not enough resources to satisfy
-> all the devices, when you fail to allocate 'required+optional' in the first
-> round and fall back to assigning only the 'required' resources, you can get the
-> reassignment order wrong, thus not allocate resources to devices for which the
-> BIOS had originally allocated resources, and hence end up disabling the device.
-
-so even required can not be satisfied?
-
-Thanks
-
-Yinghai
+greg k-h
