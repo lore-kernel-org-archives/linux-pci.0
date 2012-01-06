@@ -1,37 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qw0-f74.google.com ([209.85.216.74]:36163 "EHLO
-	mail-qw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754948Ab2ARAsq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2012 19:48:46 -0500
-Received: by qadb12 with SMTP id b12so612526qad.1
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 16:48:45 -0800 (PST)
-Subject: [PATCH] allow host bridges with no io/mem apertures
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 17 Jan 2012 17:41:16 -0700
-Message-ID: <20120118004027.1089.93781.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail2.gnudd.com ([213.203.150.91]:61564 "EHLO mail.gnudd.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759105Ab2AFUTP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Jan 2012 15:19:15 -0500
+Date: Fri, 6 Jan 2012 21:18:56 +0100
+From: Alessandro Rubini <rubini@gnudd.com>
+To: jbarnes@virtuousgeek.org
+Cc: linux-kernel@vger.kernel.org, giancarlo.asnaghi@st.com,
+	alan@linux.intel.com, linux-pci@vger.kernel.org,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
+Subject: Re: [PATCH 1/6] pci_ids: add device ids for STA2X11 device (aka
+ ConneXT)
+Message-ID: <20120106201856.GA8864@mail.gnudd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120106121154.48b570e8@jbarnes-desktop>
+References: <20120106121154.48b570e8@jbarnes-desktop>
+  <3bffc0889fba822f58b5f8607fa5247c6f50649c.1325852059.git.rubini@gnudd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch changes what we do when we don't find any apertures in
-a PCI host bridge _CRS.  Previously, we assumed something in _CRS
-parsing or in _CRS itself was broken, so we gave the root bus
-the default resources (all of I/O port and MMIO space).
+> Applied, thanks.  Will the users land this release too?
 
-But I think this is wrong because there are often host bridges that
-correctly have no apertures, e.g., they lead to things like Intel
-Uncore "devices" that have no BARs.
+It's a lot of code, and I'm working on it. I'll have patches for the
+individual drivers over the next months.
 
-This is intended for linux-next, not for the current merge window.
+The main user, the arch/x86/platform/sta2x11 place is almost ready but
+I want to test better approaches internally rather then submitting and
+fixing soon after.
 
----
-
-Bjorn Helgaas (1):
-      x86/PCI: don't fall back to defaults if _CRS has no apertures
-
-
- arch/x86/pci/acpi.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+thanks
+/alessandro
