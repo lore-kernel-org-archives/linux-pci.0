@@ -1,128 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:51341 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495Ab2A2NLy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jan 2012 08:11:54 -0500
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <svaidy@linux.vnet.ibm.com>;
-	Sun, 29 Jan 2012 18:41:50 +0530
-Date: Sun, 29 Jan 2012 18:41:39 +0530
-From: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
- sriov_init
-Message-ID: <20120129131139.GA19049@dirshya.in.ibm.com>
-Reply-To: svaidy@linux.vnet.ibm.com
-References: <20120127191032.GA22999@dirshya.in.ibm.com>
- <CAE9FiQVKLmrryoOhyjr_rGucGGZLW=PSD=s_AjW0Za6vHCvOtg@mail.gmail.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQVKLmrryoOhyjr_rGucGGZLW=PSD=s_AjW0Za6vHCvOtg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4F05F073.2050209@redhat.com>
+References: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
+	<20120103203357.GD17472@phenom.dumpdata.com>
+	<CAJULongKix3QXmcoUcraQxCyLN0wz6oe6p5Efg2A7S_r3nO6Fg@mail.gmail.com>
+	<1325692766.2758.22.camel@dabdike.int.hansenpartnership.com>
+	<CAJULoniAdLbyNUyrCYWbxOWAdB-Re-BxSNb0xfuFD8w6pDETWA@mail.gmail.com>
+	<4F05F073.2050209@redhat.com>
+Date: Fri, 6 Jan 2012 10:11:58 +0800
+Message-ID: <CAJULonggD94tzTvhO-7A0w-Sji07su8wLEvj15xto=rxyjW3Qg@mail.gmail.com>
+Subject: =?UTF-8?Q?Re=3A_=E3=80=90Question=E3=80=91Whether_it=27s_legal_to_enable_same_?=
+	=?UTF-8?Q?physical_DMA_memory_mapped_for_different_NIC_device=3F?=
+From: Yanfei Wang <backyes@mail.ustc.edu.cn>
+To: Don Dutile <ddutile@redhat.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Yinghai Lu <yinghai@kernel.org> [2012-01-27 13:05:41]:
+On Fri, Jan 6, 2012 at 2:48 AM, Don Dutile <ddutile@redhat.com> wrote:
+> On 01/05/2012 07:40 AM, Yanfei Wang wrote:
+>>
+>> On Wed, Jan 4, 2012 at 11:59 PM, James Bottomley
+>> <James.Bottomley@hansenpartnership.com>  wrote:
+>>>
+>>> On Wed, 2012-01-04 at 10:44 +0800, Yanfei Wang wrote:
+>>>>
+>>>> On Wed, Jan 4, 2012 at 4:33 AM, Konrad Rzeszutek Wilk
+>>>> <konrad.wilk@oracle.com>  wrote:
+>>>>>
+>>>>> On Wed, Dec 07, 2011 at 10:16:40PM +0800, ustc.mail wrote:
+>>>>>>
+>>>>>> Dear all,
+>>>>>>
+>>>>>> In NIC driver, to eliminate the  overhead of dma_map_single() for DMA
+>>>>>> packet data,  we have statically allocated huge DMA memory buffer ring
+>>>>>> at once instead of calling dma_map_single() per packet.  Considering
+>>>>>> to further reduce the copy overhead between different NIC(port) ring
+>>>>>> while forwarding, one packet from a input NIC(port) will be
+>>>>>> transferred to output NIC(port) with no any copy action.
+>>>>>>
+>>>>>> To satisfy this requirement, the packet memory should be mapped into
+>>>>>> input port and unmapped when leaving input port, then mapped into
+>>>>>> output port and unmapped later.
+>>>>>>
+>>>>>> Whether it's legal to map the same DMA memory into input and output
+>>>>>> port simultaneously? If it's not, then the zero-copy for packet
+>>>>>> forwarding is not feasible?
+>>>>>>
+>>>>>
+>>>>> Did you ever a get a response about this?
+>>>>
+>>>> No.
+>>>
+>>>
+>>> This is probably because no-one really understands what you're asking.
+>>> As far as mapping memory to PCI devices goes, it's the job of the bridge
+>>> (or the iommu which may or may not be part of the bridge).  A standard
+>>> iommu tends not to care about devices and functions, so a range once
+>>> mapped is available to everything behind the bridge.  A more secure
+>>> virtualisation based iommu (like the on in VT-D) does, and tends to map
+>>> ranges per device.  I know of none that map per device and function, but
+>>> maybe there are.
+>>>
+>>> Your question reads like you have a range of memory mapped to a PCI
+>>> device that you want to use for two different purposes, can you do this?
+>>> to which the answer is that a standard PCI bridge really doesn't care
+>>> and it all depends on the mechanics of the actual device.  The only
+>>> wrinkle might be if the two different purposes are on two separate PCI
+>>> functions of the device and the iommu does care.
+>>>
+>>>>>
+>>>>> Is the output/input port on a seperate device function? Or is it
+>>>>> just a specific MMIO BAR in your PCI device?
+>>>>>
+>>>> Platform: x86, intel nehalem 8Core NUMA, linux 2.6.39, 10G
+>>>> 82599NIC(two ports per NIC card);
+>>>> Function: Forwarding packets between different ports.
+>>>> Targets: Forwarding packets with Zero-Overhead, despite other obstacles.
+>>
+>> Besides hardware and OS presented above, more detailed descriptions as
+>> follows,
+>>
+>> When IXGBE driver do initialization, DMA Descriptors Ring Buffers are
+>> allocated statically and mapped as cache coherent. Instead of
+>> dynamically allocating skb buffers for packet data, to reduce the huge
+>> overhead from skb memory allocation, huge Packet data buffers are
+>> pre-allocated and mapped  when driver is loaded. The same strategy  is
+>> done for RX end and TX end.
+>> For simple packet forwarding application, one packet from RX should be
+>> replicated from kernel space to userspace, then copied TX end. Here,
+>> One packet at least, should be copied twice to accomplish forwarding.
+>> When doing high performance network application,  the copy action want
+>> to be reduced. If Zero-copy can be done, that's better. (May be you
+>> will find that Zero-copy will bring other obstacles, such as memory
+>> management overhead with high performance. We do not care about it
+>> temporally.)
+>> To achieve this goal, a alternative approach is that,  unmapping the
+>> packets buffer after receiving it from A device, then mapping this
+>> packet buffer to B device. We hope to reduce the two mapping
+>> operation, so one packet DMA buffer should be mapped to A device(NIC
+>> port) as well as B device simultaneously.
+>> Q: Can this come to ture? Is it legal for mmaping operation at this
+>> platform?
+>>
+>> Thanks.
+>>
+>> Yanfei
+>>
+>>
+> not if the two different devices (82599 VFs or PFs) are in different domains
+> (assigned to different ((kvm; Konrad:xen?) virtualization guests).
+> otherwise, I don't see why two devices can't have the same memory page
+> mapped for DMA use -- a mere matter of multi-device, shared memory
+> utilization! ;-)
+>
+OS is based on directly hardware, no kvm, xen, VT, exsit. That's to
+say, it's legal to map same physical DMA buffer into different  PCIe
+functions(devices) to eliminate the per-packet-map action.
 
-> On Fri, Jan 27, 2012 at 11:10 AM, Vaidyanathan Srinivasan
-> <svaidy@linux.vnet.ibm.com> wrote:
-> > Hi Ram and Jesse,
-> >
-> > I found a trivial issue with page size alignment check on IBM POWER
-> > box with 64k base page size.  In sriov_init(), changing the check from
-> > PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
-> > required to use one of the sriov adapter as PF since the
-> > resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
-> > pseries boxes.
-> >
-> > I think resource_size() could be less than SystemPageSize, but I would
-> > like your comments/ack/nack on any consequences of checking for only
-> > 4k alignment here in a system with larger base page size.
-> >
-> > Thanks,
-> > Vaidy
-> >
-> > ---
-> >
-> >    pci: check for 4k resource_size alignment in sriov_init
-> >
-> >    pci sriov_init should check for 4k page size alignment of resource_size
-> >    even if base page size is larger -- like 64k in powerpc.
-> >
-> >    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-> >
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > index 0321fa3..5816fa0 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -474,7 +474,7 @@ found:
-> >                                     pos + PCI_SRIOV_BAR + i * 4);
-> >                if (!res->flags)
-> >                        continue;
-> > -               if (resource_size(res) & (PAGE_SIZE - 1)) {
-> > +               if (resource_size(res) & (HW_PAGE_SIZE - 1)) {
-> >                        rc = -EIO;
-> >                        goto failed;
-> >                }
-> >
-> 
-> but HW_PAGE_SIZE is only defined for powerpc.
-
-My bad, I picked the #define used in other powerpc code.
-
-> also there is PAGE_SHIFT around in that function.
-
-This gets defined correctly if CONFIG_PPC_64K_PAGES=y.  But the actual
-problem is the need for a generic 4K #define for x86 and other archs.
-
-> maybe you can just define another MARCO according to IOV spec?
-
-This is a good idea.  I could not find an IOV specific requirement.
-The resource size has to be a multiple of 4K so that the overall
-resource-size() * PCI_SRIOV_TOTAL_VF will be a multiple of 4K or more.
-
-Let me share a patch that has a simple #define in drivers/pci/pci.h,
-which is needed to get SRIOV cards started on powerpc box.
-
---Vaidy
-
----
-
-    pci: check for 4k resource_size alignment in sriov_init
-    
-    pci sriov_init should check for 4k page size alignment of resource_size
-    even if base page size is larger like 64k in powerpc.
-    
-    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 0321fa3..10adede 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -474,7 +474,7 @@ found:
- 				     pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
- 			continue;
--		if (resource_size(res) & (PAGE_SIZE - 1)) {
-+		if (resource_size(res) & (HW_PAGE_SIZE_4K - 1)) {
- 			rc = -EIO;
- 			goto failed;
- 		}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 1009a5e..68703ab 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -6,6 +6,9 @@
- #define PCI_CFG_SPACE_SIZE	256
- #define PCI_CFG_SPACE_EXP_SIZE	4096
- 
-+/* Constants used in the PCI core code */
-+#define HW_PAGE_SIZE_4K		0x1000
-+
- /* Functions internal to the PCI core code */
- 
- extern int pci_uevent(struct device *dev, struct kobj_uevent_env *env);
+Thanks
+>
+>>>
+>>> This still doesn't really provide the information needed to elucidate
+>>> the question.
+>>>
+>>> James
+>>>
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
