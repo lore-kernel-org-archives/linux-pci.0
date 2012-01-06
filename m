@@ -1,83 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:59826 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751142Ab2AIJbX convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:4:2>);
-	Mon, 9 Jan 2012 04:31:23 -0500
-Message-Id: <4F0AC189020000780006B1DE@nat28.tlf.novell.com>
-Date: Mon, 09 Jan 2012 09:29:29 +0000
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>
-Cc: "Ian Campbell" <Ian.Campbell@citrix.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>
-Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning
- message to include domain id.
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
- <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
- <4F06C101020000780006AC32@nat28.tlf.novell.com>
- <20120106150338.GB5855@phenom.dumpdata.com>
- <1325865086.25206.512.camel@zakaz.uk.xensource.com>
- <20120106160011.GD6125@phenom.dumpdata.com>
- <20120106221927.GA10248@phenom.dumpdata.com>
-In-Reply-To: <20120106221927.GA10248@phenom.dumpdata.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120106084901.GD14188@elte.hu>
+References: <20120105212719.3965.40406.stgit@bhelgaas.mtv.corp.google.com>
+ <20120105212724.3965.30193.stgit@bhelgaas.mtv.corp.google.com>
+ <CAErSpo6=yHFspY_L0rQa6iVD692nYyL=BR=3qBwc3UV8M16xbw@mail.gmail.com> <20120106084901.GD14188@elte.hu>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 6 Jan 2012 10:18:49 -0700
+Message-ID: <CAErSpo57X-rqHgGPk0JsLLjNOAd9TKPSXotx7srcavuSEdCS0w@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PNP: work around Dell 1536/1546 BIOS MMCONFIG bug
+ that breaks USB
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, thuban@singularity.fr,
+	dann frazier <dann.frazier@canonical.com>,
+	Lisa Salimbas <lisa.salimbas@canonical.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 06.01.12 at 23:19, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
->> > I suppose you might want "Overriding ownership to dom%d".
->> 
->> OK. To the point and potentially can fit in 80 lines :-).
-> 
-> how about this?
->> 
-> From a3d4a80cdfd4274016522572148a89260b3f3de6 Mon Sep 17 00:00:00 2001
-> From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Date: Wed, 4 Jan 2012 14:16:45 -0500
-> Subject: [PATCH] xen/pciback: Expand the warning message to include domain
->  id.
-> 
-> When a PCI device is transferred to another domain and it is still
-> in usage (from the internal perspective), mention which other
-> domain is using it to aid in debugging.
-> 
-> [v2: Truncate the verbose message per Jan Beulich suggestion]
-> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+On Fri, Jan 6, 2012 at 1:49 AM, Ingo Molnar <mingo@elte.hu> wrote:
+>
+> * Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> On Thu, Jan 5, 2012 at 2:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > Some Dell BIOSes have MCFG tables that don't report the entire
+>> > MMCONFIG area claimed by the chipset.  If we move PCI devices into
+>> > that claimed-but-unreported area, they don't work.
+>> >
+>> > This quirk reads the AMD MMCONFIG MSRs and adds PNP0C01 resources as
+>> > needed to cover the entire area.
+>>
+>> PNP stuff usually goes through Len's ACPI tree, but this is
+>> really x86-specific, and these two patches need to go
+>> together, so I think it would make sense to put them both in
+>> the x86 tree.  Len, do you object?
+>
+> I'd really suggest the PCI tree for this - mmconfig is really
+> PCI related.
 
-Acked-by: Jan Beulich <jbeulich@suse.com>
+OK, Jesse, would you like to pick up these two patches?
 
-> ---
->  drivers/xen/xen-pciback/xenbus.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-> index 474d52e..2405a24 100644
-> --- a/drivers/xen/xen-pciback/xenbus.c
-> +++ b/drivers/xen/xen-pciback/xenbus.c
-> @@ -243,8 +243,8 @@ static int xen_pcibk_export_device(struct 
-> xen_pcibk_device *pdev,
->  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
->  	if (xen_register_device_domain_owner(dev,
->  					     pdev->xdev->otherend_id) != 0) {
-> -		dev_err(&dev->dev, "device has been assigned to another " \
-> -			"domain! Over-writting the ownership, but beware.\n");
-> +		dev_err(&dev->dev, "Overriding ownership to dom%d.\n",
-> +			xen_find_device_domain_owner(dev));
->  		xen_unregister_device_domain_owner(dev);
->  		xen_register_device_domain_owner(dev, pdev->xdev->otherend_id);
->  	}
-> -- 
-> 1.7.7.4
-> 
-> 
-> _______________________________________________
-> Xen-devel mailing list
-> Xen-devel@lists.xensource.com 
-> http://lists.xensource.com/xen-devel 
-
-
-
+Bjorn
