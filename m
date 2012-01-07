@@ -1,284 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:59214 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757361Ab2AXShf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2012 13:37:35 -0500
-Date: Tue, 24 Jan 2012 13:37:34 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Greg KH <greg@kroah.com>
-cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	<linux-pci@vger.kernel.org>, <linux-pcmcia@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>
-Subject: [PATCH] 
-Message-ID: <Pine.LNX.4.44L0.1201241335440.1200-100000@iolanthe.rowland.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:48397 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037Ab2AGGMg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Jan 2012 01:12:36 -0500
+Received: by yhnn56 with SMTP id n56so936079yhn.19
+        for <linux-pci@vger.kernel.org>; Fri, 06 Jan 2012 22:12:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <CAE9FiQXc8zNsg4t4+7LZFioof7nTrJK5JOa-1ExGQ=eOY08weg@mail.gmail.com>
+References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
+	<1323247984-15281-3-git-send-email-yinghai@kernel.org>
+	<20120106134915.705f5b47@jbarnes-desktop>
+	<CAE9FiQXKVgkHg9fqXHvs7umnXkQ1Hmxudfy84jdy1n_Mo5D9Cg@mail.gmail.com>
+	<CAE9FiQXbsUH1v3+FXcyZwXk=SbLuhY2FeoH-LEi2mtvu4zOeQA@mail.gmail.com>
+	<CAE9FiQXc8zNsg4t4+7LZFioof7nTrJK5JOa-1ExGQ=eOY08weg@mail.gmail.com>
+Date: Fri, 6 Jan 2012 22:12:35 -0800
+Message-ID: <CAE9FiQXORmQhP1f3ZK5vYutWv2CdpP-jN7AR0oe=w_mqz+y1fw@mail.gmail.com>
+Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, torvalds@linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch (as1514) cleans up some places where new_id and remove_id
-sysfs attributes are created and deleted.  Handling both attributes in
-a single routine rather than a pair of routines makes the code
-smaller.  It also prevents certain kinds of errors, like one we
-currently have in the USB subsystem: The removeid attribute is often
-created even when newid isn't (because the driver's no_dynamid_id flag
-is set).
+On Fri, Jan 6, 2012 at 9:53 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Jan 6, 2012 at 9:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Fri, Jan 6, 2012 at 7:46 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> This looks like a separate bug fix; can you separate it out?  I assume
+>>>> you ran into it at least once as you were adding more recursion and
+>>>> occasionally not exiting it quickly. :)
+>>
+>> hi,  the patch has been separated into three patches.
+>>
+>> please check attached.
+>>
+>> please let me know if you like me to resend the whole patch set.
 
-In the case of the PCMCIA subsystem, the newid attribute is created
-but never explicitly deleted.  The patch adds a deletion routine.
+just rebase my for-pci branch. please check them at
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: Dominik Brodowski <linux@dominikbrodowski.net>
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci
 
----
+5007278: pciehp: Checking pci conf reading to new added device instead
+of sleep 1s
+f390f69: PCI: Make sriov work with hotplug remove
+93acbd6: PCI: Fixing multiple retrying with pci resource optional
+resources allocation under multi bridges
+7f5dac3: PCI: Make pci_rescan_bus handle add_list
+18dd9be: PCI: Make rescan bus could increase bridge resource size if needed
+52e0afc: PCI: Using add_list in pcie hotplug path.
+2b6542d: PCI: Try to assign required+option size at first
+4beb962: PCI: Move get_res_add_size() early
+8cb9020: PCI: Make add_to_list() return status
+8535f21: PCI : Calculate right add_size
 
- drivers/pci/pci-driver.c  |   50 ++++++++++++-------------------------
- drivers/pcmcia/ds.c       |    6 ++++
- drivers/usb/core/driver.c |   61 +++++++++++++++-------------------------------
- 3 files changed, 43 insertions(+), 74 deletions(-)
+after those patches get into your tree, I will try do clean up as
+linus pointed in another mail.
 
-Index: usb-3.3/drivers/pci/pci-driver.c
-===================================================================
---- usb-3.3.orig/drivers/pci/pci-driver.c
-+++ usb-3.3/drivers/pci/pci-driver.c
-@@ -188,43 +188,34 @@ store_remove_id(struct device_driver *dr
- static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
- 
- static int
--pci_create_newid_file(struct pci_driver *drv)
-+pci_create_newid_files(struct pci_driver *drv)
- {
- 	int error = 0;
--	if (drv->probe != NULL)
--		error = driver_create_file(&drv->driver, &driver_attr_new_id);
--	return error;
--}
--
--static void pci_remove_newid_file(struct pci_driver *drv)
--{
--	driver_remove_file(&drv->driver, &driver_attr_new_id);
--}
- 
--static int
--pci_create_removeid_file(struct pci_driver *drv)
--{
--	int error = 0;
--	if (drv->probe != NULL)
--		error = driver_create_file(&drv->driver,&driver_attr_remove_id);
-+	if (drv->probe != NULL) {
-+		error = driver_create_file(&drv->driver, &driver_attr_new_id);
-+		if (error == 0) {
-+			error = driver_create_file(&drv->driver,
-+					&driver_attr_remove_id);
-+			if (error)
-+				driver_remove_file(&drv->driver,
-+						&driver_attr_new_id);
-+		}
-+	}
- 	return error;
- }
- 
--static void pci_remove_removeid_file(struct pci_driver *drv)
-+static void pci_remove_newid_files(struct pci_driver *drv)
- {
- 	driver_remove_file(&drv->driver, &driver_attr_remove_id);
-+	driver_remove_file(&drv->driver, &driver_attr_new_id);
- }
- #else /* !CONFIG_HOTPLUG */
--static inline int pci_create_newid_file(struct pci_driver *drv)
-+static inline int pci_create_newid_files(struct pci_driver *drv)
- {
- 	return 0;
- }
--static inline void pci_remove_newid_file(struct pci_driver *drv) {}
--static inline int pci_create_removeid_file(struct pci_driver *drv)
--{
--	return 0;
--}
--static inline void pci_remove_removeid_file(struct pci_driver *drv) {}
-+static inline void pci_remove_newid_files(struct pci_driver *drv) {}
- #endif
- 
- /**
-@@ -1136,18 +1127,12 @@ int __pci_register_driver(struct pci_dri
- 	if (error)
- 		goto out;
- 
--	error = pci_create_newid_file(drv);
-+	error = pci_create_newid_files(drv);
- 	if (error)
- 		goto out_newid;
--
--	error = pci_create_removeid_file(drv);
--	if (error)
--		goto out_removeid;
- out:
- 	return error;
- 
--out_removeid:
--	pci_remove_newid_file(drv);
- out_newid:
- 	driver_unregister(&drv->driver);
- 	goto out;
-@@ -1166,8 +1151,7 @@ out_newid:
- void
- pci_unregister_driver(struct pci_driver *drv)
- {
--	pci_remove_removeid_file(drv);
--	pci_remove_newid_file(drv);
-+	pci_remove_newid_files(drv);
- 	driver_unregister(&drv->driver);
- 	pci_free_dynids(drv);
- }
-Index: usb-3.3/drivers/pcmcia/ds.c
-===================================================================
---- usb-3.3.orig/drivers/pcmcia/ds.c
-+++ usb-3.3/drivers/pcmcia/ds.c
-@@ -157,6 +157,11 @@ pcmcia_create_newid_file(struct pcmcia_d
- 	return error;
- }
- 
-+static void
-+pcmcia_remove_newid_file(struct pcmcia_driver *drv)
-+{
-+	driver_remove_file(&drv->drv, &driver_attr_new_id);
-+}
- 
- /**
-  * pcmcia_register_driver - register a PCMCIA driver with the bus core
-@@ -201,6 +206,7 @@ EXPORT_SYMBOL(pcmcia_register_driver);
- void pcmcia_unregister_driver(struct pcmcia_driver *driver)
- {
- 	pr_debug("unregistering driver %s\n", driver->name);
-+	pcmcia_remove_newid_file(driver);
- 	driver_unregister(&driver->drv);
- 	pcmcia_free_dynids(driver);
- }
-Index: usb-3.3/drivers/usb/core/driver.c
-===================================================================
---- usb-3.3.orig/drivers/usb/core/driver.c
-+++ usb-3.3/drivers/usb/core/driver.c
-@@ -129,43 +129,39 @@ store_remove_id(struct device_driver *dr
- }
- static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
- 
--static int usb_create_newid_file(struct usb_driver *usb_drv)
-+static int usb_create_newid_files(struct usb_driver *usb_drv)
- {
- 	int error = 0;
- 
- 	if (usb_drv->no_dynamic_id)
- 		goto exit;
- 
--	if (usb_drv->probe != NULL)
-+	if (usb_drv->probe != NULL) {
- 		error = driver_create_file(&usb_drv->drvwrap.driver,
- 					   &driver_attr_new_id);
-+		if (error == 0) {
-+			error = driver_create_file(&usb_drv->drvwrap.driver,
-+					&driver_attr_remove_id);
-+			if (error)
-+				driver_remove_file(&usb_drv->drvwrap.driver,
-+						&driver_attr_new_id);
-+		}
-+	}
- exit:
- 	return error;
- }
- 
--static void usb_remove_newid_file(struct usb_driver *usb_drv)
-+static void usb_remove_newid_files(struct usb_driver *usb_drv)
- {
- 	if (usb_drv->no_dynamic_id)
- 		return;
- 
--	if (usb_drv->probe != NULL)
-+	if (usb_drv->probe != NULL) {
- 		driver_remove_file(&usb_drv->drvwrap.driver,
--				   &driver_attr_new_id);
--}
--
--static int
--usb_create_removeid_file(struct usb_driver *drv)
--{
--	int error = 0;
--	if (drv->probe != NULL)
--		error = driver_create_file(&drv->drvwrap.driver,
- 				&driver_attr_remove_id);
--	return error;
--}
--
--static void usb_remove_removeid_file(struct usb_driver *drv)
--{
--	driver_remove_file(&drv->drvwrap.driver, &driver_attr_remove_id);
-+		driver_remove_file(&usb_drv->drvwrap.driver,
-+				   &driver_attr_new_id);
-+	}
- }
- 
- static void usb_free_dynids(struct usb_driver *usb_drv)
-@@ -180,22 +176,12 @@ static void usb_free_dynids(struct usb_d
- 	spin_unlock(&usb_drv->dynids.lock);
- }
- #else
--static inline int usb_create_newid_file(struct usb_driver *usb_drv)
--{
--	return 0;
--}
--
--static void usb_remove_newid_file(struct usb_driver *usb_drv)
--{
--}
--
--static int
--usb_create_removeid_file(struct usb_driver *drv)
-+static inline int usb_create_newid_files(struct usb_driver *usb_drv)
- {
- 	return 0;
- }
- 
--static void usb_remove_removeid_file(struct usb_driver *drv)
-+static void usb_remove_newid_files(struct usb_driver *usb_drv)
- {
- }
- 
-@@ -872,22 +858,16 @@ int usb_register_driver(struct usb_drive
- 
- 	usbfs_update_special();
- 
--	retval = usb_create_newid_file(new_driver);
-+	retval = usb_create_newid_files(new_driver);
- 	if (retval)
- 		goto out_newid;
- 
--	retval = usb_create_removeid_file(new_driver);
--	if (retval)
--		goto out_removeid;
--
- 	pr_info("%s: registered new interface driver %s\n",
- 			usbcore_name, new_driver->name);
- 
- out:
- 	return retval;
- 
--out_removeid:
--	usb_remove_newid_file(new_driver);
- out_newid:
- 	driver_unregister(&new_driver->drvwrap.driver);
- 
-@@ -914,10 +894,9 @@ void usb_deregister(struct usb_driver *d
- 	pr_info("%s: deregistering interface driver %s\n",
- 			usbcore_name, driver->name);
- 
--	usb_remove_removeid_file(driver);
--	usb_remove_newid_file(driver);
--	usb_free_dynids(driver);
-+	usb_remove_newid_files(driver);
- 	driver_unregister(&driver->drvwrap.driver);
-+	usb_free_dynids(driver);
- 
- 	usbfs_update_special();
- }
+Thanks
 
+Yinghai
