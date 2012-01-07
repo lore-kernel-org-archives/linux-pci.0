@@ -1,42 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:53086 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756342Ab2AXUYp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2012 15:24:45 -0500
-Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 817A521201
-	for <linux-pci@vger.kernel.org>; Tue, 24 Jan 2012 15:24:45 -0500 (EST)
-Date: Tue, 24 Jan 2012 12:24:41 -0800
-From: Greg KH <greg@kroah.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
-	USB list <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH]
-Message-ID: <20120124202441.GC7739@kroah.com>
-References: <Pine.LNX.4.44L0.1201241335440.1200-100000@iolanthe.rowland.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:52064 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706Ab2AGFvW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Jan 2012 00:51:22 -0500
+Received: by yenm11 with SMTP id m11so978534yen.19
+        for <linux-pci@vger.kernel.org>; Fri, 06 Jan 2012 21:51:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.44L0.1201241335440.1200-100000@iolanthe.rowland.org>
+In-Reply-To: <CAE9FiQXKVgkHg9fqXHvs7umnXkQ1Hmxudfy84jdy1n_Mo5D9Cg@mail.gmail.com>
+References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
+	<1323247984-15281-3-git-send-email-yinghai@kernel.org>
+	<20120106134915.705f5b47@jbarnes-desktop>
+	<CAE9FiQXKVgkHg9fqXHvs7umnXkQ1Hmxudfy84jdy1n_Mo5D9Cg@mail.gmail.com>
+Date: Fri, 6 Jan 2012 21:51:21 -0800
+Message-ID: <CAE9FiQXbsUH1v3+FXcyZwXk=SbLuhY2FeoH-LEi2mtvu4zOeQA@mail.gmail.com>
+Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, torvalds@linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 24, 2012 at 01:37:34PM -0500, Alan Stern wrote:
-> This patch (as1514) cleans up some places where new_id and remove_id
-> sysfs attributes are created and deleted.  Handling both attributes in
-> a single routine rather than a pair of routines makes the code
-> smaller.  It also prevents certain kinds of errors, like one we
-> currently have in the USB subsystem: The removeid attribute is often
-> created even when newid isn't (because the driver's no_dynamid_id flag
-> is set).
-> 
-> In the case of the PCMCIA subsystem, the newid attribute is created
-> but never explicitly deleted.  The patch adds a deletion routine.
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-> CC: Dominik Brodowski <linux@dominikbrodowski.net>
+On Fri, Jan 6, 2012 at 7:46 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> This looks like a separate bug fix; can you separate it out?  I assume
+>> you ran into it at least once as you were adding more recursion and
+>> occasionally not exiting it quickly. :)
 
-I think this is missing a real "Subject:" right?
+hi,  the patch has been separated into three patches.
 
+please check attached.
+
+please let me know if you like me to resend the whole patch set.
+
+Thanks
+
+Yinghai Lu
