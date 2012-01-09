@@ -1,420 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:17449 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256Ab2AUKY0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:24:26 -0500
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mail-ey0-f202.google.com ([209.85.215.202]:56646 "EHLO
+	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932634Ab2AIWoB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 17:44:01 -0500
+Received: by mail-ey0-f202.google.com with SMTP id k10so135079eaa.1
+        for <linux-pci@vger.kernel.org>; Mon, 09 Jan 2012 14:44:00 -0800 (PST)
+Subject: [PATCH v2 3/3] PNP: work around Dell 1536/1546 BIOS MMCONFIG bug that
+	breaks USB
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [RFC PATCH 1/3] PCI: Add iobusn_resource and insert root bus range to that tree.
-Date: Sat, 21 Jan 2012 02:24:06 -0800
-Message-Id: <1327141448-15281-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327141448-15281-1-git-send-email-yinghai@kernel.org>
-References: <1327141448-15281-1-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, stable@kernel.org#2.6.34+,
+	thuban@singularity.fr, Lisa Salimbas <lisa.salimbas@canonical.com>,
+	dann frazier <dann.frazier@canonical.com>
+Date: Mon, 09 Jan 2012 15:43:59 -0700
+Message-ID: <20120109224359.24913.53790.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120109224349.24913.23010.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120109224349.24913.23010.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-now only root bus number range is in that tree.
+Some Dell BIOSes have MCFG tables that don't report the entire
+MMCONFIG area claimed by the chipset.  If we move PCI devices into
+that claimed-but-unreported area, they don't work.
 
-later every bus will have extra busn_res, and linked them toghter to iobusn_resource.
+This quirk reads the AMD MMCONFIG MSRs and adds PNP0C01 resources as
+needed to cover the entire area.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Example problem scenario:
+
+  BIOS-e820: 00000000cfec5400 - 00000000d4000000 (reserved)
+  Fam 10h mmconf [d0000000, dfffffff]
+  PCI: MMCONFIG for domain 0000 [bus 00-3f] at [mem 0xd0000000-0xd3ffffff] (base 0xd0000000)
+  pnp 00:0c: [mem 0xd0000000-0xd3ffffff]
+  pci 0000:00:12.0: reg 10: [mem 0xffb00000-0xffb00fff]
+  pci 0000:00:12.0: no compatible bridge window for [mem 0xffb00000-0xffb00fff]
+  pci 0000:00:12.0: BAR 0: assigned [mem 0xd4000000-0xd40000ff]
+
+Reported-by: Lisa Salimbas <lisa.salimbas@canonical.com>
+Reported-by: <thuban@singularity.fr>
+Tested-by: dann frazier <dann.frazier@canonical.com>
+References: https://bugzilla.kernel.org/show_bug.cgi?id=31602
+References: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/647043
+References: https://bugzilla.redhat.com/show_bug.cgi?id=770308
+Cc: stable@kernel.org	# 2.6.34+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/ia64/pci/pci.c              |    9 +++++++
- arch/powerpc/kernel/pci-common.c |   12 ++++++++-
- arch/x86/include/asm/topology.h  |    3 +-
- arch/x86/pci/acpi.c              |   15 +++++++++--
- arch/x86/pci/bus_numa.c          |    8 +++++-
- arch/x86/pci/common.c            |   11 +++++---
- drivers/parisc/dino.c            |    9 +++++++
- drivers/parisc/lba_pci.c         |    8 ++++++
- drivers/pci/probe.c              |   49 ++++++++++++++++++++++++++++++++++---
- drivers/pci/remove.c             |    1 +
- include/linux/ioport.h           |    1 +
- include/linux/pci.h              |    5 ++++
- kernel/resource.c                |    8 ++++++
- 13 files changed, 125 insertions(+), 14 deletions(-)
+ drivers/pnp/quirks.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 42 insertions(+), 0 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index f82f5d4..20c43cc 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -331,6 +331,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct acpi_device *device = root->device;
- 	int domain = root->segment;
- 	int bus = root->secondary.start;
-+	int busmax = root->secondary.end;
- 	struct pci_controller *controller;
- 	unsigned int windows = 0;
- 	struct pci_root_info info;
-@@ -384,6 +385,14 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
+diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
+index dfbd5a6..258fef2 100644
+--- a/drivers/pnp/quirks.c
++++ b/drivers/pnp/quirks.c
+@@ -295,6 +295,45 @@ static void quirk_system_pci_resources(struct pnp_dev *dev)
  	}
- 
-+	/* init busn_res */
-+	pbus->busn_res.start = (domain << 8) | busnum;
-+	pbus->busn_res.end = (domain << 8) | busmax;
-+	pbus->busn_res.flags = IORESOURCE_BUS;
-+
-+	insert_resource(&iobusn_resource, &pbus->busn_res);
-+	dev_printk(KERN_DEBUG, &pbus->dev, "busn_res: %06llx-%06llx inserted\n", (unsigned long long)pbus->busn_res.start, (unsigned long long)pbus->busn_res.end);
-+
- 	pbus->subordinate = pci_scan_child_bus(pbus);
- 	return pbus;
- 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index cce98d7..4146f11 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1731,6 +1731,13 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	}
- 	bus->secondary = hose->first_busno;
- 	hose->bus = bus;
-+	/* init busn_res */
-+	bus->busn_res.start = (pci_domain_nr(bus) << 8) | host->first_busno;
-+	bus->busn_res.end = (pci_domain_nr(bus) << 8) | host->last_busno;
-+	bus->busn_res.flags = IORESOURCE_BUS;
-+
-+	insert_resource(&iobusn_resource, &bus->busn_res);
-+	dev_printk(KERN_DEBUG, &bus->dev, "busn_res: %06llx-%06llx inserted\n", (unsigned long long)bus->busn_res.start, (unsigned long long)bus->busn_res.end);
- 
- 	/* Get probe mode and perform scan */
- 	mode = PCI_PROBE_NORMAL;
-@@ -1742,8 +1749,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		of_scan_bus(node, bus);
- 	}
- 
--	if (mode == PCI_PROBE_NORMAL)
-+	if (mode == PCI_PROBE_NORMAL) {
-+		bus->busn_res.end = (pci_domain_nr(bus) << 8) | 255;
- 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-+		bus->busn_res.end = (pci_domain_nr(bus) << 8) | bus->subordinate;
-+	}
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
-diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
-index b9676ae..ad4060e 100644
---- a/arch/x86/include/asm/topology.h
-+++ b/arch/x86/include/asm/topology.h
-@@ -172,7 +172,8 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
  }
  
- struct pci_bus;
--void x86_pci_root_bus_resources(int bus, struct list_head *resources);
-+void x86_pci_root_bus_resources(int bus, int *bus_max,
-+				struct list_head *resources);
- 
- #ifdef CONFIG_SMP
- #define mc_capable()	((boot_cpu_data.x86_max_cores > 1) && \
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index a312e76..1929c3f 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -348,6 +348,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct acpi_device *device = root->device;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
-+	int busmax = root->secondary.end;
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
-@@ -405,12 +406,20 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	} else {
- 		get_current_resources(device, busnum, domain, &resources);
- 		if (list_empty(&resources))
--			x86_pci_root_bus_resources(busnum, &resources);
-+			x86_pci_root_bus_resources(busnum, &busmax, &resources);
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
--		if (bus)
-+		if (bus) {
-+			/* init busn_res */
-+			bus->busn_res.start = (domain << 8) | busnum;
-+			bus->busn_res.end = (domain << 8) | busmax;
-+			bus->busn_res.flags = IORESOURCE_BUS;
++#ifdef CONFIG_AMD_NB
 +
-+			insert_resource(&iobusn_resource, &bus->busn_res);
-+			dev_printk(KERN_DEBUG, &bus->dev, "busn_res: %06llx-%06llx inserted\n", (unsigned long long)bus->busn_res.start, (unsigned long long)bus->busn_res.end);
++#include <asm/amd_nb.h>
 +
- 			bus->subordinate = pci_scan_child_bus(bus);
--		else
-+		} else
- 			pci_free_resource_list(&resources);
- 	}
- 
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index fd3f655..5213cd8 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -7,7 +7,8 @@
- int pci_root_num;
- struct pci_root_info pci_root_info[PCI_ROOT_NR];
- 
--void x86_pci_root_bus_resources(int bus, struct list_head *resources)
-+void x86_pci_root_bus_resources(int bus, int *bus_max,
-+				struct list_head *resources)
- {
- 	int i;
- 	int j;
-@@ -28,6 +29,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	       bus);
- 
- 	info = &pci_root_info[i];
-+	*bus_max = info->bus_max;
- 	for (j = 0; j < info->res_num; j++) {
- 		struct resource *res;
- 		struct resource *root;
-@@ -51,6 +53,10 @@ default_resources:
- 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
- 	pci_add_resource(resources, &ioport_resource);
- 	pci_add_resource(resources, &iomem_resource);
-+	if (!bus)
-+		*bus_max = 0xff;
-+	else if (!*bus_max)
-+		*bus_max = bus;
- }
- 
- void __devinit update_res(struct pci_root_info *info, resource_size_t start,
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 323481e..ce0aefc 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -433,6 +433,7 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
-+	int bus_max;
- 
- 	while ((bus = pci_find_next_bus(bus)) != NULL) {
- 		if (bus->number == busnum) {
-@@ -454,8 +455,9 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
- 	sd->node = get_mp_bus_to_node(busnum);
- 
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
--	x86_pci_root_bus_resources(busnum, &resources);
--	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
-+	x86_pci_root_bus_resources(busnum, &bus_max, &resources);
-+	bus = pci_scan_root_bus_max(NULL, busnum, bus_max, &pci_root_ops, sd,
-+				&resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
-@@ -643,6 +645,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
-+	int bus_max;
- 
- 	/*
- 	 * Allocate per-root-bus (not per bus) arch-specific data.
-@@ -655,8 +658,8 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 		return NULL;
- 	}
- 	sd->node = node;
--	x86_pci_root_bus_resources(busno, &resources);
--	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
-+	x86_pci_root_bus_resources(busno, &bus_max, &resources);
-+	bus = pci_scan_root_bus_max(NULL, busno, bus_max, ops, sd, &resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index 7ff10c1..8959332 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -1014,7 +1014,16 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
-+       /* init busn_res */
-+	bus->busn_res.start = (pci_domain_nr(bus) << 8) | busnum;
-+	bus->busn_res.end = (pci_domain_nr(bus) << 8) | 255;
-+	bus->busn_res.flags = IORESOURCE_BUS;
-+
-+	insert_resource(&iobusn_resource, &bus->busn_res);
-+	dev_printk(KERN_DEBUG, &bus->dev, "busn_res: %06llx-%06llx inserted\n", (unsigned long long)bus->busn_res.start, (unsigned long long)bus->busn_res.end);
-+
- 	bus->subordinate = pci_scan_child_bus(bus);
-+	bus->busn_res.end = (pci_domain_nr(bus) << 8) | bus->subordinate;
- 
- 	/* This code *depends* on scanning being single threaded
- 	 * if it isn't, this global bus number count will fail
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index d5f3d75..7c2b60a 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1531,6 +1531,14 @@ lba_driver_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
-+       /* init busn_res */
-+	lba_bus->busn_res.start = (pci_domain_nr(lba_bus) << 8) | lba_dev->hba.bus_num.start;
-+	lba_bus->busn_res.end = (pci_domain_nr(lba_bus) << 8) | lba_dev->hba.bus_num.end;
-+	lba_bus->busn_res.flags = IORESOURCE_BUS;
-+
-+	insert_resource(&iobusn_resource, &lba_bus->busn_res);
-+	dev_printk(KERN_DEBUG, &lba_bus->dev, "busn_res: %06llx-%06llx inserted\n", (unsigned long long)lba_bus->busn_res.start, (unsigned long long)lba_bus->busn_res.end);
-+
- 	lba_bus->subordinate = pci_scan_child_bus(lba_bus);
- 
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7cc9e2f..3e08207 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1608,8 +1608,9 @@ err_out:
- 	return NULL;
- }
- 
--struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
-+		int bus_max, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources)
- {
- 	struct pci_bus *b;
- 
-@@ -1617,10 +1618,32 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 	if (!b)
- 		return NULL;
- 
-+	/* init busn_res */
-+	b->busn_res.start = (pci_domain_nr(b) << 8) | bus;
-+	b->busn_res.end = (pci_domain_nr(b) << 8) | bus_max;
-+	b->busn_res.flags = IORESOURCE_BUS;
-+
-+	insert_resource(&iobusn_resource, &b->busn_res);
-+
- 	b->subordinate = pci_scan_child_bus(b);
- 	pci_bus_add_devices(b);
- 	return b;
- }
-+EXPORT_SYMBOL(pci_scan_root_bus_max);
-+
-+struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources)
++static void quirk_amd_mmconfig_area(struct pnp_dev *dev)
 +{
-+	struct pci_bus *b;
++	resource_size_t start, end;
++	struct pnp_resource *pnp_res;
++	struct resource *res;
++	struct resource mmconfig_res, *mmconfig;
 +
-+	b = pci_scan_root_bus_max(parent, bus, 255, ops, sysdata, resources);
++	mmconfig = amd_get_mmconfig_range(&mmconfig_res);
++	if (!mmconfig)
++		return;
 +
-+	if (b)
-+		b->busn_res.end = (pci_domain_nr(b) << 8) | b->subordinate;
++	list_for_each_entry(pnp_res, &dev->resources, list) {
++		res = &pnp_res->res;
++		if (res->end < mmconfig->start || res->start > mmconfig->end ||
++		    (res->start == mmconfig->start && res->end == mmconfig->end))
++			continue;
 +
-+	return b;
++		dev_info(&dev->dev, FW_BUG
++			 "%pR covers only part of AMD MMCONFIG area %pR; adding more reservations\n",
++			 res, mmconfig);
++		if (mmconfig->start < res->start) {
++			start = mmconfig->start;
++			end = res->start - 1;
++			pnp_add_mem_resource(dev, start, end, 0);
++		}
++		if (mmconfig->end > res->end) {
++			start = res->end + 1;
++			end = mmconfig->end;
++			pnp_add_mem_resource(dev, start, end, 0);
++		}
++		break;
++	}
 +}
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
- /* Deprecated; use pci_scan_root_bus() instead */
-@@ -1633,9 +1656,18 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
-+	if (b) {
-+		/* init busn_res */
-+		b->busn_res.start = (pci_domain_nr(b) << 8) | bus;
-+		b->busn_res.end = (pci_domain_nr(b) << 8) | 255;
-+		b->busn_res.flags = IORESOURCE_BUS;
++#endif
 +
-+		insert_resource(&iobusn_resource, &b->busn_res);
-+
- 		b->subordinate = pci_scan_child_bus(b);
--	else
-+
-+		b->busn_res.end = (pci_domain_nr(b) << 8) | b->subordinate;
-+	} else
- 		pci_free_resource_list(&resources);
- 	return b;
- }
-@@ -1651,7 +1683,16 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
- 	pci_add_resource(&resources, &iomem_resource);
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
-+		/* init busn_res */
-+		b->busn_res.start = (pci_domain_nr(b) << 8) | bus;
-+		b->busn_res.end = (pci_domain_nr(b) << 8) | 255;
-+		b->busn_res.flags = IORESOURCE_BUS;
-+
-+		insert_resource(&iobusn_resource, &b->busn_res);
-+
- 		b->subordinate = pci_scan_child_bus(b);
-+
-+		b->busn_res.end = (pci_domain_nr(b) << 8) | b->subordinate;
- 		pci_bus_add_devices(b);
- 	} else {
- 		pci_free_resource_list(&resources);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 6def362..a4cbe0e 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- 
- 	down_write(&pci_bus_sem);
- 	list_del(&pci_bus->node);
-+	release_resource(&pci_bus->busn_res);
- 	up_write(&pci_bus_sem);
- 	if (!pci_bus->is_added)
- 		return;
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 9d57a71..c96781c 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -142,6 +142,7 @@ struct resource_list {
- /* PC/ISA/whatever - the normal PC address spaces: IO and memory */
- extern struct resource ioport_resource;
- extern struct resource iomem_resource;
-+extern struct resource iobusn_resource;
- 
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a16b1df..4598cf5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -420,6 +420,7 @@ struct pci_bus {
- 	struct list_head slots;		/* list of slots on this bus */
- 	struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
- 	struct list_head resources;	/* address space routed to this bus */
-+	struct resource busn_res;	/* track registered bus num range */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
- 	void		*sysdata;	/* hook for sys-specific extension */
-@@ -665,6 +666,10 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
-+struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
-+					     int busmax, struct pci_ops *ops,
-+					     void *sysdata,
-+					     struct list_head *resources);
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 7640b3a..53b42f0 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -38,6 +38,14 @@ struct resource iomem_resource = {
+ /*
+  *  PnP Quirks
+  *  Cards or devices that need some tweaking due to incomplete resource info
+@@ -322,6 +361,9 @@ static struct pnp_fixup pnp_fixups[] = {
+ 	/* PnP resources that might overlap PCI BARs */
+ 	{"PNP0c01", quirk_system_pci_resources},
+ 	{"PNP0c02", quirk_system_pci_resources},
++#ifdef CONFIG_AMD_NB
++	{"PNP0c01", quirk_amd_mmconfig_area},
++#endif
+ 	{""}
  };
- EXPORT_SYMBOL(iomem_resource);
  
-+struct resource iobusn_resource = {
-+	.name	= "PCI busn",
-+	.start	= 0,
-+	.end	= 0xffffff,
-+	.flags	= IORESOURCE_BUS,
-+};
-+EXPORT_SYMBOL(iobusn_resource);
-+
- /* constraints to be met while allocating resources */
- struct resource_constraint {
- 	resource_size_t min, max, align;
--- 
-1.7.7
 
