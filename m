@@ -1,61 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:31400 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030358Ab2AFPoe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 10:44:34 -0500
-Date: Fri, 6 Jan 2012 10:03:38 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jan Beulich <JBeulich@suse.com>,
-	Ian Campbell <Ian.Campbell@eu.citrix.com>
-Cc: xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jbarnes@virtuousgeek.org
-Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
- to include domain id.
-Message-ID: <20120106150338.GB5855@phenom.dumpdata.com>
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
- <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
- <4F06C101020000780006AC32@nat28.tlf.novell.com>
+Received: from mail-ey0-f202.google.com ([209.85.215.202]:56646 "EHLO
+	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755880Ab2AIWn5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 17:43:57 -0500
+Received: by eaak10 with SMTP id k10so135079eaa.1
+        for <linux-pci@vger.kernel.org>; Mon, 09 Jan 2012 14:43:55 -0800 (PST)
+Subject: [PATCH v2 2/3] x86, amd: factor out MMCONFIG discovery
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, stable@kernel.org#2.6.34+,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <borislav.petkov@amd.com>
+Date: Mon, 09 Jan 2012 15:43:54 -0700
+Message-ID: <20120109224354.24913.79060.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120109224349.24913.23010.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120109224349.24913.23010.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F06C101020000780006AC32@nat28.tlf.novell.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 06, 2012 at 08:38:09AM +0000, Jan Beulich wrote:
-> >>> On 05.01.12 at 01:46, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
-> > When a PCI device is transferred to another domain and it is still
-> > in usage (from the internal perspective), mention which other
-> > domain is using it to aid in debugging.
-> > 
-> > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > ---
-> >  drivers/xen/xen-pciback/xenbus.c |    6 ++++--
-> >  1 files changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-> > index 474d52e..fa130bd 100644
-> > --- a/drivers/xen/xen-pciback/xenbus.c
-> > +++ b/drivers/xen/xen-pciback/xenbus.c
-> > @@ -243,8 +243,10 @@ static int xen_pcibk_export_device(struct 
-> > xen_pcibk_device *pdev,
-> >  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
-> >  	if (xen_register_device_domain_owner(dev,
-> >  					     pdev->xdev->otherend_id) != 0) {
-> > -		dev_err(&dev->dev, "device has been assigned to another " \
-> > -			"domain! Over-writting the ownership, but beware.\n");
-> > +		int other_domain = xen_find_device_domain_owner(dev);
-> > +		dev_err(&dev->dev, "device has been assigned to %d " \
-> > +			"domain! Over-writting the ownership, but beware.\n",
-> > +			other_domain);
-> 
-> As you're touching this anyway, how about fixing the other minor
-> issues with it too? E.g.
-> 
-> 		dev_err(&dev->dev, "Device appears to be assigned to dom%d!"
-> 			" Overwriting the ownership, but beware.\n",
-> 			xen_find_device_domain_owner(dev));
-> 
-> (a native English speaker may want to comment the "but beware"
-> part - it reads odd for me).
+This factors out the AMD native MMCONFIG discovery so we can use it
+outside amd_bus.c.
 
-Hm, lets ask the English speakers. Ian?
+amd_bus.c reads AMD MSRs so it can remove the MMCONFIG area from the
+PCI resources.  We may also need the MMCONFIG information to work
+around BIOS defects in the ACPI MCFG table.
+
+Cc: Borislav Petkov <borislav.petkov@amd.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@kernel.org       # 2.6.34+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/include/asm/amd_nb.h |    2 ++
+ arch/x86/kernel/amd_nb.c      |   31 ++++++++++++++++++++++++++++++
+ arch/x86/pci/amd_bus.c        |   42 +++++++++++------------------------------
+ 3 files changed, 44 insertions(+), 31 deletions(-)
+
+diff --git a/arch/x86/include/asm/amd_nb.h b/arch/x86/include/asm/amd_nb.h
+index 8e41071..49ad773 100644
+--- a/arch/x86/include/asm/amd_nb.h
++++ b/arch/x86/include/asm/amd_nb.h
+@@ -1,6 +1,7 @@
+ #ifndef _ASM_X86_AMD_NB_H
+ #define _ASM_X86_AMD_NB_H
+ 
++#include <linux/ioport.h>
+ #include <linux/pci.h>
+ 
+ struct amd_nb_bus_dev_range {
+@@ -13,6 +14,7 @@ extern const struct pci_device_id amd_nb_misc_ids[];
+ extern const struct amd_nb_bus_dev_range amd_nb_bus_dev_ranges[];
+ 
+ extern bool early_is_amd_nb(u32 value);
++extern struct resource *amd_get_mmconfig_range(struct resource *res);
+ extern int amd_cache_northbridges(void);
+ extern void amd_flush_garts(void);
+ extern int amd_numa_init(void);
+diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+index 4c39baa..bae1efe 100644
+--- a/arch/x86/kernel/amd_nb.c
++++ b/arch/x86/kernel/amd_nb.c
+@@ -119,6 +119,37 @@ bool __init early_is_amd_nb(u32 device)
+ 	return false;
+ }
+ 
++struct resource *amd_get_mmconfig_range(struct resource *res)
++{
++	u32 address;
++	u64 base, msr;
++	unsigned segn_busn_bits;
++
++	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
++		return NULL;
++
++	/* assume all cpus from fam10h have mmconfig */
++        if (boot_cpu_data.x86 < 0x10)
++		return NULL;
++
++	address = MSR_FAM10H_MMIO_CONF_BASE;
++	rdmsrl(address, msr);
++
++	/* mmconfig is not enabled */
++	if (!(msr & FAM10H_MMIO_CONF_ENABLE))
++		return NULL;
++
++	base = msr & (FAM10H_MMIO_CONF_BASE_MASK<<FAM10H_MMIO_CONF_BASE_SHIFT);
++
++	segn_busn_bits = (msr >> FAM10H_MMIO_CONF_BUSRANGE_SHIFT) &
++			 FAM10H_MMIO_CONF_BUSRANGE_MASK;
++
++	res->flags = IORESOURCE_MEM;
++	res->start = base;
++	res->end = base + (1ULL<<(segn_busn_bits + 20)) - 1;
++	return res;
++}
++
+ int amd_get_subcaches(int cpu)
+ {
+ 	struct pci_dev *link = node_to_amd_nb(amd_get_nb_id(cpu))->link;
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 026e493..385a940 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -30,34 +30,6 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
+ 	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
+ };
+ 
+-static u64 __initdata fam10h_mmconf_start;
+-static u64 __initdata fam10h_mmconf_end;
+-static void __init get_pci_mmcfg_amd_fam10h_range(void)
+-{
+-	u32 address;
+-	u64 base, msr;
+-	unsigned segn_busn_bits;
+-
+-	/* assume all cpus from fam10h have mmconf */
+-        if (boot_cpu_data.x86 < 0x10)
+-		return;
+-
+-	address = MSR_FAM10H_MMIO_CONF_BASE;
+-	rdmsrl(address, msr);
+-
+-	/* mmconfig is not enable */
+-	if (!(msr & FAM10H_MMIO_CONF_ENABLE))
+-		return;
+-
+-	base = msr & (FAM10H_MMIO_CONF_BASE_MASK<<FAM10H_MMIO_CONF_BASE_SHIFT);
+-
+-	segn_busn_bits = (msr >> FAM10H_MMIO_CONF_BUSRANGE_SHIFT) &
+-			 FAM10H_MMIO_CONF_BUSRANGE_MASK;
+-
+-	fam10h_mmconf_start = base;
+-	fam10h_mmconf_end = base + (1ULL<<(segn_busn_bits + 20)) - 1;
+-}
+-
+ #define RANGE_NUM 16
+ 
+ /**
+@@ -85,6 +57,9 @@ static int __init early_fill_mp_bus_info(void)
+ 	u64 val;
+ 	u32 address;
+ 	bool found;
++	struct resource fam10h_mmconf_res, *fam10h_mmconf;
++	u64 fam10h_mmconf_start;
++	u64 fam10h_mmconf_end;
+ 
+ 	if (!early_pci_allowed())
+ 		return -1;
+@@ -211,12 +186,17 @@ static int __init early_fill_mp_bus_info(void)
+ 		subtract_range(range, RANGE_NUM, 0, end);
+ 
+ 	/* get mmconfig */
+-	get_pci_mmcfg_amd_fam10h_range();
++	fam10h_mmconf = amd_get_mmconfig_range(&fam10h_mmconf_res);
+ 	/* need to take out mmconf range */
+-	if (fam10h_mmconf_end) {
+-		printk(KERN_DEBUG "Fam 10h mmconf [%llx, %llx]\n", fam10h_mmconf_start, fam10h_mmconf_end);
++	if (fam10h_mmconf) {
++		printk(KERN_DEBUG "Fam 10h mmconf %pR\n", fam10h_mmconf);
++		fam10h_mmconf_start = fam10h_mmconf->start;
++		fam10h_mmconf_end = fam10h_mmconf->end;
+ 		subtract_range(range, RANGE_NUM, fam10h_mmconf_start,
+ 				 fam10h_mmconf_end + 1);
++	} else {
++		fam10h_mmconf_start = 0;
++		fam10h_mmconf_end = 0;
+ 	}
+ 
+ 	/* mmio resource */
+
