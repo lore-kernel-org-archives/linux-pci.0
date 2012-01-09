@@ -1,50 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:22294 "EHLO
+Received: from acsinet15.oracle.com ([141.146.126.227]:40542 "EHLO
 	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755211Ab2AUKJR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:09:17 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 17/21] PCI: Disable cardbus bridge MEM1 pref CTL
-Date: Sat, 21 Jan 2012 02:08:33 -0800
-Message-Id: <1327140517-14811-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+	with ESMTP id S1755683Ab2AIPNT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 10:13:19 -0500
+Date: Mon, 9 Jan 2012 10:11:24 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Ian Campbell <Ian.Campbell@citrix.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jan Beulich <JBeulich@suse.com>
+Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
+ to include domain id.
+Message-ID: <20120109151124.GE25563@phenom.dumpdata.com>
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
+ <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
+ <4F06C101020000780006AC32@nat28.tlf.novell.com>
+ <20120106150338.GB5855@phenom.dumpdata.com>
+ <1325865086.25206.512.camel@zakaz.uk.xensource.com>
+ <20120106160011.GD6125@phenom.dumpdata.com>
+ <20120106221927.GA10248@phenom.dumpdata.com>
+ <1326102657.17210.11.camel@zakaz.uk.xensource.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1326102657.17210.11.camel@zakaz.uk.xensource.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some BIOS enable both pref for MEM0 and MEM1.
+On Mon, Jan 09, 2012 at 09:50:57AM +0000, Ian Campbell wrote:
+> On Fri, 2012-01-06 at 22:19 +0000, Konrad Rzeszutek Wilk wrote:
+> > > > I suppose you might want "Overriding ownership to dom%d".
+> > > 
+> > > OK. To the point and potentially can fit in 80 lines :-).
+> > 
+> > how about this?
+> > > 
+> > From a3d4a80cdfd4274016522572148a89260b3f3de6 Mon Sep 17 00:00:00 2001
+> > From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > Date: Wed, 4 Jan 2012 14:16:45 -0500
+> > Subject: [PATCH] xen/pciback: Expand the warning message to include domain
+> >  id.
+> > 
+> > When a PCI device is transferred to another domain and it is still
+> > in usage (from the internal perspective), mention which other
+> > domain is using it to aid in debugging.
+> > 
+> > [v2: Truncate the verbose message per Jan Beulich suggestion]
+> > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > ---
+> >  drivers/xen/xen-pciback/xenbus.c |    4 ++--
+> >  1 files changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> > index 474d52e..2405a24 100644
+> > --- a/drivers/xen/xen-pciback/xenbus.c
+> > +++ b/drivers/xen/xen-pciback/xenbus.c
+> > @@ -243,8 +243,8 @@ static int xen_pcibk_export_device(struct xen_pcibk_device *pdev,
+> >  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
+> >  	if (xen_register_device_domain_owner(dev,
+> >  					     pdev->xdev->otherend_id) != 0) {
+> > -		dev_err(&dev->dev, "device has been assigned to another " \
+> > -			"domain! Over-writting the ownership, but beware.\n");
+> > +		dev_err(&dev->dev, "Overriding ownership to dom%d.\n",
+> > +			xen_find_device_domain_owner(dev));
+> 
+> That sounds like you are going to be assigning the ownership to that
+> dom, but xen_find_device_domain_owner so aren't you actually steeling
+> ownership from that domain?
 
-but we assume MEM1 is non-pref...
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 090217a..d5897c3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -914,6 +914,14 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	if (realloc_head)
- 		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
- 
-+	/* MEM1 must not be pref mmio */
-+	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
-+	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
-+		ctrl &= ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
-+		pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
-+		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
-+	}
-+
- 	/*
- 	 * Check whether prefetchable memory is supported
- 	 * by this bridge.
--- 
-1.7.7
-
+Duh! I will do s/to/from/
