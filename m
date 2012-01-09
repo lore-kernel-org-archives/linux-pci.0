@@ -1,60 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:22180 "EHLO
+Received: from acsinet15.oracle.com ([141.146.126.227]:62251 "EHLO
 	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754012Ab2AUKIz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:08:55 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 02/21] PCI: Make add_to_list() return status
-Date: Sat, 21 Jan 2012 02:08:18 -0800
-Message-Id: <1327140517-14811-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+	with ESMTP id S1754560Ab2AIPYt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 10:24:49 -0500
+Date: Mon, 9 Jan 2012 10:22:54 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Ian Campbell <Ian.Campbell@citrix.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jan Beulich <JBeulich@suse.com>
+Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
+ to include domain id.
+Message-ID: <20120109152254.GA26880@phenom.dumpdata.com>
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
+ <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
+ <4F06C101020000780006AC32@nat28.tlf.novell.com>
+ <20120106150338.GB5855@phenom.dumpdata.com>
+ <1325865086.25206.512.camel@zakaz.uk.xensource.com>
+ <20120106160011.GD6125@phenom.dumpdata.com>
+ <20120106221927.GA10248@phenom.dumpdata.com>
+ <1326102657.17210.11.camel@zakaz.uk.xensource.com>
+ <20120109151124.GE25563@phenom.dumpdata.com>
+ <1326122172.17210.109.camel@zakaz.uk.xensource.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1326122172.17210.109.camel@zakaz.uk.xensource.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will be used for resource_list_x duplication for try requested+optional at first.
+> > > > -		dev_err(&dev->dev, "device has been assigned to another " \
+> > > > -			"domain! Over-writting the ownership, but beware.\n");
+> > > > +		dev_err(&dev->dev, "Overriding ownership to dom%d.\n",
+> > > > +			xen_find_device_domain_owner(dev));
+> > > 
+> > > That sounds like you are going to be assigning the ownership to that
+> > > dom, but xen_find_device_domain_owner so aren't you actually steeling
+> > > ownership from that domain?
+> > 
+> > Duh! I will do s/to/from/
+> 
+> Maybe s/Overriding/Stealing/ too? "Overriding ownership from xxx" sounds
+> a bit odd to me.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9d932f4..0282fde 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -64,7 +64,7 @@ void pci_realloc(void)
-  * @add_size:	additional size to be optionally added
-  *              to the resource
-  */
--static void add_to_list(struct resource_list_x *head,
-+static int add_to_list(struct resource_list_x *head,
- 		 struct pci_dev *dev, struct resource *res,
- 		 resource_size_t add_size, resource_size_t min_align)
- {
-@@ -75,7 +75,7 @@ static void add_to_list(struct resource_list_x *head,
- 	tmp = kmalloc(sizeof(*tmp), GFP_KERNEL);
- 	if (!tmp) {
- 		pr_warning("add_to_list: kmalloc() failed!\n");
--		return;
-+		return -ENOMEM;
- 	}
- 
- 	tmp->next = ln;
-@@ -87,6 +87,8 @@ static void add_to_list(struct resource_list_x *head,
- 	tmp->add_size = add_size;
- 	tmp->min_align = min_align;
- 	list->next = tmp;
-+
-+	return 0;
- }
- 
- static void add_to_failed_list(struct resource_list_x *head,
--- 
-1.7.7
-
+Bingo! "Stealing ownership from dom%d." it is!
