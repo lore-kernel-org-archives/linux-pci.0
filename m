@@ -1,132 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 14/21] PCI: Change free_list() to function
-Date: Sat, 21 Jan 2012 02:08:30 -0800
-Message-Id: <1327140517-14811-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nat28.tlf.novell.com ([130.57.49.28]:59826 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142Ab2AIJbX convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:4:2>);
+	Mon, 9 Jan 2012 04:31:23 -0500
+Message-Id: <4F0AC189020000780006B1DE@nat28.tlf.novell.com>
+Date: Mon, 09 Jan 2012 09:29:29 +0000
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>
+Cc: "Ian Campbell" <Ian.Campbell@citrix.com>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>
+Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning
+ message to include domain id.
+References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
+ <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
+ <4F06C101020000780006AC32@nat28.tlf.novell.com>
+ <20120106150338.GB5855@phenom.dumpdata.com>
+ <1325865086.25206.512.camel@zakaz.uk.xensource.com>
+ <20120106160011.GD6125@phenom.dumpdata.com>
+ <20120106221927.GA10248@phenom.dumpdata.com>
+In-Reply-To: <20120106221927.GA10248@phenom.dumpdata.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After merging struct pci_dev_resource_x and pci_dev_resource,
-We can use function instead of macro now.
+>>> On 06.01.12 at 23:19, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
+>> > I suppose you might want "Overriding ownership to dom%d".
+>> 
+>> OK. To the point and potentially can fit in 80 lines :-).
+> 
+> how about this?
+>> 
+> From a3d4a80cdfd4274016522572148a89260b3f3de6 Mon Sep 17 00:00:00 2001
+> From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Date: Wed, 4 Jan 2012 14:16:45 -0500
+> Subject: [PATCH] xen/pciback: Expand the warning message to include domain
+>  id.
+> 
+> When a PCI device is transferred to another domain and it is still
+> in usage (from the internal perspective), mention which other
+> domain is using it to aid in debugging.
+> 
+> [v2: Truncate the verbose message per Jan Beulich suggestion]
+> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |   36 +++++++++++++++++++-----------------
- 1 files changed, 19 insertions(+), 17 deletions(-)
+Acked-by: Jan Beulich <jbeulich@suse.com>
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a6e427a..c845d18 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -38,13 +38,15 @@ struct pci_dev_resource {
- 	unsigned long flags;
- };
- 
--#define free_list(type, head) do {				\
--	struct type *dev_res, *tmp;				\
--	list_for_each_entry_safe(dev_res, tmp, head, list) {	\
--		list_del(&dev_res->list);			\
--		kfree(dev_res);					\
--	}							\
--} while (0)
-+static void free_list(struct list_head *head)
-+{
-+	struct pci_dev_resource *dev_res, *tmp;
-+
-+	list_for_each_entry_safe(dev_res, tmp, head, list) {
-+		list_del(&dev_res->list);
-+		kfree(dev_res);
-+	}
-+}
- 
- int pci_realloc_enable = 0;
- #define pci_realloc_enabled() pci_realloc_enable
-@@ -329,7 +331,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	/* Save original start, end, flags etc at first */
- 	list_for_each_entry(dev_res, head, list) {
- 		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
--			free_list(pci_dev_resource, &save_head);
-+			free_list(&save_head);
- 			goto requested_and_reassign;
- 		}
- 	}
-@@ -347,12 +349,12 @@ static void __assign_resources_sorted(struct list_head *head,
- 		/* Remove head list from realloc_head list */
- 		list_for_each_entry(dev_res, head, list)
- 			remove_from_list(realloc_head, dev_res->res);
--		free_list(pci_dev_resource, &save_head);
--		free_list(pci_dev_resource, head);
-+		free_list(&save_head);
-+		free_list(head);
- 		return;
- 	}
- 
--	free_list(pci_dev_resource, &local_fail_head);
-+	free_list(&local_fail_head);
- 	/* Release assigned resource */
- 	list_for_each_entry(dev_res, head, list)
- 		if (dev_res->res->parent)
-@@ -365,7 +367,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 		res->end = save_res->end;
- 		res->flags = save_res->flags;
- 	}
--	free_list(pci_dev_resource, &save_head);
-+	free_list(&save_head);
- 
- requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
-@@ -375,7 +377,7 @@ requested_and_reassign:
- 		requests */
- 	if (realloc_head)
- 		reassign_resources_sorted(realloc_head, head);
--	free_list(pci_dev_resource, head);
-+	free_list(head);
- }
- 
- static void pdev_assign_resources_sorted(struct pci_dev *dev,
-@@ -1298,7 +1300,7 @@ again:
- 	 */
- 	failed_type &= type_mask;
- 	if ((failed_type == IORESOURCE_IO) || (tried_times >= pci_try_num)) {
--		free_list(pci_dev_resource, &fail_head);
-+		free_list(&fail_head);
- 		goto enable_and_dump;
- 	}
- 
-@@ -1329,7 +1331,7 @@ again:
- 		if (fail_res->dev->subordinate)
- 			res->flags = 0;
- 	}
--	free_list(pci_dev_resource, &fail_head);
-+	free_list(&fail_head);
- 
- 	goto again;
- 
-@@ -1366,7 +1368,7 @@ again:
- 
- 	if (tried_times >= 2) {
- 		/* still fail, don't need to try more */
--		free_list(pci_dev_resource, &fail_head);
-+		free_list(&fail_head);
- 		goto enable_all;
- 	}
- 
-@@ -1394,7 +1396,7 @@ again:
- 		if (fail_res->dev->subordinate)
- 			res->flags = 0;
- 	}
--	free_list(pci_dev_resource, &fail_head);
-+	free_list(&fail_head);
- 
- 	goto again;
- 
--- 
-1.7.7
+> ---
+>  drivers/xen/xen-pciback/xenbus.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> index 474d52e..2405a24 100644
+> --- a/drivers/xen/xen-pciback/xenbus.c
+> +++ b/drivers/xen/xen-pciback/xenbus.c
+> @@ -243,8 +243,8 @@ static int xen_pcibk_export_device(struct 
+> xen_pcibk_device *pdev,
+>  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
+>  	if (xen_register_device_domain_owner(dev,
+>  					     pdev->xdev->otherend_id) != 0) {
+> -		dev_err(&dev->dev, "device has been assigned to another " \
+> -			"domain! Over-writting the ownership, but beware.\n");
+> +		dev_err(&dev->dev, "Overriding ownership to dom%d.\n",
+> +			xen_find_device_domain_owner(dev));
+>  		xen_unregister_device_domain_owner(dev);
+>  		xen_register_device_domain_owner(dev, pdev->xdev->otherend_id);
+>  	}
+> -- 
+> 1.7.7.4
+> 
+> 
+> _______________________________________________
+> Xen-devel mailing list
+> Xen-devel@lists.xensource.com 
+> http://lists.xensource.com/xen-devel 
+
+
 
