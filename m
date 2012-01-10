@@ -1,107 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56531 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932111Ab2ARQwu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jan 2012 11:52:50 -0500
-Received: by lahc1 with SMTP id c1so2337826lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 08:52:47 -0800 (PST)
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:55011 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932622Ab2AJT7o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2012 14:59:44 -0500
+Message-ID: <4F0CA652.5040103@xenotime.net>
+Date: Tue, 10 Jan 2012 12:57:54 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
-References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
- <20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com> <CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 18 Jan 2012 09:52:25 -0700
-Message-ID: <CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
-Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
- via host bridge
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	x86 maintainers <x86@kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: linux-next: Tree for Jan 9 (arch/x86/pci/amd_bus.c)
+References: <20120109170457.4465dfc66a0eace4a2230fef@canb.auug.org.au> <4F0B569B.6050004@xenotime.net> <CAErSpo4+remnOA6gJXOz_54CsbbcOq_Yj=ua9gV_bq5dZ64ABA@mail.gmail.com>
+In-Reply-To: <CAErSpo4+remnOA6gJXOz_54CsbbcOq_Yj=ua9gV_bq5dZ64ABA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 18, 2012 at 12:51 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Jan 17, 2012 at 4:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> When we scan the bus behind a bridge (pci_scan_bridge()), we sometimes
->> ignore any bus numbers assigned by the BIOS and try to assign our own
->> bus numbers.  But this can only work if the new bus number is inside
->> the range reachable via the host bridge.
+On 01/09/2012 02:40 PM, Bjorn Helgaas wrote:
+> On Mon, Jan 9, 2012 at 2:05 PM, Randy Dunlap <rdunlap@xenotime.net> wrote:
+>> on several i386 builds:
 >>
->> This patch prevents us from creating a new bus under the wrong host
->> bridge.  (Obviously, if the arch doesn't tell the PCI core about the
->> host bridge configuration, we can't detect this problem, so this check
->> is only useful if the arch uses pci_scan_host_bridge() or similar.)
->>
->> Here's a sample problem scenario:
->>
->>    ACPI: PCI Root Bridge [VP18] (domain 0000 [bus 30-32])
->>    pci 0000:30:1e.0: PCI bridge to [bus 33-ff]
->>    pci 0000:33:00.0: PCI bridge to [bus 34-34]
->>    pci 0000:34:00.0: reg 10: [mem 0xe6100000-0xe613ffff 64bit]
->>    ACPI: PCI Root Bridge [VP10] (domain 0000 [bus 33-34])
->>
->> We silently reconfigured 30:1e.0 (changing its subordinate buses from
->> [bus 31] to [bus 33-ff]) because the bridge looked "broken."  Devices on
->> bus 33 exist, but they are reached via the VP10 host bridge, *not* VP18.
->>
->> The 33:00.0 resources must be allocated from VP10 host bridge windows,
->> not from VP18 windows.  We mistakenly think 33:00.0 is under VP18, so
->> we reallocate its resources from VP18 windows, and the device no longer
->> works.
->>
->> Reference: https://bugzilla.novell.com/show_bug.cgi?id=735909
->
-> looked at that bug:
-> it is hw bug that will hard-wired some pri bus number to 00.
-> (BIOS or OS can not write to PRIMARY BUS bits)
->
-> right way could be use quirk to assume primary equal to bus->number to
-> pass the valid checking.
+>> amd_bus.c:(.init.text+0x134b): undefined reference to `amd_get_mmconfig_range'
+> 
+> This is my fault.  I moved some code from amd_bus.c to amd_nb.c, and builds with
+> 
+>         CONFIG_PCI=y
+>         # CONFIG_AMD_NB not set
+> 
+> now fail.  The attached patch should fix it.  I'll repost the series
+> ("x86/PCI: amd: factor out MMCONFIG discovery") with the fix.
+> 
+> Yinghai, it looks to me like there's no reason to build amd_bus.o
+> unless we have CONFIG_AMD_NB=y, but speak up if I'm wrong :)
 
-The Novell bugzilla is not public, so for discussion purposes, here's
-the patch you're proposing:
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7cc9e2f..1e255c8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -651,6 +651,10 @@ int __devinit pci_scan_bridge(struct pci_bus
-*bus, struct pci_dev *dev, int max,
- 	dev_dbg(&dev->dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
- 		secondary, subordinate, pass);
-
-+	/* some bridge primary bus is hard wired to 0 */
-+	if (!primary && (primary != bus->number) && secondary && subordinate)
-+		primary = bus->number;
-+
- 	/* Check if setup is sensible at all */
- 	if (!pass &&
- 	    (primary != bus->number || secondary <= bus->number)) {
+Seems to work for me.  Thanks.
 
 
-The bridge in question is 30:1e.0.  It has its primary bus number
-hard-wired to 0 (not 30 as one would expect), and BIOS sets its
-secondary == subordinate == 31.  The current code in pci_scan_bridge()
-decides the bridge is "broken" because primary (0) != bus->number
-(30).
-
-I like your idea.  It might be better to use a quirk to avoid the
-reconfiguration we do in the "broken" case.  Then we'd simply scan bus
-31, as the BIOS configured it, find nothing, and be finished.  We
-wouldn't change the bridge's secondary/subordinate bus numbers as we
-do with my patches.
-
-If we go that route, though, I'd prefer something specific to this
-hardware and packaged as an actual fixup in drivers/pci/quirks.c.
-pci_scan_bridge() is already a hodge-podge of hacks for issues that
-are now lost and forgotten, and I don't like the idea of adding more.
-It just makes it too difficult to maintain.
-
-If we make a quirk for this machine, we still have the question of
-what to do with my patches.  I assert that if Linux ever reconfigures
-any bus numbers or does any configuration of hot-added P2P bridges, it
-must pay attention to the host bridge bus number window.  Therefore, I
-think we need something like this series even if we make a quirk.
-
-Bjorn
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
