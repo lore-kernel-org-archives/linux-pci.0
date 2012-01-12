@@ -1,196 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29202 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753338Ab2ASWc1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Jan 2012 17:32:27 -0500
-Date: Thu, 19 Jan 2012 17:32:22 -0500
-From: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org
-Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>, greg@kroah.com,
-	kaneshige.kenji@jp.fujitsu.com
-Message-Id: <20120119223221.15239.6758.sendpatchset@dhcp-189-101.bos.redhat.com>
-Subject: [PATCH v4] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp driver
+Received: from rcsinet15.oracle.com ([148.87.113.117]:21144 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493Ab2ALRIr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2012 12:08:47 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: xen-devel@lists.xensource.com,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH 2/2] xen/pciback: Support pci_reset_function, aka FLR or D3 support.
+Date: Thu, 12 Jan 2012 12:06:47 -0500
+Message-Id: <1326388007-19178-3-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1326388007-19178-1-git-send-email-konrad.wilk@oracle.com>
+References: <1326388007-19178-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Not to use MSI/MSI-X for pciehp, add a kernel parameter, pcie_hp=nomsi.
+We use the __pci_reset_function_locked to perform the action.
+Also on attaching ("bind") and detaching ("unbind") we save and
+restore the configuration states. When the device is disconnected
+from a guest we use the "pci_reset_function" to also reset the
+device before being passed to another guest.
 
-In my environment, while shutting down, following stack trace is shown
-sometimes.
-
-  irq 16: nobody cared (try booting with the "irqpoll" option)
-  Pid: 1081, comm: reboot Not tainted 3.2.0 #1
-  Call Trace:
-   <IRQ>  [<ffffffff810cec1d>] __report_bad_irq+0x3d/0xe0
-   [<ffffffff810cee1c>] note_interrupt+0x15c/0x210
-   [<ffffffff810cc485>] handle_irq_event_percpu+0xb5/0x210
-   [<ffffffff810cc621>] handle_irq_event+0x41/0x70
-   [<ffffffff810cf675>] handle_fasteoi_irq+0x55/0xc0
-   [<ffffffff81015356>] handle_irq+0x46/0xb0
-   [<ffffffff814fbe9d>] do_IRQ+0x5d/0xe0
-   [<ffffffff814f146e>] common_interrupt+0x6e/0x6e
-   [<ffffffff8106b040>] ? __do_softirq+0x60/0x210
-   [<ffffffff8108aeb1>] ? hrtimer_interrupt+0x151/0x240
-   [<ffffffff814fb5ec>] call_softirq+0x1c/0x30
-   [<ffffffff810152d5>] do_softirq+0x65/0xa0
-   [<ffffffff8106ae9d>] irq_exit+0xbd/0xe0
-   [<ffffffff814fbf8e>] smp_apic_timer_interrupt+0x6e/0x99
-   [<ffffffff814f9e5e>] apic_timer_interrupt+0x6e/0x80
-   <EOI>  [<ffffffff814f0fb1>] ? _raw_spin_unlock_irqrestore+0x11/0x20
-   [<ffffffff812629fc>] pci_bus_write_config_word+0x6c/0x80
-   [<ffffffff81266fc2>] pci_intx+0x52/0xa0
-   [<ffffffff8127de3d>] pci_intx_for_msi+0x1d/0x30
-  [<ffffffff8127e4fb>] pci_msi_shutdown+0x7b/0x110
-   [<ffffffff81269d34>] pci_device_shutdown+0x34/0x50
-   [<ffffffff81326c4f>] device_shutdown+0x2f/0x140
-   [<ffffffff8107b981>] kernel_restart_prepare+0x31/0x40
-   [<ffffffff8107b9e6>] kernel_restart+0x16/0x60
-   [<ffffffff8107bbfd>] sys_reboot+0x1ad/0x220
-   [<ffffffff814f4b90>] ? do_page_fault+0x1e0/0x460
-   [<ffffffff811942d0>] ? __sync_filesystem+0x90/0x90
-   [<ffffffff8105c9aa>] ? __cond_resched+0x2a/0x40
-   [<ffffffff814ef090>] ? _cond_resched+0x30/0x40
-   [<ffffffff81169e17>] ? iterate_supers+0xb7/0xd0
-   [<ffffffff814f9382>] system_call_fastpath+0x16/0x1b
-  handlers:
-  [<ffffffff8138a0f0>] usb_hcd_irq
-  [<ffffffff8138a0f0>] usb_hcd_irq
-  [<ffffffff8138a0f0>] usb_hcd_irq
-  Disabling IRQ #16
-
-An un-wanted interrupt is generated when PCI driver switches from
-MSI/MSI-X to INTx while shutting down the device.  The interrupt does
-not happen if MSI/MSI-X is not used on the device.
-I confirmed that this problem does not happen if pcie_hp=nomsi was
-specified and hotplug operation worked fine as usual.
-(From v2, the pcie_hp=nomsi does not need any more against the device
- 111d:807f, since MSI/MSI-X is disabled automatically)
-
-v2: Automatically disable MSI/MSI-X against following device:
-    PCI bridge: Integrated Device Technology, Inc. Device 807f (rev 02)
-v3: Based on the review comment, combile the if statements.
-v4: Removed module parameter.
-    Move some code to build pciehp as a module.
-    Move device specific code to driver/pci/quirks.c.
-
-Signed-off-by: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 ---
- Documentation/kernel-parameters.txt |    4 ++++
- drivers/pci/pcie/portdrv.h          |   12 ++++++++++++
- drivers/pci/pcie/portdrv_core.c     |   16 ++++++++++++++--
- drivers/pci/quirks.c                |   29 +++++++++++++++++++++++++++++
- 4 files changed, 59 insertions(+), 2 deletions(-)
+ drivers/xen/xen-pciback/pci_stub.c |   41 +++++++++++++++++++++++++++++++++--
+ drivers/xen/xen-pciback/pciback.h  |    1 +
+ 2 files changed, 39 insertions(+), 3 deletions(-)
 
-Index: linux-3.2/drivers/pci/pcie/portdrv.h
-===================================================================
---- linux-3.2.orig/drivers/pci/pcie/portdrv.h
-+++ linux-3.2/drivers/pci/pcie/portdrv.h
-@@ -34,6 +34,18 @@ struct pci_dev;
- 
- extern void pcie_clear_root_pme_status(struct pci_dev *dev);
- 
-+#ifdef CONFIG_HOTPLUG_PCI_PCIE
-+extern bool pciehp_msi_disabled;
-+
-+static inline bool pciehp_no_msi(void)
-+{
-+	return pciehp_msi_disabled;
-+}
-+
-+#else  /* !CONFIG_HOTPLUG_PCI_PCIE */
-+static inline bool pciehp_no_msi(void) { return false; }
-+#endif /* !CONFIG_HOTPLUG_PCI_PCIE */
-+
- #ifdef CONFIG_PCIE_PME
- extern bool pcie_pme_msi_disabled;
- 
-Index: linux-3.2/drivers/pci/pcie/portdrv_core.c
-===================================================================
---- linux-3.2.orig/drivers/pci/pcie/portdrv_core.c
-+++ linux-3.2/drivers/pci/pcie/portdrv_core.c
-@@ -19,6 +19,17 @@
- #include "../pci.h"
- #include "portdrv.h"
- 
-+bool pciehp_msi_disabled;
-+
-+static int __init pciehp_setup(char *str)
-+{
-+	if (!strncmp(str, "nomsi", 5))
-+		pciehp_msi_disabled = true;
-+
-+	return 1;
-+}
-+__setup("pcie_hp=", pciehp_setup);
-+
- /**
-  * release_pcie_device - free PCI Express port service device structure
-  * @dev: Port service device to release
-@@ -189,8 +200,9 @@ static int init_service_irqs(struct pci_
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 7944a17..6f63b9d 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -85,19 +85,34 @@ static struct pcistub_device *pcistub_device_alloc(struct pci_dev *dev)
+ static void pcistub_device_release(struct kref *kref)
  {
- 	int i, irq = -1;
+ 	struct pcistub_device *psdev;
++	struct xen_pcibk_dev_data *dev_data;
  
--	/* We have to use INTx if MSI cannot be used for PCIe PME. */
--	if ((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) {
-+	/* We have to use INTx if MSI cannot be used for PCIe PME or pciehp. */
-+	if (((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) ||
-+	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
- 		if (dev->pin)
- 			irq = dev->irq;
- 		goto no_msi;
-Index: linux-3.2/Documentation/kernel-parameters.txt
-===================================================================
---- linux-3.2.orig/Documentation/kernel-parameters.txt
-+++ linux-3.2/Documentation/kernel-parameters.txt
-@@ -2076,6 +2076,10 @@ bytes respectively. Such letter suffixes
- 		force	Enable ASPM even on devices that claim not to support it.
- 			WARNING: Forcing ASPM on may cause system lockups.
+ 	psdev = container_of(kref, struct pcistub_device, kref);
++	dev_data = pci_get_drvdata(psdev->dev);
  
-+	pcie_hp=	[PCIE] PCI Express Hotplug driver options:
-+		nomsi	Do not use MSI for PCI Express Native Hotplug (this
-+			makes all PCIe ports use INTx for hotplug services).
+ 	dev_dbg(&psdev->dev->dev, "pcistub_device_release\n");
+ 
+ 	xen_unregister_device_domain_owner(psdev->dev);
+ 
+-	/* Clean-up the device */
++	/* Call the reset function which does not take lock as this
++	 * is called from "unbind" which takes a device_lock mutex.
++	 */
++	__pci_reset_function_locked(psdev->dev);
++	if (pci_load_and_free_saved_state(psdev->dev,
++					  &dev_data->pci_saved_state)) {
++		dev_dbg(&psdev->dev->dev, "Could not reload PCI state\n");
++	} else
++		pci_restore_state(psdev->dev);
 +
- 	pcie_ports=	[PCIE] PCIe ports handling:
- 		auto	Ask the BIOS whether or not to use native PCIe services
- 			associated with PCIe ports (PME, hot-plug, AER).  Use
-Index: linux-3.2/drivers/pci/quirks.c
-===================================================================
---- linux-3.2.orig/drivers/pci/quirks.c
-+++ linux-3.2/drivers/pci/quirks.c
-@@ -2665,6 +2665,35 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AT
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4375,
- 			quirk_msi_intx_disable_bug);
- 
-+/*
-+ * The PCI bridge from Integrated Device Technology(IDT) has a problem
-+ * with MSI/MSI-X.
-+ * An un-wanted interrupt is generated when PCI driver switches from
-+ * MSI/MSI-X to INTx while shutting down the PCI Express port, if it
-+ * provides the Native Hotplug service.  The interrupt does not happen
-+ * if MSI/MSI-X is not used on it.  Therefore, turn off MSI/MSI-X for
-+ * this device.
-+ */
-+static void __devinit idt_bridge_msi_disable(struct pci_dev *dev)
-+{
-+	int pos;
-+	u16 reg16;
-+	u32 reg32;
++	/* Disable the device */
+ 	xen_pcibk_reset_device(psdev->dev);
 +
-+	pos = pci_pcie_cap(dev);
-+	if (!pos)
-+		return;
-+	pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &reg16);
-+	if (!(reg16 & PCI_EXP_FLAGS_SLOT))
-+		return;
-+	pci_read_config_dword(dev, pos + PCI_EXP_SLTCAP, &reg32);
-+	if (reg32 & PCI_EXP_SLTCAP_HPC) {
-+		pci_msi_off(dev);
-+		dev->no_msi = 1;
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IDT, 0x807f, idt_bridge_msi_disable);
++	kfree(dev_data);
++	pci_set_drvdata(psdev->dev, NULL);
 +
- #endif /* CONFIG_PCI_MSI */
++	/* Clean-up the device */
+ 	xen_pcibk_config_free_dyn_fields(psdev->dev);
+ 	xen_pcibk_config_free_dev(psdev->dev);
+-	kfree(pci_get_drvdata(psdev->dev));
+-	pci_set_drvdata(psdev->dev, NULL);
  
- /* Allow manual resource allocation for PCI hotplug bridges
+ 	psdev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
+ 	pci_dev_put(psdev->dev);
+@@ -231,7 +246,17 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	/* Cleanup our device
+ 	 * (so it's ready for the next domain)
+ 	 */
++
++	/* This is OK - we are running from workqueue context
++	 * and want to inhibit the user from fiddling with 'reset'
++	 */
++	pci_reset_function(dev);
++	pci_restore_state(psdev->dev);
++
++	/* This disables the device. */
+ 	xen_pcibk_reset_device(found_psdev->dev);
++
++	/* And cleanup up our emulated fields. */
+ 	xen_pcibk_config_free_dyn_fields(found_psdev->dev);
+ 	xen_pcibk_config_reset_dev(found_psdev->dev);
+ 
+@@ -328,6 +353,16 @@ static int __devinit pcistub_init_device(struct pci_dev *dev)
+ 	if (err)
+ 		goto config_release;
+ 
++	dev_dbg(&dev->dev, "reseting (FLR, D3, etc) the device\n");
++	__pci_reset_function_locked(dev);
++
++	/* We need the device active to save the state. */
++	dev_dbg(&dev->dev, "save state of device\n");
++	pci_save_state(dev);
++	dev_data->pci_saved_state = pci_store_saved_state(dev);
++	if (!dev_data->pci_saved_state)
++		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
++
+ 	/* Now disable the device (this also ensures some private device
+ 	 * data is setup before we export)
+ 	 */
+diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
+index e9b4011..a7def01 100644
+--- a/drivers/xen/xen-pciback/pciback.h
++++ b/drivers/xen/xen-pciback/pciback.h
+@@ -41,6 +41,7 @@ struct xen_pcibk_device {
+ 
+ struct xen_pcibk_dev_data {
+ 	struct list_head config_fields;
++	struct pci_saved_state *pci_saved_state;
+ 	unsigned int permissive:1;
+ 	unsigned int warned_on_write:1;
+ 	unsigned int enable_intx:1;
+-- 
+1.7.7.4
+
