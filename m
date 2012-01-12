@@ -1,78 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:43184 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180Ab2AZQrf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2012 11:47:35 -0500
-Message-ID: <4F2183A2.7010007@jp.fujitsu.com>
-Date: Thu, 26 Jan 2012 11:47:30 -0500
-From: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: linux-pci@vger.kernel.org, greg@kroah.com,
-	kaneshige.kenji@jp.fujitsu.com
-Subject: Re: [PATCH v4] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
- driver
-References: <20120119223221.15239.6758.sendpatchset@dhcp-189-101.bos.redhat.com> <CAE9FiQWKRxZcm2FBhP2SxaBGYpROc4grJQtE68OyayPhjQHdsA@mail.gmail.com>
-In-Reply-To: <CAE9FiQWKRxZcm2FBhP2SxaBGYpROc4grJQtE68OyayPhjQHdsA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mgw2.diku.dk ([130.225.96.92]:41676 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753355Ab2ALJzd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Jan 2012 04:55:33 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: kernel-janitors@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 14/15] drivers/pci/hotplug/ibmphp_ebda.c: add missing iounmap
+Date: Thu, 12 Jan 2012 10:55:16 +0100
+Message-Id: <1326362117-29371-14-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 19 Jan 2012 15:41:09 -0800,
-Yinghai Lu <yinghai@kernel.org> wrote:
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-snip
+Add missing iounmap in error handling code, in a case where the function
+already preforms iounmap on some other execution path.
 
->> Index: linux-3.2/drivers/pci/quirks.c
->> ===================================================================
->> --- linux-3.2.orig/drivers/pci/quirks.c
->> +++ linux-3.2/drivers/pci/quirks.c
->> @@ -2665,6 +2665,35 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AT
->>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4375,
->>                         quirk_msi_intx_disable_bug);
->>
->> +/*
->> + * The PCI bridge from Integrated Device Technology(IDT) has a problem
->> + * with MSI/MSI-X.
->> + * An un-wanted interrupt is generated when PCI driver switches from
->> + * MSI/MSI-X to INTx while shutting down the PCI Express port, if it
->> + * provides the Native Hotplug service.  The interrupt does not happen
->> + * if MSI/MSI-X is not used on it.  Therefore, turn off MSI/MSI-X for
->> + * this device.
->> + */
->> +static void __devinit idt_bridge_msi_disable(struct pci_dev *dev)
->> +{
->> +       int pos;
->> +       u16 reg16;
->> +       u32 reg32;
->> +
->> +       pos = pci_pcie_cap(dev);
->> +       if (!pos)
->> +               return;
->> +       pci_read_config_word(dev, pos + PCI_EXP_FLAGS,&reg16);
->> +       if (!(reg16&  PCI_EXP_FLAGS_SLOT))
->> +               return;
->> +       pci_read_config_dword(dev, pos + PCI_EXP_SLTCAP,&reg32);
->> +       if (reg32&  PCI_EXP_SLTCAP_HPC) {
->> +               pci_msi_off(dev);
->> +               dev->no_msi = 1;
->> +       }
->> +}
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IDT, 0x807f, idt_bridge_msi_disable);
->
-> do you have statement for IDT, says that is chipset problem ?
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-I'm trying to contact to them, but not yet.
+// <smpl>
+@@
+expression e;
+statement S,S1;
+int ret;
+@@
+e = \(ioremap\|ioremap_nocache\)(...)
+... when != iounmap(e)
+if (<+...e...+>) S
+... when any
+    when != iounmap(e)
+*if (...)
+   { ... when != iounmap(e)
+     return ...; }
+... when any
+iounmap(e);
+// </smpl>
 
-> it could be your platform fw problem.
->
-> if that is the case, you will disable MSI/MSIX for other platform that
-> do not have fw problem.
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Yinghai,
-Btw, how about other pieces?  I'm thinking to drop the quirk code 
-temporary, until I get the comment from them.
-Can you give an ACK if I remove the hardware specific quirk code?
+---
+ drivers/pci/hotplug/ibmphp_ebda.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Thanks,
-Takahiro
+diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
+index 2850e64..714ca5c 100644
+--- a/drivers/pci/hotplug/ibmphp_ebda.c
++++ b/drivers/pci/hotplug/ibmphp_ebda.c
+@@ -368,8 +368,10 @@ int __init ibmphp_access_ebda (void)
+ 			debug ("rio blk id: %x\n", blk_id);
+ 
+ 			rio_table_ptr = kzalloc(sizeof(struct rio_table_hdr), GFP_KERNEL);
+-			if (!rio_table_ptr)
+-				return -ENOMEM; 
++			if (!rio_table_ptr) {
++				rc = -ENOMEM;
++				goto out;
++			}
+ 			rio_table_ptr->ver_num = readb (io_mem + offset);
+ 			rio_table_ptr->scal_count = readb (io_mem + offset + 1);
+ 			rio_table_ptr->riodev_count = readb (io_mem + offset + 2);
+
