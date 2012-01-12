@@ -1,48 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:55079 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754010Ab2AUK0r convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:26:47 -0500
+Received: from mail-ee0-f74.google.com ([74.125.83.74]:48501 "EHLO
+	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848Ab2ALPBl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2012 10:01:41 -0500
+Received: by mail-ee0-f74.google.com with SMTP id d41so68711eek.1
+        for <linux-pci@vger.kernel.org>; Thu, 12 Jan 2012 07:01:41 -0800 (PST)
+Subject: [PATCH] x86/PCI: build amd_bus.o only when CONFIG_AMD_NB=y
+To: Linus Torvalds <torvalds@linux-foundation.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-kernel@vger.kernel.org
+Date: Thu, 12 Jan 2012 08:01:40 -0700
+Message-ID: <20120112150140.12223.47232.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120112145935.12223.39035.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120112145935.12223.39035.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-Date: Sat, 21 Jan 2012 02:26:46 -0800
-Message-ID: <CAE9FiQUFYcaVWorPPP7PQqiBPnKv-iBkPm_qbGz4T_xLR2THiQ@mail.gmail.com>
-Subject: Re: [PATCH 0/7] PCI: pcie hotplug related patch
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 21, 2012 at 1:52 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> b40c9ef: pciehp: Disable/enable link during slot power off/on
-> fe877ae: pciehp: Add Disable/enable link functions
-> 292e286: pciehp: Add pcie_wait_link_not_active()
-> 186b3fd: pciehp: print out link status when dlla get active.
-> 2781df4: pciehp: Checking pci conf reading to new added device instead of sleep 1s
-> bf1c4ac: PCI: Separate pci_bus_read_dev_vendor_id from pci_scan_device
-> 601c6f1: PCI: Make sriov work with hotplug remove
->
->  drivers/pci/hotplug/pciehp_hpc.c |  133 +++++++++++++++++++++++++++++++-------
->  drivers/pci/pci.h                |    2 +
->  drivers/pci/probe.c              |   48 +++++++++-----
->  drivers/pci/remove.c             |   28 ++++++++-
->  4 files changed, 169 insertions(+), 42 deletions(-)
->
-> First one is for hotplug with sriov under bridge.
-> following two are for hotplug probing with pci conf reading.
-> Last four are for pcie link disable when power off slots.
+We only need amd_bus.o for AMD systems with PCI.  arch/x86/pci/Makefile
+already depends on CONFIG_PCI=y, so this patch just adds the dependency
+on CONFIG_AMD_NB.
 
-could be found at:
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@kernel.org	# 2.6.34+ (needs adjustment for k8 -> amd rename)
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/Makefile |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-hp
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 6b8759f..d24d3da 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -18,8 +18,9 @@ obj-$(CONFIG_X86_NUMAQ)		+= numaq_32.o
+ obj-$(CONFIG_X86_MRST)		+= mrst.o
+ 
+ obj-y				+= common.o early.o
+-obj-y				+= amd_bus.o bus_numa.o
++obj-y				+= bus_numa.o
+ 
++obj-$(CONFIG_AMD_NB)		+= amd_bus.o
+ obj-$(CONFIG_PCI_CNB20LE_QUIRK)	+= broadcom_bus.o
+ 
+ ifeq ($(CONFIG_PCI_DEBUG),y)
 
-Thanks
-
-Yinghai
