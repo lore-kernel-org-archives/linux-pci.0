@@ -1,37 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:60415 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754055Ab2ANOMv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jan 2012 09:12:51 -0500
-Received: from albireo.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id A3B741C00BB
-	for <linux-pci@vger.kernel.org>; Sat, 14 Jan 2012 15:06:31 +0100 (CET)
-Date: Sat, 14 Jan 2012 15:06:31 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Correct the end of CardBus memory windows
-Message-ID: <mj+md-20120114.140622.16853.albireo@ucw.cz>
-References: <20120111211619.10328.74664.stgit@bhelgaas.mtv.corp.google.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:34045 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753535Ab2AMX05 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2012 18:26:57 -0500
+Date: Fri, 13 Jan 2012 23:26:53 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [git pull] PCI changes
+Message-ID: <20120113232653.GA29533@srcf.ucam.org>
+References: <20120111103408.30cfa338@jbarnes-desktop>
+ <CA+55aFwDVEH1NwEgKCQSv9ee3P2ma1aqtjOo-s2BeURyeTGo8g@mail.gmail.com>
+ <20120113212409.GA27671@srcf.ucam.org>
+ <CA+55aFwJvvrNyqNStjM9iYcRa+t4FuuJW48SixXN+6H6sJ9e8w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120111211619.10328.74664.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <CA+55aFwJvvrNyqNStjM9iYcRa+t4FuuJW48SixXN+6H6sJ9e8w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On Fri, Jan 13, 2012 at 03:14:21PM -0800, Linus Torvalds wrote:
+> On Fri, Jan 13, 2012 at 1:24 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> >>
+> >> So why is acpi_pci_root_add() special? Cna you explain that part to me?
+> >
+> > pcie_no_aspm() means "Do not permit ASPM to be enabled" - it doesn't
+> > alter the existing state. pcie_clear_aspm() does that.
+> 
+> I *know*.
+> 
+> So look again.
+> 
+> Why is acpi_pci_root_add() special?
+> 
+> Because dammit, it does exactly that pcie_clear_aspm() for the
+> ACPI_FADT_NO_ASPM case.
 
-> The low twelve bits of memory base/limit are assumed to be all zeros
-> and all ones, respectively.  Therefore, a window with base == limit
-> is a valid 4K window, which we should display by default, and the
-> true end of the window is ...fff, not ...000.  For example,
+I'm sorry, I thought you were referring to the status quo rather than 
+the patch - I see what you mean now. The intent here is to clear ASPM 
+state if the FADT bit has been set *and* we've got _OSC control, whereas 
+previously we'd clear ASPM state any time the FADT bit was set. There 
+are some machines which (a) set the FADT bit, (b) hand over _OSC 
+control, (c) program the device and (d) crash under certain 
+circumstances if you then try to use it. My assumption here is that the 
+FADT bit *does* mean "clear ASPM state", but only if we've been granted 
+_OSC control. That's the behaviour described in the changelog.
 
-Thanks, applied.
-
-				Have a nice fortnight
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-"When I was a boy I was told that anybody could become President; I'm beginning to believe it." -- C. Darrow
+Matthew Garrett | mjg59@srcf.ucam.org
