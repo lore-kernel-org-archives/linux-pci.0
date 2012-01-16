@@ -1,60 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:46046 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752643Ab2A0SVt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:21:49 -0500
-Date: Fri, 27 Jan 2012 10:21:45 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:39577 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896Ab2APK3T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2012 05:29:19 -0500
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Mon, 16 Jan 2012 03:29:19 -0700
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q0GATFEq146856
+	for <linux-pci@vger.kernel.org>; Mon, 16 Jan 2012 03:29:16 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q0GAT8Kg019927
+	for <linux-pci@vger.kernel.org>; Mon, 16 Jan 2012 03:29:11 -0700
+Date: Mon, 16 Jan 2012 18:29:01 +0800
+From: Ram Pai <linuxram@us.ibm.com>
 To: Yinghai Lu <yinghai@kernel.org>
 Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 16/21] PCI: remove add_to_failed_list()
-Message-ID: <20120127102145.7c6b7606@jbarnes-desktop>
-In-Reply-To: <1327140517-14811-17-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-	<1327140517-14811-17-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/BYPdVFSFddt.=VdKdLPlsBO"; protocol="application/pgp-signature"
+	Clemens Ladisch <clemens@ladisch.de>,
+	peter.henriksson@gmail.com,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
+Message-ID: <20120116102901.GA2377@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
+ <1323247984-15281-3-git-send-email-yinghai@kernel.org>
+ <20120113163922.GH7380@ram-ThinkPad-T61>
+ <CAE9FiQWTVA=LDViVyfSXX6thgGv4TzOpqidVyG6FAdWQqAMWEg@mail.gmail.com>
+ <20120115160558.GA2601@ram-ThinkPad-T61>
+ <CAE9FiQX2wG9pEZHJE8LD7kL=eiCnFsaS6dRmyNf8F2Kgg=WcpQ@mail.gmail.com>
+ <20120116032649.GC2601@ram-ThinkPad-T61>
+ <CAE9FiQXk7mbThC5HxhZm0-h4b7QsYKszz48w0xQG=TLWL2nWVw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQXk7mbThC5HxhZm0-h4b7QsYKszz48w0xQG=TLWL2nWVw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/BYPdVFSFddt.=VdKdLPlsBO
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sun, Jan 15, 2012 at 08:54:46PM -0800, Yinghai Lu wrote:
+> On Sun, Jan 15, 2012 at 7:26 PM, Ram Pai <linuxram@us.ibm.com> wrote:
+> >> Also I updated for-pci2 in my tree.
+> >>
+> >>       git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> >> for-pci2
+> >>
+> >> Peter Henriksson,
+> >> Can you try for-pci2 branch on your setup with Xonar DX?
+> >
+> > Peter should confirm it. But this patch will not fix the issue AFAICT.
+> 
+> Do you have similar setup to test that ?
 
-On Sat, 21 Jan 2012 02:08:32 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+No. :(
 
-> only one user, just use add_to_list instead.
+> 
+> > Its not just about 'not enough resources', it also about making the right
+> > choice of 'who should get the resource if there is contention'. Only the BIOS
+> > knows about it. But we trash the BIOS's allocation and don't use that
+> > knowledge when it comes to making those hard choices.
+> 
+> in extreme case, will let the user to use "pci=norealloc" to disable
+> changing pci bridge resource set by BIOS.
 
-Ok applied up to patch 16, thanks a lot for the cleanups.  See my
-replies on the later ones.
+I know its a pathological case. But still this issue will be viewed as a
+regression.  I had to struggle to solve this regression in order to get your
+realloc patch re-accepted. Don't know if you can successfully make a case
+to by-pass the regression this time.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+One way to solve this problem is to allocate 'required' resources first, and
+later aggressively try to allocate 'required+optional' resources. However
+aggressively allocation of those 'required+optional' resource would require
+ensuring minimal internal fragmentation.
 
---Sig_/BYPdVFSFddt.=VdKdLPlsBO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+RP
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIus5AAoJEIEoDkX4Qk9hQDIQAKWWzU/T/FitEXtLiL3zAkh2
-vNzEiq8A1aYBu2ueNJrlXJ8aJVDPEuFi2bTFEw7Xj9a9ikzmx6dNqksWbd+930uz
-7pzqyCdXjNHBdVxk9IfBePjZKK19tg4k7vFTDZen1SE5nnoGFh/0kGLi6N4W8YOx
-6Vleb7tNBfK/a+DdjyoVru5KyI9QWJJvmlnLf5r0sKWYXqg1gIwNg92s2cts9kDa
-LAJt1pH7br9An4+q4cB3WBSprRRRX6a+aKvKUbJvWtQpWsuL9CbDADyGCKpwaZIq
-CwlphZv+PmUcDCAnG7Dt3e1ZNQpY6bCKtsczb7tjRol3a/TZuHFO/zbQBcU2UG0m
-f11TQ7sI8xcUB57tMzKIE6ToFAZVdv06sGWsRqD0YegfwbIhhJ6TAlX24SasQpjP
-OpfIb7ywILC9EkmmRTGUVyruMvGUCSkTcoSAQXLxUbJhp1iqm3MWKjR09hFzQxmh
-vdqtbzyGDaQobF+6kxpnoqXYwfLJdRHAeTAcI9nCxYuCodWBdZou/JSC0fAN7XtK
-Xh+UYeaZHBVfUbabci1Uw2To7uT6OSJx1G2LZP3o5N5ItyJJg13ODHWjvI9/VkP3
-hh7cB4UT0hczI9RcAuVniGMJ6DYAOPTwHw+1bqriiKGyzCqbQ4OsStXuJCgSibjk
-L261xgOf6ebJmmTdPL9Q
-=f9NN
------END PGP SIGNATURE-----
-
---Sig_/BYPdVFSFddt.=VdKdLPlsBO--
