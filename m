@@ -1,165 +1,28 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:60454 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756867Ab2APVa5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2012 16:30:57 -0500
-Received: by yhnn56 with SMTP id n56so1382338yhn.19
-        for <linux-pci@vger.kernel.org>; Mon, 16 Jan 2012 13:30:56 -0800 (PST)
+Received: from eddie.linux-mips.org ([78.24.191.182]:33772 "EHLO
+	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753921Ab2APQs4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jan 2012 11:48:56 -0500
+Received: from localhost.localdomain ([127.0.0.1]:50321 "EHLO linux-mips.org"
+        rhost-flags-OK-OK-OK-FAIL) by eddie.linux-mips.org with ESMTP
+        id S1903614Ab2APQZ0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Jan 2012 17:25:26 +0100
+Date: Mon, 16 Jan 2012 17:25:20 +0100
+From: Ralf Baechle <ralf@linux-mips.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-mips@linux-mips.org
+Subject: Re: [PATCH 2/6] MIPS: PCI: use list_for_each_entry() for
+ bus->devices traversal
+Message-ID: <20120116162520.GF12896@linux-mips.org>
+References: <20111216223043.5963.87534.stgit@bhelgaas.mtv.corp.google.com>
+ <20111216223139.5963.51460.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXQYfX3TAzo0=BOGkrV4vdaO+fXJgyGVSUF0DmVAzmzhA@mail.gmail.com>
-References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
-	<1323247984-15281-3-git-send-email-yinghai@kernel.org>
-	<20120113163922.GH7380@ram-ThinkPad-T61>
-	<CAE9FiQWTVA=LDViVyfSXX6thgGv4TzOpqidVyG6FAdWQqAMWEg@mail.gmail.com>
-	<20120115160558.GA2601@ram-ThinkPad-T61>
-	<CAE9FiQX2wG9pEZHJE8LD7kL=eiCnFsaS6dRmyNf8F2Kgg=WcpQ@mail.gmail.com>
-	<20120116032649.GC2601@ram-ThinkPad-T61>
-	<CAE9FiQXk7mbThC5HxhZm0-h4b7QsYKszz48w0xQG=TLWL2nWVw@mail.gmail.com>
-	<20120116102901.GA2377@ram-ThinkPad-T61>
-	<CAE9FiQXQYfX3TAzo0=BOGkrV4vdaO+fXJgyGVSUF0DmVAzmzhA@mail.gmail.com>
-Date: Mon, 16 Jan 2012 13:30:56 -0800
-Message-ID: <CAE9FiQWPSP_zy2=x1Xj2tEJ9v4H3fiaEiBCH=QyR9z18G18Jvw@mail.gmail.com>
-Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Clemens Ladisch <clemens@ladisch.de>, peter.henriksson@gmail.com,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: multipart/mixed; boundary=20cf30426fde13de2e04b6abee9a
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111216223139.5963.51460.stgit@bhelgaas.mtv.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---20cf30426fde13de2e04b6abee9a
-Content-Type: text/plain; charset=ISO-8859-1
+Thanks, applied.
 
-On Mon, Jan 16, 2012 at 9:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> that will make case 2: do not go extra level.
->
-> or we can do:
-> We try to auto detect if we need to enable realloc.
-> (something like sriov is enabled, but some SRIOV registers are not assigned)
-> (or card bus are there etc)
->
-> and
-> pci=realloc become
-> pci=realloc=off and pci=realloc=on
-> so user can forcely turn it or off.
-
-ok, updated one patch and add one new patch to enable pci realloc only
-when sriov is not assigned.
-
-please check attached two patches.
-
-updated for-pci2 branch
-
-    git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci2
-
-Can you please check that branch to see if it works on your setups ?
-
-Thanks
-
-Yinghai
-
---20cf30426fde13de2e04b6abee9a
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_006_2_multi_try.patch"
-Content-Disposition: attachment; filename="pci_006_2_multi_try.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gxi07eqp0
-
-U3ViamVjdDogW1BBVENIIDgvOF0gUENJOiBNYWtlIHBjaSBicmlkZ2UgcmVhbGxvY2F0aW5nIGVu
-YWJsZWQvZGlzYWJsZWQKCkxldCB0aGUgdXNlciBjb3VsZCBlbmFibGUgYW5kIGRpc2FibGUgd2l0
-aCBwY2k9cmVhbGxvYz1vbiBvciBwY2k9cmVhbGxvYz1vZmYKCkFsc28KMS4gbW92ZSB2YXJpYWJs
-ZSBhbmQgZnVuY3Rpb25zIG5lYXIgdGhlIHBsYWNlIHRoZXkgYXJlIHVzZWQuCjIuIGNoYW5nZSBt
-YWNybyB0byBmdW5jdGlvbgozLiBjaGFuZ2UgcmVsYXRlZCBmdW5jdGlvbnMgYW5kIHZhcmlhYmxl
-IHRvIHN0YXRpYyBhbmQgX2luaXQKNC4gdXBkYXRlIHBhcmFtZXRlciBkZXNjcmlwdGlvbiBhY2Nv
-cmRpbmdseS4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4K
-Ci0tLQogRG9jdW1lbnRhdGlvbi9rZXJuZWwtcGFyYW1ldGVycy50eHQgfCAgICA3ICsrKysrLS0K
-IGRyaXZlcnMvcGNpL3BjaS5jICAgICAgICAgICAgICAgICAgIHwgICAgNCArKy0tCiBkcml2ZXJz
-L3BjaS9wY2kuaCAgICAgICAgICAgICAgICAgICB8ICAgIDIgKy0KIGRyaXZlcnMvcGNpL3NldHVw
-LWJ1cy5jICAgICAgICAgICAgIHwgICAyNSArKysrKysrKysrKysrKysrKystLS0tLS0tCiA0IGZp
-bGVzIGNoYW5nZWQsIDI2IGluc2VydGlvbnMoKyksIDEyIGRlbGV0aW9ucygtKQoKSW5kZXg6IGxp
-bnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYu
-b3JpZy9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3Nl
-dHVwLWJ1cy5jCkBAIC00OCwxMyArNDgsNiBAQCBzdGF0aWMgdm9pZCBmcmVlX2xpc3Qoc3RydWN0
-IGxpc3RfaGVhZCAqCiAJfQogfQogCi1pbnQgcGNpX3JlYWxsb2NfZW5hYmxlID0gMDsKLSNkZWZp
-bmUgcGNpX3JlYWxsb2NfZW5hYmxlZCgpIHBjaV9yZWFsbG9jX2VuYWJsZQotdm9pZCBwY2lfcmVh
-bGxvYyh2b2lkKQotewotCXBjaV9yZWFsbG9jX2VuYWJsZSA9IDE7Ci19Ci0KIC8qKgogICogYWRk
-X3RvX2xpc3QoKSAtIGFkZCBhIG5ldyByZXNvdXJjZSB0cmFja2VyIHRvIHRoZSBsaXN0CiAgKiBA
-aGVhZDoJSGVhZCBvZiB0aGUgbGlzdApAQCAtMTI1OSw2ICsxMjUyLDI0IEBAIHN0YXRpYyBpbnQg
-X19pbml0IHBjaV9nZXRfbWF4X2RlcHRoKHZvaWQKIAlyZXR1cm4gZGVwdGg7CiB9CiAKKy8qCisg
-KiAtMTogdW5kZWZpbmVkLCB3aWxsIGF1dG8gZGV0ZWN0IGxhdGVyCisgKiAgMDogZGlzYWJsZWQg
-YnkgdXNlcgorICogIDE6IGVuYWJsZWQgYnkgdXNlcgorICogIDI6IGVuYWJsZWQgYnkgYXV0byBk
-ZXRlY3QKKyAqLworc3RhdGljIGludCBwY2lfcmVhbGxvY19lbmFibGUgX19pbml0ZGF0YSA9IC0x
-Owordm9pZCBfX2luaXQgcGNpX3JlYWxsb2NfZ2V0X29wdChjaGFyICpzdHIpCit7CisJaWYgKHN0
-cm5jbXAoc3RyLCAib2ZmIiwgMykpCisJCXBjaV9yZWFsbG9jX2VuYWJsZSA9IDA7CisJZWxzZSBp
-ZiAoc3RybmNtcChzdHIsICJvbiIsIDIpKQorCQlwY2lfcmVhbGxvY19lbmFibGUgPSAxOworfQor
-c3RhdGljIGJvb2wgX19pbml0IHBjaV9yZWFsbG9jX2VuYWJsZWQodm9pZCkKK3sKKwlyZXR1cm4g
-cGNpX3JlYWxsb2NfZW5hYmxlID4gMDsKK30KIAogLyoKICAqIGZpcnN0IHRyeSB3aWxsIG5vdCB0
-b3VjaCBwY2kgYnJpZGdlIHJlcwpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3BjaS5jCj09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3BjaS5jCisrKyBsaW51eC0y
-LjYvZHJpdmVycy9wY2kvcGNpLmMKQEAgLTM3MTQsOCArMzcxNCw4IEBAIHN0YXRpYyBpbnQgX19p
-bml0IHBjaV9zZXR1cChjaGFyICpzdHIpCiAJCQkJcGNpX25vX21zaSgpOwogCQkJfSBlbHNlIGlm
-ICghc3RyY21wKHN0ciwgIm5vYWVyIikpIHsKIAkJCQlwY2lfbm9fYWVyKCk7Ci0JCQl9IGVsc2Ug
-aWYgKCFzdHJuY21wKHN0ciwgInJlYWxsb2MiLCA3KSkgewotCQkJCXBjaV9yZWFsbG9jKCk7CisJ
-CQl9IGVsc2UgaWYgKCFzdHJuY21wKHN0ciwgInJlYWxsb2M9IiwgOCkpIHsKKwkJCQlwY2lfcmVh
-bGxvY19nZXRfb3B0KHN0ciArIDgpOwogCQkJfSBlbHNlIGlmICghc3RyY21wKHN0ciwgIm5vZG9t
-YWlucyIpKSB7CiAJCQkJcGNpX25vX2RvbWFpbnMoKTsKIAkJCX0gZWxzZSBpZiAoIXN0cm5jbXAo
-c3RyLCAiY2Jpb3NpemU9IiwgOSkpIHsKSW5kZXg6IGxpbnV4LTIuNi9Eb2N1bWVudGF0aW9uL2tl
-cm5lbC1wYXJhbWV0ZXJzLnR4dAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9Eb2N1bWVu
-dGF0aW9uL2tlcm5lbC1wYXJhbWV0ZXJzLnR4dAorKysgbGludXgtMi42L0RvY3VtZW50YXRpb24v
-a2VybmVsLXBhcmFtZXRlcnMudHh0CkBAIC0yMTA0LDggKzIxMDQsMTEgQEAgYnl0ZXMgcmVzcGVj
-dGl2ZWx5LiBTdWNoIGxldHRlciBzdWZmaXhlcwogCQkJCXRoZSBkZWZhdWx0LgogCQkJCW9mZjog
-VHVybiBFQ1JDIG9mZgogCQkJCW9uOiBUdXJuIEVDUkMgb24uCi0JCXJlYWxsb2MJCXJlYWxsb2Nh
-dGUgUENJIHJlc291cmNlcyBpZiBhbGxvY2F0aW9ucyBkb25lIGJ5IEJJT1MKLQkJCQlhcmUgZXJy
-b25lb3VzLgorCQlyZWFsbG9jPQlFbmFibGUvZGlzYWJsZSByZWFsbG9jYXRpbmcgUENJIGJyaWRn
-ZSByZXNvdXJjZXMKKwkJCQlpZiBhbGxvY2F0aW9ucyBkb25lIGJ5IEJJT1MgYXJlIHRvbyBzbWFs
-bCB0byBmaXQKKwkJCQlyZXNvdXJjZXMgcmVxdWlyZWQgYnkgY2hpbGRyZW4gZGV2aWNlcy4KKwkJ
-CQlvZmY6IFR1cm4gcmVhbGxvYyBvZmYKKwkJCQlvbjogVHVybiByZWFsbG9jIG9uCiAKIAlwY2ll
-X2FzcG09CVtQQ0lFXSBGb3JjaWJseSBlbmFibGUgb3IgZGlzYWJsZSBQQ0llIEFjdGl2ZSBTdGF0
-ZSBQb3dlcgogCQkJTWFuYWdlbWVudC4KSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2ku
-aAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9wY2kuaAorKysgbGlu
-dXgtMi42L2RyaXZlcnMvcGNpL3BjaS5oCkBAIC0xNDgsNyArMTQ4LDcgQEAgc3RhdGljIGlubGlu
-ZSB2b2lkIHBjaV9ub19tc2kodm9pZCkgeyB9CiBzdGF0aWMgaW5saW5lIHZvaWQgcGNpX21zaV9p
-bml0X3BjaV9kZXYoc3RydWN0IHBjaV9kZXYgKmRldikgeyB9CiAjZW5kaWYKIAotZXh0ZXJuIHZv
-aWQgcGNpX3JlYWxsb2Modm9pZCk7Cit2b2lkIHBjaV9yZWFsbG9jX2dldF9vcHQoY2hhciAqKTsK
-IAogc3RhdGljIGlubGluZSBpbnQgcGNpX25vX2QxZDIoc3RydWN0IHBjaV9kZXYgKmRldikKIHsK
---20cf30426fde13de2e04b6abee9a
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_realloc_auto_detect.patch"
-Content-Disposition: attachment; filename="pci_realloc_auto_detect.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gxi080at1
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IG9ubHkgZW5hYmxlIHBjaSByZWFsbG9jIHdoZW4gU1JJT1Yg
-YmFyIGlzIG5vdCBhc3NpZ25lZAoKSWYgYmlvcyBkb2VzIG5vdCBhc3NpZ24gdGhvc2UgQkFSIG9y
-IHdyb25nIGFkZHJlc3MsIHRoZW4ga2VybmVsIHdpbGwKdHJ5IHRvIGRvIHBjaSByZWFsbG9jLgoK
-aW4gdGhhdCBjYXNlLCB1c2VyIHN0aWxsIGNhbiB1c2UgcGNpPXJlYWxsb2M9b2ZmIHRvIG92ZXJy
-aWRlIGl0LgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoK
-LS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgMjYgKysrKysrKysrKysrKysrKysrKysr
-KysrKysKIDEgZmlsZSBjaGFuZ2VkLCAyNiBpbnNlcnRpb25zKCspCgpJbmRleDogbGludXgtMi42
-L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2Ry
-aXZlcnMvcGNpL3NldHVwLWJ1cy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVz
-LmMKQEAgLTEyNzEsNiArMTI3MSwzMSBAQCBzdGF0aWMgYm9vbCBfX2luaXQgcGNpX3JlYWxsb2Nf
-ZW5hYmxlZCh2CiAJcmV0dXJuIHBjaV9yZWFsbG9jX2VuYWJsZSA+IDA7CiB9CiAKK3N0YXRpYyB2
-b2lkIF9faW5pdCBwY2lfcmVhbGxvY19kZXRlY3Qodm9pZCkKK3sKKwlzdHJ1Y3QgcGNpX2RldiAq
-ZGV2ID0gTlVMTDsKKworCWlmIChwY2lfcmVhbGxvY19lbmFibGUgIT0gLTEpCisJCXJldHVybjsK
-KworI2lmZGVmIENPTkZJR19QQ0lfSU9WCisJZm9yX2VhY2hfcGNpX2RldihkZXYpIHsKKwkJaW50
-IGk7CisKKwkJZm9yIChpID0gUENJX0lPVl9SRVNPVVJDRVM7IGkgPD0gUENJX0lPVl9SRVNPVVJD
-RV9FTkQ7IGkrKykgeworCQkJc3RydWN0IHJlc291cmNlICpyID0gJmRldi0+cmVzb3VyY2VbaV07
-CisKKwkJCS8qIE5vdCBhc3NpZ25lZCwgb3IgcmVqZWN0ZWQgYnkga2VybmVsICovCisJCQlpZiAo
-ci0+ZmxhZ3MgJiYgIXItPnN0YXJ0KSB7CisJCQkJcGNpX3JlYWxsb2NfZW5hYmxlID0gMjsKKwor
-CQkJCXJldHVybjsKKwkJCX0KKwkJfQorCX0KKyNlbmRpZgorfQorCiAvKgogICogZmlyc3QgdHJ5
-IHdpbGwgbm90IHRvdWNoIHBjaSBicmlkZ2UgcmVzCiAgKiBzZWNvbmQgIGFuZCBsYXRlciB0cnkg
-d2lsbCBjbGVhciBzbWFsbCBsZWFmIGJyaWRnZSByZXMKQEAgLTEyOTIsNiArMTMxNyw3IEBAIHBj
-aV9hc3NpZ25fdW5hc3NpZ25lZF9yZXNvdXJjZXModm9pZCkKIAlpbnQgcGNpX3RyeV9udW0gPSAx
-OwogCiAJLyogZG9uJ3QgcmVhbGxvYyBpZiBhc2tlZCB0byBkbyBzbyAqLworCXBjaV9yZWFsbG9j
-X2RldGVjdCgpOwogCWlmIChwY2lfcmVhbGxvY19lbmFibGVkKCkpIHsKIAkJaW50IG1heF9kZXB0
-aCA9IHBjaV9nZXRfbWF4X2RlcHRoKCk7CiAK
---20cf30426fde13de2e04b6abee9a--
+  Ralf
