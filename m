@@ -1,123 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:42701 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754480Ab2AUJwv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 04:52:51 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/7] PCI: Separate pci_bus_read_dev_vendor_id from pci_scan_device
-Date: Sat, 21 Jan 2012 01:52:14 -0800
-Message-Id: <1327139539-14301-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+Received: from coyote.quickmin.net ([217.14.112.24]:53775 "EHLO
+	coyote.quickmin.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751458Ab2AQKAW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2012 05:00:22 -0500
+From: Roman Fietze <roman.fietze@telemotive.de>
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: PCIe ASPM, PCI Bridges, e.g. PEX8311
+Date: Tue, 17 Jan 2012 10:53:38 +0100
+Cc: linux-pci@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <201201171053.38531.roman.fietze@telemotive.de>
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will reuse that function for pciehp probing.
+Hello Kenji, hello Linux PCI list members,
 
--v2: according to Kenji, fix crs timeout checking, and export the function
-     for later using when pciehp is compiled as module.
+Using the current code it seems, that I cannot use ASPM on links
+between any PCIe node and a PCI(e) bridge.
 
-Suggested-by: Matthew Wilcox <matthew@wil.cx>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci.h   |    2 ++
- drivers/pci/probe.c |   48 +++++++++++++++++++++++++++++++-----------------
- 2 files changed, 33 insertions(+), 17 deletions(-)
+The current ASPM code in drivers/pci/pcie/aspm.c contains the
+following statements inside pcie_aspm_cap_init(), as of the current
+HEAD around line 402-410:
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index b74084e..8dadbd3 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -205,6 +205,8 @@ enum pci_bar_type {
- 	pci_bar_mem64,		/* A 64-bit memory BAR */
- };
- 
-+bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
-+				int crs_timeout);
- extern int pci_setup_device(struct pci_dev *dev);
- extern int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 				struct resource *res, unsigned int reg);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 04e74f4..101e90f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1113,40 +1113,54 @@ struct pci_dev *alloc_pci_dev(void)
- }
- EXPORT_SYMBOL(alloc_pci_dev);
- 
--/*
-- * Read the config data for a PCI device, sanity-check it
-- * and fill in the dev structure...
-- */
--static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
-+bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+				 int crs_timeout)
- {
--	struct pci_dev *dev;
--	u32 l;
- 	int delay = 1;
- 
--	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, &l))
--		return NULL;
-+	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-+		return false;
- 
- 	/* some broken boards return 0 or ~0 if a slot is empty: */
--	if (l == 0xffffffff || l == 0x00000000 ||
--	    l == 0x0000ffff || l == 0xffff0000)
--		return NULL;
-+	if (*l == 0xffffffff || *l == 0x00000000 ||
-+	    *l == 0x0000ffff || *l == 0xffff0000)
-+		return false;
- 
- 	/* Configuration request Retry Status */
--	while (l == 0xffff0001) {
-+	while (*l == 0xffff0001) {
-+		if (!crs_timeout)
-+			return false;
-+
- 		msleep(delay);
- 		delay *= 2;
--		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, &l))
--			return NULL;
-+		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-+			return false;
- 		/* Card hasn't responded in 60 seconds?  Must be stuck. */
--		if (delay > 60 * 1000) {
-+		if (delay > crs_timeout) {
- 			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not "
- 					"responding\n", pci_domain_nr(bus),
- 					bus->number, PCI_SLOT(devfn),
- 					PCI_FUNC(devfn));
--			return NULL;
-+			return false;
- 		}
- 	}
- 
-+	return true;
-+}
-+EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
-+
-+/*
-+ * Read the config data for a PCI device, sanity-check it
-+ * and fill in the dev structure...
-+ */
-+static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
-+{
-+	struct pci_dev *dev;
-+	u32 l;
-+
-+	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
-+		return NULL;
-+
- 	dev = alloc_pci_dev();
- 	if (!dev)
- 		return NULL;
+	list_for_each_entry(child, &linkbus->devices, bus_list) {
+		if (child->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE) {
+			link->aspm_disable = ASPM_STATE_ALL;
+			break;
+		}
+	}
+
+I simply do not yet understand, why this is necessary. Is this
+required by the PCI(e) specification (1), or would enabling ASPM cause
+problems with the current code as it is right now (2)?
+
+If (2), would it be a solution to check which kind of PCI- bridge the
+device is, mainly checking if it is a PCIe-PCIe bridge or if it
+connects only to one PCIe link?
+
+Anything that could get me started, or stops me right here, would be
+very helpful.
+
+
+PCI layout of our board:
+
+00:00.0 Host bridge: Intel Corporation System Controller Hub (SCH Poulsbo) (rev 07)
+..
+00:1c.1 PCI bridge: Intel Corporation System Controller Hub (SCH Poulsbo) PCI Express Port 2 (rev 07)
+..
+02:00.0 PCI bridge: PLX Technology, Inc. PEX 8509 8-lane, 8-port PCI Express Switch (rev aa)
+03:01.0 PCI bridge: PLX Technology, Inc. PEX 8509 8-lane, 8-port PCI Express Switch (rev aa)
+03:02.0 PCI bridge: PLX Technology, Inc. PEX 8509 8-lane, 8-port PCI Express Switch (rev aa)
+..
+.. (8 -ports, downstream on on 03:0[1-7].0, see below)
+..
+03:07.0 PCI bridge: PLX Technology, Inc. PEX 8509 8-lane, 8-port PCI Express Switch (rev aa)
+04:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+05:00.0 PCI bridge: PLX Technology, Inc. PEX 8111 PCI Express-to-PCI Bridge (rev 21)
+06:04.0 Bridge: PLX Technology, Inc. Device 3456 (rev ba)
+07:00.0 PCI bridge: PLX Technology, Inc. PEX 8111 PCI Express-to-PCI Bridge (rev 21)
+08:04.0 Bridge: PLX Technology, Inc. Device 3455 (rev ba)
+..
+
+-[0000:00]-+-00.0
+           +-02.0
+           +-1a.0
+           +-1c.0-[01]----00.0
+           +-1c.1-[02-0c]----00.0-[03-0c]--+-01.0-[04]----00.0
+           |                               +-02.0-[05-06]--*--00.0-[06]----04.0
+           |                               +-03.0-[07-08]--*--00.0-[08]----04.0
+           |                               +-04.0-[09]----00.0
+           |                               +-05.0-[0a]--
+           |                               +-06.0-[0b]--
+           |                               \-07.0-[0c]--
+           +-1d.0
+           +-1d.1
+           +-1d.2
+           +-1d.7
+           +-1f.0
+           \-1f.1
+
+The two devices 05:00.0 and 07:00.0 are members of a PEX8311, which
+internally contains a PEX8111 PCIe-PCI-X bridge and a PCI-X-Localbus
+bridge, the EP 04.0). They both are marked as PCI_EXP_TYPE_PCI_BRIDGE,
+and therefore I cannot enable ASPM on the PCIe links on the buses 05
+and 07 (marked with a * in the lspci -t output above).
+
+Test scenario:
+
+- enable ASPM by setting the appropriate bits in the 8509 and the 8111
+  PECS of 03:03.0, 03:04.0, 05:00.0 and 07:00.0
+
+- enable ASPM in the kernel using /sys/module/pcie_aspm/parameters/policy
+
+
+Roman
+
 -- 
-1.7.7
-
+Roman Fietze              Telemotive AG Buero Muehlhausen
+Breitwiesen                             73347 Muehlhausen
+Tel.: +49(0)7335/18493-45        http://www.telemotive.de
