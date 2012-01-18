@@ -1,63 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:34403 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932918Ab2AKQJX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Jan 2012 11:09:23 -0500
-Received: by lago2 with SMTP id o2so363831lag.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jan 2012 08:09:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120104091015.0a8c1b2f@jbarnes-desktop>
-References: <20120104163052.GA31667@redhat.com> <20120104091015.0a8c1b2f@jbarnes-desktop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 11 Jan 2012 09:08:59 -0700
-Message-ID: <CAErSpo58_=hOhKXwXqUyc9VqAYYyyY8jeV+zJur6Rc+Ff6RnfA@mail.gmail.com>
-Subject: Re: Add Thinkpad SL510 to pci=nocrs blacklist
+Received: from mail-ey0-f202.google.com ([209.85.215.202]:40059 "EHLO
+	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755688Ab2ARAfP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2012 19:35:15 -0500
+Received: by eaaf1 with SMTP id f1so75968eaa.1
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 16:35:14 -0800 (PST)
+Subject: [PATCH 3/4] PCI: restrict subordinate buses to those reachable via
+	host bridge
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Dave Jones <davej@redhat.com>, Ingo Molnar <mingo@elte.hu>,
-	Linux Kernel <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Tue, 17 Jan 2012 17:35:12 -0700
+Message-ID: <20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 4, 2012 at 10:10 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Wed, 4 Jan 2012 11:30:52 -0500
-> Dave Jones <davej@redhat.com> wrote:
->
->> Enabling CRS by default breaks suspend on the Thinkpad SL510.
->> Details in https://bugzilla.redhat.com/show_bug.cgi?id=769657
->>
->> Reported-by: Stefan Kirrmann <stefan.kirrmann@gmail.com>
->> Signed-off-by: Dave Jones <davej@redhat.com>
->>
->> --- linux-3.1.noarch/arch/x86/pci/acpi.c~     2011-12-30 14:42:43.495717907 -0500
->> +++ linux-3.1.noarch/arch/x86/pci/acpi.c      2011-12-30 14:45:09.296198024 -0500
->> @@ -72,6 +72,16 @@ static const struct dmi_system_id pci_us
->>                       DMI_MATCH(DMI_BOARD_NAME, "0M273C"),
->>               },
->>       },
->> +     /* https://bugzilla.redhat.com/show_bug.cgi?id=769657 */
->> +     {
->> +             .callback = set_nouse_crs,
->> +             .ident = "Thinkpad SL510",
->> +             .matches = {
->> +                     DMI_MATCH(DMI_BOARD_VENDOR, "LENOVO"),
->> +                     DMI_MATCH(DMI_BOARD_NAME, "2847DFG"),
->> +                     DMI_MATCH(DMI_BIOS_VERSION, "6JET85WW (1.43 )"),
->> +             },
->> +     },
->>       {}
->>  };
->>
->>
->>
->
-> Ah I see the Thinkpad patch now... applied this one too.   Thanks.
+When we scan the bus behind a bridge (pci_scan_bridge()), we sometimes
+ignore any bus numbers assigned by the BIOS and try to assign our own
+bus numbers.  But this can only work if the new bus number is inside
+the range reachable via the host bridge.
 
-+linux-pci
+This patch prevents us from creating a new bus under the wrong host
+bridge.  (Obviously, if the arch doesn't tell the PCI core about the
+host bridge configuration, we can't detect this problem, so this check
+is only useful if the arch uses pci_scan_host_bridge() or similar.)
 
-I think we should hold off on this one, too.  We (at least I) don't
-understand the root cause here.
+Here's a sample problem scenario:
 
-Bjorn
+    ACPI: PCI Root Bridge [VP18] (domain 0000 [bus 30-32])
+    pci 0000:30:1e.0: PCI bridge to [bus 33-ff]
+    pci 0000:33:00.0: PCI bridge to [bus 34-34]
+    pci 0000:34:00.0: reg 10: [mem 0xe6100000-0xe613ffff 64bit]
+    ACPI: PCI Root Bridge [VP10] (domain 0000 [bus 33-34])
+
+We silently reconfigured 30:1e.0 (changing its subordinate buses from
+[bus 31] to [bus 33-ff]) because the bridge looked "broken."  Devices on
+bus 33 exist, but they are reached via the VP10 host bridge, *not* VP18.
+
+The 33:00.0 resources must be allocated from VP10 host bridge windows,
+not from VP18 windows.  We mistakenly think 33:00.0 is under VP18, so
+we reallocate its resources from VP18 windows, and the device no longer
+works.
+
+Reference: https://bugzilla.novell.com/show_bug.cgi?id=735909
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 434475c..a0476b9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -616,8 +616,16 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 
+ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev, int busnr)
+ {
++	struct pci_host_bridge *host_bridge = pci_host_bridge(dev);
+ 	struct pci_bus *child;
+ 
++	if (host_bridge &&
++	    (busnr < host_bridge->subordinate->start ||
++	     busnr > host_bridge->subordinate->end)) {
++		dev_info(&dev->dev, "secondary bus %02x unreachable via this host bridge\n", busnr);
++		return NULL;
++	}
++
+ 	child = pci_alloc_child_bus(parent, dev, busnr);
+ 	if (child) {
+ 		down_write(&pci_bus_sem);
+
