@@ -1,57 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:60628 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753953Ab2AWVew (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 16:34:52 -0500
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:38143 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757135Ab2ARUgY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 15:36:24 -0500
+Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 08F8F21498
+	for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 15:36:23 -0500 (EST)
+Date: Wed, 18 Jan 2012 12:35:36 -0800
+From: Greg KH <greg@kroah.com>
+To: Martin Burnicki <martin.burnicki@meinberg.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: PCI card not accessible; I/O ports at <ignored>
+Message-ID: <20120118203536.GB2671@kroah.com>
+References: <4F16EA07.4000607@meinberg.de>
+ <20120118162858.GB22156@kroah.com>
+ <4F170DDB.3010105@meinberg.de>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFy4nv5bYdjiZM2HY1E=RU_CaBoQWy6iWXReAK98yRKZpw@mail.gmail.com>
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-	<1327139539-14301-2-git-send-email-yinghai@kernel.org>
-	<CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
-	<CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
-	<CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
-	<CAE9FiQXDHHJ0rG6hd6a3B+f0ZyJmjJ3rJGNWTsCwn21o+84C_Q@mail.gmail.com>
-	<CA+55aFy4nv5bYdjiZM2HY1E=RU_CaBoQWy6iWXReAK98yRKZpw@mail.gmail.com>
-Date: Mon, 23 Jan 2012 13:34:51 -0800
-Message-ID: <CAE9FiQWt7j+Eoo_xhFmaGGh7hA-j2x991KZajmberf8Kod5G1g@mail.gmail.com>
-Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
-From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F170DDB.3010105@meinberg.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 23, 2012 at 11:44 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Mon, Jan 23, 2012 at 11:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>
->> Maybe we can put VF and PF in bus->devices like:
->> VF come first than PF?
->
-> Ugh. Ok, so that's a disgusting hack, but it's better than messing up
-> the generic PCI subsystem. At least it's a disgusting hack in the IOV
-> code.
+On Wed, Jan 18, 2012 at 07:22:19PM +0100, Martin Burnicki wrote:
+> Greg KH wrote:
+> >On Wed, Jan 18, 2012 at 04:49:27PM +0100, Martin Burnicki wrote:
+> >>Hi folks,
+> >>
+> >>I'm maintaining the driver software for the PCI cards manufactured
+> >>by our company, Meinberg Funkuhren in Germany. Basically our Linux
+> >>driver supports all our PCI cards on all Linux kernels 2.6.x and
+> >>3.x. The PCI cards are e.g. GPS receivers, radio clocks, or IRIG
+> >>time code receivers.
+> >
+> >Nice, any reason why these drivers aren't in the main kernel.org tree?
+> 
+> Yes, you wouldn't like the coding style of our driver ;-)
+> 
+> Seriously, I have discussed this with some Linux guys before, and
+> also with some folks from *BSD who also wanted to pick up the driver
+> into their *BSD source trees.
+> 
+> 
+> The disadvantages of this approach were:
 
-just tested, the patch with this hack works.
+<snip>
 
->
-> I still would prefer to just do the virtual devices right instead. Or
-> even just make the removal loop inherently robust, rather than have
-> that insane knowledge of virtual function devices that were done so
-> horribly wrong.
+That all makes sense, thanks.  It's your decision, but note, everyone
+who has ever taken the time to get their code into the main kernel tree,
+FreeBSD included, has had less time and energy maintaining it over the
+long-run.
 
-ok, let me think about it more.
+Plus, you get support for your customers from Red Hat and SUSE and
+others, and you don't void their warranty by loading unsupported kernels
+:)
 
->
-> Or even just *keep* the virtual devices on the list even though the
-> physical device has been removed - make them independent of the
-> physical device.
+But it's your business decision, if this is what you want to do, great,
+best of luck.
 
-ah, not sure how this going to work.
+thanks,
 
-Yinghai
+greg k-h
