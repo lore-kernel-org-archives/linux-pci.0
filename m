@@ -1,64 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:36985 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751235Ab2A0Rzo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:55:44 -0500
-Date: Fri, 27 Jan 2012 09:55:41 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/21] PCI : Calculate right add_size
-Message-ID: <20120127095541.7c7b806d@jbarnes-desktop>
-In-Reply-To: <1327140517-14811-2-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-	<1327140517-14811-2-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/IbMCG6GkERck/IK8/GmfpI8"; protocol="application/pgp-signature"
+Received: from server1.meinberg.de ([85.10.202.66]:41632 "EHLO
+	server1.meinberg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755729Ab2ARS1Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 13:27:16 -0500
+Message-ID: <4F170F01.9090602@meinberg.de>
+Date: Wed, 18 Jan 2012 19:27:13 +0100
+From: Martin Burnicki <martin.burnicki@meinberg.de>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org
+Subject: Re: PCI card not accessible; I/O ports at <ignored>
+References: <4F16EA07.4000607@meinberg.de> <CAErSpo6Ei=XgWTXp6f=UgY90QA78fSVMaJ8Gf7NvF5fMiPX12w@mail.gmail.com>
+In-Reply-To: <CAErSpo6Ei=XgWTXp6f=UgY90QA78fSVMaJ8Gf7NvF5fMiPX12w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/IbMCG6GkERck/IK8/GmfpI8
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Bjorn Helgaas wrote:
+> On Wed, Jan 18, 2012 at 8:49 AM, Martin Burnicki
+> <martin.burnicki@meinberg.de>  wrote:
+>> Hi folks,
+>>
+>> I'm maintaining the driver software for the PCI cards manufactured by our
+>> company, Meinberg Funkuhren in Germany. Basically our Linux driver supports
+>> all our PCI cards on all Linux kernels 2.6.x and 3.x. The PCI cards are e.g.
+>> GPS receivers, radio clocks, or IRIG time code receivers.
+>>
+>> Recently I've run into a problem with our PCI Express cards in a certain
+>> server PC: There are 8 PCI Express slots on the mainboard, and in some of
+>> the slots the cards work properly, but in some other slots on the same
+>> machine they don't work since the cards are not accessible by the kernel
+>> driver.
+>>
+>> In cases where the cards are not accessible lspci -v reports
+>> for the I/O base address 0:
+>>
+>>   Region 0: I/O ports at<ignored>
+>
+>  From the lspci source (http://mj.ucw.cz/sw/pciutils/), it looks like
+> this happens when the BAR contains zero.
+>
+>> Finally I tried different Linux distributions with different kernel versions
+>> and found that the same card in the same slot with the same driver works
+>> properly under kernel 2.6.32 and earlier, but doesn't work anymore under
+>> kernel 2.6.36 and later, including kernel 3.1.4. So there must have been
+>> some code changes in the newer kernel versions which prevent the card from
+>> being accessed via I/O, and let lspci say "I/O ports at<ignored>".
+>
+> Please open a bug report at http://bugzilla.kernel.org, category
+> Drivers/PCI, mark it as a regression, add me to the CC: list, and
+> attach complete dmesg logs from 2.6.32 and 3.1.4 with the card in the
+> slot that no longer works.
+>
+> Bjorn
 
-On Sat, 21 Jan 2012 02:08:17 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Thanks for your reply. I've just sent a lengthy explanation to this list ;-)
 
-> During debug one SRIOV enabled hotplug, found add_size is not passed prop=
-erly.
->=20
-> the device have devices under two level bridges..
->=20
+I'll care about the bug report tomorrow.
 
-Ok applied 1-5 so far, looking through the rest now.
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Martin
+-- 
+Martin Burnicki
 
---Sig_/IbMCG6GkERck/IK8/GmfpI8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIuUdAAoJEIEoDkX4Qk9h6aMP/RIHBD47FQLiAZt1AJ5axWr0
-6il60zdgzj8ARlssYskDU0yhEzYqgjmVm9Avb5wfTBBWq2ndZdIH+EUwNDPdeSVN
-woNXf8KFrFcWvH+4En02c956mWSI7zNKjDyAj3jR3AQpR+cW6y8gQ5xt5Q70UIJi
-QYOc3pAl8aj9sD8Z8DG/N+UCpgQOcndpCgiU/jfKkTxXu8TdyznrqLUMX7DBZWlW
-1Iu4q28/lWIJFb6gnknHiujJ8DJAvbANolXl62kxt+C5thGNcrqVALhgqJuugXI+
-jmbE3Ax4GL2bkgF93m3bgKGqY9Cww1zsIONpaDIGxjizYtSc2mB9J7/GWKzKu9Zx
-z7R+tQnFS01lprDaxJBtbU6hT41/I0SlOIfyVMgijcHTBGcBPcsl3VoQhzpHbsJu
-m8hAf6KikKZiUAcg42PgYE12oyf+rv8PU9xCgK48AIEq+3NQC77HPVhRgN3YER8+
-wHr0/mPpb9TJ7Z5P204kpsAkVNImCc5fu9Kp2/oLtPQV+nkApkLjxQ1px+LpsK+c
-VjZWMyaayLNu0XsXV0PfSTZ74zdjRkHzf4AZ78Z5j2VcQ0ArJjt6H1D2T+SlWJVI
-/X4PU05mfWsD42E2RpWN4hNw0o6xhgj8vc9XcrhjGynJZ6ahyXg+DXrWy12G1jRr
-0tURAjMMw1Yr1aVQcz7n
-=QSur
------END PGP SIGNATURE-----
-
---Sig_/IbMCG6GkERck/IK8/GmfpI8--
+Meinberg Funkuhren
+Bad Pyrmont
+Germany
