@@ -1,59 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:52227 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756882Ab2ARE2A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2012 23:28:00 -0500
+Received: by yhoo21 with SMTP id o21so535291yho.19
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 20:28:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120118003507.467.40594.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+	<20120118003507.467.40594.stgit@bhelgaas.mtv.corp.google.com>
+Date: Tue, 17 Jan 2012 20:27:59 -0800
+Message-ID: <CAE9FiQX7-ceMTnh+wzDdNTMXYoea1Qt+H=nT0-Nwi3hj-Z81Ow@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: add struct pci_host_bridge and pci_scan_host_bridge()
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>, Helge Deller <deller@gmx.de>,
-	linux-parisc@vger.kernel.org
-Subject: [PATCH 07/13] PCI, parisc: Register busn_res for root buses
-Date: Fri, 27 Jan 2012 18:49:25 -0800
-Message-Id: <1327718971-9598-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Kyle McMartin <kyle@mcmartin.ca>
-Cc: Helge Deller <deller@gmx.de>
-Cc: linux-parisc@vger.kernel.org
----
- drivers/parisc/dino.c    |    2 ++
- drivers/parisc/lba_pci.c |    3 +++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+On Tue, Jan 17, 2012 at 4:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> This adds a struct pci_host_bridge so the PCI core can keep track of
+> generic attributes like the subordinate bus number range and the
+> resources available to that PCI device tree.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/probe.c |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |   20 +++++++++++++++
+>  2 files changed, 89 insertions(+), 0 deletions(-)
+>
+> +struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
+> +               int domain, struct resource *subordinate,
+> +               struct list_head *resources, struct pci_ops *ops,
+> +               void *sysdata)
+> +{
+> +       struct pci_host_bridge *bridge;
+> +       struct pci_bus *bus;
+> +
+> +       bridge = pci_create_host_bridge(parent, domain, subordinate, resources,
+> +                                       ops, sysdata);
+> +       if (!bridge)
+> +               return NULL;
+> +
+> +       bus = bridge->bus;
+> +       bus->subordinate = pci_scan_child_bus(bus);
+> +       pci_bus_add_devices(bus);
+> +       return bridge;
+> +}
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index 7ff10c1..3f2e203 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -1014,7 +1014,9 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
-+	pci_bus_insert_busn_res(bus, dino_current_bus, 255);
- 	bus->subordinate = pci_scan_child_bus(bus);
-+	pci_bus_update_busn_res_end(bus, bus->subordinate);
- 
- 	/* This code *depends* on scanning being single threaded
- 	 * if it isn't, this global bus number count will fail
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index d5f3d75..b58bf8b 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1531,6 +1531,9 @@ lba_driver_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
-+	pci_bus_insert_busn_res(lba_bus, lba_dev->hba.bus_num.start,
-+				lba_dev->hba.bus_num.end);
-+
- 	lba_bus->subordinate = pci_scan_child_bus(lba_bus);
- 
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
--- 
-1.7.7
+looks like there is no user for pci_scan_host_bridge() in this series.
 
+Yinghai
