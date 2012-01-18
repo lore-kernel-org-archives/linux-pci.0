@@ -1,102 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:51067 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932252Ab2ARSHF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 13:07:05 -0500
+Received: by yhoo21 with SMTP id o21so883279yho.19
+        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 10:07:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+	<20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
+	<CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
+	<CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
+	<CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
+	<CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com>
+Date: Wed, 18 Jan 2012 10:07:04 -0800
+Message-ID: <CAE9FiQWTE2fqe7q1KepBNT9MwW0z9+FoJeN8=caYsZ6RYj_QJw@mail.gmail.com>
+Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
+ via host bridge
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/4] PCI: kill pci_fixup_parent_subordinate_busnr()
-Date: Mon, 23 Jan 2012 15:06:57 -0800
-Message-Id: <1327360018-10929-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327360018-10929-1-git-send-email-yinghai@kernel.org>
-References: <1327360018-10929-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can safely extend parent top and shrink them according iobusn_resource tree.
+On Wed, Jan 18, 2012 at 9:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> your patches should be ok, only exception should be considered: some
+>> default link root bus could access
+>> out of bus range state with _CRS stating.  some kind of transparent
+>> bridge concept.
+>
+> I'm afraid I couldn't make any sense out of the paragraph above.  If
+> we don't have any information about host bridge bus number windows
+> (for example, for bridges not described in ACPI), I think we'll have
+> to default to [bus 00-ff].  That's effectively what these patches
+> already do.  We only build the struct pci_host_bridge for ACPI
+> bridges, so the check I added in pci_add_new_bus() does nothing for
+> non-ACPI bridges.
+>
+> If you're suggesting that we need to add some exception (a
+> "transparent bridge concept"?), can you clarify or suggest a patch?
 
-Don't need that any more.
+for example: acpi said one peer root bus should be in [0,20) : the default link.
+other peer root bus could be [80,a0).
+chipset will route bus other than [80,a0) all to default link.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   45 +++++++++------------------------------------
- 1 files changed, 9 insertions(+), 36 deletions(-)
+One transparent bridge 00:1c.0 will have 10:00.0 and 10:01.0
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index f58164d..d078a58 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -608,22 +608,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
- 	return child;
- }
- 
--static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
--{
--	struct pci_bus *parent = child->parent;
--
--	/* Attempts to fix that up are really dangerous unless
--	   we're going to re-assign all bus numbers. */
--	if (!pcibios_assign_all_busses())
--		return;
--
--	while (parent->parent && parent->subordinate < max) {
--		parent->subordinate = max;
--		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
--		parent = parent->parent;
--	}
--}
--
- static void __devinit pci_bus_extend_top(struct pci_bus *parent,
- 		 resource_size_t size, struct resource *parent_res)
- {
-@@ -925,6 +909,13 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 		/* Clear errors */
- 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
- 
-+		/*
-+		 * For CardBus bridges, we leave 4 bus numbers
-+		 * as cards with a PCI-to-PCI bridge can be
-+		 * inserted later.
-+		 * other just allocate 8 bus to avoid we fall into
-+		 *  small hole in the middle.
-+		 */
- 		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
- 				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
- 				&parent_res);
-@@ -963,29 +954,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 
- 		if (!is_cardbus) {
- 			child->bridge_ctl = bctl;
--			/*
--			 * Adjust subordinate busnr in parent buses.
--			 * We do this before scanning for children because
--			 * some devices may not be detected if the bios
--			 * was lazy.
--			 */
--			pci_fixup_parent_subordinate_busnr(child, max);
-+
- 			/* Now we can scan all subordinate buses... */
- 			max = pci_scan_child_bus(child);
--			/*
--			 * now fix it up again since we have found
--			 * the real value of max.
--			 */
--			pci_fixup_parent_subordinate_busnr(child, max);
--
--		} else {
--			/*
--			 * For CardBus bridges, we leave 4 bus numbers
--			 * as cards with a PCI-to-PCI bridge can be
--			 * inserted later.
--			 */
--			pci_fixup_parent_subordinate_busnr(child, max);
- 		}
-+
- 		/*
- 		 * Set the subordinate bus number to its real value.
- 		 */
--- 
-1.7.7
+10:01.0 is cardbus bridge, if it states with bus [1e-22).
 
+bus  20-22 still can be accessible.
+
+Thanks
+
+Yinghai
