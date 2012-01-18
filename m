@@ -1,48 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:65262 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752947Ab2ARHvi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 02:51:38 -0500
+Received: by ghbg16 with SMTP id g16so2795141ghb.19
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 23:51:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120127102311.6027ea2c@jbarnes-desktop>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-	<1327140517-14811-19-git-send-email-yinghai@kernel.org>
-	<20120127102311.6027ea2c@jbarnes-desktop>
-Date: Fri, 27 Jan 2012 13:37:44 -0800
-Message-ID: <CAE9FiQXQPFYU45rctaNX4kSqh7JGCnds8U-Bh1N93xVieuqz5Q@mail.gmail.com>
-Subject: Re: [PATCH 18/21] PCI: Fix cardbus bridge resources as optional size handling
+In-Reply-To: <20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+	<20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
+Date: Tue, 17 Jan 2012 23:51:35 -0800
+Message-ID: <CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
+Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
+ via host bridge
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 27, 2012 at 10:23 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Sat, 21 Jan 2012 02:08:34 -0800
-> Yinghai Lu <yinghai@kernel.org> wrote:
+On Tue, Jan 17, 2012 at 4:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> When we scan the bus behind a bridge (pci_scan_bridge()), we sometimes
+> ignore any bus numbers assigned by the BIOS and try to assign our own
+> bus numbers.  But this can only work if the new bus number is inside
+> the range reachable via the host bridge.
 >
->> We should not set the requested size to -2.
->>
->> that will confuse the resource list sorting with align when SIZEALIGN is used.
->>
->> Change to STARTALIGN and pass align from start.
->>
->> We are safe to do that just as we do that regular pci bridge.
->>
->> In the long run, we should just treat cardbus like regular pci bridge.
->>
->> Also fix when realloc is not passed, should keep the requested size.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> This patch prevents us from creating a new bus under the wrong host
+> bridge.  (Obviously, if the arch doesn't tell the PCI core about the
+> host bridge configuration, we can't detect this problem, so this check
+> is only useful if the arch uses pci_scan_host_bridge() or similar.)
 >
-> I'd like to see some testing on this one... Dominik?
+> Here's a sample problem scenario:
+>
+>    ACPI: PCI Root Bridge [VP18] (domain 0000 [bus 30-32])
+>    pci 0000:30:1e.0: PCI bridge to [bus 33-ff]
+>    pci 0000:33:00.0: PCI bridge to [bus 34-34]
+>    pci 0000:34:00.0: reg 10: [mem 0xe6100000-0xe613ffff 64bit]
+>    ACPI: PCI Root Bridge [VP10] (domain 0000 [bus 33-34])
+>
+> We silently reconfigured 30:1e.0 (changing its subordinate buses from
+> [bus 31] to [bus 33-ff]) because the bridge looked "broken."  Devices on
+> bus 33 exist, but they are reached via the VP10 host bridge, *not* VP18.
+>
+> The 33:00.0 resources must be allocated from VP10 host bridge windows,
+> not from VP18 windows.  We mistakenly think 33:00.0 is under VP18, so
+> we reallocate its resources from VP18 windows, and the device no longer
+> works.
+>
+> Reference: https://bugzilla.novell.com/show_bug.cgi?id=735909
 
-Dominik,
+looked at that bug:
+it is hw bug that will hard-wired some pri bus number to 00.
+(BIOS or OS can not write to PRIMARY BUS bits)
 
-Can you please test branch at
-
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci2
+right way could be use quirk to assume primary equal to bus->number to
+pass the valid checking.
 
 Thanks
 
