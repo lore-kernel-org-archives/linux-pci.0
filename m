@@ -1,47 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:46539 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751490Ab1LIQnZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Dec 2011 11:43:25 -0500
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 6C09A21A71
-	for <linux-pci@vger.kernel.org>; Fri,  9 Dec 2011 11:43:25 -0500 (EST)
-Date: Fri, 9 Dec 2011 08:42:58 -0800
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:38163 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753397Ab2ARQ3R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 11:29:17 -0500
+Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id B701120F31
+	for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 11:29:16 -0500 (EST)
+Date: Wed, 18 Jan 2012 08:28:58 -0800
 From: Greg KH <greg@kroah.com>
-To: Anand Kanaginhal <anand_dk@hotmail.com>
-Cc: mjg59@srcf.ucam.org, bhelgaas@google.com,
-	Linux PCI mailing <linux-pci@vger.kernel.org>,
-	linux kernel mailing <linux-kernel@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>
-Subject: Re: PCIe Hotplugging not working
-Message-ID: <20111209164258.GA19051@kroah.com>
-References: <BAY163-W52E309F419E3588206D889FBB30@phx.gbl>
- <BAY163-W47DD39095DA3EB108AA3F2FBB30@phx.gbl>
- <20111130154022.GA1411@srcf.ucam.org>
- <BAY163-W80F10350D24162EFC3699FBB00@phx.gbl>
- <20111130182423.GA4831@srcf.ucam.org>
- <CAErSpo5SvHSJrdkWituFq11hMt=jbiobnxHeddN9Xf4DmK640g@mail.gmail.com>
- <BAY163-W600D6D6A04D4BAE8278907FBB90@phx.gbl>
- <20111209124524.GA3488@srcf.ucam.org>
- <BAY163-W58A0B068C3EEAC0D484E8EFBB90@phx.gbl>
+To: Martin Burnicki <martin.burnicki@meinberg.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: PCI card not accessible; I/O ports at <ignored>
+Message-ID: <20120118162858.GB22156@kroah.com>
+References: <4F16EA07.4000607@meinberg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <BAY163-W58A0B068C3EEAC0D484E8EFBB90@phx.gbl>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F16EA07.4000607@meinberg.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-A: No.
-Q: Should I include quotations after my reply?
-
-http://daringfireball.net/2007/07/on_top
-
-On Fri, Dec 09, 2011 at 07:03:48AM -0800, Anand Kanaginhal wrote:
+On Wed, Jan 18, 2012 at 04:49:27PM +0100, Martin Burnicki wrote:
+> Hi folks,
 > 
-> $ ls /sys/class/pci_bus
-> 0000:00  0000:02  0000:04  0000:06  0000:08
-> 0000:01  0000:03  0000:05  0000:07  0000:09
+> I'm maintaining the driver software for the PCI cards manufactured
+> by our company, Meinberg Funkuhren in Germany. Basically our Linux
+> driver supports all our PCI cards on all Linux kernels 2.6.x and
+> 3.x. The PCI cards are e.g. GPS receivers, radio clocks, or IRIG
+> time code receivers.
 
-That's not what was asked, please answer the original question.
+Nice, any reason why these drivers aren't in the main kernel.org tree?
+
+thanks,
 
 greg k-h
