@@ -1,56 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47051 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752248Ab2A3LZZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Jan 2012 06:25:25 -0500
-From: Thomas Renninger <trenn@suse.de>
+Received: from mail-yw0-f74.google.com ([209.85.213.74]:41705 "EHLO
+	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755688Ab2ARAfI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2012 19:35:08 -0500
+Received: by yhjj52 with SMTP id j52so536644yhj.1
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 16:35:08 -0800 (PST)
+Subject: [PATCH 2/4] PCI: add struct pci_host_bridge and pci_scan_host_bridge()
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH] PCI: workaround hard-wired bus number V2
-Date: Mon, 30 Jan 2012 12:25:24 +0100
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai.lu@oracle.com>
-References: <1327655507-33999-1-git-send-email-trenn@suse.de> <CAErSpo54EuF3ZmiHZmCvTK5vd0oHws7W+82WPYwLQ9PeL1MG6g@mail.gmail.com> <20120127093835.1d2737db@jbarnes-desktop>
-In-Reply-To: <20120127093835.1d2737db@jbarnes-desktop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Tue, 17 Jan 2012 17:35:07 -0700
+Message-ID: <20120118003507.467.40594.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-6"
-Message-Id: <201201301225.24312.trenn@suse.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai.lu@oracle.com>
+This adds a struct pci_host_bridge so the PCI core can keep track of
+generic attributes like the subordinate bus number range and the
+resources available to that PCI device tree.
 
-Fixes PCI device detection on IBM xSeries IBM 3850 M2 / x3950 M2
-when using ACPI resources (_CRS).
-This is default, a manual workaround (without this patch)
-would be pci=nocrs boot param.
-
-V2: Add dev_warn if the workaround is hit. This should reveal
-how common such setups are (via google) and point to possible
-problems if things are still not working as expected.
--> Suggested by Jan Beulich.
-
-Tested-by: garyhade@us.ibm.com
-CC: stable@vger.kernel.org
-CC: trenn@suse.de
-
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/probe.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/pci/probe.c |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |   20 +++++++++++++++
+ 2 files changed, 89 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7cc9e2f..71eac9c 100644
+index e282580..434475c 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -651,6 +651,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 	dev_dbg(&dev->dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
- 		secondary, subordinate, pass);
+@@ -15,6 +15,8 @@
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+ #define CARDBUS_RESERVE_BUSNR	3
  
-+	if (!primary && (primary != bus->number) && secondary && subordinate) {
-+		dev_warn(&dev->dev, "Primary bus is hard wired to 0\n");
-+		primary = bus->number;
++LIST_HEAD(pci_host_bridges);
++
+ /* Ugh.  Need to stop exporting this to modules. */
+ LIST_HEAD(pci_root_buses);
+ EXPORT_SYMBOL(pci_root_buses);
+@@ -42,6 +44,23 @@ int no_pci_devices(void)
+ }
+ EXPORT_SYMBOL(no_pci_devices);
+ 
++struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
++{
++	struct pci_bus *bus;
++	struct pci_host_bridge *bridge;
++
++	bus = dev->bus;
++	while (bus->parent)
++		bus = bus->parent;
++
++	list_for_each_entry(bridge, &pci_host_bridges, list) {
++		if (bridge->bus == bus)
++			return bridge;
 +	}
 +
- 	/* Check if setup is sensible at all */
- 	if (!pass &&
- 	    (primary != bus->number || secondary <= bus->number)) {
++	return NULL;
++}
++
+ /*
+  * PCI Bus Class
+  */
+@@ -1664,6 +1683,56 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
+ }
+ EXPORT_SYMBOL(pci_scan_bus);
+ 
++/*
++ * Use pci_scan_host_bridge() instead, unless there's some reason you have
++ * to run code between pci_scan_child_bus() and pci_bus_add_devices().
++ */
++struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
++		int domain, struct resource *subordinate,
++		struct list_head *resources, struct pci_ops *ops,
++		void *sysdata)
++{
++	struct pci_host_bridge *bridge;
++
++	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
++	if (!bridge)
++		return NULL;
++
++	bridge->subordinate = subordinate;
++	bridge->bus = pci_create_root_bus(parent, subordinate->start, ops, sysdata,
++					  resources);
++	if (!bridge->bus) {
++		kfree(bridge);
++		return NULL;
++	}
++
++	down_write(&pci_bus_sem);
++	list_add_tail(&bridge->list, &pci_host_bridges);
++	up_write(&pci_bus_sem);
++
++	return bridge;
++}
++
++struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
++		int domain, struct resource *subordinate,
++		struct list_head *resources, struct pci_ops *ops,
++		void *sysdata)
++{
++	struct pci_host_bridge *bridge;
++	struct pci_bus *bus;
++
++	bridge = pci_create_host_bridge(parent, domain, subordinate, resources,
++					ops, sysdata);
++	if (!bridge)
++		return NULL;
++
++	bus = bridge->bus;
++	bus->subordinate = pci_scan_child_bus(bus);
++	pci_bus_add_devices(bus);
++	return bridge;
++}
++
++
+ #ifdef CONFIG_HOTPLUG
+ /**
+  * pci_rescan_bus - scan a PCI bus for devices.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a16b1df..f642bca 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -388,6 +388,12 @@ static inline void pci_add_saved_cap(struct pci_dev *pci_dev,
+ 	hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
+ }
+ 
++struct pci_host_bridge {
++	struct list_head list;
++	struct resource *subordinate;	/* bus number aperture */
++	struct pci_bus *bus;		/* root bus */
++};
++
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+@@ -637,6 +643,7 @@ extern struct bus_type pci_bus_type;
+ 
+ /* Do NOT directly access these two variables, unless you are arch specific pci
+  * code, or pci core code. */
++extern struct list_head pci_host_bridges;
+ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
+ /* Some device drivers need know if pci is initiated */
+ extern int no_pci_devices(void);
+@@ -668,6 +675,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
++struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
++					       int domain,
++					       struct resource *subordinate,
++					       struct list_head *resources,
++					       struct pci_ops *ops,
++					       void *sysdata);
++struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
++					     int domain,
++					     struct resource *subordinate,
++					     struct list_head *resources,
++					     struct pci_ops *ops,
++					     void *sysdata);
++struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ 				int busnr);
+ void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+
