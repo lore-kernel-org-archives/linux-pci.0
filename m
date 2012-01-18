@@ -1,71 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 27 Jan 2012 10:25:59 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 21/21] PCI: only enable pci realloc when SRIOV bar is
- not assigned
-Message-ID: <20120127102559.1c2cb65a@jbarnes-desktop>
-In-Reply-To: <1327140517-14811-22-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-	<1327140517-14811-22-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/5Y5XoT9whJ4K6NON.Tqyd0W"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:48640 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932200Ab2ARR1j convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 12:27:39 -0500
+Received: by ghbg16 with SMTP id g16so3076725ghb.19
+        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 09:27:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+	<20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
+	<CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
+	<CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
+Date: Wed, 18 Jan 2012 09:27:38 -0800
+Message-ID: <CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
+Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
+ via host bridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/5Y5XoT9whJ4K6NON.Tqyd0W
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jan 18, 2012 at 8:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> If we make a quirk for this machine, we still have the question of
+> what to do with my patches.  I assert that if Linux ever reconfigures
+> any bus numbers or does any configuration of hot-added P2P bridges, it
+> must pay attention to the host bridge bus number window.  Therefore, I
+> think we need something like this series even if we make a quirk.
 
-On Sat, 21 Jan 2012 02:08:37 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+We may need more smart way to find unused bus range instead of just
+just max+1 and ++max.
 
-> If bios does not assign those BAR or wrong address, then kernel will
-> try to do pci realloc.
->=20
-> in that case, user still can use pci=3Drealloc=3Doff to override it.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/setup-bus.c |   26 ++++++++++++++++++++++++++
->  1 files changed, 26 insertions(+), 0 deletions(-)
->=20
+For example:  one bridge (A) have two child bridges (B and C),
+A: bus range: 10-2f
+B: bus range: 11-1f
+C: bus range: 20-2f
 
-I worry about this one; distros may enable IOV to keep a unified kernel
-binary and end up messing up all sorts of systems that happen to have
-IOV devices that the user doesn't actually care about.
+when some broken case happen, B bus BIOS assigned bus range will be
+all cleared in first pass.
+but C bus is ok.  but in second bus, bus will be assigned to 30- .
+that is totally wrong, We should still
+try to use bus 11-1f at first for bus B.
 
-I'd prefer to leave it disabled by default, and let drivers spew a
-message about IOV resources being unavailable and mentioning the
-realloc=3D param...
+your patches should be ok, only exception should be considered: some
+default link root bus could access
+out of bus range state with _CRS stating.  some kind of transparent
+bridge concept.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Thanks
 
---Sig_/5Y5XoT9whJ4K6NON.Tqyd0W
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIuw3AAoJEIEoDkX4Qk9h4pQP/iQSyyBcy7pwphXMOVFGHJ5/
-CnVvltQHJWPk03OZbfXTxIonOadmUvtM+/JpNzpQAcoFsJwhMwGVq5qOR+Of1jev
-FyY3OMlTMr860pZvkdKCSV++YcWQ/atklrM7X4ZrWJPrH4L1E4F3EBjjCvP+5sB1
-k+09stfQvCsCzJ0C80cE7Rs5xelTn3xru/kv9nqppx6LqW/2kYEcwSbgOnddriQG
-VL001GWY5WTdaCjU3EpS9I0scUHzKks+btVm+2DK7omNd2AnHgK6ilvRMqWg7E2H
-EM8hJXxtE0XLx2oSpKgEVkhZHL3pqOvnJDF4vbaFPKqPlNWbmZ++plOHkmunk4bG
-8udYOgkoarTQtfp4z80faaYt/rwoFyksBw3T1Ofwm4B6rjlyhECX9JMAlX5/yj25
-YYyVry9NQFqH4BGDB0UdrPdDHI4QzqcWm//uiYC6hiKRovP/jNb+okdmevh6WevC
-rMS/hNdV3WPTOMu25CS6VFMF/D5HpufyXcmHR6PJt50IkP4Y9ZCtFsnTrhygCvnU
-jmo+YcUWZ8wpyn2kQfjenxfDEudTP6AK81mR4MhEZRBKzMKzEzh+7qWBpZEZzuU5
-AyGUzmXszkTbNVn8mEuJ6RNM1hTqXEaFUFhsuhiBreZ9+rZybQd4RtsWENHSubGF
-gRM96zjx2gbuCZiEKDr2
-=6POi
------END PGP SIGNATURE-----
-
---Sig_/5Y5XoT9whJ4K6NON.Tqyd0W--
+Yinghai
