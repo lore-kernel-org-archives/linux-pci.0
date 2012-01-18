@@ -1,49 +1,59 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 0/4] PCI: allocate pci bus num range for unassigned bridge busn
-Date: Mon, 23 Jan 2012 15:06:54 -0800
-Message-Id: <1327360018-10929-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:54545 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756968Ab2AREbE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Jan 2012 23:31:04 -0500
+Received: by lahc1 with SMTP id c1so1951062lah.19
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 20:31:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQX7-ceMTnh+wzDdNTMXYoea1Qt+H=nT0-Nwi3hj-Z81Ow@mail.gmail.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+ <20120118003507.467.40594.stgit@bhelgaas.mtv.corp.google.com> <CAE9FiQX7-ceMTnh+wzDdNTMXYoea1Qt+H=nT0-Nwi3hj-Z81Ow@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 17 Jan 2012 21:30:42 -0700
+Message-ID: <CAErSpo5xkXnibY2E56iWy4ARs573NQ_gfvBejiJigcORtHV4wg@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: add struct pci_host_bridge and pci_scan_host_bridge()
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-5cb2147: PCI: Seperate child bus scanning to two passes overall
-0cfebdb: PCI: kill pci_fixup_parent_subordinate_busnr()
-cd03e86: PCI: Allocate bus range instead of use max blindly
-e3edd5b: PCI: Add iobusn_resource and insert root bus range to that tree.
+On Tue, Jan 17, 2012 at 9:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Jan 17, 2012 at 4:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> This adds a struct pci_host_bridge so the PCI core can keep track of
+>> generic attributes like the subordinate bus number range and the
+>> resources available to that PCI device tree.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  drivers/pci/probe.c |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci.h |   20 +++++++++++++++
+>>  2 files changed, 89 insertions(+), 0 deletions(-)
+>>
+>> +struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
+>> +               int domain, struct resource *subordinate,
+>> +               struct list_head *resources, struct pci_ops *ops,
+>> +               void *sysdata)
+>> +{
+>> +       struct pci_host_bridge *bridge;
+>> +       struct pci_bus *bus;
+>> +
+>> +       bridge = pci_create_host_bridge(parent, domain, subordinate, resources,
+>> +                                       ops, sysdata);
+>> +       if (!bridge)
+>> +               return NULL;
+>> +
+>> +       bus = bridge->bus;
+>> +       bus->subordinate = pci_scan_child_bus(bus);
+>> +       pci_bus_add_devices(bus);
+>> +       return bridge;
+>> +}
+>
+> looks like there is no user for pci_scan_host_bridge() in this series.
 
-Set up iobusn_resource tree, and register bus number range to it.
-Later when need to find bus range, will try to allocate from the tree
+You're right.  x86 can't use pci_scan_host_bridge() yet, but most
+other architectures can, and I plan to convert them soon.
 
-Need to test on arches other than x86. esp for ia64 and powerpc that support
-  more than on peer root buses.
-
-could be found at:
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
-
-Thanks
-
-Yinghai
-
- arch/ia64/pci/pci.c              |    2 +
- arch/powerpc/kernel/pci-common.c |    7 +-
- arch/x86/include/asm/topology.h  |    3 +-
- arch/x86/pci/acpi.c              |    8 +-
- arch/x86/pci/bus_numa.c          |    8 +-
- arch/x86/pci/common.c            |   11 +-
- drivers/parisc/dino.c            |    2 +
- drivers/parisc/lba_pci.c         |    3 +
- drivers/pci/probe.c              |  427 ++++++++++++++++++++++++++++++--------
- drivers/pci/remove.c             |    1 +
- include/linux/ioport.h           |    1 +
- include/linux/pci.h              |    8 +
- kernel/resource.c                |    8 +
- 13 files changed, 395 insertions(+), 94 deletions(-)
-
-
+Bjorn
