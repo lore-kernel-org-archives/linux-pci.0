@@ -1,39 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from re04.intra2net.com ([82.165.46.26]:51127 "EHLO
-	re04.intra2net.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752613Ab2AJKpz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2012 05:45:55 -0500
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-To: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel Sandy Bridge GPUs
-Date: Tue, 10 Jan 2012 11:45:52 +0100
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-kernel@vger.kernel.org,
-	Charlie Suffin <charlie.suffin@stratus.com>, stable@kernel.org
-References: <4EDFD5BB.1050906@intra2net.com>
-In-Reply-To: <4EDFD5BB.1050906@intra2net.com>
+Received: from server1.meinberg.de ([85.10.202.66]:38483 "EHLO
+	server1.meinberg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752768Ab2ASLea (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2012 06:34:30 -0500
+Message-ID: <4F17FFC1.9020502@meinberg.de>
+Date: Thu, 19 Jan 2012 12:34:25 +0100
+From: Martin Burnicki <martin.burnicki@meinberg.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201201101145.52640.thomas.jarosch@intra2net.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org
+Subject: Re: PCI card not accessible; I/O ports at <ignored>
+References: <4F16EA07.4000607@meinberg.de> <CAErSpo6Ei=XgWTXp6f=UgY90QA78fSVMaJ8Gf7NvF5fMiPX12w@mail.gmail.com>
+In-Reply-To: <CAErSpo6Ei=XgWTXp6f=UgY90QA78fSVMaJ8Gf7NvF5fMiPX12w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, 7. December 2011 22:08:11 Thomas Jarosch wrote:
-> Some BIOS implementations leave the Intel GPU interrupts enabled,
-> even though no one is handling them (f.e. i915 driver is never loaded).
-> Additionally the interrupt destination is not set up properly
-> and the interrupt ends up -somewhere-.
-> 
-> These spurious interrupts are "sticky" and the kernel disables
-> the (shared) interrupt line after 100.000+ generated interrupts.
-> 
-> Fix it by disabling the still enabled interrupts.
-> This resolves crashes often seen on monitor unplug.
+Bjorn Helgaas schrieb:
+> On Wed, Jan 18, 2012 at 8:49 AM, Martin Burnicki
+> <martin.burnicki@meinberg.de>  wrote:
+>> Hi folks,
+>>
+>> I'm maintaining the driver software for the PCI cards manufactured by our
+>> company, Meinberg Funkuhren in Germany. Basically our Linux driver supports
+>> all our PCI cards on all Linux kernels 2.6.x and 3.x. The PCI cards are e.g.
+>> GPS receivers, radio clocks, or IRIG time code receivers.
+>>
+>> Recently I've run into a problem with our PCI Express cards in a certain
+>> server PC: There are 8 PCI Express slots on the mainboard, and in some of
+>> the slots the cards work properly, but in some other slots on the same
+>> machine they don't work since the cards are not accessible by the kernel
+>> driver.
+>>
+>> In cases where the cards are not accessible lspci -v reports
+>> for the I/O base address 0:
+>>
+>>   Region 0: I/O ports at<ignored>
+>
+>  From the lspci source (http://mj.ucw.cz/sw/pciutils/), it looks like
+> this happens when the BAR contains zero.
 
-Happy new year 2012!
+This must be the BAR value saved inside the kernel's device structure. 
+The confguration space dump of lspci -x shows that even in this case a 
+usual I/O address has been assigned to BAR0 on the card.
 
-Any news on the status of this patch?
+>> Finally I tried different Linux distributions with different kernel versions
+>> and found that the same card in the same slot with the same driver works
+>> properly under kernel 2.6.32 and earlier, but doesn't work anymore under
+>> kernel 2.6.36 and later, including kernel 3.1.4. So there must have been
+>> some code changes in the newer kernel versions which prevent the card from
+>> being accessed via I/O, and let lspci say "I/O ports at<ignored>".
+>
+> Please open a bug report at http://bugzilla.kernel.org, category
+> Drivers/PCI, mark it as a regression, add me to the CC: list, and
+> attach complete dmesg logs from 2.6.32 and 3.1.4 with the card in the
+> slot that no longer works.
 
-Cheers,
-Thomas
+Done:
+https://bugzilla.kernel.org/show_bug.cgi?id=42606
+
+Thanks again!
+
+
+Martin
+-- 
+Martin Burnicki
+
+Meinberg Funkuhren
+Bad Pyrmont
+Germany
