@@ -1,132 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:33743 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753603Ab2AWTgW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 14:36:22 -0500
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:56787 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785Ab2ASW2g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2012 17:28:36 -0500
+Received: from mt1.gw.fujitsu.co.jp (unknown [10.75.179.171])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 1093E3EE081
+	for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2012 07:28:35 +0900 (JST)
+Received: from smail (mt1 [127.0.0.1])
+	by outgoing.mt1.gw.fujitsu.co.jp (Postfix) with ESMTP id EA63E45DE54
+	for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2012 07:28:34 +0900 (JST)
+Received: from st1.gw.fujitsu.co.jp (st1.gw.fujitsu.co.jp [10.75.179.161])
+	by mt1.gw.fujitsu.co.jp (Postfix) with ESMTP id C74A045DE53
+	for <linux-pci@vger.kernel.org>; Fri, 20 Jan 2012 07:28:34 +0900 (JST)
+Message-ID: <4F18986F.8010601@jp.fujitsu.com>
+Date: Thu, 19 Jan 2012 17:25:51 -0500
+From: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-	<1327139539-14301-2-git-send-email-yinghai@kernel.org>
-	<CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
-	<CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
-	<CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
-Date: Mon, 23 Jan 2012 11:36:21 -0800
-Message-ID: <CAE9FiQXDHHJ0rG6hd6a3B+f0ZyJmjJ3rJGNWTsCwn21o+84C_Q@mail.gmail.com>
-Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
-From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+CC: linux-pci@vger.kernel.org,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
+Subject: Re: [PATCH v3] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
+ driver
+References: <20120109211006.2135.13551.sendpatchset@dhcp-189-101.bos.redhat.com> <4F17E4CA.7010701@jp.fujitsu.com>
+In-Reply-To: <4F17E4CA.7010701@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 23, 2012 at 10:45 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Mon, Jan 23, 2012 at 10:30 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> in list_for_each_safe()
+On Thu, 19 Jan 2012 18:39:22 +0900,
+Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com> wrote:
+>
+>> --- linux-3.2.orig/drivers/pci/hotplug/pciehp_core.c
+>> +++ linux-3.2/drivers/pci/hotplug/pciehp_core.c
+>> @@ -42,6 +42,7 @@ int pciehp_debug;
+>>    int pciehp_poll_mode;
+>>    int pciehp_poll_time;
+>>    int pciehp_force;
+>> +int pciehp_msi_disabled;
+>
+> I think pciehp_msi_disabled needs to be defined in port driver
+> side because pciehp can be built as a module.
+
+Agree.
+
+>>    struct workqueue_struct *pciehp_wq;
+>>    struct workqueue_struct *pciehp_ordered_wq;
 >>
->> #define list_for_each_safe(pos, n, head) \
->>        for (pos = (head)->next, n = pos->next; pos != (head); \
->>                pos = n, n = pos->next)
+>> @@ -57,10 +58,12 @@ module_param(pciehp_debug, bool, 0644);
+>>    module_param(pciehp_poll_mode, bool, 0644);
+>>    module_param(pciehp_poll_time, int, 0644);
+>>    module_param(pciehp_force, bool, 0644);
+>> +module_param(pciehp_msi_disabled, bool, 0644);
+>
+> When pciehp is build as a module, the pciehp driver is loaded
+> after the MSI(-X) of the port is initialized. So I don't think
+> this module parameter works. When pciehp is build as built-in,
+> pciehp.pciehp_msi_disabled would work, but I think it is
+> meaningless because you also provide "pcie_hp=" boot parameter
+> (and I don't know what will happen if user specify different
+> values for pciehp.pciehp_msi_disabled and pcie_hp). As a result,
+> I think this module parameter should be removed.
+
+That's make sense.  Will remove this.
+
+>>    MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
+>>    MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
+>>    MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
+>>    MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
+>> +MODULE_PARM_DESC(pciehp_msi, "MSI/MSI-X enabled or not");
+>
+> Maybe it should be "pciehp_msi_disabled" instead of "pciehp_msi"?
+> Anyway, I think we should remove this for the same reason above.
+
+Ditto.
+
+>>    #define PCIE_MODULE_NAME "pciehp"
 >>
->> n is saved before, and safe only mean pos could be freed from the
->> list, but n still can be used for next loop.
+>> @@ -72,6 +75,15 @@ static int get_attention_status	(struct
+>>    static int get_latch_status	(struct hotplug_slot *slot, u8 *value);
+>>    static int get_adapter_status	(struct hotplug_slot *slot, u8 *value);
 >>
->> in our case, the list have PF and several VFs, when
->> pci_stop_bus_device() is called for PF, pos are still valid, but
->> VFs are removed from the list. so n will not be valid.
+>> +static int __init pciehp_setup(char *str)
+>> +{
+>> +	if (!strncmp(str, "nomsi", 5))
+>> +		pciehp_msi_disabled = true;
+>> +
+>> +	return 1;
+>> +}
+>> +__setup("pcie_hp=", pciehp_setup);
+>> +
 >
-> That still doesn't explain anything.
+> I think this needs to be in port driver side, otherwise pcie_hp=
+> boot parameter doesn't work when building pciehp as a module.
+> Additionally, I got the the following warning message when building
+> pciehp as a module.
 >
-> The whole point of the safe version is that if the entry that is being
-> worked on is removed, then we can still use the next one.
+> drivers/pci/hotplug/pciehp_core.c:77: warning: 'pciehp_setup' defined but not used
+
+You are corrent.  I forgot to confirm this.  Thank you for letting me
+know.
+
+>> -	/* We have to use INTx if MSI cannot be used for PCIe PME. */
+>> -	if ((mask&   PCIE_PORT_SERVICE_PME)&&   pcie_pme_no_msi()) {
+>> +	/* We have to use INTx if MSI cannot be used for PCIe PME or pciehp. */
+>> +	if (((mask&   PCIE_PORT_SERVICE_PME)&&   pcie_pme_no_msi()) ||
+>> +	    ((mask&   PCIE_PORT_SERVICE_HP)&&   pciehp_no_msi()) ||
+>> +	    ((mask&   PCIE_PORT_SERVICE_HP)&&
+>> +	     (dev->vendor == PCI_VENDOR_ID_IDT&&   dev->device == 0x807f))) {
 >
-> Why isn't this magically true in this case? If some *other* random
-> entry than the one that is being iterated over can magically be
-> removed, then the whole thing is just pure and utter crap, and no
-> amount of list maintenance can ever fix it.
->
-> So explain.
+> How about implementing vendor/device check as a quirk?
 
-Now current design with SRIOV is:
-when driver for PF is loaded, it will enable sriov on PF, and VFs are
-created and added to
-bus->devices list.
+Oh, it looks good.
+Will post a updated patch soon.
 
-when driver for PF is removed in pci_stop_bus_device(), it will
-disable sriov on PF, and VFs are removed for the list.
-
->
->> https://lkml.org/lkml/2011/10/15/141
->> or from attached one.
->
-> This still doesn't make sense. Why do that stupid allocation? Why not
-> just move the entry? Why doesn't just the sane approach work?
->
-> Exactly why does not the obvious
->
->    /* stop bus device for phys_fn at first */
->    list_for_each_safe(l, n, &bus->devices) {
->        struct pci_dev *dev = pci_dev_b(l);
->        if (!dev->is_virtfn)
->            pci_stop_bus_device(dev);
->    }
->
-> work? What the f*^& does that pci_stop_bus_device() function do to
-> that bus->devices list that isn't just a "list_del()" of that single
-> entry? And if it does anything else, it should damn well stop doing
-> that.
-
-it does not work.  because pci_stop_bus_device for PF will remove VF,
-and n is not
-valid.
-
->
-> The *exact* same loop is then apparently working for the virtual
-> device case, so what the hell is going on that it wouldn't work for
-> the physical one?
->
-> What's the confusion? Why all the crazy idiotic code that makes no sense?
-
-Maybe we can put VF and PF in bus->devices like:
-VF come first than PF?
-
-something like:
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 0321fa3..3f63b55 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -116,11 +116,11 @@ static int virtfn_add(struct pci_dev *dev, int
-id, int reset)
- 	if (reset)
- 		__pci_reset_function(virtfn);
-
-+	virtfn->is_virtfn = 1;
- 	pci_device_add(virtfn, virtfn->bus);
- 	mutex_unlock(&iov->dev->sriov->lock);
-
- 	virtfn->physfn = pci_dev_get(dev);
--	virtfn->is_virtfn = 1;
-
- 	rc = pci_bus_add_device(virtfn);
- 	if (rc)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7cc9e2f..e43d81c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1218,7 +1218,10 @@ void pci_device_add(struct pci_dev *dev, struct
-pci_bus *bus)
- 	 * and the bus list for fixup functions, etc.
- 	 */
- 	down_write(&pci_bus_sem);
--	list_add_tail(&dev->bus_list, &bus->devices);
-+	if (dev->is_virtfn)
-+		list_add(&dev->bus_list, &bus->devices);
-+	else
-+		list_add_tail(&dev->bus_list, &bus->devices);
- 	up_write(&pci_bus_sem);
- }
+Thanks,
+Takahiro
