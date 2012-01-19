@@ -1,383 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/4] PCI: Allocate bus range instead of use max blindly
-Date: Mon, 23 Jan 2012 15:06:56 -0800
-Message-Id: <1327360018-10929-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327360018-10929-1-git-send-email-yinghai@kernel.org>
-References: <1327360018-10929-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:60440 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756699Ab2ASWmO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Jan 2012 17:42:14 -0500
+Received: by lahc1 with SMTP id c1so272645lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 14:42:12 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWH0KqsC3Yin0TS+RVCvtjTi6j5wa6aUf19qU3xuQsmOA@mail.gmail.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+ <20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
+ <CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
+ <CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
+ <CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
+ <CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com>
+ <CAE9FiQXj8W4G_SRKCFU-gHJRZ+qENPAs8WAcZA_PVgoageHcoQ@mail.gmail.com>
+ <CAErSpo5cAQVJq858QGi0N_TM91PsKj0jzvUUT8_yA9ezf_wXAQ@mail.gmail.com> <CAE9FiQWH0KqsC3Yin0TS+RVCvtjTi6j5wa6aUf19qU3xuQsmOA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 19 Jan 2012 15:41:51 -0700
+Message-ID: <CAErSpo4wQ_oA6jtfoH7JW=0kaptHpYO4cVn-_1EziCSeKx4_oA@mail.gmail.com>
+Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
+ via host bridge
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-every bus have extra busn_res, and linked them toghter to iobusn_resource.
+On Thu, Jan 19, 2012 at 3:23 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Jan 19, 2012 at 2:13 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Jan 19, 2012 at 1:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> please check attached patch.
+>>
+>> You added bus_max to pci_scan_root_bus().  I'd prefer to pass a
+>> pointer to a struct resource, as we do for io & mem resources.
+>
+> Well that depends.
 
-when need to find usabled bus number range, try allocate from
-iobusn_resource tree.
+Well, I suppose it does.  On what?
 
--v3: support extend buses top.
+>> I'd
+>> like to move away from pci_scan_root_bus() and toward a
+>> pci_scan_host_bridge() (as in the patches I posted) that takes all the
+>> host bridge-related info: parent, domain, resources (including bus
+>> number range), ops, sysdata.  I don't like the current scheme of
+>> "create it with defaults and fix them later."
+>
+> No, struct host bridge is bad idea.  you are tracking host bridge and
+> peer root bus the same time.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |  276 ++++++++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 239 insertions(+), 37 deletions(-)
+Obviously host bridges and root buses are related, but it'd be useful
+if you could give some clue about *why* you think this is a bad idea.
+Redundancy, complication, what?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index f327c04..f58164d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -624,6 +624,200 @@ static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
- 	}
- }
- 
-+static void __devinit pci_bus_extend_top(struct pci_bus *parent,
-+		 resource_size_t size, struct resource *parent_res)
-+{
-+	struct resource *res;
-+
-+	if (!size)
-+		return;
-+
-+	while (parent) {
-+		res = &parent->busn_res;
-+		if (res == parent_res)
-+			break;
-+		res->end += size;
-+		parent->subordinate += size;
-+		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-+					 parent->subordinate);
-+		dev_printk(KERN_DEBUG, &parent->dev,
-+				"busn_res: extended %02llx to %06llx-%06llx\n",
-+				(unsigned long long)size,
-+				(unsigned long long)res->start,
-+				(unsigned long long)res->end);
-+		parent = parent->parent;
-+	}
-+}
-+
-+static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
-+		 resource_size_t size, struct resource *parent_res)
-+{
-+	struct resource *res;
-+
-+	if (!size)
-+		return;
-+
-+	while (parent) {
-+		res = &parent->busn_res;
-+		if (res == parent_res)
-+			break;
-+		res->end -= size;
-+		parent->subordinate -= size;
-+		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-+					 parent->subordinate);
-+		dev_printk(KERN_DEBUG, &parent->dev,
-+				"busn_res: shrunk %02llx to %06llx-%06llx\n",
-+				(unsigned long long)size,
-+				(unsigned long long)res->start,
-+				(unsigned long long)res->end);
-+		parent = parent->parent;
-+	}
-+}
-+
-+static resource_size_t __devinit find_res_top_free_size(struct resource *res)
-+{
-+	int ret = -ENOMEM;
-+	resource_size_t n_size;
-+	struct resource tmp_res;
-+
-+	/*
-+	 *   find out number below res->end, that we can use at first
-+	 *	res->start can not be used.
-+	 */
-+	n_size = resource_size(res) - 1;
-+	memset(&tmp_res, 0, sizeof(struct resource));
-+	while (n_size > 0) {
-+		ret = allocate_resource(res, &tmp_res, n_size,
-+			res->end - n_size + 1, res->end,
-+			1, NULL, NULL);
-+		if (ret == 0) {
-+			/* release busn_res */
-+			release_resource(&tmp_res);
-+			break;
-+		}
-+		n_size--;
-+	}
-+
-+	return n_size;
-+}
-+
-+static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
-+			 struct pci_dev *dev, struct resource *busn_res,
-+			 resource_size_t needed_size, struct resource **p)
-+{
-+	int ret = -ENOMEM;
-+	resource_size_t n_size;
-+	struct pci_bus *parent;
-+	struct resource *parent_res;
-+	resource_size_t tmp = bus->busn_res.end + 1;
-+	int free_sz = -1;
-+
-+	parent_res = NULL;
-+
-+again:
-+	/*
-+	 * find bigest range in bus->busn_res that we can use in the middle
-+	 *  and we can not use bus->busn_res.start.
-+	 */
-+	n_size = resource_size(&bus->busn_res) - 1;
-+	memset(busn_res, 0, sizeof(struct resource));
-+	dev_printk(KERN_DEBUG, &dev->dev,
-+			"find free busn in busn_res: %06llx-%06llx\n",
-+			(unsigned long long)bus->busn_res.start,
-+			(unsigned long long)bus->busn_res.end);
-+	while (n_size >= needed_size) {
-+		ret = allocate_resource(&bus->busn_res, busn_res, n_size,
-+				bus->busn_res.start + 1, bus->busn_res.end,
-+				1, NULL, NULL);
-+		if (ret == 0) {
-+			/* release res */
-+			release_resource(busn_res);
-+
-+			return ret;
-+		}
-+		n_size--;
-+	}
-+
-+	/* try extend the top of parent buss */
-+	if (free_sz < 0) {
-+		free_sz = find_res_top_free_size(&bus->busn_res);
-+		dev_printk(KERN_DEBUG, &dev->dev,
-+			"found free busn %d in busn_res: %06llx-%06llx top\n",
-+				free_sz,
-+				(unsigned long long)bus->busn_res.start,
-+				(unsigned long long)bus->busn_res.end);
-+	}
-+	n_size = free_sz;
-+
-+	/* check if extend could cross domain boundary */
-+	if ((bus->busn_res.end & 0xff) == 0xff)
-+		goto reduce_needed_size;
-+	if ((0x100 - (tmp & 0xff)) < (needed_size - n_size))
-+		goto reduce_needed_size;
-+
-+	/* find exteded range */
-+	memset(busn_res, 0, sizeof(struct resource));
-+	parent = bus->parent;
-+	while (parent) {
-+		ret = allocate_resource(&parent->busn_res, busn_res,
-+			 needed_size - n_size,
-+			 tmp, tmp + needed_size - n_size - 1,
-+			 1, NULL, NULL);
-+		if (ret == 0)
-+			break;
-+		parent = parent->parent;
-+	}
-+
-+reduce_needed_size:
-+	if (ret != 0) {
-+		needed_size--;
-+		if (!needed_size)
-+			return ret;
-+
-+		goto again;
-+	}
-+
-+	/* save parent_res, we need it as stopper later */
-+	parent_res = busn_res->parent;
-+	/* release busn_res */
-+	release_resource(busn_res);
-+	busn_res->start -= n_size;
-+
-+	/* extend parent bus top*/
-+	pci_bus_extend_top(bus, needed_size - n_size, parent_res);
-+
-+	*p = parent_res;
-+
-+	return ret;
-+}
-+
-+static int __devinit pci_bridge_check_busn_res(struct pci_bus *bus,
-+				struct pci_dev *dev,
-+				int secondary, int subordinate)
-+{
-+	int broken = 0;
-+
-+	struct resource busn_res;
-+	int ret;
-+
-+	memset(&busn_res, 0, sizeof(struct resource));
-+	dev_printk(KERN_DEBUG, &dev->dev,
-+		 "check if busn %02x-%02x is in busn_res: %06llx-%06llx\n",
-+		 secondary, subordinate,
-+		 (unsigned long long)bus->busn_res.start,
-+		 (unsigned long long)bus->busn_res.end);
-+	ret = allocate_resource(&bus->busn_res, &busn_res,
-+			 (subordinate - secondary + 1),
-+			 (pci_domain_nr(bus)<<8) | secondary,
-+			 (pci_domain_nr(bus)<<8) | subordinate,
-+			 1, NULL, NULL);
-+	if (ret)
-+		broken = 1;
-+	else
-+		release_resource(&busn_res);
-+
-+	return broken;
-+}
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
-@@ -638,10 +832,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- {
- 	struct pci_bus *child;
- 	int is_cardbus = (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS);
--	u32 buses, i, j = 0;
-+	u32 buses;
- 	u16 bctl;
- 	u8 primary, secondary, subordinate;
- 	int broken = 0;
-+	struct resource *parent_res = NULL;
- 
- 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
- 	primary = buses & 0xFF;
-@@ -653,10 +848,16 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 
- 	/* Check if setup is sensible at all */
- 	if (!pass &&
--	    (primary != bus->number || secondary <= bus->number)) {
--		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
-+	    (primary != bus->number || secondary <= bus->number))
- 		broken = 1;
--	}
-+
-+	/* more strict checking */
-+	if (!pass && !broken)
-+		broken = pci_bridge_check_busn_res(bus, dev,
-+						   secondary, subordinate);
-+
-+	if (broken)
-+		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
- 
- 	/* Disable MasterAbortMode during probing to avoid reporting
- 	   of bus errors (in some architectures) */ 
-@@ -689,6 +890,8 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			child->primary = primary;
- 			child->subordinate = subordinate;
- 			child->bridge_ctl = bctl;
-+
-+			pci_bus_insert_busn_res(child, secondary, subordinate);
- 		}
- 
- 		cmax = pci_scan_child_bus(child);
-@@ -701,6 +904,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 		 * We need to assign a number to this bus which we always
- 		 * do in the second pass.
- 		 */
-+		resource_size_t shrink_size;
-+		struct resource busn_res;
-+		int ret = -ENOMEM;
-+		int old_max = max;
-+
- 		if (!pass) {
- 			if (pcibios_assign_all_busses() || broken)
- 				/* Temporarily disable forwarding of the
-@@ -717,20 +925,28 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 		/* Clear errors */
- 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
- 
--		/* Prevent assigning a bus number that already exists.
--		 * This can happen when a bridge is hot-plugged, so in
--		 * this case we only re-scan this bus. */
--		child = pci_find_bus(pci_domain_nr(bus), max+1);
--		if (!child) {
--			child = pci_add_new_bus(bus, dev, ++max);
--			if (!child)
--				goto out;
--		}
-+		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
-+				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
-+				&parent_res);
-+
-+		if (ret != 0)
-+			goto out;
-+
-+		child = pci_add_new_bus(bus, dev, busn_res.start & 0xff);
-+		if (!child)
-+			goto out;
-+
-+		child->subordinate = busn_res.end & 0xff;
-+		pci_bus_insert_busn_res(child, busn_res.start & 0xff,
-+					busn_res.end & 0xff);
-+
- 		buses = (buses & 0xff000000)
- 		      | ((unsigned int)(child->primary)     <<  0)
- 		      | ((unsigned int)(child->secondary)   <<  8)
- 		      | ((unsigned int)(child->subordinate) << 16);
- 
-+		max = child->subordinate;
-+
- 		/*
- 		 * yenta.c forces a secondary latency timer of 176.
- 		 * Copy that behaviour here.
-@@ -761,43 +977,29 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			 * the real value of max.
- 			 */
- 			pci_fixup_parent_subordinate_busnr(child, max);
-+
- 		} else {
- 			/*
- 			 * For CardBus bridges, we leave 4 bus numbers
- 			 * as cards with a PCI-to-PCI bridge can be
- 			 * inserted later.
- 			 */
--			for (i=0; i<CARDBUS_RESERVE_BUSNR; i++) {
--				struct pci_bus *parent = bus;
--				if (pci_find_bus(pci_domain_nr(bus),
--							max+i+1))
--					break;
--				while (parent->parent) {
--					if ((!pcibios_assign_all_busses()) &&
--					    (parent->subordinate > max) &&
--					    (parent->subordinate <= max+i)) {
--						j = 1;
--					}
--					parent = parent->parent;
--				}
--				if (j) {
--					/*
--					 * Often, there are two cardbus bridges
--					 * -- try to leave one valid bus number
--					 * for each one.
--					 */
--					i /= 2;
--					break;
--				}
--			}
--			max += i;
- 			pci_fixup_parent_subordinate_busnr(child, max);
- 		}
- 		/*
- 		 * Set the subordinate bus number to its real value.
- 		 */
-+		shrink_size = child->subordinate - max;
- 		child->subordinate = max;
- 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
-+		pci_bus_update_busn_res_end(child, max);
-+
-+		/* shrink some back, if we extend top before */
-+		if (!is_cardbus &&  (shrink_size > 0) && parent_res)
-+			pci_bus_shrink_top(bus, shrink_size, parent_res);
-+
-+		if (old_max > max)
-+			max = old_max;
- 	}
- 
- 	sprintf(child->name,
--- 
-1.7.7
+Root buses are special in important ways, and we currently don't have
+a way to deal with that.  For example, everything below a host bridge
+has the same domain, and we don't have a good place to keep the
+domain.  The busn_res you add to struct pci_bus is only useful for
+root buses, so I don't think pci_bus is quite the right place.
 
+>> struct pci_bus already has secondary & subordinate.  I don't think
+>> adding a "struct resource busn_res" adds useful information except for
+>> the root bus, where the bus number range comes from something external
+>> like _CRS rather than from the upstream bridge config.
+>
+> no, we need that to tracking the busn usage. aka insert them into
+> iobusn_resource tree.
+
+If we want a tree, I think we should just convert pci_bus.secondary
+and subordinate to a struct resource and insert that.  Otherwise we
+have redundant information.
+
+> late it should be convert to list head even. for handling transparent bridge.
+
+I think you're talking about a host bridge that passes multiple bus
+number ranges, e.g., a PNP0A08 device with "[bus 00-3f] [bus 80-ff]"
+in _CRS.  That makes sense.  I haven't seen anything like that, but it
+seems like it would be legal.  But that wouldn't make sense for a P2P
+bridge, so it doesn't seem like pci_bus is the right place for it.
+
+Bjorn
