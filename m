@@ -1,246 +1,234 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:41994 "EHLO
-	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758626Ab2AFEZ0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2012 23:25:26 -0500
-Message-ID: <4F06779D.5010805@st.com>
-Date: Fri, 6 Jan 2012 09:55:01 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <4F17C8B9.807@jp.fujitsu.com>
+Date: Thu, 19 Jan 2012 16:39:37 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 MIME-Version: 1.0
-To: "Dave, Tushar N" <tushar.n.dave@intel.com>
-Cc: Greg KH <greg@kroah.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Shiraz HASHIM <shiraz.hashim@st.com>,
-	Deepak SIKRI <deepak.sikri@st.com>,
-	Bhavna YADAV <bhavna.yadav@st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux NICS <linuxnics@mailbox.intel.com>
-Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
-References: <CAHM4w1=i5dYy+ReqMO=m6W96CNaQ+O=jw+pKQok0nmjb5-fNAw@mail.gmail.com> <4F043190.70405@st.com> <20120104192234.GC18214@kroah.com> <4F05276F.6040708@st.com> <061C8A8601E8EE4CA8D8FD6990CEA89102D691@ORSMSX102.amr.corp.intel.com>
-In-Reply-To: <061C8A8601E8EE4CA8D8FD6990CEA89102D691@ORSMSX102.amr.corp.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -v2] pciehp: Checking pci conf reading to new added device
+ instead of sleep 1s
+References: <1324083165-805-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1324083165-805-1-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks Tushar,
+(2011/12/17 9:52), Yinghai Lu wrote:
+> During reviewing
+> |	PCI: pciehp: wait 1000 ms before Link Training check
+> Linus said:
+>> ...
+>> That's a *long* time, and it's irritating to the user. It makes the
+>> user think "the machine is slow".
+>> ...
+>> And quite frankly, an unconditional one-second delay here seems bad.
+>> Two seconds was unacceptable, one second is just bad.
+>
+> Try to access the pci conf of pci device that is supposed to show up in 1s,
+> if could read back valid vender/device id, could bail out early.
+>
+> Related discussion could be found:
+> 	https://lkml.org/lkml/2011/12/6/339
+>
+> -v2: seperate code to pci_bus_read_dev_vendor_id() from pci_scan_device()
+>      and reuse it from pciehp code. Suggested by Matthew Wilcox.
+>
+> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+>
+> ---
+>   drivers/pci/hotplug/pciehp_hpc.c |   49 +++++++++++++++++++++++++++------------
+>   drivers/pci/pci.h                |    2 +
+>   drivers/pci/probe.c              |   44 +++++++++++++++++++++--------------
+>   3 files changed, 63 insertions(+), 32 deletions(-)
+>
+> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
+> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -272,6 +272,37 @@ static void pcie_wait_link_active(struct
+>   	ctrl_dbg(ctrl, "Data Link Layer Link Active not set in 1000 msec\n");
+>   }
+>
+> +static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+> +{
+> +	u32 l;
+> +	int count = 0;
+> +	u32 lx[50];
 
-On 1/6/2012 5:24 AM, Dave, Tushar N wrote:
-> Anand,
->
-> Sorry to hear that you have this issue with card. And yeah, thanks for doing the debugging and providing the bus trace.
-> I think we should run the debug driver that prints the HW ring details when hang occurs. I can provide you a debug driver. You can then install debug driver and also let the bus tracer running. Once the issue occurs, provide me the full dmesg output (that has HW ring details) and bus trace.
->
-> Tell me which card you have, 1gig or 10gig? Which driver are you running e1000e or igb or ixgbe?
-> Can you also provide ethtool -i ethx output.
->
-> Once I know which driver, I send you debug driver.
+I don't think it's a good idea to allocate lx[] array on stack.
 
-I am using Intel PRO/1000 PT Server Adapter.
-http://www.intel.com/content/www/us/en/network-adapters/gigabit-network-adapters/pro-1000-pt.html
+> +	int delay = 1000, step = 20;
+> +	bool found = false;
+> +
+> +	do {
+> +		found = pci_bus_read_dev_vendor_id(bus, devfn,&l, step);
+> +		lx[count++] = l;
+> +
+> +		if (found)
+> +			break;
+> +
+> +		msleep(step);
 
-I am using e1000e driver.
+I don't think msleep() is needed here because pci_bus_read_dev_vendor_id()
+has timeout. And even if this msleep() is removed, maximum wait time in
+pci_bus_read_dev_vendor_id() looks much longer than 1sec (IIUC, it looks
+1ms + 2ms + 4ms + 8ms + ...)
 
-I see the problem when I try to mount rootfilesystem using NFS and use 
-MSI interrupt. I see this issue even before I can have cell prompt. 
-Please see first mail in this thread.
 
-http://www.mail-archive.com/e1000-devel@lists.sourceforge.net/msg04894.html
+> +		delay -= step;
+> +	} while (delay>  0);
+> +
+> +	if (count>  1&&  pciehp_debug) {
+> +		int i;
+> +		printk(KERN_DEBUG "pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms\n",
+> +			pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
+> +			PCI_FUNC(devfn), count, step);
+> +		for (i = 0; i<  count; i++)
+> +			printk(KERN_DEBUG "  [%02d]=%08x\n", i, lx[i]);
+> +	}
 
-Here, you can also see tx ring details when issue occur.
-Please let me know, if you need any more info.
+Why not printing the debug message each time in the while() loop?
 
-Regards
-Pratyush
+
+> +
+> +	return found;
+> +}
+> +
+>   int pciehp_check_link_status(struct controller *ctrl)
+>   {
+>   	u16 lnk_status;
+> @@ -287,13 +318,9 @@ int pciehp_check_link_status(struct cont
+>           else
+>                   msleep(1000);
+>
+> -	/*
+> -	 * Need to wait for 1000 ms after Data Link Layer Link Active
+> -	 * (DLLLA) bit reads 1b before sending configuration request.
+> -	 * We need it before checking Link Training (LT) bit becuase
+> -	 * LT is still set even after DLLLA bit is set on some platform.
+> -	 */
+> -	msleep(1000);
+> +	/* wait 100ms before read pci conf, and try in 1s */
+> +	msleep(100);
+> +	pci_bus_check_dev(ctrl->pcie->port->subordinate, PCI_DEVFN(0, 0));
+
+We need to check the result of pci_bus_check_dev() and return error if
+the the result is false.
+
+Regards,
+Kenji Kaneshige
+
+
 
 >
-> Thanks.
+>   	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA,&lnk_status);
+>   	if (retval) {
+> @@ -309,14 +336,6 @@ int pciehp_check_link_status(struct cont
+>   		return retval;
+>   	}
 >
-> -Tushar
+> -	/*
+> -	 * If the port supports Link speeds greater than 5.0 GT/s, we
+> -	 * must wait for 100 ms after Link training completes before
+> -	 * sending configuration request.
+> -	 */
+> -	if (ctrl->pcie->port->subordinate->max_bus_speed>  PCIE_SPEED_5_0GT)
+> -		msleep(100);
+> -
+>   	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
 >
-> -----Original Message-----
-> From: netdev-owner@vger.kernel.org [mailto:netdev-owner@vger.kernel.org] On Behalf Of Pratyush Anand
-> Sent: Wednesday, January 04, 2012 8:31 PM
-> To: Greg KH
-> Cc: Pratyush Anand; e1000-devel@lists.sourceforge.net; netdev@vger.kernel.org; Shiraz HASHIM; Deepak SIKRI; Bhavna YADAV; linux-pci@vger.kernel.org; Linux NICS
-> Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
+>   	return retval;
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -1119,40 +1119,50 @@ struct pci_dev *alloc_pci_dev(void)
+>   }
+>   EXPORT_SYMBOL(alloc_pci_dev);
 >
-> On 1/5/2012 12:52 AM, Greg KH wrote:
->> On Wed, Jan 04, 2012 at 04:31:36PM +0530, Pratyush Anand wrote:
->>> Adding PCI mailing list too, as problem is coming only when MSI is enabled.
->>>
->>> If I connect an PCIe analyzer, I see that at the time of issue
->>> MRd(64) for 32 words has been issued with a wrong 64 bit address
->>> from ethernet card to my RC.
->>> In the normal course it always issues MRd(32) only.
->>
->> Bug in your pcie firmware controller?
->>
->> .
->>
+> -/*
+> - * Read the config data for a PCI device, sanity-check it
+> - * and fill in the dev structure...
+> - */
+> -static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+> +				 int crs_timeout)
+>   {
+> -	struct pci_dev *dev;
+> -	u32 l;
+>   	int delay = 1;
 >
-> when you say "Bug in your pcie firmware controller?", is it RC's
-> software or EP's software?
+> -	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID,&l))
+> -		return NULL;
+> +	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+> +		return false;
 >
-> Here I am pasting a part of analyzer log converted into text.
-> Packet(177940), is an upstream request for MSI. Whenever any device
-> writes at address 0x58A8F8, my PCIe RC considers it as MSI and generates
-> an interrupt. So I receive MSI interrupt correctly in my software. Also
-> MSI controller is correctly able to point me that the interrupt is from
-> ethernet card.
+>   	/* some broken boards return 0 or ~0 if a slot is empty: */
+> -	if (l == 0xffffffff || l == 0x00000000 ||
+> -	    l == 0x0000ffff || l == 0xffff0000)
+> -		return NULL;
+> +	if (*l == 0xffffffff || *l == 0x00000000 ||
+> +	    *l == 0x0000ffff || *l == 0xffff0000)
+> +		return false;
 >
-> Now in Packet(178010), ethernet controller sends another upstream
-> request for MRd(64) of 32 dwords with Address(AFECEB87:A9D88B00).Since,
-> this address does not exist in my RC's world so, an UR is returned and
-> hence the problem occurs.
+>   	/* Configuration request Retry Status */
+> -	while (l == 0xffff0001) {
+> +	while (*l == 0xffff0001) {
+>   		msleep(delay);
+>   		delay *= 2;
+> -		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID,&l))
+> -			return NULL;
+> +		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+> +			return false;
+>   		/* Card hasn't responded in 60 seconds?  Must be stuck. */
+> -		if (delay>  60 * 1000) {
+> +		if (delay>  crs_timeout) {
+>   			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not "
+>   					"responding\n", pci_domain_nr(bus),
+>   					bus->number, PCI_SLOT(devfn),
+>   					PCI_FUNC(devfn));
+> -			return NULL;
+> +			return false;
+>   		}
+>   	}
 >
-> Now, question is, why ethernet card is generating inbound request with
-> such a wrong address. I have taken log of all the tx_desc->buffer_addr
-> programmed by software in function e1000_tx_queue. None of them is 64
-> bit or any invalid address.
+> +	return true;
+> +}
+> +
+> +/*
+> + * Read the config data for a PCI device, sanity-check it
+> + * and fill in the dev structure...
+> + */
+> +static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+> +{
+> +	struct pci_dev *dev;
+> +	u32 l;
+> +
+> +	if (!pci_bus_read_dev_vendor_id(bus, devfn,&l, 60*1000))
+> +		return NULL;
+> +
+>   	dev = alloc_pci_dev();
+>   	if (!dev)
+>   		return NULL;
+> Index: linux-2.6/drivers/pci/pci.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.h
+> +++ linux-2.6/drivers/pci/pci.h
+> @@ -208,6 +208,8 @@ enum pci_bar_type {
+>   	pci_bar_mem64,		/* A 64-bit memory BAR */
+>   };
 >
-> _______|_______________________________________________________________________
-> Packet(177916) Upstream 2.5(x1) TLP(1475) Mem MWr(32)(10:00000) Length(4)
-> _______| RequesterID(003:00:0) Tag(2) Address(0EB00200) 1st BE(1111)
-> _______| Last BE(1111) Data(4 dwords) LCRC(0x44E0407C)
-> _______| Time Stamp(0013 . 460 549 544 s)
-> _______|_______________________________________________________________________
-> Packet(177918) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1475)
-> _______| CRC 16(0x0EB7) Time Stamp(0013 . 460 551 144 s)
-> _______|_______________________________________________________________________
-> Packet(177940) Upstream 2.5(x1) TLP(1476) Mem MWr(32)(10:00000) Length(1)
-> _______| RequesterID(003:00:0) Tag(30) Address(0058A8F8) 1st BE(0011)
-> _______| Last BE(0000) Data(1 dword) LCRC(0xC21F32B6)
-> _______| Time Stamp(0013 . 460 588 544 s)
-> _______|_______________________________________________________________________
-> Packet(177942) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1476)
-> _______| CRC 16(0x69F5) Time Stamp(0013 . 460 590 088 s)
-> _______|_______________________________________________________________________
-> Packet(177946) Downstream 2.5(x1) TLP(309) Mem MRd(32)(00:00000) Length(1)
-> _______| RequesterID(002:00:0) Tag(19) Address(C01000C0) 1st BE(1111)
-> _______| Last BE(0000) LCRC(0x91BDA1F5) Time Stamp(0013 . 460 595 936 s)
-> _______|_______________________________________________________________________
-> Packet(177947) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(309)
-> _______| CRC 16(0x25C6) Time Stamp(0013 . 460 596 368 s)
-> _______|_______________________________________________________________________
-> Packet(177950) Upstream 2.5(x1) TLP(1477) Cpl CplD(10:01010) Length(1)
-> _______| RequesterID(002:00:0) Tag(19) CompleterID(003:00:0) Status(SC)
-> BCM(0)
-> _______| Byte Cnt(4) Lwr Addr(0x40) Data(1 dword) LCRC(0x8FE0D922)
-> _______| Time Stamp(0013 . 460 597 304 s)
-> _______|_______________________________________________________________________
-> Packet(177952) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1477)
-> _______| CRC 16(0xC8EE) Time Stamp(0013 . 460 598 840 s)
-> _______|_______________________________________________________________________
-> Packet(177999) Downstream 2.5(x1) TLP(310) Mem MWr(32)(10:00000) Length(1)
-> _______| RequesterID(002:00:0) Tag(0) Address(C0103818) 1st BE(1111)
-> _______| Last BE(0000) Data(1 dword) LCRC(0xA898D9A1)
-> _______| Time Stamp(0013 . 460 687 936 s)
-> _______|_______________________________________________________________________
-> Packet(178001) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(310)
-> _______| CRC 16(0xC6EA) Time Stamp(0013 . 460 688 384 s)
-> _______|_______________________________________________________________________
-> Packet(178004) Upstream 2.5(x1) TLP(1478) Mem MRd(32)(00:00000) Length(4)
-> _______| RequesterID(003:00:0) Tag(4) Address(0EAFB990) 1st BE(1111)
-> _______| Last BE(1111) LCRC(0xB54722D2) Time Stamp(0013 . 460 689 312 s)
-> _______|_______________________________________________________________________
-> Packet(178006) Downstream 2.5(x1) TLP(311) Cpl CplD(10:01010) Length(4)
-> _______| RequesterID(003:00:0) Tag(4) CompleterID(002:00:0) Status(SC)
-> BCM(0)
-> _______| Byte Cnt(16) Lwr Addr(0x10) Data(4 dwords) LCRC(0xFE303776)
-> _______| Time Stamp(0013 . 460 690 288 s)
-> _______|_______________________________________________________________________
-> Packet(178007) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(311)
-> _______| CRC 16(0x67F1) Time Stamp(0013 . 460 690 776 s)
-> _______|_______________________________________________________________________
-> Packet(178008) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1478)
-> _______| CRC 16(0x2BC2) Time Stamp(0013 . 460 690 824 s)
-> _______|_______________________________________________________________________
-> Packet(178010) Upstream 2.5(x1) TLP(1479) Mem MRd(64)(01:00000) Length(32)
-> _______| RequesterID(003:00:0) Tag(11) Address(AFECEB87:A9D88B00) 1st
-> BE(1100)
-> _______| Last BE(0011) LCRC(0x6BE341C9) Time Stamp(0013 . 460 691 680 s)
-> _______|_______________________________________________________________________
-> Packet(178011) Upstream 2.5(x1) TLP(1480) Mem MRd(64)(01:00000) Length(32)
-> _______| RequesterID(003:00:0) Tag(8) Address(AFECEB87:A9D88B7C) 1st
-> BE(1100)
-> _______| Last BE(0011) LCRC(0xAA5647BD) Time Stamp(0013 . 460 691 808 s)
-> _______|_______________________________________________________________________
-> Packet(178012) Upstream 2.5(x1) TLP(1481) Mem MRd(64)(01:00000) Length(32)
-> _______| RequesterID(003:00:0) Tag(9) Address(AFECEB87:A9D88BF8) 1st
-> BE(1100)
-> _______| Last BE(0011) LCRC(0xEEB1F63F) Time Stamp(0013 . 460 692 120 s)
-> _______|_______________________________________________________________________
-> Packet(178013) Upstream 2.5(x1) TLP(1482) Mem MRd(64)(01:00000) Length(32)
-> _______| RequesterID(003:00:0) Tag(10) Address(AFECEB87:A9D88C74) 1st
-> BE(1100)
-> _______| Last BE(0011) LCRC(0xA508142C) Time Stamp(0013 . 460 692 248 s)
-> _______|_______________________________________________________________________
-> Packet(178014) Downstream 2.5(x1) TLP(312) Cpl Cpl(00:01010) Length(0)
-> _______| RequesterID(003:00:0) Tag(11) CompleterID(002:00:0) Status(UR)-BAD
-> _______| BCM(0) Byte Cnt(124) Lwr Addr(0x02) LCRC(0xCE5540D2)
-> _______| Time Stamp(0013 . 460 692 328 s)
-> _______|_______________________________________________________________________
-> Packet(178015) Downstream 2.5(x1) TLP(313) Cpl Cpl(00:01010) Length(0)
-> _______| RequesterID(003:00:0) Tag(8) CompleterID(002:00:0) Status(UR)-BAD
-> _______| BCM(0) Byte Cnt(124) Lwr Addr(0x7E) LCRC(0x9FE2487D)
-> _______| Time Stamp(0013 . 460 692 456 s)
-> _______|_______________________________________________________________________
-> Packet(178016) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(312)
-> _______| CRC 16(0x086E) Time Stamp(0013 . 460 692 760 s)
-> _______|_______________________________________________________________________
-> Packet(178017) Downstream 2.5(x1) TLP(314) Cpl Cpl(00:01010) Length(0)
-> _______| RequesterID(003:00:0) Tag(9) CompleterID(002:00:0) Status(UR)-BAD
-> _______| BCM(0) Byte Cnt(124) Lwr Addr(0x7A) LCRC(0x097BF4DE)
-> _______| Time Stamp(0013 . 460 692 776 s)
-> _______|_______________________________________________________________________
-> Packet(178018) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(313)
-> _______| CRC 16(0xA975) Time Stamp(0013 . 460 692 888 s)
-> _______|_______________________________________________________________________
-> Packet(178019) Downstream 2.5(x1) TLP(315) Cpl Cpl(00:01010) Length(0)
-> _______| RequesterID(003:00:0) Tag(10) CompleterID(002:00:0) Status(UR)-BAD
-> _______| BCM(0) Byte Cnt(124) Lwr Addr(0x76) LCRC(0x64BDF921)
-> _______| Time Stamp(0013 . 460 692 904 s)
-> _______|_______________________________________________________________________
-> Packet(178020) Upstream 2.5(x1) TLP(1483) Msg Msg(01:10000)
-> _______| Msg Routing(To RC) Length(0) RequesterID(003:00:0) Tag(31)
-> _______| Message Code(ERR_FATAL) LCRC(0xCDA53E96)
-> _______| Time Stamp(0013 . 460 693 184 s)
-> _______|_______________________________________________________________________
-> Packet(178021) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1482)
-> _______| CRC 16(0xA771) Time Stamp(0013 . 460 693 208 s)
-> _______|_______________________________________________________________________
-> Packet(178023) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(314)
-> _______| CRC 16(0x4A59) Time Stamp(0013 . 460 693 280 s)
-> _______|_______________________________________________________________________
-> Packet(178024) Upstream 2.5(x1) TLP(1484) Msg Msg(01:10000)
-> _______| Msg Routing(To RC) Length(0) RequesterID(003:00:0) Tag(31)
-> _______| Message Code(ERR_FATAL) LCRC(0x86D9ACB6)
-> _______| Time Stamp(0013 . 460 693 312 s)
-> _______|_______________________________________________________________________
-> Packet(178025) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(315)
-> _______| CRC 16(0xEB42) Time Stamp(0013 . 460 693 408 s)
-> _______|_______________________________________________________________________
-> Packet(178026) Upstream 2.5(x1) TLP(1485) Msg Msg(01:10000)
-> _______| Msg Routing(To RC) Length(0) RequesterID(003:00:0) Tag(31)
-> _______| Message Code(ERR_FATAL) LCRC(0xC5120A31)
-> _______| Time Stamp(0013 . 460 693 632 s)
-> _______|_______________________________________________________________________
-> Packet(178028) Upstream 2.5(x1) TLP(1486) Msg Msg(01:10000)
-> _______| Msg Routing(To RC) Length(0) RequesterID(003:00:0) Tag(31)
-> _______| Message Code(ERR_FATAL) LCRC(0x41499062)
-> _______| Time Stamp(0013 . 460 693 792 s)
-> _______|_______________________________________________________________________
-> Packet(178029) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1486)
-> _______| CRC 16(0x231F) Time Stamp(0013 . 460 694 704 s)
-> _______|_______________________________________________________________________
->
+> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+> +                                 int crs_timeout);
+>   extern int pci_setup_device(struct pci_dev *dev);
+>   extern int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>   				struct resource *res, unsigned int reg);
 > --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> .
 >
 
