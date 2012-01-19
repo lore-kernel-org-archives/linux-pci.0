@@ -1,183 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 12/21] PCI: Merge pci_dev_resource_x and pci_dev_resource
-Date: Sat, 21 Jan 2012 02:08:28 -0800
-Message-Id: <1327140517-14811-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:60545 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751681Ab2ASWOU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Jan 2012 17:14:20 -0500
+Received: by lahc1 with SMTP id c1so259215lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 14:14:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXj8W4G_SRKCFU-gHJRZ+qENPAs8WAcZA_PVgoageHcoQ@mail.gmail.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+ <20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
+ <CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
+ <CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
+ <CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
+ <CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com> <CAE9FiQXj8W4G_SRKCFU-gHJRZ+qENPAs8WAcZA_PVgoageHcoQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 19 Jan 2012 15:13:57 -0700
+Message-ID: <CAErSpo5cAQVJq858QGi0N_TM91PsKj0jzvUUT8_yA9ezf_wXAQ@mail.gmail.com>
+Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
+ via host bridge
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_dev_resource_x is superset of pci_dev_resource
+On Thu, Jan 19, 2012 at 1:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jan 18, 2012 at 9:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Wed, Jan 18, 2012 at 10:27 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Wed, Jan 18, 2012 at 8:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> If we make a quirk for this machine, we still have the question of
+>>>> what to do with my patches.  I assert that if Linux ever reconfigures
+>>>> any bus numbers or does any configuration of hot-added P2P bridges, it
+>>>> must pay attention to the host bridge bus number window.  Therefore, I
+>>>> think we need something like this series even if we make a quirk.
+>>>
+>>> We may need more smart way to find unused bus range instead of just
+>>> just max+1 and ++max.
+>>>
+>>> For example:  one bridge (A) have two child bridges (B and C),
+>>> A: bus range: 10-2f
+>>> B: bus range: 11-1f
+>>> C: bus range: 20-2f
+>>>
+>>> when some broken case happen, B bus BIOS assigned bus range will be
+>>> all cleared in first pass.
+>>> but C bus is ok.  but in second bus, bus will be assigned to 30- .
+>>> that is totally wrong, We should still
+>>> try to use bus 11-1f at first for bus B.
+>>
+>> Yes, I agree we may need a better way to choose bus numbers in the
+>> first place.  My current patch (3/4) doesn't change how we choose
+>> them; it only rejects invalid ones.
+>
+> come out draft about bus number tracking and allocate bus range instead.
+>
+> please check attached patch.
 
-and those two are temp struct during resource reallocating.
+It's a pain to comment on attached patches vs. inline ones.
 
-pci_dev_resource usage is quite limted.
+You added bus_max to pci_scan_root_bus().  I'd prefer to pass a
+pointer to a struct resource, as we do for io & mem resources.  I'd
+like to move away from pci_scan_root_bus() and toward a
+pci_scan_host_bridge() (as in the patches I posted) that takes all the
+host bridge-related info: parent, domain, resources (including bus
+number range), ops, sysdata.  I don't like the current scheme of
+"create it with defaults and fix them later."
 
-So just use pci_dev_resource_x, and rename it as new pci_dev_resource.
+The printk %pR format supports bus numbers so you don't need to print
+them by hand.
 
--v2: According to Linus, Separate free_list change to another patch
+struct pci_bus already has secondary & subordinate.  I don't think
+adding a "struct resource busn_res" adds useful information except for
+the root bus, where the bus number range comes from something external
+like _CRS rather than from the upstream bridge config.
 
-Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |   36 +++++++++++++++---------------------
- 1 files changed, 15 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4c5509e..af2a98a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -31,12 +31,6 @@ struct pci_dev_resource {
- 	struct list_head list;
- 	struct resource *res;
- 	struct pci_dev *dev;
--};
--
--struct pci_dev_resource_x {
--	struct list_head list;
--	struct resource *res;
--	struct pci_dev *dev;
- 	resource_size_t start;
- 	resource_size_t end;
- 	resource_size_t add_size;
-@@ -72,7 +66,7 @@ static int add_to_list(struct list_head *head,
- 		 struct pci_dev *dev, struct resource *res,
- 		 resource_size_t add_size, resource_size_t min_align)
- {
--	struct pci_dev_resource_x *tmp;
-+	struct pci_dev_resource *tmp;
- 
- 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
- 	if (!tmp) {
-@@ -104,7 +98,7 @@ static void add_to_failed_list(struct list_head *head,
- static void remove_from_list(struct list_head *realloc_head,
- 				 struct resource *res)
- {
--	struct pci_dev_resource_x *dev_res_x, *tmp;
-+	struct pci_dev_resource *dev_res_x, *tmp;
- 
- 	list_for_each_entry_safe(dev_res_x, tmp, realloc_head, list) {
- 		if (dev_res_x->res == res) {
-@@ -118,7 +112,7 @@ static void remove_from_list(struct list_head *realloc_head,
- static resource_size_t get_res_add_size(struct list_head *realloc_head,
- 					struct resource *res)
- {
--	struct pci_dev_resource_x *dev_res_x;
-+	struct pci_dev_resource *dev_res_x;
- 
- 	list_for_each_entry(dev_res_x, realloc_head, list) {
- 		if (dev_res_x->res == res) {
-@@ -227,7 +221,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 		struct list_head *head)
- {
- 	struct resource *res;
--	struct pci_dev_resource_x *dev_res_x, *tmp;
-+	struct pci_dev_resource *dev_res_x, *tmp;
- 	struct pci_dev_resource *dev_res;
- 	resource_size_t add_size;
- 	int idx;
-@@ -325,7 +319,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 */
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
--	struct pci_dev_resource_x *dev_res_x;
-+	struct pci_dev_resource *dev_res_x;
- 	struct pci_dev_resource *dev_res;
- 
- 	/* Check if optional add_size is there */
-@@ -335,7 +329,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	/* Save original start, end, flags etc at first */
- 	list_for_each_entry(dev_res, head, list) {
- 		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
--			free_list(pci_dev_resource_x, &save_head);
-+			free_list(pci_dev_resource, &save_head);
- 			goto requested_and_reassign;
- 		}
- 	}
-@@ -353,12 +347,12 @@ static void __assign_resources_sorted(struct list_head *head,
- 		/* Remove head list from realloc_head list */
- 		list_for_each_entry(dev_res, head, list)
- 			remove_from_list(realloc_head, dev_res->res);
--		free_list(pci_dev_resource_x, &save_head);
-+		free_list(pci_dev_resource, &save_head);
- 		free_list(pci_dev_resource, head);
- 		return;
- 	}
- 
--	free_list(pci_dev_resource_x, &local_fail_head);
-+	free_list(pci_dev_resource, &local_fail_head);
- 	/* Release assigned resource */
- 	list_for_each_entry(dev_res, head, list)
- 		if (dev_res->res->parent)
-@@ -371,7 +365,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 		res->end = dev_res_x->end;
- 		res->flags = dev_res_x->flags;
- 	}
--	free_list(pci_dev_resource_x, &save_head);
-+	free_list(pci_dev_resource, &save_head);
- 
- requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
-@@ -1256,7 +1250,7 @@ pci_assign_unassigned_resources(void)
- 	int tried_times = 0;
- 	enum release_type rel_type = leaf_only;
- 	LIST_HEAD(fail_head);
--	struct pci_dev_resource_x *dev_res_x;
-+	struct pci_dev_resource *dev_res_x;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 	unsigned long failed_type;
-@@ -1304,7 +1298,7 @@ again:
- 	 */
- 	failed_type &= type_mask;
- 	if ((failed_type == IORESOURCE_IO) || (tried_times >= pci_try_num)) {
--		free_list(pci_dev_resource_x, &fail_head);
-+		free_list(pci_dev_resource, &fail_head);
- 		goto enable_and_dump;
- 	}
- 
-@@ -1335,7 +1329,7 @@ again:
- 		if (dev_res_x->dev->subordinate)
- 			res->flags = 0;
- 	}
--	free_list(pci_dev_resource_x, &fail_head);
-+	free_list(pci_dev_resource, &fail_head);
- 
- 	goto again;
- 
-@@ -1356,7 +1350,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 					want additional resources */
- 	int tried_times = 0;
- 	LIST_HEAD(fail_head);
--	struct pci_dev_resource_x *dev_res_x;
-+	struct pci_dev_resource *dev_res_x;
- 	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
-@@ -1372,7 +1366,7 @@ again:
- 
- 	if (tried_times >= 2) {
- 		/* still fail, don't need to try more */
--		free_list(pci_dev_resource_x, &fail_head);
-+		free_list(pci_dev_resource, &fail_head);
- 		goto enable_all;
- 	}
- 
-@@ -1400,7 +1394,7 @@ again:
- 		if (dev_res_x->dev->subordinate)
- 			res->flags = 0;
- 	}
--	free_list(pci_dev_resource_x, &fail_head);
-+	free_list(pci_dev_resource, &fail_head);
- 
- 	goto again;
- 
--- 
-1.7.7
-
+This makes pci_scan_bridge() significantly more ugly than it already
+is.  I think it needs to get broken up.
