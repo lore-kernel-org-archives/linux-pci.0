@@ -1,157 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 09/21] PCI: Move pdev_sort_resources() to setup-bus.c
-Date: Sat, 21 Jan 2012 02:08:25 -0800
-Message-Id: <1327140517-14811-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40212 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756375Ab2ASJjj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2012 04:39:39 -0500
+Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 679F83EE0BC
+	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:38 +0900 (JST)
+Received: from smail (m1 [127.0.0.1])
+	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 50AFD45DE56
+	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:38 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
+	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 2E21A45DE54
+	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:38 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 1D1321DB803C
+	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:38 +0900 (JST)
+Received: from m106.s.css.fujitsu.com (m106.s.css.fujitsu.com [10.240.81.146])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id BBE511DB804D
+	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:37 +0900 (JST)
+Message-ID: <4F17E4CA.7010701@jp.fujitsu.com>
+Date: Thu, 19 Jan 2012 18:39:22 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+MIME-Version: 1.0
+To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
+CC: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
+ driver
+References: <20120109211006.2135.13551.sendpatchset@dhcp-189-101.bos.redhat.com>
+In-Reply-To: <20120109211006.2135.13551.sendpatchset@dhcp-189-101.bos.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could move definition of struct resource_list to setup_bus.c
+(2012/01/10 6:10), MUNEDA Takahiro wrote:
 
-later could convert resource_list to regular list.
+(snip.)
 
-Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/setup-res.c |   47 -----------------------------------------------
- include/linux/pci.h     |    1 -
- 3 files changed, 46 insertions(+), 48 deletions(-)
+> --- linux-3.2.orig/drivers/pci/hotplug/pciehp_core.c
+> +++ linux-3.2/drivers/pci/hotplug/pciehp_core.c
+> @@ -42,6 +42,7 @@ int pciehp_debug;
+>   int pciehp_poll_mode;
+>   int pciehp_poll_time;
+>   int pciehp_force;
+> +int pciehp_msi_disabled;
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c79ce4e..f233d12 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -137,6 +137,52 @@ static resource_size_t get_res_add_size(struct resource_list_x *realloc_head,
- 	return 0;
- }
- 
-+/* Sort resources by alignment */
-+static void pdev_sort_resources(struct pci_dev *dev, struct resource_list *head)
-+{
-+	int i;
-+
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *r;
-+		struct resource_list *list, *tmp;
-+		resource_size_t r_align;
-+
-+		r = &dev->resource[i];
-+
-+		if (r->flags & IORESOURCE_PCI_FIXED)
-+			continue;
-+
-+		if (!(r->flags) || r->parent)
-+			continue;
-+
-+		r_align = pci_resource_alignment(dev, r);
-+		if (!r_align) {
-+			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
-+				 i, r);
-+			continue;
-+		}
-+		for (list = head; ; list = list->next) {
-+			resource_size_t align = 0;
-+			struct resource_list *ln = list->next;
-+
-+			if (ln)
-+				align = pci_resource_alignment(ln->dev, ln->res);
-+
-+			if (r_align > align) {
-+				tmp = kmalloc(sizeof(*tmp), GFP_KERNEL);
-+				if (!tmp)
-+					panic("pdev_sort_resources(): "
-+					      "kmalloc() failed!\n");
-+				tmp->next = ln;
-+				tmp->res = r;
-+				tmp->dev = dev;
-+				list->next = tmp;
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- static void __dev_sort_resources(struct pci_dev *dev,
- 				 struct resource_list *head)
- {
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 8b25f9c..4b1f376 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -280,53 +280,6 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 	return ret;
- }
- 
--
--/* Sort resources by alignment */
--void pdev_sort_resources(struct pci_dev *dev, struct resource_list *head)
--{
--	int i;
--
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		struct resource *r;
--		struct resource_list *list, *tmp;
--		resource_size_t r_align;
--
--		r = &dev->resource[i];
--
--		if (r->flags & IORESOURCE_PCI_FIXED)
--			continue;
--
--		if (!(r->flags) || r->parent)
--			continue;
--
--		r_align = pci_resource_alignment(dev, r);
--		if (!r_align) {
--			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
--				 i, r);
--			continue;
--		}
--		for (list = head; ; list = list->next) {
--			resource_size_t align = 0;
--			struct resource_list *ln = list->next;
--
--			if (ln)
--				align = pci_resource_alignment(ln->dev, ln->res);
--
--			if (r_align > align) {
--				tmp = kmalloc(sizeof(*tmp), GFP_KERNEL);
--				if (!tmp)
--					panic("pdev_sort_resources(): "
--					      "kmalloc() failed!\n");
--				tmp->next = ln;
--				tmp->res = r;
--				tmp->dev = dev;
--				list->next = tmp;
--				break;
--			}
--		}
--	}
--}
--
- int pci_enable_resources(struct pci_dev *dev, int mask)
- {
- 	u16 cmd, old_cmd;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 841ba6f..aa1d0d9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -895,7 +895,6 @@ int pci_claim_resource(struct pci_dev *, int);
- void pci_assign_unassigned_resources(void);
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
- void pdev_enable_device(struct pci_dev *);
--void pdev_sort_resources(struct pci_dev *, struct resource_list *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
- 		    int (*)(const struct pci_dev *, u8, u8));
--- 
-1.7.7
+I think pciehp_msi_disabled needs to be defined in port driver
+side because pciehp can be built as a module.
 
+>   struct workqueue_struct *pciehp_wq;
+>   struct workqueue_struct *pciehp_ordered_wq;
+>
+> @@ -57,10 +58,12 @@ module_param(pciehp_debug, bool, 0644);
+>   module_param(pciehp_poll_mode, bool, 0644);
+>   module_param(pciehp_poll_time, int, 0644);
+>   module_param(pciehp_force, bool, 0644);
+> +module_param(pciehp_msi_disabled, bool, 0644);
+
+When pciehp is build as a module, the pciehp driver is loaded
+after the MSI(-X) of the port is initialized. So I don't think
+this module parameter works. When pciehp is build as built-in,
+pciehp.pciehp_msi_disabled would work, but I think it is
+meaningless because you also provide "pcie_hp=" boot parameter
+(and I don't know what will happen if user specify different
+values for pciehp.pciehp_msi_disabled and pcie_hp). As a result,
+I think this module parameter should be removed.
+
+>   MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
+>   MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
+>   MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
+>   MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
+> +MODULE_PARM_DESC(pciehp_msi, "MSI/MSI-X enabled or not");
+
+Maybe it should be "pciehp_msi_disabled" instead of "pciehp_msi"?
+Anyway, I think we should remove this for the same reason above.
+
+
+>
+>   #define PCIE_MODULE_NAME "pciehp"
+>
+> @@ -72,6 +75,15 @@ static int get_attention_status	(struct
+>   static int get_latch_status	(struct hotplug_slot *slot, u8 *value);
+>   static int get_adapter_status	(struct hotplug_slot *slot, u8 *value);
+>
+> +static int __init pciehp_setup(char *str)
+> +{
+> +	if (!strncmp(str, "nomsi", 5))
+> +		pciehp_msi_disabled = true;
+> +
+> +	return 1;
+> +}
+> +__setup("pcie_hp=", pciehp_setup);
+> +
+
+I think this needs to be in port driver side, otherwise pcie_hp=
+boot parameter doesn't work when building pciehp as a module.
+Additionally, I got the the following warning message when building
+pciehp as a module.
+
+drivers/pci/hotplug/pciehp_core.c:77: warning: 'pciehp_setup' defined but not used
+
+(snip.)
+
+>
+> -	/* We have to use INTx if MSI cannot be used for PCIe PME. */
+> -	if ((mask&  PCIE_PORT_SERVICE_PME)&&  pcie_pme_no_msi()) {
+> +	/* We have to use INTx if MSI cannot be used for PCIe PME or pciehp. */
+> +	if (((mask&  PCIE_PORT_SERVICE_PME)&&  pcie_pme_no_msi()) ||
+> +	    ((mask&  PCIE_PORT_SERVICE_HP)&&  pciehp_no_msi()) ||
+> +	    ((mask&  PCIE_PORT_SERVICE_HP)&&
+> +	     (dev->vendor == PCI_VENDOR_ID_IDT&&  dev->device == 0x807f))) {
+
+How about implementing vendor/device check as a quirk?
+
+Regards,
+Kenji Kaneshige
