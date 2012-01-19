@@ -1,28 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43025 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751881Ab2A3Knl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Jan 2012 05:43:41 -0500
-From: Thomas Renninger <trenn@suse.de>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH] PCI: workaround hard-wired bus number
-Date: Mon, 30 Jan 2012 11:43:39 +0100
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai.lu@oracle.com>
-References: <1327655507-33999-1-git-send-email-trenn@suse.de> <CAErSpo54EuF3ZmiHZmCvTK5vd0oHws7W+82WPYwLQ9PeL1MG6g@mail.gmail.com> <20120127093835.1d2737db@jbarnes-desktop>
-In-Reply-To: <20120127093835.1d2737db@jbarnes-desktop>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:40975 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753927Ab2ASWXL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2012 17:23:11 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-6"
-Message-Id: <201201301143.39449.trenn@suse.de>
+In-Reply-To: <CAErSpo5cAQVJq858QGi0N_TM91PsKj0jzvUUT8_yA9ezf_wXAQ@mail.gmail.com>
+References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+	<20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
+	<CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
+	<CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
+	<CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
+	<CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com>
+	<CAE9FiQXj8W4G_SRKCFU-gHJRZ+qENPAs8WAcZA_PVgoageHcoQ@mail.gmail.com>
+	<CAErSpo5cAQVJq858QGi0N_TM91PsKj0jzvUUT8_yA9ezf_wXAQ@mail.gmail.com>
+Date: Thu, 19 Jan 2012 14:23:10 -0800
+Message-ID: <CAE9FiQWH0KqsC3Yin0TS+RVCvtjTi6j5wa6aUf19qU3xuQsmOA@mail.gmail.com>
+Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
+ via host bridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 27, 2012 06:38:35 PM Jesse Barnes wrote:
-...
-> Thomas or Yinghai, any references for this one just in case someone
-> wants to clean it up later or get testing for a related change?
+On Thu, Jan 19, 2012 at 2:13 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Jan 19, 2012 at 1:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> please check attached patch.
+>
+> It's a pain to comment on attached patches vs. inline ones.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42692
+Sorry, gmail does not allow inline patch.
 
-  Thomas
+>
+> You added bus_max to pci_scan_root_bus().  I'd prefer to pass a
+> pointer to a struct resource, as we do for io & mem resources.
+
+Well that depends.
+
+> I'd
+> like to move away from pci_scan_root_bus() and toward a
+> pci_scan_host_bridge() (as in the patches I posted) that takes all the
+> host bridge-related info: parent, domain, resources (including bus
+> number range), ops, sysdata.  I don't like the current scheme of
+> "create it with defaults and fix them later."
+
+No, struct host bridge is bad idea.  you are tracking host bridge and
+peer root bus the same time.
+
+>
+> The printk %pR format supports bus numbers so you don't need to print
+> them by hand.
+
+later. will remove the debug print.
+
+>
+> struct pci_bus already has secondary & subordinate.  I don't think
+> adding a "struct resource busn_res" adds useful information except for
+> the root bus, where the bus number range comes from something external
+> like _CRS rather than from the upstream bridge config.
+
+no, we need that to tracking the busn usage. aka insert them into
+iobusn_resource tree.
+
+late it should be convert to list head even. for handling transparent bridge.
+
+>
+> This makes pci_scan_bridge() significantly more ugly than it already
+> is.  I think it needs to get broken up.
+
+Sure.
+
+Yinghai
