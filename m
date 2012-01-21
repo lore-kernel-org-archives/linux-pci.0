@@ -1,51 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:54406 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752240Ab2A3DmT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jan 2012 22:42:19 -0500
-Message-ID: <4F26118F.7090803@jp.fujitsu.com>
-Date: Mon, 30 Jan 2012 12:42:07 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/7] PCI: pcie hotplug related patch
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org> <CAE9FiQUFYcaVWorPPP7PQqiBPnKv-iBkPm_qbGz4T_xLR2THiQ@mail.gmail.com> <20120127103601.09e3f771@jbarnes-desktop> <CAE9FiQU70tBVCK-73x7kTX82XE3H03HTwP+HaS2E4_GqwMY1SQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQU70tBVCK-73x7kTX82XE3H03HTwP+HaS2E4_GqwMY1SQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 00/21] PCI : bridge resource reallocation patchset
+Date: Sat, 21 Jan 2012 02:08:16 -0800
+Message-Id: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/01/28 3:58), Yinghai Lu wrote:
-> On Fri, Jan 27, 2012 at 10:36 AM, Jesse Barnes<jbarnes@virtuousgeek.org>  wrote:
->
->>>
->>>        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>> for-pci-hp
->>
->> Ok I dropped the earlier link state check; can you re-post the series
->> with Linus's comments addressed?
->
-> resent.
->
-> first one patch should get Linus's Ack, but he just said that solution
-> is the best so far.
->
->>
->> Kenji-san, do you have time to at least review these?  Testing would be
->> nice too...
->
-> others should already address all Kenji's reviews.
->
+a181193: PCI: only enable pci realloc when SRIOV bar is not assigned
+6662c73: PCI: Make pci bridge reallocating enabled/disabled
+1a60212: PCI: Retry on type IORESOURCE_IO allocation.
+59e4fd4: PCI: Fix cardbus bridge resources as optional size handling
+daa08ff: PCI: Disable cardbus bridge MEM1 pref CTL
+e11dc0e: PCI: remove add_to_failed_list()
+11af29c: PCI: add debug print out for add_size
+6a30c7b: PCI: Change free_list() to function
+e5aa050: PCI: Rename dev_res_x to add_res or fail_res
+ff503cf: PCI: Merge pci_dev_resource_x and pci_dev_resource
+2874630: PCI: Replace resource_list with generic list
+8eedd1e: PCI: Move struct resource_list to setup-bus.c
+23a6d3e: PCI: Move pdev_sort_resources() to setup-bus.c
+93acbd6: PCI: Fixing multiple retrying with pci resource optional resources allocation under multi bridges
+7f5dac3: PCI: Make pci_rescan_bus handle add_list
+18dd9be: PCI: Make rescan bus could increase bridge resource size if needed
+52e0afc: PCI: Using add_list in pcie hotplug path.
+2b6542d: PCI: Try to assign required+option size at first
+4beb962: PCI: Move get_res_add_size() early
+8cb9020: PCI: Make add_to_list() return status
+8535f21: PCI : Calculate right add_size
 
-I have a chance to test the patches in this week. I will do it and report
-the result. For some patches, I don't have any environment to reproduce
-the problem the patch wants to solve. So it is difficult for me to confirm
-the patch fix the problem. But I will test them from the regression
-point of view.
+those patches will fix optional resource size pass over parent bus problem.
 
-Regards,
-Kenji Kaneshige
+and try allocate request + optional resource at first, and then if failed will
+fall back to get requested at first then try to expand to optional one.
+
+at last will try auto detect if we need to realloc bridge resource.
+
+Also replace local resource_list and resource_list_x with generic list.
+
+or get from
+
+	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci2
+
+Thanks
+
+Yinghai
+
+ Documentation/kernel-parameters.txt |    7 +-
+ drivers/pci/pci-sysfs.c             |    5 +-
+ drivers/pci/pci.c                   |    4 +-
+ drivers/pci/pci.h                   |    2 +-
+ drivers/pci/probe.c                 |   22 +-
+ drivers/pci/setup-bus.c             |  629 ++++++++++++++++++++++++-----------
+ drivers/pci/setup-res.c             |   52 +---
+ include/linux/ioport.h              |    6 -
+ include/linux/pci.h                 |    2 +-
+ 9 files changed, 451 insertions(+), 278 deletions(-)
+
+
+
+
