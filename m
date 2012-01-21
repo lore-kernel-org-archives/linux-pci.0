@@ -1,85 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:60545 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751681Ab2ASWOU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Jan 2012 17:14:20 -0500
-Received: by lahc1 with SMTP id c1so259215lah.19
-        for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 14:14:18 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <4F1B0BCB.4090901@xenotime.net>
+Date: Sat, 21 Jan 2012 11:02:35 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXj8W4G_SRKCFU-gHJRZ+qENPAs8WAcZA_PVgoageHcoQ@mail.gmail.com>
-References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
- <20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
- <CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
- <CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
- <CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
- <CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com> <CAE9FiQXj8W4G_SRKCFU-gHJRZ+qENPAs8WAcZA_PVgoageHcoQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 19 Jan 2012 15:13:57 -0700
-Message-ID: <CAErSpo5cAQVJq858QGi0N_TM91PsKj0jzvUUT8_yA9ezf_wXAQ@mail.gmail.com>
-Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
- via host bridge
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [PATCH 3/14] kernel-doc: fix new warnings in pci
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 19, 2012 at 1:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Jan 18, 2012 at 9:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Wed, Jan 18, 2012 at 10:27 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Wed, Jan 18, 2012 at 8:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> If we make a quirk for this machine, we still have the question of
->>>> what to do with my patches.  I assert that if Linux ever reconfigures
->>>> any bus numbers or does any configuration of hot-added P2P bridges, it
->>>> must pay attention to the host bridge bus number window.  Therefore, I
->>>> think we need something like this series even if we make a quirk.
->>>
->>> We may need more smart way to find unused bus range instead of just
->>> just max+1 and ++max.
->>>
->>> For example:  one bridge (A) have two child bridges (B and C),
->>> A: bus range: 10-2f
->>> B: bus range: 11-1f
->>> C: bus range: 20-2f
->>>
->>> when some broken case happen, B bus BIOS assigned bus range will be
->>> all cleared in first pass.
->>> but C bus is ok.  but in second bus, bus will be assigned to 30- .
->>> that is totally wrong, We should still
->>> try to use bus 11-1f at first for bus B.
->>
->> Yes, I agree we may need a better way to choose bus numbers in the
->> first place.  My current patch (3/4) doesn't change how we choose
->> them; it only rejects invalid ones.
->
-> come out draft about bus number tracking and allocate bus range instead.
->
-> please check attached patch.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-It's a pain to comment on attached patches vs. inline ones.
+Fix new kernel-doc warnings:
 
-You added bus_max to pci_scan_root_bus().  I'd prefer to pass a
-pointer to a struct resource, as we do for io & mem resources.  I'd
-like to move away from pci_scan_root_bus() and toward a
-pci_scan_host_bridge() (as in the patches I posted) that takes all the
-host bridge-related info: parent, domain, resources (including bus
-number range), ops, sysdata.  I don't like the current scheme of
-"create it with defaults and fix them later."
+Warning(drivers/pci/pci.c:2811): No description found for parameter 'dev'
+Warning(drivers/pci/pci.c:2811): Excess function parameter 'pdev' description in 'pci_intx_mask_supported'
+Warning(drivers/pci/pci.c:2894): No description found for parameter 'dev'
+Warning(drivers/pci/pci.c:2894): Excess function parameter 'pdev' description in 'pci_check_and_mask_intx'
+Warning(drivers/pci/pci.c:2908): No description found for parameter 'dev'
+Warning(drivers/pci/pci.c:2908): Excess function parameter 'pdev' description in 'pci_check_and_unmask_intx'
 
-The printk %pR format supports bus numbers so you don't need to print
-them by hand.
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+---
+ drivers/pci/pci.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-struct pci_bus already has secondary & subordinate.  I don't think
-adding a "struct resource busn_res" adds useful information except for
-the root bus, where the bus number range comes from something external
-like _CRS rather than from the upstream bridge config.
-
-This makes pci_scan_bridge() significantly more ugly than it already
-is.  I think it needs to get broken up.
+--- lnx-33-rc1.orig/drivers/pci/pci.c
++++ lnx-33-rc1/drivers/pci/pci.c
+@@ -2802,7 +2802,7 @@ pci_intx(struct pci_dev *pdev, int enabl
+ 
+ /**
+  * pci_intx_mask_supported - probe for INTx masking support
+- * @pdev: the PCI device to operate on
++ * @dev: the PCI device to operate on
+  *
+  * Check if the device dev support INTx masking via the config space
+  * command word.
+@@ -2884,7 +2884,7 @@ done:
+ 
+ /**
+  * pci_check_and_mask_intx - mask INTx on pending interrupt
+- * @pdev: the PCI device to operate on
++ * @dev: the PCI device to operate on
+  *
+  * Check if the device dev has its INTx line asserted, mask it and
+  * return true in that case. False is returned if not interrupt was
+@@ -2898,7 +2898,7 @@ EXPORT_SYMBOL_GPL(pci_check_and_mask_int
+ 
+ /**
+  * pci_check_and_mask_intx - unmask INTx of no interrupt is pending
+- * @pdev: the PCI device to operate on
++ * @dev: the PCI device to operate on
+  *
+  * Check if the device dev has its INTx line asserted, unmask it if not
+  * and return true. False is returned and the mask remains active if
