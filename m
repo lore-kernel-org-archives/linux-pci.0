@@ -1,44 +1,34 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1327139539-14301-7-git-send-email-yinghai@kernel.org>
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org> <1327139539-14301-7-git-send-email-yinghai@kernel.org>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 23 Jan 2012 08:13:59 -0800
-Message-ID: <CA+55aFzP4xEbcNmZ+MS0SQ3LrULzSq+dBiT_X9U-bPpR-Ukgrw@mail.gmail.com>
-Subject: Re: [PATCH 6/7] pciehp: Add Disable/enable link functions
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai.lu@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 0/7] PCI: pcie hotplug related patch
+Date: Sat, 21 Jan 2012 01:52:12 -0800
+Message-Id: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 21, 2012 at 1:52 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> +
-> +       retval = pciehp_readw(ctrl, PCI_EXP_LNKCTL, &lnk_ctrl);
-> +       if (retval) {
-> +               ctrl_err(ctrl, "Cannot read LNKCTRL register\n");
-> +               return retval;
-> +       }
+b40c9ef: pciehp: Disable/enable link during slot power off/on
+fe877ae: pciehp: Add Disable/enable link functions
+292e286: pciehp: Add pcie_wait_link_not_active()
+186b3fd: pciehp: print out link status when dlla get active.
+2781df4: pciehp: Checking pci conf reading to new added device instead of sleep 1s
+bf1c4ac: PCI: Separate pci_bus_read_dev_vendor_id from pci_scan_device
+601c6f1: PCI: Make sriov work with hotplug remove
 
-Is there really any point at all in checking the return value of that
-readw() function?
+ drivers/pci/hotplug/pciehp_hpc.c |  133 +++++++++++++++++++++++++++++++-------
+ drivers/pci/pci.h                |    2 +
+ drivers/pci/probe.c              |   48 +++++++++-----
+ drivers/pci/remove.c             |   28 ++++++++-
+ 4 files changed, 169 insertions(+), 42 deletions(-)
 
-Nobody actually ever sets it. We should stop even bothering to pretend
-to care. There is no return value in real life.
+First one is for hotplug with sriov under bridge.
+following two are for hotplug probing with pci conf reading.
+Last four are for pcie link disable when power off slots.
 
-If the device doesn't exist or the read fails, you will never ever get
-an error *anyway*. You'll likely get 0xffff, and possibly a machine
-check exception. And that is unlikely to ever change - even if the
-hardware were to do it, it's insane to do error checking on an
-individual IO level. It causes more problems than it could possibly
-ever solve - error checking has to be done at a different level than
-on some random individual access.
+Thanks
 
-We should make the return type of pci_read_config_word() be 'void',
-instead of having code like this that looks like it is careful, but in
-actual fact in reality is just totally pointless.
-
-                          Linus
+Yinghai Lu
