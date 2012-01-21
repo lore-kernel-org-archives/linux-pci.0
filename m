@@ -1,68 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56239 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932200Ab2ARRqu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jan 2012 12:46:50 -0500
-Received: by lahc1 with SMTP id c1so2372213lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 09:46:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
-References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
- <20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
- <CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
- <CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com> <CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 18 Jan 2012 10:46:28 -0700
-Message-ID: <CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com>
-Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
- via host bridge
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 09/21] PCI: Move pdev_sort_resources() to setup-bus.c
+Date: Sat, 21 Jan 2012 02:08:25 -0800
+Message-Id: <1327140517-14811-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 18, 2012 at 10:27 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Jan 18, 2012 at 8:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> If we make a quirk for this machine, we still have the question of
->> what to do with my patches.  I assert that if Linux ever reconfigures
->> any bus numbers or does any configuration of hot-added P2P bridges, it
->> must pay attention to the host bridge bus number window.  Therefore, I
->> think we need something like this series even if we make a quirk.
->
-> We may need more smart way to find unused bus range instead of just
-> just max+1 and ++max.
->
-> For example:  one bridge (A) have two child bridges (B and C),
-> A: bus range: 10-2f
-> B: bus range: 11-1f
-> C: bus range: 20-2f
->
-> when some broken case happen, B bus BIOS assigned bus range will be
-> all cleared in first pass.
-> but C bus is ok.  but in second bus, bus will be assigned to 30- .
-> that is totally wrong, We should still
-> try to use bus 11-1f at first for bus B.
+So we could move definition of struct resource_list to setup_bus.c
 
-Yes, I agree we may need a better way to choose bus numbers in the
-first place.  My current patch (3/4) doesn't change how we choose
-them; it only rejects invalid ones.
+later could convert resource_list to regular list.
 
-> your patches should be ok, only exception should be considered: some
-> default link root bus could access
-> out of bus range state with _CRS stating.  some kind of transparent
-> bridge concept.
+Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/setup-res.c |   47 -----------------------------------------------
+ include/linux/pci.h     |    1 -
+ 3 files changed, 46 insertions(+), 48 deletions(-)
 
-I'm afraid I couldn't make any sense out of the paragraph above.  If
-we don't have any information about host bridge bus number windows
-(for example, for bridges not described in ACPI), I think we'll have
-to default to [bus 00-ff].  That's effectively what these patches
-already do.  We only build the struct pci_host_bridge for ACPI
-bridges, so the check I added in pci_add_new_bus() does nothing for
-non-ACPI bridges.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c79ce4e..f233d12 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -137,6 +137,52 @@ static resource_size_t get_res_add_size(struct resource_list_x *realloc_head,
+ 	return 0;
+ }
+ 
++/* Sort resources by alignment */
++static void pdev_sort_resources(struct pci_dev *dev, struct resource_list *head)
++{
++	int i;
++
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *r;
++		struct resource_list *list, *tmp;
++		resource_size_t r_align;
++
++		r = &dev->resource[i];
++
++		if (r->flags & IORESOURCE_PCI_FIXED)
++			continue;
++
++		if (!(r->flags) || r->parent)
++			continue;
++
++		r_align = pci_resource_alignment(dev, r);
++		if (!r_align) {
++			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
++				 i, r);
++			continue;
++		}
++		for (list = head; ; list = list->next) {
++			resource_size_t align = 0;
++			struct resource_list *ln = list->next;
++
++			if (ln)
++				align = pci_resource_alignment(ln->dev, ln->res);
++
++			if (r_align > align) {
++				tmp = kmalloc(sizeof(*tmp), GFP_KERNEL);
++				if (!tmp)
++					panic("pdev_sort_resources(): "
++					      "kmalloc() failed!\n");
++				tmp->next = ln;
++				tmp->res = r;
++				tmp->dev = dev;
++				list->next = tmp;
++				break;
++			}
++		}
++	}
++}
++
+ static void __dev_sort_resources(struct pci_dev *dev,
+ 				 struct resource_list *head)
+ {
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 8b25f9c..4b1f376 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -280,53 +280,6 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+ 	return ret;
+ }
+ 
+-
+-/* Sort resources by alignment */
+-void pdev_sort_resources(struct pci_dev *dev, struct resource_list *head)
+-{
+-	int i;
+-
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		struct resource *r;
+-		struct resource_list *list, *tmp;
+-		resource_size_t r_align;
+-
+-		r = &dev->resource[i];
+-
+-		if (r->flags & IORESOURCE_PCI_FIXED)
+-			continue;
+-
+-		if (!(r->flags) || r->parent)
+-			continue;
+-
+-		r_align = pci_resource_alignment(dev, r);
+-		if (!r_align) {
+-			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+-				 i, r);
+-			continue;
+-		}
+-		for (list = head; ; list = list->next) {
+-			resource_size_t align = 0;
+-			struct resource_list *ln = list->next;
+-
+-			if (ln)
+-				align = pci_resource_alignment(ln->dev, ln->res);
+-
+-			if (r_align > align) {
+-				tmp = kmalloc(sizeof(*tmp), GFP_KERNEL);
+-				if (!tmp)
+-					panic("pdev_sort_resources(): "
+-					      "kmalloc() failed!\n");
+-				tmp->next = ln;
+-				tmp->res = r;
+-				tmp->dev = dev;
+-				list->next = tmp;
+-				break;
+-			}
+-		}
+-	}
+-}
+-
+ int pci_enable_resources(struct pci_dev *dev, int mask)
+ {
+ 	u16 cmd, old_cmd;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 841ba6f..aa1d0d9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -895,7 +895,6 @@ int pci_claim_resource(struct pci_dev *, int);
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+ void pdev_enable_device(struct pci_dev *);
+-void pdev_sort_resources(struct pci_dev *, struct resource_list *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+ 		    int (*)(const struct pci_dev *, u8, u8));
+-- 
+1.7.7
 
-If you're suggesting that we need to add some exception (a
-"transparent bridge concept"?), can you clarify or suggest a patch?
-
-Bjorn
