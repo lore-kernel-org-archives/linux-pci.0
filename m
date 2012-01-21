@@ -1,62 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:50641 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751985Ab2A0Sj6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:39:58 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120127102218.3dde7360@jbarnes-desktop>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-	<1327140517-14811-18-git-send-email-yinghai@kernel.org>
-	<20120127102218.3dde7360@jbarnes-desktop>
-Date: Fri, 27 Jan 2012 10:39:57 -0800
-Message-ID: <CAE9FiQV2_zTpN6B98SFCL79GwSYGwajG=xr_0qOMoesS-crwow@mail.gmail.com>
-Subject: Re: [PATCH 17/21] PCI: Disable cardbus bridge MEM1 pref CTL
+Received: from acsinet15.oracle.com ([141.146.126.227]:22180 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754012Ab2AUKIz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:08:55 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
 Cc: Ram Pai <linuxram@us.ibm.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 02/21] PCI: Make add_to_list() return status
+Date: Sat, 21 Jan 2012 02:08:18 -0800
+Message-Id: <1327140517-14811-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 27, 2012 at 10:22 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Sat, 21 Jan 2012 02:08:33 -0800
-> Yinghai Lu <yinghai@kernel.org> wrote:
->
->> Some BIOS enable both pref for MEM0 and MEM1.
->>
->> but we assume MEM1 is non-pref...
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/setup-bus.c |    8 ++++++++
->>  1 files changed, 8 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 090217a..d5897c3 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -914,6 +914,14 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
->>       if (realloc_head)
->>               add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
->>
->> +     /* MEM1 must not be pref mmio */
->> +     pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
->> +     if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
->> +             ctrl &= ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
->> +             pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
->> +             pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
->> +     }
->> +
->>       /*
->>        * Check whether prefetchable memory is supported
->>        * by this bridge.
->
-> Is there an actual bug report for this one where prefetchable regions
-> are causing trouble?  I can see that they would I just wonder if this
-> bug is hidden by some other...
+will be used for resource_list_x duplication for try requested+optional at first.
 
-Yes, it should be hidden  by some others.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-Yinghai
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9d932f4..0282fde 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -64,7 +64,7 @@ void pci_realloc(void)
+  * @add_size:	additional size to be optionally added
+  *              to the resource
+  */
+-static void add_to_list(struct resource_list_x *head,
++static int add_to_list(struct resource_list_x *head,
+ 		 struct pci_dev *dev, struct resource *res,
+ 		 resource_size_t add_size, resource_size_t min_align)
+ {
+@@ -75,7 +75,7 @@ static void add_to_list(struct resource_list_x *head,
+ 	tmp = kmalloc(sizeof(*tmp), GFP_KERNEL);
+ 	if (!tmp) {
+ 		pr_warning("add_to_list: kmalloc() failed!\n");
+-		return;
++		return -ENOMEM;
+ 	}
+ 
+ 	tmp->next = ln;
+@@ -87,6 +87,8 @@ static void add_to_list(struct resource_list_x *head,
+ 	tmp->add_size = add_size;
+ 	tmp->min_align = min_align;
+ 	list->next = tmp;
++
++	return 0;
+ }
+ 
+ static void add_to_failed_list(struct resource_list_x *head,
+-- 
+1.7.7
+
