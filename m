@@ -1,169 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:63001 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754576Ab2AWWam (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 17:30:42 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWt7j+Eoo_xhFmaGGh7hA-j2x991KZajmberf8Kod5G1g@mail.gmail.com>
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-	<1327139539-14301-2-git-send-email-yinghai@kernel.org>
-	<CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
-	<CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
-	<CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
-	<CAE9FiQXDHHJ0rG6hd6a3B+f0ZyJmjJ3rJGNWTsCwn21o+84C_Q@mail.gmail.com>
-	<CA+55aFy4nv5bYdjiZM2HY1E=RU_CaBoQWy6iWXReAK98yRKZpw@mail.gmail.com>
-	<CAE9FiQWt7j+Eoo_xhFmaGGh7hA-j2x991KZajmberf8Kod5G1g@mail.gmail.com>
-Date: Mon, 23 Jan 2012 14:30:41 -0800
-Message-ID: <CAE9FiQW5VZZrdQmuKF6_4dvTDUO9xPL=uqo0KaohnJ4xboDwSA@mail.gmail.com>
-Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
+Received: from acsinet15.oracle.com ([141.146.126.227]:17450 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754594Ab2AUKY1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:24:27 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Content-Type: multipart/mixed; boundary=20cf3071c7fa9d3bca04b7399407
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [RFC PATCH 3/3] PCI: kill pci_fixup_parent_subordinate_busnr()
+Date: Sat, 21 Jan 2012 02:24:08 -0800
+Message-Id: <1327141448-15281-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327141448-15281-1-git-send-email-yinghai@kernel.org>
+References: <1327141448-15281-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---20cf3071c7fa9d3bca04b7399407
-Content-Type: text/plain; charset=ISO-8859-1
+Now we can safely extend parent top and shrink them according iobusn_resource tree.
 
-On Mon, Jan 23, 2012 at 1:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Jan 23, 2012 at 11:44 AM, Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
->> On Mon, Jan 23, 2012 at 11:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>
->>> Maybe we can put VF and PF in bus->devices like:
->>> VF come first than PF?
->>
->> Ugh. Ok, so that's a disgusting hack, but it's better than messing up
->> the generic PCI subsystem. At least it's a disgusting hack in the IOV
->> code.
->
-> just tested, the patch with this hack works.
->
->>
->> I still would prefer to just do the virtual devices right instead. Or
->> even just make the removal loop inherently robust, rather than have
->> that insane knowledge of virtual function devices that were done so
->> horribly wrong.
+Don't need that any more.
 
-for_each_prev_safe is working...
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   45 +++++++++------------------------------------
+ 1 files changed, 9 insertions(+), 36 deletions(-)
 
-please check attached patch...
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e20fe45..85cb6d0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -608,22 +608,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
+ 	return child;
+ }
+ 
+-static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
+-{
+-	struct pci_bus *parent = child->parent;
+-
+-	/* Attempts to fix that up are really dangerous unless
+-	   we're going to re-assign all bus numbers. */
+-	if (!pcibios_assign_all_busses())
+-		return;
+-
+-	while (parent->parent && parent->subordinate < max) {
+-		parent->subordinate = max;
+-		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
+-		parent = parent->parent;
+-	}
+-}
+-
+ static void __devinit pci_bus_extend_top(struct pci_bus *parent,
+ 		 resource_size_t needed_size, struct resource *parent_res)
+ {
+@@ -866,6 +850,13 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		/* Clear errors */
+ 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
+ 
++		/*
++		 * For CardBus bridges, we leave 4 bus numbers
++		 * as cards with a PCI-to-PCI bridge can be
++		 * inserted later.
++		 * other just allocate 8 bus to avoid we fall into
++		 *  small hole in the middle.
++		 */
+ 		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
+ 				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
+ 				&parent_res);
+@@ -907,29 +898,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ 		if (!is_cardbus) {
+ 			child->bridge_ctl = bctl;
+-			/*
+-			 * Adjust subordinate busnr in parent buses.
+-			 * We do this before scanning for children because
+-			 * some devices may not be detected if the bios
+-			 * was lazy.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
++
+ 			/* Now we can scan all subordinate buses... */
+ 			max = pci_scan_child_bus(child);
+-			/*
+-			 * now fix it up again since we have found
+-			 * the real value of max.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+-
+-		} else {
+-			/*
+-			 * For CardBus bridges, we leave 4 bus numbers
+-			 * as cards with a PCI-to-PCI bridge can be
+-			 * inserted later.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+ 		}
++
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
+-- 
+1.7.7
 
-Thanks
-
-Yinghai
-
---20cf3071c7fa9d3bca04b7399407
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_001_debug_sriov_hot_remove_7.patch"
-Content-Disposition: attachment;
-	filename="pci_001_debug_sriov_hot_remove_7.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gxs2kt390
-
-U3ViamVjdDogW1BBVENIIC12NV0gUENJOiBNYWtlIHNyaW92IHdvcmsgd2l0aCBob3RwbHVnIHJl
-bW92ZQoKV2hlbiBob3QgcmVtb3ZlIHBjaSBleHByZXNzIG1vZHVsZSB0aGF0IGhhdmUgcGNpZSBz
-d2l0Y2ggYW5kIHN1cHBvcnQgU1JJT1YsIGdvdAoKWyA1OTE4LjYxMDEyN10gcGNpZWhwIDAwMDA6
-ODA6MDIuMjpwY2llMDQ6IHBjaWVfaXNyOiBpbnRyX2xvYyAxClsgNTkxOC42MTU3NzldIHBjaWVo
-cCAwMDAwOjgwOjAyLjI6cGNpZTA0OiBBdHRlbnRpb24gYnV0dG9uIGludGVycnVwdCByZWNlaXZl
-ZApbIDU5MTguNjIyNzMwXSBwY2llaHAgMDAwMDo4MDowMi4yOnBjaWUwNDogQnV0dG9uIHByZXNz
-ZWQgb24gU2xvdCgzKQpbIDU5MTguNjI5MDAyXSBwY2llaHAgMDAwMDo4MDowMi4yOnBjaWUwNDog
-cGNpZWhwX2dldF9wb3dlcl9zdGF0dXM6IFNMT1RDVFJMIGE4IHZhbHVlIHJlYWQgMWY5ClsgNTkx
-OC42Mzc0MTZdIHBjaWVocCAwMDAwOjgwOjAyLjI6cGNpZTA0OiBQQ0kgc2xvdCAjMyAtIHBvd2Vy
-aW5nIG9mZiBkdWUgdG8gYnV0dG9uIHByZXNzLgpbIDU5MTguNjQ3MTI1XSBwY2llaHAgMDAwMDo4
-MDowMi4yOnBjaWUwNDogcGNpZV9pc3I6IGludHJfbG9jIDEwClsgNTkxOC42NTMwMzldIHBjaWVo
-cCAwMDAwOjgwOjAyLjI6cGNpZTA0OiBwY2llaHBfZ3JlZW5fbGVkX2JsaW5rOiBTTE9UQ1RSTCBh
-OCB3cml0ZSBjbWQgMjAwClsgNTkxOC42NjEyMjldIHBjaWVocCAwMDAwOjgwOjAyLjI6cGNpZTA0
-OiBwY2llaHBfc2V0X2F0dGVudGlvbl9zdGF0dXM6IFNMT1RDVFJMIGE4IHdyaXRlIGNtZCBjMApb
-IDU5MjQuNjY3NjI3XSBwY2llaHAgMDAwMDo4MDowMi4yOnBjaWUwNDogRGlzYWJsaW5nIGRvbWFp
-bjpidXM6ZGV2aWNlPTAwMDA6YjA6MDAKWyA1OTI0LjY3NDkwOV0gcGNpZWhwIDAwMDA6ODA6MDIu
-MjpwY2llMDQ6IHBjaWVocF9nZXRfcG93ZXJfc3RhdHVzOiBTTE9UQ1RSTCBhOCB2YWx1ZSByZWFk
-IDJmOQpbIDU5MjQuNjgzMjYyXSBwY2llaHAgMDAwMDo4MDowMi4yOnBjaWUwNDogcGNpZWhwX3Vu
-Y29uZmlndXJlX2RldmljZTogZG9tYWluOmJ1czpkZXYgPSAwMDAwOmIwOjAwClsgNTkyNC42OTM5
-NzZdIGxpYmZjb2VfZGV2aWNlX25vdGlmaWNhdGlvbjogTkVUREVWX1VOUkVHSVNURVIgZXRoNgpb
-IDU5MjQuNzY0OTc5XSBsaWJmY29lX2RldmljZV9ub3RpZmljYXRpb246IE5FVERFVl9VTlJFR0lT
-VEVSIGV0aDE0ClsgNTkyNC44NzM1MzldIGxpYmZjb2VfZGV2aWNlX25vdGlmaWNhdGlvbjogTkVU
-REVWX1VOUkVHSVNURVIgZXRoMTUKWyA1OTI0Ljk5NTIwOV0gbGliZmNvZV9kZXZpY2Vfbm90aWZp
-Y2F0aW9uOiBORVRERVZfVU5SRUdJU1RFUiBldGgxNgpbIDU5MjYuMTE0NDA3XSBzeGdlIDAwMDA6
-YjI6MDAuMDogUENJIElOVCBBIGRpc2FibGVkClsgNTkyNi4xMTkzNDJdIEJVRzogdW5hYmxlIHRv
-IGhhbmRsZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IChudWxsKQpbIDU5MjYu
-MTI3MTg5XSBJUDogWzxmZmZmZmZmZjgxMzUzYTNiPl0gcGNpX3N0b3BfYnVzX2RldmljZSsweDMz
-LzB4ODMKWyA1OTI2LjEzMzM3N10gUEdEIDAKWyA1OTI2LjEzNTQwMl0gT29wczogMDAwMCBbIzFd
-IFNNUApbIDU5MjYuMTM4NjU5XSBDUFUgMgpbIDU5MjYuMTQwNDk5XSBNb2R1bGVzIGxpbmtlZCBp
-bjoKLi4uClsgNTkyNi4xNDM3NTRdClsgNTkyNi4yNzU4MjNdIENhbGwgVHJhY2U6ClsgNTkyNi4y
-NzgyNjddICBbPGZmZmZmZmZmODEzNTNhMzg+XSBwY2lfc3RvcF9idXNfZGV2aWNlKzB4MzAvMHg4
-MwpbIDU5MjYuMjg0MTgwXSAgWzxmZmZmZmZmZjgxMzUzYWY0Pl0gcGNpX3JlbW92ZV9idXNfZGV2
-aWNlKzB4MWEvMHhiYQpbIDU5MjYuMjkwMjY0XSAgWzxmZmZmZmZmZjgxMzY2MzExPl0gcGNpZWhw
-X3VuY29uZmlndXJlX2RldmljZSsweDExMC8weDE3YgpbIDU5MjYuMjk2ODY2XSAgWzxmZmZmZmZm
-ZjgxMzY1ZGQ5Pl0gPyBwY2llaHBfZGlzYWJsZV9zbG90KzB4MTg4LzB4MTg4ClsgNTkyNi4zMDMx
-MjNdICBbPGZmZmZmZmZmODEzNjVkNmY+XSBwY2llaHBfZGlzYWJsZV9zbG90KzB4MTFlLzB4MTg4
-ClsgNTkyNi4zMDkyMDZdICBbPGZmZmZmZmZmODEzNjVlNjg+XSBwY2llaHBfcG93ZXJfdGhyZWFk
-KzB4OGYvMHhlMAouLi4KCiArLVswMDAwOjgwXS0rLTAwLjAtWzgxLThmXS0tCiB8ICAgICAgICAg
-ICArLTAxLjAtWzkwLTlmXS0tCiB8ICAgICAgICAgICArLTAyLjAtW2EwLWFmXS0tCiB8ICAgICAg
-ICAgICArLTAyLjItW2IwLWJmXS0tLS0wMC4wLVtiMS1iM10tLSstMDIuMC1bYjJdLS0rLTAwLjAg
-RGV2aWNlCiB8ICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAg
-ICAgICAgICArLTAwLjEgRGV2aWNlCiB8ICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIHwgICAgICAgICAgICArLTAwLjIgRGV2aWNlCiB8ICAgICAgICAgICB8ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgICAgICAgICBcLTAwLjMgRGV2aWNlCiB8ICAg
-ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwtMDMuMC1bYjNdLS0rLTAw
-LjAgRGV2aWNlCiB8ICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICArLTAwLjEgRGV2aWNlCiB8ICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICArLTAwLjIgRGV2aWNlCiB8ICAgICAgICAgICB8ICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcLTAwLjMgRGV2aWNlCgpy
-b290IGNvbXBsZXg6IDgwOjAyLjIKcGNpIGV4cHJlc3MgbW9kdWxlczogaGF2ZSBwY2llIHN3aXRj
-aCBhbmQgYXJlIGxpc3RlZCBhcyBiMDowMC4wLCBiMTowMi4wIGFuZCBiMTowMy4wLgogICAgICAg
-ICAgICAgICAgZW5kIGRldmljZXMgIGFyZSBiMjowMC4wIGFuZCBiMy4wMC4wLgogICAgICAgICAg
-ICAgICAgVkZzIGFyZTogYjI6MDAuMSwuLi4gYjI6MDAuMywgYW5kIGIzOjAwLjEsLi4uLGIzOjAw
-LjMKClJvb3QgY2F1c2U6IHdoZW4gZG9pbmcgcGNpX3N0b3BfYnVzX2RldmljZSgpIHdpdGggcGh5
-cyBmbiwgaXQgd2lsbCBzdG9wIHZpcnQgZm4gYW5kCnJlbW92ZSB0aGUgZm4sIHNvCglsaXN0X2Zv
-cl9lYWNoX3NhZmUobCwgbiwgJmJ1cy0+ZGV2aWNlcykKd2lsbCBoYXZlIHByb2JsZW0gdG8gcmVm
-ZXIgZnJlZWQgbiB0aGF0IGlzIHBvaW50ZWQgdG8gdmYgZW50cnkuCgpTb2x1dGlvbiBpcyBqdXN0
-IHJlcGxhY2luZyBsaXN0X2Zvcl9lYWNoX3NhZmUoKSB3aXRoIGxpc3RfZm9yX2VhY2goKS4KCXBj
-aV9zdG9wX2J1c19kZXZpY2UoZGV2KSB3aWxsIG5vdCByZW1vdmUgZGV2IGZyb20gYnVzLT5kZXZp
-Y2VzIGxpc3QsCglzbyBXZSBvbmx5IG5lZWQgdXNlIGZvcl9lYWNoIGhlcmUuCgpEdXJpbmcgcmV2
-aWV3aW5nIHRoZSBwYXRjaCwgQmpvcm4gc2FpZDoKfCAgIFRoZSBQQ0kgaG90LXJlbW92ZSBwYXRo
-IGNhbGxzIHBjaV9zdG9wX2J1c19kZXZpY2VzKCkgdmlhCnwgICBwY2lfcmVtb3ZlX2J1c19kZXZp
-Y2UoKS4KfAp8ICAgcGNpX3N0b3BfYnVzX2RldmljZXMoKSB0cmF2ZXJzZXMgdGhlIGJ1cy0+ZGV2
-aWNlcyBsaXN0IChwb2ludCBBIGJlbG93KSwKfCAgIHN0b3BwaW5nIGVhY2ggZGV2aWNlIGluIHR1
-cm4sIHdoaWNoIGNhbGxzIHRoZSBkcml2ZXIgcmVtb3ZlKCkgbWV0aG9kLiAgV2hlbgp8ICAgdGhl
-IGRldmljZSBpcyBhbiBTUi1JT1YgUEYsIHRoZSBkcml2ZXIgY2FsbHMgcGNpX2Rpc2FibGVfc3Jp
-b3YoKSwgd2hpY2gKfCAgIGFsc28gdXNlcyBwY2lfcmVtb3ZlX2J1c19kZXZpY2UoKSB0byByZW1v
-dmUgdGhlIFZGIGRldmljZXMgZnJvbSB0aGUKfCAgIGJ1cy0+ZGV2aWNlcyBsaXN0IChwb2ludCBC
-KS4KfAp8ICAgICAgIHBjaV9yZW1vdmVfYnVzX2RldmljZQp8ICAgICAgICAgcGNpX3N0b3BfYnVz
-X2RldmljZQp8ICAgICAgICAgICBwY2lfc3RvcF9idXNfZGV2aWNlcyhzdWJvcmRpbmF0ZSkKfCAg
-ICAgICAgICAgICBsaXN0X2Zvcl9lYWNoKGJ1cy0+ZGV2aWNlcykgICAgICAgICAgICAgPC0tIEEK
-fCAgICAgICAgICAgICAgIHBjaV9zdG9wX2J1c19kZXZpY2UoUEYpCnwgICAgICAgICAgICAgICAg
-IC4uLgp8ICAgICAgICAgICAgICAgICAgIGRyaXZlci0+cmVtb3ZlCnwgICAgICAgICAgICAgICAg
-ICAgICBwY2lfZGlzYWJsZV9zcmlvdgp8ICAgICAgICAgICAgICAgICAgICAgICAuLi4KfCAgICAg
-ICAgICAgICAgICAgICAgICAgICBwY2lfcmVtb3ZlX2J1c19kZXZpY2UoVkYpCnwgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIDxyZW1vdmUgZnJvbSBidXNfbGlzdD4gIDwtLSBCCnwKfCAgIEF0
-IEIsIHdlJ3JlIGNoYW5naW5nIHRoZSBzYW1lIGxpc3Qgd2UncmUgaXRlcmF0aW5nIHRocm91Z2gg
-YXQgQSwgc28gd2hlbgp8ICAgdGhlIGRyaXZlciByZW1vdmUoKSBtZXRob2QgcmV0dXJucywgdGhl
-IHBjaV9zdG9wX2J1c19kZXZpY2VzKCkgaXRlcmF0b3IgaGFzCnwgICBhIHBvaW50ZXIgdG8gYSBs
-aXN0IGVudHJ5IHRoYXQgaGFzIGFscmVhZHkgYmVlbiBmcmVlZC4KCkRpc2N1c3Npb24gdGhyZWFk
-IGNhbiBiZSBmb3VuZCA6IGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDExLzEwLzE1LzE0MQoKLXY1
-OiBBY2NvcmRpbmcgdG8gTGludXMgdG8gbWFrZSByZW1vdmUgbW9yZSByb2J1c3QsIENoYW5nZSB0
-byBsaXN0X2Zvcl9lYWNoX3ByZXZfc2FmZQoJaW5zdGVhZC4gVGhhdCBpcyBtb3JlIHJlYXNvbmFi
-bGUsIGJlY2F1c2UgdGhvc2UgZGV2aWNlcyBhcmUgYWRkZWQgdG8gdGFpbCBvZgoJdGhlIGxpc3Qg
-YmVmb3JlLgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoK
-LS0tCiBkcml2ZXJzL3BjaS9yZW1vdmUuYyB8ICAgMTAgKysrKysrKysrLQogMSBmaWxlIGNoYW5n
-ZWQsIDkgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2
-ZXJzL3BjaS9yZW1vdmUuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3Bj
-aS9yZW1vdmUuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3JlbW92ZS5jCkBAIC0xMjgsNyAr
-MTI4LDE1IEBAIHN0YXRpYyB2b2lkIHBjaV9zdG9wX2J1c19kZXZpY2VzKHN0cnVjdAogewogCXN0
-cnVjdCBsaXN0X2hlYWQgKmwsICpuOwogCi0JbGlzdF9mb3JfZWFjaF9zYWZlKGwsIG4sICZidXMt
-PmRldmljZXMpIHsKKwkvKgorCSAqIFZGcyBjb3VsZCBiZSByZW1vdmVkIGJ5IHBjaV9yZW1vdmVf
-YnVzX2RldmljZSgpIGluIHRoZQorCSAqICBwY2lfc3RvcF9idXNfZGV2aWNlcygpIGNvZGUgcGF0
-aCBmb3IgUEYuCisJICogIGFrYSwgYnVzLT5kZXZpY2VzIGdldCB1cGRhdGVkIGluIHRoZSBwcm9j
-ZXNzLgorCSAqIGJ1dCBWRnMgYXJlIGluc2VydGVkIGFmdGVyIFBGcyB3aGVuIFNSSU9WIGlzIGVu
-YWJsZWQgZm9yIFBGLAorCSAqIFdlIGNhbiBpdGVyYXRlIHRoZSBsaXN0IGJhY2t3YXJkcyB0byBn
-ZXQgcHJldiB2YWxpZCBQRiBpbnN0ZWFkCisJICogIG9mIHJlbW92ZWQgVkYuCisJICovCisJbGlz
-dF9mb3JfZWFjaF9wcmV2X3NhZmUobCwgbiwgJmJ1cy0+ZGV2aWNlcykgewogCQlzdHJ1Y3QgcGNp
-X2RldiAqZGV2ID0gcGNpX2Rldl9iKGwpOwogCQlwY2lfc3RvcF9idXNfZGV2aWNlKGRldik7CiAJ
-fQo=
---20cf3071c7fa9d3bca04b7399407--
