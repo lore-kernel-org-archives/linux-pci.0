@@ -1,43 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:54475 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752783Ab2AaP4p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 Jan 2012 10:56:45 -0500
-From: Mike Frysinger <vapier@gentoo.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH] update-pciids: fix PCI_COMPRESSED_IDS value when zlib is disabled
-Date: Tue, 31 Jan 2012 10:56:51 -0500
-Message-Id: <1328025411-8281-1-git-send-email-vapier@gentoo.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:42686 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599Ab2AUJwq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 04:52:46 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/7] pciehp: print out link status when dlla get active.
+Date: Sat, 21 Jan 2012 01:52:16 -0800
+Message-Id: <1327139539-14301-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If you build with zlib disabled, then PCI_COMPRESSED_IDS is not defined,
-which generates the line in the update script:
-	PCI_COMPRESSED_IDS=
-which in turn causes the update script to warn:
-	bash: [: : integer expression expected
+Use it get timestamp to calculate time for the pci conf access readness.
 
-So default it to 0 to avoid that logic.
+and let it return bool instead of int.
 
-Reported-by: AlphatPC@gmail.com
-Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+also remove inline attribute, let compiler decide it.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- Makefile |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index d5ed7ac..86fb0c7 100644
---- a/Makefile
-+++ b/Makefile
-@@ -77,6 +77,7 @@ ls-map.o: ls-map.c $(LSPCIINC)
- setpci.o: setpci.c pciutils.h $(PCIINC)
- common.o: common.c pciutils.h $(PCIINC)
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index ad8c1be..a1a9879 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -241,13 +241,20 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+ 	return retval;
+ }
  
-+PCI_COMPRESSED_IDS ?= 0
- update-pciids: update-pciids.sh
- 	sed <$< >$@ "s@^DEST=.*@DEST=$(IDSDIR)/$(PCI_IDS)@;s@^PCI_COMPRESSED_IDS=.*@PCI_COMPRESSED_IDS=$(PCI_COMPRESSED_IDS)@"
- 	chmod +x $@
+-static inline int check_link_active(struct controller *ctrl)
++static bool check_link_active(struct controller *ctrl)
+ {
+-	u16 link_status;
++	bool ret = false;
++	u16 lnk_status;
+ 
+-	if (pciehp_readw(ctrl, PCI_EXP_LNKSTA, &link_status))
+-		return 0;
+-	return !!(link_status & PCI_EXP_LNKSTA_DLLLA);
++	if (pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status))
++		return ret;
++
++	ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++
++	if (ret)
++		ctrl_dbg(ctrl, "%s: lnk_status = %x\n", __func__, lnk_status);
++
++	return ret;
+ }
+ 
+ static void pcie_wait_link_active(struct controller *ctrl)
 -- 
-1.7.8.4
+1.7.7
 
