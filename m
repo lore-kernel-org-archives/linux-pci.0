@@ -1,79 +1,20 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:35085 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752146Ab2A0Rhe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:37:34 -0500
-Date: Fri, 27 Jan 2012 09:37:32 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: linux-pci@vger.kernel.org, trivial@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] [trivial] pci: Fix typo in setup-res.c
-Message-ID: <20120127093732.46425cca@jbarnes-desktop>
-In-Reply-To: <1327589147-2193-1-git-send-email-standby24x7@gmail.com>
-References: <1327589147-2193-1-git-send-email-standby24x7@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/u6yH3_UzCphrJIJBQOnw/D6"; protocol="application/pgp-signature"
+Received: from mail.upm.edu.my ([119.40.119.52]:42388 "EHLO mail.upm.edu.my"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751314Ab2AUVzC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 21 Jan 2012 16:55:02 -0500
+Date: Sun, 22 Jan 2012 03:58:54 +0800 (MYT)
+From: Western Union?? Global Payment Services <mirna@medic.upm.edu.my>
+Reply-To: Western Union?? Global Payment Services <wumt.onlinewu@w.cn>
+Subject: You have $250,000 lodged in Western Union to be transferred to you.
+Message-ID: <82c10188-fb55-4249-9fec-964e717ba47a@mail>
+Content-Type: text/plain; charset=utf-8
+MIME-Version: 1.0
+To: undisclosed-recipients:;
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/u6yH3_UzCphrJIJBQOnw/D6
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, 26 Jan 2012 23:45:47 +0900
-Masanari Iida <standby24x7@gmail.com> wrote:
 
-> Correct spelling "resouce" to "resource" in
-> dricers/pci/setup-res.c
->=20
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-> ---
->  drivers/pci/setup-res.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index b66bfdb..5c18194 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -228,7 +228,7 @@ int pci_reassign_resource(struct pci_dev *dev, int re=
-sno, resource_size_t addsiz
->  	int ret;
-> =20
->  	if (!res->parent) {
-> -		dev_info(&dev->dev, "BAR %d: can't reassign an unassigned resouce %pR "
-> +		dev_info(&dev->dev, "BAR %d: can't reassign an unassigned resource %pR=
- "
->  			 "\n", resno, res);
->  		return -EINVAL;
->  	}
-
-Applied to -next, thanks.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/u6yH3_UzCphrJIJBQOnw/D6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIuDcAAoJEIEoDkX4Qk9hMN0QAM7Q6ODzFdGWEciQuII/fAl+
-rGoOm+lZb01Gq6BvbgqMM5UqcFgjJUJjXwzX4EFgLSrU0BGi4YA8obcKnvHBE/qC
-DZ8TCdO964LRpFvug4A4qXgWJ7gxrCcnjYmVRrKZlqjIVFskOZbMG6RDPXCkjeIY
-NNVckQWnKXMlGIeja6OYomEEuPvUspoMT+mHkgxGf9PnKU4EeO7IQY2JfIJRIvhd
-kw/TboE+yDB65tE97eGsJHStQO6EIeRed+dFvHqjGKCNZMhYt63sSJ0c+rEeB3UX
-Ho0L9JIZI6bufudkL0XQwcvRtMSKaKPmTixYriyhRIWVtuFODzFlFsw2w1hXAuHX
-6Tp7sqiufeRSWNx5d2y458qPtD7FhCGy1UALiBUhc8WWPza1oyDML2IfZ5SGVbhO
-PZciw/vTCZwjViblybBb8qLTNwd+eq7p4CEURXWOuTStIfrMQEtEsiTYSfBmriMk
-hdcata23myyEuclSfCFYZELHZbAECq3ObSbn/BDMzODSeMKTioX0PzEN3gW2z8AO
-WopOxMWdNetTtz0XNHZzgTE066Uq7bxeqgvFh31/vss5kNRcJWJhbePiGqBi9Kun
-sqMCWS/vMHbwEsfrnEOE5zOv0F7XiRnJEEuxGj0no7pBGw0GWO7Ratcuz6xuXF5i
-3WH8zpV6ivecRNzCYerQ
-=//Hy
------END PGP SIGNATURE-----
-
---Sig_/u6yH3_UzCphrJIJBQOnw/D6--
+western union
+Respond for details
