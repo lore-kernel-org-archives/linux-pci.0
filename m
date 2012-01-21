@@ -1,79 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26759 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752854Ab2ACPWL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Jan 2012 10:22:11 -0500
-Message-ID: <1325604092.3124.17.camel@bling.home>
-Subject: Re: [Qemu-devel] [PATCH 1/5] vfio: Introduce documentation for VFIO
- driver
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ronen Hod <rhod@redhat.com>
-Cc: chrisw@sous-sol.org, aik@ozlabs.ru, david@gibson.dropbear.id.au,
-	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Tue, 03 Jan 2012 08:21:32 -0700
-In-Reply-To: <4EFB4EFD.4080706@redhat.com>
-References: <20111221213019.27028.26890.stgit@bling.home>
-	 <20111221214212.27028.78947.stgit@bling.home> <4EFB4EFD.4080706@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/7] pciehp: Checking pci conf reading to new added device instead of sleep 1s
+Date: Sat, 21 Jan 2012 01:52:15 -0800
+Message-Id: <1327139539-14301-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2011-12-28 at 19:16 +0200, Ronen Hod wrote:
-> On 12/21/2011 11:42 PM, Alex Williamson wrote:
-> > +The final aspect of VFIO is the notion of merging groups.  In both the
-> > +assignment of devices to virtual machines and the pure userspace
-> > +driver model, it's expect that a single user instance is likely to
-> > +have multiple groups in use simultaneously.  If these groups are all
-> > +using the same set of IOMMU mappings, the overhead of userspace
-> > +setting up and tearing down the mappings, as well as the internal
-> > +IOMMU driver overhead of managing those mappings can be non-trivial.
-> > +Some IOMMU implementations are able to easily reduce this overhead by
-> > +simply using the same set of page tables across multiple groups.
-> > +VFIO allows users to take advantage of this option by merging groups
-> > +together, effectively creating a super group (IOMMU groups only define
-> > +the minimum granularity).
-> > +
-> > +A user can attempt to merge groups together by calling the merge ioctl
-> > +on one group (the "merger") and passing a file descriptor for the
-> > +group to be merged in (the "mergee").  Note that existing DMA mappings
-> > +cannot be atomically merged between groups, it's therefore a
-> > +requirement that the mergee group is not in use.  This is enforced by
-> > +not allowing open device or iommu file descriptors on the mergee group
-> > +at the time of merging.  The merger group can be actively in use at
-> > +the time of merging.  Likewise, to unmerge a group, none of the device
-> > +file descriptors for the group being removed can be in use.  The
-> > +remaining merged group can be actively in use.
-> > +
-> 
-> Can you elaborate on the scenario that led a user to merge groups?
+During reviewing
+|	PCI: pciehp: wait 1000 ms before Link Training check
+Linus said:
+>...
+> That's a *long* time, and it's irritating to the user. It makes the
+> user think "the machine is slow".
+>...
+> And quite frankly, an unconditional one-second delay here seems bad.
+>Two seconds was unacceptable, one second is just bad.
 
-Anytime a user is managing multiple groups with the same set of iommu
-mappings, they probably wants to try to merge the groups so they only
-have to program the iommu once, instead of once per group.  This works
-well in the qemu/x86 device assignment model where we map full guest
-memory into the iommu to allow transparent device assignment, ie. the
-guest doesn't need to be enlightened or forced to use a specific DMA
-mechanism.  If instead we exposed an emulated or paravirtualized iommu
-and expected the guest to make use of it to limit the number of pinned
-guest pages, it might make sense to expose that per group, especially if
-the I/O virtual address window is small or lives at different offsets,
-so merging wouldn't make sense then.  I'll add something to this effect
-in the documentation.
+Try to access the pci conf of pci device that is supposed to show up in 1s,
+if could read back valid vender/device id, could bail out early.
 
-> Does it make sense to try to "automatically" merge a (new) group with 
-> all the existing groups sometime prior to its first device open?
+Related discussion could be found:
+	https://lkml.org/lkml/2011/12/6/339
 
-I don't think so.  As above, it would assume a usage model.
+-v2: seperate code to pci_bus_read_dev_vendor_id() from pci_scan_device()
+    and reuse it from pciehp code. Suggested by Matthew Wilcox.
+-v3: According to Kenj, don't use array in stack, and don't wait too long
+    for crs, also return fail status if not found.
+    Also separate pci_bus_dev_read_vendor_id() change to another patch.
 
-> As always, it is a pleasure to read your documentation.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |   49 ++++++++++++++++++++++++++-----------
+ 1 files changed, 34 insertions(+), 15 deletions(-)
 
-Thanks!
-
-Alex
-
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 7b14148..ad8c1be 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -265,10 +265,37 @@ static void pcie_wait_link_active(struct controller *ctrl)
+ 	ctrl_dbg(ctrl, "Data Link Layer Link Active not set in 1000 msec\n");
+ }
+ 
++static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
++{
++	u32 l;
++	int count = 0;
++	int delay = 1000, step = 20;
++	bool found = false;
++
++	do {
++		found = pci_bus_read_dev_vendor_id(bus, devfn, &l, 0);
++		count++;
++
++		if (found)
++			break;
++
++		msleep(step);
++		delay -= step;
++	} while (delay > 0);
++
++	if (count > 1 && pciehp_debug)
++		printk(KERN_DEBUG "pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms to get %08x\n",
++			pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
++			PCI_FUNC(devfn), count, step, l);
++
++	return found;
++}
++
+ int pciehp_check_link_status(struct controller *ctrl)
+ {
+ 	u16 lnk_status;
+ 	int retval = 0;
++	bool found = false;
+ 
+         /*
+          * Data Link Layer Link Active Reporting must be capable for
+@@ -280,13 +307,10 @@ int pciehp_check_link_status(struct controller *ctrl)
+         else
+                 msleep(1000);
+ 
+-	/*
+-	 * Need to wait for 1000 ms after Data Link Layer Link Active
+-	 * (DLLLA) bit reads 1b before sending configuration request.
+-	 * We need it before checking Link Training (LT) bit becuase
+-	 * LT is still set even after DLLLA bit is set on some platform.
+-	 */
+-	msleep(1000);
++	/* wait 100ms before read pci conf, and try in 1s */
++	msleep(100);
++	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
++					PCI_DEVFN(0, 0));
+ 
+ 	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status);
+ 	if (retval) {
+@@ -302,16 +326,11 @@ int pciehp_check_link_status(struct controller *ctrl)
+ 		return retval;
+ 	}
+ 
+-	/*
+-	 * If the port supports Link speeds greater than 5.0 GT/s, we
+-	 * must wait for 100 ms after Link training completes before
+-	 * sending configuration request.
+-	 */
+-	if (ctrl->pcie->port->subordinate->max_bus_speed > PCIE_SPEED_5_0GT)
+-		msleep(100);
+-
+ 	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
+ 
++	if (!found && !retval)
++		retval = -1;
++
+ 	return retval;
+ }
+ 
+-- 
+1.7.7
 
