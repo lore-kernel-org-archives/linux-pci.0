@@ -1,63 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:39292 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab2A0TK5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 14:10:57 -0500
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <svaidy@linux.vnet.ibm.com>;
-	Sat, 28 Jan 2012 00:40:54 +0530
-Date: Sat, 28 Jan 2012 00:40:32 +0530
-From: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-To: Ram Pai <linuxram@us.ibm.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai.lu@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
- sriov_init
-Message-ID: <20120127191032.GA22999@dirshya.in.ibm.com>
-Reply-To: svaidy@linux.vnet.ibm.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from rcsinet15.oracle.com ([148.87.113.117]:42701 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754480Ab2AUJwv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 04:52:51 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/7] PCI: Separate pci_bus_read_dev_vendor_id from pci_scan_device
+Date: Sat, 21 Jan 2012 01:52:14 -0800
+Message-Id: <1327139539-14301-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ram and Jesse,
+Will reuse that function for pciehp probing.
 
-I found a trivial issue with page size alignment check on IBM POWER
-box with 64k base page size.  In sriov_init(), changing the check from
-PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
-required to use one of the sriov adapter as PF since the
-resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
-pseries boxes.
+-v2: according to Kenji, fix crs timeout checking, and export the function
+     for later using when pciehp is compiled as module.
 
-I think resource_size() could be less than SystemPageSize, but I would
-like your comments/ack/nack on any consequences of checking for only
-4k alignment here in a system with larger base page size.
-
-Thanks,
-Vaidy
-
+Suggested-by: Matthew Wilcox <matthew@wil.cx>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/pci.h   |    2 ++
+ drivers/pci/probe.c |   48 +++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 33 insertions(+), 17 deletions(-)
 
-    pci: check for 4k resource_size alignment in sriov_init
-    
-    pci sriov_init should check for 4k page size alignment of resource_size
-    even if base page size is larger -- like 64k in powerpc.
-    
-    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 0321fa3..5816fa0 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -474,7 +474,7 @@ found:
- 				     pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
- 			continue;
--		if (resource_size(res) & (PAGE_SIZE - 1)) {
-+		if (resource_size(res) & (HW_PAGE_SIZE - 1)) {
- 			rc = -EIO;
- 			goto failed;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index b74084e..8dadbd3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -205,6 +205,8 @@ enum pci_bar_type {
+ 	pci_bar_mem64,		/* A 64-bit memory BAR */
+ };
+ 
++bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
++				int crs_timeout);
+ extern int pci_setup_device(struct pci_dev *dev);
+ extern int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 				struct resource *res, unsigned int reg);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 04e74f4..101e90f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1113,40 +1113,54 @@ struct pci_dev *alloc_pci_dev(void)
+ }
+ EXPORT_SYMBOL(alloc_pci_dev);
+ 
+-/*
+- * Read the config data for a PCI device, sanity-check it
+- * and fill in the dev structure...
+- */
+-static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
++bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++				 int crs_timeout)
+ {
+-	struct pci_dev *dev;
+-	u32 l;
+ 	int delay = 1;
+ 
+-	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, &l))
+-		return NULL;
++	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
++		return false;
+ 
+ 	/* some broken boards return 0 or ~0 if a slot is empty: */
+-	if (l == 0xffffffff || l == 0x00000000 ||
+-	    l == 0x0000ffff || l == 0xffff0000)
+-		return NULL;
++	if (*l == 0xffffffff || *l == 0x00000000 ||
++	    *l == 0x0000ffff || *l == 0xffff0000)
++		return false;
+ 
+ 	/* Configuration request Retry Status */
+-	while (l == 0xffff0001) {
++	while (*l == 0xffff0001) {
++		if (!crs_timeout)
++			return false;
++
+ 		msleep(delay);
+ 		delay *= 2;
+-		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, &l))
+-			return NULL;
++		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
++			return false;
+ 		/* Card hasn't responded in 60 seconds?  Must be stuck. */
+-		if (delay > 60 * 1000) {
++		if (delay > crs_timeout) {
+ 			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not "
+ 					"responding\n", pci_domain_nr(bus),
+ 					bus->number, PCI_SLOT(devfn),
+ 					PCI_FUNC(devfn));
+-			return NULL;
++			return false;
  		}
+ 	}
+ 
++	return true;
++}
++EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
++
++/*
++ * Read the config data for a PCI device, sanity-check it
++ * and fill in the dev structure...
++ */
++static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
++{
++	struct pci_dev *dev;
++	u32 l;
++
++	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
++		return NULL;
++
+ 	dev = alloc_pci_dev();
+ 	if (!dev)
+ 		return NULL;
+-- 
+1.7.7
 
