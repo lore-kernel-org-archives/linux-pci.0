@@ -1,26 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: xen-devel@lists.xensource.com
-Subject: [PATCH] xen-pciback features for v3.4 (FLR). v2
-Date: Thu, 12 Jan 2012 12:06:45 -0500
-Message-Id: <1326388007-19178-1-git-send-email-konrad.wilk@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55079 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754010Ab2AUK0r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:26:47 -0500
+MIME-Version: 1.0
+In-Reply-To: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+Date: Sat, 21 Jan 2012 02:26:46 -0800
+Message-ID: <CAE9FiQUFYcaVWorPPP7PQqiBPnKv-iBkPm_qbGz4T_xLR2THiQ@mail.gmail.com>
+Subject: Re: [PATCH 0/7] PCI: pcie hotplug related patch
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please pull these patches in your v3.4 branch. A bunch of folks using
-Xen chatted a bit about this and it is a worthwile to have this functionality
-in the kernel.
+On Sat, Jan 21, 2012 at 1:52 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> b40c9ef: pciehp: Disable/enable link during slot power off/on
+> fe877ae: pciehp: Add Disable/enable link functions
+> 292e286: pciehp: Add pcie_wait_link_not_active()
+> 186b3fd: pciehp: print out link status when dlla get active.
+> 2781df4: pciehp: Checking pci conf reading to new added device instead of sleep 1s
+> bf1c4ac: PCI: Separate pci_bus_read_dev_vendor_id from pci_scan_device
+> 601c6f1: PCI: Make sriov work with hotplug remove
+>
+>  drivers/pci/hotplug/pciehp_hpc.c |  133 +++++++++++++++++++++++++++++++-------
+>  drivers/pci/pci.h                |    2 +
+>  drivers/pci/probe.c              |   48 +++++++++-----
+>  drivers/pci/remove.c             |   28 ++++++++-
+>  4 files changed, 169 insertions(+), 42 deletions(-)
+>
+> First one is for hotplug with sriov under bridge.
+> following two are for hotplug probing with pci conf reading.
+> Last four are for pcie link disable when power off slots.
 
-Thanks!
+could be found at:
 
-The two patches are:
- [PATCH 1/2] pci: Introduce __pci_reset_function_locked to be used
- [PATCH 2/2] xen/pciback: Support pci_reset_function, aka FLR or D3
+	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-hp
 
- drivers/pci/pci.c                  |   25 ++++++++++++++++++++++
- drivers/xen/xen-pciback/pci_stub.c |   41 +++++++++++++++++++++++++++++++++--
- drivers/xen/xen-pciback/pciback.h  |    1 +
- include/linux/pci.h                |    1 +
- 4 files changed, 65 insertions(+), 3 deletions(-)
+Thanks
+
+Yinghai
