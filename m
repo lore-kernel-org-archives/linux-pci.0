@@ -1,39 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:52064 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706Ab2AGFvW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Jan 2012 00:51:22 -0500
-Received: by yenm11 with SMTP id m11so978534yen.19
-        for <linux-pci@vger.kernel.org>; Fri, 06 Jan 2012 21:51:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXKVgkHg9fqXHvs7umnXkQ1Hmxudfy84jdy1n_Mo5D9Cg@mail.gmail.com>
-References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
-	<1323247984-15281-3-git-send-email-yinghai@kernel.org>
-	<20120106134915.705f5b47@jbarnes-desktop>
-	<CAE9FiQXKVgkHg9fqXHvs7umnXkQ1Hmxudfy84jdy1n_Mo5D9Cg@mail.gmail.com>
-Date: Fri, 6 Jan 2012 21:51:21 -0800
-Message-ID: <CAE9FiQXbsUH1v3+FXcyZwXk=SbLuhY2FeoH-LEi2mtvu4zOeQA@mail.gmail.com>
-Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
 Cc: Ram Pai <linuxram@us.ibm.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, torvalds@linux-foundation.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 16/21] PCI: remove add_to_failed_list()
+Date: Sat, 21 Jan 2012 02:08:32 -0800
+Message-Id: <1327140517-14811-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 6, 2012 at 7:46 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> This looks like a separate bug fix; can you separate it out?  I assume
->> you ran into it at least once as you were adding more recursion and
->> occasionally not exiting it quickly. :)
+only one user, just use add_to_list instead.
 
-hi,  the patch has been separated into three patches.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   14 ++++----------
+ 1 files changed, 4 insertions(+), 10 deletions(-)
 
-please check attached.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ae0b1f2..090217a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -89,14 +89,6 @@ static int add_to_list(struct list_head *head,
+ 	return 0;
+ }
+ 
+-static void add_to_failed_list(struct list_head *head,
+-				struct pci_dev *dev, struct resource *res)
+-{
+-	add_to_list(head, dev, res,
+-			0 /* dont care */,
+-			0 /* dont care */);
+-}
+-
+ static void remove_from_list(struct list_head *head,
+ 				 struct resource *res)
+ {
+@@ -302,8 +294,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 				 */
+ 				if (!((idx == PCI_ROM_RESOURCE) &&
+ 				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
+-					add_to_failed_list(fail_head,
+-							   dev_res->dev, res);
++					add_to_list(fail_head,
++						    dev_res->dev, res,
++						    0 /* dont care */,
++						    0 /* dont care */);
+ 			}
+ 			reset_resource(res);
+ 		}
+-- 
+1.7.7
 
-please let me know if you like me to resend the whole patch set.
-
-Thanks
-
-Yinghai Lu
