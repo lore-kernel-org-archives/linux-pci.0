@@ -1,75 +1,130 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:16599 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754976Ab2AUKJP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 05:09:15 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 02/14] PCI: Add iobusn_resource
-Date: Mon, 30 Jan 2012 23:42:40 -0800
-Message-Id: <1327995772-11388-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 18/21] PCI: Fix cardbus bridge resources as optional size handling
+Date: Sat, 21 Jan 2012 02:08:34 -0800
+Message-Id: <1327140517-14811-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-also add busn_res into struct pci_bus.
+We should not set the requested size to -2.
 
-will use them to have bus number resource tree.
+that will confuse the resource list sorting with align when SIZEALIGN is used.
+
+Change to STARTALIGN and pass align from start.
+
+We are safe to do that just as we do that regular pci bridge.
+
+In the long run, we should just treat cardbus like regular pci bridge.
+
+Also fix when realloc is not passed, should keep the requested size.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- include/linux/ioport.h |    1 +
- include/linux/pci.h    |    1 +
- kernel/resource.c      |    8 ++++++++
- 3 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/pci/setup-bus.c |   63 ++++++++++++++++++++++++++--------------------
+ 1 files changed, 36 insertions(+), 27 deletions(-)
 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index e885ba2..6fe9e19 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -136,6 +136,7 @@ struct resource {
- /* PC/ISA/whatever - the normal PC address spaces: IO and memory */
- extern struct resource ioport_resource;
- extern struct resource iomem_resource;
-+extern struct resource iobusn_resource;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d5897c3..3b3932a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -898,21 +898,30 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ {
+ 	struct pci_dev *bridge = bus->self;
+ 	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
++	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
+ 	u16 ctrl;
  
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f8caaab..94ad468 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -419,6 +419,7 @@ struct pci_bus {
- 	struct list_head slots;		/* list of slots on this bus */
- 	struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
- 	struct list_head resources;	/* address space routed to this bus */
-+	struct resource busn_res;	/* track registered bus num range */
+ 	/*
+ 	 * Reserve some resources for CardBus.  We reserve
+ 	 * a fixed amount of bus space for CardBus bridges.
+ 	 */
+-	b_res[0].start = 0;
+-	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
+-	if (realloc_head)
+-		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size, 0 /* dont care */);
++	b_res[0].start = pci_cardbus_io_size;
++	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
++	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[0].end -= pci_cardbus_io_size;
++		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
++				pci_cardbus_io_size);
++	}
  
- 	struct pci_ops	*ops;		/* configuration access functions */
- 	void		*sysdata;	/* hook for sys-specific extension */
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 7640b3a..53b42f0 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -38,6 +38,14 @@ struct resource iomem_resource = {
- };
- EXPORT_SYMBOL(iomem_resource);
+-	b_res[1].start = 0;
+-	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
+-	if (realloc_head)
+-		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
++	b_res[1].start = pci_cardbus_io_size;
++	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
++	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[1].end -= pci_cardbus_io_size;
++		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
++				 pci_cardbus_io_size);
++	}
  
-+struct resource iobusn_resource = {
-+	.name	= "PCI busn",
-+	.start	= 0,
-+	.end	= 0xffffff,
-+	.flags	= IORESOURCE_BUS,
-+};
-+EXPORT_SYMBOL(iobusn_resource);
-+
- /* constraints to be met while allocating resources */
- struct resource_constraint {
- 	resource_size_t min, max, align;
+ 	/* MEM1 must not be pref mmio */
+ 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+@@ -939,28 +948,28 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	 * twice the size.
+ 	 */
+ 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
+-		b_res[2].start = 0;
+-		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+2, pci_cardbus_mem_size, 0 /* dont care */);
++		b_res[2].start = pci_cardbus_mem_size;
++		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
++		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
++				  IORESOURCE_STARTALIGN;
++		if (realloc_head) {
++			b_res[2].end -= pci_cardbus_mem_size;
++			add_to_list(realloc_head, bridge, b_res+2,
++				 pci_cardbus_mem_size, pci_cardbus_mem_size);
++		}
+ 
+-		b_res[3].start = 0;
+-		b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size, 0 /* dont care */);
+-	} else {
+-		b_res[3].start = 0;
+-		b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size * 2, 0 /* dont care */);
++		/* reduce that to half */
++		b_res_3_size = pci_cardbus_mem_size;
+ 	}
+ 
+-	/* set the size of the resource to zero, so that the resource does not
+-	 * get assigned during required-resource allocation cycle but gets assigned
+-	 * during the optional-resource allocation cycle.
+- 	 */
+-	b_res[0].start = b_res[1].start = b_res[2].start = b_res[3].start = 1;
+-	b_res[0].end = b_res[1].end = b_res[2].end = b_res[3].end = 0;
++	b_res[3].start = pci_cardbus_mem_size;
++	b_res[3].end = b_res[3].start + b_res_3_size - 1;
++	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[3].end -= b_res_3_size;
++		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
++				 pci_cardbus_mem_size);
++	}
+ }
+ 
+ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
 -- 
 1.7.7
 
