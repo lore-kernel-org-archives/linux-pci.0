@@ -1,42 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:63308 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970Ab2ALPBh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2012 10:01:37 -0500
-Received: by eekd41 with SMTP id d41so68710eek.1
-        for <linux-pci@vger.kernel.org>; Thu, 12 Jan 2012 07:01:36 -0800 (PST)
-Subject: [PATCH] fix amd_get_mmconfig_range link error
-To: Linus Torvalds <torvalds@linux-foundation.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	linux-kernel@vger.kernel.org
-Date: Thu, 12 Jan 2012 08:01:34 -0700
-Message-ID: <20120112145935.12223.39035.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Yinghai Lu <yinghai.lu@oracle.com>
+Subject: [PATCH 7/7] pciehp: Disable/enable link during slot power off/on
+Date: Sat, 21 Jan 2012 01:52:19 -0800
+Message-Id: <1327139539-14301-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes a link error in current upstream when:
+One system have repeater in system board to support gen2 hotplug.
 
-    CONFIG_PCI=y
-    # CONFIG_AMD_NB not set
+Found when EM is removed from some slots, /var/log/message will be full of
+"card present/not present" warning.
 
- LD      .tmp_vmlinux1
- arch/x86/pci/built-in.o: In function `early_fill_mp_bus_info':
- /opt/src/linux/arch/x86/pci/amd_bus.c:189: undefined reference to
- `amd_get_mmconfig_range'
- make: *** [.tmp_vmlinux1] Error 1
+It turns out root complex still try to train the link to repeater because
+repeater is not reset.
 
+This patch will disable link to make repeater could reset properly.
+Also could kill AER during EM removal.
+
+Recently when testing hotplug on one system under development, found if boot
+the system without EM, and later hotplug does not work with Linux.
+But other OS is ok.
+The root cause is that bios left link disabled when slot is empty,
+and other OS is playing link disable bit in link ctrl during power on/off.
+
+So We could do the same thing to disable/enable link during power off/on.
+
+-v2: check link DLLA bit instead of 100ms waiting.
+     Separate link disable/enable functions to another patch.
+
+Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
 ---
+ drivers/pci/hotplug/pciehp_hpc.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-Bjorn Helgaas (1):
-      x86/PCI: build amd_bus.o only when CONFIG_AMD_NB=y
-
-
- arch/x86/pci/Makefile |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index fdab8a6..0e35d70 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -606,6 +606,10 @@ int pciehp_power_on_slot(struct slot * slot)
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
+ 
++	retval = pciehp_link_enable(ctrl);
++	if (retval)
++		ctrl_err(ctrl, "%s: Can not enable the link!\n", __func__);
++
+ 	return retval;
+ }
+ 
+@@ -616,6 +620,14 @@ int pciehp_power_off_slot(struct slot * slot)
+ 	u16 cmd_mask;
+ 	int retval;
+ 
++	/* Disable the link at first */
++	pciehp_link_disable(ctrl);
++	/* wait the link is down */
++	if (ctrl->link_active_reporting)
++		pcie_wait_link_not_active(ctrl);
++	else
++		msleep(1000);
++
+ 	slot_cmd = POWER_OFF;
+ 	cmd_mask = PCI_EXP_SLTCTL_PCC;
+ 	retval = pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
 -- 
-Bjorn
+1.7.7
+
