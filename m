@@ -1,157 +1,251 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [RFC PATCH v1 15/18] sh/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>
-Date: Mon, 30 Jan 2012 09:58:26 -0700
-Message-ID: <20120130165826.3231.33715.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 13/21] PCI: Rename dev_res_x to add_res or fail_res
+Date: Sat, 21 Jan 2012 02:08:29 -0800
+Message-Id: <1327140517-14811-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+According to Linus, don't use dev_res_x.
+Replace them with add_res, fail_res etc according to context.
 
-CC: Paul Mundt <lethal@linux-sh.org>
+Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/sh/drivers/pci/pci.c |   75 +++++++--------------------------------------
- arch/sh/include/asm/pci.h |    6 +---
- 2 files changed, 12 insertions(+), 69 deletions(-)
+ drivers/pci/setup-bus.c |  110 +++++++++++++++++++++++-----------------------
+ 1 files changed, 55 insertions(+), 55 deletions(-)
 
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 8f18dd0..e5aacef 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -37,11 +37,20 @@ static void __devinit pcibios_scanbus(struct pci_channel *hose)
- 	static int next_busno;
- 	static int need_domain_info;
- 	LIST_HEAD(resources);
-+	struct resource *res;
-+	resource_size_t offset;
- 	int i;
- 	struct pci_bus *bus;
- 
--	for (i = 0; i < hose->nr_resources; i++)
--		pci_add_resource(&resources, hose->resources + i);
-+	for (i = 0; i < hose->nr_resources; i++) {
-+		res = hose->resources + i;
-+		offset = 0;
-+		if (res->flags & IORESOURCE_IO)
-+			offset = hose->io_offset;
-+		else if (res->flags & IORESOURCE_MEM)
-+			offset = hose->mem_offset;
-+		pci_add_resource_offset(&resources, res, offset);
-+	}
- 
- 	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
- 				&resources);
-@@ -143,42 +152,12 @@ static int __init pcibios_init(void)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index af2a98a..a6e427a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -95,32 +95,32 @@ static void add_to_failed_list(struct list_head *head,
+ 			0 /* dont care */);
  }
- subsys_initcall(pcibios_init);
  
--static void pcibios_fixup_device_resources(struct pci_dev *dev,
--	struct pci_bus *bus)
--{
--	/* Update device resources.  */
--	struct pci_channel *hose = bus->sysdata;
--	unsigned long offset = 0;
--	int i;
--
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		if (!dev->resource[i].start)
--			continue;
--		if (dev->resource[i].flags & IORESOURCE_IO)
--			offset = hose->io_offset;
--		else if (dev->resource[i].flags & IORESOURCE_MEM)
--			offset = hose->mem_offset;
--
--		dev->resource[i].start += offset;
--		dev->resource[i].end += offset;
--	}
--}
--
- /*
-  *  Called after each bus is probed, but before its children
-  *  are examined.
-  */
- void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+-static void remove_from_list(struct list_head *realloc_head,
++static void remove_from_list(struct list_head *head,
+ 				 struct resource *res)
  {
--	struct pci_dev *dev;
--	struct list_head *ln;
--
--	for (ln = bus->devices.next; ln != &bus->devices; ln = ln->next) {
--		dev = pci_dev_b(ln);
--
--		if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
--			pcibios_fixup_device_resources(dev, bus);
--	}
+-	struct pci_dev_resource *dev_res_x, *tmp;
++	struct pci_dev_resource *dev_res, *tmp;
+ 
+-	list_for_each_entry_safe(dev_res_x, tmp, realloc_head, list) {
+-		if (dev_res_x->res == res) {
+-			list_del(&dev_res_x->list);
+-			kfree(dev_res_x);
++	list_for_each_entry_safe(dev_res, tmp, head, list) {
++		if (dev_res->res == res) {
++			list_del(&dev_res->list);
++			kfree(dev_res);
+ 			break;
+ 		}
+ 	}
  }
  
- /*
-@@ -208,36 +187,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct pci_channel *hose = dev->sysdata;
--	unsigned long offset = 0;
--
--	if (res->flags & IORESOURCE_IO)
--		offset = hose->io_offset;
--	else if (res->flags & IORESOURCE_MEM)
--		offset = hose->mem_offset;
--
--	region->start = res->start - offset;
--	region->end = res->end - offset;
--}
--
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct pci_channel *hose = dev->sysdata;
--	unsigned long offset = 0;
--
--	if (res->flags & IORESOURCE_IO)
--		offset = hose->io_offset;
--	else if (res->flags & IORESOURCE_MEM)
--		offset = hose->mem_offset;
--
--	res->start = region->start + offset;
--	res->end = region->end + offset;
--}
--
- int pcibios_enable_device(struct pci_dev *dev, int mask)
+-static resource_size_t get_res_add_size(struct list_head *realloc_head,
++static resource_size_t get_res_add_size(struct list_head *head,
+ 					struct resource *res)
  {
- 	return pci_enable_resources(dev, mask);
-@@ -381,8 +330,6 @@ EXPORT_SYMBOL(pci_iounmap);
- #endif /* CONFIG_GENERIC_IOMAP */
+-	struct pci_dev_resource *dev_res_x;
++	struct pci_dev_resource *dev_res;
  
- #ifdef CONFIG_HOTPLUG
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--EXPORT_SYMBOL(pcibios_bus_to_resource);
- EXPORT_SYMBOL(PCIBIOS_MIN_IO);
- EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
- #endif
-diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
-index cb21e23..3b5b6ab 100644
---- a/arch/sh/include/asm/pci.h
-+++ b/arch/sh/include/asm/pci.h
-@@ -114,11 +114,7 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- /* Board-specific fixup routines. */
- int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+-	list_for_each_entry(dev_res_x, realloc_head, list) {
+-		if (dev_res_x->res == res) {
+-			dev_printk(KERN_DEBUG, &dev_res_x->dev->dev,
++	list_for_each_entry(dev_res, head, list) {
++		if (dev_res->res == res) {
++			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				 "%pR get_res_add_size  add_size %llx\n",
+-				 dev_res_x->res,
+-				 (unsigned long long)dev_res_x->add_size);
+-			return dev_res_x->add_size;
++				 dev_res->res,
++				 (unsigned long long)dev_res->add_size);
++			return dev_res->add_size;
+ 		}
+ 	}
  
--extern void pcibios_resource_to_bus(struct pci_dev *dev,
--	struct pci_bus_region *region, struct resource *res);
--
--extern void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--				    struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
+@@ -221,15 +221,15 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 		struct list_head *head)
+ {
+ 	struct resource *res;
+-	struct pci_dev_resource *dev_res_x, *tmp;
++	struct pci_dev_resource *add_res, *tmp;
+ 	struct pci_dev_resource *dev_res;
+ 	resource_size_t add_size;
+ 	int idx;
  
- #define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
+-	list_for_each_entry_safe(dev_res_x, tmp, realloc_head, list) {
++	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
+ 		bool found_match = false;
  
+-		res = dev_res_x->res;
++		res = add_res->res;
+ 		/* skip resource that has been reset */
+ 		if (!res->flags)
+ 			goto out;
+@@ -244,26 +244,26 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 		if (!found_match)/* just skip */
+ 			continue;
+ 
+-		idx = res - &dev_res_x->dev->resource[0];
+-		add_size = dev_res_x->add_size;
++		idx = res - &add_res->dev->resource[0];
++		add_size = add_res->add_size;
+ 		if (!resource_size(res)) {
+-			res->start = dev_res_x->start;
++			res->start = add_res->start;
+ 			res->end = res->start + add_size - 1;
+-			if (pci_assign_resource(dev_res_x->dev, idx))
++			if (pci_assign_resource(add_res->dev, idx))
+ 				reset_resource(res);
+ 		} else {
+-			resource_size_t align = dev_res_x->min_align;
+-			res->flags |= dev_res_x->flags &
++			resource_size_t align = add_res->min_align;
++			res->flags |= add_res->flags &
+ 				 (IORESOURCE_STARTALIGN|IORESOURCE_SIZEALIGN);
+-			if (pci_reassign_resource(dev_res_x->dev, idx,
++			if (pci_reassign_resource(add_res->dev, idx,
+ 						  add_size, align))
+-				dev_printk(KERN_DEBUG, &dev_res_x->dev->dev,
++				dev_printk(KERN_DEBUG, &add_res->dev->dev,
+ 				   "failed to add optional resources res=%pR\n",
+ 							res);
+ 		}
+ out:
+-		list_del(&dev_res_x->list);
+-		kfree(dev_res_x);
++		list_del(&add_res->list);
++		kfree(add_res);
+ 	}
+ }
+ 
+@@ -319,7 +319,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 */
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+-	struct pci_dev_resource *dev_res_x;
++	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res;
+ 
+ 	/* Check if optional add_size is there */
+@@ -358,12 +358,12 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		if (dev_res->res->parent)
+ 			release_resource(dev_res->res);
+ 	/* Restore start/end/flags from saved list */
+-	list_for_each_entry(dev_res_x, &save_head, list) {
+-		struct resource *res = dev_res_x->res;
++	list_for_each_entry(save_res, &save_head, list) {
++		struct resource *res = save_res->res;
+ 
+-		res->start = dev_res_x->start;
+-		res->end = dev_res_x->end;
+-		res->flags = dev_res_x->flags;
++		res->start = save_res->start;
++		res->end = save_res->end;
++		res->flags = save_res->flags;
+ 	}
+ 	free_list(pci_dev_resource, &save_head);
+ 
+@@ -1250,7 +1250,7 @@ pci_assign_unassigned_resources(void)
+ 	int tried_times = 0;
+ 	enum release_type rel_type = leaf_only;
+ 	LIST_HEAD(fail_head);
+-	struct pci_dev_resource *dev_res_x;
++	struct pci_dev_resource *fail_res;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 	unsigned long failed_type;
+@@ -1289,8 +1289,8 @@ again:
+ 		goto enable_and_dump;
+ 
+ 	failed_type = 0;
+-	list_for_each_entry(dev_res_x, &fail_head, list)
+-		failed_type |= dev_res_x->flags;
++	list_for_each_entry(fail_res, &fail_head, list)
++		failed_type |= fail_res->flags;
+ 
+ 	/*
+ 	 * io port are tight, don't try extra
+@@ -1313,20 +1313,20 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(dev_res_x, &fail_head, list) {
+-		bus = dev_res_x->dev->bus;
++	list_for_each_entry(fail_res, &fail_head, list) {
++		bus = fail_res->dev->bus;
+ 		pci_bus_release_bridge_resources(bus,
+-						 dev_res_x->flags & type_mask,
++						 fail_res->flags & type_mask,
+ 						 rel_type);
+ 	}
+ 	/* restore size and flags */
+-	list_for_each_entry(dev_res_x, &fail_head, list) {
+-		struct resource *res = dev_res_x->res;
++	list_for_each_entry(fail_res, &fail_head, list) {
++		struct resource *res = fail_res->res;
+ 
+-		res->start = dev_res_x->start;
+-		res->end = dev_res_x->end;
+-		res->flags = dev_res_x->flags;
+-		if (dev_res_x->dev->subordinate)
++		res->start = fail_res->start;
++		res->end = fail_res->end;
++		res->flags = fail_res->flags;
++		if (fail_res->dev->subordinate)
+ 			res->flags = 0;
+ 	}
+ 	free_list(pci_dev_resource, &fail_head);
+@@ -1350,7 +1350,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 					want additional resources */
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+-	struct pci_dev_resource *dev_res_x;
++	struct pci_dev_resource *fail_res;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+@@ -1377,21 +1377,21 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(dev_res_x, &fail_head, list) {
+-		struct pci_bus *bus = dev_res_x->dev->bus;
+-		unsigned long flags = dev_res_x->flags;
++	list_for_each_entry(fail_res, &fail_head, list) {
++		struct pci_bus *bus = fail_res->dev->bus;
++		unsigned long flags = fail_res->flags;
+ 
+ 		pci_bus_release_bridge_resources(bus, flags & type_mask,
+ 						 whole_subtree);
+ 	}
+ 	/* restore size and flags */
+-	list_for_each_entry(dev_res_x, &fail_head, list) {
+-		struct resource *res = dev_res_x->res;
++	list_for_each_entry(fail_res, &fail_head, list) {
++		struct resource *res = fail_res->res;
+ 
+-		res->start = dev_res_x->start;
+-		res->end = dev_res_x->end;
+-		res->flags = dev_res_x->flags;
+-		if (dev_res_x->dev->subordinate)
++		res->start = fail_res->start;
++		res->end = fail_res->end;
++		res->flags = fail_res->flags;
++		if (fail_res->dev->subordinate)
+ 			res->flags = 0;
+ 	}
+ 	free_list(pci_dev_resource, &fail_head);
+-- 
+1.7.7
 
