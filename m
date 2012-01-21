@@ -1,80 +1,183 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:56032 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751777Ab2A0R2n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:28:43 -0500
-Date: Fri, 27 Jan 2012 09:28:40 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Charlie Suffin <charlie.suffin@stratus.com>, stable@kernel.org
-Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel
- Sandy Bridge GPUs
-Message-ID: <20120127092840.52e7567e@jbarnes-desktop>
-In-Reply-To: <201201101145.52640.thomas.jarosch@intra2net.com>
-References: <4EDFD5BB.1050906@intra2net.com>
-	<201201101145.52640.thomas.jarosch@intra2net.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_//gXEEvKLHF5a7SEIoq9Eo5s"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 12/21] PCI: Merge pci_dev_resource_x and pci_dev_resource
+Date: Sat, 21 Jan 2012 02:08:28 -0800
+Message-Id: <1327140517-14811-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_//gXEEvKLHF5a7SEIoq9Eo5s
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+pci_dev_resource_x is superset of pci_dev_resource
 
-On Tue, 10 Jan 2012 11:45:52 +0100
-Thomas Jarosch <thomas.jarosch@intra2net.com> wrote:
+and those two are temp struct during resource reallocating.
 
-> On Wednesday, 7. December 2011 22:08:11 Thomas Jarosch wrote:
-> > Some BIOS implementations leave the Intel GPU interrupts enabled,
-> > even though no one is handling them (f.e. i915 driver is never loaded).
-> > Additionally the interrupt destination is not set up properly
-> > and the interrupt ends up -somewhere-.
-> >=20
-> > These spurious interrupts are "sticky" and the kernel disables
-> > the (shared) interrupt line after 100.000+ generated interrupts.
-> >=20
-> > Fix it by disabling the still enabled interrupts.
-> > This resolves crashes often seen on monitor unplug.
->=20
-> Happy new year 2012!
->=20
-> Any news on the status of this patch?
+pci_dev_resource usage is quite limted.
 
-Did you get my last reply:
+So just use pci_dev_resource_x, and rename it as new pci_dev_resource.
 
-Could really be dev_dbg, I think this will be fairly common.  I think we
-also need to ack any outstanding interrupts after disabling them in IER
-by writing IIR back on itself. Can you test that?
+-v2: According to Linus, Separate free_list change to another patch
 
-Other than that I'd like to apply it.
+Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   36 +++++++++++++++---------------------
+ 1 files changed, 15 insertions(+), 21 deletions(-)
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4c5509e..af2a98a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -31,12 +31,6 @@ struct pci_dev_resource {
+ 	struct list_head list;
+ 	struct resource *res;
+ 	struct pci_dev *dev;
+-};
+-
+-struct pci_dev_resource_x {
+-	struct list_head list;
+-	struct resource *res;
+-	struct pci_dev *dev;
+ 	resource_size_t start;
+ 	resource_size_t end;
+ 	resource_size_t add_size;
+@@ -72,7 +66,7 @@ static int add_to_list(struct list_head *head,
+ 		 struct pci_dev *dev, struct resource *res,
+ 		 resource_size_t add_size, resource_size_t min_align)
+ {
+-	struct pci_dev_resource_x *tmp;
++	struct pci_dev_resource *tmp;
+ 
+ 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
+ 	if (!tmp) {
+@@ -104,7 +98,7 @@ static void add_to_failed_list(struct list_head *head,
+ static void remove_from_list(struct list_head *realloc_head,
+ 				 struct resource *res)
+ {
+-	struct pci_dev_resource_x *dev_res_x, *tmp;
++	struct pci_dev_resource *dev_res_x, *tmp;
+ 
+ 	list_for_each_entry_safe(dev_res_x, tmp, realloc_head, list) {
+ 		if (dev_res_x->res == res) {
+@@ -118,7 +112,7 @@ static void remove_from_list(struct list_head *realloc_head,
+ static resource_size_t get_res_add_size(struct list_head *realloc_head,
+ 					struct resource *res)
+ {
+-	struct pci_dev_resource_x *dev_res_x;
++	struct pci_dev_resource *dev_res_x;
+ 
+ 	list_for_each_entry(dev_res_x, realloc_head, list) {
+ 		if (dev_res_x->res == res) {
+@@ -227,7 +221,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 		struct list_head *head)
+ {
+ 	struct resource *res;
+-	struct pci_dev_resource_x *dev_res_x, *tmp;
++	struct pci_dev_resource *dev_res_x, *tmp;
+ 	struct pci_dev_resource *dev_res;
+ 	resource_size_t add_size;
+ 	int idx;
+@@ -325,7 +319,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 */
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+-	struct pci_dev_resource_x *dev_res_x;
++	struct pci_dev_resource *dev_res_x;
+ 	struct pci_dev_resource *dev_res;
+ 
+ 	/* Check if optional add_size is there */
+@@ -335,7 +329,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* Save original start, end, flags etc at first */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
+-			free_list(pci_dev_resource_x, &save_head);
++			free_list(pci_dev_resource, &save_head);
+ 			goto requested_and_reassign;
+ 		}
+ 	}
+@@ -353,12 +347,12 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		/* Remove head list from realloc_head list */
+ 		list_for_each_entry(dev_res, head, list)
+ 			remove_from_list(realloc_head, dev_res->res);
+-		free_list(pci_dev_resource_x, &save_head);
++		free_list(pci_dev_resource, &save_head);
+ 		free_list(pci_dev_resource, head);
+ 		return;
+ 	}
+ 
+-	free_list(pci_dev_resource_x, &local_fail_head);
++	free_list(pci_dev_resource, &local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list)
+ 		if (dev_res->res->parent)
+@@ -371,7 +365,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		res->end = dev_res_x->end;
+ 		res->flags = dev_res_x->flags;
+ 	}
+-	free_list(pci_dev_resource_x, &save_head);
++	free_list(pci_dev_resource, &save_head);
+ 
+ requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+@@ -1256,7 +1250,7 @@ pci_assign_unassigned_resources(void)
+ 	int tried_times = 0;
+ 	enum release_type rel_type = leaf_only;
+ 	LIST_HEAD(fail_head);
+-	struct pci_dev_resource_x *dev_res_x;
++	struct pci_dev_resource *dev_res_x;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 	unsigned long failed_type;
+@@ -1304,7 +1298,7 @@ again:
+ 	 */
+ 	failed_type &= type_mask;
+ 	if ((failed_type == IORESOURCE_IO) || (tried_times >= pci_try_num)) {
+-		free_list(pci_dev_resource_x, &fail_head);
++		free_list(pci_dev_resource, &fail_head);
+ 		goto enable_and_dump;
+ 	}
+ 
+@@ -1335,7 +1329,7 @@ again:
+ 		if (dev_res_x->dev->subordinate)
+ 			res->flags = 0;
+ 	}
+-	free_list(pci_dev_resource_x, &fail_head);
++	free_list(pci_dev_resource, &fail_head);
+ 
+ 	goto again;
+ 
+@@ -1356,7 +1350,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 					want additional resources */
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+-	struct pci_dev_resource_x *dev_res_x;
++	struct pci_dev_resource *dev_res_x;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+@@ -1372,7 +1366,7 @@ again:
+ 
+ 	if (tried_times >= 2) {
+ 		/* still fail, don't need to try more */
+-		free_list(pci_dev_resource_x, &fail_head);
++		free_list(pci_dev_resource, &fail_head);
+ 		goto enable_all;
+ 	}
+ 
+@@ -1400,7 +1394,7 @@ again:
+ 		if (dev_res_x->dev->subordinate)
+ 			res->flags = 0;
+ 	}
+-	free_list(pci_dev_resource_x, &fail_head);
++	free_list(pci_dev_resource, &fail_head);
+ 
+ 	goto again;
+ 
+-- 
+1.7.7
 
---Sig_//gXEEvKLHF5a7SEIoq9Eo5s
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIt7IAAoJEIEoDkX4Qk9hjuwQAM8evsv/fdwEU4oC2V+CKOHR
-ZJ4sEZ1eFKxFdAxjI8udR3m5F2P2G5A5cwNA2iioV10U+Nde7itKGxO8vYov/eWV
-A7OX9rV4f+9TqjCk2cSJaYcp9HUhPKgwN365b9z0M9Ijj4ffN+1C6GiQSVnN67Nt
-SKshG8TWoDlhrR2Of5y6lEsT2rYnbwsF6zUDtxe/U4+jyt9P3Cekoaa04JQCrpSV
-5v7k4s34m8IMKrD26eK0Q5foKpG4tdoxn0WuRHuBukYorgSlgTJgmJCefo1F5OW2
-iQchnC8Zd32/crKo9B6lPOmHscso3qB/7S67mXRfdGU0iATD4Hov0lwV7gM90rWq
-oRWhlkoutJXSMdJN9/D9Oqj1qFutsyzaCeZyVZEAyI7LQckc3WWIxQUQlYsJt1m5
-aRtEFIP0peNSEuojPn1B5e+VR0ZCbpWZOG6TRHMJc8FpIo9FZdHuck/zVg+eJ8fz
-xa6GLgOXAsVsBvNhrVmfx4zpiEOb1SHHfVN0Y370nw1S2gUx+V5qNkPmkpv+mwzK
-5h4wEvQO0vRlztJ+GWF0kDnK00Efd1Dx5xo5P/oP7QZcC2y120UGv5kNLyx30jRM
-p+YEYyjcB8/VbtmWMOmXxULHhqJgVwOv4AAvYUfZIsVwNIl4q8RuVp1L00L3FLx4
-g3VdvHsxvONYILuDx6pR
-=Rkbv
------END PGP SIGNATURE-----
-
---Sig_//gXEEvKLHF5a7SEIoq9Eo5s--
