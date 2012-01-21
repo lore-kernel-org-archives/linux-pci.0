@@ -1,45 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:55011 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932622Ab2AJT7o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2012 14:59:44 -0500
-Message-ID: <4F0CA652.5040103@xenotime.net>
-Date: Tue, 10 Jan 2012 12:57:54 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	x86 maintainers <x86@kernel.org>, linux-pci@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: linux-next: Tree for Jan 9 (arch/x86/pci/amd_bus.c)
-References: <20120109170457.4465dfc66a0eace4a2230fef@canb.auug.org.au> <4F0B569B.6050004@xenotime.net> <CAErSpo4+remnOA6gJXOz_54CsbbcOq_Yj=ua9gV_bq5dZ64ABA@mail.gmail.com>
-In-Reply-To: <CAErSpo4+remnOA6gJXOz_54CsbbcOq_Yj=ua9gV_bq5dZ64ABA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 14/21] PCI: Change free_list() to function
+Date: Sat, 21 Jan 2012 02:08:30 -0800
+Message-Id: <1327140517-14811-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/09/2012 02:40 PM, Bjorn Helgaas wrote:
-> On Mon, Jan 9, 2012 at 2:05 PM, Randy Dunlap <rdunlap@xenotime.net> wrote:
->> on several i386 builds:
->>
->> amd_bus.c:(.init.text+0x134b): undefined reference to `amd_get_mmconfig_range'
-> 
-> This is my fault.  I moved some code from amd_bus.c to amd_nb.c, and builds with
-> 
->         CONFIG_PCI=y
->         # CONFIG_AMD_NB not set
-> 
-> now fail.  The attached patch should fix it.  I'll repost the series
-> ("x86/PCI: amd: factor out MMCONFIG discovery") with the fix.
-> 
-> Yinghai, it looks to me like there's no reason to build amd_bus.o
-> unless we have CONFIG_AMD_NB=y, but speak up if I'm wrong :)
+After merging struct pci_dev_resource_x and pci_dev_resource,
+We can use function instead of macro now.
 
-Seems to work for me.  Thanks.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   36 +++++++++++++++++++-----------------
+ 1 files changed, 19 insertions(+), 17 deletions(-)
 
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a6e427a..c845d18 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -38,13 +38,15 @@ struct pci_dev_resource {
+ 	unsigned long flags;
+ };
+ 
+-#define free_list(type, head) do {				\
+-	struct type *dev_res, *tmp;				\
+-	list_for_each_entry_safe(dev_res, tmp, head, list) {	\
+-		list_del(&dev_res->list);			\
+-		kfree(dev_res);					\
+-	}							\
+-} while (0)
++static void free_list(struct list_head *head)
++{
++	struct pci_dev_resource *dev_res, *tmp;
++
++	list_for_each_entry_safe(dev_res, tmp, head, list) {
++		list_del(&dev_res->list);
++		kfree(dev_res);
++	}
++}
+ 
+ int pci_realloc_enable = 0;
+ #define pci_realloc_enabled() pci_realloc_enable
+@@ -329,7 +331,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* Save original start, end, flags etc at first */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
+-			free_list(pci_dev_resource, &save_head);
++			free_list(&save_head);
+ 			goto requested_and_reassign;
+ 		}
+ 	}
+@@ -347,12 +349,12 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		/* Remove head list from realloc_head list */
+ 		list_for_each_entry(dev_res, head, list)
+ 			remove_from_list(realloc_head, dev_res->res);
+-		free_list(pci_dev_resource, &save_head);
+-		free_list(pci_dev_resource, head);
++		free_list(&save_head);
++		free_list(head);
+ 		return;
+ 	}
+ 
+-	free_list(pci_dev_resource, &local_fail_head);
++	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list)
+ 		if (dev_res->res->parent)
+@@ -365,7 +367,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		res->end = save_res->end;
+ 		res->flags = save_res->flags;
+ 	}
+-	free_list(pci_dev_resource, &save_head);
++	free_list(&save_head);
+ 
+ requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+@@ -375,7 +377,7 @@ requested_and_reassign:
+ 		requests */
+ 	if (realloc_head)
+ 		reassign_resources_sorted(realloc_head, head);
+-	free_list(pci_dev_resource, head);
++	free_list(head);
+ }
+ 
+ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+@@ -1298,7 +1300,7 @@ again:
+ 	 */
+ 	failed_type &= type_mask;
+ 	if ((failed_type == IORESOURCE_IO) || (tried_times >= pci_try_num)) {
+-		free_list(pci_dev_resource, &fail_head);
++		free_list(&fail_head);
+ 		goto enable_and_dump;
+ 	}
+ 
+@@ -1329,7 +1331,7 @@ again:
+ 		if (fail_res->dev->subordinate)
+ 			res->flags = 0;
+ 	}
+-	free_list(pci_dev_resource, &fail_head);
++	free_list(&fail_head);
+ 
+ 	goto again;
+ 
+@@ -1366,7 +1368,7 @@ again:
+ 
+ 	if (tried_times >= 2) {
+ 		/* still fail, don't need to try more */
+-		free_list(pci_dev_resource, &fail_head);
++		free_list(&fail_head);
+ 		goto enable_all;
+ 	}
+ 
+@@ -1394,7 +1396,7 @@ again:
+ 		if (fail_res->dev->subordinate)
+ 			res->flags = 0;
+ 	}
+-	free_list(pci_dev_resource, &fail_head);
++	free_list(&fail_head);
+ 
+ 	goto again;
+ 
 -- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+1.7.7
+
