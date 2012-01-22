@@ -1,44 +1,65 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:55092 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751982Ab2AVTWf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Jan 2012 14:22:35 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4r-4JH+3cqnsgR1fgNsGQL7wH_JozPSgaHKTweKtoM7w@mail.gmail.com>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo54k=pL1P1z7OetC1qJbsH9LH0GY4QFy-=PPKR0vF14SA@mail.gmail.com>
-	<CAE9FiQUYYsfUAi-jy1uQ0V8W0mHF1eTRnHQPK46cajLvPgmR5A@mail.gmail.com>
-	<CAErSpo4r-4JH+3cqnsgR1fgNsGQL7wH_JozPSgaHKTweKtoM7w@mail.gmail.com>
-Date: Tue, 31 Jan 2012 16:27:06 -0800
-Message-ID: <CAE9FiQX7vrXJ_RFYdKFeK2v10BAzVOFNn08a4=pG7vbqjyifTA@mail.gmail.com>
-Subject: Re: [PATCH -v3 0/14] PCI: allocate pci bus num range for unassigned
- bridge busn
+In-Reply-To: <1327141448-15281-1-git-send-email-yinghai@kernel.org>
+References: <1327141448-15281-1-git-send-email-yinghai@kernel.org>
+Date: Sun, 22 Jan 2012 11:22:34 -0800
+Message-ID: <CAE9FiQVwU9gW2UsxbBxvdSJPFVFZOrgAha6TKvLqC4Ao3eD36g@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/3] PCI: allocate pci bus num range for bridge scan
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2012 at 3:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Thanks.  I tried this, and it blew up as soon as I did a rescan.  More
-> complete console log attached.
+On Sat, Jan 21, 2012 at 2:24 AM, Yinghai Lu <yinghai@kernel.org> wrote:
 >
-> # echo 1 > /sys/bus/pci/rescan
-> [  140.237870] pci_bus 0000:00: scanning bus pass 0
-> [  140.242551] pci 0000:00:01.0: scanning [bus 01-01] behind bridge, pass 0
-> [  140.249249] pci 0000:00:01.0: check if busn 01-01 is in busn_res: [bus 00-7e]
-> [  140.256377] pci 0000:00:01.0: bus configuration invalid, reconfiguring
-> [  140.262912] pci 0000:00:01.1: scanning [bus 02-02] behind bridge, pass 0
-> [  140.269593] pci 0000:00:01.1: check if busn 02-02 is in busn_res: [bus 00-7e]
-> [  140.276721] pci 0000:00:01.1: bus configuration invalid, reconfiguring
+> could be found at:
+>        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
+>
+>
+>  arch/ia64/pci/pci.c              |    9 +
+>  arch/powerpc/kernel/pci-common.c |   12 ++-
+>  arch/x86/include/asm/topology.h  |    3 +-
+>  arch/x86/pci/acpi.c              |   15 ++-
+>  arch/x86/pci/bus_numa.c          |    8 +-
+>  arch/x86/pci/common.c            |   11 +-
+>  drivers/parisc/dino.c            |    9 +
+>  drivers/parisc/lba_pci.c         |    8 +
+>  drivers/pci/probe.c              |  298 +++++++++++++++++++++++++++++---------
+>  drivers/pci/remove.c             |    1 +
+>  include/linux/ioport.h           |    1 +
+>  include/linux/pci.h              |    5 +
+>  kernel/resource.c                |    8 +
+>  13 files changed, 310 insertions(+), 78 deletions(-)
 
-did not try this test case.
+update the branch to have less change to other arch and add one patch
+to separate
+pci_scan_child_bus to two passes.
 
-will check that .
+5cb2147: PCI: Seperate child bus scanning to two passes overall
+0cfebdb: PCI: kill pci_fixup_parent_subordinate_busnr()
+cd03e86: PCI: Allocate bus range instead of use max blindly
+e3edd5b: PCI: Add iobusn_resource and insert root bus range to that tree.
 
-Thanks
-
-Yinghai
+ arch/ia64/pci/pci.c              |    2 +
+ arch/powerpc/kernel/pci-common.c |    7 +-
+ arch/x86/include/asm/topology.h  |    3 +-
+ arch/x86/pci/acpi.c              |    8 +-
+ arch/x86/pci/bus_numa.c          |    8 +-
+ arch/x86/pci/common.c            |   11 +-
+ drivers/parisc/dino.c            |    2 +
+ drivers/parisc/lba_pci.c         |    3 +
+ drivers/pci/probe.c              |  427 ++++++++++++++++++++++++++++++--------
+ drivers/pci/remove.c             |    1 +
+ include/linux/ioport.h           |    1 +
+ include/linux/pci.h              |    8 +
+ kernel/resource.c                |    8 +
+ 13 files changed, 395 insertions(+), 94 deletions(-)
