@@ -1,46 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:60482 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754969Ab2AYAdZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2012 19:33:25 -0500
-Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 585722123C
-	for <linux-pci@vger.kernel.org>; Tue, 24 Jan 2012 19:33:25 -0500 (EST)
-Date: Tue, 24 Jan 2012 16:33:13 -0800
-From: Greg KH <greg@kroah.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
-	USB list <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH resend] Clean up new_id and remove_id sysfs attribute
- routines
-Message-ID: <20120125003313.GA15617@kroah.com>
-References: <Pine.LNX.4.44L0.1201241433200.1200-100000@iolanthe.rowland.org>
+Received: from imr-ma05.mx.aol.com ([64.12.100.31]:44254 "EHLO
+	imr-ma05.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752409Ab2AVViN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Jan 2012 16:38:13 -0500
+To: laz.lazarus@gmail.com, lchung@mercurynews.com,
+	letters@mercurynews.com, libnl@lists.infradead.org,
+	linux-mtd@lists.infradead.org,
+	linux-mtd-request@lists.infradead.org, linux-pci@vger.kernel.org,
+	majordomo@vger.kernel.org, netfilter@vger.kernel.org,
+	netfilter-core@lists.netfilter.org,
+	netfilter-core-request@lists.netfilter.org,
+	netfilter-devel@vger.kernel.org,
+	ocf-linux-users@lists.sourceforge.net,
+	oprofile-list@lists.sourceforge.net, patthurston@kgoradio.com,
+	peter@peterbcollins.com, ray@raytal.com, raytaliaferro2@yahoo.com,
+	richwalcoff@kgoradio.com, robert.richter@amd.com,
+	rogerswilliamj@aol.com, sis-scps-interest@mailman.ccsds.org,
+	u-boot@lists.denx.de, u-boot-users@lists.sourceforge.net,
+	valgrind-users@lists.sourceforge.net,
+	valgrind-users-request@lists.sourceforge.net,
+	welcome@members.fling.com, wireshark-users@wireshark.org,
+	wireshark-users-request@wireshark.org, xorp-users@xorp.org
+Subject: I figured I should share the wealth.
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.44L0.1201241433200.1200-100000@iolanthe.rowland.org>
+From: jobhunts02@aol.com
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Message-Id: <8CEA76453739454-12C-1EA25@Webmail-m112.sysops.aol.com>
+Date: Sun, 22 Jan 2012 16:31:24 -0500 (EST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 24, 2012 at 02:35:13PM -0500, Alan Stern wrote:
-> This patch (as1514) cleans up some places where new_id and remove_id
-> sysfs attributes are created and deleted.  Handling both attributes in
-> a single routine rather than a pair of routines makes the code
-> smaller.  It also prevents certain kinds of errors, like one we
-> currently have in the USB subsystem: The removeid attribute is often
-> created even when newid isn't (because the driver's no_dynamid_id flag
-> is set).
-> 
-> In the case of the PCMCIA subsystem, the newid attribute is created
-> but never explicitly deleted.  The patch adds a deletion routine.
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-> CC: Dominik Brodowski <linux@dominikbrodowski.net>
+I feel guilty that I cant provide for my family now im always one step 
+ahead I had hit an all time low...
+http://reklammakinesi.com/currentevents/94DavidPatterson/ now I cant go 
+anywhere without being recognized
+this is the real deal.
 
-Jesse and Dominik, any objection for me to take this through my tree?
+ttyl.
 
-thanks,
 
-greg k-h
