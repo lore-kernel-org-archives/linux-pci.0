@@ -1,57 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19871 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753766Ab2AXArv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Jan 2012 19:47:51 -0500
-From: Seth Heasley <seth.heasley@intel.com>
-To: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
-Subject: [PATCH 6/6] pci: irq and pci_ids patch for Intel Lynx Point DeviceIDs
-Date: Mon, 23 Jan 2012 16:46:24 -0800
-Cc: linux-kernel@vger.kernel.org, james.d.ralston@intel.com,
-	seth.heasley@intel.com
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:44813 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752669Ab2AWQGe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 11:06:34 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201201231646.24194.seth.heasley@intel.com>
+In-Reply-To: <1327139539-14301-2-git-send-email-yinghai@kernel.org>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org> <1327139539-14301-2-git-send-email-yinghai@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 23 Jan 2012 08:06:12 -0800
+Message-ID: <CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the LPC Controller DeviceIDs for the Intel Lynx Point PCH.
+On Sat, Jan 21, 2012 at 1:52 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+> +       /*
+> +        * pci_stop_bus_device(dev) will not remove dev from bus->devices list,
+> +        *  so We don't need use _safe version for_each here.
+> +        * Also _safe version has problem when pci_stop_bus_device() for PF try
+> +        *  to remove VFs.
+> +        */
+> +       for (l = head->next; l != head;) {
 
-Signed-off-by: Seth Heasley <seth.heasley@intel.com>
----
- arch/x86/pci/irq.c      |    4 +++-
- include/linux/pci_ids.h |    2 ++
- 2 files changed, 5 insertions(+), 1 deletions(-)
+That's crazy. Why would you open-code this? Why isn't it just a
+"list_for_each()"?
 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 372e9b8..22468b6 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -604,7 +604,9 @@ static __init int intel_router_probe(struct irq_router *r, struct pci_dev *route
- 	||  (device >= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN &&
- 	     device <= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
- 	||  (device >= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MIN &&
--	     device <= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)) {
-+	     device <= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)
-+	||  (device >= PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN &&
-+	     device <= PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX)) {
- 		r->name = "PIIX/ICH";
- 		r->get = pirq_piix_get;
- 		r->set = pirq_piix_set;
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 31d77af..6a0359a 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2800,6 +2800,8 @@
- #define PCI_DEVICE_ID_INTEL_82454NX     0x84cb
- #define PCI_DEVICE_ID_INTEL_84460GX	0x84ea
- #define PCI_DEVICE_ID_INTEL_IXP4XX	0x8500
-+#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN	0x8c40
-+#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX	0x8c5f
- #define PCI_DEVICE_ID_INTEL_IXP2800	0x9004
- #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
- 
--- 
-1.7.4.4
+And what are the problems with the safe version? If the safe version
+doesn't work, then something is *seriously* wrong with the list.
 
+> +               struct pci_dev *dev = pci_dev_b(l);
+> +
+> +               /*
+> +                * VFs are removed by pci_remove_bus_device() in the
+> +                *  pci_stop_bus_devices() code path for PF.
+> +                *  aka, bus->devices get updated in the process.
+> +                * barrier() will make sure we get right next from that list.
+> +                */
+> +               if (!dev->is_virtfn) {
+> +                       pci_stop_bus_device(dev);
+> +                       barrier();
+> +               }
+
+And this is just insanity. The "barrier()" cannot *possibly* do
+anything sane. If it really makes a difference, there is again some
+serious problem with the whole f*cking thing.
+
+NAK on the patch until sanity is restored. This is just total voodoo
+programming.
+
+                            Linus
