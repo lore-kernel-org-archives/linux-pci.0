@@ -1,124 +1,442 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:58584 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753308Ab2AMQlL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Jan 2012 11:41:11 -0500
-Received: from /spool/local
-	by e4.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Fri, 13 Jan 2012 11:41:10 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q0DGddPc281660
-	for <linux-pci@vger.kernel.org>; Fri, 13 Jan 2012 11:39:40 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q0DGdaNY024289
-	for <linux-pci@vger.kernel.org>; Fri, 13 Jan 2012 14:39:39 -0200
-Date: Sat, 14 Jan 2012 00:39:22 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
-Message-ID: <20120113163922.GH7380@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
- <1323247984-15281-3-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 2/5] vfio: VFIO core header
+To: chrisw@sous-sol.org, aik@ozlabs.ru, david@gibson.dropbear.id.au,
+	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 23 Jan 2012 10:20:54 -0700
+Message-ID: <20120123172054.26865.88890.stgit@bling.home>
+In-Reply-To: <20120123165620.26865.51875.stgit@bling.home>
+References: <20120123165620.26865.51875.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1323247984-15281-3-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 07, 2011 at 12:53:01AM -0800, Yinghai Lu wrote:
-> Found reassign can not find right range for one resource. even total range is enough.
-> 
-> bridge b1:02.0 will need 2M+3M
-> bridge b1:03.0 will need 2M+3M
-> 
-> so bridge b0:00.0 will get assigned: 4M : [f8000000-f83fffff]
->    later is reassigned to 10M : [f8000000-f9ffffff]
-> 
-> b1:02.0 is assigned to 2M : [f8000000-f81fffff]
-> b1:03.0 is assigned to 2M : [f8200000-f83fffff]
-> 
-> after that b1:03.0 get chance to be reassigned to [f8200000-f86fffff]
-> but b1:02.0 will not have chance to expand, because b1:03.0 is using in middle one.
-> 
-> [  187.911401] pci 0000:b1:02.0: bridge window [mem 0x00100000-0x002fffff] to [bus b2-b2] add_size 300000
-> [  187.920764] pci 0000:b1:03.0: bridge window [mem 0x00100000-0x002fffff] to [bus b3-b3] add_size 300000
-> [  187.930129] pci 0000:b1:02.0: [mem 0x00100000-0x002fffff] get_res_add_size  add_size 300000
-> [  187.938500] pci 0000:b1:03.0: [mem 0x00100000-0x002fffff] get_res_add_size  add_size 300000
-> [  187.946857] pci 0000:b0:00.0: bridge window [mem 0x00100000-0x004fffff] to [bus b1-b3] add_size 600000
-> [  187.956206] pci 0000:b0:00.0: BAR 14: assigned [mem 0xf8000000-0xf83fffff]
-> [  187.963102] pci 0000:b0:00.0: BAR 15: assigned [mem 0xf5000000-0xf51fffff pref]
-> [  187.970434] pci 0000:b0:00.0: BAR 14: reassigned [mem 0xf8000000-0xf89fffff]
-> [  187.977497] pci 0000:b1:02.0: BAR 14: assigned [mem 0xf8000000-0xf81fffff]
-> [  187.984383] pci 0000:b1:02.0: BAR 15: assigned [mem 0xf5000000-0xf50fffff pref]
-> [  187.991695] pci 0000:b1:03.0: BAR 14: assigned [mem 0xf8200000-0xf83fffff]
-> [  187.998576] pci 0000:b1:03.0: BAR 15: assigned [mem 0xf5100000-0xf51fffff pref]
-> [  188.005888] pci 0000:b1:03.0: BAR 14: reassigned [mem 0xf8200000-0xf86fffff]
-> [  188.012939] pci 0000:b1:02.0: BAR 14: can't assign mem (size 0x200000)
-> [  188.019471] pci 0000:b1:02.0: failed to add 300000 to res=[mem 0xf8000000-0xf81fffff]
-> [  188.027326] pci 0000:b2:00.0: reg 184: [mem 0x00000000-0x00003fff 64bit]
-> [  188.034071] pci 0000:b2:00.0: reg 18c: [mem 0x00000000-0x000fffff 64bit]
-> [  188.040795] pci 0000:b2:00.0: BAR 2: assigned [mem 0xf8000000-0xf80fffff 64bit]
-> [  188.048119] pci 0000:b2:00.0: BAR 2: set to [mem 0xf8000000-0xf80fffff 64bit] (PCI address [0xf8000000-0xf80fffff])
-> [  188.058550] pci 0000:b2:00.0: BAR 6: assigned [mem 0xf5000000-0xf50fffff pref]
-> [  188.065802] pci 0000:b2:00.0: BAR 0: assigned [mem 0xf8100000-0xf8103fff 64bit]
-> [  188.073125] pci 0000:b2:00.0: BAR 0: set to [mem 0xf8100000-0xf8103fff 64bit] (PCI address [0xf8100000-0xf8103fff])
-> [  188.083596] pci 0000:b2:00.0: reg 18c: [mem 0x00000000-0x000fffff 64bit]
-> [  188.090310] pci 0000:b2:00.0: BAR 9: can't assign mem (size 0x300000)
-> [  188.096773] pci 0000:b2:00.0: reg 184: [mem 0x00000000-0x00003fff 64bit]
-> [  188.103479] pci 0000:b2:00.0: BAR 7: assigned [mem 0xf8104000-0xf810ffff 64bit]
-> [  188.110801] pci 0000:b2:00.0: BAR 7: set to [mem 0xf8104000-0xf810ffff 64bit] (PCI address [0xf8104000-0xf810ffff])
-> [  188.121256] pci 0000:b1:02.0: PCI bridge to [bus b2-b2]
-> [  188.126512] pci 0000:b1:02.0:   bridge window [mem 0xf8000000-0xf81fffff]
-> [  188.133328] pci 0000:b1:02.0:   bridge window [mem 0xf5000000-0xf50fffff pref]
-> [  188.140608] pci 0000:b3:00.0: reg 184: [mem 0x00000000-0x00003fff 64bit]
-> [  188.147341] pci 0000:b3:00.0: reg 18c: [mem 0x00000000-0x000fffff 64bit]
-> [  188.154076] pci 0000:b3:00.0: BAR 2: assigned [mem 0xf8200000-0xf82fffff 64bit]
-> [  188.161417] pci 0000:b3:00.0: BAR 2: set to [mem 0xf8200000-0xf82fffff 64bit] (PCI address [0xf8200000-0xf82fffff])
-> [  188.171865] pci 0000:b3:00.0: BAR 6: assigned [mem 0xf5100000-0xf51fffff pref]
-> [  188.179090] pci 0000:b3:00.0: BAR 0: assigned [mem 0xf8300000-0xf8303fff 64bit]
-> [  188.186431] pci 0000:b3:00.0: BAR 0: set to [mem 0xf8300000-0xf8303fff 64bit] (PCI address [0xf8300000-0xf8303fff])
-> [  188.196884] pci 0000:b3:00.0: reg 18c: [mem 0x00000000-0x000fffff 64bit]
-> [  188.203591] pci 0000:b3:00.0: BAR 9: assigned [mem 0xf8400000-0xf86fffff 64bit]
-> [  188.210909] pci 0000:b3:00.0: BAR 9: set to [mem 0xf8400000-0xf86fffff 64bit] (PCI address [0xf8400000-0xf86fffff])
-> [  188.221379] pci 0000:b3:00.0: reg 184: [mem 0x00000000-0x00003fff 64bit]
-> [  188.228089] pci 0000:b3:00.0: BAR 7: assigned [mem 0xf8304000-0xf830ffff 64bit]
-> [  188.235407] pci 0000:b3:00.0: BAR 7: set to [mem 0xf8304000-0xf830ffff 64bit] (PCI address [0xf8304000-0xf830ffff])
-> [  188.245843] pci 0000:b1:03.0: PCI bridge to [bus b3-b3]
-> [  188.251107] pci 0000:b1:03.0:   bridge window [mem 0xf8200000-0xf86fffff]
-> [  188.257922] pci 0000:b1:03.0:   bridge window [mem 0xf5100000-0xf51fffff pref]
-> [  188.265180] pci 0000:b0:00.0: PCI bridge to [bus b1-b3]
-> [  188.270443] pci 0000:b0:00.0:   bridge window [mem 0xf8000000-0xf89fffff]
-> [  188.277250] pci 0000:b0:00.0:   bridge window [mem 0xf5000000-0xf51fffff pref]
-> [  188.284512] pcieport 0000:80:02.2: PCI bridge to [bus b0-bf]
-> [  188.290184] pcieport 0000:80:02.2:   bridge window [io  0xa000-0xbfff]
-> [  188.296735] pcieport 0000:80:02.2:   bridge window [mem 0xf8000000-0xf8ffffff]
-> [  188.303963] pcieport 0000:80:02.2:   bridge window [mem 0xf5000000-0xf5ffffff 64bit pref]
-> 
-> b2:00.0 BAR 9 has not get assigned...
-> 
-> root cause:
-> b1:02.0 can not be added more range, because b1:03.0 is just after it.
-> not space between required ranges.
-> 
-> Solution:
-> Try to assign required + optional all together at first, and if it fails, go with required then reassign path.
+This defines both the user and bus driver APIs.
 
-Yinghai,
-	
-	I am worried that this approach will resurface old bug
-https://bugzilla.kernel.org/show_bug.cgi?id=15960
-	
-	With your approach; on a system with not enough resources to satisfy
-all the devices, when you fail to allocate 'required+optional' in the first
-round and fall back to assigning only the 'required' resources, you can get the
-reassignment order wrong, thus not allocate resources to devices for which the
-BIOS had originally allocated resources, and hence end up disabling the device.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
+ Documentation/ioctl/ioctl-number.txt |    1 
+ include/linux/vfio.h                 |  395 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 396 insertions(+), 0 deletions(-)
+ create mode 100644 include/linux/vfio.h
 
-RP
+diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
+index 2550754..79c5ef8 100644
+--- a/Documentation/ioctl/ioctl-number.txt
++++ b/Documentation/ioctl/ioctl-number.txt
+@@ -88,6 +88,7 @@ Code  Seq#(hex)	Include File		Comments
+ 		and kernel/power/user.c
+ '8'	all				SNP8023 advanced NIC card
+ 					<mailto:mcr@solidum.com>
++';'	64-83	linux/vfio.h
+ '@'	00-0F	linux/radeonfb.h	conflict!
+ '@'	00-0F	drivers/video/aty/aty128fb.c	conflict!
+ 'A'	00-1F	linux/apm_bios.h	conflict!
+diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+new file mode 100644
+index 0000000..797dbe4
+--- /dev/null
++++ b/include/linux/vfio.h
+@@ -0,0 +1,395 @@
++/*
++ * VFIO API definition
++ *
++ * Copyright (C) 2012 Red Hat, Inc.  All rights reserved.
++ *     Author: Alex Williamson <alex.williamson@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#ifndef VFIO_H
++#define VFIO_H
++
++#include <linux/types.h>
++
++#ifdef __KERNEL__	/* Internal VFIO-core/bus driver API */
++
++/**
++ * struct vfio_device_ops - VFIO bus driver device callbacks
++ *
++ * @match: Return true if buf describes the device
++ * @claim: Force driver to attach to device
++ * @open: Called when userspace receives file descriptor for device
++ * @release: Called when userspace releases file descriptor for device
++ * @read: Perform read(2) on device file descriptor
++ * @write: Perform write(2) on device file descriptor
++ * @ioctl: Perform ioctl(2) on device file descriptor, supporting VFIO_DEVICE_*
++ *         operations documented below
++ * @mmap: Perform mmap(2) on a region of the device file descriptor
++ */
++struct vfio_device_ops {
++	bool	(*match)(struct device *dev, const char *buf);
++	int	(*claim)(struct device *dev);
++	int	(*open)(void *device_data);
++	void	(*release)(void *device_data);
++	ssize_t	(*read)(void *device_data, char __user *buf,
++			size_t count, loff_t *ppos);
++	ssize_t	(*write)(void *device_data, const char __user *buf,
++			 size_t count, loff_t *size);
++	long	(*ioctl)(void *device_data, unsigned int cmd,
++			 unsigned long arg);
++	int	(*mmap)(void *device_data, struct vm_area_struct *vma);
++};
++
++/**
++ * vfio_group_add_dev() - Add a device to the vfio-core
++ *
++ * @dev: Device to add
++ * @ops: VFIO bus driver callbacks for device
++ *
++ * This registration makes the VFIO core aware of the device, creates
++ * groups objects as required and exposes chardevs under /dev/vfio.
++ *
++ * Return 0 on success, errno on failure.
++ */
++extern int vfio_group_add_dev(struct device *dev,
++			      const struct vfio_device_ops *ops);
++
++/**
++ * vfio_group_del_dev() - Remove a device from the vfio-core
++ *
++ * @dev: Device to remove
++ *
++ * Remove a device previously added to the VFIO core, removing groups
++ * and chardevs as necessary.
++ */
++extern void vfio_group_del_dev(struct device *dev);
++
++/**
++ * vfio_bind_dev() - Indicate device is bound to the VFIO bus driver and
++ *                   register private data structure for ops callbacks.
++ *
++ * @dev: Device being bound
++ * @device_data: VFIO bus driver private data
++ *
++ * This registration indicate that a device previously registered with
++ * vfio_group_add_dev() is now available for use by the VFIO core.  When
++ * all devices within a group are available, the group is viable and my
++ * be used by userspace drivers.  Typically called from VFIO bus driver
++ * probe function.
++ *
++ * Return 0 on success, errno on failure
++ */
++extern int vfio_bind_dev(struct device *dev, void *device_data);
++
++/**
++ * vfio_unbind_dev() - Indicate device is unbinding from VFIO bus driver
++ *
++ * @dev: Device being unbound
++ *
++ * De-registration of the device previously registered with vfio_bind_dev()
++ * from VFIO.  Upon completion, the device is no longer available for use by
++ * the VFIO core.  Typically called from the VFIO bus driver remove function.
++ * The VFIO core will attempt to release the device from users and may take
++ * measures to free the device and/or block as necessary.
++ *
++ * Returns pointer to private device_data structure registered with
++ * vfio_bind_dev().
++ */
++extern void *vfio_unbind_dev(struct device *dev);
++
++
++/**
++ * offsetofend(TYPE, MEMBER)
++ *
++ * @TYPE: The type of the structure
++ * @MEMBER: The member within the structure to get the end offset of
++ *
++ * Simple helper macro for dealing with variable sized structures passed
++ * from user space.  This allows us to easily determine if the provided
++ * structure is sized to include various fields.
++ */
++#define offsetofend(TYPE, MEMBER) ({				\
++	TYPE tmp;						\
++	offsetof(TYPE, MEMBER) + sizeof(tmp.MEMBER); })		\
++
++#endif /* __KERNEL__ */
++
++/* Kernel & User level defines for VFIO IOCTLs. */
++
++/*
++ * The IOCTL interface is designed for extensibility by embedding the
++ * structure length (argsz) and flags into structures passed between
++ * kernel and userspace.  We therefore use the _IO() macro for these
++ * defines to avoid implicitly embedding a size into the ioctl request.
++ * As structure fields are added, argsz will increase to match and flag
++ * bits will be defined to indicate additional fields with valid data.
++ * It's *always* the caller's responsibility to indicate the size of
++ * the structure passed by setting argsz appropriately.
++ */
++
++#define VFIO_TYPE	(';')
++#define VFIO_BASE	100
++
++/* --------------- IOCTLs for GROUP file descriptors --------------- */
++
++/**
++ * VFIO_GROUP_GET_INFO - _IOR(VFIO_TYPE, VFIO_BASE + 0, struct vfio_group_info)
++ *
++ * Retrieve information about the group.  Fills in provided
++ * struct vfio_group_info.  Caller sets argsz.
++ */
++struct vfio_group_info {
++	__u32	argsz;
++	__u32	flags;
++#define VFIO_GROUP_FLAGS_VIABLE		(1 << 0)
++#define VFIO_GROUP_FLAGS_MM_LOCKED	(1 << 1)
++};
++
++#define VFIO_GROUP_GET_INFO		_IO(VFIO_TYPE, VFIO_BASE + 0)
++
++/**
++ * VFIO_GROUP_MERGE - _IOW(VFIO_TYPE, VFIO_BASE + 1, __s32)
++ *
++ * Merge group indicated by passed file descriptor into current group.
++ * Current group may be in use, group indicated by file descriptor
++ * cannot be in use (no open iommu or devices).
++ */
++#define VFIO_GROUP_MERGE		_IOW(VFIO_TYPE, VFIO_BASE + 1, __s32)
++
++/**
++ * VFIO_GROUP_UNMERGE - _IO(VFIO_TYPE, VFIO_BASE + 2)
++ *
++ * Remove the current group from a merged set.  The current group cannot
++ * have any open devices.
++ */
++#define VFIO_GROUP_UNMERGE		_IO(VFIO_TYPE, VFIO_BASE + 2)
++
++/**
++ * VFIO_GROUP_GET_IOMMU_FD - _IO(VFIO_TYPE, VFIO_BASE + 3)
++ *
++ * Return a new file descriptor for the IOMMU object.  The IOMMU object
++ * is shared among members of a merged group.
++ */
++#define VFIO_GROUP_GET_IOMMU_FD		_IO(VFIO_TYPE, VFIO_BASE + 3)
++
++/**
++ * VFIO_GROUP_GET_DEVICE_FD - _IOW(VFIO_TYPE, VFIO_BASE + 4, char)
++ *
++ * Return a new file descriptor for the device object described by
++ * the provided char array.
++ */
++#define VFIO_GROUP_GET_DEVICE_FD	_IOW(VFIO_TYPE, VFIO_BASE + 4, char)
++
++
++/* --------------- IOCTLs for IOMMU file descriptors --------------- */
++
++/**
++ * VFIO_IOMMU_GET_INFO - _IOR(VFIO_TYPE, VFIO_BASE + 5, struct vfio_iommu_info)
++ *
++ * Retrieve information about the IOMMU object.  Fills in provided
++ * struct vfio_iommu_info.  Caller sets argsz.
++ */
++struct vfio_iommu_info {
++	__u32	argsz;
++	__u32	flags;
++	__u64	iova_start;	/* IOVA base address */
++	__u64	iova_size;	/* IOVA window size */
++	__u64	iova_entries;	/* Number mapping entries available */
++	__u64	iova_pgsizes;	/* Bitmap of supported page sizes */
++};
++
++#define	VFIO_IOMMU_GET_INFO		_IO(VFIO_TYPE, VFIO_BASE + 5)
++
++/**
++ * VFIO_IOMMU_MAP_DMA - _IOW(VFIO_TYPE, VFIO_BASE + 6, struct vfio_dma_map)
++ *
++ * Map process virtual addresses to IO virtual addresses using the
++ * provided struct vfio_dma_map.  Caller sets argsz.  READ &/ WRITE required.
++ */
++struct vfio_dma_map {
++	__u32	argsz;
++	__u32	flags;
++#define VFIO_DMA_MAP_FLAG_READ	(1 << 0)	/* readable from device */
++#define VFIO_DMA_MAP_FLAG_WRITE	(1 << 1)	/* writable from device */
++	__u64	vaddr;		/* Process virtual address */
++	__u64	iova;		/* IO virtual address */
++	__u64	size;		/* Size of mapping (bytes) */
++};
++
++#define	VFIO_IOMMU_MAP_DMA		_IO(VFIO_TYPE, VFIO_BASE + 6)
++
++/**
++ * VFIO_IOMMU_UNMAP_DMA - _IOW(VFIO_TYPE, VFIO_BASE + 7, struct vfio_dma_unmap)
++ *
++ * Unmap IO virtual addresses using the provided struct vfio_dma_unmap.
++ * Caller sets argsz.
++ */
++struct vfio_dma_unmap {
++	__u32	argsz;
++	__u32	flags;
++	__u64	iova;		/* IO virtual address */
++	__u64	size;		/* Size of mapping (bytes) */
++};
++
++#define	VFIO_IOMMU_UNMAP_DMA		_IO(VFIO_TYPE, VFIO_BASE + 7)
++
++
++/* --------------- IOCTLs for DEVICE file descriptors --------------- */
++
++/**
++ * VFIO_DEVICE_GET_INFO - _IOR(VFIO_TYPE, VFIO_BASE + 8,
++ *			       struct vfio_device_info)
++ *
++ * Retrieve information about the device.  Fills in provided
++ * struct vfio_device_info.  Caller sets argsz.
++ */
++struct vfio_device_info {
++	__u32	argsz;
++	__u32	flags;
++#define VFIO_DEVICE_FLAGS_RESET	(1 << 0)	/* Device supports reset */
++	__u32	num_regions;	/* Max region index + 1 */
++	__u32	num_irqs;	/* Max IRQ index + 1 */
++};
++
++#define VFIO_DEVICE_GET_INFO		_IO(VFIO_TYPE, VFIO_BASE + 8)
++
++/**
++ * VFIO_DEVICE_GET_REGION_INFO - _IOWR(VFIO_TYPE, VFIO_BASE + 9,
++ *				       struct vfio_region_info)
++ *
++ * Retrieve information about a device region.  Caller provides
++ * struct vfio_region_info with index value set.  Caller sets argsz.
++ * Implementation of region mapping is bus driver specific.  This is
++ * intended to describe MMIO, I/O port, as well as bus specific
++ * regions (ex. PCI config space).  Zero sized regions may be used
++ * to describe unimplemented regions (ex. unimplemented PCI BARs).
++ */
++struct vfio_region_info {
++	__u32	argsz;
++	__u32	flags;
++#define VFIO_REGION_INFO_FLAG_MMAP	(1 << 0) /* Region supports mmap */
++#define VFIO_REGION_INFO_FLAG_RO	(1 << 1) /* Region is read-only */
++	__u32	index;		/* Region index */
++	__u32	resv;		/* Reserved for alignment */
++	__u64	size;		/* Region size (bytes) */
++	__u64	offset;		/* Region offset from start of device fd */
++};
++
++#define VFIO_DEVICE_GET_REGION_INFO	_IO(VFIO_TYPE, VFIO_BASE + 9)
++
++/**
++ * VFIO_DEVICE_GET_IRQ_INFO - _IOWR(VFIO_TYPE, VFIO_BASE + 10,
++ *				    struct vfio_irq_info)
++ *
++ * Retrieve information about a device IRQ.  Caller provides
++ * struct vfio_irq_info with index value set.  Caller sets argsz.
++ * Implementation of IRQ mapping is bus driver specific.  Indexes
++ * using multiple IRQs are primarily intended to support MSI-like
++ * interrupt blocks.  Zero count irq blocks may be used to describe
++ * unimplemented interrupt types.
++ *
++ * The EVENTFD flag indicates the interrupt index supports eventfd based
++ * signaling.
++ *
++ * The MASKABLE flags indicates the index supports MASK and UNMASK
++ * actions described below.
++ *
++ * AUTOMASKED indicates that after signaling, the interrupt line is
++ * automatically masked by VFIO and the user needs to unmask the line
++ * to receive new interrupts.  This is primarily intended to distinguish
++ * level triggered interrupts.
++ *
++ * The NORESIZE flag indicates that the interrupt lines within the index
++ * are setup as a set and new subindexes cannot be enabled without first
++ * disabling the entire index.  This is used for interrupts like PCI MSI
++ * and MSI-X where the driver may only use a subset of the available
++ * indexes, but VFIO needs to enable a specific number of vectors
++ * upfront.  In the case of MSI-X, where the user can enable MSI-X and
++ * then add and unmask vectors, it's up to userspace to make the decision
++ * whether to allocate the maximum supported number of vectors or tear
++ * down setup and incrementally increase the vectors as each is enabled.
++ */
++struct vfio_irq_info {
++	__u32	argsz;
++	__u32	flags;
++#define VFIO_IRQ_INFO_EVENTFD		(1 << 0)
++#define VFIO_IRQ_INFO_MASKABLE		(1 << 1)
++#define VFIO_IRQ_INFO_AUTOMASKED	(1 << 2)
++#define VFIO_IRQ_INFO_NORESIZE		(1 << 3)
++	__u32	index;		/* IRQ index */
++	__s32	count;		/* Number of IRQs within this index */
++};
++
++#define VFIO_DEVICE_GET_IRQ_INFO	_IO(VFIO_TYPE, VFIO_BASE + 10)
++
++/**
++ * VFIO_DEVICE_SET_IRQS - _IOW(VFIO_TYPE, VFIO_BASE + 11, struct vfio_irq_set)
++ *
++ * Set signaling, masking, and unmasking of interrupts.  Caller provides
++ * struct vfio_irq_set with all fields set.  'start' and 'count' indicate
++ * the range of subindexes being specified.
++ *
++ * The DATA flags specify the type of data provided.  If DATA_NONE, the
++ * operation performs the specified action immediately on the specified
++ * interrupt(s).  For example, to unmask AUTOMASKED interrupt [0,0]:
++ * flags = (DATA_NONE|ACTION_UNMASK), index = 0, start = 0, count = 1.
++ *
++ * DATA_BOOL allows sparse support for the same on arrays of interrupts.
++ * For example, to mask interrupts [0,1] and [0,3] (but not [0,2]):
++ * flags = (DATA_BOOL|ACTION_MASK), index = 0, start = 1, count = 3,
++ * data = {1,0,1}
++ *
++ * DATA_EVENTFD binds the specified ACTION to the provided __s32 eventfd.
++ * A value of -1 can be used to either de-assign interrupts if already
++ * assigned or skip un-assigned interrupts.  For example, to set an eventfd
++ * to be trigger for interrupts [0,0] and [0,2]:
++ * flags = (DATA_EVENTFD|ACTION_TRIGGER), index = 0, start = 0, count = 3,
++ * data = {fd1, -1, fd2}
++ * If index [0,1] is previously set, two count = 1 ioctls calls would be
++ * required to set [0,0] and [0,2] without changing [0,1].
++ *
++ * Once a signaling mechanism is set, DATA_BOOL or DATA_NONE can be used
++ * with ACTION_TRIGGER to perform kernel level interrupt loopback testing
++ * from userspace (ie. simulate hardware triggering).
++ *
++ * Setting of an event triggering mechanism to userspace for ACTION_TRIGGER
++ * enables the interrupt index for the device.  Individual subindex interrupts
++ * can be disabled using the -1 value for DATA_EVENTFD or the index can be
++ * disabled as a whole with: flags = (DATA_NONE|ACTION_TRIGGER), count = 0.
++ *
++ * Note that ACTION_[UN]MASK specify user->kernel signaling (irqfds) while
++ * ACTION_TRIGGER specifies kernel->user signaling.
++ */
++struct vfio_irq_set {
++	__u32	argsz;
++	__u32	flags;
++#define VFIO_IRQ_SET_DATA_NONE		(1 << 0) /* Data not present */
++#define VFIO_IRQ_SET_DATA_BOOL		(1 << 1) /* Data is bool (u8) */
++#define VFIO_IRQ_SET_DATA_EVENTFD	(1 << 2) /* Data is eventfd (s32) */
++#define VFIO_IRQ_SET_ACTION_MASK	(1 << 3) /* Mask interrupt */
++#define VFIO_IRQ_SET_ACTION_UNMASK	(1 << 4) /* Unmask interrupt */
++#define VFIO_IRQ_SET_ACTION_TRIGGER	(1 << 5) /* Trigger interrupt */
++	__u32	index;
++	__s32	start;
++	__s32	count;
++	__u8	data[];
++};
++
++#define VFIO_DEVICE_SET_IRQS		_IO(VFIO_TYPE, VFIO_BASE + 11)
++
++#define VFIO_IRQ_SET_DATA_TYPE_MASK	(VFIO_IRQ_SET_DATA_NONE | \
++					 VFIO_IRQ_SET_DATA_BOOL | \
++					 VFIO_IRQ_SET_DATA_EVENTFD)
++#define VFIO_IRQ_SET_ACTION_TYPE_MASK	(VFIO_IRQ_SET_ACTION_MASK | \
++					 VFIO_IRQ_SET_ACTION_UNMASK | \
++					 VFIO_IRQ_SET_ACTION_TRIGGER)
++/**
++ * VFIO_DEVICE_RESET - _IO(VFIO_TYPE, VFIO_BASE + 12)
++ *
++ * Reset a device.
++ */
++#define VFIO_DEVICE_RESET		_IO(VFIO_TYPE, VFIO_BASE + 12)
++
++#endif /* VFIO_H */
 
