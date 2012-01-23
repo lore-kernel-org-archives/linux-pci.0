@@ -1,95 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:40279 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752187Ab2AZRR6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2012 12:17:58 -0500
-Received: by ghrr11 with SMTP id r11so349829ghr.19
-        for <linux-pci@vger.kernel.org>; Thu, 26 Jan 2012 09:17:57 -0800 (PST)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:39968 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753603Ab2AWTMa convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Jan 2012 14:12:30 -0500
+Received: by lahc1 with SMTP id c1so1832571lah.19
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2012 11:12:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4F2183A2.7010007@jp.fujitsu.com>
-References: <20120119223221.15239.6758.sendpatchset@dhcp-189-101.bos.redhat.com>
-	<CAE9FiQWKRxZcm2FBhP2SxaBGYpROc4grJQtE68OyayPhjQHdsA@mail.gmail.com>
-	<4F2183A2.7010007@jp.fujitsu.com>
-Date: Thu, 26 Jan 2012 09:17:57 -0800
-Message-ID: <CAE9FiQWQzwYQz7MAGC=Gjpr5HMsT-bn5t77fi7EKD1LDGbXizg@mail.gmail.com>
-Subject: Re: [PATCH v4] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp driver
-From: Yinghai Lu <yinghai@kernel.org>
-To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, greg@kroah.com,
-	kaneshige.kenji@jp.fujitsu.com
+In-Reply-To: <CAErSpo6B=NYZvCGJDLmYC=KoT0fBp7zkAyw6bEnmUaY4nXD==w@mail.gmail.com>
+References: <bug-42606-41252@https.bugzilla.kernel.org/> <CAErSpo5r8J9DAwkzAD2zJr1qp01XwCa_X2odQCB98zOU==Derw@mail.gmail.com>
+ <CAErSpo7Gpd4OwbRPRd8ePdKDRQpZKT6E-UyEVL92as6C1Tqj7Q@mail.gmail.com>
+ <4F1D9582.4030705@meinberg.de> <CAErSpo6B=NYZvCGJDLmYC=KoT0fBp7zkAyw6bEnmUaY4nXD==w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 23 Jan 2012 12:12:08 -0700
+Message-ID: <CAErSpo6RBvuq+j9Sab=V9Gbq6fYFpCAwdZsmFQoKOdPT8ZkTRg@mail.gmail.com>
+Subject: Re: Fwd: [Bug 42606] New: PCI I/O range not assigned under newer kernels
+To: Martin Burnicki <martin.burnicki@meinberg.de>
+Cc: linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 26, 2012 at 8:47 AM, MUNEDA Takahiro
-<muneda.takahiro@jp.fujitsu.com> wrote:
-> On Thu, 19 Jan 2012 15:41:09 -0800,
-> Yinghai Lu <yinghai@kernel.org> wrote:
->
-> snip
->
->>> Index: linux-3.2/drivers/pci/quirks.c
->>> ===================================================================
->>> --- linux-3.2.orig/drivers/pci/quirks.c
->>> +++ linux-3.2/drivers/pci/quirks.c
->>> @@ -2665,6 +2665,35 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AT
->>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4375,
->>>                        quirk_msi_intx_disable_bug);
->>>
->>> +/*
->>> + * The PCI bridge from Integrated Device Technology(IDT) has a problem
->>> + * with MSI/MSI-X.
->>> + * An un-wanted interrupt is generated when PCI driver switches from
->>> + * MSI/MSI-X to INTx while shutting down the PCI Express port, if it
->>> + * provides the Native Hotplug service.  The interrupt does not happen
->>> + * if MSI/MSI-X is not used on it.  Therefore, turn off MSI/MSI-X for
->>> + * this device.
->>> + */
->>> +static void __devinit idt_bridge_msi_disable(struct pci_dev *dev)
->>> +{
->>> +       int pos;
->>> +       u16 reg16;
->>> +       u32 reg32;
->>> +
->>> +       pos = pci_pcie_cap(dev);
->>> +       if (!pos)
->>> +               return;
->>> +       pci_read_config_word(dev, pos + PCI_EXP_FLAGS,&reg16);
->>> +       if (!(reg16&  PCI_EXP_FLAGS_SLOT))
->>>
->>> +               return;
->>> +       pci_read_config_dword(dev, pos + PCI_EXP_SLTCAP,&reg32);
->>> +       if (reg32&  PCI_EXP_SLTCAP_HPC) {
->>>
->>> +               pci_msi_off(dev);
->>> +               dev->no_msi = 1;
->>> +       }
->>> +}
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IDT, 0x807f,
->>> idt_bridge_msi_disable);
->>
->>
->> do you have statement for IDT, says that is chipset problem ?
->
->
-> I'm trying to contact to them, but not yet.
->
->
->> it could be your platform fw problem.
->>
->> if that is the case, you will disable MSI/MSIX for other platform that
->> do not have fw problem.
->
->
-> Yinghai,
-> Btw, how about other pieces?  I'm thinking to drop the quirk code temporary,
-> until I get the comment from them.
-> Can you give an ACK if I remove the hardware specific quirk code?
+On Mon, Jan 23, 2012 at 10:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Windows shows the [io  0xf000-0xffff] range as being available under
+> both host bridges, and the fact that those ports actually work under
+> both bridges means they must actually be routed both places.
 
-yes, other part is ok.
+Oops, this is wrong.  We can't tell whether the [io  0xf000-0xffff]
+range is routed to PCI0, because when the card under that bridge, the
+BIOS puts it at [io  0xdc00-0xdcff] instead.
 
-Actually quirk code should be separated to another patch.
+This is probably a BIOS bug (the resource assignment part puts the
+card in the right area, but the ACPI _CRS doesn't match).  But the
+fact remains that Windows does accept this _CRS and Linux doesn't but
+probably should.
 
-Thanks
-
-Yinghai
+Bjorn
