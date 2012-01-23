@@ -1,60 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>, Helge Deller <deller@gmx.de>,
-	linux-parisc@vger.kernel.org
-Subject: [PATCH 08/14] PCI, parisc: Register busn_res for root buses
-Date: Mon, 30 Jan 2012 23:42:46 -0800
-Message-Id: <1327995772-11388-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from void.printf.net ([89.145.121.20]:39398 "EHLO void.printf.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752822Ab2AWNwA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 08:52:00 -0500
+From: Chris Ball <cjb@laptop.org>
+To: Bastien ROUCARIES <roucaries.bastien@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: Need pci rescan in order to get my mmc reader
+References: <201201151255.41252.roucaries.bastien@gmail.com>
+	<CAE2SPAb3Ozk7LHrqE_asazZ7kEogXEH=2S8D5PUprqXZK2o9Ow@mail.gmail.com>
+Date: Mon, 23 Jan 2012 08:51:52 -0500
+In-Reply-To: <CAE2SPAb3Ozk7LHrqE_asazZ7kEogXEH=2S8D5PUprqXZK2o9Ow@mail.gmail.com>
+	(Bastien ROUCARIES's message of "Mon, 23 Jan 2012 11:28:34 +0100")
+Message-ID: <m2mx9ev85j.fsf@bob.laptop.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Kyle McMartin <kyle@mcmartin.ca>
-Cc: Helge Deller <deller@gmx.de>
-Cc: linux-parisc@vger.kernel.org
----
- drivers/parisc/dino.c    |    2 ++
- drivers/parisc/lba_pci.c |    3 +++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+Hi,
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index 7ff10c1..3f2e203 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -1014,7 +1014,9 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
-+	pci_bus_insert_busn_res(bus, dino_current_bus, 255);
- 	bus->subordinate = pci_scan_child_bus(bus);
-+	pci_bus_update_busn_res_end(bus, bus->subordinate);
- 
- 	/* This code *depends* on scanning being single threaded
- 	 * if it isn't, this global bus number count will fail
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index d5f3d75..b58bf8b 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1531,6 +1531,9 @@ lba_driver_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
-+	pci_bus_insert_busn_res(lba_bus, lba_dev->hba.bus_num.start,
-+				lba_dev->hba.bus_num.end);
-+
- 	lba_bus->subordinate = pci_scan_child_bus(lba_bus);
- 
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
+On Mon, Jan 23 2012, Bastien ROUCARIES wrote:
+> On Sun, Jan 15, 2012 at 12:55 PM, bastien ROUCARIES
+> <roucaries.bastien@gmail.com> wrote:
+>> I am hit by the same bug than here
+>> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/703180
+>>
+>> I order to get my mmc reader functionnal I need to put a mmc card
+>> and do a pci rescan manualy.
+>>
+>> What could be done  ?
+>>
+>> What do you need in order to help ?
+>>
+>> Thanks
+
+I'm not sure there's anything I (at the MMC layer) can do to help;
+having a visible PCI device is a prerequisite for working MMC.
+
+Have you tried a recent upstream kernel, and looked for any available
+BIOS updates for your laptop?
+
+Thanks,
+
+- Chris.
 -- 
-1.7.7
-
+Chris Ball   <cjb@laptop.org>   <http://printf.net/>
+One Laptop Per Child
