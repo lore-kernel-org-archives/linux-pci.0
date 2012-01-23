@@ -1,67 +1,76 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:46438 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753604Ab2AWSp5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 13:45:57 -0500
 MIME-Version: 1.0
-In-Reply-To: <1327718971-9598-7-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org> <1327718971-9598-7-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Jan 2012 07:44:04 -0800
-Message-ID: <CAErSpo44qjFk5SQ+VWD=Y+Fg_xyykmh-ZOdFsfN-nELE29YP-A@mail.gmail.com>
-Subject: Re: [PATCH 06/13] PCI, powerpc: Register busn_res for root buses
+In-Reply-To: <CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+ <1327139539-14301-2-git-send-email-yinghai@kernel.org> <CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
+ <CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 23 Jan 2012 10:45:35 -0800
+Message-ID: <CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
 To: Yinghai Lu <yinghai@kernel.org>
 Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 27, 2012 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: linuxppc-dev@lists.ozlabs.org
-> ---
->  arch/powerpc/kernel/pci-common.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
+On Mon, Jan 23, 2012 at 10:30 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> in list_for_each_safe()
 >
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index cce98d7..501f29b 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1732,6 +1732,8 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
->        bus->secondary = hose->first_busno;
->        hose->bus = bus;
+> #define list_for_each_safe(pos, n, head) \
+>        for (pos = (head)->next, n = pos->next; pos != (head); \
+>                pos = n, n = pos->next)
 >
-> +       pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
+> n is saved before, and safe only mean pos could be freed from the
+> list, but n still can be used for next loop.
+>
+> in our case, the list have PF and several VFs, when
+> pci_stop_bus_device() is called for PF, pos are still valid, but
+> VFs are removed from the list. so n will not be valid.
 
-The pci_create_root_bus() call is a few lines above this.  So this is
-a case of "create the root bus" followed by "fix something that's
-wrong with the bus we just created."  I'm trying to get rid of that
-pattern because it's just an opportunity for bugs.  I'd rather create
-the root bus with all the information it needs up front.
+That still doesn't explain anything.
 
-And pci_bus_insert_busn_res() is not really architecture-specific, so
-I'd like this better if that call were done in the PCI core somewhere.
+The whole point of the safe version is that if the entry that is being
+worked on is removed, then we can still use the next one.
 
->        /* Get probe mode and perform scan */
->        mode = PCI_PROBE_NORMAL;
->        if (node && ppc_md.pci_probe_mode)
-> @@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
->                of_scan_bus(node, bus);
->        }
->
-> -       if (mode == PCI_PROBE_NORMAL)
-> +       if (mode == PCI_PROBE_NORMAL) {
-> +               pci_bus_update_busn_res_end(bus, 255);
->                hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-> +               pci_bus_update_busn_res_end(bus, bus->subordinate);
-> +       }
->
->        /* Platform gets a chance to do some global fixups before
->         * we proceed to resource allocation
-> --
-> 1.7.7
->
+Why isn't this magically true in this case? If some *other* random
+entry than the one that is being iterated over can magically be
+removed, then the whole thing is just pure and utter crap, and no
+amount of list maintenance can ever fix it.
+
+So explain.
+
+> https://lkml.org/lkml/2011/10/15/141
+> or from attached one.
+
+This still doesn't make sense. Why do that stupid allocation? Why not
+just move the entry? Why doesn't just the sane approach work?
+
+Exactly why does not the obvious
+
+    /* stop bus device for phys_fn at first */
+    list_for_each_safe(l, n, &bus->devices) {
+        struct pci_dev *dev = pci_dev_b(l);
+        if (!dev->is_virtfn)
+            pci_stop_bus_device(dev);
+    }
+
+work? What the f*^& does that pci_stop_bus_device() function do to
+that bus->devices list that isn't just a "list_del()" of that single
+entry? And if it does anything else, it should damn well stop doing
+that.
+
+The *exact* same loop is then apparently working for the virtual
+device case, so what the hell is going on that it wouldn't work for
+the physical one?
+
+What's the confusion? Why all the crazy idiotic code that makes no sense?
+
+                      Linus
