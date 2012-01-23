@@ -1,74 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.eu.citrix.com ([62.200.22.115]:61028 "EHLO
-	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427Ab2AIJvA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 04:51:00 -0500
-Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
- to include domain id.
-From: Ian Campbell <Ian.Campbell@citrix.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Jan Beulich <JBeulich@suse.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>
-Date: Mon, 9 Jan 2012 09:50:57 +0000
-In-Reply-To: <20120106221927.GA10248@phenom.dumpdata.com>
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
-	 <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
-	 <4F06C101020000780006AC32@nat28.tlf.novell.com>
-	 <20120106150338.GB5855@phenom.dumpdata.com>
-	 <1325865086.25206.512.camel@zakaz.uk.xensource.com>
-	 <20120106160011.GD6125@phenom.dumpdata.com>
-	 <20120106221927.GA10248@phenom.dumpdata.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1326102657.17210.11.camel@zakaz.uk.xensource.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:60628 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753953Ab2AWVew (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 16:34:52 -0500
 MIME-Version: 1.0
+In-Reply-To: <CA+55aFy4nv5bYdjiZM2HY1E=RU_CaBoQWy6iWXReAK98yRKZpw@mail.gmail.com>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+	<1327139539-14301-2-git-send-email-yinghai@kernel.org>
+	<CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
+	<CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
+	<CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
+	<CAE9FiQXDHHJ0rG6hd6a3B+f0ZyJmjJ3rJGNWTsCwn21o+84C_Q@mail.gmail.com>
+	<CA+55aFy4nv5bYdjiZM2HY1E=RU_CaBoQWy6iWXReAK98yRKZpw@mail.gmail.com>
+Date: Mon, 23 Jan 2012 13:34:51 -0800
+Message-ID: <CAE9FiQWt7j+Eoo_xhFmaGGh7hA-j2x991KZajmberf8Kod5G1g@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
+From: Yinghai Lu <yinghai@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-01-06 at 22:19 +0000, Konrad Rzeszutek Wilk wrote:
-> > > I suppose you might want "Overriding ownership to dom%d".
-> > 
-> > OK. To the point and potentially can fit in 80 lines :-).
-> 
-> how about this?
-> > 
-> From a3d4a80cdfd4274016522572148a89260b3f3de6 Mon Sep 17 00:00:00 2001
-> From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Date: Wed, 4 Jan 2012 14:16:45 -0500
-> Subject: [PATCH] xen/pciback: Expand the warning message to include domain
->  id.
-> 
-> When a PCI device is transferred to another domain and it is still
-> in usage (from the internal perspective), mention which other
-> domain is using it to aid in debugging.
-> 
-> [v2: Truncate the verbose message per Jan Beulich suggestion]
-> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->  drivers/xen/xen-pciback/xenbus.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-> index 474d52e..2405a24 100644
-> --- a/drivers/xen/xen-pciback/xenbus.c
-> +++ b/drivers/xen/xen-pciback/xenbus.c
-> @@ -243,8 +243,8 @@ static int xen_pcibk_export_device(struct xen_pcibk_device *pdev,
->  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
->  	if (xen_register_device_domain_owner(dev,
->  					     pdev->xdev->otherend_id) != 0) {
-> -		dev_err(&dev->dev, "device has been assigned to another " \
-> -			"domain! Over-writting the ownership, but beware.\n");
-> +		dev_err(&dev->dev, "Overriding ownership to dom%d.\n",
-> +			xen_find_device_domain_owner(dev));
+On Mon, Jan 23, 2012 at 11:44 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Mon, Jan 23, 2012 at 11:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>
+>> Maybe we can put VF and PF in bus->devices like:
+>> VF come first than PF?
+>
+> Ugh. Ok, so that's a disgusting hack, but it's better than messing up
+> the generic PCI subsystem. At least it's a disgusting hack in the IOV
+> code.
 
-That sounds like you are going to be assigning the ownership to that
-dom, but xen_find_device_domain_owner so aren't you actually steeling
-ownership from that domain?
+just tested, the patch with this hack works.
 
->  		xen_unregister_device_domain_owner(dev);
->  		xen_register_device_domain_owner(dev, pdev->xdev->otherend_id);
->  	}
+>
+> I still would prefer to just do the virtual devices right instead. Or
+> even just make the removal loop inherently robust, rather than have
+> that insane knowledge of virtual function devices that were done so
+> horribly wrong.
 
+ok, let me think about it more.
 
+>
+> Or even just *keep* the virtual devices on the list even though the
+> physical device has been removed - make them independent of the
+> physical device.
+
+ah, not sure how this going to work.
+
+Yinghai
