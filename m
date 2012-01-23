@@ -1,141 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.ctxuk.citrix.com ([62.200.22.115]:42219 "EHLO
-	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754819Ab2AEKYN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2012 05:24:13 -0500
-Subject: Re: [Xen-devel] [PATCH 2/5] xen/pciback: Support
- pci_reset_function, aka FLR or D3 support.
-From: Ian Campbell <Ian.Campbell@citrix.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
-Date: Thu, 5 Jan 2012 10:24:11 +0000
-In-Reply-To: <1325724403-29642-3-git-send-email-konrad.wilk@oracle.com>
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
-	 <1325724403-29642-3-git-send-email-konrad.wilk@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1325759051.25206.361.camel@zakaz.uk.xensource.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:64733 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753095Ab2AWK2g convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Jan 2012 05:28:36 -0500
 MIME-Version: 1.0
+In-Reply-To: <201201151255.41252.roucaries.bastien@gmail.com>
+References: <201201151255.41252.roucaries.bastien@gmail.com>
+Date: Mon, 23 Jan 2012 11:28:34 +0100
+Message-ID: <CAE2SPAb3Ozk7LHrqE_asazZ7kEogXEH=2S8D5PUprqXZK2o9Ow@mail.gmail.com>
+Subject: Re: Need pci rescan in order to get my mmc reader
+From: Bastien ROUCARIES <roucaries.bastien@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	cjb@laptop.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-01-05 at 00:46 +0000, Konrad Rzeszutek Wilk wrote:
-> We use the __pci_reset_function_locked to perform the action.
-> Also on attaching ("bind") and detaching ("unbind") we save and
-> restore the configuration states. When the device is disconnected
-> from a guest we use the "pci_reset_function" to also reset the
-> device before being passed to another guest.
+On Sun, Jan 15, 2012 at 12:55 PM, bastien ROUCARIES
+<roucaries.bastien@gmail.com> wrote:
+> I am hit by the same bug than here
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/703180
+>
+> I order to get my mmc reader functionnal I need to put a mmc card and do a pci rescan manualy.
+>
+> What could be done  ?
+>
+> What do you need in order to help ?
+>
+> Thanks
 
-Currently I thought the toolstack was supposed to do the reset (by
-writing to the reset node in sysfs) as it was (de)assigning devices
-to/from guests. That's not to say that there isn't an argument for
-preferring to do it kernels side but it would be interesting to make
-that argument explicitly.
+Ping ?
 
-I guess the toolstack doesn't currently save/restore the configuration
-state, could it though? I guess the state is all available in sysfs. On
-the other hand the kernel provides us with a very handy function which
-Just Does It...
-
-Ian.
-
-> 
-> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->  drivers/xen/xen-pciback/pci_stub.c |   41 +++++++++++++++++++++++++++++++++--
->  drivers/xen/xen-pciback/pciback.h  |    1 +
->  2 files changed, 39 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-> index 8f06e1e..0ce0dc6 100644
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -85,19 +85,34 @@ static struct pcistub_device *pcistub_device_alloc(struct pci_dev *dev)
->  static void pcistub_device_release(struct kref *kref)
->  {
->  	struct pcistub_device *psdev;
-> +	struct xen_pcibk_dev_data *dev_data;
->  
->  	psdev = container_of(kref, struct pcistub_device, kref);
-> +	dev_data = pci_get_drvdata(psdev->dev);
->  
->  	dev_dbg(&psdev->dev->dev, "pcistub_device_release\n");
->  
->  	xen_unregister_device_domain_owner(psdev->dev);
->  
-> -	/* Clean-up the device */
-> +	/* Call the reset function which does not take lock as this
-> +	 * is called from "unbind" which takes a device_lock mutex.
-> +	 */
-> +	__pci_reset_function_locked(psdev->dev);
-> +	if (pci_load_and_free_saved_state(psdev->dev,
-> +					  &dev_data->pci_saved_state)) {
-> +		dev_dbg(&psdev->dev->dev, "Could not reload PCI state\n");
-> +	} else
-> +		pci_restore_state(psdev->dev);
-> +
-> +	/* Disable the device */
->  	xen_pcibk_reset_device(psdev->dev);
-> +
-> +	kfree(dev_data);
-> +	pci_set_drvdata(psdev->dev, NULL);
-> +
-> +	/* Clean-up the device */
->  	xen_pcibk_config_free_dyn_fields(psdev->dev);
->  	xen_pcibk_config_free_dev(psdev->dev);
-> -	kfree(pci_get_drvdata(psdev->dev));
-> -	pci_set_drvdata(psdev->dev, NULL);
->  
->  	pci_dev_put(psdev->dev);
->  
-> @@ -230,7 +245,17 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
->  	/* Cleanup our device
->  	 * (so it's ready for the next domain)
->  	 */
-> +
-> +	/* This is OK - we are running from workqueue context
-> +	 * and want to inhibit the user from fiddling with 'reset'
-> +	 */
-> +	pci_reset_function(dev);
-> +	pci_restore_state(psdev->dev);
-> +
-> +	/* This disables the device. */
->  	xen_pcibk_reset_device(found_psdev->dev);
-> +
-> +	/* And cleanup up our emulated fields. */
->  	xen_pcibk_config_free_dyn_fields(found_psdev->dev);
->  	xen_pcibk_config_reset_dev(found_psdev->dev);
->  
-> @@ -325,6 +350,16 @@ static int __devinit pcistub_init_device(struct pci_dev *dev)
->  	if (err)
->  		goto config_release;
->  
-> +	dev_dbg(&dev->dev, "reseting (FLR, D3, etc) the device\n");
-> +	__pci_reset_function_locked(dev);
-> +
-> +	/* We need the device active to save the state. */
-> +	dev_dbg(&dev->dev, "save state of device\n");
-> +	pci_save_state(dev);
-> +	dev_data->pci_saved_state = pci_store_saved_state(dev);
-> +	if (!dev_data->pci_saved_state)
-> +		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
-> +
->  	/* Now disable the device (this also ensures some private device
->  	 * data is setup before we export)
->  	 */
-> diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
-> index e9b4011..a7def01 100644
-> --- a/drivers/xen/xen-pciback/pciback.h
-> +++ b/drivers/xen/xen-pciback/pciback.h
-> @@ -41,6 +41,7 @@ struct xen_pcibk_device {
->  
->  struct xen_pcibk_dev_data {
->  	struct list_head config_fields;
-> +	struct pci_saved_state *pci_saved_state;
->  	unsigned int permissive:1;
->  	unsigned int warned_on_write:1;
->  	unsigned int enable_intx:1;
-
-
+> Bastien
+>
+>
