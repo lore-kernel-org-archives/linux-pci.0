@@ -1,66 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 00/21] PCI : bridge resource reallocation patchset
-Date: Sat, 21 Jan 2012 02:08:16 -0800
-Message-Id: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58836 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750890Ab2AWRVQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Jan 2012 12:21:16 -0500
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 0/5] VFIO core framework
+To: chrisw@sous-sol.org, aik@ozlabs.ru, david@gibson.dropbear.id.au,
+	joerg.roedel@amd.com, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 23 Jan 2012 10:20:05 -0700
+Message-ID: <20120123165620.26865.51875.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-a181193: PCI: only enable pci realloc when SRIOV bar is not assigned
-6662c73: PCI: Make pci bridge reallocating enabled/disabled
-1a60212: PCI: Retry on type IORESOURCE_IO allocation.
-59e4fd4: PCI: Fix cardbus bridge resources as optional size handling
-daa08ff: PCI: Disable cardbus bridge MEM1 pref CTL
-e11dc0e: PCI: remove add_to_failed_list()
-11af29c: PCI: add debug print out for add_size
-6a30c7b: PCI: Change free_list() to function
-e5aa050: PCI: Rename dev_res_x to add_res or fail_res
-ff503cf: PCI: Merge pci_dev_resource_x and pci_dev_resource
-2874630: PCI: Replace resource_list with generic list
-8eedd1e: PCI: Move struct resource_list to setup-bus.c
-23a6d3e: PCI: Move pdev_sort_resources() to setup-bus.c
-93acbd6: PCI: Fixing multiple retrying with pci resource optional resources allocation under multi bridges
-7f5dac3: PCI: Make pci_rescan_bus handle add_list
-18dd9be: PCI: Make rescan bus could increase bridge resource size if needed
-52e0afc: PCI: Using add_list in pcie hotplug path.
-2b6542d: PCI: Try to assign required+option size at first
-4beb962: PCI: Move get_res_add_size() early
-8cb9020: PCI: Make add_to_list() return status
-8535f21: PCI : Calculate right add_size
+This series includes the core framework for the VFIO driver.
+VFIO is a userspace driver interface meant to replace both the
+KVM device assignment code as well as interfaces like UIO.  Please
+see patch 1/5 for a complete description of VFIO, what it can do,
+and how it's designed.
 
-those patches will fix optional resource size pass over parent bus problem.
+This series can also be found here:
 
-and try allocate request + optional resource at first, and then if failed will
-fall back to get requested at first then try to expand to optional one.
+git://github.com/awilliam/linux-vfio.git vfio-next
 
-at last will try auto detect if we need to realloc bridge resource.
+This plus the PCI VFIO bus driver for exposing PCI devices to
+userspace can be found here:
 
-Also replace local resource_list and resource_list_x with generic list.
+git://github.com/awilliam/linux-vfio.git vfio-next-staging
 
-or get from
+or here for a linux-2.6.git based tree:
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci2
+git://github.com/awilliam/linux-vfio.git vfio-linux-staging
 
-Thanks
+A fully functional qemu driver for doing non-KVM based PCI
+device assignment can be found here:
 
-Yinghai
+git://github.com/awilliam/qemu-vfio.git vfio-ng
 
- Documentation/kernel-parameters.txt |    7 +-
- drivers/pci/pci-sysfs.c             |    5 +-
- drivers/pci/pci.c                   |    4 +-
- drivers/pci/pci.h                   |    2 +-
- drivers/pci/probe.c                 |   22 +-
- drivers/pci/setup-bus.c             |  629 ++++++++++++++++++++++++-----------
- drivers/pci/setup-res.c             |   52 +---
- include/linux/ioport.h              |    6 -
- include/linux/pci.h                 |    2 +-
- 9 files changed, 451 insertions(+), 278 deletions(-)
+I'd like to propose VFIO for inclusion in Linux 3.4, starting with
+this core framework series.  Once we have agreement on these, I'll
+split up and post the VFIO PCI bus driver for inclusion as well.
+I can also host the above vfio-next branch for inclusion in
+linux-next.  Please review and comment.  Thanks,
 
+Alex
 
+v2: Interrupt setup ioctl rework based on comments by Konrad.
+    The interrupt ioctls are no longer exclusively targeted
+    at eventfds, allowing for more flexibility of other vfio
+    bus drivers making use of alternate mechanisms.  Also
+    updated vfio_iommu_info to report common IOMMU geometry
+    fields that we know we're going to need for Freescale
+    PAMU.  Additional ioctls and fields to be added via flags
+    as they're implemented in the IOMMU API.
+
+---
+
+Alex Williamson (5):
+      vfio: VFIO core Kconfig and Makefile
+      vfio: VFIO core IOMMU mapping support
+      vfio: VFIO core group interface
+      vfio: VFIO core header
+      vfio: Introduce documentation for VFIO driver
 
 
+ Documentation/ioctl/ioctl-number.txt |    1 
+ Documentation/vfio.txt               |  359 ++++++++++
+ MAINTAINERS                          |    8 
+ drivers/Kconfig                      |    2 
+ drivers/Makefile                     |    1 
+ drivers/vfio/Kconfig                 |    8 
+ drivers/vfio/Makefile                |    3 
+ drivers/vfio/vfio_iommu.c            |  611 +++++++++++++++++
+ drivers/vfio/vfio_main.c             | 1248 ++++++++++++++++++++++++++++++++++
+ drivers/vfio/vfio_private.h          |   36 +
+ include/linux/vfio.h                 |  395 +++++++++++
+ 11 files changed, 2672 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/vfio.txt
+ create mode 100644 drivers/vfio/Kconfig
+ create mode 100644 drivers/vfio/Makefile
+ create mode 100644 drivers/vfio/vfio_iommu.c
+ create mode 100644 drivers/vfio/vfio_main.c
+ create mode 100644 drivers/vfio/vfio_private.h
+ create mode 100644 include/linux/vfio.h
