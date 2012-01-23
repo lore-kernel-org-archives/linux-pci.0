@@ -1,36 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30652 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752281Ab2ADXuF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 18:50:05 -0500
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:39602 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753803Ab2AWT7U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 14:59:20 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFwEbbq0yuN4mAtfDSbOE86mAWsBBz+pgBzn8_QHVk+B3g@mail.gmail.com>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+	<1327139539-14301-2-git-send-email-yinghai@kernel.org>
+	<CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
+	<CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
+	<CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
+	<CA+55aFwEbbq0yuN4mAtfDSbOE86mAWsBBz+pgBzn8_QHVk+B3g@mail.gmail.com>
+Date: Mon, 23 Jan 2012 11:59:19 -0800
+Message-ID: <CAE9FiQUPwvg0159-My4B+9FG0AeR=86Y5baQT5v8bSVcvGH=Hg@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: DEVICE_COUNT_RESOURCE should be equal to PCI_NUM_RESOURCES
-Date: Wed,  4 Jan 2012 15:49:45 -0800
-Message-Id: <1325720985-6051-1-git-send-email-yinghai@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save some bytes for device resource array.
+On Mon, Jan 23, 2012 at 11:34 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>  (b) if that isn't an option, and the virtual devices make a mess, at
+> least don't make the code uglier, just do something like:
+>
+>    while (!list_empty(&bus->devices)) {
+>        struct pci_dev *dev = list_first_entry(struct pci_dev, bus_list);
+>
+>        pci_stop_bus_device(dev);
+>    }
+>
+> which at least isn't butt ugly. Add a large comment about how
+> pci_stop_bus_device() can remove multiple devices due to the virtual
+> devices having been done badly.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+yes, this one should work and less confusing.
 
----
- include/linux/pci.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> Who is in charge of the whole 'is_virtfn' mess? How realistic is it to
+> fix that crud?
 
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -111,7 +111,7 @@ enum {
- 	PCI_NUM_RESOURCES,
- 
- 	/* preserve this for compatibility */
--	DEVICE_COUNT_RESOURCE
-+	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
- };
- 
- typedef int __bitwise pci_power_t;
+Not sure.  it seems the guy Yu Zhao (?) already left intel several years ago.
+
+It seems  ./scripts/get_maintainer.pl for pci patches now only return Jesse.
+
+Yinghai
