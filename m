@@ -1,205 +1,132 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [RFC PATCH v1 16/18] sparc/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org
-Date: Mon, 30 Jan 2012 09:58:31 -0700
-Message-ID: <20120130165831.3231.67111.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:33743 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753603Ab2AWTgW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 14:36:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+	<1327139539-14301-2-git-send-email-yinghai@kernel.org>
+	<CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
+	<CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
+	<CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
+Date: Mon, 23 Jan 2012 11:36:21 -0800
+Message-ID: <CAE9FiQXDHHJ0rG6hd6a3B+f0ZyJmjJ3rJGNWTsCwn21o+84C_Q@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
+From: Yinghai Lu <yinghai@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+On Mon, Jan 23, 2012 at 10:45 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Mon, Jan 23, 2012 at 10:30 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> in list_for_each_safe()
+>>
+>> #define list_for_each_safe(pos, n, head) \
+>>        for (pos = (head)->next, n = pos->next; pos != (head); \
+>>                pos = n, n = pos->next)
+>>
+>> n is saved before, and safe only mean pos could be freed from the
+>> list, but n still can be used for next loop.
+>>
+>> in our case, the list have PF and several VFs, when
+>> pci_stop_bus_device() is called for PF, pos are still valid, but
+>> VFs are removed from the list. so n will not be valid.
+>
+> That still doesn't explain anything.
+>
+> The whole point of the safe version is that if the entry that is being
+> worked on is removed, then we can still use the next one.
+>
+> Why isn't this magically true in this case? If some *other* random
+> entry than the one that is being iterated over can magically be
+> removed, then the whole thing is just pure and utter crap, and no
+> amount of list maintenance can ever fix it.
+>
+> So explain.
 
-N.B. Leon apparently never uses initial BAR values, so it didn't matter
-that we never fixed up the I/O resources from bus address to CPU addresses.
+Now current design with SRIOV is:
+when driver for PF is loaded, it will enable sriov on PF, and VFs are
+created and added to
+bus->devices list.
 
-Other sparc uses pci_of_scan_bus(), which sets device resources directly
-to CPU addresses, not bus addresses, so it didn't need pcibios_fixup_bus()
-either.  But by telling the core about the offsets, we can nuke
-pcibios_resource_to_bus().
----
- arch/sparc/include/asm/pci_32.h |    8 +------
- arch/sparc/include/asm/pci_64.h |    8 +------
- arch/sparc/kernel/leon_pci.c    |   47 ++++++---------------------------------
- arch/sparc/kernel/pci.c         |   46 +++-----------------------------------
- 4 files changed, 13 insertions(+), 96 deletions(-)
+when driver for PF is removed in pci_stop_bus_device(), it will
+disable sriov on PF, and VFs are removed for the list.
 
-diff --git a/arch/sparc/include/asm/pci_32.h b/arch/sparc/include/asm/pci_32.h
-index 6de7f7b..6384f30 100644
---- a/arch/sparc/include/asm/pci_32.h
-+++ b/arch/sparc/include/asm/pci_32.h
-@@ -52,13 +52,7 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
-  * 64Kbytes by the Host controller.
-  */
- 
--extern void
--pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			struct resource *res);
--
--extern void
--pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
-diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
-index 755a4bb..2918bd1 100644
---- a/arch/sparc/include/asm/pci_64.h
-+++ b/arch/sparc/include/asm/pci_64.h
-@@ -73,13 +73,7 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			       enum pci_mmap_state mmap_state,
- 			       int write_combine);
- 
--extern void
--pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			struct resource *res);
--
--extern void
--pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
-diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-index c7bec25..aba6b95 100644
---- a/arch/sparc/kernel/leon_pci.c
-+++ b/arch/sparc/kernel/leon_pci.c
-@@ -15,14 +15,19 @@
- 
- /* The LEON architecture does not rely on a BIOS or bootloader to setup
-  * PCI for us. The Linux generic routines are used to setup resources,
-- * reset values of confuration-space registers settings ae preseved.
-+ * reset values of configuration-space register settings are preserved.
-+ *
-+ * PCI Memory and Prefetchable Memory is direct-mapped. However I/O Space is
-+ * accessed through a Window which is translated to low 64KB in PCI space, the
-+ * first 4KB is not used so 60KB is available.
-  */
- void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
- {
- 	LIST_HEAD(resources);
- 	struct pci_bus *root_bus;
- 
--	pci_add_resource(&resources, &info->io_space);
-+	pci_add_resource_offset(&resources, &info->io_space,
-+				info->io_space.start - 0x1000);
- 	pci_add_resource(&resources, &info->mem_space);
- 
- 	root_bus = pci_scan_root_bus(&ofdev->dev, 0, info->ops, info,
-@@ -38,44 +43,6 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
- 	}
+>
+>> https://lkml.org/lkml/2011/10/15/141
+>> or from attached one.
+>
+> This still doesn't make sense. Why do that stupid allocation? Why not
+> just move the entry? Why doesn't just the sane approach work?
+>
+> Exactly why does not the obvious
+>
+>    /* stop bus device for phys_fn at first */
+>    list_for_each_safe(l, n, &bus->devices) {
+>        struct pci_dev *dev = pci_dev_b(l);
+>        if (!dev->is_virtfn)
+>            pci_stop_bus_device(dev);
+>    }
+>
+> work? What the f*^& does that pci_stop_bus_device() function do to
+> that bus->devices list that isn't just a "list_del()" of that single
+> entry? And if it does anything else, it should damn well stop doing
+> that.
+
+it does not work.  because pci_stop_bus_device for PF will remove VF,
+and n is not
+valid.
+
+>
+> The *exact* same loop is then apparently working for the virtual
+> device case, so what the hell is going on that it wouldn't work for
+> the physical one?
+>
+> What's the confusion? Why all the crazy idiotic code that makes no sense?
+
+Maybe we can put VF and PF in bus->devices like:
+VF come first than PF?
+
+something like:
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 0321fa3..3f63b55 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -116,11 +116,11 @@ static int virtfn_add(struct pci_dev *dev, int
+id, int reset)
+ 	if (reset)
+ 		__pci_reset_function(virtfn);
+
++	virtfn->is_virtfn = 1;
+ 	pci_device_add(virtfn, virtfn->bus);
+ 	mutex_unlock(&iov->dev->sriov->lock);
+
+ 	virtfn->physfn = pci_dev_get(dev);
+-	virtfn->is_virtfn = 1;
+
+ 	rc = pci_bus_add_device(virtfn);
+ 	if (rc)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 7cc9e2f..e43d81c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1218,7 +1218,10 @@ void pci_device_add(struct pci_dev *dev, struct
+pci_bus *bus)
+ 	 * and the bus list for fixup functions, etc.
+ 	 */
+ 	down_write(&pci_bus_sem);
+-	list_add_tail(&dev->bus_list, &bus->devices);
++	if (dev->is_virtfn)
++		list_add(&dev->bus_list, &bus->devices);
++	else
++		list_add_tail(&dev->bus_list, &bus->devices);
+ 	up_write(&pci_bus_sem);
  }
- 
--/* PCI Memory and Prefetchable Memory is direct-mapped. However I/O Space is
-- * accessed through a Window which is translated to low 64KB in PCI space, the
-- * first 4KB is not used so 60KB is available.
-- *
-- * This function is used by generic code to translate resource addresses into
-- * PCI addresses.
-- */
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct leon_pci_info *info = dev->bus->sysdata;
--
--	region->start = res->start;
--	region->end = res->end;
--
--	if (res->flags & IORESOURCE_IO) {
--		region->start -= (info->io_space.start - 0x1000);
--		region->end -= (info->io_space.start - 0x1000);
--	}
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--/* see pcibios_resource_to_bus() comment */
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct leon_pci_info *info = dev->bus->sysdata;
--
--	res->start = region->start;
--	res->end = region->end;
--
--	if (res->flags & IORESOURCE_IO) {
--		res->start += (info->io_space.start - 0x1000);
--		res->end += (info->io_space.start - 0x1000);
--	}
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
- void __devinit pcibios_fixup_bus(struct pci_bus *pbus)
- {
- 	struct leon_pci_info *info = pbus->sysdata;
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index bb8bc2e..253e8ac 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -691,8 +691,10 @@ struct pci_bus * __devinit pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
--	pci_add_resource(&resources, &pbm->io_space);
--	pci_add_resource(&resources, &pbm->mem_space);
-+	pci_add_resource_offset(&resources, &pbm->io_space,
-+				pbm->io_space.start);
-+	pci_add_resource_offset(&resources, &pbm->mem_space,
-+				pbm->mem_space.start);
- 	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
- 				  pbm, &resources);
- 	if (!bus) {
-@@ -755,46 +757,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *pdev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct pci_pbm_info *pbm = pdev->bus->sysdata;
--	struct resource zero_res, *root;
--
--	zero_res.start = 0;
--	zero_res.end = 0;
--	zero_res.flags = res->flags;
--
--	if (res->flags & IORESOURCE_IO)
--		root = &pbm->io_space;
--	else
--		root = &pbm->mem_space;
--
--	pci_resource_adjust(&zero_res, root);
--
--	region->start = res->start - zero_res.start;
--	region->end = res->end - zero_res.start;
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--void pcibios_bus_to_resource(struct pci_dev *pdev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct pci_pbm_info *pbm = pdev->bus->sysdata;
--	struct resource *root;
--
--	res->start = region->start;
--	res->end = region->end;
--
--	if (res->flags & IORESOURCE_IO)
--		root = &pbm->io_space;
--	else
--		root = &pbm->mem_space;
--
--	pci_resource_adjust(res, root);
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
- char * __devinit pcibios_setup(char *str)
- {
- 	return str;
-
