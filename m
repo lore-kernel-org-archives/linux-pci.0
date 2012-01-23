@@ -1,82 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.eu.citrix.com ([62.200.22.115]:62683 "EHLO
-	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755570Ab2AIPQn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 10:16:43 -0500
-Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
- to include domain id.
-From: Ian Campbell <Ian.Campbell@citrix.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jan Beulich <JBeulich@suse.com>
-Date: Mon, 9 Jan 2012 15:16:12 +0000
-In-Reply-To: <20120109151124.GE25563@phenom.dumpdata.com>
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
-	 <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
-	 <4F06C101020000780006AC32@nat28.tlf.novell.com>
-	 <20120106150338.GB5855@phenom.dumpdata.com>
-	 <1325865086.25206.512.camel@zakaz.uk.xensource.com>
-	 <20120106160011.GD6125@phenom.dumpdata.com>
-	 <20120106221927.GA10248@phenom.dumpdata.com>
-	 <1326102657.17210.11.camel@zakaz.uk.xensource.com>
-	 <20120109151124.GE25563@phenom.dumpdata.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1326122172.17210.109.camel@zakaz.uk.xensource.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1327139539-14301-7-git-send-email-yinghai@kernel.org>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org> <1327139539-14301-7-git-send-email-yinghai@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 23 Jan 2012 08:13:59 -0800
+Message-ID: <CA+55aFzP4xEbcNmZ+MS0SQ3LrULzSq+dBiT_X9U-bPpR-Ukgrw@mail.gmail.com>
+Subject: Re: [PATCH 6/7] pciehp: Add Disable/enable link functions
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai.lu@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-01-09 at 15:11 +0000, Konrad Rzeszutek Wilk wrote:
-> On Mon, Jan 09, 2012 at 09:50:57AM +0000, Ian Campbell wrote:
-> > On Fri, 2012-01-06 at 22:19 +0000, Konrad Rzeszutek Wilk wrote:
-> > > > > I suppose you might want "Overriding ownership to dom%d".
-> > > > 
-> > > > OK. To the point and potentially can fit in 80 lines :-).
-> > > 
-> > > how about this?
-> > > > 
-> > > From a3d4a80cdfd4274016522572148a89260b3f3de6 Mon Sep 17 00:00:00 2001
-> > > From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > > Date: Wed, 4 Jan 2012 14:16:45 -0500
-> > > Subject: [PATCH] xen/pciback: Expand the warning message to include domain
-> > >  id.
-> > > 
-> > > When a PCI device is transferred to another domain and it is still
-> > > in usage (from the internal perspective), mention which other
-> > > domain is using it to aid in debugging.
-> > > 
-> > > [v2: Truncate the verbose message per Jan Beulich suggestion]
-> > > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > > ---
-> > >  drivers/xen/xen-pciback/xenbus.c |    4 ++--
-> > >  1 files changed, 2 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-> > > index 474d52e..2405a24 100644
-> > > --- a/drivers/xen/xen-pciback/xenbus.c
-> > > +++ b/drivers/xen/xen-pciback/xenbus.c
-> > > @@ -243,8 +243,8 @@ static int xen_pcibk_export_device(struct xen_pcibk_device *pdev,
-> > >  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
-> > >  	if (xen_register_device_domain_owner(dev,
-> > >  					     pdev->xdev->otherend_id) != 0) {
-> > > -		dev_err(&dev->dev, "device has been assigned to another " \
-> > > -			"domain! Over-writting the ownership, but beware.\n");
-> > > +		dev_err(&dev->dev, "Overriding ownership to dom%d.\n",
-> > > +			xen_find_device_domain_owner(dev));
-> > 
-> > That sounds like you are going to be assigning the ownership to that
-> > dom, but xen_find_device_domain_owner so aren't you actually steeling
-> > ownership from that domain?
-> 
-> Duh! I will do s/to/from/
+On Sat, Jan 21, 2012 at 1:52 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> +
+> +       retval = pciehp_readw(ctrl, PCI_EXP_LNKCTL, &lnk_ctrl);
+> +       if (retval) {
+> +               ctrl_err(ctrl, "Cannot read LNKCTRL register\n");
+> +               return retval;
+> +       }
 
-Maybe s/Overriding/Stealing/ too? "Overriding ownership from xxx" sounds
-a bit odd to me.
+Is there really any point at all in checking the return value of that
+readw() function?
 
-Ian.
+Nobody actually ever sets it. We should stop even bothering to pretend
+to care. There is no return value in real life.
 
+If the device doesn't exist or the read fails, you will never ever get
+an error *anyway*. You'll likely get 0xffff, and possibly a machine
+check exception. And that is unlikely to ever change - even if the
+hardware were to do it, it's insane to do error checking on an
+individual IO level. It causes more problems than it could possibly
+ever solve - error checking has to be done at a different level than
+on some random individual access.
 
+We should make the return type of pci_read_config_word() be 'void',
+instead of having code like this that looks like it is careful, but in
+actual fact in reality is just totally pointless.
 
+                          Linus
