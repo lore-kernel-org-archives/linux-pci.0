@@ -1,79 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 27 Jan 2012 09:26:22 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai.lu@oracle.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pciehp: Disable/enable link during slot power off/on
-Message-ID: <20120127092622.6d8c2ae8@jbarnes-desktop>
-In-Reply-To: <4ED95AD0.7090003@oracle.com>
-References: <4ED95AD0.7090003@oracle.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/TZfY3mT0jBz1aohPCMGpoiR"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:38424 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347Ab2AWWid (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2012 17:38:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQW5VZZrdQmuKF6_4dvTDUO9xPL=uqo0KaohnJ4xboDwSA@mail.gmail.com>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+ <1327139539-14301-2-git-send-email-yinghai@kernel.org> <CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
+ <CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
+ <CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
+ <CAE9FiQXDHHJ0rG6hd6a3B+f0ZyJmjJ3rJGNWTsCwn21o+84C_Q@mail.gmail.com>
+ <CA+55aFy4nv5bYdjiZM2HY1E=RU_CaBoQWy6iWXReAK98yRKZpw@mail.gmail.com>
+ <CAE9FiQWt7j+Eoo_xhFmaGGh7hA-j2x991KZajmberf8Kod5G1g@mail.gmail.com> <CAE9FiQW5VZZrdQmuKF6_4dvTDUO9xPL=uqo0KaohnJ4xboDwSA@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 23 Jan 2012 14:38:12 -0800
+Message-ID: <CA+55aFxBKbXSNmfs8y6SrzA8w3kVRRni9R6VjxSJ-5VsRyhX0g@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/TZfY3mT0jBz1aohPCMGpoiR
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jan 23, 2012 at 2:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+> for_each_prev_safe is working...
+>
+> please check attached patch...
 
-On Fri, 02 Dec 2011 15:10:08 -0800
-Yinghai Lu <yinghai.lu@oracle.com> wrote:
+Ugh. This is probably the best one so far, but the whole thing is
+really confused.
 
->=20
-> One system have repeater in system board to support gen2 hotplug.
->=20
-> Found when EM is removed from some slots, /var/log/message will be full of
-> "card present/not present" warning.
->=20
-> It turns out root complex still try to train the link to repeater because
-> repeater is not reset.
->=20
-> This patch will disable link to make repeater could reset properly.
-> Also could kill AER during EM removal.
->=20
-> Recently when testing hotplug on one system under development, found if b=
-oot
-> the system without EM, and later hotplug does not work with Linux.
-> But other OS is ok.
-> The root cause is that bios left link disabled when slot is empty,
-> and other OS is playing link disable bit in link ctrl during power on/off.
->=20
-> So We could do the same thing to disable/enable link during power off/on.
->=20
-> Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
+Why does "stop_bus_device" do a "remove" for VF's at _all_? Why is
+everything about those stupid virtual devices so screwed up? Why do we
+have separate "stop" and "remove" methods, and then the "stop" does a
+remove? WTF?
 
-Ok I had to massage that commit message quite a bit, please let me know
-if it's still accurate.
-
-The 100ms delay still needs to be clarified; if it's really necessary
-maybe we could move the delays into a delayed work handler?
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/TZfY3mT0jBz1aohPCMGpoiR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIt4+AAoJEIEoDkX4Qk9hRY0QALBlxf/UWdxUQ+/70o8mXZpA
-IkfV4HjlW+g1tb4tBy3gvHuDg7lsMaIOczxhlFtKFxmDK5lZ6mTXykU8/hQIoi3J
-hkcoImz7behwxw/bSbh8BKYB90rceGJt3ULCN06V6pt2sZK11nIJRAqXIBt1TjTa
-eDpWIbs+Fv3nVaXrGk8odOwj/qs2eq+FhnQi8w51rGlVtesgveJJTq5cNn0HP4o7
-SODnJrSHCqeX4uDWZrFHOQAI9hQiaD7c86XHssCToDj4zE7NilxJtS9AV0mSmH+O
-BQjoQwnWC6hS3l1DwnmNMWKMqCqEeDVfvcjv7EMLdCGEZzs40IvEovI41xkO0CZe
-abHAPAsUmEtZ1rwnX4kM2oA0hHE04XZ3fibsG2SPaulfR7KbPn7oGc2J/YG/8v77
-vsw5T+0lEWs7q3ZpmBkDKjtPngrWx6FPJJQe24V5fTUzLB64DNjsicgczW8OWWKs
-WQCkYkK0YWvanaEuXkiMjArc0YsTRkjQFnTEQhr4nW0xwYp0OTXcSSZTjGz9Y5xn
-hC0vX7scjyqTMv68Reo2vt1HNwYGgUBhv833tgkHS3V+aTFkhw/E+VMvBo9earZz
-MW76gb/2v65rcEpG4tiH6gwEdI2bH7el85/Pz5k24lo0wUCdi8j4JTVJgwTiYFr5
-ucWjuwVFL9t3fq9fzNfr
-=1WZ0
------END PGP SIGNATURE-----
-
---Sig_/TZfY3mT0jBz1aohPCMGpoiR--
+                         Linus
