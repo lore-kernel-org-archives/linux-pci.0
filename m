@@ -1,170 +1,284 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f74.google.com ([209.85.213.74]:41705 "EHLO
-	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755688Ab2ARAfI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2012 19:35:08 -0500
-Received: by yhjj52 with SMTP id j52so536644yhj.1
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 16:35:08 -0800 (PST)
-Subject: [PATCH 2/4] PCI: add struct pci_host_bridge and pci_scan_host_bridge()
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Tue, 17 Jan 2012 17:35:07 -0700
-Message-ID: <20120118003507.467.40594.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59214 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757361Ab2AXShf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2012 13:37:35 -0500
+Date: Tue, 24 Jan 2012 13:37:34 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Greg KH <greg@kroah.com>
+cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	<linux-pci@vger.kernel.org>, <linux-pcmcia@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>
+Subject: [PATCH] 
+Message-ID: <Pine.LNX.4.44L0.1201241335440.1200-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds a struct pci_host_bridge so the PCI core can keep track of
-generic attributes like the subordinate bus number range and the
-resources available to that PCI device tree.
+This patch (as1514) cleans up some places where new_id and remove_id
+sysfs attributes are created and deleted.  Handling both attributes in
+a single routine rather than a pair of routines makes the code
+smaller.  It also prevents certain kinds of errors, like one we
+currently have in the USB subsystem: The removeid attribute is often
+created even when newid isn't (because the driver's no_dynamid_id flag
+is set).
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+In the case of the PCMCIA subsystem, the newid attribute is created
+but never explicitly deleted.  The patch adds a deletion routine.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Dominik Brodowski <linux@dominikbrodowski.net>
+
 ---
- drivers/pci/probe.c |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |   20 +++++++++++++++
- 2 files changed, 89 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e282580..434475c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -15,6 +15,8 @@
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
- #define CARDBUS_RESERVE_BUSNR	3
+ drivers/pci/pci-driver.c  |   50 ++++++++++++-------------------------
+ drivers/pcmcia/ds.c       |    6 ++++
+ drivers/usb/core/driver.c |   61 +++++++++++++++-------------------------------
+ 3 files changed, 43 insertions(+), 74 deletions(-)
+
+Index: usb-3.3/drivers/pci/pci-driver.c
+===================================================================
+--- usb-3.3.orig/drivers/pci/pci-driver.c
++++ usb-3.3/drivers/pci/pci-driver.c
+@@ -188,43 +188,34 @@ store_remove_id(struct device_driver *dr
+ static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
  
-+LIST_HEAD(pci_host_bridges);
-+
- /* Ugh.  Need to stop exporting this to modules. */
- LIST_HEAD(pci_root_buses);
- EXPORT_SYMBOL(pci_root_buses);
-@@ -42,6 +44,23 @@ int no_pci_devices(void)
- }
- EXPORT_SYMBOL(no_pci_devices);
+ static int
+-pci_create_newid_file(struct pci_driver *drv)
++pci_create_newid_files(struct pci_driver *drv)
+ {
+ 	int error = 0;
+-	if (drv->probe != NULL)
+-		error = driver_create_file(&drv->driver, &driver_attr_new_id);
+-	return error;
+-}
+-
+-static void pci_remove_newid_file(struct pci_driver *drv)
+-{
+-	driver_remove_file(&drv->driver, &driver_attr_new_id);
+-}
  
-+struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus;
-+	struct pci_host_bridge *bridge;
-+
-+	bus = dev->bus;
-+	while (bus->parent)
-+		bus = bus->parent;
-+
-+	list_for_each_entry(bridge, &pci_host_bridges, list) {
-+		if (bridge->bus == bus)
-+			return bridge;
+-static int
+-pci_create_removeid_file(struct pci_driver *drv)
+-{
+-	int error = 0;
+-	if (drv->probe != NULL)
+-		error = driver_create_file(&drv->driver,&driver_attr_remove_id);
++	if (drv->probe != NULL) {
++		error = driver_create_file(&drv->driver, &driver_attr_new_id);
++		if (error == 0) {
++			error = driver_create_file(&drv->driver,
++					&driver_attr_remove_id);
++			if (error)
++				driver_remove_file(&drv->driver,
++						&driver_attr_new_id);
++		}
 +	}
-+
-+	return NULL;
-+}
-+
- /*
-  * PCI Bus Class
-  */
-@@ -1664,6 +1683,56 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
+ 	return error;
  }
- EXPORT_SYMBOL(pci_scan_bus);
  
-+/*
-+ * Use pci_scan_host_bridge() instead, unless there's some reason you have
-+ * to run code between pci_scan_child_bus() and pci_bus_add_devices().
-+ */
-+struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
-+		int domain, struct resource *subordinate,
-+		struct list_head *resources, struct pci_ops *ops,
-+		void *sysdata)
-+{
-+	struct pci_host_bridge *bridge;
-+
-+	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-+	if (!bridge)
-+		return NULL;
-+
-+	bridge->subordinate = subordinate;
-+	bridge->bus = pci_create_root_bus(parent, subordinate->start, ops, sysdata,
-+					  resources);
-+	if (!bridge->bus) {
-+		kfree(bridge);
-+		return NULL;
-+	}
-+
-+	down_write(&pci_bus_sem);
-+	list_add_tail(&bridge->list, &pci_host_bridges);
-+	up_write(&pci_bus_sem);
-+
-+	return bridge;
-+}
-+
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
-+		int domain, struct resource *subordinate,
-+		struct list_head *resources, struct pci_ops *ops,
-+		void *sysdata)
-+{
-+	struct pci_host_bridge *bridge;
-+	struct pci_bus *bus;
-+
-+	bridge = pci_create_host_bridge(parent, domain, subordinate, resources,
-+					ops, sysdata);
-+	if (!bridge)
-+		return NULL;
-+
-+	bus = bridge->bus;
-+	bus->subordinate = pci_scan_child_bus(bus);
-+	pci_bus_add_devices(bus);
-+	return bridge;
-+}
-+
-+
- #ifdef CONFIG_HOTPLUG
+-static void pci_remove_removeid_file(struct pci_driver *drv)
++static void pci_remove_newid_files(struct pci_driver *drv)
+ {
+ 	driver_remove_file(&drv->driver, &driver_attr_remove_id);
++	driver_remove_file(&drv->driver, &driver_attr_new_id);
+ }
+ #else /* !CONFIG_HOTPLUG */
+-static inline int pci_create_newid_file(struct pci_driver *drv)
++static inline int pci_create_newid_files(struct pci_driver *drv)
+ {
+ 	return 0;
+ }
+-static inline void pci_remove_newid_file(struct pci_driver *drv) {}
+-static inline int pci_create_removeid_file(struct pci_driver *drv)
+-{
+-	return 0;
+-}
+-static inline void pci_remove_removeid_file(struct pci_driver *drv) {}
++static inline void pci_remove_newid_files(struct pci_driver *drv) {}
+ #endif
+ 
  /**
-  * pci_rescan_bus - scan a PCI bus for devices.
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a16b1df..f642bca 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -388,6 +388,12 @@ static inline void pci_add_saved_cap(struct pci_dev *pci_dev,
- 	hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
+@@ -1136,18 +1127,12 @@ int __pci_register_driver(struct pci_dri
+ 	if (error)
+ 		goto out;
+ 
+-	error = pci_create_newid_file(drv);
++	error = pci_create_newid_files(drv);
+ 	if (error)
+ 		goto out_newid;
+-
+-	error = pci_create_removeid_file(drv);
+-	if (error)
+-		goto out_removeid;
+ out:
+ 	return error;
+ 
+-out_removeid:
+-	pci_remove_newid_file(drv);
+ out_newid:
+ 	driver_unregister(&drv->driver);
+ 	goto out;
+@@ -1166,8 +1151,7 @@ out_newid:
+ void
+ pci_unregister_driver(struct pci_driver *drv)
+ {
+-	pci_remove_removeid_file(drv);
+-	pci_remove_newid_file(drv);
++	pci_remove_newid_files(drv);
+ 	driver_unregister(&drv->driver);
+ 	pci_free_dynids(drv);
+ }
+Index: usb-3.3/drivers/pcmcia/ds.c
+===================================================================
+--- usb-3.3.orig/drivers/pcmcia/ds.c
++++ usb-3.3/drivers/pcmcia/ds.c
+@@ -157,6 +157,11 @@ pcmcia_create_newid_file(struct pcmcia_d
+ 	return error;
  }
  
-+struct pci_host_bridge {
-+	struct list_head list;
-+	struct resource *subordinate;	/* bus number aperture */
-+	struct pci_bus *bus;		/* root bus */
-+};
-+
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
-@@ -637,6 +643,7 @@ extern struct bus_type pci_bus_type;
++static void
++pcmcia_remove_newid_file(struct pcmcia_driver *drv)
++{
++	driver_remove_file(&drv->drv, &driver_attr_new_id);
++}
  
- /* Do NOT directly access these two variables, unless you are arch specific pci
-  * code, or pci core code. */
-+extern struct list_head pci_host_bridges;
- extern struct list_head pci_root_buses;	/* list of all known PCI buses */
- /* Some device drivers need know if pci is initiated */
- extern int no_pci_devices(void);
-@@ -668,6 +675,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-+struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
-+					       int domain,
-+					       struct resource *subordinate,
-+					       struct list_head *resources,
-+					       struct pci_ops *ops,
-+					       void *sysdata);
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
-+					     int domain,
-+					     struct resource *subordinate,
-+					     struct list_head *resources,
-+					     struct pci_ops *ops,
-+					     void *sysdata);
-+struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
- void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+ /**
+  * pcmcia_register_driver - register a PCMCIA driver with the bus core
+@@ -201,6 +206,7 @@ EXPORT_SYMBOL(pcmcia_register_driver);
+ void pcmcia_unregister_driver(struct pcmcia_driver *driver)
+ {
+ 	pr_debug("unregistering driver %s\n", driver->name);
++	pcmcia_remove_newid_file(driver);
+ 	driver_unregister(&driver->drv);
+ 	pcmcia_free_dynids(driver);
+ }
+Index: usb-3.3/drivers/usb/core/driver.c
+===================================================================
+--- usb-3.3.orig/drivers/usb/core/driver.c
++++ usb-3.3/drivers/usb/core/driver.c
+@@ -129,43 +129,39 @@ store_remove_id(struct device_driver *dr
+ }
+ static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
+ 
+-static int usb_create_newid_file(struct usb_driver *usb_drv)
++static int usb_create_newid_files(struct usb_driver *usb_drv)
+ {
+ 	int error = 0;
+ 
+ 	if (usb_drv->no_dynamic_id)
+ 		goto exit;
+ 
+-	if (usb_drv->probe != NULL)
++	if (usb_drv->probe != NULL) {
+ 		error = driver_create_file(&usb_drv->drvwrap.driver,
+ 					   &driver_attr_new_id);
++		if (error == 0) {
++			error = driver_create_file(&usb_drv->drvwrap.driver,
++					&driver_attr_remove_id);
++			if (error)
++				driver_remove_file(&usb_drv->drvwrap.driver,
++						&driver_attr_new_id);
++		}
++	}
+ exit:
+ 	return error;
+ }
+ 
+-static void usb_remove_newid_file(struct usb_driver *usb_drv)
++static void usb_remove_newid_files(struct usb_driver *usb_drv)
+ {
+ 	if (usb_drv->no_dynamic_id)
+ 		return;
+ 
+-	if (usb_drv->probe != NULL)
++	if (usb_drv->probe != NULL) {
+ 		driver_remove_file(&usb_drv->drvwrap.driver,
+-				   &driver_attr_new_id);
+-}
+-
+-static int
+-usb_create_removeid_file(struct usb_driver *drv)
+-{
+-	int error = 0;
+-	if (drv->probe != NULL)
+-		error = driver_create_file(&drv->drvwrap.driver,
+ 				&driver_attr_remove_id);
+-	return error;
+-}
+-
+-static void usb_remove_removeid_file(struct usb_driver *drv)
+-{
+-	driver_remove_file(&drv->drvwrap.driver, &driver_attr_remove_id);
++		driver_remove_file(&usb_drv->drvwrap.driver,
++				   &driver_attr_new_id);
++	}
+ }
+ 
+ static void usb_free_dynids(struct usb_driver *usb_drv)
+@@ -180,22 +176,12 @@ static void usb_free_dynids(struct usb_d
+ 	spin_unlock(&usb_drv->dynids.lock);
+ }
+ #else
+-static inline int usb_create_newid_file(struct usb_driver *usb_drv)
+-{
+-	return 0;
+-}
+-
+-static void usb_remove_newid_file(struct usb_driver *usb_drv)
+-{
+-}
+-
+-static int
+-usb_create_removeid_file(struct usb_driver *drv)
++static inline int usb_create_newid_files(struct usb_driver *usb_drv)
+ {
+ 	return 0;
+ }
+ 
+-static void usb_remove_removeid_file(struct usb_driver *drv)
++static void usb_remove_newid_files(struct usb_driver *usb_drv)
+ {
+ }
+ 
+@@ -872,22 +858,16 @@ int usb_register_driver(struct usb_drive
+ 
+ 	usbfs_update_special();
+ 
+-	retval = usb_create_newid_file(new_driver);
++	retval = usb_create_newid_files(new_driver);
+ 	if (retval)
+ 		goto out_newid;
+ 
+-	retval = usb_create_removeid_file(new_driver);
+-	if (retval)
+-		goto out_removeid;
+-
+ 	pr_info("%s: registered new interface driver %s\n",
+ 			usbcore_name, new_driver->name);
+ 
+ out:
+ 	return retval;
+ 
+-out_removeid:
+-	usb_remove_newid_file(new_driver);
+ out_newid:
+ 	driver_unregister(&new_driver->drvwrap.driver);
+ 
+@@ -914,10 +894,9 @@ void usb_deregister(struct usb_driver *d
+ 	pr_info("%s: deregistering interface driver %s\n",
+ 			usbcore_name, driver->name);
+ 
+-	usb_remove_removeid_file(driver);
+-	usb_remove_newid_file(driver);
+-	usb_free_dynids(driver);
++	usb_remove_newid_files(driver);
+ 	driver_unregister(&driver->drvwrap.driver);
++	usb_free_dynids(driver);
+ 
+ 	usbfs_update_special();
+ }
 
