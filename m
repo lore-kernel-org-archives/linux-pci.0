@@ -1,69 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:52046 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756565Ab2ARUEA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jan 2012 15:04:00 -0500
-Received: from dslb-178-003-241-093.pools.arcor-ip.net ([::ffff:178.3.241.93] HELO eto.sf-tec.de) (auth=eike@sf-mail.de)
-	by mail.sf-mail.de (Qsmtpd 0.21svn) with (DHE-RSA-AES256-SHA encrypted) ESMTPSA
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 20:03:57 +0000
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-To: linux-pci@vger.kernel.org
-Subject: Re: PCI card not accessible; I/O ports at <ignored>
-Date: Wed, 18 Jan 2012 21:03:25 +0100
-Message-ID: <2291613.bPZ67F62Nj@eto>
-In-Reply-To: <4F170DDB.3010105@meinberg.de>
-References: <4F16EA07.4000607@meinberg.de> <20120118162858.GB22156@kroah.com> <4F170DDB.3010105@meinberg.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 24 Jan 2012 13:34:41 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Greg KH <greg@kroah.com>
+cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	<linux-input@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-pcmcia@lists.infradead.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: [PATCH 2/5] Dynamic ID addition doesn't need get_driver()
+Message-ID: <Pine.LNX.4.44L0.1201241310400.1200-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart44238330.HKVDQUrspZ"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+As part of the removal of get_driver()/put_driver(), this patch
+(as1511) changes all the places that add dynamic IDs for drivers.
+Since these additions are done by writing to the drivers' sysfs
+attribute files, and the attributes are removed when the drivers are
+unregistered, there is no reason to take an extra reference to the
+drivers.
 
---nextPart44238330.HKVDQUrspZ
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+The one exception is the pci-stub driver, which calls pci_add_dynid()
+as part of its registration.  But again, there's no reason to take an
+extra reference here, because the driver can't be unloaded while it is
+being registered.
 
-Am Mittwoch 18 Januar 2012, 19:22:19 schrieben Sie:
-> Greg KH wrote:
-> > On Wed, Jan 18, 2012 at 04:49:27PM +0100, Martin Burnicki wrote:
-> >> Hi folks,
-> >> 
-> >> I'm maintaining the driver software for the PCI cards manufactured
-> >> by our company, Meinberg Funkuhren in Germany. Basically our Linux
-> >> driver supports all our PCI cards on all Linux kernels 2.6.x and
-> >> 3.x. The PCI cards are e.g. GPS receivers, radio clocks, or IRIG
-> >> time code receivers.
-> > 
-> > Nice, any reason why these drivers aren't in the main kernel.org tree?
-> 
-> Yes, you wouldn't like the coding style of our driver ;-)
-> 
-> Seriously, I have discussed this with some Linux guys before, and also
-> with some folks from *BSD who also wanted to pick up the driver into
-> their *BSD source trees.
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+CC: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+CC: Jiri Kosina <jkosina@suse.cz>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Dominik Brodowski <linux@dominikbrodowski.net>
 
-I've had such a driver before. Trust me, it was a great relief once I got rid 
-of it because I did not have to maintain the os abstraction layer anymore. And 
-many of the lower level functions you need to do by hand for all systems can 
-be done with fewer calls on nearly all systems. Just the borders of these 
-calls differ between the systems, so you can't abstract this away in the 
-wrapper layer.
+---
 
-And noone stops you to have your driver available for older kernel releases 
-too. But plugging something in and it just works is just cool ;)
+ drivers/hid/hid-core.c    |    6 +-----
+ drivers/pci/pci-driver.c  |    2 --
+ drivers/pcmcia/ds.c       |    5 +----
+ drivers/usb/core/driver.c |    5 +----
+ 4 files changed, 3 insertions(+), 15 deletions(-)
 
-Eike
---nextPart44238330.HKVDQUrspZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iEYEABECAAYFAk8XJZIACgkQXKSJPmm5/E7WaACfYAIk9m73NUGccbfj+qcfZo/M
-bLQAnRd2CasQWDCiztgGt8kt1bsXwPtM
-=Wbwt
------END PGP SIGNATURE-----
-
---nextPart44238330.HKVDQUrspZ--
+Index: usb-3.3/drivers/hid/hid-core.c
+===================================================================
+--- usb-3.3.orig/drivers/hid/hid-core.c
++++ usb-3.3/drivers/hid/hid-core.c
+@@ -1619,11 +1619,7 @@ static ssize_t store_new_id(struct devic
+ 	list_add_tail(&dynid->list, &hdrv->dyn_list);
+ 	spin_unlock(&hdrv->dyn_lock);
+ 
+-	ret = 0;
+-	if (get_driver(&hdrv->driver)) {
+-		ret = driver_attach(&hdrv->driver);
+-		put_driver(&hdrv->driver);
+-	}
++	ret = driver_attach(&hdrv->driver);
+ 
+ 	return ret ? : count;
+ }
+Index: usb-3.3/drivers/pci/pci-driver.c
+===================================================================
+--- usb-3.3.orig/drivers/pci/pci-driver.c
++++ usb-3.3/drivers/pci/pci-driver.c
+@@ -72,9 +72,7 @@ int pci_add_dynid(struct pci_driver *drv
+ 	list_add_tail(&dynid->node, &drv->dynids.list);
+ 	spin_unlock(&drv->dynids.lock);
+ 
+-	get_driver(&drv->driver);
+ 	retval = driver_attach(&drv->driver);
+-	put_driver(&drv->driver);
+ 
+ 	return retval;
+ }
+Index: usb-3.3/drivers/pcmcia/ds.c
+===================================================================
+--- usb-3.3.orig/drivers/pcmcia/ds.c
++++ usb-3.3/drivers/pcmcia/ds.c
+@@ -127,10 +127,7 @@ pcmcia_store_new_id(struct device_driver
+ 	list_add_tail(&dynid->node, &pdrv->dynids.list);
+ 	mutex_unlock(&pdrv->dynids.lock);
+ 
+-	if (get_driver(&pdrv->drv)) {
+-		retval = driver_attach(&pdrv->drv);
+-		put_driver(&pdrv->drv);
+-	}
++	retval = driver_attach(&pdrv->drv);
+ 
+ 	if (retval)
+ 		return retval;
+Index: usb-3.3/drivers/usb/core/driver.c
+===================================================================
+--- usb-3.3.orig/drivers/usb/core/driver.c
++++ usb-3.3/drivers/usb/core/driver.c
+@@ -71,10 +71,7 @@ ssize_t usb_store_new_id(struct usb_dyni
+ 	list_add_tail(&dynid->node, &dynids->list);
+ 	spin_unlock(&dynids->lock);
+ 
+-	if (get_driver(driver)) {
+-		retval = driver_attach(driver);
+-		put_driver(driver);
+-	}
++	retval = driver_attach(driver);
+ 
+ 	if (retval)
+ 		return retval;
 
