@@ -1,109 +1,90 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1327718971-9598-13-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org> <1327718971-9598-13-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Jan 2012 08:09:19 -0800
-Message-ID: <CAErSpo6JuJ-2u4KptUyx0N623f5X29CiqkzWEFTKnSFKQ6sP_w@mail.gmail.com>
-Subject: Re: [PATCH 12/13] PCI: kill pci_fixup_parent_subordinate_busnr()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:41799 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753811Ab2AXEe3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Jan 2012 23:34:29 -0500
+Message-ID: <1327379648.19850.31.camel@pasglop>
+Subject: Re: [PATCH 1/7] PCI: Make sriov work with hotplug remove
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Date: Tue, 24 Jan 2012 15:34:08 +1100
+In-Reply-To: <CA+55aFwEbbq0yuN4mAtfDSbOE86mAWsBBz+pgBzn8_QHVk+B3g@mail.gmail.com>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+	 <1327139539-14301-2-git-send-email-yinghai@kernel.org>
+	 <CA+55aFz7B5ebEGKKJmvuWY+2O-6qarUj40CHASu_4EQ0KDgi_Q@mail.gmail.com>
+	 <CAE9FiQWbmO+FFsE06eQ=-PVNtdaTG3EsqXNXdUCxb9YxtPS8Cw@mail.gmail.com>
+	 <CA+55aFyok04YrmEYXLbAE2vB_944+aEJZhd5tzu6U2k0CLaN5A@mail.gmail.com>
+	 <CA+55aFwEbbq0yuN4mAtfDSbOE86mAWsBBz+pgBzn8_QHVk+B3g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 27, 2012 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Now we can safely extend parent top and shrink them according iobusn_resource tree.
->
-> Don't need that any more.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/probe.c |   45 +++++++++------------------------------------
->  1 files changed, 9 insertions(+), 36 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 23c2f0d..54615a9 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -608,22 +608,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
->        return child;
->  }
->
-> -static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
-> -{
-> -       struct pci_bus *parent = child->parent;
-> -
-> -       /* Attempts to fix that up are really dangerous unless
-> -          we're going to re-assign all bus numbers. */
-> -       if (!pcibios_assign_all_busses())
-> -               return;
-> -
-> -       while (parent->parent && parent->subordinate < max) {
-> -               parent->subordinate = max;
-> -               pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
-> -               parent = parent->parent;
-> -       }
-> -}
-> -
->  static void __devinit pci_bus_extend_top(struct pci_bus *parent,
->                 resource_size_t size, struct resource *parent_res)
->  {
-> @@ -925,6 +909,13 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
->                /* Clear errors */
->                pci_write_config_word(dev, PCI_STATUS, 0xffff);
->
-> +               /*
-> +                * For CardBus bridges, we leave 4 bus numbers
-> +                * as cards with a PCI-to-PCI bridge can be
-> +                * inserted later.
-> +                * other just allocate 8 bus to avoid we fall into
-> +                *  small hole in the middle.
-> +                */
+On Mon, 2012-01-23 at 11:34 -0800, Linus Torvalds wrote:
+> On Mon, Jan 23, 2012 at 10:45 AM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+> >
+> > Why isn't this magically true in this case? If some *other* random
+> > entry than the one that is being iterated over can magically be
+> > removed, then the whole thing is just pure and utter crap, and no
+> > amount of list maintenance can ever fix it.
+> >
+> > So explain.
+> 
+> Ahh. I finally understand what's going on. The virtual device attached
+> to a physical device can go away, and it's on the same damn list.
+> 
+> That's broken. Virtual devices set up by a physical device should be
+> *children* of the physical device, not "siblings". But that's
+> apparently not what the broken virtual PCI layer does.
 
-This comment addition is in the wrong patch; it should go in the one
-that added the code.
+Thank the PCI SIG for that ... they are sibling functions (or even
+devices in some case) of the PF :-(
 
->                ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
->                                is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
->                                &parent_res);
-> @@ -963,29 +954,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
->
->                if (!is_cardbus) {
->                        child->bridge_ctl = bctl;
-> -                       /*
-> -                        * Adjust subordinate busnr in parent buses.
-> -                        * We do this before scanning for children because
-> -                        * some devices may not be detected if the bios
-> -                        * was lazy.
-> -                        */
-> -                       pci_fixup_parent_subordinate_busnr(child, max);
-> +
->                        /* Now we can scan all subordinate buses... */
->                        max = pci_scan_child_bus(child);
-> -                       /*
-> -                        * now fix it up again since we have found
-> -                        * the real value of max.
-> -                        */
-> -                       pci_fixup_parent_subordinate_busnr(child, max);
-> -
-> -               } else {
-> -                       /*
-> -                        * For CardBus bridges, we leave 4 bus numbers
-> -                        * as cards with a PCI-to-PCI bridge can be
-> -                        * inserted later.
-> -                        */
-> -                       pci_fixup_parent_subordinate_busnr(child, max);
->                }
-> +
->                /*
->                 * Set the subordinate bus number to its real value.
->                 */
+> So I think that there are two possible solutions:
+> 
+>  (a) fix the virtual devices that are attached to physical devices to
+> really be children of the physical device, with the physical device as
+> a "bridge" to that virtual bus.
+
+This will confuse various other aspects of the PCI code since they are
+really siblings from an addressing standpoint (ie bus/dev/fn)
+
+Cheers,
+Ben.
+
+> I think this is the correct solution from any sane standpoint (now the
+> topology of the device tree actually matches the logical
+> relationship), which is why I think this is the RightThing(tm) to do.
+> And it should automatically fix this insane issue where removing a
+> device from a bus can remove *multiple* devices from the same list.
+> 
+>  (b) if that isn't an option, and the virtual devices make a mess, at
+> least don't make the code uglier, just do something like:
+> 
+>     while (!list_empty(&bus->devices)) {
+>         struct pci_dev *dev = list_first_entry(struct pci_dev, bus_list);
+> 
+>         pci_stop_bus_device(dev);
+>     }
+> 
+> which at least isn't butt ugly. Add a large comment about how
+> pci_stop_bus_device() can remove multiple devices due to the virtual
+> devices having been done badly.
+> 
+> Who is in charge of the whole 'is_virtfn' mess? How realistic is it to
+> fix that crud?
+> 
+>                      Linus
 > --
-> 1.7.7
->
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
