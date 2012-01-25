@@ -1,77 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:47771 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751536Ab2A0Rc3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:32:29 -0500
-Date: Fri, 27 Jan 2012 09:32:25 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xensource.com
-Subject: Re: [PATCH 1/2] pci: Introduce __pci_reset_function_locked to be
- used when holding device_lock.
-Message-ID: <20120127093225.7c1194ae@jbarnes-desktop>
-In-Reply-To: <1326388007-19178-2-git-send-email-konrad.wilk@oracle.com>
-References: <1326388007-19178-1-git-send-email-konrad.wilk@oracle.com>
-	<1326388007-19178-2-git-send-email-konrad.wilk@oracle.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/wOU34tgT+IIj2Ug/yepQ1AI"; protocol="application/pgp-signature"
+Received: from isilmar-3.linta.de ([188.40.101.200]:40879 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751120Ab2AYT4H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jan 2012 14:56:07 -0500
+Date: Wed, 25 Jan 2012 20:33:46 +0100
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg KH <greg@kroah.com>, linux-input@vger.kernel.org,
+	linux-pcmcia@lists.infradead.org, Jiri Kosina <jkosina@suse.cz>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] Dynamic ID addition doesn't need get_driver()
+Message-ID: <20120125193346.GB9192@comet.dominikbrodowski.net>
+References: <Pine.LNX.4.44L0.1201241310400.1200-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.44L0.1201241310400.1200-100000@iolanthe.rowland.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/wOU34tgT+IIj2Ug/yepQ1AI
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jan 24, 2012 at 01:34:41PM -0500, Alan Stern wrote:
+> As part of the removal of get_driver()/put_driver(), this patch
+> (as1511) changes all the places that add dynamic IDs for drivers.
+> Since these additions are done by writing to the drivers' sysfs
+> attribute files, and the attributes are removed when the drivers are
+> unregistered, there is no reason to take an extra reference to the
+> drivers.
+> 
+> The one exception is the pci-stub driver, which calls pci_add_dynid()
+> as part of its registration.  But again, there's no reason to take an
+> extra reference here, because the driver can't be unloaded while it is
+> being registered.
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> CC: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+> CC: Jiri Kosina <jkosina@suse.cz>
+> CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+> CC: Dominik Brodowski <linux@dominikbrodowski.net>
 
-On Thu, 12 Jan 2012 12:06:46 -0500
-Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
-
-> The use case of this is when a driver wants to call FLR when a device
-> is attached to it using the SysFS "bind" or "unbind" functionality.
->=20
-> The call chain when a user does "bind" looks as so:
->=20
->  echo "0000:01.07.0" > /sys/bus/pci/drivers/XXXX/bind
->=20
-> and ends up calling:
->   driver_bind:
->     device_lock(dev);  <=3D=3D=3D TAKES LOCK
->     XXXX_probe:
->          .. pci_enable_device()
->          ...__pci_reset_function(), which calls
->                  pci_dev_reset(dev, 0):
->                         if (!0) {
->                                 device_lock(dev) <=3D=3D=3D=3D DEADLOCK
-
-I have these two in my -next branch now; but you could also push them
-through the Xen tree.  If you have other deps and the Xen tree would be
-easier, just let me know and I'll drop them.
+For the PCMCIA part: Acked-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
 Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/wOU34tgT+IIj2Ug/yepQ1AI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIt+pAAoJEIEoDkX4Qk9h0uEQAJd6MNnPCNalZFs6c18vFEJb
-Tz6rEPPsyPyd9NFrTE1ko2sQmDtPwRCjvqGUOs4e/+eoFwAgC/K4eWNn1plkNaDj
-3z0FtP2gK8+qYp+nOah2du6GGiYYo4qRWQk04gAQ/8FI9Mpa5myk7OZM2ALk6fCb
-9lcvJaWSSkVljOs6TqgsDLIcjS3tRfrw191KxUKVmEsFyIIkB7Y/6WUkf43YjS1Q
-qgsVXJzYM3BWFHI+OOBpna78qaoXWHR8CurchdCINSrBMSpxl4VBSqJqSoYJtSLX
-7TyYNLlAwnbefT+cLx7wIj9Bk2HnJApHj4Ez6q8HSKABpKXfCNcuMkBcGo5l67PO
-4kWXsZDpkcZKVP96+KW4DQOPP9EVAge+eInXT+cJSseXWcuRS9rBLjDhj+1E6B8t
-SWOTB5RRTD8l7/B4PT66GA5oI/Pg4roZuiXe3oti/ZVyyhdRkfJKkC428+qfDaKA
-KWzionpARPsHL78WEM6ZkSgYhbW3XW/yECM3fKjNiQ97osq3lyx9jmrj2a13O7Dc
-Ys3PMuKY2FED0oFGqQscYBZYP7ScfX76IU3ryxLG/K9BQpGqYaNVpYxFplkVHK7H
-hUsD7Nmvj8omVUFyKEDCGBTSgdJyWveZf1RLIlyMaQa+fbYUyPxD8ShVvMuciu7j
-5EJxwTUoASaMbzbc82O5
-=nf3W
------END PGP SIGNATURE-----
-
---Sig_/wOU34tgT+IIj2Ug/yepQ1AI--
+	Dominik
