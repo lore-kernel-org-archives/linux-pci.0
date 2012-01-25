@@ -1,74 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:33140 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000Ab2ADVSv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 16:18:51 -0500
+Received: from mail-we0-f174.google.com ([74.125.82.174]:62255 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120Ab2AYVd5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jan 2012 16:33:57 -0500
+Received: by werb13 with SMTP id b13so4160735wer.19
+        for <linux-pci@vger.kernel.org>; Wed, 25 Jan 2012 13:33:56 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120104120248.4f4747bf@jbarnes-desktop>
-References: <20120103185304.GA25184@hmsreliant.think-freely.org>
-	<20120104091952.7cc5316d@jbarnes-desktop>
-	<20120104195134.GB24324@hmsreliant.think-freely.org>
-	<20120104.145619.1728971973635198635.davem@davemloft.net>
-	<20120104120248.4f4747bf@jbarnes-desktop>
-Date: Wed, 4 Jan 2012 16:18:49 -0500
-Message-ID: <CA+5PVA4=j_pXQ0L9NBoaGGGhEWFhga_LxVG-oi11vSrm4UG3Sg@mail.gmail.com>
-Subject: Re: [PATCH] msi: fix imbalanced refcount of msi irq sysfs objects
-From: Josh Boyer <jwboyer@gmail.com>
+In-Reply-To: <20120125130836.22450527@jbarnes-desktop>
+References: <20120109224349.24913.23010.stgit@bhelgaas.mtv.corp.google.com> <20120125130836.22450527@jbarnes-desktop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Jan 2012 14:33:36 -0700
+Message-ID: <CAErSpo4227cGPKCsYRYgREQyxdE-qZHpfJ+iqmt0TS6vctB-DQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] x86/PCI: build amd_bus.o only when CONFIG_AMD_NB=y
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: David Miller <davem@davemloft.net>, nhorman@tuxdriver.com,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com, gregkh@suse.de,
-	linux-pci@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 4, 2012 at 3:02 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Wed, 04 Jan 2012 14:56:19 -0500 (EST)
-> David Miller <davem@davemloft.net> wrote:
+On Wed, Jan 25, 2012 at 2:08 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Mon, 09 Jan 2012 15:43:49 -0700
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
->> From: Neil Horman <nhorman@tuxdriver.com>
->> Date: Wed, 4 Jan 2012 14:51:34 -0500
+>> We only need amd_bus.o for AMD systems with PCI.  arch/x86/pci/Makefile
+>> already depends on CONFIG_PCI=y, so this patch just adds the dependency
+>> on CONFIG_AMD_NB.
 >>
->> > On Wed, Jan 04, 2012 at 09:19:52AM -0800, Jesse Barnes wrote:
->> >> On Tue, 3 Jan 2012 13:53:05 -0500
->> >> Neil Horman <nhorman@tuxdriver.com> wrote:
->> >>
->> >> > On Tue, Jan 03, 2012 at 01:05:26PM -0500, David Miller wrote:
->> >> > > From: Neil Horman <nhorman@tuxdriver.com>
->> >> > > Date: Tue,  3 Jan 2012 10:29:54 -0500
->> >> > >
->> >> > > > This warning was recently reported to me:
->> >> > >
->> >> > > I've hit this too, see:
->> >> > >
->> >> > > http://marc.info/?l=linux-kernel&m=132458146927890&w=2
->> >> > >
->> >> > > and my analysis at:
->> >> > >
->> >> > > http://marc.info/?l=linux-arch&m=132458391128660&w=2
->> >> > >
->> >> > Yup, your analysis is correct. Regardless of the why behind msi enablement
->> >> > failing, we need to gate the kobject_del/put in free_msi_irqs on successful
->> >> > completion of kobject_init_and_add in populate_msi_sysfs.  This patch does that,
->> >> > using the parent pointer as a flag.
->> >>
->> >> I applied this to my -next branch; doesn't seem critical to land
->> >> immediately.  If you disagree let me know and I'll pull it over to my
->> >> for-linus branch instead.
->> >>
->> >> Thanks,
->> > I'm ok with it waiting, but I'll defer to Dave and others who have seen it
->> > occur.  It sounds like its alot of log noise.
+>> CC: Yinghai Lu <yinghai@kernel.org>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  arch/x86/pci/Makefile |    3 ++-
+>>  1 files changed, 2 insertions(+), 1 deletions(-)
 >>
->> The bug only exists in the PCI -next code I thought.
+>> diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+>> index 6b8759f..d24d3da 100644
+>> --- a/arch/x86/pci/Makefile
+>> +++ b/arch/x86/pci/Makefile
+>> @@ -18,8 +18,9 @@ obj-$(CONFIG_X86_NUMAQ)             += numaq_32.o
+>>  obj-$(CONFIG_X86_MRST)               += mrst.o
+>>
+>>  obj-y                                += common.o early.o
+>> -obj-y                                += amd_bus.o bus_numa.o
+>> +obj-y                                += bus_numa.o
+>>
+>> +obj-$(CONFIG_AMD_NB)         += amd_bus.o
+>>  obj-$(CONFIG_PCI_CNB20LE_QUIRK)      += broadcom_bus.o
+>>
+>>  ifeq ($(CONFIG_PCI_DEBUG),y)
 >
-> Oh yeah, looks like it.  Lost track of my -next vs master branches
-> there...
+> Arg sorry guys I've been totally swamped since sending in the pull
+> req.  I'll do a review & merge pass on the outstanding stuff tomorrow.
 
-Er... Neil's commit log in the patch itself has an oops from 3.1.6 in
-it.  If the bug the patch fixes is only present in -next PCI code, how
-did it get hit on that release?
+Linus picked up this particular fix already (5cf9a4e69c1ff), so don't
+worry about this one.
 
-Did we switch to talking about some other patch here and I'm just confused?
-
-josh
+Bjorn
