@@ -1,63 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:40279 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187Ab2AZRR6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2012 12:17:58 -0500
+Received: by ghrr11 with SMTP id r11so349829ghr.19
+        for <linux-pci@vger.kernel.org>; Thu, 26 Jan 2012 09:17:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4F2183A2.7010007@jp.fujitsu.com>
+References: <20120119223221.15239.6758.sendpatchset@dhcp-189-101.bos.redhat.com>
+	<CAE9FiQWKRxZcm2FBhP2SxaBGYpROc4grJQtE68OyayPhjQHdsA@mail.gmail.com>
+	<4F2183A2.7010007@jp.fujitsu.com>
+Date: Thu, 26 Jan 2012 09:17:57 -0800
+Message-ID: <CAE9FiQWQzwYQz7MAGC=Gjpr5HMsT-bn5t77fi7EKD1LDGbXizg@mail.gmail.com>
+Subject: Re: [PATCH v4] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp driver
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 0/14] PCI: allocate pci bus num range for unassigned bridge busn
-Date: Mon, 30 Jan 2012 23:42:38 -0800
-Message-Id: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, greg@kroah.com,
+	kaneshige.kenji@jp.fujitsu.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-25b9b3c: PCI: Seperate child bus scanning to two passes overall
-58fe568: PCI: kill pci_fixup_parent_subordinate_busnr()
-72a276a: PCI: Allocate bus range instead of use max blindly
-3e65251: PCI: Strict checking of valid range for bridge
-a06b7d3: PCI: Probe safe range that we can use for unassigned bridge.
-f7d1b3e: PCI: Add pci_bus_extend/shrink_top()
-941553d: PCI, parisc: Register busn_res for root buses
-44ade6c: PCI, powerpc: Register busn_res for root buses
-c96df0d: PCI, ia64: Register busn_res for root buses
-370ff8b: PCI, x86: Register busn_res for root buses
-12aa505: PCI: Add busn_res tracking in core
-5729f35: PCI: Add busn_res operation functions
-b7283c2: PCI: Add iobusn_resource
-443e84a: Make %pR could handle bus resource with domain
+On Thu, Jan 26, 2012 at 8:47 AM, MUNEDA Takahiro
+<muneda.takahiro@jp.fujitsu.com> wrote:
+> On Thu, 19 Jan 2012 15:41:09 -0800,
+> Yinghai Lu <yinghai@kernel.org> wrote:
+>
+> snip
+>
+>>> Index: linux-3.2/drivers/pci/quirks.c
+>>> ===================================================================
+>>> --- linux-3.2.orig/drivers/pci/quirks.c
+>>> +++ linux-3.2/drivers/pci/quirks.c
+>>> @@ -2665,6 +2665,35 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AT
+>>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4375,
+>>>                        quirk_msi_intx_disable_bug);
+>>>
+>>> +/*
+>>> + * The PCI bridge from Integrated Device Technology(IDT) has a problem
+>>> + * with MSI/MSI-X.
+>>> + * An un-wanted interrupt is generated when PCI driver switches from
+>>> + * MSI/MSI-X to INTx while shutting down the PCI Express port, if it
+>>> + * provides the Native Hotplug service.  The interrupt does not happen
+>>> + * if MSI/MSI-X is not used on it.  Therefore, turn off MSI/MSI-X for
+>>> + * this device.
+>>> + */
+>>> +static void __devinit idt_bridge_msi_disable(struct pci_dev *dev)
+>>> +{
+>>> +       int pos;
+>>> +       u16 reg16;
+>>> +       u32 reg32;
+>>> +
+>>> +       pos = pci_pcie_cap(dev);
+>>> +       if (!pos)
+>>> +               return;
+>>> +       pci_read_config_word(dev, pos + PCI_EXP_FLAGS,&reg16);
+>>> +       if (!(reg16&  PCI_EXP_FLAGS_SLOT))
+>>>
+>>> +               return;
+>>> +       pci_read_config_dword(dev, pos + PCI_EXP_SLTCAP,&reg32);
+>>> +       if (reg32&  PCI_EXP_SLTCAP_HPC) {
+>>>
+>>> +               pci_msi_off(dev);
+>>> +               dev->no_msi = 1;
+>>> +       }
+>>> +}
+>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IDT, 0x807f,
+>>> idt_bridge_msi_disable);
+>>
+>>
+>> do you have statement for IDT, says that is chipset problem ?
+>
+>
+> I'm trying to contact to them, but not yet.
+>
+>
+>> it could be your platform fw problem.
+>>
+>> if that is the case, you will disable MSI/MSIX for other platform that
+>> do not have fw problem.
+>
+>
+> Yinghai,
+> Btw, how about other pieces?  I'm thinking to drop the quirk code temporary,
+> until I get the comment from them.
+> Can you give an ACK if I remove the hardware specific quirk code?
 
-Set up iobusn_resource tree, and register bus number range to it.
-Later when need to find bus range, will try to allocate from the tree
+yes, other part is ok.
 
-Need to test on arches other than x86. esp for ia64 and powerpc that support
-  more than on peer root buses.
-
-could be found at:
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
-
--v2: according to Jesse, split to more small patches.
--v3: address some request from Bjorn. like make use %pR for busn_res debug print
-	out, and move the comment change with code change.
+Actually quirk code should be separated to another patch.
 
 Thanks
 
 Yinghai
-
- arch/ia64/pci/pci.c              |    2 +
- arch/powerpc/kernel/pci-common.c |    7 +-
- arch/x86/include/asm/topology.h  |    3 +-
- arch/x86/pci/acpi.c              |    8 +-
- arch/x86/pci/bus_numa.c          |    8 +-
- arch/x86/pci/common.c            |   11 +-
- drivers/parisc/dino.c            |    2 +
- drivers/parisc/lba_pci.c         |    3 +
- drivers/pci/probe.c              |  410 ++++++++++++++++++++++++++++++--------
- drivers/pci/remove.c             |    1 +
- include/linux/ioport.h           |    1 +
- include/linux/pci.h              |    8 +
- kernel/resource.c                |    8 +
- lib/vsprintf.c                   |   28 +++-
- 14 files changed, 402 insertions(+), 98 deletions(-)
