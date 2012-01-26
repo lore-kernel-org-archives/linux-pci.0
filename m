@@ -1,60 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4F1B0BCB.4090901@xenotime.net>
-Date: Sat, 21 Jan 2012 11:02:35 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.solarflare.com ([216.237.3.220]:23048 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752735Ab2AZVuM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2012 16:50:12 -0500
+Message-ID: <1327614608.2482.12.camel@bwh-desktop>
+Subject: Re: [PATCH net-next 02/10] bnx2x: Removing indirect register access
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Ariel Elior <ariele@broadcom.com>
+CC: <davem@davemloft.net>, <netdev@vger.kernel.org>,
+	<eilong@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 26 Jan 2012 21:50:08 +0000
+In-Reply-To: <1327593714-18358-3-git-send-email-ariele@broadcom.com>
+References: <1327593714-18358-1-git-send-email-ariele@broadcom.com>
+	 <1327593714-18358-3-git-send-email-ariele@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: [PATCH 3/14] kernel-doc: fix new warnings in pci
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+On Thu, 2012-01-26 at 18:01 +0200, Ariel Elior wrote:
+> In virtualized environments indirect access to the device may not be supported
+> (depending on the Hypervisor type). Indirect device access was used since in
+> some harware contexts (i.e. certain chipset and BIOS) every access the driver
+> makes across the pci is followed by a BIOS initiated Zero Length Read to the
+> same address.
+[...]
 
-Fix new kernel-doc warnings:
+This is intriguing.  Isn't that a general problem that can affect many
+devices?  Can you be more specific about which systems have this
+behaviour?
 
-Warning(drivers/pci/pci.c:2811): No description found for parameter 'dev'
-Warning(drivers/pci/pci.c:2811): Excess function parameter 'pdev' description in 'pci_intx_mask_supported'
-Warning(drivers/pci/pci.c:2894): No description found for parameter 'dev'
-Warning(drivers/pci/pci.c:2894): Excess function parameter 'pdev' description in 'pci_check_and_mask_intx'
-Warning(drivers/pci/pci.c:2908): No description found for parameter 'dev'
-Warning(drivers/pci/pci.c:2908): Excess function parameter 'pdev' description in 'pci_check_and_unmask_intx'
+Ben.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
----
- drivers/pci/pci.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
---- lnx-33-rc1.orig/drivers/pci/pci.c
-+++ lnx-33-rc1/drivers/pci/pci.c
-@@ -2802,7 +2802,7 @@ pci_intx(struct pci_dev *pdev, int enabl
- 
- /**
-  * pci_intx_mask_supported - probe for INTx masking support
-- * @pdev: the PCI device to operate on
-+ * @dev: the PCI device to operate on
-  *
-  * Check if the device dev support INTx masking via the config space
-  * command word.
-@@ -2884,7 +2884,7 @@ done:
- 
- /**
-  * pci_check_and_mask_intx - mask INTx on pending interrupt
-- * @pdev: the PCI device to operate on
-+ * @dev: the PCI device to operate on
-  *
-  * Check if the device dev has its INTx line asserted, mask it and
-  * return true in that case. False is returned if not interrupt was
-@@ -2898,7 +2898,7 @@ EXPORT_SYMBOL_GPL(pci_check_and_mask_int
- 
- /**
-  * pci_check_and_mask_intx - unmask INTx of no interrupt is pending
-- * @pdev: the PCI device to operate on
-+ * @dev: the PCI device to operate on
-  *
-  * Check if the device dev has its INTx line asserted, unmask it if not
-  * and return true. False is returned and the mask remains active if
