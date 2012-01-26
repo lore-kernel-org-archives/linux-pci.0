@@ -1,37 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:37518 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198Ab2ALDir convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2012 22:38:47 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120111103408.30cfa338@jbarnes-desktop>
-References: <20120111103408.30cfa338@jbarnes-desktop>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 11 Jan 2012 19:38:25 -0800
-Message-ID: <CA+55aFwDVEH1NwEgKCQSv9ee3P2ma1aqtjOo-s2BeURyeTGo8g@mail.gmail.com>
-Subject: Re: [git pull] PCI changes
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Matthew Garrett <mjg@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:37441
+	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751991Ab2AZOqP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2012 09:46:15 -0500
+From: Masanari Iida <standby24x7@gmail.com>
+To: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
+Cc: standby24x7@gmail.com, trivial@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] [trivial] pci: Fix typo in setup-res.c
+Date: Thu, 26 Jan 2012 23:45:47 +0900
+Message-Id: <1327589147-2193-1-git-send-email-standby24x7@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 11, 2012 at 10:34 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
->
-> Matthew Garrett (1):
->      PCI: Rework ASPM disable code
+Correct spelling "resouce" to "resource" in
+dricers/pci/setup-res.c
 
-Yay.
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/pci/setup-res.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-However, looking this through some more, I'm still a bit confused by
-the pcie_clear_aspm() call in acpi_pci_root_add().
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index b66bfdb..5c18194 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -228,7 +228,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 	int ret;
+ 
+ 	if (!res->parent) {
+-		dev_info(&dev->dev, "BAR %d: can't reassign an unassigned resouce %pR "
++		dev_info(&dev->dev, "BAR %d: can't reassign an unassigned resource %pR "
+ 			 "\n", resno, res);
+ 		return -EINVAL;
+ 	}
+-- 
+1.7.6.5
 
-It seems to be explicitly against the rules elsewhere - we clear ASPM
-even though ACPI_FADT_NO_ASPM is set - which the changelog (and the
-other parts of that commit) says means "don't touch pre-existing ASPM
-state").
-
-So why is acpi_pci_root_add() special? Cna you explain that part to me?
-
-                    Linus
