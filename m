@@ -1,111 +1,423 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:33686 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753478Ab2AaRoS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2012 12:44:18 -0500
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <svaidy@linux.vnet.ibm.com>;
-	Tue, 31 Jan 2012 23:14:15 +0530
-Date: Tue, 31 Jan 2012 23:14:02 +0530
-From: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
- sriov_init
-Message-ID: <20120131174402.GA6172@dirshya.in.ibm.com>
-Reply-To: svaidy@linux.vnet.ibm.com
-References: <20120127191032.GA22999@dirshya.in.ibm.com>
- <20120130031845.GA2359@ram-ThinkPad-T61>
+Received: from mga14.intel.com ([143.182.124.37]:25039 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752123Ab2AZV3U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2012 16:29:20 -0500
+From: "Dave, Tushar N" <tushar.n.dave@intel.com>
+To: Pratyush Anand <pratyush.anand@st.com>
+CC: Greg KH <greg@kroah.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	Deepak SIKRI <deepak.sikri@st.com>,
+	Bhavna YADAV <bhavna.yadav@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux NICS <linuxnics@mailbox.intel.com>,
+	"Dave, Tushar N" <tushar.n.dave@intel.com>
+Subject: RE: Detected Hardware Unit Hang on Intel Wired Ethernet
+Date: Thu, 26 Jan 2012 21:27:23 +0000
+Message-ID: <061C8A8601E8EE4CA8D8FD6990CEA891224F76@ORSMSX102.amr.corp.intel.com>
+References: <CAHM4w1=i5dYy+ReqMO=m6W96CNaQ+O=jw+pKQok0nmjb5-fNAw@mail.gmail.com>
+ <4F043190.70405@st.com> <20120104192234.GC18214@kroah.com>
+ <4F05276F.6040708@st.com>
+ <061C8A8601E8EE4CA8D8FD6990CEA89102D691@ORSMSX102.amr.corp.intel.com>
+ <4F06779D.5010805@st.com>
+ <061C8A8601E8EE4CA8D8FD6990CEA89102DE71@ORSMSX102.amr.corp.intel.com>
+ <4F0BBC98.80406@st.com>
+ <061C8A8601E8EE4CA8D8FD6990CEA89102FE90@ORSMSX102.amr.corp.intel.com>
+ <4F0D031C.2050107@st.com>
+In-Reply-To: <4F0D031C.2050107@st.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20120130031845.GA2359@ram-ThinkPad-T61>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Ram Pai <linuxram@us.ibm.com> [2012-01-30 11:18:45]:
+>-----Original Message-----
+>From: Pratyush Anand [mailto:pratyush.anand@st.com]
+>Sent: Tuesday, January 10, 2012 7:34 PM
+>To: Dave, Tushar N
+>Cc: Greg KH; Pratyush Anand; e1000-devel@lists.sourceforge.net;
+>netdev@vger.kernel.org; Shiraz HASHIM; Deepak SIKRI; Bhavna YADAV; linux-
+>pci@vger.kernel.org; Linux NICS
+>Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
+>
+>As I said earlier, issue is reproducible if I try to keep my
+>rootfilesystem  over NFS. So, after the booting, kernel tries to mount
+>rootfs over NFS and it crashes. So, I see issue even before I can reach
+>to # prompt. How can I use "ethtool -s ethx msglvl 0x3c00" to enable any
+>debug message. May be I can directly change in kernel code to enable this.
 
-> On Sat, Jan 28, 2012 at 12:40:32AM +0530, Vaidyanathan Srinivasan wrote:
-> > Hi Ram and Jesse,
-> > 
-> > I found a trivial issue with page size alignment check on IBM POWER
-> > box with 64k base page size.  In sriov_init(), changing the check from
-> > PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
-> > required to use one of the sriov adapter as PF since the
-> > resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
-> > pseries boxes.
-> > 
-> > I think resource_size() could be less than SystemPageSize, but I would
-> > like your comments/ack/nack on any consequences of checking for only
-> > 4k alignment here in a system with larger base page size.
-> 
-> As per the SRIOV specs, the  resource has to be System page size aligned.
-> 
-> PFs are required to support 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB
-> page sizes. In your case if your adapter's PF is not supporting 64K page size
-> then I think it is not conforming to the PCI SRIOV spec.
+Any update on this? Did you change in-kernel driver source to print the driver HW ring?
+If you did and had reproduced the issue please send me the full dmesg log along with bus trace and I'll take a look.
 
-Hi Ram,
+-Tushar
 
-Thanks for the pointer.  I did some more experiments and found that
-the card does support 64k page size, but the PCI_SRIOV_SYS_PGSIZE was
-set to default 4k when we do the query and check resource_size().
-
-You were correct, the resource_size() has to come up with 64k on 64k
-PAGE_SIZE system.  We should not change that check.  I was able to
-get a working solution by setting PCI_SRIOV_SYS_PGSIZE to 64k before
-we do the query.
-
-This was the case in the original code before you moved these to
-sriov_enable().  If it is ok to leave the SYS_PGSIZE setting in
-sriov_init(), then I have the following fix that works for me.
-
-Please review and let me know your comments.
-
-Thanks,
-Vaidy
----
-
-    	pci: set pci sriov page size before reading sriov bar
-    
-    	For an SRIOV device, PCI_SRIOV_SYS_PGSIZE should be set before
-    	the PCI_SRIOV_BAR is queried.  The sys pagesize defaults to 4k,
-    	so this change is required on powerpc box with 64k base page size.
-    
-    	This is a regression caused due to moving SRIOV init to sriov_enable().
-    
-    	| commit afd24ece5c76af87f6fc477f2747b83a764f161c
-    	| Author: Ram Pai <linuxram@us.ibm.com>
-    
-    	| PCI: delay configuration of SRIOV capability
-    	| The SRIOV capability, namely page size and total_vfs of a device are
-    	| configured during enumeration phase of the device.  This can potentially
-    	| interfere with the PCI operations of the platform, if the IOV capability
-    	| of the device is not enabled.
-    
-    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 0321fa3..0dab5ec 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -347,8 +347,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 			return rc;
- 	}
- 
--	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
--
- 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-@@ -466,6 +464,7 @@ found:
- 		return -EIO;
- 
- 	pgsz &= ~(pgsz - 1);
-+	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
- 
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> -----Original Message-----
+>> From: Pratyush Anand [mailto:pratyush.anand@st.com]
+>> Sent: Monday, January 09, 2012 8:21 PM
+>> To: Dave, Tushar N
+>> Cc: Greg KH; Pratyush Anand; e1000-devel@lists.sourceforge.net;
+>netdev@vger.kernel.org; Shiraz HASHIM; Deepak SIKRI; Bhavna YADAV; linux-
+>pci@vger.kernel.org; Linux NICS
+>> Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
+>>
+>> On 1/7/2012 12:25 AM, Dave, Tushar N wrote:
+>>> Pratyush,
+>>>
+>>> Sorry I got your name reversed.
+>>> Are you using in-kernel driver or one from Sourceforge.
+>>
+>> I am using in-kernel driver from kernel 2.6.37.
+>>
+>>> Please send me output of ethtool -i ethx.
+>>
+>> root@192.168.1.10:~# ethtool -i eth0
+>> driver: e1000e
+>> version: 1.2.7-k2
+>> firmware-version: 5.11-8
+>> bus-info: 0000:01:00.0
+>>
+>> Regards
+>> Pratyush
+>>
+>>>
+>>> -Tushar
+>>>
+>>> -----Original Message-----
+>>> From: Pratyush Anand [mailto:pratyush.anand@st.com]
+>>> Sent: Thursday, January 05, 2012 8:25 PM
+>>> To: Dave, Tushar N
+>>> Cc: Greg KH; Pratyush Anand; e1000-devel@lists.sourceforge.net;
+>netdev@vger.kernel.org; Shiraz HASHIM; Deepak SIKRI; Bhavna YADAV; linux-
+>pci@vger.kernel.org; Linux NICS
+>>> Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
+>>>
+>>> Thanks Tushar,
+>>>
+>>> On 1/6/2012 5:24 AM, Dave, Tushar N wrote:
+>>>> Anand,
+>>>>
+>>>> Sorry to hear that you have this issue with card. And yeah, thanks for
+>doing the debugging and providing the bus trace.
+>>>> I think we should run the debug driver that prints the HW ring details
+>when hang occurs. I can provide you a debug driver. You can then install
+>debug driver and also let the bus tracer running. Once the issue occurs,
+>provide me the full dmesg output (that has HW ring details) and bus trace.
+>>>>
+>>>> Tell me which card you have, 1gig or 10gig? Which driver are you
+>running e1000e or igb or ixgbe?
+>>>> Can you also provide ethtool -i ethx output.
+>>>>
+>>>> Once I know which driver, I send you debug driver.
+>>>
+>>> I am using Intel PRO/1000 PT Server Adapter.
+>>> http://www.intel.com/content/www/us/en/network-adapters/gigabit-
+>network-adapters/pro-1000-pt.html
+>>>
+>>> I am using e1000e driver.
+>>>
+>>> I see the problem when I try to mount rootfilesystem using NFS and use
+>>> MSI interrupt. I see this issue even before I can have cell prompt.
+>>> Please see first mail in this thread.
+>>>
+>>> http://www.mail-archive.com/e1000-
+>devel@lists.sourceforge.net/msg04894.html
+>>>
+>>> Here, you can also see tx ring details when issue occur.
+>>> Please let me know, if you need any more info.
+>>>
+>>> Regards
+>>> Pratyush
+>>>
+>>>>
+>>>> Thanks.
+>>>>
+>>>> -Tushar
+>>>>
+>>>> -----Original Message-----
+>>>> From: netdev-owner@vger.kernel.org [mailto:netdev-
+>owner@vger.kernel.org] On Behalf Of Pratyush Anand
+>>>> Sent: Wednesday, January 04, 2012 8:31 PM
+>>>> To: Greg KH
+>>>> Cc: Pratyush Anand; e1000-devel@lists.sourceforge.net;
+>netdev@vger.kernel.org; Shiraz HASHIM; Deepak SIKRI; Bhavna YADAV; linux-
+>pci@vger.kernel.org; Linux NICS
+>>>> Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
+>>>>
+>>>> On 1/5/2012 12:52 AM, Greg KH wrote:
+>>>>> On Wed, Jan 04, 2012 at 04:31:36PM +0530, Pratyush Anand wrote:
+>>>>>> Adding PCI mailing list too, as problem is coming only when MSI is
+>enabled.
+>>>>>>
+>>>>>> If I connect an PCIe analyzer, I see that at the time of issue
+>>>>>> MRd(64) for 32 words has been issued with a wrong 64 bit address
+>>>>>> from ethernet card to my RC.
+>>>>>> In the normal course it always issues MRd(32) only.
+>>>>>
+>>>>> Bug in your pcie firmware controller?
+>>>>>
+>>>>> .
+>>>>>
+>>>>
+>>>> when you say "Bug in your pcie firmware controller?", is it RC's
+>>>> software or EP's software?
+>>>>
+>>>> Here I am pasting a part of analyzer log converted into text.
+>>>> Packet(177940), is an upstream request for MSI. Whenever any device
+>>>> writes at address 0x58A8F8, my PCIe RC considers it as MSI and
+>generates
+>>>> an interrupt. So I receive MSI interrupt correctly in my software.
+>Also
+>>>> MSI controller is correctly able to point me that the interrupt is
+>from
+>>>> ethernet card.
+>>>>
+>>>> Now in Packet(178010), ethernet controller sends another upstream
+>>>> request for MRd(64) of 32 dwords with
+>Address(AFECEB87:A9D88B00).Since,
+>>>> this address does not exist in my RC's world so, an UR is returned and
+>>>> hence the problem occurs.
+>>>>
+>>>> Now, question is, why ethernet card is generating inbound request with
+>>>> such a wrong address. I have taken log of all the tx_desc->buffer_addr
+>>>> programmed by software in function e1000_tx_queue. None of them is 64
+>>>> bit or any invalid address.
+>>>>
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177916) Upstream 2.5(x1) TLP(1475) Mem MWr(32)(10:00000)
+>Length(4)
+>>>> _______| RequesterID(003:00:0) Tag(2) Address(0EB00200) 1st BE(1111)
+>>>> _______| Last BE(1111) Data(4 dwords) LCRC(0x44E0407C)
+>>>> _______| Time Stamp(0013 . 460 549 544 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177918) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1475)
+>>>> _______| CRC 16(0x0EB7) Time Stamp(0013 . 460 551 144 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177940) Upstream 2.5(x1) TLP(1476) Mem MWr(32)(10:00000)
+>Length(1)
+>>>> _______| RequesterID(003:00:0) Tag(30) Address(0058A8F8) 1st BE(0011)
+>>>> _______| Last BE(0000) Data(1 dword) LCRC(0xC21F32B6)
+>>>> _______| Time Stamp(0013 . 460 588 544 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177942) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1476)
+>>>> _______| CRC 16(0x69F5) Time Stamp(0013 . 460 590 088 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177946) Downstream 2.5(x1) TLP(309) Mem MRd(32)(00:00000)
+>Length(1)
+>>>> _______| RequesterID(002:00:0) Tag(19) Address(C01000C0) 1st BE(1111)
+>>>> _______| Last BE(0000) LCRC(0x91BDA1F5) Time Stamp(0013 . 460 595 936
+>s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177947) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(309)
+>>>> _______| CRC 16(0x25C6) Time Stamp(0013 . 460 596 368 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177950) Upstream 2.5(x1) TLP(1477) Cpl CplD(10:01010) Length(1)
+>>>> _______| RequesterID(002:00:0) Tag(19) CompleterID(003:00:0)
+>Status(SC)
+>>>> BCM(0)
+>>>> _______| Byte Cnt(4) Lwr Addr(0x40) Data(1 dword) LCRC(0x8FE0D922)
+>>>> _______| Time Stamp(0013 . 460 597 304 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177952) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1477)
+>>>> _______| CRC 16(0xC8EE) Time Stamp(0013 . 460 598 840 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(177999) Downstream 2.5(x1) TLP(310) Mem MWr(32)(10:00000)
+>Length(1)
+>>>> _______| RequesterID(002:00:0) Tag(0) Address(C0103818) 1st BE(1111)
+>>>> _______| Last BE(0000) Data(1 dword) LCRC(0xA898D9A1)
+>>>> _______| Time Stamp(0013 . 460 687 936 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178001) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(310)
+>>>> _______| CRC 16(0xC6EA) Time Stamp(0013 . 460 688 384 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178004) Upstream 2.5(x1) TLP(1478) Mem MRd(32)(00:00000)
+>Length(4)
+>>>> _______| RequesterID(003:00:0) Tag(4) Address(0EAFB990) 1st BE(1111)
+>>>> _______| Last BE(1111) LCRC(0xB54722D2) Time Stamp(0013 . 460 689 312
+>s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178006) Downstream 2.5(x1) TLP(311) Cpl CplD(10:01010)
+>Length(4)
+>>>> _______| RequesterID(003:00:0) Tag(4) CompleterID(002:00:0) Status(SC)
+>>>> BCM(0)
+>>>> _______| Byte Cnt(16) Lwr Addr(0x10) Data(4 dwords) LCRC(0xFE303776)
+>>>> _______| Time Stamp(0013 . 460 690 288 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178007) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(311)
+>>>> _______| CRC 16(0x67F1) Time Stamp(0013 . 460 690 776 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178008) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1478)
+>>>> _______| CRC 16(0x2BC2) Time Stamp(0013 . 460 690 824 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178010) Upstream 2.5(x1) TLP(1479) Mem MRd(64)(01:00000)
+>Length(32)
+>>>> _______| RequesterID(003:00:0) Tag(11) Address(AFECEB87:A9D88B00) 1st
+>>>> BE(1100)
+>>>> _______| Last BE(0011) LCRC(0x6BE341C9) Time Stamp(0013 . 460 691 680
+>s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178011) Upstream 2.5(x1) TLP(1480) Mem MRd(64)(01:00000)
+>Length(32)
+>>>> _______| RequesterID(003:00:0) Tag(8) Address(AFECEB87:A9D88B7C) 1st
+>>>> BE(1100)
+>>>> _______| Last BE(0011) LCRC(0xAA5647BD) Time Stamp(0013 . 460 691 808
+>s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178012) Upstream 2.5(x1) TLP(1481) Mem MRd(64)(01:00000)
+>Length(32)
+>>>> _______| RequesterID(003:00:0) Tag(9) Address(AFECEB87:A9D88BF8) 1st
+>>>> BE(1100)
+>>>> _______| Last BE(0011) LCRC(0xEEB1F63F) Time Stamp(0013 . 460 692 120
+>s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178013) Upstream 2.5(x1) TLP(1482) Mem MRd(64)(01:00000)
+>Length(32)
+>>>> _______| RequesterID(003:00:0) Tag(10) Address(AFECEB87:A9D88C74) 1st
+>>>> BE(1100)
+>>>> _______| Last BE(0011) LCRC(0xA508142C) Time Stamp(0013 . 460 692 248
+>s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178014) Downstream 2.5(x1) TLP(312) Cpl Cpl(00:01010) Length(0)
+>>>> _______| RequesterID(003:00:0) Tag(11) CompleterID(002:00:0)
+>Status(UR)-BAD
+>>>> _______| BCM(0) Byte Cnt(124) Lwr Addr(0x02) LCRC(0xCE5540D2)
+>>>> _______| Time Stamp(0013 . 460 692 328 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178015) Downstream 2.5(x1) TLP(313) Cpl Cpl(00:01010) Length(0)
+>>>> _______| RequesterID(003:00:0) Tag(8) CompleterID(002:00:0)
+>Status(UR)-BAD
+>>>> _______| BCM(0) Byte Cnt(124) Lwr Addr(0x7E) LCRC(0x9FE2487D)
+>>>> _______| Time Stamp(0013 . 460 692 456 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178016) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(312)
+>>>> _______| CRC 16(0x086E) Time Stamp(0013 . 460 692 760 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178017) Downstream 2.5(x1) TLP(314) Cpl Cpl(00:01010) Length(0)
+>>>> _______| RequesterID(003:00:0) Tag(9) CompleterID(002:00:0)
+>Status(UR)-BAD
+>>>> _______| BCM(0) Byte Cnt(124) Lwr Addr(0x7A) LCRC(0x097BF4DE)
+>>>> _______| Time Stamp(0013 . 460 692 776 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178018) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(313)
+>>>> _______| CRC 16(0xA975) Time Stamp(0013 . 460 692 888 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178019) Downstream 2.5(x1) TLP(315) Cpl Cpl(00:01010) Length(0)
+>>>> _______| RequesterID(003:00:0) Tag(10) CompleterID(002:00:0)
+>Status(UR)-BAD
+>>>> _______| BCM(0) Byte Cnt(124) Lwr Addr(0x76) LCRC(0x64BDF921)
+>>>> _______| Time Stamp(0013 . 460 692 904 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178020) Upstream 2.5(x1) TLP(1483) Msg Msg(01:10000)
+>>>> _______| Msg Routing(To RC) Length(0) RequesterID(003:00:0) Tag(31)
+>>>> _______| Message Code(ERR_FATAL) LCRC(0xCDA53E96)
+>>>> _______| Time Stamp(0013 . 460 693 184 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178021) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1482)
+>>>> _______| CRC 16(0xA771) Time Stamp(0013 . 460 693 208 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178023) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(314)
+>>>> _______| CRC 16(0x4A59) Time Stamp(0013 . 460 693 280 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178024) Upstream 2.5(x1) TLP(1484) Msg Msg(01:10000)
+>>>> _______| Msg Routing(To RC) Length(0) RequesterID(003:00:0) Tag(31)
+>>>> _______| Message Code(ERR_FATAL) LCRC(0x86D9ACB6)
+>>>> _______| Time Stamp(0013 . 460 693 312 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178025) Upstream 2.5(x1) DLLP ACK AckNak_Seq_Num(315)
+>>>> _______| CRC 16(0xEB42) Time Stamp(0013 . 460 693 408 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178026) Upstream 2.5(x1) TLP(1485) Msg Msg(01:10000)
+>>>> _______| Msg Routing(To RC) Length(0) RequesterID(003:00:0) Tag(31)
+>>>> _______| Message Code(ERR_FATAL) LCRC(0xC5120A31)
+>>>> _______| Time Stamp(0013 . 460 693 632 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178028) Upstream 2.5(x1) TLP(1486) Msg Msg(01:10000)
+>>>> _______| Msg Routing(To RC) Length(0) RequesterID(003:00:0) Tag(31)
+>>>> _______| Message Code(ERR_FATAL) LCRC(0x41499062)
+>>>> _______| Time Stamp(0013 . 460 693 792 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>> Packet(178029) Downstream 2.5(x1) DLLP ACK AckNak_Seq_Num(1486)
+>>>> _______| CRC 16(0x231F) Time Stamp(0013 . 460 694 704 s)
+>>>>
+>_______|__________________________________________________________________
+>_____
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe netdev" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>> .
+>>>>
+>>>
+>>> .
+>>>
+>>
+>> .
+>>
 
