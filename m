@@ -1,90 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:36590 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753724Ab2A0SgE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:36:04 -0500
-Date: Fri, 27 Jan 2012 10:36:01 -0800
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:56032 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751777Ab2A0R2n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:28:43 -0500
+Date: Fri, 27 Jan 2012 09:28:40 -0800
 From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/7] PCI: pcie hotplug related patch
-Message-ID: <20120127103601.09e3f771@jbarnes-desktop>
-In-Reply-To: <CAE9FiQUFYcaVWorPPP7PQqiBPnKv-iBkPm_qbGz4T_xLR2THiQ@mail.gmail.com>
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-	<CAE9FiQUFYcaVWorPPP7PQqiBPnKv-iBkPm_qbGz4T_xLR2THiQ@mail.gmail.com>
+To: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Charlie Suffin <charlie.suffin@stratus.com>, stable@kernel.org
+Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel
+ Sandy Bridge GPUs
+Message-ID: <20120127092840.52e7567e@jbarnes-desktop>
+In-Reply-To: <201201101145.52640.thomas.jarosch@intra2net.com>
+References: <4EDFD5BB.1050906@intra2net.com>
+	<201201101145.52640.thomas.jarosch@intra2net.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ew2DPY4uNs5K0M=GNBx.pB2"; protocol="application/pgp-signature"
+ boundary="Sig_//gXEEvKLHF5a7SEIoq9Eo5s"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/ew2DPY4uNs5K0M=GNBx.pB2
-Content-Type: text/plain; charset=ISO-8859-1
+--Sig_//gXEEvKLHF5a7SEIoq9Eo5s
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 21 Jan 2012 02:26:46 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+On Tue, 10 Jan 2012 11:45:52 +0100
+Thomas Jarosch <thomas.jarosch@intra2net.com> wrote:
 
-> On Sat, Jan 21, 2012 at 1:52 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > b40c9ef: pciehp: Disable/enable link during slot power off/on
-> > fe877ae: pciehp: Add Disable/enable link functions
-> > 292e286: pciehp: Add pcie_wait_link_not_active()
-> > 186b3fd: pciehp: print out link status when dlla get active.
-> > 2781df4: pciehp: Checking pci conf reading to new added device instead =
-of sleep 1s
-> > bf1c4ac: PCI: Separate pci_bus_read_dev_vendor_id from pci_scan_device
-> > 601c6f1: PCI: Make sriov work with hotplug remove
-> >
-> > =A0drivers/pci/hotplug/pciehp_hpc.c | =A0133 ++++++++++++++++++++++++++=
-+++++-------
-> > =A0drivers/pci/pci.h =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A02 +
-> > =A0drivers/pci/probe.c =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 48 +++++++++---=
---
-> > =A0drivers/pci/remove.c =A0 =A0 =A0 =A0 =A0 =A0 | =A0 28 ++++++++-
-> > =A04 files changed, 169 insertions(+), 42 deletions(-)
-> >
-> > First one is for hotplug with sriov under bridge.
-> > following two are for hotplug probing with pci conf reading.
-> > Last four are for pcie link disable when power off slots.
+> On Wednesday, 7. December 2011 22:08:11 Thomas Jarosch wrote:
+> > Some BIOS implementations leave the Intel GPU interrupts enabled,
+> > even though no one is handling them (f.e. i915 driver is never loaded).
+> > Additionally the interrupt destination is not set up properly
+> > and the interrupt ends up -somewhere-.
+> >=20
+> > These spurious interrupts are "sticky" and the kernel disables
+> > the (shared) interrupt line after 100.000+ generated interrupts.
+> >=20
+> > Fix it by disabling the still enabled interrupts.
+> > This resolves crashes often seen on monitor unplug.
 >=20
-> could be found at:
+> Happy new year 2012!
 >=20
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-pci-hp
+> Any news on the status of this patch?
 
-Ok I dropped the earlier link state check; can you re-post the series
-with Linus's comments addressed?
+Did you get my last reply:
 
-Kenji-san, do you have time to at least review these?  Testing would be
-nice too...
+Could really be dev_dbg, I think this will be fairly common.  I think we
+also need to ack any outstanding interrupts after disabling them in IER
+by writing IIR back on itself. Can you test that?
+
+Other than that I'd like to apply it.
 
 Thanks,
 --=20
 Jesse Barnes, Intel Open Source Technology Center
 
---Sig_/ew2DPY4uNs5K0M=GNBx.pB2
+--Sig_//gXEEvKLHF5a7SEIoq9Eo5s
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAEBAgAGBQJPIu6RAAoJEIEoDkX4Qk9hNZ8QAKyXfZO4zjYP+W6cZ4Eqp4W5
-SwfmdWW2vBjAZLO9sAd255PBzeXvlrehEpb+Zy4DN/XGHe5viBZN4FDDGiTwSfZx
-6El0z18w92fc48KdK+DGvFUWSrGqIhYJUY48d6e7UHAulx1VkNTttNYM+MeJATKX
-dbJAoPduREkRLV7U0aSEi+vBqCwwshaMBnuDfMc9XaYTfXgpO1z169LuHjgZUhqe
-Xcg9F70u8lqQgoqQW8OtH1qu8tSbLvmQxLPD7ii2n7wL9pdnRY/Ij1a0wj+Qci9X
-jHt7cTjdWHQPD0LNfeGRROZl9kTiFmSbDtXWVfEa10ApDpdNDWMUVh9/da5v5Qh8
-sGXxNP9qWKfsns/707/KL1AF368p+JFOnv4+bIKbKGJSzI0seQCfn95wKnU0Wchz
-DvkMl6ETuWiq0rlWxZREAVyOncTLbN5OK78AtMD6oCssen4V02EPS5c/dGqW/Z9J
-rvU1VCCTKuMTGh1avpi0MuQqGeFYRkFqkQRfAxDwJrsMf1+1D4PHJgDWch1QRtPv
-Rixq+g0k5cmMFIWkol7UMhPBjGISIHrXnt2hJ8Q4ZedlxPMcnyZEeAtwsXJlJKsZ
-ABIMjxXvYKb5saC0E3zvnSyjRrjZdm+YwsYeHG2iy6/3IzR7WpWvAJIxS7g+voPD
-4VVuKiKPaJ3WbMtLXCig
-=Er01
+iQIcBAEBAgAGBQJPIt7IAAoJEIEoDkX4Qk9hjuwQAM8evsv/fdwEU4oC2V+CKOHR
+ZJ4sEZ1eFKxFdAxjI8udR3m5F2P2G5A5cwNA2iioV10U+Nde7itKGxO8vYov/eWV
+A7OX9rV4f+9TqjCk2cSJaYcp9HUhPKgwN365b9z0M9Ijj4ffN+1C6GiQSVnN67Nt
+SKshG8TWoDlhrR2Of5y6lEsT2rYnbwsF6zUDtxe/U4+jyt9P3Cekoaa04JQCrpSV
+5v7k4s34m8IMKrD26eK0Q5foKpG4tdoxn0WuRHuBukYorgSlgTJgmJCefo1F5OW2
+iQchnC8Zd32/crKo9B6lPOmHscso3qB/7S67mXRfdGU0iATD4Hov0lwV7gM90rWq
+oRWhlkoutJXSMdJN9/D9Oqj1qFutsyzaCeZyVZEAyI7LQckc3WWIxQUQlYsJt1m5
+aRtEFIP0peNSEuojPn1B5e+VR0ZCbpWZOG6TRHMJc8FpIo9FZdHuck/zVg+eJ8fz
+xa6GLgOXAsVsBvNhrVmfx4zpiEOb1SHHfVN0Y370nw1S2gUx+V5qNkPmkpv+mwzK
+5h4wEvQO0vRlztJ+GWF0kDnK00Efd1Dx5xo5P/oP7QZcC2y120UGv5kNLyx30jRM
+p+YEYyjcB8/VbtmWMOmXxULHhqJgVwOv4AAvYUfZIsVwNIl4q8RuVp1L00L3FLx4
+g3VdvHsxvONYILuDx6pR
+=Rkbv
 -----END PGP SIGNATURE-----
 
---Sig_/ew2DPY4uNs5K0M=GNBx.pB2--
+--Sig_//gXEEvKLHF5a7SEIoq9Eo5s--
