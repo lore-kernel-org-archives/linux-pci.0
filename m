@@ -1,49 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:51280 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975Ab2A3Vq4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2012 16:46:56 -0500
-Received: by wgbed3 with SMTP id ed3so5176179wgb.1
-        for <linux-pci@vger.kernel.org>; Mon, 30 Jan 2012 13:46:55 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Heasley, Seth" <seth.heasley@intel.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Ralston, James D" <james.d.ralston@intel.com>
+Subject: RE: [PATCH 6/6] pci: irq and pci_ids patch for Intel Lynx Point
+ DeviceIDs
+Date: Fri, 27 Jan 2012 18:56:39 +0000
+Message-ID: <DEC3922D1904474A8862C7BFF516EA9A2EAE3732@ORSMSX101.amr.corp.intel.com>
+References: <201201231646.24194.seth.heasley@intel.com>
+ <20120127103110.2a4d667f@jbarnes-desktop>
+In-Reply-To: <20120127103110.2a4d667f@jbarnes-desktop>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1327956544.28487.47.camel@pasglop>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
- <20120130165820.3231.9878.stgit@bhelgaas.mtv.corp.google.com> <1327956544.28487.47.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Jan 2012 13:46:35 -0800
-Message-ID: <CAErSpo7qV084bxjfds=oaZ45xDB4=u78T6UmjpmbDWd3yBcCmA@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 14/18] powerpc/PCI: get rid of device resource fixups
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 30, 2012 at 12:49 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Mon, 2012-01-30 at 09:58 -0700, Bjorn Helgaas wrote:
->> Tell the PCI core about host bridge address translation so it can take
->> care of bus-to-resource conversion for us.
+>> This patch adds the LPC Controller DeviceIDs for the Intel Lynx Point
+>PCH.
 >>
->> N.B. powerpc used a 32-bit mask when converting IO addresses.  If we
->> figure out the right offset, I think simple addition should do the
->> same thing, but I might not have it exactly right yet.
+>> Signed-off-by: Seth Heasley <seth.heasley@intel.com>
+>> ---
+>>  arch/x86/pci/irq.c      |    4 +++-
+>>  include/linux/pci_ids.h |    2 ++
+>>  2 files changed, 5 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c index
+>> 372e9b8..22468b6 100644
+>> --- a/arch/x86/pci/irq.c
+>> +++ b/arch/x86/pci/irq.c
+>> @@ -604,7 +604,9 @@ static __init int intel_router_probe(struct
+>irq_router *r, struct pci_dev *route
+>>  	||  (device >= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN &&
+>>  	     device <= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
+>>  	||  (device >= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MIN &&
+>> -	     device <= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)) {
+>> +	     device <= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)
+>> +	||  (device >= PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN &&
+>> +	     device <= PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX)) {
+>>  		r->name = "PIIX/ICH";
+>>  		r->get = pirq_piix_get;
+>>  		r->set = pirq_piix_set;
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h index
+>> 31d77af..6a0359a 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -2800,6 +2800,8 @@
+>>  #define PCI_DEVICE_ID_INTEL_82454NX     0x84cb
+>>  #define PCI_DEVICE_ID_INTEL_84460GX	0x84ea
+>>  #define PCI_DEVICE_ID_INTEL_IXP4XX	0x8500
+>> +#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN	0x8c40
+>> +#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX	0x8c5f
+>>  #define PCI_DEVICE_ID_INTEL_IXP2800	0x9004
+>>  #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
+>>
 >
-> Wow that's going to be a big change :-) A quick look... seems like you
-> do a per-resource offset right ? I will need that (was about to change
-> powerpc) as we have hardware that provides us with two different windows
-> to MMIO space with different offsets unfortunately.
+>Seems we add every new GMCH or PCH anyway, why not just use the piix
+>routines for any unknown (therefore presumably new) Intel PCH device?
 
-Exactly ... the offset is per-aperture.
-
-> One thing I also want to generalize is the whole "REASSIGN_ALL_RSRC"
-> flag, ie, avoid reading & printing all those resources we know we are
-> just going to kill off.
->
-> I'll try to test your stuff asap (I'm doing 3 things at once right now
-> so it might take a few days unless I find somebody to look at it).
-
-Thanks!  No particular rush on my side; I'm expecting to have to
-iterate a few times to get this right.
-
-Bjorn
+Makes sense to me.
+-Seth
