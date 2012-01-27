@@ -1,74 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:47679 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753162Ab2A0SkQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:40:16 -0500
-Date: Fri, 27 Jan 2012 10:40:05 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Greg KH <greg@kroah.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	<linux-input@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-pcmcia@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/5] Dynamic ID addition doesn't need get_driver()
-Message-ID: <20120127104005.6dde9416@jbarnes-desktop>
-In-Reply-To: <Pine.LNX.4.44L0.1201241310400.1200-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1201241310400.1200-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Ah0bVaxQFqREfpvCvj2HeRG"; protocol="application/pgp-signature"
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:50641 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751985Ab2A0Sj6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:39:58 -0500
+MIME-Version: 1.0
+In-Reply-To: <20120127102218.3dde7360@jbarnes-desktop>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+	<1327140517-14811-18-git-send-email-yinghai@kernel.org>
+	<20120127102218.3dde7360@jbarnes-desktop>
+Date: Fri, 27 Jan 2012 10:39:57 -0800
+Message-ID: <CAE9FiQV2_zTpN6B98SFCL79GwSYGwajG=xr_0qOMoesS-crwow@mail.gmail.com>
+Subject: Re: [PATCH 17/21] PCI: Disable cardbus bridge MEM1 pref CTL
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/Ah0bVaxQFqREfpvCvj2HeRG
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Jan 27, 2012 at 10:22 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Sat, 21 Jan 2012 02:08:33 -0800
+> Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>> Some BIOS enable both pref for MEM0 and MEM1.
+>>
+>> but we assume MEM1 is non-pref...
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/setup-bus.c |    8 ++++++++
+>>  1 files changed, 8 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 090217a..d5897c3 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -914,6 +914,14 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+>>       if (realloc_head)
+>>               add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
+>>
+>> +     /* MEM1 must not be pref mmio */
+>> +     pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+>> +     if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
+>> +             ctrl &= ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
+>> +             pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
+>> +             pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+>> +     }
+>> +
+>>       /*
+>>        * Check whether prefetchable memory is supported
+>>        * by this bridge.
+>
+> Is there an actual bug report for this one where prefetchable regions
+> are causing trouble?  I can see that they would I just wonder if this
+> bug is hidden by some other...
 
-On Tue, 24 Jan 2012 13:34:41 -0500 (EST)
-Alan Stern <stern@rowland.harvard.edu> wrote:
+Yes, it should be hidden  by some others.
 
-> As part of the removal of get_driver()/put_driver(), this patch
-> (as1511) changes all the places that add dynamic IDs for drivers.
-> Since these additions are done by writing to the drivers' sysfs
-> attribute files, and the attributes are removed when the drivers are
-> unregistered, there is no reason to take an extra reference to the
-> drivers.
->=20
-> The one exception is the pci-stub driver, which calls pci_add_dynid()
-> as part of its registration.  But again, there's no reason to take an
-> extra reference here, because the driver can't be unloaded while it is
-> being registered.
-
-Looks fine, you can add my ack too.
-
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/Ah0bVaxQFqREfpvCvj2HeRG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIu+GAAoJEIEoDkX4Qk9hLD0P/jnz89Va5dr4iXEXhK5PwRvj
-ia2nWFmZA99R6bD9VaUno7L1GiOGkwQ9k+od/c0g6yQkh657BlL5xhwvYaYQDuOD
-bukzyrCJl8v0k12ZkbK7SeMaabyvab7hgSenAUtJdJ38qjuog82PMLSirwS7YYvA
-RFjNip1ewnxVFRfZkXSnHQDdBQtx/S16eHE1CZojNujhfwI7i4tt2O9Pt+iDi17t
-zS6zh+YnZYnU4UPfNcqjJcBvqNvxq8TQ3Sg+/RAZ07nlp13FTErcXRhipZ7WZa/T
-rSPXmxbFKLoViRBZ0DvpYS32hGSAjGVdUAJefF1HMlXUeSgLtwIBPJfA+6XL+0pi
-nE0bO+FMSnapsaZW0ne+A4IObwkMXFLouzYxK939E3n+c/w96HZmEh/FVq00jZeG
-uhTyepBcXeRJwlj2TOtoPJfAPJhflNBOYBBshG0hsL3QDIWgnM1xkkdX4KJr2yf0
-rZ/bA3mcH/GL4BGiEe75zBmRhpk8LhhCAyqoNq+PwFgbgV4l6+FTtZO99WGmzTBe
-z6elvrGWyvJZu7ONQeVaj9F+1E2GtaJ+Lf6YKjc7YGTG9yGV5N7IIWh/K3eA+NRX
-yI7/xtscLRVmRIUjyVxrLV1wNmG7NvghAxeUNbqMtpH+voeMBc6KxgTwj4dZva5P
-ENCAn1Joaf47NCms+H4D
-=4RkF
------END PGP SIGNATURE-----
-
---Sig_/Ah0bVaxQFqREfpvCvj2HeRG--
+Yinghai
