@@ -1,57 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:44017 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843Ab2AOQGM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jan 2012 11:06:12 -0500
-Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Sun, 15 Jan 2012 09:06:11 -0700
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q0FG69nQ150990
-	for <linux-pci@vger.kernel.org>; Sun, 15 Jan 2012 09:06:09 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q0FG681T003661
-	for <linux-pci@vger.kernel.org>; Sun, 15 Jan 2012 09:06:09 -0700
-Date: Mon, 16 Jan 2012 00:05:58 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
-Message-ID: <20120115160558.GA2601@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
- <1323247984-15281-3-git-send-email-yinghai@kernel.org>
- <20120113163922.GH7380@ram-ThinkPad-T61>
- <CAE9FiQWTVA=LDViVyfSXX6thgGv4TzOpqidVyG6FAdWQqAMWEg@mail.gmail.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:50528 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065Ab2A0RjZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:39:25 -0500
+Message-ID: <4F22E136.5010404@oracle.com>
+Date: Fri, 27 Jan 2012 09:39:02 -0800
+From: Yinghai Lu <yinghai.lu@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQWTVA=LDViVyfSXX6thgGv4TzOpqidVyG6FAdWQqAMWEg@mail.gmail.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pciehp: Disable/enable link during slot power off/on
+References: <4ED95AD0.7090003@oracle.com> <20120127092622.6d8c2ae8@jbarnes-desktop>
+In-Reply-To: <20120127092622.6d8c2ae8@jbarnes-desktop>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 13, 2012 at 03:28:29PM -0800, Yinghai Lu wrote:
-> On Fri, Jan 13, 2012 at 8:39 AM, Ram Pai <linuxram@us.ibm.com> wrote:
-> > On Wed, Dec 07, 2011 at 12:53:01AM -0800, Yinghai Lu wrote:
-> >
-> >        I am worried that this approach will resurface old bug
-> > https://bugzilla.kernel.org/show_bug.cgi?id=15960
-> 
-> will ask them to test for-pci2 branch.
-> 
-> >
-> >        With your approach; on a system with not enough resources to satisfy
-> > all the devices, when you fail to allocate 'required+optional' in the first
-> > round and fall back to assigning only the 'required' resources, you can get the
-> > reassignment order wrong, thus not allocate resources to devices for which the
-> > BIOS had originally allocated resources, and hence end up disabling the device.
-> 
-> so even required can not be satisfied?
+On 01/27/2012 09:26 AM, Jesse Barnes wrote:
 
-Yes. Even required cannot be satisfied fully.
+> On Fri, 02 Dec 2011 15:10:08 -0800
+> Yinghai Lu <yinghai.lu@oracle.com> wrote:
+> 
+>>
+>> One system have repeater in system board to support gen2 hotplug.
+>>
+>> Found when EM is removed from some slots, /var/log/message will be full of
+>> "card present/not present" warning.
+>>
+>> It turns out root complex still try to train the link to repeater because
+>> repeater is not reset.
+>>
+>> This patch will disable link to make repeater could reset properly.
+>> Also could kill AER during EM removal.
+>>
+>> Recently when testing hotplug on one system under development, found if boot
+>> the system without EM, and later hotplug does not work with Linux.
+>> But other OS is ok.
+>> The root cause is that bios left link disabled when slot is empty,
+>> and other OS is playing link disable bit in link ctrl during power on/off.
+>>
+>> So We could do the same thing to disable/enable link during power off/on.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
+> 
+> Ok I had to massage that commit message quite a bit, please let me know
+> if it's still accurate.
+> 
+> The 100ms delay still needs to be clarified; if it's really necessary
+> maybe we could move the delays into a delayed work handler?
 
-RP
 
+Please you check updated versions that i sent later.
+
+it was changed to three patches... i sent those patchs 1/123
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-hp
+
+you can find other patches in 
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci2
+
+and
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
+
+Thanks
+
+Yinghai
