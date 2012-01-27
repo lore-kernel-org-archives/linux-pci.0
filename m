@@ -1,57 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:45935 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756255Ab2ARAlu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2012 19:41:50 -0500
-Received: by eekb15 with SMTP id b15so103668eek.1
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 16:41:49 -0800 (PST)
-Subject: [PATCH 4/4] x86/PCI: use pci_create_host_bridge() so PCI core knows
-	subordinate buses
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Tue, 17 Jan 2012 17:35:17 -0700
-Message-ID: <20120118003517.467.80646.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53871 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751534Ab2A0Q0i convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Jan 2012 11:26:38 -0500
+Received: by lagu2 with SMTP id u2so1057154lag.19
+        for <linux-pci@vger.kernel.org>; Fri, 27 Jan 2012 08:26:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1327655507-33999-1-git-send-email-trenn@suse.de>
+References: <1327655507-33999-1-git-send-email-trenn@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 27 Jan 2012 09:26:16 -0700
+Message-ID: <CAErSpo54EuF3ZmiHZmCvTK5vd0oHws7W+82WPYwLQ9PeL1MG6g@mail.gmail.com>
+Subject: Re: [PATCH] PCI: workaround hard-wired bus number
+To: Thomas Renninger <trenn@suse.de>
+Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai.lu@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the PCI core knows the entire subordinate bus range (not just the
-root bus number), it can restrict enumeration to just those buses.
-If we enumerate devices under the wrong host bridge, we'll use the
-wrong resources for those devices.
+On Fri, Jan 27, 2012 at 2:11 AM, Thomas Renninger <trenn@suse.de> wrote:
+> From: Yinghai Lu <yinghai.lu@oracle.com>
+>
+> Fixes PCI device detection on IBM xSeries IBM 3850 M2 / x3950 M2
+> when using ACPI resources (_CRS).
+> This is default, a manual workaround (without this patch)
+> would be pci=nocrs boot param.
+>
+> Tested-by: garyhade@us.ibm.com
+> CC: trenn@suse.de
+> CC: bhelgaas@google.com
+> Signed-off-by: Thomas Renninger <trenn@suse.de>
+> ---
+>  drivers/pci/probe.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 7cc9e2f..1e255c8 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -651,6 +651,10 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+>        dev_dbg(&dev->dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
+>                secondary, subordinate, pass);
+>
+> +       /* some bridge primary bus is hard wired to 0 */
+> +       if (!primary && (primary != bus->number) && secondary && subordinate)
+> +               primary = bus->number;
+> +
+>        /* Check if setup is sensible at all */
+>        if (!pass &&
+>            (primary != bus->number || secondary <= bus->number)) {
+> --
+> 1.7.6.1
+>
 
-Reference: https://bugzilla.novell.com/show_bug.cgi?id=735909
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/acpi.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+I'm not thrilled with adding a machine-specific quirk in this generic
+code path because future rework of this path will always have to
+consider and preserve it.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index a312e76..0a45d1c 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -349,6 +349,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
- 	LIST_HEAD(resources);
-+	struct pci_host_bridge *bridge;
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
- 	int node;
-@@ -406,8 +407,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		get_current_resources(device, busnum, domain, &resources);
- 		if (list_empty(&resources))
- 			x86_pci_root_bus_resources(busnum, &resources);
--		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
--					  &resources);
-+		bridge = pci_create_host_bridge(NULL, domain, &root->secondary,
-+						&resources, &pci_root_ops, sd);
-+		bus = bridge ? bridge->bus : NULL;
- 		if (bus)
- 			bus->subordinate = pci_scan_child_bus(bus);
- 		else
+I wonder whether it would be possible to set this up so we read
+PCI_PRIMARY_BUS earlier, so we could update that primary bus number in
+a quirk before getting into the rest of pci_scan_bridge().  That might
+take non-trivial rework, since the cached copy of the primary bus
+number is currently in struct pci_bus, not in struct pci_dev.  But
+that in itself is non-intuitive to me: the primary, secondary, and
+subordinate bus numbers are all in struct pci_bus, when they seem more
+like a property of the bridge device than of the bus.
 
+If we put something like this in mainline, I think it needs a bugzilla
+reference, preferably in bugzilla.kernel.org, where the details (DMI
+info, vendor/device ID of the bridge, etc.) will be public (there is a
+Novell bugzilla, but I don't think it's public).
+
+Bjorn
