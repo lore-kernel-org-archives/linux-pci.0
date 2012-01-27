@@ -1,116 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40212 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756375Ab2ASJjj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2012 04:39:39 -0500
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 679F83EE0BC
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:38 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 50AFD45DE56
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:38 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 2E21A45DE54
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:38 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 1D1321DB803C
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:38 +0900 (JST)
-Received: from m106.s.css.fujitsu.com (m106.s.css.fujitsu.com [10.240.81.146])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id BBE511DB804D
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jan 2012 18:39:37 +0900 (JST)
-Message-ID: <4F17E4CA.7010701@jp.fujitsu.com>
-Date: Thu, 19 Jan 2012 18:39:22 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-MIME-Version: 1.0
-To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-CC: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
- driver
-References: <20120109211006.2135.13551.sendpatchset@dhcp-189-101.bos.redhat.com>
-In-Reply-To: <20120109211006.2135.13551.sendpatchset@dhcp-189-101.bos.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:38183 "HELO
+	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753568Ab2A0SbP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:31:15 -0500
+Date: Fri, 27 Jan 2012 10:31:10 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Seth Heasley <seth.heasley@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	james.d.ralston@intel.com
+Subject: Re: [PATCH 6/6] pci: irq and pci_ids patch for Intel Lynx Point
+ DeviceIDs
+Message-ID: <20120127103110.2a4d667f@jbarnes-desktop>
+In-Reply-To: <201201231646.24194.seth.heasley@intel.com>
+References: <201201231646.24194.seth.heasley@intel.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/WpPe4ajWb+6sZKoA8.4d8Ds"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/01/10 6:10), MUNEDA Takahiro wrote:
+--Sig_/WpPe4ajWb+6sZKoA8.4d8Ds
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-(snip.)
+On Mon, 23 Jan 2012 16:46:24 -0800
+Seth Heasley <seth.heasley@intel.com> wrote:
 
-> --- linux-3.2.orig/drivers/pci/hotplug/pciehp_core.c
-> +++ linux-3.2/drivers/pci/hotplug/pciehp_core.c
-> @@ -42,6 +42,7 @@ int pciehp_debug;
->   int pciehp_poll_mode;
->   int pciehp_poll_time;
->   int pciehp_force;
-> +int pciehp_msi_disabled;
+> This patch adds the LPC Controller DeviceIDs for the Intel Lynx Point PCH.
+>=20
+> Signed-off-by: Seth Heasley <seth.heasley@intel.com>
+> ---
+>  arch/x86/pci/irq.c      |    4 +++-
+>  include/linux/pci_ids.h |    2 ++
+>  2 files changed, 5 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+> index 372e9b8..22468b6 100644
+> --- a/arch/x86/pci/irq.c
+> +++ b/arch/x86/pci/irq.c
+> @@ -604,7 +604,9 @@ static __init int intel_router_probe(struct irq_route=
+r *r, struct pci_dev *route
+>  	||  (device >=3D PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN &&
+>  	     device <=3D PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
+>  	||  (device >=3D PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MIN &&
+> -	     device <=3D PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)) {
+> +	     device <=3D PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)
+> +	||  (device >=3D PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN &&
+> +	     device <=3D PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX)) {
+>  		r->name =3D "PIIX/ICH";
+>  		r->get =3D pirq_piix_get;
+>  		r->set =3D pirq_piix_set;
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 31d77af..6a0359a 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2800,6 +2800,8 @@
+>  #define PCI_DEVICE_ID_INTEL_82454NX     0x84cb
+>  #define PCI_DEVICE_ID_INTEL_84460GX	0x84ea
+>  #define PCI_DEVICE_ID_INTEL_IXP4XX	0x8500
+> +#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN	0x8c40
+> +#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX	0x8c5f
+>  #define PCI_DEVICE_ID_INTEL_IXP2800	0x9004
+>  #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
+> =20
 
-I think pciehp_msi_disabled needs to be defined in port driver
-side because pciehp can be built as a module.
+Seems we add every new GMCH or PCH anyway, why not just use the piix
+routines for any unknown (therefore presumably new) Intel PCH device?
 
->   struct workqueue_struct *pciehp_wq;
->   struct workqueue_struct *pciehp_ordered_wq;
->
-> @@ -57,10 +58,12 @@ module_param(pciehp_debug, bool, 0644);
->   module_param(pciehp_poll_mode, bool, 0644);
->   module_param(pciehp_poll_time, int, 0644);
->   module_param(pciehp_force, bool, 0644);
-> +module_param(pciehp_msi_disabled, bool, 0644);
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-When pciehp is build as a module, the pciehp driver is loaded
-after the MSI(-X) of the port is initialized. So I don't think
-this module parameter works. When pciehp is build as built-in,
-pciehp.pciehp_msi_disabled would work, but I think it is
-meaningless because you also provide "pcie_hp=" boot parameter
-(and I don't know what will happen if user specify different
-values for pciehp.pciehp_msi_disabled and pcie_hp). As a result,
-I think this module parameter should be removed.
+--Sig_/WpPe4ajWb+6sZKoA8.4d8Ds
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
->   MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
->   MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
->   MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
->   MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
-> +MODULE_PARM_DESC(pciehp_msi, "MSI/MSI-X enabled or not");
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-Maybe it should be "pciehp_msi_disabled" instead of "pciehp_msi"?
-Anyway, I think we should remove this for the same reason above.
+iQIcBAEBAgAGBQJPIu1uAAoJEIEoDkX4Qk9h4tYQAKFpQ8kAUWHl13VVJMl4kyQg
+BcR0HcXskOB2zpgCTefxwe92extMDVABopqGCo/pvvrl2dl+3LhB532Evj3n5Pja
+E2p8NKEWWlMBbLVzjYQM0YwKBTQNVAHQbKtRsMUsDDrA2WniA/jjiVpjxvUW2LGw
+q0Ma+YmxrRFg2wAYoWowIo04gSDu35yCCRIzK30Oodcj9q393b3oU4xsI73S/SEl
+hK6eYZX4IPQM1Tw9ovjGQQngSx8peQjdzNcSnArozkVSXoYKlCL6AkY9d2Zs/ql/
+59c9Y0r7yWkecrn24wntvOebf3MDWDpImvZVNyB5XYicFgW0wVZMHh9z64IYpFUA
+DdGaXdW/5+ogs9MjQjBqSDRIpYhATvu1WTII+JJoQVNNO9OJcR8qNEMU+jVTdgq+
+5Xq1b7sFqDDqJgveMkOzL+hIdrOyA2ODBtrlS3/sFDYw+Qpyey7MePIy1g8mbrJB
+hNlNYbQ0GcZ7zTcJi3VEfiy99ICL0PGRZpZYZ0ZX+641u/wLDdxOUx948AUefpYW
+dqwzff/apAoMdpaef1akR5RXsh2THl4rWUUUKlVQYYYQXmfbJ8btxaYY5RwQsvXv
+cuSy71i5bag5dXHol5D1iC5GrUlnJxLcayle3DjSGhrDpVMUWsD+MINlScB2tbf7
+hHaCnqcHf5j+T7FhiQJ8
+=GtcP
+-----END PGP SIGNATURE-----
 
-
->
->   #define PCIE_MODULE_NAME "pciehp"
->
-> @@ -72,6 +75,15 @@ static int get_attention_status	(struct
->   static int get_latch_status	(struct hotplug_slot *slot, u8 *value);
->   static int get_adapter_status	(struct hotplug_slot *slot, u8 *value);
->
-> +static int __init pciehp_setup(char *str)
-> +{
-> +	if (!strncmp(str, "nomsi", 5))
-> +		pciehp_msi_disabled = true;
-> +
-> +	return 1;
-> +}
-> +__setup("pcie_hp=", pciehp_setup);
-> +
-
-I think this needs to be in port driver side, otherwise pcie_hp=
-boot parameter doesn't work when building pciehp as a module.
-Additionally, I got the the following warning message when building
-pciehp as a module.
-
-drivers/pci/hotplug/pciehp_core.c:77: warning: 'pciehp_setup' defined but not used
-
-(snip.)
-
->
-> -	/* We have to use INTx if MSI cannot be used for PCIe PME. */
-> -	if ((mask&  PCIE_PORT_SERVICE_PME)&&  pcie_pme_no_msi()) {
-> +	/* We have to use INTx if MSI cannot be used for PCIe PME or pciehp. */
-> +	if (((mask&  PCIE_PORT_SERVICE_PME)&&  pcie_pme_no_msi()) ||
-> +	    ((mask&  PCIE_PORT_SERVICE_HP)&&  pciehp_no_msi()) ||
-> +	    ((mask&  PCIE_PORT_SERVICE_HP)&&
-> +	     (dev->vendor == PCI_VENDOR_ID_IDT&&  dev->device == 0x807f))) {
-
-How about implementing vendor/device check as a quirk?
-
-Regards,
-Kenji Kaneshige
+--Sig_/WpPe4ajWb+6sZKoA8.4d8Ds--
