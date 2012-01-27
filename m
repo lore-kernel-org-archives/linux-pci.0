@@ -1,92 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: linux-kernel@vger.kernel.org, jbarnes@virtuousgeek.org,
-	linux-pci@vger.kernel.org
-Cc: xen-devel@lists.xensource.com,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH 1/5] pci: Introduce __pci_reset_function_locked to be used when holding device_lock.
-Date: Wed,  4 Jan 2012 19:46:39 -0500
-Message-Id: <1325724403-29642-2-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy9.bluehost.com ([69.89.24.6]:47739 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751648Ab2A0RhB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:37:01 -0500
+Date: Fri, 27 Jan 2012 09:36:58 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+Subject: Re: Probing unconfigured PCI bridge resouces
+Message-ID: <20120127093658.27dc258b@jbarnes-desktop>
+In-Reply-To: <1327380633.19850.33.camel@pasglop>
+References: <1327379147.19850.29.camel@pasglop>
+	<1327380633.19850.33.camel@pasglop>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/0C_LC6pRRQm5+i5lV0X9G.3"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The use case of this is when a driver wants to call FLR when a device
-is attached to it using the SysFS "bind" or "unbind" functionality.
+--Sig_/0C_LC6pRRQm5+i5lV0X9G.3
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-The call chain when a user does "bind" looks as so:
+On Tue, 24 Jan 2012 15:50:33 +1100
+Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
 
- echo "0000:01.07.0" > /sys/bus/pci/drivers/XXXX/bind
+> On Tue, 2012-01-24 at 15:25 +1100, Benjamin Herrenschmidt wrote:
+>  .../...
+>=20
+> > Or am I missing some important fact here ?
+>=20
+> Ok, I think I was missing pci_bridge_check_ranges(), gotta figure now
+> why this didn't kick in properly for me, probably some arch code
+> crackpot.
+>=20
+> One thing I noticed is that we do clear IORESOURCE_UNSET in setup-res.c
+> when setting up a device resource but we don't clear it for bridges in
+> generic code ever, so it leaks all the way through from my early arch
+> code. Not a big deal but annoying.
 
-and ends up calling:
-  driver_bind:
-    device_lock(dev);  <=== TAKES LOCK
-    XXXX_probe:
-         .. pci_enable_device()
-         ...__pci_reset_function(), which calls
-                 pci_dev_reset(dev, 0):
-                        if (!0) {
-                                device_lock(dev) <==== DEADLOCK
+Maybe you can fix that when you unify your arch resource handling code
+with the core one day. :)
 
-The __pci_reset_function_locked function allows the the drivers
-'probe' function to call the "pci_reset_function" while still holding
-the driver mutex lock.
+There have been a lot of changes to handle re-allocation and such, and
+I'm sure there's more duplication now...
 
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- drivers/pci/pci.c   |   25 +++++++++++++++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 26 insertions(+), 0 deletions(-)
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6d4a531..f9a2a0d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3020,6 +3020,31 @@ int __pci_reset_function(struct pci_dev *dev)
- EXPORT_SYMBOL_GPL(__pci_reset_function);
- 
- /**
-+ * __pci_reset_function_locked - reset a PCI device function while holding
-+ * the @dev mutex lock.
-+ * @dev: PCI device to reset
-+ *
-+ * Some devices allow an individual function to be reset without affecting
-+ * other functions in the same device.  The PCI device must be responsive
-+ * to PCI config space in order to use this function.
-+ *
-+ * The device function is presumed to be unused and the caller is holding
-+ * the device mutex lock when this function is called.
-+ * Resetting the device will make the contents of PCI configuration space
-+ * random, so any caller of this must be prepared to reinitialise the
-+ * device including MSI, bus mastering, BARs, decoding IO and memory spaces,
-+ * etc.
-+ *
-+ * Returns 0 if the device function was successfully reset or negative if the
-+ * device doesn't support resetting a single function.
-+ */
-+int __pci_reset_function_locked(struct pci_dev *dev)
-+{
-+	return pci_dev_reset(dev, 1);
-+}
-+EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
-+
-+/**
-  * pci_probe_reset_function - check whether the device can be safely reset
-  * @dev: PCI device to reset
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7cda65b..af5ee43 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -814,6 +814,7 @@ int pcie_set_readrq(struct pci_dev *dev, int rq);
- int pcie_get_mps(struct pci_dev *dev);
- int pcie_set_mps(struct pci_dev *dev, int mps);
- int __pci_reset_function(struct pci_dev *dev);
-+int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
--- 
-1.7.7.4
+--Sig_/0C_LC6pRRQm5+i5lV0X9G.3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPIuC7AAoJEIEoDkX4Qk9h4S0QAL8t4l+FI69paZz8x9eQBemo
+o2D6aI+mgA+hOA8NE/11+1PuETJdut0HYwniYeKTmwtCmgg5LtexmmpWvbSEnke1
+oM4kazeuKjdheT1t7B6mjSqshzWS+t4f0PtCHMWhPfnM1Ia+eKuwIV7N6t6IsvfE
+7s/dD4jBoDgwpEVHmO+23zVT7oxQ2BEpEH265pd2DKdZfoEW6VJSnyDheBqMHuC/
+6hCCt+ItE8suVndFp+4+4cryo1KVfCbdJITK66sBeh0QQYQ1fuCJzNZS3wFyiOjG
+VHt8V+s5J9k6zn/B4C8lQEOniX2U8nmHujpsh0rosU8DTQZop2l7fEe1qgbnRjOK
+p7KF7biN88JvL+LXX0Zi7jUa1RluAAAIN/WF3hxNLLyCYNP6DHXobVEyQ++ZlTqa
+iSfnvPyHQeOFNOGMFOy9VOCRwXAnGJL5vCqs/HoAAeUcW4Ue1BRz29tGnniO+Ce8
+B7192+fVMfhIOAZBbvsaphuwIC2UYXOxiq3ZT6cGfTV29oct7Jc1D77o/Z5mS23i
+yrdwXRtulB7q6EPaxSGDFBWOp/AARyLBcrUG0hNmQFXbi0pXCP+nIC+2QZwi5ERH
+zyWwlbywpxsCLX9WD9CEH8iz9JoY1DJpwsI1kW+T9LMI/HDV0jnrSKyDJlPTp5ro
+PIqir2rYEcyAbIcIAjGw
+=8vZJ
+-----END PGP SIGNATURE-----
+
+--Sig_/0C_LC6pRRQm5+i5lV0X9G.3--
