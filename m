@@ -1,65 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:33247 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756606Ab2ADR2L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 12:28:11 -0500
-Date: Wed, 4 Jan 2012 09:28:04 -0800
+Received: from oproxy9.bluehost.com ([69.89.24.6]:38174 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750865Ab2A0RPk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:15:40 -0500
+Date: Fri, 27 Jan 2012 09:15:33 -0800
 From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v3 09/34] arm/PCI: convert to pci_scan_root_bus() for
- correct root bus resources
-Message-ID: <20120104092804.686d17d3@jbarnes-desktop>
-In-Reply-To: <CAErSpo4MEYHUVsHywnRfYFU18Ly=48gFRZJK_35v=WMj0HHqHw@mail.gmail.com>
-References: <20111028222432.30729.8431.stgit@bhelgaas.mtv.corp.google.com>
-	<20111028222616.30729.96687.stgit@bhelgaas.mtv.corp.google.com>
-	<CAErSpo4MEYHUVsHywnRfYFU18Ly=48gFRZJK_35v=WMj0HHqHw@mail.gmail.com>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -v2 1/3] PCI: Fix starting basis for resource requests
+Message-ID: <20120127091533.52ada529@jbarnes-desktop>
+In-Reply-To: <20111121185407.9603.70264.stgit@amt.stowe>
+References: <20111121185401.9603.34587.stgit@amt.stowe>
+	<20111121185407.9603.70264.stgit@amt.stowe>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+4_6H_bowoh+IbGhEEpWUpC"; protocol="application/pgp-signature"
+ boundary="Sig_/c12rSxJftZ/=.VPcsQv+d7/"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/+4_6H_bowoh+IbGhEEpWUpC
+--Sig_/c12rSxJftZ/=.VPcsQv+d7/
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 22 Dec 2011 18:10:43 -0700
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Mon, 21 Nov 2011 11:54:07 -0700
+Myron Stowe <myron.stowe@redhat.com> wrote:
 
-> Working through this with a cross-compiler, I found a build bug in
-> this patch.  Updated patch and incremental patch (from commit
-> 9a1d98b3a0d8621 in your linux-next branch) attached.
+> From: Myron Stowe <mstowe@redhat.com>
 >=20
-> My cross-compiler can only build about half of the ARM configs, but
-> better than nothing, I guess.
+> pci_revert_fw_address() is used to reinstate a PCI device's original
+> FW-assigned BIOS BAR value(s) if normal resource assignment fails.
+>=20
+> When attempting to reinstate an address, the point within the resource
+> tree from which to attempt the new resource request should be the parent
+> resource corresponding to the device, not the base of the resource tree
+> (ioport_resource or iomem_resource).  For PCI devices this would
+> typically be the resource corresponding to the upstream PCI host bridge
+> or P2P bridge aperture.
+>=20
+> This patch sets the point within the resource tree to attempt a new
+> resource assignment request to the PCI device's parent resource and only
+> if that fails does it fall back to the base ioport_resource or
+> iomem_resource.
+>=20
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
 
-Merged this into the existing ARM patch, thanks.
+Applied these 3 to my -next branch, thanks for your patience Myron.
 
 --=20
 Jesse Barnes, Intel Open Source Technology Center
 
---Sig_/+4_6H_bowoh+IbGhEEpWUpC
+--Sig_/c12rSxJftZ/=.VPcsQv+d7/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAEBAgAGBQJPBIwkAAoJEIEoDkX4Qk9h1JwP/jvvIUYx9/UFx2xOY0A1ozPO
-q/HkkCR4XVRi11wWlILhBF/fJuGVkGO4/aR+hCbDe583bGt0AzahwwFYYLs/bVgA
-xCskeRvZJVEXshz5jMoGfJHrmDyLv3XCkkL/nljP3yd+EbLMYcoUCGysb+dyGxqJ
-X+4z3GVtfYPMJS2wRTotTqExhswNvBaR4SXyC4MW/s76Lt+8vb73DWSQ13XooJUK
-wKSoXlNUfpWr0CMuKVcouJIXsTgoNI6+TCLN8xjo5FzxHOZHNo+os8SHozbMfXMH
-O3PeLNgpn/T+df6Vd4sp4HP6xNmt2Tj5E0ZhqxY/nzHadYfSVGtvg2Dksnng3d71
-GL9b+Rp5tJlqAklyZcKHRp4+e+ukMSCunVddPKah2Y8IzzNYvIkyHvdq5363jqlf
-0HAaufwS5tkA5fbkhgplyN9u7kQ8eX6CCjLS//A+aFOVmStkAAcTIMqJL72zRPdD
-/G4N5DXtKbMQFrJ8fL8DKecHXBrotype4Ip0gE9HcirTAs///5NUH83f01NgEH8c
-Ajny7iHslqtyGkBOAtQ9BCj3+FwqQqnz9cX9MhrzffF9OKZl5+XQAtoXfG4mfhjh
-rP52/t3L5qj3g4AcF3rFFjO99KYqIqayyZ504z9ZbPYQB28zr3IVmtcymvJfd9aC
-PUyyO8IquPotpMF9zyA0
-=GVXY
+iQIcBAEBAgAGBQJPItu1AAoJEIEoDkX4Qk9hsZUP/3ITxSNnBIyvUBls2OC+QhLc
+0wdTSkdEAnBElCubfDEXBDg3vMONTcDZYjigNidlbNhk+e6fj16eZlXKoHdITEdS
+h3X4d3FWiS/04umAlOFkFTEtiZ27E9fJGJv4Uwi6s5PEPme2Lw94VELXBmAHHxWU
+gSlFp8sJHsu/R5HO1qh4mbvrpYpfW9MIOBO4Q8COPvL19Y+RPz8Ly8SVgAp9ZdaC
+MjKVDCd9dqu9neWGCbpmFfMCND+kNY80PmFyEMrQ6wsJt9UiOyGqDoxI82fGeeOC
+wUDF+6lChrd09S1Nj7Kx7mcEhbaZ/QAw6KRZnLshMU/cDi2g1yeiht+TBJi4zjAS
+L5bCa0tqFMNGKrhJBmJDpxlow332AfQ0XTH0jPae6GUxUtV3hCO+tLMfVOWC52hz
+UY+RTfPLvynFg3e7yGnEnYnno13NhUHRx9j1+wlxbaBBp2oyfwNjh4axb1QqkRuW
+U0N5wgox76LVqiIYxI0dTToQ+DdRsHXqOlRkY3QYnwbRcr8jNT863aR9i2qVMwVQ
+9PC3ubPF7Kvx2hMjDvRIccxfOJho7uuVbqq/YimT9xHu1sCSN6Ugb/dJ0PgA2tEP
+c0j7FB4kCwoR5RrdVfa6qnwaVW/uOG3Sf52dZxSZmFjfRJurPyNGVH2vY9U8/Tyj
+C/3iZoPO8Np4yI6XRyTd
+=3tDm
 -----END PGP SIGNATURE-----
 
---Sig_/+4_6H_bowoh+IbGhEEpWUpC--
+--Sig_/c12rSxJftZ/=.VPcsQv+d7/--
