@@ -1,62 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Heasley, Seth" <seth.heasley@intel.com>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Ralston, James D" <james.d.ralston@intel.com>
-Subject: RE: [PATCH 6/6] pci: irq and pci_ids patch for Intel Lynx Point
- DeviceIDs
-Date: Fri, 27 Jan 2012 18:56:39 +0000
-Message-ID: <DEC3922D1904474A8862C7BFF516EA9A2EAE3732@ORSMSX101.amr.corp.intel.com>
-References: <201201231646.24194.seth.heasley@intel.com>
- <20120127103110.2a4d667f@jbarnes-desktop>
-In-Reply-To: <20120127103110.2a4d667f@jbarnes-desktop>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:36590 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753724Ab2A0SgE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:36:04 -0500
+Date: Fri, 27 Jan 2012 10:36:01 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/7] PCI: pcie hotplug related patch
+Message-ID: <20120127103601.09e3f771@jbarnes-desktop>
+In-Reply-To: <CAE9FiQUFYcaVWorPPP7PQqiBPnKv-iBkPm_qbGz4T_xLR2THiQ@mail.gmail.com>
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
+	<CAE9FiQUFYcaVWorPPP7PQqiBPnKv-iBkPm_qbGz4T_xLR2THiQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ew2DPY4uNs5K0M=GNBx.pB2"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> This patch adds the LPC Controller DeviceIDs for the Intel Lynx Point
->PCH.
->>
->> Signed-off-by: Seth Heasley <seth.heasley@intel.com>
->> ---
->>  arch/x86/pci/irq.c      |    4 +++-
->>  include/linux/pci_ids.h |    2 ++
->>  2 files changed, 5 insertions(+), 1 deletions(-)
->>
->> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c index
->> 372e9b8..22468b6 100644
->> --- a/arch/x86/pci/irq.c
->> +++ b/arch/x86/pci/irq.c
->> @@ -604,7 +604,9 @@ static __init int intel_router_probe(struct
->irq_router *r, struct pci_dev *route
->>  	||  (device >= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN &&
->>  	     device <= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
->>  	||  (device >= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MIN &&
->> -	     device <= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)) {
->> +	     device <= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)
->> +	||  (device >= PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN &&
->> +	     device <= PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX)) {
->>  		r->name = "PIIX/ICH";
->>  		r->get = pirq_piix_get;
->>  		r->set = pirq_piix_set;
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h index
->> 31d77af..6a0359a 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -2800,6 +2800,8 @@
->>  #define PCI_DEVICE_ID_INTEL_82454NX     0x84cb
->>  #define PCI_DEVICE_ID_INTEL_84460GX	0x84ea
->>  #define PCI_DEVICE_ID_INTEL_IXP4XX	0x8500
->> +#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MIN	0x8c40
->> +#define PCI_DEVICE_ID_INTEL_LYNXPOINT_LPC_MAX	0x8c5f
->>  #define PCI_DEVICE_ID_INTEL_IXP2800	0x9004
->>  #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
->>
->
->Seems we add every new GMCH or PCH anyway, why not just use the piix
->routines for any unknown (therefore presumably new) Intel PCH device?
+--Sig_/ew2DPY4uNs5K0M=GNBx.pB2
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Makes sense to me.
--Seth
+On Sat, 21 Jan 2012 02:26:46 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
+
+> On Sat, Jan 21, 2012 at 1:52 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > b40c9ef: pciehp: Disable/enable link during slot power off/on
+> > fe877ae: pciehp: Add Disable/enable link functions
+> > 292e286: pciehp: Add pcie_wait_link_not_active()
+> > 186b3fd: pciehp: print out link status when dlla get active.
+> > 2781df4: pciehp: Checking pci conf reading to new added device instead =
+of sleep 1s
+> > bf1c4ac: PCI: Separate pci_bus_read_dev_vendor_id from pci_scan_device
+> > 601c6f1: PCI: Make sriov work with hotplug remove
+> >
+> > =A0drivers/pci/hotplug/pciehp_hpc.c | =A0133 ++++++++++++++++++++++++++=
++++++-------
+> > =A0drivers/pci/pci.h =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A02 +
+> > =A0drivers/pci/probe.c =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 48 +++++++++---=
+--
+> > =A0drivers/pci/remove.c =A0 =A0 =A0 =A0 =A0 =A0 | =A0 28 ++++++++-
+> > =A04 files changed, 169 insertions(+), 42 deletions(-)
+> >
+> > First one is for hotplug with sriov under bridge.
+> > following two are for hotplug probing with pci conf reading.
+> > Last four are for pcie link disable when power off slots.
+>=20
+> could be found at:
+>=20
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-hp
+
+Ok I dropped the earlier link state check; can you re-post the series
+with Linus's comments addressed?
+
+Kenji-san, do you have time to at least review these?  Testing would be
+nice too...
+
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/ew2DPY4uNs5K0M=GNBx.pB2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPIu6RAAoJEIEoDkX4Qk9hNZ8QAKyXfZO4zjYP+W6cZ4Eqp4W5
+SwfmdWW2vBjAZLO9sAd255PBzeXvlrehEpb+Zy4DN/XGHe5viBZN4FDDGiTwSfZx
+6El0z18w92fc48KdK+DGvFUWSrGqIhYJUY48d6e7UHAulx1VkNTttNYM+MeJATKX
+dbJAoPduREkRLV7U0aSEi+vBqCwwshaMBnuDfMc9XaYTfXgpO1z169LuHjgZUhqe
+Xcg9F70u8lqQgoqQW8OtH1qu8tSbLvmQxLPD7ii2n7wL9pdnRY/Ij1a0wj+Qci9X
+jHt7cTjdWHQPD0LNfeGRROZl9kTiFmSbDtXWVfEa10ApDpdNDWMUVh9/da5v5Qh8
+sGXxNP9qWKfsns/707/KL1AF368p+JFOnv4+bIKbKGJSzI0seQCfn95wKnU0Wchz
+DvkMl6ETuWiq0rlWxZREAVyOncTLbN5OK78AtMD6oCssen4V02EPS5c/dGqW/Z9J
+rvU1VCCTKuMTGh1avpi0MuQqGeFYRkFqkQRfAxDwJrsMf1+1D4PHJgDWch1QRtPv
+Rixq+g0k5cmMFIWkol7UMhPBjGISIHrXnt2hJ8Q4ZedlxPMcnyZEeAtwsXJlJKsZ
+ABIMjxXvYKb5saC0E3zvnSyjRrjZdm+YwsYeHG2iy6/3IzR7WpWvAJIxS7g+voPD
+4VVuKiKPaJ3WbMtLXCig
+=Er01
+-----END PGP SIGNATURE-----
+
+--Sig_/ew2DPY4uNs5K0M=GNBx.pB2--
