@@ -1,129 +1,48 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:34762 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235Ab2A0TJw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 14:09:52 -0500
+Date: Fri, 27 Jan 2012 14:07:22 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xen-devel@lists.xensource.com
+Subject: Re: [PATCH 1/2] pci: Introduce __pci_reset_function_locked to be
+ used when holding device_lock.
+Message-ID: <20120127190722.GA14256@phenom.dumpdata.com>
+References: <1326388007-19178-1-git-send-email-konrad.wilk@oracle.com>
+ <1326388007-19178-2-git-send-email-konrad.wilk@oracle.com>
+ <20120127093225.7c1194ae@jbarnes-desktop>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUXjjk=twgwWVB01JMD9GokEVjOoiRLYZYRTPSPXHYfFw@mail.gmail.com>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
- <20120130165719.3231.43751.stgit@bhelgaas.mtv.corp.google.com> <CAE9FiQUXjjk=twgwWVB01JMD9GokEVjOoiRLYZYRTPSPXHYfFw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Jan 2012 14:00:02 -0800
-Message-ID: <CAErSpo6WqUa5AcEBNwa1g4O1M+MvKwr9RXhVSo04APDLncp+tA@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 02/18] PCI: add struct pci_host_bridge and a list
- of all bridges found
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120127093225.7c1194ae@jbarnes-desktop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 30, 2012 at 12:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Jan 30, 2012 at 8:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> This adds a list of all PCI host bridges we find and a way to look up
->> the host bridge from a pci_dev.
->> ---
->>  drivers/pci/probe.c |   39 ++++++++++++++++++++++++++++++++++-----
->>  include/linux/pci.h |    5 +++++
->>  2 files changed, 39 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index da0d655..2ffe8a3 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -15,6 +15,8 @@
->>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
->>  #define CARDBUS_RESERVE_BUSNR  3
->>
->> +static LIST_HEAD(pci_host_bridges);
->> +
->>  /* Ugh.  Need to stop exporting this to modules. */
->>  LIST_HEAD(pci_root_buses);
->>  EXPORT_SYMBOL(pci_root_buses);
->> @@ -42,6 +44,23 @@ int no_pci_devices(void)
->>  }
->>  EXPORT_SYMBOL(no_pci_devices);
->>
->> +static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
->> +{
->> +       struct pci_bus *bus;
->> +       struct pci_host_bridge *bridge;
->> +
->> +       bus = dev->bus;
->> +       while (bus->parent)
->> +               bus = bus->parent;
->> +
->> +       list_for_each_entry(bridge, &pci_host_bridges, list) {
->> +               if (bridge->bus == bus)
->> +                       return bridge;
->> +       }
->> +
->> +       return NULL;
->> +}
->> +
->>  /*
->>  * PCI Bus Class
->>  */
->> @@ -1526,20 +1545,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>                struct pci_ops *ops, void *sysdata, struct list_head *resources)
->>  {
->>        int error, i;
->> +       struct pci_host_bridge *bridge;
->>        struct pci_bus *b, *b2;
->>        struct device *dev;
->>        struct pci_bus_resource *bus_res, *n;
->>        struct resource *res;
->>
->> +       bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
->> +       if (!bridge)
->> +               return NULL;
->> +
->>        b = pci_alloc_bus();
->>        if (!b)
->> -               return NULL;
->> +               goto err_bus;
->>
->>        dev = kzalloc(sizeof(*dev), GFP_KERNEL);
->> -       if (!dev) {
->> -               kfree(b);
->> -               return NULL;
->> -       }
->> +       if (!dev)
->> +               goto err_dev;
->>
->>        b->sysdata = sysdata;
->>        b->ops = ops;
->> @@ -1576,6 +1598,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>
->>        b->number = b->secondary = bus;
->>
->> +       bridge->bus = b;
->> +
->>        /* Add initial resources to the bus */
->>        list_for_each_entry_safe(bus_res, n, resources, list)
->>                list_move_tail(&bus_res->list, &b->resources);
->> @@ -1591,6 +1615,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>        }
->>
->>        down_write(&pci_bus_sem);
->> +       list_add_tail(&bridge->list, &pci_host_bridges);
->>        list_add_tail(&b->node, &pci_root_buses);
->>        up_write(&pci_bus_sem);
->
-> we already have list for root_bus. So there will be two lists.
+On Fri, Jan 27, 2012 at 09:32:25AM -0800, Jesse Barnes wrote:
+> On Thu, 12 Jan 2012 12:06:46 -0500
+> Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
+> 
+> > The use case of this is when a driver wants to call FLR when a device
+> > is attached to it using the SysFS "bind" or "unbind" functionality.
+> > 
+> > The call chain when a user does "bind" looks as so:
+> > 
+> >  echo "0000:01.07.0" > /sys/bus/pci/drivers/XXXX/bind
+> > 
+> > and ends up calling:
+> >   driver_bind:
+> >     device_lock(dev);  <=== TAKES LOCK
+> >     XXXX_probe:
+> >          .. pci_enable_device()
+> >          ...__pci_reset_function(), which calls
+> >                  pci_dev_reset(dev, 0):
+> >                         if (!0) {
+> >                                 device_lock(dev) <==== DEADLOCK
+> 
+> I have these two in my -next branch now; but you could also push them
+> through the Xen tree.  If you have other deps and the Xen tree would be
+> easier, just let me know and I'll drop them.
 
-Yeah, I'm not sure we need both either.  If we do end up adding a
-struct pci_host_bridge, then I think it makes sense to keep a list of
-*those* (and possibly remove the root_bus list), since that's a
-slightly higher-level abstraction than root_bus is.
-
-> wonder if we can overload bus->self point to struct host_bridge.
-
-pci_bus->self points to a struct pci_dev.  A host bridge is not a
-pci_dev.  I don't think it's a good idea to simply reuse "self" to
-point to something of a different type, but maybe you have something
-different in mind.
-
-> or just do not add host_bridge , and instead only add another field
-> like struct list_head windows in pci_sysdata?
-
-The pci_sysdata I see is an x86-specific thing, so I don't see how
-that would help.
-
-Bjorn
+Thanks! Lets keep them in your tree.
