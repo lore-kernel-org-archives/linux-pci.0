@@ -1,56 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:52372 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755819Ab2ADT5b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 14:57:31 -0500
-Date: Wed, 04 Jan 2012 14:56:19 -0500 (EST)
-Message-Id: <20120104.145619.1728971973635198635.davem@davemloft.net>
-To: nhorman@tuxdriver.com
-Cc: jbarnes@virtuousgeek.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, gregkh@suse.de, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] msi: fix imbalanced refcount of msi irq sysfs objects
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120104195134.GB24324@hmsreliant.think-freely.org>
-References: <20120103185304.GA25184@hmsreliant.think-freely.org>
-	<20120104091952.7cc5316d@jbarnes-desktop>
-	<20120104195134.GB24324@hmsreliant.think-freely.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:39292 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752970Ab2A0TK5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 14:10:57 -0500
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <svaidy@linux.vnet.ibm.com>;
+	Sat, 28 Jan 2012 00:40:54 +0530
+Date: Sat, 28 Jan 2012 00:40:32 +0530
+From: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+To: Ram Pai <linuxram@us.ibm.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai.lu@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
+ sriov_init
+Message-ID: <20120127191032.GA22999@dirshya.in.ibm.com>
+Reply-To: svaidy@linux.vnet.ibm.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Neil Horman <nhorman@tuxdriver.com>
-Date: Wed, 4 Jan 2012 14:51:34 -0500
+Hi Ram and Jesse,
 
-> On Wed, Jan 04, 2012 at 09:19:52AM -0800, Jesse Barnes wrote:
->> On Tue, 3 Jan 2012 13:53:05 -0500
->> Neil Horman <nhorman@tuxdriver.com> wrote:
->> 
->> > On Tue, Jan 03, 2012 at 01:05:26PM -0500, David Miller wrote:
->> > > From: Neil Horman <nhorman@tuxdriver.com>
->> > > Date: Tue,  3 Jan 2012 10:29:54 -0500
->> > > 
->> > > > This warning was recently reported to me:
->> > > 
->> > > I've hit this too, see:
->> > > 
->> > > http://marc.info/?l=linux-kernel&m=132458146927890&w=2
->> > > 
->> > > and my analysis at:
->> > > 
->> > > http://marc.info/?l=linux-arch&m=132458391128660&w=2
->> > > 
->> > Yup, your analysis is correct. Regardless of the why behind msi enablement
->> > failing, we need to gate the kobject_del/put in free_msi_irqs on successful
->> > completion of kobject_init_and_add in populate_msi_sysfs.  This patch does that,
->> > using the parent pointer as a flag.
->> 
->> I applied this to my -next branch; doesn't seem critical to land
->> immediately.  If you disagree let me know and I'll pull it over to my
->> for-linus branch instead.
->> 
->> Thanks,
-> I'm ok with it waiting, but I'll defer to Dave and others who have seen it
-> occur.  It sounds like its alot of log noise.
+I found a trivial issue with page size alignment check on IBM POWER
+box with 64k base page size.  In sriov_init(), changing the check from
+PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
+required to use one of the sriov adapter as PF since the
+resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
+pseries boxes.
 
-The bug only exists in the PCI -next code I thought.
+I think resource_size() could be less than SystemPageSize, but I would
+like your comments/ack/nack on any consequences of checking for only
+4k alignment here in a system with larger base page size.
+
+Thanks,
+Vaidy
+
+---
+
+    pci: check for 4k resource_size alignment in sriov_init
+    
+    pci sriov_init should check for 4k page size alignment of resource_size
+    even if base page size is larger -- like 64k in powerpc.
+    
+    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 0321fa3..5816fa0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -474,7 +474,7 @@ found:
+ 				     pos + PCI_SRIOV_BAR + i * 4);
+ 		if (!res->flags)
+ 			continue;
+-		if (resource_size(res) & (PAGE_SIZE - 1)) {
++		if (resource_size(res) & (HW_PAGE_SIZE - 1)) {
+ 			rc = -EIO;
+ 			goto failed;
+ 		}
+
