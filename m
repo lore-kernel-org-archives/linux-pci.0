@@ -1,71 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:50528 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065Ab2A0RjZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:39:25 -0500
-Message-ID: <4F22E136.5010404@oracle.com>
-Date: Fri, 27 Jan 2012 09:39:02 -0800
-From: Yinghai Lu <yinghai.lu@oracle.com>
-MIME-Version: 1.0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pciehp: Disable/enable link during slot power off/on
-References: <4ED95AD0.7090003@oracle.com> <20120127092622.6d8c2ae8@jbarnes-desktop>
-In-Reply-To: <20120127092622.6d8c2ae8@jbarnes-desktop>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:35085 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752146Ab2A0Rhe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:37:34 -0500
+Date: Fri, 27 Jan 2012 09:37:32 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: linux-pci@vger.kernel.org, trivial@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] [trivial] pci: Fix typo in setup-res.c
+Message-ID: <20120127093732.46425cca@jbarnes-desktop>
+In-Reply-To: <1327589147-2193-1-git-send-email-standby24x7@gmail.com>
+References: <1327589147-2193-1-git-send-email-standby24x7@gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/u6yH3_UzCphrJIJBQOnw/D6"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/27/2012 09:26 AM, Jesse Barnes wrote:
+--Sig_/u6yH3_UzCphrJIJBQOnw/D6
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> On Fri, 02 Dec 2011 15:10:08 -0800
-> Yinghai Lu <yinghai.lu@oracle.com> wrote:
-> 
->>
->> One system have repeater in system board to support gen2 hotplug.
->>
->> Found when EM is removed from some slots, /var/log/message will be full of
->> "card present/not present" warning.
->>
->> It turns out root complex still try to train the link to repeater because
->> repeater is not reset.
->>
->> This patch will disable link to make repeater could reset properly.
->> Also could kill AER during EM removal.
->>
->> Recently when testing hotplug on one system under development, found if boot
->> the system without EM, and later hotplug does not work with Linux.
->> But other OS is ok.
->> The root cause is that bios left link disabled when slot is empty,
->> and other OS is playing link disable bit in link ctrl during power on/off.
->>
->> So We could do the same thing to disable/enable link during power off/on.
->>
->> Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
-> 
-> Ok I had to massage that commit message quite a bit, please let me know
-> if it's still accurate.
-> 
-> The 100ms delay still needs to be clarified; if it's really necessary
-> maybe we could move the delays into a delayed work handler?
+On Thu, 26 Jan 2012 23:45:47 +0900
+Masanari Iida <standby24x7@gmail.com> wrote:
 
+> Correct spelling "resouce" to "resource" in
+> dricers/pci/setup-res.c
+>=20
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> ---
+>  drivers/pci/setup-res.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index b66bfdb..5c18194 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -228,7 +228,7 @@ int pci_reassign_resource(struct pci_dev *dev, int re=
+sno, resource_size_t addsiz
+>  	int ret;
+> =20
+>  	if (!res->parent) {
+> -		dev_info(&dev->dev, "BAR %d: can't reassign an unassigned resouce %pR "
+> +		dev_info(&dev->dev, "BAR %d: can't reassign an unassigned resource %pR=
+ "
+>  			 "\n", resno, res);
+>  		return -EINVAL;
+>  	}
 
-Please you check updated versions that i sent later.
+Applied to -next, thanks.
 
-it was changed to three patches... i sent those patchs 1/123
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-hp
+--Sig_/u6yH3_UzCphrJIJBQOnw/D6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-you can find other patches in 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci2
+iQIcBAEBAgAGBQJPIuDcAAoJEIEoDkX4Qk9hMN0QAM7Q6ODzFdGWEciQuII/fAl+
+rGoOm+lZb01Gq6BvbgqMM5UqcFgjJUJjXwzX4EFgLSrU0BGi4YA8obcKnvHBE/qC
+DZ8TCdO964LRpFvug4A4qXgWJ7gxrCcnjYmVRrKZlqjIVFskOZbMG6RDPXCkjeIY
+NNVckQWnKXMlGIeja6OYomEEuPvUspoMT+mHkgxGf9PnKU4EeO7IQY2JfIJRIvhd
+kw/TboE+yDB65tE97eGsJHStQO6EIeRed+dFvHqjGKCNZMhYt63sSJ0c+rEeB3UX
+Ho0L9JIZI6bufudkL0XQwcvRtMSKaKPmTixYriyhRIWVtuFODzFlFsw2w1hXAuHX
+6Tp7sqiufeRSWNx5d2y458qPtD7FhCGy1UALiBUhc8WWPza1oyDML2IfZ5SGVbhO
+PZciw/vTCZwjViblybBb8qLTNwd+eq7p4CEURXWOuTStIfrMQEtEsiTYSfBmriMk
+hdcata23myyEuclSfCFYZELHZbAECq3ObSbn/BDMzODSeMKTioX0PzEN3gW2z8AO
+WopOxMWdNetTtz0XNHZzgTE066Uq7bxeqgvFh31/vss5kNRcJWJhbePiGqBi9Kun
+sqMCWS/vMHbwEsfrnEOE5zOv0F7XiRnJEEuxGj0no7pBGw0GWO7Ratcuz6xuXF5i
+3WH8zpV6ivecRNzCYerQ
+=//Hy
+-----END PGP SIGNATURE-----
 
-and
-
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
-
-Thanks
-
-Yinghai
+--Sig_/u6yH3_UzCphrJIJBQOnw/D6--
