@@ -1,162 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:47190 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052Ab2AaHnb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2012 02:43:31 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 27 Jan 2012 10:00:04 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 10/14] PCI: Probe safe range that we can use for unassigned bridge.
-Date: Mon, 30 Jan 2012 23:42:48 -0800
-Message-Id: <1327995772-11388-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 06/21] PCI: Make rescan bus could increase bridge
+ resource size if needed
+Message-ID: <20120127100004.18ffff4d@jbarnes-desktop>
+In-Reply-To: <1327140517-14811-7-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+	<1327140517-14811-7-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/VmAONftPwpCtTQByuQSNPRq"; protocol="application/pgp-signature"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Try to allocate from parent bus busn_res. if can not find any big enough, will try
-to extend parent bus top. even the extending is through allocating, after allocating
-will pad the range to parent buses top.
+--Sig_/VmAONftPwpCtTQByuQSNPRq
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-When extending happens, We will record the parent_res, so could use it as stopper
-for really extend/shrink top later.
+On Sat, 21 Jan 2012 02:08:22 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |  114 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 114 insertions(+), 0 deletions(-)
+> Current rescan will not touch bridge MMIO and IO.
+>=20
+> Try to reuse pci_assign_unassigned_bridge_resources(bridge) to update bri=
+dge
+> resource, if child devices need more resource.
+>=20
+> only do that for bridges that all children get removed before. So do not
+> release resources that could already be used by drivers of child devices.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 91fdaec..10aa6d1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -670,6 +670,120 @@ static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
- 	}
- }
- 
-+static resource_size_t __devinit find_res_top_free_size(struct resource *res)
-+{
-+	int ret = -ENOMEM;
-+	resource_size_t n_size;
-+	struct resource tmp_res;
-+
-+	/*
-+	 *   find out number below res->end, that we can use at first
-+	 *	res->start can not be used.
-+	 */
-+	n_size = resource_size(res) - 1;
-+	memset(&tmp_res, 0, sizeof(struct resource));
-+	while (n_size > 0) {
-+		ret = allocate_resource(res, &tmp_res, n_size,
-+			res->end - n_size + 1, res->end,
-+			1, NULL, NULL);
-+		if (ret == 0) {
-+			/* release busn_res */
-+			release_resource(&tmp_res);
-+			break;
-+		}
-+		n_size--;
-+	}
-+
-+	return n_size;
-+}
-+
-+static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
-+			 struct pci_dev *dev, struct resource *busn_res,
-+			 resource_size_t needed_size, struct resource **p)
-+{
-+	int ret = -ENOMEM;
-+	resource_size_t n_size;
-+	struct pci_bus *parent;
-+	struct resource *parent_res;
-+	resource_size_t tmp = bus->busn_res.end + 1;
-+	int free_sz = -1;
-+
-+	parent_res = NULL;
-+
-+again:
-+	/*
-+	 * find bigest range in bus->busn_res that we can use in the middle
-+	 *  and we can not use bus->busn_res.start.
-+	 */
-+	n_size = resource_size(&bus->busn_res) - 1;
-+	memset(busn_res, 0, sizeof(struct resource));
-+	dev_printk(KERN_DEBUG, &dev->dev,
-+			"find free busn in busn_res: %pR\n", &bus->busn_res);
-+	while (n_size >= needed_size) {
-+		ret = allocate_resource(&bus->busn_res, busn_res, n_size,
-+				bus->busn_res.start + 1, bus->busn_res.end,
-+				1, NULL, NULL);
-+		if (ret == 0) {
-+			/* found one, prepare to return */
-+			release_resource(busn_res);
-+
-+			return ret;
-+		}
-+		n_size--;
-+	}
-+
-+	/* try extend the top of parent buss */
-+	if (free_sz < 0) {
-+		free_sz = find_res_top_free_size(&bus->busn_res);
-+		dev_printk(KERN_DEBUG, &dev->dev,
-+			"found free busn %d in busn_res: %pR top\n",
-+				free_sz, &bus->busn_res);
-+	}
-+	n_size = free_sz;
-+
-+	/* check if extend could cross domain boundary */
-+	if ((bus->busn_res.end & 0xff) == 0xff)
-+		goto reduce_needed_size;
-+	if ((0x100 - (tmp & 0xff)) < (needed_size - n_size))
-+		goto reduce_needed_size;
-+
-+	/* find exteded range */
-+	memset(busn_res, 0, sizeof(struct resource));
-+	parent = bus->parent;
-+	while (parent) {
-+		ret = allocate_resource(&parent->busn_res, busn_res,
-+			 needed_size - n_size,
-+			 tmp, tmp + needed_size - n_size - 1,
-+			 1, NULL, NULL);
-+		if (ret == 0)
-+			break;
-+		parent = parent->parent;
-+	}
-+
-+reduce_needed_size:
-+	if (ret != 0) {
-+		needed_size--;
-+		if (!needed_size)
-+			return ret;
-+
-+		goto again;
-+	}
-+
-+	/* save parent_res, we need it as stopper later */
-+	parent_res = busn_res->parent;
-+
-+	/* prepare busn_res for return */
-+	release_resource(busn_res);
-+	busn_res->start -= n_size;
-+
-+	/* extend parent bus top*/
-+	pci_bus_extend_top(bus, needed_size - n_size, parent_res);
-+
-+	*p = parent_res;
-+
-+	return ret;
-+}
-+
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
--- 
-1.7.7
+Applied, but I fixed up the comment; please check for accuracy.
 
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/VmAONftPwpCtTQByuQSNPRq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPIuYkAAoJEIEoDkX4Qk9hO+kP/ijfFNTqc48GJoNsDSm5i8B2
+cSYZ3yfMvpU+L7kqI1TU81C4+LyKs5l73XWKjFvFzRy8wJ8dSazbDprs1/l0oxYe
+AEdjXJQo+SGsLlYgTaiQDnxTYyfFeA568LfOUOyy7+v1AW/DUyr+q5q2RExXsFbK
+xuYCv1mhF36UBsP/ZrMFjttmrpO+kexT+RAxeniEhEoR/vGvRRP2ipD/MQuXx2Zh
+LaSl/P/UJWvtlH/R3JR0coNR19yJwIQgQsLZr3MQrKsUBF//2hrgYPvs53ltmxo0
+za/hUZL0TaNM6MybHeaY6DkPIfxrPSqzJx6wolS8Rtvu5LcrFCLp79Rxfmk3fu7i
+npwrPP/oLE5nTp87SkEtC6ClOpHGBg/eIjFJAL8sga5TsCF9X3djzxlas8iC04aV
+8yn1QK2jNXKy8yStP4KFA+mHr5/z8H6HbAI7LkUsJ/LsCGn1qlNrDN6UBtLVrd0x
+2lShYiQBDdT6Cr7r71V5K3Ty1+rUBviMCMzrsvbedFW8CD9Pk7N1lqx5QvAE4eoq
+XJMCXBI+dexHRsVBAc2ixfoXH9vsa19ikHwkzqFs53FeCXIYoAgIWE4mB/85ly5j
+alnYVQlA1RwIBwSZ0NnNFMLcyJdGQDrcq75qlYjj22kTo+1i35oJr5T+5/hF/kSf
+8zH7owYgLakemKmkHUde
+=N4Y1
+-----END PGP SIGNATURE-----
+
+--Sig_/VmAONftPwpCtTQByuQSNPRq--
