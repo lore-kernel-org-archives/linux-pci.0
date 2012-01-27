@@ -1,27 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:46653 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120Ab2AYVbX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jan 2012 16:31:23 -0500
-Received: by wgbed3 with SMTP id ed3so5767114wgb.1
-        for <linux-pci@vger.kernel.org>; Wed, 25 Jan 2012 13:31:22 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Jan 2012 14:31:02 -0700
-Message-ID: <CAErSpo6Uibvc61AkXDz5qCO3nMH-XNKtGw13fNcr6mAj4hmaNA@mail.gmail.com>
-Subject: Re: [PATCH 0/4] add struct pci_host_bridge
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20120127102311.6027ea2c@jbarnes-desktop>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+	<1327140517-14811-19-git-send-email-yinghai@kernel.org>
+	<20120127102311.6027ea2c@jbarnes-desktop>
+Date: Fri, 27 Jan 2012 13:37:44 -0800
+Message-ID: <CAE9FiQXQPFYU45rctaNX4kSqh7JGCnds8U-Bh1N93xVieuqz5Q@mail.gmail.com>
+Subject: Re: [PATCH 18/21] PCI: Fix cardbus bridge resources as optional size handling
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 17, 2012 at 5:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> This series adds a struct pci_host_bridge to track generic host bridge
-> information like the bus numbers and resources available behind the
-> host bridge.
+On Fri, Jan 27, 2012 at 10:23 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Sat, 21 Jan 2012 02:08:34 -0800
+> Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>> We should not set the requested size to -2.
+>>
+>> that will confuse the resource list sorting with align when SIZEALIGN is used.
+>>
+>> Change to STARTALIGN and pass align from start.
+>>
+>> We are safe to do that just as we do that regular pci bridge.
+>>
+>> In the long run, we should just treat cardbus like regular pci bridge.
+>>
+>> Also fix when realloc is not passed, should keep the requested size.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> I'd like to see some testing on this one... Dominik?
 
-Please disregard this series.  Yinghai had some concerns and has
-posted other patches to address this problem.
+Dominik,
+
+Can you please test branch at
+
+	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci2
+
+Thanks
+
+Yinghai
