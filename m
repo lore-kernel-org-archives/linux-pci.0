@@ -1,120 +1,79 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 07/21] PCI: Make pci_rescan_bus handle add_list
-Date: Sat, 21 Jan 2012 02:08:23 -0800
-Message-Id: <1327140517-14811-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+Date: Fri, 27 Jan 2012 09:26:22 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai.lu@oracle.com>
+Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pciehp: Disable/enable link during slot power off/on
+Message-ID: <20120127092622.6d8c2ae8@jbarnes-desktop>
+In-Reply-To: <4ED95AD0.7090003@oracle.com>
+References: <4ED95AD0.7090003@oracle.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/TZfY3mT0jBz1aohPCMGpoiR"; protocol="application/pgp-signature"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So it will allocate resource to hotplug bridge during remove/rescan.
+--Sig_/TZfY3mT0jBz1aohPCMGpoiR
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Need to move that function to setup-bus.c so it could use
-  __pci_bus_size_bridges and __pci_bus_assign_resources
-directly to take add_list.
+On Fri, 02 Dec 2011 15:10:08 -0800
+Yinghai Lu <yinghai.lu@oracle.com> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c     |   32 --------------------------------
- drivers/pci/setup-bus.c |   39 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 39 insertions(+), 32 deletions(-)
+>=20
+> One system have repeater in system board to support gen2 hotplug.
+>=20
+> Found when EM is removed from some slots, /var/log/message will be full of
+> "card present/not present" warning.
+>=20
+> It turns out root complex still try to train the link to repeater because
+> repeater is not reset.
+>=20
+> This patch will disable link to make repeater could reset properly.
+> Also could kill AER during EM removal.
+>=20
+> Recently when testing hotplug on one system under development, found if b=
+oot
+> the system without EM, and later hotplug does not work with Linux.
+> But other OS is ok.
+> The root cause is that bios left link disabled when slot is empty,
+> and other OS is playing link disable bit in link ctrl during power on/off.
+>=20
+> So We could do the same thing to disable/enable link during power off/on.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 24c8710..7232fc8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1631,38 +1631,6 @@ unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
- 	return max;
- }
- 
--/**
-- * pci_rescan_bus - scan a PCI bus for devices.
-- * @bus: PCI bus to scan
-- *
-- * Scan a PCI bus and child buses for new devices, adds them,
-- * and enables them.
-- *
-- * Returns the max number of subordinate bus discovered.
-- */
--unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
--{
--	unsigned int max;
--	struct pci_dev *dev;
--
--	max = pci_scan_child_bus(bus);
--
--	down_read(&pci_bus_sem);
--	list_for_each_entry(dev, &bus->devices, bus_list)
--		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
--		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
--			if (dev->subordinate)
--				pci_bus_size_bridges(dev->subordinate);
--	up_read(&pci_bus_sem);
--
--	pci_bus_assign_resources(bus);
--	pci_enable_bridges(bus);
--	pci_bus_add_devices(bus);
--
--	return max;
--}
--EXPORT_SYMBOL_GPL(pci_rescan_bus);
--
- EXPORT_SYMBOL(pci_add_new_bus);
- EXPORT_SYMBOL(pci_scan_slot);
- EXPORT_SYMBOL(pci_scan_bridge);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 97c1eda..c09c67a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1357,3 +1357,42 @@ enable_all:
- 	pci_enable_bridges(parent);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
-+
-+#ifdef CONFIG_HOTPLUG
-+/**
-+ * pci_rescan_bus - scan a PCI bus for devices.
-+ * @bus: PCI bus to scan
-+ *
-+ * Scan a PCI bus and child buses for new devices, adds them,
-+ * and enables them.
-+ *
-+ * Returns the max number of subordinate bus discovered.
-+ */
-+unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
-+{
-+	unsigned int max;
-+	struct pci_dev *dev;
-+	struct resource_list_x add_list; /* list of resources that
-+					want additional resources */
-+
-+	max = pci_scan_child_bus(bus);
-+
-+	add_list.next = NULL;
-+	down_read(&pci_bus_sem);
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-+		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
-+			if (dev->subordinate)
-+				__pci_bus_size_bridges(dev->subordinate,
-+							 &add_list);
-+	up_read(&pci_bus_sem);
-+	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	BUG_ON(add_list.next);
-+
-+	pci_enable_bridges(bus);
-+	pci_bus_add_devices(bus);
-+
-+	return max;
-+}
-+EXPORT_SYMBOL_GPL(pci_rescan_bus);
-+#endif
--- 
-1.7.7
+Ok I had to massage that commit message quite a bit, please let me know
+if it's still accurate.
 
+The 100ms delay still needs to be clarified; if it's really necessary
+maybe we could move the delays into a delayed work handler?
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/TZfY3mT0jBz1aohPCMGpoiR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPIt4+AAoJEIEoDkX4Qk9hRY0QALBlxf/UWdxUQ+/70o8mXZpA
+IkfV4HjlW+g1tb4tBy3gvHuDg7lsMaIOczxhlFtKFxmDK5lZ6mTXykU8/hQIoi3J
+hkcoImz7behwxw/bSbh8BKYB90rceGJt3ULCN06V6pt2sZK11nIJRAqXIBt1TjTa
+eDpWIbs+Fv3nVaXrGk8odOwj/qs2eq+FhnQi8w51rGlVtesgveJJTq5cNn0HP4o7
+SODnJrSHCqeX4uDWZrFHOQAI9hQiaD7c86XHssCToDj4zE7NilxJtS9AV0mSmH+O
+BQjoQwnWC6hS3l1DwnmNMWKMqCqEeDVfvcjv7EMLdCGEZzs40IvEovI41xkO0CZe
+abHAPAsUmEtZ1rwnX4kM2oA0hHE04XZ3fibsG2SPaulfR7KbPn7oGc2J/YG/8v77
+vsw5T+0lEWs7q3ZpmBkDKjtPngrWx6FPJJQe24V5fTUzLB64DNjsicgczW8OWWKs
+WQCkYkK0YWvanaEuXkiMjArc0YsTRkjQFnTEQhr4nW0xwYp0OTXcSSZTjGz9Y5xn
+hC0vX7scjyqTMv68Reo2vt1HNwYGgUBhv833tgkHS3V+aTFkhw/E+VMvBo9earZz
+MW76gb/2v65rcEpG4tiH6gwEdI2bH7el85/Pz5k24lo0wUCdi8j4JTVJgwTiYFr5
+ucWjuwVFL9t3fq9fzNfr
+=1WZ0
+-----END PGP SIGNATURE-----
+
+--Sig_/TZfY3mT0jBz1aohPCMGpoiR--
