@@ -1,42 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35877 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754516Ab2ACSxN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jan 2012 13:53:13 -0500
-Date: Tue, 3 Jan 2012 13:53:05 -0500
-From: Neil Horman <nhorman@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, jbarnes@virtuousgeek.org,
-	bhelgaas@google.com, gregkh@suse.de, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] msi: fix imbalanced refcount of msi irq sysfs objects
-Message-ID: <20120103185304.GA25184@hmsreliant.think-freely.org>
-References: <1325604594-7184-1-git-send-email-nhorman@tuxdriver.com>
- <20120103.130526.2034128205205666131.davem@davemloft.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:3742 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754332Ab2A0HUN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Jan 2012 02:20:13 -0500
+Subject: Re: [PATCH net-next 02/10] bnx2x: Removing indirect register
+ access
+From: "Eilon Greenstein" <eilong@broadcom.com>
+Reply-to: eilong@broadcom.com
+To: "Ben Hutchings" <bhutchings@solarflare.com>
+cc: "Ariel Elior" <ariele@broadcom.com>, davem@davemloft.net,
+	netdev@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>
+In-Reply-To: <1327614608.2482.12.camel@bwh-desktop>
+References: <1327593714-18358-1-git-send-email-ariele@broadcom.com>
+ <1327593714-18358-3-git-send-email-ariele@broadcom.com>
+ <1327614608.2482.12.camel@bwh-desktop>
+Date: Fri, 27 Jan 2012 09:19:56 +0200
+Message-ID: <1327648796.9270.0.camel@lb-tlvb-eilong.il.broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120103.130526.2034128205205666131.davem@davemloft.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 03, 2012 at 01:05:26PM -0500, David Miller wrote:
-> From: Neil Horman <nhorman@tuxdriver.com>
-> Date: Tue,  3 Jan 2012 10:29:54 -0500
+On Thu, 2012-01-26 at 21:50 +0000, Ben Hutchings wrote:
+> On Thu, 2012-01-26 at 18:01 +0200, Ariel Elior wrote:
+> > In virtualized environments indirect access to the device may not be supported
+> > (depending on the Hypervisor type). Indirect device access was used since in
+> > some harware contexts (i.e. certain chipset and BIOS) every access the driver
+> > makes across the pci is followed by a BIOS initiated Zero Length Read to the
+> > same address.
+> [...]
 > 
-> > This warning was recently reported to me:
-> 
-> I've hit this too, see:
-> 
-> http://marc.info/?l=linux-kernel&m=132458146927890&w=2
-> 
-> and my analysis at:
-> 
-> http://marc.info/?l=linux-arch&m=132458391128660&w=2
-> 
-Yup, your analysis is correct. Regardless of the why behind msi enablement
-failing, we need to gate the kobject_del/put in free_msi_irqs on successful
-completion of kobject_init_and_add in populate_msi_sysfs.  This patch does that,
-using the parent pointer as a flag.
+> This is intriguing.  Isn't that a general problem that can affect many
+> devices?  Can you be more specific about which systems have this
+> behaviour?
 
-Thanks
-Neil
+This is with regards to some AMD chipsets that translate the HT
+protocol, which is usually used between the AMD CPUs, to the PCI address
+space. The BIOS marks some areas as requiring acknowledgment - and that
+is implemented by issuing a Zero Length Read (ZLR) over the PCI after
+every PIO write to that address space. According to the PCI spec, the
+masked addresses should have no effect and in ZLR, everything is masked
+- so this read should be returned right away with no impact which makes
+it safe to be used as acknowledgment that the write has reached the
+device (since the read that followed just returned). Unfortunately, on
+the 57710 this ZLR actually reached all the way down to the specific HW
+block without the mask. This is causing a problem when a "wide bus" (the
+bus size is greater than 32bits) was written to - the HW assumed that
+the SW will guarantee that the write will be consecutive and without any
+other access to that bus in the middle of writing or reading a line. So
+for the 57710, the ZLR is causing real problems and can be worked around
+by indirect access (using the PCI config space) or DMAE (where the
+device reads the data). For other devices, the worst case scenario is
+performance impact due to this extra read on the PCI bus that takes some
+PCI BW and slow down consecutive writes.
+
+Regards,
+Eilon
+
 
