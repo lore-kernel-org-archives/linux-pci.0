@@ -1,80 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.eu.citrix.com ([62.200.22.115]:39111 "EHLO
-	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030357Ab2AFPv1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 10:51:27 -0500
-Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
- to include domain id.
-From: Ian Campbell <Ian.Campbell@citrix.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Jan Beulich <JBeulich@suse.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>
-Date: Fri, 6 Jan 2012 15:51:25 +0000
-In-Reply-To: <20120106150338.GB5855@phenom.dumpdata.com>
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
-	 <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
-	 <4F06C101020000780006AC32@nat28.tlf.novell.com>
-	 <20120106150338.GB5855@phenom.dumpdata.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1325865086.25206.512.camel@zakaz.uk.xensource.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:51544 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752327Ab2A0VFm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 16:05:42 -0500
 MIME-Version: 1.0
+In-Reply-To: <20120127191032.GA22999@dirshya.in.ibm.com>
+References: <20120127191032.GA22999@dirshya.in.ibm.com>
+Date: Fri, 27 Jan 2012 13:05:41 -0800
+Message-ID: <CAE9FiQVKLmrryoOhyjr_rGucGGZLW=PSD=s_AjW0Za6vHCvOtg@mail.gmail.com>
+Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in sriov_init
+From: Yinghai Lu <yinghai@kernel.org>
+To: svaidy@linux.vnet.ibm.com
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-01-06 at 15:03 +0000, Konrad Rzeszutek Wilk wrote:
-> On Fri, Jan 06, 2012 at 08:38:09AM +0000, Jan Beulich wrote:
-> > >>> On 05.01.12 at 01:46, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
-> > > When a PCI device is transferred to another domain and it is still
-> > > in usage (from the internal perspective), mention which other
-> > > domain is using it to aid in debugging.
-> > > 
-> > > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > > ---
-> > >  drivers/xen/xen-pciback/xenbus.c |    6 ++++--
-> > >  1 files changed, 4 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-> > > index 474d52e..fa130bd 100644
-> > > --- a/drivers/xen/xen-pciback/xenbus.c
-> > > +++ b/drivers/xen/xen-pciback/xenbus.c
-> > > @@ -243,8 +243,10 @@ static int xen_pcibk_export_device(struct 
-> > > xen_pcibk_device *pdev,
-> > >  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
-> > >  	if (xen_register_device_domain_owner(dev,
-> > >  					     pdev->xdev->otherend_id) != 0) {
-> > > -		dev_err(&dev->dev, "device has been assigned to another " \
-> > > -			"domain! Over-writting the ownership, but beware.\n");
-> > > +		int other_domain = xen_find_device_domain_owner(dev);
-> > > +		dev_err(&dev->dev, "device has been assigned to %d " \
-> > > +			"domain! Over-writting the ownership, but beware.\n",
-> > > +			other_domain);
-> > 
-> > As you're touching this anyway, how about fixing the other minor
-> > issues with it too? E.g.
-> > 
-> > 		dev_err(&dev->dev, "Device appears to be assigned to dom%d!"
-> > 			" Overwriting the ownership, but beware.\n",
-> > 			xen_find_device_domain_owner(dev));
-> > 
-> > (a native English speaker may want to comment the "but beware"
-> > part - it reads odd for me).
-> 
-> Hm, lets ask the English speakers. Ian?
+On Fri, Jan 27, 2012 at 11:10 AM, Vaidyanathan Srinivasan
+<svaidy@linux.vnet.ibm.com> wrote:
+> Hi Ram and Jesse,
+>
+> I found a trivial issue with page size alignment check on IBM POWER
+> box with 64k base page size.  In sriov_init(), changing the check from
+> PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
+> required to use one of the sriov adapter as PF since the
+> resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
+> pseries boxes.
+>
+> I think resource_size() could be less than SystemPageSize, but I would
+> like your comments/ack/nack on any consequences of checking for only
+> 4k alignment here in a system with larger base page size.
+>
+> Thanks,
+> Vaidy
+>
+> ---
+>
+>    pci: check for 4k resource_size alignment in sriov_init
+>
+>    pci sriov_init should check for 4k page size alignment of resource_size
+>    even if base page size is larger -- like 64k in powerpc.
+>
+>    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 0321fa3..5816fa0 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -474,7 +474,7 @@ found:
+>                                     pos + PCI_SRIOV_BAR + i * 4);
+>                if (!res->flags)
+>                        continue;
+> -               if (resource_size(res) & (PAGE_SIZE - 1)) {
+> +               if (resource_size(res) & (HW_PAGE_SIZE - 1)) {
+>                        rc = -EIO;
+>                        goto failed;
+>                }
+>
 
-I think you underestimate a native speakers ability to mangle a
-language. Especially this one ;-)
+but HW_PAGE_SIZE is only defined for powerpc.
 
-Anyway, I think it's unnecessary, so you may as well drop it and just
-have:
+also there is PAGE_SHIFT around in that function.
 
- 		dev_err(&dev->dev, "Device appears to be assigned to dom%d!"
- 			" Overwriting the ownership.\n",
- 			xen_find_device_domain_owner(dev));
+maybe you can just define another MARCO according to IOV spec?
 
-I suppose you might want "Overriding ownership to dom%d".
+Thanks
 
-Ian.
-
+Yinghai
