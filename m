@@ -1,74 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy9.bluehost.com ([69.89.24.6]:47739 "HELO
-	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751648Ab2A0RhB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:37:01 -0500
-Date: Fri, 27 Jan 2012 09:36:58 -0800
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:38602 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751558Ab2A0SXO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:23:14 -0500
+Date: Fri, 27 Jan 2012 10:23:11 -0800
 From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-pci@vger.kernel.org,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Subject: Re: Probing unconfigured PCI bridge resouces
-Message-ID: <20120127093658.27dc258b@jbarnes-desktop>
-In-Reply-To: <1327380633.19850.33.camel@pasglop>
-References: <1327379147.19850.29.camel@pasglop>
-	<1327380633.19850.33.camel@pasglop>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: [PATCH 18/21] PCI: Fix cardbus bridge resources as optional
+ size handling
+Message-ID: <20120127102311.6027ea2c@jbarnes-desktop>
+In-Reply-To: <1327140517-14811-19-git-send-email-yinghai@kernel.org>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+	<1327140517-14811-19-git-send-email-yinghai@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/0C_LC6pRRQm5+i5lV0X9G.3"; protocol="application/pgp-signature"
+ boundary="Sig_/I4YBQgV0WXMHr3fJej0LjKC"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/0C_LC6pRRQm5+i5lV0X9G.3
+--Sig_/I4YBQgV0WXMHr3fJej0LjKC
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 24 Jan 2012 15:50:33 +1100
-Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+On Sat, 21 Jan 2012 02:08:34 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-> On Tue, 2012-01-24 at 15:25 +1100, Benjamin Herrenschmidt wrote:
->  .../...
+> We should not set the requested size to -2.
 >=20
-> > Or am I missing some important fact here ?
+> that will confuse the resource list sorting with align when SIZEALIGN is =
+used.
 >=20
-> Ok, I think I was missing pci_bridge_check_ranges(), gotta figure now
-> why this didn't kick in properly for me, probably some arch code
-> crackpot.
+> Change to STARTALIGN and pass align from start.
 >=20
-> One thing I noticed is that we do clear IORESOURCE_UNSET in setup-res.c
-> when setting up a device resource but we don't clear it for bridges in
-> generic code ever, so it leaks all the way through from my early arch
-> code. Not a big deal but annoying.
+> We are safe to do that just as we do that regular pci bridge.
+>=20
+> In the long run, we should just treat cardbus like regular pci bridge.
+>=20
+> Also fix when realloc is not passed, should keep the requested size.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Maybe you can fix that when you unify your arch resource handling code
-with the core one day. :)
-
-There have been a lot of changes to handle re-allocation and such, and
-I'm sure there's more duplication now...
+I'd like to see some testing on this one... Dominik?
 
 --=20
 Jesse Barnes, Intel Open Source Technology Center
 
---Sig_/0C_LC6pRRQm5+i5lV0X9G.3
+--Sig_/I4YBQgV0WXMHr3fJej0LjKC
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAEBAgAGBQJPIuC7AAoJEIEoDkX4Qk9h4S0QAL8t4l+FI69paZz8x9eQBemo
-o2D6aI+mgA+hOA8NE/11+1PuETJdut0HYwniYeKTmwtCmgg5LtexmmpWvbSEnke1
-oM4kazeuKjdheT1t7B6mjSqshzWS+t4f0PtCHMWhPfnM1Ia+eKuwIV7N6t6IsvfE
-7s/dD4jBoDgwpEVHmO+23zVT7oxQ2BEpEH265pd2DKdZfoEW6VJSnyDheBqMHuC/
-6hCCt+ItE8suVndFp+4+4cryo1KVfCbdJITK66sBeh0QQYQ1fuCJzNZS3wFyiOjG
-VHt8V+s5J9k6zn/B4C8lQEOniX2U8nmHujpsh0rosU8DTQZop2l7fEe1qgbnRjOK
-p7KF7biN88JvL+LXX0Zi7jUa1RluAAAIN/WF3hxNLLyCYNP6DHXobVEyQ++ZlTqa
-iSfnvPyHQeOFNOGMFOy9VOCRwXAnGJL5vCqs/HoAAeUcW4Ue1BRz29tGnniO+Ce8
-B7192+fVMfhIOAZBbvsaphuwIC2UYXOxiq3ZT6cGfTV29oct7Jc1D77o/Z5mS23i
-yrdwXRtulB7q6EPaxSGDFBWOp/AARyLBcrUG0hNmQFXbi0pXCP+nIC+2QZwi5ERH
-zyWwlbywpxsCLX9WD9CEH8iz9JoY1DJpwsI1kW+T9LMI/HDV0jnrSKyDJlPTp5ro
-PIqir2rYEcyAbIcIAjGw
-=8vZJ
+iQIcBAEBAgAGBQJPIuuPAAoJEIEoDkX4Qk9hnSIQAMsD+A35VK+u91iQPjPEjM99
+iXg2Ey6Aph8jJV/As0FsluOEGhOIYsSqPl/zCV8bvAT9RtdcWo7l+LFWs2bFy+gK
+A2w+KZH5hBLnFDF3Pr3wIUIsJufpqZhz2z+YtY1qZ8F3qRt3IDX6CMYZcAU38bHK
+bh2rT7sY2U3uBNpwcvyObnwMkoMW0WuAOm21oK2vBgJSJ6gEpS00dXn85sJb8GNT
+Cg06hN61G0l85kkN26Men1amLurq79BnNJGWEwIJIr+lNQrKJusq7KOL8aCwM0oV
+zF0eYGGN9NNYgBex0dxOUSeo/zOCOWcki3k1cNpJcc1e8OS4LP6cz0c96EtD2C6B
+ivC8hV83dP2X23qTLKpZSxb08S3F7nUbwUkZd40eNwyFUdWrqkj4mEfr50Rl+1+n
+sg7MTxIvoByJAWK0apFBv+BQT8LEfq+1hgn6DagG77kj3UWioadFmT1xIIp7APLR
+aPWem9mUMgwoyLTnO1QXsouXC/dJxVCa5q/g2qg+z3sBuSRUfzh+5GDxKY4w8cR1
+Al2VTt0PTRRQOduTgzyNhVFalGri6kWnt22kevtaO6sZpDVeIceWv0Sd7TUraa/K
+nQK2gJdVdS5Jk/ekrKJ/hciifQLC/0zzQDJ/b23HMQw8AAnp8lHBfH3GUMdPxxyk
+udDgfHsFmKI79vNt5WKp
+=Gbck
 -----END PGP SIGNATURE-----
 
---Sig_/0C_LC6pRRQm5+i5lV0X9G.3--
+--Sig_/I4YBQgV0WXMHr3fJej0LjKC--
