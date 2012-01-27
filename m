@@ -1,70 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:32932 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756976Ab2AKSBP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2012 13:01:15 -0500
-Received: by yenm10 with SMTP id m10so456746yen.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jan 2012 10:01:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+55aFz7OpwZuqu+f4AMpWjyjM7B-V2iAzpgROdg289RW8AE1w@mail.gmail.com>
-References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
-	<1323247984-15281-3-git-send-email-yinghai@kernel.org>
-	<20120106134915.705f5b47@jbarnes-desktop>
-	<CA+55aFwDSm=0qf3VmcocZa_jtkopxLpKxwtmXeNp4NJ3dyEQjA@mail.gmail.com>
-	<CAE9FiQVf1x1PggJpWundVJP6mchy5Gv4_MntRe_8c2RThd=zsQ@mail.gmail.com>
-	<CA+55aFz7OpwZuqu+f4AMpWjyjM7B-V2iAzpgROdg289RW8AE1w@mail.gmail.com>
-Date: Wed, 11 Jan 2012 10:01:14 -0800
-Message-ID: <CAE9FiQUEgtFidaHNSYnz61AoKFWVmjP4ryen9DgT8=cu+nM+SA@mail.gmail.com>
-Subject: Re: [PATCH 2/5] PCI: Try to assign required+option size at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:58023 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751985Ab2A0Ret (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 12:34:49 -0500
+Date: Fri, 27 Jan 2012 09:34:46 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] x86/PCI: don't fall back to defaults if _CRS has no
+ apertures
+Message-ID: <20120127093446.23955111@jbarnes-desktop>
+In-Reply-To: <20120118004121.1089.43631.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120118004027.1089.93781.stgit@bhelgaas.mtv.corp.google.com>
+	<20120118004121.1089.43631.stgit@bhelgaas.mtv.corp.google.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hvlKrr9=ngPUmIysc9x961r"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 10, 2012 at 10:20 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Sun, Jan 8, 2012 at 10:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>
->> Spent some time today, try to produce some patches according to your direction.
->>
->> Please check them to see if it is with your thoughts.
->
-> Get rid of "insert_list_before()". That's a particularly bad
-> implementation of "list_add_tail()", which we already have. And
-> list_add_tail() generates better code, and supports the proper full
-> list debugging.
->
-> (Think about it: adding something "before" an entry in a doubly-linked
-> circular list is the same as adding it at the tail of the list - it's
-> circular!)
+--Sig_/hvlKrr9=ngPUmIysc9x961r
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Indeed.  could just use list_add_tail instead.
+On Tue, 17 Jan 2012 17:41:21 -0700
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
->
-> The other patches look reasonable, but I only gave them a quick look.
+> Host bridges that lead to things like the Uncore need not have any
+> I/O port or MMIO apertures.  For example, in this case:
+>=20
+>     ACPI: PCI Root Bridge [UNC1] (domain 0000 [bus ff])
+>     PCI: root bus ff: using default resources
+>     PCI host bridge to bus 0000:ff
+>     pci_bus 0000:ff: root bus resource [io  0x0000-0xffff]
+>     pci_bus 0000:ff: root bus resource [mem 0x00000000-0x3fffffffffff]
+>=20
+> we should not pretend those default resources are available on bus ff.
 
+Applied to -next, let's see if this _CRS change breaks anything. :)
 
-> Although why is "free_list()" a #define rather than a real function
-> (apart from the obvious reason that it used to be that before too..)
->
-> Oh, and I just noticed that you fixed that in the "merge struct"
-> patch, which is good, except I think it would be much better to aim to
-> do *one* thing per patch, instead of mixing them up like that.
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-ok, will separate to another patch about free_list changes.
+--Sig_/hvlKrr9=ngPUmIysc9x961r
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
->
-> .. and when you merged the "_x" resource struct, you still left the
-> variables with the "_x" names.. Do you really need dev_res and
-> dev_res_x variables?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-sure,  will drop _x.
+iQIcBAEBAgAGBQJPIuA2AAoJEIEoDkX4Qk9h4MQP/iokIyX9WN4TP44TCpKI0kML
+H5JJMGJNHTYRtPrRjH7lDROhYsLVsbnywQObQ7eey6IDh3dPf3xa5MJJmM5MygG8
+0cVNr8Ma4YD1zo21DvHwZXam3Zb9+9wNqFoo7rwPvEpWgMmaPPX89/hdzz0XfDtX
+icRNIvWBTCMeIfoU5eEYn456y79mTwidlLdLU4PQXq3x/YVOzYVcsrhGquWE1w7x
+wpoeDTKD38WZZmek6cnx9BaTCp+SOOlg2yebrc6vhCiiZ8QfbKRP86bObxS9Twpr
+GumyKfdZMPpgxUVljksOA+W/TEI2Egjj5MN1L/cwZz7AdPqgvcHiMVLMDdAGDkIA
+BzkjxmsS3w2wU3QaxwSrVY5UqnmKB1/aXdY3eRGQwYy6IAldB1WfB//FRLiAV79W
+D3+vjbALa8iht2PLoqWn/YsBQ18fKdXlbArhm63l7IokPVIvWsKJ/aCsLimbMX+U
+SdyYsiQARGzYGDCeG8Z40fUdtFuOYiIAKcOf9r1fIfrTY5XIKnVxRC7t0z+Vr/Qn
++rOQY98TfSTrELhOp5hnd6a2+NtUKgpMUjsr65HS3csQR/myhsrYTPlty22VPjXJ
+V+mp1xhN2S+A7e95CigNXLgqt+ac+nz1xrGALFQKiRPKuYbiMR4FBgFNdwjKGcat
+irVObb8M1t1h7YPuamOD
+=Mck2
+-----END PGP SIGNATURE-----
 
-Thanks
-
-Yinghai
+--Sig_/hvlKrr9=ngPUmIysc9x961r--
