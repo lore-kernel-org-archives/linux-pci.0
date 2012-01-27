@@ -1,43 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ww0-f74.google.com ([74.125.82.74]:36858 "EHLO
-	mail-ww0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755426Ab2ARAe7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2012 19:34:59 -0500
-Received: by wgbgn7 with SMTP id gn7so111302wgb.1
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2012 16:34:58 -0800 (PST)
-Subject: [PATCH 0/4] add struct pci_host_bridge
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Tue, 17 Jan 2012 17:34:57 -0700
-Message-ID: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from cantor2.suse.de ([195.135.220.15]:48842 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750984Ab2A0JME (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Jan 2012 04:12:04 -0500
+From: Thomas Renninger <trenn@suse.de>
+To: jbarnes@virtuousgeek.org
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai.lu@oracle.com>,
+	trenn@suse.de, bhelgaas@google.com
+Subject: [PATCH] PCI: workaround hard-wired bus number
+Date: Fri, 27 Jan 2012 10:11:47 +0100
+Message-Id: <1327655507-33999-1-git-send-email-trenn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series adds a struct pci_host_bridge to track generic host bridge
-information like the bus numbers and resources available behind the
-host bridge.
+From: Yinghai Lu <yinghai.lu@oracle.com>
 
-The first use is to use the subordinate bus range to fix a problem in
-scanning behind bridges.  Currently, we'll try to scan a bus number
-that may not even be reachable via the current host bridge.  This
-can break devices because we assign the wrong resources to them
-(details in 3/3 changelog).
+Fixes PCI device detection on IBM xSeries IBM 3850 M2 / x3950 M2
+when using ACPI resources (_CRS).
+This is default, a manual workaround (without this patch)
+would be pci=nocrs boot param.
 
-This is intended for linux-next, not for the current merge window.
-
+Tested-by: garyhade@us.ibm.com
+CC: trenn@suse.de
+CC: bhelgaas@google.com
+Signed-off-by: Thomas Renninger <trenn@suse.de>
 ---
+ drivers/pci/probe.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Bjorn Helgaas (4):
-      PCI: log bridge reconfiguration information
-      PCI: add struct pci_host_bridge and pci_scan_host_bridge()
-      PCI: restrict subordinate buses to those reachable via host bridge
-      x86/PCI: use pci_create_host_bridge() so PCI core knows subordinate buses
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 7cc9e2f..1e255c8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -651,6 +651,10 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 	dev_dbg(&dev->dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
+ 		secondary, subordinate, pass);
+ 
++	/* some bridge primary bus is hard wired to 0 */
++	if (!primary && (primary != bus->number) && secondary && subordinate)
++		primary = bus->number;
++
+ 	/* Check if setup is sensible at all */
+ 	if (!pass &&
+ 	    (primary != bus->number || secondary <= bus->number)) {
+-- 
+1.7.6.1
 
-
- arch/x86/pci/acpi.c |    6 ++--
- drivers/pci/probe.c |   83 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h |   20 ++++++++++++
- 3 files changed, 106 insertions(+), 3 deletions(-)
