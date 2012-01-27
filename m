@@ -1,110 +1,129 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1325692766.2758.22.camel@dabdike.int.hansenpartnership.com>
-References: <CAJULonj9rFDKNCzpEXj2r3XjkYojy-CGYpVQ1RF8SxwLVrXqAA@mail.gmail.com>
-	<20120103203357.GD17472@phenom.dumpdata.com>
-	<CAJULongKix3QXmcoUcraQxCyLN0wz6oe6p5Efg2A7S_r3nO6Fg@mail.gmail.com>
-	<1325692766.2758.22.camel@dabdike.int.hansenpartnership.com>
-Date: Thu, 5 Jan 2012 20:40:47 +0800
-Message-ID: <CAJULoniAdLbyNUyrCYWbxOWAdB-Re-BxSNb0xfuFD8w6pDETWA@mail.gmail.com>
-Subject: =?UTF-8?Q?Re=3A_=E3=80=90Question=E3=80=91Whether_it=27s_legal_to_enable_same_?=
-	=?UTF-8?Q?physical_DMA_memory_mapped_for_different_NIC_device=3F?=
-From: Yanfei Wang <backyes@gmail.com>
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:40361 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753352Ab2A0Szh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:55:37 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/7] pciehp: Checking pci conf reading to new added device instead of sleep 1s
+Date: Fri, 27 Jan 2012 10:55:11 -0800
+Message-Id: <1327690515-2991-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327690515-2991-1-git-send-email-yinghai@kernel.org>
+References: <1327690515-2991-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 4, 2012 at 11:59 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Wed, 2012-01-04 at 10:44 +0800, Yanfei Wang wrote:
->> On Wed, Jan 4, 2012 at 4:33 AM, Konrad Rzeszutek Wilk
->> <konrad.wilk@oracle.com> wrote:
->> > On Wed, Dec 07, 2011 at 10:16:40PM +0800, ustc.mail wrote:
->> >> Dear all,
->> >>
->> >> In NIC driver, to eliminate the  overhead of dma_map_single() for DMA
->> >> packet data,  we have statically allocated huge DMA memory buffer ring
->> >> at once instead of calling dma_map_single() per packet.  Considering
->> >> to further reduce the copy overhead between different NIC(port) ring
->> >> while forwarding, one packet from a input NIC(port) will be
->> >> transferred to output NIC(port) with no any copy action.
->> >>
->> >> To satisfy this requirement, the packet memory should be mapped into
->> >> input port and unmapped when leaving input port, then mapped into
->> >> output port and unmapped later.
->> >>
->> >> Whether it's legal to map the same DMA memory into input and output
->> >> port simultaneously? If it's not, then the zero-copy for packet
->> >> forwarding is not feasible?
->> >>
->> >
->> > Did you ever a get a response about this?
->> No.
->
-> This is probably because no-one really understands what you're asking.
-> As far as mapping memory to PCI devices goes, it's the job of the bridge
-> (or the iommu which may or may not be part of the bridge).  A standard
-> iommu tends not to care about devices and functions, so a range once
-> mapped is available to everything behind the bridge.  A more secure
-> virtualisation based iommu (like the on in VT-D) does, and tends to map
-> ranges per device.  I know of none that map per device and function, but
-> maybe there are.
->
-> Your question reads like you have a range of memory mapped to a PCI
-> device that you want to use for two different purposes, can you do this?
-> to which the answer is that a standard PCI bridge really doesn't care
-> and it all depends on the mechanics of the actual device.  The only
-> wrinkle might be if the two different purposes are on two separate PCI
-> functions of the device and the iommu does care.
->
->> >
->> > Is the output/input port on a seperate device function? Or is it
->> > just a specific MMIO BAR in your PCI device?
->> >
->> Platform: x86, intel nehalem 8Core NUMA, linux 2.6.39, 10G
->> 82599NIC(two ports per NIC card);
->> Function: Forwarding packets between different ports.
->> Targets: Forwarding packets with Zero-Overhead, despite other obstacles.
-Besides hardware and OS presented above, more detailed descriptions as follows,
+During reviewing
+|	PCI: pciehp: wait 1000 ms before Link Training check
+Linus said:
+>...
+> That's a *long* time, and it's irritating to the user. It makes the
+> user think "the machine is slow".
+>...
+> And quite frankly, an unconditional one-second delay here seems bad.
+>Two seconds was unacceptable, one second is just bad.
 
-When IXGBE driver do initialization, DMA Descriptors Ring Buffers are
-allocated statically and mapped as cache coherent. Instead of
-dynamically allocating skb buffers for packet data, to reduce the huge
-overhead from skb memory allocation, huge Packet data buffers are
-pre-allocated and mapped  when driver is loaded. The same strategy  is
-done for RX end and TX end.
-For simple packet forwarding application, one packet from RX should be
-replicated from kernel space to userspace, then copied TX end. Here,
-One packet at least, should be copied twice to accomplish forwarding.
-When doing high performance network application,  the copy action want
-to be reduced. If Zero-copy can be done, that's better. (May be you
-will find that Zero-copy will bring other obstacles, such as memory
-management overhead with high performance. We do not care about it
-temporally.)
-To achieve this goal, a alternative approach is that,  unmapping the
-packets buffer after receiving it from A device, then mapping this
-packet buffer to B device. We hope to reduce the two mapping
-operation, so one packet DMA buffer should be mapped to A device(NIC
-port) as well as B device simultaneously.
-Q: Can this come to ture? Is it legal for mmaping operation at this platform?
+Try to access the pci conf of pci device that is supposed to show up in 1s,
+if could read back valid vender/device id, could bail out early.
 
-Thanks.
+Related discussion could be found:
+	https://lkml.org/lkml/2011/12/6/339
 
-Yanfei
+-v2: seperate code to pci_bus_read_dev_vendor_id() from pci_scan_device()
+    and reuse it from pciehp code. Suggested by Matthew Wilcox.
+-v3: According to Kenj, don't use array in stack, and don't wait too long
+    for crs, also return fail status if not found.
+    Also separate pci_bus_dev_read_vendor_id() change to another patch.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |   49 ++++++++++++++++++++++++++-----------
+ 1 files changed, 34 insertions(+), 15 deletions(-)
 
->
-> This still doesn't really provide the information needed to elucidate
-> the question.
->
-> James
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 7b14148..ad8c1be 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -265,10 +265,37 @@ static void pcie_wait_link_active(struct controller *ctrl)
+ 	ctrl_dbg(ctrl, "Data Link Layer Link Active not set in 1000 msec\n");
+ }
+ 
++static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
++{
++	u32 l;
++	int count = 0;
++	int delay = 1000, step = 20;
++	bool found = false;
++
++	do {
++		found = pci_bus_read_dev_vendor_id(bus, devfn, &l, 0);
++		count++;
++
++		if (found)
++			break;
++
++		msleep(step);
++		delay -= step;
++	} while (delay > 0);
++
++	if (count > 1 && pciehp_debug)
++		printk(KERN_DEBUG "pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms to get %08x\n",
++			pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
++			PCI_FUNC(devfn), count, step, l);
++
++	return found;
++}
++
+ int pciehp_check_link_status(struct controller *ctrl)
+ {
+ 	u16 lnk_status;
+ 	int retval = 0;
++	bool found = false;
+ 
+         /*
+          * Data Link Layer Link Active Reporting must be capable for
+@@ -280,13 +307,10 @@ int pciehp_check_link_status(struct controller *ctrl)
+         else
+                 msleep(1000);
+ 
+-	/*
+-	 * Need to wait for 1000 ms after Data Link Layer Link Active
+-	 * (DLLLA) bit reads 1b before sending configuration request.
+-	 * We need it before checking Link Training (LT) bit becuase
+-	 * LT is still set even after DLLLA bit is set on some platform.
+-	 */
+-	msleep(1000);
++	/* wait 100ms before read pci conf, and try in 1s */
++	msleep(100);
++	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
++					PCI_DEVFN(0, 0));
+ 
+ 	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status);
+ 	if (retval) {
+@@ -302,16 +326,11 @@ int pciehp_check_link_status(struct controller *ctrl)
+ 		return retval;
+ 	}
+ 
+-	/*
+-	 * If the port supports Link speeds greater than 5.0 GT/s, we
+-	 * must wait for 100 ms after Link training completes before
+-	 * sending configuration request.
+-	 */
+-	if (ctrl->pcie->port->subordinate->max_bus_speed > PCIE_SPEED_5_0GT)
+-		msleep(100);
+-
+ 	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
+ 
++	if (!found && !retval)
++		retval = -1;
++
+ 	return retval;
+ }
+ 
+-- 
+1.7.7
+
