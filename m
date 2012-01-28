@@ -1,71 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 27 Jan 2012 10:29:41 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:26529 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753810Ab2A1CuB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 21:50:01 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: Add iobusn_resource and insert root bus range
- to that tree.
-Message-ID: <20120127102941.22eb826f@jbarnes-desktop>
-In-Reply-To: <1327360018-10929-2-git-send-email-yinghai@kernel.org>
-References: <1327360018-10929-1-git-send-email-yinghai@kernel.org>
-	<1327360018-10929-2-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/QdF18X9l4Bvr7ZErsM=vlQr"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 12/13] PCI: kill pci_fixup_parent_subordinate_busnr()
+Date: Fri, 27 Jan 2012 18:49:30 -0800
+Message-Id: <1327718971-9598-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/QdF18X9l4Bvr7ZErsM=vlQr
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Now we can safely extend parent top and shrink them according iobusn_resource tree.
 
-On Mon, 23 Jan 2012 15:06:55 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Don't need that any more.
 
-> now only root bus number range is in that tree.
->=20
-> later every bus will have extra busn_res, and linked them toghter to iobu=
-sn_resource.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   45 +++++++++------------------------------------
+ 1 files changed, 9 insertions(+), 36 deletions(-)
 
-This needs to be split into at least a few patches:
-  - one to add the bus resource tracking infrastructure to the core
-  - one to add tracking to the core
-  - one patch per arch
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 23c2f0d..54615a9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -608,22 +608,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
+ 	return child;
+ }
+ 
+-static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
+-{
+-	struct pci_bus *parent = child->parent;
+-
+-	/* Attempts to fix that up are really dangerous unless
+-	   we're going to re-assign all bus numbers. */
+-	if (!pcibios_assign_all_busses())
+-		return;
+-
+-	while (parent->parent && parent->subordinate < max) {
+-		parent->subordinate = max;
+-		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
+-		parent = parent->parent;
+-	}
+-}
+-
+ static void __devinit pci_bus_extend_top(struct pci_bus *parent,
+ 		 resource_size_t size, struct resource *parent_res)
+ {
+@@ -925,6 +909,13 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		/* Clear errors */
+ 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
+ 
++		/*
++		 * For CardBus bridges, we leave 4 bus numbers
++		 * as cards with a PCI-to-PCI bridge can be
++		 * inserted later.
++		 * other just allocate 8 bus to avoid we fall into
++		 *  small hole in the middle.
++		 */
+ 		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
+ 				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
+ 				&parent_res);
+@@ -963,29 +954,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ 		if (!is_cardbus) {
+ 			child->bridge_ctl = bctl;
+-			/*
+-			 * Adjust subordinate busnr in parent buses.
+-			 * We do this before scanning for children because
+-			 * some devices may not be detected if the bios
+-			 * was lazy.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
++
+ 			/* Now we can scan all subordinate buses... */
+ 			max = pci_scan_child_bus(child);
+-			/*
+-			 * now fix it up again since we have found
+-			 * the real value of max.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+-
+-		} else {
+-			/*
+-			 * For CardBus bridges, we leave 4 bus numbers
+-			 * as cards with a PCI-to-PCI bridge can be
+-			 * inserted later.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+ 		}
++
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
+-- 
+1.7.7
 
-and acks and tested-bys from the arch folks.
-
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/QdF18X9l4Bvr7ZErsM=vlQr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIu0VAAoJEIEoDkX4Qk9hfHkQAK0kfm2pKxZ9WFHknfCbUn3u
-zz7VNX3gma6TakbEYSb/Ywlu7m580NR0uPPsicr2GFZyXwHQGVSfclND9PqUaZcP
-f3TDaue4TXloK/py1X60qYZlyhp1aLVw0zezqiS90a1ebsSYGdqcLqX1wAFKi1l6
-sgvqoyUqP4y48/wStT5FxDUJAVAr7T6UMiUj6Xu6k0WtWDofCW9UqY9Fy+4DGlZL
-ZQas4DnUUQkWMKXH2QF8uhdMZ8+MaaiL1Igv2ioIGiV4YOhTIWrPnPXlD1CqmOrs
-C/piFYc7AicsUf1bsvaye+U4TfwKkesEIfsS17mBWcvhUU+bNg91ZWRNpZaMX7T8
-v5OwrpVQogDZMhwqYRke6TG19r2a4OEuOmmS+tH11/gJHyf06JnxWhqfMd/QShM2
-qY/eaRhqBBh4tpzZHCJw9RTg95dRWJlfXB6OnHLdT+voi513nepXuJ1EzGRaK3HX
-gJrnQvfKVno5yrvYRIG/UCXYOLs7IPuYqUOGnwv2S4ySOks4PHHb+1Fxz+jWgGpP
-fHFG2MAh2T5ynNOLoqAFFa67av2qSjSLUIrxDPcC7xSnBgLZMqtRQBsOR6wENx7q
-7vYIDV9HKIBRPluxTUb0TE2w1di7qxszYn+dzKUdyYxymZr8u26MUOgsqa1jBwCC
-v2g3+uMijqKsPEHALzx5
-=x2h/
------END PGP SIGNATURE-----
-
---Sig_/QdF18X9l4Bvr7ZErsM=vlQr--
