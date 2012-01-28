@@ -1,72 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:40542 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755683Ab2AIPNT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 10:13:19 -0500
-Date: Mon, 9 Jan 2012 10:11:24 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Ian Campbell <Ian.Campbell@citrix.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
- to include domain id.
-Message-ID: <20120109151124.GE25563@phenom.dumpdata.com>
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
- <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
- <4F06C101020000780006AC32@nat28.tlf.novell.com>
- <20120106150338.GB5855@phenom.dumpdata.com>
- <1325865086.25206.512.camel@zakaz.uk.xensource.com>
- <20120106160011.GD6125@phenom.dumpdata.com>
- <20120106221927.GA10248@phenom.dumpdata.com>
- <1326102657.17210.11.camel@zakaz.uk.xensource.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1326102657.17210.11.camel@zakaz.uk.xensource.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 01/13] PCI: Add iobusn_resource
+Date: Fri, 27 Jan 2012 18:49:19 -0800
+Message-Id: <1327718971-9598-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 09, 2012 at 09:50:57AM +0000, Ian Campbell wrote:
-> On Fri, 2012-01-06 at 22:19 +0000, Konrad Rzeszutek Wilk wrote:
-> > > > I suppose you might want "Overriding ownership to dom%d".
-> > > 
-> > > OK. To the point and potentially can fit in 80 lines :-).
-> > 
-> > how about this?
-> > > 
-> > From a3d4a80cdfd4274016522572148a89260b3f3de6 Mon Sep 17 00:00:00 2001
-> > From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > Date: Wed, 4 Jan 2012 14:16:45 -0500
-> > Subject: [PATCH] xen/pciback: Expand the warning message to include domain
-> >  id.
-> > 
-> > When a PCI device is transferred to another domain and it is still
-> > in usage (from the internal perspective), mention which other
-> > domain is using it to aid in debugging.
-> > 
-> > [v2: Truncate the verbose message per Jan Beulich suggestion]
-> > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > ---
-> >  drivers/xen/xen-pciback/xenbus.c |    4 ++--
-> >  1 files changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-> > index 474d52e..2405a24 100644
-> > --- a/drivers/xen/xen-pciback/xenbus.c
-> > +++ b/drivers/xen/xen-pciback/xenbus.c
-> > @@ -243,8 +243,8 @@ static int xen_pcibk_export_device(struct xen_pcibk_device *pdev,
-> >  	dev_dbg(&dev->dev, "registering for %d\n", pdev->xdev->otherend_id);
-> >  	if (xen_register_device_domain_owner(dev,
-> >  					     pdev->xdev->otherend_id) != 0) {
-> > -		dev_err(&dev->dev, "device has been assigned to another " \
-> > -			"domain! Over-writting the ownership, but beware.\n");
-> > +		dev_err(&dev->dev, "Overriding ownership to dom%d.\n",
-> > +			xen_find_device_domain_owner(dev));
-> 
-> That sounds like you are going to be assigning the ownership to that
-> dom, but xen_find_device_domain_owner so aren't you actually steeling
-> ownership from that domain?
+also add busn_res into struct pci_bus.
 
-Duh! I will do s/to/from/
+will use them to have bus number resource tree.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ include/linux/ioport.h |    1 +
+ include/linux/pci.h    |    1 +
+ kernel/resource.c      |    8 ++++++++
+ 3 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index e885ba2..6fe9e19 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -136,6 +136,7 @@ struct resource {
+ /* PC/ISA/whatever - the normal PC address spaces: IO and memory */
+ extern struct resource ioport_resource;
+ extern struct resource iomem_resource;
++extern struct resource iobusn_resource;
+ 
+ extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
+ extern int request_resource(struct resource *root, struct resource *new);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f8caaab..94ad468 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -419,6 +419,7 @@ struct pci_bus {
+ 	struct list_head slots;		/* list of slots on this bus */
+ 	struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
+ 	struct list_head resources;	/* address space routed to this bus */
++	struct resource busn_res;	/* track registered bus num range */
+ 
+ 	struct pci_ops	*ops;		/* configuration access functions */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 7640b3a..53b42f0 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -38,6 +38,14 @@ struct resource iomem_resource = {
+ };
+ EXPORT_SYMBOL(iomem_resource);
+ 
++struct resource iobusn_resource = {
++	.name	= "PCI busn",
++	.start	= 0,
++	.end	= 0xffffff,
++	.flags	= IORESOURCE_BUS,
++};
++EXPORT_SYMBOL(iobusn_resource);
++
+ /* constraints to be met while allocating resources */
+ struct resource_constraint {
+ 	resource_size_t min, max, align;
+-- 
+1.7.7
+
