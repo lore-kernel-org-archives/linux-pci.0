@@ -1,68 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from server1.meinberg.de ([85.10.202.66]:41632 "EHLO
-	server1.meinberg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755729Ab2ARS1Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2012 13:27:16 -0500
-Message-ID: <4F170F01.9090602@meinberg.de>
-Date: Wed, 18 Jan 2012 19:27:13 +0100
-From: Martin Burnicki <martin.burnicki@meinberg.de>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org
-Subject: Re: PCI card not accessible; I/O ports at <ignored>
-References: <4F16EA07.4000607@meinberg.de> <CAErSpo6Ei=XgWTXp6f=UgY90QA78fSVMaJ8Gf7NvF5fMiPX12w@mail.gmail.com>
-In-Reply-To: <CAErSpo6Ei=XgWTXp6f=UgY90QA78fSVMaJ8Gf7NvF5fMiPX12w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 04/13] PCI, x86: Register busn_res for root buses
+Date: Fri, 27 Jan 2012 18:49:22 -0800
+Message-Id: <1327718971-9598-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> On Wed, Jan 18, 2012 at 8:49 AM, Martin Burnicki
-> <martin.burnicki@meinberg.de>  wrote:
->> Hi folks,
->>
->> I'm maintaining the driver software for the PCI cards manufactured by our
->> company, Meinberg Funkuhren in Germany. Basically our Linux driver supports
->> all our PCI cards on all Linux kernels 2.6.x and 3.x. The PCI cards are e.g.
->> GPS receivers, radio clocks, or IRIG time code receivers.
->>
->> Recently I've run into a problem with our PCI Express cards in a certain
->> server PC: There are 8 PCI Express slots on the mainboard, and in some of
->> the slots the cards work properly, but in some other slots on the same
->> machine they don't work since the cards are not accessible by the kernel
->> driver.
->>
->> In cases where the cards are not accessible lspci -v reports
->> for the I/O base address 0:
->>
->>   Region 0: I/O ports at<ignored>
->
->  From the lspci source (http://mj.ucw.cz/sw/pciutils/), it looks like
-> this happens when the BAR contains zero.
->
->> Finally I tried different Linux distributions with different kernel versions
->> and found that the same card in the same slot with the same driver works
->> properly under kernel 2.6.32 and earlier, but doesn't work anymore under
->> kernel 2.6.36 and later, including kernel 3.1.4. So there must have been
->> some code changes in the newer kernel versions which prevent the card from
->> being accessed via I/O, and let lspci say "I/O ports at<ignored>".
->
-> Please open a bug report at http://bugzilla.kernel.org, category
-> Drivers/PCI, mark it as a regression, add me to the CC: list, and
-> attach complete dmesg logs from 2.6.32 and 3.1.4 with the card in the
-> slot that no longer works.
->
-> Bjorn
+update x86_pci_root_bus_resources() to get bus_max for non-acpi case.
 
-Thanks for your reply. I've just sent a lengthy explanation to this list ;-)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/topology.h |    3 ++-
+ arch/x86/pci/acpi.c             |    8 +++++---
+ arch/x86/pci/bus_numa.c         |    8 +++++++-
+ arch/x86/pci/common.c           |   11 +++++++----
+ 4 files changed, 21 insertions(+), 9 deletions(-)
 
-I'll care about the bug report tomorrow.
-
-
-Martin
+diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
+index b9676ae..ad4060e 100644
+--- a/arch/x86/include/asm/topology.h
++++ b/arch/x86/include/asm/topology.h
+@@ -172,7 +172,8 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
+ }
+ 
+ struct pci_bus;
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources);
++void x86_pci_root_bus_resources(int bus, int *bus_max,
++				struct list_head *resources);
+ 
+ #ifdef CONFIG_SMP
+ #define mc_capable()	((boot_cpu_data.x86_max_cores > 1) && \
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index daa4249..b25b5b1 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -348,6 +348,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct acpi_device *device = root->device;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
++	int busmax = root->secondary.end;
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+@@ -410,12 +411,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+ 		if (!pci_use_crs)
+-			x86_pci_root_bus_resources(busnum, &resources);
++			x86_pci_root_bus_resources(busnum, &busmax, &resources);
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+-		if (bus)
++		if (bus) {
++			pci_bus_insert_busn_res(bus, busnum, busmax);
+ 			bus->subordinate = pci_scan_child_bus(bus);
+-		else
++		} else
+ 			pci_free_resource_list(&resources);
+ 	}
+ 
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index fd3f655..5213cd8 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -7,7 +7,8 @@
+ int pci_root_num;
+ struct pci_root_info pci_root_info[PCI_ROOT_NR];
+ 
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources)
++void x86_pci_root_bus_resources(int bus, int *bus_max,
++				struct list_head *resources)
+ {
+ 	int i;
+ 	int j;
+@@ -28,6 +29,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	       bus);
+ 
+ 	info = &pci_root_info[i];
++	*bus_max = info->bus_max;
+ 	for (j = 0; j < info->res_num; j++) {
+ 		struct resource *res;
+ 		struct resource *root;
+@@ -51,6 +53,10 @@ default_resources:
+ 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
+ 	pci_add_resource(resources, &ioport_resource);
+ 	pci_add_resource(resources, &iomem_resource);
++	if (!bus)
++		*bus_max = 0xff;
++	else if (!*bus_max)
++		*bus_max = bus;
+ }
+ 
+ void __devinit update_res(struct pci_root_info *info, resource_size_t start,
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 323481e..ce0aefc 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -433,6 +433,7 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+ 	struct pci_sysdata *sd;
++	int bus_max;
+ 
+ 	while ((bus = pci_find_next_bus(bus)) != NULL) {
+ 		if (bus->number == busnum) {
+@@ -454,8 +455,9 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 	sd->node = get_mp_bus_to_node(busnum);
+ 
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+-	x86_pci_root_bus_resources(busnum, &resources);
+-	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
++	x86_pci_root_bus_resources(busnum, &bus_max, &resources);
++	bus = pci_scan_root_bus_max(NULL, busnum, bus_max, &pci_root_ops, sd,
++				&resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
+@@ -643,6 +645,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+ 	struct pci_sysdata *sd;
++	int bus_max;
+ 
+ 	/*
+ 	 * Allocate per-root-bus (not per bus) arch-specific data.
+@@ -655,8 +658,8 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 		return NULL;
+ 	}
+ 	sd->node = node;
+-	x86_pci_root_bus_resources(busno, &resources);
+-	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
++	x86_pci_root_bus_resources(busno, &bus_max, &resources);
++	bus = pci_scan_root_bus_max(NULL, busno, bus_max, ops, sd, &resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
 -- 
-Martin Burnicki
+1.7.7
 
-Meinberg Funkuhren
-Bad Pyrmont
-Germany
