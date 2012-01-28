@@ -1,84 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:48112 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759112Ab2AFUq4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 15:46:56 -0500
-Date: Fri, 6 Jan 2012 12:46:49 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [git pull] PCI fixes
-Message-ID: <20120106124649.146001d6@jbarnes-desktop>
-In-Reply-To: <CA+55aFz7j8ipEn7e0dGnrG4dskyRiBOx0-ExAx3qnH_cR5mLQw@mail.gmail.com>
-References: <20111217092935.2c2e075e@jbarnes-desktop>
-	<CAE9FiQWueS=9aSAH4fLz=EpE=A_WanKU6pbfnR2a4gsymWjnDA@mail.gmail.com>
-	<dfbb748b-b9de-4390-bb8d-138fc4c5734f@email.android.com>
-	<CA+55aFz7j8ipEn7e0dGnrG4dskyRiBOx0-ExAx3qnH_cR5mLQw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/FpCkH/x/=WSxyVX_t5/_6UZ"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [PATCH 05/13] PCI, ia64: Register busn_res for root buses
+Date: Fri, 27 Jan 2012 18:49:23 -0800
+Message-Id: <1327718971-9598-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/FpCkH/x/=WSxyVX_t5/_6UZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-On Sun, 18 Dec 2011 14:14:13 -0800
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index f82f5d4..936b2f1 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -331,6 +331,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct acpi_device *device = root->device;
+ 	int domain = root->segment;
+ 	int bus = root->secondary.start;
++	int busmax = root->secondary.end;
+ 	struct pci_controller *controller;
+ 	unsigned int windows = 0;
+ 	struct pci_root_info info;
+@@ -384,6 +385,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		return NULL;
+ 	}
+ 
++	pci_bus_insert_busn_res(pbus, busnum, busmax);
+ 	pbus->subordinate = pci_scan_child_bus(pbus);
+ 	return pbus;
+ 
+-- 
+1.7.7
 
-> On Sat, Dec 17, 2011 at 9:52 PM, Jesse Barnes <jbarnes@virtuousgeek.org> =
-wrote:
-> >
-> > Crap, and after you guys spent so long coming up with a clean version.
-> >
-> > Linus, can you just apply this one on top? I think it's the one Yinghai=
- and Ram agreed to.
->=20
-> Ok, applied, but I have to say that I hate it.
->=20
-> Why don't we just move the stupid iov indexes to the end, and then
-> ignore them by not counting through them in
-> __pci_enable_device_flags()? So the regular PCI code would always walk
-> through the resources 0 .. PCI_BRIDGE_RESOURCES_END or something. And
-> then the magic IOV code could look at its own ones that the generic
-> code apparently doesn't even want to know about.
->=20
-> Hmm?
-
-There was some talk awhile back of pulling the SR-IOV resources out of
-the pci_dev resource array (adding a separate member to track them only
-if CONFIG_PCI_IOV is enabled), that would probably be the way to go.
-Then fix up whatever resource walking code that cares about IOV BARs
-(there isn't much I think).
-
-Any thoughts Yinghai?
-
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/FpCkH/x/=WSxyVX_t5/_6UZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPB125AAoJEIEoDkX4Qk9hAw4P/1f9b22hEWv/dlQG+sFO3vga
-j+g3S9aK0RWYwtc+GXgDYZIzqpwgCSHcCptpQKJlmI3uvTPX6v7B1KjU/HHLPyJ9
-8RdtFAeP+iVo8dQWrked1BVdQRMh39Tc8k2byyBr7t5FLyQh7Uu4BLDNxw7WmSPK
-UALkRUdtuJcnvtI9hnDFG+MeHZaf6nIrwksQwKX5MzXBh1YflgfjuL6lwhtrEgxq
-LO2yzPDzbRAYAt0Yo+2WIwYpk4sA5Yp52k0PXFR+IA6saY+ZvsSfeqHSnWBTu2lq
-gu9KqoZIL4xtzycwS8FWVVPRSCvZ1PBIuIsEbWUQJ1mGtDsJHopi3B4CUsRPmhi0
-TbhWwPltbG4dU7oKleHW0u3QBxzxBFwxBCZKNdXGyAcUXzNW0u39AddgHk+ssrBn
-h0wUHtfurtfw6hlFYxsc3sDUVsmpXfvNV2LYCPhkvTfdPnLB1lFdwX2ZPtf1/NOe
-8JNskSHfEQ3w1Vg8CbAvw+Yser//IiI6gPwgG1mlo/tE3eSymLj8ddaaBkyPi08U
-TI8VOKiPtq5LDgy0/P9EFkfz+332bvlRFL+/ZZexlmmgNxkh0cOqQleU6DHSO89n
-ZIvCnaN7HOeffPa6fOpwyPGwsaAmIrgsqIOTKe6TX4DQMtTvwWpBgCg889c++xS8
-YyKxd7C76UG36mZv3UU8
-=BNoN
------END PGP SIGNATURE-----
-
---Sig_/FpCkH/x/=WSxyVX_t5/_6UZ--
