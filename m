@@ -1,77 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:40358 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753330Ab2A0Szh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 13:55:37 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Yinghai Lu <yinghai.lu@oracle.com>
-Subject: [PATCH 6/7] pciehp: Add Disable/enable link functions
-Date: Fri, 27 Jan 2012 10:55:14 -0800
-Message-Id: <1327690515-2991-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327690515-2991-1-git-send-email-yinghai@kernel.org>
-References: <1327690515-2991-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 10/13] PCI: Strict checking of valid range for bridge
+Date: Fri, 27 Jan 2012 18:49:28 -0800
+Message-Id: <1327718971-9598-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will use it during power off/on slots
+children bridges busn range should be able to be allocated from parent bus range.
 
-Signed-off-by: Yinghai Lu <yinghai.lu@oracle.com>
+to avoid overlapping between sibling bridges on same bus.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/hotplug/pciehp_hpc.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 36 insertions(+), 0 deletions(-)
+ drivers/pci/probe.c |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index ea54aef..fdab8a6 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -352,6 +352,42 @@ int pciehp_check_link_status(struct controller *ctrl)
- 	return retval;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 83df3fb..e12f65f0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -791,6 +791,33 @@ reduce_needed_size:
+ 	return ret;
  }
  
-+static int __pciehp_link_set(struct controller *ctrl, bool enable)
++static int __devinit pci_bridge_check_busn_res(struct pci_bus *bus,
++				struct pci_dev *dev,
++				int secondary, int subordinate)
 +{
-+	u16 lnk_ctrl;
-+	int retval = 0;
++	int broken = 0;
 +
-+	retval = pciehp_readw(ctrl, PCI_EXP_LNKCTL, &lnk_ctrl);
-+	if (retval) {
-+		ctrl_err(ctrl, "Cannot read LNKCTRL register\n");
-+		return retval;
-+	}
++	struct resource busn_res;
++	int ret;
 +
-+	if (enable)
-+		lnk_ctrl &= ~PCI_EXP_LNKCTL_LD;
++	memset(&busn_res, 0, sizeof(struct resource));
++	dev_printk(KERN_DEBUG, &dev->dev,
++		 "check if busn %02x-%02x is in busn_res: %06llx-%06llx\n",
++		 secondary, subordinate,
++		 (unsigned long long)bus->busn_res.start,
++		 (unsigned long long)bus->busn_res.end);
++	ret = allocate_resource(&bus->busn_res, &busn_res,
++			 (subordinate - secondary + 1),
++			 (pci_domain_nr(bus)<<8) | secondary,
++			 (pci_domain_nr(bus)<<8) | subordinate,
++			 1, NULL, NULL);
++	if (ret)
++		broken = 1;
 +	else
-+		lnk_ctrl |= PCI_EXP_LNKCTL_LD;
++		release_resource(&busn_res);
 +
-+	retval = pciehp_writew(ctrl, PCI_EXP_LNKCTL, lnk_ctrl);
-+	if (retval) {
-+		ctrl_err(ctrl, "Cannot write LNKCTRL register\n");
-+		return retval;
-+	}
-+	ctrl_dbg(ctrl, "%s: lnk_ctrl = %x\n", __func__, lnk_ctrl);
-+
-+	return retval;
++	return broken;
 +}
-+
-+static int pciehp_link_enable(struct controller *ctrl)
-+{
-+	return __pciehp_link_set(ctrl, true);
-+}
-+
-+static int pciehp_link_disable(struct controller *ctrl)
-+{
-+	return __pciehp_link_set(ctrl, false);
-+}
-+
- int pciehp_get_attention_status(struct slot *slot, u8 *status)
- {
- 	struct controller *ctrl = slot->ctrl;
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
 -- 
 1.7.7
 
