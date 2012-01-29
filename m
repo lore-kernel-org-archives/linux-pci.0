@@ -1,160 +1,128 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [RFC PATCH v1 10/18] microblaze/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, Michal Simek <monstr@monstr.eu>
-Date: Mon, 30 Jan 2012 09:58:00 -0700
-Message-ID: <20120130165800.3231.42814.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:51341 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495Ab2A2NLy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jan 2012 08:11:54 -0500
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <svaidy@linux.vnet.ibm.com>;
+	Sun, 29 Jan 2012 18:41:50 +0530
+Date: Sun, 29 Jan 2012 18:41:39 +0530
+From: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
+ sriov_init
+Message-ID: <20120129131139.GA19049@dirshya.in.ibm.com>
+Reply-To: svaidy@linux.vnet.ibm.com
+References: <20120127191032.GA22999@dirshya.in.ibm.com>
+ <CAE9FiQVKLmrryoOhyjr_rGucGGZLW=PSD=s_AjW0Za6vHCvOtg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQVKLmrryoOhyjr_rGucGGZLW=PSD=s_AjW0Za6vHCvOtg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+* Yinghai Lu <yinghai@kernel.org> [2012-01-27 13:05:41]:
 
-N.B. We might need to tweak the I/O range and offset to account for the
-32-bit mask previously used in pcibios_resource_to_bus().  I don't
-know the details of this mapping.  If anybody can help me test and
-fix this, please let me know.
+> On Fri, Jan 27, 2012 at 11:10 AM, Vaidyanathan Srinivasan
+> <svaidy@linux.vnet.ibm.com> wrote:
+> > Hi Ram and Jesse,
+> >
+> > I found a trivial issue with page size alignment check on IBM POWER
+> > box with 64k base page size.  In sriov_init(), changing the check from
+> > PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
+> > required to use one of the sriov adapter as PF since the
+> > resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
+> > pseries boxes.
+> >
+> > I think resource_size() could be less than SystemPageSize, but I would
+> > like your comments/ack/nack on any consequences of checking for only
+> > 4k alignment here in a system with larger base page size.
+> >
+> > Thanks,
+> > Vaidy
+> >
+> > ---
+> >
+> >    pci: check for 4k resource_size alignment in sriov_init
+> >
+> >    pci sriov_init should check for 4k page size alignment of resource_size
+> >    even if base page size is larger -- like 64k in powerpc.
+> >
+> >    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+> >
+> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > index 0321fa3..5816fa0 100644
+> > --- a/drivers/pci/iov.c
+> > +++ b/drivers/pci/iov.c
+> > @@ -474,7 +474,7 @@ found:
+> >                                     pos + PCI_SRIOV_BAR + i * 4);
+> >                if (!res->flags)
+> >                        continue;
+> > -               if (resource_size(res) & (PAGE_SIZE - 1)) {
+> > +               if (resource_size(res) & (HW_PAGE_SIZE - 1)) {
+> >                        rc = -EIO;
+> >                        goto failed;
+> >                }
+> >
+> 
+> but HW_PAGE_SIZE is only defined for powerpc.
 
-CC: Michal Simek <monstr@monstr.eu>
+My bad, I picked the #define used in other powerpc code.
+
+> also there is PAGE_SHIFT around in that function.
+
+This gets defined correctly if CONFIG_PPC_64K_PAGES=y.  But the actual
+problem is the need for a generic 4K #define for x86 and other archs.
+
+> maybe you can just define another MARCO according to IOV spec?
+
+This is a good idea.  I could not find an IOV specific requirement.
+The resource size has to be a multiple of 4K so that the overall
+resource-size() * PCI_SRIOV_TOTAL_VF will be a multiple of 4K or more.
+
+Let me share a patch that has a simple #define in drivers/pci/pci.h,
+which is needed to get SRIOV cards started on powerpc box.
+
+--Vaidy
+
 ---
- arch/microblaze/include/asm/pci.h |    8 +---
- arch/microblaze/pci/pci-common.c  |   69 ++-----------------------------------
- 2 files changed, 4 insertions(+), 73 deletions(-)
 
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index 0331376..8db01f7 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -94,13 +94,7 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
-  */
- #define PCI_DMA_BUS_IS_PHYS     (1)
- 
--extern void pcibios_resource_to_bus(struct pci_dev *dev,
--			struct pci_bus_region *region,
--			struct resource *res);
--
--extern void pcibios_bus_to_resource(struct pci_dev *dev,
--			struct resource *res,
--			struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline struct resource *pcibios_select_root(struct pci_dev *pdev,
- 			struct resource *res)
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 85f2ac1..a9fa875 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -840,59 +840,6 @@ int pci_proc_domain(struct pci_bus *bus)
- 	return 1;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	resource_size_t offset = 0, mask = (resource_size_t)-1;
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--
--	if (!hose)
--		return;
--	if (res->flags & IORESOURCE_IO) {
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		mask = 0xffffffffu;
--	} else if (res->flags & IORESOURCE_MEM)
--		offset = hose->pci_mem_offset;
--
--	region->start = (res->start - offset) & mask;
--	region->end = (res->end - offset) & mask;
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	resource_size_t offset = 0, mask = (resource_size_t)-1;
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--
--	if (!hose)
--		return;
--	if (res->flags & IORESOURCE_IO) {
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		mask = 0xffffffffu;
--	} else if (res->flags & IORESOURCE_MEM)
--		offset = hose->pci_mem_offset;
--	res->start = (region->start + offset) & mask;
--	res->end = (region->end + offset) & mask;
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
--/* Fixup a bus resource into a linux resource */
--static void __devinit fixup_resource(struct resource *res, struct pci_dev *dev)
--{
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	resource_size_t offset = 0, mask = (resource_size_t)-1;
--
--	if (res->flags & IORESOURCE_IO) {
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		mask = 0xffffffffu;
--	} else if (res->flags & IORESOURCE_MEM)
--		offset = hose->pci_mem_offset;
--
--	res->start = (res->start + offset) & mask;
--	res->end = (res->end + offset) & mask;
--}
--
- /* This header fixup will do the resource fixup for all devices as they are
-  * probed, but not for bridge ranges
-  */
-@@ -929,18 +876,11 @@ static void __devinit pcibios_fixup_resources(struct pci_dev *dev)
+    pci: check for 4k resource_size alignment in sriov_init
+    
+    pci sriov_init should check for 4k page size alignment of resource_size
+    even if base page size is larger like 64k in powerpc.
+    
+    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 0321fa3..10adede 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -474,7 +474,7 @@ found:
+ 				     pos + PCI_SRIOV_BAR + i * 4);
+ 		if (!res->flags)
  			continue;
+-		if (resource_size(res) & (PAGE_SIZE - 1)) {
++		if (resource_size(res) & (HW_PAGE_SIZE_4K - 1)) {
+ 			rc = -EIO;
+ 			goto failed;
  		}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 1009a5e..68703ab 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -6,6 +6,9 @@
+ #define PCI_CFG_SPACE_SIZE	256
+ #define PCI_CFG_SPACE_EXP_SIZE	4096
  
--		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x] fixup...\n",
-+		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]\n",
- 			 pci_name(dev), i,
- 			 (unsigned long long)res->start,\
- 			 (unsigned long long)res->end,
- 			 (unsigned int)res->flags);
--
--		fixup_resource(res, dev);
--
--		pr_debug("PCI:%s            %016llx-%016llx\n",
--			 pci_name(dev),
--			 (unsigned long long)res->start,
--			 (unsigned long long)res->end);
- 	}
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_fixup_resources);
-@@ -1037,9 +977,6 @@ static void __devinit pcibios_fixup_bridge(struct pci_bus *bus)
- 			 (unsigned long long)res->end,
- 			 (unsigned int)res->flags);
++/* Constants used in the PCI core code */
++#define HW_PAGE_SIZE_4K		0x1000
++
+ /* Functions internal to the PCI core code */
  
--		/* Perform fixup */
--		fixup_resource(res, dev);
--
- 		/* Try to detect uninitialized P2P bridge resources,
- 		 * and clear them out so they get re-assigned later
- 		 */
-@@ -1535,7 +1472,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
- 		res->end = res->start + IO_SPACE_LIMIT;
- 		res->flags = IORESOURCE_IO;
- 	}
--	pci_add_resource(resources, res);
-+	pci_add_resource_offset(resources, res, hose->io_base_virt - _IO_BASE);
- 
- 	pr_debug("PCI: PHB IO resource    = %016llx-%016llx [%lx]\n",
- 		 (unsigned long long)res->start,
-@@ -1558,7 +1495,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
- 			res->flags = IORESOURCE_MEM;
- 
- 		}
--		pci_add_resource(resources, res);
-+		pci_add_resource_offset(resources, res, hose->pci_mem_offset);
- 
- 		pr_debug("PCI: PHB MEM resource %d = %016llx-%016llx [%lx]\n",
- 			i, (unsigned long long)res->start,
+ extern int pci_uevent(struct device *dev, struct kobj_uevent_env *env);
 
