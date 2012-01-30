@@ -1,149 +1,181 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 04/13] PCI, x86: Register busn_res for root buses
-Date: Fri, 27 Jan 2012 18:49:22 -0800
-Message-Id: <1327718971-9598-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+Subject: [RFC PATCH v1 14/18] powerpc/PCI: get rid of device resource fixups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Mon, 30 Jan 2012 09:58:21 -0700
+Message-ID: <20120130165820.3231.9878.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-update x86_pci_root_bus_resources() to get bus_max for non-acpi case.
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+N.B. powerpc used a 32-bit mask when converting IO addresses.  If we
+figure out the right offset, I think simple addition should do the
+same thing, but I might not have it exactly right yet.
+
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 ---
- arch/x86/include/asm/topology.h |    3 ++-
- arch/x86/pci/acpi.c             |    8 +++++---
- arch/x86/pci/bus_numa.c         |    8 +++++++-
- arch/x86/pci/common.c           |   11 +++++++----
- 4 files changed, 21 insertions(+), 9 deletions(-)
+ arch/powerpc/include/asm/pci.h   |    8 ----
+ arch/powerpc/kernel/pci-common.c |   79 ++------------------------------------
+ 2 files changed, 6 insertions(+), 81 deletions(-)
 
-diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
-index b9676ae..ad4060e 100644
---- a/arch/x86/include/asm/topology.h
-+++ b/arch/x86/include/asm/topology.h
-@@ -172,7 +172,8 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index f54b3d2..839178b 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -154,13 +154,7 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ 
+ #endif /* CONFIG_PPC64 */
+ 
+-extern void pcibios_resource_to_bus(struct pci_dev *dev,
+-			struct pci_bus_region *region,
+-			struct resource *res);
+-
+-extern void pcibios_bus_to_resource(struct pci_dev *dev,
+-			struct resource *res,
+-			struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
+ 
+ extern void pcibios_claim_one_bus(struct pci_bus *b);
+ 
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index cce98d7..f0084c9 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -849,60 +849,6 @@ int pci_proc_domain(struct pci_bus *bus)
+ 	return 1;
  }
  
- struct pci_bus;
--void x86_pci_root_bus_resources(int bus, struct list_head *resources);
-+void x86_pci_root_bus_resources(int bus, int *bus_max,
-+				struct list_head *resources);
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
+-{
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-
+-	if (!hose)
+-		return;
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-
+-	region->start = (res->start - offset) & mask;
+-	region->end = (res->end - offset) & mask;
+-}
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
+-{
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-
+-	if (!hose)
+-		return;
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-	res->start = (region->start + offset) & mask;
+-	res->end = (region->end + offset) & mask;
+-}
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+-
+-/* Fixup a bus resource into a linux resource */
+-static void __devinit fixup_resource(struct resource *res, struct pci_dev *dev)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-
+-	res->start = (res->start + offset) & mask;
+-	res->end = (res->end + offset) & mask;
+-}
+-
+-
+ /* This header fixup will do the resource fixup for all devices as they are
+  * probed, but not for bridge ranges
+  */
+@@ -942,18 +888,11 @@ static void __devinit pcibios_fixup_resources(struct pci_dev *dev)
+ 			continue;
+ 		}
  
- #ifdef CONFIG_SMP
- #define mc_capable()	((boot_cpu_data.x86_max_cores > 1) && \
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index daa4249..b25b5b1 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -348,6 +348,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct acpi_device *device = root->device;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
-+	int busmax = root->secondary.end;
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
-@@ -410,12 +411,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 * defaults or native bridge info if we're ignoring _CRS.
+-		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x] fixup...\n",
++		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]\n",
+ 			 pci_name(dev), i,
+ 			 (unsigned long long)res->start,\
+ 			 (unsigned long long)res->end,
+ 			 (unsigned int)res->flags);
+-
+-		fixup_resource(res, dev);
+-
+-		pr_debug("PCI:%s            %016llx-%016llx\n",
+-			 pci_name(dev),
+-			 (unsigned long long)res->start,
+-			 (unsigned long long)res->end);
+ 	}
+ 
+ 	/* Call machine specific resource fixup */
+@@ -1055,27 +994,18 @@ static void __devinit pcibios_fixup_bridge(struct pci_bus *bus)
+ 			continue;
+ 		}
+ 
+-		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x] fixup...\n",
++		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x]\n",
+ 			 pci_name(dev), i,
+ 			 (unsigned long long)res->start,\
+ 			 (unsigned long long)res->end,
+ 			 (unsigned int)res->flags);
+ 
+-		/* Perform fixup */
+-		fixup_resource(res, dev);
+-
+ 		/* Try to detect uninitialized P2P bridge resources,
+ 		 * and clear them out so they get re-assigned later
  		 */
- 		if (!pci_use_crs)
--			x86_pci_root_bus_resources(busnum, &resources);
-+			x86_pci_root_bus_resources(busnum, &busmax, &resources);
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
--		if (bus)
-+		if (bus) {
-+			pci_bus_insert_busn_res(bus, busnum, busmax);
- 			bus->subordinate = pci_scan_child_bus(bus);
--		else
-+		} else
- 			pci_free_resource_list(&resources);
+ 		if (pcibios_uninitialized_bridge_resource(bus, res)) {
+ 			res->flags = 0;
+ 			pr_debug("PCI:%s            (unassigned)\n", pci_name(dev));
+-		} else {
+-
+-			pr_debug("PCI:%s            %016llx-%016llx\n",
+-				 pci_name(dev),
+-				 (unsigned long long)res->start,
+-				 (unsigned long long)res->end);
+ 		}
  	}
- 
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index fd3f655..5213cd8 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -7,7 +7,8 @@
- int pci_root_num;
- struct pci_root_info pci_root_info[PCI_ROOT_NR];
- 
--void x86_pci_root_bus_resources(int bus, struct list_head *resources)
-+void x86_pci_root_bus_resources(int bus, int *bus_max,
-+				struct list_head *resources)
- {
- 	int i;
- 	int j;
-@@ -28,6 +29,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	       bus);
- 
- 	info = &pci_root_info[i];
-+	*bus_max = info->bus_max;
- 	for (j = 0; j < info->res_num; j++) {
- 		struct resource *res;
- 		struct resource *root;
-@@ -51,6 +53,10 @@ default_resources:
- 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
- 	pci_add_resource(resources, &ioport_resource);
- 	pci_add_resource(resources, &iomem_resource);
-+	if (!bus)
-+		*bus_max = 0xff;
-+	else if (!*bus_max)
-+		*bus_max = bus;
  }
+@@ -1589,7 +1519,8 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
+ 		 (unsigned long long)res->start,
+ 		 (unsigned long long)res->end,
+ 		 (unsigned long)res->flags);
+-	pci_add_resource(resources, res);
++	pci_add_resource_offset(resources, res,
++			(resource_size_t) hose->io_base_virt - _IO_BASE);
  
- void __devinit update_res(struct pci_root_info *info, resource_size_t start,
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 323481e..ce0aefc 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -433,6 +433,7 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
-+	int bus_max;
- 
- 	while ((bus = pci_find_next_bus(bus)) != NULL) {
- 		if (bus->number == busnum) {
-@@ -454,8 +455,9 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
- 	sd->node = get_mp_bus_to_node(busnum);
- 
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
--	x86_pci_root_bus_resources(busnum, &resources);
--	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
-+	x86_pci_root_bus_resources(busnum, &bus_max, &resources);
-+	bus = pci_scan_root_bus_max(NULL, busnum, bus_max, &pci_root_ops, sd,
-+				&resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
-@@ -643,6 +645,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
-+	int bus_max;
- 
- 	/*
- 	 * Allocate per-root-bus (not per bus) arch-specific data.
-@@ -655,8 +658,8 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 		return NULL;
+ 	/* Hookup PHB Memory resources */
+ 	for (i = 0; i < 3; ++i) {
+@@ -1612,7 +1543,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
+ 			 (unsigned long long)res->start,
+ 			 (unsigned long long)res->end,
+ 			 (unsigned long)res->flags);
+-		pci_add_resource(resources, res);
++		pci_add_resource_offset(resources, res, hose->pci_mem_offset);
  	}
- 	sd->node = node;
--	x86_pci_root_bus_resources(busno, &resources);
--	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
-+	x86_pci_root_bus_resources(busno, &bus_max, &resources);
-+	bus = pci_scan_root_bus_max(NULL, busno, bus_max, ops, sd, &resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
--- 
-1.7.7
+ 
+ 	pr_debug("PCI: PHB MEM offset     = %016llx\n",
 
