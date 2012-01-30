@@ -1,148 +1,64 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:53240 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752283Ab2A3Svb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2012 13:51:31 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5QYvx6dtL4NqW4Pu29HXbS-kcTq-GKvpJO8AJ6vRYeBw@mail.gmail.com>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+	<1327718971-9598-10-git-send-email-yinghai@kernel.org>
+	<CAErSpo5QYvx6dtL4NqW4Pu29HXbS-kcTq-GKvpJO8AJ6vRYeBw@mail.gmail.com>
+Date: Mon, 30 Jan 2012 10:51:30 -0800
+Message-ID: <CAE9FiQWLRvXXyeEhvW+n55_Q+P88xyfgLCKwyK8d4tg679-8gg@mail.gmail.com>
+Subject: Re: [PATCH 09/13] PCI: Probe safe range that we can use for
+ unassigned bridge.
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 13/13] PCI: Seperate child bus scanning to two passes overall
-Date: Fri, 27 Jan 2012 18:49:31 -0800
-Message-Id: <1327718971-9598-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In extreme case: Two bridges are properly setup.
-       bridge A
-               bridge AA
-               bridge AB
-       bridge B
-	       bridge BA
-	       bridge BB
-   but AA, AB are not setup properly.
-   bridge A has small range, and bridge AB could need more, when do the
-       first pass0 for bridge A, it will do pass0 and pass1 for AA and AB,
-	during that process, it will extend range of A for AB blindly.
-	because bridge B is not registered yet.
-       that could overlap range that is used by bridge B.
+On Mon, Jan 30, 2012 at 7:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jan 27, 2012 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Try to allocate from parent bus busn_res. if can not find any big enough, will try
+>> to extend parent bus top. even the extending is through allocating, after allocating
+>> will pad the range to parent buses top.
+>>
+>> When extending happens, We will record the parent_res, so could use it as stopper
+>> for really extend/shrink top later.
+>>
+..
+>
+> I think what this does is "find the largest available area in 'res'."
+> That *sounds* sort of useful (and like something that could go
+> somewhere more generic than drivers/pci/probe.c), but there's no
+> locking, so we don't have any assurance that the area we find will
+> *remain* available.
 
-Right way should be:
-       do pass0 for all good bridges at first.
-So we could do pass0 for bridge B before pass1 for bridge AB.
+two usages:
+1. init booting : should be safe, that is sequential scanning
+2. hotplug: we should have overall lock somewhere for it?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   50 ++++++++++++++++++++++++++++++++++----------------
- 1 files changed, 34 insertions(+), 16 deletions(-)
+>
+> Since the caller should deal with failure anyway (if the largest
+> available area is no longer available by the time it gets around to
+> allocating it), it seems like it'd be better to fold this into the
+> caller somehow.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 54615a9..e2dbfde 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -802,6 +802,9 @@ static int __devinit pci_bridge_check_busn_res(struct pci_bus *bus,
- 
- 	return broken;
- }
-+
-+static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
-+						 int pass);
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
-@@ -853,11 +856,10 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 	    !is_cardbus && !broken) {
- 		unsigned int cmax;
- 		/*
--		 * Bus already configured by firmware, process it in the first
--		 * pass and just note the configuration.
-+		 * Bus already configured by firmware, still process it in two
-+		 * passes in extreme case like two adjaced bridges have children
-+		 * bridges that are not setup properly.
- 		 */
--		if (pass)
--			goto out;
- 
- 		/*
- 		 * If we already got to this bus through a different bridge,
-@@ -878,7 +880,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			pci_bus_insert_busn_res(child, secondary, subordinate);
- 		}
- 
--		cmax = pci_scan_child_bus(child);
-+		cmax = __pci_scan_child_bus(child, pass);
- 		if (cmax > max)
- 			max = cmax;
- 		if (child->subordinate > max)
-@@ -1668,12 +1670,13 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- }
- EXPORT_SYMBOL_GPL(pcie_bus_configure_settings);
- 
--unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
-+static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
-+						 int pass)
- {
--	unsigned int devfn, pass, max = bus->secondary;
-+	unsigned int devfn, max = bus->secondary;
- 	struct pci_dev *dev;
- 
--	dev_dbg(&bus->dev, "scanning bus\n");
-+	dev_dbg(&bus->dev, "scanning bus pass %d\n", pass);
- 
- 	/* Go find them, Rover! */
- 	for (devfn = 0; devfn < 0x100; devfn += 8)
-@@ -1687,18 +1690,16 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- 	 * all PCI-to-PCI bridges on this bus.
- 	 */
- 	if (!bus->is_added) {
--		dev_dbg(&bus->dev, "fixups for bus\n");
-+		dev_dbg(&bus->dev, "fixups for bus pass %d\n", pass);
- 		pcibios_fixup_bus(bus);
- 		if (pci_is_root_bus(bus))
- 			bus->is_added = 1;
- 	}
- 
--	for (pass=0; pass < 2; pass++)
--		list_for_each_entry(dev, &bus->devices, bus_list) {
--			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
--			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
--				max = pci_scan_bridge(bus, dev, max, pass);
--		}
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-+		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
-+			max = pci_scan_bridge(bus, dev, max, pass);
- 
- 	/*
- 	 * We've scanned the bus and so we know all about what's on
-@@ -1707,7 +1708,24 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- 	 *
- 	 * Return how far we've got finding sub-buses.
- 	 */
--	dev_dbg(&bus->dev, "bus scan returning with max=%02x\n", max);
-+	dev_dbg(&bus->dev, "bus scan returning with max=%02x pass %d\n",
-+			max, pass);
-+
-+	return max;
-+}
-+
-+unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
-+{
-+	int pass;
-+	unsigned int max = 0, tmp;
-+
-+	for (pass = 0; pass < 2;  pass++) {
-+		tmp = __pci_scan_child_bus(bus, pass);
-+
-+		if (tmp > max)
-+			max = tmp;
-+	}
-+
- 	return max;
- }
- 
--- 
-1.7.7
 
+
+>> +               if (ret == 0) {
+>> +                       /* release busn_res */
+>
+> Comments like this that repeat exactly what the next line of code does
+> without adding any useful information are unnecessary and distracting.
+
+ok, will remove them.
+
+Yinghai
