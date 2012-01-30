@@ -1,192 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:26527 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753796Ab2A1CuB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2012 21:50:01 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 11/13] PCI: Allocate bus range instead of use max blindly
-Date: Fri, 27 Jan 2012 18:49:29 -0800
-Message-Id: <1327718971-9598-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+Received: from mail-yw0-f74.google.com ([209.85.213.74]:38186 "EHLO
+	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753569Ab2A3Q6h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2012 11:58:37 -0500
+Received: by mail-yw0-f74.google.com with SMTP id j52so395332yhj.1
+        for <linux-pci@vger.kernel.org>; Mon, 30 Jan 2012 08:58:36 -0800 (PST)
+Subject: [RFC PATCH v1 17/18] xtensa/PCI: get rid of device resource fixups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, Chris Zankel <chris@zankel.net>
+Date: Mon, 30 Jan 2012 09:58:36 -0700
+Message-ID: <20120130165836.3231.1159.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-every bus have extra busn_res, and linked them toghter to iobusn_resource.
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-when need to find usable bus number range, try probe from iobusn_resource tree.
-
-To avoid falling to small hole in the middle, we try from 8 spare bus.
-if can not find 8 or more in the middle, will try to append 8 on top later.
-then if can not append, will try to find 7 from the middle, then will try to append 7 on top.
-then if can not append, will try to find 6 from the middle...
-
-for cardbus will only find 4 spare.
-
-if extend from top, at last will shrink back to really needed range...
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+CC: Chris Zankel <chris@zankel.net>
 ---
- drivers/pci/probe.c |   82 ++++++++++++++++++++++++++++-----------------------
- 1 files changed, 45 insertions(+), 37 deletions(-)
+ arch/xtensa/kernel/pci.c |   17 +----------------
+ 1 files changed, 1 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e12f65f0..23c2f0d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -832,10 +832,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- {
- 	struct pci_bus *child;
- 	int is_cardbus = (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS);
--	u32 buses, i, j = 0;
-+	u32 buses;
- 	u16 bctl;
- 	u8 primary, secondary, subordinate;
- 	int broken = 0;
-+	struct resource *parent_res = NULL;
- 
- 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
- 	primary = buses & 0xFF;
-@@ -847,10 +848,16 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 
- 	/* Check if setup is sensible at all */
- 	if (!pass &&
--	    (primary != bus->number || secondary <= bus->number)) {
--		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
-+	    (primary != bus->number || secondary <= bus->number))
- 		broken = 1;
--	}
-+
-+	/* more strict checking */
-+	if (!pass && !broken)
-+		broken = pci_bridge_check_busn_res(bus, dev,
-+						   secondary, subordinate);
-+
-+	if (broken)
-+		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
- 
- 	/* Disable MasterAbortMode during probing to avoid reporting
- 	   of bus errors (in some architectures) */ 
-@@ -883,6 +890,8 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			child->primary = primary;
- 			child->subordinate = subordinate;
- 			child->bridge_ctl = bctl;
-+
-+			pci_bus_insert_busn_res(child, secondary, subordinate);
- 		}
- 
- 		cmax = pci_scan_child_bus(child);
-@@ -895,6 +904,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 		 * We need to assign a number to this bus which we always
- 		 * do in the second pass.
- 		 */
-+		resource_size_t shrink_size;
-+		struct resource busn_res;
-+		int ret = -ENOMEM;
-+		int old_max = max;
-+
- 		if (!pass) {
- 			if (pcibios_assign_all_busses() || broken)
- 				/* Temporarily disable forwarding of the
-@@ -911,20 +925,28 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 		/* Clear errors */
- 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
- 
--		/* Prevent assigning a bus number that already exists.
--		 * This can happen when a bridge is hot-plugged, so in
--		 * this case we only re-scan this bus. */
--		child = pci_find_bus(pci_domain_nr(bus), max+1);
--		if (!child) {
--			child = pci_add_new_bus(bus, dev, ++max);
--			if (!child)
--				goto out;
--		}
-+		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
-+				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
-+				&parent_res);
-+
-+		if (ret != 0)
-+			goto out;
-+
-+		child = pci_add_new_bus(bus, dev, busn_res.start & 0xff);
-+		if (!child)
-+			goto out;
-+
-+		child->subordinate = busn_res.end & 0xff;
-+		pci_bus_insert_busn_res(child, busn_res.start & 0xff,
-+					busn_res.end & 0xff);
-+
- 		buses = (buses & 0xff000000)
- 		      | ((unsigned int)(child->primary)     <<  0)
- 		      | ((unsigned int)(child->secondary)   <<  8)
- 		      | ((unsigned int)(child->subordinate) << 16);
- 
-+		max = child->subordinate;
-+
- 		/*
- 		 * yenta.c forces a secondary latency timer of 176.
- 		 * Copy that behaviour here.
-@@ -955,43 +977,29 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			 * the real value of max.
- 			 */
- 			pci_fixup_parent_subordinate_busnr(child, max);
-+
- 		} else {
- 			/*
- 			 * For CardBus bridges, we leave 4 bus numbers
- 			 * as cards with a PCI-to-PCI bridge can be
- 			 * inserted later.
- 			 */
--			for (i=0; i<CARDBUS_RESERVE_BUSNR; i++) {
--				struct pci_bus *parent = bus;
--				if (pci_find_bus(pci_domain_nr(bus),
--							max+i+1))
--					break;
--				while (parent->parent) {
--					if ((!pcibios_assign_all_busses()) &&
--					    (parent->subordinate > max) &&
--					    (parent->subordinate <= max+i)) {
--						j = 1;
--					}
--					parent = parent->parent;
--				}
--				if (j) {
--					/*
--					 * Often, there are two cardbus bridges
--					 * -- try to leave one valid bus number
--					 * for each one.
--					 */
--					i /= 2;
--					break;
--				}
--			}
--			max += i;
- 			pci_fixup_parent_subordinate_busnr(child, max);
- 		}
- 		/*
- 		 * Set the subordinate bus number to its real value.
- 		 */
-+		shrink_size = child->subordinate - max;
- 		child->subordinate = max;
- 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
-+		pci_bus_update_busn_res_end(child, max);
-+
-+		/* shrink some back, if we extend top before */
-+		if (!is_cardbus &&  (shrink_size > 0) && parent_res)
-+			pci_bus_shrink_top(bus, shrink_size, parent_res);
-+
-+		if (old_max > max)
-+			max = old_max;
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index 61045c1..eb30e35 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -153,7 +153,7 @@ static void __init pci_controller_apertures(struct pci_controller *pci_ctrl,
  	}
+ 	res->start += io_offset;
+ 	res->end += io_offset;
+-	pci_add_resource(resources, res);
++	pci_add_resource_offset(resources, res, io_offset);
  
- 	sprintf(child->name,
--- 
-1.7.7
+ 	for (i = 0; i < 3; i++) {
+ 		res = &pci_ctrl->mem_resources[i];
+@@ -200,24 +200,9 @@ subsys_initcall(pcibios_init);
+ 
+ void __init pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	struct pci_controller *pci_ctrl = bus->sysdata;
+-	struct resource *res;
+-	unsigned long io_offset;
+-	int i;
+-
+-	io_offset = (unsigned long)pci_ctrl->io_space.base;
+ 	if (bus->parent) {
+ 		/* This is a subordinate bridge */
+ 		pci_read_bridge_bases(bus);
+-
+-		for (i = 0; i < 4; i++) {
+-			if ((res = bus->resource[i]) == NULL || !res->flags)
+-				continue;
+-			if (io_offset && (res->flags & IORESOURCE_IO)) {
+-				res->start += io_offset;
+-				res->end += io_offset;
+-			}
+-		}
+ 	}
+ }
+ 
 
