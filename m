@@ -1,75 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50812 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835Ab2A0WQS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Jan 2012 17:16:18 -0500
-Message-ID: <1327702566.24487.26.camel@pasglop>
-Subject: Re: Probing unconfigured PCI bridge resouces
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Date: Sat, 28 Jan 2012 09:16:06 +1100
-In-Reply-To: <20120127093658.27dc258b@jbarnes-desktop>
-References: <1327379147.19850.29.camel@pasglop>
-	 <1327380633.19850.33.camel@pasglop>
-	 <20120127093658.27dc258b@jbarnes-desktop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUXjjk=twgwWVB01JMD9GokEVjOoiRLYZYRTPSPXHYfFw@mail.gmail.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+ <20120130165719.3231.43751.stgit@bhelgaas.mtv.corp.google.com> <CAE9FiQUXjjk=twgwWVB01JMD9GokEVjOoiRLYZYRTPSPXHYfFw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Jan 2012 14:00:02 -0800
+Message-ID: <CAErSpo6WqUa5AcEBNwa1g4O1M+MvKwr9RXhVSo04APDLncp+tA@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 02/18] PCI: add struct pci_host_bridge and a list
+ of all bridges found
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-01-27 at 09:36 -0800, Jesse Barnes wrote:
+On Mon, Jan 30, 2012 at 12:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Jan 30, 2012 at 8:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> This adds a list of all PCI host bridges we find and a way to look up
+>> the host bridge from a pci_dev.
+>> ---
+>>  drivers/pci/probe.c |   39 ++++++++++++++++++++++++++++++++++-----
+>>  include/linux/pci.h |    5 +++++
+>>  2 files changed, 39 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index da0d655..2ffe8a3 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -15,6 +15,8 @@
+>>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
+>>  #define CARDBUS_RESERVE_BUSNR  3
+>>
+>> +static LIST_HEAD(pci_host_bridges);
+>> +
+>>  /* Ugh.  Need to stop exporting this to modules. */
+>>  LIST_HEAD(pci_root_buses);
+>>  EXPORT_SYMBOL(pci_root_buses);
+>> @@ -42,6 +44,23 @@ int no_pci_devices(void)
+>>  }
+>>  EXPORT_SYMBOL(no_pci_devices);
+>>
+>> +static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
+>> +{
+>> +       struct pci_bus *bus;
+>> +       struct pci_host_bridge *bridge;
+>> +
+>> +       bus = dev->bus;
+>> +       while (bus->parent)
+>> +               bus = bus->parent;
+>> +
+>> +       list_for_each_entry(bridge, &pci_host_bridges, list) {
+>> +               if (bridge->bus == bus)
+>> +                       return bridge;
+>> +       }
+>> +
+>> +       return NULL;
+>> +}
+>> +
+>>  /*
+>>  * PCI Bus Class
+>>  */
+>> @@ -1526,20 +1545,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>                struct pci_ops *ops, void *sysdata, struct list_head *resources)
+>>  {
+>>        int error, i;
+>> +       struct pci_host_bridge *bridge;
+>>        struct pci_bus *b, *b2;
+>>        struct device *dev;
+>>        struct pci_bus_resource *bus_res, *n;
+>>        struct resource *res;
+>>
+>> +       bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+>> +       if (!bridge)
+>> +               return NULL;
+>> +
+>>        b = pci_alloc_bus();
+>>        if (!b)
+>> -               return NULL;
+>> +               goto err_bus;
+>>
+>>        dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+>> -       if (!dev) {
+>> -               kfree(b);
+>> -               return NULL;
+>> -       }
+>> +       if (!dev)
+>> +               goto err_dev;
+>>
+>>        b->sysdata = sysdata;
+>>        b->ops = ops;
+>> @@ -1576,6 +1598,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>
+>>        b->number = b->secondary = bus;
+>>
+>> +       bridge->bus = b;
+>> +
+>>        /* Add initial resources to the bus */
+>>        list_for_each_entry_safe(bus_res, n, resources, list)
+>>                list_move_tail(&bus_res->list, &b->resources);
+>> @@ -1591,6 +1615,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>        }
+>>
+>>        down_write(&pci_bus_sem);
+>> +       list_add_tail(&bridge->list, &pci_host_bridges);
+>>        list_add_tail(&b->node, &pci_root_buses);
+>>        up_write(&pci_bus_sem);
+>
+> we already have list for root_bus. So there will be two lists.
 
-> > Ok, I think I was missing pci_bridge_check_ranges(), gotta figure now
-> > why this didn't kick in properly for me, probably some arch code
-> > crackpot.
-> > 
-> > One thing I noticed is that we do clear IORESOURCE_UNSET in setup-res.c
-> > when setting up a device resource but we don't clear it for bridges in
-> > generic code ever, so it leaks all the way through from my early arch
-> > code. Not a big deal but annoying.
-> 
-> Maybe you can fix that when you unify your arch resource handling code
-> with the core one day. :)
-> 
-> There have been a lot of changes to handle re-allocation and such, and
-> I'm sure there's more duplication now...
+Yeah, I'm not sure we need both either.  If we do end up adding a
+struct pci_host_bridge, then I think it makes sense to keep a list of
+*those* (and possibly remove the root_bus list), since that's a
+slightly higher-level abstraction than root_bus is.
 
-There isn't much the my arch does that isn't just calling into core
-nowadays on powerpc, look at my resource survey :-)
+> wonder if we can overload bus->self point to struct host_bridge.
 
-I have some slightly different (arguably better ?) logic to deal with
-unassigned resources in the initial allocation pass before re-assigning
-(or assigning unassigned) and flags to enable ignoring the initial state
-of devices (which should be improved with core changes one of these
-days, for example we still read all bridge bases even when we know we
-are just going to re-assign everything etc...).
+pci_bus->self points to a struct pci_dev.  A host bridge is not a
+pci_dev.  I don't think it's a good idea to simply reuse "self" to
+point to something of a different type, but maybe you have something
+different in mind.
 
-The one thing I cannot unify is actually new in 3.3, it's the code to
-assign resources on the new "powernv" platform which requires its own
-logic unfortunately and I'm not sure I can make the core do what I want
-without major uglyness.
+> or just do not add host_bridge , and instead only add another field
+> like struct list_head windows in pci_sysdata?
 
-The main reason is that on p7ioc and similar recent IBM host bridges, we
-have a domain mechanism which allows error isolation, dma isolation
-etc... which also encompass MMIO (in order to properly assign MMIO
-errors such as target aborts etc... with a domain).
+The pci_sysdata I see is an x86-specific thing, so I don't see how
+that would help.
 
-The way this works is by segmenting the MMIO space, which means that all
-BARs of a all devices in a given domain shall be assigned to a group of
-segments. Now I -can- renumber 32-bit segments so in theory I could get
-away with alignment tricks (tho nasty ones) only but I can't always
-renumber 64-bit segments (tho in my current scheme I simply don't use
-64-bit MMIO segments at all, in part due to that complication).
-
-The consequence is that I need to pre-assign domains at boot based on
-various constraints and policy decisions which unfortunately have to be
-made by the kernel arbitrarily, and then tweak the MMIO resource
-allocation to assign BARs of devices accordingly so they fit into
-"segments" that can be made to correspond with the domains.
-
-Cheers,
-Ben.
-
-
+Bjorn
