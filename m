@@ -1,117 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:35736 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1030596Ab2AFVOk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 16:14:40 -0500
-Date: Fri, 6 Jan 2012 13:14:36 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/5] PCI : Calculate right add_size
-Message-ID: <20120106131436.17cf45e6@jbarnes-desktop>
-In-Reply-To: <1323247984-15281-2-git-send-email-yinghai@kernel.org>
-References: <1323247984-15281-1-git-send-email-yinghai@kernel.org>
-	<1323247984-15281-2-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/SAtBIQH/GozX4lB=fsAIL_F"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [RFC PATCH v1 11/18] mips/PCI: get rid of device resource fixups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	Yoichi Yuasa <yuasa@linux-mips.org>
+Date: Mon, 30 Jan 2012 09:58:05 -0700
+Message-ID: <20120130165805.3231.99160.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/SAtBIQH/GozX4lB=fsAIL_F
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-On Wed,  7 Dec 2011 00:53:00 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+N.B. cobalt_legacy_ide_fixup() does scary things with resources, but I
+*think* it will still work because we're still making the same adjustments,
+just in the opposite order.  Here are the legacy IDE resource.start
+values I expect:
 
-> During debug one SRIOV enabled hotplug, found add_size is not passed prop=
-erly.
->=20
-> the device have devices under two level bridges..
->=20
->  +-[0000:80]-+-00.0-[81-8f]--
->  |           +-01.0-[90-9f]--
->  |           +-02.0-[a0-af]----00.0-[a1-a3]--+-02.0-[a2]--+-00.0  Oracle =
-Corporation Device
->  |           |                               \-03.0-[a3]--+-00.0  Oracle =
-Corporation Device
->=20
-> so later parent bridge will not try to add big range.
-> [  557.455077] pci 0000:a0:00.0: BAR 14: assigned [mem 0xf9000000-0xf93ff=
-fff]
-> [  557.461974] pci 0000:a0:00.0: BAR 15: assigned [mem 0xf6000000-0xf61ff=
-fff pref]
-> [  557.469340] pci 0000:a1:02.0: BAR 14: assigned [mem 0xf9000000-0xf91ff=
-fff]
-> [  557.476231] pci 0000:a1:02.0: BAR 15: assigned [mem 0xf6000000-0xf60ff=
-fff pref]
-> [  557.483582] pci 0000:a1:03.0: BAR 14: assigned [mem 0xf9200000-0xf93ff=
-fff]
-> [  557.490468] pci 0000:a1:03.0: BAR 15: assigned [mem 0xf6100000-0xf61ff=
-fff pref]
-> [  557.497833] pci 0000:a1:03.0: BAR 14: can't assign mem (size 0x200000)
-> [  557.504378] pci 0000:a1:03.0: failed to add optional resources res=3D[=
-mem 0xf9200000-0xf93fffff]
-> [  557.513026] pci 0000:a1:02.0: BAR 14: can't assign mem (size 0x200000)
-> [  557.519578] pci 0000:a1:02.0: failed to add optional resources res=3D[=
-mem 0xf9000000-0xf91fffff]
->=20
-> it turns out We did not calculate size1 properly.
->=20
-> static resource_size_t calculate_memsize(resource_size_t size,
->                 resource_size_t min_size,
->                 resource_size_t size1,
->                 resource_size_t old_size,
->                 resource_size_t align)
-> {
->         if (size < min_size)
->                 size =3D min_size;
->         if (old_size =3D=3D 1 )
->                 old_size =3D 0;
->         if (size < old_size)
->                 size =3D old_size;
->         size =3D ALIGN(size + size1, align);
->         return size;
-> }
->=20
-> We should not pass add_size with min_size in calculate_memsize.
-> that will make add_size not contribute final add_size.
->=20
-> Just pass add_size with size1 to calculate_memsize()
->=20
-> With this change, We should have chance to remove extra addon in pci_reas=
-sign_resource...
+         current                                        new
 
-This one looks like a fairly standalone bug fix; it doesn't require
-subtle changes in behavior from the later patches to work right does it?
+           0x1f0   (pci_setup_device)                 0x1f0
+                   (pci_bus_to_resource)       + 0xf0000000
+    - 0xf0000000   (cobalt_legacy_ide_fixup)   - 0xf0000000
+    + 0xf0000000   (pcibios_fixup_bus)
+    ------------                               ------------
+           0x1f0    final value                       0x1f0
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+CC: Ralf Baechle <ralf@linux-mips.org>
+CC: Yoichi Yuasa <yuasa@linux-mips.org>
+---
+ arch/mips/include/asm/pci.h |    6 +---
+ arch/mips/pci/pci.c         |   70 ++-----------------------------------------
+ 2 files changed, 4 insertions(+), 72 deletions(-)
 
---Sig_/SAtBIQH/GozX4lB=fsAIL_F
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 576397c..2be0c69 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -112,11 +112,7 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ }
+ #endif
+ 
+-extern void pcibios_resource_to_bus(struct pci_dev *dev,
+-	struct pci_bus_region *region, struct resource *res);
+-
+-extern void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-				    struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
+ 
+ #define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
+ 
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index aec2b11..cab58e6 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -95,8 +95,9 @@ static void __devinit pcibios_scanbus(struct pci_controller *hose)
+ 	if (hose->get_busno && pci_probe_only)
+ 		next_busno = (*hose->get_busno)();
+ 
+-	pci_add_resource(&resources, hose->mem_resource);
+-	pci_add_resource(&resources, hose->io_resource);
++	pci_add_resource_offset(&resources,
++				hose->mem_resource, hose->mem_offset);
++	pci_add_resource_offset(&resources, hose->io_resource, hose->io_offset);
+ 	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
+ 				&resources);
+ 	if (!bus)
+@@ -254,45 +255,13 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return pcibios_plat_dev_init(dev);
+ }
+ 
+-static void pcibios_fixup_device_resources(struct pci_dev *dev,
+-	struct pci_bus *bus)
+-{
+-	/* Update device resources.  */
+-	struct pci_controller *hose = (struct pci_controller *)bus->sysdata;
+-	unsigned long offset = 0;
+-	int i;
+-
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		if (!dev->resource[i].start)
+-			continue;
+-		if (dev->resource[i].flags & IORESOURCE_IO)
+-			offset = hose->io_offset;
+-		else if (dev->resource[i].flags & IORESOURCE_MEM)
+-			offset = hose->mem_offset;
+-
+-		dev->resource[i].start += offset;
+-		dev->resource[i].end += offset;
+-	}
+-}
+-
+ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	/* Propagate hose info into the subordinate devices.  */
+-
+-	struct list_head *ln;
+ 	struct pci_dev *dev = bus->self;
+ 
+ 	if (pci_probe_only && dev &&
+ 	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+ 		pci_read_bridge_bases(bus);
+-		pcibios_fixup_device_resources(dev, bus);
+-	}
+-
+-	for (ln = bus->devices.next; ln != &bus->devices; ln = ln->next) {
+-		dev = pci_dev_b(ln);
+-
+-		if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
+-			pcibios_fixup_device_resources(dev, bus);
+ 	}
+ }
+ 
+@@ -302,40 +271,7 @@ pcibios_update_irq(struct pci_dev *dev, int irq)
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+ }
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			 struct resource *res)
+-{
+-	struct pci_controller *hose = (struct pci_controller *)dev->sysdata;
+-	unsigned long offset = 0;
+-
+-	if (res->flags & IORESOURCE_IO)
+-		offset = hose->io_offset;
+-	else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->mem_offset;
+-
+-	region->start = res->start - offset;
+-	region->end = res->end - offset;
+-}
+-
+-void __devinit
+-pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			struct pci_bus_region *region)
+-{
+-	struct pci_controller *hose = (struct pci_controller *)dev->sysdata;
+-	unsigned long offset = 0;
+-
+-	if (res->flags & IORESOURCE_IO)
+-		offset = hose->io_offset;
+-	else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->mem_offset;
+-
+-	res->start = region->start + offset;
+-	res->end = region->end + offset;
+-}
+-
+ #ifdef CONFIG_HOTPLUG
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+ EXPORT_SYMBOL(PCIBIOS_MIN_IO);
+ EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
+ #endif
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPB2Q8AAoJEIEoDkX4Qk9h+f8P/37cLsqkHaOlaiZ4vBzAGTFo
-WfR3AKS++K4ISIQosHEYz7z872362XW4nX+G3jtXiVeBhBVPtUfJVrgGwJbFJ5Mp
-sCmfWPaFPkZlehmMFT2+GXUgBeCz3xmUjrWO6fySwkA9IZ0/YvEvgxLfxX4Hy2xB
-aoKETXB0XcoPu38N7JMn0YSotVREwYWGZiRZZHQ5+cEouJsqFvH2HEyRuwN+h+f2
-tjzoKcyYfzuLlrl7nqEsjnbtfXARfK04p8Q4hSdEpwi44ktiBUUbiA6kacG0ElQB
-8vEyWOUHk89qyMEFF+bnDkyMaBnt1ezv8ElVuSBAr+A362q6H6TlN86+G2320R7T
-ODGy9gjAxPL9ftTpPI0DDgqtQY1/oogwQGSMYshST+WRzkeLUEnppwf1Om5/Ms76
-2RkULkteHcwq/xBnndPqx0IyuP+MD8CkgQzJF3SkeAZXD0A9zMmwOhBL6iQiJ1Iq
-O+BcGo4y0K4HgiEt8e752SDwFjuoB0BSMGWSOPs54ktJipQBRTS8/l7xWlZ6YCIf
-XGB6gWMlZCR+aCMsPeJ0v9EHfinmZLXLd8OFfO1hIasbIBUgWjqCYdnb1PibGYTG
-3+htcHUeSQfOm85yiW/67Lpu7qjwsIoNH6TzYzjeuWALf6ieOnfyGI2nZyYS7d5l
-efKZlH50ep1qpZ6H/Hvg
-=k4/N
------END PGP SIGNATURE-----
-
---Sig_/SAtBIQH/GozX4lB=fsAIL_F--
