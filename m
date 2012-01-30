@@ -1,66 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2.gnudd.com ([213.203.150.91]:64050 "EHLO mail.gnudd.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751090Ab2AFMtS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Jan 2012 07:49:18 -0500
-Date: Fri, 6 Jan 2012 13:32:41 +0100
-From: Alessandro Rubini <rubini@gnudd.com>
-To: linux-kernel@vger.kernel.org
-Cc: giancarlo.asnaghi@st.com, alan@linux.intel.com,
-	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
-Subject: [PATCH 1/6] pci_ids: add device ids for STA2X11 device (aka
- ConneXT)
-Message-ID: <3bffc0889fba822f58b5f8607fa5247c6f50649c.1325852059.git.rubini@gnudd.com>
+Received: from mail-qy0-f202.google.com ([209.85.216.202]:48145 "EHLO
+	mail-qy0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753155Ab2A3Q55 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2012 11:57:57 -0500
+Received: by mail-qy0-f202.google.com with SMTP id d17so399024qcs.1
+        for <linux-pci@vger.kernel.org>; Mon, 30 Jan 2012 08:57:57 -0800 (PST)
+Subject: [RFC PATCH v1 09/18] ia64/PCI: get rid of device resource fixups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
+	Jack Steiner <steiner@sgi.com>
+Date: Mon, 30 Jan 2012 09:57:55 -0700
+Message-ID: <20120130165755.3231.58980.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The chip is an I/O hub used by some Atom boards.  Most of those
-symbols are used in arch/x86/platform/sta2x11/sta2x11.c (to be
-introduced) and in the specific drivers as well.
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-Signed-off-by: Alessandro Rubini <rubini@gnudd.com>
-Acked-by: Giancarlo Asnaghi <giancarlo.asnaghi@st.com>
-Cc: Alan Cox <alan@linux.intel.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Jack Steiner <steiner@sgi.com>
 ---
- include/linux/pci_ids.h |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+ arch/ia64/include/asm/pci.h   |    6 +---
+ arch/ia64/pci/pci.c           |   55 +----------------------------------------
+ arch/ia64/sn/kernel/io_init.c |    4 ++-
+ 3 files changed, 6 insertions(+), 59 deletions(-)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 2aaee0c..31d77af 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -776,6 +776,29 @@
- #define PCI_DEVICE_ID_ELSA_QS3000	0x3000
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 279b38a..519bb5c 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -108,11 +108,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ 	return (pci_domain_nr(bus) != 0);
+ }
  
- #define PCI_VENDOR_ID_STMICRO		0x104A
-+#define PCI_DEVICE_ID_STMICRO_USB_HOST	0xCC00
-+#define PCI_DEVICE_ID_STMICRO_USB_OHCI	0xCC01
-+#define PCI_DEVICE_ID_STMICRO_USB_OTG	0xCC02
-+#define PCI_DEVICE_ID_STMICRO_UART_HWFC 0xCC03
-+#define PCI_DEVICE_ID_STMICRO_UART_NO_HWFC	0xCC04
-+#define PCI_DEVICE_ID_STMICRO_SOC_DMA	0xCC05
-+#define PCI_DEVICE_ID_STMICRO_SATA	0xCC06
-+#define PCI_DEVICE_ID_STMICRO_I2C	0xCC07
-+#define PCI_DEVICE_ID_STMICRO_SPI_HS	0xCC08
-+#define PCI_DEVICE_ID_STMICRO_MAC	0xCC09
-+#define PCI_DEVICE_ID_STMICRO_SDIO_EMMC 0xCC0A
-+#define PCI_DEVICE_ID_STMICRO_SDIO	0xCC0B
-+#define PCI_DEVICE_ID_STMICRO_GPIO	0xCC0C
-+#define PCI_DEVICE_ID_STMICRO_VIP	0xCC0D
-+#define PCI_DEVICE_ID_STMICRO_AUDIO_ROUTER_DMA	0xCC0E
-+#define PCI_DEVICE_ID_STMICRO_AUDIO_ROUTER_SRCS 0xCC0F
-+#define PCI_DEVICE_ID_STMICRO_AUDIO_ROUTER_MSPS 0xCC10
-+#define PCI_DEVICE_ID_STMICRO_CAN	0xCC11
-+#define PCI_DEVICE_ID_STMICRO_MLB	0xCC12
-+#define PCI_DEVICE_ID_STMICRO_DBP	0xCC13
-+#define PCI_DEVICE_ID_STMICRO_SATA_PHY	0xCC14
-+#define PCI_DEVICE_ID_STMICRO_ESRAM	0xCC15
-+#define PCI_DEVICE_ID_STMICRO_VIC	0xCC16
+-extern void pcibios_resource_to_bus(struct pci_dev *dev,
+-		struct pci_bus_region *region, struct resource *res);
+-
+-extern void pcibios_bus_to_resource(struct pci_dev *dev,
+-		struct resource *res, struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
  
- #define PCI_VENDOR_ID_BUSLOGIC		      0x104B
- #define PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER_NC 0x0140
--- 
-1.7.7.2
+ static inline struct resource *
+ pcibios_select_root(struct pci_dev *pdev, struct resource *res)
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index f82f5d4..d1ce320 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -320,7 +320,8 @@ static __devinit acpi_status add_window(struct acpi_resource *res, void *data)
+ 	 * Ignore these tiny memory ranges */
+ 	if (!((window->resource.flags & IORESOURCE_MEM) &&
+ 	      (window->resource.end - window->resource.start < 16)))
+-		pci_add_resource(&info->resources, &window->resource);
++		pci_add_resource_offset(&info->resources, &window->resource,
++					window->offset);
+ 
+ 	return AE_OK;
+ }
+@@ -395,54 +396,6 @@ out1:
+ 	return NULL;
+ }
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev,
+-		struct pci_bus_region *region, struct resource *res)
+-{
+-	struct pci_controller *controller = PCI_CONTROLLER(dev);
+-	unsigned long offset = 0;
+-	int i;
+-
+-	for (i = 0; i < controller->windows; i++) {
+-		struct pci_window *window = &controller->window[i];
+-		if (!(window->resource.flags & res->flags))
+-			continue;
+-		if (window->resource.start > res->start)
+-			continue;
+-		if (window->resource.end < res->end)
+-			continue;
+-		offset = window->offset;
+-		break;
+-	}
+-
+-	region->start = res->start - offset;
+-	region->end = res->end - offset;
+-}
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-
+-void pcibios_bus_to_resource(struct pci_dev *dev,
+-		struct resource *res, struct pci_bus_region *region)
+-{
+-	struct pci_controller *controller = PCI_CONTROLLER(dev);
+-	unsigned long offset = 0;
+-	int i;
+-
+-	for (i = 0; i < controller->windows; i++) {
+-		struct pci_window *window = &controller->window[i];
+-		if (!(window->resource.flags & res->flags))
+-			continue;
+-		if (window->resource.start - window->offset > region->start)
+-			continue;
+-		if (window->resource.end - window->offset < region->end)
+-			continue;
+-		offset = window->offset;
+-		break;
+-	}
+-
+-	res->start = region->start + offset;
+-	res->end = region->end + offset;
+-}
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+-
+ static int __devinit is_valid_resource(struct pci_dev *dev, int idx)
+ {
+ 	unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+@@ -464,15 +417,11 @@ static int __devinit is_valid_resource(struct pci_dev *dev, int idx)
+ static void __devinit
+ pcibios_fixup_resources(struct pci_dev *dev, int start, int limit)
+ {
+-	struct pci_bus_region region;
+ 	int i;
+ 
+ 	for (i = start; i < limit; i++) {
+ 		if (!dev->resource[i].flags)
+ 			continue;
+-		region.start = dev->resource[i].start;
+-		region.end = dev->resource[i].end;
+-		pcibios_bus_to_resource(dev, &dev->resource[i], &region);
+ 		if ((is_valid_resource(dev, i)))
+ 			pci_claim_resource(dev, i);
+ 	}
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index c99c2ca..238e2c5 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -320,7 +320,9 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 				   prom_bussoft_ptr->bs_legacy_io,
+ 				   prom_bussoft_ptr->bs_legacy_mem);
+ 	for (i = 0; i < controller->windows; i++)
+-		pci_add_resource(&resources, &controller->window[i].resource);
++		pci_add_resource_offset(&resources,
++					&controller->window[i].resource,
++					controller->window[i].offset);
+ 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
+ 				&resources);
+  	if (bus == NULL)
+
