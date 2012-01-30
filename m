@@ -1,76 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 6 Jan 2012 13:05:23 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: DEVICE_COUNT_RESOURCE should be equal to
- PCI_NUM_RESOURCES
-Message-ID: <20120106130523.2a904776@jbarnes-desktop>
-In-Reply-To: <1325720985-6051-1-git-send-email-yinghai@kernel.org>
-References: <1325720985-6051-1-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2mwAQqExp68Vbf3BTLA0lk7"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4d=HW9Lk+O8Kz6BzQZY1DpF1OEuD37RwABgT3m03LB3Q@mail.gmail.com>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+	<1327718971-9598-4-git-send-email-yinghai@kernel.org>
+	<CAErSpo4d=HW9Lk+O8Kz6BzQZY1DpF1OEuD37RwABgT3m03LB3Q@mail.gmail.com>
+Date: Mon, 30 Jan 2012 10:39:29 -0800
+Message-ID: <CAE9FiQUGd3FoxiLOx4cHr0e9EJBtSA=oVq4eXbtdw+0vi5QZrA@mail.gmail.com>
+Subject: Re: [PATCH 03/13] PCI: Add busn_res tracking in core
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/2mwAQqExp68Vbf3BTLA0lk7
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jan 30, 2012 at 7:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jan 27, 2012 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> update pci_scan_root_bus, and pci_scan_bus to insert root bus busn into
+>> iobusn_resource tree.
+>> -struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+>> -               struct pci_ops *ops, void *sysdata, struct list_head *resources)
+>> +struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
+>> +               int bus_max, struct pci_ops *ops, void *sysdata,
+>> +               struct list_head *resources)
+>
+> We are adding "scan root bus" interfaces at an alarming rate (I'm
+> responsible for most of them, so I'm not blaming you :)).  Could we
+> get away without adding this one by just adding a bus number resource
+> to the "resources" list?  For example, then an arch could do:
+>
+>    LIST_HEAD(resources);
+>    pci_add_resource(resources, bus_window);
+>    pci_add_resource(resources, mem_window);
+>    pci_add_resource(resources, io_window);
+>    pci_scan_root_bus(..., resources);
+>
+> If pci_scan_root_bus() didn't find a bus number resource in the list,
+> it could fall back to a default max_bus of 255.
+>
 
-On Wed,  4 Jan 2012 15:49:45 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+this pci_scan_root_bus_max is only used for x86 code.  and should be
+fixed later.
 
-> Save some bytes for device resource array.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->=20
-> ---
->  include/linux/pci.h |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> Index: linux-2.6/include/linux/pci.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.orig/include/linux/pci.h
-> +++ linux-2.6/include/linux/pci.h
-> @@ -111,7 +111,7 @@ enum {
->  	PCI_NUM_RESOURCES,
-> =20
->  	/* preserve this for compatibility */
-> -	DEVICE_COUNT_RESOURCE
-> +	DEVICE_COUNT_RESOURCE =3D PCI_NUM_RESOURCES,
->  };
-> =20
->  typedef int __bitwise pci_power_t;
-
-Not sure what this buys us by itself, but it's applied in preparation
-for any upcoming cleanups.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/2mwAQqExp68Vbf3BTLA0lk7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPB2ITAAoJEIEoDkX4Qk9hay8QAK1iVFB+3e4WgDefioNNHmAP
-nCu9ntqu0TUkbVdyzqjeVe04hn7e6e8DEMuAlSQD37tPQPEQuLCoXkii7/GV0/1T
-ePSqRth6fq1LW3omNP6EVcY36Z+y0Di4x3hgd6JQbU3AiR+qCpfGTeJ6TAZg7yKb
-jzBDPhRvZMZqp2gnNq+8yienS+2lsQZejzOLXnWmDLmI4WYRMeUde/I3Ircg+dCk
-WOVDKgQTtFxnMvJmOi3sdOyRUy+OSlvDubV0H7g7mqlWWQtHIGv1FT0q4BFbb/FU
-grboQ0jswYDJTM+tZkPHWE+IXEYdNEapSVjuDI07n7lqAX9dcKr18gNugPW0ry9q
-H3GXQD71CBONrCgDiGWmSZOMShfFPB9oOv5bCoVrcXiDXoOXafIklqdhA8HYKvkB
-RHIlT8W+f3BmQGYmyV+1x9qoyGWPlLHTjEYipgOPuPJmZrkxB+mZRrJbqdR9Syrp
-5TVhXKfFvUwSHtey4gEJ0caSBIAuZC8b/xlb41zc0p9mv/6lsLh1aafPa3I7TK1w
-+ZlmW1VEuWdtM7EZkv8X6cjA8x/9lp9l/XTriuKp+Um4HUzxjiJ5SNUPyfkwlb1c
-5MW4pYY5/JY+wMxk1lcxzxI4G8Upp9S0wtWipoxQhK48ZXJnWhsqyO47cZ4dyaGh
-bYWvlGd7Hg7kFzNYnTB+
-=zRJh
------END PGP SIGNATURE-----
-
---Sig_/2mwAQqExp68Vbf3BTLA0lk7--
+Yinghai
