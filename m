@@ -1,41 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from wp188.webpack.hosteurope.de ([80.237.132.195]:45883 "EHLO
-	wp188.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753775Ab2A3WAk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2012 17:00:40 -0500
-From: Danny Kukawka <danny.kukawka@bisect.de>
-To: Scott Murray <scott@spiteful.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 06/16] cpcihp: fix debug module parameter to be bool
-Date: Mon, 30 Jan 2012 23:00:10 +0100
-Message-Id: <1327960820-11867-7-git-send-email-danny.kukawka@bisect.de>
-In-Reply-To: <1327960820-11867-1-git-send-email-danny.kukawka@bisect.de>
-References: <1327960820-11867-1-git-send-email-danny.kukawka@bisect.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [RFC PATCH v1 15/18] sh/PCI: get rid of device resource fixups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>
+Date: Mon, 30 Jan 2012 09:58:26 -0700
+Message-ID: <20120130165826.3231.33715.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix debug variable from module parameter to be really bool to
-fix 'warning: return from incompatible pointer type'.
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
+CC: Paul Mundt <lethal@linux-sh.org>
 ---
- drivers/pci/hotplug/cpcihp_generic.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ arch/sh/drivers/pci/pci.c |   75 +++++++--------------------------------------
+ arch/sh/include/asm/pci.h |    6 +---
+ 2 files changed, 12 insertions(+), 69 deletions(-)
 
-diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-index fb3f846..81af764 100644
---- a/drivers/pci/hotplug/cpcihp_generic.c
-+++ b/drivers/pci/hotplug/cpcihp_generic.c
-@@ -62,7 +62,7 @@
- #define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index 8f18dd0..e5aacef 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -37,11 +37,20 @@ static void __devinit pcibios_scanbus(struct pci_channel *hose)
+ 	static int next_busno;
+ 	static int need_domain_info;
+ 	LIST_HEAD(resources);
++	struct resource *res;
++	resource_size_t offset;
+ 	int i;
+ 	struct pci_bus *bus;
  
- /* local variables */
--static int debug;
-+static bool debug;
- static char *bridge;
- static u8 bridge_busnr;
- static u8 bridge_slot;
--- 
-1.7.7.3
+-	for (i = 0; i < hose->nr_resources; i++)
+-		pci_add_resource(&resources, hose->resources + i);
++	for (i = 0; i < hose->nr_resources; i++) {
++		res = hose->resources + i;
++		offset = 0;
++		if (res->flags & IORESOURCE_IO)
++			offset = hose->io_offset;
++		else if (res->flags & IORESOURCE_MEM)
++			offset = hose->mem_offset;
++		pci_add_resource_offset(&resources, res, offset);
++	}
+ 
+ 	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
+ 				&resources);
+@@ -143,42 +152,12 @@ static int __init pcibios_init(void)
+ }
+ subsys_initcall(pcibios_init);
+ 
+-static void pcibios_fixup_device_resources(struct pci_dev *dev,
+-	struct pci_bus *bus)
+-{
+-	/* Update device resources.  */
+-	struct pci_channel *hose = bus->sysdata;
+-	unsigned long offset = 0;
+-	int i;
+-
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		if (!dev->resource[i].start)
+-			continue;
+-		if (dev->resource[i].flags & IORESOURCE_IO)
+-			offset = hose->io_offset;
+-		else if (dev->resource[i].flags & IORESOURCE_MEM)
+-			offset = hose->mem_offset;
+-
+-		dev->resource[i].start += offset;
+-		dev->resource[i].end += offset;
+-	}
+-}
+-
+ /*
+  *  Called after each bus is probed, but before its children
+  *  are examined.
+  */
+ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	struct pci_dev *dev;
+-	struct list_head *ln;
+-
+-	for (ln = bus->devices.next; ln != &bus->devices; ln = ln->next) {
+-		dev = pci_dev_b(ln);
+-
+-		if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
+-			pcibios_fixup_device_resources(dev, bus);
+-	}
+ }
+ 
+ /*
+@@ -208,36 +187,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return start;
+ }
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
+-{
+-	struct pci_channel *hose = dev->sysdata;
+-	unsigned long offset = 0;
+-
+-	if (res->flags & IORESOURCE_IO)
+-		offset = hose->io_offset;
+-	else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->mem_offset;
+-
+-	region->start = res->start - offset;
+-	region->end = res->end - offset;
+-}
+-
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
+-{
+-	struct pci_channel *hose = dev->sysdata;
+-	unsigned long offset = 0;
+-
+-	if (res->flags & IORESOURCE_IO)
+-		offset = hose->io_offset;
+-	else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->mem_offset;
+-
+-	res->start = region->start + offset;
+-	res->end = region->end + offset;
+-}
+-
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+ 	return pci_enable_resources(dev, mask);
+@@ -381,8 +330,6 @@ EXPORT_SYMBOL(pci_iounmap);
+ #endif /* CONFIG_GENERIC_IOMAP */
+ 
+ #ifdef CONFIG_HOTPLUG
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+ EXPORT_SYMBOL(PCIBIOS_MIN_IO);
+ EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
+ #endif
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index cb21e23..3b5b6ab 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -114,11 +114,7 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ /* Board-specific fixup routines. */
+ int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+ 
+-extern void pcibios_resource_to_bus(struct pci_dev *dev,
+-	struct pci_bus_region *region, struct resource *res);
+-
+-extern void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-				    struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
+ 
+ #define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
+ 
 
