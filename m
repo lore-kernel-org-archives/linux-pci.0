@@ -1,54 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:40099 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753739Ab2AEQyd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jan 2012 11:54:33 -0500
-Received: from compute1.internal (compute1.nyi.mail.srv.osa [10.202.2.41])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id B693220EC1
-	for <linux-pci@vger.kernel.org>; Thu,  5 Jan 2012 11:54:32 -0500 (EST)
-Date: Thu, 5 Jan 2012 08:46:06 -0800
-From: Greg KH <greg@kroah.com>
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Shiraz HASHIM <shiraz.hashim@st.com>,
-	Deepak SIKRI <deepak.sikri@st.com>,
-	Bhavna YADAV <bhavna.yadav@st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux.nics@intel.com
-Subject: Re: Detected Hardware Unit Hang on Intel Wired Ethernet
-Message-ID: <20120105164606.GC26153@kroah.com>
-References: <CAHM4w1=i5dYy+ReqMO=m6W96CNaQ+O=jw+pKQok0nmjb5-fNAw@mail.gmail.com>
- <4F043190.70405@st.com>
- <20120104192234.GC18214@kroah.com>
- <4F05276F.6040708@st.com>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:33717 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754051Ab2A3DTE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jan 2012 22:19:04 -0500
+Received: from /spool/local
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Sun, 29 Jan 2012 20:19:03 -0700
+Date: Mon, 30 Jan 2012 11:18:45 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
+ sriov_init
+Message-ID: <20120130031845.GA2359@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <20120127191032.GA22999@dirshya.in.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F05276F.6040708@st.com>
+In-Reply-To: <20120127191032.GA22999@dirshya.in.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 05, 2012 at 10:00:39AM +0530, Pratyush Anand wrote:
-> On 1/5/2012 12:52 AM, Greg KH wrote:
-> >On Wed, Jan 04, 2012 at 04:31:36PM +0530, Pratyush Anand wrote:
-> >>Adding PCI mailing list too, as problem is coming only when MSI is enabled.
-> >>
-> >>If I connect an PCIe analyzer, I see that at the time of issue
-> >>MRd(64) for 32 words has been issued with a wrong 64 bit address
-> >>from ethernet card to my RC.
-> >>In the normal course it always issues MRd(32) only.
-> >
-> >Bug in your pcie firmware controller?
-> >
-> >.
-> >
+On Sat, Jan 28, 2012 at 12:40:32AM +0530, Vaidyanathan Srinivasan wrote:
+> Hi Ram and Jesse,
 > 
-> when you say "Bug in your pcie firmware controller?", is it RC's
-> software or EP's software?
+> I found a trivial issue with page size alignment check on IBM POWER
+> box with 64k base page size.  In sriov_init(), changing the check from
+> PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
+> required to use one of the sriov adapter as PF since the
+> resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
+> pseries boxes.
+> 
+> I think resource_size() could be less than SystemPageSize, but I would
+> like your comments/ack/nack on any consequences of checking for only
+> 4k alignment here in a system with larger base page size.
 
-I don't know, but I would place the bet on your motherboard controller,
-not the device.
+As per the SRIOV specs, the  resource has to be System page size aligned.
 
-greg k-h
+PFs are required to support 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB
+page sizes. In your case if your adapter's PF is not supporting 64K page size
+then I think it is not conforming to the PCI SRIOV spec.
+
+RP
+
