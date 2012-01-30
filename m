@@ -1,42 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:57938 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758750Ab2AFPuP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2012 10:50:15 -0500
-Date: Fri, 06 Jan 2012 15:50:04 +0000
-Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
- to include domain id.
-From: Keir Fraser <keir@xen.org>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ian Campbell <Ian.Campbell@eu.citrix.com>
-CC: <linux-pci@vger.kernel.org>, <xen-devel@lists.xensource.com>,
-	<linux-kernel@vger.kernel.org>, <jbarnes@virtuousgeek.org>
-Message-ID: <CB2CC8AC.36FD5%keir@xen.org>
-In-Reply-To: <20120106150338.GB5855@phenom.dumpdata.com>
-Mime-version: 1.0
-Content-type: text/plain;
-	charset="US-ASCII"
+Received: from mail-gx0-f202.google.com ([209.85.161.202]:42988 "EHLO
+	mail-gx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753546Ab2A3Q5l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2012 11:57:41 -0500
+Received: by ggnk1 with SMTP id k1so389999ggn.1
+        for <linux-pci@vger.kernel.org>; Mon, 30 Jan 2012 08:57:40 -0800 (PST)
+Subject: [RFC PATCH v1 06/18] alpha/PCI: get rid of device resource fixups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-alpha@vger.kernel.org
+Date: Mon, 30 Jan 2012 09:57:39 -0700
+Message-ID: <20120130165739.3231.90160.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/01/2012 15:03, "Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com> wrote:
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
->> As you're touching this anyway, how about fixing the other minor
->> issues with it too? E.g.
->> 
->> dev_err(&dev->dev, "Device appears to be assigned to dom%d!"
->> " Overwriting the ownership, but beware.\n",
->> xen_find_device_domain_owner(dev));
->> 
->> (a native English speaker may want to comment the "but beware"
->> part - it reads odd for me).
-> 
-> Hm, lets ask the English speakers. Ian?
+CC: linux-alpha@vger.kernel.org
+---
+ arch/alpha/include/asm/pci.h |    6 +---
+ arch/alpha/kernel/pci.c      |   71 ++----------------------------------------
+ 2 files changed, 5 insertions(+), 72 deletions(-)
 
-The suggested reworking above is an improvement. The "but beware" bit is
-fine.
-
- -- keir
-
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index 28d0497..dace435 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -99,11 +99,7 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 	return channel ? 15 : 14;
+ }
+ 
+-extern void pcibios_resource_to_bus(struct pci_dev *, struct pci_bus_region *,
+-				    struct resource *);
+-
+-extern void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-				    struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
+ 
+ #define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
+ 
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 8c723c1..ee74503 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -253,32 +253,6 @@ pci_restore_srm_config(void)
+ #endif
+ 
+ void __devinit
+-pcibios_fixup_resource(struct resource *res, struct resource *root)
+-{
+-	res->start += root->start;
+-	res->end += root->start;
+-}
+-
+-void __devinit
+-pcibios_fixup_device_resources(struct pci_dev *dev, struct pci_bus *bus)
+-{
+-	/* Update device resources.  */
+-	struct pci_controller *hose = (struct pci_controller *)bus->sysdata;
+-	int i;
+-
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		if (!dev->resource[i].start)
+-			continue;
+-		if (dev->resource[i].flags & IORESOURCE_IO)
+-			pcibios_fixup_resource(&dev->resource[i],
+-					       hose->io_space);
+-		else if (dev->resource[i].flags & IORESOURCE_MEM)
+-			pcibios_fixup_resource(&dev->resource[i],
+-					       hose->mem_space);
+-	}
+-}
+-
+-void __devinit
+ pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev = bus->self;
+@@ -286,13 +260,10 @@ pcibios_fixup_bus(struct pci_bus *bus)
+ 	if (pci_probe_only && dev &&
+  		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+  		pci_read_bridge_bases(bus);
+- 		pcibios_fixup_device_resources(dev, bus);
+ 	} 
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		pdev_save_srm_config(dev);
+-		if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
+-			pcibios_fixup_device_resources(dev, bus);
+ 	}
+ }
+ 
+@@ -302,42 +273,6 @@ pcibios_update_irq(struct pci_dev *dev, int irq)
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+ }
+ 
+-void
+-pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			 struct resource *res)
+-{
+-	struct pci_controller *hose = (struct pci_controller *)dev->sysdata;
+-	unsigned long offset = 0;
+-
+-	if (res->flags & IORESOURCE_IO)
+-		offset = hose->io_space->start;
+-	else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->mem_space->start;
+-
+-	region->start = res->start - offset;
+-	region->end = res->end - offset;
+-}
+-
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
+-{
+-	struct pci_controller *hose = (struct pci_controller *)dev->sysdata;
+-	unsigned long offset = 0;
+-
+-	if (res->flags & IORESOURCE_IO)
+-		offset = hose->io_space->start;
+-	else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->mem_space->start;
+-
+-	res->start = region->start + offset;
+-	res->end = region->end + offset;
+-}
+-
+-#ifdef CONFIG_HOTPLUG
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+-#endif
+-
+ int
+ pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+@@ -416,8 +351,10 @@ common_init_pci(void)
+ 			hose->mem_space->end = end;
+ 
+ 		INIT_LIST_HEAD(&resources);
+-		pci_add_resource(&resources, hose->io_space);
+-		pci_add_resource(&resources, hose->mem_space);
++		pci_add_resource_offset(&resources, hose->io_space,
++					hose->io_space->start);
++		pci_add_resource_offset(&resources, hose->mem_space,
++					hose->mem_space->start);
+ 
+ 		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
+ 					hose, &resources);
 
