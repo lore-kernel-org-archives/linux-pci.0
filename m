@@ -1,56 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7RsR+2gDJvWic4ta-_SWfUwECaVxRrCVnTFZyFG5RCkw@mail.gmail.com>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
+	<1327718971-9598-11-git-send-email-yinghai@kernel.org>
+	<CAErSpo7RsR+2gDJvWic4ta-_SWfUwECaVxRrCVnTFZyFG5RCkw@mail.gmail.com>
+Date: Mon, 30 Jan 2012 10:52:52 -0800
+Message-ID: <CAE9FiQU64Ev66D+044m+ZLn+tWSVtnZWXnyaNjkaM+aQD_1CQw@mail.gmail.com>
+Subject: Re: [PATCH 10/13] PCI: Strict checking of valid range for bridge
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 06/13] PCI, powerpc: Register busn_res for root buses
-Date: Fri, 27 Jan 2012 18:49:24 -0800
-Message-Id: <1327718971-9598-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci-common.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+On Mon, Jan 30, 2012 at 8:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jan 27, 2012 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> children bridges busn range should be able to be allocated from parent bus range.
+>>
+>> to avoid overlapping between sibling bridges on same bus.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/probe.c |   27 +++++++++++++++++++++++++++
+>>  1 files changed, 27 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 83df3fb..e12f65f0 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -791,6 +791,33 @@ reduce_needed_size:
+>>        return ret;
+>>  }
+>>
+>> +static int __devinit pci_bridge_check_busn_res(struct pci_bus *bus,
+>> +                               struct pci_dev *dev,
+>> +                               int secondary, int subordinate)
+>
+> This function returns a boolean, but the function name doesn't give
+> any clue about what a true/false return means.  Something like
+> "busn_valid" would make the callers more readable.
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index cce98d7..501f29b 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1732,6 +1732,8 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	bus->secondary = hose->first_busno;
- 	hose->bus = bus;
- 
-+	pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
-+
- 	/* Get probe mode and perform scan */
- 	mode = PCI_PROBE_NORMAL;
- 	if (node && ppc_md.pci_probe_mode)
-@@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		of_scan_bus(node, bus);
- 	}
- 
--	if (mode == PCI_PROBE_NORMAL)
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
- 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, bus->subordinate);
-+	}
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
--- 
-1.7.7
+ok
 
+>
+>> +{
+>> +       int broken = 0;
+>> +
+>> +       struct resource busn_res;
+>> +       int ret;
+>> +
+>> +       memset(&busn_res, 0, sizeof(struct resource));
+>> +       dev_printk(KERN_DEBUG, &dev->dev,
+>> +                "check if busn %02x-%02x is in busn_res: %06llx-%06llx\n",
+>> +                secondary, subordinate,
+>> +                (unsigned long long)bus->busn_res.start,
+>> +                (unsigned long long)bus->busn_res.end);
+>> +       ret = allocate_resource(&bus->busn_res, &busn_res,
+>> +                        (subordinate - secondary + 1),
+>> +                        (pci_domain_nr(bus)<<8) | secondary,
+>> +                        (pci_domain_nr(bus)<<8) | subordinate,
+>
+> I think this "(pci_domain_nr(bus)<<8) | secondary" stuff needs to be a
+> macro or something.
+
+maybe.
