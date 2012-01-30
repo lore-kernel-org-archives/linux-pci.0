@@ -1,117 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1327718971-9598-3-git-send-email-yinghai@kernel.org>
-References: <1327718971-9598-1-git-send-email-yinghai@kernel.org> <1327718971-9598-3-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Jan 2012 07:28:56 -0800
-Message-ID: <CAErSpo7ji9R3azc7Xiu8K-=QXm26w=0oSWmcBh=j8dy=MttEvg@mail.gmail.com>
-Subject: Re: [PATCH 02/13] PCI: Add busn_res operation functions
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
+In-Reply-To: <20120130165719.3231.43751.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+	<20120130165719.3231.43751.stgit@bhelgaas.mtv.corp.google.com>
+Date: Mon, 30 Jan 2012 12:52:24 -0800
+Message-ID: <CAE9FiQUXjjk=twgwWVB01JMD9GokEVjOoiRLYZYRTPSPXHYfFw@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 02/18] PCI: add struct pci_host_bridge and a list
+ of all bridges found
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 27, 2012 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> will use them insert/update busn res in pci_bus
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On Mon, Jan 30, 2012 at 8:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> This adds a list of all PCI host bridges we find and a way to look up
+> the host bridge from a pci_dev.
 > ---
->  drivers/pci/probe.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |    3 +++
->  2 files changed, 47 insertions(+), 0 deletions(-)
+>  drivers/pci/probe.c |   39 ++++++++++++++++++++++++++++++++++-----
+>  include/linux/pci.h |    5 +++++
+>  2 files changed, 39 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index a114173..71261da 100644
+> index da0d655..2ffe8a3 100644
 > --- a/drivers/pci/probe.c
 > +++ b/drivers/pci/probe.c
-> @@ -1622,6 +1622,50 @@ err_out:
->        return NULL;
->  }
+> @@ -15,6 +15,8 @@
+>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
+>  #define CARDBUS_RESERVE_BUSNR  3
 >
-> +void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+> +static LIST_HEAD(pci_host_bridges);
+> +
+>  /* Ugh.  Need to stop exporting this to modules. */
+>  LIST_HEAD(pci_root_buses);
+>  EXPORT_SYMBOL(pci_root_buses);
+> @@ -42,6 +44,23 @@ int no_pci_devices(void)
+>  }
+>  EXPORT_SYMBOL(no_pci_devices);
+>
+> +static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
 > +{
-> +       struct resource *res = &b->busn_res;
-> +       struct resource *parent_res = &iobusn_resource;
-> +       int ret;
+> +       struct pci_bus *bus;
+> +       struct pci_host_bridge *bridge;
 > +
-> +       res->start = (pci_domain_nr(b) << 8) | bus;
-> +       res->end = (pci_domain_nr(b) << 8) | bus_max;
-> +       res->flags = IORESOURCE_BUS;
+> +       bus = dev->bus;
+> +       while (bus->parent)
+> +               bus = bus->parent;
 > +
-> +       if (!pci_is_root_bus(b))
-> +               parent_res = &b->parent->busn_res;
+> +       list_for_each_entry(bridge, &pci_host_bridges, list) {
+> +               if (bridge->bus == bus)
+> +                       return bridge;
+> +       }
 > +
-> +       ret = insert_resource(parent_res, res);
-> +
-> +       dev_printk(KERN_DEBUG, &b->dev,
-> +        "busn_res: %06llx-%06llx %s inserted under %06llx-%06llx\n",
-> +                       (unsigned long long)res->start,
-> +                       (unsigned long long)res->end,
-> +                        ret ? "can not be" : "is",
-> +                       (unsigned long long)parent_res->start,
-> +                       (unsigned long long)parent_res->end);
-
-Please update the %pR implementation so you can use it instead of
-having to fiddle around with start/end separately and casts.
-
+> +       return NULL;
 > +}
 > +
-> +void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
-> +{
-> +       struct resource *res = &b->busn_res;
-> +       unsigned long long old_end = res->end;
-> +
-> +       res->end &= ~0xff;
-> +       res->end |= bus_max;
-
-This updates a resource in place, without removing it from the
-resource tree and re-inserting it.  Doesn't this make it possible to
-corrupt the resource tree?  For example, let's say you have this tree:
-
-    00-3f : host bridge A
-      00-1f : P2P bridge B
-    40-7f : host bridge C
-
-Now you use pci_bus_update_busn_res_end() to update the resource for
-P2P bridge B,  setting its end to 5f.  I think the resource tree is
-now corrupted.
-
-> +       dev_printk(KERN_DEBUG, &b->dev,
-> +                "busn_res: %06llx-%06llx end updated to %06llx-%06llx\n",
-> +                       (unsigned long long)res->start,
-> +                       old_end,
-> +                       (unsigned long long)res->start,
-> +                       (unsigned long long)res->end);
-> +}
-> +
-> +void pci_bus_release_busn_res(struct pci_bus *b)
-> +{
-> +       release_resource(&b->busn_res);
-> +}
-> +
->  struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+>  /*
+>  * PCI Bus Class
+>  */
+> @@ -1526,20 +1545,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
 >                struct pci_ops *ops, void *sysdata, struct list_head *resources)
 >  {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 94ad468..3da935c 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -665,6 +665,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
->  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->                                    struct pci_ops *ops, void *sysdata,
->                                    struct list_head *resources);
-> +void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
-> +void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
-> +void pci_bus_release_busn_res(struct pci_bus *b);
->  struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
->                                             struct pci_ops *ops, void *sysdata,
->                                             struct list_head *resources);
-> --
-> 1.7.7
+>        int error, i;
+> +       struct pci_host_bridge *bridge;
+>        struct pci_bus *b, *b2;
+>        struct device *dev;
+>        struct pci_bus_resource *bus_res, *n;
+>        struct resource *res;
 >
+> +       bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> +       if (!bridge)
+> +               return NULL;
+> +
+>        b = pci_alloc_bus();
+>        if (!b)
+> -               return NULL;
+> +               goto err_bus;
+>
+>        dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+> -       if (!dev) {
+> -               kfree(b);
+> -               return NULL;
+> -       }
+> +       if (!dev)
+> +               goto err_dev;
+>
+>        b->sysdata = sysdata;
+>        b->ops = ops;
+> @@ -1576,6 +1598,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>
+>        b->number = b->secondary = bus;
+>
+> +       bridge->bus = b;
+> +
+>        /* Add initial resources to the bus */
+>        list_for_each_entry_safe(bus_res, n, resources, list)
+>                list_move_tail(&bus_res->list, &b->resources);
+> @@ -1591,6 +1615,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>        }
+>
+>        down_write(&pci_bus_sem);
+> +       list_add_tail(&bridge->list, &pci_host_bridges);
+>        list_add_tail(&b->node, &pci_root_buses);
+>        up_write(&pci_bus_sem);
+
+we already have list for root_bus. So there will be two lists.
+
+wonder if we can overload bus->self point to struct host_bridge.
+
+or just do not add host_bridge , and instead only add another field
+like struct list_head windows in pci_sysdata?
+
+Thanks
+
+Yinghai
