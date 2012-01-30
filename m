@@ -1,92 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: xen-devel@lists.xensource.com,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH 1/2] pci: Introduce __pci_reset_function_locked to be used when holding device_lock.
-Date: Thu, 12 Jan 2012 12:06:46 -0500
-Message-Id: <1326388007-19178-2-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1326388007-19178-1-git-send-email-konrad.wilk@oracle.com>
-References: <1326388007-19178-1-git-send-email-konrad.wilk@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ee0-f74.google.com ([74.125.83.74]:50063 "EHLO
+	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753230Ab2A3Q5Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jan 2012 11:57:16 -0500
+Received: by eekb15 with SMTP id b15so224869eek.1
+        for <linux-pci@vger.kernel.org>; Mon, 30 Jan 2012 08:57:15 -0800 (PST)
+Subject: [RFC PATCH v1 01/18] PCI: don't publish new root bus until it's fully
+	initialized
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org
+Date: Mon, 30 Jan 2012 09:57:14 -0700
+Message-ID: <20120130165714.3231.65354.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The use case of this is when a driver wants to call FLR when a device
-is attached to it using the SysFS "bind" or "unbind" functionality.
+When pci_create_root_bus() adds the new struct pci_bus to the global
+pci_root_buses list, the bus becomes visible to other parts of the
+kernel, so it should be fully initialized.
 
-The call chain when a user does "bind" looks as so:
-
- echo "0000:01.07.0" > /sys/bus/pci/drivers/XXXX/bind
-
-and ends up calling:
-  driver_bind:
-    device_lock(dev);  <=== TAKES LOCK
-    XXXX_probe:
-         .. pci_enable_device()
-         ...__pci_reset_function(), which calls
-                 pci_dev_reset(dev, 0):
-                        if (!0) {
-                                device_lock(dev) <==== DEADLOCK
-
-The __pci_reset_function_locked function allows the the drivers
-'probe' function to call the "pci_reset_function" while still holding
-the driver mutex lock.
-
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+This patch delays adding the bus to the pci_root_buses list until after
+all the struct pci_bus initialization is finished.
 ---
- drivers/pci/pci.c   |   25 +++++++++++++++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 26 insertions(+), 0 deletions(-)
+ drivers/pci/probe.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 97fff78..192be5d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3163,6 +3163,31 @@ int __pci_reset_function(struct pci_dev *dev)
- EXPORT_SYMBOL_GPL(__pci_reset_function);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 7cc9e2f..da0d655 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1551,10 +1551,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		goto err_out;
+ 	}
  
- /**
-+ * __pci_reset_function_locked - reset a PCI device function while holding
-+ * the @dev mutex lock.
-+ * @dev: PCI device to reset
-+ *
-+ * Some devices allow an individual function to be reset without affecting
-+ * other functions in the same device.  The PCI device must be responsive
-+ * to PCI config space in order to use this function.
-+ *
-+ * The device function is presumed to be unused and the caller is holding
-+ * the device mutex lock when this function is called.
-+ * Resetting the device will make the contents of PCI configuration space
-+ * random, so any caller of this must be prepared to reinitialise the
-+ * device including MSI, bus mastering, BARs, decoding IO and memory spaces,
-+ * etc.
-+ *
-+ * Returns 0 if the device function was successfully reset or negative if the
-+ * device doesn't support resetting a single function.
-+ */
-+int __pci_reset_function_locked(struct pci_dev *dev)
-+{
-+	return pci_dev_reset(dev, 1);
-+}
-+EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+-	down_write(&pci_bus_sem);
+-	list_add_tail(&b->node, &pci_root_buses);
+-	up_write(&pci_bus_sem);
+-
+ 	dev->parent = parent;
+ 	dev->release = pci_release_bus_bridge_dev;
+ 	dev_set_name(dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+@@ -1594,6 +1590,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 			dev_info(&b->dev, "root bus resource %pR\n", res);
+ 	}
+ 
++	down_write(&pci_bus_sem);
++	list_add_tail(&b->node, &pci_root_buses);
++	up_write(&pci_bus_sem);
 +
-+/**
-  * pci_probe_reset_function - check whether the device can be safely reset
-  * @dev: PCI device to reset
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a16b1df..65c2d8a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -817,6 +817,7 @@ int pcie_set_readrq(struct pci_dev *dev, int rq);
- int pcie_get_mps(struct pci_dev *dev);
- int pcie_set_mps(struct pci_dev *dev, int mps);
- int __pci_reset_function(struct pci_dev *dev);
-+int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
--- 
-1.7.7.4
+ 	return b;
+ 
+ class_dev_reg_err:
 
