@@ -1,33 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2.gnudd.com ([213.203.150.91]:61564 "EHLO mail.gnudd.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759105Ab2AFUTP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Jan 2012 15:19:15 -0500
-Date: Fri, 6 Jan 2012 21:18:56 +0100
-From: Alessandro Rubini <rubini@gnudd.com>
-To: jbarnes@virtuousgeek.org
-Cc: linux-kernel@vger.kernel.org, giancarlo.asnaghi@st.com,
-	alan@linux.intel.com, linux-pci@vger.kernel.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
-Subject: Re: [PATCH 1/6] pci_ids: add device ids for STA2X11 device (aka
- ConneXT)
-Message-ID: <20120106201856.GA8864@mail.gnudd.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120106121154.48b570e8@jbarnes-desktop>
-References: <20120106121154.48b570e8@jbarnes-desktop>
-  <3bffc0889fba822f58b5f8607fa5247c6f50649c.1325852059.git.rubini@gnudd.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1327718971-9598-11-git-send-email-yinghai@kernel.org>
+References: <1327718971-9598-1-git-send-email-yinghai@kernel.org> <1327718971-9598-11-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Jan 2012 08:04:39 -0800
+Message-ID: <CAErSpo7RsR+2gDJvWic4ta-_SWfUwECaVxRrCVnTFZyFG5RCkw@mail.gmail.com>
+Subject: Re: [PATCH 10/13] PCI: Strict checking of valid range for bridge
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Applied, thanks.  Will the users land this release too?
+On Fri, Jan 27, 2012 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> children bridges busn range should be able to be allocated from parent bus range.
+>
+> to avoid overlapping between sibling bridges on same bus.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/probe.c |   27 +++++++++++++++++++++++++++
+>  1 files changed, 27 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 83df3fb..e12f65f0 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -791,6 +791,33 @@ reduce_needed_size:
+>        return ret;
+>  }
+>
+> +static int __devinit pci_bridge_check_busn_res(struct pci_bus *bus,
+> +                               struct pci_dev *dev,
+> +                               int secondary, int subordinate)
 
-It's a lot of code, and I'm working on it. I'll have patches for the
-individual drivers over the next months.
+This function returns a boolean, but the function name doesn't give
+any clue about what a true/false return means.  Something like
+"busn_valid" would make the callers more readable.
 
-The main user, the arch/x86/platform/sta2x11 place is almost ready but
-I want to test better approaches internally rather then submitting and
-fixing soon after.
+> +{
+> +       int broken = 0;
+> +
+> +       struct resource busn_res;
+> +       int ret;
+> +
+> +       memset(&busn_res, 0, sizeof(struct resource));
+> +       dev_printk(KERN_DEBUG, &dev->dev,
+> +                "check if busn %02x-%02x is in busn_res: %06llx-%06llx\n",
+> +                secondary, subordinate,
+> +                (unsigned long long)bus->busn_res.start,
+> +                (unsigned long long)bus->busn_res.end);
+> +       ret = allocate_resource(&bus->busn_res, &busn_res,
+> +                        (subordinate - secondary + 1),
+> +                        (pci_domain_nr(bus)<<8) | secondary,
+> +                        (pci_domain_nr(bus)<<8) | subordinate,
 
-thanks
-/alessandro
+I think this "(pci_domain_nr(bus)<<8) | secondary" stuff needs to be a
+macro or something.
+
+> +                        1, NULL, NULL);
+> +       if (ret)
+> +               broken = 1;
+> +       else
+> +               release_resource(&busn_res);
+> +
+> +       return broken;
+> +}
+>  /*
+>  * If it's a bridge, configure it and scan the bus behind it.
+>  * For CardBus bridges, we don't scan behind as the devices will
+> --
+> 1.7.7
+>
