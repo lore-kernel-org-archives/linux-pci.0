@@ -1,51 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:34045 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753535Ab2AMX05 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2012 18:26:57 -0500
-Date: Fri, 13 Jan 2012 23:26:53 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [git pull] PCI changes
-Message-ID: <20120113232653.GA29533@srcf.ucam.org>
-References: <20120111103408.30cfa338@jbarnes-desktop>
- <CA+55aFwDVEH1NwEgKCQSv9ee3P2ma1aqtjOo-s2BeURyeTGo8g@mail.gmail.com>
- <20120113212409.GA27671@srcf.ucam.org>
- <CA+55aFwJvvrNyqNStjM9iYcRa+t4FuuJW48SixXN+6H6sJ9e8w@mail.gmail.com>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:54406 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752240Ab2A3DmT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jan 2012 22:42:19 -0500
+Message-ID: <4F26118F.7090803@jp.fujitsu.com>
+Date: Mon, 30 Jan 2012 12:42:07 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFwJvvrNyqNStjM9iYcRa+t4FuuJW48SixXN+6H6sJ9e8w@mail.gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/7] PCI: pcie hotplug related patch
+References: <1327139539-14301-1-git-send-email-yinghai@kernel.org> <CAE9FiQUFYcaVWorPPP7PQqiBPnKv-iBkPm_qbGz4T_xLR2THiQ@mail.gmail.com> <20120127103601.09e3f771@jbarnes-desktop> <CAE9FiQU70tBVCK-73x7kTX82XE3H03HTwP+HaS2E4_GqwMY1SQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQU70tBVCK-73x7kTX82XE3H03HTwP+HaS2E4_GqwMY1SQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 13, 2012 at 03:14:21PM -0800, Linus Torvalds wrote:
-> On Fri, Jan 13, 2012 at 1:24 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> >>
-> >> So why is acpi_pci_root_add() special? Cna you explain that part to me?
-> >
-> > pcie_no_aspm() means "Do not permit ASPM to be enabled" - it doesn't
-> > alter the existing state. pcie_clear_aspm() does that.
-> 
-> I *know*.
-> 
-> So look again.
-> 
-> Why is acpi_pci_root_add() special?
-> 
-> Because dammit, it does exactly that pcie_clear_aspm() for the
-> ACPI_FADT_NO_ASPM case.
+(2012/01/28 3:58), Yinghai Lu wrote:
+> On Fri, Jan 27, 2012 at 10:36 AM, Jesse Barnes<jbarnes@virtuousgeek.org>  wrote:
+>
+>>>
+>>>        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>> for-pci-hp
+>>
+>> Ok I dropped the earlier link state check; can you re-post the series
+>> with Linus's comments addressed?
+>
+> resent.
+>
+> first one patch should get Linus's Ack, but he just said that solution
+> is the best so far.
+>
+>>
+>> Kenji-san, do you have time to at least review these?  Testing would be
+>> nice too...
+>
+> others should already address all Kenji's reviews.
+>
 
-I'm sorry, I thought you were referring to the status quo rather than 
-the patch - I see what you mean now. The intent here is to clear ASPM 
-state if the FADT bit has been set *and* we've got _OSC control, whereas 
-previously we'd clear ASPM state any time the FADT bit was set. There 
-are some machines which (a) set the FADT bit, (b) hand over _OSC 
-control, (c) program the device and (d) crash under certain 
-circumstances if you then try to use it. My assumption here is that the 
-FADT bit *does* mean "clear ASPM state", but only if we've been granted 
-_OSC control. That's the behaviour described in the changelog.
+I have a chance to test the patches in this week. I will do it and report
+the result. For some patches, I don't have any environment to reproduce
+the problem the patch wants to solve. So it is difficult for me to confirm
+the patch fix the problem. But I will test them from the regression
+point of view.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Regards,
+Kenji Kaneshige
