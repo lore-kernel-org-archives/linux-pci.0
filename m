@@ -1,85 +1,150 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 15/21] PCI: add debug print out for add_size
-Date: Sat, 21 Jan 2012 02:08:31 -0800
-Message-Id: <1327140517-14811-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 05/14] PCI, x86: Register busn_res for root buses
+Date: Mon, 30 Jan 2012 23:42:43 -0800
+Message-Id: <1327995772-11388-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-for some corner cases later.
+update x86_pci_root_bus_resources() to get bus_max for non-acpi case.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c |   24 ++++++++++++++++++------
- 1 files changed, 18 insertions(+), 6 deletions(-)
+ arch/x86/include/asm/topology.h |    3 ++-
+ arch/x86/pci/acpi.c             |    8 +++++---
+ arch/x86/pci/bus_numa.c         |    8 +++++++-
+ arch/x86/pci/common.c           |   11 +++++++----
+ 4 files changed, 21 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c845d18..ae0b1f2 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -118,10 +118,13 @@ static resource_size_t get_res_add_size(struct list_head *head,
+diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
+index b9676ae..ad4060e 100644
+--- a/arch/x86/include/asm/topology.h
++++ b/arch/x86/include/asm/topology.h
+@@ -172,7 +172,8 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
+ }
  
- 	list_for_each_entry(dev_res, head, list) {
- 		if (dev_res->res == res) {
-+			int idx = res - &dev_res->dev->resource[0];
-+
- 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--				 "%pR get_res_add_size  add_size %llx\n",
--				 dev_res->res,
-+				 "res[%d]=%pR get_res_add_size add_size %llx\n",
-+				 idx, dev_res->res,
- 				 (unsigned long long)dev_res->add_size);
-+
- 			return dev_res->add_size;
- 		}
+ struct pci_bus;
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources);
++void x86_pci_root_bus_resources(int bus, int *bus_max,
++				struct list_head *resources);
+ 
+ #ifdef CONFIG_SMP
+ #define mc_capable()	((boot_cpu_data.x86_max_cores > 1) && \
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index daa4249..b25b5b1 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -348,6 +348,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct acpi_device *device = root->device;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
++	int busmax = root->secondary.end;
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+@@ -410,12 +411,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+ 		if (!pci_use_crs)
+-			x86_pci_root_bus_resources(busnum, &resources);
++			x86_pci_root_bus_resources(busnum, &busmax, &resources);
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+-		if (bus)
++		if (bus) {
++			pci_bus_insert_busn_res(bus, busnum, busmax);
+ 			bus->subordinate = pci_scan_child_bus(bus);
+-		else
++		} else
+ 			pci_free_resource_list(&resources);
  	}
-@@ -260,8 +263,9 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 			if (pci_reassign_resource(add_res->dev, idx,
- 						  add_size, align))
- 				dev_printk(KERN_DEBUG, &add_res->dev->dev,
--				   "failed to add optional resources res=%pR\n",
--							res);
-+					   "failed to add %llx res[%d]=%pR\n",
-+					   (unsigned long long)add_size,
-+					   idx, res);
- 		}
- out:
- 		list_del(&add_res->list);
-@@ -760,8 +764,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	b_res->start = 4096;
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
--	if (size1 > size0 && realloc_head)
-+	if (size1 > size0 && realloc_head) {
- 		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
-+		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
-+				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
-+				 bus->secondary, bus->subordinate, size1-size0);
-+	}
+ 
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index fd3f655..5213cd8 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -7,7 +7,8 @@
+ int pci_root_num;
+ struct pci_root_info pci_root_info[PCI_ROOT_NR];
+ 
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources)
++void x86_pci_root_bus_resources(int bus, int *bus_max,
++				struct list_head *resources)
+ {
+ 	int i;
+ 	int j;
+@@ -28,6 +29,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	       bus);
+ 
+ 	info = &pci_root_info[i];
++	*bus_max = info->bus_max;
+ 	for (j = 0; j < info->res_num; j++) {
+ 		struct resource *res;
+ 		struct resource *root;
+@@ -51,6 +53,10 @@ default_resources:
+ 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
+ 	pci_add_resource(resources, &ioport_resource);
+ 	pci_add_resource(resources, &iomem_resource);
++	if (!bus)
++		*bus_max = 0xff;
++	else if (!*bus_max)
++		*bus_max = bus;
  }
  
- /**
-@@ -873,8 +881,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN | mem64_mask;
--	if (size1 > size0 && realloc_head)
-+	if (size1 > size0 && realloc_head) {
- 		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
-+		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
-+				 "%pR to [bus %02x-%02x] add_size %llx\n", b_res,
-+				 bus->secondary, bus->subordinate, (unsigned long long)size1-size0);
-+	}
- 	return 1;
- }
+ void __devinit update_res(struct pci_root_info *info, resource_size_t start,
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 323481e..ce0aefc 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -433,6 +433,7 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+ 	struct pci_sysdata *sd;
++	int bus_max;
  
+ 	while ((bus = pci_find_next_bus(bus)) != NULL) {
+ 		if (bus->number == busnum) {
+@@ -454,8 +455,9 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 	sd->node = get_mp_bus_to_node(busnum);
+ 
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+-	x86_pci_root_bus_resources(busnum, &resources);
+-	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
++	x86_pci_root_bus_resources(busnum, &bus_max, &resources);
++	bus = pci_scan_root_bus_max(NULL, busnum, bus_max, &pci_root_ops, sd,
++				&resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
+@@ -643,6 +645,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+ 	struct pci_sysdata *sd;
++	int bus_max;
+ 
+ 	/*
+ 	 * Allocate per-root-bus (not per bus) arch-specific data.
+@@ -655,8 +658,8 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 		return NULL;
+ 	}
+ 	sd->node = node;
+-	x86_pci_root_bus_resources(busno, &resources);
+-	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
++	x86_pci_root_bus_resources(busno, &bus_max, &resources);
++	bus = pci_scan_root_bus_max(NULL, busno, bus_max, ops, sd, &resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
 -- 
 1.7.7
 
