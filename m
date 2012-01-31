@@ -1,52 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:40909 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751089Ab2AYT4r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jan 2012 14:56:47 -0500
-Date: Wed, 25 Jan 2012 20:32:26 +0100
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Greg KH <greg@kroah.com>, linux-pci@vger.kernel.org,
-	linux-pcmcia@lists.infradead.org,
-	Alan Stern <stern@rowland.harvard.edu>,
-	USB list <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH resend] Clean up new_id and remove_id sysfs attribute
- routines
-Message-ID: <20120125193226.GA9192@comet.dominikbrodowski.net>
-References: <Pine.LNX.4.44L0.1201241433200.1200-100000@iolanthe.rowland.org>
- <20120125003313.GA15617@kroah.com>
- <20120124165936.47e53e99@jbarnes-desktop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120124165936.47e53e99@jbarnes-desktop>
+Received: from acsinet15.oracle.com ([141.146.126.227]:47103 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752887Ab2AaHnV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2012 02:43:21 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 04/14] PCI: Add busn_res tracking in core
+Date: Mon, 30 Jan 2012 23:42:42 -0800
+Message-Id: <1327995772-11388-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 24, 2012 at 04:59:36PM -0800, Jesse Barnes wrote:
-> On Tue, 24 Jan 2012 16:33:13 -0800
-> Greg KH <greg@kroah.com> wrote:
-> 
-> > On Tue, Jan 24, 2012 at 02:35:13PM -0500, Alan Stern wrote:
-> > > This patch (as1514) cleans up some places where new_id and remove_id
-> > > sysfs attributes are created and deleted.  Handling both attributes in
-> > > a single routine rather than a pair of routines makes the code
-> > > smaller.  It also prevents certain kinds of errors, like one we
-> > > currently have in the USB subsystem: The removeid attribute is often
-> > > created even when newid isn't (because the driver's no_dynamid_id flag
-> > > is set).
-> > > 
-> > > In the case of the PCMCIA subsystem, the newid attribute is created
-> > > but never explicitly deleted.  The patch adds a deletion routine.
-> > > 
-> > > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> > > CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-> > > CC: Dominik Brodowski <linux@dominikbrodowski.net>
-> > 
-> > Jesse and Dominik, any objection for me to take this through my tree?
-> 
-> No objection here, thanks guys.
+update pci_scan_root_bus, and pci_scan_bus to insert root bus busn into
+iobusn_resource tree.
 
-And none from me, neither. Thanks!
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c  |   30 ++++++++++++++++++++++++++----
+ drivers/pci/remove.c |    1 +
+ include/linux/pci.h  |    4 ++++
+ 3 files changed, 31 insertions(+), 4 deletions(-)
 
-Best,
-	Dominik
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 957c2bc..79de0dd 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1658,8 +1658,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 	release_resource(&b->busn_res);
+ }
+ 
+-struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
++		int bus_max, struct pci_ops *ops, void *sysdata,
++		struct list_head *resources)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -1667,10 +1668,26 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!b)
+ 		return NULL;
+ 
++	pci_bus_insert_busn_res(b, bus, bus_max);
+ 	b->subordinate = pci_scan_child_bus(b);
+ 	pci_bus_add_devices(b);
+ 	return b;
+ }
++EXPORT_SYMBOL(pci_scan_root_bus_max);
++
++struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata,
++		struct list_head *resources)
++{
++	struct pci_bus *b;
++
++	b = pci_scan_root_bus_max(parent, bus, 255, ops, sysdata, resources);
++
++	if (b)
++		pci_bus_update_busn_res_end(b, b->subordinate);
++
++	return b;
++}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ /* Deprecated; use pci_scan_root_bus() instead */
+@@ -1683,9 +1700,11 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
+-	if (b)
++	if (b) {
++		pci_bus_insert_busn_res(b, bus, 255);
+ 		b->subordinate = pci_scan_child_bus(b);
+-	else
++		pci_bus_update_busn_res_end(b, b->subordinate);
++	} else
+ 		pci_free_resource_list(&resources);
+ 	return b;
+ }
+@@ -1701,7 +1720,10 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+ 	if (b) {
++		pci_bus_insert_busn_res(b, bus, 255);
+ 		b->subordinate = pci_scan_child_bus(b);
++		pci_bus_update_busn_res_end(b, b->subordinate);
++
+ 		pci_bus_add_devices(b);
+ 	} else {
+ 		pci_free_resource_list(&resources);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index bd70f23..8056e6a 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+ 
+ 	down_write(&pci_bus_sem);
+ 	list_del(&pci_bus->node);
++	pci_bus_release_busn_res(pci_bus);
+ 	up_write(&pci_bus_sem);
+ 	if (!pci_bus->is_added)
+ 		return;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3da935c..d5b6786 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -668,6 +668,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
++struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
++					     int busmax, struct pci_ops *ops,
++					     void *sysdata,
++					     struct list_head *resources);
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+-- 
+1.7.7
+
