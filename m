@@ -1,109 +1,66 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Jan 2012 13:34:41 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Greg KH <greg@kroah.com>
-cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	<linux-input@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-pcmcia@lists.infradead.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: [PATCH 2/5] Dynamic ID addition doesn't need get_driver()
-Message-ID: <Pine.LNX.4.44L0.1201241310400.1200-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 11/14] PCI: Strict checking of valid range for bridge
+Date: Mon, 30 Jan 2012 23:42:49 -0800
+Message-Id: <1327995772-11388-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As part of the removal of get_driver()/put_driver(), this patch
-(as1511) changes all the places that add dynamic IDs for drivers.
-Since these additions are done by writing to the drivers' sysfs
-attribute files, and the attributes are removed when the drivers are
-unregistered, there is no reason to take an extra reference to the
-drivers.
+children bridges busn range should be able to be allocated from parent bus range.
 
-The one exception is the pci-stub driver, which calls pci_add_dynid()
-as part of its registration.  But again, there's no reason to take an
-extra reference here, because the driver can't be unloaded while it is
-being registered.
+to avoid overlapping between sibling bridges on same bus.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-CC: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-CC: Jiri Kosina <jkosina@suse.cz>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: Dominik Brodowski <linux@dominikbrodowski.net>
-
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/probe.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
- drivers/hid/hid-core.c    |    6 +-----
- drivers/pci/pci-driver.c  |    2 --
- drivers/pcmcia/ds.c       |    5 +----
- drivers/usb/core/driver.c |    5 +----
- 4 files changed, 3 insertions(+), 15 deletions(-)
-
-Index: usb-3.3/drivers/hid/hid-core.c
-===================================================================
---- usb-3.3.orig/drivers/hid/hid-core.c
-+++ usb-3.3/drivers/hid/hid-core.c
-@@ -1619,11 +1619,7 @@ static ssize_t store_new_id(struct devic
- 	list_add_tail(&dynid->list, &hdrv->dyn_list);
- 	spin_unlock(&hdrv->dyn_lock);
- 
--	ret = 0;
--	if (get_driver(&hdrv->driver)) {
--		ret = driver_attach(&hdrv->driver);
--		put_driver(&hdrv->driver);
--	}
-+	ret = driver_attach(&hdrv->driver);
- 
- 	return ret ? : count;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 10aa6d1..b9459c5 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -784,6 +784,31 @@ reduce_needed_size:
+ 	return ret;
  }
-Index: usb-3.3/drivers/pci/pci-driver.c
-===================================================================
---- usb-3.3.orig/drivers/pci/pci-driver.c
-+++ usb-3.3/drivers/pci/pci-driver.c
-@@ -72,9 +72,7 @@ int pci_add_dynid(struct pci_driver *drv
- 	list_add_tail(&dynid->node, &drv->dynids.list);
- 	spin_unlock(&drv->dynids.lock);
  
--	get_driver(&drv->driver);
- 	retval = driver_attach(&drv->driver);
--	put_driver(&drv->driver);
- 
- 	return retval;
- }
-Index: usb-3.3/drivers/pcmcia/ds.c
-===================================================================
---- usb-3.3.orig/drivers/pcmcia/ds.c
-+++ usb-3.3/drivers/pcmcia/ds.c
-@@ -127,10 +127,7 @@ pcmcia_store_new_id(struct device_driver
- 	list_add_tail(&dynid->node, &pdrv->dynids.list);
- 	mutex_unlock(&pdrv->dynids.lock);
- 
--	if (get_driver(&pdrv->drv)) {
--		retval = driver_attach(&pdrv->drv);
--		put_driver(&pdrv->drv);
--	}
-+	retval = driver_attach(&pdrv->drv);
- 
- 	if (retval)
- 		return retval;
-Index: usb-3.3/drivers/usb/core/driver.c
-===================================================================
---- usb-3.3.orig/drivers/usb/core/driver.c
-+++ usb-3.3/drivers/usb/core/driver.c
-@@ -71,10 +71,7 @@ ssize_t usb_store_new_id(struct usb_dyni
- 	list_add_tail(&dynid->node, &dynids->list);
- 	spin_unlock(&dynids->lock);
- 
--	if (get_driver(driver)) {
--		retval = driver_attach(driver);
--		put_driver(driver);
--	}
-+	retval = driver_attach(driver);
- 
- 	if (retval)
- 		return retval;
++static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
++				struct pci_dev *dev,
++				int secondary, int subordinate)
++{
++	int broken = 0;
++
++	struct resource busn_res;
++	int ret;
++
++	memset(&busn_res, 0, sizeof(struct resource));
++	dev_printk(KERN_DEBUG, &dev->dev,
++		 "check if busn %02x-%02x is in busn_res: %pR\n",
++		 secondary, subordinate, &bus->busn_res);
++	ret = allocate_resource(&bus->busn_res, &busn_res,
++			 (subordinate - secondary + 1),
++			 (pci_domain_nr(bus)<<8) | secondary,
++			 (pci_domain_nr(bus)<<8) | subordinate,
++			 1, NULL, NULL);
++	if (ret)
++		broken = 1;
++	else
++		release_resource(&busn_res);
++
++	return broken;
++}
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+-- 
+1.7.7
 
