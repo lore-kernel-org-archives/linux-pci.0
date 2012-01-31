@@ -1,75 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 01/14] Make %pR could handle bus resource with domain
-Date: Mon, 30 Jan 2012 23:42:39 -0800
-Message-Id: <1327995772-11388-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:33686 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753478Ab2AaRoS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2012 12:44:18 -0500
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <svaidy@linux.vnet.ibm.com>;
+	Tue, 31 Jan 2012 23:14:15 +0530
+Date: Tue, 31 Jan 2012 23:14:02 +0530
+From: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
+ sriov_init
+Message-ID: <20120131174402.GA6172@dirshya.in.ibm.com>
+Reply-To: svaidy@linux.vnet.ibm.com
+References: <20120127191032.GA22999@dirshya.in.ibm.com>
+ <20120130031845.GA2359@ram-ThinkPad-T61>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20120130031845.GA2359@ram-ThinkPad-T61>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could use %pR for busn_res with domain nr in start/end
+* Ram Pai <linuxram@us.ibm.com> [2012-01-30 11:18:45]:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> On Sat, Jan 28, 2012 at 12:40:32AM +0530, Vaidyanathan Srinivasan wrote:
+> > Hi Ram and Jesse,
+> > 
+> > I found a trivial issue with page size alignment check on IBM POWER
+> > box with 64k base page size.  In sriov_init(), changing the check from
+> > PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
+> > required to use one of the sriov adapter as PF since the
+> > resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
+> > pseries boxes.
+> > 
+> > I think resource_size() could be less than SystemPageSize, but I would
+> > like your comments/ack/nack on any consequences of checking for only
+> > 4k alignment here in a system with larger base page size.
+> 
+> As per the SRIOV specs, the  resource has to be System page size aligned.
+> 
+> PFs are required to support 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB
+> page sizes. In your case if your adapter's PF is not supporting 64K page size
+> then I think it is not conforming to the PCI SRIOV spec.
+
+Hi Ram,
+
+Thanks for the pointer.  I did some more experiments and found that
+the card does support 64k page size, but the PCI_SRIOV_SYS_PGSIZE was
+set to default 4k when we do the query and check resource_size().
+
+You were correct, the resource_size() has to come up with 64k on 64k
+PAGE_SIZE system.  We should not change that check.  I was able to
+get a working solution by setting PCI_SRIOV_SYS_PGSIZE to 64k before
+we do the query.
+
+This was the case in the original code before you moved these to
+sriov_enable().  If it is ok to leave the SYS_PGSIZE setting in
+sriov_init(), then I have the following fix that works for me.
+
+Please review and let me know your comments.
+
+Thanks,
+Vaidy
 ---
- lib/vsprintf.c |   28 ++++++++++++++++++++++++----
- 1 files changed, 24 insertions(+), 4 deletions(-)
 
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index 8e75003..b34eeea 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -451,6 +451,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
- 		.precision = -1,
- 		.flags = SPECIAL | SMALL | ZEROPAD,
- 	};
-+	static const struct printf_spec domain_spec = {
-+		.base = 16,
-+		.field_width = 4,
-+		.precision = -1,
-+		.flags = SMALL | ZEROPAD,
-+	};
- 	static const struct printf_spec bus_spec = {
- 		.base = 16,
- 		.field_width = 2,
-@@ -507,11 +513,25 @@ char *resource_string(char *buf, char *end, struct resource *res,
- 		specp = &mem_spec;
- 		decode = 0;
+    	pci: set pci sriov page size before reading sriov bar
+    
+    	For an SRIOV device, PCI_SRIOV_SYS_PGSIZE should be set before
+    	the PCI_SRIOV_BAR is queried.  The sys pagesize defaults to 4k,
+    	so this change is required on powerpc box with 64k base page size.
+    
+    	This is a regression caused due to moving SRIOV init to sriov_enable().
+    
+    	| commit afd24ece5c76af87f6fc477f2747b83a764f161c
+    	| Author: Ram Pai <linuxram@us.ibm.com>
+    
+    	| PCI: delay configuration of SRIOV capability
+    	| The SRIOV capability, namely page size and total_vfs of a device are
+    	| configured during enumeration phase of the device.  This can potentially
+    	| interfere with the PCI operations of the platform, if the IOV capability
+    	| of the device is not enabled.
+    
+    Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 0321fa3..0dab5ec 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -347,8 +347,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
  	}
--	p = number(p, pend, res->start, *specp);
--	if (res->start != res->end) {
--		*p++ = '-';
--		p = number(p, pend, res->end, *specp);
-+
-+	if (res->flags & IORESOURCE_BUS && res->end >> 8) {
-+		p = number(p, pend, res->start >> 8, domain_spec);
-+		*p++ = ':';
-+		p = number(p, pend, res->start & 0xff, *specp);
-+		if (res->start != res->end) {
-+			*p++ = '-';
-+			p = number(p, pend, res->end >> 8, domain_spec);
-+			*p++ = ':';
-+			p = number(p, pend, res->end & 0xff, *specp);
-+		}
-+	} else {
-+		p = number(p, pend, res->start, *specp);
-+		if (res->start != res->end) {
-+			*p++ = '-';
-+			p = number(p, pend, res->end, *specp);
-+		}
- 	}
-+
- 	if (decode) {
- 		if (res->flags & IORESOURCE_MEM_64)
- 			p = string(p, pend, " 64bit", str_spec);
--- 
-1.7.7
+ 
+-	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+-
+ 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+@@ -466,6 +464,7 @@ found:
+ 		return -EIO;
+ 
+ 	pgsz &= ~(pgsz - 1);
++	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+ 
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
 
