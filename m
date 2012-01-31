@@ -1,50 +1,84 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 31 Jan 2012 11:42:50 +0900
-From: Yoichi Yuasa <yuasa@linux-mips.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: yuasa@linux-mips.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [RFC PATCH v1 11/18] mips/PCI: get rid of device resource
- fixups
-Message-Id: <20120131114250.b0e6af10.yuasa@linux-mips.org>
-In-Reply-To: <20120130165805.3231.99160.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
-	<20120130165805.3231.99160.stgit@bhelgaas.mtv.corp.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 13/14] PCI: kill pci_fixup_parent_subordinate_busnr()
+Date: Mon, 30 Jan 2012 23:42:51 -0800
+Message-Id: <1327995772-11388-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Now we can safely extend parent top and shrink them according iobusn_resource tree.
 
-On Mon, 30 Jan 2012 09:58:05 -0700
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+Don't need that any more.
 
-> Tell the PCI core about host bridge address translation so it can take
-> care of bus-to-resource conversion for us.
-> 
-> N.B. cobalt_legacy_ide_fixup() does scary things with resources, but I
-> *think* it will still work because we're still making the same adjustments,
-> just in the opposite order.  Here are the legacy IDE resource.start
-> values I expect:
-> 
->          current                                        new
-> 
->            0x1f0   (pci_setup_device)                 0x1f0
->                    (pci_bus_to_resource)       + 0xf0000000
->     - 0xf0000000   (cobalt_legacy_ide_fixup)   - 0xf0000000
->     + 0xf0000000   (pcibios_fixup_bus)
->     ------------                               ------------
->            0x1f0    final value                       0x1f0
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   33 ++-------------------------------
+ 1 files changed, 2 insertions(+), 31 deletions(-)
 
-It seems to be unable to handle the offset correctly.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 931cd8e..86a4402 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -608,22 +608,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
+ 	return child;
+ }
+ 
+-static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
+-{
+-	struct pci_bus *parent = child->parent;
+-
+-	/* Attempts to fix that up are really dangerous unless
+-	   we're going to re-assign all bus numbers. */
+-	if (!pcibios_assign_all_busses())
+-		return;
+-
+-	while (parent->parent && parent->subordinate < max) {
+-		parent->subordinate = max;
+-		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
+-		parent = parent->parent;
+-	}
+-}
+-
+ static void __devinit pci_bus_extend_top(struct pci_bus *parent,
+ 		 resource_size_t size, struct resource *parent_res)
+ {
+@@ -961,24 +945,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ 		if (!is_cardbus) {
+ 			child->bridge_ctl = bctl;
+-			/*
+-			 * Adjust subordinate busnr in parent buses.
+-			 * We do this before scanning for children because
+-			 * some devices may not be detected if the bios
+-			 * was lazy.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
++
+ 			/* Now we can scan all subordinate buses... */
+ 			max = pci_scan_child_bus(child);
+-			/*
+-			 * now fix it up again since we have found
+-			 * the real value of max.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+-
+-		} else {
+-			pci_fixup_parent_subordinate_busnr(child, max);
+ 		}
++
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
+-- 
+1.7.7
 
-failed on Cobalt:
-
-pata_via 0000:00:09.1: BAR 0: can't reserve [io  0x100001f0-0x100001f7]         
-pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)      
-pata_via 0000:00:09.1: BAR 2: can't reserve [io  0x10000170-0x10000177]         
-pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)      
-pata_via 0000:00:09.1: no available native port 
-
-Yoichi
