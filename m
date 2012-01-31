@@ -1,47 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:62251 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754560Ab2AIPYt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2012 10:24:49 -0500
-Date: Mon, 9 Jan 2012 10:22:54 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Ian Campbell <Ian.Campbell@citrix.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: Re: [Xen-devel] [PATCH 4/5] xen/pciback: Expand the warning message
- to include domain id.
-Message-ID: <20120109152254.GA26880@phenom.dumpdata.com>
-References: <1325724403-29642-1-git-send-email-konrad.wilk@oracle.com>
- <1325724403-29642-5-git-send-email-konrad.wilk@oracle.com>
- <4F06C101020000780006AC32@nat28.tlf.novell.com>
- <20120106150338.GB5855@phenom.dumpdata.com>
- <1325865086.25206.512.camel@zakaz.uk.xensource.com>
- <20120106160011.GD6125@phenom.dumpdata.com>
- <20120106221927.GA10248@phenom.dumpdata.com>
- <1326102657.17210.11.camel@zakaz.uk.xensource.com>
- <20120109151124.GE25563@phenom.dumpdata.com>
- <1326122172.17210.109.camel@zakaz.uk.xensource.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1326122172.17210.109.camel@zakaz.uk.xensource.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20120131114250.b0e6af10.yuasa@linux-mips.org>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+ <20120130165805.3231.99160.stgit@bhelgaas.mtv.corp.google.com> <20120131114250.b0e6af10.yuasa@linux-mips.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Jan 2012 19:54:35 -0800
+Message-ID: <CAErSpo7xUL++rqnJug7=Wd_nfvaUDOewGjz1C2Fp-oQrkxO2yg@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 11/18] mips/PCI: get rid of device resource fixups
+To: Yoichi Yuasa <yuasa@linux-mips.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > > > -		dev_err(&dev->dev, "device has been assigned to another " \
-> > > > -			"domain! Over-writting the ownership, but beware.\n");
-> > > > +		dev_err(&dev->dev, "Overriding ownership to dom%d.\n",
-> > > > +			xen_find_device_domain_owner(dev));
-> > > 
-> > > That sounds like you are going to be assigning the ownership to that
-> > > dom, but xen_find_device_domain_owner so aren't you actually steeling
-> > > ownership from that domain?
-> > 
-> > Duh! I will do s/to/from/
-> 
-> Maybe s/Overriding/Stealing/ too? "Overriding ownership from xxx" sounds
-> a bit odd to me.
+On Mon, Jan 30, 2012 at 6:42 PM, Yoichi Yuasa <yuasa@linux-mips.org> wrote:
+> Hi,
+>
+> On Mon, 30 Jan 2012 09:58:05 -0700
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> Tell the PCI core about host bridge address translation so it can take
+>> care of bus-to-resource conversion for us.
+>>
+>> N.B. cobalt_legacy_ide_fixup() does scary things with resources, but I
+>> *think* it will still work because we're still making the same adjustments,
+>> just in the opposite order.  Here are the legacy IDE resource.start
+>> values I expect:
+>>
+>>          current                                        new
+>>
+>>            0x1f0   (pci_setup_device)                 0x1f0
+>>                    (pci_bus_to_resource)       + 0xf0000000
+>>     - 0xf0000000   (cobalt_legacy_ide_fixup)   - 0xf0000000
+>>     + 0xf0000000   (pcibios_fixup_bus)
+>>     ------------                               ------------
+>>            0x1f0    final value                       0x1f0
+>
+> It seems to be unable to handle the offset correctly.
+>
+> failed on Cobalt:
+>
+> pata_via 0000:00:09.1: BAR 0: can't reserve [io  0x100001f0-0x100001f7]
+> pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
+> pata_via 0000:00:09.1: BAR 2: can't reserve [io  0x10000170-0x10000177]
+> pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
+> pata_via 0000:00:09.1: no available native port
 
-Bingo! "Stealing ownership from dom%d." it is!
+Thank you very much for testing this.  Could you collect the complete
+dmesg and /proc/ioport contents, before and after my patches?
+
+Bjorn
