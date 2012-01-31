@@ -1,41 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:35617 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756952Ab2ADVZt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2012 16:25:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <CA+5PVA4=j_pXQ0L9NBoaGGGhEWFhga_LxVG-oi11vSrm4UG3Sg@mail.gmail.com>
-References: <20120103185304.GA25184@hmsreliant.think-freely.org>
-	<20120104091952.7cc5316d@jbarnes-desktop>
-	<20120104195134.GB24324@hmsreliant.think-freely.org>
-	<20120104.145619.1728971973635198635.davem@davemloft.net>
-	<20120104120248.4f4747bf@jbarnes-desktop>
-	<CA+5PVA4=j_pXQ0L9NBoaGGGhEWFhga_LxVG-oi11vSrm4UG3Sg@mail.gmail.com>
-Date: Wed, 4 Jan 2012 16:25:47 -0500
-Message-ID: <CA+5PVA4-Xofs3AKq3L2UjtmVLa4HpjMwv0_rMdXO5ku8uFvfkg@mail.gmail.com>
-Subject: Re: [PATCH] msi: fix imbalanced refcount of msi irq sysfs objects
-From: Josh Boyer <jwboyer@gmail.com>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: David Miller <davem@davemloft.net>, nhorman@tuxdriver.com,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com, gregkh@suse.de,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 03/14] PCI: Add busn_res operation functions
+Date: Mon, 30 Jan 2012 23:42:41 -0800
+Message-Id: <1327995772-11388-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 4, 2012 at 4:18 PM, Josh Boyer <jwboyer@gmail.com> wrote:
->>> The bug only exists in the PCI -next code I thought.
->>
->> Oh yeah, looks like it.  Lost track of my -next vs master branches
->> there...
->
-> Er... Neil's commit log in the patch itself has an oops from 3.1.6 in
-> it.  If the bug the patch fixes is only present in -next PCI code, how
-> did it get hit on that release?
->
-> Did we switch to talking about some other patch here and I'm just confused?
+will use them insert/update busn res in pci_bus
 
-I'm just confused.  I forgot Neil backported that upstream code to the
-F16 3.1.6 kernel.  Sorry for the noise.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   36 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 39 insertions(+), 0 deletions(-)
 
-josh
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a114173..957c2bc 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1622,6 +1622,42 @@ err_out:
+ 	return NULL;
+ }
+ 
++void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
++{
++	struct resource *res = &b->busn_res;
++	struct resource *parent_res = &iobusn_resource;
++	int ret;
++
++	res->start = (pci_domain_nr(b) << 8) | bus;
++	res->end = (pci_domain_nr(b) << 8) | bus_max;
++	res->flags = IORESOURCE_BUS;
++
++	if (!pci_is_root_bus(b))
++		parent_res = &b->parent->busn_res;
++
++	ret = insert_resource(parent_res, res);
++
++	dev_printk(KERN_DEBUG, &b->dev,
++			"busn_res: %pR %s inserted under %pR\n",
++			res, ret ? "can not be" : "is", parent_res);
++}
++
++void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
++{
++	struct resource *res = &b->busn_res;
++	struct resource old_res = *res;
++
++	res->end &= ~0xff;
++	res->end |= bus_max;
++	dev_printk(KERN_DEBUG, &b->dev, "busn_res: %pR end updated to %pR\n",
++			&old_res, res);
++}
++
++void pci_bus_release_busn_res(struct pci_bus *b)
++{
++	release_resource(&b->busn_res);
++}
++
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 94ad468..3da935c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -665,6 +665,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
++void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
++void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+-- 
+1.7.7
+
