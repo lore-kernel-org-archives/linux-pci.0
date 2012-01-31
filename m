@@ -1,63 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:42686 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752599Ab2AUJwq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Jan 2012 04:52:46 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/7] pciehp: print out link status when dlla get active.
-Date: Sat, 21 Jan 2012 01:52:16 -0800
-Message-Id: <1327139539-14301-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-References: <1327139539-14301-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 01/14] Make %pR could handle bus resource with domain
+Date: Mon, 30 Jan 2012 23:42:39 -0800
+Message-Id: <1327995772-11388-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use it get timestamp to calculate time for the pci conf access readness.
-
-and let it return bool instead of int.
-
-also remove inline attribute, let compiler decide it.
+So could use %pR for busn_res with domain nr in start/end
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/hotplug/pciehp_hpc.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
+ lib/vsprintf.c |   28 ++++++++++++++++++++++++----
+ 1 files changed, 24 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index ad8c1be..a1a9879 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -241,13 +241,20 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- 	return retval;
- }
- 
--static inline int check_link_active(struct controller *ctrl)
-+static bool check_link_active(struct controller *ctrl)
- {
--	u16 link_status;
-+	bool ret = false;
-+	u16 lnk_status;
- 
--	if (pciehp_readw(ctrl, PCI_EXP_LNKSTA, &link_status))
--		return 0;
--	return !!(link_status & PCI_EXP_LNKSTA_DLLLA);
-+	if (pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status))
-+		return ret;
+diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+index 8e75003..b34eeea 100644
+--- a/lib/vsprintf.c
++++ b/lib/vsprintf.c
+@@ -451,6 +451,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
+ 		.precision = -1,
+ 		.flags = SPECIAL | SMALL | ZEROPAD,
+ 	};
++	static const struct printf_spec domain_spec = {
++		.base = 16,
++		.field_width = 4,
++		.precision = -1,
++		.flags = SMALL | ZEROPAD,
++	};
+ 	static const struct printf_spec bus_spec = {
+ 		.base = 16,
+ 		.field_width = 2,
+@@ -507,11 +513,25 @@ char *resource_string(char *buf, char *end, struct resource *res,
+ 		specp = &mem_spec;
+ 		decode = 0;
+ 	}
+-	p = number(p, pend, res->start, *specp);
+-	if (res->start != res->end) {
+-		*p++ = '-';
+-		p = number(p, pend, res->end, *specp);
 +
-+	ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++	if (res->flags & IORESOURCE_BUS && res->end >> 8) {
++		p = number(p, pend, res->start >> 8, domain_spec);
++		*p++ = ':';
++		p = number(p, pend, res->start & 0xff, *specp);
++		if (res->start != res->end) {
++			*p++ = '-';
++			p = number(p, pend, res->end >> 8, domain_spec);
++			*p++ = ':';
++			p = number(p, pend, res->end & 0xff, *specp);
++		}
++	} else {
++		p = number(p, pend, res->start, *specp);
++		if (res->start != res->end) {
++			*p++ = '-';
++			p = number(p, pend, res->end, *specp);
++		}
+ 	}
 +
-+	if (ret)
-+		ctrl_dbg(ctrl, "%s: lnk_status = %x\n", __func__, lnk_status);
-+
-+	return ret;
- }
- 
- static void pcie_wait_link_active(struct controller *ctrl)
+ 	if (decode) {
+ 		if (res->flags & IORESOURCE_MEM_64)
+ 			p = string(p, pend, " 64bit", str_spec);
 -- 
 1.7.7
 
