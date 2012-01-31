@@ -1,234 +1,162 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4F17C8B9.807@jp.fujitsu.com>
-Date: Thu, 19 Jan 2012 16:39:37 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:47190 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052Ab2AaHnb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jan 2012 02:43:31 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -v2] pciehp: Checking pci conf reading to new added device
- instead of sleep 1s
-References: <1324083165-805-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1324083165-805-1-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 10/14] PCI: Probe safe range that we can use for unassigned bridge.
+Date: Mon, 30 Jan 2012 23:42:48 -0800
+Message-Id: <1327995772-11388-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2011/12/17 9:52), Yinghai Lu wrote:
-> During reviewing
-> |	PCI: pciehp: wait 1000 ms before Link Training check
-> Linus said:
->> ...
->> That's a *long* time, and it's irritating to the user. It makes the
->> user think "the machine is slow".
->> ...
->> And quite frankly, an unconditional one-second delay here seems bad.
->> Two seconds was unacceptable, one second is just bad.
->
-> Try to access the pci conf of pci device that is supposed to show up in 1s,
-> if could read back valid vender/device id, could bail out early.
->
-> Related discussion could be found:
-> 	https://lkml.org/lkml/2011/12/6/339
->
-> -v2: seperate code to pci_bus_read_dev_vendor_id() from pci_scan_device()
->      and reuse it from pciehp code. Suggested by Matthew Wilcox.
->
-> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
->
-> ---
->   drivers/pci/hotplug/pciehp_hpc.c |   49 +++++++++++++++++++++++++++------------
->   drivers/pci/pci.h                |    2 +
->   drivers/pci/probe.c              |   44 +++++++++++++++++++++--------------
->   3 files changed, 63 insertions(+), 32 deletions(-)
->
-> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -272,6 +272,37 @@ static void pcie_wait_link_active(struct
->   	ctrl_dbg(ctrl, "Data Link Layer Link Active not set in 1000 msec\n");
->   }
->
-> +static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
-> +{
-> +	u32 l;
-> +	int count = 0;
-> +	u32 lx[50];
+Try to allocate from parent bus busn_res. if can not find any big enough, will try
+to extend parent bus top. even the extending is through allocating, after allocating
+will pad the range to parent buses top.
 
-I don't think it's a good idea to allocate lx[] array on stack.
+When extending happens, We will record the parent_res, so could use it as stopper
+for really extend/shrink top later.
 
-> +	int delay = 1000, step = 20;
-> +	bool found = false;
-> +
-> +	do {
-> +		found = pci_bus_read_dev_vendor_id(bus, devfn,&l, step);
-> +		lx[count++] = l;
-> +
-> +		if (found)
-> +			break;
-> +
-> +		msleep(step);
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |  114 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 114 insertions(+), 0 deletions(-)
 
-I don't think msleep() is needed here because pci_bus_read_dev_vendor_id()
-has timeout. And even if this msleep() is removed, maximum wait time in
-pci_bus_read_dev_vendor_id() looks much longer than 1sec (IIUC, it looks
-1ms + 2ms + 4ms + 8ms + ...)
-
-
-> +		delay -= step;
-> +	} while (delay>  0);
-> +
-> +	if (count>  1&&  pciehp_debug) {
-> +		int i;
-> +		printk(KERN_DEBUG "pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms\n",
-> +			pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
-> +			PCI_FUNC(devfn), count, step);
-> +		for (i = 0; i<  count; i++)
-> +			printk(KERN_DEBUG "  [%02d]=%08x\n", i, lx[i]);
-> +	}
-
-Why not printing the debug message each time in the while() loop?
-
-
-> +
-> +	return found;
-> +}
-> +
->   int pciehp_check_link_status(struct controller *ctrl)
->   {
->   	u16 lnk_status;
-> @@ -287,13 +318,9 @@ int pciehp_check_link_status(struct cont
->           else
->                   msleep(1000);
->
-> -	/*
-> -	 * Need to wait for 1000 ms after Data Link Layer Link Active
-> -	 * (DLLLA) bit reads 1b before sending configuration request.
-> -	 * We need it before checking Link Training (LT) bit becuase
-> -	 * LT is still set even after DLLLA bit is set on some platform.
-> -	 */
-> -	msleep(1000);
-> +	/* wait 100ms before read pci conf, and try in 1s */
-> +	msleep(100);
-> +	pci_bus_check_dev(ctrl->pcie->port->subordinate, PCI_DEVFN(0, 0));
-
-We need to check the result of pci_bus_check_dev() and return error if
-the the result is false.
-
-Regards,
-Kenji Kaneshige
-
-
-
->
->   	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA,&lnk_status);
->   	if (retval) {
-> @@ -309,14 +336,6 @@ int pciehp_check_link_status(struct cont
->   		return retval;
->   	}
->
-> -	/*
-> -	 * If the port supports Link speeds greater than 5.0 GT/s, we
-> -	 * must wait for 100 ms after Link training completes before
-> -	 * sending configuration request.
-> -	 */
-> -	if (ctrl->pcie->port->subordinate->max_bus_speed>  PCIE_SPEED_5_0GT)
-> -		msleep(100);
-> -
->   	pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status);
->
->   	return retval;
-> Index: linux-2.6/drivers/pci/probe.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/probe.c
-> +++ linux-2.6/drivers/pci/probe.c
-> @@ -1119,40 +1119,50 @@ struct pci_dev *alloc_pci_dev(void)
->   }
->   EXPORT_SYMBOL(alloc_pci_dev);
->
-> -/*
-> - * Read the config data for a PCI device, sanity-check it
-> - * and fill in the dev structure...
-> - */
-> -static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
-> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-> +				 int crs_timeout)
->   {
-> -	struct pci_dev *dev;
-> -	u32 l;
->   	int delay = 1;
->
-> -	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID,&l))
-> -		return NULL;
-> +	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-> +		return false;
->
->   	/* some broken boards return 0 or ~0 if a slot is empty: */
-> -	if (l == 0xffffffff || l == 0x00000000 ||
-> -	    l == 0x0000ffff || l == 0xffff0000)
-> -		return NULL;
-> +	if (*l == 0xffffffff || *l == 0x00000000 ||
-> +	    *l == 0x0000ffff || *l == 0xffff0000)
-> +		return false;
->
->   	/* Configuration request Retry Status */
-> -	while (l == 0xffff0001) {
-> +	while (*l == 0xffff0001) {
->   		msleep(delay);
->   		delay *= 2;
-> -		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID,&l))
-> -			return NULL;
-> +		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-> +			return false;
->   		/* Card hasn't responded in 60 seconds?  Must be stuck. */
-> -		if (delay>  60 * 1000) {
-> +		if (delay>  crs_timeout) {
->   			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not "
->   					"responding\n", pci_domain_nr(bus),
->   					bus->number, PCI_SLOT(devfn),
->   					PCI_FUNC(devfn));
-> -			return NULL;
-> +			return false;
->   		}
->   	}
->
-> +	return true;
-> +}
-> +
-> +/*
-> + * Read the config data for a PCI device, sanity-check it
-> + * and fill in the dev structure...
-> + */
-> +static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
-> +{
-> +	struct pci_dev *dev;
-> +	u32 l;
-> +
-> +	if (!pci_bus_read_dev_vendor_id(bus, devfn,&l, 60*1000))
-> +		return NULL;
-> +
->   	dev = alloc_pci_dev();
->   	if (!dev)
->   		return NULL;
-> Index: linux-2.6/drivers/pci/pci.h
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci.h
-> +++ linux-2.6/drivers/pci/pci.h
-> @@ -208,6 +208,8 @@ enum pci_bar_type {
->   	pci_bar_mem64,		/* A 64-bit memory BAR */
->   };
->
-> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
-> +                                 int crs_timeout);
->   extern int pci_setup_device(struct pci_dev *dev);
->   extern int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->   				struct resource *res, unsigned int reg);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 91fdaec..10aa6d1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -670,6 +670,120 @@ static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
+ 	}
+ }
+ 
++static resource_size_t __devinit find_res_top_free_size(struct resource *res)
++{
++	int ret = -ENOMEM;
++	resource_size_t n_size;
++	struct resource tmp_res;
++
++	/*
++	 *   find out number below res->end, that we can use at first
++	 *	res->start can not be used.
++	 */
++	n_size = resource_size(res) - 1;
++	memset(&tmp_res, 0, sizeof(struct resource));
++	while (n_size > 0) {
++		ret = allocate_resource(res, &tmp_res, n_size,
++			res->end - n_size + 1, res->end,
++			1, NULL, NULL);
++		if (ret == 0) {
++			/* release busn_res */
++			release_resource(&tmp_res);
++			break;
++		}
++		n_size--;
++	}
++
++	return n_size;
++}
++
++static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
++			 struct pci_dev *dev, struct resource *busn_res,
++			 resource_size_t needed_size, struct resource **p)
++{
++	int ret = -ENOMEM;
++	resource_size_t n_size;
++	struct pci_bus *parent;
++	struct resource *parent_res;
++	resource_size_t tmp = bus->busn_res.end + 1;
++	int free_sz = -1;
++
++	parent_res = NULL;
++
++again:
++	/*
++	 * find bigest range in bus->busn_res that we can use in the middle
++	 *  and we can not use bus->busn_res.start.
++	 */
++	n_size = resource_size(&bus->busn_res) - 1;
++	memset(busn_res, 0, sizeof(struct resource));
++	dev_printk(KERN_DEBUG, &dev->dev,
++			"find free busn in busn_res: %pR\n", &bus->busn_res);
++	while (n_size >= needed_size) {
++		ret = allocate_resource(&bus->busn_res, busn_res, n_size,
++				bus->busn_res.start + 1, bus->busn_res.end,
++				1, NULL, NULL);
++		if (ret == 0) {
++			/* found one, prepare to return */
++			release_resource(busn_res);
++
++			return ret;
++		}
++		n_size--;
++	}
++
++	/* try extend the top of parent buss */
++	if (free_sz < 0) {
++		free_sz = find_res_top_free_size(&bus->busn_res);
++		dev_printk(KERN_DEBUG, &dev->dev,
++			"found free busn %d in busn_res: %pR top\n",
++				free_sz, &bus->busn_res);
++	}
++	n_size = free_sz;
++
++	/* check if extend could cross domain boundary */
++	if ((bus->busn_res.end & 0xff) == 0xff)
++		goto reduce_needed_size;
++	if ((0x100 - (tmp & 0xff)) < (needed_size - n_size))
++		goto reduce_needed_size;
++
++	/* find exteded range */
++	memset(busn_res, 0, sizeof(struct resource));
++	parent = bus->parent;
++	while (parent) {
++		ret = allocate_resource(&parent->busn_res, busn_res,
++			 needed_size - n_size,
++			 tmp, tmp + needed_size - n_size - 1,
++			 1, NULL, NULL);
++		if (ret == 0)
++			break;
++		parent = parent->parent;
++	}
++
++reduce_needed_size:
++	if (ret != 0) {
++		needed_size--;
++		if (!needed_size)
++			return ret;
++
++		goto again;
++	}
++
++	/* save parent_res, we need it as stopper later */
++	parent_res = busn_res->parent;
++
++	/* prepare busn_res for return */
++	release_resource(busn_res);
++	busn_res->start -= n_size;
++
++	/* extend parent bus top*/
++	pci_bus_extend_top(bus, needed_size - n_size, parent_res);
++
++	*p = parent_res;
++
++	return ret;
++}
++
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+-- 
+1.7.7
 
