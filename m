@@ -1,41 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from imr-ma05.mx.aol.com ([64.12.100.31]:44254 "EHLO
-	imr-ma05.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752409Ab2AVViN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Jan 2012 16:38:13 -0500
-To: laz.lazarus@gmail.com, lchung@mercurynews.com,
-	letters@mercurynews.com, libnl@lists.infradead.org,
-	linux-mtd@lists.infradead.org,
-	linux-mtd-request@lists.infradead.org, linux-pci@vger.kernel.org,
-	majordomo@vger.kernel.org, netfilter@vger.kernel.org,
-	netfilter-core@lists.netfilter.org,
-	netfilter-core-request@lists.netfilter.org,
-	netfilter-devel@vger.kernel.org,
-	ocf-linux-users@lists.sourceforge.net,
-	oprofile-list@lists.sourceforge.net, patthurston@kgoradio.com,
-	peter@peterbcollins.com, ray@raytal.com, raytaliaferro2@yahoo.com,
-	richwalcoff@kgoradio.com, robert.richter@amd.com,
-	rogerswilliamj@aol.com, sis-scps-interest@mailman.ccsds.org,
-	u-boot@lists.denx.de, u-boot-users@lists.sourceforge.net,
-	valgrind-users@lists.sourceforge.net,
-	valgrind-users-request@lists.sourceforge.net,
-	welcome@members.fling.com, wireshark-users@wireshark.org,
-	wireshark-users-request@wireshark.org, xorp-users@xorp.org
-Subject: I figured I should share the wealth.
-MIME-Version: 1.0
-From: jobhunts02@aol.com
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Message-Id: <8CEA76453739454-12C-1EA25@Webmail-m112.sysops.aol.com>
-Date: Sun, 22 Jan 2012 16:31:24 -0500 (EST)
+Received: from smtp.gentoo.org ([140.211.166.183]:53784 "EHLO smtp.gentoo.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752994Ab2AaPuh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 Jan 2012 10:50:37 -0500
+From: Mike Frysinger <vapier@gentoo.org>
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org, Kevin Pyle <gentoo@spamgourmet.com>
+Subject: [PATCH] install: split out pcilib install to a dedicated target
+Date: Tue, 31 Jan 2012 10:50:43 -0500
+Message-Id: <1328025043-6762-1-git-send-email-vapier@gentoo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I feel guilty that I cant provide for my family now im always one step 
-ahead I had hit an all time low...
-http://reklammakinesi.com/currentevents/94DavidPatterson/ now I cant go 
-anywhere without being recognized
-this is the real deal.
+From: Kevin Pyle <gentoo@spamgourmet.com>
 
-ttyl.
+The "install" target manages one set of files, and the "install-pcilib"
+target manages a different set.  They both install the pci library though
+so if you try to run `make -j install install-pcilib`, things randomly
+fail.  So split out the commonly installed files into a dedicated target.
+---
+ Makefile |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
+diff --git a/Makefile b/Makefile
+index f726e87..d5ed7ac 100644
+--- a/Makefile
++++ b/Makefile
+@@ -98,6 +98,13 @@ clean:
+ 
+ distclean: clean
+ 
++install-pcilib: lib/$(PCILIB)
++	$(DIRINSTALL) -m 755 $(DESTDIR)$(LIBDIR)
++	$(INSTALL) -c -m 644 lib/$(PCILIB) $(DESTDIR)$(LIBDIR)
++
++ifeq ($(SHARED),yes)
++install: install-pcilib
++endif
+ install: all
+ # -c is ignored on Linux, but required on FreeBSD
+ 	$(DIRINSTALL) -m 755 $(DESTDIR)$(SBINDIR) $(DESTDIR)$(IDSDIR) $(DESTDIR)$(MANDIR)/man8 $(DESTDIR)$(MANDIR)/man7
+@@ -107,15 +114,12 @@ install: all
+ 	$(INSTALL) -c -m 644 lspci.8 setpci.8 update-pciids.8 $(DESTDIR)$(MANDIR)/man8
+ 	$(INSTALL) -c -m 644 pcilib.7 $(DESTDIR)$(MANDIR)/man7
+ ifeq ($(SHARED),yes)
+-	$(DIRINSTALL) -m 755 $(DESTDIR)$(LIBDIR)
+-	$(INSTALL) -c -m 644 lib/$(PCILIB) $(DESTDIR)$(LIBDIR)
+ 	ln -sf $(PCILIB) $(DESTDIR)$(LIBDIR)/$(LIBNAME).so$(ABI_VERSION)
+ endif
+ 
+-install-lib: $(PCIINC_INS) lib/$(PCILIB) lib/$(PCILIBPC)
+-	$(DIRINSTALL) -m 755 $(DESTDIR)$(INCDIR)/pci $(DESTDIR)$(LIBDIR) $(DESTDIR)$(PKGCFDIR)
++install-lib: $(PCIINC_INS) lib/$(PCILIBPC) install-pcilib
++	$(DIRINSTALL) -m 755 $(DESTDIR)$(INCDIR)/pci $(DESTDIR)$(PKGCFDIR)
+ 	$(INSTALL) -c -m 644 $(PCIINC_INS) $(DESTDIR)$(INCDIR)/pci
+-	$(INSTALL) -c -m 644 lib/$(PCILIB) $(DESTDIR)$(LIBDIR)
+ 	$(INSTALL) -c -m 644 lib/$(PCILIBPC) $(DESTDIR)$(PKGCFDIR)
+ ifeq ($(SHARED),yes)
+ 	ln -sf $(LIBNAME).so$(ABI_VERSION) $(DESTDIR)$(LIBDIR)/$(LIBNAME).so
+-- 
+1.7.8.4
 
