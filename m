@@ -1,47 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:40879 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751120Ab2AYT4H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jan 2012 14:56:07 -0500
-Date: Wed, 25 Jan 2012 20:33:46 +0100
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Greg KH <greg@kroah.com>, linux-input@vger.kernel.org,
-	linux-pcmcia@lists.infradead.org, Jiri Kosina <jkosina@suse.cz>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] Dynamic ID addition doesn't need get_driver()
-Message-ID: <20120125193346.GB9192@comet.dominikbrodowski.net>
-References: <Pine.LNX.4.44L0.1201241310400.1200-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.44L0.1201241310400.1200-100000@iolanthe.rowland.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 0/14] PCI: allocate pci bus num range for unassigned bridge busn
+Date: Mon, 30 Jan 2012 23:42:38 -0800
+Message-Id: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 24, 2012 at 01:34:41PM -0500, Alan Stern wrote:
-> As part of the removal of get_driver()/put_driver(), this patch
-> (as1511) changes all the places that add dynamic IDs for drivers.
-> Since these additions are done by writing to the drivers' sysfs
-> attribute files, and the attributes are removed when the drivers are
-> unregistered, there is no reason to take an extra reference to the
-> drivers.
-> 
-> The one exception is the pci-stub driver, which calls pci_add_dynid()
-> as part of its registration.  But again, there's no reason to take an
-> extra reference here, because the driver can't be unloaded while it is
-> being registered.
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> CC: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> CC: Jiri Kosina <jkosina@suse.cz>
-> CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-> CC: Dominik Brodowski <linux@dominikbrodowski.net>
+25b9b3c: PCI: Seperate child bus scanning to two passes overall
+58fe568: PCI: kill pci_fixup_parent_subordinate_busnr()
+72a276a: PCI: Allocate bus range instead of use max blindly
+3e65251: PCI: Strict checking of valid range for bridge
+a06b7d3: PCI: Probe safe range that we can use for unassigned bridge.
+f7d1b3e: PCI: Add pci_bus_extend/shrink_top()
+941553d: PCI, parisc: Register busn_res for root buses
+44ade6c: PCI, powerpc: Register busn_res for root buses
+c96df0d: PCI, ia64: Register busn_res for root buses
+370ff8b: PCI, x86: Register busn_res for root buses
+12aa505: PCI: Add busn_res tracking in core
+5729f35: PCI: Add busn_res operation functions
+b7283c2: PCI: Add iobusn_resource
+443e84a: Make %pR could handle bus resource with domain
 
-For the PCMCIA part: Acked-by: Dominik Brodowski <linux@dominikbrodowski.net>
+Set up iobusn_resource tree, and register bus number range to it.
+Later when need to find bus range, will try to allocate from the tree
 
-Thanks,
-	Dominik
+Need to test on arches other than x86. esp for ia64 and powerpc that support
+  more than on peer root buses.
+
+could be found at:
+	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
+
+-v2: according to Jesse, split to more small patches.
+-v3: address some request from Bjorn. like make use %pR for busn_res debug print
+	out, and move the comment change with code change.
+
+Thanks
+
+Yinghai
+
+ arch/ia64/pci/pci.c              |    2 +
+ arch/powerpc/kernel/pci-common.c |    7 +-
+ arch/x86/include/asm/topology.h  |    3 +-
+ arch/x86/pci/acpi.c              |    8 +-
+ arch/x86/pci/bus_numa.c          |    8 +-
+ arch/x86/pci/common.c            |   11 +-
+ drivers/parisc/dino.c            |    2 +
+ drivers/parisc/lba_pci.c         |    3 +
+ drivers/pci/probe.c              |  410 ++++++++++++++++++++++++++++++--------
+ drivers/pci/remove.c             |    1 +
+ include/linux/ioport.h           |    1 +
+ include/linux/pci.h              |    8 +
+ kernel/resource.c                |    8 +
+ lib/vsprintf.c                   |   28 +++-
+ 14 files changed, 402 insertions(+), 98 deletions(-)
