@@ -1,80 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:46974 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752705Ab2BJWgl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Feb 2012 17:36:41 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH] PCI / PM: Disable wakeup during shutdown for devices not enabled to wake up
-Date: Fri, 10 Feb 2012 23:40:29 +0100
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Alan Stern <stern@rowland.harvard.edu>
-References: <201202070050.35931.rjw@sisk.pl> <20120210123407.7087d6a4@jbarnes-desktop>
-In-Reply-To: <20120210123407.7087d6a4@jbarnes-desktop>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201202102340.29644.rjw@sisk.pl>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Kyle McMartin <kyle@mcmartin.ca>, Helge Deller <deller@gmx.de>,
+	linux-parisc@vger.kernel.org
+Subject: [PATCH 08/15] PCI, parisc: Register busn_res for root buses
+Date: Wed,  1 Feb 2012 14:43:55 -0800
+Message-Id: <1328136242-17725-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, February 10, 2012, Jesse Barnes wrote:
-> On Tue, 7 Feb 2012 00:50:35 +0100
-> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> 
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > If a PCI device is enabled to generate wakeup signals (PME) when put
-> > into a low-power state by runtime PM, it will be still enabled to
-> > generate those signals after the system shutdown, unless its driver's
-> > .shutdown() callback takes care of the wakeup signals generation
-> > setting.  Moreover, there are devices that are not enabled to wake
-> > up the system and that are configured by runtime PM to generate
-> > wakeup signals so that (runtime) remote wakeup works with them.
-> > Those devices should be reconfigured during system shutdown so that
-> > they don't generate wakeup signals, but at least some drivers don't
-> > do that.  However, that very well may be done by the PCI core so
-> > that drivers don't have to worry about it.  For this reason, modify
-> > pci_device_shutdown() to disable the generation of wakeup events for
-> > devices not supposed to wake up the system.
-> > 
-> > References: https://bugzilla.kernel.org/show_bug.cgi?id=37952
-> > Reported-and-tested-by: Kamil Iskra <kamil.54002@iskra.name>
-> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > ---
-> >  drivers/pci/pci-driver.c |   10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> > 
-> > Index: linux/drivers/pci/pci-driver.c
-> > ===================================================================
-> > --- linux.orig/drivers/pci/pci-driver.c
-> > +++ linux/drivers/pci/pci-driver.c
-> > @@ -430,6 +430,16 @@ static void pci_device_shutdown(struct d
-> >  		drv->shutdown(pci_dev);
-> >  	pci_msi_shutdown(pci_dev);
-> >  	pci_msix_shutdown(pci_dev);
-> > +
-> > +	/*
-> > +	 * Devices may be enabled to wake up by runtime PM, but they need not
-> > +	 * be supposed to wake up the system from its "power off" state (e.g.
-> > +	 * ACPI S5).  Therefore disable wakeup for all devices that aren't
-> > +	 * supposed to wake up the system at this point.  The state argument
-> > +	 * will be ignored by pci_enable_wake().
-> > +	 */
-> > +	if (!device_may_wakeup(dev))
-> > +		pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
-> >  }
-> >  
-> >  #ifdef CONFIG_PM
-> > 
-> 
-> So where do we end up setting the right wakeup state for devices we
-> actually *do* want to wake the system from S5?  Presumably later in the
-> shutdown sequence?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Kyle McMartin <kyle@mcmartin.ca>
+Cc: Helge Deller <deller@gmx.de>
+Cc: linux-parisc@vger.kernel.org
+---
+ drivers/parisc/dino.c    |    2 ++
+ drivers/parisc/lba_pci.c |    3 +++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-Yes, in general.  However, device_may_wakeup(dev) has to return true for those
-devices, so they aren't affected by this change.
+diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+index 7ff10c1..3f2e203 100644
+--- a/drivers/parisc/dino.c
++++ b/drivers/parisc/dino.c
+@@ -1014,7 +1014,9 @@ static int __init dino_probe(struct parisc_device *dev)
+ 		return 0;
+ 	}
+ 
++	pci_bus_insert_busn_res(bus, dino_current_bus, 255);
+ 	bus->subordinate = pci_scan_child_bus(bus);
++	pci_bus_update_busn_res_end(bus, bus->subordinate);
+ 
+ 	/* This code *depends* on scanning being single threaded
+ 	 * if it isn't, this global bus number count will fail
+diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+index d5f3d75..b58bf8b 100644
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -1531,6 +1531,9 @@ lba_driver_probe(struct parisc_device *dev)
+ 		return 0;
+ 	}
+ 
++	pci_bus_insert_busn_res(lba_bus, lba_dev->hba.bus_num.start,
++				lba_dev->hba.bus_num.end);
++
+ 	lba_bus->subordinate = pci_scan_child_bus(lba_bus);
+ 
+ 	/* This is in lieu of calling pci_assign_unassigned_resources() */
+-- 
+1.7.7
 
-Thanks,
-Rafael
