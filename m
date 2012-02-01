@@ -1,47 +1,47 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"Cc: Dominik Brodowski" <linux@dominikbrodowski.net>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 06/24] PCI: insert busn_res in pci_create_root_bus
-Date: Tue, 28 Feb 2012 14:07:25 -0800
-Message-Id: <1330466863-28469-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/7] PCI: Disable cardbus bridge MEM1 pref CTL
+Date: Wed,  1 Feb 2012 14:42:44 -0800
+Message-Id: <1328136170-17613-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
+References: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-that busn_res is from resources list
+Some BIOS enable both pref for MEM0 and MEM1.
+
+but we assume MEM1 is non-pref...
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/pci/setup-bus.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ed82369..25a7ef8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1649,7 +1649,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		list_move_tail(&window->list, &bridge->windows);
- 		res = window->res;
- 		offset = window->offset;
--		pci_bus_add_resource(b, res, 0);
-+		if (res->flags & IORESOURCE_BUS)
-+			pci_bus_insert_busn_res(b, res->start, res->end);
-+		else
-+			pci_bus_add_resource(b, res, 0);
- 		if (offset) {
- 			if (resource_type(res) == IORESOURCE_IO)
- 				fmt = " (bus address [%#06llx-%#06llx])";
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 090217a..d5897c3 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -914,6 +914,14 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	if (realloc_head)
+ 		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
+ 
++	/* MEM1 must not be pref mmio */
++	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
++	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
++		ctrl &= ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
++		pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
++		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
++	}
++
+ 	/*
+ 	 * Check whether prefetchable memory is supported
+ 	 * by this bridge.
 -- 
 1.7.7
 
