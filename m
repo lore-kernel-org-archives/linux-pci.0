@@ -1,231 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:38825 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447Ab2BPFPU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:15:20 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/4] PCI: Move out pci reassigndev resource alignment out of quirk
-Date: Wed, 15 Feb 2012 21:14:55 -0800
-Message-Id: <1329369296-4255-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
-References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:48888 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754179Ab2BANCS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Feb 2012 08:02:18 -0500
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <svaidy@linux.vnet.ibm.com>;
+	Wed, 1 Feb 2012 12:56:31 +1000
+Date: Wed, 1 Feb 2012 18:32:06 +0530
+From: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
+ sriov_init
+Message-ID: <20120201130206.GD3510@dirshya.in.ibm.com>
+Reply-To: svaidy@linux.vnet.ibm.com
+References: <20120127191032.GA22999@dirshya.in.ibm.com>
+ <20120130031845.GA2359@ram-ThinkPad-T61>
+ <20120131174402.GA6172@dirshya.in.ibm.com>
+ <20120201062145.GA11505@ram-ThinkPad-T61>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20120201062145.GA11505@ram-ThinkPad-T61>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-That looks like abusing quirk framework.
+* Ram Pai <linuxram@us.ibm.com> [2012-02-01 14:21:45]:
 
-calling it directly in pci_add_device. or do we have good place for it?
+> On Tue, Jan 31, 2012 at 11:14:02PM +0530, Vaidyanathan Srinivasan wrote:
+> > * Ram Pai <linuxram@us.ibm.com> [2012-01-30 11:18:45]:
+> > 
+> > > On Sat, Jan 28, 2012 at 12:40:32AM +0530, Vaidyanathan Srinivasan wrote:
+> > > > Hi Ram and Jesse,
+> > > > 
+> > > > I found a trivial issue with page size alignment check on IBM POWER
+> > > > box with 64k base page size.  In sriov_init(), changing the check from
+> > > > PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
+> > > > required to use one of the sriov adapter as PF since the
+> > > > resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
+> > > > pseries boxes.
+> > > > 
+> > > > I think resource_size() could be less than SystemPageSize, but I would
+> > > > like your comments/ack/nack on any consequences of checking for only
+> > > > 4k alignment here in a system with larger base page size.
+> > > 
+> > > As per the SRIOV specs, the  resource has to be System page size aligned.
+> > > 
+> > > PFs are required to support 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB
+> > > page sizes. In your case if your adapter's PF is not supporting 64K page size
+> > > then I think it is not conforming to the PCI SRIOV spec.
+> > 
+> > Hi Ram,
+> > 
+> > Thanks for the pointer.  I did some more experiments and found that
+> > the card does support 64k page size, but the PCI_SRIOV_SYS_PGSIZE was
+> > set to default 4k when we do the query and check resource_size().
+> > 
+> > You were correct, the resource_size() has to come up with 64k on 64k
+> > PAGE_SIZE system.  We should not change that check.  I was able to
+> > get a working solution by setting PCI_SRIOV_SYS_PGSIZE to 64k before
+> > we do the query.
+> > 
+> > This was the case in the original code before you moved these to
+> > sriov_enable().  If it is ok to leave the SYS_PGSIZE setting in
+> > sriov_init(), then I have the following fix that works for me.
+> > 
+> > Please review and let me know your comments.
+> > 
+> > Thanks,
+> > Vaidy
+> > ---
+> > 
+> >     	pci: set pci sriov page size before reading sriov bar
+> >     
+> >     	For an SRIOV device, PCI_SRIOV_SYS_PGSIZE should be set before
+> >     	the PCI_SRIOV_BAR is queried.  The sys pagesize defaults to 4k,
+> >     	so this change is required on powerpc box with 64k base page size.
+> >     
+> >     	This is a regression caused due to moving SRIOV init to sriov_enable().
+> >     
+> >     	| commit afd24ece5c76af87f6fc477f2747b83a764f161c
+> >     	| Author: Ram Pai <linuxram@us.ibm.com>
+> >     
+> >     	| PCI: delay configuration of SRIOV capability
+> >     	| The SRIOV capability, namely page size and total_vfs of a device are
+> >     	| configured during enumeration phase of the device.  This can potentially
+> >     	| interfere with the PCI operations of the platform, if the IOV capability
+> >     	| of the device is not enabled.
+> >     
+> >     Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+> > 
+> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > index 0321fa3..0dab5ec 100644
+> > --- a/drivers/pci/iov.c
+> > +++ b/drivers/pci/iov.c
+> > @@ -347,8 +347,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> >  			return rc;
+> >  	}
+> > 
+> > -	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+> > -
+> >  	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+> >  	pci_cfg_access_lock(dev);
+> >  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+> > @@ -466,6 +464,7 @@ found:
+> >  		return -EIO;
+> > 
+> >  	pgsz &= ~(pgsz - 1);
+> > +	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+> > 
+> >  	nres = 0;
+> >  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> 
+> 
+> ACK. I think it is better to revert  afd24ece5c76af87f6fc477f2747b83a764f161c.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Hi Ram,
 
----
- drivers/pci/pci.c       |   62 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h       |    5 ---
- drivers/pci/probe.c     |    3 ++
- drivers/pci/quirks.c    |   63 ------------------------------------------------
- drivers/pci/setup-res.c |    4 ---
- 5 files changed, 66 insertions(+), 71 deletions(-)
+Thanks for the ack.  But afd24ece5c76af87f6fc477f2747b83a764f161c has
+one more change of moving 
+pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, total) to sriov_enable().
 
-Index: linux-2.6/drivers/pci/pci.c
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.c
-+++ linux-2.6/drivers/pci/pci.c
-@@ -3694,6 +3694,68 @@ int pci_is_reassigndev(struct pci_dev *d
- 	return (pci_specified_resource_alignment(dev) != 0);
- }
- 
-+/*
-+ * This function disables memory decoding and releases memory resources
-+ * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
-+ * It also rounds up size to specified alignment.
-+ * Later on, the kernel will assign page-aligned memory resource back
-+ * to the device.
-+ */
-+void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-+{
-+	int i;
-+	struct resource *r;
-+	resource_size_t align, size;
-+	u16 command;
-+
-+	if (!pci_is_reassigndev(dev))
-+		return;
-+
-+	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
-+	    (dev->class >> 8) == PCI_CLASS_BRIDGE_HOST) {
-+		dev_warn(&dev->dev,
-+			"Can't reassign resources to host bridge.\n");
-+		return;
-+	}
-+
-+	dev_info(&dev->dev,
-+		"Disabling memory decoding and releasing memory resources.\n");
-+	pci_read_config_word(dev, PCI_COMMAND, &command);
-+	command &= ~PCI_COMMAND_MEMORY;
-+	pci_write_config_word(dev, PCI_COMMAND, command);
-+
-+	align = pci_specified_resource_alignment(dev);
-+	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
-+		r = &dev->resource[i];
-+		if (!(r->flags & IORESOURCE_MEM))
-+			continue;
-+		size = resource_size(r);
-+		if (size < align) {
-+			size = align;
-+			dev_info(&dev->dev,
-+				"Rounding up size of resource #%d to %#llx.\n",
-+				i, (unsigned long long)size);
-+		}
-+		r->end = size - 1;
-+		r->start = 0;
-+	}
-+	/* Need to disable bridge's resource window,
-+	 * to enable the kernel to reassign new resource
-+	 * window later on.
-+	 */
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
-+	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-+		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
-+			r = &dev->resource[i];
-+			if (!(r->flags & IORESOURCE_MEM))
-+				continue;
-+			r->end = resource_size(r) - 1;
-+			r->start = 0;
-+		}
-+		pci_disable_bridge_window(dev);
-+	}
-+}
-+
- ssize_t pci_set_resource_alignment_param(const char *buf, size_t count)
- {
- 	if (count > RESOURCE_ALIGNMENT_PARAM_SIZE - 1)
-Index: linux-2.6/drivers/pci/pci.h
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.h
-+++ linux-2.6/drivers/pci/pci.h
-@@ -230,11 +230,8 @@ static inline int pci_ari_enabled(struct
- 	return bus->self && bus->self->ari_enabled;
- }
- 
--#ifdef CONFIG_PCI_QUIRKS
--extern int pci_is_reassigndev(struct pci_dev *dev);
--resource_size_t pci_specified_resource_alignment(struct pci_dev *dev);
-+void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- extern void pci_disable_bridge_window(struct pci_dev *dev);
--#endif
- 
- /* Single Root I/O Virtualization */
- struct pci_sriov {
-Index: linux-2.6/drivers/pci/quirks.c
-===================================================================
---- linux-2.6.orig/drivers/pci/quirks.c
-+++ linux-2.6/drivers/pci/quirks.c
-@@ -32,69 +32,6 @@
- #include "pci.h"
- 
- /*
-- * This quirk function disables memory decoding and releases memory resources
-- * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
-- * It also rounds up size to specified alignment.
-- * Later on, the kernel will assign page-aligned memory resource back
-- * to the device.
-- */
--static void __devinit quirk_resource_alignment(struct pci_dev *dev)
--{
--	int i;
--	struct resource *r;
--	resource_size_t align, size;
--	u16 command;
--
--	if (!pci_is_reassigndev(dev))
--		return;
--
--	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
--	    (dev->class >> 8) == PCI_CLASS_BRIDGE_HOST) {
--		dev_warn(&dev->dev,
--			"Can't reassign resources to host bridge.\n");
--		return;
--	}
--
--	dev_info(&dev->dev,
--		"Disabling memory decoding and releasing memory resources.\n");
--	pci_read_config_word(dev, PCI_COMMAND, &command);
--	command &= ~PCI_COMMAND_MEMORY;
--	pci_write_config_word(dev, PCI_COMMAND, command);
--
--	align = pci_specified_resource_alignment(dev);
--	for (i=0; i < PCI_BRIDGE_RESOURCES; i++) {
--		r = &dev->resource[i];
--		if (!(r->flags & IORESOURCE_MEM))
--			continue;
--		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
--		}
--		r->end = size - 1;
--		r->start = 0;
--	}
--	/* Need to disable bridge's resource window,
--	 * to enable the kernel to reassign new resource
--	 * window later on.
--	 */
--	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
--	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
--		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
--			r = &dev->resource[i];
--			if (!(r->flags & IORESOURCE_MEM))
--				continue;
--			r->end = resource_size(r) - 1;
--			r->start = 0;
--		}
--		pci_disable_bridge_window(dev);
--	}
--}
--DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, quirk_resource_alignment);
--
--/*
-  * Decoding should be disabled for a PCI device during BAR sizing to avoid
-  * conflict. But doing so may cause problems on host bridge and perhaps other
-  * key system devices. For devices that need to have mmio decoding always-on,
-Index: linux-2.6/drivers/pci/setup-res.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-res.c
-+++ linux-2.6/drivers/pci/setup-res.c
-@@ -114,7 +114,6 @@ int pci_claim_resource(struct pci_dev *d
- }
- EXPORT_SYMBOL(pci_claim_resource);
- 
--#ifdef CONFIG_PCI_QUIRKS
- void pci_disable_bridge_window(struct pci_dev *dev)
- {
- 	dev_info(&dev->dev, "disabling bridge mem windows\n");
-@@ -127,9 +126,6 @@ void pci_disable_bridge_window(struct pc
- 	pci_write_config_dword(dev, PCI_PREF_MEMORY_BASE, 0x0000fff0);
- 	pci_write_config_dword(dev, PCI_PREF_BASE_UPPER32, 0xffffffff);
- }
--#endif	/* CONFIG_PCI_QUIRKS */
--
--
- 
- static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 		int resno, resource_size_t size, resource_size_t align)
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1426,6 +1426,9 @@ void pci_device_add(struct pci_dev *dev,
- 	/* Fix up broken headers */
- 	pci_fixup_device(pci_fixup_header, dev);
- 
-+	/* moved out from quirk header fixup code */
-+	pci_reassigndev_resource_alignment(dev);
-+
- 	/* Clear the state_saved flag. */
- 	dev->state_saved = false;
- 
+This change is required so that we set the PCI_SRIOV_NUM_VF only
+during sriov_enable.
+
+So we should not revert the entire commit, we can just add this change.
+
+--Vaidy
+
+
