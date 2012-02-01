@@ -1,105 +1,127 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 10 Feb 2012 12:51:50 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"Cc: Dominik Brodowski" <linux@dominikbrodowski.net>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org
-Subject: Re: [PATCH 01/24] PCI: Add iobusn_resource
-Message-ID: <20120210125150.3353237c@jbarnes-desktop>
-In-Reply-To: <CAE9FiQXeRGXE2RCe5S1iOE=QY37wauM=WUevjXWkMqMOjV3t7A@mail.gmail.com>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-	<1328425088-6562-2-git-send-email-yinghai@kernel.org>
-	<CAErSpo4HJH+3EQAWowyVxZFa5jVy1EOo=SoybJqqcjhVdo0nzw@mail.gmail.com>
-	<CAE9FiQXeRGXE2RCe5S1iOE=QY37wauM=WUevjXWkMqMOjV3t7A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/M=dzPqIZawhCO/v/OZGvQkS"; protocol="application/pgp-signature"
-Sender: linux-arch-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/7] PCI: Fix cardbus bridge resources as optional size handling
+Date: Wed,  1 Feb 2012 14:42:45 -0800
+Message-Id: <1328136170-17613-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
+References: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/M=dzPqIZawhCO/v/OZGvQkS
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+We should not set the requested size to -2.
 
-On Mon, 6 Feb 2012 10:55:14 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+that will confuse the resource list sorting with align when SIZEALIGN is used.
 
-> On Mon, Feb 6, 2012 at 10:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrot=
-e:
-> >> +struct resource iobusn_resource =3D {
-> >> + =C2=A0 =C2=A0 =C2=A0 .name =C2=A0 =3D "PCI busn",
-> >> + =C2=A0 =C2=A0 =C2=A0 .start =C2=A0=3D 0,
-> >> + =C2=A0 =C2=A0 =C2=A0 .end =C2=A0 =C2=A0=3D 0xffffff,
-> >> + =C2=A0 =C2=A0 =C2=A0 .flags =C2=A0=3D IORESOURCE_BUS,
-> >> +};
-> >
-> > I'm not sure this should be global. =C2=A0iomem_resource and
-> > ioport_resource *are* really global, because they refer to processor
-> > address space that is the same for everybody. =C2=A0But PCI bus numbers=
- are
-> > specific to PCI. =C2=A0Some machines don't have PCI at all, and there a=
-re
-> > different bus architectures to which this doesn't apply.
->=20
-> that does not hurt them.
+Change to STARTALIGN and pass align from start.
 
-Yes but it's superfluous and confusing if you're porting to a new arch
-or looking at changes in generic code that may affect you.
+We are safe to do that just as we do that regular pci bridge.
 
-> > The 0-0xffffff range is misleading because it includes both the domain
-> > and the bus number, and it's meaningless to allocate ranges that cross
-> > domain boundaries. =C2=A0For example, [bus 0x0000f0-0x000120] includes =
-bus
-> > numbers from domain 0000 and domain 0001, which doesn't make any sense
-> > because a bus can only be in one domain.
->=20
-> allocation code will make sure it will be cross the boundary for domain.
+In the long run, we should just treat cardbus like regular pci bridge.
 
-But that means everyone reading it will do a double take, have to dig
-into the implementation, and only then say "ah yeah ok it looks
-correct" rather than it being obvious from the fact that the resource
-is tracked on a per-domain basis.
+Also fix when realloc is not passed, should keep the requested size.
 
-> > I think it would make more sense to keep this bus number resource in a
-> > per-host bridge structure. =C2=A0Then we wouldn't need to include the
-> > domain number at all because the host bridge determines the domain.
->=20
-> not sure. insert the all busn_res of all peer root buses into one
-> global iobusn_resource
-> looks more simple.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   63 ++++++++++++++++++++++++++--------------------
+ 1 files changed, 36 insertions(+), 27 deletions(-)
 
-In what sense?  Simpler in the sense of your current implementation,
-but not simpler at all to someone just reading the code...
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d5897c3..3b3932a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -898,21 +898,30 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ {
+ 	struct pci_dev *bridge = bus->self;
+ 	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
++	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
+ 	u16 ctrl;
+ 
+ 	/*
+ 	 * Reserve some resources for CardBus.  We reserve
+ 	 * a fixed amount of bus space for CardBus bridges.
+ 	 */
+-	b_res[0].start = 0;
+-	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
+-	if (realloc_head)
+-		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size, 0 /* dont care */);
++	b_res[0].start = pci_cardbus_io_size;
++	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
++	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[0].end -= pci_cardbus_io_size;
++		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
++				pci_cardbus_io_size);
++	}
+ 
+-	b_res[1].start = 0;
+-	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
+-	if (realloc_head)
+-		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
++	b_res[1].start = pci_cardbus_io_size;
++	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
++	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[1].end -= pci_cardbus_io_size;
++		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
++				 pci_cardbus_io_size);
++	}
+ 
+ 	/* MEM1 must not be pref mmio */
+ 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+@@ -939,28 +948,28 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	 * twice the size.
+ 	 */
+ 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
+-		b_res[2].start = 0;
+-		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+2, pci_cardbus_mem_size, 0 /* dont care */);
++		b_res[2].start = pci_cardbus_mem_size;
++		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
++		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
++				  IORESOURCE_STARTALIGN;
++		if (realloc_head) {
++			b_res[2].end -= pci_cardbus_mem_size;
++			add_to_list(realloc_head, bridge, b_res+2,
++				 pci_cardbus_mem_size, pci_cardbus_mem_size);
++		}
+ 
+-		b_res[3].start = 0;
+-		b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size, 0 /* dont care */);
+-	} else {
+-		b_res[3].start = 0;
+-		b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size * 2, 0 /* dont care */);
++		/* reduce that to half */
++		b_res_3_size = pci_cardbus_mem_size;
+ 	}
+ 
+-	/* set the size of the resource to zero, so that the resource does not
+-	 * get assigned during required-resource allocation cycle but gets assigned
+-	 * during the optional-resource allocation cycle.
+- 	 */
+-	b_res[0].start = b_res[1].start = b_res[2].start = b_res[3].start = 1;
+-	b_res[0].end = b_res[1].end = b_res[2].end = b_res[3].end = 0;
++	b_res[3].start = pci_cardbus_mem_size;
++	b_res[3].end = b_res[3].start + b_res_3_size - 1;
++	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[3].end -= b_res_3_size;
++		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
++				 pci_cardbus_mem_size);
++	}
+ }
+ 
+ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+-- 
+1.7.7
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/M=dzPqIZawhCO/v/OZGvQkS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPNYNmAAoJEIEoDkX4Qk9hf58P/0eVO49mgMAHjjkImINiBeBA
-pRSm9M0JoKxjHJXtXJa4SgvXkiFDiSeMossV0sjGiR5Cc047MPLPEOcRWNhf5HYu
-IGAY4lor2wixEYuT+qRIULQhcYID2Oavvi6WYi39ONTA9yLzJTBGPhBNW0HIl0Wo
-bk/p3wbjWSZ2tkspdvjkdNvGGYEIMiTeusGArE4B/Md7Cx8V8TlHlCtk4iQ6ObL8
-dGUlb49c31xhy/vM5ln/kNtLY+gWBprwe5aMpeTqUXjjaKX3Ai72HxmWjqkCrIdy
-v1inMr8hQYVzly1h+UWpB8LJ4NoPguZ1Jw/xE/pL0uV5Al/EPp4wpI1Qkn5Zkxwa
-lXp1cUZOx/0QUd7MoHEw37BpOoPpmKPwC+43U6hGx/Al55rSV/UxFINluY7V7w71
-EA5DVNSsao/K6DC9ouYlbtLDqBxmNI/oMAd1gn4ad2OCVg84fomvBrqz3IAyk+lU
-nSLuPwV4z9ajEbONpqVB9mUbkwUKC074DgmGQLMFhvCMGUPVowS2/ESbtEhh8cVG
-Q9H8S04lj46J3fnUnwTXKA7HhvH6ScTpMJXg8WNWGdv4vVFvsGl8vIBjqpwtDmnA
-yPWu1MhFFVk3F/A3yqWZJU6kQuBr+x83JG4quduMASIoLZ87kP1qkL/uUrflfQPO
-nQoxbGK3bXiwbh4Ravmv
-=y0DF
------END PGP SIGNATURE-----
-
---Sig_/M=dzPqIZawhCO/v/OZGvQkS--
