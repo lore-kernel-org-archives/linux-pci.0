@@ -1,78 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:44897 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750709Ab2BXFjb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 00:39:31 -0500
-From: "Pedanekar, Hemant" <hemantp@ti.com>
-To: Pratyush Anand <pratyush.anand@st.com>, Tejun Heo <tj@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Viresh KUMAR <viresh.kumar@st.com>,
-	Shiraz HASHIM <shiraz.hashim@st.com>,
-	Armando VISCONTI <armando.visconti@st.com>,
-	Vipin KUMAR <vipin.kumar@st.com>,
-	Deepak SIKRI <deepak.sikri@st.com>,
-	Rajeev KUMAR <rajeev-dlh.kumar@st.com>,
-	Vipul Kumar SAMAR <vipulkumar.samar@st.com>,
-	Amit VIRDI <Amit.VIRDI@st.com>,
-	Bhupesh SHARMA <bhupesh.sharma@st.com>
-Subject: RE: [PATCH] PCIE: pcie_set_readrq must not be allowed by PCIE EP
- driver
-Date: Fri, 24 Feb 2012 05:38:20 +0000
-Message-ID: <DDE393F022194E4FB9AE108B0AECD70C317CA30B@DBDE01.ent.ti.com>
-References: <1297937650-2558-1-git-send-email-pratyush.anand@st.com>
- <2A3DCF3DA181AD40BDE86A3150B27B6B0373799132@dbde02.ent.ti.com>
- <2A3DCF3DA181AD40BDE86A3150B27B6B03737991EA@dbde02.ent.ti.com>
- <4D78D6E3.50004@st.com>
- <2A3DCF3DA181AD40BDE86A3150B27B6B03743048FE@dbde02.ent.ti.com>
- <4D806132.1090704@st.com> <4F460E79.5000308@st.com>
- <20120223174228.GF22536@google.com> <4F470ABE.2010206@st.com>
-In-Reply-To: <4F470ABE.2010206@st.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 05/15] PCI, x86: Register busn_res for root buses
+Date: Wed,  1 Feb 2012 14:43:52 -0800
+Message-Id: <1328136242-17725-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+update x86_pci_root_bus_resources() to get bus_max for non-acpi case.
 
-Pratyush Anand wrote on Friday, February 24, 2012 9:28 AM:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/topology.h |    3 ++-
+ arch/x86/pci/acpi.c             |    8 +++++---
+ arch/x86/pci/bus_numa.c         |    8 +++++++-
+ arch/x86/pci/common.c           |   11 +++++++----
+ 4 files changed, 21 insertions(+), 9 deletions(-)
 
-> On 2/23/2012 11:12 PM, Tejun Heo wrote:
->> Hello,
->> 
->> On Thu, Feb 23, 2012 at 03:31:29PM +0530, Pratyush Anand wrote:
->>> Its a long pending patch.
->>> Any decision on this patch.
->> 
->> Hmmm.... I really don't know what to do.  IIRC it was something lifted
->> from the proprietary sil driver and they probably added that to work
->> around performance oddities under certain configurations and I'm a bit
->> worried about changing it after all this time.  Is there any way to
->> make this conditional somehow?
-> 
-> I see that there is a patch in the latest kernel.
-> 
-> commit a1c473aa11e61bc871be16279c9bf976acf22504
-> Author: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Date:   Fri Oct 14 14:56:15 2011 -0500
-> 
->      pci: Clamp pcie_set_readrq() when using "performance" settings
-> 
-> I think, this will resolve the issue.
-> We are moving to the new kernel. Will check it there.
-> 
-I see that the patch above considers MPS to clamp RRQ size, while I think
-both should be independent, or perhaps I am missing something. 
+diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
+index b9676ae..ad4060e 100644
+--- a/arch/x86/include/asm/topology.h
++++ b/arch/x86/include/asm/topology.h
+@@ -172,7 +172,8 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
+ }
+ 
+ struct pci_bus;
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources);
++void x86_pci_root_bus_resources(int bus, int *bus_max,
++				struct list_head *resources);
+ 
+ #ifdef CONFIG_SMP
+ #define mc_capable()	((boot_cpu_data.x86_max_cores > 1) && \
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index daa4249..b25b5b1 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -348,6 +348,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct acpi_device *device = root->device;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
++	int busmax = root->secondary.end;
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+@@ -410,12 +411,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+ 		if (!pci_use_crs)
+-			x86_pci_root_bus_resources(busnum, &resources);
++			x86_pci_root_bus_resources(busnum, &busmax, &resources);
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+-		if (bus)
++		if (bus) {
++			pci_bus_insert_busn_res(bus, busnum, busmax);
+ 			bus->subordinate = pci_scan_child_bus(bus);
+-		else
++		} else
+ 			pci_free_resource_list(&resources);
+ 	}
+ 
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index fd3f655..5213cd8 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -7,7 +7,8 @@
+ int pci_root_num;
+ struct pci_root_info pci_root_info[PCI_ROOT_NR];
+ 
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources)
++void x86_pci_root_bus_resources(int bus, int *bus_max,
++				struct list_head *resources)
+ {
+ 	int i;
+ 	int j;
+@@ -28,6 +29,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	       bus);
+ 
+ 	info = &pci_root_info[i];
++	*bus_max = info->bus_max;
+ 	for (j = 0; j < info->res_num; j++) {
+ 		struct resource *res;
+ 		struct resource *root;
+@@ -51,6 +53,10 @@ default_resources:
+ 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
+ 	pci_add_resource(resources, &ioport_resource);
+ 	pci_add_resource(resources, &iomem_resource);
++	if (!bus)
++		*bus_max = 0xff;
++	else if (!*bus_max)
++		*bus_max = bus;
+ }
+ 
+ void __devinit update_res(struct pci_root_info *info, resource_size_t start,
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 323481e..ce0aefc 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -433,6 +433,7 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+ 	struct pci_sysdata *sd;
++	int bus_max;
+ 
+ 	while ((bus = pci_find_next_bus(bus)) != NULL) {
+ 		if (bus->number == busnum) {
+@@ -454,8 +455,9 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 	sd->node = get_mp_bus_to_node(busnum);
+ 
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+-	x86_pci_root_bus_resources(busnum, &resources);
+-	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
++	x86_pci_root_bus_resources(busnum, &bus_max, &resources);
++	bus = pci_scan_root_bus_max(NULL, busnum, bus_max, &pci_root_ops, sd,
++				&resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
+@@ -643,6 +645,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+ 	struct pci_sysdata *sd;
++	int bus_max;
+ 
+ 	/*
+ 	 * Allocate per-root-bus (not per bus) arch-specific data.
+@@ -655,8 +658,8 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 		return NULL;
+ 	}
+ 	sd->node = node;
+-	x86_pci_root_bus_resources(busno, &resources);
+-	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
++	x86_pci_root_bus_resources(busno, &bus_max, &resources);
++	bus = pci_scan_root_bus_max(NULL, busno, bus_max, ops, sd, &resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
+-- 
+1.7.7
 
-Not allowing EP drivers to choose max RRQ setting for their respective 
-devices will prevent breaking the mismatches where EP sends RRQ which RC 
-cannot handle.
-
-Other option is that the EP drivers which force max RRQ size also handle
-the case where they get completor abort (or it wil be UR?) from the 
-completor and then try to use lower (or lowest) read request. This will 
-prevent breaking the data paths at the same time allowing systems which are
-capable to have max performance.
-
-Thanks.
-
-   Hemant
