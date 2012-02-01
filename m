@@ -1,127 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:33773 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757699Ab2BAWoa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Feb 2012 17:44:30 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 07/11] x86, PCI: break down get_current_resource()
-Date: Mon, 27 Feb 2012 18:03:47 -0800
-Message-Id: <1330394631-28978-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 03/15] PCI: Add busn_res operation functions
+Date: Wed,  1 Feb 2012 14:43:50 -0800
+Message-Id: <1328136242-17725-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-change it to probe_pci_root_info, aka only do one thing.
-
-1. remove resource list head from pci_root_info
-2. make get_current_resources() not pass resources
-   move out add_resources calling out of yet.
-3. rename get_current_resourcs name to probe_pci_root_info
+will use them insert/update busn res in pci_bus
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/acpi.c |   34 +++++++++++++---------------------
- 1 files changed, 13 insertions(+), 21 deletions(-)
+ drivers/pci/probe.c |   36 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 39 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 304ccf0..763f7bb 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,7 +12,6 @@ struct pci_root_info {
- 	char *name;
- 	unsigned int res_num;
- 	struct resource *res;
--	struct list_head *resources;
- 	int busnum;
- };
- 
-@@ -277,7 +276,8 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
- 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a114173..957c2bc 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1622,6 +1622,42 @@ err_out:
+ 	return NULL;
  }
  
--static void add_resources(struct pci_root_info *info)
-+static void add_resources(struct pci_root_info *info,
-+			  struct list_head *resources)
++void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
++{
++	struct resource *res = &b->busn_res;
++	struct resource *parent_res = &iobusn_resource;
++	int ret;
++
++	res->start = (pci_domain_nr(b) << 8) | bus;
++	res->end = (pci_domain_nr(b) << 8) | bus_max;
++	res->flags = IORESOURCE_BUS;
++
++	if (!pci_is_root_bus(b))
++		parent_res = &b->parent->busn_res;
++
++	ret = insert_resource(parent_res, res);
++
++	dev_printk(KERN_DEBUG, &b->dev,
++			"busn_res: %pR %s inserted under %pR\n",
++			res, ret ? "can not be" : "is", parent_res);
++}
++
++void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
++{
++	struct resource *res = &b->busn_res;
++	struct resource old_res = *res;
++
++	res->end &= ~0xff;
++	res->end |= bus_max;
++	dev_printk(KERN_DEBUG, &b->dev, "busn_res: %pR end updated to %pR\n",
++			&old_res, res);
++}
++
++void pci_bus_release_busn_res(struct pci_bus *b)
++{
++	release_resource(&b->busn_res);
++}
++
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
  {
- 	int i;
- 	struct resource *res, *root, *conflict;
-@@ -301,7 +301,7 @@ static void add_resources(struct pci_root_info *info)
- 				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
- 				 res, conflict->name, conflict);
- 		else
--			pci_add_resource(info->resources, res);
-+			pci_add_resource(resources, res);
- 	}
- }
- 
-@@ -313,41 +313,30 @@ static void free_pci_root_info(struct pci_root_info *info)
- }
- 
- static void
--get_current_resources(struct pci_root_info *info,
--		      struct acpi_device *device, int busnum,
--		      int domain, struct list_head *resources)
-+probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
-+		    int busnum, int domain)
- {
- 	size_t size;
- 
- 	info->bridge = device;
- 	info->res_num = 0;
--	info->resources = resources;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
- 				info);
- 	if (!info->res_num)
- 		return;
- 
- 	size = sizeof(*info->res) * info->res_num;
-+	info->res_num = 0;
- 	info->res = kmalloc(size, GFP_KERNEL);
- 	if (!info->res)
- 		return;
- 
- 	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
- 	if (!info->name)
--		goto name_alloc_fail;
-+		return;
- 
--	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
--
--	if (pci_use_crs) {
--		add_resources(info);
--
--		return;
--	}
--
--name_alloc_fail:
--	free_pci_root_info(info);
- }
- 
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
-@@ -412,15 +401,18 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(sd);
- 	} else {
--		get_current_resources(&info, device, busnum, domain,
--					&resources);
-+		probe_pci_root_info(&info, device, busnum, domain);
- 
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
--		if (!pci_use_crs)
-+		if (pci_use_crs)
-+			add_resources(&info, &resources);
-+		else {
-+			free_pci_root_info(&info);
- 			x86_pci_root_bus_resources(busnum, &resources);
-+		}
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
- 		if (bus)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 94ad468..3da935c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -665,6 +665,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
++void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
++void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
 -- 
 1.7.7
 
