@@ -1,100 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:50151 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758995Ab2BJU4r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:56:47 -0500
-Date: Fri, 10 Feb 2012 12:56:44 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 7/9] PCI: Make pci bridge reallocating enabled/disabled
-Message-ID: <20120210125644.7521a0d8@jbarnes-desktop>
-In-Reply-To: <1328424908-6385-8-git-send-email-yinghai@kernel.org>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-	<1328424908-6385-8-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/k3TtHVE.zN/B2otFIctClFh"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 13/15] PCI: kill pci_fixup_parent_subordinate_busnr()
+Date: Wed,  1 Feb 2012 14:44:00 -0800
+Message-Id: <1328136242-17725-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/k3TtHVE.zN/B2otFIctClFh
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Now we can safely extend parent top and shrink them according iobusn_resource tree.
 
-On Sat,  4 Feb 2012 22:55:06 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Don't need that any more.
 
-> Let the user could enable and disable with pci=3Drealloc=3Don or pci=3Dre=
-alloc=3Doff
->=20
-> Also
-> 1. move variable and functions near the place they are used.
-> 2. change macro to function
-> 3. change related functions and variable to static and _init
-> 4. update parameter description accordingly.
->=20
-> -v2: still honor pci=3Drealloc, and treat it as pci=3Drealloc=3Don
->      also use enum instead of ...
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  Documentation/kernel-parameters.txt |    8 ++++++--
->  drivers/pci/pci.c                   |    4 +++-
->  drivers/pci/pci.h                   |    2 +-
->  drivers/pci/setup-bus.c             |   33 ++++++++++++++++++++++++++---=
-----
->  4 files changed, 36 insertions(+), 11 deletions(-)
->=20
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-p=
-arameters.txt
-> index 033d4e6..e11e5dd 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2109,8 +2109,12 @@ bytes respectively. Such letter suffixes can also =
-be entirely omitted.
->  				the default.
->  				off: Turn ECRC off
->  				on: Turn ECRC on.
-> -		realloc		reallocate PCI resources if allocations done by BIOS
-> -				are erroneous.
-> +		realloc=3D	Enable/disable reallocating PCI bridge resources
-> +				if allocations done by BIOS are too small to fit
-> +				resources required by children devices.
-> +				off: Turn realloc off
-> +				on: Turn realloc on
-> +		realloc		same as realloc=3Don
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   33 ++-------------------------------
+ 1 files changed, 2 insertions(+), 31 deletions(-)
 
-"too small to accommodate resources required by all child devices"
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 97100a9..890e3f9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -608,22 +608,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
+ 	return child;
+ }
+ 
+-static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
+-{
+-	struct pci_bus *parent = child->parent;
+-
+-	/* Attempts to fix that up are really dangerous unless
+-	   we're going to re-assign all bus numbers. */
+-	if (!pcibios_assign_all_busses())
+-		return;
+-
+-	while (parent->parent && parent->subordinate < max) {
+-		parent->subordinate = max;
+-		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
+-		parent = parent->parent;
+-	}
+-}
+-
+ static void __devinit pci_bus_extend_top(struct pci_bus *parent,
+ 		 resource_size_t size, struct resource *parent_res)
+ {
+@@ -970,24 +954,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ 		if (!is_cardbus) {
+ 			child->bridge_ctl = bctl;
+-			/*
+-			 * Adjust subordinate busnr in parent buses.
+-			 * We do this before scanning for children because
+-			 * some devices may not be detected if the bios
+-			 * was lazy.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
++
+ 			/* Now we can scan all subordinate buses... */
+ 			max = pci_scan_child_bus(child);
+-			/*
+-			 * now fix it up again since we have found
+-			 * the real value of max.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+-
+-		} else {
+-			pci_fixup_parent_subordinate_busnr(child, max);
+ 		}
++
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
+-- 
+1.7.7
 
-Looks good otherwise.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/k3TtHVE.zN/B2otFIctClFh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPNYSMAAoJEIEoDkX4Qk9hKRoQAIRSbIaOKoIECRJqRG2TIwEg
-PtHBuO9/CrtyIuQwGzcu73/1ZCg3qjiyrEAl1SasV2dhG9/ns2HaWzYM1jG4L6sr
-3N4f85nMpc28497kp+zcw+k00S7uFRASml/va0+lEmhVdVPuclqvtd/1F0oIVQOj
-Qadi55BtKlPN4IU08LhKXhSw3cCNq+JYWa7q1uAC6s65qOmQgrnxia7U903LYzqE
-NkCrq6TWw4TErSOZmm5Da2Af8OyVuyZ2bqFEM7FscC6osDviCkYhMANLOtqiDddY
-0rN++1VxqOJP7WM03Oxnpd/Nf4mLuxAq5nxVhTh+phuZWlF8PQGDZBvcrNjc0vpb
-qsJ/arzvPzDAd6CieQMQxx2FrvGywTIGSmP8tAZJtL+MRuvMKiirkLAOCkpJ2LTn
-WpJ/Rl+9EGijlD8kFPJ2I6YBcfx3y9iF/b075IdAxMRqlyJZaFAB1eZIBwlyoBbk
-Hqa8oJEiTkfc45M+ybaX+nVV+CMCeDK4LuX5oMLyOtMX+hfIso3wdAUj04xlDVvY
-WzABEzf9axVi0DaNUZ1vzRDHhF96h+BMPPlAzsvZ3ulY09lGyPsA9U6QvxE1ZGGh
-UNek48HltYMlPcTt7CBR3I3o7+OAfAtijhArlECLfbJcFlQqz53eYLs0iKu/EML0
-08L5os9i8nckgZrNtQHK
-=72Pc
------END PGP SIGNATURE-----
-
---Sig_/k3TtHVE.zN/B2otFIctClFh--
