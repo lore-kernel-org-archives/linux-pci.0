@@ -1,70 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:21264 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755462Ab2BXDtn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:43 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"Cc: Dominik Brodowski" <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 13/13] PCI: Disable mem in the ioapic removing path
-Date: Thu, 23 Feb 2012 19:48:59 -0800
-Message-Id: <1330055339-11662-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 4/7] PCI: Retry on type IORESOURCE_IO allocation.
+Date: Wed,  1 Feb 2012 14:42:47 -0800
+Message-Id: <1328136170-17613-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
+References: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For physical hot plug should be ok, but for remove/rescan path will need us
-to disable that.
+During reenabling pci reallocating for pci bridge by clean the small size in
+bridge and assign with requested + optional size for first several try,
+Ram mention could have problem with one case
+	https://bugzilla.kernel.org/show_bug.cgi?id=15960
 
-otherwise rescan mmio resource for pci ioapic device will not be sized and
-allocated, aka skiped.
-For ioapic_probe:pci_enable_device will not enable the device correctly, and
-will bail out early.
+After checking the booting log in
+	https://lkml.org/lkml/2010/4/19/44
+	[regression, bisected] Xonar DX invalid PCI I/O range since 977d17bb174
 
-So we can just disable mmio for all removing case. that will hurt real hotplug
-path.
+We should not stop too early for io ports.
+	Apr 19 10:19:38 [kernel] pci 0000:04:00.0: BAR 7: can't assign io (size 0x4000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:01.0: BAR 8: assigned [mem 0x80400000-0x805fffff]
+	Apr 19 10:19:38 [kernel] pci 0000:05:01.0: BAR 7: can't assign io (size 0x2000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:02.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:03.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:08:00.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:09:04.0: BAR 0: can't assign io (size 0x100)
+and clear 00:1c.0 to retry again.
 
-Signed-off-by: <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+The patch remove the IORESOUCE_IO checking, and try one more time.
+and we will have chance to get allocation for 00:1c.0 io port range because
+from 0x4000 to 0x8000 could be used.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/ioapic.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+ drivers/pci/setup-bus.c |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-index 4183a5c..0b2c210 100644
---- a/drivers/pci/ioapic.c
-+++ b/drivers/pci/ioapic.c
-@@ -88,6 +88,17 @@ exit_free:
- 	return -ENODEV;
- }
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 2991a89..162edfb 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1292,7 +1292,6 @@ pci_assign_unassigned_resources(void)
+ 	struct pci_dev_resource *fail_res;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+-	unsigned long failed_type;
+ 	int pci_try_num = 1;
  
-+static void pci_disable_device_mem(struct pci_dev *dev)
-+{
-+	u16 pci_command;
-+
-+	pci_read_config_word(dev, PCI_COMMAND, &pci_command);
-+	if (pci_command & PCI_COMMAND_MEMORY) {
-+		pci_command &= ~PCI_COMMAND_MEMORY;
-+		pci_write_config_word(dev, PCI_COMMAND, pci_command);
-+	}
-+}
-+
- static void __devexit ioapic_remove(struct pci_dev *dev)
- {
- 	struct ioapic *ioapic = pci_get_drvdata(dev);
-@@ -95,6 +106,8 @@ static void __devexit ioapic_remove(struct pci_dev *dev)
- 	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
- 	pci_release_region(dev, 0);
- 	pci_disable_device(dev);
-+	/* need to disable it, otherwise remove/rescan will not work */
-+	pci_disable_device_mem(dev);
- 	kfree(ioapic);
- }
+ 	/* don't realloc if asked to do so */
+@@ -1327,16 +1326,7 @@ again:
+ 	if (list_empty(&fail_head))
+ 		goto enable_and_dump;
  
+-	failed_type = 0;
+-	list_for_each_entry(fail_res, &fail_head, list)
+-		failed_type |= fail_res->flags;
+-
+-	/*
+-	 * io port are tight, don't try extra
+-	 * or if reach the limit, don't want to try more
+-	 */
+-	failed_type &= type_mask;
+-	if ((failed_type == IORESOURCE_IO) || (tried_times >= pci_try_num)) {
++	if (tried_times >= pci_try_num) {
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+ 	}
 -- 
 1.7.7
 
