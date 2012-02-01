@@ -1,104 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:43299 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757476Ab2ARUoE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jan 2012 15:44:04 -0500
-Received: by lahc1 with SMTP id c1so2476528lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2012 12:44:02 -0800 (PST)
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:59100 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753460Ab2BAGWb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Feb 2012 01:22:31 -0500
+Received: from /spool/local
+	by e2.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Wed, 1 Feb 2012 01:22:28 -0500
+Date: Wed, 1 Feb 2012 14:21:45 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
+ sriov_init
+Message-ID: <20120201062145.GA11505@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <20120127191032.GA22999@dirshya.in.ibm.com>
+ <20120130031845.GA2359@ram-ThinkPad-T61>
+ <20120131174402.GA6172@dirshya.in.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXEus3iDTFUT0CW4Y4fww-1iE4f7gTcdZ9Z9LexuCwkhA@mail.gmail.com>
-References: <20120118003335.467.71863.stgit@bhelgaas.mtv.corp.google.com>
- <20120118003512.467.60770.stgit@bhelgaas.mtv.corp.google.com>
- <CAE9FiQXvLAJVY-t8EJHkJgugtRsPdT9SS=60vA+by6qMCd5-Wg@mail.gmail.com>
- <CAErSpo7xgJmT=gs8axiY-OseyurqwUEqYixm692kmZAoA-2sNw@mail.gmail.com>
- <CAE9FiQUMEv+=mXzGc_muM_zTQ14S8tVex+bYgyyM1F++37Cu8w@mail.gmail.com>
- <CAErSpo7Awb97fn=bZECqaf4RF4Tmkh1_sUf6_Vk+jgv5jCYNTw@mail.gmail.com>
- <CAE9FiQWTE2fqe7q1KepBNT9MwW0z9+FoJeN8=caYsZ6RYj_QJw@mail.gmail.com>
- <CAErSpo6GF_QyXbwMt9xUpdrtm27MEqz2N4GV3RdZPvMFM4dGcw@mail.gmail.com> <CAE9FiQXEus3iDTFUT0CW4Y4fww-1iE4f7gTcdZ9Z9LexuCwkhA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 18 Jan 2012 13:43:41 -0700
-Message-ID: <CAErSpo7kSC1VMpBXya3wO3XoqxNPtkJqnkkVUJ0xe6kZ+6cuyg@mail.gmail.com>
-Subject: Re: [PATCH 3/4] PCI: restrict subordinate buses to those reachable
- via host bridge
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120131174402.GA6172@dirshya.in.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 18, 2012 at 12:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Jan 18, 2012 at 10:30 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Wed, Jan 18, 2012 at 11:07 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Wed, Jan 18, 2012 at 9:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>> your patches should be ok, only exception should be considered: some
->>>>> default link root bus could access
->>>>> out of bus range state with _CRS stating.  some kind of transparent
->>>>> bridge concept.
->>>>
->>>> I'm afraid I couldn't make any sense out of the paragraph above.  If
->>>> we don't have any information about host bridge bus number windows
->>>> (for example, for bridges not described in ACPI), I think we'll have
->>>> to default to [bus 00-ff].  That's effectively what these patches
->>>> already do.  We only build the struct pci_host_bridge for ACPI
->>>> bridges, so the check I added in pci_add_new_bus() does nothing for
->>>> non-ACPI bridges.
->>>>
->>>> If you're suggesting that we need to add some exception (a
->>>> "transparent bridge concept"?), can you clarify or suggest a patch?
->>>
->>> for example: acpi said one peer root bus should be in [0,20) : the default link.
->>> other peer root bus could be [80,a0).
->>> chipset will route bus other than [80,a0) all to default link.
->>>
->>> One transparent bridge 00:1c.0 will have 10:00.0 and 10:01.0
->>>
->>> 10:01.0 is cardbus bridge, if it states with bus [1e-22).
->>>
->>> bus  20-22 still can be accessible.
->>
->> I think you're suggesting that a host bridge bus number aperture might
->> be larger than ACPI reports, and that we should somehow accommodate
->> that, i.e., something like this:
->>
->>  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-1f])
->>  pci 0000:00:1c.0: PCI bridge to [bus [10-22]
->>  pci 0000:10:01.0: CardBus bridge to [bus 1e-22]
->>  pci 0000:1e:00.0: PCI bridge to [bus 20]
->>  pci 0000:20:00.0:
->>
->> With my patches, we'd refuse to scan behind the bridge at 1e:00.0, and
->> I think you're suggesting that we *should* scan behind it.
->
-> could extend pci_host_bridge to have secondary resource list to take
-> more than bus range.
->
-> and later could use those range to find valid bus range for children
-> bridges. or even transparent bridge chain.
->>
->> I'm dubious.  How do you propose to identify a "default" host bridge
->> where we should ignore the bus range from _CRS?  Is there a real
->> machine like this?  If so, how does Windows handle this?
->
-> AMD HT chain have this default link setting.
->
-> i don't know how other os is doing this.
+On Tue, Jan 31, 2012 at 11:14:02PM +0530, Vaidyanathan Srinivasan wrote:
+> * Ram Pai <linuxram@us.ibm.com> [2012-01-30 11:18:45]:
+> 
+> > On Sat, Jan 28, 2012 at 12:40:32AM +0530, Vaidyanathan Srinivasan wrote:
+> > > Hi Ram and Jesse,
+> > > 
+> > > I found a trivial issue with page size alignment check on IBM POWER
+> > > box with 64k base page size.  In sriov_init(), changing the check from
+> > > PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
+> > > required to use one of the sriov adapter as PF since the
+> > > resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
+> > > pseries boxes.
+> > > 
+> > > I think resource_size() could be less than SystemPageSize, but I would
+> > > like your comments/ack/nack on any consequences of checking for only
+> > > 4k alignment here in a system with larger base page size.
+> > 
+> > As per the SRIOV specs, the  resource has to be System page size aligned.
+> > 
+> > PFs are required to support 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB
+> > page sizes. In your case if your adapter's PF is not supporting 64K page size
+> > then I think it is not conforming to the PCI SRIOV spec.
+> 
+> Hi Ram,
+> 
+> Thanks for the pointer.  I did some more experiments and found that
+> the card does support 64k page size, but the PCI_SRIOV_SYS_PGSIZE was
+> set to default 4k when we do the query and check resource_size().
+> 
+> You were correct, the resource_size() has to come up with 64k on 64k
+> PAGE_SIZE system.  We should not change that check.  I was able to
+> get a working solution by setting PCI_SRIOV_SYS_PGSIZE to 64k before
+> we do the query.
+> 
+> This was the case in the original code before you moved these to
+> sriov_enable().  If it is ok to leave the SYS_PGSIZE setting in
+> sriov_init(), then I have the following fix that works for me.
+> 
+> Please review and let me know your comments.
+> 
+> Thanks,
+> Vaidy
+> ---
+> 
+>     	pci: set pci sriov page size before reading sriov bar
+>     
+>     	For an SRIOV device, PCI_SRIOV_SYS_PGSIZE should be set before
+>     	the PCI_SRIOV_BAR is queried.  The sys pagesize defaults to 4k,
+>     	so this change is required on powerpc box with 64k base page size.
+>     
+>     	This is a regression caused due to moving SRIOV init to sriov_enable().
+>     
+>     	| commit afd24ece5c76af87f6fc477f2747b83a764f161c
+>     	| Author: Ram Pai <linuxram@us.ibm.com>
+>     
+>     	| PCI: delay configuration of SRIOV capability
+>     	| The SRIOV capability, namely page size and total_vfs of a device are
+>     	| configured during enumeration phase of the device.  This can potentially
+>     	| interfere with the PCI operations of the platform, if the IOV capability
+>     	| of the device is not enabled.
+>     
+>     Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 0321fa3..0dab5ec 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -347,8 +347,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  			return rc;
+>  	}
+> 
+> -	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+> -
+>  	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+>  	pci_cfg_access_lock(dev);
+>  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+> @@ -466,6 +464,7 @@ found:
+>  		return -EIO;
+> 
+>  	pgsz &= ~(pgsz - 1);
+> +	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+> 
+>  	nres = 0;
+>  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
 
-ACPI gives us an abstract model of the machine.  My goal is to make
-Linux work as well with that abstract model as possible.  There will
-be exceptions where the model is wrong or incomplete, and we can deal
-with those as exceptions, i.e., quirks, as we find them.
 
-For any abstraction, one can dream up scenarios that don't fit exactly
-or can't be described completely.  I don't think we should worry about
-those scenarios until they become a real problem.  I'm not interested
-in kludging up generic code to deal with random things that "could"
-happen.
+ACK. I think it is better to revert  afd24ece5c76af87f6fc477f2747b83a764f161c.
 
-In the case you describe, ACPI is sufficiently expressive to correctly
-describe a bus number aperture.  You're proposing that we add a
-"default bridge" concept to work around a hypothetical broken ACPI
-description.  I'm not convinced that's necessary.  If you have a real
-machine that would require it, let's see the specifics.
+RP
 
-Bjorn
