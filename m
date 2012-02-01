@@ -1,92 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:33866 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757712Ab2BAWom (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Feb 2012 17:44:42 -0500
+Received: from rcsinet15.oracle.com ([148.87.113.117]:32799 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753472Ab2BAWnO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Feb 2012 17:43:14 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"Cc: Dominik Brodowski" <linux@dominikbrodowski.net>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 09/15] PCI: Add pci_bus_extend/shrink_top()
-Date: Wed,  1 Feb 2012 14:43:56 -0800
-Message-Id: <1328136242-17725-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 7/7] PCI: only enable pci realloc when SRIOV bar is not assigned
+Date: Wed,  1 Feb 2012 14:42:50 -0800
+Message-Id: <1328136170-17613-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
+References: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-extend or shrink bus and parent buses top (subordinate)
+If bios does not assign those BAR or wrong address, then kernel will
+try to do pci realloc.
 
-extended range is verified safe range, and stop at recorded parent_res.
+in that case, user still can use pci=realloc=off to override it.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 46 insertions(+), 0 deletions(-)
+ drivers/pci/setup-bus.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 79de0dd..91fdaec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -624,6 +624,52 @@ static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
- 	}
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9526038..520f256 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1293,6 +1293,31 @@ static bool __init pci_realloc_enabled(void)
+ 	return pci_realloc_enable >= enable_yes_user;
  }
  
-+static void __devinit pci_bus_extend_top(struct pci_bus *parent,
-+		 resource_size_t size, struct resource *parent_res)
++static void __init pci_realloc_detect(void)
 +{
-+	struct resource *res;
++	struct pci_dev *dev = NULL;
 +
-+	if (!size)
++	if (pci_realloc_enable != enable_not_set)
 +		return;
 +
-+	while (parent) {
-+		res = &parent->busn_res;
-+		if (res == parent_res)
-+			break;
-+		res->end += size;
-+		parent->subordinate += size;
-+		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-+					 parent->subordinate);
-+		dev_printk(KERN_DEBUG, &parent->dev,
-+				"busn_res: extended %02llx to %pR\n",
-+				(unsigned long long)size, res);
-+		parent = parent->parent;
++#ifdef CONFIG_PCI_IOV
++	for_each_pci_dev(dev) {
++		int i;
++
++		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++			struct resource *r = &dev->resource[i];
++
++			/* Not assigned, or rejected by kernel */
++			if (r->flags && !r->start) {
++				pci_realloc_enable = enable_yes_detected;
++
++				return;
++			}
++		}
 +	}
-+}
-+
-+static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
-+		 resource_size_t size, struct resource *parent_res)
-+{
-+	struct resource *res;
-+
-+	if (!size)
-+		return;
-+
-+	while (parent) {
-+		res = &parent->busn_res;
-+		if (res == parent_res)
-+			break;
-+		res->end -= size;
-+		parent->subordinate -= size;
-+		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-+					 parent->subordinate);
-+		dev_printk(KERN_DEBUG, &parent->dev,
-+				"busn_res: shrunk %02llx to %pR\n",
-+				(unsigned long long)size, res);
-+		parent = parent->parent;
-+	}
++#endif
 +}
 +
  /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
+  * first try will not touch pci bridge res
+  * second  and later try will clear small leaf bridge res
+@@ -1314,6 +1339,7 @@ pci_assign_unassigned_resources(void)
+ 	int pci_try_num = 1;
+ 
+ 	/* don't realloc if asked to do so */
++	pci_realloc_detect();
+ 	if (pci_realloc_enabled()) {
+ 		int max_depth = pci_get_max_depth();
+ 
+@@ -1348,6 +1374,8 @@ again:
+ 	if (tried_times >= pci_try_num) {
+ 		if (pci_realloc_enable == enable_not_set)
+ 			printk(KERN_INFO "Some pci devices resources are not assigned, please try to boot with pci=realloc\n");
++		else if (pci_realloc_enable == enable_yes_detected)
++			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, please try to boot with pci=realloc=off\n");
+ 
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
 -- 
 1.7.7
 
