@@ -1,73 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 27 Jan 2012 10:33:05 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai.lu@oracle.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pciehp: Disable/enable link during slot power off/on
-Message-ID: <20120127103305.5fdb8de3@jbarnes-desktop>
-In-Reply-To: <4F22E136.5010404@oracle.com>
-References: <4ED95AD0.7090003@oracle.com>
-	<20120127092622.6d8c2ae8@jbarnes-desktop>
-	<4F22E136.5010404@oracle.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/zOgfkL6gxa4hgGWk1=_tJtV"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4r-4JH+3cqnsgR1fgNsGQL7wH_JozPSgaHKTweKtoM7w@mail.gmail.com>
+References: <1327995772-11388-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo54k=pL1P1z7OetC1qJbsH9LH0GY4QFy-=PPKR0vF14SA@mail.gmail.com>
+	<CAE9FiQUYYsfUAi-jy1uQ0V8W0mHF1eTRnHQPK46cajLvPgmR5A@mail.gmail.com>
+	<CAErSpo4r-4JH+3cqnsgR1fgNsGQL7wH_JozPSgaHKTweKtoM7w@mail.gmail.com>
+Date: Tue, 31 Jan 2012 16:27:06 -0800
+Message-ID: <CAE9FiQX7vrXJ_RFYdKFeK2v10BAzVOFNn08a4=pG7vbqjyifTA@mail.gmail.com>
+Subject: Re: [PATCH -v3 0/14] PCI: allocate pci bus num range for unassigned
+ bridge busn
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/zOgfkL6gxa4hgGWk1=_tJtV
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jan 31, 2012 at 3:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Thanks.  I tried this, and it blew up as soon as I did a rescan.  More
+> complete console log attached.
+>
+> # echo 1 > /sys/bus/pci/rescan
+> [  140.237870] pci_bus 0000:00: scanning bus pass 0
+> [  140.242551] pci 0000:00:01.0: scanning [bus 01-01] behind bridge, pass 0
+> [  140.249249] pci 0000:00:01.0: check if busn 01-01 is in busn_res: [bus 00-7e]
+> [  140.256377] pci 0000:00:01.0: bus configuration invalid, reconfiguring
+> [  140.262912] pci 0000:00:01.1: scanning [bus 02-02] behind bridge, pass 0
+> [  140.269593] pci 0000:00:01.1: check if busn 02-02 is in busn_res: [bus 00-7e]
+> [  140.276721] pci 0000:00:01.1: bus configuration invalid, reconfiguring
 
-On Fri, 27 Jan 2012 09:39:02 -0800
-Yinghai Lu <yinghai.lu@oracle.com> wrote:
-> Please you check updated versions that i sent later.
->=20
-> it was changed to three patches... i sent those patchs 1/123
->=20
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git f=
-or-pci-hp
->=20
-> you can find other patches in=20
->=20
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git f=
-or-pci2
->=20
-> and
->=20
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git f=
-or-pci-busn-alloc
+did not try this test case.
 
-Ok I'll see if I can dig them out of the list; note I can't pull
-directly from your branches since I usually need to rewrite the
-changelogs and the patches need careful review.
+will check that .
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Thanks
 
---Sig_/zOgfkL6gxa4hgGWk1=_tJtV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPIu3hAAoJEIEoDkX4Qk9hiroP/0Vn0r2N5pObmyrL12gkhiB5
-+t2qWgA58VusLyS3KCPG3lMrSZ+gtl2POPso0u4PPvCqr/P1LurbwjrtSIRb++fR
-miXk2fyo5fPjiVS3GTyrW2gnVGP9Dbd/Gem+uQuXapRlH5Nc0DdFVs25Grbinb65
-RHU8UDL+u/lskAwk3g+AGWirU0OdlXm+4b9RnY1l0mTkDAYlvjLjJWbmUcjrX9uZ
-H1nxkugFPwmTlIvabZ5c4BlBMMxT7+D+9b3AvWPhMzfSVAH3ca9GAB+OnL/+/jIW
-s5CSg2DevJVs5OUd36bq4IAUYmxN02mPDQSCsj42iFY/n7VWKcy/jvpXXMKcyffT
-Y7GhPcV9xctf2Bpv23VR5K/QyMQ75xHIZ07Eh0pa5ZFMsAxza5kA/0f9J5oCdleG
-hVc1o4M3gvbrcEI6K/mUUQLB0GqD5933Osu1UPHcxDSdkf+qyH44hWgbE7f5A24h
-MK+oDzlbgo1kzjsnKjgx4TTIuOvu9HkIh7kfhurzprCWgHQTeCz2ku0yY2mQe4ua
-rsHwNzyFzwaBiiVG/lhCnRL5oDrBrDEt7dY/7oKzyVE6KAjulx34Ifwv9Vy8Fupf
-IWatMYzRvooH6k8rAs3Q1DM2WCoeQl8hvLmlFhPhFMsvxXGujJciYcWCiMb3KQUA
-z6EoOlGNCBdsJvh7Jih1
-=LBcK
------END PGP SIGNATURE-----
-
---Sig_/zOgfkL6gxa4hgGWk1=_tJtV--
+Yinghai
