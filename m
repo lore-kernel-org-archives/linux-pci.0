@@ -1,65 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:33910 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756119Ab2BWT6G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:58:06 -0500
-Date: Thu, 23 Feb 2012 11:58:00 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
 Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
+	"Cc: Dominik Brodowski" <linux@dominikbrodowski.net>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] PCI: Skip reset cardbus assigned resource during
- pci bus rescan
-Message-ID: <20120223115800.1ef0cf78@jbarnes-desktop>
-In-Reply-To: <1328916832-6588-4-git-send-email-yinghai@kernel.org>
-References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
-	<1328916832-6588-4-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/XzrrrH+.OkjS16k+KZf3Qcr"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/7] PCI: Make pci bridge reallocating enabled/disabled
+Date: Wed,  1 Feb 2012 14:42:48 -0800
+Message-Id: <1328136170-17613-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
+References: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/XzrrrH+.OkjS16k+KZf3Qcr
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Let the user could enable and disable with pci=realloc=on or pci=realloc=off
 
-On Fri, 10 Feb 2012 15:33:48 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Also
+1. move variable and functions near the place they are used.
+2. change macro to function
+3. change related functions and variable to static and _init
+4. update parameter description accordingly.
 
-> otherwise when rescan is used for cardbus, assigned resource will get
-> cleared.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
+-v2: still honor pci=realloc, and treat it as pci=realloc=on
+     also use enum instead of ...
 
-Applied 1-3, thanks guys.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ Documentation/kernel-parameters.txt |    8 ++++++--
+ drivers/pci/pci.c                   |    4 +++-
+ drivers/pci/pci.h                   |    2 +-
+ drivers/pci/setup-bus.c             |   33 ++++++++++++++++++++++++++-------
+ 4 files changed, 36 insertions(+), 11 deletions(-)
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 033d4e6..e11e5dd 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2109,8 +2109,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				the default.
+ 				off: Turn ECRC off
+ 				on: Turn ECRC on.
+-		realloc		reallocate PCI resources if allocations done by BIOS
+-				are erroneous.
++		realloc=	Enable/disable reallocating PCI bridge resources
++				if allocations done by BIOS are too small to fit
++				resources required by children devices.
++				off: Turn realloc off
++				on: Turn realloc on
++		realloc		same as realloc=on
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9c89447..09cb1f2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3744,8 +3744,10 @@ static int __init pci_setup(char *str)
+ 				pci_no_msi();
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
++			} else if (!strncmp(str, "realloc=", 8)) {
++				pci_realloc_get_opt(str + 8);
+ 			} else if (!strncmp(str, "realloc", 7)) {
+-				pci_realloc();
++				pci_realloc_get_opt("on");
+ 			} else if (!strcmp(str, "nodomains")) {
+ 				pci_no_domains();
+ 			} else if (!strncmp(str, "cbiosize=", 9)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index aaf7ff8..f862a5a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -148,7 +148,7 @@ static inline void pci_no_msi(void) { }
+ static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
+ 
+-extern void pci_realloc(void);
++void pci_realloc_get_opt(char *);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 162edfb..22454c5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -48,13 +48,6 @@ static void free_list(struct list_head *head)
+ 	}
+ }
+ 
+-int pci_realloc_enable = 0;
+-#define pci_realloc_enabled() pci_realloc_enable
+-void pci_realloc(void)
+-{
+-	pci_realloc_enable = 1;
+-}
+-
+ /**
+  * add_to_list() - add a new resource tracker to the list
+  * @head:	Head of the list
+@@ -1273,6 +1266,32 @@ static int __init pci_get_max_depth(void)
+ 	return depth;
+ }
+ 
++/*
++ * -1: undefined, will auto detect later
++ *  0: disabled by user
++ *  1: enabled by user
++ *  2: enabled by auto detect
++ */
++enum enable_type {
++	enable_not_set = -1,
++	enable_no_user,
++	enable_no_detected,
++	enable_yes_user,
++	enable_yes_detected,
++};
++
++static enum enable_type pci_realloc_enable __initdata = enable_not_set;
++void __init pci_realloc_get_opt(char *str)
++{
++	if (!strncmp(str, "off", 3))
++		pci_realloc_enable = enable_no_user;
++	else if (!strncmp(str, "on", 2))
++		pci_realloc_enable = enable_yes_user;
++}
++static bool __init pci_realloc_enabled(void)
++{
++	return pci_realloc_enable >= enable_yes_user;
++}
+ 
+ /*
+  * first try will not touch pci bridge res
+-- 
+1.7.7
 
---Sig_/XzrrrH+.OkjS16k+KZf3Qcr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPRppIAAoJEIEoDkX4Qk9hfUUQAIlSJ/NBKJkjyaJRqB/kv+F6
-1udh6Y+T76UJzMBZ/asJFTX/kCEKK3/BnyK2husAHPGuTJ94xGrqz8w3GLtWGIKq
-XzkCSyFC8hTIqPQwJpZjVHQFdKkXneu2zIXQ6+XrDllCpsov5Zo/X8ePmEfM/tHH
-/85HAUIsbBZELTrZ1st0H+2nxS7KdT4cb1Mm/lK4xjBC/Pu+e1fNnk2JchQqlo8g
-3J78qzC4jhcIzg3uHj7YQFIV+1eCNKWipFSfTahr7ETnnia6is83NYj35BKFAnsO
-4Ie6ust+Gn2+grCyDVQC/KP3L/fAM8tJiMVJWeHql4Opidt4KYWuquAy64Pjq4UO
-5erVE+Ax8K82X/CmPyrR9JptdHE9WPYQRdNkYVZVM0G4l4x9Rf/Fgnk10gwXA86h
-DdSuqiIm+HaVWaWJpUl+hT/GT4D1tU584NWTV43ZPU88QMSyCFcIkLwBHAHJZk45
-m70bx5WWDolhFsL15BajL2bxEtyHZLKKr4TX+saOwmmgazcNDxAUQlnA7WEsDvOZ
-eiNRf4cMQIfq/4GUzgUWuT3ggCGONvKtiqlUD+G/zA1mMKWITRQOCdfrC36v04My
-Cge+5Ei0CPNrgt8BDsjJifnLMQi4xWVchOIO4s2nexiuEdBJ25NJeaFEF5/TOJ2p
-JFYIgwPGZlGpRIANSzf7
-=SqYE
------END PGP SIGNATURE-----
-
---Sig_/XzrrrH+.OkjS16k+KZf3Qcr--
