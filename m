@@ -1,63 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:42781 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932518Ab2BJUbp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:31:45 -0500
-Date: Fri, 10 Feb 2012 12:31:43 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/3] pcie: Add support for setting default ASPM policy
-Message-ID: <20120210123143.69c95d1f@jbarnes-desktop>
-In-Reply-To: <1328282293-16551-3-git-send-email-mjg@redhat.com>
-References: <1328282293-16551-1-git-send-email-mjg@redhat.com>
-	<1328282293-16551-3-git-send-email-mjg@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/rnQulsmYqzf.pASpuLzqiIg"; protocol="application/pgp-signature"
+Received: from mga02.intel.com ([134.134.136.20]:12143 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933030Ab2BBTTV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Feb 2012 14:19:21 -0500
+Date: Thu, 2 Feb 2012 11:19:14 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Oliver Neukum <oneukum@suse.de>
+Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: failure of port switching to XHCI on PantherPoint on boot
+Message-ID: <20120202191914.GA16955@xanatos>
+References: <201202021558.18427.oneukum@suse.de>
+ <20120202172002.GB5711@xanatos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120202172002.GB5711@xanatos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/rnQulsmYqzf.pASpuLzqiIg
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, Feb 02, 2012 at 09:20:02AM -0800, Sarah Sharp wrote:
+> On Thu, Feb 02, 2012 at 03:58:18PM +0100, Oliver Neukum wrote:
+> > Hi,
+> > 
+> > I am observing a failure to switch ports to XHCI on boot, because the quirk
+> > handler bails out at quirk_usb_handoff_xhci():
+> > 
+> >         if (!mmio_resource_enabled(pdev, 0))
+> >                 return;
+> > 
+> > spefically mmio_enabled(pdev) fails. This seems to be generic because
+> > I see it on all my test systems. The switch itself works. My devices go to XHCI
+> > after an S4.
+> 
+> I have no idea why PCI MMIO wouldn't be enabled.  Maybe a PCI or BIOS
+> issue?  What does `sudo lspci -vvv` say about the xHCI host controller
+> revision, and what BIOS are you using?
 
-On Fri,  3 Feb 2012 10:18:13 -0500
-Matthew Garrett <mjg@redhat.com> wrote:
+In particular, what BIOS settings do you have that relate to USB?  Under
+my system's BIOS menu, I see USB options under Advanced -> USB and
+Advanced -> PCH-IO Configuration -> USB.
 
-> Distributions may wish to provide different defaults for PCIE ASPM
-> depending on their target audience. Provide a configuration option for
-> choosing the default policy.
->=20
-> Signed-off-by: Matthew Garrett <mjg@redhat.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: jbarnes@virtuousgeek.org
+Under the PCH USB options, do you have an option called "xHCI Mode"?  If
+so, what is it set to?  If it's set to "Disabled", try setting it to
+"Smart Auto" and see if that helps.  Setting it to "Enabled" will cause
+the BIOS to put the ports under xHCI, but that's not usually on by
+default.  I'm wondering if the BIOS is attempting to disable the xHCI
+PCI device for some reason.
 
-Applied to -next, thanks.
+The xHCI driver really isn't designed to work with GPIO, it only does
+memory mapped I/O right now.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/rnQulsmYqzf.pASpuLzqiIg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPNX6vAAoJEIEoDkX4Qk9h2r0P/2f2zwrwnzPAS5K+48zMsiqZ
-KSOf75Tfkj1UwkmlE2QwZTgxU56a6qz4NsIy1Kz/m5XclJ3RolCs7Tlr6u1yL5Vg
-4R5Co4qz3+HxPlvfLMw/m7g1kzGS+bt3wl7Jb7gP8q8hZGiHcfWL7mFJpE3DagWK
-YD1yy0h/6jatXFOUXEbZ/Gevz4+fIsNZWg+oQB+oE42wZwoAY7sdoaO45hYukuBp
-vJUbAtvendFdV5SWxBEbjj3cxem41NLAFuOlTmepZSwrAkvMS7qoFFOhrJy1WoEX
-Dm4MWTY/AAW1VQKuP70SUkfHgowx2eok8JaZAyK7NVsNeSX+YwIRLlD1JkcTMSq4
-QfZ5jIqynubN33u9D5LU1yv2BSLmwtifwV5kyLPXpbhYtbCm+IAJ9Oz5E3UKR9AX
-A+UFiJ0dE5Rp1O4DAekLtNYKK5QXWP3MfrqfDK+DAOI3brShKmxxaXPy3PWHQX5s
-MjhhzL5Ezv4afdQNZrz1ceokwSN+qm5hrNcDuSJ903YXM5x9zrZkxI0t4gTa5295
-7kadddbHqGpj14qtxIuaR9MGaeGwJwUys37dj14Z5Pa9Ykm+3MM7W2Z9inc33tGm
-DnSAzNu/slxTMrL+Et1Zc0VHdmXmZgt5WCt9bNuL3xYUSZY8OJIAWSCsIb7kfDEg
-aCTeQasc3fW3HDkHJgDV
-=3PTY
------END PGP SIGNATURE-----
-
---Sig_/rnQulsmYqzf.pASpuLzqiIg--
+Sarah Sharp
