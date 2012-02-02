@@ -1,55 +1,101 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1329946899.20389.9.camel@pasglop>
-References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
- <20120222181948.27513.96215.stgit@bhelgaas.mtv.corp.google.com> <1329946899.20389.9.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 23 Feb 2012 10:49:07 -0800
-Message-ID: <CAErSpo6=ADAx0LPWQz-YGBm2opoKAMaPGDY6yqvkNY8riF9ZFQ@mail.gmail.com>
-Subject: Re: [PATCH v1 09/11] powerpc/PCI: replace pci_probe_only with pci_flags
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Olof Johansson <olof@lixom.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:21804 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752277Ab2BBUQH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Feb 2012 15:16:07 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] pci: Fix pci cardbus removal
+Date: Thu,  2 Feb 2012 12:15:48 -0800
+Message-Id: <1328213748-2804-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 22, 2012 at 1:41 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2012-02-22 at 11:19 -0700, Bjorn Helgaas wrote:
->>  int maple_pci_get_legacy_ide_irq(struct pci_dev *pdev, int channel)
->> diff --git a/arch/powerpc/platforms/pasemi/pci.c
->> b/arch/powerpc/platforms/pasemi/pci.c
->> index b6a0ec4..b27d886 100644
->> --- a/arch/powerpc/platforms/pasemi/pci.c
->> +++ b/arch/powerpc/platforms/pasemi/pci.c
->> @@ -231,7 +231,7 @@ void __init pas_pci_init(void)
->>         pci_devs_phb_init();
->>
->>         /* Use the common resource allocation mechanism */
->> -       pci_probe_only = 1;
->> +       pci_add_flags(PCI_PROBE_ONLY);
->>  }
->
-> Olof, do you remember why you used to set that on pasemi ?
->
-> I would have expected it to be clear, so the kernel can re-assign things
-> if needed. We really only want it set for pseries because of the
-> hypervisor being a PITA :-)
+During test busn_res allocation with cardbus, found pci card removal is not
+working anymore, and it turns out it is broken by:
 
-Speaking of the hypervisor, powerpc has this of_scan_bus() thing which
-seems to discover PCI devices using the OF device tree rather than
-using PCI config accesses.  This seems related to the "pci_probe_only"
-idea.
+|commit 79cc9601c3e42b4f0650fe7e69132ebce7ab48f9
+|Date:   Tue Nov 22 21:06:53 2011 -0800
+|
+|    PCI: Only call pci_stop_bus_device() one time for child devices at remove
 
-I wonder whether it would be possible/feasible/desirable to implement
-this by using config space accessors that would internally look at the
-OF device tree.  Then we possibly could use the standard PCI scan bus
-path.  Maybe the core could detect non-changeable BARs somehow and
-mark them, e.g., with IORESOURCE_PCI_FIXED.
+that patch changed pci_remove_behind_bridge behavoir that yenta_carbus depends.
 
-Just a pie-in-the sky thought for now; I have no concrete plans to do
-anything like this, but it seems like it might allow more unification
-if it were possible.
+Restore the behavoir by:
+1. rename pci_remove_behind_bridge to __pci_remove_behind_bridge, and let
+	__pci_remove_bus_device() call it instead.
+2. add pci-stop_befind_bridge that will stop device under bridge
+3. add back new pci_remove_behind_bridge that will stop and remove device
+	under bridge.
 
-Bjorn
+This one is for v3.3
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/remove.c |   28 ++++++++++++++++++++++------
+ 1 file changed, 22 insertions(+), 6 deletions(-)
+
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -78,6 +78,7 @@ void pci_remove_bus(struct pci_bus *pci_
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
++static void __pci_remove_behind_bridge(struct pci_dev *dev);
+ /**
+  * pci_remove_bus_device - remove a PCI device and any children
+  * @dev: the device to remove
+@@ -95,7 +96,7 @@ static void __pci_remove_bus_device(stru
+ 	if (dev->subordinate) {
+ 		struct pci_bus *b = dev->subordinate;
+ 
+-		pci_remove_behind_bridge(dev);
++		__pci_remove_behind_bridge(dev);
+ 		pci_remove_bus(b);
+ 		dev->subordinate = NULL;
+ 	}
+@@ -108,6 +109,24 @@ void pci_remove_bus_device(struct pci_de
+ 	__pci_remove_bus_device(dev);
+ }
+ 
++static void __pci_remove_behind_bridge(struct pci_dev *dev)
++{
++	struct list_head *l, *n;
++
++	if (dev->subordinate)
++		list_for_each_safe(l, n, &dev->subordinate->devices)
++			__pci_remove_bus_device(pci_dev_b(l));
++}
++
++static void pci_stop_behind_bridge(struct pci_dev *dev)
++{
++	struct list_head *l, *n;
++
++	if (dev->subordinate)
++		list_for_each_safe(l, n, &dev->subordinate->devices)
++			pci_stop_bus_device(pci_dev_b(l));
++}
++
+ /**
+  * pci_remove_behind_bridge - remove all devices behind a PCI bridge
+  * @dev: PCI bridge device
+@@ -118,11 +137,8 @@ void pci_remove_bus_device(struct pci_de
+  */
+ void pci_remove_behind_bridge(struct pci_dev *dev)
+ {
+-	struct list_head *l, *n;
+-
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			__pci_remove_bus_device(pci_dev_b(l));
++	pci_stop_behind_bridge(dev);
++	__pci_remove_behind_bridge(dev);
+ }
+ 
+ static void pci_stop_bus_devices(struct pci_bus *bus)
