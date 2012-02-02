@@ -1,72 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:55118 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756000Ab2BBUjD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Feb 2012 15:39:03 -0500
+MIME-Version: 1.0
+In-Reply-To: <4F2A5ED1.3040109@jp.fujitsu.com>
+References: <1327690515-2991-1-git-send-email-yinghai@kernel.org>
+	<4F2A5ED1.3040109@jp.fujitsu.com>
+Date: Thu, 2 Feb 2012 12:39:01 -0800
+Message-ID: <CAE9FiQVgP1TjHPf06JgDj=7piU5A+J11OF-izhcg=pi4eCb2vw@mail.gmail.com>
+Subject: Re: [PATCH -v2 0/7] PCI: pcie hotplug related patch
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 12/36] x86, PCI: add print all root info for nocrs path
-Date: Wed, 29 Feb 2012 19:00:13 -0800
-Message-Id: <1330570837-26638-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/amd_bus.c  |    2 +-
- arch/x86/pci/bus_numa.c |    8 ++++++++
- arch/x86/pci/bus_numa.h |    1 +
- 3 files changed, 10 insertions(+), 1 deletions(-)
+On Thu, Feb 2, 2012 at 2:00 AM, Kenji Kaneshige
+<kaneshige.kenji@jp.fujitsu.com> wrote:
+> Yinghai, Jesse,
+>
+> I tested pciehp with your set of patches. I have some comments below.
+>
+> (1) I got a following warning message on compiling the patch [5/7].
+>
+>    drivers/pci/hotplug/pciehp_hpc.c:281: warning:
+> 'pcie_wait_link_not_active' defined but not used
+>
+> (2) I got following warning messages on compiling the patch [6/7]
+>
+>    drivers/pci/hotplug/pciehp_hpc.c:381: warning: 'pciehp_link_enable'
+> defined but not used
+>    drivers/pci/hotplug/pciehp_hpc.c:386: warning: 'pciehp_link_disable'
+> defined but not used
+>
+> (3) I've asked Naoki Yanagimoto, who reported that configuration read
+>    on some hot-added PCIe device returns invalid value, to test the
+>    patch. Unfortunately, the problem happens with your patch. But
+>    after some discussion and testing, it turned out that problem doesn't
+>    happen when the same card with updated bios is used. So it seems the
+>    problem is in PCIe card side.
+>
+> As a result, problems I found are (1) and (2). Please fix those.
+> Other than that, pciehp seems to work well.
+>
+> Tested-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+>
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index 0b6abbe..5f30a98 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -291,7 +291,7 @@ static int __init early_fill_mp_bus_info(void)
- 		}
- 	}
- 
--	print_pci_root_info(info, "bus:", true);
-+	print_all_pci_root_info("ht link", true);
- 
- 	return 0;
- }
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index 7251011..772949f 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -94,6 +94,14 @@ void print_pci_root_info(struct pci_root_info *info, char *name, bool nodelink)
- 				 &root_res->res);
- }
- 
-+void print_all_pci_root_info(char *name, bool nodelink)
-+{
-+	struct pci_root_info *info;
-+
-+	list_for_each_entry(info, &pci_root_infos, list)
-+		print_pci_root_info(info, name, nodelink);
-+}
-+
- void __devinit update_res(struct pci_root_info *info, resource_size_t start,
- 			  resource_size_t end, unsigned long flags, int merge)
- {
-diff --git a/arch/x86/pci/bus_numa.h b/arch/x86/pci/bus_numa.h
-index d19ac93..deada6a 100644
---- a/arch/x86/pci/bus_numa.h
-+++ b/arch/x86/pci/bus_numa.h
-@@ -23,6 +23,7 @@ extern struct list_head pci_root_infos;
- struct pci_root_info *alloc_pci_root_info(int bus_min, int bus_max,
- 						int node, int link);
- void print_pci_root_info(struct pci_root_info *info, char *name, bool nodelink);
-+void print_all_pci_root_info(char *name, bool nodelink);
- extern void update_res(struct pci_root_info *info, resource_size_t start,
- 		      resource_size_t end, unsigned long flags, int merge);
- #endif
--- 
-1.7.7
+Great. thanks for confirmation.
 
+for (1) and (2), patch 5, and 6 will add some helper functions and
+they will be used by patch 7.
+
+so when patch 7 is applied, there will be no compiling warning anymore.
+
+Thanks
+
+Yinghai
