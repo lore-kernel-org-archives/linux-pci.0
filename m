@@ -1,26 +1,51 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m020-f174.google.com ([209.85.217.174]:50701 "EHLO
+	mail-lpp01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751307Ab2BCAGy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:06:54 -0500
 MIME-Version: 1.0
-In-Reply-To: <20120210023717.10311.37310.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com> <20120210023717.10311.37310.stgit@bhelgaas.mtv.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 9 Feb 2012 18:43:03 -0800
-Message-ID: <CAErSpo6GpZ7arxCyfZw07pHz1K8FPuUagZhRCGHf5i+PtiH-FA@mail.gmail.com>
-Subject: Re: [PATCH v2 11/18] mips/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Yoichi Yuasa <yuasa@linux-mips.org>
+In-Reply-To: <1327960820-11867-7-git-send-email-danny.kukawka@bisect.de>
+References: <1327960820-11867-1-git-send-email-danny.kukawka@bisect.de>
+	<1327960820-11867-7-git-send-email-danny.kukawka@bisect.de>
+Date: Thu, 2 Feb 2012 19:06:52 -0500
+Message-ID: <CAO8r2eeSPQnCR4KkZyrZA8LtsZY3nnsNHYynBC0Rc8N-02fihQ@mail.gmail.com>
+Subject: Re: [PATCH 06/16] cpcihp: fix debug module parameter to be bool
+From: Scott Murray <scott@spiteful.org>
+To: Danny Kukawka <danny.kukawka@bisect.de>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 9, 2012 at 6:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Tell the PCI core about host bridge address translation so it can take
-> care of bus-to-resource conversion for us.
+Sorry for the delay, this looks fine.
+
+Acked-by: Scott Murray <scott@spiteful.org>
+
+On Mon, Jan 30, 2012 at 5:00 PM, Danny Kukawka <danny.kukawka@bisect.de> wrote:
 >
-> Here's the wrinkle on Cobalt: we can't generate normal I/O port addresses
-> on PCI because the GT-64111 doesn't do any address translation,
-
-Yuasa-san, thanks for testing v1 of this series.  I hope this v2
-series fixes the problem you saw.  Let me know if it doesn't.
-
-Bjorn
+> Fix debug variable from module parameter to be really bool to
+> fix 'warning: return from incompatible pointer type'.
+>
+> Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
+> ---
+>  drivers/pci/hotplug/cpcihp_generic.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
+> index fb3f846..81af764 100644
+> --- a/drivers/pci/hotplug/cpcihp_generic.c
+> +++ b/drivers/pci/hotplug/cpcihp_generic.c
+> @@ -62,7 +62,7 @@
+>  #define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
+>
+>  /* local variables */
+> -static int debug;
+> +static bool debug;
+>  static char *bridge;
+>  static u8 bridge_busnr;
+>  static u8 bridge_slot;
+> --
+> 1.7.7.3
+>
