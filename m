@@ -1,92 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:61351 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799Ab2BEG6k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Feb 2012 01:58:40 -0500
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:60193 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753592Ab2BCRXp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Feb 2012 12:23:45 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6sdsV_ZEkfLq-tGxY4GvyWSz99h31XqS62RjFvthvJhw@mail.gmail.com>
+References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+	<1328136242-17725-2-git-send-email-yinghai@kernel.org>
+	<CAErSpo6sdsV_ZEkfLq-tGxY4GvyWSz99h31XqS62RjFvthvJhw@mail.gmail.com>
+Date: Fri, 3 Feb 2012 09:23:44 -0800
+Message-ID: <CAE9FiQUqLwgXMOH-oAf4o-9O_cyLaRs1h8Abg+U-4iu3CRipfA@mail.gmail.com>
+Subject: Re: [PATCH 01/15] Make %pR could handle bus resource with domain
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v5 0/24] PCI: allocate pci bus num range for unassigned bridge busn + pci rescan cleanup
-Date: Sat,  4 Feb 2012 22:57:44 -0800
-Message-Id: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-cdef5a1: PCI: clean up rescan_bus_bridge_resize
-7b6deb4: PCI: make pci_rescan_bus_bridge_resize use pci_scan_bridge instead
-876bd4a: PCI: Add pci_bus_add_single_device()
-6e5f346: PCI, sysfs: create rescan_bridge under /sys/.../pci/devices/... for pci bridges
-3c92113: PCI, sys: Use device_type and attr_groups with pci dev
-e6d3c54: PCI, pciehp: Remove not needed bus number range checking
-2306e31: PCI: Double checking setting for bus register and bus struct.
-daddc90: pcmcia: remove workaround for fixing pci parent bus subordinate
-6a88939: PCI: Seperate child bus scanning to two passes overall
-60c7d94: PCI: kill pci_fixup_parent_subordinate_busnr()
-e9e72be: PCI: Allocate bus range instead of use max blindly
-f22af7f: PCI: Strict checking of valid range for bridge
-8656ea6: PCI: Probe safe range that we can use for unassigned bridge.
-4023fc3: PCI: Add pci_bus_extend/shrink_top()
-a066c95: PCI, parisc: Register busn_res for root buses
-d069fbb: PCI, powerpc: Register busn_res for root buses
-f00e514: PCI, ia64: Register busn_res for root buses
-1a203f1: PCI, x86: Register busn_res for root buses
-8b1b01b: PCI: Add busn_res tracking in core
-a9ccca7: PCI: add /proc/iobusn
-ec1cdb3: PCI: Add busn_res operation functions
-2a09fbd: Make %pR could handle bus resource with domain
-9c83a59: PCI: add busn inline helper
-b18cd6a: PCI: Add iobusn_resource
+On Fri, Feb 3, 2012 at 8:26 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Feb 1, 2012 at 2:43 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> So could use %pR for busn_res with domain nr in start/end
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Andrew Morton <akpm@linux-foundation.org>
+>> ---
+>>  lib/vsprintf.c |   28 ++++++++++++++++++++++++----
+>>  1 files changed, 24 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+>> index 8e75003..b34eeea 100644
+>> --- a/lib/vsprintf.c
+>> +++ b/lib/vsprintf.c
+>> @@ -451,6 +451,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
+>>                .precision = -1,
+>>                .flags = SPECIAL | SMALL | ZEROPAD,
+>>        };
+>> +       static const struct printf_spec domain_spec = {
+>> +               .base = 16,
+>> +               .field_width = 4,
+>> +               .precision = -1,
+>> +               .flags = SMALL | ZEROPAD,
+>> +       };
+>>        static const struct printf_spec bus_spec = {
+>>                .base = 16,
+>>                .field_width = 2,
+>> @@ -507,11 +513,25 @@ char *resource_string(char *buf, char *end, struct resource *res,
+>>                specp = &mem_spec;
+>>                decode = 0;
+>>        }
+>> -       p = number(p, pend, res->start, *specp);
+>> -       if (res->start != res->end) {
+>> -               *p++ = '-';
+>> -               p = number(p, pend, res->end, *specp);
+>> +
+>> +       if (res->flags & IORESOURCE_BUS && res->end >> 8) {
+>> +               p = number(p, pend, res->start >> 8, domain_spec);
+>> +               *p++ = ':';
+>> +               p = number(p, pend, res->start & 0xff, *specp);
+>> +               if (res->start != res->end) {
+>> +                       *p++ = '-';
+>> +                       p = number(p, pend, res->end >> 8, domain_spec);
+>> +                       *p++ = ':';
+>> +                       p = number(p, pend, res->end & 0xff, *specp);
+>
+> The "<< 8", ">>8", and "& 0xff" patterns are used frequently in these
+> patches.  I think it's worth adding macros or inline functions to make
+> it clear that all these places are connected.
 
-Set up iobusn_resource tree, and register bus number range to it.
-Later when need to find bus range, will try to allocate from the tree
+ok will check if can use
 
-Need to test on arches other than x86. esp for ia64 and powerpc that support
-  more than on peer root buses.
+busn_domain_nr(res): res->end >> 8
+busn_bus_nr(res): res->end & 0xff;
+busn_val(domain_nr, bus_nr)
 
-last five patches are rescan cleanup that make use busn alloc.
-
-could be found at:
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
-
--v2: according to Jesse, split to more small patches.
--v3: address some request from Bjorn. like make use %pR for busn_res debug print
-	out, and move the comment change with code change.
--v4: fixes the problem about rescan that Bjorn found.
--v5: add /proc/iobusn that is requested by Bjorn.
-     remove old workaround from pciehp.
-     add rescan_bridge for pci bridge in /sys
+instead.
 
 Thanks
 
 Yinghai
-
- Documentation/ABI/testing/sysfs-bus-pci |   10 +
- arch/ia64/pci/pci.c                     |    2 +
- arch/powerpc/kernel/pci-common.c        |    7 +-
- arch/x86/include/asm/topology.h         |    3 +-
- arch/x86/pci/acpi.c                     |    8 +-
- arch/x86/pci/bus_numa.c                 |    8 +-
- arch/x86/pci/common.c                   |   11 +-
- drivers/parisc/dino.c                   |    2 +
- drivers/parisc/lba_pci.c                |    3 +
- drivers/pci/bus.c                       |   40 +++
- drivers/pci/hotplug/pciehp_pci.c        |   12 +-
- drivers/pci/pci-sysfs.c                 |   59 ++++-
- drivers/pci/pci.h                       |    1 +
- drivers/pci/probe.c                     |  460 +++++++++++++++++++++++++------
- drivers/pci/remove.c                    |    1 +
- drivers/pcmcia/yenta_socket.c           |   75 -----
- include/linux/ioport.h                  |   18 ++
- include/linux/pci.h                     |    9 +
- kernel/resource.c                       |   50 ++++
- lib/vsprintf.c                          |   29 ++-
- 20 files changed, 617 insertions(+), 191 deletions(-)
-
