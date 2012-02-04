@@ -1,72 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:61724 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754974Ab2BEHAO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Feb 2012 02:00:14 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1328312292.30631.5.camel@pasglop>
+References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
+	<1328136242-17725-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo44bef-Vj4LPB0QJ8HRjWxqRFK_=kpMq8hYEe=4t58zGQ@mail.gmail.com>
+	<1328312292.30631.5.camel@pasglop>
+Date: Fri, 3 Feb 2012 18:30:42 -0800
+Message-ID: <CAE9FiQVG9YbZW=Usv0drxuyQ=ZTERK5KZK3TF6aX-iWuAS8L6Q@mail.gmail.com>
+Subject: Re: [PATCH 02/15] PCI: Add iobusn_resource
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Tony Luck <tony.luck@intel.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 13/24] PCI: Strict checking of valid range for bridge
-Date: Sat,  4 Feb 2012 22:57:57 -0800
-Message-Id: <1328425088-6562-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-children bridges busn range should be able to be allocated from parent bus range.
+On Fri, Feb 3, 2012 at 3:38 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Fri, 2012-02-03 at 08:36 -0800, Bjorn Helgaas wrote:
+>> On Wed, Feb 1, 2012 at 2:43 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> > also add busn_res into struct pci_bus.
+>> >
+>> > will use them to have bus number resource tree.
+>>
+>> Will you make this tree visible in /proc?  Seems like that would be
+>> useful for debugging and for symmetry with /proc/iomem and
+>> /proc/ioports.
+>
+> To be honest that whole business with bus numbers in struct resource
+> seems like gratuituous bloat & over engineering to me ...
 
-to avoid overlapping between sibling bridges on same bus.
+ah, i thought it is simple enough, and should be done before already.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+> Does it actually solve a specific problem or serve a purpose ?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7015dcd..a860acb 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -770,6 +770,31 @@ reduce_needed_size:
- 	return ret;
- }
- 
-+static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
-+				struct pci_dev *dev,
-+				int secondary, int subordinate)
-+{
-+	int broken = 0;
-+
-+	struct resource busn_res;
-+	int ret;
-+
-+	memset(&busn_res, 0, sizeof(struct resource));
-+	dev_printk(KERN_DEBUG, &dev->dev,
-+		 "check if busn %02x-%02x is in busn_res: %pR\n",
-+		 secondary, subordinate, &bus->busn_res);
-+	ret = allocate_resource(&bus->busn_res, &busn_res,
-+			 (subordinate - secondary + 1),
-+			 busn(pci_domain_nr(bus), secondary),
-+			 busn(pci_domain_nr(bus), subordinate),
-+			 1, NULL, NULL);
-+	if (ret)
-+		broken = 1;
-+	else
-+		release_resource(&busn_res);
-+
-+	return broken;
-+}
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
--- 
-1.7.7
+very beginning is for one IBM x3950...
 
+https://bugzilla.novell.com/show_bug.cgi?id=735909
+
+++max searching valid bus number range is out of boundary of peer root
+bus range.
+
+later, found the code could help: pcie hotplug, pci bus rescan and
+even remove some hacks for/from cardbus field.
+
+now with this patchset (+ one patch that is not sent out yet), I could
+even use setpci/pci rescan to move pci bus around.
+
+Thanks
+
+Yinghai
