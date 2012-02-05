@@ -1,42 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qw0-f74.google.com ([209.85.216.74]:48563 "EHLO
-	mail-qw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756500Ab2BWToF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:44:05 -0500
-Received: by mail-qw0-f74.google.com with SMTP id b12so213849qad.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 11:44:04 -0800 (PST)
-Subject: [PATCH v2 12/12] PCI: make pci_flags non-weak
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org
-Date: Thu, 23 Feb 2012 12:44:03 -0700
-Message-ID: <20120223194403.20708.53279.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/9] pci: Fix pci cardbus removal
+Date: Sat,  4 Feb 2012 22:55:00 -0800
+Message-Id: <1328424908-6385-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No architecture defines its own pci_flags, so the core symbol does not
-need to be weak.
+During test busn_res allocation with cardbus, found pci card removal is not
+working anymore, and it turns out it is broken by:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+|commit 79cc9601c3e42b4f0650fe7e69132ebce7ab48f9
+|Date:   Tue Nov 22 21:06:53 2011 -0800
+|
+|    PCI: Only call pci_stop_bus_device() one time for child devices at remove
+
+that patch changed pci_remove_behind_bridge behavoir that yenta_carbus depends.
+
+Restore the old behavoir of pci_remove_behind_bridge by:
+1. rename pci_remove_behind_bridge to __pci_remove_behind_bridge, and let
+	__pci_remove_bus_device() call it instead.
+2. add pci-stop_befind_bridge that will stop device under bridge
+3. add back pci_remove_behind_bridge that will stop and remove device
+	under bridge.
+
+This one is for v3.3
+
+-v2: update commit description a little bit.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/pci/remove.c |   28 ++++++++++++++++++++++------
+ 1 files changed, 22 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7b7d7e9..c172ebb 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -28,7 +28,7 @@
- #include <asm-generic/pci-bridge.h>
- #include "pci.h"
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index bd70f23..82f8ae5 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -77,6 +77,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
  
--unsigned int __weak pci_flags;
-+unsigned int pci_flags;
++static void __pci_remove_behind_bridge(struct pci_dev *dev);
+ /**
+  * pci_remove_bus_device - remove a PCI device and any children
+  * @dev: the device to remove
+@@ -94,7 +95,7 @@ static void __pci_remove_bus_device(struct pci_dev *dev)
+ 	if (dev->subordinate) {
+ 		struct pci_bus *b = dev->subordinate;
  
- struct resource_list_x {
- 	struct resource_list_x *next;
+-		pci_remove_behind_bridge(dev);
++		__pci_remove_behind_bridge(dev);
+ 		pci_remove_bus(b);
+ 		dev->subordinate = NULL;
+ 	}
+@@ -107,6 +108,24 @@ void pci_remove_bus_device(struct pci_dev *dev)
+ 	__pci_remove_bus_device(dev);
+ }
+ 
++static void __pci_remove_behind_bridge(struct pci_dev *dev)
++{
++	struct list_head *l, *n;
++
++	if (dev->subordinate)
++		list_for_each_safe(l, n, &dev->subordinate->devices)
++			__pci_remove_bus_device(pci_dev_b(l));
++}
++
++static void pci_stop_behind_bridge(struct pci_dev *dev)
++{
++	struct list_head *l, *n;
++
++	if (dev->subordinate)
++		list_for_each_safe(l, n, &dev->subordinate->devices)
++			pci_stop_bus_device(pci_dev_b(l));
++}
++
+ /**
+  * pci_remove_behind_bridge - remove all devices behind a PCI bridge
+  * @dev: PCI bridge device
+@@ -117,11 +136,8 @@ void pci_remove_bus_device(struct pci_dev *dev)
+  */
+ void pci_remove_behind_bridge(struct pci_dev *dev)
+ {
+-	struct list_head *l, *n;
+-
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			__pci_remove_bus_device(pci_dev_b(l));
++	pci_stop_behind_bridge(dev);
++	__pci_remove_behind_bridge(dev);
+ }
+ 
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+-- 
+1.7.7
 
