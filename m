@@ -1,38 +1,95 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+	Tony Luck <tony.luck@intel.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 17/36] PCI: release busn when removing bus
-Date: Wed, 29 Feb 2012 19:00:18 -0800
-Message-Id: <1330570837-26638-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 22/24] PCI: Add pci_bus_add_single_device()
+Date: Sat,  4 Feb 2012 22:58:06 -0800
+Message-Id: <1328425088-6562-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
+
+will use it to pci_bus_bridge_scan_resize(0 to make bridge will
+have pci_bus directory created.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/remove.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/pci/bus.c   |   40 ++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    1 +
+ 2 files changed, 41 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index fd77e2b..04a4861 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 398f5d8..7b2ae85 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -247,6 +247,46 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 	}
+ }
  
- 	down_write(&pci_bus_sem);
- 	list_del(&pci_bus->node);
-+	pci_bus_release_busn_res(pci_bus);
- 	up_write(&pci_bus_sem);
- 	if (!pci_bus->is_added)
- 		return;
++void pci_bus_add_single_device(struct pci_dev *dev)
++{
++	struct pci_bus *child;
++	int retval;
++
++	/* Skip already-added devices */
++	if (!dev->is_added) {
++		retval = pci_bus_add_device(dev);
++		if (retval)
++			dev_err(&dev->dev, "Error adding device, continuing\n");
++	}
++
++	BUG_ON(!dev->is_added);
++
++	child = dev->subordinate;
++	/*
++	 * If there is an unattached subordinate bus, attach
++	 * it and then scan for unattached PCI devices.
++	 */
++	if (child) {
++		if (list_empty(&child->node)) {
++			down_write(&pci_bus_sem);
++			list_add_tail(&child->node, &dev->bus->children);
++			up_write(&pci_bus_sem);
++		}
++		pci_bus_add_devices(child);
++
++		/*
++		 * register the bus with sysfs as the parent is now
++		 * properly registered.
++		 */
++		if (!child->is_added) {
++			retval = pci_bus_add_child(child);
++			if (retval)
++				dev_err(&dev->dev, "Error adding bus, continuing\n");
++		}
++	}
++}
++
++
+ void pci_enable_bridges(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d5b6786..8061031 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -659,6 +659,7 @@ void pci_fixup_cardbus(struct pci_bus *);
+ void pcibios_scan_specific_bus(int busn);
+ extern struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
++void pci_bus_add_single_device(struct pci_dev *dev);
+ struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+ 				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
 -- 
 1.7.7
 
