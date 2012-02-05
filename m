@@ -1,28 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 16 Feb 2012 16:54:49 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: jbarnes@virtuousgeek.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: RFC: export constants from shpc.h?
-Message-ID: <20120216145447.GA25979@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 23/24] PCI: make pci_rescan_bus_bridge_resize use pci_scan_bridge instead
+Date: Sat,  4 Feb 2012 22:58:07 -0800
+Message-Id: <1328425088-6562-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I've implemented an shpc controller emulator
-in qemu, so I needed a bunch of constants
-similar to what drivers/pci/hotplug/shpc.h has.
+So after remove all children and then using setpci change bus register and rescan
+bridge could use new set bus number.
 
-Any objections to adding a PCI_SHPC_XXXX prefix
-so these and moving them to pci_regs.h?
-PCI utilities can then use them from /usr/include/linux.
+Otherwise need to rescan parent bus, it would have too much overhead.
 
-One can see how a utility that looks at slot LED and MRL
-states might be useful
-(we'd need to export the base offset through sysfs
-to make it possible to use such in parallel with shpc).
+also need to use pci_bus_add_single_device to make sure new change bus have directory
+ /sys/../.../pci_bus.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 61df44d..e85b823 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1972,14 +1972,16 @@ EXPORT_SYMBOL(pci_scan_bus);
+  */
+ unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+ {
+-	unsigned int max;
+-	struct pci_bus *bus = bridge->subordinate;
++	unsigned int max = 0;
++	int pass;
++	struct pci_bus *bus = bridge->bus;
+ 
+-	max = pci_scan_child_bus(bus);
++	for (pass = 0; pass < 2; pass++)
++		max = pci_scan_bridge(bus, bridge, max, pass);
+ 
+ 	pci_assign_unassigned_bridge_resources(bridge);
+ 
+-	pci_bus_add_devices(bus);
++	pci_bus_add_single_device(bridge);
+ 
+ 	return max;
+ }
 -- 
-MST
+1.7.7
 
