@@ -1,87 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:48872 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752766Ab2B1CLR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:11:17 -0500
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:44472 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753341Ab2BEXaJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Feb 2012 18:30:09 -0500
+MIME-Version: 1.0
+In-Reply-To: <20120205215824.GA5071@comet.dominikbrodowski.net>
+References: <1327140517-14811-1-git-send-email-yinghai@kernel.org>
+	<1327140517-14811-19-git-send-email-yinghai@kernel.org>
+	<20120127102311.6027ea2c@jbarnes-desktop>
+	<CAE9FiQXQPFYU45rctaNX4kSqh7JGCnds8U-Bh1N93xVieuqz5Q@mail.gmail.com>
+	<20120205215824.GA5071@comet.dominikbrodowski.net>
+Date: Sun, 5 Feb 2012 15:30:09 -0800
+Message-ID: <CAE9FiQXvU-GCDSVMGvUT23WMMVmbyHpQOApuAp5mV+=UOPf_1Q@mail.gmail.com>
+Subject: Re: [PATCH 18/21] PCI: Fix cardbus bridge resources as optional size handling
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
+To: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Ram Pai <linuxram@us.ibm.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v8 0/18] PCI: allocate pci bus num range for unassigned bridge busn
-Date: Mon, 27 Feb 2012 18:09:51 -0800
-Message-Id: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-be1ba9d: PCI, pciehp: Remove not needed bus number range checking
-131d47a: PCI: Double checking setting for bus register and bus struct.
-5932e47: pcmcia: remove workaround for fixing pci parent bus subordinate
-ea33b11: PCI: Seperate child bus scanning to two passes overall
-00ca2e7: PCI: kill pci_fixup_parent_subordinate_busnr()
-596d4a6: PCI: Allocate bus range instead of use max blindly
-64bfcda: PCI: Strict checking of valid range for bridge
-d4ed872: PCI: Probe safe range that we can use for unassigned bridge.
-31e4760: PCI: Add pci_bus_extend/shrink_top()
-74b8f25: PCI, parisc: Register busn_res for root buses
-de71ada: PCI, powerpc: Register busn_res for root buses
-e810285: PCI, sparc: Register busn_res for root buses
-8912504: PCI, ia64: Register busn_res for root buses
-82de8a8: PCI, x86: Register busn_res for root buses
-2e8d3bf: PCI: Add busn_res tracking in core
-a9a5832: PCI: Add busn_res operation functions
-6122ad8: PCI: Add busn_res into struct pci_bus.
-b362780: x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
+On Sun, Feb 5, 2012 at 1:58 PM, Dominik Brodowski
+<linux@dominikbrodowski.net> wrote:
+> On Fri, Jan 27, 2012 at 01:37:44PM -0800, Yinghai Lu wrote:
+>> On Fri, Jan 27, 2012 at 10:23 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+>> > On Sat, 21 Jan 2012 02:08:34 -0800
+>> > Yinghai Lu <yinghai@kernel.org> wrote:
+>> >
+>> >> We should not set the requested size to -2.
+>> >>
+>> >> that will confuse the resource list sorting with align when SIZEALIGN is used.
+>> >>
+>> >> Change to STARTALIGN and pass align from start.
+>> >>
+>> >> We are safe to do that just as we do that regular pci bridge.
+>> >>
+>> >> In the long run, we should just treat cardbus like regular pci bridge.
+>> >>
+>> >> Also fix when realloc is not passed, should keep the requested size.
+>> >>
+>> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> >
+>> > I'd like to see some testing on this one... Dominik?
+>>
+>> Dominik,
+>>
+>> Can you please test branch at
+>>
+>>       git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>> for-pci2
+>
+> Tested this on my limited test systems (COUNT=1), and seems to work fine.
+>
 
-Set up iobusn_resource tree, and register bus number range to it.
-Later when need to find bus range, will try to allocate from the tree
+Thanks a lot.
 
-Need to test on arches other than x86. esp for ia64 and powerpc that support
-  more than on peer root buses.
+Thought that you should have bunch of systems (laptop) with pci cardbus slots.
 
-could be found at:
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
+Found another regression by one commit already got into linus' tree.
 
-need to apply to top of pci/for-linus plus pci/linux-next plus
-	[PATCH -v2] PCI: pci_host_bridge related cleanup
+and should be fixed by
 
--v2: according to Jesse, split to more small patches.
--v3: address some request from Bjorn. like make use %pR for busn_res debug print
-	out, and move the comment change with code change.
--v4: fixes the problem about rescan that Bjorn found.
--v5: add /proc/iobusn that is requested by Bjorn.
-     remove old workaround from pciehp.
-     add rescan_bridge for pci bridge in /sys
--v6: remove global iobusn_resource, and every root bus's busn_res will be root
-     of children buses' busn_res.
-     pc cardbus change is tested by pcmcia maintainter.
--v7: remove pci_scan_root_bus_max requested by Bjorn and Jesse.
--v8: rebase on top other patches with arch/x86/pci/bus_numa.c changes
-     also only include busn_res related changes.
+[PATCH] pci: Fix pci cardbus removal
 
-Thanks
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=patch;h=29834f2faeed3cb87dea984a3d411337752e6b7c
+
+please double check
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci3
+
+or
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-busn-alloc
 
 Yinghai
-
- arch/ia64/pci/pci.c              |    2 +
- arch/powerpc/kernel/pci-common.c |    7 +-
- arch/sparc/kernel/pci.c          |    1 +
- arch/x86/include/asm/topology.h  |    3 +-
- arch/x86/pci/acpi.c              |    8 +-
- arch/x86/pci/bus_numa.c          |    9 +-
- arch/x86/pci/common.c            |   37 +---
- drivers/parisc/dino.c            |    2 +
- drivers/parisc/lba_pci.c         |    3 +
- drivers/pci/hotplug/pciehp_pci.c |   12 +-
- drivers/pci/probe.c              |  430 +++++++++++++++++++++++++++++++-------
- drivers/pci/remove.c             |    1 +
- drivers/pcmcia/yenta_socket.c    |   75 -------
- include/linux/pci.h              |    4 +
- 14 files changed, 396 insertions(+), 198 deletions(-)
-
