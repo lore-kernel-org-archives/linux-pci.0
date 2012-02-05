@@ -1,46 +1,98 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Arjan van de Ven <arjan@infradead.org>
-Subject: [PATCH 4/4] PCI: quirk print dev name with duration
-Date: Wed, 15 Feb 2012 21:14:56 -0800
-Message-Id: <1329369296-4255-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
-References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 04/24] PCI: Add busn_res operation functions
+Date: Sat,  4 Feb 2012 22:57:48 -0800
+Message-Id: <1328425088-6562-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could find out which device is involved with the calling
+will use them insert/update busn res in pci_bus
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Arjan van de Ven <arjan@infradead.org>
-
 ---
- drivers/pci/quirks.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/pci/probe.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 45 insertions(+), 0 deletions(-)
 
-Index: linux-2.6/drivers/pci/quirks.c
-===================================================================
---- linux-2.6.orig/drivers/pci/quirks.c
-+++ linux-2.6/drivers/pci/quirks.c
-@@ -2854,14 +2854,15 @@ static void do_one_fixup_debug(void (*fn
- 	ktime_t calltime, delta, rettime;
- 	unsigned long long duration;
- 
--	printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
-+	printk(KERN_DEBUG "calling  %pF @ %i for %s\n",
-+			fn, task_pid_nr(current), dev_name(&dev->dev));
- 	calltime = ktime_get();
- 	fn(dev);
- 	rettime = ktime_get();
- 	delta = ktime_sub(rettime, calltime);
- 	duration = (unsigned long long) ktime_to_ns(delta) >> 10;
--	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
--		duration);
-+	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs for %s\n",
-+			fn, duration, dev_name(&dev->dev));
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a114173..8d4de5e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1622,6 +1622,48 @@ err_out:
+ 	return NULL;
  }
  
- /*
++void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
++{
++	struct resource *res = &b->busn_res;
++	struct resource *parent_res = &iobusn_resource;
++	int ret;
++
++	res->start = busn(pci_domain_nr(b), bus);
++	res->end = busn(pci_domain_nr(b), bus_max);
++	res->flags = IORESOURCE_BUS;
++
++	if (!pci_is_root_bus(b))
++		parent_res = &b->parent->busn_res;
++
++	ret = insert_resource(parent_res, res);
++
++	dev_printk(KERN_DEBUG, &b->dev,
++			"busn_res: %pR %s inserted under %pR\n",
++			res, ret ? "can not be" : "is", parent_res);
++}
++
++void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
++{
++	struct resource *res = &b->busn_res;
++	struct resource old_res = *res;
++
++	res->end = busn_update_bus_nr(res->end, bus_max);
++	dev_printk(KERN_DEBUG, &b->dev,
++			"busn_res: %pR end updated to %pR\n",
++			&old_res, res);
++}
++
++void pci_bus_release_busn_res(struct pci_bus *b)
++{
++	struct resource *res = &b->busn_res;
++	int ret;
++
++	ret = release_resource(res);
++	dev_printk(KERN_DEBUG, &b->dev,
++			"busn_res: %pR %s released\n",
++			res, ret ? "can not be" : "is");
++}
++
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 94ad468..3da935c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -665,6 +665,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
++void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
++void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+-- 
+1.7.7
+
