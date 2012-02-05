@@ -1,78 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 06/11] PCI: add host bridge release support
-Date: Mon, 27 Feb 2012 18:03:46 -0800
-Message-Id: <1330394631-28978-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 02/24] PCI: add busn inline helper
+Date: Sat,  4 Feb 2012 22:57:46 -0800
+Message-Id: <1328425088-6562-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need one hook to release host bridge resource that are created for host
-bridge.
+convert back and forth with busn and domain_nr/bus_nr
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/pci/host-bridge.c |    8 ++++++++
- drivers/pci/probe.c       |    3 ++-
- include/linux/pci.h       |    5 +++++
- 3 files changed, 15 insertions(+), 1 deletions(-)
+ include/linux/ioport.h |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 03d8db1..a710a60 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -27,6 +27,14 @@ static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
- 	return to_pci_host_bridge(bus->bridge);
- }
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 6fe9e19..f80c0cc 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -138,6 +138,23 @@ extern struct resource ioport_resource;
+ extern struct resource iomem_resource;
+ extern struct resource iobusn_resource;
  
-+void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
-+				 void (*release_fn)(struct pci_host_bridge *),
-+				 void *release_data)
++static inline int busn_domain_nr(resource_size_t busn)
 +{
-+	bridge->release_fn = release_fn;
-+	bridge->release_data = release_data;
++	return busn >> 8;
++}
++static inline int busn_bus_nr(resource_size_t busn)
++{
++	return busn & 0xff;
++}
++static inline resource_size_t busn_update_bus_nr(resource_size_t busn, int b_nr)
++{
++	return (busn & ~0xff) | (b_nr & 0xff);
++}
++static inline resource_size_t busn(int d_nr, int b_nr)
++{
++	return  ((d_nr & 0xffff) << 8) | (b_nr & 0xff);
 +}
 +
- static bool resource_contains(struct resource *res1, struct resource *res2)
- {
- 	return res1->start <= res2->start && res1->end >= res2->end;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index fb3dd4b..675d7ed 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1136,7 +1136,8 @@ static void pci_release_bus_bridge_dev(struct device *dev)
- {
- 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
- 
--	/* TODO: need to free window->res */
-+	if (bridge->release_fn)
-+		bridge->release_fn(bridge);
- 
- 	pci_free_resource_list(&bridge->windows);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 310610e..d93d3ae 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -378,9 +378,14 @@ struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* pci_host_bridge_windows */
-+	void (*release_fn)(struct pci_host_bridge *);
-+	void *release_data;
- };
- 
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-+void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
-+		     void (*release_fn)(struct pci_host_bridge *),
-+		     void *release_data);
- 
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+ extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
+ extern int request_resource(struct resource *root, struct resource *new);
+ extern int release_resource(struct resource *new);
 -- 
 1.7.7
 
