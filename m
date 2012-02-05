@@ -1,52 +1,87 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [PATCH 06/18] PCI, ia64: Register busn_res for root buses
-Date: Mon, 27 Feb 2012 18:09:57 -0800
-Message-Id: <1330395009-29260-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/9] PCI: Skip reset cardbus assigned resource during pci bus rescan
+Date: Sat,  4 Feb 2012 22:55:04 -0800
+Message-Id: <1328424908-6385-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/pci/pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+otherwise when rescan is used for cardbus, assigned resource will get
+cleared.
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index d1ce320..bc59e950 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -332,6 +332,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct acpi_device *device = root->device;
- 	int domain = root->segment;
- 	int bus = root->secondary.start;
-+	int busmax = root->secondary.end;
- 	struct pci_controller *controller;
- 	unsigned int windows = 0;
- 	struct pci_root_info info;
-@@ -385,6 +386,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 3b3932a..2991a89 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -901,6 +901,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
+ 	u16 ctrl;
+ 
++	if (b_res[0].parent)
++		goto handle_b_res_1;
+ 	/*
+ 	 * Reserve some resources for CardBus.  We reserve
+ 	 * a fixed amount of bus space for CardBus bridges.
+@@ -914,6 +916,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 				pci_cardbus_io_size);
  	}
  
-+	pci_bus_insert_busn_res(pbus, busnum, busmax);
- 	pbus->subordinate = pci_scan_child_bus(pbus);
- 	return pbus;
++handle_b_res_1:
++	if (b_res[1].parent)
++		goto handle_b_res_2;
+ 	b_res[1].start = pci_cardbus_io_size;
+ 	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
+ 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+@@ -923,6 +928,7 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 				 pci_cardbus_io_size);
+ 	}
  
++handle_b_res_2:
+ 	/* MEM1 must not be pref mmio */
+ 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+ 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
+@@ -942,6 +948,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+ 	}
+ 
++	if (b_res[2].parent)
++		goto handle_b_res_3;
+ 	/*
+ 	 * If we have prefetchable memory support, allocate
+ 	 * two regions.  Otherwise, allocate one region of
+@@ -962,6 +970,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 		b_res_3_size = pci_cardbus_mem_size;
+ 	}
+ 
++handle_b_res_3:
++	if (b_res[3].parent)
++		goto handle_done;
+ 	b_res[3].start = pci_cardbus_mem_size;
+ 	b_res[3].end = b_res[3].start + b_res_3_size - 1;
+ 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
+@@ -970,6 +981,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+ 				 pci_cardbus_mem_size);
+ 	}
++
++handle_done:
++	;
+ }
+ 
+ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
 -- 
 1.7.7
 
