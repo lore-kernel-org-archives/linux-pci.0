@@ -1,70 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:42880 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755170Ab2B0XAh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 18:00:37 -0500
-Received: by wibhm11 with SMTP id hm11so1614545wib.19
-        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2012 15:00:36 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWgjSSXQgi=xsK8em4pWtXy5vUq2vtNazX3Hurq2CUmBQ@mail.gmail.com>
-References: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
- <1330299202-3838-6-git-send-email-yinghai@kernel.org> <CAErSpo4PMzuPdCZvbYFiQRGjGuMg+KYk0ZxJH0xr-n6AfqBAnA@mail.gmail.com>
- <CAE9FiQUDtJc5uwPXkQ7T7zr8=xa=VnPuQT4Q87SXbynuCHQ2Zg@mail.gmail.com>
- <CAErSpo4pDOZ0FM_OQ7=X2iysfUy6pFyWvY5i7WX=5cdD2Tu9Ew@mail.gmail.com>
- <CAE9FiQUAp6kWT4DZvAKCBGhbGWMp2Q1hz_fuJKD0mS8BYzUb1g@mail.gmail.com>
- <CAErSpo5WUhbiGc6kexRKdwA4F-BqdT-9gZY2HZSaxiPm+ZfUtw@mail.gmail.com> <CAE9FiQWgjSSXQgi=xsK8em4pWtXy5vUq2vtNazX3Hurq2CUmBQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 Feb 2012 16:00:15 -0700
-Message-ID: <CAErSpo7MFajXaQe52gXdVjaMLRU2Cpcu88QjM+Mw_22bArwF7w@mail.gmail.com>
-Subject: Re: [PATCH 5/8] PCI: add generic device into pci_host_bridge struct
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 6/9] PCI: Retry on type IORESOURCE_IO allocation.
+Date: Sat,  4 Feb 2012 22:55:05 -0800
+Message-Id: <1328424908-6385-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 27, 2012 at 3:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Feb 27, 2012 at 2:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>> for every bus will have ->bridge, and that is device pointer. to  pci
->>> bridge dev.
->>>
->>> for root bus, there is not pci bridge for that. So create_root_bus
->>> allocate local dummy one.
->>>
->>> that dummy device will be bus->dev's parent.
->>>
->>> Now pci_host_bridge is added, and it is allocated, so just put the
->>> struct device into that pci_host_bridge.
->>>
->>> and use pci_host_bridge->dev as parent of root bus->dev's parent.
->>
->> What's the device passed in to pci_create_root_bus()?  Why is that
->> different than the root bus dev's parent?
->
-> ia64 and x86 doesn't pass that.
->
-> arch/ia64/pci/pci.c:    pbus = pci_create_root_bus(NULL, bus,
-> &pci_root_ops, controller,
-> arch/powerpc/kernel/pci-common.c:       bus =
-> pci_create_root_bus(hose->parent, hose->first_busno,
-> arch/sparc/kernel/pci.c:        bus = pci_create_root_bus(parent,
-> pbm->pci_first_busno, pbm->pci_ops,
-> arch/x86/pci/acpi.c:            bus = pci_create_root_bus(NULL,
-> busnum, &pci_root_ops, sd,
-> drivers/parisc/dino.c:  dino_dev->hba.hba_bus = bus =
-> pci_create_root_bus(&dev->dev,
-> drivers/parisc/lba_pci.c:               pci_create_root_bus(&dev->dev,
-> lba_dev->hba.bus_num.start,
->
-> sparc, powerpc, parisc have their local ...
->
-> so local hose etc's dev ---> allocated dev ---> root bus's dev
->
-> this patch change to
->
-> local hose etc's dev ---> allocated host bridge's dev ---> root bus's dev
+During reenabling pci reallocating for pci bridge by clean the small size in
+bridge and assign with requested + optional size for first several try,
+Ram mention could have problem with one case
+	https://bugzilla.kernel.org/show_bug.cgi?id=15960
 
-Why do we have a separate dev for the hose and the root bus's dev?
-The hose *is* a PCI host bridge.
+After checking the booting log in
+	https://lkml.org/lkml/2010/4/19/44
+	[regression, bisected] Xonar DX invalid PCI I/O range since 977d17bb174
+
+We should not stop too early for io ports.
+	Apr 19 10:19:38 [kernel] pci 0000:04:00.0: BAR 7: can't assign io (size 0x4000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:01.0: BAR 8: assigned [mem 0x80400000-0x805fffff]
+	Apr 19 10:19:38 [kernel] pci 0000:05:01.0: BAR 7: can't assign io (size 0x2000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:02.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:03.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:08:00.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:09:04.0: BAR 0: can't assign io (size 0x100)
+and clear 00:1c.0 to retry again.
+
+The patch remove the IORESOUCE_IO checking, and try one more time.
+and we will have chance to get allocation for 00:1c.0 io port range because
+from 0x4000 to 0x8000 could be used.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 2991a89..162edfb 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1292,7 +1292,6 @@ pci_assign_unassigned_resources(void)
+ 	struct pci_dev_resource *fail_res;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+-	unsigned long failed_type;
+ 	int pci_try_num = 1;
+ 
+ 	/* don't realloc if asked to do so */
+@@ -1327,16 +1326,7 @@ again:
+ 	if (list_empty(&fail_head))
+ 		goto enable_and_dump;
+ 
+-	failed_type = 0;
+-	list_for_each_entry(fail_res, &fail_head, list)
+-		failed_type |= fail_res->flags;
+-
+-	/*
+-	 * io port are tight, don't try extra
+-	 * or if reach the limit, don't want to try more
+-	 */
+-	failed_type &= type_mask;
+-	if ((failed_type == IORESOURCE_IO) || (tried_times >= pci_try_num)) {
++	if (tried_times >= pci_try_num) {
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+ 	}
+-- 
+1.7.7
+
