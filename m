@@ -1,62 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:57694 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932264Ab2BXWhq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 17:37:46 -0500
-Date: Fri, 24 Feb 2012 14:37:36 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/4] PCI: Move out pci reassigndev resource alignment
- out of quirk
-Message-ID: <20120224143736.683b73e7@jbarnes-desktop>
-In-Reply-To: <1329370832-2253-4-git-send-email-yinghai@kernel.org>
-References: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
-	<1329370832-2253-4-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/odGpxMs883QyWKWI/TvlTQs"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 9/9] PCI: only enable pci realloc when SRIOV bar is not assigned
+Date: Sat,  4 Feb 2012 22:55:08 -0800
+Message-Id: <1328424908-6385-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/odGpxMs883QyWKWI/TvlTQs
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+If bios does not assign those BAR or wrong address, then kernel will
+try to do pci realloc.
 
-On Wed, 15 Feb 2012 21:40:31 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+in that case, user still can use pci=realloc=off to override it.
 
-> That looks like abusing quirk framework.
->=20
-> calling it directly in pci_add_device. or do we have good place for it?
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-Applied, thanks.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9526038..520f256 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1293,6 +1293,31 @@ static bool __init pci_realloc_enabled(void)
+ 	return pci_realloc_enable >= enable_yes_user;
+ }
+ 
++static void __init pci_realloc_detect(void)
++{
++	struct pci_dev *dev = NULL;
++
++	if (pci_realloc_enable != enable_not_set)
++		return;
++
++#ifdef CONFIG_PCI_IOV
++	for_each_pci_dev(dev) {
++		int i;
++
++		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++			struct resource *r = &dev->resource[i];
++
++			/* Not assigned, or rejected by kernel */
++			if (r->flags && !r->start) {
++				pci_realloc_enable = enable_yes_detected;
++
++				return;
++			}
++		}
++	}
++#endif
++}
++
+ /*
+  * first try will not touch pci bridge res
+  * second  and later try will clear small leaf bridge res
+@@ -1314,6 +1339,7 @@ pci_assign_unassigned_resources(void)
+ 	int pci_try_num = 1;
+ 
+ 	/* don't realloc if asked to do so */
++	pci_realloc_detect();
+ 	if (pci_realloc_enabled()) {
+ 		int max_depth = pci_get_max_depth();
+ 
+@@ -1348,6 +1374,8 @@ again:
+ 	if (tried_times >= pci_try_num) {
+ 		if (pci_realloc_enable == enable_not_set)
+ 			printk(KERN_INFO "Some pci devices resources are not assigned, please try to boot with pci=realloc\n");
++		else if (pci_realloc_enable == enable_yes_detected)
++			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, please try to boot with pci=realloc=off\n");
+ 
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+-- 
+1.7.7
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/odGpxMs883QyWKWI/TvlTQs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPSBEwAAoJEIEoDkX4Qk9hsdkP/RcG6uzoHNVH9k9Z52zzf9is
-f6bqafdmntkzcIrSx2MBtcBAZKSlyBDe7ZZXNfJe/DrMNsTmglvO6HLqKQA6x/lk
-asaKHFO3AgU4WQ6Ew9FuqTECSkQgKwjCs7ulzt29h3KZNSVLlqB8eKLnd7JcAAJd
-MFYsJdK/fUxdpztKirMsQq8iWMB+6BoWPf5ihle48ZzR8uvlWbA+HAZBeW48UVBa
-g9fpXTc3ArnLtBeVwC9DHFog9cdYRrFliSjBAp+X7VpwJOts6gQft1nmQdU3qeDT
-irCrTICAziwpXDF96b3Eh5uznjZT77VHp39lf4xOOW20wBUV12mIRtYVYL91Tqk1
-5hkcX9xESig/RjwGLxXKoudR5IzdXReoq4pI98m9DECOCy7/WufWWI0YRD9qRRG5
-QfKpfep4jn+XPPZ2zIozJ8tPXV+anIlIJUpjimjR2uEIVUmDHWDXPihzBgulC45U
-YwGW+8ITHnUKa7p9J+REINhqv4kgMwx0beVYLiXpVfdQ7Q8Qx0yQZTS7dArQ2Ixb
-dVKFXOqYRGlWVmLAsB1xuzSm1sUy+xhI5sYJnDfqmzchPtaZu36EWepxiHsV11D2
-7Ror+3uEY3sDbTK0VbVpyXJGX4MWgBrWGYnQ6dm2QVxtKWAi+NC5oMK7B0dIkGHa
-I5aydzIwTyL+d5lLvG8B
-=wyA4
------END PGP SIGNATURE-----
-
---Sig_/odGpxMs883QyWKWI/TvlTQs--
