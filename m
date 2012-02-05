@@ -1,62 +1,128 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 17/18] xtensa/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, Chris Zankel <chris@zankel.net>
-Date: Thu, 09 Feb 2012 19:37:48 -0700
-Message-ID: <20120210023748.10311.59774.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 06/24] PCI: Add busn_res tracking in core
+Date: Sat,  4 Feb 2012 22:57:50 -0800
+Message-Id: <1328425088-6562-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+update pci_scan_root_bus, and pci_scan_bus to insert root bus busn into
+iobusn_resource tree.
 
-CC: Chris Zankel <chris@zankel.net>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/xtensa/kernel/pci.c |   17 +----------------
- 1 files changed, 1 insertions(+), 16 deletions(-)
+ drivers/pci/probe.c  |   30 ++++++++++++++++++++++++++----
+ drivers/pci/remove.c |    1 +
+ include/linux/pci.h  |    4 ++++
+ 3 files changed, 31 insertions(+), 4 deletions(-)
 
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index 61045c1..eb30e35 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -153,7 +153,7 @@ static void __init pci_controller_apertures(struct pci_controller *pci_ctrl,
- 	}
- 	res->start += io_offset;
- 	res->end += io_offset;
--	pci_add_resource(resources, res);
-+	pci_add_resource_offset(resources, res, io_offset);
- 
- 	for (i = 0; i < 3; i++) {
- 		res = &pci_ctrl->mem_resources[i];
-@@ -200,24 +200,9 @@ subsys_initcall(pcibios_init);
- 
- void __init pcibios_fixup_bus(struct pci_bus *bus)
- {
--	struct pci_controller *pci_ctrl = bus->sysdata;
--	struct resource *res;
--	unsigned long io_offset;
--	int i;
--
--	io_offset = (unsigned long)pci_ctrl->io_space.base;
- 	if (bus->parent) {
- 		/* This is a subordinate bridge */
- 		pci_read_bridge_bases(bus);
--
--		for (i = 0; i < 4; i++) {
--			if ((res = bus->resource[i]) == NULL || !res->flags)
--				continue;
--			if (io_offset && (res->flags & IORESOURCE_IO)) {
--				res->start += io_offset;
--				res->end += io_offset;
--			}
--		}
- 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index fabf9d0..cdd6e83 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1667,8 +1667,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
  }
  
+-struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
++		int bus_max, struct pci_ops *ops, void *sysdata,
++		struct list_head *resources)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -1676,10 +1677,26 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!b)
+ 		return NULL;
+ 
++	pci_bus_insert_busn_res(b, bus, bus_max);
+ 	b->subordinate = pci_scan_child_bus(b);
+ 	pci_bus_add_devices(b);
+ 	return b;
+ }
++EXPORT_SYMBOL(pci_scan_root_bus_max);
++
++struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata,
++		struct list_head *resources)
++{
++	struct pci_bus *b;
++
++	b = pci_scan_root_bus_max(parent, bus, 255, ops, sysdata, resources);
++
++	if (b)
++		pci_bus_update_busn_res_end(b, b->subordinate);
++
++	return b;
++}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ /* Deprecated; use pci_scan_root_bus() instead */
+@@ -1692,9 +1709,11 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
+-	if (b)
++	if (b) {
++		pci_bus_insert_busn_res(b, bus, 255);
+ 		b->subordinate = pci_scan_child_bus(b);
+-	else
++		pci_bus_update_busn_res_end(b, b->subordinate);
++	} else
+ 		pci_free_resource_list(&resources);
+ 	return b;
+ }
+@@ -1710,7 +1729,10 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+ 	if (b) {
++		pci_bus_insert_busn_res(b, bus, 255);
+ 		b->subordinate = pci_scan_child_bus(b);
++		pci_bus_update_busn_res_end(b, b->subordinate);
++
+ 		pci_bus_add_devices(b);
+ 	} else {
+ 		pci_free_resource_list(&resources);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 82f8ae5..5b679d2 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+ 
+ 	down_write(&pci_bus_sem);
+ 	list_del(&pci_bus->node);
++	pci_bus_release_busn_res(pci_bus);
+ 	up_write(&pci_bus_sem);
+ 	if (!pci_bus->is_added)
+ 		return;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3da935c..d5b6786 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -668,6 +668,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
++struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
++					     int busmax, struct pci_ops *ops,
++					     void *sysdata,
++					     struct list_head *resources);
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+-- 
+1.7.7
 
