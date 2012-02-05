@@ -1,36 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:50201 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750851Ab2BCPQ7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Feb 2012 10:16:59 -0500
-Date: Fri, 3 Feb 2012 10:16:58 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Oliver Neukum <oneukum@suse.de>
-cc: linux-usb@vger.kernel.org, <gregkh@linuxfoundation.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Takashi Iwai <tiwai@suse.de>, <trenn@suse.de>,
-	<linux-pci@vger.kernel.org>, Michal Marek <MMarek@suse.com>
-Subject: Re: [PATCH] USB:xhci: fix port switching on PantherPoint
-In-Reply-To: <201202031222.43649.oneukum@suse.de>
-Message-ID: <Pine.LNX.4.44L0.1202031015360.1598-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from acsinet15.oracle.com ([141.146.126.227]:24828 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755106Ab2BEHAh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Feb 2012 02:00:37 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 19/24] PCI, pciehp: Remove not needed bus number range checking
+Date: Sat,  4 Feb 2012 22:58:03 -0800
+Message-Id: <1328425088-6562-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 3 Feb 2012, Oliver Neukum wrote:
+Found hotplug adding one EM with bridge fail, bios only leave one bus range
+ for slot.
 
-> From be9bdcf88b2974cfe95c1afea327b46135b65391 Mon Sep 17 00:00:00 2001
-> From: Oliver Neukum <oliver@neukum.org>
-> Date: Fri, 3 Feb 2012 12:01:12 +0100
-> Subject: [PATCH] USB:xhci: fix port switching on PantherPoint
-> 
-> The quirks of XHCI were called to early so that the
-> PCI device hadn't been enabled and the quirk handler bailed out.
-> The fix is to call it later.
+[ 1169.621444] pciehp: No bus number available for hot-added bridge 0000:55:00.0
+[ 1169.633277] pcieport 0000:40:03.0: PCI bridge to [bus 55-55]
 
-I don't understand.  How can PCI_FIXUP_FINAL be too late?  And if it 
-is, why do all the other BIOS-handover routines work okay?
+With busn_res tracking and allocating, we don't need that checking anymore.
 
-Alan Stern
+Parent bridges' bus number will be extended safely.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/pciehp_pci.c |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index a4031df..df1f3ed 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -37,18 +37,8 @@
+ static int __ref pciehp_add_bridge(struct pci_dev *dev)
+ {
+ 	struct pci_bus *parent = dev->bus;
+-	int pass, busnr, start = parent->secondary;
+-	int end = parent->subordinate;
++	int pass, busnr = parent->secondary;
+ 
+-	for (busnr = start; busnr <= end; busnr++) {
+-		if (!pci_find_bus(pci_domain_nr(parent), busnr))
+-			break;
+-	}
+-	if (busnr-- > end) {
+-		err("No bus number available for hot-added bridge %s\n",
+-				pci_name(dev));
+-		return -1;
+-	}
+ 	for (pass = 0; pass < 2; pass++)
+ 		busnr = pci_scan_bridge(parent, dev, busnr, pass);
+ 	if (!dev->subordinate)
+-- 
+1.7.7
 
