@@ -1,100 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:56029 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755209Ab2BJTfL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 14:35:11 -0500
-Date: Fri, 10 Feb 2012 11:35:07 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Thomas Renninger <trenn@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai.lu@oracle.com>
-Subject: Re: [PATCH] PCI: workaround hard-wired bus number V2
-Message-ID: <20120210113507.5968216f@jbarnes-desktop>
-In-Reply-To: <201201301225.24312.trenn@suse.de>
-References: <1327655507-33999-1-git-send-email-trenn@suse.de>
-	<CAErSpo54EuF3ZmiHZmCvTK5vd0oHws7W+82WPYwLQ9PeL1MG6g@mail.gmail.com>
-	<20120127093835.1d2737db@jbarnes-desktop>
-	<201201301225.24312.trenn@suse.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_//u6U.5=GM5q8mWjP=ajaxz3"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 7/9] PCI: Make pci bridge reallocating enabled/disabled
+Date: Sat,  4 Feb 2012 22:55:06 -0800
+Message-Id: <1328424908-6385-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_//u6U.5=GM5q8mWjP=ajaxz3
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Let the user could enable and disable with pci=realloc=on or pci=realloc=off
 
-On Mon, 30 Jan 2012 12:25:24 +0100
-Thomas Renninger <trenn@suse.de> wrote:
+Also
+1. move variable and functions near the place they are used.
+2. change macro to function
+3. change related functions and variable to static and _init
+4. update parameter description accordingly.
 
-> From: Yinghai Lu <yinghai.lu@oracle.com>
->=20
-> Fixes PCI device detection on IBM xSeries IBM 3850 M2 / x3950 M2
-> when using ACPI resources (_CRS).
-> This is default, a manual workaround (without this patch)
-> would be pci=3Dnocrs boot param.
->=20
-> V2: Add dev_warn if the workaround is hit. This should reveal
-> how common such setups are (via google) and point to possible
-> problems if things are still not working as expected.
-> -> Suggested by Jan Beulich.
->=20
-> Tested-by: garyhade@us.ibm.com
-> CC: stable@vger.kernel.org
-> CC: trenn@suse.de
->=20
-> ---
->  drivers/pci/probe.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 7cc9e2f..71eac9c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -651,6 +651,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, s=
-truct pci_dev *dev, int max,
->  	dev_dbg(&dev->dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
->  		secondary, subordinate, pass);
-> =20
-> +	if (!primary && (primary !=3D bus->number) && secondary && subordinate)=
+-v2: still honor pci=realloc, and treat it as pci=realloc=on
+     also use enum instead of ...
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ Documentation/kernel-parameters.txt |    8 ++++++--
+ drivers/pci/pci.c                   |    4 +++-
+ drivers/pci/pci.h                   |    2 +-
+ drivers/pci/setup-bus.c             |   33 ++++++++++++++++++++++++++-------
+ 4 files changed, 36 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 033d4e6..e11e5dd 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2109,8 +2109,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				the default.
+ 				off: Turn ECRC off
+ 				on: Turn ECRC on.
+-		realloc		reallocate PCI resources if allocations done by BIOS
+-				are erroneous.
++		realloc=	Enable/disable reallocating PCI bridge resources
++				if allocations done by BIOS are too small to fit
++				resources required by children devices.
++				off: Turn realloc off
++				on: Turn realloc on
++		realloc		same as realloc=on
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9c89447..09cb1f2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3744,8 +3744,10 @@ static int __init pci_setup(char *str)
+ 				pci_no_msi();
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
++			} else if (!strncmp(str, "realloc=", 8)) {
++				pci_realloc_get_opt(str + 8);
+ 			} else if (!strncmp(str, "realloc", 7)) {
+-				pci_realloc();
++				pci_realloc_get_opt("on");
+ 			} else if (!strcmp(str, "nodomains")) {
+ 				pci_no_domains();
+ 			} else if (!strncmp(str, "cbiosize=", 9)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index aaf7ff8..f862a5a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -148,7 +148,7 @@ static inline void pci_no_msi(void) { }
+ static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
+ 
+-extern void pci_realloc(void);
++void pci_realloc_get_opt(char *);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
  {
-> +		dev_warn(&dev->dev, "Primary bus is hard wired to 0\n");
-> +		primary =3D bus->number;
-> +	}
-> +
->  	/* Check if setup is sensible at all */
->  	if (!pass &&
->  	    (primary !=3D bus->number || secondary <=3D bus->number)) {
->=20
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 162edfb..22454c5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -48,13 +48,6 @@ static void free_list(struct list_head *head)
+ 	}
+ }
+ 
+-int pci_realloc_enable = 0;
+-#define pci_realloc_enabled() pci_realloc_enable
+-void pci_realloc(void)
+-{
+-	pci_realloc_enable = 1;
+-}
+-
+ /**
+  * add_to_list() - add a new resource tracker to the list
+  * @head:	Head of the list
+@@ -1273,6 +1266,32 @@ static int __init pci_get_max_depth(void)
+ 	return depth;
+ }
+ 
++/*
++ * -1: undefined, will auto detect later
++ *  0: disabled by user
++ *  1: enabled by user
++ *  2: enabled by auto detect
++ */
++enum enable_type {
++	enable_not_set = -1,
++	enable_no_user,
++	enable_no_detected,
++	enable_yes_user,
++	enable_yes_detected,
++};
++
++static enum enable_type pci_realloc_enable __initdata = enable_not_set;
++void __init pci_realloc_get_opt(char *str)
++{
++	if (!strncmp(str, "off", 3))
++		pci_realloc_enable = enable_no_user;
++	else if (!strncmp(str, "on", 2))
++		pci_realloc_enable = enable_yes_user;
++}
++static bool __init pci_realloc_enabled(void)
++{
++	return pci_realloc_enable >= enable_yes_user;
++}
+ 
+ /*
+  * first try will not touch pci bridge res
+-- 
+1.7.7
 
-Applied, thanks Thomas.  I'll send this over to Linus next week
-assuming it doesn't blow up before then.
-
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_//u6U.5=GM5q8mWjP=ajaxz3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPNXFrAAoJEIEoDkX4Qk9h54gP/2MNiQ9uzhf4NWxmphU4tD5r
-1YBcevgHF4erfchT8Ia5kEaxaDu3Ja3XryFTyfgY294OPdiP97Xdmu7t5ia6F+3n
-lV1lgUUjntLYgHaH2vDKLuPHQcJCZCJTBf/RxVQ45uJQJOPWiVTVal+WlWFrdxKF
-hjEBtU5eLZ+onyZ2skfddJdCynPKxwyFeZc5p43ucnpwzE7WRuqZJ5yV0kwrp1+v
-EppAaAiACj99OTw0yYUZyklEotga6lsqgB5IT9+X2e/dPpZst7LN0kJrCWgLpYbh
-+9Ir5qvGmTR0CsPXfxbKN4hwOCljcHPDI4caWDqDr/Ky7s/umjxrScYj37UWc0th
-firUHWBhujJ8LictYpGqR9bsyBqeuJQTBqcZrRc3JXwRy3PhIF9aQ2x6Pme2opzz
-euikpFXw+wG3bFdyPpDcWk+gZ4gPm6Ar15IL+G9e3Z9013jDINTGyoqSrMWCXvEr
-U2QiWe97lWuWMipptkX8/vKprFeVeA/y4VU2SZVAzAuoSiSOWFBBK0XJYkI9UdWZ
-VioZE7deKROX1gPQBReIuTdcnJG4JZe3iuBSfSyKvSecMPoSU/WNvs6kmXkRvx+k
-VjDO8VyA7NkiFz4mukfvLpuhi9RW8p6y6MKJCcDc39pqY5LEYg0dWQiVJRTqVzs8
-0Z+1YCGdYjTtok++EBMg
-=JceE
------END PGP SIGNATURE-----
-
---Sig_//u6U.5=GM5q8mWjP=ajaxz3--
