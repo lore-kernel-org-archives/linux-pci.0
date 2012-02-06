@@ -1,98 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6=t1XtdUMBAn7Ag5XNLS3wKueybfrsUzmht6GL9XSGLQ@mail.gmail.com>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+	<1328425088-6562-5-git-send-email-yinghai@kernel.org>
+	<CAErSpo6=t1XtdUMBAn7Ag5XNLS3wKueybfrsUzmht6GL9XSGLQ@mail.gmail.com>
+Date: Mon, 6 Feb 2012 12:45:15 -0800
+Message-ID: <CAE9FiQXrFARy4+ynOTRyEuoyRxTc9qqzUaYJH8e19Wt3JRRxug@mail.gmail.com>
+Subject: Re: [PATCH 04/24] PCI: Add busn_res operation functions
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 39/39] x86, PCI: kill busn in acpi pci_root_info
-Date: Wed, 29 Feb 2012 15:07:38 -0800
-Message-Id: <1330556858-11768-40-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn thought that we should just use that in acpi_root.
+On Mon, Feb 6, 2012 at 10:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Feb 4, 2012 at 10:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> will use them insert/update busn res in pci_bus
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/probe.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci.h |    3 +++
+>>  2 files changed, 45 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index a114173..8d4de5e 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1622,6 +1622,48 @@ err_out:
+>>        return NULL;
+>>  }
+>>
+>> +void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+>> +{
+>> +       struct resource *res = &b->busn_res;
+>> +       struct resource *parent_res = &iobusn_resource;
+>> +       int ret;
+>> +
+>> +       res->start = busn(pci_domain_nr(b), bus);
+>> +       res->end = busn(pci_domain_nr(b), bus_max);
+>> +       res->flags = IORESOURCE_BUS;
+>> +
+>> +       if (!pci_is_root_bus(b))
+>> +               parent_res = &b->parent->busn_res;
+>> +
+>> +       ret = insert_resource(parent_res, res);
+>> +
+>> +       dev_printk(KERN_DEBUG, &b->dev,
+>> +                       "busn_res: %pR %s inserted under %pR\n",
+>> +                       res, ret ? "can not be" : "is", parent_res);
+>> +}
+>> +
+>> +void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
+>> +{
+>> +       struct resource *res = &b->busn_res;
+>> +       struct resource old_res = *res;
+>> +
+>> +       res->end = busn_update_bus_nr(res->end, bus_max);
+>
+> I think this design is a mistake.  Here's what you're doing:
+>
+>  - initialize struct resource (keys are "start" and "end")
+>  - insert into tree (placed in tree by kernel/resource.c based on
+> "start" and "end")
+>  - update "end"
+>
+> You "know" in this case that the update is safe because the caller has
+> validated "bus_max."  But that still breaks the kernel/resource.c
+> encapsulation.  If we change the kernel/resource.c implementation,
+> this code might break.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/acpi.c |   19 ++++++-------------
- 1 files changed, 6 insertions(+), 13 deletions(-)
+the point is: I only want to reuse allocate_resource() to get right position.
+and the code does not depends to kernel/resource.c much.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index ff5243e..5178917 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,7 +12,6 @@ struct pci_root_info {
- 	char name[16];
- 	unsigned int res_num;
- 	struct resource *res;
--	struct resource busn;
- 	struct pci_sysdata sd;
- };
- 
-@@ -283,9 +282,6 @@ static void add_resources(struct pci_root_info *info,
- 	int i;
- 	struct resource *res, *root, *conflict;
- 
--	if (info->busn.flags & IORESOURCE_BUS)
--		pci_add_resource(resources, &info->busn);
--
- 	coalesce_windows(info, IORESOURCE_MEM);
- 	coalesce_windows(info, IORESOURCE_IO);
- 
-@@ -346,16 +342,12 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
- 
- static void
- probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
--		    int busnum, int busmax, int domain)
-+		    int busnum, int domain)
- {
- 	size_t size;
- 
- 	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 	info->bridge = device;
--	info->busn.name = info->name;
--	info->busn.start = busnum;
--	info->busn.end = busmax;
--	info->busn.flags = IORESOURCE_BUS;
- 
- 	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
-@@ -379,7 +371,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_root_info *info = NULL;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
--	int busmax = root->secondary.end;
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
-@@ -432,15 +423,17 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(info);
- 	} else {
--		probe_pci_root_info(info, device, busnum, busmax, domain);
-+		probe_pci_root_info(info, device, busnum, domain);
- 
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
--		if (pci_use_crs)
-+		if (pci_use_crs) {
-+                       /* insert busn res at first */
-+			pci_add_resource(&resources,  &root->secondary);
- 			add_resources(info, &resources);
--		else {
-+		} else {
- 			free_pci_root_info_res(info);
- 			x86_pci_root_bus_resources(busnum, &resources);
- 		}
--- 
-1.7.7
+>
+> I think it would be better to remove the bus resource from the tree,
+> change its "end," then re-insert it.
 
+how about parent buses that have extended top?
+
+Yinghai
