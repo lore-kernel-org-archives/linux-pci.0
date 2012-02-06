@@ -1,133 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:44346 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752829Ab2BFS7d convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2012 13:59:33 -0500
+Received: by werb13 with SMTP id b13so4506282wer.19
+        for <linux-pci@vger.kernel.org>; Mon, 06 Feb 2012 10:59:32 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1328425088-6562-5-git-send-email-yinghai@kernel.org>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org> <1328425088-6562-5-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 6 Feb 2012 10:59:12 -0800
+Message-ID: <CAErSpo6=t1XtdUMBAn7Ag5XNLS3wKueybfrsUzmht6GL9XSGLQ@mail.gmail.com>
+Subject: Re: [PATCH 04/24] PCI: Add busn_res operation functions
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Bernhard Kaindl <bk@suse.de>, linux-pcmcia@lists.infradead.org
-Subject: [PATCH 15/15] pcmcia: remove workaround for fixing pci parent bus subordinate
-Date: Wed,  1 Feb 2012 14:44:02 -0800
-Message-Id: <1328136242-17725-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci busn allocation code is there, and it will preallocate bus number and it
-will make sure parent buses subordinate is right.
+On Sat, Feb 4, 2012 at 10:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> will use them insert/update busn res in pci_bus
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/probe.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |    3 +++
+>  2 files changed, 45 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index a114173..8d4de5e 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1622,6 +1622,48 @@ err_out:
+>        return NULL;
+>  }
+>
+> +void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+> +{
+> +       struct resource *res = &b->busn_res;
+> +       struct resource *parent_res = &iobusn_resource;
+> +       int ret;
+> +
+> +       res->start = busn(pci_domain_nr(b), bus);
+> +       res->end = busn(pci_domain_nr(b), bus_max);
+> +       res->flags = IORESOURCE_BUS;
+> +
+> +       if (!pci_is_root_bus(b))
+> +               parent_res = &b->parent->busn_res;
+> +
+> +       ret = insert_resource(parent_res, res);
+> +
+> +       dev_printk(KERN_DEBUG, &b->dev,
+> +                       "busn_res: %pR %s inserted under %pR\n",
+> +                       res, ret ? "can not be" : "is", parent_res);
+> +}
+> +
+> +void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
+> +{
+> +       struct resource *res = &b->busn_res;
+> +       struct resource old_res = *res;
+> +
+> +       res->end = busn_update_bus_nr(res->end, bus_max);
 
-So remove workaround here.
+I think this design is a mistake.  Here's what you're doing:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: Bernhard Kaindl <bk@suse.de>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-pcmcia@lists.infradead.org
----
- drivers/pcmcia/yenta_socket.c |   75 -----------------------------------------
- 1 files changed, 0 insertions(+), 75 deletions(-)
+  - initialize struct resource (keys are "start" and "end")
+  - insert into tree (placed in tree by kernel/resource.c based on
+"start" and "end")
+  - update "end"
 
-diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
-index 849c0c1..5757cae 100644
---- a/drivers/pcmcia/yenta_socket.c
-+++ b/drivers/pcmcia/yenta_socket.c
-@@ -1064,79 +1064,6 @@ static void yenta_config_init(struct yenta_socket *socket)
- 	config_writew(socket, CB_BRIDGE_CONTROL, bridge);
- }
- 
--/**
-- * yenta_fixup_parent_bridge - Fix subordinate bus# of the parent bridge
-- * @cardbus_bridge: The PCI bus which the CardBus bridge bridges to
-- *
-- * Checks if devices on the bus which the CardBus bridge bridges to would be
-- * invisible during PCI scans because of a misconfigured subordinate number
-- * of the parent brige - some BIOSes seem to be too lazy to set it right.
-- * Does the fixup carefully by checking how far it can go without conflicts.
-- * See http://bugzilla.kernel.org/show_bug.cgi?id=2944 for more information.
-- */
--static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
--{
--	struct list_head *tmp;
--	unsigned char upper_limit;
--	/*
--	 * We only check and fix the parent bridge: All systems which need
--	 * this fixup that have been reviewed are laptops and the only bridge
--	 * which needed fixing was the parent bridge of the CardBus bridge:
--	 */
--	struct pci_bus *bridge_to_fix = cardbus_bridge->parent;
--
--	/* Check bus numbers are already set up correctly: */
--	if (bridge_to_fix->subordinate >= cardbus_bridge->subordinate)
--		return; /* The subordinate number is ok, nothing to do */
--
--	if (!bridge_to_fix->parent)
--		return; /* Root bridges are ok */
--
--	/* stay within the limits of the bus range of the parent: */
--	upper_limit = bridge_to_fix->parent->subordinate;
--
--	/* check the bus ranges of all silbling bridges to prevent overlap */
--	list_for_each(tmp, &bridge_to_fix->parent->children) {
--		struct pci_bus *silbling = pci_bus_b(tmp);
--		/*
--		 * If the silbling has a higher secondary bus number
--		 * and it's secondary is equal or smaller than our
--		 * current upper limit, set the new upper limit to
--		 * the bus number below the silbling's range:
--		 */
--		if (silbling->secondary > bridge_to_fix->subordinate
--		    && silbling->secondary <= upper_limit)
--			upper_limit = silbling->secondary - 1;
--	}
--
--	/* Show that the wanted subordinate number is not possible: */
--	if (cardbus_bridge->subordinate > upper_limit)
--		dev_printk(KERN_WARNING, &cardbus_bridge->dev,
--			   "Upper limit for fixing this "
--			   "bridge's parent bridge: #%02x\n", upper_limit);
--
--	/* If we have room to increase the bridge's subordinate number, */
--	if (bridge_to_fix->subordinate < upper_limit) {
--
--		/* use the highest number of the hidden bus, within limits */
--		unsigned char subordinate_to_assign =
--			min(cardbus_bridge->subordinate, upper_limit);
--
--		dev_printk(KERN_INFO, &bridge_to_fix->dev,
--			   "Raising subordinate bus# of parent "
--			   "bus (#%02x) from #%02x to #%02x\n",
--			   bridge_to_fix->number,
--			   bridge_to_fix->subordinate, subordinate_to_assign);
--
--		/* Save the new subordinate in the bus struct of the bridge */
--		bridge_to_fix->subordinate = subordinate_to_assign;
--
--		/* and update the PCI config space with the new subordinate */
--		pci_write_config_byte(bridge_to_fix->self,
--			PCI_SUBORDINATE_BUS, bridge_to_fix->subordinate);
--	}
--}
--
- /*
-  * Initialize a cardbus controller. Make sure we have a usable
-  * interrupt, and that we can map the cardbus area. Fill in the
-@@ -1257,8 +1184,6 @@ static int __devinit yenta_probe(struct pci_dev *dev, const struct pci_device_id
- 	dev_printk(KERN_INFO, &dev->dev,
- 		   "Socket status: %08x\n", cb_readl(socket, CB_SOCKET_STATE));
- 
--	yenta_fixup_parent_bridge(dev->subordinate);
--
- 	/* Register it with the pcmcia layer.. */
- 	ret = pcmcia_register_socket(&socket->socket);
- 	if (ret == 0) {
--- 
-1.7.7
+You "know" in this case that the update is safe because the caller has
+validated "bus_max."  But that still breaks the kernel/resource.c
+encapsulation.  If we change the kernel/resource.c implementation,
+this code might break.
 
+I think it would be better to remove the bus resource from the tree,
+change its "end," then re-insert it.
+
+> +       dev_printk(KERN_DEBUG, &b->dev,
+> +                       "busn_res: %pR end updated to %pR\n",
+> +                       &old_res, res);
+> +}
+> +
+> +void pci_bus_release_busn_res(struct pci_bus *b)
+> +{
+> +       struct resource *res = &b->busn_res;
+> +       int ret;
+> +
+> +       ret = release_resource(res);
+> +       dev_printk(KERN_DEBUG, &b->dev,
+> +                       "busn_res: %pR %s released\n",
+> +                       res, ret ? "can not be" : "is");
+> +}
+> +
+>  struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+>                struct pci_ops *ops, void *sysdata, struct list_head *resources)
+>  {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 94ad468..3da935c 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -665,6 +665,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>                                    struct pci_ops *ops, void *sysdata,
+>                                    struct list_head *resources);
+> +void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+> +void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+> +void pci_bus_release_busn_res(struct pci_bus *b);
+>  struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+>                                             struct pci_ops *ops, void *sysdata,
+>                                             struct list_head *resources);
+> --
+> 1.7.7
+>
