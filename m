@@ -1,267 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25648 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752120Ab2B1CEt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:04:49 -0500
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 01/11] PCI: Separate host_bridge code out from probe.c
-Date: Mon, 27 Feb 2012 18:03:41 -0800
-Message-Id: <1330394631-28978-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH] PCI / PM: Disable wakeup during shutdown for devices not enabled to wake up
+Date: Tue, 7 Feb 2012 00:50:35 +0100
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201202070050.35931.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
--v2: Bjorn want add_to_pci_host_bridges to pass struct pci_host_bridge *
-      instead of list head pointer.
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+If a PCI device is enabled to generate wakeup signals (PME) when put
+into a low-power state by runtime PM, it will be still enabled to
+generate those signals after the system shutdown, unless its driver's
+.shutdown() callback takes care of the wakeup signals generation
+setting.  Moreover, there are devices that are not enabled to wake
+up the system and that are configured by runtime PM to generate
+wakeup signals so that (runtime) remote wakeup works with them.
+Those devices should be reconfigured during system shutdown so that
+they don't generate wakeup signals, but at least some drivers don't
+do that.  However, that very well may be done by the PCI core so
+that drivers don't have to worry about it.  For this reason, modify
+pci_device_shutdown() to disable the generation of wakeup events for
+devices not supposed to wake up the system.
+
+References: https://bugzilla.kernel.org/show_bug.cgi?id=37952
+Reported-and-tested-by: Kamil Iskra <kamil.54002@iskra.name>
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- drivers/pci/Makefile      |    2 +-
- drivers/pci/host-bridge.c |   93 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h         |    2 +
- drivers/pci/probe.c       |   81 +--------------------------------------
- 4 files changed, 97 insertions(+), 81 deletions(-)
- create mode 100644 drivers/pci/host-bridge.c
+ drivers/pci/pci-driver.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 083a49f..2c224ed 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -2,7 +2,7 @@
- # Makefile for the PCI bus specific drivers.
- #
- 
--obj-y		+= access.o bus.o probe.o remove.o pci.o \
-+obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
- 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
- 			irq.o vpd.o
- obj-$(CONFIG_PROC_FS) += proc.o
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-new file mode 100644
-index 0000000..5ca4220
---- /dev/null
-+++ b/drivers/pci/host-bridge.c
-@@ -0,0 +1,93 @@
-+/*
-+ * host_bridge.c - host bridge related code
-+ */
+Index: linux/drivers/pci/pci-driver.c
+===================================================================
+--- linux.orig/drivers/pci/pci-driver.c
++++ linux/drivers/pci/pci-driver.c
+@@ -430,6 +430,16 @@ static void pci_device_shutdown(struct d
+ 		drv->shutdown(pci_dev);
+ 	pci_msi_shutdown(pci_dev);
+ 	pci_msix_shutdown(pci_dev);
 +
-+#include <linux/kernel.h>
-+#include <linux/init.h>
-+#include <linux/pci.h>
-+#include <linux/module.h>
-+
-+#include "pci.h"
-+
-+static LIST_HEAD(pci_host_bridges);
-+
-+void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
-+{
-+	list_add_tail(&bridge->list, &pci_host_bridges);
-+}
-+
-+static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus;
-+	struct pci_host_bridge *bridge;
-+
-+	bus = dev->bus;
-+	while (bus->parent)
-+		bus = bus->parent;
-+
-+	list_for_each_entry(bridge, &pci_host_bridges, list) {
-+		if (bridge->bus == bus)
-+			return bridge;
-+	}
-+
-+	return NULL;
-+}
-+
-+static bool resource_contains(struct resource *res1, struct resource *res2)
-+{
-+	return res1->start <= res2->start && res1->end >= res2->end;
-+}
-+
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res)
-+{
-+	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge_window *window;
-+	resource_size_t offset = 0;
-+
-+	list_for_each_entry(window, &bridge->windows, list) {
-+		if (resource_type(res) != resource_type(window->res))
-+			continue;
-+
-+		if (resource_contains(window->res, res)) {
-+			offset = window->offset;
-+			break;
-+		}
-+	}
-+
-+	region->start = res->start - offset;
-+	region->end = res->end - offset;
-+}
-+EXPORT_SYMBOL(pcibios_resource_to_bus);
-+
-+static bool region_contains(struct pci_bus_region *region1,
-+			    struct pci_bus_region *region2)
-+{
-+	return region1->start <= region2->start && region1->end >= region2->end;
-+}
-+
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region)
-+{
-+	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge_window *window;
-+	struct pci_bus_region bus_region;
-+	resource_size_t offset = 0;
-+
-+	list_for_each_entry(window, &bridge->windows, list) {
-+		if (resource_type(res) != resource_type(window->res))
-+			continue;
-+
-+		bus_region.start = window->res->start - window->offset;
-+		bus_region.end = window->res->end - window->offset;
-+
-+		if (region_contains(&bus_region, region)) {
-+			offset = window->offset;
-+			break;
-+		}
-+	}
-+
-+	res->start = region->start + offset;
-+	res->end = region->end + offset;
-+}
-+EXPORT_SYMBOL(pcibios_bus_to_resource);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e494347..c695a92 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -231,6 +231,8 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- extern void pci_disable_bridge_window(struct pci_dev *dev);
- 
-+void add_to_pci_host_bridges(struct pci_host_bridge *bridge);
-+
- /* Single Root I/O Virtualization */
- struct pci_sriov {
- 	int pos;		/* capability position */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 944e05a..89a82a3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -15,13 +15,10 @@
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
- #define CARDBUS_RESERVE_BUSNR	3
- 
--static LIST_HEAD(pci_host_bridges);
--
- /* Ugh.  Need to stop exporting this to modules. */
- LIST_HEAD(pci_root_buses);
- EXPORT_SYMBOL(pci_root_buses);
- 
--
- static int find_anything(struct device *dev, void *data)
- {
- 	return 1;
-@@ -44,82 +41,6 @@ int no_pci_devices(void)
++	/*
++	 * Devices may be enabled to wake up by runtime PM, but they need not
++	 * be supposed to wake up the system from its "power off" state (e.g.
++	 * ACPI S5).  Therefore disable wakeup for all devices that aren't
++	 * supposed to wake up the system at this point.  The state argument
++	 * will be ignored by pci_enable_wake().
++	 */
++	if (!device_may_wakeup(dev))
++		pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
  }
- EXPORT_SYMBOL(no_pci_devices);
  
--static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
--{
--	struct pci_bus *bus;
--	struct pci_host_bridge *bridge;
--
--	bus = dev->bus;
--	while (bus->parent)
--		bus = bus->parent;
--
--	list_for_each_entry(bridge, &pci_host_bridges, list) {
--		if (bridge->bus == bus)
--			return bridge;
--	}
--
--	return NULL;
--}
--
--static bool resource_contains(struct resource *res1, struct resource *res2)
--{
--	return res1->start <= res2->start && res1->end >= res2->end;
--}
--
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct pci_host_bridge *bridge = pci_host_bridge(dev);
--	struct pci_host_bridge_window *window;
--	resource_size_t offset = 0;
--
--	list_for_each_entry(window, &bridge->windows, list) {
--		if (resource_type(res) != resource_type(window->res))
--			continue;
--
--		if (resource_contains(window->res, res)) {
--			offset = window->offset;
--			break;
--		}
--	}
--
--	region->start = res->start - offset;
--	region->end = res->end - offset;
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--static bool region_contains(struct pci_bus_region *region1,
--			    struct pci_bus_region *region2)
--{
--	return region1->start <= region2->start && region1->end >= region2->end;
--}
--
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct pci_host_bridge *bridge = pci_host_bridge(dev);
--	struct pci_host_bridge_window *window;
--	struct pci_bus_region bus_region;
--	resource_size_t offset = 0;
--
--	list_for_each_entry(window, &bridge->windows, list) {
--		if (resource_type(res) != resource_type(window->res))
--			continue;
--
--		bus_region.start = window->res->start - window->offset;
--		bus_region.end = window->res->end - window->offset;
--
--		if (region_contains(&bus_region, region)) {
--			offset = window->offset;
--			break;
--		}
--	}
--
--	res->start = region->start + offset;
--	res->end = region->end + offset;
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
- /*
-  * PCI Bus Class
-  */
-@@ -1731,7 +1652,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	}
- 
- 	down_write(&pci_bus_sem);
--	list_add_tail(&bridge->list, &pci_host_bridges);
-+	add_to_pci_host_bridges(bridge);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
- 
--- 
-1.7.7
-
+ #ifdef CONFIG_PM
