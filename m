@@ -1,67 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:52807 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752755Ab2BVIZD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2012 03:25:03 -0500
-Date: Wed, 22 Feb 2012 09:24:52 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@nvidia.com>
-Cc: "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"Olof Johansson (olof@lixom.net)" <olof@lixom.net>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: PCIe device tree support
-Message-ID: <20120222082449.GA15157@avionic-0098.adnet.avionic-design.de>
-References: <20120220191804.GA14499@avionic-0098.adnet.avionic-design.de>
- <74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Feb 2012 09:27:43 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Alex Shi <alex.shi@intel.com>, stern@rowland.harvard.edu
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+	andiry.xu@amd.com, linux-kernel@vger.kernel.org,
+	Oliver Neukum <oneukum@suse.de>, Takashi Iwai <tiwai@suse.de>,
+	trenn@suse.de, linux-pci@vger.kernel.org,
+	Michal Marek <MMarek@suse.com>
+Subject: Re: [PATCH] usb: enable pci MSI/MSIX in usb core
+Message-ID: <20120207172743.GA4780@xanatos>
+References: <1328531341-22705-1-git-send-email-alex.shi@intel.com>
+ <4F311233.9070404@intel.com>
+ <20120207144204.GA7214@kroah.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="lrZ03NoBR/3+SXJZ"
-In-Reply-To: <74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120207144204.GA7214@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Feb 07, 2012 at 06:42:04AM -0800, Greg KH wrote:
+> On Tue, Feb 07, 2012 at 07:59:47PM +0800, Alex Shi wrote:
+> > On 02/06/2012 08:29 PM, Alex Shi wrote:
+> > 
+> > > MSI/MSIX is the favorite interrupt for PCIe device. PCIe usb HCD should
+> > > be used more and more in future, but current USB core still just wants
+> > > line IRQ, only XHCI usb driver enabled MSI/MSIX.
+> > > 
+> > > This patch enabled pci MSI/MSIX in usb core for HCD, and removed MSI/MSIX
+> > > setup code from XHCI since it becomes redundant now.
+> > > There 2 places need prepare to enable MSI/MSIX in usb driver.
+> > > 1, set HCD_MSI_FIRST in driver->flags to enable MSI/MSIX.
+> > > 2, prepare a get_msix_num() for specific drivers.
+> > > XHCI is a good example for this.
+> > > 
+> > > This patch bases on my "USB-try-MSI-before-legacy-irq-on-pci-xhci-HCD"
+> > > patch.
+> > 
+> > 
+> > Gregkh&Alan:
+> > 
+> > Do you need a full patch that include my recent MSI setup/bug fix
+> > patches? or just this one is ok?
+> 
+> I was thinking that Sarah would forward this on.  We need whatever
+> should be applied to the tree, as I do not have any pending patches from
+> you in my queue.
 
---lrZ03NoBR/3+SXJZ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'm trying to track down an oops on my for-usb-linus queue that could
+either be related to Alex's original MSI work around patch, or the patch
+Oliver posted for working around PCI MMIO not being enabled fast enough.
+I don't want to review this MSI improvement patch until I'm sure the
+original MSI work around patch is stable.
 
-[Adding Jesse Barnes and the linux-pci mailing list to CC.]
+Alex, please give me time to debug bug fixes for 3.3 before pushing on
+features for 3.4.
 
-* Stephen Warren wrote:
-> Thierry Reding wrote at Monday, February 20, 2012 12:18 PM:
-> > I would like to add device tree support for the Tegra2 PCIe controller.=
- From
-> > what I understand this will require the PCIe code to be rewritten as a =
-proper
-> > platform driver in order to be able to instantiate it via the device tr=
-ee. Is
-> > that correct?
->=20
-> That's probably the cleanest way, yes.
->=20
-> Is there a drivers/ directory for PCI/PCIe host controllers? Moving the
-> code there might be nice if so, although IIRC when I asked Olof about
-> that a number of months back, he said quite a few host controllers were
-> in arch/...
-
-Most PCI/PCIe host controller drivers seem to currently be in arch/. Is the=
-re
-a specific reason for this? Would it be acceptable to put any new drivers
-below drivers/pci/?
-
-Thierry
-
---lrZ03NoBR/3+SXJZ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9EplEACgkQZ+BJyKLjJp+jrQCePAIVtOgbog1DJ66IXJ4SVyBB
-k0EAn1oXCyiApNbVtaTiXs7Bx6tMW6IS
-=PICf
------END PGP SIGNATURE-----
-
---lrZ03NoBR/3+SXJZ--
+Sarah Sharp
