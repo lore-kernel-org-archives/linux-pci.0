@@ -1,98 +1,58 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: "jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"Kay, Allen M" <allen.m.kay@intel.com>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: [PATCH] Quirk for IVB graphics FLR errata
-Date: Mon, 20 Feb 2012 02:27:25 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FCD089A@SHSMSX102.ccr.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Date: Tue, 7 Feb 2012 14:13:17 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Alex Shi <alex.shi@intel.com>, stern@rowland.harvard.edu
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+	andiry.xu@amd.com, linux-kernel@vger.kernel.org,
+	Oliver Neukum <oneukum@suse.de>, Takashi Iwai <tiwai@suse.de>,
+	trenn@suse.de, linux-pci@vger.kernel.org,
+	Michal Marek <MMarek@suse.com>
+Subject: Re: [PATCH] usb: enable pci MSI/MSIX in usb core
+Message-ID: <20120207221317.GA6103@xanatos>
+References: <1328531341-22705-1-git-send-email-alex.shi@intel.com>
+ <4F311233.9070404@intel.com>
+ <20120207144204.GA7214@kroah.com>
+ <20120207172743.GA4780@xanatos>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120207172743.GA4780@xanatos>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For IvyBridge Mobile platform, a system hang may occur if a FLR(Function Level Reset) is asserted to internal graphics.
+On Tue, Feb 07, 2012 at 09:27:43AM -0800, Sarah Sharp wrote:
+> I'm trying to track down an oops on my for-usb-linus queue that could
+> either be related to Alex's original MSI work around patch, or the patch
+> Oliver posted for working around PCI MMIO not being enabled fast enough.
+> I don't want to review this MSI improvement patch until I'm sure the
+> original MSI work around patch is stable.
+> 
+> Alex, please give me time to debug bug fixes for 3.3 before pushing on
+> features for 3.4.
 
-This quirk patch is workaround for the IVB FLR errata issue.
+Alex, your original MSI enabling patch simply does not work.  The xHCI
+PCI driver was marked as const and the xHCI PCI probe function oopsed as
+soon as it tried to add HCD_MSI_FIRST to driver->flags.  Please test all
+the patches in your patchsets individually to make sure they don't cause
+bugs, as this will break git-bisect.  It's especially troublesome to not
+test a patch I've said will be needed for stable, since we really try
+not to break stable. </grumpy maintainer rant>
 
-Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
----
- drivers/pci/quirks.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 46 insertions(+), 0 deletions(-)
+The oops brings up an interesting point.  I think the reason the xHCI
+PCI driver structure is marked as const is because it's shared across
+all xHCI hosts in the system.  Even if you remove the const keyword, you
+could be modifying the flags while another xHCI host controller is being
+initialized.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6476547..8bf5b88 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -29,6 +29,10 @@
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
- 
-+#include <asm/tsc.h>
-+/* 10 seconds */
-+#define IGD_OPERATION_TIMEOUT ((cycles_t) tsc_khz*10*1000)
-+
- /*
-  * This quirk function disables memory decoding and releases memory resources
-  * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
-@@ -3069,11 +3073,53 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
-+static int reset_ivb_igd(struct pci_dev *dev, int probe)
-+{
-+	u8 *mmio_base;
-+	u32 val;
-+
-+	if (probe)
-+		return 0;
-+
-+	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-+				 pci_resource_len(dev, 0));
-+	if (!mmio_base)
-+		return -ENOMEM;
-+
-+	/* work around */
-+	*((u32 *)(mmio_base + 0x45010)) = 0x00000002;
-+	*((u32 *)(mmio_base + 0xc2004)) = 0x00000005;
-+	val = *((u32 *)(mmio_base + 0xc7204)) & 0xfffffffe;
-+	*((u32 *)(mmio_base + 0xc7204)) = val;
-+	do {
-+		cycles_t start_time = get_cycles();
-+		while (1) {
-+			val = *((u32 *)(mmio_base + 0xc7200));
-+			if (((val & 0x80000000) == 0)
-+				&& ((val & 0x30000000) == 0))
-+				break;
-+			if (IGD_OPERATION_TIMEOUT < (get_cycles() - start_time))
-+				break;
-+			cpu_relax();
-+		}
-+	} while (0);
-+	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
-+
-+	iounmap(pci_resource_start(dev, 0));
-+	return 0;
-+}
-+
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-+#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-+#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
- 
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-+		reset_ivb_igd },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-+		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 		reset_intel_generic_dev },
- 	{ 0 }
--- 
-1.6.0.rc1
+I think PCI probe isn't run in parallel, but you could still have the
+case where the Intel Panther Point xHCI PCI probe runs first,
+HCD_MSI_FIRST gets added to the hcd driver flags, and then the PCI probe
+runs for a Fresco Logic add-in card that doesn't handle MSI, and the USB
+core doesn't attempt to allocate the legacy IRQ because HCD_MSI_FIRST is
+set.  Then the Fresco Logic host controller will be left with no
+interrupt.
 
+
+Alan, is the hc_driver structure (xhci_pci_hc_driver) shared across all
+xHCI PCI hosts in the system?
+
+Sarah Sharp
