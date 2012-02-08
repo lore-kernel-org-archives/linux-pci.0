@@ -1,106 +1,55 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <1328312292.30631.5.camel@pasglop>
-Subject: Re: [PATCH 02/15] PCI: Add iobusn_resource
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120208050119.GE8930@ram-ThinkPad-T61>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-5-git-send-email-yinghai@kernel.org>
+	<20120208043517.GD8930@ram-ThinkPad-T61>
+	<CAE9FiQUdRLmc-_hHWtaz=8QZiu4Ma6ZY7zavByJnwMDTBQLtzg@mail.gmail.com>
+	<20120208050119.GE8930@ram-ThinkPad-T61>
+Date: Tue, 7 Feb 2012 22:11:22 -0800
+Message-ID: <CAE9FiQUYg8V8RSeh+xiWYxEfSxwEhp9KRXAjVkyhT94Enkqc3Q@mail.gmail.com>
+Subject: Re: [PATCH 4/9] PCI: Fix cardbus bridge resources as optional size handling
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Date: Sat, 04 Feb 2012 10:38:12 +1100
-In-Reply-To: <CAErSpo44bef-Vj4LPB0QJ8HRjWxqRFK_=kpMq8hYEe=4t58zGQ@mail.gmail.com>
-References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-	 <1328136242-17725-3-git-send-email-yinghai@kernel.org>
-	 <CAErSpo44bef-Vj4LPB0QJ8HRjWxqRFK_=kpMq8hYEe=4t58zGQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-02-03 at 08:36 -0800, Bjorn Helgaas wrote:
-> On Wed, Feb 1, 2012 at 2:43 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > also add busn_res into struct pci_bus.
-> >
-> > will use them to have bus number resource tree.
-> 
-> Will you make this tree visible in /proc?  Seems like that would be
-> useful for debugging and for symmetry with /proc/iomem and
-> /proc/ioports.
+On Tue, Feb 7, 2012 at 9:01 PM, Ram Pai <linuxram@us.ibm.com> wrote:
+>
+> ..snip..
+>>        * If we have prefetchable memory support, allocate
+>>        * two regions.  Otherwise, allocate one region of
+>>        * twice the size.
+>>        */
+>>       if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
+>>               b_res[2].start = pci_cardbus_mem_size;
+>>               b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
+>>               b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
+>>                                 IORESOURCE_STARTALIGN;
+>>               if (realloc_head) {
+>>                       b_res[2].end -= pci_cardbus_mem_size;
+>>                       add_to_list(realloc_head, bridge, b_res+2,
+>>                                pci_cardbus_mem_size, pci_cardbus_mem_size);
+>>               }
+>>
+>>               /* reduce that to half */
+>>               b_res_3_size = pci_cardbus_mem_size;
+>>       }
+>
+> ACK. Ok. got it. This looks correct.
 
-To be honest that whole business with bus numbers in struct resource
-seems like gratuituous bloat & over engineering to me ...
+Good, So we have
 
-Does it actually solve a specific problem or serve a purpose ?
+Acked-by: Ram Pai <linuxram@us.ibm.com>
+Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
-Cheers,
-Ben.
+Hope Jesse will not miss to add them
 
-> 
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > ---
-> >  include/linux/ioport.h |    1 +
-> >  include/linux/pci.h    |    1 +
-> >  kernel/resource.c      |    8 ++++++++
-> >  3 files changed, 10 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> > index e885ba2..6fe9e19 100644
-> > --- a/include/linux/ioport.h
-> > +++ b/include/linux/ioport.h
-> > @@ -136,6 +136,7 @@ struct resource {
-> >  /* PC/ISA/whatever - the normal PC address spaces: IO and memory */
-> >  extern struct resource ioport_resource;
-> >  extern struct resource iomem_resource;
-> > +extern struct resource iobusn_resource;
-> >
-> >  extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
-> >  extern int request_resource(struct resource *root, struct resource *new);
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index f8caaab..94ad468 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -419,6 +419,7 @@ struct pci_bus {
-> >        struct list_head slots;         /* list of slots on this bus */
-> >        struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
-> >        struct list_head resources;     /* address space routed to this bus */
-> > +       struct resource busn_res;       /* track registered bus num range */
-> 
-> Is this different from bus.secondary and bus.subordinate?  Do we need
-> both busn_res and secondary/subordinate?  If we need both, in what
-> circumstance with they contain different information?
-> 
-> >        struct pci_ops  *ops;           /* configuration access functions */
-> >        void            *sysdata;       /* hook for sys-specific extension */
-> > diff --git a/kernel/resource.c b/kernel/resource.c
-> > index 7640b3a..53b42f0 100644
-> > --- a/kernel/resource.c
-> > +++ b/kernel/resource.c
-> > @@ -38,6 +38,14 @@ struct resource iomem_resource = {
-> >  };
-> >  EXPORT_SYMBOL(iomem_resource);
-> >
-> > +struct resource iobusn_resource = {
-> > +       .name   = "PCI busn",
-> > +       .start  = 0,
-> > +       .end    = 0xffffff,
-> > +       .flags  = IORESOURCE_BUS,
-> > +};
-> > +EXPORT_SYMBOL(iobusn_resource);
-> > +
-> >  /* constraints to be met while allocating resources */
-> >  struct resource_constraint {
-> >        resource_size_t min, max, align;
-> > --
-> > 1.7.7
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Thanks
 
-
+Yinghai
