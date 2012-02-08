@@ -1,85 +1,86 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 04/18] PCI: Add busn_res tracking in core
-Date: Mon, 27 Feb 2012 18:09:55 -0800
-Message-Id: <1330395009-29260-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:62585 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756261Ab2BHB3o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Feb 2012 20:29:44 -0500
+Subject: Re: [PATCH] usb: enable pci MSI/MSIX in usb core
+From: "Alex,Shi" <alex.shi@intel.com>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: stern@rowland.harvard.edu, Greg KH <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, andiry.xu@amd.com,
+	linux-kernel@vger.kernel.org, Oliver Neukum <oneukum@suse.de>,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
+In-Reply-To: <20120207221317.GA6103@xanatos>
+References: <1328531341-22705-1-git-send-email-alex.shi@intel.com>
+	 <4F311233.9070404@intel.com> <20120207144204.GA7214@kroah.com>
+	 <20120207172743.GA4780@xanatos>  <20120207221317.GA6103@xanatos>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 08 Feb 2012 09:26:32 +0800
+Message-ID: <1328664392.12669.233.camel@debian>
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-update pci_scan_root_bus, and pci_scan_bus to insert root bus busn into
-iobusn_resource tree.
+On Tue, 2012-02-07 at 14:13 -0800, Sarah Sharp wrote:
+> On Tue, Feb 07, 2012 at 09:27:43AM -0800, Sarah Sharp wrote:
+> > I'm trying to track down an oops on my for-usb-linus queue that could
+> > either be related to Alex's original MSI work around patch, or the patch
+> > Oliver posted for working around PCI MMIO not being enabled fast enough.
+> > I don't want to review this MSI improvement patch until I'm sure the
+> > original MSI work around patch is stable.
+> > 
+> > Alex, please give me time to debug bug fixes for 3.3 before pushing on
+> > features for 3.4.
+> 
+> Alex, your original MSI enabling patch simply does not work.  The xHCI
+> PCI driver was marked as const and the xHCI PCI probe function oopsed as
+> soon as it tried to add HCD_MSI_FIRST to driver->flags.  Please test all
+> the patches in your patchsets individually to make sure they don't cause
+> bugs, as this will break git-bisect.  It's especially troublesome to not
+> test a patch I've said will be needed for stable, since we really try
+> not to break stable. </grumpy maintainer rant>
 
--v2: not add pci_scan_root_bus_max...
+I am sorry for bring trouble on the patch. 
+But all my patches were tested with possible USB3 HCD in our site,
+include a NEC device and the BIOS broken Intel panther point HCD.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c  |   11 +++++++++--
- drivers/pci/remove.c |    1 +
- 2 files changed, 10 insertions(+), 2 deletions(-)
+[    3.772513] xhci_hcd 0000:00:14.0: can't derive routing for PCI INT A
+[    3.772515] xhci_hcd 0000:00:14.0: PCI INT A: no GSI
+[    3.772552] xhci_hcd 0000:00:14.0: setting latency timer to 64
+[    3.772593] xhci_hcd 0000:00:14.0: irq 45 for MSI/MSI-X
+[    3.772602] xhci_hcd 0000:00:14.0: xHCI Host Controller
+[    3.772639] xhci_hcd 0000:00:14.0: new USB bus registered, assigned
+bus number 1
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3c0eecb..e09f9b2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1734,7 +1734,9 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 	if (!b)
- 		return NULL;
- 
-+	pci_bus_insert_busn_res(b, bus, 255);
- 	b->subordinate = pci_scan_child_bus(b);
-+	pci_bus_update_busn_res_end(b, b->subordinate);
- 	pci_bus_add_devices(b);
- 	return b;
- }
-@@ -1750,9 +1752,11 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
-+	if (b) {
-+		pci_bus_insert_busn_res(b, bus, 255);
- 		b->subordinate = pci_scan_child_bus(b);
--	else
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+	} else
- 		pci_free_resource_list(&resources);
- 	return b;
- }
-@@ -1768,7 +1772,10 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
- 	pci_add_resource(&resources, &iomem_resource);
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
-+		pci_bus_insert_busn_res(b, bus, 255);
- 		b->subordinate = pci_scan_child_bus(b);
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+
- 		pci_bus_add_devices(b);
- 	} else {
- 		pci_free_resource_list(&resources);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index fd77e2b..04a4861 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- 
- 	down_write(&pci_bus_sem);
- 	list_del(&pci_bus->node);
-+	pci_bus_release_busn_res(pci_bus);
- 	up_write(&pci_bus_sem);
- 	if (!pci_bus->is_added)
- 		return;
--- 
-1.7.7
+Maybe some kernel configuration related with this oops? 
+
+> 
+> The oops brings up an interesting point.  I think the reason the xHCI
+> PCI driver structure is marked as const is because it's shared across
+> all xHCI hosts in the system.  Even if you remove the const keyword, you
+> could be modifying the flags while another xHCI host controller is being
+> initialized.
+> 
+> I think PCI probe isn't run in parallel, but you could still have the
+> case where the Intel Panther Point xHCI PCI probe runs first,
+> HCD_MSI_FIRST gets added to the hcd driver flags, and then the PCI probe
+> runs for a Fresco Logic add-in card that doesn't handle MSI, and the USB
+> core doesn't attempt to allocate the legacy IRQ because HCD_MSI_FIRST is
+> set.  Then the Fresco Logic host controller will be left with no
+> interrupt.
+
+Yes, you are right here.
+So, the first patch naturally have this problem. But my latest patch:
+enable MSI in usb-core won't the problem. Because it direct skip the
+Fresco Card for MSI, not get help from flags. 
+
+So, let's drop the previous 2 patches and using this latest one? 
+> 
+> 
+> Alan, is the hc_driver structure (xhci_pci_hc_driver) shared across all
+> xHCI PCI hosts in the system?
+> 
+> Sarah Sharp
+
 
