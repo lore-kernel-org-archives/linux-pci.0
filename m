@@ -1,137 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	"Cc: Dominik Brodowski" <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 5/7] PCI: Make pci bridge reallocating enabled/disabled
-Date: Wed,  1 Feb 2012 14:42:48 -0800
-Message-Id: <1328136170-17613-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
-References: <1328136170-17613-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:59972 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751107Ab2BHVsx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Feb 2012 16:48:53 -0500
+Date: Wed, 8 Feb 2012 13:48:51 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Oliver Neukum <oneukum@suse.de>
+Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC] xhci: Fix BIOS handoff failure on some Intel systems.
+Message-ID: <20120208214851.GA2669@xanatos>
+References: <20120207233118.GA6947@xanatos>
+ <201202081611.37097.oneukum@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201202081611.37097.oneukum@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let the user could enable and disable with pci=realloc=on or pci=realloc=off
+On Wed, Feb 08, 2012 at 04:11:37PM +0100, Oliver Neukum wrote:
+> Am Mittwoch, 8. Februar 2012, 00:31:18 schrieb Sarah Sharp:
+> > The downside is that the xHCI BIOS handoff mechanism will fail because
+> > memory mapped I/O is not enabled for the disabled PCI device.  Make the
+> > xHCI quirk handler call pci_enable_device() to re-enable MMIO, and call
+> > pci_disable_device() once it's done with the BIOS handoff.  This will
+> > balance the ref counts in the PCI core.  When the xHCI PCI probe is
+> > called, usb_hcd_pci_probe() will call pci_enable_device() again.
+> > 
+> > Also add some debugging to the xHCI quirk failure paths, so we can pin
+> > point the problem when a user says their xHCI PCI quirk function fails.
+> > 
+> > Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+> > ---
+> > 
+> > Hi Oliver,
+> > 
+> > What about this approach instead?  This means the PCI quirk sequence
+> > doesn't change, and the xHCI ports are still switched over before the
+> > EHCI PCI probe starts.  With your original patch, the ports could be
+> > switched over after the EHCI driver has already started to enumerate
+> > devices.
+> > 
+> > Can you test and make sure this fixes the issue on your test systems?
+> 
+> I've tested it and it works. Are you sure it is safe to enable a PCI device
+> at that point? If so, your patch is better than mine.
 
-Also
-1. move variable and functions near the place they are used.
-2. change macro to function
-3. change related functions and variable to static and _init
-4. update parameter description accordingly.
+Jesse Barnes told me it's fine over IRC, so I'm just going to send this
+off, with your Tested-by line.
 
--v2: still honor pci=realloc, and treat it as pci=realloc=on
-     also use enum instead of ...
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- Documentation/kernel-parameters.txt |    8 ++++++--
- drivers/pci/pci.c                   |    4 +++-
- drivers/pci/pci.h                   |    2 +-
- drivers/pci/setup-bus.c             |   33 ++++++++++++++++++++++++++-------
- 4 files changed, 36 insertions(+), 11 deletions(-)
-
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 033d4e6..e11e5dd 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2109,8 +2109,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				the default.
- 				off: Turn ECRC off
- 				on: Turn ECRC on.
--		realloc		reallocate PCI resources if allocations done by BIOS
--				are erroneous.
-+		realloc=	Enable/disable reallocating PCI bridge resources
-+				if allocations done by BIOS are too small to fit
-+				resources required by children devices.
-+				off: Turn realloc off
-+				on: Turn realloc on
-+		realloc		same as realloc=on
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 9c89447..09cb1f2 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3744,8 +3744,10 @@ static int __init pci_setup(char *str)
- 				pci_no_msi();
- 			} else if (!strcmp(str, "noaer")) {
- 				pci_no_aer();
-+			} else if (!strncmp(str, "realloc=", 8)) {
-+				pci_realloc_get_opt(str + 8);
- 			} else if (!strncmp(str, "realloc", 7)) {
--				pci_realloc();
-+				pci_realloc_get_opt("on");
- 			} else if (!strcmp(str, "nodomains")) {
- 				pci_no_domains();
- 			} else if (!strncmp(str, "cbiosize=", 9)) {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index aaf7ff8..f862a5a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -148,7 +148,7 @@ static inline void pci_no_msi(void) { }
- static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
- #endif
- 
--extern void pci_realloc(void);
-+void pci_realloc_get_opt(char *);
- 
- static inline int pci_no_d1d2(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 162edfb..22454c5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -48,13 +48,6 @@ static void free_list(struct list_head *head)
- 	}
- }
- 
--int pci_realloc_enable = 0;
--#define pci_realloc_enabled() pci_realloc_enable
--void pci_realloc(void)
--{
--	pci_realloc_enable = 1;
--}
--
- /**
-  * add_to_list() - add a new resource tracker to the list
-  * @head:	Head of the list
-@@ -1273,6 +1266,32 @@ static int __init pci_get_max_depth(void)
- 	return depth;
- }
- 
-+/*
-+ * -1: undefined, will auto detect later
-+ *  0: disabled by user
-+ *  1: enabled by user
-+ *  2: enabled by auto detect
-+ */
-+enum enable_type {
-+	enable_not_set = -1,
-+	enable_no_user,
-+	enable_no_detected,
-+	enable_yes_user,
-+	enable_yes_detected,
-+};
-+
-+static enum enable_type pci_realloc_enable __initdata = enable_not_set;
-+void __init pci_realloc_get_opt(char *str)
-+{
-+	if (!strncmp(str, "off", 3))
-+		pci_realloc_enable = enable_no_user;
-+	else if (!strncmp(str, "on", 2))
-+		pci_realloc_enable = enable_yes_user;
-+}
-+static bool __init pci_realloc_enabled(void)
-+{
-+	return pci_realloc_enable >= enable_yes_user;
-+}
- 
- /*
-  * first try will not touch pci bridge res
--- 
-1.7.7
-
+Thanks,
+Sarah Sharp
