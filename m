@@ -1,73 +1,210 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f202.google.com ([209.85.213.202]:53925 "EHLO
-	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756389Ab2BWTnX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:43:23 -0500
-Received: by mail-yx0-f202.google.com with SMTP id m1so199474yen.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 11:43:23 -0800 (PST)
-Subject: [PATCH v2 04/12] arm/PCI: remove arch pci_flags definition
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <rob.herring@calxeda.com>
-Date: Thu, 23 Feb 2012 12:43:22 -0700
-Message-ID: <20120223194322.20708.4942.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:49025 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756083Ab2BHEsh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Feb 2012 23:48:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20120208043517.GD8930@ram-ThinkPad-T61>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-5-git-send-email-yinghai@kernel.org>
+	<20120208043517.GD8930@ram-ThinkPad-T61>
+Date: Tue, 7 Feb 2012 20:48:36 -0800
+Message-ID: <CAE9FiQUdRLmc-_hHWtaz=8QZiu4Ma6ZY7zavByJnwMDTBQLtzg@mail.gmail.com>
+Subject: Re: [PATCH 4/9] PCI: Fix cardbus bridge resources as optional size handling
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI core provides a pci_flags definition (currently __weak), so drop
-the arm definition in favor of that.
+On Tue, Feb 7, 2012 at 8:35 PM, Ram Pai <linuxram@us.ibm.com> wrote:
+> On Sat, Feb 04, 2012 at 10:55:03PM -0800, Yinghai Lu wrote:
+>> We should not set the requested size to -2.
+>>
+>> that will confuse the resource list sorting with align when SIZEALIGN is used.
+>>
+>> Change to STARTALIGN and pass align from start.
+>>
+>> We are safe to do that just as we do that regular pci bridge.
+>>
+>> In the long run, we should just treat cardbus like regular pci bridge.
+>>
+>> Also fix when realloc is not passed, should keep the requested size.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/setup-bus.c |   63 ++++++++++++++++++++++++++--------------------
+>>  1 files changed, 36 insertions(+), 27 deletions(-)
+>>
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index d5897c3..3b3932a 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -898,21 +898,30 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+>>  {
+>>       struct pci_dev *bridge = bus->self;
+>>       struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+>> +     resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
+>>       u16 ctrl;
+>>
+>>       /*
+>>        * Reserve some resources for CardBus.  We reserve
+>>        * a fixed amount of bus space for CardBus bridges.
+>>        */
+>> -     b_res[0].start = 0;
+>> -     b_res[0].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
+>> -     if (realloc_head)
+>> -             add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size, 0 /* dont care */);
+>> +     b_res[0].start = pci_cardbus_io_size;
+>> +     b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
+>> +     b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+>> +     if (realloc_head) {
+>> +             b_res[0].end -= pci_cardbus_io_size;
+>> +             add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
+>> +                             pci_cardbus_io_size);
+>> +     }
+>>
+>> -     b_res[1].start = 0;
+>> -     b_res[1].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
+>> -     if (realloc_head)
+>> -             add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
+>> +     b_res[1].start = pci_cardbus_io_size;
+>> +     b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
+>> +     b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+>> +     if (realloc_head) {
+>> +             b_res[1].end -= pci_cardbus_io_size;
+>> +             add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
+>> +                              pci_cardbus_io_size);
+>> +     }
+>>
+>>       /* MEM1 must not be pref mmio */
+>>       pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+>> @@ -939,28 +948,28 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+>>        * twice the size.
+>>        */
+>>       if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
+>> -             b_res[2].start = 0;
+>> -             b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_SIZEALIGN;
+>> -             if (realloc_head)
+>> -                     add_to_list(realloc_head, bridge, b_res+2, pci_cardbus_mem_size, 0 /* dont care */);
+>> +             b_res[2].start = pci_cardbus_mem_size;
+>> +             b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
+>> +             b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
+>> +                               IORESOURCE_STARTALIGN;
+>> +             if (realloc_head) {
+>> +                     b_res[2].end -= pci_cardbus_mem_size;
+>> +                     add_to_list(realloc_head, bridge, b_res+2,
+>> +                              pci_cardbus_mem_size, pci_cardbus_mem_size);
+>> +             }
+>>
+>> -             b_res[3].start = 0;
+>> -             b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
+>> -             if (realloc_head)
+>> -                     add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size, 0 /* dont care */);
+>
+> The b_res_3_size has to be reduced to half here.
+> Otherwise it will try allocate 2*pci_cardbus_mem_size to the BAR3..
+>
+>                b_res_3_size = pci_cardbus_mem_size;
+>
+>
+>> -     } else {
+>> -             b_res[3].start = 0;
+>> -             b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
+>> -             if (realloc_head)
+>> -                     add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size * 2, 0 /* dont care */);
+>> +             /* reduce that to half */
+>> +             b_res_3_size = pci_cardbus_mem_size;
+>
+> b_res3_3_size should not be updated here, since BAR3 has to be allocated 2*pci_cardbus_mem_size
+> resource.
+>
 
-We EXPORT_SYMBOL(pci_flags) as arm did previously.  I'm dubious about
-this: no other architecture exports it, and I didn't see any modules in
-the tree that reference it.
+looks like you did not read the patch correctly
 
-CC: Rob Herring <rob.herring@calxeda.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/arm/kernel/bios32.c |    2 ++
- arch/arm/mm/iomap.c      |    3 ---
- 2 files changed, 2 insertions(+), 3 deletions(-)
+that else {} get removed already in this patch
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index f58ba35..f3fd52b 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -525,6 +525,7 @@ void __init pci_common_init(struct hw_pci *hw)
- 
- 	INIT_LIST_HEAD(&hw->buses);
- 
-+	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 	if (hw->preinit)
- 		hw->preinit();
- 	pcibios_init_hw(hw);
-@@ -559,6 +560,7 @@ void __init pci_common_init(struct hw_pci *hw)
- 		pci_bus_add_devices(bus);
- 	}
- }
-+EXPORT_SYMBOL(pci_flags);
- 
- #ifndef CONFIG_PCI_HOST_ITE8152
- void pcibios_set_master(struct pci_dev *dev)
-diff --git a/arch/arm/mm/iomap.c b/arch/arm/mm/iomap.c
-index e62956e..4614208 100644
---- a/arch/arm/mm/iomap.c
-+++ b/arch/arm/mm/iomap.c
-@@ -32,9 +32,6 @@ EXPORT_SYMBOL(pcibios_min_io);
- unsigned long pcibios_min_mem = 0x01000000;
- EXPORT_SYMBOL(pcibios_min_mem);
- 
--unsigned int pci_flags = PCI_REASSIGN_ALL_RSRC;
--EXPORT_SYMBOL(pci_flags);
--
- void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
- {
- 	if ((unsigned long)addr >= VMALLOC_START &&
+please check segment after patch...
 
+static void pci_bus_size_cardbus(struct pci_bus *bus,
+			struct list_head *realloc_head)
+{
+	struct pci_dev *bridge = bus->self;
+	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
+	u16 ctrl;
+
+	/*
+	 * Reserve some resources for CardBus.  We reserve
+	 * a fixed amount of bus space for CardBus bridges.
+	 */
+	b_res[0].start = pci_cardbus_io_size;
+	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
+	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+	if (realloc_head) {
+		b_res[0].end -= pci_cardbus_io_size;
+		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
+				pci_cardbus_io_size);
+	}
+
+	b_res[1].start = pci_cardbus_io_size;
+	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
+	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+	if (realloc_head) {
+		b_res[1].end -= pci_cardbus_io_size;
+		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
+				 pci_cardbus_io_size);
+	}
+
+	/* MEM1 must not be pref mmio */
+	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
+		ctrl &= ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
+		pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
+		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+	}
+
+	/*
+	 * Check whether prefetchable memory is supported
+	 * by this bridge.
+	 */
+	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+	if (!(ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0)) {
+		ctrl |= PCI_CB_BRIDGE_CTL_PREFETCH_MEM0;
+		pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
+		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+	}
+
+	/*
+	 * If we have prefetchable memory support, allocate
+	 * two regions.  Otherwise, allocate one region of
+	 * twice the size.
+	 */
+	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
+		b_res[2].start = pci_cardbus_mem_size;
+		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
+		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
+				  IORESOURCE_STARTALIGN;
+		if (realloc_head) {
+			b_res[2].end -= pci_cardbus_mem_size;
+			add_to_list(realloc_head, bridge, b_res+2,
+				 pci_cardbus_mem_size, pci_cardbus_mem_size);
+		}
+
+		/* reduce that to half */
+		b_res_3_size = pci_cardbus_mem_size;
+	}
+
+	b_res[3].start = pci_cardbus_mem_size;
+	b_res[3].end = b_res[3].start + b_res_3_size - 1;
+	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
+	if (realloc_head) {
+		b_res[3].end -= b_res_3_size;
+		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+				 pci_cardbus_mem_size);
+	}
+}
