@@ -1,77 +1,28 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:57237 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756012Ab2BWT5w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:57:52 -0500
-Date: Thu, 23 Feb 2012 11:57:47 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/7] PCI: Make pci bridge reallocating enabled/disabled
-Message-ID: <20120223115747.4b85fdb2@jbarnes-desktop>
-In-Reply-To: <1328916832-6588-6-git-send-email-yinghai@kernel.org>
-References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
-	<1328916832-6588-6-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/A=.yXc0r1EB_AJvXnQp5jCe"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 8 Feb 2012 10:07:51 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+cc: Alex Shi <alex.shi@intel.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	<linux-usb@vger.kernel.org>, <andiry.xu@amd.com>,
+	<linux-kernel@vger.kernel.org>, Oliver Neukum <oneukum@suse.de>,
+	Takashi Iwai <tiwai@suse.de>, <trenn@suse.de>,
+	<linux-pci@vger.kernel.org>, Michal Marek <MMarek@suse.com>
+Subject: Re: [PATCH] usb: enable pci MSI/MSIX in usb core
+In-Reply-To: <20120207221317.GA6103@xanatos>
+Message-ID: <Pine.LNX.4.44L0.1202081006470.1697-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/A=.yXc0r1EB_AJvXnQp5jCe
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, 7 Feb 2012, Sarah Sharp wrote:
 
-On Fri, 10 Feb 2012 15:33:50 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
-> +enum enable_type {
-> +	enable_not_set =3D -1,
-> +	enable_no_user,
-> +	enable_no_detected,
-> +	enable_yes_user,
-> +	enable_yes_detected,
-> +};
+> Alan, is the hc_driver structure (xhci_pci_hc_driver) shared across all
+> xHCI PCI hosts in the system?
 
-How about:
-  user_enabled
-  user_disabled
-  auto_enabled
-  auto_disabled
-?
+Maybe this isn't relevant to the discussion any more...  but yes, it 
+is.
 
-enable_no_* seems a bit confusing...
+Alan Stern
 
-also the help text in kernel-parameters.txt should mention the config
-option and describe default behavior with and without that config
-option enabled.
-
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/A=.yXc0r1EB_AJvXnQp5jCe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPRpo7AAoJEIEoDkX4Qk9hsNcP/2QR1BTvKR1CRO1vTPhqpMpz
-EegR+Z4LGTOYKZODY7rHeOmi4owV8NkI8HsW1ZHNNWaQ3AY3LU7r/Rrbxwa5D1Ou
-wJe7vTPH4DuHsSsXqNF+TpD4eORWSsV2FWuldSwW0y1GQVRjPM6zfIQjHlcQEYQ+
-8VW8P+RD7AV9HsMx5+DWVFta2lzIf0NAug1Ob/P+Vxq6qFB8dVYJ6h+qB7vOhi+5
-GTCVIaF2yDfVZuJRTrTsooT4YU6k0PY2I2ye8gKC2cby9rf1gBGo4W8/bEEdpOd5
-2wPBkforrrhwO81RW319+RDgQUMhCtAc2LgLGAE51OXVk3XEldp0N9P4NCM5p+Cj
-og5sRPJ2SZRWVhHtmvsfaeVwt4nSNS0yqQ6WDkRHE/8C5Z0duD9cBB4UIKKXAQfN
-fSqXMzdiBf57ITP5j1iMbfE8P2wDbwO8ZrMo/J3qlXfCB5KXiSgxF7EWfDpHqien
-foOYVhFFN6auNwS/Vjrfc5H5KfH5L0EHHnji9u5rH8SQy37YydVtYMQf0rY+QzlG
-oHRLXpeopYLLp24mbOw7AhR/7Cfja1xjtvmLW7hUoRQdVKx5ykMYc2q+H9JPO23Q
-lO+TvSVUlbMqdnc7m6l7xvXKHrnSc2J9biN1ORZ0MA1VV9vsS/DsU62Vgb8WMYhw
-vcPKMYLjgqlDNptsQTG5
-=m7Gh
------END PGP SIGNATURE-----
-
---Sig_/A=.yXc0r1EB_AJvXnQp5jCe--
