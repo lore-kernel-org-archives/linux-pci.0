@@ -1,77 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:54068 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756347Ab2BWUoc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 15:44:32 -0500
-Date: Thu, 23 Feb 2012 12:44:26 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -v2 1/4] PCI: Add class support in quirk handling
-Message-ID: <20120223124426.2631b779@jbarnes-desktop>
-In-Reply-To: <1329370832-2253-2-git-send-email-yinghai@kernel.org>
-References: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
-	<1329370832-2253-2-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/BWo0ax=4MrbQ7fkiVm7d6Do"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120208132234.710f19be.yuasa@linux-mips.org>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+ <20120130165805.3231.99160.stgit@bhelgaas.mtv.corp.google.com>
+ <20120131114250.b0e6af10.yuasa@linux-mips.org> <CAErSpo7xUL++rqnJug7=Wd_nfvaUDOewGjz1C2Fp-oQrkxO2yg@mail.gmail.com>
+ <CAErSpo7ry8piDCTpgkdr01=Kd7=G6HTNwDAQAockPgXtyhJvuw@mail.gmail.com> <20120208132234.710f19be.yuasa@linux-mips.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 8 Feb 2012 13:16:52 -0800
+Message-ID: <CAErSpo7oTngzPLb7+HHyOgYPB7Toc2yOtr1i0Z+85gLy4Mik0g@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 11/18] mips/PCI: get rid of device resource fixups
+To: Yoichi Yuasa <yuasa@linux-mips.org>, linux-arch@vger.kernel.org,
+	linux-pci@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/BWo0ax=4MrbQ7fkiVm7d6Do
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Feb 7, 2012 at 8:22 PM, Yoichi Yuasa <yuasa@linux-mips.org> wrote:
+> Hi,
+>
+> On Tue, 7 Feb 2012 18:56:46 -0800
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> On Mon, Jan 30, 2012 at 7:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > On Mon, Jan 30, 2012 at 6:42 PM, Yoichi Yuasa <yuasa@linux-mips.org> wrote:
+>> >> Hi,
+>> >>
+>> >> On Mon, 30 Jan 2012 09:58:05 -0700
+>> >> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >>
+>> >>> Tell the PCI core about host bridge address translation so it can take
+>> >>> care of bus-to-resource conversion for us.
+>> >>>
+>> >>> N.B. cobalt_legacy_ide_fixup() does scary things with resources, but I
+>> >>> *think* it will still work because we're still making the same adjustments,
+>> >>> just in the opposite order.  Here are the legacy IDE resource.start
+>> >>> values I expect:
+>> >>>
+>> >>>          current                                        new
+>> >>>
+>> >>>            0x1f0   (pci_setup_device)                 0x1f0
+>> >>>                    (pci_bus_to_resource)       + 0xf0000000
+>> >>>     - 0xf0000000   (cobalt_legacy_ide_fixup)   - 0xf0000000
+>> >>>     + 0xf0000000   (pcibios_fixup_bus)
+>> >>>     ------------                               ------------
+>> >>>            0x1f0    final value                       0x1f0
+>> >>
+>> >> It seems to be unable to handle the offset correctly.
+>> >>
+>> >> failed on Cobalt:
+>> >>
+>> >> pata_via 0000:00:09.1: BAR 0: can't reserve [io  0x100001f0-0x100001f7]
+>> >> pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
+>> >> pata_via 0000:00:09.1: BAR 2: can't reserve [io  0x10000170-0x10000177]
+>> >> pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
+>> >> pata_via 0000:00:09.1: no available native port
+>> >
+>> > Thank you very much for testing this.  Could you collect the complete
+>> > dmesg and /proc/ioport contents, before and after my patches?
+>>
+>> Ping :)  I'll try to figure this out, but it would be easier if I had
+>> the info mentioned above.  Thanks!
+>
+> It cannot mount rootfs with your patches.
+> I cannot get /proc/ioports yet.
+>
+> I attach only boot logs.
 
-On Wed, 15 Feb 2012 21:40:29 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Ah, I see the trouble.  The original MIPS pcibios_fixup_bus() applied
+the io_offset to all IORESOURE_IO resources, but the generic
+pcibios_bus_to_resource() only applies the offset to things that are
+in the host bridge's window.
 
-> Recently there is new support to make quirk calling will report duration =
-time.
-> That will boot log get more print out with initcall_debug is specified.
->=20
-> Found a lot of quirks are calling for not related devices.
->=20
-> Reason is quirk frame do not support class handling. So quirk code have to
-> use PCI_ANY_ID for vendor/device and let quirk code itself to check class
-> inside the func.
->=20
-> The patch add class and cls_shift into struct pci_fixup.
-> Also update related macro to accept the class and shift.
->=20
-> -v2: fix v1 that left over of sparated patch.
+The legacy IDE addresses aren't in the window, so we didn't apply the
+offset, and it didn't work.
 
-I like this series, a few comments:
-  - class and class_shift everywhere (in pci_fixup {} and the new
-    macros) for readability
-  - split the individual quirk fixes into separate patches (makes it
-    easier to revert or identify if one breaks)
-  - the reassigndev patch looks like a good one independent of the
-    series
+I'll rework this and update my patches.
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Thanks!
 
---Sig_/BWo0ax=4MrbQ7fkiVm7d6Do
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPRqUqAAoJEIEoDkX4Qk9hJxEP/jnXFqyV0bxdGFDYRfyZ9NaB
-wjAM7XA4+ERGjN5A5dbmgsPZj71Jo/qsoSc9MWUVySjnD3pLIqDE3tFBL0Fs+hX4
-xZeksBKlX8/3r8EUESpIM/3pMtw1BFor2ubWjD8DlCYDf7RMUTamx8wscFwKLlp7
-j7Pgc39h5PL0GxnnM22K3hbQA+S5b3t6faxpR4GRvS25AIcrPgxWHuA2hi+y82HS
-Eh4MOW3hPWt+TCWhVqQNYaUvRnePXwQxeZTGV17jdGENRGiAaPWEHauXGpDwMFgK
-LRmul3jj3cSUsQVKaovKW7d1VKTpdqY4KTtJvCZywhimloO2DHaemmu1AQFMkFyO
-RuDIUgx4YQd6+nO+qsYArQbPIrPvu4RVwCa0TNFOb8eXc3u/vo3yabd+5vTzWfuY
-njnV3Hj6tkvppUgKx6fAVPpqpBU5nieEfu84aNX1OV0C9sFFcsKdqNNoni9PvON6
-DJ2jDP3RYNrJm+xCi3ARycRDrSAryfKIcVVN3XzwYtT2Eh1oKhZ6H96wvQ92HMFp
-LQYoxWDrnpT5fi+jooikDPgV/wBme65Daiv1rhS3ukwQcVoOWxF2i6QUmYsW9mus
-wz/ULpqlbsMvbg1AkZFNRAv3DgFI+vrP/yqhUEU4V6VbeX2GjWy8KtC33e84J25h
-J0sPT96TgheFwWUf/P1A
-=8nOd
------END PGP SIGNATURE-----
-
---Sig_/BWo0ax=4MrbQ7fkiVm7d6Do--
+Bjorn
