@@ -1,53 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34067 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751708Ab2BPQy2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Feb 2012 11:54:28 -0500
-Date: Thu, 16 Feb 2012 08:54:24 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Oliver Neukum <oliver@neukum.org>
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [RFC v2] USB: Fix handoff when BIOS disables host PCI device.
-Message-ID: <20120216165424.GA4703@xanatos>
-References: <20120209150823.GA5232@xanatos>
- <201202161115.48524.oneukum@suse.de>
- <20120216143321.GA9127@xanatos>
- <201202161548.53556.oliver@neukum.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:43111 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757249Ab2BHC5H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Feb 2012 21:57:07 -0500
+Received: by werb13 with SMTP id b13so52653wer.19
+        for <linux-pci@vger.kernel.org>; Tue, 07 Feb 2012 18:57:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201202161548.53556.oliver@neukum.org>
+In-Reply-To: <CAErSpo7xUL++rqnJug7=Wd_nfvaUDOewGjz1C2Fp-oQrkxO2yg@mail.gmail.com>
+References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
+ <20120130165805.3231.99160.stgit@bhelgaas.mtv.corp.google.com>
+ <20120131114250.b0e6af10.yuasa@linux-mips.org> <CAErSpo7xUL++rqnJug7=Wd_nfvaUDOewGjz1C2Fp-oQrkxO2yg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 7 Feb 2012 18:56:46 -0800
+Message-ID: <CAErSpo7ry8piDCTpgkdr01=Kd7=G6HTNwDAQAockPgXtyhJvuw@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 11/18] mips/PCI: get rid of device resource fixups
+To: Yoichi Yuasa <yuasa@linux-mips.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2012 at 03:48:53PM +0100, Oliver Neukum wrote:
-> Am Donnerstag, 16. Februar 2012, 15:33:21 schrieb Sarah Sharp:
-> > > The BIOS might touch it. Are you really willing to say that there won't
-> > > be BIOSes that assume that what they enabled must stay enabled?
-> > 
-> > Once the xHCI PCI quirk handler runs, we've taken the host controller
-> > away from the BIOS with the BIOS/OS semaphore handshake.  (If the BIOS
-> > is smart enough to actually handle that.)  Any BIOS that touches the
-> > xHCI host controller after that point is just broken.  There is only so
-> > much we can do about the BIOS breakage. :)
-> 
-> What about S3 when the BIOS takes control?
+On Mon, Jan 30, 2012 at 7:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jan 30, 2012 at 6:42 PM, Yoichi Yuasa <yuasa@linux-mips.org> wrote:
+>> Hi,
+>>
+>> On Mon, 30 Jan 2012 09:58:05 -0700
+>> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>>> Tell the PCI core about host bridge address translation so it can take
+>>> care of bus-to-resource conversion for us.
+>>>
+>>> N.B. cobalt_legacy_ide_fixup() does scary things with resources, but I
+>>> *think* it will still work because we're still making the same adjustments,
+>>> just in the opposite order.  Here are the legacy IDE resource.start
+>>> values I expect:
+>>>
+>>>          current                                        new
+>>>
+>>>            0x1f0   (pci_setup_device)                 0x1f0
+>>>                    (pci_bus_to_resource)       + 0xf0000000
+>>>     - 0xf0000000   (cobalt_legacy_ide_fixup)   - 0xf0000000
+>>>     + 0xf0000000   (pcibios_fixup_bus)
+>>>     ------------                               ------------
+>>>            0x1f0    final value                       0x1f0
+>>
+>> It seems to be unable to handle the offset correctly.
+>>
+>> failed on Cobalt:
+>>
+>> pata_via 0000:00:09.1: BAR 0: can't reserve [io  0x100001f0-0x100001f7]
+>> pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
+>> pata_via 0000:00:09.1: BAR 2: can't reserve [io  0x10000170-0x10000177]
+>> pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
+>> pata_via 0000:00:09.1: no available native port
+>
+> Thank you very much for testing this.  Could you collect the complete
+> dmesg and /proc/ioport contents, before and after my patches?
 
-If that was a problem, we would see BIOS issues during S3 with the
-current code when a host controller driver wasn't loaded before
-suspend.  In fact, I think several distros used to unload the USB
-drivers when the user selected suspend from the menu.
+Ping :)  I'll try to figure this out, but it would be easier if I had
+the info mentioned above.  Thanks!
 
-When the driver is unloaded, usb_hcd_pci_remove() is called, which will
-call pci_disable_device().  If the ref counts were balanced (and I
-believe they are), then the PCI device would have been disabled before
-S3 for distros that unloaded the USB drivers on suspend.  So the BIOS
-would have seen a disabled PCI device for these distros, just like it
-would with my patch if the driver never got loaded.
-
-I don't think this is an issue.
-
-Sarah Sharp
+Bjorn
