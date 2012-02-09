@@ -1,75 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us02smtp1.synopsys.com ([198.182.60.75]:42882 "EHLO
-	vaxjo.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863Ab2BHUnw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Feb 2012 15:43:52 -0500
-From: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
-To: "balbi@ti.com" <balbi@ti.com>
-CC: "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Date: Wed, 8 Feb 2012 12:43:51 -0800
-Subject: RE: [PATCH 4/4] usb: dwc3: second part of hibernation support
-Message-ID: <F6C4814A9B336243ABC3D1FB44E08AE801D5678673@US01WXMBX1.internal.synopsys.com>
-References: <cover.1328582753.git.paulz@synopsys.com>
- <9c4ee1f156d28640bc43dee647e3470b9e1b9f37.1328582753.git.paulz@synopsys.com>
- <20120207070322.GB3707@legolas.emea.dhcp.ti.com>
- <F6C4814A9B336243ABC3D1FB44E08AE801D5677E3A@US01WXMBX1.internal.synopsys.com>
- <20120207201742.GA10970@legolas.emea.dhcp.ti.com>
- <F6C4814A9B336243ABC3D1FB44E08AE801D5677FC6@US01WXMBX1.internal.synopsys.com>
- <20120208061452.GF3707@legolas.emea.dhcp.ti.com>
-In-Reply-To: <20120208061452.GF3707@legolas.emea.dhcp.ti.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <1328823358.2903.77.camel@pasglop>
+Subject: Re: [PATCH 09/24] PCI, powerpc: Register busn_res for root buses
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Date: Fri, 10 Feb 2012 08:35:58 +1100
+In-Reply-To: <CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+	 <1328425088-6562-10-git-send-email-yinghai@kernel.org>
+	 <CAErSpo6BwznWf3rq4J2Ao+rrgR4yWqQ0mQGygkd2KmBuA1OD8g@mail.gmail.com>
+	 <1328738567.2903.45.camel@pasglop>
+	 <CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Felipe Balbi [mailto:balbi@ti.com]
-> Sent: Tuesday, February 07, 2012 10:15 PM
+On Thu, 2012-02-09 at 11:24 -0800, Bjorn Helgaas wrote:
+> My point is that the interface between the arch and the PCI core
+> should be simply the arch telling the core "this is the range of bus
+> numbers you can use."  If the firmware doesn't give you the HW limits,
+> that's the arch's problem.  If you want to assume 0..255 are
+> available, again, that's the arch's decision.
 > 
-> On Tue, Feb 07, 2012 at 02:19:49PM -0800, Paul Zimmerman wrote:
-> > >
-> > > OK, I will poke around and see if I can find an existing driver to use as
-> > > an example.
-> >
-> > Hi Felipe,
-> >
-> > Can you explain a little about how the runtime_pm stuff will work in
-> > the DWC3 driver, disregarding the HAPS platform for now.
-> >
-> > For example, if the device is a PCI device, won't the PM ops need to
-> > be part of the struct pci_driver in the dwc3-pci module?
-> >
-> > If so, how will they be able to communicate with the routines in the
-> > dwc3 module? Or if not, how will that work exactly?
-> 
-> Ok, the way it works is that the e.g. PCI device is a parent device to
-> the DWC3. So, in fact, you will end up with two pm ops: one that only
-> knows about DWC3 and one that only knows about PCI.
-> 
-> The pm core guarantees that parent's e.g. runtime_suspend(), will only
-> be called after all children (in this case, only one) are suspended.
-> Likewise for resume.
-> 
-> So, what we need to do is to make one pm ops that knows everything the
-> power management features on DWC3 and another which knows about PCI,
-> then hook them up properly and whenever pm usage counter reaches zero,
-> dwc3's runtime_suspend() is called, then after that dwc3-pci's
-> runtime_suspend() will be called.
+> But the answer to the question "what bus numbers are available to me"
+> depends only on the host bridge HW configuration.  It does not depend
+> on what pci_scan_child_bus() found.  Therefore, I think we can come up
+> with a design where pci_bus_update_busn_res_end() is unnecessary.
 
-Thank you! That was the piece of the puzzle that was missing. OK,
-I'll take a crack at implementing the pm ops for dwc3 and dwc3-pci.
+In an ideal world yes. In a world where there are reverse engineered
+platforms on which we aren't 100% sure how thing actually work under the
+hood and have the code just adapt on "what's there" (and try to fix it
+up -sometimes-), thinks can get a bit murky :-)
 
-> Just keep in mind that glue layer also needs to keep track of its own
-> usage counters, what I mean by that, is that on dwc3-pci probe you
-> should probably call pm_runtime_get_sync() and right before returning
-> from probe, you call pm_runtime_put(). This will make sure that the PCIe
-> device is powered up when you need and can be autosuspended when you
-> don't need it anymore.
+But yes, I see your point. As for what is the "correct" setting that
+needs to be done so that the patch doesn't end up a regression for us,
+I'll have to dig into some ancient HW to dbl check a few things. I hope
+0...255 will just work but I can't guarantee it.
 
-I see that Alan had a correction to this part in a later email.
+What I'll probably do is constraint the core to the values in
+hose->min/max, and update selected platforms to put 0..255 in there when
+I know for sure they can cope.
 
--- 
-Paul
+Cheers,
+Ben.
+
 
