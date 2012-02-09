@@ -1,148 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:21288 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755994Ab2BXDts (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:48 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
+Received: from mga09.intel.com ([134.134.136.24]:25765 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752953Ab2BIUNy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:13:54 -0500
+Date: Thu, 9 Feb 2012 12:13:54 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Oliver Neukum <oliver@neukum.org>
+Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>
-Subject: [PATCH 03/13] x86, irq: Add realloc_irq_and_cfg_at()
-Date: Thu, 23 Feb 2012 19:48:49 -0800
-Message-Id: <1330055339-11662-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+Subject: [RFC v2] USB: Fix handoff when BIOS disables host PCI device.
+Message-ID: <20120209201354.GA6709@xanatos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120209150823.GA5232@xanatos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will use it to allocate irq that are pre-reserved.
+On some systems with an Intel Panther Point xHCI host controller, the
+BIOS disables the xHCI PCI device during boot, and switches the xHCI
+ports over to EHCI.  This allows the BIOS to access USB devices without
+having xHCI support.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Suresh Siddha <suresh.b.siddha@intel.com>
+The downside is that the xHCI BIOS handoff mechanism will fail because
+memory mapped I/O is not enabled for the disabled PCI device.
+Jesse Barnes says this is expected behavior.  The PCI core will enable
+BARs before quirks run, but it will leave it in an undefined state, and
+it may not have memory mapped I/O enabled.
+
+Make the generic USB quirk handler call pci_enable_device() to re-enable
+MMIO, and call pci_disable_device() once the host-specific BIOS handoff
+is finished.  This will balance the ref counts in the PCI core.  When
+the PCI probe function is called, usb_hcd_pci_probe() will call
+pci_enable_device() again.
+
+This should be backported to kernels as old as 2.6.32.  That was the
+first kernel with xHCI support, and no one has complained about BIOS
+handoffs failing due to memory mapped I/O being disabled on other hosts
+(EHCI, UHCI, or OHCI).
+
+Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: stable@kernel.org
 ---
- arch/x86/kernel/apic/io_apic.c |   33 ++++++++++++++++++++++++++++++++-
- include/linux/irq.h            |    5 +++++
- kernel/irq/irqdesc.c           |   26 ++++++++++++++++++++++++++
- 3 files changed, 63 insertions(+), 1 deletions(-)
+ drivers/usb/host/pci-quirks.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 4c008ac..4d62f0f 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -300,6 +300,37 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
- 	irq_free_desc(at);
+diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+index ac53a66..7732d69 100644
+--- a/drivers/usb/host/pci-quirks.c
++++ b/drivers/usb/host/pci-quirks.c
+@@ -872,7 +872,17 @@ static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
+ 	 */
+ 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+ 		return;
++	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
++			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
++			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
++			pdev->class != PCI_CLASS_SERIAL_USB_XHCI)
++		return;
+ 
++	if (pci_enable_device(pdev) < 0) {
++		dev_warn(&pdev->dev, "Can't enable PCI device, "
++				"BIOS handoff failed.\n");
++		return;
++	}
+ 	if (pdev->class == PCI_CLASS_SERIAL_USB_UHCI)
+ 		quirk_usb_handoff_uhci(pdev);
+ 	else if (pdev->class == PCI_CLASS_SERIAL_USB_OHCI)
+@@ -881,5 +891,6 @@ static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
+ 		quirk_usb_disable_ehci(pdev);
+ 	else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
+ 		quirk_usb_handoff_xhci(pdev);
++	pci_disable_device(pdev);
  }
- 
-+static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
-+{
-+	struct irq_desc *desc = irq_to_desc(at);
-+	struct irq_cfg *cfg;
-+	int res;
-+
-+	if (desc) {
-+		if (irq_desc_get_irq_data(desc)->node == node)
-+			return alloc_irq_and_cfg_at(at, node);
-+
-+		cfg = irq_desc_get_chip_data(desc);
-+		if (cfg) {
-+			/* shared irq */
-+			if (!list_empty(&cfg->irq_2_pin))
-+				return cfg;
-+			free_irq_cfg(at, cfg);
-+		}
-+	}
-+
-+	res = irq_realloc_desc_at(at, node);
-+	if (res >= 0) {
-+		cfg = alloc_irq_cfg(at, node);
-+		if (cfg) {
-+			irq_set_chip_data(at, cfg);
-+			return cfg;
-+		}
-+	}
-+
-+	return alloc_irq_and_cfg_at(at, node);
-+}
-+
- struct io_apic {
- 	unsigned int index;
- 	unsigned int unused[3];
-@@ -3563,7 +3594,7 @@ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
- static int
- io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- {
--	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
-+	struct irq_cfg *cfg = realloc_irq_and_cfg_at(irq, node);
- 	int ret;
- 
- 	if (!cfg)
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 7a9a19b..e15bc35 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -584,6 +584,11 @@ void irq_free_descs(unsigned int irq, unsigned int cnt);
- int irq_reserve_irqs(unsigned int from, unsigned int cnt);
- int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
- 
-+int __irq_realloc_desc(int at, int node, struct module *owner);
-+/* use macros to avoid needing export.h for THIS_MODULE */
-+#define irq_realloc_desc_at(at, node)	\
-+	__irq_realloc_desc(at, node, THIS_MODULE)
-+
- static inline void irq_free_desc(unsigned int irq)
- {
- 	irq_free_descs(irq, 1);
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 3e23bb9..b1d6e51 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -99,6 +99,11 @@ EXPORT_SYMBOL_GPL(nr_irqs);
- static DEFINE_MUTEX(sparse_irq_lock);
- static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
- 
-+static bool __irq_is_reserved(int irq)
-+{
-+	return !!test_bit(irq, allocated_irqs);
-+}
-+
- #ifdef CONFIG_SPARSE_IRQ
- 
- static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
-@@ -400,6 +405,27 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- EXPORT_SYMBOL_GPL(__irq_alloc_descs);
- 
- /**
-+ * irq_realloc_desc - allocate irq descriptor for irq that is already reserved
-+ * @irq:	Allocate for specific irq number if irq >= 0
-+ * @node:	Preferred node on which the irq descriptor should be allocated
-+ * @owner:	Owning module (can be NULL)
-+ *
-+ * Returns the irq number or error code
-+ */
-+int __ref
-+__irq_realloc_desc(int irq, int node, struct module *owner)
-+{
-+	if (!__irq_is_reserved(irq))
-+		return -EINVAL;
-+
-+	if (irq_to_desc(irq))
-+		free_desc(irq);
-+
-+	return alloc_descs(irq, 1, node, owner);
-+}
-+EXPORT_SYMBOL_GPL(__irq_realloc_desc);
-+
-+/**
-  * irq_reserve_irqs - mark irqs allocated
-  * @from:	mark from irq number
-  * @cnt:	number of irqs to mark
+ DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_usb_early_handoff);
 -- 
-1.7.7
+1.7.9
 
