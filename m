@@ -1,76 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 14/24] PCI, powerpc: Register busn_res for root buses
-Date: Tue, 28 Feb 2012 14:07:33 -0800
-Message-Id: <1330466863-28469-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out003.kontent.com ([81.88.40.217]:33228 "EHLO
+	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268Ab2BIIyC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Feb 2012 03:54:02 -0500
+From: Oliver Neukum <oliver@neukum.org>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: [RFC] xhci: Fix BIOS handoff failure on some Intel systems.
+Date: Thu, 9 Feb 2012 09:56:22 +0100
+Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+References: <20120207233118.GA6947@xanatos> <201202081611.37097.oneukum@suse.de> <20120208214851.GA2669@xanatos>
+In-Reply-To: <20120208214851.GA2669@xanatos>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201202090956.22456.oliver@neukum.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci-common.c      |   10 +++++++++-
- 2 files changed, 10 insertions(+), 1 deletions(-)
+Am Mittwoch, 8. Februar 2012, 22:48:51 schrieb Sarah Sharp:
+> > > Can you test and make sure this fixes the issue on your test systems?
+> > 
+> > I've tested it and it works. Are you sure it is safe to enable a PCI device
+> > at that point? If so, your patch is better than mine.
+> 
+> Jesse Barnes told me it's fine over IRC, so I'm just going to send this
+> off, with your Tested-by line.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 5d48765..11cebf0 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -30,6 +30,7 @@ struct pci_controller {
- 	int first_busno;
- 	int last_busno;
- 	int self_busno;
-+	struct resource busn;
- 
- 	void __iomem *io_base_virt;
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 910b9de..ee8c0c9 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1648,6 +1648,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	/* Wire up PHB bus resources */
- 	pcibios_setup_phb_resources(hose, &resources);
- 
-+	hose->busn.start = hose->first_busno;
-+	hose->busn.end	 = hose->last_busno;
-+	hose->busn.flags = IORESOURCE_BUS;
-+	pci_add_resource(&resources, &hose->busn);
-+
- 	/* Create an empty bus for the toplevel */
- 	bus = pci_create_root_bus(hose->parent, hose->first_busno,
- 				  hose->ops, hose, &resources);
-@@ -1670,8 +1675,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		of_scan_bus(node, bus);
- 	}
- 
--	if (mode == PCI_PROBE_NORMAL)
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
- 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, bus->subordinate);
-+	}
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
--- 
-1.7.7
+Very well, but then consequently you should do it for all HCIs.
+
+	Regards
+		Oliver
 
