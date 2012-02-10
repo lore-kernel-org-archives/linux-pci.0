@@ -1,153 +1,133 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 12/18] mn10300/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, David Howells <dhowells@redhat.com>
-Date: Thu, 09 Feb 2012 19:37:22 -0700
-Message-ID: <20120210023722.10311.19200.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:56268 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753670Ab2BJXeS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 18:34:18 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/7] PCI: Fix cardbus bridge resources as optional size handling
+Date: Fri, 10 Feb 2012 15:33:47 -0800
+Message-Id: <1328916832-6588-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+We should not set the requested size to -2.
 
-CC: David Howells <dhowells@redhat.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+that will confuse the resource list sorting with align when SIZEALIGN is used.
+
+Change to STARTALIGN and pass align from start.
+
+We are safe to do that just as we do that regular pci bridge.
+
+In the long run, we should just treat cardbus like regular pci bridge.
+
+Also fix when realloc is not passed, should keep the requested size.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
+Acked-by: Ram Pai <linuxram@us.ibm.com>
 ---
- arch/mn10300/include/asm/pci.h  |   16 +---------
- arch/mn10300/unit-asb2305/pci.c |   62 ++++++---------------------------------
- 2 files changed, 10 insertions(+), 68 deletions(-)
+ drivers/pci/setup-bus.c |   63 ++++++++++++++++++++++++++--------------------
+ 1 files changed, 36 insertions(+), 27 deletions(-)
 
-diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
-index 6095a28..dfe1581 100644
---- a/arch/mn10300/include/asm/pci.h
-+++ b/arch/mn10300/include/asm/pci.h
-@@ -85,21 +85,7 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- /* implement the pci_ DMA API in terms of the generic device dma_ one */
- #include <asm-generic/pci-dma-compat.h>
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d5897c3..3b3932a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -898,21 +898,30 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ {
+ 	struct pci_dev *bridge = bus->self;
+ 	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
++	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
+ 	u16 ctrl;
  
--/**
-- * pcibios_resource_to_bus - convert resource to PCI bus address
-- * @dev: device which owns this resource
-- * @region: converted bus-centric region (start,end)
-- * @res: resource to convert
-- *
-- * Convert a resource to a PCI device bus address or bus window.
-- */
--extern void pcibios_resource_to_bus(struct pci_dev *dev,
--				    struct pci_bus_region *region,
--				    struct resource *res);
--
--extern void pcibios_bus_to_resource(struct pci_dev *dev,
--				    struct resource *res,
--				    struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
+ 	/*
+ 	 * Reserve some resources for CardBus.  We reserve
+ 	 * a fixed amount of bus space for CardBus bridges.
+ 	 */
+-	b_res[0].start = 0;
+-	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
+-	if (realloc_head)
+-		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size, 0 /* dont care */);
++	b_res[0].start = pci_cardbus_io_size;
++	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
++	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[0].end -= pci_cardbus_io_size;
++		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
++				pci_cardbus_io_size);
++	}
  
- static inline struct resource *
- pcibios_select_root(struct pci_dev *pdev, struct resource *res)
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index a7c5f08..6dce9fc 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -32,8 +32,7 @@ struct pci_ops *pci_root_ops;
-  * insert specific PCI bus resources instead of using the platform-level bus
-  * resources directly for the PCI root bus.
-  *
-- * These are configured and inserted by pcibios_init() and are attached to the
-- * root bus by pcibios_fixup_bus().
-+ * These are configured and inserted by pcibios_init().
-  */
- static struct resource pci_ioport_resource = {
- 	.name	= "PCI IO",
-@@ -78,52 +77,6 @@ static inline int __query(const struct pci_bus *bus, unsigned int devfn)
+-	b_res[1].start = 0;
+-	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
+-	if (realloc_head)
+-		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
++	b_res[1].start = pci_cardbus_io_size;
++	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
++	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[1].end -= pci_cardbus_io_size;
++		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
++				 pci_cardbus_io_size);
++	}
+ 
+ 	/* MEM1 must not be pref mmio */
+ 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+@@ -939,28 +948,28 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	 * twice the size.
+ 	 */
+ 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
+-		b_res[2].start = 0;
+-		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+2, pci_cardbus_mem_size, 0 /* dont care */);
++		b_res[2].start = pci_cardbus_mem_size;
++		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
++		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
++				  IORESOURCE_STARTALIGN;
++		if (realloc_head) {
++			b_res[2].end -= pci_cardbus_mem_size;
++			add_to_list(realloc_head, bridge, b_res+2,
++				 pci_cardbus_mem_size, pci_cardbus_mem_size);
++		}
+ 
+-		b_res[3].start = 0;
+-		b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size, 0 /* dont care */);
+-	} else {
+-		b_res[3].start = 0;
+-		b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
+-		if (realloc_head)
+-			add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size * 2, 0 /* dont care */);
++		/* reduce that to half */
++		b_res_3_size = pci_cardbus_mem_size;
+ 	}
+ 
+-	/* set the size of the resource to zero, so that the resource does not
+-	 * get assigned during required-resource allocation cycle but gets assigned
+-	 * during the optional-resource allocation cycle.
+- 	 */
+-	b_res[0].start = b_res[1].start = b_res[2].start = b_res[3].start = 1;
+-	b_res[0].end = b_res[1].end = b_res[2].end = b_res[3].end = 0;
++	b_res[3].start = pci_cardbus_mem_size;
++	b_res[3].end = b_res[3].start + b_res_3_size - 1;
++	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
++	if (realloc_head) {
++		b_res[3].end -= b_res_3_size;
++		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
++				 pci_cardbus_mem_size);
++	}
  }
  
- /*
-- * translate Linuxcentric addresses to PCI bus addresses
-- */
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	if (res->flags & IORESOURCE_IO) {
--		region->start = (res->start & 0x00ffffff);
--		region->end   = (res->end   & 0x00ffffff);
--	}
--
--	if (res->flags & IORESOURCE_MEM) {
--		region->start = (res->start & 0x03ffffff) | MEM_PAGING_REG;
--		region->end   = (res->end   & 0x03ffffff) | MEM_PAGING_REG;
--	}
--
--#if 0
--	printk(KERN_DEBUG "RES->BUS: %lx-%lx => %lx-%lx\n",
--	       res->start, res->end, region->start, region->end);
--#endif
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--/*
-- * translate PCI bus addresses to Linuxcentric addresses
-- */
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	if (res->flags & IORESOURCE_IO) {
--		res->start = (region->start & 0x00ffffff) | 0xbe000000;
--		res->end   = (region->end   & 0x00ffffff) | 0xbe000000;
--	}
--
--	if (res->flags & IORESOURCE_MEM) {
--		res->start = (region->start & 0x03ffffff) | 0xb8000000;
--		res->end   = (region->end   & 0x03ffffff) | 0xb8000000;
--	}
--
--#if 0
--	printk(KERN_INFO "BUS->RES: %lx-%lx => %lx-%lx\n",
--	       region->start, region->end, res->start, res->end);
--#endif
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
--/*
-  *
-  */
- static int pci_ampci_read_config_byte(struct pci_bus *bus, unsigned int devfn,
-@@ -364,9 +317,6 @@ static void __devinit pcibios_fixup_device_resources(struct pci_dev *dev)
- 		if (!dev->resource[i].flags)
- 			continue;
- 
--		region.start = dev->resource[i].start;
--		region.end = dev->resource[i].end;
--		pcibios_bus_to_resource(dev, &dev->resource[i], &region);
- 		if (is_valid_resource(dev, i))
- 			pci_claim_resource(dev, i);
- 	}
-@@ -397,6 +347,7 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
-  */
- static int __init pcibios_init(void)
- {
-+	resource_size_t io_offset, mem_offset;
- 	LIST_HEAD(resources);
- 
- 	ioport_resource.start	= 0xA0000000;
-@@ -420,8 +371,13 @@ static int __init pcibios_init(void)
- 	printk(KERN_INFO "PCI: Probing PCI hardware [mempage %08x]\n",
- 	       MEM_PAGING_REG);
- 
--	pci_add_resource(&resources, &pci_ioport_resource);
--	pci_add_resource(&resources, &pci_iomem_resource);
-+	io_offset = pci_ioport_resource.start -
-+	    (pci_ioport_resource.start & 0x00ffffff);
-+	mem_offset = pci_iomem_resource.start -
-+	    ((pci_iomem_resource.start & 0x03ffffff) | MEM_PAGING_REG);
-+
-+	pci_add_resource_offset(&resources, &pci_ioport_resource, io_offset);
-+	pci_add_resource_offset(&resources, &pci_iomem_resource, mem_offset);
- 	pci_root_bus = pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL,
- 					 &resources);
- 
+ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+-- 
+1.7.7
 
