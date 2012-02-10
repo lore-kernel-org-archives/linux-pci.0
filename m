@@ -1,60 +1,69 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+Date: Thu, 9 Feb 2012 20:03:46 -0800
+Message-ID: <CAE9FiQWE-VGoh=8hyhWPMrTe7X1dqTyBCgAM=ozWMyZXEvwGTg@mail.gmail.com>
+Subject: Re: [PATCH v2 00/18] add PCI bus-to-resource offset support in core
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 20/36] PCI: default busn_resource
-Date: Wed, 29 Feb 2012 19:00:21 -0800
-Message-Id: <1330570837-26638-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to put into the resources list
+On Thu, Feb 9, 2012 at 6:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> There's a lot of PCI-related code under arch/, but much of it is not actually
+> architecture-specific.  This series removes some of that code by moving most
+> of the bus-to-resource conversions into the core.
+>
+> We currently read PCI bus addresses from BARs in the core (pci_setup_device()).
+> Then every arch is responsible for converting those bus addresses to CPU
+> resources, usually in pcibios_fixup_bus().
+>
+> We already have a way for architectures to tell the core what the windows
+> through a host bridge are:
+>
+>    LIST_HEAD(resources);
+>    pci_add_resource(&resources, io_space);
+>    pci_add_resource(&resources, mem_space);
+>    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+>
+> This series extends that so the arch can also tell the core about address
+> translation performed by the host bridge:
+>
+>    LIST_HEAD(resources);
+>    pci_add_resource_offset(&resources, io_space, io_offset);
+>    pci_add_resource_offset(&resources, mem_space, mem_offset);
+>    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+>
+> Given that offset (the difference between bus address and CPU address for
+> each aperture), the core can do the bus-to-resource conversion immediately
+> when it reads the BARs.
+>
+> This removes an opportunity for bugs (some PCI fixups currently see bus
+> addresses in struct pci_dev resources when they're expecting CPU addresses),
+> but the main reason to do this is to make our PCI resource handling simpler
+> and more uniform.
+>
+> These patches are also available in this git repo:
+>    git://github.com/bjorn-helgaas/linux.git pci-offset-v2-d15af52258dd
+>
+> Or you can browse them here:
+>    https://github.com/bjorn-helgaas/linux/compare/master...pci-offset-v2-d15af52258dd
+>
+> I'd like to get these into linux-next soon to be ready for the 3.4 merge
+> window, so please let me know if you see any issues.
+>
+> Changes since v1:
+>  - mips: remove Cobalt legacy IDE fixup
+>  - show bus address range, not offset, e.g., this:
+>        pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus address [0x80000000-0xfedfffff])
+>    instead of this:
+>        pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus offset 0xeff80000000)
+>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |    7 +++++++
- include/linux/pci.h |    2 ++
- 2 files changed, 9 insertions(+), 0 deletions(-)
+still think make pci_sysdata to generic and add one offset field to
+that would be more simple.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6f3bdbc..1149109 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -15,6 +15,13 @@
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
- #define CARDBUS_RESERVE_BUSNR	3
- 
-+struct resource busn_resource = {
-+	.name	= "PCI busn",
-+	.start	= 0,
-+	.end	= 255,
-+	.flags	= IORESOURCE_BUS,
-+};
-+
- /* Ugh.  Need to stop exporting this to modules. */
- LIST_HEAD(pci_root_buses);
- EXPORT_SYMBOL(pci_root_buses);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e494759..40606c1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -368,6 +368,8 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 	return (pdev->error_state != pci_channel_io_normal);
- }
- 
-+extern struct resource busn_resource;
-+
- struct pci_host_bridge_window {
- 	struct list_head list;
- 	struct resource *res;		/* host bridge aperture (CPU address) */
--- 
-1.7.7
-
+Yinghai
