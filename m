@@ -1,39 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:20925 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751847Ab2BPFlH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:41:07 -0500
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59274 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752139Ab2BJU4Y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:56:24 -0500
+MIME-Version: 1.0
+In-Reply-To: <20120210125258.55c1f339@jbarnes-desktop>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-5-git-send-email-yinghai@kernel.org>
+	<20120208043517.GD8930@ram-ThinkPad-T61>
+	<CAE9FiQUdRLmc-_hHWtaz=8QZiu4Ma6ZY7zavByJnwMDTBQLtzg@mail.gmail.com>
+	<20120208050119.GE8930@ram-ThinkPad-T61>
+	<CAE9FiQUYg8V8RSeh+xiWYxEfSxwEhp9KRXAjVkyhT94Enkqc3Q@mail.gmail.com>
+	<20120210125258.55c1f339@jbarnes-desktop>
+Date: Fri, 10 Feb 2012 12:56:23 -0800
+Message-ID: <CAE9FiQUhqEqJaNf2ya_JmQNMrNpPtx8W=nJWUQ=EwkWTXfYUHw@mail.gmail.com>
+Subject: Re: [PATCH 4/9] PCI: Fix cardbus bridge resources as optional size handling
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 0/4] PCI: quirk related clean up
-Date: Wed, 15 Feb 2012 21:40:28 -0800
-Message-Id: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After commit:
-| commit 3209874a1da2c51c7325e601d9634189ee178ad6
-| Author: Arjan van de Ven <arjan@infradead.org>
-| Date:   Mon Jan 30 20:52:07 2012 -0800
-|
-|    PCI: Annotate PCI quirks in initcall_debug style
+On Fri, Feb 10, 2012 at 12:52 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
 
-will have lots of print out for quirks when initcall_debug is specified.
+>> > ACK. Ok. got it. This looks correct.
+>>
+>> Good, So we have
+>>
+>> Acked-by: Ram Pai <linuxram@us.ibm.com>
+>> Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
+>>
+>> Hope Jesse will not miss to add them
+>
+> Yeah looks fine.  I'd like to see an ack from Dominik on 5/9 as well
+> though.  Can you include the acks and tested-bys when you re-post 3-9
+> with bug references and any other comments included?
 
-It turns out most of them are not really called for the devices because
-quirks itself will check class id and bail out early.
-
-Try to class into quirk declaration. So we could avoid dip into these quirks.
-
-[PATCH 1/4] PCI: Add class support in quirk handling
-[PATCH 2/4] PCI: Specify class for quirk entry with PCI_ANY_ID
-[PATCH 3/4] PCI: Move out pci reassigndev resource alignment out of quirk
-[PATCH 4/4] PCI: quirk print dev name with duration
-
-Resending
-
-Thanks
+sure. Will send them updated acks and etc.
 
 Yinghai
