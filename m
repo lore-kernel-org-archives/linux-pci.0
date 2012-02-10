@@ -1,129 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:21168 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753422Ab2BZXdw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Feb 2012 18:33:52 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 7/8] x86, PCI: break down get_current_resource()
-Date: Sun, 26 Feb 2012 15:33:21 -0800
-Message-Id: <1330299202-3838-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
-References: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
+Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:51055 "HELO
+	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932435Ab2BJTma (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 14:42:30 -0500
+Date: Fri, 10 Feb 2012 11:42:27 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-pci@vger.kernel.org, arjanvandeven@gmail.com
+Subject: Re: pci: Annotate PCI quirks in initcall_debug style
+Message-ID: <20120210114227.0b0679db@jbarnes-desktop>
+In-Reply-To: <20120130205207.41636a23@infradead.org>
+References: <20120130205207.41636a23@infradead.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/whBx5+E2RLSUpN2ormtUTjf"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-change it to probe_pci_root_info, aka only do one thing.
+--Sig_/whBx5+E2RLSUpN2ormtUTjf
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-1. remove resource list head from pci_root_info
-2. make get_current_resources() not pass resources
-   move out add_resources calling out of yet.
-3. rename get_current_resourcs name to probe_pci_root_info
+On Mon, 30 Jan 2012 20:52:07 -0800
+Arjan van de Ven <arjan@infradead.org> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> From 77fcc610189853f9c8cf35f77bb8bcfc68833202 Mon Sep 17 00:00:00 2001
+> From: Arjan van de Ven <arjan@linux.intel.com>
+> Date: Mon, 30 Jan 2012 20:30:03 -0800
+> Subject: [PATCH] pci: Annotate PCI quirks in initcall_debug style
+>=20
+> While diagnosing some boot time issues on a platform, all that I
+> could see in the bootgraph/dmesg was that the system was spending
+> a lot of time in applying one or more PCI quirks... which
+> was virtually undebuggable.
+>=20
+> This patch adds printk's in "initcall_debug" style to the dmesg,
+> which are added when the user asks for the initcall_debug
+> (the nr one tool to use when debugging boot hangs or boot time issues)
+> kernel command line option.
+>=20
+> CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+> CC: linux-pci@vger.kernel.org
+>=20
+> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> ---
+>  drivers/pci/quirks.c |   21 ++++++++++++++++++++-
+>  1 files changed, 20 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6476547..b3afa1c 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2906,6 +2906,22 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65=
+f8, quirk_intel_mc_errata);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_err=
+ata);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_err=
+ata);
+> =20
+> +
+> +static void do_one_fixup_debug(void (*fn)(struct pci_dev *dev), struct p=
+ci_dev *dev)
+> +{
+> +	ktime_t calltime, delta, rettime;
+> +	unsigned long long duration;
+> +
+> +	printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
+> +	calltime =3D ktime_get();
+> +	fn(dev);
+> +	rettime =3D ktime_get();
+> +	delta =3D ktime_sub(rettime, calltime);
+> +	duration =3D (unsigned long long) ktime_to_ns(delta) >> 10;
+> +	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
+> +		duration);
+> +}
+> +
+>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>  			  struct pci_fixup *end)
+>  {
+> @@ -2913,7 +2929,10 @@ static void pci_do_fixups(struct pci_dev *dev, str=
+uct pci_fixup *f,
+>  		if ((f->vendor =3D=3D dev->vendor || f->vendor =3D=3D (u16) PCI_ANY_ID=
+) &&
+>  		    (f->device =3D=3D dev->device || f->device =3D=3D (u16) PCI_ANY_ID=
+)) {
+>  			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
+> -			f->hook(dev);
+> +			if (initcall_debug)
+> +				do_one_fixup_debug(f->hook, dev);
+> +			else
+> +				f->hook(dev);
+>  		}
+>  		f++;
+>  	}
 
----
- arch/x86/pci/acpi.c |   34 +++++++++++++---------------------
- 1 file changed, 13 insertions(+), 21 deletions(-)
+Looks cool Arjan, thanks.  Applied to my -next branch.
 
-Index: linux-2.6/arch/x86/pci/acpi.c
-===================================================================
---- linux-2.6.orig/arch/x86/pci/acpi.c
-+++ linux-2.6/arch/x86/pci/acpi.c
-@@ -12,7 +12,6 @@ struct pci_root_info {
- 	char *name;
- 	unsigned int res_num;
- 	struct resource *res;
--	struct list_head *resources;
- 	int busnum;
- };
- 
-@@ -277,7 +276,8 @@ static void coalesce_windows(struct pci_
- 	}
- }
- 
--static void add_resources(struct pci_root_info *info)
-+static void add_resources(struct pci_root_info *info,
-+			  struct list_head *resources)
- {
- 	int i;
- 	struct resource *res, *root, *conflict;
-@@ -301,7 +301,7 @@ static void add_resources(struct pci_roo
- 				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
- 				 res, conflict->name, conflict);
- 		else
--			pci_add_resource(info->resources, res);
-+			pci_add_resource(resources, res);
- 	}
- }
- 
-@@ -313,41 +313,30 @@ static void free_pci_root_info(struct pc
- }
- 
- static void
--get_current_resources(struct pci_root_info *info,
--		      struct acpi_device *device, int busnum,
--		      int domain, struct list_head *resources)
-+probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
-+		    int busnum, int domain)
- {
- 	size_t size;
- 
- 	info->bridge = device;
- 	info->res_num = 0;
--	info->resources = resources;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
- 				info);
- 	if (!info->res_num)
- 		return;
- 
- 	size = sizeof(*info->res) * info->res_num;
-+	info->res_num = 0;
- 	info->res = kmalloc(size, GFP_KERNEL);
- 	if (!info->res)
- 		return;
- 
- 	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
- 	if (!info->name)
--		goto name_alloc_fail;
-+		return;
- 
--	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
--
--	if (pci_use_crs) {
--		add_resources(info);
--
--		return;
--	}
--
--name_alloc_fail:
--	free_pci_root_info(info);
- }
- 
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
-@@ -412,15 +401,18 @@ struct pci_bus * __devinit pci_acpi_scan
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(sd);
- 	} else {
--		get_current_resources(&info, device, busnum, domain,
--					&resources);
-+		probe_pci_root_info(&info, device, busnum, domain);
- 
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
--		if (!pci_use_crs)
-+		if (pci_use_crs)
-+			add_resources(&info, &resources);
-+		else {
-+			free_pci_root_info(&info);
- 			x86_pci_root_bus_resources(busnum, &resources);
-+		}
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
- 		if (bus)
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/whBx5+E2RLSUpN2ormtUTjf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNXMjAAoJEIEoDkX4Qk9hIbsP/AsUA7OP15ypMDKc3SlvPXlA
+Qr382nLydAhaO+xdRYsvPkycuz55M8KYZcYXmhFAMB2aabnMMqcmPcFgT4PZC8ku
++Xb4k8VYHXbJddLK2J6LNOu3zs6HQmKKHptT45ccejbjR/8nHvtiq7OxD66Isn4e
+ZeQfwpiDRwrPU5mRNbJrEKtqPcuC6Mt8M2pVeL8MIMueoTjXkdhQVGaZFfoW/u76
+3Xq6AfMxxVtbYEqi1riPxEItLPxLBqrU2EWHdMYsGs/1fhYX+6TQVuGMx1sYv/x8
+1wrs43OSN7U3m8UXVKV4ggjRM/7NJrchkjQCdcBzj4ig86pxwpSZYaeLHDlUFKvu
+QbRF+NB83Pock6Gd7HXXfzov2LF/9t4IfjSMw50VZFr+ynRBIn/YnBlIJOxtfU+s
+LpGPIUReIX77BQdNkGZZbfT7zI+pxgx1Cg02Oq+W9QMjjxQlnL3sHBGHMyKvsPvH
+HwKKI7Hw6ZeaEFD3/g9xWpKzAVP8GrrgRgOXgRXqVnShipFztHzn1OOLlzNgSNqM
+8GI+e73JldVA9ltM1ib9Lc2nFR8kAQWuEPrv1b2hW3QnLMoQlKzIrQ5aKC/PamEd
+qlmeElnKj4TBqftFCAryt/hRfph2f5zntJeC6UYYX6jTDWr225L/NjX4Apg7uaeG
+0cWnGaZMnDNu66ctpTL5
+=MFDq
+-----END PGP SIGNATURE-----
+
+--Sig_/whBx5+E2RLSUpN2ormtUTjf--
