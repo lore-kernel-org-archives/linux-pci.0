@@ -1,71 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 23 Feb 2012 12:09:52 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Anthony PERARD <anthony.perard@citrix.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	"Michael S . Tsirkin" <mst@redhat.com>,
-	QEMU-devel <qemu-devel@nongnu.org>
-Subject: Re: PCI: Add PCI_EXP_TYPE_PCIE_BRIDGE value
-Message-ID: <20120223120952.6d9915a1@jbarnes-desktop>
-In-Reply-To: <1329841330-14902-1-git-send-email-anthony.perard@citrix.com>
-References: <1329841330-14902-1-git-send-email-anthony.perard@citrix.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6RJqChPfqE5W3V+LIdZqRV="; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6zHhpz+N6y3ybDVp-oabVWAYeTt9pPJS3nz+nD2C8xkg@mail.gmail.com>
+References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+	<CAE9FiQWE-VGoh=8hyhWPMrTe7X1dqTyBCgAM=ozWMyZXEvwGTg@mail.gmail.com>
+	<CAErSpo7pxGA02uTDNoFpxU_6_B4CgvJM10zpFRjjhXHK5L3mtg@mail.gmail.com>
+	<CAE9FiQVx7=cSVkApbh_8dnoBqdrRYDOVtMqdC=mDCwq0fuVZpA@mail.gmail.com>
+	<CAErSpo6zHhpz+N6y3ybDVp-oabVWAYeTt9pPJS3nz+nD2C8xkg@mail.gmail.com>
+Date: Fri, 10 Feb 2012 09:20:22 -0800
+Message-ID: <CAE9FiQVqKZGacZYqXETVVaqzobiw01OyCmASUfxwZ075rdX7XA@mail.gmail.com>
+Subject: Re: [PATCH v2 00/18] add PCI bus-to-resource offset support in core
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/6RJqChPfqE5W3V+LIdZqRV=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Feb 10, 2012 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+...
+>>
+>> I mean, we can unify sysdata usuage, make them all most the same.
+>>
+>> and for some sysdata, already acting like host_bridge struct with
+>> domain, numa_node, and resources.
+>>
+>>> If you can show an example of what you mean, maybe it will help me understand.
+>>
+>> just looked the sys_data of different arch,
+>>
+>> looks like pci_sys_data for arm already include the io offset
+>>
+>> arch/arm/include/asm/mach/pci.h::
+>>
+>> struct pci_sys_data {
+>> #ifdef CONFIG_PCI_DOMAINS
+>>        int             domain;
+>> #endif
+>>        struct list_head node;
+>>        int             busnr;          /* primary bus number
+>>         */
+>>        u64             mem_offset;     /* bus->cpu memory mapping
+>> offset       */
+>>        unsigned long   io_offset;      /* bus->cpu IO mapping offset
+>>         */
+>>        struct pci_bus  *bus;           /* PCI bus
+>>         */
+>>        struct list_head resources;     /* root bus resources (apertures)
+>
+> Let me try again.  Maybe your idea is that we should create something
+> like "struct pcibios_sysdata" and require every arch to define a
+> struct with that name.  Every arch's struct would contain some members
+> such as "domain," "mem_offset," "io_offset," and "resources."  These
+> would have standard names & types across all arches and would be
+> referenced by the PCI core.  In addition, the struct could include
+> arch-specific data such as "acpi_handle," "iommu," etc.
+>
+> That way, the core could implement things like pci_domain_nr() and
+> pci_bus_to_resource() by using the data in struct pcibios_sysdata.
+> The current "void *sysdata" parameters to pci_scan_bus() and friends
+> would become "struct pcibios_sysdata *sysdata".
+>
+> I like the idea of unifying the sysdata struct name and changing from
+> a "void *" to something like "struct pcibios_sysdata *".  That might
+> be worth doing.
 
-On Tue, 21 Feb 2012 16:22:10 +0000
-Anthony PERARD <anthony.perard@citrix.com> wrote:
+what i am mean:
+1. make every arch to use same name for the struct, but could have
+different contents.
+   struct pci_sys_data.
+2. unify member field name, by changing name
+    pci_first_busno ==> first_busno
+    pci_last_busno ==> last_busno
+    or adding
+    first_busno
+    last_busno
+3. changing more filed like domain, node
+    and io_offset, mem_offset
+...
 
-> Signed-off-by: Anthony PERARD <anthony.perard@citrix.com>
->=20
-> ---
->  include/linux/pci_regs.h |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->=20
-> diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-> index e41a10f..4b608f5 100644
-> --- a/include/linux/pci_regs.h
-> +++ b/include/linux/pci_regs.h
-> @@ -391,6 +391,7 @@
->  #define  PCI_EXP_TYPE_UPSTREAM	0x5	/* Upstream Port */
->  #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
->  #define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
-> +#define  PCI_EXP_TYPE_PCIE_BRIDGE 0x8	/* PCI/PCI-X to PCIE Bridge */
->  #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
->  #define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
->  #define PCI_EXP_FLAGS_SLOT	0x0100	/* Slot implemented */
-
-Applied, thanks.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/6RJqChPfqE5W3V+LIdZqRV=
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPRp0QAAoJEIEoDkX4Qk9hu9UP/RaFaroT0qaz8vn9kpXPvOs8
-1OVSJ3Z0WkhBJ8aM1u1158CGomyIfZ4TikqO/u8Tg7Q7tX5FaG8OH+TvFYFzwsR3
-Iwle86BPSDI3KMD00C4yEm8Z2b7BhEK9Ji5QgfyeN7IuhYqE+HaQBz7OxPTkmGN1
-0A6DSL1KFtoQIcv5SFMX4+8BoqIh1xmffM+u7MTH64D9YQmRsaan8Grzjjhw5VrM
-Fs7NRsDHd6hv7cW6Et5162RuknLe0+wi7N+9Wm1qKjz4QS4L/sa4L8RxGWp8gJVw
-fz5+7jTijriioP57ZP3Tesw1qjGIjPUwKrs0e05J/taRP2llJ/qHwnGhpjJpyJk7
-XmrayCPyRKUok+YqmlPwkYn1QUlyFNqcJZqS6W5mQgywrnGfssuhPfm2iua7p10k
-we+JPQwvLWoTEsmPGKfgLccwO3bCal8zZGBOA9Z6TZUZ4k0UmhNOrNbqoCVxtuIU
-2NlZofKqmuMuzh/S2yVWl9QYzh9eguO3TRfOHiGqqYBncUHSO0w4hib5lKdno2wl
-QRczHY7apMvPTB16pEYDtriRhDubw0OsvMcP8H0yp7e/Sk2iuQ+od9MlhT1LgR9y
-fTk7RctN8ExPdsA1WiUaLU2OLBcz+k3jJMOVYTRy+X8jcys2PMeq4UztQIWYuPUt
-oEkliWdJejcSNiUyk29o
-=dY5a
------END PGP SIGNATURE-----
-
---Sig_/6RJqChPfqE5W3V+LIdZqRV=--
+Yinghai
