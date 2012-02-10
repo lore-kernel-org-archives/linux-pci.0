@@ -1,95 +1,267 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:55647 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751785Ab2BWGEK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 01:04:10 -0500
-Date: Thu, 23 Feb 2012 07:03:55 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@nvidia.com>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"Olof Johansson (olof@lixom.net)" <olof@lixom.net>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: PCIe device tree support
-Message-ID: <20120223060355.GA21091@avionic-0098.mockup.avionic-design.de>
-References: <20120220191804.GA14499@avionic-0098.adnet.avionic-design.de>
- <74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
- <20120222082449.GA15157@avionic-0098.adnet.avionic-design.de>
- <CAErSpo4TfpGmx+HZ1ZnZwj3ZP_cQMCzkMT+6JK6ztYp2zWJcxw@mail.gmail.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v2 13/18] parisc/PCI: get rid of device resource fixups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-parisc@vger.kernel.org
+Date: Thu, 09 Feb 2012 19:37:27 -0700
+Message-ID: <20120210023727.10311.47277.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="C7zPtVaVf+AK4Oqc"
-In-Reply-To: <CAErSpo4TfpGmx+HZ1ZnZwj3ZP_cQMCzkMT+6JK6ztYp2zWJcxw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
---C7zPtVaVf+AK4Oqc
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+CC: linux-parisc@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/parisc/include/asm/pci.h |   38 +-----------------------------
+ arch/parisc/kernel/pci.c      |   52 -----------------------------------------
+ drivers/parisc/dino.c         |   27 +++++----------------
+ drivers/parisc/lba_pci.c      |   31 +++++-------------------
+ 4 files changed, 13 insertions(+), 135 deletions(-)
 
-* Bjorn Helgaas wrote:
-> On Wed, Feb 22, 2012 at 12:24 AM, Thierry Reding
-> <thierry.reding@avionic-design.de> wrote:
-> > [Adding Jesse Barnes and the linux-pci mailing list to CC.]
-> >
-> > * Stephen Warren wrote:
-> >> Thierry Reding wrote at Monday, February 20, 2012 12:18 PM:
-> >> > I would like to add device tree support for the Tegra2 PCIe controll=
-er. From
-> >> > what I understand this will require the PCIe code to be rewritten as=
- a proper
-> >> > platform driver in order to be able to instantiate it via the device=
- tree. Is
-> >> > that correct?
-> >>
-> >> That's probably the cleanest way, yes.
-> >>
-> >> Is there a drivers/ directory for PCI/PCIe host controllers? Moving the
-> >> code there might be nice if so, although IIRC when I asked Olof about
-> >> that a number of months back, he said quite a few host controllers were
-> >> in arch/...
-> >
-> > Most PCI/PCIe host controller drivers seem to currently be in arch/. Is=
- there
-> > a specific reason for this? Would it be acceptable to put any new drive=
-rs
-> > below drivers/pci/?
->=20
-> PCI host bridges aren't architected, so discovering them and their
-> properties has historically been mostly architecture-specific.  ACPI
-> is one exception (with a driver in drivers/acpi/pci_root.c) and it
-> sounds like device tree might be a similar exception.  If you can make
-> a non-arch-specific driver and put it somewhere other than arch/, I'm
-> all in favor of that, especially if you can make it usable by other
-> arches that use device tree.  Where to put it?  I dunno.  drivers/pci/
-> sounds like a reasonable possibility.
+diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
+index 2242a5c..a8b591f 100644
+--- a/arch/parisc/include/asm/pci.h
++++ b/arch/parisc/include/asm/pci.h
+@@ -82,38 +82,8 @@ struct pci_hba_data {
+ 
+ #ifdef CONFIG_64BIT
+ #define PCI_F_EXTEND		0xffffffff00000000UL
+-#define PCI_IS_LMMIO(hba,a)	pci_is_lmmio(hba,a)
+-
+-/* We need to know if an address is LMMMIO or GMMIO.
+- * LMMIO requires mangling and GMMIO we must use as-is.
+- */
+-static __inline__  int pci_is_lmmio(struct pci_hba_data *hba, unsigned long a)
+-{
+-	return(((a) & PCI_F_EXTEND) == PCI_F_EXTEND);
+-}
+-
+-/*
+-** Convert between PCI (IO_VIEW) addresses and processor (PA_VIEW) addresses.
+-** See pci.c for more conversions used by Generic PCI code.
+-**
+-** Platform characteristics/firmware guarantee that
+-**	(1) PA_VIEW - IO_VIEW = lmmio_offset for both LMMIO and ELMMIO
+-**	(2) PA_VIEW == IO_VIEW for GMMIO
+-*/
+-#define PCI_BUS_ADDR(hba,a)	(PCI_IS_LMMIO(hba,a)	\
+-		?  ((a) - hba->lmmio_space_offset)	/* mangle LMMIO */ \
+-		: (a))					/* GMMIO */
+-#define PCI_HOST_ADDR(hba,a)	(((a) & PCI_F_EXTEND) == 0 \
+-		? (a) + hba->lmmio_space_offset \
+-		: (a))
+-
+ #else	/* !CONFIG_64BIT */
+-
+-#define PCI_BUS_ADDR(hba,a)	(a)
+-#define PCI_HOST_ADDR(hba,a)	(a)
+ #define PCI_F_EXTEND		0UL
+-#define PCI_IS_LMMIO(hba,a)	(1)	/* 32-bit doesn't support GMMIO */
+-
+ #endif /* !CONFIG_64BIT */
+ 
+ /*
+@@ -245,13 +215,7 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ }
+ #endif
+ 
+-extern void
+-pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			 struct resource *res);
+-
+-extern void
+-pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
+ 
+ static inline void pcibios_penalize_isa_irq(int irq, int active)
+ {
+diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
+index 9efd974..74d544b 100644
+--- a/arch/parisc/kernel/pci.c
++++ b/arch/parisc/kernel/pci.c
+@@ -195,58 +195,6 @@ void __init pcibios_init_bus(struct pci_bus *bus)
+ 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, bridge_ctl);
+ }
+ 
+-/* called by drivers/pci/setup-bus.c:pci_setup_bridge().  */
+-void __devinit pcibios_resource_to_bus(struct pci_dev *dev,
+-		struct pci_bus_region *region, struct resource *res)
+-{
+-#ifdef CONFIG_64BIT
+-	struct pci_hba_data *hba = HBA_DATA(dev->bus->bridge->platform_data);
+-#endif
+-
+-	if (res->flags & IORESOURCE_IO) {
+-		/*
+-		** I/O space may see busnumbers here. Something
+-		** in the form of 0xbbxxxx where bb is the bus num
+-		** and xxxx is the I/O port space address.
+-		** Remaining address translation are done in the
+-		** PCI Host adapter specific code - ie dino_out8.
+-		*/
+-		region->start = PCI_PORT_ADDR(res->start);
+-		region->end   = PCI_PORT_ADDR(res->end);
+-	} else if (res->flags & IORESOURCE_MEM) {
+-		/* Convert MMIO addr to PCI addr (undo global virtualization) */
+-		region->start = PCI_BUS_ADDR(hba, res->start);
+-		region->end   = PCI_BUS_ADDR(hba, res->end);
+-	}
+-
+-	DBG_RES("pcibios_resource_to_bus(%02x %s [%lx,%lx])\n",
+-		dev->bus->number, res->flags & IORESOURCE_IO ? "IO" : "MEM",
+-		region->start, region->end);
+-}
+-
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			      struct pci_bus_region *region)
+-{
+-#ifdef CONFIG_64BIT
+-	struct pci_hba_data *hba = HBA_DATA(dev->bus->bridge->platform_data);
+-#endif
+-
+-	if (res->flags & IORESOURCE_MEM) {
+-		res->start = PCI_HOST_ADDR(hba, region->start);
+-		res->end = PCI_HOST_ADDR(hba, region->end);
+-	}
+-
+-	if (res->flags & IORESOURCE_IO) {
+-		res->start = region->start;
+-		res->end = region->end;
+-	}
+-}
+-
+-#ifdef CONFIG_HOTPLUG
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+-#endif
+-
+ /*
+  * pcibios align resources() is called every time generic PCI code
+  * wants to generate a new address. The process of looking for
+diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+index 7ff10c1..0610e91 100644
+--- a/drivers/parisc/dino.c
++++ b/drivers/parisc/dino.c
+@@ -553,7 +553,6 @@ dino_fixup_bus(struct pci_bus *bus)
+ 	struct list_head *ln;
+         struct pci_dev *dev;
+         struct dino_device *dino_dev = DINO_DEV(parisc_walk_tree(bus->bridge));
+-	int port_base = HBA_PORT_BASE(dino_dev->hba.hba_num);
+ 
+ 	DBG(KERN_WARNING "%s(0x%p) bus %d platform_data 0x%p\n",
+ 	    __func__, bus, bus->secondary,
+@@ -599,8 +598,6 @@ dino_fixup_bus(struct pci_bus *bus)
+ 
+ 
+ 	list_for_each(ln, &bus->devices) {
+-		int i;
+-
+ 		dev = pci_dev_b(ln);
+ 		if (is_card_dino(&dino_dev->hba.dev->id))
+ 			dino_card_fixup(dev);
+@@ -612,21 +609,6 @@ dino_fixup_bus(struct pci_bus *bus)
+ 		if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI)
+ 			continue;
+ 
+-		/* Adjust the I/O Port space addresses */
+-		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-			struct resource *res = &dev->resource[i];
+-			if (res->flags & IORESOURCE_IO) {
+-				res->start |= port_base;
+-				res->end |= port_base;
+-			}
+-#ifdef __LP64__
+-			/* Sign Extend MMIO addresses */
+-			else if (res->flags & IORESOURCE_MEM) {
+-				res->start |= F_EXTEND(0UL);
+-				res->end   |= F_EXTEND(0UL);
+-			}
+-#endif
+-		}
+ 		/* null out the ROM resource if there is one (we don't
+ 		 * care about an expansion rom on parisc, since it
+ 		 * usually contains (x86) bios code) */
+@@ -991,11 +973,14 @@ static int __init dino_probe(struct parisc_device *dev)
+ 
+ 	dev->dev.platform_data = dino_dev;
+ 
+-	pci_add_resource(&resources, &dino_dev->hba.io_space);
++	pci_add_resource_offset(&resources, &dino_dev->hba.io_space,
++				HBA_PORT_BASE(dino_dev->hba.hba_num));
+ 	if (dino_dev->hba.lmmio_space.flags)
+-		pci_add_resource(&resources, &dino_dev->hba.lmmio_space);
++		pci_add_resource_offset(&resources, &dino_dev->hba.lmmio_space,
++					dino_dev->hba.lmmio_space_offset);
+ 	if (dino_dev->hba.elmmio_space.flags)
+-		pci_add_resource(&resources, &dino_dev->hba.elmmio_space);
++		pci_add_resource_offset(&resources, &dino_dev->hba.elmmio_space,
++					dino_dev->hba.lmmio_space_offset);
+ 	if (dino_dev->hba.gmmio_space.flags)
+ 		pci_add_resource(&resources, &dino_dev->hba.gmmio_space);
+ 
+diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+index d5f3d75..e885764 100644
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -635,7 +635,6 @@ lba_fixup_bus(struct pci_bus *bus)
+ 	u16 status;
+ #endif
+ 	struct lba_device *ldev = LBA_DEV(parisc_walk_tree(bus->bridge));
+-	int lba_portbase = HBA_PORT_BASE(ldev->hba.hba_num);
+ 
+ 	DBG("lba_fixup_bus(0x%p) bus %d platform_data 0x%p\n",
+ 		bus, bus->secondary, bus->bridge->platform_data);
+@@ -726,27 +725,6 @@ lba_fixup_bus(struct pci_bus *bus)
+ 			if (!res->start)
+ 				continue;
+ 
+-			if (res->flags & IORESOURCE_IO) {
+-				DBG("lba_fixup_bus() I/O Ports [%lx/%lx] -> ",
+-					res->start, res->end);
+-				res->start |= lba_portbase;
+-				res->end   |= lba_portbase;
+-				DBG("[%lx/%lx]\n", res->start, res->end);
+-			} else if (res->flags & IORESOURCE_MEM) {
+-				/*
+-				** Convert PCI (IO_VIEW) addresses to
+-				** processor (PA_VIEW) addresses
+-				 */
+-				DBG("lba_fixup_bus() MMIO [%lx/%lx] -> ",
+-					res->start, res->end);
+-				res->start = PCI_HOST_ADDR(HBA_DATA(ldev), res->start);
+-				res->end   = PCI_HOST_ADDR(HBA_DATA(ldev), res->end);
+-				DBG("[%lx/%lx]\n", res->start, res->end);
+-			} else {
+-				DBG("lba_fixup_bus() WTF? 0x%lx [%lx/%lx] XXX",
+-					res->flags, res->start, res->end);
+-			}
+-
+ 			/*
+ 			** FIXME: this will result in whinging for devices
+ 			** that share expansion ROMs (think quad tulip), but
+@@ -1514,11 +1492,14 @@ lba_driver_probe(struct parisc_device *dev)
+ 		lba_dev->hba.lmmio_space.flags = 0;
+ 	}
+ 
+-	pci_add_resource(&resources, &lba_dev->hba.io_space);
++	pci_add_resource_offset(&resources, &lba_dev->hba.io_space,
++				HBA_PORT_BASE(lba_dev->hba.hba_num));
+ 	if (lba_dev->hba.elmmio_space.start)
+-		pci_add_resource(&resources, &lba_dev->hba.elmmio_space);
++		pci_add_resource_offset(&resources, &lba_dev->hba.elmmio_space,
++					lba_dev->hba.lmmio_space_offset);
+ 	if (lba_dev->hba.lmmio_space.flags)
+-		pci_add_resource(&resources, &lba_dev->hba.lmmio_space);
++		pci_add_resource_offset(&resources, &lba_dev->hba.lmmio_space,
++					lba_dev->hba.lmmio_space_offset);
+ 	if (lba_dev->hba.gmmio_space.flags)
+ 		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
+ 
 
-I don't think it would be possible to write a driver that works for all
-device tree based boards or architectures. As you said the implementation is
-very hardware specific and probably couldn't even be generalized among two
-chipsets of the same architecture.
-
-However there has recently been a lot of work to move out arch-specific
-drivers for PWM, GPIO and others out of arch/ and into respective directori=
-es
-below drivers/. The reason I asked was because I think the same could be do=
-ne
-for PCI/PCIe.
-
-Thierry
-
---C7zPtVaVf+AK4Oqc
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9F1ssACgkQZ+BJyKLjJp/cdACggvsxcINrwjylNZd6lILAGhTB
-j0gAoJPv/UThttCMTSJYMj3KyUNU3Yqp
-=kmj+
------END PGP SIGNATURE-----
-
---C7zPtVaVf+AK4Oqc--
