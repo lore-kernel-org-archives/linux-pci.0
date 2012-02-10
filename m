@@ -1,273 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36559 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756808Ab2BYQST convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Feb 2012 11:18:19 -0500
-Received: by werb13 with SMTP id b13so2023139wer.19
-        for <linux-pci@vger.kernel.org>; Sat, 25 Feb 2012 08:18:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1330155147-15118-1-git-send-email-yinghai@kernel.org>
-References: <1330155147-15118-1-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v2 00/18] add PCI bus-to-resource offset support in core
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 25 Feb 2012 09:17:58 -0700
-Message-ID: <CAErSpo6wSmWBEr4-pKLUPwJAHE0FUFt1O+QzQHrJVdDpaHVq0A@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: Separate host_bridge code out from probe.c
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Cc: linux-arch@vger.kernel.org
+Date: Thu, 09 Feb 2012 19:36:20 -0700
+Message-ID: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 25, 2012 at 12:32 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> ---
->  drivers/pci/Makefile      |    2
->  drivers/pci/host-bridge.c |   93 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pci.h         |    2
->  drivers/pci/probe.c       |   81 ----------------------------------------
->  4 files changed, 97 insertions(+), 81 deletions(-)
->
-> Index: linux-2.6/drivers/pci/host-bridge.c
-> ===================================================================
-> --- /dev/null
-> +++ linux-2.6/drivers/pci/host-bridge.c
-> @@ -0,0 +1,93 @@
-> +/*
-> + * host_bridge.c - host bridge related code
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/init.h>
-> +#include <linux/pci.h>
-> +#include <linux/module.h>
-> +
-> +#include "pci.h"
-> +
-> +static LIST_HEAD(pci_host_bridges);
-> +
-> +void add_to_pci_host_bridges(struct list_head *list)
+There's a lot of PCI-related code under arch/, but much of it is not actually
+architecture-specific.  This series removes some of that code by moving most
+of the bus-to-resource conversions into the core.
 
-I'd prefer to pass a "struct pci_host_bridge *" here instead of a
-"struct list_head *".  That way the compiler can check a little more.
+We currently read PCI bus addresses from BARs in the core (pci_setup_device()).
+Then every arch is responsible for converting those bus addresses to CPU
+resources, usually in pcibios_fixup_bus().
 
-> +{
-> +       list_add_tail(list, &pci_host_bridges);
-> +}
-> +
-> +static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-> +{
-> +       struct pci_bus *bus;
-> +       struct pci_host_bridge *bridge;
-> +
-> +       bus = dev->bus;
-> +       while (bus->parent)
-> +               bus = bus->parent;
-> +
-> +       list_for_each_entry(bridge, &pci_host_bridges, list) {
-> +               if (bridge->bus == bus)
-> +                       return bridge;
-> +       }
-> +
-> +       return NULL;
-> +}
-> +
-> +static bool resource_contains(struct resource *res1, struct resource *res2)
-> +{
-> +       return res1->start <= res2->start && res1->end >= res2->end;
-> +}
-> +
-> +void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-> +                            struct resource *res)
-> +{
-> +       struct pci_host_bridge *bridge = pci_host_bridge(dev);
-> +       struct pci_host_bridge_window *window;
-> +       resource_size_t offset = 0;
-> +
-> +       list_for_each_entry(window, &bridge->windows, list) {
-> +               if (resource_type(res) != resource_type(window->res))
-> +                       continue;
-> +
-> +               if (resource_contains(window->res, res)) {
-> +                       offset = window->offset;
-> +                       break;
-> +               }
-> +       }
-> +
-> +       region->start = res->start - offset;
-> +       region->end = res->end - offset;
-> +}
-> +EXPORT_SYMBOL(pcibios_resource_to_bus);
-> +
-> +static bool region_contains(struct pci_bus_region *region1,
-> +                           struct pci_bus_region *region2)
-> +{
-> +       return region1->start <= region2->start && region1->end >= region2->end;
-> +}
-> +
-> +void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-> +                            struct pci_bus_region *region)
-> +{
-> +       struct pci_host_bridge *bridge = pci_host_bridge(dev);
-> +       struct pci_host_bridge_window *window;
-> +       struct pci_bus_region bus_region;
-> +       resource_size_t offset = 0;
-> +
-> +       list_for_each_entry(window, &bridge->windows, list) {
-> +               if (resource_type(res) != resource_type(window->res))
-> +                       continue;
-> +
-> +               bus_region.start = window->res->start - window->offset;
-> +               bus_region.end = window->res->end - window->offset;
-> +
-> +               if (region_contains(&bus_region, region)) {
-> +                       offset = window->offset;
-> +                       break;
-> +               }
-> +       }
-> +
-> +       res->start = region->start + offset;
-> +       res->end = region->end + offset;
-> +}
-> +EXPORT_SYMBOL(pcibios_bus_to_resource);
-> Index: linux-2.6/drivers/pci/pci.h
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci.h
-> +++ linux-2.6/drivers/pci/pci.h
-> @@ -231,6 +231,8 @@ static inline int pci_ari_enabled(struct
->  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
->  extern void pci_disable_bridge_window(struct pci_dev *dev);
->
-> +void add_to_pci_host_bridges(struct list_head *list);
-> +
->  /* Single Root I/O Virtualization */
->  struct pci_sriov {
->        int pos;                /* capability position */
-> Index: linux-2.6/drivers/pci/probe.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/probe.c
-> +++ linux-2.6/drivers/pci/probe.c
-> @@ -15,13 +15,10 @@
->  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
->  #define CARDBUS_RESERVE_BUSNR  3
->
-> -static LIST_HEAD(pci_host_bridges);
-> -
->  /* Ugh.  Need to stop exporting this to modules. */
->  LIST_HEAD(pci_root_buses);
->  EXPORT_SYMBOL(pci_root_buses);
->
-> -
->  static int find_anything(struct device *dev, void *data)
->  {
->        return 1;
-> @@ -44,82 +41,6 @@ int no_pci_devices(void)
->  }
->  EXPORT_SYMBOL(no_pci_devices);
->
-> -static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-> -{
-> -       struct pci_bus *bus;
-> -       struct pci_host_bridge *bridge;
-> -
-> -       bus = dev->bus;
-> -       while (bus->parent)
-> -               bus = bus->parent;
-> -
-> -       list_for_each_entry(bridge, &pci_host_bridges, list) {
-> -               if (bridge->bus == bus)
-> -                       return bridge;
-> -       }
-> -
-> -       return NULL;
-> -}
-> -
-> -static bool resource_contains(struct resource *res1, struct resource *res2)
-> -{
-> -       return res1->start <= res2->start && res1->end >= res2->end;
-> -}
-> -
-> -void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-> -                            struct resource *res)
-> -{
-> -       struct pci_host_bridge *bridge = pci_host_bridge(dev);
-> -       struct pci_host_bridge_window *window;
-> -       resource_size_t offset = 0;
-> -
-> -       list_for_each_entry(window, &bridge->windows, list) {
-> -               if (resource_type(res) != resource_type(window->res))
-> -                       continue;
-> -
-> -               if (resource_contains(window->res, res)) {
-> -                       offset = window->offset;
-> -                       break;
-> -               }
-> -       }
-> -
-> -       region->start = res->start - offset;
-> -       region->end = res->end - offset;
-> -}
-> -EXPORT_SYMBOL(pcibios_resource_to_bus);
-> -
-> -static bool region_contains(struct pci_bus_region *region1,
-> -                           struct pci_bus_region *region2)
-> -{
-> -       return region1->start <= region2->start && region1->end >= region2->end;
-> -}
-> -
-> -void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-> -                            struct pci_bus_region *region)
-> -{
-> -       struct pci_host_bridge *bridge = pci_host_bridge(dev);
-> -       struct pci_host_bridge_window *window;
-> -       struct pci_bus_region bus_region;
-> -       resource_size_t offset = 0;
-> -
-> -       list_for_each_entry(window, &bridge->windows, list) {
-> -               if (resource_type(res) != resource_type(window->res))
-> -                       continue;
-> -
-> -               bus_region.start = window->res->start - window->offset;
-> -               bus_region.end = window->res->end - window->offset;
-> -
-> -               if (region_contains(&bus_region, region)) {
-> -                       offset = window->offset;
-> -                       break;
-> -               }
-> -       }
-> -
-> -       res->start = region->start + offset;
-> -       res->end = region->end + offset;
-> -}
-> -EXPORT_SYMBOL(pcibios_bus_to_resource);
-> -
->  /*
->  * PCI Bus Class
->  */
-> @@ -1731,7 +1652,7 @@ struct pci_bus *pci_create_root_bus(stru
->        }
->
->        down_write(&pci_bus_sem);
-> -       list_add_tail(&bridge->list, &pci_host_bridges);
-> +       add_to_pci_host_bridges(&bridge->list);
->        list_add_tail(&b->node, &pci_root_buses);
->        up_write(&pci_bus_sem);
->
-> Index: linux-2.6/drivers/pci/Makefile
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/Makefile
-> +++ linux-2.6/drivers/pci/Makefile
-> @@ -2,7 +2,7 @@
->  # Makefile for the PCI bus specific drivers.
->  #
->
-> -obj-y          += access.o bus.o probe.o remove.o pci.o \
-> +obj-y          += access.o bus.o probe.o host-bridge.o remove.o pci.o \
->                        pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
->                        irq.o vpd.o
->  obj-$(CONFIG_PROC_FS) += proc.o
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We already have a way for architectures to tell the core what the windows
+through a host bridge are:
+
+    LIST_HEAD(resources);
+    pci_add_resource(&resources, io_space);
+    pci_add_resource(&resources, mem_space);
+    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+
+This series extends that so the arch can also tell the core about address
+translation performed by the host bridge:
+
+    LIST_HEAD(resources);
+    pci_add_resource_offset(&resources, io_space, io_offset);
+    pci_add_resource_offset(&resources, mem_space, mem_offset);
+    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+
+Given that offset (the difference between bus address and CPU address for
+each aperture), the core can do the bus-to-resource conversion immediately
+when it reads the BARs.
+
+This removes an opportunity for bugs (some PCI fixups currently see bus
+addresses in struct pci_dev resources when they're expecting CPU addresses),
+but the main reason to do this is to make our PCI resource handling simpler
+and more uniform.
+
+These patches are also available in this git repo:
+    git://github.com/bjorn-helgaas/linux.git pci-offset-v2-d15af52258dd
+
+Or you can browse them here:
+    https://github.com/bjorn-helgaas/linux/compare/master...pci-offset-v2-d15af52258dd
+
+I'd like to get these into linux-next soon to be ready for the 3.4 merge
+window, so please let me know if you see any issues.
+
+Changes since v1:
+  - mips: remove Cobalt legacy IDE fixup
+  - show bus address range, not offset, e.g., this:
+	pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus address [0x80000000-0xfedfffff])
+    instead of this:
+	pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus offset 0xeff80000000)
+
+---
+
+Bjorn Helgaas (18):
+      PCI: don't publish new root bus until it's fully initialized
+      PCI: add struct pci_host_bridge and a list of all bridges found
+      PCI: add struct pci_host_bridge_window with CPU/bus address offset
+      PCI: convert bus addresses to resource when reading BARs
+      PCI: add generic pcibios_resource_to_bus()
+      alpha/PCI: get rid of device resource fixups
+      arm/PCI: get rid of device resource fixups
+      ia64/PCI: SN: convert to pci_scan_root_bus() for correct root bus resources
+      ia64/PCI: get rid of device resource fixups
+      microblaze/PCI: get rid of device resource fixups
+      mips/PCI: get rid of device resource fixups
+      mn10300/PCI: get rid of device resource fixups
+      parisc/PCI: get rid of device resource fixups
+      powerpc/PCI: get rid of device resource fixups
+      sh/PCI: get rid of device resource fixups
+      sparc/PCI: get rid of device resource fixups
+      xtensa/PCI: get rid of device resource fixups
+      PCI: collapse pcibios_resource_to_bus
+
+
+ arch/alpha/include/asm/pci.h          |    6 -
+ arch/alpha/kernel/pci.c               |   71 +----------
+ arch/arm/common/it8152.c              |    4 -
+ arch/arm/include/asm/pci.h            |    8 -
+ arch/arm/kernel/bios32.c              |   69 +----------
+ arch/arm/mach-cns3xxx/pcie.c          |    4 -
+ arch/arm/mach-dove/pcie.c             |    4 -
+ arch/arm/mach-footbridge/dc21285.c    |    8 +
+ arch/arm/mach-integrator/pci_v3.c     |    7 +
+ arch/arm/mach-iop13xx/pci.c           |    4 -
+ arch/arm/mach-ixp2000/pci.c           |    6 +
+ arch/arm/mach-ixp23xx/pci.c           |    6 +
+ arch/arm/mach-ixp4xx/common-pci.c     |    4 -
+ arch/arm/mach-kirkwood/pcie.c         |    4 -
+ arch/arm/mach-ks8695/pci.c            |    4 -
+ arch/arm/mach-mv78xx0/pcie.c          |    4 -
+ arch/arm/mach-orion5x/pci.c           |   14 +-
+ arch/arm/mach-sa1100/pci-nanoengine.c |    8 +
+ arch/arm/mach-tegra/pcie.c            |    6 -
+ arch/arm/mach-versatile/pci.c         |    6 -
+ arch/arm/plat-iop/pci.c               |    4 -
+ arch/ia64/include/asm/pci.h           |    6 -
+ arch/ia64/pci/pci.c                   |   55 ---------
+ arch/ia64/sn/kernel/io_init.c         |   16 ++-
+ arch/microblaze/include/asm/pci.h     |    8 -
+ arch/microblaze/pci/pci-common.c      |   69 -----------
+ arch/mips/include/asm/pci.h           |    6 -
+ arch/mips/pci/fixup-cobalt.c          |   61 ----------
+ arch/mips/pci/pci.c                   |   70 -----------
+ arch/mn10300/include/asm/pci.h        |   16 ---
+ arch/mn10300/unit-asb2305/pci.c       |   62 +---------
+ arch/parisc/include/asm/pci.h         |   38 ------
+ arch/parisc/kernel/pci.c              |   52 --------
+ arch/powerpc/include/asm/pci.h        |    8 -
+ arch/powerpc/kernel/pci-common.c      |   79 +------------
+ arch/sh/drivers/pci/pci.c             |   75 ++----------
+ arch/sh/include/asm/pci.h             |    6 -
+ arch/sparc/include/asm/pci_32.h       |    8 -
+ arch/sparc/include/asm/pci_64.h       |    8 -
+ arch/sparc/kernel/leon_pci.c          |   47 +------
+ arch/sparc/kernel/pci.c               |   46 +------
+ arch/xtensa/kernel/pci.c              |   17 ---
+ drivers/parisc/dino.c                 |   27 +---
+ drivers/parisc/lba_pci.c              |   31 +----
+ drivers/pci/bus.c                     |   30 +++--
+ drivers/pci/probe.c                   |  208 ++++++++++++++++++++++++++-------
+ include/asm-generic/pci.h             |   24 ----
+ include/linux/pci.h                   |   18 +++
+ 48 files changed, 331 insertions(+), 1011 deletions(-)
+
+-- 
+Signature
