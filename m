@@ -1,64 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE2SPAbpeHiz_JByYGrMJ6s1_yCM3SaQ8xjx4heuT2_i2Gyxcw@mail.gmail.com>
-References: <201201151255.41252.roucaries.bastien@gmail.com>
-	<CAE2SPAb3Ozk7LHrqE_asazZ7kEogXEH=2S8D5PUprqXZK2o9Ow@mail.gmail.com>
-	<m2mx9ev85j.fsf@bob.laptop.org>
-	<CAE2SPAbpeHiz_JByYGrMJ6s1_yCM3SaQ8xjx4heuT2_i2Gyxcw@mail.gmail.com>
-Date: Tue, 14 Feb 2012 19:17:22 +0100
-Message-ID: <CAE2SPAaY0Svfwo6_i0k9G39WO-vN3OD-o4+o3xnyun1n=PAuMw@mail.gmail.com>
-Subject: Re: Need pci rescan in order to get my mmc reader
-From: Bastien ROUCARIES <roucaries.bastien@gmail.com>
-To: Chris Ball <cjb@laptop.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:51382 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1760115Ab2BJUqR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:46:17 -0500
+Date: Fri, 10 Feb 2012 12:46:14 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/9] PCI: Disable cardbus bridge MEM1 pref CTL
+Message-ID: <20120210124614.5006563e@jbarnes-desktop>
+In-Reply-To: <1328424908-6385-4-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-4-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Xw.lNCemD=g6gl3MLg8_U=Z"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ping **2
+--Sig_/Xw.lNCemD=g6gl3MLg8_U=Z
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jan 26, 2012 at 10:54 AM, Bastien ROUCARIES
-<roucaries.bastien@gmail.com> wrote:
-> On Mon, Jan 23, 2012 at 2:51 PM, Chris Ball <cjb@laptop.org> wrote:
->> Hi,
->>
->> On Mon, Jan 23 2012, Bastien ROUCARIES wrote:
->>> On Sun, Jan 15, 2012 at 12:55 PM, bastien ROUCARIES
->>> <roucaries.bastien@gmail.com> wrote:
->>>> I am hit by the same bug than here
->>>> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/703180
->>>>
->>>> I order to get my mmc reader functionnal I need to put a mmc card
->>>> and do a pci rescan manualy.
->>>>
->>>> What could be done  ?
->>>>
->>>> What do you need in order to help ?
->>>>
->>>> Thanks
->>
->> I'm not sure there's anything I (at the MMC layer) can do to help;
->> having a visible PCI device is a prerequisite for working MMC.
->>
->> Have you tried a recent upstream kernel, and looked for any available
->> BIOS updates for your laptop?
->
-> BIOS is lasted and kernel is 3.1.
->
-> I know that  PCI device is a prerequisite  but I believe it is
-> possible to run some quirk on this laptop, in order to get the mmc
-> reader up earlier.
->
-> See also https://bugzilla.kernel.org/show_bug.cgi?id=40802
->
-> perhap loading by default pci hotplug and do a rescan every second ?
->
-> Bastien
->>
->> Thanks,
->>
->> - Chris.
->> --
->> Chris Ball   <cjb@laptop.org>   <http://printf.net/>
->> One Laptop Per Child
+On Sat,  4 Feb 2012 22:55:02 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
+
+> Some BIOS enable both pref for MEM0 and MEM1.
+>=20
+> but we assume MEM1 is non-pref...
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/setup-bus.c |    8 ++++++++
+>  1 files changed, 8 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 090217a..d5897c3 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -914,6 +914,14 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+>  	if (realloc_head)
+>  		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* d=
+ont care */);
+> =20
+> +	/* MEM1 must not be pref mmio */
+> +	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+> +	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
+> +		ctrl &=3D ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
+> +		pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
+> +		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+> +	}
+> +
+>  	/*
+>  	 * Check whether prefetchable memory is supported
+>  	 * by this bridge.
+
+Does this actually fix any bugs?  Dominik, have you tested it?
+
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/Xw.lNCemD=g6gl3MLg8_U=Z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNYIWAAoJEIEoDkX4Qk9hCAIP/imSMtl+Cm2CrK0reSRlXZp6
+f99slEizLCqd5qkx3vU/lYEcHTtDS+8KT/lZyYitWB7a7tXRCuJdmG+cH3StOJxf
+zcg2LW5G5hXmw/uTBR3YjkZwGtGRdukXqxLgQGX/o7pn7/UpdCF09Mj/z+J+Rfe5
+quq9ydItZUZC+jhv3Cr53vmhhYU3djDFJKrjQHbmBEetwgiVhqFmScJQ33D40sZF
+qRxG5yCFfta8odfmgvdQgPI1pQAzdH4hhsaYkC3w+sukPJ0SkVMEfXLawnVNMHr3
+xXAI5ks4z/QNgjK5xVOobwNKfL0Y0pr6WefxZoqqzDuQYPpN+ptHHAgg4vqKizTW
+B3MMcr3ic9ldcA6ruYOy92SRMfSVtBDZI2NOoJFOV7ScmwLRnyvI/JoHzGnMkyzf
+Qp8XoIWtfMsiU0Nb9f0EusOAV8xqjR9nUmroxbfikla4e19D2y5RY8U/JOstXsh7
+E+lKwiWkfKG2KAjwpmRnD+qB7PWu3B2snoSQeYLejs5JD89iLKcceWam3jrTfuOj
+kJYcoUvzcnqzKQU3pdaZlYuVjgcDVac6aM39rqka3KrgBIc2erb80vU20EpgcgRI
+e4QdSB8VaiLBv5PO0VSaFtb5D8ioIMyqlr0h75smHCgg46ZApan3IkCHley/WFbd
+Es+4Byx/GhxIanuwvyTY
+=TZ0U
+-----END PGP SIGNATURE-----
+
+--Sig_/Xw.lNCemD=g6gl3MLg8_U=Z--
