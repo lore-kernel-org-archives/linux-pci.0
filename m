@@ -1,125 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:49082 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756841Ab2B2XCd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Feb 2012 18:02:33 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH] PCI / PCIe: Introduce command line option to disable ARI
-Date: Thu, 1 Mar 2012 00:06:33 +0100
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-References: <201202292309.42051.rjw@sisk.pl> <4F4EA7B1.9060607@xenotime.net>
-In-Reply-To: <4F4EA7B1.9060607@xenotime.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201203010006.33723.rjw@sisk.pl>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:60590 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932399Ab2BJUxC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:53:02 -0500
+Date: Fri, 10 Feb 2012 12:52:58 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/9] PCI: Fix cardbus bridge resources as optional size
+ handling
+Message-ID: <20120210125258.55c1f339@jbarnes-desktop>
+In-Reply-To: <CAE9FiQUYg8V8RSeh+xiWYxEfSxwEhp9KRXAjVkyhT94Enkqc3Q@mail.gmail.com>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-5-git-send-email-yinghai@kernel.org>
+	<20120208043517.GD8930@ram-ThinkPad-T61>
+	<CAE9FiQUdRLmc-_hHWtaz=8QZiu4Ma6ZY7zavByJnwMDTBQLtzg@mail.gmail.com>
+	<20120208050119.GE8930@ram-ThinkPad-T61>
+	<CAE9FiQUYg8V8RSeh+xiWYxEfSxwEhp9KRXAjVkyhT94Enkqc3Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/xD+bwy2Mh.Es8SEK6xItDRZ"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, February 29, 2012, Randy Dunlap wrote:
-> On 02/29/2012 02:09 PM, Rafael J. Wysocki wrote:
-> 
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > There are PCIe devices on the market that report ARI support but
-> > then fail to initialize correctly when ARI is actually used.  This
-> > leads to situations in which kernels 2.6.34 and newer fail to handle
-> > systems where the previous kernels worked without any apparent
-> > problems.  Unfortunately, it is currently unknown how many such
-> > devices are there.
-> > 
-> > For this reason, introduce a new kernel command line option,
-> > pci=noari, allowing users to disable PCIe ARI altogether if they
-> > see problems with PCIe device initialization.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > ---
-> >  drivers/pci/pci.c |    7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> > 
-> > Index: linux/drivers/pci/pci.c
-> > ===================================================================
-> > --- linux.orig/drivers/pci/pci.c
-> > +++ linux/drivers/pci/pci.c
-> > @@ -94,6 +94,9 @@ u8 pci_cache_line_size;
-> >   */
-> >  unsigned int pcibios_max_latency = 255;
-> >  
-> > +/* If set, the PCIe ARI capability will not be used. */
-> > +static bool pcie_ari_disabled;
-> 
-> 
-> Please update Documentation/kernel-parameters.txt .
+--Sig_/xD+bwy2Mh.Es8SEK6xItDRZ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Ah, sorry for the omission, updated patch follows.
+On Tue, 7 Feb 2012 22:11:22 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
+
+> On Tue, Feb 7, 2012 at 9:01 PM, Ram Pai <linuxram@us.ibm.com> wrote:
+> >
+> > ..snip..
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0* If we have prefetchable memory support, a=
+llocate
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0* two regions. =C2=A0Otherwise, allocate on=
+e region of
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0* twice the size.
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
+> >> =C2=A0 =C2=A0 =C2=A0 if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 b_res[2].start =3D pc=
+i_cardbus_mem_size;
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 b_res[2].end =3D b_re=
+s[2].start + pci_cardbus_mem_size - 1;
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 b_res[2].flags |=3D I=
+ORESOURCE_MEM | IORESOURCE_PREFETCH |
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 IORESOURCE_STARTALIGN;
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (realloc_head) {
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 b_res[2].end -=3D pci_cardbus_mem_size;
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 add_to_list(realloc_head, bridge, b_res+2,
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pci_cardbus_mem_size, pci_cardbus_=
+mem_size);
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
+> >>
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* reduce that to hal=
+f */
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 b_res_3_size =3D pci_=
+cardbus_mem_size;
+> >> =C2=A0 =C2=A0 =C2=A0 }
+> >
+> > ACK. Ok. got it. This looks correct.
+>=20
+> Good, So we have
+>=20
+> Acked-by: Ram Pai <linuxram@us.ibm.com>
+> Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
+>=20
+> Hope Jesse will not miss to add them
+
+Yeah looks fine.  I'd like to see an ack from Dominik on 5/9 as well
+though.  Can you include the acks and tested-bys when you re-post 3-9
+with bug references and any other comments included?
 
 Thanks,
-Rafael
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
----
-From: Rafael J. Wysocki <rjw@sisk.pl>
-Subject: PCI / PCIe: Introduce command line option to disable ARI
+--Sig_/xD+bwy2Mh.Es8SEK6xItDRZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-There are PCIe devices on the market that report ARI support but
-then fail to initialize correctly when ARI is actually used.  This
-leads to situations in which kernels 2.6.34 and newer fail to handle
-systems where the previous kernels worked without any apparent
-problems.  Unfortunately, it is currently unknown how many such
-devices are there.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-For this reason, introduce a new kernel command line option,
-pci=noari, allowing users to disable PCIe ARI altogether if they
-see problems with PCIe device initialization.
+iQIcBAEBAgAGBQJPNYOrAAoJEIEoDkX4Qk9hylsQALhuaQZwFfVFObk0Aw945+4h
+qu9SPRm+H25S0cxhHUH6jNHeCU6LYAXpArG1KyLNRy6SZxaL/t465h0eVO32G8et
+W937GZgsIdMtCRKx9rdPu1nL3hWRz6tlnPtk8ah3/ti4JjRgOxFmK+zXDt1vnf5C
+Y3BOIm5Q4P0KNKOrKl8V9BnzMs/Es7SNPmImA22dBEhX5XeOJtRpe7Bx3O0bxy/F
+9kxCz4Q+tg+Xjt/s5XVerH8J6DMflTK/T68WPho4CT0dOTpDMjxgWLW2fubSEi81
+s4iItnI6S7+3CK9Wa5BTYgF1PlacnMrRpuFkNRKpfuuEznMUSqU3vvOgEP1diXbF
+mXfiQ/1OPX7c/3QVC1kztrl/ni3siMwdLyIdi+Ut9m1vle0eMAqSB4qBY0D2Ax1E
+q60tVeBMe3JkLZq/E8PlCXnVSPUenUbXuoOYBUBTwFzff/TlLOSbsQMjOQT1g/Hi
+7bel/GHe1yEpNO28eRi1LhfC20ml2iBXfYNFWlPA8XxrLsENPbFhzjOhUyiPDedD
+hzOYHGDvt7ZARj3uiQZMWOYIJBtAcL4/jh8F/QPjQIbNeyervHG0Ag1RzpJjvCv8
+QIbosUdxn7y6CkblY9zX7oT/fpUV27Y0sUn45dR+jI/Bxlh2RAcnDwcEpYRIoGWK
+eVAlNuk8MobsQ7TZ/9/K
+=e9bl
+-----END PGP SIGNATURE-----
 
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- Documentation/kernel-parameters.txt |    1 +
- drivers/pci/pci.c                   |    7 ++++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-Index: linux/drivers/pci/pci.c
-===================================================================
---- linux.orig/drivers/pci/pci.c
-+++ linux/drivers/pci/pci.c
-@@ -94,6 +94,9 @@ u8 pci_cache_line_size;
-  */
- unsigned int pcibios_max_latency = 255;
- 
-+/* If set, the PCIe ARI capability will not be used. */
-+static bool pcie_ari_disabled;
-+
- /**
-  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
-  * @bus: pointer to PCI bus structure to search
-@@ -1922,7 +1925,7 @@ void pci_enable_ari(struct pci_dev *dev)
- 	u16 flags, ctrl;
- 	struct pci_dev *bridge;
- 
--	if (!pci_is_pcie(dev) || dev->devfn)
-+	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
- 		return;
- 
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI);
-@@ -3718,6 +3721,8 @@ static int __init pci_setup(char *str)
- 				pci_realloc();
- 			} else if (!strcmp(str, "nodomains")) {
- 				pci_no_domains();
-+			} else if (!strncmp(str, "noari", 5)) {
-+				pcie_ari_disabled = true;
- 			} else if (!strncmp(str, "cbiosize=", 9)) {
- 				pci_cardbus_io_size = memparse(str + 9, &str);
- 			} else if (!strncmp(str, "cbmemsize=", 10)) {
-Index: linux/Documentation/kernel-parameters.txt
-===================================================================
---- linux.orig/Documentation/kernel-parameters.txt
-+++ linux/Documentation/kernel-parameters.txt
-@@ -2111,6 +2111,7 @@ bytes respectively. Such letter suffixes
- 				on: Turn ECRC on.
- 		realloc		reallocate PCI resources if allocations done by BIOS
- 				are erroneous.
-+		noari		do not use PCIe ARI.
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
+--Sig_/xD+bwy2Mh.Es8SEK6xItDRZ--
