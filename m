@@ -1,145 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:61100 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755762Ab2CAB0I convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 20:26:08 -0500
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"Kay, Allen M" <allen.m.kay@intel.com>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: RE: [PATCH V2] Quirk for IVB graphics FLR errata
-Date: Thu, 1 Mar 2012 01:25:32 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FCDB21A@SHSMSX102.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FCDA04B@SHSMSX102.ccr.corp.intel.com>
- <20120229103152.59dcedd6@jbarnes-x220>
-In-Reply-To: <20120229103152.59dcedd6@jbarnes-x220>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:56194 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758980Ab2BJU7H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:59:07 -0500
+Date: Fri, 10 Feb 2012 12:59:02 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 8/9] PCI: print out suggestion about using pci=realloc
+Message-ID: <20120210125902.37c9c55c@jbarnes-desktop>
+In-Reply-To: <1328424908-6385-9-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-9-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/GT=/9DncFcMr9l2XR_wQC.E"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Jesse Barnes [mailto:jbarnes@virtuousgeek.org]
-> Sent: Thursday, March 01, 2012 2:32 AM
-> To: Hao, Xudong
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> kvm@vger.kernel.org; Kay, Allen M; Zhang, Xiantao
-> Subject: Re: [PATCH V2] Quirk for IVB graphics FLR errata
-> 
-> On Wed, 29 Feb 2012 03:11:24 +0000
-> "Hao, Xudong" <xudong.hao@intel.com> wrote:
-> 
-> > For IvyBridge Mobile platform, a system hang may occur if a
-> > FLR(Function Level Reset) is asserted to internal graphics.
-> >
-> > This quirk patch is workaround for the IVB FLR errata issue.
-> > We are disabling the FLR reset handshake between the PCH and CPU
-> > display, then manually powering down the panel power sequencing and
-> > resetting the PCH display.
-> >
-> > Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-> > Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
-> > ---
-> >  drivers/pci/quirks.c |   49
-> > +++++++++++++++++++++++++++++++++++++++++++++++++ 1 files changed,
-> 49
-> > insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
-> > 6476547..5223b80 100644 --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -29,6 +29,11 @@
-> >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-> >  #include "pci.h"
-> >
-> > +#include "../gpu/drm/i915/i915_reg.h"
-> 
-> Ugg... this is ugly.  Should probably go near the definition of the quirk at any
-> rate.
-> 
+--Sig_/GT=/9DncFcMr9l2XR_wQC.E
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-OK, I'll move it just above the reset_ivb_igd function.
+On Sat,  4 Feb 2012 22:55:07 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-> > +#include <asm/tsc.h>
-> > +/* 10 seconds */
-> > +#define IGD_OPERATION_TIMEOUT ((cycles_t) tsc_khz*10*1000)
-> > +
-> 
-> Same here, the asm/tsc.h can go at the top, but the timeout definition should
-> go near the reset function.
-> 
-> May as well make it a static const cycles_t as well.
-> 
-Will modify it.
- 
-> > +#define MSG_CTL	0x45010
-> > +
-> > +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
-> > +	u8 *mmio_base;
-> > +	u32 val;
-> > +
-> > +	if (probe)
-> > +		return 0;
-> > +
-> > +	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-> > +				 pci_resource_len(dev, 0));
-> > +	if (!mmio_base)
-> > +		return -ENOMEM;
-> > +
-> > +	/* Work Around */
-> > +	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
-> > +	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
-> > +	val = *((u32 *)(mmio_base + PCH_PP_CONTROL)) & 0xfffffffe;
-> > +	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
-> 
-> These clobber existing values.  Since we're doing a reset, clobbering
-> PCH_PP_CONTROL should be ok, but clobbering SOUTH_CHICKEN2 is only ok if
-> the next driver that loads sets the right bits (if i915 was previously using the
-> device, it would have set a couple of bits).
-> 
-> But again since it's it a reset that's probably ok, but you should put a comment
-> indicating as much.
-> 
+> let user know they could try if pci=3Drealloc could help.
+>=20
+> Suggested-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/setup-bus.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 22454c5..9526038 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1346,6 +1346,9 @@ again:
+>  		goto enable_and_dump;
+> =20
+>  	if (tried_times >=3D pci_try_num) {
+> +		if (pci_realloc_enable =3D=3D enable_not_set)
+> +			printk(KERN_INFO "Some pci devices resources are not assigned, please=
+ try to boot with pci=3Drealloc\n");
+> +
+>  		free_list(&fail_head);
+>  		goto enable_and_dump;
+>  	}
 
-I'll add comment here, thanks Jesse.
+"Some PCI device resources are unassigned, try booting with pci=3Drealloc"
 
-> > +	do {
-> > +		cycles_t start_time = get_cycles();
-> > +		while (1) {
-> > +			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
-> > +			if (((val & 0x80000000) == 0)
-> > +				&& ((val & 0x30000000) == 0))
-> > +				break;
-> > +			if (IGD_OPERATION_TIMEOUT < (get_cycles() -
-> > start_time))
-> > +				break;
-> > +			cpu_relax();
-> > +		}
-> > +	} while (0);
-> > +	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
-> > +
-> > +	iounmap(pci_resource_start(dev, 0));
-> > +	return 0;
-> > +}
-> > +
-> >  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> > +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-> > +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
-> >
-> >  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
-> >  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
-> >  		 reset_intel_82599_sfp_virtfn },
-> > +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-> > +		reset_ivb_igd },
-> > +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-> > +		reset_ivb_igd },
-> >  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-> >  		reset_intel_generic_dev },
-> >  	{ 0 }
-> 
-> Looks ok otherwise, thanks.
-> 
-> Jesse
+That said, I wonder if this will cause more problems than it solves.
+In some cases the BIOS may not allocate all resources, but this will be
+harmless since the user won't actually use the device, or the driver
+for the device won't even use the BARs in question anyway (as happens a
+lot for IO regions).
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/GT=/9DncFcMr9l2XR_wQC.E
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNYUWAAoJEIEoDkX4Qk9hZpkP/RZVZw449vRTIXC95YwWmeaJ
+7yis2q6LPWFiLKuVSycsO0p59SE/jq1bgfkGtydCGrCidmXzpQY2wNkZ5v7LHGD4
+2AlmJEHsza1EHfNzt+W2BybFBVx0ehjvhmuvJtcCH0hJu9SGC9MlriuKHPWNdnRn
+RLZM4+1t9sb/SXqRJ1b/K+m1gZ3OvMaK7NJMZghDaW4IiPbDJKqiymMabQm/0a40
+f4bgmYvzYxRFWnmYGr6rNUNwI80nBMP/9F8R+ituIavkhV7X2A+hjXdAsZ8bdGmr
+AcOtVfWD+bJtx8/mq/xuz3wJeuLGflIh63JRJUrFKMm8CIk5skcaUyMQG0z/KI6F
+i4hHK3OjIqZdkNTMYi9L633QgqOYqMXRE/MKbY86368oIQVN8cjiGAt8CKQzjj66
+XNGZfFy+z1QHWtydgq+whM7IusnabonQfbPS64lx4rD+wFSq+L09BonWHzikxd0M
+OIaGhb0tCdrYZfblB9jXERkDs77oKD2AxOfyyvWLShOzOs2t3VtjTo3ppKich7WG
+tDRmPyUzIIdldx52lwLodWEDNCx4nIAOLntZq1NlOn/lQza9IKeiwgoezOoxMAbk
+zFz647GV9sWsLfKUaY00OyCLGV/ufZLl39AEffDe/ArfQrhqTLcwqjY4Crwb9f0y
+yCDFf4gtEdcNLXvoiOll
+=S7Gv
+-----END PGP SIGNATURE-----
+
+--Sig_/GT=/9DncFcMr9l2XR_wQC.E--
