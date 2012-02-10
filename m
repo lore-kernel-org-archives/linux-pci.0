@@ -1,112 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:32895 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757102Ab2BXKXR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 05:23:17 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 19/23] PCI, sys: Use device_type and attr_groups with pci dev
-Date: Fri, 24 Feb 2012 02:19:07 -0800
-Message-Id: <1330078751-7299-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWE-VGoh=8hyhWPMrTe7X1dqTyBCgAM=ozWMyZXEvwGTg@mail.gmail.com>
+References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com> <CAE9FiQWE-VGoh=8hyhWPMrTe7X1dqTyBCgAM=ozWMyZXEvwGTg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 9 Feb 2012 20:34:30 -0800
+Message-ID: <CAErSpo7pxGA02uTDNoFpxU_6_B4CgvJM10zpFRjjhXHK5L3mtg@mail.gmail.com>
+Subject: Re: [PATCH v2 00/18] add PCI bus-to-resource offset support in core
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to create rescan in sys only for pci bridge instead of all pci dev.
+On Thu, Feb 9, 2012 at 8:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Feb 9, 2012 at 6:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> There's a lot of PCI-related code under arch/, but much of it is not actually
+>> architecture-specific.  This series removes some of that code by moving most
+>> of the bus-to-resource conversions into the core.
+>>
+>> We currently read PCI bus addresses from BARs in the core (pci_setup_device()).
+>> Then every arch is responsible for converting those bus addresses to CPU
+>> resources, usually in pcibios_fixup_bus().
+>>
+>> We already have a way for architectures to tell the core what the windows
+>> through a host bridge are:
+>>
+>>    LIST_HEAD(resources);
+>>    pci_add_resource(&resources, io_space);
+>>    pci_add_resource(&resources, mem_space);
+>>    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+>>
+>> This series extends that so the arch can also tell the core about address
+>> translation performed by the host bridge:
+>>
+>>    LIST_HEAD(resources);
+>>    pci_add_resource_offset(&resources, io_space, io_offset);
+>>    pci_add_resource_offset(&resources, mem_space, mem_offset);
+>>    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+>>
+>> Given that offset (the difference between bus address and CPU address for
+>> each aperture), the core can do the bus-to-resource conversion immediately
+>> when it reads the BARs.
+>>
+>> This removes an opportunity for bugs (some PCI fixups currently see bus
+>> addresses in struct pci_dev resources when they're expecting CPU addresses),
+>> but the main reason to do this is to make our PCI resource handling simpler
+>> and more uniform.
+>>
+>> These patches are also available in this git repo:
+>>    git://github.com/bjorn-helgaas/linux.git pci-offset-v2-d15af52258dd
+>>
+>> Or you can browse them here:
+>>    https://github.com/bjorn-helgaas/linux/compare/master...pci-offset-v2-d15af52258dd
+>>
+>> I'd like to get these into linux-next soon to be ready for the 3.4 merge
+>> window, so please let me know if you see any issues.
+>>
+>> Changes since v1:
+>>  - mips: remove Cobalt legacy IDE fixup
+>>  - show bus address range, not offset, e.g., this:
+>>        pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus address [0x80000000-0xfedfffff])
+>>    instead of this:
+>>        pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus offset 0xeff80000000)
+>>
+>
+> still think make pci_sysdata to generic and add one offset field to
+> that would be more simple.
 
-We could use attribute_groups/is_visible method to do that.
+Maybe I'm misunderstanding you, because this doesn't make sense to me at all.
 
-Now pci dev does not use device type yet. So add pci_dev_type to take
-attr_groups with it.
+*One* offset field is insufficient.  A host bridge can have an
+arbitrary number of apertures, and each aperture can have a different
+offset.  So we must have a list or other variable-size structure.
 
-Add pci_dev_bridge_attrs_are_visible() to control attr_bridge_group only create
-attr for bridge.
+pci_scan_bus() takes a "void *sysdata".  Every arch defines its own
+structure (struct pci_sysdata for x86, struct pci_controller for most
+others) to supply here.  Are you suggesting that we make a common
+structure like this:
 
-This is the framework related change, later could attr to bridge_attr_group,
-to make those attr only show up on pci bridge device.
+    struct pci_sysdata {
+        struct list_head windows;
+        void *sysdata;  /* arch-specific stuff */
+    };
 
-Also We could add more attr groups with is_visible to reduce messness in
-	pci_create_sysfs_dev_files. ( at least for boot_vga one )
+That's possible, but I don't see the advantage over what I've done.
+It doesn't seem simpler, because all the arch code that looks at
+bus->sysdata would have to change to use
+bus->generic_sysdata->sysdata.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci-sysfs.c |   30 ++++++++++++++++++++++++++++++
- drivers/pci/pci.h       |    1 +
- drivers/pci/probe.c     |    1 +
- 3 files changed, 32 insertions(+), 0 deletions(-)
+If you can show an example of what you mean, maybe it will help me understand.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index d972303..124e826 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1335,3 +1335,33 @@ static int __init pci_sysfs_init(void)
- }
- 
- late_initcall(pci_sysfs_init);
-+
-+static struct attribute *pci_dev_bridge_attrs[] = {
-+	NULL,
-+};
-+
-+static umode_t pci_dev_bridge_attrs_are_visible(struct kobject *kobj,
-+						struct attribute *a, int n)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (!pdev->subordinate)
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+static struct attribute_group pci_dev_bridge_attr_group = {
-+	.attrs = pci_dev_bridge_attrs,
-+	.is_visible = pci_dev_bridge_attrs_are_visible,
-+};
-+
-+static const struct attribute_group *pci_dev_attr_groups[] = {
-+	&pci_dev_bridge_attr_group,
-+	NULL,
-+};
-+
-+struct device_type pci_dev_type = {
-+	.groups = pci_dev_attr_groups,
-+};
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 586ac9b..3a8867b 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -162,6 +162,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
- }
- extern struct device_attribute pci_dev_attrs[];
- extern struct device_attribute pcibus_dev_attrs[];
-+extern struct device_type pci_dev_type;
- #ifdef CONFIG_HOTPLUG
- extern struct bus_attribute pci_bus_attrs[];
- #else
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 57bec0c..1c36b39 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1105,6 +1105,7 @@ int pci_setup_device(struct pci_dev *dev)
- 	dev->sysdata = dev->bus->sysdata;
- 	dev->dev.parent = dev->bus->bridge;
- 	dev->dev.bus = &pci_bus_type;
-+	dev->dev.type = &pci_dev_type;
- 	dev->hdr_type = hdr_type & 0x7f;
- 	dev->multifunction = !!(hdr_type & 0x80);
- 	dev->error_state = pci_channel_io_normal;
--- 
-1.7.7
-
+Bjorn
