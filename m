@@ -1,58 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 23/23] PCI: clean up rescan_bus_bridge_resize
-Date: Fri, 24 Feb 2012 02:19:11 -0800
-Message-Id: <1330078751-7299-24-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v2 14/18] powerpc/PCI: get rid of device resource fixups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Thu, 09 Feb 2012 19:37:32 -0700
+Message-ID: <20120210023732.10311.2622.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Should only use it with bridge instead of bus.
-it could get new subordinate. so can not use it with reguar bus.
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-in that case, use may need to make all children devices get removed already.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci-sysfs.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ arch/powerpc/include/asm/pci.h   |    8 ----
+ arch/powerpc/kernel/pci-common.c |   79 ++------------------------------------
+ 2 files changed, 6 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 68caf29..a3fa64e 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -337,7 +337,7 @@ dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index f54b3d2..839178b 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -154,13 +154,7 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
  
- 	if (val) {
- 		mutex_lock(&pci_remove_rescan_mutex);
--		pci_rescan_bus(pdev->subordinate);
-+		pci_rescan_bus_bridge_resize(pdev);
- 		mutex_unlock(&pci_remove_rescan_mutex);
- 	}
- 	return count;
-@@ -387,10 +387,7 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ #endif /* CONFIG_PPC64 */
  
- 	if (val) {
- 		mutex_lock(&pci_remove_rescan_mutex);
--		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
--			pci_rescan_bus_bridge_resize(bus->self);
--		else
--			pci_rescan_bus(bus);
-+		pci_rescan_bus(bus);
- 		mutex_unlock(&pci_remove_rescan_mutex);
+-extern void pcibios_resource_to_bus(struct pci_dev *dev,
+-			struct pci_bus_region *region,
+-			struct resource *res);
+-
+-extern void pcibios_bus_to_resource(struct pci_dev *dev,
+-			struct resource *res,
+-			struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
+ 
+ extern void pcibios_claim_one_bus(struct pci_bus *b);
+ 
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index cce98d7..f0084c9 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -849,60 +849,6 @@ int pci_proc_domain(struct pci_bus *bus)
+ 	return 1;
+ }
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
+-{
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-
+-	if (!hose)
+-		return;
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-
+-	region->start = (res->start - offset) & mask;
+-	region->end = (res->end - offset) & mask;
+-}
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
+-{
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-
+-	if (!hose)
+-		return;
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-	res->start = (region->start + offset) & mask;
+-	res->end = (region->end + offset) & mask;
+-}
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+-
+-/* Fixup a bus resource into a linux resource */
+-static void __devinit fixup_resource(struct resource *res, struct pci_dev *dev)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-
+-	res->start = (res->start + offset) & mask;
+-	res->end = (res->end + offset) & mask;
+-}
+-
+-
+ /* This header fixup will do the resource fixup for all devices as they are
+  * probed, but not for bridge ranges
+  */
+@@ -942,18 +888,11 @@ static void __devinit pcibios_fixup_resources(struct pci_dev *dev)
+ 			continue;
+ 		}
+ 
+-		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x] fixup...\n",
++		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]\n",
+ 			 pci_name(dev), i,
+ 			 (unsigned long long)res->start,\
+ 			 (unsigned long long)res->end,
+ 			 (unsigned int)res->flags);
+-
+-		fixup_resource(res, dev);
+-
+-		pr_debug("PCI:%s            %016llx-%016llx\n",
+-			 pci_name(dev),
+-			 (unsigned long long)res->start,
+-			 (unsigned long long)res->end);
  	}
- 	return count;
--- 
-1.7.7
+ 
+ 	/* Call machine specific resource fixup */
+@@ -1055,27 +994,18 @@ static void __devinit pcibios_fixup_bridge(struct pci_bus *bus)
+ 			continue;
+ 		}
+ 
+-		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x] fixup...\n",
++		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x]\n",
+ 			 pci_name(dev), i,
+ 			 (unsigned long long)res->start,\
+ 			 (unsigned long long)res->end,
+ 			 (unsigned int)res->flags);
+ 
+-		/* Perform fixup */
+-		fixup_resource(res, dev);
+-
+ 		/* Try to detect uninitialized P2P bridge resources,
+ 		 * and clear them out so they get re-assigned later
+ 		 */
+ 		if (pcibios_uninitialized_bridge_resource(bus, res)) {
+ 			res->flags = 0;
+ 			pr_debug("PCI:%s            (unassigned)\n", pci_name(dev));
+-		} else {
+-
+-			pr_debug("PCI:%s            %016llx-%016llx\n",
+-				 pci_name(dev),
+-				 (unsigned long long)res->start,
+-				 (unsigned long long)res->end);
+ 		}
+ 	}
+ }
+@@ -1589,7 +1519,8 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
+ 		 (unsigned long long)res->start,
+ 		 (unsigned long long)res->end,
+ 		 (unsigned long)res->flags);
+-	pci_add_resource(resources, res);
++	pci_add_resource_offset(resources, res,
++			(resource_size_t) hose->io_base_virt - _IO_BASE);
+ 
+ 	/* Hookup PHB Memory resources */
+ 	for (i = 0; i < 3; ++i) {
+@@ -1612,7 +1543,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
+ 			 (unsigned long long)res->start,
+ 			 (unsigned long long)res->end,
+ 			 (unsigned long)res->flags);
+-		pci_add_resource(resources, res);
++		pci_add_resource_offset(resources, res, hose->pci_mem_offset);
+ 	}
+ 
+ 	pr_debug("PCI: PHB MEM offset     = %016llx\n",
 
