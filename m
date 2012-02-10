@@ -1,154 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:43141 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756014Ab2B1CLS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:11:18 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUZ8aDOe6oUxSrCgS9_3io4hpJdQsiJ=Hm7NACrcNBSDg@mail.gmail.com>
+References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+ <CAE9FiQWE-VGoh=8hyhWPMrTe7X1dqTyBCgAM=ozWMyZXEvwGTg@mail.gmail.com>
+ <CAErSpo7pxGA02uTDNoFpxU_6_B4CgvJM10zpFRjjhXHK5L3mtg@mail.gmail.com>
+ <CAE9FiQVx7=cSVkApbh_8dnoBqdrRYDOVtMqdC=mDCwq0fuVZpA@mail.gmail.com>
+ <CAErSpo6zHhpz+N6y3ybDVp-oabVWAYeTt9pPJS3nz+nD2C8xkg@mail.gmail.com>
+ <CAE9FiQVqKZGacZYqXETVVaqzobiw01OyCmASUfxwZ075rdX7XA@mail.gmail.com>
+ <CAErSpo6MWS0=3gin7P6HQ7CNZwxD9cPfB6QNr1GDF7DVMhx2tw@mail.gmail.com> <CAE9FiQUZ8aDOe6oUxSrCgS9_3io4hpJdQsiJ=Hm7NACrcNBSDg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 10 Feb 2012 14:37:13 -0800
+Message-ID: <CAErSpo50HORbMF+R3cbemn1YpdMZodZmBqd6ouP_L9nvGmVrZw@mail.gmail.com>
+Subject: Re: [PATCH v2 00/18] add PCI bus-to-resource offset support in core
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: jbarnes@virtuousgeek.org, Tony Luck <tony.luck@intel.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 05/18] PCI, x86: Register busn_res for root buses
-Date: Mon, 27 Feb 2012 18:09:56 -0800
-Message-Id: <1330395009-29260-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-update x86_pci_root_bus_resources() to get bus_max for non-acpi case.
+On Fri, Feb 10, 2012 at 12:25 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Feb 10, 2012 at 9:24 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Fri, Feb 10, 2012 at 9:20 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>
+>> That's exactly what I said above, isn't it?  (In the paragraph
+>> starting "Let me try again.")
+>
+> no, not create one. make them looks like one struct with some common fields.
 
-update pci_acpi_scan_root_bus, and pci_scan_root_bus_on_node
-to insert busn_res before scan child bus.
-So could make root bus busn_res is kept the original large one.
+The difference I see is that you kept the ugliness (enforcing
+cut-and-paste of generic members across all architectures) and threw
+out the possible goodness (replacing a "void *" with a "struct
+pci_sysdata *").
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/include/asm/topology.h |    3 ++-
- arch/x86/pci/acpi.c             |    8 +++++---
- arch/x86/pci/bus_numa.c         |    9 ++++++++-
- arch/x86/pci/common.c           |   12 +++++++++---
- 4 files changed, 24 insertions(+), 8 deletions(-)
+>> As I said, the reason I don't like that approach is that I don't want
+>> a dozen copies of first_busno, last_busno, domain, node, io_offset,
+>> mem_offset, etc.  That information is not architecture-specific, so we
+>> shouldn't keep it in an architecture-specific struct.
+>
+> but you want to add hostbridge struct list and that just produce
+> duplicated info.
 
-diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
-index b9676ae..8413481 100644
---- a/arch/x86/include/asm/topology.h
-+++ b/arch/x86/include/asm/topology.h
-@@ -172,7 +172,8 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
- }
- 
- struct pci_bus;
--void x86_pci_root_bus_resources(int bus, struct list_head *resources);
-+void x86_pci_root_bus_resources(int bus, int *bus_max,
-+				 struct list_head *resources);
- 
- #ifdef CONFIG_SMP
- #define mc_capable()	((boot_cpu_data.x86_max_cores > 1) && \
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 7538fad..7bb327f 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -368,6 +368,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_root_info *info = NULL;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
-+	int busmax = root->secondary.end;
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
-@@ -436,14 +437,15 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 			add_resources(info, &resources);
- 		else {
- 			free_pci_root_info(info);
--			x86_pci_root_bus_resources(busnum, &resources);
-+			x86_pci_root_bus_resources(busnum, &busmax, &resources);
- 		}
- 
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
--		if (bus)
-+		if (bus) {
-+			pci_bus_insert_busn_res(bus, busnum, busmax);
- 			bus->subordinate = pci_scan_child_bus(bus);
--		else
-+		} else
- 			pci_free_resource_list(&resources);
- 
- 		if (pci_use_crs) {
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index 7251011..91ce4dd 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -20,7 +20,8 @@ static struct pci_root_info *x86_find_pci_root_info(int bus)
- 	return NULL;
- }
- 
--void x86_pci_root_bus_resources(int bus, struct list_head *resources)
-+void x86_pci_root_bus_resources(int bus, int *bus_max,
-+				struct list_head *resources)
- {
- 	struct pci_root_info *info = x86_find_pci_root_info(bus);
- 	struct pci_root_res *root_res;
-@@ -43,6 +44,8 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 			root = &iomem_resource;
- 		insert_resource(root, res);
- 	}
-+
-+	*bus_max = info->bus_max;
- 	return;
- 
- default_resources:
-@@ -54,6 +57,10 @@ default_resources:
- 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
- 	pci_add_resource(resources, &ioport_resource);
- 	pci_add_resource(resources, &iomem_resource);
-+	if (!bus)
-+		*bus_max = 0xff;
-+	else if (!*bus_max)
-+		*bus_max = bus;
- }
- 
- struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 8e04ec5..5115606 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -623,6 +623,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
-+	int bus_max;
- 
- 	/*
- 	 * Allocate per-root-bus (not per bus) arch-specific data.
-@@ -635,13 +636,18 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 		return NULL;
- 	}
- 	sd->node = node;
--	x86_pci_root_bus_resources(busno, &resources);
--	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
--	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
-+	x86_pci_root_bus_resources(busno, &bus_max, &resources);
-+	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x-%02x)\n",
-+			 busno, bus_max);
-+	bus = pci_create_root_bus(NULL, busno, &pci_root_ops, sd, &resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
-+		return bus;
- 	}
-+	pci_bus_insert_busn_res(bus, busno, bus_max);
-+	bus->subordinate = pci_scan_child_bus(bus);
-+	pci_bus_add_devices(bus);
- 
- 	return bus;
- }
--- 
-1.7.7
+You can think of it as merely being duplicated uselessly.  I think of
+it as "putting it in the logical place and enabling its removal from
+the wrong places."
 
+> and search hostbridge for dev looks not good.
+> Now you try to: for every device or resource find root bus and then
+> check hostbridge list to get hostbridge and get offset.
+>
+> use sysdata pointer to get sys data like hostbridge info quickly
+>
+> i drafted one patch, and it seems not ugly with macro. please check it.
+
+I hate to say it, but I think it's ugly.  It looks like a hack bolted
+on at the end because we were too lazy to do a nice design up front.
+It might be the fewest lines of code change, but I think it's much
+harder to read.  It's much more important that code be easier to read
+and understand than it is to minimize code change.
+
+Bjorn
