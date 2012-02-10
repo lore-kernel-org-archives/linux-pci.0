@@ -1,69 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:51250 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755376Ab2BHP7l convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Feb 2012 10:59:41 -0500
-Received: by mail-wi0-f174.google.com with SMTP id s10so479923wic.19
-        for <linux-pci@vger.kernel.org>; Wed, 08 Feb 2012 07:59:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1328425088-6562-10-git-send-email-yinghai@kernel.org>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org> <1328425088-6562-10-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 8 Feb 2012 07:58:21 -0800
-Message-ID: <CAErSpo6BwznWf3rq4J2Ao+rrgR4yWqQ0mQGygkd2KmBuA1OD8g@mail.gmail.com>
-Subject: Re: [PATCH 09/24] PCI, powerpc: Register busn_res for root buses
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:42781 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932518Ab2BJUbp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:31:45 -0500
+Date: Fri, 10 Feb 2012 12:31:43 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3] pcie: Add support for setting default ASPM policy
+Message-ID: <20120210123143.69c95d1f@jbarnes-desktop>
+In-Reply-To: <1328282293-16551-3-git-send-email-mjg@redhat.com>
+References: <1328282293-16551-1-git-send-email-mjg@redhat.com>
+	<1328282293-16551-3-git-send-email-mjg@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/rnQulsmYqzf.pASpuLzqiIg"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 4, 2012 at 10:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: linuxppc-dev@lists.ozlabs.org
-> ---
->  arch/powerpc/kernel/pci-common.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
->
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index cce98d7..501f29b 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1732,6 +1732,8 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
->        bus->secondary = hose->first_busno;
->        hose->bus = bus;
->
-> +       pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
-> +
->        /* Get probe mode and perform scan */
->        mode = PCI_PROBE_NORMAL;
->        if (node && ppc_md.pci_probe_mode)
-> @@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
->                of_scan_bus(node, bus);
->        }
->
-> -       if (mode == PCI_PROBE_NORMAL)
-> +       if (mode == PCI_PROBE_NORMAL) {
-> +               pci_bus_update_busn_res_end(bus, 255);
->                hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-> +               pci_bus_update_busn_res_end(bus, bus->subordinate);
-> +       }
+--Sig_/rnQulsmYqzf.pASpuLzqiIg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-The only architecture-specific thing here is discovering the range of
-bus numbers below a host bridge.  The architecture should not have to
-mess around with pci_bus_update_busn_res_end() like this.  It should
-be able to say "here's my bus number range" (and of course the PCI
-core can default to 0-255 if the arch doesn't supply a range) and the
-core should take care of the rest.
+On Fri,  3 Feb 2012 10:18:13 -0500
+Matthew Garrett <mjg@redhat.com> wrote:
 
-Bjorn
+> Distributions may wish to provide different defaults for PCIE ASPM
+> depending on their target audience. Provide a configuration option for
+> choosing the default policy.
+>=20
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: jbarnes@virtuousgeek.org
+
+Applied to -next, thanks.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/rnQulsmYqzf.pASpuLzqiIg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNX6vAAoJEIEoDkX4Qk9h2r0P/2f2zwrwnzPAS5K+48zMsiqZ
+KSOf75Tfkj1UwkmlE2QwZTgxU56a6qz4NsIy1Kz/m5XclJ3RolCs7Tlr6u1yL5Vg
+4R5Co4qz3+HxPlvfLMw/m7g1kzGS+bt3wl7Jb7gP8q8hZGiHcfWL7mFJpE3DagWK
+YD1yy0h/6jatXFOUXEbZ/Gevz4+fIsNZWg+oQB+oE42wZwoAY7sdoaO45hYukuBp
+vJUbAtvendFdV5SWxBEbjj3cxem41NLAFuOlTmepZSwrAkvMS7qoFFOhrJy1WoEX
+Dm4MWTY/AAW1VQKuP70SUkfHgowx2eok8JaZAyK7NVsNeSX+YwIRLlD1JkcTMSq4
+QfZ5jIqynubN33u9D5LU1yv2BSLmwtifwV5kyLPXpbhYtbCm+IAJ9Oz5E3UKR9AX
+A+UFiJ0dE5Rp1O4DAekLtNYKK5QXWP3MfrqfDK+DAOI3brShKmxxaXPy3PWHQX5s
+MjhhzL5Ezv4afdQNZrz1ceokwSN+qm5hrNcDuSJ903YXM5x9zrZkxI0t4gTa5295
+7kadddbHqGpj14qtxIuaR9MGaeGwJwUys37dj14Z5Pa9Ykm+3MM7W2Z9inc33tGm
+DnSAzNu/slxTMrL+Et1Zc0VHdmXmZgt5WCt9bNuL3xYUSZY8OJIAWSCsIb7kfDEg
+aCTeQasc3fW3HDkHJgDV
+=3PTY
+-----END PGP SIGNATURE-----
+
+--Sig_/rnQulsmYqzf.pASpuLzqiIg--
