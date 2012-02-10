@@ -1,59 +1,107 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWBvYZO-D+Z2zwdd0a-bkatF-0YPtmxKP4Se75vccgPrA@mail.gmail.com>
-References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
- <1330466863-28469-13-git-send-email-yinghai@kernel.org> <CAErSpo66PD3+E3ZFqp73XHabL+8GavpX97pUkd28T6KWTBH-aA@mail.gmail.com>
- <CAE9FiQWBvYZO-D+Z2zwdd0a-bkatF-0YPtmxKP4Se75vccgPrA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 Feb 2012 17:22:46 -0700
-Message-ID: <CAErSpo5NOqnqWxCBV+NecA34z0YJHP7FCy6mNd5GUJ8q__CZHw@mail.gmail.com>
-Subject: Re: [PATCH 12/24] PCI, ia64: Register busn_res for root buses
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Fenghua Yu <fenghua.yu@intel.com>,
-	linux-ia64@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 7/7] PCI: only enable pci realloc when SRIOV bar is not assigned
+Date: Fri, 10 Feb 2012 15:33:52 -0800
+Message-Id: <1328916832-6588-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 28, 2012 at 5:12 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Feb 28, 2012 at 4:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Feb 28, 2012 at 3:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> Cc: Tony Luck <tony.luck@intel.com>
->>> Cc: Fenghua Yu <fenghua.yu@intel.com>
->>> Cc: linux-ia64@vger.kernel.org
->>> ---
->>>  arch/ia64/include/asm/pci.h |    1 +
->>>  arch/ia64/pci/pci.c         |    5 +++++
->>>  2 files changed, 6 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
->>> index b22e5f5..6e54220 100644
->>> --- a/arch/ia64/include/asm/pci.h
->>> +++ b/arch/ia64/include/asm/pci.h
->>> @@ -94,6 +94,7 @@ struct pci_controller {
->>>
->>>        unsigned int windows;
->>>        struct pci_window *window;
->>> +       struct resource busn;
->>
->> Why do you add a new struct resource here?  Can't you just use the one
->> passed in from acpi_pci_root_add()?
->
-> not quite sure about the life cycle for that object.
+If bios does not assign those BAR or wrong address, then kernel will
+try to do pci realloc.
 
-The struct acpi_pci_root is allocated in acpi_pci_root_add() and freed
-in acpi_pci_root_remove(), so it should be safe for PCI to use.
+in that case, user still can use pci=realloc=off to override it.
 
-Same thing applies for x86, of course.
+-v2: According to Jesse, adding one CONFIG option for distribution to
+     disable it or enable it.
 
-Bjorn
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/Kconfig     |   10 ++++++++++
+ drivers/pci/setup-bus.c |   28 ++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 37856f7..ee29565 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -31,6 +31,16 @@ config PCI_DEBUG
+ 
+ 	  When in doubt, say N.
+ 
++config PCI_REALLOC_ENABLE_DETECT
++	bool "PCI Realloc Enable Detecting"
++	depends on PCI
++	help
++	  Say Y here if you want the PCI core to detect if  pci realloc
++	  need to be enabled. You can always use pci=realloc=on or
++	  pci=realloc=off to override it.
++
++	  When in doubt, say N.
++
+ config PCI_STUB
+ 	tristate "PCI Stub driver"
+ 	depends on PCI
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c73244a..3aef181 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1293,6 +1293,31 @@ static bool __init pci_realloc_enabled(void)
+ 	return pci_realloc_enable >= enable_yes_user;
+ }
+ 
++static void __init pci_realloc_detect(void)
++{
++#if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_DETECT)
++	struct pci_dev *dev = NULL;
++
++	if (pci_realloc_enable != enable_not_set)
++		return;
++
++	for_each_pci_dev(dev) {
++		int i;
++
++		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++			struct resource *r = &dev->resource[i];
++
++			/* Not assigned, or rejected by kernel ? */
++			if (r->flags && !r->start) {
++				pci_realloc_enable = enable_yes_detected;
++
++				return;
++			}
++		}
++	}
++#endif
++}
++
+ /*
+  * first try will not touch pci bridge res
+  * second  and later try will clear small leaf bridge res
+@@ -1314,6 +1339,7 @@ pci_assign_unassigned_resources(void)
+ 	int pci_try_num = 1;
+ 
+ 	/* don't realloc if asked to do so */
++	pci_realloc_detect();
+ 	if (pci_realloc_enabled()) {
+ 		int max_depth = pci_get_max_depth();
+ 
+@@ -1348,6 +1374,8 @@ again:
+ 	if (tried_times >= pci_try_num) {
+ 		if (pci_realloc_enable == enable_not_set)
+ 			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
++		else if (pci_realloc_enable == enable_yes_detected)
++			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
+ 
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+-- 
+1.7.7
+
