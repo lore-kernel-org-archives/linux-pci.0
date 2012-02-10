@@ -1,145 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Mike Frysinger <vapier@gentoo.org>,
-	Suresh Siddha <suresh.b.siddha@intel.com>
-Subject: [PATCH 01/13] x86, irq: Convert irq_2_pin list to generic list
-Date: Thu, 23 Feb 2012 19:48:47 -0800
-Message-Id: <1330055339-11662-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:46974 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752705Ab2BJWgl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Feb 2012 17:36:41 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH] PCI / PM: Disable wakeup during shutdown for devices not enabled to wake up
+Date: Fri, 10 Feb 2012 23:40:29 +0100
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>
+References: <201202070050.35931.rjw@sisk.pl> <20120210123407.7087d6a4@jbarnes-desktop>
+In-Reply-To: <20120210123407.7087d6a4@jbarnes-desktop>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <201202102340.29644.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we can use generic list helper function.
+On Friday, February 10, 2012, Jesse Barnes wrote:
+> On Tue, 7 Feb 2012 00:50:35 +0100
+> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+> 
+> > From: Rafael J. Wysocki <rjw@sisk.pl>
+> > 
+> > If a PCI device is enabled to generate wakeup signals (PME) when put
+> > into a low-power state by runtime PM, it will be still enabled to
+> > generate those signals after the system shutdown, unless its driver's
+> > .shutdown() callback takes care of the wakeup signals generation
+> > setting.  Moreover, there are devices that are not enabled to wake
+> > up the system and that are configured by runtime PM to generate
+> > wakeup signals so that (runtime) remote wakeup works with them.
+> > Those devices should be reconfigured during system shutdown so that
+> > they don't generate wakeup signals, but at least some drivers don't
+> > do that.  However, that very well may be done by the PCI core so
+> > that drivers don't have to worry about it.  For this reason, modify
+> > pci_device_shutdown() to disable the generation of wakeup events for
+> > devices not supposed to wake up the system.
+> > 
+> > References: https://bugzilla.kernel.org/show_bug.cgi?id=37952
+> > Reported-and-tested-by: Kamil Iskra <kamil.54002@iskra.name>
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > ---
+> >  drivers/pci/pci-driver.c |   10 ++++++++++
+> >  1 file changed, 10 insertions(+)
+> > 
+> > Index: linux/drivers/pci/pci-driver.c
+> > ===================================================================
+> > --- linux.orig/drivers/pci/pci-driver.c
+> > +++ linux/drivers/pci/pci-driver.c
+> > @@ -430,6 +430,16 @@ static void pci_device_shutdown(struct d
+> >  		drv->shutdown(pci_dev);
+> >  	pci_msi_shutdown(pci_dev);
+> >  	pci_msix_shutdown(pci_dev);
+> > +
+> > +	/*
+> > +	 * Devices may be enabled to wake up by runtime PM, but they need not
+> > +	 * be supposed to wake up the system from its "power off" state (e.g.
+> > +	 * ACPI S5).  Therefore disable wakeup for all devices that aren't
+> > +	 * supposed to wake up the system at this point.  The state argument
+> > +	 * will be ignored by pci_enable_wake().
+> > +	 */
+> > +	if (!device_may_wakeup(dev))
+> > +		pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
+> >  }
+> >  
+> >  #ifdef CONFIG_PM
+> > 
+> 
+> So where do we end up setting the right wakeup state for devices we
+> actually *do* want to wake the system from S5?  Presumably later in the
+> shutdown sequence?
 
-Also make free_irq_cfg() free irq_2_pin list.
+Yes, in general.  However, device_may_wakeup(dev) has to return true for those
+devices, so they aren't affected by this change.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Mike Frysinger <vapier@gentoo.org>
-Cc: Suresh Siddha <suresh.b.siddha@intel.com>
----
- arch/x86/include/asm/hw_irq.h  |    2 +-
- arch/x86/kernel/apic/io_apic.c |   22 ++++++++++++----------
- 2 files changed, 13 insertions(+), 11 deletions(-)
-
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index eb92a6e..7c2c92a 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -114,7 +114,7 @@ struct irq_2_iommu {
-  * Most irqs are mapped 1:1 with pins.
-  */
- struct irq_cfg {
--	struct irq_pin_list	*irq_2_pin;
-+	struct list_head	irq_2_pin;
- 	cpumask_var_t		domain;
- 	cpumask_var_t		old_domain;
- 	u8			vector;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index fb07275..4c008ac 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -65,7 +65,7 @@
- 
- #define __apicdebuginit(type) static type __init
- #define for_each_irq_pin(entry, head) \
--	for (entry = head; entry; entry = entry->next)
-+	list_for_each_entry(entry, &head, list)
- 
- /*
-  *      Is the SiS APIC rmw bug present ?
-@@ -175,8 +175,8 @@ void mp_save_irq(struct mpc_intsrc *m)
- }
- 
- struct irq_pin_list {
-+	struct list_head list;
- 	int apic, pin;
--	struct irq_pin_list *next;
- };
- 
- static struct irq_pin_list *alloc_irq_pin_list(int node)
-@@ -212,6 +212,7 @@ int __init arch_early_irq_init(void)
- 	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
- 
- 	for (i = 0; i < count; i++) {
-+		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
- 		irq_set_chip_data(i, &cfg[i]);
- 		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
- 		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
-@@ -244,6 +245,7 @@ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
- 		goto out_cfg;
- 	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
- 		goto out_domain;
-+	INIT_LIST_HEAD(&cfg->irq_2_pin);
- 	return cfg;
- out_domain:
- 	free_cpumask_var(cfg->domain);
-@@ -254,11 +256,15 @@ out_cfg:
- 
- static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
- {
-+	struct irq_pin_list *entry, *tmp;
-+
- 	if (!cfg)
- 		return;
- 	irq_set_chip_data(at, NULL);
- 	free_cpumask_var(cfg->domain);
- 	free_cpumask_var(cfg->old_domain);
-+	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
-+		kfree(entry);
- 	kfree(cfg);
- }
- 
-@@ -438,15 +444,12 @@ static void ioapic_mask_entry(int apic, int pin)
- static int
- __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
- {
--	struct irq_pin_list **last, *entry;
-+	struct irq_pin_list *entry;
- 
- 	/* don't allow duplicates */
--	last = &cfg->irq_2_pin;
--	for_each_irq_pin(entry, cfg->irq_2_pin) {
-+	for_each_irq_pin(entry, cfg->irq_2_pin)
- 		if (entry->apic == apic && entry->pin == pin)
- 			return 0;
--		last = &entry->next;
--	}
- 
- 	entry = alloc_irq_pin_list(node);
- 	if (!entry) {
-@@ -457,7 +460,7 @@ __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
- 	entry->apic = apic;
- 	entry->pin = pin;
- 
--	*last = entry;
-+	list_add_tail(&entry->list, &cfg->irq_2_pin);
- 	return 0;
- }
- 
-@@ -1722,8 +1725,7 @@ __apicdebuginit(void) print_IO_APICs(void)
- 		cfg = irq_get_chip_data(irq);
- 		if (!cfg)
- 			continue;
--		entry = cfg->irq_2_pin;
--		if (!entry)
-+		if (list_empty(&cfg->irq_2_pin))
- 			continue;
- 		printk(KERN_DEBUG "IRQ%d ", irq);
- 		for_each_irq_pin(entry, cfg->irq_2_pin)
--- 
-1.7.7
-
+Thanks,
+Rafael
