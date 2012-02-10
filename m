@@ -1,45 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy9.bluehost.com ([69.89.24.6]:47385 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932396Ab2BJUUY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:20:24 -0500
+Date: Fri, 10 Feb 2012 12:20:19 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [PATCH 26/39] PCI, ia64: Register busn_res for root buses
-Date: Wed, 29 Feb 2012 15:07:25 -0800
-Message-Id: <1330556858-11768-27-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/9] pci: Fix pci cardbus removal
+Message-ID: <20120210122019.2ce504f9@jbarnes-desktop>
+In-Reply-To: <1328424908-6385-2-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-2-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/36tscn935Z69CCuYmhdb+AY"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
--v2: according to Bjorn, use root->secondary directly.
+--Sig_/36tscn935Z69CCuYmhdb+AY
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/pci/pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Sat,  4 Feb 2012 22:55:00 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index d1ce320..6c7c4ae 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -352,6 +352,8 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
- #endif
- 
- 	INIT_LIST_HEAD(&info.resources);
-+	/* insert busn resource at first */
-+	pci_add_resource(&info.resources, &root->secondary);
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
- 			&windows);
- 	if (windows) {
--- 
-1.7.7
+> During test busn_res allocation with cardbus, found pci card removal is n=
+ot
+> working anymore, and it turns out it is broken by:
+>=20
+> |commit 79cc9601c3e42b4f0650fe7e69132ebce7ab48f9
+> |Date:   Tue Nov 22 21:06:53 2011 -0800
+> |
+> |    PCI: Only call pci_stop_bus_device() one time for child devices at r=
+emove
+>=20
+> that patch changed pci_remove_behind_bridge behavoir that yenta_carbus de=
+pends.
+>=20
+> Restore the old behavoir of pci_remove_behind_bridge by:
+> 1. rename pci_remove_behind_bridge to __pci_remove_behind_bridge, and let
+> 	__pci_remove_bus_device() call it instead.
+> 2. add pci-stop_befind_bridge that will stop device under bridge
+> 3. add back pci_remove_behind_bridge that will stop and remove device
+> 	under bridge.
+>=20
+> This one is for v3.3
 
+Applied to -fixes with Dominik's tested-by.  A nice cleanup on top
+might be to rename pci_remove_behind_bridge to
+pci_stop_remove_behind_bridge or something to indicate that it's
+calling stop each time as well...
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/36tscn935Z69CCuYmhdb+AY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNXwDAAoJEIEoDkX4Qk9h3UkQAJyK8w08lsmVxgVQqBnpRzWA
+iCgVskuCqW9TJqTVAljjD4NeARt4I1Lr6xiPQHA1goR+DXaTs53vk0FbtNfbA0yO
+ZsZ3mspkIr8sIRiIpn/GTFtnMG+ikOBmXgmU58DYEIW0cD4m91xyY8U3sSyfKBnb
+0iUqVLnkQ6UrWU5GUABM81pQr08uCrYNnCGZK4oMsgxlW/auCp8Uv0CCZIlRM5zf
+kPo19aTzTMCLozmVbkvHPzw5rRGn+Uxq5MkON7ERED6tlg0PoUh0gOUH7eD5myHn
+CYVqpYqla6R8H71pKUR+6IswSE0XYWY4SsrcO3WeQIV9ZYlJGNa+A1lrOtND+4to
+rnntHTwNFt7eBbTzmm0/QHfRZnqqahZLL9tx6nzeZeP9V5IDY2epcFdqQmtcBMr3
+Tifs+Cj4bcUH1vAUFdRnCTKid0Rqn/uj3I/Qc7l6OkeDTpUPzANlpBiRjRWkldav
+rw3B4oA3TCHIvKjH5XZS0u44sTqQCYBavq/JkBxA6PjotAYfk0lfiKlSxNs8g4MA
+yeN2Xxq3f6VJKb39bZQYsYLDi7H0UKwV5k1q+2mj3CMbuPQBh9erQw/EBQIA3jNw
+PVgruMwYwm61Q+LOgnE17sG2JelBmbxrihaysdWrt/2UIrR5kAxQkyK6qvr1EKvA
+XtHsT4aSUGLKr8jotxAZ
+=6l9O
+-----END PGP SIGNATURE-----
+
+--Sig_/36tscn935Z69CCuYmhdb+AY--
