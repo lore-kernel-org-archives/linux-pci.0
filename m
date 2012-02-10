@@ -1,79 +1,125 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Date: Fri, 10 Feb 2012 13:00:29 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 10/23] PCI: Add pci_bus_extend/shrink_top()
-Date: Fri, 24 Feb 2012 02:18:58 -0800
-Message-Id: <1330078751-7299-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 9/9] PCI: only enable pci realloc when SRIOV bar is not
+ assigned
+Message-ID: <20120210130029.44d2a823@jbarnes-desktop>
+In-Reply-To: <1328424908-6385-10-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-10-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/_6IeE_hVtx2YvmdFS1c=ZLy"; protocol="application/pgp-signature"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-extend or shrink bus and parent buses top (subordinate)
+--Sig_/_6IeE_hVtx2YvmdFS1c=ZLy
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-extended range is verified safe range, and stop at recorded parent_res.
+On Sat,  4 Feb 2012 22:55:08 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 36 insertions(+), 0 deletions(-)
+> If bios does not assign those BAR or wrong address, then kernel will
+> try to do pci realloc.
+>=20
+> in that case, user still can use pci=3Drealloc=3Doff to override it.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/setup-bus.c |   28 ++++++++++++++++++++++++++++
+>  1 files changed, 28 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 9526038..520f256 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1293,6 +1293,31 @@ static bool __init pci_realloc_enabled(void)
+>  	return pci_realloc_enable >=3D enable_yes_user;
+>  }
+> =20
+> +static void __init pci_realloc_detect(void)
+> +{
+> +	struct pci_dev *dev =3D NULL;
+> +
+> +	if (pci_realloc_enable !=3D enable_not_set)
+> +		return;
+> +
+> +#ifdef CONFIG_PCI_IOV
+> +	for_each_pci_dev(dev) {
+> +		int i;
+> +
+> +		for (i =3D PCI_IOV_RESOURCES; i <=3D PCI_IOV_RESOURCE_END; i++) {
+> +			struct resource *r =3D &dev->resource[i];
+> +
+> +			/* Not assigned, or rejected by kernel */
+> +			if (r->flags && !r->start) {
+> +				pci_realloc_enable =3D enable_yes_detected;
+> +
+> +				return;
+> +			}
+> +		}
+> +	}
+> +#endif
+> +}
+> +
+>  /*
+>   * first try will not touch pci bridge res
+>   * second  and later try will clear small leaf bridge res
+> @@ -1314,6 +1339,7 @@ pci_assign_unassigned_resources(void)
+>  	int pci_try_num =3D 1;
+> =20
+>  	/* don't realloc if asked to do so */
+> +	pci_realloc_detect();
+>  	if (pci_realloc_enabled()) {
+>  		int max_depth =3D pci_get_max_depth();
+> =20
+> @@ -1348,6 +1374,8 @@ again:
+>  	if (tried_times >=3D pci_try_num) {
+>  		if (pci_realloc_enable =3D=3D enable_not_set)
+>  			printk(KERN_INFO "Some pci devices resources are not assigned, please=
+ try to boot with pci=3Drealloc\n");
+> +		else if (pci_realloc_enable =3D=3D enable_yes_detected)
+> +			printk(KERN_INFO "Automatically enabled pci realloc, if you have prob=
+lem, please try to boot with pci=3Drealloc=3Doff\n");
+> =20
+>  		free_list(&fail_head);
+>  		goto enable_and_dump;
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cf6ff62..b2b6d88 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -624,6 +624,42 @@ static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
- 	}
- }
- 
-+static void __devinit pci_bus_update_top(struct pci_bus *parent,
-+		 long size, struct resource *parent_res)
-+{
-+	struct resource *res;
-+
-+	if (!size)
-+		return;
-+
-+	while (parent) {
-+		res = &parent->busn_res;
-+		if (res == parent_res)
-+			break;
-+		res->end += size;
-+		parent->subordinate += size;
-+		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-+					 parent->subordinate);
-+		dev_printk(KERN_DEBUG, &parent->dev,
-+				"busn_res: %s %02lx to %pR\n",
-+				(size > 0) ? "extended" : "shrunk",
-+				abs(size), res);
-+		parent = parent->parent;
-+	}
-+}
-+
-+static void __devinit pci_bus_extend_top(struct pci_bus *parent,
-+		 long size, struct resource *parent_res)
-+{
-+	pci_bus_update_top(parent, size, parent_res);
-+}
-+
-+static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
-+		 long size, struct resource *parent_res)
-+{
-+	pci_bus_update_top(parent, -size, parent_res);
-+}
-+
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
--- 
-1.7.7
+Not sure I like this one either.  Distros will want to enable IOV by
+default, but in most configs users still won't use it, and many BIOSes
+won't bother to allocate IOV space.  So defaulting to trying to do so
+will likely cause a lot of unnecessary re-allocation.
 
+So distro guidance would be appreciated here for the default behavior.
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/_6IeE_hVtx2YvmdFS1c=ZLy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNYVtAAoJEIEoDkX4Qk9h5X4P/iRqZRAm0pOQzkmxb+Lvk1ph
+ji52XpGOALbgpPjs20+RhqwDDp4c3+tsKBy8WuDzLpVxo0nMhMTDc6UweC8bMKHj
+K4g8geMFZOC6bj9DL3QwP6BPKiwlSP6fyCbSsvUwsmvli8xHl2tgIcqahVj0qhfv
+hLxHr4yD40UoF8vGQzoH8qfLep6WBpvT9yY8U/ccEtGwNqGC79FTqgwnceaL6BrE
+aOtcYIBXx/FTRygUxEeI3Y15hGOG3Jl6Ls0I+REWR+KNj7MTo+az5x6OTDv4q7NA
+GmB54VKQna1Bl1bkiWAjNkNmyRDuzFlvGHDUNyT9TLCcprpp7zS3J4EQl23HrsoP
+cobdfUhQkHugEYbgbU2OWE2ecD2LK7Sitbq8yirR/7ASz2RBQIr1eTcyrwHiSzwJ
+ECLySRjP3sVJd6FAxzJPRiMOR6Z9qMHldKr/D/5pgWvLm2qz8WYgW33mS6A8X8zD
+sU31yl1xOb8e3USVZWlAP12Ddjy/pniAkdWvJxjDqnJkv0xHrUA3JfBSSI8dGv9S
+N+qMuFrt6FT7MibZwsJjuwrUA57qOTEDQA1Gox5fOrSzYha1TpyS6CYJgQFzqAyY
+X8a43lN0cj2N/4R0pmbsk1sMnW36b8A6a6lk3DLnFQyL4ZUUjgpyMBHulUcOnqlJ
+k1N74ERUCewnyyzJoVmW
+=MMzw
+-----END PGP SIGNATURE-----
+
+--Sig_/_6IeE_hVtx2YvmdFS1c=ZLy--
