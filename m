@@ -1,108 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:47345 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755104Ab2B1KDm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 05:03:42 -0500
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:59376 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759174Ab2BJVXX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 16:23:23 -0500
 MIME-Version: 1.0
-In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-Date: Tue, 28 Feb 2012 02:03:41 -0800
-Message-ID: <CAE9FiQW12-X8Tn-2L2ko=2An3O3V9pQVFaGdmsfS6UGERGRdrQ@mail.gmail.com>
-Subject: [PATCH -v8 0/23] PCI: allocate pci bus num range for unassigned
- bridge busn
+In-Reply-To: <20120210130029.44d2a823@jbarnes-desktop>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-10-git-send-email-yinghai@kernel.org>
+	<20120210130029.44d2a823@jbarnes-desktop>
+Date: Fri, 10 Feb 2012 13:23:23 -0800
+Message-ID: <CAE9FiQX5Ln9YM6gh-cm8_OiJpMHgD8dpYo1_4rVm35K4F_gP6Q@mail.gmail.com>
+Subject: Re: [PATCH 9/9] PCI: only enable pci realloc when SRIOV bar is not assigned
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 27, 2012 at 6:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+On Fri, Feb 10, 2012 at 1:00 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Sat,  4 Feb 2012 22:55:08 -0800
+> Yinghai Lu <yinghai@kernel.org> wrote:
 >
-> Set up iobusn_resource tree, and register bus number range to it.
-> Later when need to find bus range, will try to allocate from the tree
+>> If bios does not assign those BAR or wrong address, then kernel will
+>> try to do pci realloc.
+>>
+>> in that case, user still can use pci=realloc=off to override it.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/setup-bus.c |   28 ++++++++++++++++++++++++++++
+>>  1 files changed, 28 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 9526038..520f256 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -1293,6 +1293,31 @@ static bool __init pci_realloc_enabled(void)
+>>       return pci_realloc_enable >= enable_yes_user;
+>>  }
+>>
+>> +static void __init pci_realloc_detect(void)
+>> +{
+>> +     struct pci_dev *dev = NULL;
+>> +
+>> +     if (pci_realloc_enable != enable_not_set)
+>> +             return;
+>> +
+>> +#ifdef CONFIG_PCI_IOV
+>> +     for_each_pci_dev(dev) {
+>> +             int i;
+>> +
+>> +             for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+>> +                     struct resource *r = &dev->resource[i];
+>> +
+>> +                     /* Not assigned, or rejected by kernel */
+>> +                     if (r->flags && !r->start) {
+>> +                             pci_realloc_enable = enable_yes_detected;
+>> +
+>> +                             return;
+>> +                     }
+>> +             }
+>> +     }
+>> +#endif
+>> +}
+>> +
+>>  /*
+>>   * first try will not touch pci bridge res
+>>   * second  and later try will clear small leaf bridge res
+>> @@ -1314,6 +1339,7 @@ pci_assign_unassigned_resources(void)
+>>       int pci_try_num = 1;
+>>
+>>       /* don't realloc if asked to do so */
+>> +     pci_realloc_detect();
+>>       if (pci_realloc_enabled()) {
+>>               int max_depth = pci_get_max_depth();
+>>
+>> @@ -1348,6 +1374,8 @@ again:
+>>       if (tried_times >= pci_try_num) {
+>>               if (pci_realloc_enable == enable_not_set)
+>>                       printk(KERN_INFO "Some pci devices resources are not assigned, please try to boot with pci=realloc\n");
+>> +             else if (pci_realloc_enable == enable_yes_detected)
+>> +                     printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, please try to boot with pci=realloc=off\n");
+>>
+>>               free_list(&fail_head);
+>>               goto enable_and_dump;
 >
-> Need to test on arches other than x86. esp for ia64 and powerpc that support
->  more than on peer root buses.
-
- could be found at:
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-busn-alloc
-
-update to v9, and will pass bus resource through resources list.
-
-will not send to the LKML, please check for-pci-busn-alloc branch.
-
-or you can browse them from
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-busn-alloc
-
-4d92227: PCI, pciehp: Remove not needed bus number range checking
-edccefd: PCI: Double checking setting for bus register and bus struct.
-d1d6372: pcmcia: remove workaround for fixing pci parent bus subordinate
-5bb9418: PCI: Seperate child bus scanning to two passes overall
-d0fd5ac: PCI: kill pci_fixup_parent_subordinate_busnr()
-b86867f: PCI: Allocate bus range instead of use max blindly
-8d0fbe4: PCI: Strict checking of valid range for bridge
-8c26011: PCI: Probe safe range that we can use for unassigned bridge.
-a7b217b: PCI: Add pci_bus_extend/shrink_top()
-d8f54cd: PCI, parisc: Register busn_res for root buses
-e02e198: PCI, powerpc: Register busn_res for root buses
-d10c14b: PCI, sparc: Register busn_res for root buses
-4977b59: PCI, ia64: Register busn_res for root buses
-d169b44: x86, PCI: put busn resource in pci_root_info for no_crs path
-c77a824: x86, PCI: put busn resource in pci_root_info for acpi path
-1909435: PCI: add default res for pci_scan_bus
-948a438: PCI: default busn_resource
-5e2711b: PCI: checking busn_res in pci_scan_root_bus
-c10e4a1: PCI: insert busn_res in pci_create_root_bus
-fc176a9: PCI: release busn when removing bus
-0eae1b6: PCI: Add busn_res operation functions
-1e6215a: PCI: Add busn_res into struct pci_bus.
-1f1fd3e: x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
-
-
+> Not sure I like this one either.  Distros will want to enable IOV by
+> default, but in most configs users still won't use it, and many BIOSes
+> won't bother to allocate IOV space.  So defaulting to trying to do so
+> will likely cause a lot of unnecessary re-allocation.
 >
-> need to apply to top of pci/for-linus plus pci/linux-next plus
->        [PATCH -v2] PCI: pci_host_bridge related cleanup
->
-> -v2: according to Jesse, split to more small patches.
-> -v3: address some request from Bjorn. like make use %pR for busn_res debug print
->        out, and move the comment change with code change.
-> -v4: fixes the problem about rescan that Bjorn found.
-> -v5: add /proc/iobusn that is requested by Bjorn.
->     remove old workaround from pciehp.
->     add rescan_bridge for pci bridge in /sys
-> -v6: remove global iobusn_resource, and every root bus's busn_res will be root
->     of children buses' busn_res.
->     pc cardbus change is tested by pcmcia maintainter.
-> -v7: remove pci_scan_root_bus_max requested by Bjorn and Jesse.
-> -v8: rebase on top other patches with arch/x86/pci/bus_numa.c changes
->     also only include busn_res related changes.
+> So distro guidance would be appreciated here for the default behavior.
 
- arch/ia64/include/asm/pci.h           |    1 +
- arch/ia64/pci/pci.c                   |    5 +
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci-common.c      |   10 +-
- arch/sparc/kernel/pci.c               |    4 +
- arch/sparc/kernel/pci_impl.h          |    1 +
- arch/x86/pci/acpi.c                   |   12 +-
- arch/x86/pci/broadcom_bus.c           |    4 +-
- arch/x86/pci/bus_numa.c               |   19 +-
- arch/x86/pci/bus_numa.h               |    3 +-
- arch/x86/pci/common.c                 |   27 +--
- drivers/parisc/dino.c                 |    5 +
- drivers/parisc/lba_pci.c              |    3 +
- drivers/pci/hotplug/pciehp_pci.c      |   12 +-
- drivers/pci/probe.c                   |  458 +++++++++++++++++++++++++++------
- drivers/pci/remove.c                  |    1 +
- drivers/pcmcia/yenta_socket.c         |   75 ------
- include/linux/pci.h                   |    6 +
- 18 files changed, 441 insertions(+), 206 deletions(-)
+Or do you prefer to:
+
+if all SRIOV bar are not assigned, We will not enable SRIOV feature even?
+
+Yinghai
