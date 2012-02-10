@@ -1,132 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 06/36] x86, PCI: break down get_current_resource()
-Date: Wed, 29 Feb 2012 19:00:07 -0800
-Message-Id: <1330570837-26638-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:39890 "HELO
+	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754167Ab2BJUCV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:02:21 -0500
+Date: Fri, 10 Feb 2012 12:02:17 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: svaidy@linux.vnet.ibm.com
+Cc: Ram Pai <linuxram@us.ibm.com>, Yinghai Lu <yinghai.lu@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [BUGFIX][PATCH] pci: set pci sriov page size before reading
+ SRIOV BAR
+Message-ID: <20120210120217.6bb5c836@jbarnes-desktop>
+In-Reply-To: <20120202174120.GA3753@dirshya.in.ibm.com>
+References: <20120202174120.GA3753@dirshya.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/PkuNm076j/WqJkd0F81xqaG"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-change it to probe_pci_root_info, aka only do one thing.
+--Sig_/PkuNm076j/WqJkd0F81xqaG
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-1. remove resource list head from pci_root_info
-2. make get_current_resources() not pass resources
-   move out add_resources calling out of yet.
-3. rename get_current_resourcs name to probe_pci_root_info
+On Thu, 2 Feb 2012 23:11:20 +0530
+Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/acpi.c |   34 +++++++++++++---------------------
- 1 files changed, 13 insertions(+), 21 deletions(-)
+> Hi Jesse,
+>=20
+> The following patch fixes a regression introduced when an SRIOV card
+> is used as a PF in a 64k base page size configuration.
+>=20
+> Reference: https://lkml.org/lkml/2012/2/1/165
+>=20
+> Please queue this bugfix patch for the current release cycle.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 304ccf0..763f7bb 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,7 +12,6 @@ struct pci_root_info {
- 	char *name;
- 	unsigned int res_num;
- 	struct resource *res;
--	struct list_head *resources;
- 	int busnum;
- };
- 
-@@ -277,7 +276,8 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
- 	}
- }
- 
--static void add_resources(struct pci_root_info *info)
-+static void add_resources(struct pci_root_info *info,
-+			  struct list_head *resources)
- {
- 	int i;
- 	struct resource *res, *root, *conflict;
-@@ -301,7 +301,7 @@ static void add_resources(struct pci_root_info *info)
- 				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
- 				 res, conflict->name, conflict);
- 		else
--			pci_add_resource(info->resources, res);
-+			pci_add_resource(resources, res);
- 	}
- }
- 
-@@ -313,41 +313,30 @@ static void free_pci_root_info(struct pci_root_info *info)
- }
- 
- static void
--get_current_resources(struct pci_root_info *info,
--		      struct acpi_device *device, int busnum,
--		      int domain, struct list_head *resources)
-+probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
-+		    int busnum, int domain)
- {
- 	size_t size;
- 
- 	info->bridge = device;
- 	info->res_num = 0;
--	info->resources = resources;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
- 				info);
- 	if (!info->res_num)
- 		return;
- 
- 	size = sizeof(*info->res) * info->res_num;
-+	info->res_num = 0;
- 	info->res = kmalloc(size, GFP_KERNEL);
- 	if (!info->res)
- 		return;
- 
- 	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
- 	if (!info->name)
--		goto name_alloc_fail;
-+		return;
- 
--	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
--
--	if (pci_use_crs) {
--		add_resources(info);
--
--		return;
--	}
--
--name_alloc_fail:
--	free_pci_root_info(info);
- }
- 
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
-@@ -412,15 +401,18 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(sd);
- 	} else {
--		get_current_resources(&info, device, busnum, domain,
--					&resources);
-+		probe_pci_root_info(&info, device, busnum, domain);
- 
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
--		if (!pci_use_crs)
-+		if (pci_use_crs)
-+			add_resources(&info, &resources);
-+		else {
-+			free_pci_root_info(&info);
- 			x86_pci_root_bus_resources(busnum, &resources);
-+		}
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
- 		if (bus)
--- 
-1.7.7
+Applied, thanks.  Ram please shout if this isn't ok and you'd prefer a
+different fix.
 
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/PkuNm076j/WqJkd0F81xqaG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNXfJAAoJEIEoDkX4Qk9hUaAP/3Ky/6j9cYfYa3s/IUskAO3O
++U2cjoCK9cqVzE8weqBc68P27/aCrTix1UkWDiXjGJRjEgRorCUz1fnXW2eXv09q
+QHkT7DnHn5rphwplzMlSNkjcgkcm/MRzlRwDMgRWbTH1s6RnTcHYcWcj5ioCSIvU
+fPyLmytiqqLCl5FmLGJp//sM6G7Jt/giF9vqV158tTjdJeQeT06mOZ4EhcvBmFqJ
+cu9bkIL4b9yb0aneU75ynlN0qWcuKQSiHb3r0cn8rLSKE0j0y9ANEeaNsF6WeeH1
+PhhL4TRmj4XABVL/YGx/aZtFp5KdKNHj/VHWEGYS2LFjONtXkAOKqz+mSpzXUtTm
+AU2E6RGQYvDWRpPKORnLJWrgkSUpJR+wd/wAg88hscufTTqto5xPEg3C3e+xo3mS
+36qKXGIu/88zE5uzr8pmvq4VhHKFvwrRlO/dMY/poHiBjYdnwAwRc6PcClNQ5xqp
+NV+T8FCHgx63lQi1yUkTjdLTBD8X5KwzDCnXTSRea8YM3XL1bWCUuEaN1qyb6gpL
+URZHHYM3go0JUni8io2nSRdmKyjpntcSAwTlaHFdqLvWzzZYIS5swChTC61BzPbG
+raekZ7Ubj8aKU45lFgxN6nKhDPHbfx66UZPx0CK7aCYE64jNhbp4EPJONJ6q9/hH
+rlDAfrsTwNPPx7xGQJsq
+=/y6H
+-----END PGP SIGNATURE-----
+
+--Sig_/PkuNm076j/WqJkd0F81xqaG--
