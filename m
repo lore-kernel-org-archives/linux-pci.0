@@ -1,60 +1,140 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 38/39] PCI, pciehp: Remove not needed bus number range checking
-Date: Wed, 29 Feb 2012 15:07:37 -0800
-Message-Id: <1330556858-11768-39-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/7] PCI: Make pci bridge reallocating enabled/disabled
+Date: Fri, 10 Feb 2012 15:33:50 -0800
+Message-Id: <1328916832-6588-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found hotplug adding one EM with bridge fail, bios only leave one bus range
- for slot.
+Let the user could enable and disable with pci=realloc=on or pci=realloc=off
 
-[ 1169.621444] pciehp: No bus number available for hot-added bridge 0000:55:00.0
-[ 1169.633277] pcieport 0000:40:03.0: PCI bridge to [bus 55-55]
+Also
+1. move variable and functions near the place they are used.
+2. change macro to function
+3. change related functions and variable to static and _init
+4. update parameter description accordingly.
 
-With busn_res tracking and allocating, we don't need that checking anymore.
-
-Parent bridges' bus number will be extended safely.
+-v2: still honor pci=realloc, and treat it as pci=realloc=on
+     also use enum instead of ...
+-v3: update kernel-paramenters.txt according to Jesse.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Jesse Barnes <jbarnes@virtuousgeek.org>
 ---
- drivers/pci/hotplug/pciehp_pci.c |   12 +-----------
- 1 files changed, 1 insertions(+), 11 deletions(-)
+ Documentation/kernel-parameters.txt |    9 +++++++--
+ drivers/pci/pci.c                   |    4 +++-
+ drivers/pci/pci.h                   |    2 +-
+ drivers/pci/setup-bus.c             |   33 ++++++++++++++++++++++++++-------
+ 4 files changed, 37 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 47d9dc0..e21171c 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -37,18 +37,8 @@
- static int __ref pciehp_add_bridge(struct pci_dev *dev)
- {
- 	struct pci_bus *parent = dev->bus;
--	int pass, busnr, start = parent->secondary;
--	int end = parent->subordinate;
-+	int pass, busnr = parent->secondary;
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 033d4e6..791c7fd 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2109,8 +2109,13 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				the default.
+ 				off: Turn ECRC off
+ 				on: Turn ECRC on.
+-		realloc		reallocate PCI resources if allocations done by BIOS
+-				are erroneous.
++		realloc=	Enable/disable reallocating PCI bridge resources
++				if allocations done by BIOS are too small to
++				accommodate resources required by all child
++				devices.
++				off: Turn realloc off
++				on: Turn realloc on
++		realloc		same as realloc=on
  
--	for (busnr = start; busnr <= end; busnr++) {
--		if (!pci_find_bus(pci_domain_nr(parent), busnr))
--			break;
--	}
--	if (busnr-- > end) {
--		err("No bus number available for hot-added bridge %s\n",
--				pci_name(dev));
--		return -1;
--	}
- 	for (pass = 0; pass < 2; pass++)
- 		busnr = pci_scan_bridge(parent, dev, busnr, pass);
- 	if (!dev->subordinate)
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9c89447..09cb1f2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3744,8 +3744,10 @@ static int __init pci_setup(char *str)
+ 				pci_no_msi();
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
++			} else if (!strncmp(str, "realloc=", 8)) {
++				pci_realloc_get_opt(str + 8);
+ 			} else if (!strncmp(str, "realloc", 7)) {
+-				pci_realloc();
++				pci_realloc_get_opt("on");
+ 			} else if (!strcmp(str, "nodomains")) {
+ 				pci_no_domains();
+ 			} else if (!strncmp(str, "cbiosize=", 9)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index aaf7ff8..f862a5a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -148,7 +148,7 @@ static inline void pci_no_msi(void) { }
+ static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
+ 
+-extern void pci_realloc(void);
++void pci_realloc_get_opt(char *);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 162edfb..22454c5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -48,13 +48,6 @@ static void free_list(struct list_head *head)
+ 	}
+ }
+ 
+-int pci_realloc_enable = 0;
+-#define pci_realloc_enabled() pci_realloc_enable
+-void pci_realloc(void)
+-{
+-	pci_realloc_enable = 1;
+-}
+-
+ /**
+  * add_to_list() - add a new resource tracker to the list
+  * @head:	Head of the list
+@@ -1273,6 +1266,32 @@ static int __init pci_get_max_depth(void)
+ 	return depth;
+ }
+ 
++/*
++ * -1: undefined, will auto detect later
++ *  0: disabled by user
++ *  1: enabled by user
++ *  2: enabled by auto detect
++ */
++enum enable_type {
++	enable_not_set = -1,
++	enable_no_user,
++	enable_no_detected,
++	enable_yes_user,
++	enable_yes_detected,
++};
++
++static enum enable_type pci_realloc_enable __initdata = enable_not_set;
++void __init pci_realloc_get_opt(char *str)
++{
++	if (!strncmp(str, "off", 3))
++		pci_realloc_enable = enable_no_user;
++	else if (!strncmp(str, "on", 2))
++		pci_realloc_enable = enable_yes_user;
++}
++static bool __init pci_realloc_enabled(void)
++{
++	return pci_realloc_enable >= enable_yes_user;
++}
+ 
+ /*
+  * first try will not touch pci bridge res
 -- 
 1.7.7
 
