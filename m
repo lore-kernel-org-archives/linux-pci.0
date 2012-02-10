@@ -1,95 +1,89 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 22/24] PCI: Add pci_bus_add_single_device()
-Date: Sat,  4 Feb 2012 22:58:06 -0800
-Message-Id: <1328425088-6562-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 3/7] PCI: Skip reset cardbus assigned resource during pci bus rescan
+Date: Fri, 10 Feb 2012 15:33:48 -0800
+Message-Id: <1328916832-6588-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will use it to pci_bus_bridge_scan_resize(0 to make bridge will
-have pci_bus directory created.
+otherwise when rescan is used for cardbus, assigned resource will get
+cleared.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c   |   40 ++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 41 insertions(+), 0 deletions(-)
+Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 398f5d8..7b2ae85 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -247,6 +247,46 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+---
+ drivers/pci/setup-bus.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 3b3932a..2991a89 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -901,6 +901,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
+ 	u16 ctrl;
+ 
++	if (b_res[0].parent)
++		goto handle_b_res_1;
+ 	/*
+ 	 * Reserve some resources for CardBus.  We reserve
+ 	 * a fixed amount of bus space for CardBus bridges.
+@@ -914,6 +916,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 				pci_cardbus_io_size);
  	}
+ 
++handle_b_res_1:
++	if (b_res[1].parent)
++		goto handle_b_res_2;
+ 	b_res[1].start = pci_cardbus_io_size;
+ 	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
+ 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+@@ -923,6 +928,7 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 				 pci_cardbus_io_size);
+ 	}
+ 
++handle_b_res_2:
+ 	/* MEM1 must not be pref mmio */
+ 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+ 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
+@@ -942,6 +948,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+ 	}
+ 
++	if (b_res[2].parent)
++		goto handle_b_res_3;
+ 	/*
+ 	 * If we have prefetchable memory support, allocate
+ 	 * two regions.  Otherwise, allocate one region of
+@@ -962,6 +970,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 		b_res_3_size = pci_cardbus_mem_size;
+ 	}
+ 
++handle_b_res_3:
++	if (b_res[3].parent)
++		goto handle_done;
+ 	b_res[3].start = pci_cardbus_mem_size;
+ 	b_res[3].end = b_res[3].start + b_res_3_size - 1;
+ 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
+@@ -970,6 +981,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+ 				 pci_cardbus_mem_size);
+ 	}
++
++handle_done:
++	;
  }
  
-+void pci_bus_add_single_device(struct pci_dev *dev)
-+{
-+	struct pci_bus *child;
-+	int retval;
-+
-+	/* Skip already-added devices */
-+	if (!dev->is_added) {
-+		retval = pci_bus_add_device(dev);
-+		if (retval)
-+			dev_err(&dev->dev, "Error adding device, continuing\n");
-+	}
-+
-+	BUG_ON(!dev->is_added);
-+
-+	child = dev->subordinate;
-+	/*
-+	 * If there is an unattached subordinate bus, attach
-+	 * it and then scan for unattached PCI devices.
-+	 */
-+	if (child) {
-+		if (list_empty(&child->node)) {
-+			down_write(&pci_bus_sem);
-+			list_add_tail(&child->node, &dev->bus->children);
-+			up_write(&pci_bus_sem);
-+		}
-+		pci_bus_add_devices(child);
-+
-+		/*
-+		 * register the bus with sysfs as the parent is now
-+		 * properly registered.
-+		 */
-+		if (!child->is_added) {
-+			retval = pci_bus_add_child(child);
-+			if (retval)
-+				dev_err(&dev->dev, "Error adding bus, continuing\n");
-+		}
-+	}
-+}
-+
-+
- void pci_enable_bridges(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d5b6786..8061031 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -659,6 +659,7 @@ void pci_fixup_cardbus(struct pci_bus *);
- void pcibios_scan_specific_bus(int busn);
- extern struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
-+void pci_bus_add_single_device(struct pci_dev *dev);
- struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
- 				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
 -- 
 1.7.7
 
