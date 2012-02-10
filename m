@@ -1,41 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:51172 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844Ab2BXFEZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 00:04:25 -0500
-Received: by wics10 with SMTP id s10so1197284wic.19
-        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 21:04:24 -0800 (PST)
-MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 23 Feb 2012 21:04:04 -0800
-Message-ID: <CAErSpo67Y4xtctJ=a8LQLqopRyM9_3gYKwFSUw8kT6XEVsPZzA@mail.gmail.com>
-Subject: pci_probe_only and bus_to_resources patches rebased to pci linux-next branch
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 6/7] PCI: print out suggestion about using pci=realloc
+Date: Fri, 10 Feb 2012 15:33:51 -0800
+Message-Id: <1328916832-6588-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jesse,
+let user know they could try if pci=realloc could help.
 
-I rebased these series:
+-v2: update suggestion text.
 
-    v2 generic pci_probe_only flag
-    (http://marc.info/?l=linux-pci&m=133002621016744&w=2)
+Suggested-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-    v2 add PCI bus-to-resource offset support in core
-    (http://marc.info/?l=linux-pci&m=132884138928641&w=2)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 22454c5..c73244a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1346,6 +1346,9 @@ again:
+ 		goto enable_and_dump;
+ 
+ 	if (tried_times >= pci_try_num) {
++		if (pci_realloc_enable == enable_not_set)
++			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
++
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+ 	}
+-- 
+1.7.7
 
-onto your current linux-next tree (based on commit 823806ff).  Minor
-conflict resolutions in include/linux/pci.h, and that's about it.
-
-You can examine the result here:
-
-    https://github.com/bjorn-helgaas/linux/tree/pci-next+probe_only+bus2res-fb127cb
-
-or pull both series with:
-
-    git pull git://github.com/bjorn-helgaas/linux.git
-pci-next+probe_only+bus2res-fb127cb
-
-Bjorn
