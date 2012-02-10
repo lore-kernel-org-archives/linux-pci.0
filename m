@@ -1,61 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44000 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932291Ab2CAAm6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 19:42:58 -0500
-Received: by lahj13 with SMTP id j13so52597lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 29 Feb 2012 16:42:56 -0800 (PST)
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:59417 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758388Ab2BJEuA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Feb 2012 23:50:00 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQW=NXnaEY+fmUS_cyJy_BE-1+pWy8kfAoPA_s=vwDq4Mw@mail.gmail.com>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
- <1330556858-11768-3-git-send-email-yinghai@kernel.org> <CAErSpo62VuJw+3caNUhmg5moh3h4cn5z4kCsqTWZW-XqSzpk4Q@mail.gmail.com>
- <CAE9FiQW=NXnaEY+fmUS_cyJy_BE-1+pWy8kfAoPA_s=vwDq4Mw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 29 Feb 2012 17:42:36 -0700
-Message-ID: <CAErSpo5N72zkfvvgSNg0MsKAZwcR5TOsxH+Y7BkVbOBYWbdaKQ@mail.gmail.com>
-Subject: Re: [PATCH 02/39] x86, PCI: have own version for pcibios_bus_to_resource
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
+In-Reply-To: <CAErSpo7pxGA02uTDNoFpxU_6_B4CgvJM10zpFRjjhXHK5L3mtg@mail.gmail.com>
+References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+	<CAE9FiQWE-VGoh=8hyhWPMrTe7X1dqTyBCgAM=ozWMyZXEvwGTg@mail.gmail.com>
+	<CAErSpo7pxGA02uTDNoFpxU_6_B4CgvJM10zpFRjjhXHK5L3mtg@mail.gmail.com>
+Date: Thu, 9 Feb 2012 20:50:00 -0800
+Message-ID: <CAE9FiQVx7=cSVkApbh_8dnoBqdrRYDOVtMqdC=mDCwq0fuVZpA@mail.gmail.com>
+Subject: Re: [PATCH v2 00/18] add PCI bus-to-resource offset support in core
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 29, 2012 at 4:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Feb 29, 2012 at 3:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Wed, Feb 29, 2012 at 4:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> x86 does not need to offset the address. So we can skip that costing offset
->>> searching.
+On Thu, Feb 9, 2012 at 8:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Feb 9, 2012 at 8:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Thu, Feb 9, 2012 at 6:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> There's a lot of PCI-related code under arch/, but much of it is not actually
+>>> architecture-specific.  This series removes some of that code by moving most
+>>> of the bus-to-resource conversions into the core.
+>>>
+>>> We currently read PCI bus addresses from BARs in the core (pci_setup_device()).
+>>> Then every arch is responsible for converting those bus addresses to CPU
+>>> resources, usually in pcibios_fixup_bus().
+>>>
+>>> We already have a way for architectures to tell the core what the windows
+>>> through a host bridge are:
+>>>
+>>>    LIST_HEAD(resources);
+>>>    pci_add_resource(&resources, io_space);
+>>>    pci_add_resource(&resources, mem_space);
+>>>    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+>>>
+>>> This series extends that so the arch can also tell the core about address
+>>> translation performed by the host bridge:
+>>>
+>>>    LIST_HEAD(resources);
+>>>    pci_add_resource_offset(&resources, io_space, io_offset);
+>>>    pci_add_resource_offset(&resources, mem_space, mem_offset);
+>>>    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+>>>
+>>> Given that offset (the difference between bus address and CPU address for
+>>> each aperture), the core can do the bus-to-resource conversion immediately
+>>> when it reads the BARs.
+>>>
+>>> This removes an opportunity for bugs (some PCI fixups currently see bus
+>>> addresses in struct pci_dev resources when they're expecting CPU addresses),
+>>> but the main reason to do this is to make our PCI resource handling simpler
+>>> and more uniform.
+>>>
+>>> These patches are also available in this git repo:
+>>>    git://github.com/bjorn-helgaas/linux.git pci-offset-v2-d15af52258dd
+>>>
+>>> Or you can browse them here:
+>>>    https://github.com/bjorn-helgaas/linux/compare/master...pci-offset-v2-d15af52258dd
+>>>
+>>> I'd like to get these into linux-next soon to be ready for the 3.4 merge
+>>> window, so please let me know if you see any issues.
+>>>
+>>> Changes since v1:
+>>>  - mips: remove Cobalt legacy IDE fixup
+>>>  - show bus address range, not offset, e.g., this:
+>>>        pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus address [0x80000000-0xfedfffff])
+>>>    instead of this:
+>>>        pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus offset 0xeff80000000)
+>>>
 >>
->> I tried to start a discussion about this patch (and others), but I
->> don't think you responded:
->> http://marc.info/?l=linux-pci&m=133036414506921&w=2
+>> still think make pci_sysdata to generic and add one offset field to
+>> that would be more simple.
 >
-> this patch does reduce some not needed ops.
+> Maybe I'm misunderstanding you, because this doesn't make sense to me at all.
 >
-> and it does not affects your effects,
+> *One* offset field is insufficient.  A host bridge can have an
+> arbitrary number of apertures, and each aperture can have a different
+> offset.  So we must have a list or other variable-size structure.
+>
+> pci_scan_bus() takes a "void *sysdata".  Every arch defines its own
+> structure (struct pci_sysdata for x86, struct pci_controller for most
+> others) to supply here.  Are you suggesting that we make a common
+> structure like this:
+>
+>    struct pci_sysdata {
+>        struct list_head windows;
+>        void *sysdata;  /* arch-specific stuff */
+>    };
+>
+> That's possible, but I don't see the advantage over what I've done.
+> It doesn't seem simpler, because all the arch code that looks at
+> bus->sysdata would have to change to use
+> bus->generic_sysdata->sysdata.
 
-It does affect my efforts in that this patch adds back x86 complexity
-that I don't think is necessary.
+I mean, we can unify sysdata usuage, make them all most the same.
 
-And this patch makes it so the pci_add_resource_offset() interface
-exists and appears to work on x86, but if somebody tries to use it, it
-*doesn't* work.  I don't like to write code like that.  I think it's
-poor style.
+and for some sysdata, already acting like host_bridge struct with
+domain, numa_node, and resources.
 
-> and it just make x86 not get punished.
+>
+> If you can show an example of what you mean, maybe it will help me understand.
 
-What punishment are you worried about?  I really don't think you'll be
-able to measure any performance impact.
+just looked the sys_data of different arch,
 
-I agree that the x86 code you add *is* simpler than the generic
-version.  But I think the *overall* complexity is higher because now
-you have to look at two versions (generic and x86) and convince
-yourself that it's safe to use the x86 version.
+looks like pci_sys_data for arm already include the io offset
 
-Bjorn
+arch/arm/include/asm/mach/pci.h::
+
+struct pci_sys_data {
+#ifdef CONFIG_PCI_DOMAINS
+        int             domain;
+#endif
+        struct list_head node;
+        int             busnr;          /* primary bus number
+         */
+        u64             mem_offset;     /* bus->cpu memory mapping
+offset       */
+        unsigned long   io_offset;      /* bus->cpu IO mapping offset
+         */
+        struct pci_bus  *bus;           /* PCI bus
+         */
+        struct list_head resources;     /* root bus resources (apertures)
+
+Thanks
+
+Yinghai
