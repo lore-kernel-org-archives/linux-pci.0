@@ -1,94 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:43090 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753834Ab2BVUlO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2012 15:41:14 -0500
-Received: by wics10 with SMTP id s10so311248wic.19
-        for <linux-pci@vger.kernel.org>; Wed, 22 Feb 2012 12:41:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1329787427-17890-1-git-send-email-yinghai@kernel.org>
-References: <1329787427-17890-1-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Feb 2012 12:40:53 -0800
-Message-ID: <CAErSpo7T0NuY-O58rB81x7j+7j6tzaZqhHLGLXPJbjhrdGunxA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: fix memleak when ACPI _CRS is not used.
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 10 Feb 2012 11:40:45 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Danny Kukawka <danny.kukawka@bisect.de>
+Cc: Scott Murray <scott@spiteful.org>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH 06/16] cpcihp: fix debug module parameter to be bool
+Message-ID: <20120210114045.08a2d313@jbarnes-desktop>
+In-Reply-To: <1327960820-11867-7-git-send-email-danny.kukawka@bisect.de>
+References: <1327960820-11867-1-git-send-email-danny.kukawka@bisect.de>
+	<1327960820-11867-7-git-send-email-danny.kukawka@bisect.de>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/6hjhN3Y_sVpvC31tPMYTa5q"; protocol="application/pgp-signature"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 20, 2012 at 5:23 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> got warning:
-> unreferenced object 0xffff8801f6914200 (size 512):
->  comm "swapper/0", pid 1, jiffies 4294893643 (age 2664.644s)
->  hex dump (first 32 bytes):
->    00 00 c0 fe 00 00 00 00 ff ff ff ff 00 00 00 00  ................
->    60 58 2f f6 03 88 ff ff 00 02 00 00 00 00 00 00  `X/.............
->  backtrace:
->    [<ffffffff81c2408c>] kmemleak_alloc+0x26/0x43
->    [<ffffffff8113764f>] __kmalloc+0x121/0x183
->    [<ffffffff81ca8d93>] get_current_resources+0x5a/0xc6
->    [<ffffffff81c5bedd>] pci_acpi_scan_root+0x13c/0x21c
->    [<ffffffff81c2a745>] acpi_pci_root_add+0x1e1/0x421
->    [<ffffffff81408f50>] acpi_device_probe+0x50/0x190
->    [<ffffffff8149edc7>] really_probe+0x99/0x126
->    [<ffffffff8149ef83>] driver_probe_device+0x3b/0x56
->    [<ffffffff8149effd>] __driver_attach+0x5f/0x82
->    [<ffffffff8149d860>] bus_for_each_dev+0x5c/0x88
->    [<ffffffff8149eb87>] driver_attach+0x1e/0x20
->    [<ffffffff8149e7cc>] bus_add_driver+0xca/0x21d
->    [<ffffffff8149f47b>] driver_register+0x91/0xfe
->    [<ffffffff81409d09>] acpi_bus_register_driver+0x43/0x45
->    [<ffffffff8278bdc9>] acpi_pci_root_init+0x20/0x28
->    [<ffffffff810001e7>] do_one_initcall+0x57/0x134
->
-> The system have _CRS for root buses, but they are not used because is old...
->
-> Try free those not used resource array and name.
+--Sig_/6hjhN3Y_sVpvC31tPMYTa5q
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for fixing this.
+On Mon, 30 Jan 2012 23:00:10 +0100
+Danny Kukawka <danny.kukawka@bisect.de> wrote:
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
+> Fix debug variable from module parameter to be really bool to
+> fix 'warning: return from incompatible pointer type'.
+>=20
+> Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
 > ---
->  arch/x86/pci/acpi.c |   12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
->
-> Index: linux-2.6/arch/x86/pci/acpi.c
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/pci/acpi.c
-> +++ linux-2.6/arch/x86/pci/acpi.c
-> @@ -282,9 +282,6 @@ static void add_resources(struct pci_roo
->        int i;
->        struct resource *res, *root, *conflict;
->
-> -       if (!pci_use_crs)
-> -               return;
-> -
->        coalesce_windows(info, IORESOURCE_MEM);
->        coalesce_windows(info, IORESOURCE_IO);
->
-> @@ -336,8 +333,13 @@ get_current_resources(struct acpi_device
->        acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
->                                &info);
->
-> -       add_resources(&info);
-> -       return;
-> +       if (pci_use_crs) {
-> +               add_resources(&info);
-> +
-> +               return;
-> +       }
-> +
-> +       kfree(info.name);
->
->  name_alloc_fail:
->        kfree(info.res);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/pci/hotplug/cpcihp_generic.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/c=
+pcihp_generic.c
+> index fb3f846..81af764 100644
+> --- a/drivers/pci/hotplug/cpcihp_generic.c
+> +++ b/drivers/pci/hotplug/cpcihp_generic.c
+> @@ -62,7 +62,7 @@
+>  #define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_=
+NAME , ## arg)
+> =20
+>  /* local variables */
+> -static int debug;
+> +static bool debug;
+>  static char *bridge;
+>  static u8 bridge_busnr;
+>  static u8 bridge_slot;
+
+Applied to my -next branch, thanks.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/6hjhN3Y_sVpvC31tPMYTa5q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNXK9AAoJEIEoDkX4Qk9hj08QAJUJzT3ENcJrI5ZN/N+XpQFi
+uOzllqJJffnN2DA/i3dMV7EtSdPAVtMRa38V2He09fAvNjbGF3gq8iw3+Q9I8h57
+tmQq/KkIKoJJERo36LC5YDeykLl4fPmW7pWe1vPyCpGBvxcDbN4lsmhVb/enkLoD
+nV09PlYL1e6/Ve/9biP5uSQb74HaWIS669/APrK7xRDSVJ15O/QkxKWPv0flJEkz
+voOrPKZLGM5ZGM3AdL9/lrsU0nCDilBFjUdj3LcZ5u/4DKyrLUzJdhgpn5+3CiJM
+yhC9zD29UFMWmycn0F2wiO4FLe1k9cplzd0Xve+bCmRTlrFlTzykzQNejnMcUJiV
+EGDuv7fg3sar3k6/qE7rwQ3oqUF9LviawT9fLJnkHbcTHtofMwMALmeErxf0fKYC
+y2i5v1uAw5TDpBLEls3zLjtBdFH2qqEAq1GC+aodtB9KepFFe/VunO46GL3ssQ0e
+HKnvVFmYa/Jgq91Fxn+iSuKVWIniFHJbni4tbjShsEd/aoa24UoDwRMbthezYsC5
+XVA1ONaVhNso6Vcom49f/GDS0Zhc6EO2AyccfHJ/3WDA387euXAyk3nW51H8x6y5
+gPZBYCFifU7b5bWEey4J2LRep7bZZs8BKjZpmQoBoWECrIA2P8yu/P85eHGbOf7a
+lxxKSMi8JUip2zb1OJ7I
+=LJfC
+-----END PGP SIGNATURE-----
+
+--Sig_/6hjhN3Y_sVpvC31tPMYTa5q--
