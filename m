@@ -1,133 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:50151 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758995Ab2BJU4r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:56:47 -0500
+Date: Fri, 10 Feb 2012 12:56:44 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	linux-pcmcia@lists.infradead.org
-Subject: [PATCH 16/18] pcmcia: remove workaround for fixing pci parent bus subordinate
-Date: Mon, 27 Feb 2012 18:10:07 -0800
-Message-Id: <1330395009-29260-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 7/9] PCI: Make pci bridge reallocating enabled/disabled
+Message-ID: <20120210125644.7521a0d8@jbarnes-desktop>
+In-Reply-To: <1328424908-6385-8-git-send-email-yinghai@kernel.org>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-8-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/k3TtHVE.zN/B2otFIctClFh"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci busn allocation code is there, and it will preallocate bus number and it
-will make sure parent buses subordinate is right.
+--Sig_/k3TtHVE.zN/B2otFIctClFh
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-So remove workaround here.
+On Sat,  4 Feb 2012 22:55:06 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: linux-pcmcia@lists.infradead.org
----
- drivers/pcmcia/yenta_socket.c |   75 -----------------------------------------
- 1 files changed, 0 insertions(+), 75 deletions(-)
+> Let the user could enable and disable with pci=3Drealloc=3Don or pci=3Dre=
+alloc=3Doff
+>=20
+> Also
+> 1. move variable and functions near the place they are used.
+> 2. change macro to function
+> 3. change related functions and variable to static and _init
+> 4. update parameter description accordingly.
+>=20
+> -v2: still honor pci=3Drealloc, and treat it as pci=3Drealloc=3Don
+>      also use enum instead of ...
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  Documentation/kernel-parameters.txt |    8 ++++++--
+>  drivers/pci/pci.c                   |    4 +++-
+>  drivers/pci/pci.h                   |    2 +-
+>  drivers/pci/setup-bus.c             |   33 ++++++++++++++++++++++++++---=
+----
+>  4 files changed, 36 insertions(+), 11 deletions(-)
+>=20
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-p=
+arameters.txt
+> index 033d4e6..e11e5dd 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2109,8 +2109,12 @@ bytes respectively. Such letter suffixes can also =
+be entirely omitted.
+>  				the default.
+>  				off: Turn ECRC off
+>  				on: Turn ECRC on.
+> -		realloc		reallocate PCI resources if allocations done by BIOS
+> -				are erroneous.
+> +		realloc=3D	Enable/disable reallocating PCI bridge resources
+> +				if allocations done by BIOS are too small to fit
+> +				resources required by children devices.
+> +				off: Turn realloc off
+> +				on: Turn realloc on
+> +		realloc		same as realloc=3Don
 
-diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
-index 849c0c1..5757cae 100644
---- a/drivers/pcmcia/yenta_socket.c
-+++ b/drivers/pcmcia/yenta_socket.c
-@@ -1064,79 +1064,6 @@ static void yenta_config_init(struct yenta_socket *socket)
- 	config_writew(socket, CB_BRIDGE_CONTROL, bridge);
- }
- 
--/**
-- * yenta_fixup_parent_bridge - Fix subordinate bus# of the parent bridge
-- * @cardbus_bridge: The PCI bus which the CardBus bridge bridges to
-- *
-- * Checks if devices on the bus which the CardBus bridge bridges to would be
-- * invisible during PCI scans because of a misconfigured subordinate number
-- * of the parent brige - some BIOSes seem to be too lazy to set it right.
-- * Does the fixup carefully by checking how far it can go without conflicts.
-- * See http://bugzilla.kernel.org/show_bug.cgi?id=2944 for more information.
-- */
--static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
--{
--	struct list_head *tmp;
--	unsigned char upper_limit;
--	/*
--	 * We only check and fix the parent bridge: All systems which need
--	 * this fixup that have been reviewed are laptops and the only bridge
--	 * which needed fixing was the parent bridge of the CardBus bridge:
--	 */
--	struct pci_bus *bridge_to_fix = cardbus_bridge->parent;
--
--	/* Check bus numbers are already set up correctly: */
--	if (bridge_to_fix->subordinate >= cardbus_bridge->subordinate)
--		return; /* The subordinate number is ok, nothing to do */
--
--	if (!bridge_to_fix->parent)
--		return; /* Root bridges are ok */
--
--	/* stay within the limits of the bus range of the parent: */
--	upper_limit = bridge_to_fix->parent->subordinate;
--
--	/* check the bus ranges of all silbling bridges to prevent overlap */
--	list_for_each(tmp, &bridge_to_fix->parent->children) {
--		struct pci_bus *silbling = pci_bus_b(tmp);
--		/*
--		 * If the silbling has a higher secondary bus number
--		 * and it's secondary is equal or smaller than our
--		 * current upper limit, set the new upper limit to
--		 * the bus number below the silbling's range:
--		 */
--		if (silbling->secondary > bridge_to_fix->subordinate
--		    && silbling->secondary <= upper_limit)
--			upper_limit = silbling->secondary - 1;
--	}
--
--	/* Show that the wanted subordinate number is not possible: */
--	if (cardbus_bridge->subordinate > upper_limit)
--		dev_printk(KERN_WARNING, &cardbus_bridge->dev,
--			   "Upper limit for fixing this "
--			   "bridge's parent bridge: #%02x\n", upper_limit);
--
--	/* If we have room to increase the bridge's subordinate number, */
--	if (bridge_to_fix->subordinate < upper_limit) {
--
--		/* use the highest number of the hidden bus, within limits */
--		unsigned char subordinate_to_assign =
--			min(cardbus_bridge->subordinate, upper_limit);
--
--		dev_printk(KERN_INFO, &bridge_to_fix->dev,
--			   "Raising subordinate bus# of parent "
--			   "bus (#%02x) from #%02x to #%02x\n",
--			   bridge_to_fix->number,
--			   bridge_to_fix->subordinate, subordinate_to_assign);
--
--		/* Save the new subordinate in the bus struct of the bridge */
--		bridge_to_fix->subordinate = subordinate_to_assign;
--
--		/* and update the PCI config space with the new subordinate */
--		pci_write_config_byte(bridge_to_fix->self,
--			PCI_SUBORDINATE_BUS, bridge_to_fix->subordinate);
--	}
--}
--
- /*
-  * Initialize a cardbus controller. Make sure we have a usable
-  * interrupt, and that we can map the cardbus area. Fill in the
-@@ -1257,8 +1184,6 @@ static int __devinit yenta_probe(struct pci_dev *dev, const struct pci_device_id
- 	dev_printk(KERN_INFO, &dev->dev,
- 		   "Socket status: %08x\n", cb_readl(socket, CB_SOCKET_STATE));
- 
--	yenta_fixup_parent_bridge(dev->subordinate);
--
- 	/* Register it with the pcmcia layer.. */
- 	ret = pcmcia_register_socket(&socket->socket);
- 	if (ret == 0) {
--- 
-1.7.7
+"too small to accommodate resources required by all child devices"
 
+Looks good otherwise.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/k3TtHVE.zN/B2otFIctClFh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPNYSMAAoJEIEoDkX4Qk9hKRoQAIRSbIaOKoIECRJqRG2TIwEg
+PtHBuO9/CrtyIuQwGzcu73/1ZCg3qjiyrEAl1SasV2dhG9/ns2HaWzYM1jG4L6sr
+3N4f85nMpc28497kp+zcw+k00S7uFRASml/va0+lEmhVdVPuclqvtd/1F0oIVQOj
+Qadi55BtKlPN4IU08LhKXhSw3cCNq+JYWa7q1uAC6s65qOmQgrnxia7U903LYzqE
+NkCrq6TWw4TErSOZmm5Da2Af8OyVuyZ2bqFEM7FscC6osDviCkYhMANLOtqiDddY
+0rN++1VxqOJP7WM03Oxnpd/Nf4mLuxAq5nxVhTh+phuZWlF8PQGDZBvcrNjc0vpb
+qsJ/arzvPzDAd6CieQMQxx2FrvGywTIGSmP8tAZJtL+MRuvMKiirkLAOCkpJ2LTn
+WpJ/Rl+9EGijlD8kFPJ2I6YBcfx3y9iF/b075IdAxMRqlyJZaFAB1eZIBwlyoBbk
+Hqa8oJEiTkfc45M+ybaX+nVV+CMCeDK4LuX5oMLyOtMX+hfIso3wdAUj04xlDVvY
+WzABEzf9axVi0DaNUZ1vzRDHhF96h+BMPPlAzsvZ3ulY09lGyPsA9U6QvxE1ZGGh
+UNek48HltYMlPcTt7CBR3I3o7+OAfAtijhArlECLfbJcFlQqz53eYLs0iKu/EML0
+08L5os9i8nckgZrNtQHK
+=72Pc
+-----END PGP SIGNATURE-----
+
+--Sig_/k3TtHVE.zN/B2otFIctClFh--
