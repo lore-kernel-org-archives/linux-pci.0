@@ -1,114 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:43585 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030714Ab2B2RLz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 12:11:55 -0500
-Received: by yenl12 with SMTP id l12so1408841yen.19
-        for <linux-pci@vger.kernel.org>; Wed, 29 Feb 2012 09:11:54 -0800 (PST)
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:53057 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932214Ab2BJUym convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:54:42 -0500
 MIME-Version: 1.0
-In-Reply-To: <7CA7CC8661C64A85926B8624168F24BA@SonyVAIO>
-References: <7CA7CC8661C64A85926B8624168F24BA@SonyVAIO>
-Date: Wed, 29 Feb 2012 09:11:54 -0800
-Message-ID: <CANEJEGs+tpLx539wtC0wLB=zu_o_3YkMfMk0QDiCo-_dHRM7aw@mail.gmail.com>
-Subject: Re: PCIe latency / your MMIO latency
-From: Grant Grundler <grantgrundler@gmail.com>
-To: Anton Murashov <anton.murashov@gmail.com>
-Cc: Robert.Olsson@data.slu.se, buytenh@wantstofly.org,
-	laforge@gnumonks.org, grundler@parisc-linux.org,
-	derbenev@quantstellation.ru, Evgeny Vasin <gevorr@gmail.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20120210124614.5006563e@jbarnes-desktop>
+References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	<1328424908-6385-4-git-send-email-yinghai@kernel.org>
+	<20120210124614.5006563e@jbarnes-desktop>
+Date: Fri, 10 Feb 2012 12:54:41 -0800
+Message-ID: <CAE9FiQXeNGP3zj2PhWK_Gcnwr9Qsn6LZ74TL2OA2RrztLaewvg@mail.gmail.com>
+Subject: Re: [PATCH 3/9] PCI: Disable cardbus bridge MEM1 pref CTL
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+linux-pci  [ re: http://svn.gnumonks.org/trunk/mmio_test/ ]
-
-Hi Anton,
-Please CC linux-pci. mmio_test is a public tool - please use a public
-mailing list when asking for advice. Secondly, *current* linux pci
-expertise resides on this list.
-
-On Tue, Feb 28, 2012 at 11:42 PM, Anton Murashov
-<anton.murashov@gmail.com> wrote:
-> Hello, Gents.
+On Fri, Feb 10, 2012 at 12:46 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Sat,  4 Feb 2012 22:55:02 -0800
+> Yinghai Lu <yinghai@kernel.org> wrote:
 >
-> I am writing to you because you are the authors of great MMIO tool.
+>> Some BIOS enable both pref for MEM0 and MEM1.
+>>
+>> but we assume MEM1 is non-pref...
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/setup-bus.c |    8 ++++++++
+>>  1 files changed, 8 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 090217a..d5897c3 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -914,6 +914,14 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+>>       if (realloc_head)
+>>               add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
+>>
+>> +     /* MEM1 must not be pref mmio */
+>> +     pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+>> +     if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
+>> +             ctrl &= ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
+>> +             pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
+>> +             pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+>> +     }
+>> +
+>>       /*
+>>        * Check whether prefetchable memory is supported
+>>        * by this bridge.
 >
-> We are developing very latency-sensitive hardware/software complex and part
-> of this project is a very fast (=low-latency) interconnect between CPU and
-> PCIe card. Theoretically PCIe latency (non-posted read request â€“ completion
-> or posted write-write pair from/to the device) should be around 250ns (=
-> 875 clock cycles @ our 3.5 Ghz CPU).
+> Does this actually fix any bugs?
 
-How did you arrive at this theoretical number of 250ns? What did you consider?
+at least, one of laptop have this problem.
 
-MMIO is measuring in CPU cycles (TSC) the time from CPU
+> Dominik, have you tested it?
 
-> Cache coherence and other issues can
-> vary this figure.
+he tested my for-pci3 and for-pci-busn-alloc branches, both branches
+have this patch.
 
-MMIO space is generally non-coherent and uncached. Is that not true
-for your device?
-I'm wondering why cache coherency traffic should interfere with your
-measurement.
+and it does not cause problem to him.
 
-> â€“ but measuring real-world machine we`ve never got anything
-> even close to these 250ns. We tried different motherboards, different CPUs,
-> different slots within one motherboard, etc.
-
-Can you post chip set models/vendors and times measured so we can
-duplicate the results with other devices?
-
-> Results vary deadly â€“ from 0.7 us to 2 us, what is much bigger figures than
-> we were expecting. More of that â€“ this dispersion depending on particular
-> setup means that problem is not inside our hardware (actually, we tried
-> multiply hardware options as well) but in PCIe hardware / settings.
-
-0.7us-2us seems quite reasonable for PCIe MMIO read based on my
-previous experience. 700ns is about 4x-5x longer than an "open page"
-memory fetch.  250ns would be roughly 2x-3x a memory fetch. 250ns
-seems unrealistic given memory operations are generally all occur on
-one chip (crossing timing domains but all within one chip) and MMIO
-operations must traverse many more timing domains and "bridges".
-
-> So, my questions to you gents are:
->
-> Do you have any experience with PCIe from this perspective?
-
-Not recently. See
-http://www.parisc-linux.org/~grundler/talks/ols_2002/4_6MMIO_Reads_are.html
-
-> Do you have ideas how to make it work around it`s theoretical 250ns? Have you ever seen
-> figures like this while working on MMIO or other things?
-
-No. I've never seen 250us PCIe MMIO read completion time. In general,
-to get those sorts of transaction times, one has to have a "flow" of
-transactions (ie all DMA, no MMIO reads or writes) and one can then
-just measure the time a device needs to DMA in a command queue and
-emit a completion message in another queue (CPU polled). And even with
-that, I'm skeptical the "round trip time" will be below ~400-500ns on
-conventional x86 HW.
-
-> We will really appreciate any comments from you regarding this issue. The
-> fact that you`ve written MMIO means you have a lot of great experience in
-> this filed!
-
-Uhm. Not really. It just means we were curious and wanted other people
-to help us measure MMIO access times.
-
-mmio_test is also an "education tool" so HW vendors become more aware
-of how expensive MMIO reads are and why they should design interfaces
-that do NOT use MMIO read in the "performance path".
-
-More "tips" on developing high performance PCI devices here:
-    "09_Advanced Programming Interfaces for PCI Devices"
-    http://www.pcisig.com/developers/main/training_materials/get_document?doc_id=00941b570381863f8cc97850d46c0597e919a34b
-
-cheers,
-grant
-
->
-> Thank you!
->
-> Kind regards,
-> Â Â Â Â Â Â Â  Anton.
+Yinghai
