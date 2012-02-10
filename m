@@ -1,105 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120210023631.10311.37307.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+	<20120210023631.10311.37307.stgit@bhelgaas.mtv.corp.google.com>
+Date: Thu, 9 Feb 2012 19:47:00 -0800
+Message-ID: <CAE9FiQXtYfcqjSKLxiYqgtMfqZts2kvM8G1M5Kw0VemmtvTBPA@mail.gmail.com>
+Subject: Re: [PATCH v2 02/18] PCI: add struct pci_host_bridge and a list of
+ all bridges found
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 19/22] PCI, sysfs: create rescan_bridge under /sys/.../pci/devices/... for pci bridges
-Date: Fri, 10 Feb 2012 20:06:22 -0800
-Message-Id: <1328933185-15154-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
-References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will create rescan for every pci device under parent bus.
-that is not right. the device is already there, there is no reason to rescan it.
+On Thu, Feb 9, 2012 at 6:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> This adds a list of all PCI host bridges we find and a way to look up
+> the host bridge from a pci_dev.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/probe.c |   39 ++++++++++++++++++++++++++++++++++-----
+>  include/linux/pci.h |    5 +++++
+>  2 files changed, 39 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index da0d655..2ffe8a3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -15,6 +15,8 @@
+>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
+>  #define CARDBUS_RESERVE_BUSNR  3
+>
+> +static LIST_HEAD(pci_host_bridges);
+> +
+>  /* Ugh.  Need to stop exporting this to modules. */
+>  LIST_HEAD(pci_root_buses);
+>  EXPORT_SYMBOL(pci_root_buses);
+> @@ -42,6 +44,23 @@ int no_pci_devices(void)
+>  }
+>  EXPORT_SYMBOL(no_pci_devices);
+>
+> +static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
+> +{
+> +       struct pci_bus *bus;
+> +       struct pci_host_bridge *bridge;
+> +
+> +       bus = dev->bus;
+> +       while (bus->parent)
+> +               bus = bus->parent;
+> +
+> +       list_for_each_entry(bridge, &pci_host_bridges, list) {
+> +               if (bridge->bus == bus)
+> +                       return bridge;
+> +       }
+> +
+> +       return NULL;
+> +}
+> +
 
-We could have rescan for pci bridges. less confusing.
+so pci_host_bridge(dev) still is expensive.
 
-Need to move rescan attr to pci dev bridge attribute group.
-And We should rescan bridge's secondary bus instead of primary bus.
 
--v3: Use device_type for pci dev.
--v4: Seperate pci device type change out
--v5: add rescan_bridge for bridge type, and still keep the old rescan.
-	may remove the old rescan later.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
- drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
- 2 files changed, 34 insertions(+), 0 deletions(-)
+>  /*
+>  * PCI Bus Class
+>  */
+> @@ -1526,20 +1545,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>                struct pci_ops *ops, void *sysdata, struct list_head *resources)
+>  {
+>        int error, i;
+> +       struct pci_host_bridge *bridge;
+>        struct pci_bus *b, *b2;
+>        struct device *dev;
+>        struct pci_bus_resource *bus_res, *n;
+>        struct resource *res;
+>
+> +       bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> +       if (!bridge)
+> +               return NULL;
+> +
+>        b = pci_alloc_bus();
+>        if (!b)
+> -               return NULL;
+> +               goto err_bus;
+>
+>        dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+> -       if (!dev) {
+> -               kfree(b);
+> -               return NULL;
+> -       }
+> +       if (!dev)
+> +               goto err_dev;
+>
+>        b->sysdata = sysdata;
+>        b->ops = ops;
+> @@ -1576,6 +1598,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>
+>        b->number = b->secondary = bus;
+>
+> +       bridge->bus = b;
+> +
+>        /* Add initial resources to the bus */
+>        list_for_each_entry_safe(bus_res, n, resources, list)
+>                list_move_tail(&bus_res->list, &b->resources);
+> @@ -1591,6 +1615,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>        }
+>
+>        down_write(&pci_bus_sem);
+> +       list_add_tail(&bridge->list, &pci_host_bridges);
+>        list_add_tail(&b->node, &pci_root_buses);
+>        up_write(&pci_bus_sem);
+>
+> @@ -1600,11 +1625,15 @@ class_dev_reg_err:
+>        device_unregister(dev);
+>  dev_reg_err:
+>        down_write(&pci_bus_sem);
+> +       list_del(&bridge->list);
+>        list_del(&b->node);
+>        up_write(&pci_bus_sem);
+>  err_out:
+>        kfree(dev);
+> +err_dev:
+>        kfree(b);
+> +err_bus:
+> +       kfree(bridge);
+>        return NULL;
+>  }
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a16b1df..dfb2b64 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -388,6 +388,11 @@ static inline void pci_add_saved_cap(struct pci_dev *pci_dev,
+>        hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
+>  }
+>
+> +struct pci_host_bridge {
+> +       struct list_head list;
+> +       struct pci_bus *bus;            /* root bus */
+> +};
+> +
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 34f5110..95f0f37 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -111,6 +111,16 @@ Description:
- 		from this part of the device tree.
- 		Depends on CONFIG_HOTPLUG.
- 
-+What:		/sys/bus/pci/devices/.../rescan_bridge
-+Date:		February 2012
-+Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
-+Description:
-+		Writing a non-zero value to this attribute will
-+		force a rescan of the bridge and all child buses, and
-+		re-discover devices removed earlier from this part of
-+		the device tree.
-+		Depends on CONFIG_HOTPLUG.
-+
- What:		/sys/bus/pci/devices/.../reset
- Date:		July 2009
- Contact:	Michael S. Tsirkin <mst@redhat.com>
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 124e826..68caf29 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
- 	return count;
- }
- 
-+static ssize_t
-+dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
-+		 const char *buf, size_t count)
-+{
-+	unsigned long val;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if (val) {
-+		mutex_lock(&pci_remove_rescan_mutex);
-+		pci_rescan_bus(pdev->subordinate);
-+		mutex_unlock(&pci_remove_rescan_mutex);
-+	}
-+	return count;
-+}
-+
-+static struct device_attribute pci_dev_bridge_rescan_attr =
-+	__ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
-+
- static void remove_callback(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
- late_initcall(pci_sysfs_init);
- 
- static struct attribute *pci_dev_bridge_attrs[] = {
-+#ifdef CONFIG_HOTPLUG
-+	&pci_dev_bridge_rescan_attr.attr,
-+#endif
- 	NULL,
- };
- 
--- 
-1.7.7
+also still have two list: one for host bridges and one for root buses.
 
+Yinghai
