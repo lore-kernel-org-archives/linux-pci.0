@@ -1,47 +1,88 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 02/12] PCI: add pci_clear_flags()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org
-Date: Thu, 23 Feb 2012 12:43:12 -0700
-Message-ID: <20120223194312.20708.41825.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: fix memleak for pci dev removing during hotplug
+Date: Sat, 11 Feb 2012 00:18:30 -0800
+Message-Id: <1328948310-14748-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a pci_clear_flags() for cases when we statically initialize
-pci_flags, then decide to clear things out later.
+unreferenced object 0xffff880276d17700 (size 64):
+  comm "swapper/0", pid 1, jiffies 4294897182 (age 3976.028s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 18 f9 de 76 02 88 ff ff  ...........v....
+    10 00 00 00 0e 00 00 00 0f 28 40 00 00 00 00 00  .........(@.....
+  backtrace:
+    [<ffffffff81c8aede>] kmemleak_alloc+0x26/0x43
+    [<ffffffff811385f0>] __kmalloc+0x121/0x183
+    [<ffffffff813cf821>] pci_add_cap_save_buffer+0x35/0x7c
+    [<ffffffff813d12b7>] pci_allocate_cap_save_buffers+0x1d/0x65
+    [<ffffffff813cdb52>] pci_device_add+0x92/0xf1
+    [<ffffffff81c8afe6>] pci_scan_single_device+0x9f/0xa1
+    [<ffffffff813cdbd2>] pci_scan_slot.part.20+0x21/0x106
+    [<ffffffff813cdce2>] pci_scan_slot+0x2b/0x35
+    [<ffffffff81c8dae4>] __pci_scan_child_bus+0x51/0x107
+    [<ffffffff81c8d75b>] pci_scan_bridge+0x376/0x6ae
+    [<ffffffff81c8db60>] __pci_scan_child_bus+0xcd/0x107
+    [<ffffffff81c8dbab>] pci_scan_child_bus+0x11/0x2a
+    [<ffffffff81cca58c>] pci_acpi_scan_root+0x18b/0x21c
+    [<ffffffff81c916be>] acpi_pci_root_add+0x1e1/0x42a
+    [<ffffffff81406210>] acpi_device_probe+0x50/0x190
+    [<ffffffff814a0227>] really_probe+0x99/0x126
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Need to free saved_buffer for capabilities.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- include/asm-generic/pci-bridge.h |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/pci/pci.c   |    9 +++++++++
+ drivers/pci/pci.h   |    1 +
+ drivers/pci/probe.c |    1 +
+ 3 files changed, 11 insertions(+)
 
-diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
-index 4a5aca2..a5b5d5a 100644
---- a/include/asm-generic/pci-bridge.h
-+++ b/include/asm-generic/pci-bridge.h
-@@ -45,6 +45,11 @@ static inline void pci_add_flags(int flags)
- 	pci_flags |= flags;
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1225,6 +1225,7 @@ static void pci_release_capabilities(str
+ {
+ 	pci_vpd_release(dev);
+ 	pci_iov_release(dev);
++	pci_free_cap_save_buffers(dev);
  }
  
-+static inline void pci_clear_flags(int flags)
+ /**
+Index: linux-2.6/drivers/pci/pci.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.c
++++ linux-2.6/drivers/pci/pci.c
+@@ -1916,6 +1916,15 @@ void pci_allocate_cap_save_buffers(struc
+ 			"unable to preallocate PCI-X save buffer\n");
+ }
+ 
++void pci_free_cap_save_buffers(struct pci_dev *dev)
 +{
-+	pci_flags &= ~flags;
++	struct pci_cap_saved_state *tmp;
++	struct hlist_node *pos, *n;
++
++	hlist_for_each_entry_safe(tmp, pos, n, &dev->saved_cap_space, next)
++		kfree(tmp);
 +}
 +
- static inline int pci_has_flag(int flag)
+ /**
+  * pci_enable_ari - enable ARI forwarding if hardware support it
+  * @dev: the PCI device
+Index: linux-2.6/drivers/pci/pci.h
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.h
++++ linux-2.6/drivers/pci/pci.h
+@@ -73,6 +73,7 @@ extern int __pci_pme_wakeup(struct pci_d
+ extern void pci_pm_init(struct pci_dev *dev);
+ extern void platform_pci_wakeup_init(struct pci_dev *dev);
+ extern void pci_allocate_cap_save_buffers(struct pci_dev *dev);
++void pci_free_cap_save_buffers(struct pci_dev *dev);
+ 
+ static inline void pci_wakeup_event(struct pci_dev *dev)
  {
- 	return pci_flags & flag;
-@@ -52,6 +57,7 @@ static inline int pci_has_flag(int flag)
- #else
- static inline void pci_set_flags(int flags) { }
- static inline void pci_add_flags(int flags) { }
-+static inline void pci_clear_flags(int flags) { }
- static inline int pci_has_flag(int flag)
- {
- 	return 0;
-
