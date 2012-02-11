@@ -1,58 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f202.google.com ([209.85.213.202]:56042 "EHLO
-	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752847Ab2BVSTn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2012 13:19:43 -0500
-Received: by mail-yx0-f202.google.com with SMTP id m1so39414yen.1
-        for <linux-pci@vger.kernel.org>; Wed, 22 Feb 2012 10:19:43 -0800 (PST)
-Subject: [PATCH v1 08/11] mips/PCI: removed unused pci_probe configurability
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-mips@linux-mips.org,
-	Ralf Baechle <ralf@linux-mips.org>
-Date: Wed, 22 Feb 2012 11:19:43 -0700
-Message-ID: <20120222181943.27513.19771.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 01/22] PCI: Add busn_res into struct pci_bus.
+Date: Fri, 10 Feb 2012 20:06:04 -0800
+Message-Id: <1328933185-15154-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We never assign anything other than PCI_ASSIGN_ALL_BUSSES to pci_probe,
-so just remove the indirection.  If configurability is required in the
-future, please use the pci_flags/PCI_REASSIGN_ALL_BUS functionality
-as is done for powerpc.
+will use it to have bus number resource tree.
 
-CC: Ralf Baechle <ralf@linux-mips.org>
-CC: linux-mips@linux-mips.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+-v2: remove iobusn_resource
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- arch/mips/pci/pci.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+ include/linux/pci.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index 2a11045..19f6d19 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -24,10 +24,6 @@
-  * assignments.
-  */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f8caaab..94ad468 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -419,6 +419,7 @@ struct pci_bus {
+ 	struct list_head slots;		/* list of slots on this bus */
+ 	struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
+ 	struct list_head resources;	/* address space routed to this bus */
++	struct resource busn_res;	/* track registered bus num range */
  
--#define PCI_ASSIGN_ALL_BUSSES	1
--
--unsigned int pci_probe = PCI_ASSIGN_ALL_BUSSES;
--
- /*
-  * The PCI controller list.
-  */
-@@ -238,7 +234,7 @@ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
- 
- unsigned int pcibios_assign_all_busses(void)
- {
--	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
-+	return 1;
- }
- 
- int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	struct pci_ops	*ops;		/* configuration access functions */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+-- 
+1.7.7
 
