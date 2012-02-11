@@ -1,94 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:37316 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755472Ab2BXDtn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:43 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>
-Subject: [PATCH 07/13] x86, irq: more strict check for register ioapic
-Date: Thu, 23 Feb 2012 19:48:53 -0800
-Message-Id: <1330055339-11662-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 18/22] PCI, sys: Use device_type and attr_groups with pci dev
+Date: Fri, 10 Feb 2012 20:06:21 -0800
+Message-Id: <1328933185-15154-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. check overlaping gsi range
-for hotplug ioapic case, BIOS may have some entries in MADT
-and also in pci bus with _GSB.
+We want to create rescan in sys only for pci bridge instead of all pci dev.
 
-2. make bad_ioapics take idx instead of nr_ioapics.
-for hotadd ioapic could find spare slot in the middle later.
+We could use attribute_groups/is_visible method to do that.
 
-3. check if entries in right range.
+Now pci dev does not use device type yet. So add pci_dev_type to take
+attr_groups with it.
+
+Add pci_dev_bridge_attrs_are_visible() to control attr_bridge_group only create
+attr for bridge.
+
+This is the framework related change, later could attr to bridge_attr_group,
+to make those attr only show up on pci bridge device.
+
+Also We could add more attr groups with is_visible to reduce messness in
+	pci_create_sysfs_dev_files. ( at least for boot_vga one )
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Suresh Siddha <suresh.b.siddha@intel.com>
 ---
- arch/x86/kernel/apic/io_apic.c |   19 ++++++++++++++-----
- 1 files changed, 14 insertions(+), 5 deletions(-)
+ drivers/pci/pci-sysfs.c |   30 ++++++++++++++++++++++++++++++
+ drivers/pci/pci.h       |    1 +
+ drivers/pci/probe.c     |    1 +
+ 3 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 527b184..57ffa86 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -4065,11 +4065,11 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d972303..124e826 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1335,3 +1335,33 @@ static int __init pci_sysfs_init(void)
  }
  
--static __init int bad_ioapic(unsigned long address)
-+static __init int bad_ioapic(int idx, unsigned long address)
- {
--	if (nr_ioapics >= MAX_IO_APICS) {
-+	if (idx >= MAX_IO_APICS) {
- 		printk(KERN_WARNING "WARNING: Max # of I/O APICs (%d) exceeded "
--		       "(found %d), skipping\n", MAX_IO_APICS, nr_ioapics);
-+		       "(found %d), skipping\n", MAX_IO_APICS, idx);
- 		return 1;
- 	}
- 	if (!address) {
-@@ -4082,14 +4082,17 @@ static __init int bad_ioapic(unsigned long address)
- 
- void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- {
--	int idx = 0;
-+	int idx;
- 	int entries;
- 	struct mp_ioapic_gsi *gsi_cfg;
- 
--	if (bad_ioapic(address))
-+	idx = mp_find_ioapic(gsi_base);
-+	if (idx >= 0)
- 		return;
- 
- 	idx = nr_ioapics;
-+	if (bad_ioapic(idx, address))
-+		return;
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
-@@ -4104,6 +4107,12 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
+ late_initcall(pci_sysfs_init);
 +
-+	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
-+		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+		return;
-+	}
++static struct attribute *pci_dev_bridge_attrs[] = {
++	NULL,
++};
 +
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
- 	gsi_cfg->gsi_end = gsi_base + entries - 1;
++static umode_t pci_dev_bridge_attrs_are_visible(struct kobject *kobj,
++						struct attribute *a, int n)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pdev->subordinate)
++		return 0;
++
++	return a->mode;
++}
++
++static struct attribute_group pci_dev_bridge_attr_group = {
++	.attrs = pci_dev_bridge_attrs,
++	.is_visible = pci_dev_bridge_attrs_are_visible,
++};
++
++static const struct attribute_group *pci_dev_attr_groups[] = {
++	&pci_dev_bridge_attr_group,
++	NULL,
++};
++
++struct device_type pci_dev_type = {
++	.groups = pci_dev_attr_groups,
++};
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f862a5a..8d17a1c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -161,6 +161,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+ }
+ extern struct device_attribute pci_dev_attrs[];
+ extern struct device_attribute pcibus_dev_attrs[];
++extern struct device_type pci_dev_type;
+ #ifdef CONFIG_HOTPLUG
+ extern struct bus_attribute pci_bus_attrs[];
+ #else
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 009946a..b24fa1f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1100,6 +1100,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->sysdata = dev->bus->sysdata;
+ 	dev->dev.parent = dev->bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
++	dev->dev.type = &pci_dev_type;
+ 	dev->hdr_type = hdr_type & 0x7f;
+ 	dev->multifunction = !!(hdr_type & 0x80);
+ 	dev->error_state = pci_channel_io_normal;
 -- 
 1.7.7
 
