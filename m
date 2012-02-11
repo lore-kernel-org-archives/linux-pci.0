@@ -1,39 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:11769 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752828Ab2BIPIZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Feb 2012 10:08:25 -0500
-Date: Thu, 9 Feb 2012 07:08:23 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Oliver Neukum <oliver@neukum.org>
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC] xhci: Fix BIOS handoff failure on some Intel systems.
-Message-ID: <20120209150823.GA5232@xanatos>
-References: <20120207233118.GA6947@xanatos>
- <201202081611.37097.oneukum@suse.de>
- <20120208214851.GA2669@xanatos>
- <201202090956.22456.oliver@neukum.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201202090956.22456.oliver@neukum.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH 07/22] PCI, powerpc: Register busn_res for root buses
+Date: Fri, 10 Feb 2012 20:06:10 -0800
+Message-Id: <1328933185-15154-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 09, 2012 at 09:56:22AM +0100, Oliver Neukum wrote:
-> Am Mittwoch, 8. Februar 2012, 22:48:51 schrieb Sarah Sharp:
-> > > > Can you test and make sure this fixes the issue on your test systems?
-> > > 
-> > > I've tested it and it works. Are you sure it is safe to enable a PCI device
-> > > at that point? If so, your patch is better than mine.
-> > 
-> > Jesse Barnes told me it's fine over IRC, so I'm just going to send this
-> > off, with your Tested-by line.
-> 
-> Very well, but then consequently you should do it for all HCIs.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/kernel/pci-common.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-Ok, sure. :)  I'll send the patch out later today.
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index cce98d7..501f29b 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1732,6 +1732,8 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
+ 	bus->secondary = hose->first_busno;
+ 	hose->bus = bus;
+ 
++	pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
++
+ 	/* Get probe mode and perform scan */
+ 	mode = PCI_PROBE_NORMAL;
+ 	if (node && ppc_md.pci_probe_mode)
+@@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
+ 		of_scan_bus(node, bus);
+ 	}
+ 
+-	if (mode == PCI_PROBE_NORMAL)
++	if (mode == PCI_PROBE_NORMAL) {
++		pci_bus_update_busn_res_end(bus, 255);
+ 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
++		pci_bus_update_busn_res_end(bus, bus->subordinate);
++	}
+ 
+ 	/* Platform gets a chance to do some global fixups before
+ 	 * we proceed to resource allocation
+-- 
+1.7.7
 
-Sarah Sharp
