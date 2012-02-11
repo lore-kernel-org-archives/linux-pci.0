@@ -1,111 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:32329 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755175Ab2BXDYF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:24:05 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/4] PCI: only enable pci realloc when SRIOV bar is not assigned
-Date: Thu, 23 Feb 2012 19:23:32 -0800
-Message-Id: <1330053812-10316-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
-References: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 19/22] PCI, sysfs: create rescan_bridge under /sys/.../pci/devices/... for pci bridges
+Date: Fri, 10 Feb 2012 20:06:22 -0800
+Message-Id: <1328933185-15154-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If bios does not assign those BAR or wrong address, then kernel will
-try to do pci realloc.
+Current code will create rescan for every pci device under parent bus.
+that is not right. the device is already there, there is no reason to rescan it.
 
-in that case, user still can use pci=realloc=off to override it.
+We could have rescan for pci bridges. less confusing.
 
--v2: According to Jesse, adding one CONFIG option for distribution to
-     disable it or enable it.
+Need to move rescan attr to pci dev bridge attribute group.
+And We should rescan bridge's secondary bus instead of primary bus.
+
+-v3: Use device_type for pci dev.
+-v4: Seperate pci device type change out
+-v5: add rescan_bridge for bridge type, and still keep the old rescan.
+	may remove the old rescan later.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/Kconfig     |   10 ++++++++++
- drivers/pci/setup-bus.c |   28 ++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+), 0 deletions(-)
+ Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
+ drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 37856f7..771a037 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -31,6 +31,16 @@ config PCI_DEBUG
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 34f5110..95f0f37 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -111,6 +111,16 @@ Description:
+ 		from this part of the device tree.
+ 		Depends on CONFIG_HOTPLUG.
  
- 	  When in doubt, say N.
- 
-+config PCI_REALLOC_ENABLE_AUTO
-+	bool "PCI Realloc Enable Auto"
-+	depends on PCI
-+	help
-+	  Say Y here if you want the PCI core to detect if pci realloc
-+	  need to be enabled. You can always use pci=realloc=on or
-+	  pci=realloc=off to override it.
++What:		/sys/bus/pci/devices/.../rescan_bridge
++Date:		February 2012
++Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
++Description:
++		Writing a non-zero value to this attribute will
++		force a rescan of the bridge and all child buses, and
++		re-discover devices removed earlier from this part of
++		the device tree.
++		Depends on CONFIG_HOTPLUG.
 +
-+	  When in doubt, say N.
-+
- config PCI_STUB
- 	tristate "PCI Stub driver"
- 	depends on PCI
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e21e1c2..c9214a1 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1294,6 +1294,31 @@ static bool __init pci_realloc_enabled(void)
- 	return pci_realloc_enable >= user_enabled;
+ What:		/sys/bus/pci/devices/.../reset
+ Date:		July 2009
+ Contact:	Michael S. Tsirkin <mst@redhat.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 124e826..68caf29 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	return count;
  }
  
-+static void __init pci_realloc_detect(void)
++static ssize_t
++dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
++		 const char *buf, size_t count)
 +{
-+#if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
-+	struct pci_dev *dev = NULL;
++	unsigned long val;
++	struct pci_dev *pdev = to_pci_dev(dev);
 +
-+	if (pci_realloc_enable != undefined)
-+		return;
++	if (kstrtoul(buf, 0, &val) < 0)
++		return -EINVAL;
 +
-+	for_each_pci_dev(dev) {
-+		int i;
-+
-+		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+			struct resource *r = &dev->resource[i];
-+
-+			/* Not assigned, or rejected by kernel ? */
-+			if (r->flags && !r->start) {
-+				pci_realloc_enable = auto_enabled;
-+
-+				return;
-+			}
-+		}
++	if (val) {
++		mutex_lock(&pci_remove_rescan_mutex);
++		pci_rescan_bus(pdev->subordinate);
++		mutex_unlock(&pci_remove_rescan_mutex);
 +	}
-+#endif
++	return count;
 +}
 +
- /*
-  * first try will not touch pci bridge res
-  * second  and later try will clear small leaf bridge res
-@@ -1315,6 +1340,7 @@ pci_assign_unassigned_resources(void)
- 	int pci_try_num = 1;
++static struct device_attribute pci_dev_bridge_rescan_attr =
++	__ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
++
+ static void remove_callback(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+@@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
+ late_initcall(pci_sysfs_init);
  
- 	/* don't realloc if asked to do so */
-+	pci_realloc_detect();
- 	if (pci_realloc_enabled()) {
- 		int max_depth = pci_get_max_depth();
+ static struct attribute *pci_dev_bridge_attrs[] = {
++#ifdef CONFIG_HOTPLUG
++	&pci_dev_bridge_rescan_attr.attr,
++#endif
+ 	NULL,
+ };
  
-@@ -1349,6 +1375,8 @@ again:
- 	if (tried_times >= pci_try_num) {
- 		if (pci_realloc_enable == undefined)
- 			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
-+		else if (pci_realloc_enable == auto_enabled)
-+			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
- 
- 		free_list(&fail_head);
- 		goto enable_and_dump;
 -- 
 1.7.7
 
