@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:48885 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756588Ab2B1CLS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:11:18 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -14,12 +10,12 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 03/18] PCI: Add busn_res operation functions
-Date: Mon, 27 Feb 2012 18:09:54 -0800
-Message-Id: <1330395009-29260-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 02/22] PCI: Add busn_res operation functions
+Date: Fri, 10 Feb 2012 20:06:05 -0800
+Message-Id: <1328933185-15154-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 will use them insert/update busn res in pci_bus
@@ -31,10 +27,10 @@ Signed-off-by: Yinghai Lu <yinghai@kernel.org>
  2 files changed, 50 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 675d7ed..3c0eecb 100644
+index a114173..480670f 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -1678,6 +1678,53 @@ err_out:
+@@ -1622,6 +1622,53 @@ err_out:
  	return NULL;
  }
  
@@ -89,10 +85,10 @@ index 675d7ed..3c0eecb 100644
  		struct pci_ops *ops, void *sysdata, struct list_head *resources)
  {
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7c03852..e494759 100644
+index 94ad468..3da935c 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -669,6 +669,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+@@ -665,6 +665,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
  				    struct pci_ops *ops, void *sysdata,
  				    struct list_head *resources);
