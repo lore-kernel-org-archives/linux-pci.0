@@ -1,4 +1,4 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -9,54 +9,50 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>, Helge Deller <deller@gmx.de>,
-	linux-parisc@vger.kernel.org
-Subject: [PATCH 09/18] PCI, parisc: Register busn_res for root buses
-Date: Mon, 27 Feb 2012 18:10:00 -0800
-Message-Id: <1330395009-29260-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 22/22] PCI: clean up rescan_bus_bridge_resize
+Date: Fri, 10 Feb 2012 20:06:25 -0800
+Message-Id: <1328933185-15154-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Kyle McMartin <kyle@mcmartin.ca>
-Cc: Helge Deller <deller@gmx.de>
-Cc: linux-parisc@vger.kernel.org
----
- drivers/parisc/dino.c    |    2 ++
- drivers/parisc/lba_pci.c |    3 +++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+Should only use it with bridge instead of bus.
+it could get new subordinate. so can not use it with reguar bus.
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index 0610e91..ea3f483 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -999,7 +999,9 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
+in that case, use may need to make all children devices get removed already.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-sysfs.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 68caf29..a3fa64e 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -337,7 +337,7 @@ dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+ 
+ 	if (val) {
+ 		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus(pdev->subordinate);
++		pci_rescan_bus_bridge_resize(pdev);
+ 		mutex_unlock(&pci_remove_rescan_mutex);
  	}
+ 	return count;
+@@ -387,10 +387,7 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
  
-+	pci_bus_insert_busn_res(bus, dino_current_bus, 255);
- 	bus->subordinate = pci_scan_child_bus(bus);
-+	pci_bus_update_busn_res_end(bus, bus->subordinate);
- 
- 	/* This code *depends* on scanning being single threaded
- 	 * if it isn't, this global bus number count will fail
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index e885764..84fa239 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1512,6 +1512,9 @@ lba_driver_probe(struct parisc_device *dev)
- 		return 0;
+ 	if (val) {
+ 		mutex_lock(&pci_remove_rescan_mutex);
+-		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+-			pci_rescan_bus_bridge_resize(bus->self);
+-		else
+-			pci_rescan_bus(bus);
++		pci_rescan_bus(bus);
+ 		mutex_unlock(&pci_remove_rescan_mutex);
  	}
- 
-+	pci_bus_insert_busn_res(lba_bus, lba_dev->hba.bus_num.start,
-+				lba_dev->hba.bus_num.end);
-+
- 	lba_bus->subordinate = pci_scan_child_bus(lba_bus);
- 
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
+ 	return count;
 -- 
 1.7.7
 
