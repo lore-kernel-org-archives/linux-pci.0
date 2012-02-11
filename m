@@ -1,41 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:36980 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752722Ab2BOQiJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Feb 2012 11:38:09 -0500
-Date: Wed, 15 Feb 2012 08:38:07 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Oliver Neukum <oneukum@suse.de>
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [RFC v2] USB: Fix handoff when BIOS disables host PCI device.
-Message-ID: <20120215163807.GA5446@xanatos>
-References: <20120209150823.GA5232@xanatos>
- <20120209201354.GA6709@xanatos>
- <20120214203311.GA8485@xanatos>
- <201202150948.07115.oneukum@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201202150948.07115.oneukum@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [PATCH 05/22] PCI, ia64: Register busn_res for root buses
+Date: Fri, 10 Feb 2012 20:06:08 -0800
+Message-Id: <1328933185-15154-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 15, 2012 at 09:48:07AM +0100, Oliver Neukum wrote:
-> Am Dienstag, 14. Februar 2012, 21:33:11 schrieb Sarah Sharp:
-> > Hi Oliver,
-> > 
-> > Have you gotten a chance to test this patch on your test system?  I'd
-> > like to get it out, but I want to make sure it fixes your problem.
-> 
-> Did I forget to answer? Anyway, yes it works. However it seems a bad idea
-> to me to unconditionally disable the device, on second thought.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Why?  The USB core will re-enable the device during the PCI probe, so I
-don't see the harm in it.  What else might be accessing the PCI device?
-Obviously the PCI core didn't care if the device was enabled or not
-pre-probe, or it would have enabled the PCI device itself.
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index f82f5d4..936b2f1 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -331,6 +331,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct acpi_device *device = root->device;
+ 	int domain = root->segment;
+ 	int bus = root->secondary.start;
++	int busmax = root->secondary.end;
+ 	struct pci_controller *controller;
+ 	unsigned int windows = 0;
+ 	struct pci_root_info info;
+@@ -384,6 +385,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		return NULL;
+ 	}
+ 
++	pci_bus_insert_busn_res(pbus, busnum, busmax);
+ 	pbus->subordinate = pci_scan_child_bus(pbus);
+ 	return pbus;
+ 
+-- 
+1.7.7
 
-Sarah Sharp
