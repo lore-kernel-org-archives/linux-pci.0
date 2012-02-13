@@ -1,56 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45506 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751307Ab2BCLU0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Feb 2012 06:20:26 -0500
-From: Oliver Neukum <oneukum@suse.de>
-To: linux-usb@vger.kernel.org
-Subject: [PATCH] USB:xhci: fix port switching on PantherPoint
-Date: Fri, 3 Feb 2012 12:22:43 +0100
-Cc: gregkh@linuxfoundation.org,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201202031222.43649.oneukum@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo5_9N-HX3Ja8k04QaS6nss8SAm-NUtuQyHt0t-Dczt8-w@mail.gmail.com>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+	<1328425088-6562-5-git-send-email-yinghai@kernel.org>
+	<CAErSpo6=t1XtdUMBAn7Ag5XNLS3wKueybfrsUzmht6GL9XSGLQ@mail.gmail.com>
+	<CAE9FiQXrFARy4+ynOTRyEuoyRxTc9qqzUaYJH8e19Wt3JRRxug@mail.gmail.com>
+	<CAErSpo5_9N-HX3Ja8k04QaS6nss8SAm-NUtuQyHt0t-Dczt8-w@mail.gmail.com>
+Date: Sun, 12 Feb 2012 16:03:05 -0800
+Message-ID: <CAE9FiQV=nAK3KDUVvqiQ=otVUAHQf9GpxbR1gLvPc5ofHjOJaA@mail.gmail.com>
+Subject: Re: [PATCH 04/24] PCI: Add busn_res operation functions
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From be9bdcf88b2974cfe95c1afea327b46135b65391 Mon Sep 17 00:00:00 2001
-From: Oliver Neukum <oliver@neukum.org>
-Date: Fri, 3 Feb 2012 12:01:12 +0100
-Subject: [PATCH] USB:xhci: fix port switching on PantherPoint
+On Sun, Feb 12, 2012 at 3:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>>>
+>>> I think it would be better to remove the bus resource from the tree,
+>>> change its "end," then re-insert it.
+>>
+>> how about parent buses that have extended top?
+>
+> I don't understand your question.  I assume you mean there's a case
+> where remove/update/reinsert doesn't work, but I don't see why that
+> would be a problem.  Can you show an example?
 
-The quirks of XHCI were called to early so that the
-PCI device hadn't been enabled and the quirk handler bailed out.
-The fix is to call it later.
+I mean parent busn_res already had several level's children busn_res.
+and every level may have some siblings.
+before remove will need to record those resources, to later to put them back.
 
-Signed-off-by: Oliver Neukum <oneukum@suse.de>
----
- drivers/usb/host/pci-quirks.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+that just increase not necessary complexity. because we already know
+those resource could be extended safely.
 
-diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
-index caf8742..b49e3d0 100644
---- a/drivers/usb/host/pci-quirks.c
-+++ b/drivers/usb/host/pci-quirks.c
-@@ -873,7 +873,12 @@ static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
- 		quirk_usb_handoff_ohci(pdev);
- 	else if (pdev->class == PCI_CLASS_SERIAL_USB_EHCI)
- 		quirk_usb_disable_ehci(pdev);
--	else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
--		quirk_usb_handoff_xhci(pdev);
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_usb_early_handoff);
-+
-+static void __devinit quirk_xhci_early_handoff(struct pci_dev *pdev)
-+{
-+	 if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
-+                quirk_usb_handoff_xhci(pdev);
-+}
-+DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_xhci_early_handoff);
--- 
-1.7.1
-
+Yinghai
