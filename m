@@ -1,237 +1,140 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 05/39] PCI: add generic device into pci_host_bridge struct
-Date: Wed, 29 Feb 2012 15:07:04 -0800
-Message-Id: <1330556858-11768-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Date: Mon, 13 Feb 2012 11:08:08 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: svaidy@linux.vnet.ibm.com, Ram Pai <linuxram@us.ibm.com>,
+	Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
+ sriov_init
+Message-ID: <20120213030808.GA18296@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <20120127191032.GA22999@dirshya.in.ibm.com>
+ <20120130031845.GA2359@ram-ThinkPad-T61>
+ <20120131174402.GA6172@dirshya.in.ibm.com>
+ <20120201062145.GA11505@ram-ThinkPad-T61>
+ <20120201130206.GD3510@dirshya.in.ibm.com>
+ <20120210115452.4bfefa05@jbarnes-desktop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120210115452.4bfefa05@jbarnes-desktop>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-use that device for pci_root_bus bridge pointer.
+On Fri, Feb 10, 2012 at 11:54:52AM -0800, Jesse Barnes wrote:
+> On Wed, 1 Feb 2012 18:32:06 +0530
+> Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com> wrote:
+> 
+> > * Ram Pai <linuxram@us.ibm.com> [2012-02-01 14:21:45]:
+> > 
+> > > On Tue, Jan 31, 2012 at 11:14:02PM +0530, Vaidyanathan Srinivasan wrote:
+> > > > * Ram Pai <linuxram@us.ibm.com> [2012-01-30 11:18:45]:
+> > > > 
+> > > > > On Sat, Jan 28, 2012 at 12:40:32AM +0530, Vaidyanathan Srinivasan wrote:
+> > > > > > Hi Ram and Jesse,
+> > > > > > 
+> > > > > > I found a trivial issue with page size alignment check on IBM POWER
+> > > > > > box with 64k base page size.  In sriov_init(), changing the check from
+> > > > > > PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
+> > > > > > required to use one of the sriov adapter as PF since the
+> > > > > > resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
+> > > > > > pseries boxes.
+> > > > > > 
+> > > > > > I think resource_size() could be less than SystemPageSize, but I would
+> > > > > > like your comments/ack/nack on any consequences of checking for only
+> > > > > > 4k alignment here in a system with larger base page size.
+> > > > > 
+> > > > > As per the SRIOV specs, the  resource has to be System page size aligned.
+> > > > > 
+> > > > > PFs are required to support 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB
+> > > > > page sizes. In your case if your adapter's PF is not supporting 64K page size
+> > > > > then I think it is not conforming to the PCI SRIOV spec.
+> > > > 
+> > > > Hi Ram,
+> > > > 
+> > > > Thanks for the pointer.  I did some more experiments and found that
+> > > > the card does support 64k page size, but the PCI_SRIOV_SYS_PGSIZE was
+> > > > set to default 4k when we do the query and check resource_size().
+> > > > 
+> > > > You were correct, the resource_size() has to come up with 64k on 64k
+> > > > PAGE_SIZE system.  We should not change that check.  I was able to
+> > > > get a working solution by setting PCI_SRIOV_SYS_PGSIZE to 64k before
+> > > > we do the query.
+> > > > 
+> > > > This was the case in the original code before you moved these to
+> > > > sriov_enable().  If it is ok to leave the SYS_PGSIZE setting in
+> > > > sriov_init(), then I have the following fix that works for me.
+> > > > 
+> > > > Please review and let me know your comments.
+> > > > 
+> > > > Thanks,
+> > > > Vaidy
+> > > > ---
+> > > > 
+> > > >     	pci: set pci sriov page size before reading sriov bar
+> > > >     
+> > > >     	For an SRIOV device, PCI_SRIOV_SYS_PGSIZE should be set before
+> > > >     	the PCI_SRIOV_BAR is queried.  The sys pagesize defaults to 4k,
+> > > >     	so this change is required on powerpc box with 64k base page size.
+> > > >     
+> > > >     	This is a regression caused due to moving SRIOV init to sriov_enable().
+> > > >     
+> > > >     	| commit afd24ece5c76af87f6fc477f2747b83a764f161c
+> > > >     	| Author: Ram Pai <linuxram@us.ibm.com>
+> > > >     
+> > > >     	| PCI: delay configuration of SRIOV capability
+> > > >     	| The SRIOV capability, namely page size and total_vfs of a device are
+> > > >     	| configured during enumeration phase of the device.  This can potentially
+> > > >     	| interfere with the PCI operations of the platform, if the IOV capability
+> > > >     	| of the device is not enabled.
+> > > >     
+> > > >     Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
+> > > > 
+> > > > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > > > index 0321fa3..0dab5ec 100644
+> > > > --- a/drivers/pci/iov.c
+> > > > +++ b/drivers/pci/iov.c
+> > > > @@ -347,8 +347,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> > > >  			return rc;
+> > > >  	}
+> > > > 
+> > > > -	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+> > > > -
+> > > >  	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+> > > >  	pci_cfg_access_lock(dev);
+> > > >  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+> > > > @@ -466,6 +464,7 @@ found:
+> > > >  		return -EIO;
+> > > > 
+> > > >  	pgsz &= ~(pgsz - 1);
+> > > > +	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+> > > > 
+> > > >  	nres = 0;
+> > > >  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> > > 
+> > > 
+> > > ACK. I think it is better to revert  afd24ece5c76af87f6fc477f2747b83a764f161c.
+> > 
+> > Hi Ram,
+> > 
+> > Thanks for the ack.  But afd24ece5c76af87f6fc477f2747b83a764f161c has
+> > one more change of moving 
+> > pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, total) to sriov_enable().
+> > 
+> > This change is required so that we set the PCI_SRIOV_NUM_VF only
+> > during sriov_enable.
+> > 
+> > So we should not revert the entire commit, we can just add this change.
+> 
+> So which is it Ram, the ack or the revert? :)
 
-With that make code more simple.
+Jesse, 
+	As Vaidy mentioned, revert is not the right solution. So dont revert.
+	But apply Vaidy's patch.
 
-Also we can use pci_release_bus_bridge_dev() to release allocated
-pci_host_bridge during removing path.
+> 
+> Having the right page size early seems like the right solution...
+Yes.
 
-At last, we can use root bus bridge pointer to get host bridge pointer instead
-of going over host bridge list, so could kill that host bridge list.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host-bridge.c |   15 +---------
- drivers/pci/pci.h         |    2 -
- drivers/pci/probe.c       |   65 +++++++++++++++++++++++---------------------
- include/linux/pci.h       |    4 ++-
- 4 files changed, 38 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index b3ddcc5..03d8db1 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -9,13 +9,6 @@
- 
- #include "pci.h"
- 
--static LIST_HEAD(pci_host_bridges);
--
--void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
--{
--	list_add_tail(&bridge->list, &pci_host_bridges);
--}
--
- static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
- {
- 	struct pci_bus *bus;
-@@ -30,14 +23,8 @@ static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
- static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
- {
- 	struct pci_bus *bus = find_pci_root_bus(dev);
--	struct pci_host_bridge *bridge;
--
--	list_for_each_entry(bridge, &pci_host_bridges, list) {
--		if (bridge->bus == bus)
--			return bridge;
--	}
- 
--	return NULL;
-+	return to_pci_host_bridge(bus->bridge);
- }
- 
- static bool resource_contains(struct resource *res1, struct resource *res2)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c695a92..e494347 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -231,8 +231,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- extern void pci_disable_bridge_window(struct pci_dev *dev);
- 
--void add_to_pci_host_bridges(struct pci_host_bridge *bridge);
--
- /* Single Root I/O Virtualization */
- struct pci_sriov {
- 	int pos;		/* capability position */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 89a82a3..fb3dd4b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -421,6 +421,19 @@ static struct pci_bus * pci_alloc_bus(void)
- 	return b;
- }
- 
-+static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-+{
-+	struct pci_host_bridge *bridge;
-+
-+	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-+	if (bridge) {
-+		INIT_LIST_HEAD(&bridge->windows);
-+		bridge->bus = b;
-+	}
-+
-+	return bridge;
-+}
-+
- static unsigned char pcix_bus_speed[] = {
- 	PCI_SPEED_UNKNOWN,		/* 0 */
- 	PCI_SPEED_66MHz_PCIX,		/* 1 */
-@@ -1121,7 +1134,13 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 
- static void pci_release_bus_bridge_dev(struct device *dev)
- {
--	kfree(dev);
-+	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-+
-+	/* TODO: need to free window->res */
-+
-+	pci_free_resource_list(&bridge->windows);
-+
-+	kfree(bridge);
- }
- 
- struct pci_dev *alloc_pci_dev(void)
-@@ -1570,28 +1589,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	int error;
- 	struct pci_host_bridge *bridge;
- 	struct pci_bus *b, *b2;
--	struct device *dev;
- 	struct pci_host_bridge_window *window, *n;
- 	struct resource *res;
- 	resource_size_t offset;
- 	char bus_addr[64];
- 	char *fmt;
- 
--	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
--	if (!bridge)
--		return NULL;
- 
- 	b = pci_alloc_bus();
- 	if (!b)
--		goto err_bus;
--
--	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
--	if (!dev)
--		goto err_dev;
-+		return NULL;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
--
- 	b2 = pci_find_bus(pci_domain_nr(b), bus);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
-@@ -1599,13 +1609,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		goto err_out;
- 	}
- 
--	dev->parent = parent;
--	dev->release = pci_release_bus_bridge_dev;
--	dev_set_name(dev, "pci%04x:%02x", pci_domain_nr(b), bus);
--	error = device_register(dev);
-+	bridge = pci_alloc_host_bridge(b);
-+	if (!bridge)
-+		goto err_out;
-+
-+	bridge->dev.parent = parent;
-+	bridge->dev.release = pci_release_bus_bridge_dev;
-+	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	error = device_register(&bridge->dev);
- 	if (error)
--		goto dev_reg_err;
--	b->bridge = get_device(dev);
-+		goto bridge_dev_reg_err;
-+	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
- 
-@@ -1624,9 +1638,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	b->number = b->secondary = bus;
- 
--	bridge->bus = b;
--	INIT_LIST_HEAD(&bridge->windows);
--
- 	if (parent)
- 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 	else
-@@ -1652,25 +1663,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	}
- 
- 	down_write(&pci_bus_sem);
--	add_to_pci_host_bridges(bridge);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
- 
- 	return b;
- 
- class_dev_reg_err:
--	device_unregister(dev);
--dev_reg_err:
--	down_write(&pci_bus_sem);
--	list_del(&bridge->list);
--	list_del(&b->node);
--	up_write(&pci_bus_sem);
-+	device_unregister(&bridge->dev);
-+bridge_dev_reg_err:
-+	kfree(bridge);
- err_out:
--	kfree(dev);
--err_dev:
- 	kfree(b);
--err_bus:
--	kfree(bridge);
- 	return NULL;
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5584aac..310610e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -375,11 +375,13 @@ struct pci_host_bridge_window {
- };
- 
- struct pci_host_bridge {
--	struct list_head list;
-+	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* pci_host_bridge_windows */
- };
- 
-+#define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-+
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
--- 
-1.7.7
+RP
 
