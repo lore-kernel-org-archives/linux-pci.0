@@ -1,48 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42078 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752157Ab2BPKNT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Feb 2012 05:13:19 -0500
-From: Oliver Neukum <oneukum@suse.de>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: [RFC v2] USB: Fix handoff when BIOS disables host PCI device.
-Date: Thu, 16 Feb 2012 11:15:48 +0100
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-References: <20120209150823.GA5232@xanatos> <201202150948.07115.oneukum@suse.de> <20120215163807.GA5446@xanatos>
-In-Reply-To: <20120215163807.GA5446@xanatos>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201202161115.48524.oneukum@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQV=nAK3KDUVvqiQ=otVUAHQf9GpxbR1gLvPc5ofHjOJaA@mail.gmail.com>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+ <1328425088-6562-5-git-send-email-yinghai@kernel.org> <CAErSpo6=t1XtdUMBAn7Ag5XNLS3wKueybfrsUzmht6GL9XSGLQ@mail.gmail.com>
+ <CAE9FiQXrFARy4+ynOTRyEuoyRxTc9qqzUaYJH8e19Wt3JRRxug@mail.gmail.com>
+ <CAErSpo5_9N-HX3Ja8k04QaS6nss8SAm-NUtuQyHt0t-Dczt8-w@mail.gmail.com> <CAE9FiQV=nAK3KDUVvqiQ=otVUAHQf9GpxbR1gLvPc5ofHjOJaA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sun, 12 Feb 2012 16:11:48 -0800
+Message-ID: <CAErSpo7F4caRyFVjrQKoCZLMo-45Vy+oEr4fMUXLeMojpuDNag@mail.gmail.com>
+Subject: Re: [PATCH 04/24] PCI: Add busn_res operation functions
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, 15. Februar 2012, 17:38:07 schrieb Sarah Sharp:
-> On Wed, Feb 15, 2012 at 09:48:07AM +0100, Oliver Neukum wrote:
-> > Am Dienstag, 14. Februar 2012, 21:33:11 schrieb Sarah Sharp:
-> > > Hi Oliver,
-> > > 
-> > > Have you gotten a chance to test this patch on your test system?  I'd
-> > > like to get it out, but I want to make sure it fixes your problem.
-> > 
-> > Did I forget to answer? Anyway, yes it works. However it seems a bad idea
-> > to me to unconditionally disable the device, on second thought.
-> 
-> Why?  The USB core will re-enable the device during the PCI probe, so I
+On Sun, Feb 12, 2012 at 4:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sun, Feb 12, 2012 at 3:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>
+>>>>
+>>>> I think it would be better to remove the bus resource from the tree,
+>>>> change its "end," then re-insert it.
+>>>
+>>> how about parent buses that have extended top?
+>>
+>> I don't understand your question.  I assume you mean there's a case
+>> where remove/update/reinsert doesn't work, but I don't see why that
+>> would be a problem.  Can you show an example?
+>
+> I mean parent busn_res already had several level's children busn_res.
+> and every level may have some siblings.
+> before remove will need to record those resources, to later to put them back.
+>
+> that just increase not necessary complexity. because we already know
+> those resource could be extended safely.
 
-Provided the device is probed. Typically of course it wii be, but
-we cannot assume that the xhci driver will always be loaded.
+You're doing surgery on the middle of a relatively complicated data
+structure.  Now readers of the code have to trust that not only does
+kernel/resource.c work correctly, but they also have to examine this
+PCI code to make sure that these alterations are safe.  I know this is
+all crystal-clear in your mind, and no doubt it is correct right now,
+but I don't think it is a reader-friendly approach.
 
-> don't see the harm in it.  What else might be accessing the PCI device?
-> Obviously the PCI core didn't care if the device was enabled or not
-> pre-probe, or it would have enabled the PCI device itself.
+But I don't expect to convince you, so I'll stop trying :)
 
-The BIOS might touch it. Are you really willing to say that there won't
-be BIOSes that assume that what they enabled must stay enabled?
-
-	Regards
-		Oliver
+Bjorn
