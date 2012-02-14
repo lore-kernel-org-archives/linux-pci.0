@@ -1,216 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qy0-f202.google.com ([209.85.216.202]:58423 "EHLO
-	mail-qy0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932120Ab2BJCho (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Feb 2012 21:37:44 -0500
-Received: by qcsp5 with SMTP id p5so264490qcs.1
-        for <linux-pci@vger.kernel.org>; Thu, 09 Feb 2012 18:37:43 -0800 (PST)
-Subject: [PATCH v2 16/18] sparc/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, sparclinux@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Date: Thu, 09 Feb 2012 19:37:43 -0700
-Message-ID: <20120210023743.10311.96138.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga11.intel.com ([192.55.52.93]:9236 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753638Ab2BNEsJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Feb 2012 23:48:09 -0500
+Subject: Re: [RFT] USB: Try MSI first before line IRQ for Intel PCIe USB3
+ HCD
+From: "Alex,Shi" <alex.shi@intel.com>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: stern@rowland.harvard.edu, Greg KH <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, andiry.xu@amd.com,
+	linux-kernel@vger.kernel.org, Oliver Neukum <oneukum@suse.de>,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
+In-Reply-To: <20120214002557.GA13003@xanatos>
+References: <20120214002557.GA13003@xanatos>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 14 Feb 2012 12:43:56 +0800
+Message-ID: <1329194636.12669.1725.camel@debian>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+On Mon, 2012-02-13 at 16:25 -0800, Sarah Sharp wrote:
+> We have a PCI USB xhci host controller on a new platform. It doesn't
+> have a line IRQ definition in BIOS. The Linux driver refuses to
+> initial this controller, but Windows works well because it only depends
+> on MSI.
+> 
+> Actually, Linux also can work for MSI. This patch skips the first line
+> IRQ checking for our HCD in usb-core pci probe, then try to enable MSI
+> firstly. That make this HCD works well under Linux.
+> 
+> This patch should be backported to kernels as old as 2.6.32.
+> 
+> Signed-off-by: Alex Shi <alex.shi@intel.com>
+> Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+> Cc: stable@vger.kernel.org
+> ---
+> 
+> Hi Alex,
+> 
+> Please test this on your Panther Point system that doesn't have a BIOS
+> provided IRQ line.  I think this is a much simpler solution.
 
-N.B. Leon apparently never uses initial BAR values, so it didn't matter
-that we never fixed up the I/O resources from bus address to CPU addresses.
+It is Ok on the platform. 
+Thanks!
+> 
+> Sarah Sharp
+> 
+>  drivers/usb/core/hcd-pci.c |    5 ++++-
+>  drivers/usb/core/hcd.c     |    6 ++++--
+>  drivers/usb/host/xhci.c    |    5 +++++
+>  3 files changed, 13 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
+> index d136b8f..81e2c0d 100644
+> --- a/drivers/usb/core/hcd-pci.c
+> +++ b/drivers/usb/core/hcd-pci.c
+> @@ -187,7 +187,10 @@ int usb_hcd_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  		return -ENODEV;
+>  	dev->current_state = PCI_D0;
+>  
+> -	if (!dev->irq) {
+> +	/* The xHCI driver supports MSI and MSI-X,
+> +	 * so don't fail if the BIOS doesn't provide a legacy IRQ.
+> +	 */
+> +	if (!dev->irq && (driver->flags & HCD_MASK) != HCD_USB3) {
+>  		dev_err(&dev->dev,
+>  			"Found HC with no IRQ.  Check BIOS/PCI %s setup!\n",
+>  			pci_name(dev));
+> diff --git a/drivers/usb/core/hcd.c b/drivers/usb/core/hcd.c
+> index eb19cba..e128232 100644
+> --- a/drivers/usb/core/hcd.c
+> +++ b/drivers/usb/core/hcd.c
+> @@ -2447,8 +2447,10 @@ int usb_add_hcd(struct usb_hcd *hcd,
+>  			&& device_can_wakeup(&hcd->self.root_hub->dev))
+>  		dev_dbg(hcd->self.controller, "supports USB remote wakeup\n");
+>  
+> -	/* enable irqs just before we start the controller */
+> -	if (usb_hcd_is_primary_hcd(hcd)) {
+> +	/* enable irqs just before we start the controller,
+> +	 * if the BIOS provides legacy PCI irqs.
+> +	 */
+> +	if (usb_hcd_is_primary_hcd(hcd) && irqnum) {
+>  		retval = usb_hcd_request_irqs(hcd, irqnum, irqflags);
+>  		if (retval)
+>  			goto err_request_irq;
+> diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+> index 6bbe3c3..c939f5f 100644
+> --- a/drivers/usb/host/xhci.c
+> +++ b/drivers/usb/host/xhci.c
+> @@ -352,6 +352,11 @@ static int xhci_try_enable_msi(struct usb_hcd *hcd)
+>  		/* hcd->irq is -1, we have MSI */
+>  		return 0;
+>  
+> +	if (!pdev->irq) {
+> +		xhci_err(xhci, "No msi-x/msi found and no IRQ in BIOS\n");
+> +		return -EINVAL;
+> +	}
+> +
+>  	/* fall back to legacy interrupt*/
+>  	ret = request_irq(pdev->irq, &usb_hcd_irq, IRQF_SHARED,
+>  			hcd->irq_descr, hcd);
 
-Other sparc uses pci_of_scan_bus(), which sets device resources directly
-to CPU addresses, not bus addresses, so it didn't need pcibios_fixup_bus()
-either.  But by telling the core about the offsets, we can nuke
-pcibios_resource_to_bus().
-
-CC: "David S. Miller" <davem@davemloft.net>
-CC: sparclinux@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/sparc/include/asm/pci_32.h |    8 +------
- arch/sparc/include/asm/pci_64.h |    8 +------
- arch/sparc/kernel/leon_pci.c    |   47 ++++++---------------------------------
- arch/sparc/kernel/pci.c         |   46 +++-----------------------------------
- 4 files changed, 13 insertions(+), 96 deletions(-)
-
-diff --git a/arch/sparc/include/asm/pci_32.h b/arch/sparc/include/asm/pci_32.h
-index 6de7f7b..6384f30 100644
---- a/arch/sparc/include/asm/pci_32.h
-+++ b/arch/sparc/include/asm/pci_32.h
-@@ -52,13 +52,7 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
-  * 64Kbytes by the Host controller.
-  */
- 
--extern void
--pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			struct resource *res);
--
--extern void
--pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
-diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
-index 755a4bb..2918bd1 100644
---- a/arch/sparc/include/asm/pci_64.h
-+++ b/arch/sparc/include/asm/pci_64.h
-@@ -73,13 +73,7 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			       enum pci_mmap_state mmap_state,
- 			       int write_combine);
- 
--extern void
--pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			struct resource *res);
--
--extern void
--pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
-diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-index c7bec25..aba6b95 100644
---- a/arch/sparc/kernel/leon_pci.c
-+++ b/arch/sparc/kernel/leon_pci.c
-@@ -15,14 +15,19 @@
- 
- /* The LEON architecture does not rely on a BIOS or bootloader to setup
-  * PCI for us. The Linux generic routines are used to setup resources,
-- * reset values of confuration-space registers settings ae preseved.
-+ * reset values of configuration-space register settings are preserved.
-+ *
-+ * PCI Memory and Prefetchable Memory is direct-mapped. However I/O Space is
-+ * accessed through a Window which is translated to low 64KB in PCI space, the
-+ * first 4KB is not used so 60KB is available.
-  */
- void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
- {
- 	LIST_HEAD(resources);
- 	struct pci_bus *root_bus;
- 
--	pci_add_resource(&resources, &info->io_space);
-+	pci_add_resource_offset(&resources, &info->io_space,
-+				info->io_space.start - 0x1000);
- 	pci_add_resource(&resources, &info->mem_space);
- 
- 	root_bus = pci_scan_root_bus(&ofdev->dev, 0, info->ops, info,
-@@ -38,44 +43,6 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
- 	}
- }
- 
--/* PCI Memory and Prefetchable Memory is direct-mapped. However I/O Space is
-- * accessed through a Window which is translated to low 64KB in PCI space, the
-- * first 4KB is not used so 60KB is available.
-- *
-- * This function is used by generic code to translate resource addresses into
-- * PCI addresses.
-- */
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct leon_pci_info *info = dev->bus->sysdata;
--
--	region->start = res->start;
--	region->end = res->end;
--
--	if (res->flags & IORESOURCE_IO) {
--		region->start -= (info->io_space.start - 0x1000);
--		region->end -= (info->io_space.start - 0x1000);
--	}
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--/* see pcibios_resource_to_bus() comment */
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct leon_pci_info *info = dev->bus->sysdata;
--
--	res->start = region->start;
--	res->end = region->end;
--
--	if (res->flags & IORESOURCE_IO) {
--		res->start += (info->io_space.start - 0x1000);
--		res->end += (info->io_space.start - 0x1000);
--	}
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
- void __devinit pcibios_fixup_bus(struct pci_bus *pbus)
- {
- 	struct leon_pci_info *info = pbus->sysdata;
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index bb8bc2e..253e8ac 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -691,8 +691,10 @@ struct pci_bus * __devinit pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
--	pci_add_resource(&resources, &pbm->io_space);
--	pci_add_resource(&resources, &pbm->mem_space);
-+	pci_add_resource_offset(&resources, &pbm->io_space,
-+				pbm->io_space.start);
-+	pci_add_resource_offset(&resources, &pbm->mem_space,
-+				pbm->mem_space.start);
- 	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
- 				  pbm, &resources);
- 	if (!bus) {
-@@ -755,46 +757,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *pdev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct pci_pbm_info *pbm = pdev->bus->sysdata;
--	struct resource zero_res, *root;
--
--	zero_res.start = 0;
--	zero_res.end = 0;
--	zero_res.flags = res->flags;
--
--	if (res->flags & IORESOURCE_IO)
--		root = &pbm->io_space;
--	else
--		root = &pbm->mem_space;
--
--	pci_resource_adjust(&zero_res, root);
--
--	region->start = res->start - zero_res.start;
--	region->end = res->end - zero_res.start;
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--void pcibios_bus_to_resource(struct pci_dev *pdev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct pci_pbm_info *pbm = pdev->bus->sysdata;
--	struct resource *root;
--
--	res->start = region->start;
--	res->end = region->end;
--
--	if (res->flags & IORESOURCE_IO)
--		root = &pbm->io_space;
--	else
--		root = &pbm->mem_space;
--
--	pci_resource_adjust(res, root);
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
- char * __devinit pcibios_setup(char *str)
- {
- 	return str;
 
