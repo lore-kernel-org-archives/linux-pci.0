@@ -1,82 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:58697 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754148Ab2B0UTk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 15:19:40 -0500
-Date: Mon, 27 Feb 2012 12:19:32 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] PCI: acpihp user __pci_remove_bus_device instead
-Message-ID: <20120227121932.24852506@jbarnes-desktop>
-In-Reply-To: <1330206863-31381-5-git-send-email-yinghai@kernel.org>
-References: <1330206863-31381-1-git-send-email-yinghai@kernel.org>
-	<1330206863-31381-5-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/TCcGUpmW5aX1Tnb3r8+DclX"; protocol="application/pgp-signature"
+Received: from mga02.intel.com ([134.134.136.20]:20747 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755361Ab2BNUdQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Feb 2012 15:33:16 -0500
+Date: Tue, 14 Feb 2012 12:33:11 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Oliver Neukum <oliver@neukum.org>
+Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [RFC v2] USB: Fix handoff when BIOS disables host PCI device.
+Message-ID: <20120214203311.GA8485@xanatos>
+References: <20120209150823.GA5232@xanatos>
+ <20120209201354.GA6709@xanatos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120209201354.GA6709@xanatos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/TCcGUpmW5aX1Tnb3r8+DclX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Oliver,
 
-On Sat, 25 Feb 2012 13:54:23 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Have you gotten a chance to test this patch on your test system?  I'd
+like to get it out, but I want to make sure it fixes your problem.
 
-> pci_stop_bus_device get called before in the same loop.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->=20
+Thanks,
+Sarah Sharp
+
+On Thu, Feb 09, 2012 at 12:13:54PM -0800, Sarah Sharp wrote:
+> On some systems with an Intel Panther Point xHCI host controller, the
+> BIOS disables the xHCI PCI device during boot, and switches the xHCI
+> ports over to EHCI.  This allows the BIOS to access USB devices without
+> having xHCI support.
+> 
+> The downside is that the xHCI BIOS handoff mechanism will fail because
+> memory mapped I/O is not enabled for the disabled PCI device.
+> Jesse Barnes says this is expected behavior.  The PCI core will enable
+> BARs before quirks run, but it will leave it in an undefined state, and
+> it may not have memory mapped I/O enabled.
+> 
+> Make the generic USB quirk handler call pci_enable_device() to re-enable
+> MMIO, and call pci_disable_device() once the host-specific BIOS handoff
+> is finished.  This will balance the ref counts in the PCI core.  When
+> the PCI probe function is called, usb_hcd_pci_probe() will call
+> pci_enable_device() again.
+> 
+> This should be backported to kernels as old as 2.6.32.  That was the
+> first kernel with xHCI support, and no one has complained about BIOS
+> handoffs failing due to memory mapped I/O being disabled on other hosts
+> (EHCI, UHCI, or OHCI).
+> 
+> Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+> Cc: Oliver Neukum <oneukum@suse.de>
+> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> Cc: stable@kernel.org
 > ---
->  drivers/pci/hotplug/acpiphp_glue.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> Index: linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -910,7 +910,7 @@ static int disable_device(struct acpiphp
->  				disable_bridges(pdev->subordinate);
->  				pci_disable_device(pdev);
->  			}
-> -			pci_stop_and_remove_bus_device(pdev);
-> +			__pci_remove_bus_device(pdev);
->  			pci_dev_put(pdev);
->  		}
->  	}
->=20
-
-Ok applied these.  How about another that converts in-tree users to
-pci_remove_bus_device and marks the __ version deprecated though?
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/TCcGUpmW5aX1Tnb3r8+DclX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPS+VUAAoJEIEoDkX4Qk9hxt8QAMAp+2tK1c+5mTtTOuItEckt
-cM2KORyERTzalS98iabSG7UhI18cNaIuLbflbgG5IVQxdvBLFJdFgBk8MqDTI1Ra
-4i9lu+QFXVFgNTSaYKvtzKIzJtYURJq7O+tWY+gjIzAkb9DWjO48CYXXZBtwO4o5
-CfCntYsyjQJpsDY8Q/euSE3OvHXRg/HWoJzi2NgXfbFKQlmUvDmxWqFfMsKuvpkT
-rTi/TZAoPefwEQjUSBoPtfigaeEXPFRBPmI84vfVZ2Ojnw3qMreMcAoQiL/7D5+k
-2LAOVpvdJx5MVkcTt/0c4bRmO653nStNU5+tFyX3EywkoPJZw+ByYUlWYUp0qXQo
-xwS2M0BSStdCPo5Ao2qahxM/qdCclN0NK4+2+JJDWdXxxEhpADfoiZ5u4ylRCEja
-+rMGJ6jxCdgOI0oCzncqD/f6mEno1yjWFbab8oLClPqmIu6ePUc4q05HJ6eHe4AF
-04/aoQyHTiW649tQQU4Oi61pht/95sx5GR8GScn+EE2p/XtnhDzkg7OW/Dcg7VV8
-ydD24hLQWotMc9zmdgV+yfJQ07pz4qmFrFOEnYXsDOEd6WP/7S1s6AoLN37hy8ub
-impfqT9obX+WwdnHsrxnp0Ija1e1N3LHGfR91AGw/3H3Y94QJiClcKI5ieYCZro7
-AP9xV1TTSKpwrzFhnWv0
-=x/N/
------END PGP SIGNATURE-----
-
---Sig_/TCcGUpmW5aX1Tnb3r8+DclX--
+>  drivers/usb/host/pci-quirks.c |   11 +++++++++++
+>  1 files changed, 11 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+> index ac53a66..7732d69 100644
+> --- a/drivers/usb/host/pci-quirks.c
+> +++ b/drivers/usb/host/pci-quirks.c
+> @@ -872,7 +872,17 @@ static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
+>  	 */
+>  	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+>  		return;
+> +	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
+> +			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
+> +			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
+> +			pdev->class != PCI_CLASS_SERIAL_USB_XHCI)
+> +		return;
+>  
+> +	if (pci_enable_device(pdev) < 0) {
+> +		dev_warn(&pdev->dev, "Can't enable PCI device, "
+> +				"BIOS handoff failed.\n");
+> +		return;
+> +	}
+>  	if (pdev->class == PCI_CLASS_SERIAL_USB_UHCI)
+>  		quirk_usb_handoff_uhci(pdev);
+>  	else if (pdev->class == PCI_CLASS_SERIAL_USB_OHCI)
+> @@ -881,5 +891,6 @@ static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
+>  		quirk_usb_disable_ehci(pdev);
+>  	else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
+>  		quirk_usb_handoff_xhci(pdev);
+> +	pci_disable_device(pdev);
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_usb_early_handoff);
+> -- 
+> 1.7.9
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
