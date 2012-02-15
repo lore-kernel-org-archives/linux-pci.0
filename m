@@ -1,22 +1,41 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Fri, 3 Feb 2012 16:01:46 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Subject: Re: [RFC PATCH v1 07/18] arm/PCI: get rid of device resource fixups
-Message-ID: <20120203160146.GM889@n2100.arm.linux.org.uk>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com> <20120130165745.3231.37109.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:36980 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752722Ab2BOQiJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Feb 2012 11:38:09 -0500
+Date: Wed, 15 Feb 2012 08:38:07 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Oliver Neukum <oneukum@suse.de>
+Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [RFC v2] USB: Fix handoff when BIOS disables host PCI device.
+Message-ID: <20120215163807.GA5446@xanatos>
+References: <20120209150823.GA5232@xanatos>
+ <20120209201354.GA6709@xanatos>
+ <20120214203311.GA8485@xanatos>
+ <201202150948.07115.oneukum@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120130165745.3231.37109.stgit@bhelgaas.mtv.corp.google.com>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <201202150948.07115.oneukum@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 30, 2012 at 09:57:45AM -0700, Bjorn Helgaas wrote:
-> Tell the PCI core about host bridge address translation so it can take
-> care of bus-to-resource conversion for us.
+On Wed, Feb 15, 2012 at 09:48:07AM +0100, Oliver Neukum wrote:
+> Am Dienstag, 14. Februar 2012, 21:33:11 schrieb Sarah Sharp:
+> > Hi Oliver,
+> > 
+> > Have you gotten a chance to test this patch on your test system?  I'd
+> > like to get it out, but I want to make sure it fixes your problem.
+> 
+> Did I forget to answer? Anyway, yes it works. However it seems a bad idea
+> to me to unconditionally disable the device, on second thought.
 
-Are the rest of these patches (in particular whereever is introduced
-the generic versions) available somewhere?
+Why?  The USB core will re-enable the device during the PCI probe, so I
+don't see the harm in it.  What else might be accessing the PCI device?
+Obviously the PCI core didn't care if the device was enabled or not
+pre-probe, or it would have enabled the PCI device itself.
 
-Thanks.
+Sarah Sharp
