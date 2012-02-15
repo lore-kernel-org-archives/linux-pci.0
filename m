@@ -1,145 +1,61 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 09/18] ia64/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-	Jack Steiner <steiner@sgi.com>
-Date: Thu, 09 Feb 2012 19:37:07 -0700
-Message-ID: <20120210023707.10311.27574.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:63437 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932129Ab2BOCfY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Feb 2012 21:35:24 -0500
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH] ARM/PCI: Remove ARM's duplicate definition of
+	'pcibios_max_latency'
+To: jbarnes@virtuousgeek.org
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk
+Date: Tue, 14 Feb 2012 19:35:15 -0700
+Message-ID: <20120215023515.22807.66164.stgit@amt.stowe>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+From: Myron Stowe <mstowe@redhat.com>
 
-CC: Tony Luck <tony.luck@intel.com>
-CC: Jack Steiner <steiner@sgi.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+The patch series to re-factor PCI's 'latency timer' setup (re:
+http://marc.info/?l=linux-kernel&m=131983853831049&w=2) forgot to
+remove the ARM specific definition of 'pcibios_max_latency' once such
+had been moved into the pci core resulting in ARM related compile
+errors -
+  drivers/built-in.o:(.data+0x230): multiple definition of
+  `pcibios_max_latency'
+  arch/arm/common/built-in.o:(.data+0x40c): first defined here
+  make[1]: *** [vmlinux.o] Error 1
+
+In the series, patch 2/16 (commit 168c8619fd8) converted the ARM
+specific version of 'pcibios_set_master()' to a non-inlined version.
+This was done in preperation for hosting it up into PCI's core, which
+was done in patch 10/16 (commit 96c5590058d) of the series (and
+where the removal of ARM's 'pcibios_max_latency' was overlooked).
+
+Reported-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
- arch/ia64/include/asm/pci.h   |    6 +---
- arch/ia64/pci/pci.c           |   55 +----------------------------------------
- arch/ia64/sn/kernel/io_init.c |    4 ++-
- 3 files changed, 6 insertions(+), 59 deletions(-)
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 279b38a..519bb5c 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -108,11 +108,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- 	return (pci_domain_nr(bus) != 0);
+ arch/arm/common/it8152.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm/common/it8152.c b/arch/arm/common/it8152.c
+index d1bcd7b..fb1f1cf 100644
+--- a/arch/arm/common/it8152.c
++++ b/arch/arm/common/it8152.c
+@@ -320,13 +320,6 @@ err0:
+ 	return -EBUSY;
  }
  
--extern void pcibios_resource_to_bus(struct pci_dev *dev,
--		struct pci_bus_region *region, struct resource *res);
+-/*
+- * If we set up a device for bus mastering, we need to check the latency
+- * timer as we don't have even crappy BIOSes to set it properly.
+- * The implementation is from arch/i386/pci/i386.c
+- */
+-unsigned int pcibios_max_latency = 255;
 -
--extern void pcibios_bus_to_resource(struct pci_dev *dev,
--		struct resource *res, struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline struct resource *
- pcibios_select_root(struct pci_dev *pdev, struct resource *res)
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index f82f5d4..d1ce320 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -320,7 +320,8 @@ static __devinit acpi_status add_window(struct acpi_resource *res, void *data)
- 	 * Ignore these tiny memory ranges */
- 	if (!((window->resource.flags & IORESOURCE_MEM) &&
- 	      (window->resource.end - window->resource.start < 16)))
--		pci_add_resource(&info->resources, &window->resource);
-+		pci_add_resource_offset(&info->resources, &window->resource,
-+					window->offset);
- 
- 	return AE_OK;
- }
-@@ -395,54 +396,6 @@ out1:
- 	return NULL;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *dev,
--		struct pci_bus_region *region, struct resource *res)
--{
--	struct pci_controller *controller = PCI_CONTROLLER(dev);
--	unsigned long offset = 0;
--	int i;
--
--	for (i = 0; i < controller->windows; i++) {
--		struct pci_window *window = &controller->window[i];
--		if (!(window->resource.flags & res->flags))
--			continue;
--		if (window->resource.start > res->start)
--			continue;
--		if (window->resource.end < res->end)
--			continue;
--		offset = window->offset;
--		break;
--	}
--
--	region->start = res->start - offset;
--	region->end = res->end - offset;
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--void pcibios_bus_to_resource(struct pci_dev *dev,
--		struct resource *res, struct pci_bus_region *region)
--{
--	struct pci_controller *controller = PCI_CONTROLLER(dev);
--	unsigned long offset = 0;
--	int i;
--
--	for (i = 0; i < controller->windows; i++) {
--		struct pci_window *window = &controller->window[i];
--		if (!(window->resource.flags & res->flags))
--			continue;
--		if (window->resource.start - window->offset > region->start)
--			continue;
--		if (window->resource.end - window->offset < region->end)
--			continue;
--		offset = window->offset;
--		break;
--	}
--
--	res->start = region->start + offset;
--	res->end = region->end + offset;
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
- static int __devinit is_valid_resource(struct pci_dev *dev, int idx)
- {
- 	unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
-@@ -464,15 +417,11 @@ static int __devinit is_valid_resource(struct pci_dev *dev, int idx)
- static void __devinit
- pcibios_fixup_resources(struct pci_dev *dev, int start, int limit)
- {
--	struct pci_bus_region region;
- 	int i;
- 
- 	for (i = start; i < limit; i++) {
- 		if (!dev->resource[i].flags)
- 			continue;
--		region.start = dev->resource[i].start;
--		region.end = dev->resource[i].end;
--		pcibios_bus_to_resource(dev, &dev->resource[i], &region);
- 		if ((is_valid_resource(dev, i)))
- 			pci_claim_resource(dev, i);
- 	}
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index c99c2ca..238e2c5 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -320,7 +320,9 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 				   prom_bussoft_ptr->bs_legacy_io,
- 				   prom_bussoft_ptr->bs_legacy_mem);
- 	for (i = 0; i < controller->windows; i++)
--		pci_add_resource(&resources, &controller->window[i].resource);
-+		pci_add_resource_offset(&resources,
-+					&controller->window[i].resource,
-+					controller->window[i].offset);
- 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
- 				&resources);
-  	if (bus == NULL)
+ /* ITE bridge requires setting latency timer to avoid early bus access
+    termination by PCI bus master devices
+ */
 
