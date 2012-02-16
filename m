@@ -1,128 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:44965 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837Ab2BPFfM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:35:12 -0500
+MIME-Version: 1.0
+In-Reply-To: <1329369930.5082.4.camel@joe2Laptop>
+References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
+	<1329369296-4255-5-git-send-email-yinghai@kernel.org>
+	<1329369930.5082.4.camel@joe2Laptop>
+Date: Wed, 15 Feb 2012 21:35:11 -0800
+Message-ID: <CAE9FiQUK8m5KKb0or59wH7BD6Eo5ddx9NaF7vszNeR0T3UYMRw@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: quirk print dev name with duration
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 03/22] PCI: Add busn_res tracking in core
-Date: Fri, 10 Feb 2012 20:06:06 -0800
-Message-Id: <1328933185-15154-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
-References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arjan van de Ven <arjan@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-update pci_scan_root_bus, and pci_scan_bus to insert root bus busn into
-iobusn_resource tree.
+On Wed, Feb 15, 2012 at 9:25 PM, Joe Perches <joe@perches.com> wrote:
+> On Wed, 2012-02-15 at 21:14 -0800, Yinghai Lu wrote:
+>> So could find out which device is involved with the calling
+> []
+>> +++ linux-2.6/drivers/pci/quirks.c
+>> @@ -2854,14 +2854,15 @@ static void do_one_fixup_debug(void (*fn
+>>       ktime_t calltime, delta, rettime;
+>>       unsigned long long duration;
+>>
+>> -     printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
+>> +     printk(KERN_DEBUG "calling  %pF @ %i for %s\n",
+>> +                     fn, task_pid_nr(current), dev_name(&dev->dev));
+>
+> Might be better to use dev_dbg
+>
+>        dev_dbg(&dev->dev, "calling %pF @ %i\n", fn, task_pid_nr(current));
+>
+> []
+>
+>> -     printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
+>> -             duration);
+>> +     printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs for %s\n",
+>> +                     fn, duration, dev_name(&dev->dev));
+>
+>        dev_dbg(&dev->dev, "pci fixup %pF returned after %llu usecs\n",
+>                fn, duration);
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c  |   30 ++++++++++++++++++++++++++----
- drivers/pci/remove.c |    1 +
- include/linux/pci.h  |    4 ++++
- 3 files changed, 31 insertions(+), 4 deletions(-)
+Not sure if that is going to break Arjan 's tool that analyze the boot time.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 480670f..33cc54e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1669,8 +1669,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 			res, ret ? "can not be" : "is");
- }
- 
--struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
-+		int bus_max, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources)
- {
- 	struct pci_bus *b;
- 
-@@ -1678,10 +1679,26 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 	if (!b)
- 		return NULL;
- 
-+	pci_bus_insert_busn_res(b, bus, bus_max);
- 	b->subordinate = pci_scan_child_bus(b);
- 	pci_bus_add_devices(b);
- 	return b;
- }
-+EXPORT_SYMBOL(pci_scan_root_bus_max);
-+
-+struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources)
-+{
-+	struct pci_bus *b;
-+
-+	b = pci_scan_root_bus_max(parent, bus, 255, ops, sysdata, resources);
-+
-+	if (b)
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+
-+	return b;
-+}
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
- /* Deprecated; use pci_scan_root_bus() instead */
-@@ -1694,9 +1711,11 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
-+	if (b) {
-+		pci_bus_insert_busn_res(b, bus, 255);
- 		b->subordinate = pci_scan_child_bus(b);
--	else
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+	} else
- 		pci_free_resource_list(&resources);
- 	return b;
- }
-@@ -1712,7 +1731,10 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
- 	pci_add_resource(&resources, &iomem_resource);
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
-+		pci_bus_insert_busn_res(b, bus, 255);
- 		b->subordinate = pci_scan_child_bus(b);
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+
- 		pci_bus_add_devices(b);
- 	} else {
- 		pci_free_resource_list(&resources);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index bd70f23..8056e6a 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- 
- 	down_write(&pci_bus_sem);
- 	list_del(&pci_bus->node);
-+	pci_bus_release_busn_res(pci_bus);
- 	up_write(&pci_bus_sem);
- 	if (!pci_bus->is_added)
- 		return;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3da935c..d5b6786 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -668,6 +668,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
-+struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
-+					     int busmax, struct pci_ops *ops,
-+					     void *sysdata,
-+					     struct list_head *resources);
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
--- 
-1.7.7
+Thanks
 
+Yinghai
