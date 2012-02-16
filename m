@@ -1,69 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:52044 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751568Ab2BTA7U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Feb 2012 19:59:20 -0500
-Subject: Re: [PATCH] usb: enable pci MSI/MSIX in usb core
-From: "Alex,Shi" <alex.shi@intel.com>
-To: Andiry Xu <andiry.xu@amd.com>
-Cc: Clemens Ladisch <clemens@ladisch.de>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	stern@rowland.harvard.edu, Greg KH <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Oliver Neukum <oneukum@suse.de>, Takashi Iwai <tiwai@suse.de>,
-	trenn@suse.de, linux-pci@vger.kernel.org,
-	Michal Marek <MMarek@suse.com>
-In-Reply-To: <4F3F4509.4070003@amd.com>
-References: <1328531341-22705-1-git-send-email-alex.shi@intel.com>
-	 <4F311233.9070404@intel.com> <20120207144204.GA7214@kroah.com>
-	 <20120207172743.GA4780@xanatos> <20120207221317.GA6103@xanatos>
-	 <1328664392.12669.233.camel@debian> <1328682430.12669.443.camel@debian>
-	 <1328692300.12669.593.camel@debian>  <20120214002030.GA10364@xanatos>
-	 <1329359801.12669.2872.camel@debian> <1329461087.12669.2911.camel@debian>
-	 <4F3E0C3D.4030307@ladisch.de> <1329468418.12669.2988.camel@debian>
-	 <4F3E28D1.1030509@ladisch.de>  <4F3F4509.4070003@amd.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:58310 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751525Ab2BPRyi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Feb 2012 12:54:38 -0500
+Message-ID: <1329414876.11146.2.camel@joe2Laptop>
+Subject: Re: [PATCH 4/4] PCI: quirk print dev name with duration
+From: Joe Perches <joe@perches.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Arjan van de Ven <arjan@infradead.org>
+Date: Thu, 16 Feb 2012 09:54:36 -0800
+In-Reply-To: <CAErSpo57hL9dFyFDvdEQcLKCPOeCh3MY3UCURvrXKPpA8W3y3A@mail.gmail.com>
+References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
+	 <1329369296-4255-5-git-send-email-yinghai@kernel.org>
+	 <1329369930.5082.4.camel@joe2Laptop>
+	 <CAE9FiQUK8m5KKb0or59wH7BD6Eo5ddx9NaF7vszNeR0T3UYMRw@mail.gmail.com>
+	 <1329371019.5082.9.camel@joe2Laptop> <1329376076.7658.4.camel@joe2Laptop>
+	 <CAErSpo57hL9dFyFDvdEQcLKCPOeCh3MY3UCURvrXKPpA8W3y3A@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 20 Feb 2012 08:57:03 +0800
-Message-ID: <1329699423.14084.9.camel@debian>
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > Assume that an XHCI controller has two rings, and that each one gets its
-> > own MSI-X interrupt.  How should the driver decide which of the rings
-> > needs to be handled?
-> > 
-> > irqreturn_t xhci_msix_irq(struct usb_hcd *hcd)
-> > {
-> > 	struct xhci_hcd *xhci = hcd_to_xhci(hcd);
-> > 
-> > 	if (...)
-> > 		handle(xhci->ring[0]);
-> > 	else
-> > 		handle(xhci->ring[1]);
-> > }
-> > 
-> > I.e., what should go into the if()?
-> > 
-> > 
-> 
-> Currently xHCI driver only support one ERST event ring. If we need to
-> support multiple event rings in the future, it's simple: in
-> usb_hcd_request_msi_msix_irqs, change the last parameter of
-> request_irq() to xhci->erst[i], and we can get the corresponding erst[i]
-> in xhci_msi_irq() like this:
-> 
-> irqreturn_t xhci_msi_irq(int irq, void *dev_id)
-> {
-> 	struct xhci_erst *erst = dev_id;
-> 	...
-> 	/* Handle corresponding event ring pointed by erst */
-> }
-> 
-> See Matthew Wilcox's patchset below for reference:
-> 
-> www.spinics.net/lists/linux-usb/msg47353.html
+On Thu, 2012-02-16 at 09:49 -0800, Bjorn Helgaas wrote:
+> If you do change, remember that dev_dbg() is different from
+> printk(KERN_DEBUG) in that printk(KERN_DEBUG) is always compiled-in
+> and always goes to the dmesg, but dev_dbg() is only compiled in when
+> DEBUG is defined, so dev_printk(KERN_DEBUG) would be a more direct
+> replacement for printk(KERN_DEBUG).
 
-Oh. Thanks Andiry and Clemens! The problem really worth to have another
-patchset for it. 
+Correct.
+
+Which is why I usually add #define DEBUG or an
+equivalent CONFIG option before those are converted.
+Doing so allows control via dynamic debug.
+
 
