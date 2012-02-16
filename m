@@ -1,76 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 22/36] x86, PCI: add busn into resources list for acpi path
-Date: Wed, 29 Feb 2012 19:00:23 -0800
-Message-Id: <1330570837-26638-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from perches-mx.perches.com ([206.117.179.246]:42975 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757237Ab2BPHH6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Feb 2012 02:07:58 -0500
+Message-ID: <1329376076.7658.4.camel@joe2Laptop>
+Subject: Re: [PATCH 4/4] PCI: quirk print dev name with duration
+From: Joe Perches <joe@perches.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arjan van de Ven <arjan@infradead.org>
+Date: Wed, 15 Feb 2012 23:07:56 -0800
+In-Reply-To: <1329371019.5082.9.camel@joe2Laptop>
+References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
+	 <1329369296-4255-5-git-send-email-yinghai@kernel.org>
+	 <1329369930.5082.4.camel@joe2Laptop>
+	 <CAE9FiQUK8m5KKb0or59wH7BD6Eo5ddx9NaF7vszNeR0T3UYMRw@mail.gmail.com>
+	 <1329371019.5082.9.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will put it in resources list and pass it for create_root_bus
+On Wed, 2012-02-15 at 21:43 -0800, Joe Perches wrote:
+> On Wed, 2012-02-15 at 21:35 -0800, Yinghai Lu wrote:
+> > On Wed, Feb 15, 2012 at 9:25 PM, Joe Perches <joe@perches.com> wrote:
+> > > On Wed, 2012-02-15 at 21:14 -0800, Yinghai Lu wrote:
+> > >> So could find out which device is involved with the calling
+> > > []
+> > >> +++ linux-2.6/drivers/pci/quirks.c
+> > >> @@ -2854,14 +2854,15 @@ static void do_one_fixup_debug(void (*fn
+> > >>       ktime_t calltime, delta, rettime;
+> > >>       unsigned long long duration;
+> > >>
+> > >> -     printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
+> > >> +     printk(KERN_DEBUG "calling  %pF @ %i for %s\n",
+> > >> +                     fn, task_pid_nr(current), dev_name(&dev->dev));
+> > >
+> > > Might be better to use dev_dbg
+> > >
+> > >        dev_dbg(&dev->dev, "calling %pF @ %i\n", fn, task_pid_nr(current));
+> > >
+> > > []
+> > >
+> > >> -     printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
+> > >> -             duration);
+> > >> +     printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs for %s\n",
+> > >> +                     fn, duration, dev_name(&dev->dev));
+> > >
+> > >        dev_dbg(&dev->dev, "pci fixup %pF returned after %llu usecs\n",
+> > >                fn, duration);
+> > Not sure if that is going to break Arjan 's tool that analyze the boot time.
+> That depends on the tool code.
+[]
+> Do you have a link to the tool?
 
-Bjorn thought that we should just use that in acpi_root.
+That tool would be scripts/bootgraph.pl and using
+dev_dbg would break it unless it's adapted to the
+change.  Your change seems fine for now.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/acpi.c |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 2331ccb..5178917 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,7 +12,6 @@ struct pci_root_info {
- 	char name[16];
- 	unsigned int res_num;
- 	struct resource *res;
--	int busnum;
- 	struct pci_sysdata sd;
- };
- 
-@@ -347,7 +346,9 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- {
- 	size_t size;
- 
-+	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 	info->bridge = device;
-+
- 	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
- 				info);
-@@ -360,8 +361,6 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	if (!info->res)
- 		return;
- 
--	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
--
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
- }
-@@ -430,9 +429,11 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
--		if (pci_use_crs)
-+		if (pci_use_crs) {
-+                       /* insert busn res at first */
-+			pci_add_resource(&resources,  &root->secondary);
- 			add_resources(info, &resources);
--		else {
-+		} else {
- 			free_pci_root_info_res(info);
- 			x86_pci_root_bus_resources(busnum, &resources);
- 		}
--- 
-1.7.7
 
