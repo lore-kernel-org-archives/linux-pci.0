@@ -1,36 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:33228 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268Ab2BIIyC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Feb 2012 03:54:02 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: [RFC] xhci: Fix BIOS handoff failure on some Intel systems.
-Date: Thu, 9 Feb 2012 09:56:22 +0100
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-References: <20120207233118.GA6947@xanatos> <201202081611.37097.oneukum@suse.de> <20120208214851.GA2669@xanatos>
-In-Reply-To: <20120208214851.GA2669@xanatos>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201202090956.22456.oliver@neukum.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Arjan van de Ven <arjan@infradead.org>
+Subject: [PATCH 4/4] PCI: quirk print dev name with duration
+Date: Wed, 15 Feb 2012 21:40:32 -0800
+Message-Id: <1329370832-2253-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+References: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, 8. Februar 2012, 22:48:51 schrieb Sarah Sharp:
-> > > Can you test and make sure this fixes the issue on your test systems?
-> > 
-> > I've tested it and it works. Are you sure it is safe to enable a PCI device
-> > at that point? If so, your patch is better than mine.
-> 
-> Jesse Barnes told me it's fine over IRC, so I'm just going to send this
-> off, with your Tested-by line.
+So could find out which device is involved with the calling
 
-Very well, but then consequently you should do it for all HCIs.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Arjan van de Ven <arjan@infradead.org>
 
-	Regards
-		Oliver
+---
+ drivers/pci/quirks.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
+Index: linux-2.6/drivers/pci/quirks.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/quirks.c
++++ linux-2.6/drivers/pci/quirks.c
+@@ -2854,14 +2854,15 @@ static void do_one_fixup_debug(void (*fn
+ 	ktime_t calltime, delta, rettime;
+ 	unsigned long long duration;
+ 
+-	printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
++	printk(KERN_DEBUG "calling  %pF @ %i for %s\n",
++			fn, task_pid_nr(current), dev_name(&dev->dev));
+ 	calltime = ktime_get();
+ 	fn(dev);
+ 	rettime = ktime_get();
+ 	delta = ktime_sub(rettime, calltime);
+ 	duration = (unsigned long long) ktime_to_ns(delta) >> 10;
+-	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
+-		duration);
++	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs for %s\n",
++			fn, duration, dev_name(&dev->dev));
+ }
+ 
+ /*
