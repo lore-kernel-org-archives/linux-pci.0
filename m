@@ -1,133 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/8] x86, PCI: Fix memleak with get_current_resources
-Date: Sun, 26 Feb 2012 15:33:17 -0800
-Message-Id: <1330299202-3838-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
-References: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:42078 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752157Ab2BPKNT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Feb 2012 05:13:19 -0500
+From: Oliver Neukum <oneukum@suse.de>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: [RFC v2] USB: Fix handoff when BIOS disables host PCI device.
+Date: Thu, 16 Feb 2012 11:15:48 +0100
+Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+References: <20120209150823.GA5232@xanatos> <201202150948.07115.oneukum@suse.de> <20120215163807.GA5446@xanatos>
+In-Reply-To: <20120215163807.GA5446@xanatos>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201202161115.48524.oneukum@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-in pci_scan_acpi_root, when pci_use_crs is set, get_current_resources is used
-to get pci_root_info, and it will allocate name and res array.
+Am Mittwoch, 15. Februar 2012, 17:38:07 schrieb Sarah Sharp:
+> On Wed, Feb 15, 2012 at 09:48:07AM +0100, Oliver Neukum wrote:
+> > Am Dienstag, 14. Februar 2012, 21:33:11 schrieb Sarah Sharp:
+> > > Hi Oliver,
+> > > 
+> > > Have you gotten a chance to test this patch on your test system?  I'd
+> > > like to get it out, but I want to make sure it fixes your problem.
+> > 
+> > Did I forget to answer? Anyway, yes it works. However it seems a bad idea
+> > to me to unconditionally disable the device, on second thought.
+> 
+> Why?  The USB core will re-enable the device during the PCI probe, so I
 
-later if pci_create_root_bus can not create bus (could be already there...)
-it will only free bus res list. but the name and res array is not freed.
+Provided the device is probed. Typically of course it wii be, but
+we cannot assume that the xhci driver will always be loaded.
 
-let get_current_resource take info pointer instead have local info.
+> don't see the harm in it.  What else might be accessing the PCI device?
+> Obviously the PCI core didn't care if the device was enabled or not
+> pre-probe, or it would have enabled the PCI device itself.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+The BIOS might touch it. Are you really willing to say that there won't
+be BIOSes that assume that what they enabled must stay enabled?
 
----
- arch/x86/pci/acpi.c |   49 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 30 insertions(+), 19 deletions(-)
-
-Index: linux-2.6/arch/x86/pci/acpi.c
-===================================================================
---- linux-2.6.orig/arch/x86/pci/acpi.c
-+++ linux-2.6/arch/x86/pci/acpi.c
-@@ -305,49 +305,55 @@ static void add_resources(struct pci_roo
- 	}
- }
- 
-+static void free_pci_root_info(struct pci_root_info *info)
-+{
-+	kfree(info->name);
-+	kfree(info->res);
-+	memset(info, 0, sizeof(struct pci_root_info));
-+}
-+
- static void
--get_current_resources(struct acpi_device *device, int busnum,
-+get_current_resources(struct pci_root_info *info,
-+		      struct acpi_device *device, int busnum,
- 		      int domain, struct list_head *resources)
- {
--	struct pci_root_info info;
- 	size_t size;
- 
--	info.bridge = device;
--	info.res_num = 0;
--	info.resources = resources;
-+	info->bridge = device;
-+	info->res_num = 0;
-+	info->resources = resources;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
--				&info);
--	if (!info.res_num)
-+				info);
-+	if (!info->res_num)
- 		return;
- 
--	size = sizeof(*info.res) * info.res_num;
--	info.res = kmalloc(size, GFP_KERNEL);
--	if (!info.res)
-+	size = sizeof(*info->res) * info->res_num;
-+	info->res = kmalloc(size, GFP_KERNEL);
-+	if (!info->res)
- 		return;
- 
--	info.name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
--	if (!info.name)
-+	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
-+	if (!info->name)
- 		goto name_alloc_fail;
- 
--	info.res_num = 0;
-+	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
--				&info);
-+				info);
- 
- 	if (pci_use_crs) {
--		add_resources(&info);
-+		add_resources(info);
- 
- 		return;
- 	}
- 
--	kfree(info.name);
--
- name_alloc_fail:
--	kfree(info.res);
-+	free_pci_root_info(info);
- }
- 
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-+	struct pci_root_info info;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
- 	LIST_HEAD(resources);
-@@ -392,6 +398,7 @@ struct pci_bus * __devinit pci_acpi_scan
- 
- 	sd->domain = domain;
- 	sd->node = node;
-+	memset(&info, 0, sizeof(struct pci_root_info));
- 	/*
- 	 * Maybe the desired pci bus has been already scanned. In such case
- 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
-@@ -405,7 +412,8 @@ struct pci_bus * __devinit pci_acpi_scan
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(sd);
- 	} else {
--		get_current_resources(device, busnum, domain, &resources);
-+		get_current_resources(&info, device, busnum, domain,
-+					&resources);
- 
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
-@@ -419,6 +427,9 @@ struct pci_bus * __devinit pci_acpi_scan
- 			bus->subordinate = pci_scan_child_bus(bus);
- 		else
- 			pci_free_resource_list(&resources);
-+
-+		if (!bus && pci_use_crs)
-+			free_pci_root_info(&info);
- 	}
- 
- 	/* After the PCI-E bus has been walked and all devices discovered,
+	Regards
+		Oliver
