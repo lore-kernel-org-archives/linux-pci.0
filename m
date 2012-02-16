@@ -1,54 +1,39 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 01/18] PCI: don't publish new root bus until it's fully
-	initialized
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org
-Date: Thu, 09 Feb 2012 19:36:26 -0700
-Message-ID: <20120210023626.10311.44633.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:20925 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751847Ab2BPFlH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:41:07 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 0/4] PCI: quirk related clean up
+Date: Wed, 15 Feb 2012 21:40:28 -0800
+Message-Id: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When pci_create_root_bus() adds the new struct pci_bus to the global
-pci_root_buses list, the bus becomes visible to other parts of the
-kernel, so it should be fully initialized.
+After commit:
+| commit 3209874a1da2c51c7325e601d9634189ee178ad6
+| Author: Arjan van de Ven <arjan@infradead.org>
+| Date:   Mon Jan 30 20:52:07 2012 -0800
+|
+|    PCI: Annotate PCI quirks in initcall_debug style
 
-This patch delays adding the bus to the pci_root_buses list until after
-all the struct pci_bus initialization is finished.
+will have lots of print out for quirks when initcall_debug is specified.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+It turns out most of them are not really called for the devices because
+quirks itself will check class id and bail out early.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7cc9e2f..da0d655 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1551,10 +1551,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		goto err_out;
- 	}
- 
--	down_write(&pci_bus_sem);
--	list_add_tail(&b->node, &pci_root_buses);
--	up_write(&pci_bus_sem);
--
- 	dev->parent = parent;
- 	dev->release = pci_release_bus_bridge_dev;
- 	dev_set_name(dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-@@ -1594,6 +1590,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 			dev_info(&b->dev, "root bus resource %pR\n", res);
- 	}
- 
-+	down_write(&pci_bus_sem);
-+	list_add_tail(&b->node, &pci_root_buses);
-+	up_write(&pci_bus_sem);
-+
- 	return b;
- 
- class_dev_reg_err:
+Try to class into quirk declaration. So we could avoid dip into these quirks.
 
+[PATCH 1/4] PCI: Add class support in quirk handling
+[PATCH 2/4] PCI: Specify class for quirk entry with PCI_ANY_ID
+[PATCH 3/4] PCI: Move out pci reassigndev resource alignment out of quirk
+[PATCH 4/4] PCI: quirk print dev name with duration
+
+Resending
+
+Thanks
+
+Yinghai
