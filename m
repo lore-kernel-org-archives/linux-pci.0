@@ -1,54 +1,151 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV=nAK3KDUVvqiQ=otVUAHQf9GpxbR1gLvPc5ofHjOJaA@mail.gmail.com>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
- <1328425088-6562-5-git-send-email-yinghai@kernel.org> <CAErSpo6=t1XtdUMBAn7Ag5XNLS3wKueybfrsUzmht6GL9XSGLQ@mail.gmail.com>
- <CAE9FiQXrFARy4+ynOTRyEuoyRxTc9qqzUaYJH8e19Wt3JRRxug@mail.gmail.com>
- <CAErSpo5_9N-HX3Ja8k04QaS6nss8SAm-NUtuQyHt0t-Dczt8-w@mail.gmail.com> <CAE9FiQV=nAK3KDUVvqiQ=otVUAHQf9GpxbR1gLvPc5ofHjOJaA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 12 Feb 2012 16:11:48 -0800
-Message-ID: <CAErSpo7F4caRyFVjrQKoCZLMo-45Vy+oEr4fMUXLeMojpuDNag@mail.gmail.com>
-Subject: Re: [PATCH 04/24] PCI: Add busn_res operation functions
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:42641 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837Ab2BPFlI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:41:08 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 1/4] PCI: Add class support in quirk handling
+Date: Wed, 15 Feb 2012 21:40:29 -0800
+Message-Id: <1329370832-2253-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+References: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 12, 2012 at 4:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sun, Feb 12, 2012 at 3:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>>>
->>>> I think it would be better to remove the bus resource from the tree,
->>>> change its "end," then re-insert it.
->>>
->>> how about parent buses that have extended top?
->>
->> I don't understand your question.  I assume you mean there's a case
->> where remove/update/reinsert doesn't work, but I don't see why that
->> would be a problem.  Can you show an example?
->
-> I mean parent busn_res already had several level's children busn_res.
-> and every level may have some siblings.
-> before remove will need to record those resources, to later to put them back.
->
-> that just increase not necessary complexity. because we already know
-> those resource could be extended safely.
+Recently there is new support to make quirk calling will report duration time.
+That will boot log get more print out with initcall_debug is specified.
 
-You're doing surgery on the middle of a relatively complicated data
-structure.  Now readers of the code have to trust that not only does
-kernel/resource.c work correctly, but they also have to examine this
-PCI code to make sure that these alterations are safe.  I know this is
-all crystal-clear in your mind, and no doubt it is correct right now,
-but I don't think it is a reader-friendly approach.
+Found a lot of quirks are calling for not related devices.
 
-But I don't expect to convince you, so I'll stop trying :)
+Reason is quirk frame do not support class handling. So quirk code have to
+use PCI_ANY_ID for vendor/device and let quirk code itself to check class
+inside the func.
 
-Bjorn
+The patch add class and cls_shift into struct pci_fixup.
+Also update related macro to accept the class and shift.
+
+-v2: fix v1 that left over of sparated patch.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/quirks.c |   12 ++++++-----
+ include/linux/pci.h  |   53 ++++++++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 49 insertions(+), 16 deletions(-)
+
+Index: linux-2.6/drivers/pci/quirks.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/quirks.c
++++ linux-2.6/drivers/pci/quirks.c
+@@ -2961,17 +2961,19 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
+ {
+-	while (f < end) {
+-		if ((f->vendor == dev->vendor || f->vendor == (u16) PCI_ANY_ID) &&
+-		    (f->device == dev->device || f->device == (u16) PCI_ANY_ID)) {
++	for (; f < end; f++)
++		if ((f->class == (u32) (dev->class >> f->cls_shift) ||
++		     f->class == (u32) PCI_ANY_ID) &&
++		    (f->vendor == dev->vendor ||
++		     f->vendor == (u16) PCI_ANY_ID) &&
++		    (f->device == dev->device ||
++		     f->device == (u16) PCI_ANY_ID)) {
+ 			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
+ 			if (initcall_debug)
+ 				do_one_fixup_debug(f->hook, dev);
+ 			else
+ 				f->hook(dev);
+ 		}
+-		f++;
+-	}
+ }
+ 
+ extern struct pci_fixup __start_pci_fixups_early[];
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -1377,7 +1377,10 @@ static inline void pci_resource_to_user(
+  */
+ 
+ struct pci_fixup {
+-	u16 vendor, device;	/* You can use PCI_ANY_ID here of course */
++	u16 vendor;		/* You can use PCI_ANY_ID here of course */
++	u16 device;		/* You can use PCI_ANY_ID here of course */
++	u32 class;		/* You can use PCI_ANY_ID here too */
++	unsigned int cls_shift;	/* should be 0, 8, 16 */
+ 	void (*hook)(struct pci_dev *dev);
+ };
+ 
+@@ -1392,30 +1395,58 @@ enum pci_fixup_pass {
+ };
+ 
+ /* Anonymous variables would be nice... */
+-#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, hook)	\
+-	static const struct pci_fixup __pci_fixup_##name __used		\
+-	__attribute__((__section__(#section))) = { vendor, device, hook };
++#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, c, cs, hook)\
++	static const struct pci_fixup const __pci_fixup_##name __used	     \
++	__attribute__((__section__(#section), aligned((sizeof(void *)))))    \
++		= { vendor, device, c, cs, hook };
++
++#define DECLARE_PCI_FIXUP_CLASS_EARLY(vendor, device, cls, clt, hook)	\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
++		vendor##device##hook, vendor, device, cls, clt, hook)
++#define DECLARE_PCI_FIXUP_CLASS_HEADER(vendor, device, cls, clt, hook)	\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
++		vendor##device##hook, vendor, device, cls, clt, hook)
++#define DECLARE_PCI_FIXUP_CLASS_FINAL(vendor, device, cls, clt, hook)	\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
++		vendor##device##hook, vendor, device, cls, clt, hook)
++#define DECLARE_PCI_FIXUP_CLASS_ENABLE(vendor, device, cls, clt, hook)	\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
++		vendor##device##hook, vendor, device, cls, clt, hook)
++#define DECLARE_PCI_FIXUP_CLASS_RESUME(vendor, device, cls, clt, hook)	\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
++		resume##vendor##device##hook, vendor, device, cls, clt, hook)
++#define DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(vendor, device, cls, clt, hook) \
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
++		resume_early##vendor##device##hook, vendor, device,	\
++		cls, clt, hook)
++#define DECLARE_PCI_FIXUP_CLASS_SUSPEND(vendor, device, cls, clt, hook)	\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
++		suspend##vendor##device##hook, vendor, device, cls, clt, hook)
++
+ #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
+-			vendor##device##hook, vendor, device, hook)
++		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_HEADER(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
+-			vendor##device##hook, vendor, device, hook)
++		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_FINAL(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
+-			vendor##device##hook, vendor, device, hook)
++		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_ENABLE(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
+-			vendor##device##hook, vendor, device, hook)
++		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_RESUME(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
+-			resume##vendor##device##hook, vendor, device, hook)
++		resume##vendor##device##hook, vendor, device,		\
++		PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_RESUME_EARLY(vendor, device, hook)		\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
+-			resume_early##vendor##device##hook, vendor, device, hook)
++		resume_early##vendor##device##hook, vendor, device,	\
++		PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_SUSPEND(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+-			suspend##vendor##device##hook, vendor, device, hook)
++		suspend##vendor##device##hook, vendor, device,		\
++		PCI_ANY_ID, 0, hook)
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
