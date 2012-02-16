@@ -1,68 +1,231 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:20976 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752750Ab2BPFlM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:41:12 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v4 0/15] PCI: allocate pci bus num range for unassigned bridge busn
-Date: Wed,  1 Feb 2012 14:43:47 -0800
-Message-Id: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/4] PCI: Move out pci reassigndev resource alignment out of quirk
+Date: Wed, 15 Feb 2012 21:40:31 -0800
+Message-Id: <1329370832-2253-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+References: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-676b367: pcmcia: remove workaround for fixing pci parent bus subordinate
-ddbc547: PCI: Seperate child bus scanning to two passes overall
-c82fe6d: PCI: kill pci_fixup_parent_subordinate_busnr()
-7bf1ff4: PCI: Allocate bus range instead of use max blindly
-1e511be: PCI: Strict checking of valid range for bridge
-a433d03: PCI: Probe safe range that we can use for unassigned bridge.
-7f45e65: PCI: Add pci_bus_extend/shrink_top()
-6e8d9f1: PCI, parisc: Register busn_res for root buses
-aadaf33: PCI, powerpc: Register busn_res for root buses
-10ba93b: PCI, ia64: Register busn_res for root buses
-6663d7a: PCI, x86: Register busn_res for root buses
-f283aa2: PCI: Add busn_res tracking in core
-d20c7d9: PCI: Add busn_res operation functions
-196dcc6: PCI: Add iobusn_resource
-634a14b: Make %pR could handle bus resource with domain
+That looks like abusing quirk framework.
 
-Set up iobusn_resource tree, and register bus number range to it.
-Later when need to find bus range, will try to allocate from the tree
+calling it directly in pci_add_device. or do we have good place for it?
 
-Need to test on arches other than x86. esp for ia64 and powerpc that support
-  more than on peer root buses.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-could be found at:
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
+---
+ drivers/pci/pci.c       |   62 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h       |    5 ---
+ drivers/pci/probe.c     |    3 ++
+ drivers/pci/quirks.c    |   63 ------------------------------------------------
+ drivers/pci/setup-res.c |    4 ---
+ 5 files changed, 66 insertions(+), 71 deletions(-)
 
--v2: according to Jesse, split to more small patches.
--v3: address some request from Bjorn. like make use %pR for busn_res debug print
-	out, and move the comment change with code change.
--v4: fixes the problem about rescan that Bjorn found.
-
-Thanks
-
-Yinghai
-
- arch/ia64/pci/pci.c              |    2 +
- arch/powerpc/kernel/pci-common.c |    7 +-
- arch/x86/include/asm/topology.h  |    3 +-
- arch/x86/pci/acpi.c              |    8 +-
- arch/x86/pci/bus_numa.c          |    8 +-
- arch/x86/pci/common.c            |   11 +-
- drivers/parisc/dino.c            |    2 +
- drivers/parisc/lba_pci.c         |    3 +
- drivers/pci/probe.c              |  417 ++++++++++++++++++++++++++++++--------
- drivers/pci/remove.c             |    1 +
- drivers/pcmcia/yenta_socket.c    |   75 -------
- include/linux/ioport.h           |    1 +
- include/linux/pci.h              |    8 +
- kernel/resource.c                |    8 +
- lib/vsprintf.c                   |   28 +++-
- 15 files changed, 410 insertions(+), 172 deletions(-)
-
+Index: linux-2.6/drivers/pci/pci.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.c
++++ linux-2.6/drivers/pci/pci.c
+@@ -3694,6 +3694,68 @@ int pci_is_reassigndev(struct pci_dev *d
+ 	return (pci_specified_resource_alignment(dev) != 0);
+ }
+ 
++/*
++ * This function disables memory decoding and releases memory resources
++ * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
++ * It also rounds up size to specified alignment.
++ * Later on, the kernel will assign page-aligned memory resource back
++ * to the device.
++ */
++void pci_reassigndev_resource_alignment(struct pci_dev *dev)
++{
++	int i;
++	struct resource *r;
++	resource_size_t align, size;
++	u16 command;
++
++	if (!pci_is_reassigndev(dev))
++		return;
++
++	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
++	    (dev->class >> 8) == PCI_CLASS_BRIDGE_HOST) {
++		dev_warn(&dev->dev,
++			"Can't reassign resources to host bridge.\n");
++		return;
++	}
++
++	dev_info(&dev->dev,
++		"Disabling memory decoding and releasing memory resources.\n");
++	pci_read_config_word(dev, PCI_COMMAND, &command);
++	command &= ~PCI_COMMAND_MEMORY;
++	pci_write_config_word(dev, PCI_COMMAND, command);
++
++	align = pci_specified_resource_alignment(dev);
++	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
++		r = &dev->resource[i];
++		if (!(r->flags & IORESOURCE_MEM))
++			continue;
++		size = resource_size(r);
++		if (size < align) {
++			size = align;
++			dev_info(&dev->dev,
++				"Rounding up size of resource #%d to %#llx.\n",
++				i, (unsigned long long)size);
++		}
++		r->end = size - 1;
++		r->start = 0;
++	}
++	/* Need to disable bridge's resource window,
++	 * to enable the kernel to reassign new resource
++	 * window later on.
++	 */
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
++	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
++		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
++			r = &dev->resource[i];
++			if (!(r->flags & IORESOURCE_MEM))
++				continue;
++			r->end = resource_size(r) - 1;
++			r->start = 0;
++		}
++		pci_disable_bridge_window(dev);
++	}
++}
++
+ ssize_t pci_set_resource_alignment_param(const char *buf, size_t count)
+ {
+ 	if (count > RESOURCE_ALIGNMENT_PARAM_SIZE - 1)
+Index: linux-2.6/drivers/pci/pci.h
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.h
++++ linux-2.6/drivers/pci/pci.h
+@@ -228,11 +228,8 @@ static inline int pci_ari_enabled(struct
+ 	return bus->self && bus->self->ari_enabled;
+ }
+ 
+-#ifdef CONFIG_PCI_QUIRKS
+-extern int pci_is_reassigndev(struct pci_dev *dev);
+-resource_size_t pci_specified_resource_alignment(struct pci_dev *dev);
++void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+ extern void pci_disable_bridge_window(struct pci_dev *dev);
+-#endif
+ 
+ /* Single Root I/O Virtualization */
+ struct pci_sriov {
+Index: linux-2.6/drivers/pci/quirks.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/quirks.c
++++ linux-2.6/drivers/pci/quirks.c
+@@ -32,69 +32,6 @@
+ #include "pci.h"
+ 
+ /*
+- * This quirk function disables memory decoding and releases memory resources
+- * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
+- * It also rounds up size to specified alignment.
+- * Later on, the kernel will assign page-aligned memory resource back
+- * to the device.
+- */
+-static void __devinit quirk_resource_alignment(struct pci_dev *dev)
+-{
+-	int i;
+-	struct resource *r;
+-	resource_size_t align, size;
+-	u16 command;
+-
+-	if (!pci_is_reassigndev(dev))
+-		return;
+-
+-	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
+-	    (dev->class >> 8) == PCI_CLASS_BRIDGE_HOST) {
+-		dev_warn(&dev->dev,
+-			"Can't reassign resources to host bridge.\n");
+-		return;
+-	}
+-
+-	dev_info(&dev->dev,
+-		"Disabling memory decoding and releasing memory resources.\n");
+-	pci_read_config_word(dev, PCI_COMMAND, &command);
+-	command &= ~PCI_COMMAND_MEMORY;
+-	pci_write_config_word(dev, PCI_COMMAND, command);
+-
+-	align = pci_specified_resource_alignment(dev);
+-	for (i=0; i < PCI_BRIDGE_RESOURCES; i++) {
+-		r = &dev->resource[i];
+-		if (!(r->flags & IORESOURCE_MEM))
+-			continue;
+-		size = resource_size(r);
+-		if (size < align) {
+-			size = align;
+-			dev_info(&dev->dev,
+-				"Rounding up size of resource #%d to %#llx.\n",
+-				i, (unsigned long long)size);
+-		}
+-		r->end = size - 1;
+-		r->start = 0;
+-	}
+-	/* Need to disable bridge's resource window,
+-	 * to enable the kernel to reassign new resource
+-	 * window later on.
+-	 */
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+-	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+-		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
+-			r = &dev->resource[i];
+-			if (!(r->flags & IORESOURCE_MEM))
+-				continue;
+-			r->end = resource_size(r) - 1;
+-			r->start = 0;
+-		}
+-		pci_disable_bridge_window(dev);
+-	}
+-}
+-DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, quirk_resource_alignment);
+-
+-/*
+  * Decoding should be disabled for a PCI device during BAR sizing to avoid
+  * conflict. But doing so may cause problems on host bridge and perhaps other
+  * key system devices. For devices that need to have mmio decoding always-on,
+Index: linux-2.6/drivers/pci/setup-res.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-res.c
++++ linux-2.6/drivers/pci/setup-res.c
+@@ -114,7 +114,6 @@ int pci_claim_resource(struct pci_dev *d
+ }
+ EXPORT_SYMBOL(pci_claim_resource);
+ 
+-#ifdef CONFIG_PCI_QUIRKS
+ void pci_disable_bridge_window(struct pci_dev *dev)
+ {
+ 	dev_info(&dev->dev, "disabling bridge mem windows\n");
+@@ -127,9 +126,6 @@ void pci_disable_bridge_window(struct pc
+ 	pci_write_config_dword(dev, PCI_PREF_MEMORY_BASE, 0x0000fff0);
+ 	pci_write_config_dword(dev, PCI_PREF_BASE_UPPER32, 0xffffffff);
+ }
+-#endif	/* CONFIG_PCI_QUIRKS */
+-
+-
+ 
+ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 		int resno, resource_size_t size, resource_size_t align)
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1227,6 +1227,9 @@ void pci_device_add(struct pci_dev *dev,
+ 	/* Fix up broken headers */
+ 	pci_fixup_device(pci_fixup_header, dev);
+ 
++	/* moved out from quirk header fixup code */
++	pci_reassigndev_resource_alignment(dev);
++
+ 	/* Clear the state_saved flag. */
+ 	dev->state_saved = false;
+ 
