@@ -1,54 +1,52 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/9] PCI: Fix /sys warning when sriov enabled card is hot removed
-Date: Sat,  4 Feb 2012 22:55:01 -0800
-Message-Id: <1328424908-6385-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+Message-ID: <4F3E28D1.1030509@ladisch.de>
+Date: Fri, 17 Feb 2012 11:15:45 +0100
+From: Clemens Ladisch <clemens@ladisch.de>
+MIME-Version: 1.0
+To: "Alex,Shi" <alex.shi@intel.com>
+CC: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	stern@rowland.harvard.edu, Greg KH <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, andiry.xu@amd.com,
+	linux-kernel@vger.kernel.org, Oliver Neukum <oneukum@suse.de>,
+	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
+	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
+Subject: Re: [PATCH] usb: enable pci MSI/MSIX in usb core
+References: <1328531341-22705-1-git-send-email-alex.shi@intel.com>  <4F311233.9070404@intel.com> <20120207144204.GA7214@kroah.com>  <20120207172743.GA4780@xanatos> <20120207221317.GA6103@xanatos>  <1328664392.12669.233.camel@debian> <1328682430.12669.443.camel@debian>  <1328692300.12669.593.camel@debian>  <20120214002030.GA10364@xanatos>  <1329359801.12669.2872.camel@debian> <1329461087.12669.2911.camel@debian>  <4F3E0C3D.4030307@ladisch.de> <1329468418.12669.2988.camel@debian>
+In-Reply-To: <1329468418.12669.2988.camel@debian>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During recent strick checking about sysfs_remove from Eric.
-it will spit more bitter warning.
+Alex,Shi wrote:
+>> The controller driver will need to know which of the multiple MSI-X
+>> interrupts has been raised:
+>>
+>> irqreturn_t (*msix_irq)(struct usb_hcd *hcd, unsigned int nr_or_index);
+>
+> Actually, hcd has 2 object for msix, msix_count and msix_entries.
+>
+> Do you mean msix_count maybe smaller than we decide in hcd_setup_msix()?
 
-For SRIOV hotplug, we are calling pci_stop_dev() for VF at first.
-(after we update pci_stop_bus_devices).
+No.  But when msic_count > 1, we have multiple interrupts.
 
-that pci_stop_dev will calling device_unregiste for that VF, so that directory
-in VF is removed already.
+> Which situation will make this?
 
-We double checking if that VF dir in /sys is there, before try removing that
- physfn link.
+Assume that an XHCI controller has two rings, and that each one gets its
+own MSI-X interrupt.  How should the driver decide which of the rings
+needs to be handled?
 
-Signed-of-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/iov.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+irqreturn_t xhci_msix_irq(struct usb_hcd *hcd)
+{
+	struct xhci_hcd *xhci = hcd_to_xhci(hcd);
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 0321fa3..dfc7d65 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -173,7 +173,12 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 
- 	sprintf(buf, "virtfn%u", id);
- 	sysfs_remove_link(&dev->dev.kobj, buf);
--	sysfs_remove_link(&virtfn->dev.kobj, "physfn");
-+	/*
-+	 * pci_stop_dev() could be called for this virtfn before already
-+	 *  so directory for the virtfn is removed before.
-+	 */
-+	if (virtfn->dev.kobj.sd)
-+		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
- 
- 	mutex_lock(&iov->dev->sriov->lock);
- 	pci_remove_bus_device(virtfn);
--- 
-1.7.7
+	if (...)
+		handle(xhci->ring[0]);
+	else
+		handle(xhci->ring[1]);
+}
 
+I.e., what should go into the if()?
+
+
+Regards,
+Clemens
