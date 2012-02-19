@@ -1,122 +1,66 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120223122536.6a2a7a6b@jbarnes-desktop>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
- <1328425088-6562-10-git-send-email-yinghai@kernel.org> <CAErSpo6BwznWf3rq4J2Ao+rrgR4yWqQ0mQGygkd2KmBuA1OD8g@mail.gmail.com>
- <1328738567.2903.45.camel@pasglop> <CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
- <1328823358.2903.77.camel@pasglop> <20120223122536.6a2a7a6b@jbarnes-desktop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 23 Feb 2012 12:51:30 -0800
-Message-ID: <CAErSpo7_WGjitDZz4XH+77f65Uz1ynd5_USN+D17D09Eux1iQQ@mail.gmail.com>
-Subject: Re: [PATCH 09/24] PCI, powerpc: Register busn_res for root buses
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:45148 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026Ab2BSWuf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Feb 2012 17:50:35 -0500
+From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: Fix device class print out
+Date: Sun, 19 Feb 2012 14:50:12 -0800
+Message-Id: <1329691812-23665-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 23, 2012 at 12:25 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Fri, 10 Feb 2012 08:35:58 +1100
-> Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
->
->> On Thu, 2012-02-09 at 11:24 -0800, Bjorn Helgaas wrote:
->> > My point is that the interface between the arch and the PCI core
->> > should be simply the arch telling the core "this is the range of bus
->> > numbers you can use."  If the firmware doesn't give you the HW limits,
->> > that's the arch's problem.  If you want to assume 0..255 are
->> > available, again, that's the arch's decision.
->> >
->> > But the answer to the question "what bus numbers are available to me"
->> > depends only on the host bridge HW configuration.  It does not depend
->> > on what pci_scan_child_bus() found.  Therefore, I think we can come up
->> > with a design where pci_bus_update_busn_res_end() is unnecessary.
->>
->> In an ideal world yes. In a world where there are reverse engineered
->> platforms on which we aren't 100% sure how thing actually work under the
->> hood and have the code just adapt on "what's there" (and try to fix it
->> up -sometimes-), thinks can get a bit murky :-)
->>
->> But yes, I see your point. As for what is the "correct" setting that
->> needs to be done so that the patch doesn't end up a regression for us,
->> I'll have to dig into some ancient HW to dbl check a few things. I hope
->> 0...255 will just work but I can't guarantee it.
->>
->> What I'll probably do is constraint the core to the values in
->> hose->min/max, and update selected platforms to put 0..255 in there when
->> I know for sure they can cope.
->
-> But I think the point is, can't we intiialize the busn resource after
-> the first & last bus numbers have been determined?  E.g. rather than
-> Yinghai's current:
-> +       pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
-> +
->        /* Get probe mode and perform scan */
->        mode = PCI_PROBE_NORMAL;
->        if (node && ppc_md.pci_probe_mode)
-> @@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
->                of_scan_bus(node, bus);
->        }
->
-> -       if (mode == PCI_PROBE_NORMAL)
-> +       if (mode == PCI_PROBE_NORMAL) {
-> +               pci_bus_update_busn_res_end(bus, 255);
->                hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-> +               pci_bus_update_busn_res_end(bus, bus->subordinate);
-> +       }
->
-> we'd have something more like:
->
->        /* Get probe mode and perform scan */
->        mode = PCI_PROBE_NORMAL;
->        if (node && ppc_md.pci_probe_mode)
-> @@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
->                of_scan_bus(node, bus);
->        }
->
->        if (mode == PCI_PROBE_NORMAL)
->                hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
->
-> +       pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
->
-> since we should have the final bus range by then?  Setting the end to
-> 255 and then changing it again doesn't make sense; and definitely makes
-> the code hard to follow.
+Found debug print out about class is shifted.
 
-I have two issues here:
+| pci 0000:f8:15.2: [8086:2b56] type 0 class 0x000600
 
-1) hose->last_busno is currently the highest bus number found by
-pci_scan_child_bus().  If I understand correctly,
-pci_bus_insert_busn_res() is supposed to update the core's idea of the
-host bridge's bus number aperture.  (Actually, I guess it just updates
-the *end* of the aperture, since we supply the start directly to
-pci_scan_root_bus()).  The aperture and the highest bus number we
-found are not related, except that we should have:
+code is trying to print class with 6 digits, but use shifted class with 4 digits
+valid value as variable.
 
-    hose->first_busno <= bus->subordinate <= hose->last_busno
+Change to original dev->class directly.
 
-If we set the aperture to [first_busno - last_busno], we artificially
-prevent some hotplug.
+also remove not needed calculating of local variable class, because it will be
+updated after pci_fixup_device(pci_fixup_early...)
 
-2) We already have a way to add resources to a root bus: the
-pci_add_resource() used to add I/O port and MMIO apertures.  I think
-it'd be a lot simpler to just use that same interface for the bus
-number aperture, e.g.,
+Also unify type print out when class and header is not matched.
 
-    pci_add_resource(&resources, hose->io_space);
-    pci_add_resource(&resources, hose->mem_space);
-    pci_add_resource(&resources, hose->busnr_space);
-    bus = pci_scan_root_bus(dev, next_busno, pci_ops, sysdata, &resources);
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-This is actually a bit redundant, since "next_busno" should be the
-same as hose->busnr_space->start.  So if we adopted this approach, we
-might want to eventually drop the "next_busno" argument.
+---
+ drivers/pci/probe.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
- Bjorn
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1125,12 +1125,10 @@ int pci_setup_device(struct pci_dev *dev
+ 
+ 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
+ 	dev->revision = class & 0xff;
+-	class >>= 8;				    /* upper 3 bytes */
+-	dev->class = class;
+-	class >>= 8;
++	dev->class = class >> 8;		    /* upper 3 bytes */
+ 
+-	dev_printk(KERN_DEBUG, &dev->dev, "[%04x:%04x] type %d class %#08x\n",
+-		   dev->vendor, dev->device, dev->hdr_type, class);
++	dev_printk(KERN_DEBUG, &dev->dev, "[%04x:%04x] type %02x class %#08x\n",
++		   dev->vendor, dev->device, dev->hdr_type, dev->class);
+ 
+ 	/* need to have dev->class ready */
+ 	dev->cfg_size = pci_cfg_space_size(dev);
+@@ -1212,8 +1210,8 @@ int pci_setup_device(struct pci_dev *dev
+ 		return -EIO;
+ 
+ 	bad:
+-		dev_err(&dev->dev, "ignoring class %02x (doesn't match header "
+-			"type %02x)\n", class, dev->hdr_type);
++		dev_err(&dev->dev, "ignoring class %#08x (doesn't match header "
++			"type %02x)\n", dev->class, dev->hdr_type);
+ 		dev->class = PCI_CLASS_NOT_DEFINED;
+ 	}
+ 
