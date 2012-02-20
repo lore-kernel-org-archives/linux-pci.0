@@ -1,58 +1,42 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 41-204-38-3-dedicated.4u.com.gh ([41.204.38.3]:38963 "EHLO
+	mail.kpoly.edu.gh" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299Ab2BTIfP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Feb 2012 03:35:15 -0500
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4HJH+3EQAWowyVxZFa5jVy1EOo=SoybJqqcjhVdo0nzw@mail.gmail.com>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-	<1328425088-6562-2-git-send-email-yinghai@kernel.org>
-	<CAErSpo4HJH+3EQAWowyVxZFa5jVy1EOo=SoybJqqcjhVdo0nzw@mail.gmail.com>
-Date: Mon, 6 Feb 2012 10:55:14 -0800
-Message-ID: <CAE9FiQXeRGXE2RCe5S1iOE=QY37wauM=WUevjXWkMqMOjV3t7A@mail.gmail.com>
-Subject: Re: [PATCH 01/24] PCI: Add iobusn_resource
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Subject: Transfer Notice!!
+To: Recipients <westernunion@wu.com>
+From: "Western Union Outlet" <westernunion@wu.com>
+Date: Mon, 20 Feb 2012 08:38:42 +0100
+Reply-To: westernunionpaycenter@fastservice.com
+Message-Id: <20120220074006.A3F6F5C8D728@mail.kpoly.edu.gh>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 6, 2012 at 10:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> +struct resource iobusn_resource = {
->> +       .name   = "PCI busn",
->> +       .start  = 0,
->> +       .end    = 0xffffff,
->> +       .flags  = IORESOURCE_BUS,
->> +};
->
-> I'm not sure this should be global.  iomem_resource and
-> ioport_resource *are* really global, because they refer to processor
-> address space that is the same for everybody.  But PCI bus numbers are
-> specific to PCI.  Some machines don't have PCI at all, and there are
-> different bus architectures to which this doesn't apply.
+Dear Beneficiary.
 
-that does not hurt them.
+We write to inform you that we have transferred USD$400,000.00 dollars, I could have called you via phone to give you the MTCN information but we lost your contact phone number. So, I decided to email you the information so that you can start cashing your money in USD5000.00 daily installment with the same MTCN and sender's name which will be valid for 20 days until you cash the full $400,000.00usd as it automatically activates for use for 20 days after the first reactivation.
 
->
-> The 0-0xffffff range is misleading because it includes both the domain
-> and the bus number, and it's meaningless to allocate ranges that cross
-> domain boundaries.  For example, [bus 0x0000f0-0x000120] includes bus
-> numbers from domain 0000 and domain 0001, which doesn't make any sense
-> because a bus can only be in one domain.
+The money is available for pick up which was deposited for transfer to you by MR Bernard Harry from United Nation Trust Funds.  The money is available for pick up by receiver (you) but when you track it, it will display PICKED UP due to the fact that it has been deactivated from our head office for security reason because it has stayed too long in the air as we have been trying to reach you on the phone for some days now but it was not reachable,so it was blocked.
 
-allocation code will make sure it will be cross the boundary for domain.
+Therefore you can not cash it out in any western union office due to its restriction from our head office,which was a security measure because the money has been in the air for three days now and maybe in danger, hence the mtcn has to be reactivated to enable you cash out the money in any western union office in your area, the reactivation of the MTCN will cost you a token of $155, once this is paid, our head office will release the fund on hold to enable you cash it.To be sure of this please log on to www.westernunion.com and click on track to and enter the sender's info and mtcn below.
 
->
-> I think it would make more sense to keep this bus number resource in a
-> per-host bridge structure.  Then we wouldn't need to include the
-> domain number at all because the host bridge determines the domain.
+Sender's Fist name: Abraham
+Sender's Last Name: Elizabeth
+MTCN: 5801913322
+Question: Who Is Great
+Answer: God
+Amount: $5000.00USD
+Total Amount To be Cashed: $400,000.00Usd
 
-not sure. insert the all busn_res of all peer root buses into one
-global iobusn_resource
-looks more simple.
+Please also send to us the following details..
+1,Re-Comfirm Your Contact Phone Number.................
 
-Yinghai
+With due respect please get back to me urgently after tracking the money on-line so i can instruct you on how to send the $155 to us for the reactivation of the MTCN.
+
+
+Best Regards
+Mr.Smith Mcferrin.
+Outlet Manager,
+Western Union Money Transfer.
