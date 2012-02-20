@@ -1,77 +1,98 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 30/39] PCI: Add pci_bus_extend/shrink_top()
-Date: Wed, 29 Feb 2012 15:07:29 -0800
-Message-Id: <1330556858-11768-31-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: "jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"Kay, Allen M" <allen.m.kay@intel.com>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Subject: [PATCH] Quirk for IVB graphics FLR errata
+Date: Mon, 20 Feb 2012 02:27:25 +0000
+Message-ID: <403610A45A2B5242BD291EDAE8B37D300FCD089A@SHSMSX102.ccr.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-extend or shrink bus and parent buses top (subordinate)
+For IvyBridge Mobile platform, a system hang may occur if a FLR(Function Level Reset) is asserted to internal graphics.
 
-extended range is verified safe range, and stop at recorded parent_res.
+This quirk patch is workaround for the IVB FLR errata issue.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
 ---
- drivers/pci/probe.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 36 insertions(+), 0 deletions(-)
+ drivers/pci/quirks.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 46 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 1c07aba..96259f8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -655,6 +655,42 @@ static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
- 	}
- }
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6476547..8bf5b88 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -29,6 +29,10 @@
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+ #include "pci.h"
  
-+static void __devinit pci_bus_update_top(struct pci_bus *parent,
-+		 long size, struct resource *parent_res)
-+{
-+	struct resource *res;
-+
-+	if (!size)
-+		return;
-+
-+	while (parent) {
-+		res = &parent->busn_res;
-+		if (res == parent_res)
-+			break;
-+		res->end += size;
-+		parent->subordinate += size;
-+		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-+					 parent->subordinate);
-+		dev_printk(KERN_DEBUG, &parent->dev,
-+				"busn_res: %s %02lx to %pR\n",
-+				(size > 0) ? "extended" : "shrunk",
-+				abs(size), res);
-+		parent = parent->parent;
-+	}
-+}
-+
-+static void __devinit pci_bus_extend_top(struct pci_bus *parent,
-+		 long size, struct resource *parent_res)
-+{
-+	pci_bus_update_top(parent, size, parent_res);
-+}
-+
-+static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
-+		 long size, struct resource *parent_res)
-+{
-+	pci_bus_update_top(parent, -size, parent_res);
-+}
++#include <asm/tsc.h>
++/* 10 seconds */
++#define IGD_OPERATION_TIMEOUT ((cycles_t) tsc_khz*10*1000)
 +
  /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
+  * This quirk function disables memory decoding and releases memory resources
+  * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
+@@ -3069,11 +3073,53 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++static int reset_ivb_igd(struct pci_dev *dev, int probe)
++{
++	u8 *mmio_base;
++	u32 val;
++
++	if (probe)
++		return 0;
++
++	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
++				 pci_resource_len(dev, 0));
++	if (!mmio_base)
++		return -ENOMEM;
++
++	/* work around */
++	*((u32 *)(mmio_base + 0x45010)) = 0x00000002;
++	*((u32 *)(mmio_base + 0xc2004)) = 0x00000005;
++	val = *((u32 *)(mmio_base + 0xc7204)) & 0xfffffffe;
++	*((u32 *)(mmio_base + 0xc7204)) = val;
++	do {
++		cycles_t start_time = get_cycles();
++		while (1) {
++			val = *((u32 *)(mmio_base + 0xc7200));
++			if (((val & 0x80000000) == 0)
++				&& ((val & 0x30000000) == 0))
++				break;
++			if (IGD_OPERATION_TIMEOUT < (get_cycles() - start_time))
++				break;
++			cpu_relax();
++		}
++	} while (0);
++	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
++
++	iounmap(pci_resource_start(dev, 0));
++	return 0;
++}
++
+ #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
++#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
++#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+ 
+ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+ 		 reset_intel_82599_sfp_virtfn },
++	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
++		reset_ivb_igd },
++	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
++		reset_ivb_igd },
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+ 		reset_intel_generic_dev },
+ 	{ 0 }
 -- 
-1.7.7
+1.6.0.rc1
 
