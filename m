@@ -1,46 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 25/39] PCI: add default res for pci_scan_bus
-Date: Wed, 29 Feb 2012 15:07:24 -0800
-Message-Id: <1330556858-11768-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:52044 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751568Ab2BTA7U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Feb 2012 19:59:20 -0500
+Subject: Re: [PATCH] usb: enable pci MSI/MSIX in usb core
+From: "Alex,Shi" <alex.shi@intel.com>
+To: Andiry Xu <andiry.xu@amd.com>
+Cc: Clemens Ladisch <clemens@ladisch.de>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	stern@rowland.harvard.edu, Greg KH <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Oliver Neukum <oneukum@suse.de>, Takashi Iwai <tiwai@suse.de>,
+	trenn@suse.de, linux-pci@vger.kernel.org,
+	Michal Marek <MMarek@suse.com>
+In-Reply-To: <4F3F4509.4070003@amd.com>
+References: <1328531341-22705-1-git-send-email-alex.shi@intel.com>
+	 <4F311233.9070404@intel.com> <20120207144204.GA7214@kroah.com>
+	 <20120207172743.GA4780@xanatos> <20120207221317.GA6103@xanatos>
+	 <1328664392.12669.233.camel@debian> <1328682430.12669.443.camel@debian>
+	 <1328692300.12669.593.camel@debian>  <20120214002030.GA10364@xanatos>
+	 <1329359801.12669.2872.camel@debian> <1329461087.12669.2911.camel@debian>
+	 <4F3E0C3D.4030307@ladisch.de> <1329468418.12669.2988.camel@debian>
+	 <4F3E28D1.1030509@ladisch.de>  <4F3F4509.4070003@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 20 Feb 2012 08:57:03 +0800
+Message-ID: <1329699423.14084.9.camel@debian>
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> > Assume that an XHCI controller has two rings, and that each one gets its
+> > own MSI-X interrupt.  How should the driver decide which of the rings
+> > needs to be handled?
+> > 
+> > irqreturn_t xhci_msix_irq(struct usb_hcd *hcd)
+> > {
+> > 	struct xhci_hcd *xhci = hcd_to_xhci(hcd);
+> > 
+> > 	if (...)
+> > 		handle(xhci->ring[0]);
+> > 	else
+> > 		handle(xhci->ring[1]);
+> > }
+> > 
+> > I.e., what should go into the if()?
+> > 
+> > 
+> 
+> Currently xHCI driver only support one ERST event ring. If we need to
+> support multiple event rings in the future, it's simple: in
+> usb_hcd_request_msi_msix_irqs, change the last parameter of
+> request_irq() to xhci->erst[i], and we can get the corresponding erst[i]
+> in xhci_msi_irq() like this:
+> 
+> irqreturn_t xhci_msi_irq(int irq, void *dev_id)
+> {
+> 	struct xhci_erst *erst = dev_id;
+> 	...
+> 	/* Handle corresponding event ring pointed by erst */
+> }
+> 
+> See Matthew Wilcox's patchset below for reference:
+> 
+> www.spinics.net/lists/linux-usb/msg47353.html
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 1149109..1c07aba 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1784,6 +1784,7 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &busn_resource);
- 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
- 	if (b)
- 		b->subordinate = pci_scan_child_bus(b);
-@@ -1801,6 +1802,7 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &busn_resource);
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
- 		b->subordinate = pci_scan_child_bus(b);
--- 
-1.7.7
+Oh. Thanks Andiry and Clemens! The problem really worth to have another
+patchset for it. 
 
