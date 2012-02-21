@@ -1,109 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:60590 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932399Ab2BJUxC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:53:02 -0500
-Date: Fri, 10 Feb 2012 12:52:58 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/9] PCI: Fix cardbus bridge resources as optional size
- handling
-Message-ID: <20120210125258.55c1f339@jbarnes-desktop>
-In-Reply-To: <CAE9FiQUYg8V8RSeh+xiWYxEfSxwEhp9KRXAjVkyhT94Enkqc3Q@mail.gmail.com>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-	<1328424908-6385-5-git-send-email-yinghai@kernel.org>
-	<20120208043517.GD8930@ram-ThinkPad-T61>
-	<CAE9FiQUdRLmc-_hHWtaz=8QZiu4Ma6ZY7zavByJnwMDTBQLtzg@mail.gmail.com>
-	<20120208050119.GE8930@ram-ThinkPad-T61>
-	<CAE9FiQUYg8V8RSeh+xiWYxEfSxwEhp9KRXAjVkyhT94Enkqc3Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/xD+bwy2Mh.Es8SEK6xItDRZ"; protocol="application/pgp-signature"
+Received: from rcsinet15.oracle.com ([148.87.113.117]:46853 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084Ab2BUBYH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Feb 2012 20:24:07 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: fix memleak when ACPI _CRS is not used.
+Date: Mon, 20 Feb 2012 17:23:47 -0800
+Message-Id: <1329787427-17890-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/xD+bwy2Mh.Es8SEK6xItDRZ
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+got warning:
+unreferenced object 0xffff8801f6914200 (size 512):
+  comm "swapper/0", pid 1, jiffies 4294893643 (age 2664.644s)
+  hex dump (first 32 bytes):
+    00 00 c0 fe 00 00 00 00 ff ff ff ff 00 00 00 00  ................
+    60 58 2f f6 03 88 ff ff 00 02 00 00 00 00 00 00  `X/.............
+  backtrace:
+    [<ffffffff81c2408c>] kmemleak_alloc+0x26/0x43
+    [<ffffffff8113764f>] __kmalloc+0x121/0x183
+    [<ffffffff81ca8d93>] get_current_resources+0x5a/0xc6
+    [<ffffffff81c5bedd>] pci_acpi_scan_root+0x13c/0x21c
+    [<ffffffff81c2a745>] acpi_pci_root_add+0x1e1/0x421
+    [<ffffffff81408f50>] acpi_device_probe+0x50/0x190
+    [<ffffffff8149edc7>] really_probe+0x99/0x126
+    [<ffffffff8149ef83>] driver_probe_device+0x3b/0x56
+    [<ffffffff8149effd>] __driver_attach+0x5f/0x82
+    [<ffffffff8149d860>] bus_for_each_dev+0x5c/0x88
+    [<ffffffff8149eb87>] driver_attach+0x1e/0x20
+    [<ffffffff8149e7cc>] bus_add_driver+0xca/0x21d
+    [<ffffffff8149f47b>] driver_register+0x91/0xfe
+    [<ffffffff81409d09>] acpi_bus_register_driver+0x43/0x45
+    [<ffffffff8278bdc9>] acpi_pci_root_init+0x20/0x28
+    [<ffffffff810001e7>] do_one_initcall+0x57/0x134
 
-On Tue, 7 Feb 2012 22:11:22 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+The system have _CRS for root buses, but they are not used because is old...
 
-> On Tue, Feb 7, 2012 at 9:01 PM, Ram Pai <linuxram@us.ibm.com> wrote:
-> >
-> > ..snip..
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0* If we have prefetchable memory support, a=
-llocate
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0* two regions. =C2=A0Otherwise, allocate on=
-e region of
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0* twice the size.
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
-> >> =C2=A0 =C2=A0 =C2=A0 if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 b_res[2].start =3D pc=
-i_cardbus_mem_size;
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 b_res[2].end =3D b_re=
-s[2].start + pci_cardbus_mem_size - 1;
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 b_res[2].flags |=3D I=
-ORESOURCE_MEM | IORESOURCE_PREFETCH |
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 IORESOURCE_STARTALIGN;
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (realloc_head) {
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 b_res[2].end -=3D pci_cardbus_mem_size;
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 add_to_list(realloc_head, bridge, b_res+2,
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pci_cardbus_mem_size, pci_cardbus_=
-mem_size);
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
-> >>
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* reduce that to hal=
-f */
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 b_res_3_size =3D pci_=
-cardbus_mem_size;
-> >> =C2=A0 =C2=A0 =C2=A0 }
-> >
-> > ACK. Ok. got it. This looks correct.
->=20
-> Good, So we have
->=20
-> Acked-by: Ram Pai <linuxram@us.ibm.com>
-> Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
->=20
-> Hope Jesse will not miss to add them
+Try free those not used resource array and name.
 
-Yeah looks fine.  I'd like to see an ack from Dominik on 5/9 as well
-though.  Can you include the acks and tested-bys when you re-post 3-9
-with bug references and any other comments included?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+---
+ arch/x86/pci/acpi.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
---Sig_/xD+bwy2Mh.Es8SEK6xItDRZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPNYOrAAoJEIEoDkX4Qk9hylsQALhuaQZwFfVFObk0Aw945+4h
-qu9SPRm+H25S0cxhHUH6jNHeCU6LYAXpArG1KyLNRy6SZxaL/t465h0eVO32G8et
-W937GZgsIdMtCRKx9rdPu1nL3hWRz6tlnPtk8ah3/ti4JjRgOxFmK+zXDt1vnf5C
-Y3BOIm5Q4P0KNKOrKl8V9BnzMs/Es7SNPmImA22dBEhX5XeOJtRpe7Bx3O0bxy/F
-9kxCz4Q+tg+Xjt/s5XVerH8J6DMflTK/T68WPho4CT0dOTpDMjxgWLW2fubSEi81
-s4iItnI6S7+3CK9Wa5BTYgF1PlacnMrRpuFkNRKpfuuEznMUSqU3vvOgEP1diXbF
-mXfiQ/1OPX7c/3QVC1kztrl/ni3siMwdLyIdi+Ut9m1vle0eMAqSB4qBY0D2Ax1E
-q60tVeBMe3JkLZq/E8PlCXnVSPUenUbXuoOYBUBTwFzff/TlLOSbsQMjOQT1g/Hi
-7bel/GHe1yEpNO28eRi1LhfC20ml2iBXfYNFWlPA8XxrLsENPbFhzjOhUyiPDedD
-hzOYHGDvt7ZARj3uiQZMWOYIJBtAcL4/jh8F/QPjQIbNeyervHG0Ag1RzpJjvCv8
-QIbosUdxn7y6CkblY9zX7oT/fpUV27Y0sUn45dR+jI/Bxlh2RAcnDwcEpYRIoGWK
-eVAlNuk8MobsQ7TZ/9/K
-=e9bl
------END PGP SIGNATURE-----
-
---Sig_/xD+bwy2Mh.Es8SEK6xItDRZ--
+Index: linux-2.6/arch/x86/pci/acpi.c
+===================================================================
+--- linux-2.6.orig/arch/x86/pci/acpi.c
++++ linux-2.6/arch/x86/pci/acpi.c
+@@ -282,9 +282,6 @@ static void add_resources(struct pci_roo
+ 	int i;
+ 	struct resource *res, *root, *conflict;
+ 
+-	if (!pci_use_crs)
+-		return;
+-
+ 	coalesce_windows(info, IORESOURCE_MEM);
+ 	coalesce_windows(info, IORESOURCE_IO);
+ 
+@@ -336,8 +333,13 @@ get_current_resources(struct acpi_device
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				&info);
+ 
+-	add_resources(&info);
+-	return;
++	if (pci_use_crs) {
++		add_resources(&info);
++
++		return;
++	}
++
++	kfree(info.name);
+ 
+ name_alloc_fail:
+ 	kfree(info.res);
