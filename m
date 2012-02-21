@@ -1,69 +1,39 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 14/39] x86, PCI: allocate temp range array in amd_bus pci_root_info probing
-Date: Wed, 29 Feb 2012 15:07:13 -0800
-Message-Id: <1330556858-11768-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.citrix.com ([66.165.176.89]:40257 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752613Ab2BUQXX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Feb 2012 11:23:23 -0500
+From: Anthony PERARD <anthony.perard@citrix.com>
+To: linux-kernel@vger.kernel.org
+CC: Anthony PERARD <anthony.perard@citrix.com>,
+	linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"Michael S . Tsirkin" <mst@redhat.com>,
+	QEMU-devel <qemu-devel@nongnu.org>
+Subject: PCI: Add PCI_EXP_TYPE_PCIE_BRIDGE value
+Date: Tue, 21 Feb 2012 16:22:10 +0000
+Message-ID: <1329841330-14902-1-git-send-email-anthony.perard@citrix.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Anthony PERARD <anthony.perard@citrix.com>
+
 ---
- arch/x86/pci/amd_bus.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
+ include/linux/pci_regs.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index 5f30a98..aff155d 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -30,7 +30,7 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
- 	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
- };
- 
--#define RANGE_NUM 16
-+#define RANGE_NUM 128
- 
- static struct pci_root_info __init *find_pci_root_info(int node, int link)
- {
-@@ -64,7 +64,7 @@ static int __init early_fill_mp_bus_info(void)
- 	u32 reg;
- 	u64 start;
- 	u64 end;
--	struct range range[RANGE_NUM];
-+	struct range *range;
- 	u64 val;
- 	u32 address;
- 	bool found;
-@@ -125,7 +125,10 @@ static int __init early_fill_mp_bus_info(void)
- 	reg = read_pci_config(bus, slot, 0, 0x64);
- 	def_link = (reg >> 8) & 0x03;
- 
--	memset(range, 0, sizeof(range));
-+	range = kcalloc(RANGE_NUM, sizeof(struct range), GFP_KERNEL);
-+	if (!range)
-+		return -ENOMEM;
-+
- 	add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
- 	/* io port resource */
- 	for (i = 0; i < 4; i++) {
-@@ -291,6 +294,8 @@ static int __init early_fill_mp_bus_info(void)
- 		}
- 	}
- 
-+	kfree(range);
-+
- 	print_all_pci_root_info("ht link", true);
- 
- 	return 0;
+diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
+index e41a10f..4b608f5 100644
+--- a/include/linux/pci_regs.h
++++ b/include/linux/pci_regs.h
+@@ -391,6 +391,7 @@
+ #define  PCI_EXP_TYPE_UPSTREAM	0x5	/* Upstream Port */
+ #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
+ #define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
++#define  PCI_EXP_TYPE_PCIE_BRIDGE 0x8	/* PCI/PCI-X to PCIE Bridge */
+ #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
+ #define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
+ #define PCI_EXP_FLAGS_SLOT	0x0100	/* Slot implemented */
 -- 
-1.7.7
-
+tg: (27e74da..) add-new-pci-value (depends on: master)
