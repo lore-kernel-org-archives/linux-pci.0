@@ -1,45 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 04/11] PCI: Use class for quirk for pci_fixup_video
-Date: Thu, 23 Feb 2012 23:46:52 -0800
-Message-Id: <1330069619-14446-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
-References: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v1 01/11] PCI: make pci_flags always available
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org
+Date: Wed, 22 Feb 2012 11:19:07 -0700
+Message-ID: <20120222181907.27513.95239.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/fixup.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+If we move resource assignment functions into the core, we'll still
+need a way for architectures to prevent reassignment, e.g., the
+"pci_probe_only" functionality, and we'll need a generic, always
+available way the core can test for that.  The "pci_flags"
+arrangement used by several architectures seems like a convenient
+way to do this.
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 24172ff..d0e6e40 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -322,9 +322,6 @@ static void __devinit pci_fixup_video(struct pci_dev *pdev)
- 	struct pci_bus *bus;
- 	u16 config;
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/setup-bus.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 86b69f85..7b7d7e9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -25,8 +25,11 @@
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
+ #include <linux/slab.h>
++#include <asm-generic/pci-bridge.h>
+ #include "pci.h"
  
--	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--		return;
--
- 	/* Is VGA routed to us? */
- 	bus = pdev->bus;
- 	while (bus) {
-@@ -353,7 +350,8 @@ static void __devinit pci_fixup_video(struct pci_dev *pdev)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
- 	}
- }
--DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pci_fixup_video);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
- 
- 
- static const struct dmi_system_id __devinitconst msi_k8t_dmi_table[] = {
--- 
-1.7.7
++unsigned int __weak pci_flags;
++
+ struct resource_list_x {
+ 	struct resource_list_x *next;
+ 	struct resource *res;
 
