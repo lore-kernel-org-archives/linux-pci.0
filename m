@@ -1,205 +1,140 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 33/39] PCI: Allocate bus range instead of use max blindly
-Date: Wed, 29 Feb 2012 15:07:32 -0800
-Message-Id: <1330556858-11768-34-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v1 03/11] alpha/PCI: replace pci_probe_only with pci_flags
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-alpha@vger.kernel.org
+Date: Wed, 22 Feb 2012 11:19:17 -0700
+Message-ID: <20120222181917.27513.44072.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-every bus have extra busn_res, and linked them toghter to iobusn_resource.
+Some architectures (alpha, mips, powerpc) have an arch-specific
+"pci_probe_only" flag.  Others use PCI_PROBE_ONLY in pci_flags for
+the same purpose.  This moves alpha to the pci_flags approach so
+generic code can use the same test across all architectures.
 
-when need to find usable bus number range, try probe from iobusn_resource tree.
-
-To avoid falling to small hole in the middle, we try from 8 spare bus.
-if can not find 8 or more in the middle, will try to append 8 on top later.
-then if can not append, will try to find 7 from the middle, then will try to append 7 on top.
-then if can not append, will try to find 6 from the middle...
-
-for cardbus will only find 4 spare.
-
-if extend from top, at last will shrink back to really needed range...
-
--v4: fix checking with pci rescan. Found by Bjorn.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+CC: linux-alpha@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/probe.c |  100 ++++++++++++++++++++++++++++++---------------------
- 1 files changed, 59 insertions(+), 41 deletions(-)
+ arch/alpha/include/asm/pci.h   |    1 +
+ arch/alpha/kernel/pci.c        |   15 +++++++--------
+ arch/alpha/kernel/pci_impl.h   |    3 ---
+ arch/alpha/kernel/sys_marvel.c |    3 ++-
+ arch/alpha/kernel/sys_titan.c  |    3 ++-
+ 5 files changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5c031f0..f22a209 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -839,10 +839,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index 28d0497..6a3fe07 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -7,6 +7,7 @@
+ #include <linux/dma-mapping.h>
+ #include <asm/scatterlist.h>
+ #include <asm/machvec.h>
++#include <asm-generic/pci-bridge.h>
+ 
+ /*
+  * The following structure is used to manage multiple PCI busses.
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 8c723c1..3a5cdf2 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -43,12 +43,10 @@ const char *const pci_mem_names[] = {
+ 
+ const char pci_hae0_name[] = "HAE0";
+ 
+-/* Indicate whether we respect the PCI setup left by console. */
+ /*
+- * Make this long-lived  so that we know when shutting down
+- * whether we probed only or not.
++ * If PCI_PROBE_ONLY in pci_flags is set, we don't change any PCI resource
++ * assignments.
+  */
+-int pci_probe_only;
+ 
+ /*
+  * The PCI controller list.
+@@ -215,7 +213,7 @@ pdev_save_srm_config(struct pci_dev *dev)
+ 	struct pdev_srm_saved_conf *tmp;
+ 	static int printed = 0;
+ 
+-	if (!alpha_using_srm || pci_probe_only)
++	if (!alpha_using_srm || pci_has_flag(PCI_PROBE_ONLY))
+ 		return;
+ 
+ 	if (!printed) {
+@@ -242,7 +240,7 @@ pci_restore_srm_config(void)
+ 	struct pdev_srm_saved_conf *tmp;
+ 
+ 	/* No need to restore if probed only. */
+-	if (pci_probe_only)
++	if (pci_has_flag(PCI_PROBE_ONLY))
+ 		return;
+ 
+ 	/* Restore SRM config. */
+@@ -283,7 +281,7 @@ pcibios_fixup_bus(struct pci_bus *bus)
  {
- 	struct pci_bus *child;
- 	int is_cardbus = (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS);
--	u32 buses, i, j = 0;
-+	u32 buses;
- 	u16 bctl;
- 	u8 primary, secondary, subordinate;
- 	int broken = 0;
-+	struct resource *parent_res = NULL;
+ 	struct pci_dev *dev = bus->self;
  
- 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
- 	primary = buses & 0xFF;
-@@ -859,10 +860,16 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+-	if (pci_probe_only && dev &&
++	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+  		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+  		pci_read_bridge_bases(bus);
+  		pcibios_fixup_device_resources(dev, bus);
+@@ -374,7 +372,8 @@ pcibios_claim_one_bus(struct pci_bus *b)
  
- 	/* Check if setup is sensible at all */
- 	if (!pass &&
--	    (primary != bus->number || secondary <= bus->number)) {
--		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
-+	    (primary != bus->number || secondary <= bus->number))
- 		broken = 1;
--	}
-+
-+	/* more strict checking */
-+	if (!pass && !broken && !dev->subordinate)
-+		broken = pci_bridge_check_busn_broken(bus, dev,
-+						   secondary, subordinate);
-+
-+	if (broken)
-+		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
- 
- 	/* Disable MasterAbortMode during probing to avoid reporting
- 	   of bus errors (in some architectures) */ 
-@@ -895,6 +902,8 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			child->primary = primary;
- 			child->subordinate = subordinate;
- 			child->bridge_ctl = bctl;
-+
-+			pci_bus_insert_busn_res(child, secondary, subordinate);
+ 			if (r->parent || !r->start || !r->flags)
+ 				continue;
+-			if (pci_probe_only || (r->flags & IORESOURCE_PCI_FIXED))
++			if (pci_has_flag(PCI_PROBE_ONLY) ||
++			    (r->flags & IORESOURCE_PCI_FIXED))
+ 				pci_claim_resource(dev, i);
  		}
- 
- 		cmax = pci_scan_child_bus(child);
-@@ -907,6 +916,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 		 * We need to assign a number to this bus which we always
- 		 * do in the second pass.
- 		 */
-+		long shrink_size;
-+		struct resource busn_res;
-+		int ret = -ENOMEM;
-+		int old_max = max;
-+
- 		if (!pass) {
- 			if (pcibios_assign_all_busses() || broken)
- 				/* Temporarily disable forwarding of the
-@@ -923,20 +937,43 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 		/* Clear errors */
- 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
- 
--		/* Prevent assigning a bus number that already exists.
--		 * This can happen when a bridge is hot-plugged, so in
--		 * this case we only re-scan this bus. */
--		child = pci_find_bus(pci_domain_nr(bus), max+1);
--		if (!child) {
--			child = pci_add_new_bus(bus, dev, ++max);
--			if (!child)
--				goto out;
-+		if (dev->subordinate) {
-+			/* We get here only for cardbus */
-+			child = dev->subordinate;
-+			if  (!is_cardbus)
-+				dev_warn(&dev->dev,
-+				 "rescan scaned bridge as broken one again ?");
-+
-+			goto out;
- 		}
-+		/*
-+		 * For CardBus bridges, we leave 4 bus numbers
-+		 * as cards with a PCI-to-PCI bridge can be
-+		 * inserted later.
-+		 * other just allocate 8 bus to avoid we fall into
-+		 *  small hole in the middle.
-+		 */
-+		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
-+				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
-+				&parent_res);
-+
-+		if (ret != 0)
-+			goto out;
-+
-+		child = pci_add_new_bus(bus, dev, busn_res.start);
-+		if (!child)
-+			goto out;
-+
-+		child->subordinate = busn_res.end;
-+		pci_bus_insert_busn_res(child, busn_res.start, busn_res.end);
-+
- 		buses = (buses & 0xff000000)
- 		      | ((unsigned int)(child->primary)     <<  0)
- 		      | ((unsigned int)(child->secondary)   <<  8)
- 		      | ((unsigned int)(child->subordinate) << 16);
- 
-+		max = child->subordinate;
-+
- 		/*
- 		 * yenta.c forces a secondary latency timer of 176.
- 		 * Copy that behaviour here.
-@@ -967,43 +1004,24 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			 * the real value of max.
- 			 */
- 			pci_fixup_parent_subordinate_busnr(child, max);
-+
- 		} else {
--			/*
--			 * For CardBus bridges, we leave 4 bus numbers
--			 * as cards with a PCI-to-PCI bridge can be
--			 * inserted later.
--			 */
--			for (i=0; i<CARDBUS_RESERVE_BUSNR; i++) {
--				struct pci_bus *parent = bus;
--				if (pci_find_bus(pci_domain_nr(bus),
--							max+i+1))
--					break;
--				while (parent->parent) {
--					if ((!pcibios_assign_all_busses()) &&
--					    (parent->subordinate > max) &&
--					    (parent->subordinate <= max+i)) {
--						j = 1;
--					}
--					parent = parent->parent;
--				}
--				if (j) {
--					/*
--					 * Often, there are two cardbus bridges
--					 * -- try to leave one valid bus number
--					 * for each one.
--					 */
--					i /= 2;
--					break;
--				}
--			}
--			max += i;
- 			pci_fixup_parent_subordinate_busnr(child, max);
- 		}
- 		/*
- 		 * Set the subordinate bus number to its real value.
- 		 */
-+		shrink_size = child->subordinate - max;
- 		child->subordinate = max;
- 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
-+		pci_bus_update_busn_res_end(child, max);
-+
-+		/* shrink some back, if we extend top before */
-+		if (!is_cardbus && (shrink_size > 0) && parent_res)
-+			pci_bus_shrink_top(bus, shrink_size, parent_res);
-+
-+		if (old_max > max)
-+			max = old_max;
  	}
+diff --git a/arch/alpha/kernel/pci_impl.h b/arch/alpha/kernel/pci_impl.h
+index 85457b2..2b0ac42 100644
+--- a/arch/alpha/kernel/pci_impl.h
++++ b/arch/alpha/kernel/pci_impl.h
+@@ -173,9 +173,6 @@ extern void pci_restore_srm_config(void);
+ extern struct pci_controller *hose_head, **hose_tail;
+ extern struct pci_controller *pci_isa_hose;
  
- 	sprintf(child->name,
--- 
-1.7.7
+-/* Indicate that we trust the console to configure things properly.  */
+-extern int pci_probe_only;
+-
+ extern unsigned long alpha_agpgart_size;
+ 
+ extern void common_init_pci(void);
+diff --git a/arch/alpha/kernel/sys_marvel.c b/arch/alpha/kernel/sys_marvel.c
+index 95cfc83..fc8b125 100644
+--- a/arch/alpha/kernel/sys_marvel.c
++++ b/arch/alpha/kernel/sys_marvel.c
+@@ -384,7 +384,8 @@ marvel_init_pci(void)
+ 
+ 	marvel_register_error_handlers();
+ 
+-	pci_probe_only = 1;
++	/* Indicate that we trust the console to configure things properly */
++	pci_set_flags(PCI_PROBE_ONLY);
+ 	common_init_pci();
+ 	locate_and_init_vga(NULL);
+ 
+diff --git a/arch/alpha/kernel/sys_titan.c b/arch/alpha/kernel/sys_titan.c
+index f47b30a..b8eafa0 100644
+--- a/arch/alpha/kernel/sys_titan.c
++++ b/arch/alpha/kernel/sys_titan.c
+@@ -331,7 +331,8 @@ titan_init_pci(void)
+  	 */
+  	titan_late_init();
+  
+-	pci_probe_only = 1;
++	/* Indicate that we trust the console to configure things properly */
++	pci_set_flags(PCI_PROBE_ONLY);
+ 	common_init_pci();
+ 	SMC669_Init(0);
+ 	locate_and_init_vga(NULL);
 
