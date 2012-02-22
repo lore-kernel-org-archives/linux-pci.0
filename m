@@ -1,90 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:38535 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142Ab2BVWrV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2012 17:47:21 -0500
+Received: by wics10 with SMTP id s10so372087wic.19
+        for <linux-pci@vger.kernel.org>; Wed, 22 Feb 2012 14:47:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1330299202-3838-3-git-send-email-yinghai@kernel.org>
-References: <1330299202-3838-1-git-send-email-yinghai@kernel.org> <1330299202-3838-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1329946909.20389.10.camel@pasglop>
+References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+ <20120222181948.27513.96215.stgit@bhelgaas.mtv.corp.google.com> <1329946909.20389.10.camel@pasglop>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 Feb 2012 10:34:33 -0700
-Message-ID: <CAErSpo6njxGbsjqFW6nJi3hefKRNUYKj_zCGuPmOOfaFcLkk4A@mail.gmail.com>
-Subject: Re: [PATCH 2/8] x86, PCI: have own version for pcibios_bus_to_resource
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+Date: Wed, 22 Feb 2012 14:47:00 -0800
+Message-ID: <CAErSpo7bMNbZgEZFmezJwTvGGoRsCe-qZavBJZS_q4DmnNAE7A@mail.gmail.com>
+Subject: Re: [PATCH v1 09/11] powerpc/PCI: replace pci_probe_only with pci_flags
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 26, 2012 at 4:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> x86 does not need to offset the address. So we can skip that costing offset
-> searching.
-
-I don't understand the point of this.  I'm trying hard to *remove* PCI
-code from arch/ because most of it is not really arch-specific.  This
-is a good example.  There's nothing in the pcibios_bus_to_resource()
-that you're adding back to x86 that is specific to x86, and it makes
-things more complicated.  Using __weak adds ambiguity for the reader,
-now the pci_add_resource_offset() interface exists but doesn't work,
-etc.
-
-I agree that this patch will make x86 a tiny bit faster and a tiny bit
-smaller, but I don't think it's enough to matter.  Do you have numbers
-that say otherwise?
-
-Bjorn
-
-> ---
->  arch/x86/pci/i386.c       |   14 ++++++++++++++
->  drivers/pci/host-bridge.c |    9 +++++----
->  2 files changed, 19 insertions(+), 4 deletions(-)
+On Wed, Feb 22, 2012 at 1:41 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2012-02-22 at 11:19 -0700, Bjorn Helgaas wrote:
+>> We already use pci_flags, so this just sets pci_flags directly and removes
+>> the intermediate step of figuring out pci_probe_only, then using it to set
+>> pci_flags.
 >
-> Index: linux-2.6/arch/x86/pci/i386.c
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/pci/i386.c
-> +++ linux-2.6/arch/x86/pci/i386.c
-> @@ -335,6 +335,20 @@ void __init pcibios_resource_survey(void
->  */
->  fs_initcall(pcibios_assign_resources);
+> Ah yes, those flags are now common indeed.
 >
-> +void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-> +                            struct resource *res)
-> +{
-> +       region->start = res->start;
-> +       region->end = res->end;
-> +}
-> +
-> +void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-> +                            struct pci_bus_region *region)
-> +{
-> +       res->start = region->start;
-> +       res->end = region->end;
-> +}
-> +
->  static const struct vm_operations_struct pci_mmap_ops = {
->        .access = generic_access_phys,
->  };
-> Index: linux-2.6/drivers/pci/host-bridge.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/host-bridge.c
-> +++ linux-2.6/drivers/pci/host-bridge.c
-> @@ -38,8 +38,9 @@ static bool resource_contains(struct res
->        return res1->start <= res2->start && res1->end >= res2->end;
->  }
+>> The PCI core provides a pci_flags definition (currently __weak), so drop
+>> the powerpc definitions in favor of that.  Note that we must set the ppc64
+>> default (PCI_PROBE_ONLY set) in the 64-bit setup_arch() before calling
+>> the platform .setup_arch() method, which may override the default.
 >
-> -void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-> -                            struct resource *res)
-> +void __weak pcibios_resource_to_bus(struct pci_dev *dev,
-> +                                   struct pci_bus_region *region,
-> +                                   struct resource *res)
->  {
->        struct pci_host_bridge *bridge = pci_host_bridge(dev);
->        struct pci_host_bridge_window *window;
-> @@ -66,8 +67,8 @@ static bool region_contains(struct pci_b
->        return region1->start <= region2->start && region1->end >= region2->end;
->  }
+> Ah wait, I have a patch about to hit -next that flips the ppc64
+> default...
 >
-> -void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-> -                            struct pci_bus_region *region)
-> +void __weak pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-> +                                   struct pci_bus_region *region)
->  {
->        struct pci_host_bridge *bridge = pci_host_bridge(dev);
->        struct pci_host_bridge_window *window;
+> Maybe it's easier if you just pick it up and stick it in your series,
+> that will avoid integration clashes..
+>
+> http://patchwork.ozlabs.org/patch/141225/
+
+Sure, I'll pick up that patch and repost the series.  I'll wait until
+tomorrow or so in case anybody else has comments.
+
+Thanks,
+  Bjorn
