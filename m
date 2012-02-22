@@ -1,81 +1,58 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120208132234.710f19be.yuasa@linux-mips.org>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
- <20120130165805.3231.99160.stgit@bhelgaas.mtv.corp.google.com>
- <20120131114250.b0e6af10.yuasa@linux-mips.org> <CAErSpo7xUL++rqnJug7=Wd_nfvaUDOewGjz1C2Fp-oQrkxO2yg@mail.gmail.com>
- <CAErSpo7ry8piDCTpgkdr01=Kd7=G6HTNwDAQAockPgXtyhJvuw@mail.gmail.com> <20120208132234.710f19be.yuasa@linux-mips.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:56042 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752847Ab2BVSTn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2012 13:19:43 -0500
+Received: by mail-yx0-f202.google.com with SMTP id m1so39414yen.1
+        for <linux-pci@vger.kernel.org>; Wed, 22 Feb 2012 10:19:43 -0800 (PST)
+Subject: [PATCH v1 08/11] mips/PCI: removed unused pci_probe configurability
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 8 Feb 2012 13:16:52 -0800
-Message-ID: <CAErSpo7oTngzPLb7+HHyOgYPB7Toc2yOtr1i0Z+85gLy4Mik0g@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 11/18] mips/PCI: get rid of device resource fixups
-To: Yoichi Yuasa <yuasa@linux-mips.org>, linux-arch@vger.kernel.org,
-	linux-pci@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, linux-mips@linux-mips.org,
+	Ralf Baechle <ralf@linux-mips.org>
+Date: Wed, 22 Feb 2012 11:19:43 -0700
+Message-ID: <20120222181943.27513.19771.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 7, 2012 at 8:22 PM, Yoichi Yuasa <yuasa@linux-mips.org> wrote:
-> Hi,
->
-> On Tue, 7 Feb 2012 18:56:46 -0800
-> Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> On Mon, Jan 30, 2012 at 7:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> > On Mon, Jan 30, 2012 at 6:42 PM, Yoichi Yuasa <yuasa@linux-mips.org> wrote:
->> >> Hi,
->> >>
->> >> On Mon, 30 Jan 2012 09:58:05 -0700
->> >> Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >>
->> >>> Tell the PCI core about host bridge address translation so it can take
->> >>> care of bus-to-resource conversion for us.
->> >>>
->> >>> N.B. cobalt_legacy_ide_fixup() does scary things with resources, but I
->> >>> *think* it will still work because we're still making the same adjustments,
->> >>> just in the opposite order.  Here are the legacy IDE resource.start
->> >>> values I expect:
->> >>>
->> >>>          current                                        new
->> >>>
->> >>>            0x1f0   (pci_setup_device)                 0x1f0
->> >>>                    (pci_bus_to_resource)       + 0xf0000000
->> >>>     - 0xf0000000   (cobalt_legacy_ide_fixup)   - 0xf0000000
->> >>>     + 0xf0000000   (pcibios_fixup_bus)
->> >>>     ------------                               ------------
->> >>>            0x1f0    final value                       0x1f0
->> >>
->> >> It seems to be unable to handle the offset correctly.
->> >>
->> >> failed on Cobalt:
->> >>
->> >> pata_via 0000:00:09.1: BAR 0: can't reserve [io  0x100001f0-0x100001f7]
->> >> pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
->> >> pata_via 0000:00:09.1: BAR 2: can't reserve [io  0x10000170-0x10000177]
->> >> pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
->> >> pata_via 0000:00:09.1: no available native port
->> >
->> > Thank you very much for testing this.  Could you collect the complete
->> > dmesg and /proc/ioport contents, before and after my patches?
->>
->> Ping :)  I'll try to figure this out, but it would be easier if I had
->> the info mentioned above.  Thanks!
->
-> It cannot mount rootfs with your patches.
-> I cannot get /proc/ioports yet.
->
-> I attach only boot logs.
+We never assign anything other than PCI_ASSIGN_ALL_BUSSES to pci_probe,
+so just remove the indirection.  If configurability is required in the
+future, please use the pci_flags/PCI_REASSIGN_ALL_BUS functionality
+as is done for powerpc.
 
-Ah, I see the trouble.  The original MIPS pcibios_fixup_bus() applied
-the io_offset to all IORESOURE_IO resources, but the generic
-pcibios_bus_to_resource() only applies the offset to things that are
-in the host bridge's window.
+CC: Ralf Baechle <ralf@linux-mips.org>
+CC: linux-mips@linux-mips.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/mips/pci/pci.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-The legacy IDE addresses aren't in the window, so we didn't apply the
-offset, and it didn't work.
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 2a11045..19f6d19 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -24,10 +24,6 @@
+  * assignments.
+  */
+ 
+-#define PCI_ASSIGN_ALL_BUSSES	1
+-
+-unsigned int pci_probe = PCI_ASSIGN_ALL_BUSSES;
+-
+ /*
+  * The PCI controller list.
+  */
+@@ -238,7 +234,7 @@ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
+ 
+ unsigned int pcibios_assign_all_busses(void)
+ {
+-	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
++	return 1;
+ }
+ 
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
 
-I'll rework this and update my patches.
-
-Thanks!
-
-Bjorn
