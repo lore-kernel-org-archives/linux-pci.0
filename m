@@ -1,87 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:46305 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756012Ab2BWUBZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 15:01:25 -0500
-Date: Thu, 23 Feb 2012 12:01:19 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: RFC: export constants from shpc.h?
-Message-ID: <20120223120119.782db1da@jbarnes-desktop>
-In-Reply-To: <20120223195053.GB28779@redhat.com>
-References: <20120216145447.GA25979@redhat.com>
-	<20120223085004.17e32327@jbarnes-desktop>
-	<20120223195053.GB28779@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GVoBx32FN151sNORELLM3pX"; protocol="application/pgp-signature"
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:43090 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753834Ab2BVUlO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2012 15:41:14 -0500
+Received: by wics10 with SMTP id s10so311248wic.19
+        for <linux-pci@vger.kernel.org>; Wed, 22 Feb 2012 12:41:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1329787427-17890-1-git-send-email-yinghai@kernel.org>
+References: <1329787427-17890-1-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 22 Feb 2012 12:40:53 -0800
+Message-ID: <CAErSpo7T0NuY-O58rB81x7j+7j6tzaZqhHLGLXPJbjhrdGunxA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: fix memleak when ACPI _CRS is not used.
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/GVoBx32FN151sNORELLM3pX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Feb 20, 2012 at 5:23 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> got warning:
+> unreferenced object 0xffff8801f6914200 (size 512):
+>  comm "swapper/0", pid 1, jiffies 4294893643 (age 2664.644s)
+>  hex dump (first 32 bytes):
+>    00 00 c0 fe 00 00 00 00 ff ff ff ff 00 00 00 00  ................
+>    60 58 2f f6 03 88 ff ff 00 02 00 00 00 00 00 00  `X/.............
+>  backtrace:
+>    [<ffffffff81c2408c>] kmemleak_alloc+0x26/0x43
+>    [<ffffffff8113764f>] __kmalloc+0x121/0x183
+>    [<ffffffff81ca8d93>] get_current_resources+0x5a/0xc6
+>    [<ffffffff81c5bedd>] pci_acpi_scan_root+0x13c/0x21c
+>    [<ffffffff81c2a745>] acpi_pci_root_add+0x1e1/0x421
+>    [<ffffffff81408f50>] acpi_device_probe+0x50/0x190
+>    [<ffffffff8149edc7>] really_probe+0x99/0x126
+>    [<ffffffff8149ef83>] driver_probe_device+0x3b/0x56
+>    [<ffffffff8149effd>] __driver_attach+0x5f/0x82
+>    [<ffffffff8149d860>] bus_for_each_dev+0x5c/0x88
+>    [<ffffffff8149eb87>] driver_attach+0x1e/0x20
+>    [<ffffffff8149e7cc>] bus_add_driver+0xca/0x21d
+>    [<ffffffff8149f47b>] driver_register+0x91/0xfe
+>    [<ffffffff81409d09>] acpi_bus_register_driver+0x43/0x45
+>    [<ffffffff8278bdc9>] acpi_pci_root_init+0x20/0x28
+>    [<ffffffff810001e7>] do_one_initcall+0x57/0x134
+>
+> The system have _CRS for root buses, but they are not used because is old...
+>
+> Try free those not used resource array and name.
 
-On Thu, 23 Feb 2012 21:50:54 +0200
-"Michael S. Tsirkin" <mst@redhat.com> wrote:
+Thanks for fixing this.
 
-> On Thu, Feb 23, 2012 at 08:50:04AM -0800, Jesse Barnes wrote:
-> > On Thu, 16 Feb 2012 16:54:49 +0200
-> > "Michael S. Tsirkin" <mst@redhat.com> wrote:
-> >=20
-> > > I've implemented an shpc controller emulator
-> > > in qemu, so I needed a bunch of constants
-> > > similar to what drivers/pci/hotplug/shpc.h has.
-> > >=20
-> > > Any objections to adding a PCI_SHPC_XXXX prefix
-> > > so these and moving them to pci_regs.h?
-> > > PCI utilities can then use them from /usr/include/linux.
-> > >=20
-> > > One can see how a utility that looks at slot LED and MRL
-> > > states might be useful
-> > > (we'd need to export the base offset through sysfs
-> > > to make it possible to use such in parallel with shpc).
-> >=20
-> > pci_regs.h is generally reserved for architected regs,
-> > but maybe a
-> > separate header file makes sense.  Or just patch libpciaccess or
-> > pci-utils with your tool.
-> >=20
-> > --=20
-> > Jesse Barnes, Intel Open Source Technology Center
->=20
-> Fair enough, but out of curiosity,
-> could you pls clarify what is meant by 'architected'?
-> SHPC is a PCI-SIG spec after all, not a vecor-specific interface...
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Sorry that's what I meant; I was thinking it was one of the vendor
-ones.  Putting the SHPC reg definitions in pci_regs.h is fine.
-
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/GVoBx32FN151sNORELLM3pX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPRpsPAAoJEIEoDkX4Qk9hCAgP/A+Ugm/4cJJOty0EHtpcxnRS
-kM/jk87ctWGhoQz4WtCvGiu9sZXUXsJG00Vd+6hjUiw0mOSLtyaXpJgR52dphRCM
-/f2KfQ1flKTBpP70iqBzhDkxsYEvLQvlWcVRg5E91AULuJg7+AIOIP4zOAzrW1Sl
-riyYUcGbALG+ht0lMKiZNGCfBQhhYZjvbvG6gO0JixddW07DZ0uNyOydrcUgzmS+
-7WwLhZgsjrvfTnY22n7qXr6Q9JtIxuZeZsvhbIDwIMM3UVKXE/DObrrfJo3oXZuc
-SyETnVCHzN+J/t2iTTuz2gJeIriYYYdLA9cNU/GIhooRBeTlLizIoiiB/diLXUkk
-boLg9pGxeuO9JAipK+q9BO4LSLN+Q+PrtcsodttsYpplMs5PF8zSt72IQ1OG5ZD6
-g1iqRY0mz68GqUT4plqfBo+eVQaao8yuGkE5ds4uQ8kYuRHvzX1aGcvPKv5qqq5C
-PQhTD8944qKC+FurjwUMoZrkx/lLHqjDHWe7UhAcqXbmiPgG84bwWbxVLBkS+ddq
-vQfW7aHsCZ7J4dqmjJc0Gg2qufc5Q8fRabB2A6OtvKxTlRO7NOJPd1KYpqR+BEv8
-JqfRO//u73X6NX9Sr3YegDYLH97AXDWTrOLI4MHKm0VjvoPtICfP9GufvGyDeXyZ
-lLSeh6eabPn1OSQDGYli
-=uEXb
------END PGP SIGNATURE-----
-
---Sig_/GVoBx32FN151sNORELLM3pX--
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> ---
+>  arch/x86/pci/acpi.c |   12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+>
+> Index: linux-2.6/arch/x86/pci/acpi.c
+> ===================================================================
+> --- linux-2.6.orig/arch/x86/pci/acpi.c
+> +++ linux-2.6/arch/x86/pci/acpi.c
+> @@ -282,9 +282,6 @@ static void add_resources(struct pci_roo
+>        int i;
+>        struct resource *res, *root, *conflict;
+>
+> -       if (!pci_use_crs)
+> -               return;
+> -
+>        coalesce_windows(info, IORESOURCE_MEM);
+>        coalesce_windows(info, IORESOURCE_IO);
+>
+> @@ -336,8 +333,13 @@ get_current_resources(struct acpi_device
+>        acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+>                                &info);
+>
+> -       add_resources(&info);
+> -       return;
+> +       if (pci_use_crs) {
+> +               add_resources(&info);
+> +
+> +               return;
+> +       }
+> +
+> +       kfree(info.name);
+>
+>  name_alloc_fail:
+>        kfree(info.res);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
