@@ -1,42 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 10/11] PCI: Use class for quirk for ti816x class fixup
-Date: Thu, 23 Feb 2012 23:46:58 -0800
-Message-Id: <1330069619-14446-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
-References: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <1329946909.20389.10.camel@pasglop>
+Subject: Re: [PATCH v1 09/11] powerpc/PCI: replace pci_probe_only with
+ pci_flags
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Date: Thu, 23 Feb 2012 08:41:49 +1100
+In-Reply-To: <20120222181948.27513.96215.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+	 <20120222181948.27513.96215.stgit@bhelgaas.mtv.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/quirks.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+On Wed, 2012-02-22 at 11:19 -0700, Bjorn Helgaas wrote:
+> We already use pci_flags, so this just sets pci_flags directly and removes
+> the intermediate step of figuring out pci_probe_only, then using it to set
+> pci_flags.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 91733a2..e198589 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2822,12 +2822,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3c28, vtd_mask_spec_errors);
- static void __devinit fixup_ti816x_class(struct pci_dev* dev)
- {
- 	/* TI 816x devices do not have class code set when in PCIe boot mode */
--	if (dev->class == PCI_CLASS_NOT_DEFINED) {
--		dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
--		dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
--	}
-+	dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
-+	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_TI, 0xb800, fixup_ti816x_class);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_TI, 0xb800,
-+				 PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
- 
- /* Some PCIe devices do not work reliably with the claimed maximum
-  * payload size supported.
--- 
-1.7.7
+Ah yes, those flags are now common indeed.
+
+> The PCI core provides a pci_flags definition (currently __weak), so drop
+> the powerpc definitions in favor of that.  Note that we must set the ppc64
+> default (PCI_PROBE_ONLY set) in the 64-bit setup_arch() before calling
+> the platform .setup_arch() method, which may override the default.
+
+Ah wait, I have a patch about to hit -next that flips the ppc64
+default...
+
+Maybe it's easier if you just pick it up and stick it in your series,
+that will avoid integration clashes..
+
+http://patchwork.ozlabs.org/patch/141225/
+
+Cheers,
+Ben.
+
 
