@@ -1,67 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:49024 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756206Ab2B2WFk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Feb 2012 17:05:40 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: [PATCH] PCI / PCIe: Introduce command line option to disable ARI
-Date: Wed, 29 Feb 2012 23:09:41 +0100
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v1 02/11] PCI: add pci_clear_flags()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org
+Date: Wed, 22 Feb 2012 11:19:12 -0700
+Message-ID: <20120222181912.27513.47630.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201202292309.42051.rjw@sisk.pl>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rjw@sisk.pl>
+Add a pci_clear_flags() for cases when we statically initialize
+pci_flags, then decide to clear things out later.
 
-There are PCIe devices on the market that report ARI support but
-then fail to initialize correctly when ARI is actually used.  This
-leads to situations in which kernels 2.6.34 and newer fail to handle
-systems where the previous kernels worked without any apparent
-problems.  Unfortunately, it is currently unknown how many such
-devices are there.
-
-For this reason, introduce a new kernel command line option,
-pci=noari, allowing users to disable PCIe ARI altogether if they
-see problems with PCIe device initialization.
-
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ include/asm-generic/pci-bridge.h |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Index: linux/drivers/pci/pci.c
-===================================================================
---- linux.orig/drivers/pci/pci.c
-+++ linux/drivers/pci/pci.c
-@@ -94,6 +94,9 @@ u8 pci_cache_line_size;
-  */
- unsigned int pcibios_max_latency = 255;
+diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
+index 4a5aca2..a5b5d5a 100644
+--- a/include/asm-generic/pci-bridge.h
++++ b/include/asm-generic/pci-bridge.h
+@@ -45,6 +45,11 @@ static inline void pci_add_flags(int flags)
+ 	pci_flags |= flags;
+ }
  
-+/* If set, the PCIe ARI capability will not be used. */
-+static bool pcie_ari_disabled;
++static inline void pci_clear_flags(int flags)
++{
++	pci_flags &= ~flags;
++}
 +
- /**
-  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
-  * @bus: pointer to PCI bus structure to search
-@@ -1922,7 +1925,7 @@ void pci_enable_ari(struct pci_dev *dev)
- 	u16 flags, ctrl;
- 	struct pci_dev *bridge;
- 
--	if (!pci_is_pcie(dev) || dev->devfn)
-+	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
- 		return;
- 
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI);
-@@ -3718,6 +3721,8 @@ static int __init pci_setup(char *str)
- 				pci_realloc();
- 			} else if (!strcmp(str, "nodomains")) {
- 				pci_no_domains();
-+			} else if (!strncmp(str, "noari", 5)) {
-+				pcie_ari_disabled = true;
- 			} else if (!strncmp(str, "cbiosize=", 9)) {
- 				pci_cardbus_io_size = memparse(str + 9, &str);
- 			} else if (!strncmp(str, "cbmemsize=", 10)) {
+ static inline int pci_has_flag(int flag)
+ {
+ 	return pci_flags & flag;
+@@ -52,6 +57,7 @@ static inline int pci_has_flag(int flag)
+ #else
+ static inline void pci_set_flags(int flags) { }
+ static inline void pci_add_flags(int flags) { }
++static inline void pci_clear_flags(int flags) { }
+ static inline int pci_has_flag(int flag)
+ {
+ 	return 0;
+
