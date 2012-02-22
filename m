@@ -1,55 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:59972 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751107Ab2BHVsx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Feb 2012 16:48:53 -0500
-Date: Wed, 8 Feb 2012 13:48:51 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Oliver Neukum <oneukum@suse.de>
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC] xhci: Fix BIOS handoff failure on some Intel systems.
-Message-ID: <20120208214851.GA2669@xanatos>
-References: <20120207233118.GA6947@xanatos>
- <201202081611.37097.oneukum@suse.de>
+Received: from moutng.kundenserver.de ([212.227.17.8]:52807 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752755Ab2BVIZD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2012 03:25:03 -0500
+Date: Wed, 22 Feb 2012 09:24:52 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@nvidia.com>
+Cc: "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"Olof Johansson (olof@lixom.net)" <olof@lixom.net>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: PCIe device tree support
+Message-ID: <20120222082449.GA15157@avionic-0098.adnet.avionic-design.de>
+References: <20120220191804.GA14499@avionic-0098.adnet.avionic-design.de>
+ <74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201202081611.37097.oneukum@suse.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lrZ03NoBR/3+SXJZ"
+In-Reply-To: <74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 08, 2012 at 04:11:37PM +0100, Oliver Neukum wrote:
-> Am Mittwoch, 8. Februar 2012, 00:31:18 schrieb Sarah Sharp:
-> > The downside is that the xHCI BIOS handoff mechanism will fail because
-> > memory mapped I/O is not enabled for the disabled PCI device.  Make the
-> > xHCI quirk handler call pci_enable_device() to re-enable MMIO, and call
-> > pci_disable_device() once it's done with the BIOS handoff.  This will
-> > balance the ref counts in the PCI core.  When the xHCI PCI probe is
-> > called, usb_hcd_pci_probe() will call pci_enable_device() again.
-> > 
-> > Also add some debugging to the xHCI quirk failure paths, so we can pin
-> > point the problem when a user says their xHCI PCI quirk function fails.
-> > 
-> > Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-> > ---
-> > 
-> > Hi Oliver,
-> > 
-> > What about this approach instead?  This means the PCI quirk sequence
-> > doesn't change, and the xHCI ports are still switched over before the
-> > EHCI PCI probe starts.  With your original patch, the ports could be
-> > switched over after the EHCI driver has already started to enumerate
-> > devices.
-> > 
-> > Can you test and make sure this fixes the issue on your test systems?
-> 
-> I've tested it and it works. Are you sure it is safe to enable a PCI device
-> at that point? If so, your patch is better than mine.
 
-Jesse Barnes told me it's fine over IRC, so I'm just going to send this
-off, with your Tested-by line.
+--lrZ03NoBR/3+SXJZ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Sarah Sharp
+[Adding Jesse Barnes and the linux-pci mailing list to CC.]
+
+* Stephen Warren wrote:
+> Thierry Reding wrote at Monday, February 20, 2012 12:18 PM:
+> > I would like to add device tree support for the Tegra2 PCIe controller.=
+ From
+> > what I understand this will require the PCIe code to be rewritten as a =
+proper
+> > platform driver in order to be able to instantiate it via the device tr=
+ee. Is
+> > that correct?
+>=20
+> That's probably the cleanest way, yes.
+>=20
+> Is there a drivers/ directory for PCI/PCIe host controllers? Moving the
+> code there might be nice if so, although IIRC when I asked Olof about
+> that a number of months back, he said quite a few host controllers were
+> in arch/...
+
+Most PCI/PCIe host controller drivers seem to currently be in arch/. Is the=
+re
+a specific reason for this? Would it be acceptable to put any new drivers
+below drivers/pci/?
+
+Thierry
+
+--lrZ03NoBR/3+SXJZ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk9EplEACgkQZ+BJyKLjJp+jrQCePAIVtOgbog1DJ66IXJ4SVyBB
+k0EAn1oXCyiApNbVtaTiXs7Bx6tMW6IS
+=PICf
+-----END PGP SIGNATURE-----
+
+--lrZ03NoBR/3+SXJZ--
