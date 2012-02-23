@@ -1,77 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:57386 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1030256Ab2B1TJw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 14:09:52 -0500
-Date: Tue, 28 Feb 2012 11:09:42 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <4F46B1FC.4050002@gmail.com>
+Date: Thu, 23 Feb 2012 15:39:08 -0600
+From: Rob Herring <robherring2@gmail.com>
+MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>, linux-pci@vger.kernel.org,
-	Svante Signell <svante.signell@telia.com>
-Subject: Re: [PATCH] x86/PCI: use host bridge _CRS info on MSI MS-7253
-Message-ID: <20120228110942.3eb0cbdc@jbarnes-desktop>
-In-Reply-To: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/gwyYIJoV7bfu4DP.f1F4KmP"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+CC: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 04/12] arm/PCI: remove arch pci_flags definition
+References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com> <20120223194322.20708.4942.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120223194322.20708.4942.stgit@bhelgaas.mtv.corp.google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/gwyYIJoV7bfu4DP.f1F4KmP
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Bjorn,
 
-On Tue, 28 Feb 2012 11:51:10 -0700
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+On 02/23/2012 01:43 PM, Bjorn Helgaas wrote:
+> The PCI core provides a pci_flags definition (currently __weak), so drop
+> the arm definition in favor of that.
+> 
+> We EXPORT_SYMBOL(pci_flags) as arm did previously.  I'm dubious about
+> this: no other architecture exports it, and I didn't see any modules in
+> the tree that reference it.
 
-> From: Jonathan Nieder <jrnieder@gmail.com>
->=20
-> In the spirit of commit 29cf7a30f8a0 ("x86/PCI: use host bridge _CRS
-> info on ASUS M2V-MX SE"), this DMI quirk turns on "pci_use_crs" by
-> default on a board that needs it.
->=20
-> This fixes boot failures and oopses introduced in 3e3da00c01d0
-> ("x86/pci: AMD one chain system to use pci read out res").  The quirk
-> is quite targetted (to a specific board and BIOS version) for two
-> reasons:
->=20
->  (1) to emphasize that this method of tackling the problem one quirk
->      at a time is a little insane
->=20
->  (2) to give BIOS vendors an opportunity to use simpler tables and
->      allow us to return to generic behavior (whatever that happens to
->      be) with a later BIOS update
->=20
-> In other words, I am not at all happy with having quirks like this.
-> But it is even worse for the kernel not to work out of the box on
-> these machines, so...
+I think you're right that it doesn't need to be exported.
 
-Applied to my for-linus branch, thanks.
+Rob
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/gwyYIJoV7bfu4DP.f1F4KmP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPTSZ2AAoJEIEoDkX4Qk9htGMP/0ipncNRIDGYiGE1HMlgGuia
-PY3q9+AH+8ZgWMDI8bmOL4CK2TGFR94TuFK+kcKyRO0THlCwxGOty+jMdnsNwO0I
-CYSXufA4x0zIEkEAXedfMYk+f3dP4UK+Ya/tXDDzSrqg7/NAFGv4ISeXPAtFCm6v
-ym9OlR+5hBmUfrinbeLuR+jyUatGYtOGjJO3ARgltFkUT0wY+PAoqc2wB5fguZYt
-e2cgfbZ77/wO/iTE82WhxZedrgm6ncMIYweneAH2pVpSOACS5hTuxPWZ4ZqsuxYE
-KIv+EAJY/bTPhmC2wQ4fSNyrBzK6fNWmEvLsxcEXqd2MBLzrcTO2JQWD8vpHl1+l
-zoimJneHD0VYFKDJfvzWD0sbPn1u9fkwNpSF+2kLEu4puDn5xTF3LXf6IOYIPkKT
-qxIejkxBAhZjr4bsdoPgpUw8OChihihjPcZQTkjrFKSOCqzuDM4Ikt8Utqh9apKS
-+yrsQnozFmnTRT+/FXiF3pS5E2ljEREAqVoVbm+i40korxyRd9Jv0cZUOwbQTZzg
-4mVYHojmDGdYV/QiObpKirG0coy7xHYxHF9vC7Wav6ku/ub/MnwKnqjGHf6KBrUG
-7D9s4q9rzSY8s3UVwMdssfyTUWW0YfAN93dLoyaI7NvldQ7m+Gk8KJSxvvcjsaew
-vNtKlVPJxEP0GoUJa64F
-=L4LZ
------END PGP SIGNATURE-----
-
---Sig_/gwyYIJoV7bfu4DP.f1F4KmP--
+> CC: Rob Herring <rob.herring@calxeda.com>
+> CC: Russell King <linux@arm.linux.org.uk>
+> CC: linux-arm-kernel@lists.infradead.org
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/arm/kernel/bios32.c |    2 ++
+>  arch/arm/mm/iomap.c      |    3 ---
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index f58ba35..f3fd52b 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -525,6 +525,7 @@ void __init pci_common_init(struct hw_pci *hw)
+>  
+>  	INIT_LIST_HEAD(&hw->buses);
+>  
+> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+>  	if (hw->preinit)
+>  		hw->preinit();
+>  	pcibios_init_hw(hw);
+> @@ -559,6 +560,7 @@ void __init pci_common_init(struct hw_pci *hw)
+>  		pci_bus_add_devices(bus);
+>  	}
+>  }
+> +EXPORT_SYMBOL(pci_flags);
+>  
+>  #ifndef CONFIG_PCI_HOST_ITE8152
+>  void pcibios_set_master(struct pci_dev *dev)
+> diff --git a/arch/arm/mm/iomap.c b/arch/arm/mm/iomap.c
+> index e62956e..4614208 100644
+> --- a/arch/arm/mm/iomap.c
+> +++ b/arch/arm/mm/iomap.c
+> @@ -32,9 +32,6 @@ EXPORT_SYMBOL(pcibios_min_io);
+>  unsigned long pcibios_min_mem = 0x01000000;
+>  EXPORT_SYMBOL(pcibios_min_mem);
+>  
+> -unsigned int pci_flags = PCI_REASSIGN_ALL_RSRC;
+> -EXPORT_SYMBOL(pci_flags);
+> -
+>  void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
+>  {
+>  	if ((unsigned long)addr >= VMALLOC_START &&
+> 
