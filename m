@@ -1,153 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 08/11] x86, PCI: add host bridge resource release for using _CRS
-Date: Mon, 27 Feb 2012 18:03:48 -0800
-Message-Id: <1330394631-28978-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v2 06/12] microblaze/PCI: remove unused pci_flags
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, microblaze-uclinux@itee.uq.edu.au,
+	Michal Simek <monstr@monstr.eu>
+Date: Thu, 23 Feb 2012 12:43:33 -0700
+Message-ID: <20120223194332.20708.55580.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. allocate pci_root_info instead of use local stack. we need to pass around info
-   for release fn.
-2. add release_pci_root_info
-3. set x86 own host bridge release fn, so will make sure root bridge
-   related resources get freed during root bus removal.
+pci_flags is initialized to zero and never modified (I think this was just
+copied from powerpc).  Therefore, "(pci_flags & XX)" is always false and
+"!(pci_flags & XX)" is always true, and we can remove all references
+to pci_flags.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+CC: Michal Simek <monstr@monstr.eu>
+CC: microblaze-uclinux@itee.uq.edu.au
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/pci/acpi.c |   66 +++++++++++++++++++++++++++++++++++++++++----------
- 1 files changed, 53 insertions(+), 13 deletions(-)
+ arch/microblaze/include/asm/pci-bridge.h |    1 -
+ arch/microblaze/pci/pci-common.c         |   48 ++++++------------------------
+ 2 files changed, 9 insertions(+), 40 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 763f7bb..208f257 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -309,7 +309,33 @@ static void free_pci_root_info(struct pci_root_info *info)
+diff --git a/arch/microblaze/include/asm/pci-bridge.h b/arch/microblaze/include/asm/pci-bridge.h
+index e9834b2..cb5d397 100644
+--- a/arch/microblaze/include/asm/pci-bridge.h
++++ b/arch/microblaze/include/asm/pci-bridge.h
+@@ -10,7 +10,6 @@
+ #include <linux/pci.h>
+ #include <linux/list.h>
+ #include <linux/ioport.h>
+-#include <asm-generic/pci-bridge.h>
+ 
+ struct device_node;
+ 
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 85f2ac1..8a257a7 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -46,9 +46,6 @@ static int global_phb_number;		/* Global phb counter */
+ /* ISA Memory physical address */
+ resource_size_t isa_mem_base;
+ 
+-/* Default PCI flags is 0 on ppc32, modified at boot on ppc64 */
+-unsigned int pci_flags;
+-
+ static struct dma_map_ops *pci_dma_ops = &dma_direct_ops;
+ 
+ unsigned long isa_io_base;
+@@ -833,11 +830,7 @@ int pci_proc_domain(struct pci_bus *bus)
  {
- 	kfree(info->name);
- 	kfree(info->res);
--	memset(info, 0, sizeof(struct pci_root_info));
-+	kfree(info);
-+}
-+
-+static void __release_pci_root_info(struct pci_root_info *info)
-+{
-+	int i;
-+	struct resource *res;
-+
-+	for (i = 0; i < info->res_num; i++) {
-+		res = &info->res[i];
-+
-+		if (!res->parent)
-+			continue;
-+
-+		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-+			continue;
-+
-+		release_resource(res);
-+	}
-+
-+	free_pci_root_info(info);
-+}
-+static void release_pci_root_info(struct pci_host_bridge *bridge)
-+{
-+	struct pci_root_info *info = bridge->release_data;
-+
-+	__release_pci_root_info(info);
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+ 
+-	if (!(pci_flags & PCI_ENABLE_PROC_DOMAINS))
+-		return 0;
+-	if (pci_flags & PCI_COMPAT_DOMAIN_0)
+-		return hose->global_number != 0;
+-	return 1;
++	return 0;
  }
  
- static void
-@@ -342,7 +368,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+@@ -910,13 +903,7 @@ static void __devinit pcibios_fixup_resources(struct pci_dev *dev)
+ 		struct resource *res = dev->resource + i;
+ 		if (!res->flags)
+ 			continue;
+-		/* On platforms that have PCI_PROBE_ONLY set, we don't
+-		 * consider 0 as an unassigned BAR value. It's technically
+-		 * a valid value, but linux doesn't like it... so when we can
+-		 * re-assign things, we do so, but if we can't, we keep it
+-		 * around and hope for the best...
+-		 */
+-		if (res->start == 0 && !(pci_flags & PCI_PROBE_ONLY)) {
++		if (res->start == 0) {
+ 			pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]" \
+ 							"is unassigned\n",
+ 				 pci_name(dev), i,
+@@ -959,10 +946,6 @@ static int __devinit pcibios_uninitialized_bridge_resource(struct pci_bus *bus,
+ 	u16 command;
+ 	int i;
+ 
+-	/* We don't do anything if PCI_PROBE_ONLY is set */
+-	if (pci_flags & PCI_PROBE_ONLY)
+-		return 0;
+-
+ 	/* Job is a bit different between memory and IO */
+ 	if (res->flags & IORESOURCE_MEM) {
+ 		/* If the BAR is non-0 (res != pci_mem_offset) then it's
+@@ -1107,9 +1090,6 @@ EXPORT_SYMBOL(pcibios_fixup_bus);
+ 
+ static int skip_isa_ioresource_align(struct pci_dev *dev)
  {
- 	struct acpi_device *device = root->device;
--	struct pci_root_info info;
-+	struct pci_root_info *info = NULL;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
- 	LIST_HEAD(resources);
-@@ -379,15 +405,16 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	 * It's arguable whether it's worth the trouble to care.
- 	 */
- 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
--	if (!sd) {
--		printk(KERN_WARNING "pci_bus %04x:%02x: "
--		       "ignored (out of memory)\n", domain, busnum);
--		return NULL;
+-	if ((pci_flags & PCI_CAN_SKIP_ISA_ALIGN) &&
+-	    !(dev->bus->bridge_ctl & PCI_BRIDGE_CTL_ISA))
+-		return 1;
+ 	return 0;
+ }
+ 
+@@ -1236,8 +1216,6 @@ void pcibios_allocate_bus_resources(struct pci_bus *bus)
+ 			 * and as such ensure proper re-allocation
+ 			 * later.
+ 			 */
+-			if (pci_flags & PCI_REASSIGN_ALL_RSRC)
+-				goto clear_resource;
+ 			pr = pci_find_parent_resource(bus->self, res);
+ 			if (pr == res) {
+ 				/* this happens when the generic PCI
+@@ -1422,27 +1400,19 @@ void __init pcibios_resource_survey(void)
+ 	list_for_each_entry(b, &pci_root_buses, node)
+ 		pcibios_allocate_bus_resources(b);
+ 
+-	if (!(pci_flags & PCI_REASSIGN_ALL_RSRC)) {
+-		pcibios_allocate_resources(0);
+-		pcibios_allocate_resources(1);
 -	}
-+	if (!sd)
-+		goto out_no_memory;
++	pcibios_allocate_resources(0);
++	pcibios_allocate_resources(1);
  
- 	sd->domain = domain;
- 	sd->node = node;
--	memset(&info, 0, sizeof(struct pci_root_info));
-+	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	if (!info) {
-+		kfree(sd);
-+		goto out_no_memory;
-+	}
- 	/*
- 	 * Maybe the desired pci bus has been already scanned. In such case
- 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
-@@ -399,20 +426,22 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 * be replaced by sd.
- 		 */
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
-+		kfree(info);
- 		kfree(sd);
- 	} else {
--		probe_pci_root_info(&info, device, busnum, domain);
-+		probe_pci_root_info(info, device, busnum, domain);
+ 	/* Before we start assigning unassigned resource, we try to reserve
+ 	 * the low IO area and the VGA memory area if they intersect the
+ 	 * bus available resources to avoid allocating things on top of them
+ 	 */
+-	if (!(pci_flags & PCI_PROBE_ONLY)) {
+-		list_for_each_entry(b, &pci_root_buses, node)
+-			pcibios_reserve_legacy_regions(b);
+-	}
++	list_for_each_entry(b, &pci_root_buses, node)
++		pcibios_reserve_legacy_regions(b);
  
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
- 		if (pci_use_crs)
--			add_resources(&info, &resources);
-+			add_resources(info, &resources);
- 		else {
--			free_pci_root_info(&info);
-+			free_pci_root_info(info);
- 			x86_pci_root_bus_resources(busnum, &resources);
- 		}
-+
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
- 		if (bus)
-@@ -420,8 +449,14 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		else
- 			pci_free_resource_list(&resources);
- 
--		if (!bus && pci_use_crs)
--			free_pci_root_info(&info);
-+		if (pci_use_crs) {
-+			if (bus)
-+				pci_set_host_bridge_release(
-+					to_pci_host_bridge(bus->bridge),
-+					release_pci_root_info, info);
-+			else
-+				__release_pci_root_info(info);
-+		}
- 	}
- 
- 	/* After the PCI-E bus has been walked and all devices discovered,
-@@ -452,6 +487,11 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	}
- 
- 	return bus;
-+
-+out_no_memory:
-+	printk(KERN_WARNING "pci_bus %04x:%02x: "
-+	       "ignored (out of memory)\n", domain, busnum);
-+	return NULL;
+-	/* Now, if the platform didn't decide to blindly trust the firmware,
+-	 * we proceed to assigning things that were left unassigned
+-	 */
+-	if (!(pci_flags & PCI_PROBE_ONLY)) {
+-		pr_debug("PCI: Assigning unassigned resources...\n");
+-		pci_assign_unassigned_resources();
+-	}
++	/* Now proceed to assigning things that were left unassigned */
++	pr_debug("PCI: Assigning unassigned resources...\n");
++	pci_assign_unassigned_resources();
  }
  
- int __init pci_acpi_init(void)
--- 
-1.7.7
+ #ifdef CONFIG_HOTPLUG
 
