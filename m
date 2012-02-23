@@ -1,88 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:56194 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758980Ab2BJU7H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:59:07 -0500
-Date: Fri, 10 Feb 2012 12:59:02 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 8/9] PCI: print out suggestion about using pci=realloc
-Message-ID: <20120210125902.37c9c55c@jbarnes-desktop>
-In-Reply-To: <1328424908-6385-9-git-send-email-yinghai@kernel.org>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-	<1328424908-6385-9-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GT=/9DncFcMr9l2XR_wQC.E"; protocol="application/pgp-signature"
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:39819 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756531Ab2BWRuA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 12:50:00 -0500
+Received: by wics10 with SMTP id s10so929796wic.19
+        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 09:49:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120223060355.GA21091@avionic-0098.mockup.avionic-design.de>
+References: <20120220191804.GA14499@avionic-0098.adnet.avionic-design.de>
+ <74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
+ <20120222082449.GA15157@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo4TfpGmx+HZ1ZnZwj3ZP_cQMCzkMT+6JK6ztYp2zWJcxw@mail.gmail.com> <20120223060355.GA21091@avionic-0098.mockup.avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 23 Feb 2012 09:49:39 -0800
+Message-ID: <CAErSpo7wSB-uCjV4YeA-fUOHPtugn4ASXScN3MndVybfkk8mOw@mail.gmail.com>
+Subject: Re: PCIe device tree support
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Stephen Warren <swarren@nvidia.com>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"Olof Johansson (olof@lixom.net)" <olof@lixom.net>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/GT=/9DncFcMr9l2XR_wQC.E
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Feb 22, 2012 at 10:03 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> * Bjorn Helgaas wrote:
+>> On Wed, Feb 22, 2012 at 12:24 AM, Thierry Reding
+>> <thierry.reding@avionic-design.de> wrote:
+>> > [Adding Jesse Barnes and the linux-pci mailing list to CC.]
+>> >
+>> > * Stephen Warren wrote:
+>> >> Thierry Reding wrote at Monday, February 20, 2012 12:18 PM:
+>> >> > I would like to add device tree support for the Tegra2 PCIe controller. From
+>> >> > what I understand this will require the PCIe code to be rewritten as a proper
+>> >> > platform driver in order to be able to instantiate it via the device tree. Is
+>> >> > that correct?
+>> >>
+>> >> That's probably the cleanest way, yes.
+>> >>
+>> >> Is there a drivers/ directory for PCI/PCIe host controllers? Moving the
+>> >> code there might be nice if so, although IIRC when I asked Olof about
+>> >> that a number of months back, he said quite a few host controllers were
+>> >> in arch/...
+>> >
+>> > Most PCI/PCIe host controller drivers seem to currently be in arch/. Is there
+>> > a specific reason for this? Would it be acceptable to put any new drivers
+>> > below drivers/pci/?
+>>
+>> PCI host bridges aren't architected, so discovering them and their
+>> properties has historically been mostly architecture-specific.  ACPI
+>> is one exception (with a driver in drivers/acpi/pci_root.c) and it
+>> sounds like device tree might be a similar exception.  If you can make
+>> a non-arch-specific driver and put it somewhere other than arch/, I'm
+>> all in favor of that, especially if you can make it usable by other
+>> arches that use device tree.  Where to put it?  I dunno.  drivers/pci/
+>> sounds like a reasonable possibility.
+>
+> I don't think it would be possible to write a driver that works for all
+> device tree based boards or architectures. As you said the implementation is
+> very hardware specific and probably couldn't even be generalized among two
+> chipsets of the same architecture.
 
-On Sat,  4 Feb 2012 22:55:07 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Host bridges may be hardware-specific, but the PCI core really only
+needs an abstract description.  It needs the bus number aperture, the
+I/O port apertures, the MMIO apertures, and associated offsets between
+CPU and PCI bus addresses.  I don't know anything about device tree,
+but I'd be surprised and disappointed if it encodes this basic
+information in platform-specific ways.
 
-> let user know they could try if pci=3Drealloc could help.
->=20
-> Suggested-by: Jesse Barnes <jbarnes@virtuousgeek.org>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/setup-bus.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 22454c5..9526038 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1346,6 +1346,9 @@ again:
->  		goto enable_and_dump;
-> =20
->  	if (tried_times >=3D pci_try_num) {
-> +		if (pci_realloc_enable =3D=3D enable_not_set)
-> +			printk(KERN_INFO "Some pci devices resources are not assigned, please=
- try to boot with pci=3Drealloc\n");
-> +
->  		free_list(&fail_head);
->  		goto enable_and_dump;
->  	}
+I agree that if the code isn't shared at all, there's no point in
+putting it in a generic place like drivers/pci/.
 
-"Some PCI device resources are unassigned, try booting with pci=3Drealloc"
-
-That said, I wonder if this will cause more problems than it solves.
-In some cases the BIOS may not allocate all resources, but this will be
-harmless since the user won't actually use the device, or the driver
-for the device won't even use the BARs in question anyway (as happens a
-lot for IO regions).
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/GT=/9DncFcMr9l2XR_wQC.E
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPNYUWAAoJEIEoDkX4Qk9hZpkP/RZVZw449vRTIXC95YwWmeaJ
-7yis2q6LPWFiLKuVSycsO0p59SE/jq1bgfkGtydCGrCidmXzpQY2wNkZ5v7LHGD4
-2AlmJEHsza1EHfNzt+W2BybFBVx0ehjvhmuvJtcCH0hJu9SGC9MlriuKHPWNdnRn
-RLZM4+1t9sb/SXqRJ1b/K+m1gZ3OvMaK7NJMZghDaW4IiPbDJKqiymMabQm/0a40
-f4bgmYvzYxRFWnmYGr6rNUNwI80nBMP/9F8R+ituIavkhV7X2A+hjXdAsZ8bdGmr
-AcOtVfWD+bJtx8/mq/xuz3wJeuLGflIh63JRJUrFKMm8CIk5skcaUyMQG0z/KI6F
-i4hHK3OjIqZdkNTMYi9L633QgqOYqMXRE/MKbY86368oIQVN8cjiGAt8CKQzjj66
-XNGZfFy+z1QHWtydgq+whM7IusnabonQfbPS64lx4rD+wFSq+L09BonWHzikxd0M
-OIaGhb0tCdrYZfblB9jXERkDs77oKD2AxOfyyvWLShOzOs2t3VtjTo3ppKich7WG
-tDRmPyUzIIdldx52lwLodWEDNCx4nIAOLntZq1NlOn/lQza9IKeiwgoezOoxMAbk
-zFz647GV9sWsLfKUaY00OyCLGV/ufZLl39AEffDe/ArfQrhqTLcwqjY4Crwb9f0y
-yCDFf4gtEdcNLXvoiOll
-=S7Gv
------END PGP SIGNATURE-----
-
---Sig_/GT=/9DncFcMr9l2XR_wQC.E--
+Bjorn
