@@ -1,79 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 04/11] PCI: rename pci_host_bridge() to find_pci_root_bridge()
-Date: Mon, 27 Feb 2012 18:03:44 -0800
-Message-Id: <1330394631-28978-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:47060 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753162Ab2BWQ1I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 11:27:08 -0500
+Date: Thu, 23 Feb 2012 08:27:03 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: fix memleak when ACPI _CRS is not used.
+Message-ID: <20120223082703.5d87dab4@jbarnes-desktop>
+In-Reply-To: <1329787427-17890-1-git-send-email-yinghai@kernel.org>
+References: <1329787427-17890-1-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/bj0o2i=pQojw=/5kVdQ==ti"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Separate find_pci_root_bus out.
+--Sig_/bj0o2i=pQojw=/5kVdQ==ti
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
--v2: according to Bjorn, remove extra null checking.
+On Mon, 20 Feb 2012 17:23:47 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host-bridge.c |   18 +++++++++++++-----
- 1 files changed, 13 insertions(+), 5 deletions(-)
+> got warning:
+> unreferenced object 0xffff8801f6914200 (size 512):
+>   comm "swapper/0", pid 1, jiffies 4294893643 (age 2664.644s)
+>   hex dump (first 32 bytes):
+>     00 00 c0 fe 00 00 00 00 ff ff ff ff 00 00 00 00  ................
+>     60 58 2f f6 03 88 ff ff 00 02 00 00 00 00 00 00  `X/.............
+>   backtrace:
+>     [<ffffffff81c2408c>] kmemleak_alloc+0x26/0x43
+>     [<ffffffff8113764f>] __kmalloc+0x121/0x183
+>     [<ffffffff81ca8d93>] get_current_resources+0x5a/0xc6
+>     [<ffffffff81c5bedd>] pci_acpi_scan_root+0x13c/0x21c
+>     [<ffffffff81c2a745>] acpi_pci_root_add+0x1e1/0x421
+>     [<ffffffff81408f50>] acpi_device_probe+0x50/0x190
+>     [<ffffffff8149edc7>] really_probe+0x99/0x126
+>     [<ffffffff8149ef83>] driver_probe_device+0x3b/0x56
+>     [<ffffffff8149effd>] __driver_attach+0x5f/0x82
+>     [<ffffffff8149d860>] bus_for_each_dev+0x5c/0x88
+>     [<ffffffff8149eb87>] driver_attach+0x1e/0x20
+>     [<ffffffff8149e7cc>] bus_add_driver+0xca/0x21d
+>     [<ffffffff8149f47b>] driver_register+0x91/0xfe
+>     [<ffffffff81409d09>] acpi_bus_register_driver+0x43/0x45
+>     [<ffffffff8278bdc9>] acpi_pci_root_init+0x20/0x28
+>     [<ffffffff810001e7>] do_one_initcall+0x57/0x134
+>=20
+> The system have _CRS for root buses, but they are not used because is old=
+...
+>=20
+> Try free those not used resource array and name.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index dfaff3f..b3ddcc5 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -16,15 +16,22 @@ void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
- 	list_add_tail(&bridge->list, &pci_host_bridges);
- }
- 
--static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-+static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
- {
- 	struct pci_bus *bus;
--	struct pci_host_bridge *bridge;
- 
- 	bus = dev->bus;
- 	while (bus->parent)
- 		bus = bus->parent;
- 
-+	return bus;
-+}
-+
-+static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = find_pci_root_bus(dev);
-+	struct pci_host_bridge *bridge;
-+
- 	list_for_each_entry(bridge, &pci_host_bridges, list) {
- 		if (bridge->bus == bus)
- 			return bridge;
-@@ -42,7 +49,7 @@ void __weak pcibios_resource_to_bus(struct pci_dev *dev,
- 				    struct pci_bus_region *region,
- 				    struct resource *res)
- {
--	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -70,12 +77,13 @@ static bool region_contains(struct pci_bus_region *region1,
- void __weak pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 				    struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
--	struct pci_bus_region bus_region;
- 	resource_size_t offset = 0;
- 
- 	list_for_each_entry(window, &bridge->windows, list) {
-+		struct pci_bus_region bus_region;
-+
- 		if (resource_type(res) != resource_type(window->res))
- 			continue;
- 
--- 
-1.7.7
+Applied to for-linus, thanks.
 
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/bj0o2i=pQojw=/5kVdQ==ti
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPRmjXAAoJEIEoDkX4Qk9hKjoQAMG7ZZ+zVbef+R+uurwWOIKT
+tP4lr1mBd2DJKvFHPXXrL3WlQKxh8F7Y9n5WsIFmqnpTGx9POzeVvH3pRiDGFjdE
+I9VqqkNGAmyqNoNcZ+u5/xnzVBYL1Tc8J7m72WA2i+gCYvXXDiwNK4HfdgN8hQg1
+xsXtKR2lKl6gDv0XzYi8zNE1AThVAyCD7ovNDFkknVM78Wv20pC9HBHQGPfiGyax
+syLGLuNviU+B0Xs9kKn9S4Q4ScexeVRA5fjp8G007/yUknM3S8MXUke4imEMztyY
+I8p0maDyYrR+W6xlAVsC8JoCpPzbzwjPuPtb1Fzigf5XlpJ7NvXucoQ9EVi+6LqX
+wDSmp30HZ84+bAlaZPMy1XPg6IZHgS0C/YcXYjAX/8U3wblfesw8wUNO9q+DLTwT
+GMrG//e0xGYa/L6RaaAY6S/YkXP85mLK3ctKxvpJo3RELm1exQjqClagXAP6qDV6
+HSZZkWPL2HxD747wl9tuFU2VpylzejdyjOFy6xw4Gkj+fiTtJeq5vdLt5u2dkqVu
+Qtog8pa1x5QHpROGjsQloYGCXDCypUk8d2+I5SZMEkIMPtpHWkSq94UCwYJtR17A
+trOVCdWpwktnkxc+LoVT1KNewmIr31Rfu33fw0wMK11UrL0St4tJ6MA+2FgmNY1W
+v8wD+IL9Ucmmyp0U/iGL
+=v0ig
+-----END PGP SIGNATURE-----
+
+--Sig_/bj0o2i=pQojw=/5kVdQ==ti--
