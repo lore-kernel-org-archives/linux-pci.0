@@ -1,61 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 22/23] PCI: make pci_rescan_bus_bridge_resize use pci_scan_bridge instead
-Date: Fri, 24 Feb 2012 02:19:10 -0800
-Message-Id: <1330078751-7299-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v2 01/12] PCI: make pci_flags always available
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org
+Date: Thu, 23 Feb 2012 12:43:07 -0700
+Message-ID: <20120223194307.20708.66822.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So after remove all children and then using setpci change bus register and rescan
-bridge could use new set bus number.
+If we move resource assignment functions into the core, we'll still
+need a way for architectures to prevent reassignment, e.g., the
+"pci_probe_only" functionality, and we'll need a generic, always
+available way the core can test for that.  The "pci_flags"
+arrangement used by several architectures seems like a convenient
+way to do this.
 
-Otherwise need to rescan parent bus, it would have too much overhead.
-
-also need to use pci_bus_add_single_device to make sure new change bus have directory
- /sys/../.../pci_bus.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/probe.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/pci/setup-bus.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 1c36b39..8063cf1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1961,14 +1961,16 @@ EXPORT_SYMBOL(pci_scan_bus);
-  */
- unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
- {
--	unsigned int max;
--	struct pci_bus *bus = bridge->subordinate;
-+	unsigned int max = 0;
-+	int pass;
-+	struct pci_bus *bus = bridge->bus;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 86b69f85..7b7d7e9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -25,8 +25,11 @@
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
+ #include <linux/slab.h>
++#include <asm-generic/pci-bridge.h>
+ #include "pci.h"
  
--	max = pci_scan_child_bus(bus);
-+	for (pass = 0; pass < 2; pass++)
-+		max = pci_scan_bridge(bus, bridge, max, pass);
- 
- 	pci_assign_unassigned_bridge_resources(bridge);
- 
--	pci_bus_add_devices(bus);
-+	pci_bus_add_single_device(bridge);
- 
- 	return max;
- }
--- 
-1.7.7
++unsigned int __weak pci_flags;
++
+ struct resource_list_x {
+ 	struct resource_list_x *next;
+ 	struct resource *res;
 
