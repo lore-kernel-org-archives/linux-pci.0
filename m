@@ -1,64 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42992 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755574Ab2BCP1r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Feb 2012 10:27:47 -0500
-Date: Fri, 3 Feb 2012 07:27:45 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Oliver Neukum <oneukum@suse.de>
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
-Subject: Re: [PATCH] USB:xhci: fix port switching on PantherPoint
-Message-ID: <20120203152745.GA5321@xanatos>
-References: <201202031222.43649.oneukum@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201202031222.43649.oneukum@suse.de>
+Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:46367 "HELO
+	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753246Ab2BWQsU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 11:48:20 -0500
+Date: Thu, 23 Feb 2012 08:48:13 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lenb@kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: shpc with acpi=off?
+Message-ID: <20120223084813.39908d81@jbarnes-desktop>
+In-Reply-To: <20120216150421.GA26167@redhat.com>
+References: <20120216150421.GA26167@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/eR5zNMI19XUPhk2mZEmMiX."; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 03, 2012 at 12:22:43PM +0100, Oliver Neukum wrote:
-> From be9bdcf88b2974cfe95c1afea327b46135b65391 Mon Sep 17 00:00:00 2001
-> From: Oliver Neukum <oliver@neukum.org>
-> Date: Fri, 3 Feb 2012 12:01:12 +0100
-> Subject: [PATCH] USB:xhci: fix port switching on PantherPoint
-> 
-> The quirks of XHCI were called to early so that the
-> PCI device hadn't been enabled and the quirk handler bailed out.
-> The fix is to call it later.
+--Sig_/eR5zNMI19XUPhk2mZEmMiX.
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Are the PCI fixups called before any PCI probe function?  I think this
-patch is fine, but if the moved function now runs after the EHCI probe,
-the EHCI host may notice disconnects from the ports being switched over
-to xHCI.
+On Thu, 16 Feb 2012 17:04:22 +0200
+"Michael S. Tsirkin" <mst@redhat.com> wrote:
 
-Sarah Sharp
+> I have a box where shpc works fine with acpi,
+> as well as when acpi is not built into kernel,
+> but fails with acpi=3Doff
+> Some debugging seems to indicate that
+> acpi_get_hp_hw_control_from_firmware
+> fails with acpi=3Doff.
+>=20
+> Is this a bug or is there a reason to prevent shpc
+> from working in this setup?
+> Do we even care about acpi=3Doff?
+> Assuming we want to make acpi_get_hp_hw_control_from_firmware
+> succeed with acpi=3Doff, what is the best way to do this?
+> Check acpi_pci_disabled?
 
-> Signed-off-by: Oliver Neukum <oneukum@suse.de>
-> ---
->  drivers/usb/host/pci-quirks.c |    9 +++++++--
->  1 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
-> index caf8742..b49e3d0 100644
-> --- a/drivers/usb/host/pci-quirks.c
-> +++ b/drivers/usb/host/pci-quirks.c
-> @@ -873,7 +873,12 @@ static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
->  		quirk_usb_handoff_ohci(pdev);
->  	else if (pdev->class == PCI_CLASS_SERIAL_USB_EHCI)
->  		quirk_usb_disable_ehci(pdev);
-> -	else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
-> -		quirk_usb_handoff_xhci(pdev);
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_usb_early_handoff);
-> +
-> +static void __devinit quirk_xhci_early_handoff(struct pci_dev *pdev)
-> +{
-> +	 if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
-> +                quirk_usb_handoff_xhci(pdev);
-> +}
-> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_xhci_early_handoff);
-> -- 
-> 1.7.1
-> 
+Yeah not sure it's important to have SHPC work with acpi=3Doff.
+Disabling ACPI prevents us from getting all sorts of important info
+these days...
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/eR5zNMI19XUPhk2mZEmMiX.
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPRm3NAAoJEIEoDkX4Qk9hVjoQAKLz+XnHv42HdmYLE6qtrgwe
+XYGjpicKKBQfkG3rTvXQLQnPP9n6xJl7Vbi0bwvsHYr0skA49UbzATWqMi0blbUZ
+WgL5CUDpFpXeC8iXTZwlbH4v7FHKd21ukB9RPX45Db11qKhQLN48cWnwJ+1Wki5D
+VpWBJ8orhGTSoLBP7dlKAqE0+BMbFTraa0gnzL/UIjgGSWH1t9MhY427cagrIJhn
+4DUxdqjqDzj245bybIdnCAzAxv3A5++yev89s25V6W4HqYZThf9oUZKGrkVyvQ6B
+MWTOeCMVS1XHogaOtQC4Vq1q5oo0Jr7Okm82xuZduk9/Usuhwt5xpwtoYo/14+ZA
+V7KIz5m1hQCNHTUL3PIr1gIBArXhRyFrKNkA8mA9DMPVa2KcrCT8GEWcbdfHRTFB
+GdE4FdeRpiRpxIdxSWVaiAbG6/RX0VQmcSNyCTilzeabPf4wodPNltchtGgaeQB+
+FoJ1gKHN00lA3+hltMnkpzZmA+N3qPHfgo2QG/Nc47LjghnwQumXwk7XZsfSDk13
+k9eZ1vc2YquoS5sPzRSoyNGJ91+Q6BfZnZ9n+oc4WxaIYmIqXYfsifTxcaMg1N4s
+B6F183bz++mO1DMIZ7QW4LMdX32cz1S/zZb4uXZVAsbTpVHGgZFmJHKpXUV1Jwhe
+cL+B4aHhnurz944FmDct
+=eyjL
+-----END PGP SIGNATURE-----
+
+--Sig_/eR5zNMI19XUPhk2mZEmMiX.--
