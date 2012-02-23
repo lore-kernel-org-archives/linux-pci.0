@@ -1,133 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120223122536.6a2a7a6b@jbarnes-desktop>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+ <1328425088-6562-10-git-send-email-yinghai@kernel.org> <CAErSpo6BwznWf3rq4J2Ao+rrgR4yWqQ0mQGygkd2KmBuA1OD8g@mail.gmail.com>
+ <1328738567.2903.45.camel@pasglop> <CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
+ <1328823358.2903.77.camel@pasglop> <20120223122536.6a2a7a6b@jbarnes-desktop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 23 Feb 2012 12:51:30 -0800
+Message-ID: <CAErSpo7_WGjitDZz4XH+77f65Uz1ynd5_USN+D17D09Eux1iQQ@mail.gmail.com>
+Subject: Re: [PATCH 09/24] PCI, powerpc: Register busn_res for root buses
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	linux-pcmcia@lists.infradead.org
-Subject: [PATCH 17/24] pcmcia: remove workaround for fixing pci parent bus subordinate
-Date: Sat,  4 Feb 2012 22:58:01 -0800
-Message-Id: <1328425088-6562-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci busn allocation code is there, and it will preallocate bus number and it
-will make sure parent buses subordinate is right.
+On Thu, Feb 23, 2012 at 12:25 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Fri, 10 Feb 2012 08:35:58 +1100
+> Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+>
+>> On Thu, 2012-02-09 at 11:24 -0800, Bjorn Helgaas wrote:
+>> > My point is that the interface between the arch and the PCI core
+>> > should be simply the arch telling the core "this is the range of bus
+>> > numbers you can use."  If the firmware doesn't give you the HW limits,
+>> > that's the arch's problem.  If you want to assume 0..255 are
+>> > available, again, that's the arch's decision.
+>> >
+>> > But the answer to the question "what bus numbers are available to me"
+>> > depends only on the host bridge HW configuration.  It does not depend
+>> > on what pci_scan_child_bus() found.  Therefore, I think we can come up
+>> > with a design where pci_bus_update_busn_res_end() is unnecessary.
+>>
+>> In an ideal world yes. In a world where there are reverse engineered
+>> platforms on which we aren't 100% sure how thing actually work under the
+>> hood and have the code just adapt on "what's there" (and try to fix it
+>> up -sometimes-), thinks can get a bit murky :-)
+>>
+>> But yes, I see your point. As for what is the "correct" setting that
+>> needs to be done so that the patch doesn't end up a regression for us,
+>> I'll have to dig into some ancient HW to dbl check a few things. I hope
+>> 0...255 will just work but I can't guarantee it.
+>>
+>> What I'll probably do is constraint the core to the values in
+>> hose->min/max, and update selected platforms to put 0..255 in there when
+>> I know for sure they can cope.
+>
+> But I think the point is, can't we intiialize the busn resource after
+> the first & last bus numbers have been determined?  E.g. rather than
+> Yinghai's current:
+> +       pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
+> +
+>        /* Get probe mode and perform scan */
+>        mode = PCI_PROBE_NORMAL;
+>        if (node && ppc_md.pci_probe_mode)
+> @@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
+>                of_scan_bus(node, bus);
+>        }
+>
+> -       if (mode == PCI_PROBE_NORMAL)
+> +       if (mode == PCI_PROBE_NORMAL) {
+> +               pci_bus_update_busn_res_end(bus, 255);
+>                hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
+> +               pci_bus_update_busn_res_end(bus, bus->subordinate);
+> +       }
+>
+> we'd have something more like:
+>
+>        /* Get probe mode and perform scan */
+>        mode = PCI_PROBE_NORMAL;
+>        if (node && ppc_md.pci_probe_mode)
+> @@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
+>                of_scan_bus(node, bus);
+>        }
+>
+>        if (mode == PCI_PROBE_NORMAL)
+>                hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
+>
+> +       pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
+>
+> since we should have the final bus range by then?  Setting the end to
+> 255 and then changing it again doesn't make sense; and definitely makes
+> the code hard to follow.
 
-So remove workaround here.
+I have two issues here:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-pcmcia@lists.infradead.org
----
- drivers/pcmcia/yenta_socket.c |   75 -----------------------------------------
- 1 files changed, 0 insertions(+), 75 deletions(-)
+1) hose->last_busno is currently the highest bus number found by
+pci_scan_child_bus().  If I understand correctly,
+pci_bus_insert_busn_res() is supposed to update the core's idea of the
+host bridge's bus number aperture.  (Actually, I guess it just updates
+the *end* of the aperture, since we supply the start directly to
+pci_scan_root_bus()).  The aperture and the highest bus number we
+found are not related, except that we should have:
 
-diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
-index 849c0c1..5757cae 100644
---- a/drivers/pcmcia/yenta_socket.c
-+++ b/drivers/pcmcia/yenta_socket.c
-@@ -1064,79 +1064,6 @@ static void yenta_config_init(struct yenta_socket *socket)
- 	config_writew(socket, CB_BRIDGE_CONTROL, bridge);
- }
- 
--/**
-- * yenta_fixup_parent_bridge - Fix subordinate bus# of the parent bridge
-- * @cardbus_bridge: The PCI bus which the CardBus bridge bridges to
-- *
-- * Checks if devices on the bus which the CardBus bridge bridges to would be
-- * invisible during PCI scans because of a misconfigured subordinate number
-- * of the parent brige - some BIOSes seem to be too lazy to set it right.
-- * Does the fixup carefully by checking how far it can go without conflicts.
-- * See http://bugzilla.kernel.org/show_bug.cgi?id=2944 for more information.
-- */
--static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
--{
--	struct list_head *tmp;
--	unsigned char upper_limit;
--	/*
--	 * We only check and fix the parent bridge: All systems which need
--	 * this fixup that have been reviewed are laptops and the only bridge
--	 * which needed fixing was the parent bridge of the CardBus bridge:
--	 */
--	struct pci_bus *bridge_to_fix = cardbus_bridge->parent;
--
--	/* Check bus numbers are already set up correctly: */
--	if (bridge_to_fix->subordinate >= cardbus_bridge->subordinate)
--		return; /* The subordinate number is ok, nothing to do */
--
--	if (!bridge_to_fix->parent)
--		return; /* Root bridges are ok */
--
--	/* stay within the limits of the bus range of the parent: */
--	upper_limit = bridge_to_fix->parent->subordinate;
--
--	/* check the bus ranges of all silbling bridges to prevent overlap */
--	list_for_each(tmp, &bridge_to_fix->parent->children) {
--		struct pci_bus *silbling = pci_bus_b(tmp);
--		/*
--		 * If the silbling has a higher secondary bus number
--		 * and it's secondary is equal or smaller than our
--		 * current upper limit, set the new upper limit to
--		 * the bus number below the silbling's range:
--		 */
--		if (silbling->secondary > bridge_to_fix->subordinate
--		    && silbling->secondary <= upper_limit)
--			upper_limit = silbling->secondary - 1;
--	}
--
--	/* Show that the wanted subordinate number is not possible: */
--	if (cardbus_bridge->subordinate > upper_limit)
--		dev_printk(KERN_WARNING, &cardbus_bridge->dev,
--			   "Upper limit for fixing this "
--			   "bridge's parent bridge: #%02x\n", upper_limit);
--
--	/* If we have room to increase the bridge's subordinate number, */
--	if (bridge_to_fix->subordinate < upper_limit) {
--
--		/* use the highest number of the hidden bus, within limits */
--		unsigned char subordinate_to_assign =
--			min(cardbus_bridge->subordinate, upper_limit);
--
--		dev_printk(KERN_INFO, &bridge_to_fix->dev,
--			   "Raising subordinate bus# of parent "
--			   "bus (#%02x) from #%02x to #%02x\n",
--			   bridge_to_fix->number,
--			   bridge_to_fix->subordinate, subordinate_to_assign);
--
--		/* Save the new subordinate in the bus struct of the bridge */
--		bridge_to_fix->subordinate = subordinate_to_assign;
--
--		/* and update the PCI config space with the new subordinate */
--		pci_write_config_byte(bridge_to_fix->self,
--			PCI_SUBORDINATE_BUS, bridge_to_fix->subordinate);
--	}
--}
--
- /*
-  * Initialize a cardbus controller. Make sure we have a usable
-  * interrupt, and that we can map the cardbus area. Fill in the
-@@ -1257,8 +1184,6 @@ static int __devinit yenta_probe(struct pci_dev *dev, const struct pci_device_id
- 	dev_printk(KERN_INFO, &dev->dev,
- 		   "Socket status: %08x\n", cb_readl(socket, CB_SOCKET_STATE));
- 
--	yenta_fixup_parent_bridge(dev->subordinate);
--
- 	/* Register it with the pcmcia layer.. */
- 	ret = pcmcia_register_socket(&socket->socket);
- 	if (ret == 0) {
--- 
-1.7.7
+    hose->first_busno <= bus->subordinate <= hose->last_busno
 
+If we set the aperture to [first_busno - last_busno], we artificially
+prevent some hotplug.
+
+2) We already have a way to add resources to a root bus: the
+pci_add_resource() used to add I/O port and MMIO apertures.  I think
+it'd be a lot simpler to just use that same interface for the bus
+number aperture, e.g.,
+
+    pci_add_resource(&resources, hose->io_space);
+    pci_add_resource(&resources, hose->mem_space);
+    pci_add_resource(&resources, hose->busnr_space);
+    bus = pci_scan_root_bus(dev, next_busno, pci_ops, sysdata, &resources);
+
+This is actually a bit redundant, since "next_busno" should be the
+same as hose->busnr_space->start.  So if we adopted this approach, we
+might want to eventually drop the "next_busno" argument.
+
+ Bjorn
