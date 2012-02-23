@@ -1,89 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/7] PCI: Skip reset cardbus assigned resource during pci bus rescan
-Date: Fri, 10 Feb 2012 15:33:48 -0800
-Message-Id: <1328916832-6588-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
-References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:41047 "HELO
+	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751346Ab2BWUaK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 15:30:10 -0500
+Date: Thu, 23 Feb 2012 12:30:03 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, greg@kroah.com,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org
+Subject: Re: [PATCH v5] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
+ driver
+Message-ID: <20120223123003.662cf548@jbarnes-desktop>
+In-Reply-To: <20120202160922.4564.99032.sendpatchset@dhcp-189-101.bos.redhat.com>
+References: <20120202160922.4564.99032.sendpatchset@dhcp-189-101.bos.redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/6OtdMSNa/ZFWd5J2f2AnlZ="; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-otherwise when rescan is used for cardbus, assigned resource will get
-cleared.
+--Sig_/6OtdMSNa/ZFWd5J2f2AnlZ=
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
+On Thu, 2 Feb 2012 11:09:22 -0500
+MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com> wrote:
 
----
- drivers/pci/setup-bus.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+> Not to use MSI/MSI-X for pciehp, add a kernel parameter, pcie_hp=3Dnomsi.
+>=20
+> In my environment, while shutting down, following stack trace is shown
+> sometimes.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3b3932a..2991a89 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -901,6 +901,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
- 	u16 ctrl;
- 
-+	if (b_res[0].parent)
-+		goto handle_b_res_1;
- 	/*
- 	 * Reserve some resources for CardBus.  We reserve
- 	 * a fixed amount of bus space for CardBus bridges.
-@@ -914,6 +916,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 				pci_cardbus_io_size);
- 	}
- 
-+handle_b_res_1:
-+	if (b_res[1].parent)
-+		goto handle_b_res_2;
- 	b_res[1].start = pci_cardbus_io_size;
- 	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
- 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
-@@ -923,6 +928,7 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 				 pci_cardbus_io_size);
- 	}
- 
-+handle_b_res_2:
- 	/* MEM1 must not be pref mmio */
- 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
- 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
-@@ -942,6 +948,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
- 	}
- 
-+	if (b_res[2].parent)
-+		goto handle_b_res_3;
- 	/*
- 	 * If we have prefetchable memory support, allocate
- 	 * two regions.  Otherwise, allocate one region of
-@@ -962,6 +970,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 		b_res_3_size = pci_cardbus_mem_size;
- 	}
- 
-+handle_b_res_3:
-+	if (b_res[3].parent)
-+		goto handle_done;
- 	b_res[3].start = pci_cardbus_mem_size;
- 	b_res[3].end = b_res[3].start + b_res_3_size - 1;
- 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
-@@ -970,6 +981,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
- 				 pci_cardbus_mem_size);
- 	}
-+
-+handle_done:
-+	;
- }
- 
- void __ref __pci_bus_size_bridges(struct pci_bus *bus,
--- 
-1.7.7
+Applied, thanks guys.
 
+Now should we also have a platform/device blacklist to enable this
+option automatically so people don't have to remember to use it?
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/6OtdMSNa/ZFWd5J2f2AnlZ=
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPRqHLAAoJEIEoDkX4Qk9h3WIP/0XChkNVqQ/utwIG1j3HXViU
+E8RvquiVgoZy4yvFB+JGlTFtAKHcVn1dPbGTqh9/9oBoO5giUKWHpS+hFp2ALg52
+OIFymAljpw7p8MJAt6NhYbMKXK74H8gez+N/R3xi7yVrCboIbZ9Tc20lLGetPalK
+4gcKLp+dwZomdm+7CZUyJMpWkghHASvq1dAJjtuLnVIszDNNIyjOc3b9RG+WV8cl
+oXsSLxxI+jmrLBlSyPcrEvHJsIkto3+PZkyIz422svHArWl/07sUNNfWgmY5scDB
+Jutnr1MeuNpNa7MDgiKF1fv1mGlnnxMZgqk7vj1H5vIaO5442x4lWmERgXLxpN3e
+yZXeg+sitXA6LYoBuzEvrATouOvJTBVm61R72niwxUAdOB1kyM0pd7W+P3hZqFEn
+ksp26pMbkdD9FkcM/yts/vYzFI3TKuamfV2cbPhq+fc3vPRPjwlKRd4UeTgB/M5f
+VioDb51CcYSxy5ZmBGk3yRKmb+PCH78YZWBBk6bt15/8ojadH0b/+E7+OqdxWOwD
+NnDZSdLKBd2nh5vSQN3KX/lfxsBRE8tGVWIkKDnTs8zH0kkAIaOIsnGib9iufRpD
+9/auwIFXOzWJvmBjZMglaUf1kp2/SmH8nOGDK69FHiWsWrQdONMxwjXM7VDFcETh
+nHdjACf2AJMDEJqpCqJP
+=MT/X
+-----END PGP SIGNATURE-----
+
+--Sig_/6OtdMSNa/ZFWd5J2f2AnlZ=--
