@@ -1,47 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alvesta.synopsys.com ([198.182.60.77]:52232 "EHLO
-	alvesta.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756230Ab2BGW1f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Feb 2012 17:27:35 -0500
-From: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
-To: "balbi@ti.com" <balbi@ti.com>
-CC: "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Date: Tue, 7 Feb 2012 14:19:49 -0800
-Subject: RE: [PATCH 4/4] usb: dwc3: second part of hibernation support
-Message-ID: <F6C4814A9B336243ABC3D1FB44E08AE801D5677FC6@US01WXMBX1.internal.synopsys.com>
-References: <cover.1328582753.git.paulz@synopsys.com>
- <9c4ee1f156d28640bc43dee647e3470b9e1b9f37.1328582753.git.paulz@synopsys.com>
- <20120207070322.GB3707@legolas.emea.dhcp.ti.com>
- <F6C4814A9B336243ABC3D1FB44E08AE801D5677E3A@US01WXMBX1.internal.synopsys.com>
- <20120207201742.GA10970@legolas.emea.dhcp.ti.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:33910 "HELO
+	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756119Ab2BWT6G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:58:06 -0500
+Date: Thu, 23 Feb 2012 11:58:00 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/7] PCI: Skip reset cardbus assigned resource during
+ pci bus rescan
+Message-ID: <20120223115800.1ef0cf78@jbarnes-desktop>
+In-Reply-To: <1328916832-6588-4-git-send-email-yinghai@kernel.org>
+References: <1328916832-6588-1-git-send-email-yinghai@kernel.org>
+	<1328916832-6588-4-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/XzrrrH+.OkjS16k+KZf3Qcr"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Paul Zimmerman
-> Sent: Tuesday, February 07, 2012 1:16 PM
-> 
-> OK, I will poke around and see if I can find an existing driver to use as
-> an example.
+--Sig_/XzrrrH+.OkjS16k+KZf3Qcr
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hi Felipe,
+On Fri, 10 Feb 2012 15:33:48 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Can you explain a little about how the runtime_pm stuff will work in
-the DWC3 driver, disregarding the HAPS platform for now.
+> otherwise when rescan is used for cardbus, assigned resource will get
+> cleared.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
-For example, if the device is a PCI device, won't the PM ops need to
-be part of the struct pci_driver in the dwc3-pci module?
+Applied 1-3, thanks guys.
 
-If so, how will they be able to communicate with the routines in the
-dwc3 module? Or if not, how will that work exactly?
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-Thanks.
+--Sig_/XzrrrH+.OkjS16k+KZf3Qcr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
--- 
-Paul
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
+iQIcBAEBAgAGBQJPRppIAAoJEIEoDkX4Qk9hfUUQAIlSJ/NBKJkjyaJRqB/kv+F6
+1udh6Y+T76UJzMBZ/asJFTX/kCEKK3/BnyK2husAHPGuTJ94xGrqz8w3GLtWGIKq
+XzkCSyFC8hTIqPQwJpZjVHQFdKkXneu2zIXQ6+XrDllCpsov5Zo/X8ePmEfM/tHH
+/85HAUIsbBZELTrZ1st0H+2nxS7KdT4cb1Mm/lK4xjBC/Pu+e1fNnk2JchQqlo8g
+3J78qzC4jhcIzg3uHj7YQFIV+1eCNKWipFSfTahr7ETnnia6is83NYj35BKFAnsO
+4Ie6ust+Gn2+grCyDVQC/KP3L/fAM8tJiMVJWeHql4Opidt4KYWuquAy64Pjq4UO
+5erVE+Ax8K82X/CmPyrR9JptdHE9WPYQRdNkYVZVM0G4l4x9Rf/Fgnk10gwXA86h
+DdSuqiIm+HaVWaWJpUl+hT/GT4D1tU584NWTV43ZPU88QMSyCFcIkLwBHAHJZk45
+m70bx5WWDolhFsL15BajL2bxEtyHZLKKr4TX+saOwmmgazcNDxAUQlnA7WEsDvOZ
+eiNRf4cMQIfq/4GUzgUWuT3ggCGONvKtiqlUD+G/zA1mMKWITRQOCdfrC36v04My
+Cge+5Ei0CPNrgt8BDsjJifnLMQi4xWVchOIO4s2nexiuEdBJ25NJeaFEF5/TOJ2p
+JFYIgwPGZlGpRIANSzf7
+=SqYE
+-----END PGP SIGNATURE-----
+
+--Sig_/XzrrrH+.OkjS16k+KZf3Qcr--
