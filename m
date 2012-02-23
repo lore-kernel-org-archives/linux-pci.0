@@ -1,75 +1,61 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gx0-f202.google.com ([209.85.161.202]:33702 "EHLO
+	mail-gx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756500Ab2BWTn7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:43:59 -0500
+Received: by mail-gx0-f202.google.com with SMTP id p1so202655ggn.1
+        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 11:43:59 -0800 (PST)
+Subject: [PATCH v2 11/12] unicore32/PCI: use pci_flags PCI_PROBE_ONLY instead
+	of arm-specific flag
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, Guan Xuetao <gxt@mprc.pku.edu.cn>
+Date: Thu, 23 Feb 2012 12:43:58 -0700
+Message-ID: <20120223194358.20708.90268.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20120210125150.3353237c@jbarnes-desktop>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-	<1328425088-6562-2-git-send-email-yinghai@kernel.org>
-	<CAErSpo4HJH+3EQAWowyVxZFa5jVy1EOo=SoybJqqcjhVdo0nzw@mail.gmail.com>
-	<CAE9FiQXeRGXE2RCe5S1iOE=QY37wauM=WUevjXWkMqMOjV3t7A@mail.gmail.com>
-	<20120210125150.3353237c@jbarnes-desktop>
-Date: Fri, 10 Feb 2012 15:40:53 -0800
-Message-ID: <CAE9FiQXvzHM4a=u5PDbRkKEo5EC8c7VaZZgQ8wyTjveegf=7dA@mail.gmail.com>
-Subject: Re: [PATCH 01/24] PCI: Add iobusn_resource
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 12:51 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Mon, 6 Feb 2012 10:55:14 -0800
-> Yinghai Lu <yinghai@kernel.org> wrote:
->
->> On Mon, Feb 6, 2012 at 10:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >> +struct resource iobusn_resource = {
->> >> +       .name   = "PCI busn",
->> >> +       .start  = 0,
->> >> +       .end    = 0xffffff,
->> >> +       .flags  = IORESOURCE_BUS,
->> >> +};
->> >
->> > I'm not sure this should be global.  iomem_resource and
->> > ioport_resource *are* really global, because they refer to processor
->> > address space that is the same for everybody.  But PCI bus numbers are
->> > specific to PCI.  Some machines don't have PCI at all, and there are
->> > different bus architectures to which this doesn't apply.
->>
->> that does not hurt them.
->
-> Yes but it's superfluous and confusing if you're porting to a new arch
-> or looking at changes in generic code that may affect you.
->
->> > The 0-0xffffff range is misleading because it includes both the domain
->> > and the bus number, and it's meaningless to allocate ranges that cross
->> > domain boundaries.  For example, [bus 0x0000f0-0x000120] includes bus
->> > numbers from domain 0000 and domain 0001, which doesn't make any sense
->> > because a bus can only be in one domain.
->>
->> allocation code will make sure it will be cross the boundary for domain.
->
-> But that means everyone reading it will do a double take, have to dig
-> into the implementation, and only then say "ah yeah ok it looks
-> correct" rather than it being obvious from the fact that the resource
-> is tracked on a per-domain basis.
->
->> > I think it would make more sense to keep this bus number resource in a
->> > per-host bridge structure.  Then we wouldn't need to include the
->> > domain number at all because the host bridge determines the domain.
->>
->> not sure. insert the all busn_res of all peer root buses into one
->> global iobusn_resource
->> looks more simple.
->
-> In what sense?  Simpler in the sense of your current implementation,
-> but not simpler at all to someone just reading the code...
+CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/unicore32/kernel/pci.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-ok, will check if i could drop iobusn_resource.
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index a8f07fe..6c1248f 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -19,9 +19,9 @@
+ #include <linux/slab.h>
+ #include <linux/init.h>
+ #include <linux/io.h>
++#include <asm-generic/pci-bridge.h>
+ 
+ static int debug_pci;
+-static int use_firmware;
+ 
+ #define CONFIG_CMD(bus, devfn, where)	\
+ 	(0x80000000 | (bus->number << 16) | (devfn << 8) | (where & ~3))
+@@ -276,7 +276,7 @@ static int __init pci_common_init(void)
+ 
+ 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
+ 
+-	if (!use_firmware) {
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 		/*
+ 		 * Size the bridge windows.
+ 		 */
+@@ -303,7 +303,7 @@ char * __devinit pcibios_setup(char *str)
+ 		debug_pci = 1;
+ 		return NULL;
+ 	} else if (!strcmp(str, "firmware")) {
+-		use_firmware = 1;
++		pci_add_flags(PCI_PROBE_ONLY);
+ 		return NULL;
+ 	}
+ 	return str;
 
-Yinghai
