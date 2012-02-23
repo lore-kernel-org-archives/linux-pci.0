@@ -1,84 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:41818 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756150Ab2BYVyy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Feb 2012 16:54:54 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/4] PCI: Rename pci_remove_behind_bridge to pci_stop_and_remove_behind_bridge
-Date: Sat, 25 Feb 2012 13:54:22 -0800
-Message-Id: <1330206863-31381-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330206863-31381-1-git-send-email-yinghai@kernel.org>
-References: <1330206863-31381-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 23 Feb 2012 12:27:04 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: move pci_find_saved_cap out of linux/pci.h
+Message-ID: <20120223122704.262229fd@jbarnes-desktop>
+In-Reply-To: <1328948321-14791-1-git-send-email-yinghai@kernel.org>
+References: <1328948321-14791-1-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/tsLomWQFrA3wsJf0ZIWtMrM"; protocol="application/pgp-signature"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-old pci_remove_behind_bridge actually do stop and remove.
+--Sig_/tsLomWQFrA3wsJf0ZIWtMrM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Make the name reflect that, and less confusing.
+On Sat, 11 Feb 2012 00:18:41 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Suggested-by: Jesse Barnes <jbarnes@virtuousgeek.org>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Only have user in driver/pci/pci.c
+>=20
+> Don't need to put it in global pci.h
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org.
 
----
- drivers/pci/remove.c     |    7 ++++---
- drivers/pcmcia/cardbus.c |    2 +-
- include/linux/pci.h      |    2 +-
- 3 files changed, 6 insertions(+), 5 deletions(-)
+Applied, thanks.
 
-Index: linux-2.6/drivers/pci/remove.c
-===================================================================
---- linux-2.6.orig/drivers/pci/remove.c
-+++ linux-2.6/drivers/pci/remove.c
-@@ -127,14 +127,15 @@ static void pci_stop_behind_bridge(struc
- }
- 
- /**
-- * pci_remove_behind_bridge - remove all devices behind a PCI bridge
-+ * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
-+ *					 a PCI bridge
-  * @dev: PCI bridge device
-  *
-  * Remove all devices on the bus, except for the parent bridge.
-  * This also removes any child buses, and any devices they may
-  * contain in a depth-first manner.
-  */
--void pci_remove_behind_bridge(struct pci_dev *dev)
-+void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
- {
- 	pci_stop_behind_bridge(dev);
- 	__pci_remove_behind_bridge(dev);
-@@ -175,5 +176,5 @@ void pci_stop_bus_device(struct pci_dev
- }
- 
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
--EXPORT_SYMBOL(pci_remove_behind_bridge);
-+EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
- EXPORT_SYMBOL_GPL(pci_stop_bus_device);
-Index: linux-2.6/drivers/pcmcia/cardbus.c
-===================================================================
---- linux-2.6.orig/drivers/pcmcia/cardbus.c
-+++ linux-2.6/drivers/pcmcia/cardbus.c
-@@ -108,5 +108,5 @@ void cb_free(struct pcmcia_socket *s)
- 	struct pci_dev *bridge = s->cb_dev;
- 
- 	if (bridge)
--		pci_remove_behind_bridge(bridge);
-+		pci_stop_and_remove_behind_bridge(bridge);
- }
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -959,7 +959,7 @@ void pci_unregister_driver(struct pci_dr
- 	module_driver(__pci_driver, pci_register_driver, \
- 		       pci_unregister_driver)
- 
--void pci_remove_behind_bridge(struct pci_dev *dev);
-+void pci_stop_and_remove_behind_bridge(struct pci_dev *dev);
- struct pci_driver *pci_dev_driver(const struct pci_dev *dev);
- int pci_add_dynid(struct pci_driver *drv,
- 		  unsigned int vendor, unsigned int device,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/tsLomWQFrA3wsJf0ZIWtMrM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPRqEYAAoJEIEoDkX4Qk9h9dkP+gPf9iROfuwJT8v8xBdImNVp
+gYnOJRejGG1wXiOY0T2xe/fZStdGkoTt1PFiY/V0MJsdFz/x2d4mp6fp8bs1GFkP
+3DcJe6uiGX2hcXACzVc2McBHUSrRUCQTT+358c/lxgmxzfHZBncN7kRVWvULN7iP
+kOHC0n9XsVz3vO3L7hZ6At/j04u7sFo6P+9jGrNgmar305Ts4OiMOhK9GOs2dJjy
+/wXiHx3SB0DbwP/HGjMZ012faTQx3wLGr3xaml8XbSP/BziGofiMvuTqjD7MiAHa
+6X6y5hZA+eXJL0AQkB6E9ZRKCqocpPXr4eLDGUWrbMp+KNHA96/BUd6Tp7mHTWXR
+oTLjNZp6IS9HiCkYoHGiK/vXp2xz9JRgZDxSbNXcPvnCXJT9o3oMYtIe8bIW4H0i
+XPUM3v4Z+tyTp0499TvbV51BoqSf8c0QGeEWikgOJMTgBLm8xuTlxlYBUBREvxip
+LFOi2dwCBoI8T+5fHQFQbJTTDi/P00ykw4gxOSr9r4c+7t4HqSJvqd7Kljp5u9g0
++wK6izD9hOUzrndAH25k1KZzeiw8FAJzDizWr1SviBcpesJeqDNdo0XNZZI8iO9c
+/aUogsqutnHDVQlRAv9xuiVYevupENS+R9UI3mqRInw+KGX3nFiS8Pi8oiYHFy6z
+BGSvRussP4kJts9eSBxN
+=Jq6Z
+-----END PGP SIGNATURE-----
+
+--Sig_/tsLomWQFrA3wsJf0ZIWtMrM--
