@@ -1,149 +1,55 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 35/39] PCI: Seperate child bus scanning to two passes overall
-Date: Wed, 29 Feb 2012 15:07:34 -0800
-Message-Id: <1330556858-11768-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1329946899.20389.9.camel@pasglop>
+References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+ <20120222181948.27513.96215.stgit@bhelgaas.mtv.corp.google.com> <1329946899.20389.9.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 23 Feb 2012 10:49:07 -0800
+Message-ID: <CAErSpo6=ADAx0LPWQz-YGBm2opoKAMaPGDY6yqvkNY8riF9ZFQ@mail.gmail.com>
+Subject: Re: [PATCH v1 09/11] powerpc/PCI: replace pci_probe_only with pci_flags
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, Olof Johansson <olof@lixom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In extreme case: Two bridges are properly setup.
-       bridge A
-               bridge AA
-               bridge AB
-       bridge B
-	       bridge BA
-	       bridge BB
-   but AA, AB are not setup properly.
-   bridge A has small range, and bridge AB could need more, when do the
-       first pass0 for bridge A, it will do pass0 and pass1 for AA and AB,
-	during that process, it will extend range of A for AB blindly.
-	because bridge B is not registered yet.
-       that could overlap range that is used by bridge B.
+On Wed, Feb 22, 2012 at 1:41 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2012-02-22 at 11:19 -0700, Bjorn Helgaas wrote:
+>>  int maple_pci_get_legacy_ide_irq(struct pci_dev *pdev, int channel)
+>> diff --git a/arch/powerpc/platforms/pasemi/pci.c
+>> b/arch/powerpc/platforms/pasemi/pci.c
+>> index b6a0ec4..b27d886 100644
+>> --- a/arch/powerpc/platforms/pasemi/pci.c
+>> +++ b/arch/powerpc/platforms/pasemi/pci.c
+>> @@ -231,7 +231,7 @@ void __init pas_pci_init(void)
+>>         pci_devs_phb_init();
+>>
+>>         /* Use the common resource allocation mechanism */
+>> -       pci_probe_only = 1;
+>> +       pci_add_flags(PCI_PROBE_ONLY);
+>>  }
+>
+> Olof, do you remember why you used to set that on pasemi ?
+>
+> I would have expected it to be clear, so the kernel can re-assign things
+> if needed. We really only want it set for pseries because of the
+> hypervisor being a PITA :-)
 
-Right way should be:
-       do pass0 for all good bridges at first.
-So we could do pass0 for bridge B before pass1 for bridge AB.
+Speaking of the hypervisor, powerpc has this of_scan_bus() thing which
+seems to discover PCI devices using the OF device tree rather than
+using PCI config accesses.  This seems related to the "pci_probe_only"
+idea.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   50 ++++++++++++++++++++++++++++++++++----------------
- 1 files changed, 34 insertions(+), 16 deletions(-)
+I wonder whether it would be possible/feasible/desirable to implement
+this by using config space accessors that would internally look at the
+OF device tree.  Then we possibly could use the standard PCI scan bus
+path.  Maybe the core could detect non-changeable BARs somehow and
+mark them, e.g., with IORESOURCE_PCI_FIXED.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ba51902..4a38ef4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -809,6 +809,9 @@ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
- 
- 	return broken;
- }
-+
-+static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
-+						 int pass);
- /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
-@@ -865,11 +868,10 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 	    !is_cardbus && !broken) {
- 		unsigned int cmax;
- 		/*
--		 * Bus already configured by firmware, process it in the first
--		 * pass and just note the configuration.
-+		 * Bus already configured by firmware, still process it in two
-+		 * passes in extreme case like two adjaced bridges have children
-+		 * bridges that are not setup properly.
- 		 */
--		if (pass)
--			goto out;
- 
- 		/*
- 		 * If we already got to this bus through a different bridge,
-@@ -890,7 +892,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 			pci_bus_insert_busn_res(child, secondary, subordinate);
- 		}
- 
--		cmax = pci_scan_child_bus(child);
-+		cmax = __pci_scan_child_bus(child, pass);
- 		if (cmax > max)
- 			max = cmax;
- 		if (child->subordinate > max)
-@@ -1704,12 +1706,13 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- }
- EXPORT_SYMBOL_GPL(pcie_bus_configure_settings);
- 
--unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
-+static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
-+						 int pass)
- {
--	unsigned int devfn, pass, max = bus->secondary;
-+	unsigned int devfn, max = bus->secondary;
- 	struct pci_dev *dev;
- 
--	dev_dbg(&bus->dev, "scanning bus\n");
-+	dev_dbg(&bus->dev, "scanning bus pass %d\n", pass);
- 
- 	/* Go find them, Rover! */
- 	for (devfn = 0; devfn < 0x100; devfn += 8)
-@@ -1723,18 +1726,16 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- 	 * all PCI-to-PCI bridges on this bus.
- 	 */
- 	if (!bus->is_added) {
--		dev_dbg(&bus->dev, "fixups for bus\n");
-+		dev_dbg(&bus->dev, "fixups for bus pass %d\n", pass);
- 		pcibios_fixup_bus(bus);
- 		if (pci_is_root_bus(bus))
- 			bus->is_added = 1;
- 	}
- 
--	for (pass=0; pass < 2; pass++)
--		list_for_each_entry(dev, &bus->devices, bus_list) {
--			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
--			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
--				max = pci_scan_bridge(bus, dev, max, pass);
--		}
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-+		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
-+			max = pci_scan_bridge(bus, dev, max, pass);
- 
- 	/*
- 	 * We've scanned the bus and so we know all about what's on
-@@ -1743,7 +1744,24 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- 	 *
- 	 * Return how far we've got finding sub-buses.
- 	 */
--	dev_dbg(&bus->dev, "bus scan returning with max=%02x\n", max);
-+	dev_dbg(&bus->dev, "bus scan returning with max=%02x pass %d\n",
-+			max, pass);
-+
-+	return max;
-+}
-+
-+unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
-+{
-+	int pass;
-+	unsigned int max = 0, tmp;
-+
-+	for (pass = 0; pass < 2;  pass++) {
-+		tmp = __pci_scan_child_bus(bus, pass);
-+
-+		if (tmp > max)
-+			max = tmp;
-+	}
-+
- 	return max;
- }
- 
--- 
-1.7.7
+Just a pie-in-the sky thought for now; I have no concrete plans to do
+anything like this, but it seems like it might allow more unification
+if it were possible.
 
+Bjorn
