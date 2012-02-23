@@ -1,45 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:26341 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030241Ab2B1WJY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 17:09:24 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 05/24] PCI: release busn when removing bus
-Date: Tue, 28 Feb 2012 14:07:24 -0800
-Message-Id: <1330466863-28469-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v2 03/12] alpha/PCI: replace pci_probe_only with pci_flags
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-alpha@vger.kernel.org
+Date: Thu, 23 Feb 2012 12:43:17 -0700
+Message-ID: <20120223194317.20708.1404.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/remove.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Some architectures (alpha, mips, powerpc) have an arch-specific
+"pci_probe_only" flag.  Others use PCI_PROBE_ONLY in pci_flags for
+the same purpose.  This moves alpha to the pci_flags approach so
+generic code can use the same test across all architectures.
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index fd77e2b..04a4861 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+CC: linux-alpha@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/alpha/include/asm/pci.h   |    1 +
+ arch/alpha/kernel/pci.c        |   15 +++++++--------
+ arch/alpha/kernel/pci_impl.h   |    3 ---
+ arch/alpha/kernel/sys_marvel.c |    3 ++-
+ arch/alpha/kernel/sys_titan.c  |    3 ++-
+ 5 files changed, 12 insertions(+), 13 deletions(-)
+
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index 28d0497..6a3fe07 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -7,6 +7,7 @@
+ #include <linux/dma-mapping.h>
+ #include <asm/scatterlist.h>
+ #include <asm/machvec.h>
++#include <asm-generic/pci-bridge.h>
  
- 	down_write(&pci_bus_sem);
- 	list_del(&pci_bus->node);
-+	pci_bus_release_busn_res(pci_bus);
- 	up_write(&pci_bus_sem);
- 	if (!pci_bus->is_added)
+ /*
+  * The following structure is used to manage multiple PCI busses.
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 8c723c1..3a5cdf2 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -43,12 +43,10 @@ const char *const pci_mem_names[] = {
+ 
+ const char pci_hae0_name[] = "HAE0";
+ 
+-/* Indicate whether we respect the PCI setup left by console. */
+ /*
+- * Make this long-lived  so that we know when shutting down
+- * whether we probed only or not.
++ * If PCI_PROBE_ONLY in pci_flags is set, we don't change any PCI resource
++ * assignments.
+  */
+-int pci_probe_only;
+ 
+ /*
+  * The PCI controller list.
+@@ -215,7 +213,7 @@ pdev_save_srm_config(struct pci_dev *dev)
+ 	struct pdev_srm_saved_conf *tmp;
+ 	static int printed = 0;
+ 
+-	if (!alpha_using_srm || pci_probe_only)
++	if (!alpha_using_srm || pci_has_flag(PCI_PROBE_ONLY))
  		return;
--- 
-1.7.7
+ 
+ 	if (!printed) {
+@@ -242,7 +240,7 @@ pci_restore_srm_config(void)
+ 	struct pdev_srm_saved_conf *tmp;
+ 
+ 	/* No need to restore if probed only. */
+-	if (pci_probe_only)
++	if (pci_has_flag(PCI_PROBE_ONLY))
+ 		return;
+ 
+ 	/* Restore SRM config. */
+@@ -283,7 +281,7 @@ pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev = bus->self;
+ 
+-	if (pci_probe_only && dev &&
++	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+  		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+  		pci_read_bridge_bases(bus);
+  		pcibios_fixup_device_resources(dev, bus);
+@@ -374,7 +372,8 @@ pcibios_claim_one_bus(struct pci_bus *b)
+ 
+ 			if (r->parent || !r->start || !r->flags)
+ 				continue;
+-			if (pci_probe_only || (r->flags & IORESOURCE_PCI_FIXED))
++			if (pci_has_flag(PCI_PROBE_ONLY) ||
++			    (r->flags & IORESOURCE_PCI_FIXED))
+ 				pci_claim_resource(dev, i);
+ 		}
+ 	}
+diff --git a/arch/alpha/kernel/pci_impl.h b/arch/alpha/kernel/pci_impl.h
+index 85457b2..2b0ac42 100644
+--- a/arch/alpha/kernel/pci_impl.h
++++ b/arch/alpha/kernel/pci_impl.h
+@@ -173,9 +173,6 @@ extern void pci_restore_srm_config(void);
+ extern struct pci_controller *hose_head, **hose_tail;
+ extern struct pci_controller *pci_isa_hose;
+ 
+-/* Indicate that we trust the console to configure things properly.  */
+-extern int pci_probe_only;
+-
+ extern unsigned long alpha_agpgart_size;
+ 
+ extern void common_init_pci(void);
+diff --git a/arch/alpha/kernel/sys_marvel.c b/arch/alpha/kernel/sys_marvel.c
+index 95cfc83..fc8b125 100644
+--- a/arch/alpha/kernel/sys_marvel.c
++++ b/arch/alpha/kernel/sys_marvel.c
+@@ -384,7 +384,8 @@ marvel_init_pci(void)
+ 
+ 	marvel_register_error_handlers();
+ 
+-	pci_probe_only = 1;
++	/* Indicate that we trust the console to configure things properly */
++	pci_set_flags(PCI_PROBE_ONLY);
+ 	common_init_pci();
+ 	locate_and_init_vga(NULL);
+ 
+diff --git a/arch/alpha/kernel/sys_titan.c b/arch/alpha/kernel/sys_titan.c
+index f47b30a..b8eafa0 100644
+--- a/arch/alpha/kernel/sys_titan.c
++++ b/arch/alpha/kernel/sys_titan.c
+@@ -331,7 +331,8 @@ titan_init_pci(void)
+  	 */
+  	titan_late_init();
+  
+-	pci_probe_only = 1;
++	/* Indicate that we trust the console to configure things properly */
++	pci_set_flags(PCI_PROBE_ONLY);
+ 	common_init_pci();
+ 	SMC669_Init(0);
+ 	locate_and_init_vga(NULL);
 
