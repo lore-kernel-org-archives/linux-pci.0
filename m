@@ -1,104 +1,64 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 21/24] PCI, sysfs: create rescan_bridge under /sys/.../pci/devices/... for pci bridges
-Date: Sat,  4 Feb 2012 22:58:05 -0800
-Message-Id: <1328425088-6562-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:33124 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756801Ab2BWUe5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 15:34:57 -0500
+Date: Thu, 23 Feb 2012 12:34:53 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi <linux-acpi@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] PCI: Move acpi_dev_run_wake to acpi core
+Message-ID: <20120223123453.00645ec3@jbarnes-desktop>
+In-Reply-To: <1329362677.3413.12.camel@minggr>
+References: <1329362677.3413.12.camel@minggr>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/97.6BOE_.X693g.G.9ObLg2"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will create rescan for every pci device under parent bus.
-that is not right. the device is already there, there is no reason to rescan it.
+--Sig_/97.6BOE_.X693g.G.9ObLg2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-We could have rescan for pci bridges. less confusing.
+On Thu, 16 Feb 2012 11:24:37 +0800
+Lin Ming <ming.m.lin@intel.com> wrote:
 
-Need to move rescan attr to pci dev bridge attribute group.
-And We should rescan bridge's secondary bus instead of primary bus.
+> acpi_dev_run_wake is a generic function which can be used by
+> other subsystem too. Rename it to acpi_pm_device_run_wake, to be
+> consistent with acpi_pm_device_sleep_wake.
+>=20
+> Then move it to acpi core.
+>=20
 
--v3: Use device_type for pci dev.
--v4: Seperate pci device type change out
--v5: add rescan_bridge for bridge type, and still keep the old rescan.
+Assuming Len hasn't already picked this up, I think it can go through
+the ACPI tree.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
- drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
- 2 files changed, 34 insertions(+), 0 deletions(-)
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 34f5110..95f0f37 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -111,6 +111,16 @@ Description:
- 		from this part of the device tree.
- 		Depends on CONFIG_HOTPLUG.
- 
-+What:		/sys/bus/pci/devices/.../rescan_bridge
-+Date:		February 2012
-+Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
-+Description:
-+		Writing a non-zero value to this attribute will
-+		force a rescan of the bridge and all child buses, and
-+		re-discover devices removed earlier from this part of
-+		the device tree.
-+		Depends on CONFIG_HOTPLUG.
-+
- What:		/sys/bus/pci/devices/.../reset
- Date:		July 2009
- Contact:	Michael S. Tsirkin <mst@redhat.com>
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 124e826..68caf29 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
- 	return count;
- }
- 
-+static ssize_t
-+dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
-+		 const char *buf, size_t count)
-+{
-+	unsigned long val;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if (val) {
-+		mutex_lock(&pci_remove_rescan_mutex);
-+		pci_rescan_bus(pdev->subordinate);
-+		mutex_unlock(&pci_remove_rescan_mutex);
-+	}
-+	return count;
-+}
-+
-+static struct device_attribute pci_dev_bridge_rescan_attr =
-+	__ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
-+
- static void remove_callback(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
- late_initcall(pci_sysfs_init);
- 
- static struct attribute *pci_dev_bridge_attrs[] = {
-+#ifdef CONFIG_HOTPLUG
-+	&pci_dev_bridge_rescan_attr.attr,
-+#endif
- 	NULL,
- };
- 
--- 
-1.7.7
+--Sig_/97.6BOE_.X693g.G.9ObLg2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPRqLtAAoJEIEoDkX4Qk9h9ZMQALDyarP84otxFwhcfvImeQI8
+kR+80sKLha6gJre8V1YwnN4SdZ+Q/+KSiThNZWe+eKaxmUsi/mS5NoYRaUYVZSM6
+FJ0BZf5YsPmIRZZdtXGk1rHUg1J2rwh1ymVZeeOl8sYD7Lh/IcsiOzq3NSkOvnMc
+xV29dnOsKoMGF+0lPwV9qZtTXBBqaMsy0zs0FkFVhBMKfW9GGfISQdDntmjAxZt7
+vtYxqLDZ8oQfZVskYkaaRuPhBOYpLe8tTaCP2vxlI76yVnmNgQihwSsTyvxcyfd8
+liUCBkaRiTwSCHqzaEO0SKTiWJ/jkZPVGP6UDhsDn0oIOjicCc65VeGnMZwXTXKL
+LRqIW/FAgNmzQmZWTbO3IqDsle3hqkloXViiVnfg2Bjbc3i/Yo8mzfGrlgrzbL2a
+aEvjO4iIQ0/qEmfVCHQxb3bBIeZRuu/9+1afwpFTL+6ydxm4SPR9qGkriWQa/yQs
+peX5MGwHOInS8wDJoNHuezUejfn6uNNAb9gaTPKil/dLfxTNA8xFvAtJxnGvVLMq
+dyzfhNvH/DqBYncsfA8Axn3C62dp/JeM3USItBSvaJho3MIgXKtZW/COS/RDzbm8
+ViR4DgD3KGUBtfyJQCGlAOgX8JT3lj372UefrBH6y0sGMG0lxJyVRTnpO3JSjFxE
+OBs7D4jhZQZUobFE/Fjy
+=Kr9O
+-----END PGP SIGNATURE-----
+
+--Sig_/97.6BOE_.X693g.G.9ObLg2--
