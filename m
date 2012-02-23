@@ -1,60 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:38105 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754567Ab2BXHrY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 02:47:24 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 00/11] PCI: quirk related clean up
-Date: Thu, 23 Feb 2012 23:46:48 -0800
-Message-Id: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:41567 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754158Ab2BWQuJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 11:50:09 -0500
+Date: Thu, 23 Feb 2012 08:50:04 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: RFC: export constants from shpc.h?
+Message-ID: <20120223085004.17e32327@jbarnes-desktop>
+In-Reply-To: <20120216145447.GA25979@redhat.com>
+References: <20120216145447.GA25979@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/U6PI+oWotV80NDBRgRtjQrQ"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After commit:
-| commit 3209874a1da2c51c7325e601d9634189ee178ad6
-| Author: Arjan van de Ven <arjan@infradead.org>
-| Date:   Mon Jan 30 20:52:07 2012 -0800
-|
-|    PCI: Annotate PCI quirks in initcall_debug style
+--Sig_/U6PI+oWotV80NDBRgRtjQrQ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-will have lots of print out for quirks when initcall_debug is specified.
+On Thu, 16 Feb 2012 16:54:49 +0200
+"Michael S. Tsirkin" <mst@redhat.com> wrote:
 
-It turns out most of them are not really called for the devices because
-quirks itself will check class id and bail out early.
+> I've implemented an shpc controller emulator
+> in qemu, so I needed a bunch of constants
+> similar to what drivers/pci/hotplug/shpc.h has.
+>=20
+> Any objections to adding a PCI_SHPC_XXXX prefix
+> so these and moving them to pci_regs.h?
+> PCI utilities can then use them from /usr/include/linux.
+>=20
+> One can see how a utility that looks at slot LED and MRL
+> states might be useful
+> (we'd need to export the base offset through sysfs
+> to make it possible to use such in parallel with shpc).
 
-Try to put class into quirk declaration. So we could avoid dive into these
-quirks.
+pci_regs.h is generally reserved for architected regs, but maybe a
+separate header file makes sense.  Or just patch libpciaccess or
+pci-utils with your tool.
 
-could be found at:
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci5
+--Sig_/U6PI+oWotV80NDBRgRtjQrQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-4ace9ad: PCI: Use class for quirk for usb host controller fixup
-cc60c7c: PCI: Use class for quirk for ti816x class fixup
-85fa49c: PCI: Use class for quirk for intel e100 interrupt fixup
-8e4b35b: PCI: Use class for quirk for netmos class fixup
-7c4b5d6: PCI: Use class for quirk for legacy ATA NO_D3
-176e7df: PCI: Use class for quirk for cardbus_legacy
-c2c7107: PCI: Use class for quirk for host bridge mmio_always_on
-6924d3b: PCI: Use class for quirk for pci_fixup_video
-7133c84: PCI: Use class quirk for intel fix_transparent_bridge
-bf9f6e6: PCI: Use class for quirk for via_no_dac
-d2e6e88: PCI: Add class support in quirk handling
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
+iQIcBAEBAgAGBQJPRm48AAoJEIEoDkX4Qk9hqvoP+wWCIownLvvL8lOlyYwD1E78
+STSV+RIMaO4zjv9mmJt1177K3APu+Ggx6R1OlV5+8OK8e+0ZTU5i9/YfgKbVuC7p
+mIMUcMwaxUNZvbiyvfXTqz1rNcuZ3DmyJKKl9M38dPQFFKwFbIgM8lCIZhjYv8Mf
+R+SrzLHi5tzgj8s9ZI+nnmOvOpyRFXByHz/koG41DwTv43Pfz2GRWPQ83WGaG/ww
+sOYqUzicE3wlg58hJ7s74yUR5BqyU1nBsYOIj4gRu+7CzJbegv0GB6cIa70ZhizV
+HgWQlGJGPz52iJwYPjMAmJJEAKHf2rYxbMAeqdAQRVp6hvRdGCj/+9aBlSZKZriG
++WhsezIhJ3TskKUSCCVlHAgllrAIhSAWJRzsJeh6ESMJUFmlWPWxeXnVP2K/Whpm
+RXnuPPLa3smWmB9eTQIysbpHNDwsr6Dze/DlRHUx5QSnZjgKv7Q3f4hYEBpCxSG+
+5pi7YkgovyJgA7HORSDGaR8u4NnUH7HOPqea+hyq4mpHkcCR6aGcqctRWDP/jFNh
+25lt+Fjb1NimG8NpBg3aMcaQMpsm4XdLrpnk97qllIvYRR6n4aJrbKzG61Q3aFzW
+9uUwvKZNvuYcY+4bm9e0xepc4LGjXEGT2XI4ZgeII9AqE1JekmpXR2jbjQTkDzhH
+g90lytHgNGYQesIy455K
+=/dKV
+-----END PGP SIGNATURE-----
 
--v2: separate to small patches for different quirk according to Jesse.
-
-Thanks
-
-Yinghai
-
- arch/x86/kernel/pci-dma.c     |    5 ++-
- arch/x86/pci/fixup.c          |   12 +++----
- drivers/pci/quirks.c          |   61 +++++++++++++++++++++------------------
- drivers/usb/host/pci-quirks.c |    3 +-
- include/linux/pci.h           |   63 +++++++++++++++++++++++++++++++++-------
- 5 files changed, 95 insertions(+), 49 deletions(-)
-
+--Sig_/U6PI+oWotV80NDBRgRtjQrQ--
