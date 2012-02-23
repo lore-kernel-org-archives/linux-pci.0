@@ -1,82 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 9/9] PCI: only enable pci realloc when SRIOV bar is not assigned
-Date: Sat,  4 Feb 2012 22:55:08 -0800
-Message-Id: <1328424908-6385-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qw0-f74.google.com ([209.85.216.74]:48563 "EHLO
+	mail-qw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756500Ab2BWToF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:44:05 -0500
+Received: by mail-qw0-f74.google.com with SMTP id b12so213849qad.1
+        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 11:44:04 -0800 (PST)
+Subject: [PATCH v2 12/12] PCI: make pci_flags non-weak
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org
+Date: Thu, 23 Feb 2012 12:44:03 -0700
+Message-ID: <20120223194403.20708.53279.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If bios does not assign those BAR or wrong address, then kernel will
-try to do pci realloc.
+No architecture defines its own pci_flags, so the core symbol does not
+need to be weak.
 
-in that case, user still can use pci=realloc=off to override it.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/setup-bus.c |   28 ++++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
+ drivers/pci/setup-bus.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9526038..520f256 100644
+index 7b7d7e9..c172ebb 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1293,6 +1293,31 @@ static bool __init pci_realloc_enabled(void)
- 	return pci_realloc_enable >= enable_yes_user;
- }
+@@ -28,7 +28,7 @@
+ #include <asm-generic/pci-bridge.h>
+ #include "pci.h"
  
-+static void __init pci_realloc_detect(void)
-+{
-+	struct pci_dev *dev = NULL;
-+
-+	if (pci_realloc_enable != enable_not_set)
-+		return;
-+
-+#ifdef CONFIG_PCI_IOV
-+	for_each_pci_dev(dev) {
-+		int i;
-+
-+		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+			struct resource *r = &dev->resource[i];
-+
-+			/* Not assigned, or rejected by kernel */
-+			if (r->flags && !r->start) {
-+				pci_realloc_enable = enable_yes_detected;
-+
-+				return;
-+			}
-+		}
-+	}
-+#endif
-+}
-+
- /*
-  * first try will not touch pci bridge res
-  * second  and later try will clear small leaf bridge res
-@@ -1314,6 +1339,7 @@ pci_assign_unassigned_resources(void)
- 	int pci_try_num = 1;
+-unsigned int __weak pci_flags;
++unsigned int pci_flags;
  
- 	/* don't realloc if asked to do so */
-+	pci_realloc_detect();
- 	if (pci_realloc_enabled()) {
- 		int max_depth = pci_get_max_depth();
- 
-@@ -1348,6 +1374,8 @@ again:
- 	if (tried_times >= pci_try_num) {
- 		if (pci_realloc_enable == enable_not_set)
- 			printk(KERN_INFO "Some pci devices resources are not assigned, please try to boot with pci=realloc\n");
-+		else if (pci_realloc_enable == enable_yes_detected)
-+			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, please try to boot with pci=realloc=off\n");
- 
- 		free_list(&fail_head);
- 		goto enable_and_dump;
--- 
-1.7.7
+ struct resource_list_x {
+ 	struct resource_list_x *next;
 
