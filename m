@@ -1,68 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:53057 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932214Ab2BJUym convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 15:54:42 -0500
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:35369 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754041Ab2BXRQp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 12:16:45 -0500
 MIME-Version: 1.0
-In-Reply-To: <20120210124614.5006563e@jbarnes-desktop>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-	<1328424908-6385-4-git-send-email-yinghai@kernel.org>
-	<20120210124614.5006563e@jbarnes-desktop>
-Date: Fri, 10 Feb 2012 12:54:41 -0800
-Message-ID: <CAE9FiQXeNGP3zj2PhWK_Gcnwr9Qsn6LZ74TL2OA2RrztLaewvg@mail.gmail.com>
-Subject: Re: [PATCH 3/9] PCI: Disable cardbus bridge MEM1 pref CTL
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20120224065921.GA28932@avionic-0098.mockup.avionic-design.de>
+References: <20120220191804.GA14499@avionic-0098.adnet.avionic-design.de>
+	<74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
+	<20120222082449.GA15157@avionic-0098.adnet.avionic-design.de>
+	<CAErSpo4TfpGmx+HZ1ZnZwj3ZP_cQMCzkMT+6JK6ztYp2zWJcxw@mail.gmail.com>
+	<20120223060355.GA21091@avionic-0098.mockup.avionic-design.de>
+	<CAErSpo7wSB-uCjV4YeA-fUOHPtugn4ASXScN3MndVybfkk8mOw@mail.gmail.com>
+	<20120224065921.GA28932@avionic-0098.mockup.avionic-design.de>
+Date: Fri, 24 Feb 2012 22:46:06 +0530
+Message-ID: <CAHM4w1k1_Yp56tpfPqDxT1WHQWRB5xe_Zs-BEj+n5rVmuyAJiw@mail.gmail.com>
+Subject: Re: PCIe device tree support
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Olof Johansson (olof@lixom.net)" <olof@lixom.net>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@nvidia.com>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 12:46 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Sat,  4 Feb 2012 22:55:02 -0800
-> Yinghai Lu <yinghai@kernel.org> wrote:
+I too had similar query.
+I have written a PCIe host driver for SPEAr platform (ARM Arch).
+This driver is registered on paltform bus.
+It is for Designware IP, so I believe that most of its part
+can be re-usaable for other person.
+ have kept common and SPEAr specific part separately.
+But,  I am not sure about its best location.
+I believe best would have been to keep in driver/pci/pcie/hosts/.
+But it uses pci_common_init function which is specific to ARM platform.
+So it limits option to arch/arm.
+But, if I keep it in arch/arm/mach-spear13xx/ , then it will limit others
+from using synopsys specific code.
+
+What do you suggest?
+
+Regards
+Pratyush
+
+
+On Fri, Feb 24, 2012 at 12:29 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> * Bjorn Helgaas wrote:
+>> I agree that if the code isn't shared at all, there's no point in
+>> putting it in a generic place like drivers/pci/.
 >
->> Some BIOS enable both pref for MEM0 and MEM1.
->>
->> but we assume MEM1 is non-pref...
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/setup-bus.c |    8 ++++++++
->>  1 files changed, 8 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 090217a..d5897c3 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -914,6 +914,14 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
->>       if (realloc_head)
->>               add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
->>
->> +     /* MEM1 must not be pref mmio */
->> +     pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
->> +     if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
->> +             ctrl &= ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
->> +             pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
->> +             pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
->> +     }
->> +
->>       /*
->>        * Check whether prefetchable memory is supported
->>        * by this bridge.
+> Alright, I'll keep the driver in arch/arm/mach-tegra/ then.
 >
-> Does this actually fix any bugs?
-
-at least, one of laptop have this problem.
-
-> Dominik, have you tested it?
-
-he tested my for-pci3 and for-pci-busn-alloc branches, both branches
-have this patch.
-
-and it does not cause problem to him.
-
-Yinghai
+> Thierry
