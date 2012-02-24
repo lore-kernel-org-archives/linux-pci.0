@@ -1,32 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:19313 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447Ab2BBLHO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Feb 2012 06:07:14 -0500
-Received: from G9W0369G.americas.hpqcorp.net (g9w0369g.houston.hp.com [16.216.193.232])
-	(using TLSv1 with cipher AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by g5t0007.atlanta.hp.com (Postfix) with ESMTPS id 63B48142F4
-	for <linux-pci@vger.kernel.org>; Thu,  2 Feb 2012 11:07:13 +0000 (UTC)
-From: "Fischer, Anna" <anna.fischer@hp.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 2 Feb 2012 11:05:36 +0000
-Subject: PCI MSI-X vectors in /proc/interrupts
-Message-ID: <0199E0D51A61344794750DC57738F58E758ACB536F@GVW1118EXC.americas.hpqcorp.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from eu1sys200aog108.obsmtp.com ([207.126.144.125]:35114 "EHLO
+	eu1sys200aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754230Ab2BXGJo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 01:09:44 -0500
+Message-ID: <4F472990.2010304@st.com>
+Date: Fri, 24 Feb 2012 11:39:20 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
 MIME-Version: 1.0
+To: "Pedanekar, Hemant" <hemantp@ti.com>
+Cc: Tejun Heo <tj@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Viresh KUMAR <viresh.kumar@st.com>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	Armando VISCONTI <armando.visconti@st.com>,
+	Vipin KUMAR <vipin.kumar@st.com>,
+	Deepak SIKRI <deepak.sikri@st.com>,
+	Rajeev KUMAR <rajeev-dlh.kumar@st.com>,
+	Vipul Kumar SAMAR <vipulkumar.samar@st.com>,
+	Amit VIRDI <Amit.VIRDI@st.com>,
+	Bhupesh SHARMA <bhupesh.sharma@st.com>
+Subject: Re: [PATCH] PCIE: pcie_set_readrq must not be allowed by PCIE EP
+ driver
+References: <1297937650-2558-1-git-send-email-pratyush.anand@st.com> <2A3DCF3DA181AD40BDE86A3150B27B6B0373799132@dbde02.ent.ti.com> <2A3DCF3DA181AD40BDE86A3150B27B6B03737991EA@dbde02.ent.ti.com> <4D78D6E3.50004@st.com> <2A3DCF3DA181AD40BDE86A3150B27B6B03743048FE@dbde02.ent.ti.com> <4D806132.1090704@st.com> <4F460E79.5000308@st.com> <20120223174228.GF22536@google.com> <4F470ABE.2010206@st.com> <DDE393F022194E4FB9AE108B0AECD70C317CA30B@DBDE01.ent.ti.com>
+In-Reply-To: <DDE393F022194E4FB9AE108B0AECD70C317CA30B@DBDE01.ent.ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm developing a kernel device driver which is using 2 PCI MSI-X vectors. 
+On 2/24/2012 11:08 AM, Pedanekar, Hemant wrote:
+> Hi,
+>
+> Pratyush Anand wrote on Friday, February 24, 2012 9:28 AM:
+>
+>> On 2/23/2012 11:12 PM, Tejun Heo wrote:
+>>> Hello,
+>>>
+>>> On Thu, Feb 23, 2012 at 03:31:29PM +0530, Pratyush Anand wrote:
+>>>> Its a long pending patch.
+>>>> Any decision on this patch.
+>>>
+>>> Hmmm.... I really don't know what to do.  IIRC it was something lifted
+>>> from the proprietary sil driver and they probably added that to work
+>>> around performance oddities under certain configurations and I'm a bit
+>>> worried about changing it after all this time.  Is there any way to
+>>> make this conditional somehow?
+>>
+>> I see that there is a patch in the latest kernel.
+>>
+>> commit a1c473aa11e61bc871be16279c9bf976acf22504
+>> Author: Benjamin Herrenschmidt<benh@kernel.crashing.org>
+>> Date:   Fri Oct 14 14:56:15 2011 -0500
+>>
+>>       pci: Clamp pcie_set_readrq() when using "performance" settings
+>>
+>> I think, this will resolve the issue.
+>> We are moving to the new kernel. Will check it there.
+>>
+> I see that the patch above considers MPS to clamp RRQ size, while I think
+> both should be independent, or perhaps I am missing something.
+>
 
-When the device comes up and I call pci_enable_msix() the kernel prints 
+Please also see following patch for completeness.
 
-"[snip] irq 45 for MSI/MSI-X"
-"[snip] irq 46 for MSI/MSI-X"
+commit b03e7495a862b028294f59fc87286d6d78ee7fa1
+Author: Jon Mason <mason@myri.com>
+Date:   Wed Jul 20 15:20:54 2011 -0500
 
-So it seems as if IRQs 45 and 46 are allocated for my device. However, when I look into /proc/interrupts, it lists my device under IRQ 42 and 43. Is it expected that those IRQ numbers match, e.g. something is broken in my device driver or kernel code? I use Linux 3.2.0-rc7.
+     PCI: Set PCI-E Max Payload Size on fabric
 
-Thanks for your help.
-
-Anna
+Regards
+Pratyush
