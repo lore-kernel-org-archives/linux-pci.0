@@ -1,95 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:44871 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672Ab2B0WpD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 17:45:03 -0500
-Received: by wejx9 with SMTP id x9so608655wej.19
-        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2012 14:45:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXx6wXaes1pbpM7SAHzndgr=N2D2g6LEWsB2_pf8+mgSA@mail.gmail.com>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
- <1328425088-6562-10-git-send-email-yinghai@kernel.org> <CAErSpo6BwznWf3rq4J2Ao+rrgR4yWqQ0mQGygkd2KmBuA1OD8g@mail.gmail.com>
- <1328738567.2903.45.camel@pasglop> <CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
- <1328823358.2903.77.camel@pasglop> <20120223122536.6a2a7a6b@jbarnes-desktop>
- <CAErSpo7_WGjitDZz4XH+77f65Uz1ynd5_USN+D17D09Eux1iQQ@mail.gmail.com>
- <20120224142430.58f5e5ef@jbarnes-desktop> <CAE9FiQXx6wXaes1pbpM7SAHzndgr=N2D2g6LEWsB2_pf8+mgSA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 Feb 2012 15:44:42 -0700
-Message-ID: <CAErSpo4YvyAhG1dCmtVhqNpCLj2oF4tCQ+UpU0oQYrG0nw+-ug@mail.gmail.com>
-Subject: Re: [PATCH 09/24] PCI, powerpc: Register busn_res for root buses
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 17/23] PCI: Double checking setting for bus register and bus struct.
+Date: Fri, 24 Feb 2012 02:19:05 -0800
+Message-Id: <1330078751-7299-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
+References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 25, 2012 at 12:47 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Feb 24, 2012 at 2:24 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
->> On Thu, 23 Feb 2012 12:51:30 -0800
->> Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> 2) We already have a way to add resources to a root bus: the
->>> pci_add_resource() used to add I/O port and MMIO apertures.  I think
->>> it'd be a lot simpler to just use that same interface for the bus
->>> number aperture, e.g.,
->>>
->>>     pci_add_resource(&resources, hose->io_space);
->>>     pci_add_resource(&resources, hose->mem_space);
->>>     pci_add_resource(&resources, hose->busnr_space);
->>>     bus = pci_scan_root_bus(dev, next_busno, pci_ops, sysdata, &resources);
->>>
->>> This is actually a bit redundant, since "next_busno" should be the
->>> same as hose->busnr_space->start.  So if we adopted this approach, we
->>> might want to eventually drop the "next_busno" argument.
->>
->> Yeah that would be nice, the call would certainly make more sense that
->> way.
->
-> no, I don't think so.
->
-> using pci_add_resource will need to create dummy resource abut bus range.
+User could use setpci change bridge's bus register. that could make value of register
+and struct is out of sync.
+User later will use rescan to see the devices is moving.
 
-I don't see the problem here.  The bus number aperture is a
-fundamental property of a host bridge, and any firmware or native
-bridge driver that tells you about a bridge but doesn't tell you the
-bus number aperture is just broken.
+In the rescaning, we need to double check the range and remove the old struct at first.
 
-Every arch already has struct resources for the MMIO and IO port
-regions available on the bus.  ACPI already has a resource for the bus
-number range.  It makes sense to me that the arch should supply a bus
-number resource.
+to make thing working user may need have script to remove children devices under bridge
+at first, and then use setpci update bus register and then rescan.
 
-Conceptually, it's just like the MMIO and IO resources, so it makes
-sense to me that the code for bus numbers should look like the code
-for MMIO and IO ports.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   40 ++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 40 insertions(+), 0 deletions(-)
 
-> there is lots of pci_scan_root_bus(),  and those user does not bus end
-> yet before scan.
-> so could just hide pci_insert_busn_res in pci_scan_root_bus, and
-> update busn_res end there.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 9f748b6..57bec0c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -819,6 +819,46 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 	    (primary != bus->number || secondary <= bus->number))
+ 		broken = 1;
+ 
++	if (!pass && dev->subordinate) {
++		child = dev->subordinate;
++		/*
++		 * User could change bus register in bridge manually with
++		 * setpci and rescan. So double check the setting, and remove
++		 * old structs.  Don't set broken yet, let following check
++		 * to see if the new setting good.
++		 */
++		if (primary != child->primary ||
++		    secondary != child->secondary ||
++		    subordinate != child->subordinate) {
++			dev_info(&dev->dev,
++				"someone changed bus register from pri:%02x, sec:%02x, sub:%02x to pri:%02x, sec:%02x, sub:%02x\n",
++				child->primary, child->secondary, child->subordinate,
++				primary, secondary, subordinate);
++			if (!list_empty(&dev->subordinate->devices)) {
++				u32 old_buses;
++
++				dev_info(&dev->dev,
++				 "but children devices are not removed manually before that.\n");
++				/*
++				 * Try best to remove left children devices
++				 * but we need to set bus register back, otherwise
++				 * We can not access children device and stop them
++				 */
++				old_buses = (buses & 0xff000000)
++				   | ((unsigned int)(child->primary)     <<  0)
++				   | ((unsigned int)(child->secondary)   <<  8)
++				   | ((unsigned int)(child->subordinate) << 16);
++				pci_write_config_dword(dev, PCI_PRIMARY_BUS,
++							 old_buses);
++				pci_remove_behind_bridge(dev);
++				pci_write_config_dword(dev, PCI_PRIMARY_BUS,
++							 buses);
++			}
++			pci_remove_bus(dev->subordinate);
++			dev->subordinate = NULL;
++		}
++	}
++
+ 	/* more strict checking */
+ 	if (!pass && !broken && !dev->subordinate)
+ 		broken = pci_bridge_check_busn_broken(bus, dev,
+-- 
+1.7.7
 
-pci_scan_child_bus() does NOT tell you the end of the bus number
-aperture, and we shouldn't pretend that it does.  It might give you a
-lower bound on the end of the aperture (as long as you're willing to
-trust the current PCI config and you don't change anything).
-
-> other arch like x86, ia64, powerpc, sparc, will insert exact bus range
-> between pci_create_root_bus and
-> pci_scan_child_bus, will not need to update busn_res end.
->
-> please check v7 of this patchset.
->
->        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-pci-busn-alloc
-
-I looked at your git tree, but I can't tell whether what's there is v7
-or not and it's too much trouble to try to figure it out.
-
-Bjorn
