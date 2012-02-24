@@ -1,96 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:37773 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754005Ab2B0UWq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 15:22:46 -0500
-Date: Mon, 27 Feb 2012 12:22:40 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Ingo Molnar <mingo@elte.hu>,
-	"Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
-	linux-pci@vger.kernel.org, andreas.herrmann3@amd.com
-Subject: Re: [andreas.herrmann3@amd.com: [PATCH 1/2] x86/amd: Restore
- early_fill_mp_bus_to_node]
-Message-ID: <20120227122240.778bcc5b@jbarnes-desktop>
-In-Reply-To: <20120227094406.GB10078@elte.hu>
-References: <20120227094406.GB10078@elte.hu>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/fkms5APvTCBRa2IRXtyFMmF"; protocol="application/pgp-signature"
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31655 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757269Ab2BXKUn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 05:20:43 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v7 0/23] PCI: allocate pci bus num range for unassigned bridge busn + pci rescan cleanup
+Date: Fri, 24 Feb 2012 02:18:48 -0800
+Message-Id: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/fkms5APvTCBRa2IRXtyFMmF
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+8a2fc18: PCI: clean up rescan_bus_bridge_resize
+bf71259: PCI: make pci_rescan_bus_bridge_resize use pci_scan_bridge instead
+e920668: PCI: Add pci_bus_add_single_device()
+c61820d: PCI, sysfs: create rescan_bridge under /sys/.../pci/devices/... for pci bridges
+52b414e: PCI, sys: Use device_type and attr_groups with pci dev
+1dd3a1e: PCI, pciehp: Remove not needed bus number range checking
+4ecfb5b: PCI: Double checking setting for bus register and bus struct.
+938bc68: pcmcia: remove workaround for fixing pci parent bus subordinate
+206c646: PCI: Seperate child bus scanning to two passes overall
+883167f: PCI: kill pci_fixup_parent_subordinate_busnr()
+a4c590e: PCI: Allocate bus range instead of use max blindly
+13e322a: PCI: Strict checking of valid range for bridge
+8a6af68: PCI: Probe safe range that we can use for unassigned bridge.
+85f1fdd: PCI: Add pci_bus_extend/shrink_top()
+d4c8a5e: PCI, parisc: Register busn_res for root buses
+821fbcf: PCI, powerpc: Register busn_res for root buses
+8b257c9: PCI, sparc: Register busn_res for root buses
+8be529a: PCI, ia64: Register busn_res for root buses
+136c1d8: PCI, x86: Register busn_res for root buses
+fb89a01f: PCI: Add busn_res tracking in core
+d919f95: PCI: Add busn_res operation functions
+7bb98d3: PCI: Add busn_res into struct pci_bus.
+8958703: x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
 
-On Mon, 27 Feb 2012 10:44:06 +0100
-Ingo Molnar <mingo@elte.hu> wrote:
+Set up iobusn_resource tree, and register bus number range to it.
+Later when need to find bus range, will try to allocate from the tree
 
->=20
-> Yours?
->=20
-> ----- Forwarded message from Andreas Herrmann <andreas.herrmann3@amd.com>=
- -----
->=20
-> Date: Fri, 24 Feb 2012 16:19:12 +0100
-> From: Andreas Herrmann <andreas.herrmann3@amd.com>
-> To: Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, "H=
-. Peter Anvin"
-> 	<hpa@zytor.com>
-> CC: linux-kernel@vger.kernel.org
-> Subject: [PATCH 1/2] x86/amd: Restore early_fill_mp_bus_to_node
->=20
->=20
-> Once upon a time this function was overloaded with quirky stuff to fix
-> resource detection on systems w/ _CRS defects (seems that some Sun and
-> HP systems were affected).
->=20
-> See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
-> (x86: multi pci root bus with different io resource range, on 64-bit)
->=20
-> Restore the old function and thus decouple it from the quirk that is
-> CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
-> I assume that the _CRS stuff is working on current systems.
->=20
-> This is required to properly initilize the numa_node information of
-> PCI busses and associated devices.
->=20
-> Signed-off-by: Andreas Herrmann <andreas.herrmann3@amd.com>
-> ---
->  arch/x86/pci/amd_bus.c |   84 +++++++++++++++++++++++++++++++-----------=
------
+Need to test on arches other than x86. esp for ia64 and powerpc that support
+  more than on peer root buses.
 
-ISTR this function getting things wrong on some Nehalem based systems,
-and assigning all IO devices to node 0, resulting in bad NIC
-performance.
+last five patches are rescan cleanup that make use busn alloc.
 
-Jesse, are things working ok now?  Care to test this patch to make sure
-it doesn't regress anything on one of the previously affected systems?
+could be found at:
+	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
 
-Thanks,
---=20
-Jesse Barnes, Intel Open Source Technology Center
+-v2: according to Jesse, split to more small patches.
+-v3: address some request from Bjorn. like make use %pR for busn_res debug print
+	out, and move the comment change with code change.
+-v4: fixes the problem about rescan that Bjorn found.
+-v5: add /proc/iobusn that is requested by Bjorn.
+     remove old workaround from pciehp.
+     add rescan_bridge for pci bridge in /sys
+-v6: remove global iobusn_resource, and every root bus's busn_res will be root
+     of children buses' busn_res.
+     pc cardbus change is tested by pcmcia maintainter.
+-v7: remove pci_scan_root_bus_max requested by Bjorn and Jesse.
 
---Sig_/fkms5APvTCBRa2IRXtyFMmF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Thanks
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Yinghai
 
-iQIcBAEBAgAGBQJPS+YQAAoJEIEoDkX4Qk9hqY0P/AiM8nd5lqfxrHlLtFwSbUxd
-4thnkgxjZMVPKV/tUbE63scMEb/wM2p5OYRIdCW121hRhWcczwPDEz8DMoXnSMWm
-nFJDs/b6cXq/DMg0pdNR/DF6iXZn4XsoNgVVFFycp08oD0FEthgMbRcj1uaRsz1w
-/Hv1lysJAa3xYsQQA/M6pQuDfQjZ5GdaOwpro0pKSwcCPqFApp5ua6Aap/LXPoqF
-hNqE2TnbCWaExz/LANI2VPmDIqKVYb2PrryIrVOUsnazOM76LkA/Ey6WdafcnYjK
-v/Bh/dWNv5eQzxBmIrk1KJIPaXy4BgDgbLq7iwXsUS2N16bLSB1kN1/kzeGftm61
-ieR3UJtnZaicJC2tFMXt5DQ3L35TLEmdSVoQi8QVDjCfmqEqM5ZJmPNffjMES1t9
-/0PY4eXL1wX1+Ko8cx2XiGE1egWj/uD2cDJonLaOfv8EKSK0mdqLN31Omli5VYhV
-YgbdJWjYausp0t2NlPuHHujJ5Auwx7FDn7MJlEx8u9o97bjrh5h00ExmFU3o/tOr
-ShYR8rlDTzyyLNLIlao9VsJ9kZmZriCPPb06y2k1P6r9AOKKoQ3dtvxCh+FuuyTP
-YK7thnIrNx9BKI0W/BL6QoL+vgD3raV8gN9/fnM4Z8iB9REsz8ejjLRms+BGMqni
-rrZDA5e/uLXLmlVTHgQP
-=S5xX
------END PGP SIGNATURE-----
+ Documentation/ABI/testing/sysfs-bus-pci |   10 +
+ arch/ia64/pci/pci.c                     |    2 +
+ arch/powerpc/kernel/pci-common.c        |    7 +-
+ arch/sparc/kernel/pci.c                 |    1 +
+ arch/x86/include/asm/topology.h         |    3 +-
+ arch/x86/pci/acpi.c                     |    8 +-
+ arch/x86/pci/bus_numa.c                 |    8 +-
+ arch/x86/pci/common.c                   |   37 +--
+ drivers/parisc/dino.c                   |    2 +
+ drivers/parisc/lba_pci.c                |    3 +
+ drivers/pci/bus.c                       |   40 +++
+ drivers/pci/hotplug/pciehp_pci.c        |   12 +-
+ drivers/pci/pci-sysfs.c                 |   59 ++++-
+ drivers/pci/pci.h                       |    1 +
+ drivers/pci/probe.c                     |  441 +++++++++++++++++++++++++------
+ drivers/pci/remove.c                    |    1 +
+ drivers/pcmcia/yenta_socket.c           |   75 ------
+ include/linux/pci.h                     |    5 +
+ 18 files changed, 509 insertions(+), 206 deletions(-)
 
---Sig_/fkms5APvTCBRa2IRXtyFMmF--
