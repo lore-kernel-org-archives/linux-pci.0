@@ -1,79 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:38067 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab2BCDti convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Feb 2012 22:49:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <4F2B562F.9070008@jp.fujitsu.com>
-References: <1327690515-2991-1-git-send-email-yinghai@kernel.org>
-	<4F2A5ED1.3040109@jp.fujitsu.com>
-	<CAE9FiQVgP1TjHPf06JgDj=7piU5A+J11OF-izhcg=pi4eCb2vw@mail.gmail.com>
-	<4F2B562F.9070008@jp.fujitsu.com>
-Date: Thu, 2 Feb 2012 19:49:37 -0800
-Message-ID: <CAE9FiQWPbMk5P5Y92Ac7=SvRkhFEqQ3HCdF5TDhvvVYinAe48g@mail.gmail.com>
-Subject: Re: [PATCH -v2 0/7] PCI: pcie hotplug related patch
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 01/11] PCI: Add class support in quirk handling
+Date: Thu, 23 Feb 2012 23:46:49 -0800
+Message-Id: <1330069619-14446-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
+References: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 2, 2012 at 7:36 PM, Kenji Kaneshige
-<kaneshige.kenji@jp.fujitsu.com> wrote:
-> (2012/02/03 5:39), Yinghai Lu wrote:
->>
->> On Thu, Feb 2, 2012 at 2:00 AM, Kenji Kaneshige
->> <kaneshige.kenji@jp.fujitsu.com>  wrote:
->>>
->>> Yinghai, Jesse,
->>>
->>> I tested pciehp with your set of patches. I have some comments below.
->>>
->>> (1) I got a following warning message on compiling the patch [5/7].
->>>
->>>    drivers/pci/hotplug/pciehp_hpc.c:281: warning:
->>> 'pcie_wait_link_not_active' defined but not used
->>>
->>> (2) I got following warning messages on compiling the patch [6/7]
->>>
->>>    drivers/pci/hotplug/pciehp_hpc.c:381: warning: 'pciehp_link_enable'
->>> defined but not used
->>>    drivers/pci/hotplug/pciehp_hpc.c:386: warning: 'pciehp_link_disable'
->>> defined but not used
->>>
->>> (3) I've asked Naoki Yanagimoto, who reported that configuration read
->>>    on some hot-added PCIe device returns invalid value, to test the
->>>    patch. Unfortunately, the problem happens with your patch. But
->>>    after some discussion and testing, it turned out that problem doesn't
->>>    happen when the same card with updated bios is used. So it seems the
->>>    problem is in PCIe card side.
->>>
->>> As a result, problems I found are (1) and (2). Please fix those.
->>> Other than that, pciehp seems to work well.
->>>
->>> Tested-by: Kenji Kaneshige<kaneshige.kenji@jp.fujitsu.com>
->>>
->>
->> Great. thanks for confirmation.
->>
->> for (1) and (2), patch 5, and 6 will add some helper functions and
->> they will be used by patch 7.
->>
->> so when patch 7 is applied, there will be no compiling warning anymore.
->
->
-> I know that.
-> But I think each patch should be compiled without warnings.
-> Patch 5/7 and 6/7 are useless without 7/7. How about merging them?
+Recently there is new support to make quirk calling will report duration time.
+That will boot log get more print out with initcall_debug is specified.
 
-just want to keep patch small and easy to be reviewed.
+Found a lot of quirks are calling for not related devices.
 
-and I split it to three intentionally.
+Reason is quirk frame do not support class handling. So quirk code have to
+use PCI_ANY_ID for vendor/device and let quirk code itself to check class
+inside the func.
 
-Thanks
+The patch add class and cls_shift into struct pci_fixup.
+Also update related macro to accept the class and shift.
 
-Yinghai
+-v2: fix v1 that left over of sparated patch.
+-v3: according to Jesse, change cls to class, cls_shift, to class_shift.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/quirks.c |   12 +++++----
+ include/linux/pci.h  |   63 +++++++++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 59 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index fb544d6..2b4b1ea 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2961,17 +2961,19 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
+ {
+-	while (f < end) {
+-		if ((f->vendor == dev->vendor || f->vendor == (u16) PCI_ANY_ID) &&
+-		    (f->device == dev->device || f->device == (u16) PCI_ANY_ID)) {
++	for (; f < end; f++)
++		if ((f->class == (u32) (dev->class >> f->class_shift) ||
++		     f->class == (u32) PCI_ANY_ID) &&
++		    (f->vendor == dev->vendor ||
++		     f->vendor == (u16) PCI_ANY_ID) &&
++		    (f->device == dev->device ||
++		     f->device == (u16) PCI_ANY_ID)) {
+ 			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
+ 			if (initcall_debug)
+ 				do_one_fixup_debug(f->hook, dev);
+ 			else
+ 				f->hook(dev);
+ 		}
+-		f++;
+-	}
+ }
+ 
+ extern struct pci_fixup __start_pci_fixups_early[];
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index bcaa51c..ec32328 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1364,7 +1364,10 @@ static inline void pci_resource_to_user(const struct pci_dev *dev, int bar,
+  */
+ 
+ struct pci_fixup {
+-	u16 vendor, device;	/* You can use PCI_ANY_ID here of course */
++	u16 vendor;		/* You can use PCI_ANY_ID here of course */
++	u16 device;		/* You can use PCI_ANY_ID here of course */
++	u32 class;		/* You can use PCI_ANY_ID here too */
++	unsigned int class_shift;	/* should be 0, 8, 16 */
+ 	void (*hook)(struct pci_dev *dev);
+ };
+ 
+@@ -1379,30 +1382,68 @@ enum pci_fixup_pass {
+ };
+ 
+ /* Anonymous variables would be nice... */
+-#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, hook)	\
+-	static const struct pci_fixup __pci_fixup_##name __used		\
+-	__attribute__((__section__(#section))) = { vendor, device, hook };
++#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, class,	\
++				  class_shift, hook)			\
++	static const struct pci_fixup const __pci_fixup_##name __used	\
++	__attribute__((__section__(#section), aligned((sizeof(void *)))))    \
++		= { vendor, device, class, class_shift, hook };
++
++#define DECLARE_PCI_FIXUP_CLASS_EARLY(vendor, device, class,		\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
++		vendor##device##hook, vendor, device, class, class_shift, hook)
++#define DECLARE_PCI_FIXUP_CLASS_HEADER(vendor, device, class,		\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
++		vendor##device##hook, vendor, device, class, class_shift, hook)
++#define DECLARE_PCI_FIXUP_CLASS_FINAL(vendor, device, class,		\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
++		vendor##device##hook, vendor, device, class, class_shift, hook)
++#define DECLARE_PCI_FIXUP_CLASS_ENABLE(vendor, device, class,		\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
++		vendor##device##hook, vendor, device, class, class_shift, hook)
++#define DECLARE_PCI_FIXUP_CLASS_RESUME(vendor, device, class,		\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
++		resume##vendor##device##hook, vendor, device, class,	\
++		class_shift, hook)
++#define DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(vendor, device, class,	\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
++		resume_early##vendor##device##hook, vendor, device,	\
++		class, class_shift, hook)
++#define DECLARE_PCI_FIXUP_CLASS_SUSPEND(vendor, device, class,		\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
++		suspend##vendor##device##hook, vendor, device, class,	\
++		class_shift, hook)
++
+ #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
+-			vendor##device##hook, vendor, device, hook)
++		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_HEADER(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
+-			vendor##device##hook, vendor, device, hook)
++		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_FINAL(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
+-			vendor##device##hook, vendor, device, hook)
++		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_ENABLE(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
+-			vendor##device##hook, vendor, device, hook)
++		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_RESUME(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
+-			resume##vendor##device##hook, vendor, device, hook)
++		resume##vendor##device##hook, vendor, device,		\
++		PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_RESUME_EARLY(vendor, device, hook)		\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
+-			resume_early##vendor##device##hook, vendor, device, hook)
++		resume_early##vendor##device##hook, vendor, device,	\
++		PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_SUSPEND(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+-			suspend##vendor##device##hook, vendor, device, hook)
++		suspend##vendor##device##hook, vendor, device,		\
++		PCI_ANY_ID, 0, hook)
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+-- 
+1.7.7
+
