@@ -1,99 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:38059 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755932Ab2BLXvl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Feb 2012 18:51:41 -0500
-Received: by wics10 with SMTP id s10so3131286wic.19
-        for <linux-pci@vger.kernel.org>; Sun, 12 Feb 2012 15:51:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXrFARy4+ynOTRyEuoyRxTc9qqzUaYJH8e19Wt3JRRxug@mail.gmail.com>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
- <1328425088-6562-5-git-send-email-yinghai@kernel.org> <CAErSpo6=t1XtdUMBAn7Ag5XNLS3wKueybfrsUzmht6GL9XSGLQ@mail.gmail.com>
- <CAE9FiQXrFARy4+ynOTRyEuoyRxTc9qqzUaYJH8e19Wt3JRRxug@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 12 Feb 2012 15:51:20 -0800
-Message-ID: <CAErSpo5_9N-HX3Ja8k04QaS6nss8SAm-NUtuQyHt0t-Dczt8-w@mail.gmail.com>
-Subject: Re: [PATCH 04/24] PCI: Add busn_res operation functions
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/4] PCI: Retry on type IORESOURCE_IO allocation.
+Date: Thu, 23 Feb 2012 19:23:29 -0800
+Message-Id: <1330053812-10316-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
+References: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 6, 2012 at 12:45 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Feb 6, 2012 at 10:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sat, Feb 4, 2012 at 10:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> will use them insert/update busn res in pci_bus
->>>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> ---
->>>  drivers/pci/probe.c |   42 ++++++++++++++++++++++++++++++++++++++++++
->>>  include/linux/pci.h |    3 +++
->>>  2 files changed, 45 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index a114173..8d4de5e 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -1622,6 +1622,48 @@ err_out:
->>>        return NULL;
->>>  }
->>>
->>> +void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
->>> +{
->>> +       struct resource *res = &b->busn_res;
->>> +       struct resource *parent_res = &iobusn_resource;
->>> +       int ret;
->>> +
->>> +       res->start = busn(pci_domain_nr(b), bus);
->>> +       res->end = busn(pci_domain_nr(b), bus_max);
->>> +       res->flags = IORESOURCE_BUS;
->>> +
->>> +       if (!pci_is_root_bus(b))
->>> +               parent_res = &b->parent->busn_res;
->>> +
->>> +       ret = insert_resource(parent_res, res);
->>> +
->>> +       dev_printk(KERN_DEBUG, &b->dev,
->>> +                       "busn_res: %pR %s inserted under %pR\n",
->>> +                       res, ret ? "can not be" : "is", parent_res);
->>> +}
->>> +
->>> +void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
->>> +{
->>> +       struct resource *res = &b->busn_res;
->>> +       struct resource old_res = *res;
->>> +
->>> +       res->end = busn_update_bus_nr(res->end, bus_max);
->>
->> I think this design is a mistake.  Here's what you're doing:
->>
->>  - initialize struct resource (keys are "start" and "end")
->>  - insert into tree (placed in tree by kernel/resource.c based on
->> "start" and "end")
->>  - update "end"
->>
->> You "know" in this case that the update is safe because the caller has
->> validated "bus_max."  But that still breaks the kernel/resource.c
->> encapsulation.  If we change the kernel/resource.c implementation,
->> this code might break.
->
-> the point is: I only want to reuse allocate_resource() to get right position.
-> and the code does not depends to kernel/resource.c much.
->
->>
->> I think it would be better to remove the bus resource from the tree,
->> change its "end," then re-insert it.
->
-> how about parent buses that have extended top?
+During reenabling pci reallocating for pci bridge by clean the small size in
+bridge and assign with requested + optional size for first several try,
+Ram mention could have problem with one case
+	https://bugzilla.kernel.org/show_bug.cgi?id=15960
 
-I don't understand your question.  I assume you mean there's a case
-where remove/update/reinsert doesn't work, but I don't see why that
-would be a problem.  Can you show an example?
+After checking the booting log in
+	https://lkml.org/lkml/2010/4/19/44
+	[regression, bisected] Xonar DX invalid PCI I/O range since 977d17bb174
+
+We should not stop too early for io ports.
+	Apr 19 10:19:38 [kernel] pci 0000:04:00.0: BAR 7: can't assign io (size 0x4000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:01.0: BAR 8: assigned [mem 0x80400000-0x805fffff]
+	Apr 19 10:19:38 [kernel] pci 0000:05:01.0: BAR 7: can't assign io (size 0x2000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:02.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:05:03.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:08:00.0: BAR 7: can't assign io (size 0x1000)
+	Apr 19 10:19:38 [kernel] pci 0000:09:04.0: BAR 0: can't assign io (size 0x100)
+and clear 00:1c.0 to retry again.
+
+The patch remove the IORESOUCE_IO checking, and try one more time.
+and we will have chance to get allocation for 00:1c.0 io port range because
+from 0x4000 to 0x8000 could be used.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 2991a89..162edfb 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1292,7 +1292,6 @@ pci_assign_unassigned_resources(void)
+ 	struct pci_dev_resource *fail_res;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+-	unsigned long failed_type;
+ 	int pci_try_num = 1;
+ 
+ 	/* don't realloc if asked to do so */
+@@ -1327,16 +1326,7 @@ again:
+ 	if (list_empty(&fail_head))
+ 		goto enable_and_dump;
+ 
+-	failed_type = 0;
+-	list_for_each_entry(fail_res, &fail_head, list)
+-		failed_type |= fail_res->flags;
+-
+-	/*
+-	 * io port are tight, don't try extra
+-	 * or if reach the limit, don't want to try more
+-	 */
+-	failed_type &= type_mask;
+-	if ((failed_type == IORESOURCE_IO) || (tried_times >= pci_try_num)) {
++	if (tried_times >= pci_try_num) {
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+ 	}
+-- 
+1.7.7
+
