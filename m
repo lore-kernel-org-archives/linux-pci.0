@@ -1,151 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:42641 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837Ab2BPFlI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:41:08 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 1/4] PCI: Add class support in quirk handling
-Date: Wed, 15 Feb 2012 21:40:29 -0800
-Message-Id: <1329370832-2253-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
-References: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:60319 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756791Ab2BXV4R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 16:56:17 -0500
+Date: Fri, 24 Feb 2012 13:56:11 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, greg@kroah.com,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org
+Subject: Re: [PATCH v5] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
+ driver
+Message-ID: <20120224135611.2166ff46@jbarnes-desktop>
+In-Reply-To: <4F47FB6B.3050509@jp.fujitsu.com>
+References: <20120202160922.4564.99032.sendpatchset@dhcp-189-101.bos.redhat.com>
+	<20120223123003.662cf548@jbarnes-desktop>
+	<4F47FB6B.3050509@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/7hO2vU0hcThNiFQuqp+C==C"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Recently there is new support to make quirk calling will report duration time.
-That will boot log get more print out with initcall_debug is specified.
+--Sig_/7hO2vU0hcThNiFQuqp+C==C
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Found a lot of quirks are calling for not related devices.
+On Fri, 24 Feb 2012 16:04:43 -0500
+MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com> wrote:
 
-Reason is quirk frame do not support class handling. So quirk code have to
-use PCI_ANY_ID for vendor/device and let quirk code itself to check class
-inside the func.
+> On Thu, 23 Feb 2012 12:30:03 -0800,
+> Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+>=20
+> > On Thu, 2 Feb 2012 11:09:22 -0500
+> > MUNEDA Takahiro<muneda.takahiro@jp.fujitsu.com>  wrote:
+> >
+> >> Not to use MSI/MSI-X for pciehp, add a kernel parameter, pcie_hp=3Dnom=
+si.
+> >>
+> >> In my environment, while shutting down, following stack trace is shown
+> >> sometimes.
+> >
+> > Applied, thanks guys.
+> >
+> > Now should we also have a platform/device blacklist to enable this
+> > option automatically so people don't have to remember to use it?
+>=20
+> Hi Jesse,
+>=20
+> I agree with you.
+> However, I don't have a device which *officially* has a problem
+> regarding this.  I'm waiting a statement from vendor.  We should start
+> after statement becomes available.
 
-The patch add class and cls_shift into struct pci_fixup.
-Also update related macro to accept the class and shift.
+Ok, thanks Takahiro-san.  Just submit a patch if/when you get some
+confirmation.
 
--v2: fix v1 that left over of sparated patch.
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/quirks.c |   12 ++++++-----
- include/linux/pci.h  |   53 ++++++++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 49 insertions(+), 16 deletions(-)
+--Sig_/7hO2vU0hcThNiFQuqp+C==C
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Index: linux-2.6/drivers/pci/quirks.c
-===================================================================
---- linux-2.6.orig/drivers/pci/quirks.c
-+++ linux-2.6/drivers/pci/quirks.c
-@@ -2961,17 +2961,19 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
- {
--	while (f < end) {
--		if ((f->vendor == dev->vendor || f->vendor == (u16) PCI_ANY_ID) &&
--		    (f->device == dev->device || f->device == (u16) PCI_ANY_ID)) {
-+	for (; f < end; f++)
-+		if ((f->class == (u32) (dev->class >> f->cls_shift) ||
-+		     f->class == (u32) PCI_ANY_ID) &&
-+		    (f->vendor == dev->vendor ||
-+		     f->vendor == (u16) PCI_ANY_ID) &&
-+		    (f->device == dev->device ||
-+		     f->device == (u16) PCI_ANY_ID)) {
- 			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
- 			if (initcall_debug)
- 				do_one_fixup_debug(f->hook, dev);
- 			else
- 				f->hook(dev);
- 		}
--		f++;
--	}
- }
- 
- extern struct pci_fixup __start_pci_fixups_early[];
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -1377,7 +1377,10 @@ static inline void pci_resource_to_user(
-  */
- 
- struct pci_fixup {
--	u16 vendor, device;	/* You can use PCI_ANY_ID here of course */
-+	u16 vendor;		/* You can use PCI_ANY_ID here of course */
-+	u16 device;		/* You can use PCI_ANY_ID here of course */
-+	u32 class;		/* You can use PCI_ANY_ID here too */
-+	unsigned int cls_shift;	/* should be 0, 8, 16 */
- 	void (*hook)(struct pci_dev *dev);
- };
- 
-@@ -1392,30 +1395,58 @@ enum pci_fixup_pass {
- };
- 
- /* Anonymous variables would be nice... */
--#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, hook)	\
--	static const struct pci_fixup __pci_fixup_##name __used		\
--	__attribute__((__section__(#section))) = { vendor, device, hook };
-+#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, c, cs, hook)\
-+	static const struct pci_fixup const __pci_fixup_##name __used	     \
-+	__attribute__((__section__(#section), aligned((sizeof(void *)))))    \
-+		= { vendor, device, c, cs, hook };
-+
-+#define DECLARE_PCI_FIXUP_CLASS_EARLY(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
-+		vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_HEADER(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
-+		vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_FINAL(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
-+		vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_ENABLE(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
-+		vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_RESUME(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
-+		resume##vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(vendor, device, cls, clt, hook) \
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
-+		resume_early##vendor##device##hook, vendor, device,	\
-+		cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_SUSPEND(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
-+		suspend##vendor##device##hook, vendor, device, cls, clt, hook)
-+
- #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_HEADER(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_FINAL(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_ENABLE(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_RESUME(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
--			resume##vendor##device##hook, vendor, device, hook)
-+		resume##vendor##device##hook, vendor, device,		\
-+		PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_RESUME_EARLY(vendor, device, hook)		\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
--			resume_early##vendor##device##hook, vendor, device, hook)
-+		resume_early##vendor##device##hook, vendor, device,	\
-+		PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_SUSPEND(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
--			suspend##vendor##device##hook, vendor, device, hook)
-+		suspend##vendor##device##hook, vendor, device,		\
-+		PCI_ANY_ID, 0, hook)
- 
- #ifdef CONFIG_PCI_QUIRKS
- void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPSAd7AAoJEIEoDkX4Qk9hJLIP+gOwWCeEN3C2QAZxzt6C80DJ
+IQ4vdPZft2FcpFAKAMuEUilxEAYhScIuNNKJpKr6tx3K734q0Ey8tENnnpPc/gEi
+ffVzicpxdrf6O5H1HGjlv3MJaIIl5V4xhmyK30iKCdGcdK/FO1X79tdL1AHPvwvK
+qPGYcSPO7BubPFoksr6C5JRlldeI7zBOFELHHCgDVDf4RVCP/Zd/JkltmxceD0JI
+llBVcEAFgR5FUPsIL/+16BgmpDq7Ig7ei3mxbGd5xmP3zAU+bebsJwL2m61rRWqS
+QZ6MH/EnQYp7Twxl0ZptrSqfyUB85ZehVGEusKew1NiTEMjkQ2tYQ02uk5wfrn6V
+QsfdVMo2moBFHrWm7tjmzSnVGy+/yxqA/EJq6OM1Po3MgtM/s92vuhEcOhJxLYfs
+FHtg8yyh21sPEtmfsBc0YHDw1JH8Bfw/+cw91ESzCkJScvdO/mfHsstjFUdRQx8Q
+CdYki4J+CPZyzbvSCHkqlTFsFx+A/IiN9JdnJ4k3HqYj7EG+6ABDKZKX/5mDPA2n
+DfTvUIyedzQAK4QfG1+IX9ZUgNDyntGxYLEz1eCJYiHv6Mb0nw1BQDgAQbPMta6J
+3pBSnBKeVUqcnc0Mz/5Thh6C8ZeOv0W4Zq5HDkp8jWHNovkxrzaDvsKuDdJLUcSv
+vv7euZdpymrpVv2mYcGq
+=MVxG
+-----END PGP SIGNATURE-----
+
+--Sig_/7hO2vU0hcThNiFQuqp+C==C--
