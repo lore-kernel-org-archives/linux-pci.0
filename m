@@ -1,90 +1,67 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVqKZGacZYqXETVVaqzobiw01OyCmASUfxwZ075rdX7XA@mail.gmail.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
- <CAE9FiQWE-VGoh=8hyhWPMrTe7X1dqTyBCgAM=ozWMyZXEvwGTg@mail.gmail.com>
- <CAErSpo7pxGA02uTDNoFpxU_6_B4CgvJM10zpFRjjhXHK5L3mtg@mail.gmail.com>
- <CAE9FiQVx7=cSVkApbh_8dnoBqdrRYDOVtMqdC=mDCwq0fuVZpA@mail.gmail.com>
- <CAErSpo6zHhpz+N6y3ybDVp-oabVWAYeTt9pPJS3nz+nD2C8xkg@mail.gmail.com> <CAE9FiQVqKZGacZYqXETVVaqzobiw01OyCmASUfxwZ075rdX7XA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 10 Feb 2012 09:24:15 -0800
-Message-ID: <CAErSpo6MWS0=3gin7P6HQ7CNZwxD9cPfB6QNr1GDF7DVMhx2tw@mail.gmail.com>
-Subject: Re: [PATCH v2 00/18] add PCI bus-to-resource offset support in core
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:37310 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755435Ab2BXDtm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:42 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 00/13] x86, irq: support ioapic device hotplug for x86
+Date: Thu, 23 Feb 2012 19:48:46 -0800
+Message-Id: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 9:20 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Feb 10, 2012 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> ...
->>>
->>> I mean, we can unify sysdata usuage, make them all most the same.
->>>
->>> and for some sysdata, already acting like host_bridge struct with
->>> domain, numa_node, and resources.
->>>
->>>> If you can show an example of what you mean, maybe it will help me understand.
->>>
->>> just looked the sys_data of different arch,
->>>
->>> looks like pci_sys_data for arm already include the io offset
->>>
->>> arch/arm/include/asm/mach/pci.h::
->>>
->>> struct pci_sys_data {
->>> #ifdef CONFIG_PCI_DOMAINS
->>>        int             domain;
->>> #endif
->>>        struct list_head node;
->>>        int             busnr;          /* primary bus number
->>>         */
->>>        u64             mem_offset;     /* bus->cpu memory mapping
->>> offset       */
->>>        unsigned long   io_offset;      /* bus->cpu IO mapping offset
->>>         */
->>>        struct pci_bus  *bus;           /* PCI bus
->>>         */
->>>        struct list_head resources;     /* root bus resources (apertures)
->>
->> Let me try again.  Maybe your idea is that we should create something
->> like "struct pcibios_sysdata" and require every arch to define a
->> struct with that name.  Every arch's struct would contain some members
->> such as "domain," "mem_offset," "io_offset," and "resources."  These
->> would have standard names & types across all arches and would be
->> referenced by the PCI core.  In addition, the struct could include
->> arch-specific data such as "acpi_handle," "iommu," etc.
->>
->> That way, the core could implement things like pci_domain_nr() and
->> pci_bus_to_resource() by using the data in struct pcibios_sysdata.
->> The current "void *sysdata" parameters to pci_scan_bus() and friends
->> would become "struct pcibios_sysdata *sysdata".
->>
->> I like the idea of unifying the sysdata struct name and changing from
->> a "void *" to something like "struct pcibios_sysdata *".  That might
->> be worth doing.
->
-> what i am mean:
-> 1. make every arch to use same name for the struct, but could have
-> different contents.
->   struct pci_sys_data.
-> 2. unify member field name, by changing name
->    pci_first_busno ==> first_busno
->    pci_last_busno ==> last_busno
->    or adding
->    first_busno
->    last_busno
-> 3. changing more filed like domain, node
->    and io_offset, mem_offset
-> ...
+Hi, Thomas
 
-That's exactly what I said above, isn't it?  (In the paragraph
-starting "Let me try again.")
+Current x86 code does not support iapic hotplug yet.
 
-As I said, the reason I don't like that approach is that I don't want
-a dozen copies of first_busno, last_busno, domain, node, io_offset,
-mem_offset, etc.  That information is not architecture-specific, so we
-shouldn't keep it in an architecture-specific struct.
+This patcheset will try to pre-reserve irq block in allocated_irqs bitmap.
+for hot add ioapic controller. also record irq_base in gsi_config, so later
+could use it to convert gsi to irq for pci device using that ioapic controller.
 
-Bjorn
+need to update x86/irq to support realloc_irq after those bit are pre-reserved.
+
+It is tested with pci remove/rescan method plus some test stubs.
+
+Please review them.
+
+could get them from:
+
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
+
+
+Thanks
+
+	Yinghai
+
+94738bb: PCI: Disable mem in the ioapic removing path
+6a53ea9: PCI: Make sure hotplug ioapic driver get loaded early
+77f4e2b: x86, acpi, irq: Enable pci device type ioapic hotplug
+b495bde: x86, irq: Make ioapics loop code skip blank slot
+56cb7ba: x86, irq: Add mp_unregister_ioapic could handle hotremove ioapic
+bd48b79: x86, irq: Make mp_register_ioapic could handle hotadd ioapic
+3b23367: x86, irq: more strict check for register ioapic
+996f15b: genirq: bail out early in free_desc()
+f83ad47: x86, irq: add ioapic_gsi_to_irq
+e864fc4: x86, irq: pre-reserve irq range that are used by ioapic
+16b8b29: x86, irq: Add realloc_irq_and_cfg_at()
+660c577: genirq: Split __irq_reserve_irqs from irq_alloc_descs
+1060703: x86, irq: Convert irq_2_pin list to generic list
+
+ arch/x86/include/asm/hw_irq.h  |    2 +-
+ arch/x86/include/asm/io_apic.h |    2 +
+ arch/x86/include/asm/mpspec.h  |    2 +
+ arch/x86/kernel/acpi/boot.c    |   28 +---
+ arch/x86/kernel/apic/io_apic.c |  348 +++++++++++++++++++++++++++++++---------
+ drivers/pci/Kconfig            |    2 +-
+ drivers/pci/Makefile           |    5 +-
+ drivers/pci/ioapic.c           |   19 ++-
+ include/linux/irq.h            |    6 +
+ kernel/irq/irqdesc.c           |   84 +++++++----
+ 10 files changed, 366 insertions(+), 132 deletions(-)
+
+
