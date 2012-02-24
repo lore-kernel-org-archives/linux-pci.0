@@ -1,105 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:38199 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965242Ab2B1W26 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 17:28:58 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v9 00/24] PCI: allocate pci bus num range for unassigned bridge busn
-Date: Tue, 28 Feb 2012 14:07:19 -0800
-Message-Id: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/4] PCI: Make pci bridge reallocating enabled/disabled
+Date: Thu, 23 Feb 2012 19:23:30 -0800
+Message-Id: <1330053812-10316-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
+References: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set up iobusn_resource tree, and register bus number range to it.
-Later when need to find bus range, will try to allocate from the tree
+Let the user could enable and disable with pci=realloc=on or pci=realloc=off
 
-Need to test on arches other than x86. esp for ia64 and powerpc that support
-  more than on peer root buses.
+Also
+1. move variable and functions near the place they are used.
+2. change macro to function
+3. change related functions and variable to static and _init
+4. update parameter description accordingly.
 
-could be found at:
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
+-v2: still honor pci=realloc, and treat it as pci=realloc=on
+     also use enum instead of ...
+-v3: update kernel-paramenters.txt according to Jesse.
 
-need to apply to top of pci/for-linus plus pci/linux-next plus
-        [PATCH -v2] PCI: pci_host_bridge related cleanup
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+---
+ Documentation/kernel-parameters.txt |    9 +++++++--
+ drivers/pci/pci.c                   |    4 +++-
+ drivers/pci/pci.h                   |    2 +-
+ drivers/pci/setup-bus.c             |   34 +++++++++++++++++++++++++++-------
+ 4 files changed, 38 insertions(+), 11 deletions(-)
 
--v2: according to Jesse, split to more small patches.
--v3: address some request from Bjorn. like make use %pR for busn_res debug print
-        out, and move the comment change with code change.
--v4: fixes the problem about rescan that Bjorn found.
--v5: add /proc/iobusn that is requested by Bjorn.
-     remove old workaround from pciehp.
-     add rescan_bridge for pci bridge in /sys
--v6: remove global iobusn_resource, and every root bus's busn_res will be root
-     of children buses' busn_res.
-     pc cardbus change is tested by pcmcia maintainter.
--v7: remove pci_scan_root_bus_max requested by Bjorn and Jesse.
--v8: rebase on top other patches with arch/x86/pci/bus_numa.c changes
-     also only include busn_res related changes.
--v9: Add busn into pci_root_info, and add it to resources list and pass it
-     to pci_create_root_bus.
-
-Thanks
-
-Yinghai
-
-Yinghai Lu (24):
-  x86, PCI: add print all root info for nocrs path
-  x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
-  PCI: Add busn_res into struct pci_bus.
-  PCI: Add busn_res operation functions
-  PCI: release busn when removing bus
-  PCI: insert busn_res in pci_create_root_bus
-  PCI: checking busn_res in pci_scan_root_bus
-  PCI: default busn_resource
-  PCI: add default res for pci_scan_bus
-  x86, PCI: put busn resource in pci_root_info for acpi path
-  x86, PCI: put busn resource in pci_root_info for no_crs path
-  PCI, ia64: Register busn_res for root buses
-  PCI, sparc: Register busn_res for root buses
-  PCI, powerpc: Register busn_res for root buses
-  PCI, parisc: Register busn_res for root buses
-  PCI: Add pci_bus_extend/shrink_top()
-  PCI: Probe safe range that we can use for unassigned bridge.
-  PCI: Strict checking of valid range for bridge
-  PCI: Allocate bus range instead of use max blindly
-  PCI: kill pci_fixup_parent_subordinate_busnr()
-  PCI: Seperate child bus scanning to two passes overall
-  pcmcia: remove workaround for fixing pci parent bus subordinate
-  PCI: Double checking setting for bus register and bus struct.
-  PCI, pciehp: Remove not needed bus number range checking
-
- arch/ia64/include/asm/pci.h           |    1 +
- arch/ia64/pci/pci.c                   |    5 +
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci-common.c      |   10 +-
- arch/sparc/kernel/pci.c               |    4 +
- arch/sparc/kernel/pci_impl.h          |    1 +
- arch/x86/pci/acpi.c                   |   17 +-
- arch/x86/pci/amd_bus.c                |    2 +-
- arch/x86/pci/broadcom_bus.c           |    4 +-
- arch/x86/pci/bus_numa.c               |   27 ++-
- arch/x86/pci/bus_numa.h               |    4 +-
- arch/x86/pci/common.c                 |   27 +--
- drivers/parisc/dino.c                 |    5 +
- drivers/parisc/lba_pci.c              |    3 +
- drivers/pci/hotplug/pciehp_pci.c      |   12 +-
- drivers/pci/probe.c                   |  458 +++++++++++++++++++++++++++------
- drivers/pci/remove.c                  |    1 +
- drivers/pcmcia/yenta_socket.c         |   75 ------
- include/linux/pci.h                   |    6 +
- 19 files changed, 454 insertions(+), 209 deletions(-)
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 7fb7a4b..7dc523e 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2109,8 +2109,13 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				the default.
+ 				off: Turn ECRC off
+ 				on: Turn ECRC on.
+-		realloc		reallocate PCI resources if allocations done by BIOS
+-				are erroneous.
++		realloc=	Enable/disable reallocating PCI bridge resources
++				if allocations done by BIOS are too small to
++				accommodate resources required by all child
++				devices.
++				off: Turn realloc off
++				on: Turn realloc on
++		realloc		same as realloc=on
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8f30736..e9f9dc1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3772,8 +3772,10 @@ static int __init pci_setup(char *str)
+ 				pci_no_msi();
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
++			} else if (!strncmp(str, "realloc=", 8)) {
++				pci_realloc_get_opt(str + 8);
+ 			} else if (!strncmp(str, "realloc", 7)) {
+-				pci_realloc();
++				pci_realloc_get_opt("on");
+ 			} else if (!strcmp(str, "nodomains")) {
+ 				pci_no_domains();
+ 			} else if (!strncmp(str, "cbiosize=", 9)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 586ac9b..1fc63b3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -149,7 +149,7 @@ static inline void pci_no_msi(void) { }
+ static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
+ 
+-extern void pci_realloc(void);
++void pci_realloc_get_opt(char *);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 162edfb..219722d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -48,13 +48,6 @@ static void free_list(struct list_head *head)
+ 	}
+ }
+ 
+-int pci_realloc_enable = 0;
+-#define pci_realloc_enabled() pci_realloc_enable
+-void pci_realloc(void)
+-{
+-	pci_realloc_enable = 1;
+-}
+-
+ /**
+  * add_to_list() - add a new resource tracker to the list
+  * @head:	Head of the list
+@@ -1273,6 +1266,33 @@ static int __init pci_get_max_depth(void)
+ 	return depth;
+ }
+ 
++/*
++ * -1: undefined, will auto detect later
++ *  0: disabled by user
++ *  1: disabled by auto detect
++ *  2: enabled by user
++ *  3: enabled by auto detect
++ */
++enum enable_type {
++	undefined = -1,
++	user_disabled,
++	auto_disabled,
++	user_enabled,
++	auto_enabled,
++};
++
++static enum enable_type pci_realloc_enable __initdata = undefined;
++void __init pci_realloc_get_opt(char *str)
++{
++	if (!strncmp(str, "off", 3))
++		pci_realloc_enable = user_disabled;
++	else if (!strncmp(str, "on", 2))
++		pci_realloc_enable = user_enabled;
++}
++static bool __init pci_realloc_enabled(void)
++{
++	return pci_realloc_enable >= user_enabled;
++}
+ 
+ /*
+  * first try will not touch pci bridge res
 -- 
 1.7.7
 
