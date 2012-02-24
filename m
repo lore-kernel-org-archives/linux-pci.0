@@ -1,213 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f202.google.com ([209.85.220.202]:36577 "EHLO
-	mail-vx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756500Ab2BWTny (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:43:54 -0500
-Received: by mail-vx0-f202.google.com with SMTP id f1so198300vcb.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 11:43:54 -0800 (PST)
-Subject: [PATCH v2 10/12] powerpc/PCI: replace pci_probe_only with pci_flags
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org
-Date: Thu, 23 Feb 2012 12:43:53 -0700
-Message-ID: <20120223194353.20708.48000.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from acsinet15.oracle.com ([141.146.126.227]:37316 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755472Ab2BXDtn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:43 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>
+Subject: [PATCH 07/13] x86, irq: more strict check for register ioapic
+Date: Thu, 23 Feb 2012 19:48:53 -0800
+Message-Id: <1330055339-11662-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We already use pci_flags, so this just sets pci_flags directly and removes
-the intermediate step of figuring out pci_probe_only, then using it to set
-pci_flags.
+1. check overlaping gsi range
+for hotplug ioapic case, BIOS may have some entries in MADT
+and also in pci bus with _GSB.
 
-The PCI core provides a pci_flags definition (currently __weak), so drop
-the powerpc definitions in favor of that.
+2. make bad_ioapics take idx instead of nr_ioapics.
+for hotadd ioapic could find spare slot in the middle later.
 
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+3. check if entries in right range.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Suresh Siddha <suresh.b.siddha@intel.com>
 ---
- arch/powerpc/include/asm/ppc-pci.h        |    2 --
- arch/powerpc/kernel/pci-common.c          |    3 ---
- arch/powerpc/kernel/pci_64.c              |    5 -----
- arch/powerpc/kernel/rtas_pci.c            |   10 +++++++---
- arch/powerpc/platforms/iseries/pci.c      |    2 +-
- arch/powerpc/platforms/maple/pci.c        |    2 +-
- arch/powerpc/platforms/pasemi/pci.c       |    2 +-
- arch/powerpc/platforms/powernv/pci-ioda.c |    5 ++---
- arch/powerpc/platforms/powernv/pci.c      |    2 +-
- arch/powerpc/platforms/pseries/setup.c    |    4 ++--
- 10 files changed, 15 insertions(+), 22 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   19 ++++++++++++++-----
+ 1 files changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-index 6d42297..a96d012 100644
---- a/arch/powerpc/include/asm/ppc-pci.h
-+++ b/arch/powerpc/include/asm/ppc-pci.h
-@@ -45,8 +45,6 @@ extern void init_pci_config_tokens (void);
- extern unsigned long get_phb_buid (struct device_node *);
- extern int rtas_setup_phb(struct pci_controller *phb);
- 
--extern unsigned long pci_probe_only;
--
- /* ---- EEH internal-use-only related routines ---- */
- #ifdef CONFIG_EEH
- 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index cce98d7..6d03da4 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -50,9 +50,6 @@ static int global_phb_number;		/* Global phb counter */
- /* ISA Memory physical address */
- resource_size_t isa_mem_base;
- 
--/* Default PCI flags is 0 on ppc32, modified at boot on ppc64 */
--unsigned int pci_flags = 0;
--
- 
- static struct dma_map_ops *pci_dma_ops = &dma_direct_ops;
- 
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index f627eb7..75417fd 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -33,8 +33,6 @@
- #include <asm/machdep.h>
- #include <asm/ppc-pci.h>
- 
--unsigned long pci_probe_only = 0;
--
- /* pci_io_base -- the base address from which io bars are offsets.
-  * This is the lowest I/O base address (so bar values are always positive),
-  * and it *must* be the start of ISA space if an ISA bus exists because
-@@ -55,9 +53,6 @@ static int __init pcibios_init(void)
- 	 */
- 	ppc_md.phys_mem_access_prot = pci_phys_mem_access_prot;
- 
--	if (pci_probe_only)
--		pci_add_flags(PCI_PROBE_ONLY);
--
- 	/* On ppc64, we always enable PCI domains and we keep domain 0
- 	 * backward compatible in /proc for video cards
- 	 */
-diff --git a/arch/powerpc/kernel/rtas_pci.c b/arch/powerpc/kernel/rtas_pci.c
-index 6cd8f01..140735c 100644
---- a/arch/powerpc/kernel/rtas_pci.c
-+++ b/arch/powerpc/kernel/rtas_pci.c
-@@ -276,7 +276,7 @@ void __init find_and_init_phbs(void)
- 	pci_devs_phb_init();
- 
- 	/*
--	 * pci_probe_only and pci_assign_all_buses can be set via properties
-+	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
- 	 * in chosen.
- 	 */
- 	if (of_chosen) {
-@@ -284,8 +284,12 @@ void __init find_and_init_phbs(void)
- 
- 		prop = of_get_property(of_chosen,
- 				"linux,pci-probe-only", NULL);
--		if (prop)
--			pci_probe_only = *prop;
-+		if (prop) {
-+			if (*prop)
-+				pci_add_flags(PCI_PROBE_ONLY);
-+			else
-+				pci_clear_flags(PCI_PROBE_ONLY);
-+		}
- 
- #ifdef CONFIG_PPC32 /* Will be made generic soon */
- 		prop = of_get_property(of_chosen,
-diff --git a/arch/powerpc/platforms/iseries/pci.c b/arch/powerpc/platforms/iseries/pci.c
-index c754128..171b2f3 100644
---- a/arch/powerpc/platforms/iseries/pci.c
-+++ b/arch/powerpc/platforms/iseries/pci.c
-@@ -868,7 +868,7 @@ void __init iSeries_pcibios_init(void)
- 	/* Install IO hooks */
- 	ppc_pci_io = iseries_pci_io;
- 
--	pci_probe_only = 1;
-+	pci_add_flags(PCI_PROBE_ONLY);
- 
- 	/* iSeries has no IO space in the common sense, it needs to set
- 	 * the IO base to 0
-diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
-index 401e3f3..465ee8f 100644
---- a/arch/powerpc/platforms/maple/pci.c
-+++ b/arch/powerpc/platforms/maple/pci.c
-@@ -620,7 +620,7 @@ void __init maple_pci_init(void)
- 	}
- 
- 	/* Tell pci.c to not change any resource allocations.  */
--	pci_probe_only = 1;
-+	pci_add_flags(PCI_PROBE_ONLY);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 527b184..57ffa86 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -4065,11 +4065,11 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ 	return gsi - gsi_cfg->gsi_base;
  }
  
- int maple_pci_get_legacy_ide_irq(struct pci_dev *pdev, int channel)
-diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
-index b6a0ec4..b27d886 100644
---- a/arch/powerpc/platforms/pasemi/pci.c
-+++ b/arch/powerpc/platforms/pasemi/pci.c
-@@ -231,7 +231,7 @@ void __init pas_pci_init(void)
- 	pci_devs_phb_init();
- 
- 	/* Use the common resource allocation mechanism */
--	pci_probe_only = 1;
-+	pci_add_flags(PCI_PROBE_ONLY);
- }
- 
- void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 5e155df..fbdd74d 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1299,15 +1299,14 @@ void __init pnv_pci_init_ioda1_phb(struct device_node *np)
- 	/* Setup MSI support */
- 	pnv_pci_init_ioda_msis(phb);
- 
--	/* We set both probe_only and PCI_REASSIGN_ALL_RSRC. This is an
-+	/* We set both PCI_PROBE_ONLY and PCI_REASSIGN_ALL_RSRC. This is an
- 	 * odd combination which essentially means that we skip all resource
- 	 * fixups and assignments in the generic code, and do it all
- 	 * ourselves here
- 	 */
--	pci_probe_only = 1;
- 	ppc_md.pcibios_fixup_phb = pnv_pci_ioda_fixup_phb;
- 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
--	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-+	pci_add_flags(PCI_PROBE_ONLY | PCI_REASSIGN_ALL_RSRC);
- 
- 	/* Reset IODA tables to a clean state */
- 	rc = opal_pci_reset(phb_id, OPAL_PCI_IODA_TABLE_RESET, OPAL_ASSERT_RESET);
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 94ed056..15f4e73 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -561,7 +561,7 @@ void __init pnv_pci_init(void)
+-static __init int bad_ioapic(unsigned long address)
++static __init int bad_ioapic(int idx, unsigned long address)
  {
- 	struct device_node *np;
+-	if (nr_ioapics >= MAX_IO_APICS) {
++	if (idx >= MAX_IO_APICS) {
+ 		printk(KERN_WARNING "WARNING: Max # of I/O APICs (%d) exceeded "
+-		       "(found %d), skipping\n", MAX_IO_APICS, nr_ioapics);
++		       "(found %d), skipping\n", MAX_IO_APICS, idx);
+ 		return 1;
+ 	}
+ 	if (!address) {
+@@ -4082,14 +4082,17 @@ static __init int bad_ioapic(unsigned long address)
  
--	pci_set_flags(PCI_CAN_SKIP_ISA_ALIGN);
-+	pci_add_flags(PCI_CAN_SKIP_ISA_ALIGN);
+ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ {
+-	int idx = 0;
++	int idx;
+ 	int entries;
+ 	struct mp_ioapic_gsi *gsi_cfg;
  
- 	/* OPAL absent, try POPAL first then RTAS detection of PHBs */
- 	if (!firmware_has_feature(FW_FEATURE_OPAL)) {
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 386e265..fc2a6f6 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -380,8 +380,8 @@ static void __init pSeries_setup_arch(void)
+-	if (bad_ioapic(address))
++	idx = mp_find_ioapic(gsi_base);
++	if (idx >= 0)
+ 		return;
  
- 	fwnmi_init();
+ 	idx = nr_ioapics;
++	if (bad_ioapic(idx, address))
++		return;
  
--	/* By default, only probe PCI (can be overriden by rtas_pci */
--	pci_probe_only = 1;
-+	/* By default, only probe PCI (can be overriden by rtas_pci) */
-+	pci_add_flags(PCI_PROBE_ONLY);
- 
- 	/* Find and initialize PCI host bridges */
- 	init_pci_config_tokens();
+ 	ioapics[idx].mp_config.type = MP_IOAPIC;
+ 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
+@@ -4104,6 +4107,12 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
+ 	 */
+ 	entries = io_apic_get_redir_entries(idx);
++
++	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
++		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++		return;
++	}
++
+ 	gsi_cfg = mp_ioapic_gsi_routing(idx);
+ 	gsi_cfg->gsi_base = gsi_base;
+ 	gsi_cfg->gsi_end = gsi_base + entries - 1;
+-- 
+1.7.7
 
