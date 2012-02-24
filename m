@@ -1,154 +1,160 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:37608 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755599Ab2BXDu4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:50:56 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 31/39] PCI: Probe safe range that we can use for unassigned bridge.
-Date: Wed, 29 Feb 2012 15:07:30 -0800
-Message-Id: <1330556858-11768-32-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Henrik Kretzschmar <henne@nachtwindheim.de>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH 05/13] x86, irq: add ioapic_gsi_to_irq
+Date: Thu, 23 Feb 2012 19:48:51 -0800
+Message-Id: <1330055339-11662-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Try to allocate from parent bus busn_res. if can not find any big enough, will try
-to extend parent bus top. even the extending is through allocating, after allocating
-will pad the range to parent buses top.
+it will handle hot add ioapic that irq_base is not equal to gsi_base.
 
-When extending happens, We will record the parent_res, so could use it as stopper
-for really extend/shrink top later.
+Also remove irq_to_gsi that is causing confusing.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Len Brown <len.brown@intel.com>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Henrik Kretzschmar <henne@nachtwindheim.de>
+Cc: Suresh Siddha <suresh.b.siddha@intel.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- drivers/pci/probe.c |  110 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 110 insertions(+), 0 deletions(-)
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   22 +++++-----------------
+ arch/x86/kernel/apic/io_apic.c |   29 ++++++++++++++++++++++++++++-
+ 3 files changed, 34 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 96259f8..c540022 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -691,6 +691,116 @@ static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
- 	pci_bus_update_top(parent, -size, parent_res);
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index f2a83ae..b5489e8 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -168,6 +168,7 @@ struct mp_ioapic_gsi{
+ };
+ extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
++int ioapic_gsi_to_irq(u32 gsi);
+ int mp_find_ioapic(u32 gsi);
+ int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index ce664f3..fa9473b 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -112,6 +112,10 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 		}
+ 	}
+ 
++#ifdef CONFIG_X86_IO_APIC
++	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
++		return ioapic_gsi_to_irq(gsi);
++#endif
+ 	/* Provide an identity mapping of gsi == irq
+ 	 * except on truly weird platforms that have
+ 	 * non isa irqs in the first 16 gsis.
+@@ -124,22 +128,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 	return irq;
  }
  
-+static resource_size_t __devinit find_res_top_free_size(struct resource *res)
-+{
-+	resource_size_t n_size;
-+	struct resource tmp_res;
-+
-+	/*
-+	 *   find out number below res->end, that we can use at first
-+	 *	res->start can not be used.
-+	 */
-+	n_size = resource_size(res) - 1;
-+	memset(&tmp_res, 0, sizeof(struct resource));
-+	while (n_size > 0) {
-+		int ret;
-+
-+		ret = allocate_resource(res, &tmp_res, n_size,
-+			res->end - n_size + 1, res->end,
-+			1, NULL, NULL);
-+		if (ret == 0) {
-+			release_resource(&tmp_res);
-+			break;
-+		}
-+		n_size--;
-+	}
-+
-+	return n_size;
-+}
-+
-+static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
-+			 struct pci_dev *dev, struct resource *busn_res,
-+			 resource_size_t needed_size, struct resource **p)
-+{
-+	int ret = -ENOMEM;
-+	resource_size_t n_size;
-+	struct pci_bus *parent;
-+	struct resource *parent_res = NULL;
-+	resource_size_t tmp = bus->busn_res.end + 1;
-+	int free_sz = -1;
-+
-+again:
-+	/*
-+	 * find bigest range in bus->busn_res that we can use in the middle
-+	 *  and we can not use bus->busn_res.start.
-+	 */
-+	n_size = resource_size(&bus->busn_res) - 1;
-+	memset(busn_res, 0, sizeof(struct resource));
-+	dev_printk(KERN_DEBUG, &dev->dev,
-+			"find free busn in busn_res: %pR\n", &bus->busn_res);
-+	while (n_size >= needed_size) {
-+		ret = allocate_resource(&bus->busn_res, busn_res, n_size,
-+				bus->busn_res.start + 1, bus->busn_res.end,
-+				1, NULL, NULL);
-+		if (ret == 0) {
-+			/* found one, prepare to return */
-+			release_resource(busn_res);
-+
-+			return ret;
-+		}
-+		n_size--;
-+	}
-+
-+	/* try extend the top of parent bus, find free under top af first */
-+	if (free_sz < 0) {
-+		free_sz = find_res_top_free_size(&bus->busn_res);
-+		dev_printk(KERN_DEBUG, &dev->dev,
-+			"found free busn %d in busn_res: %pR top\n",
-+				free_sz, &bus->busn_res);
-+	}
-+	n_size = free_sz;
-+
-+	/* can not extend cross domain boundary */
-+	if ((0xff - bus->busn_res.end) < (needed_size - n_size))
-+		goto reduce_needed_size;
-+
-+	/* find exteded range */
-+	memset(busn_res, 0, sizeof(struct resource));
-+	parent = bus->parent;
-+	while (parent) {
-+		ret = allocate_resource(&parent->busn_res, busn_res,
-+			 needed_size - n_size,
-+			 tmp, tmp + needed_size - n_size - 1,
-+			 1, NULL, NULL);
-+		if (ret == 0)
-+			break;
-+		parent = parent->parent;
-+	}
-+
-+reduce_needed_size:
-+	if (ret != 0) {
-+		needed_size--;
-+		if (!needed_size)
-+			return ret;
-+
-+		goto again;
-+	}
-+
-+	/* save parent_res, we need it as stopper later */
-+	parent_res = busn_res->parent;
-+
-+	/* prepare busn_res for return */
-+	release_resource(busn_res);
-+	busn_res->start -= n_size;
-+
-+	/* extend parent bus top*/
-+	pci_bus_extend_top(bus, needed_size - n_size, parent_res);
-+
-+	*p = parent_res;
-+
-+	return ret;
-+}
-+
+-static u32 irq_to_gsi(int irq)
+-{
+-	unsigned int gsi;
+-
+-	if (irq < NR_IRQS_LEGACY)
+-		gsi = isa_irq_to_gsi[irq];
+-	else if (irq < gsi_top)
+-		gsi = irq;
+-	else if (irq < (gsi_top + NR_IRQS_LEGACY))
+-		gsi = irq - gsi_top;
+-	else
+-		gsi = 0xffffffff;
+-
+-	return gsi;
+-}
+-
  /*
-  * If it's a bridge, configure it and scan the bus behind it.
-  * For CardBus bridges, we don't scan behind as the devices will
+  * Temporarily use the virtual area starting from FIX_IO_APIC_BASE_END,
+  * to map the target physical address. The problem is that set_fixmap()
+@@ -527,7 +515,7 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+ {
+ 	if (isa_irq >= 16)
+ 		return -1;
+-	*gsi = irq_to_gsi(isa_irq);
++	*gsi = isa_irq_to_gsi[isa_irq];
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 0702998..527b184 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1081,13 +1081,16 @@ static int pin_2_irq(int idx, int apic, int pin)
+ 
+ 	if (test_bit(bus, mp_bus_not_pci)) {
+ 		irq = mp_irqs[idx].srcbusirq;
+-	} else {
++	} else if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
+ 		u32 gsi = gsi_cfg->gsi_base + pin;
+ 
+ 		if (gsi >= NR_IRQS_LEGACY)
+ 			irq = gsi;
+ 		else
+ 			irq = gsi_top + gsi;
++	} else {
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
+ 	}
+ 
+ #ifdef CONFIG_X86_32
+@@ -1581,6 +1584,30 @@ static void __init setup_IO_APIC_irqs(void)
+ 		__io_apic_setup_irqs(ioapic_idx);
+ }
+ 
++int ioapic_gsi_to_irq(u32 gsi)
++{
++	int ioapic_idx = 0, irq = gsi;
++	struct mp_ioapic_gsi *gsi_cfg;
++
++	ioapic_idx = mp_find_ioapic(gsi);
++	if (ioapic_idx < 0)
++		return -1;
++
++	gsi_cfg = mp_ioapic_gsi_routing(ioapic_idx);
++	if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
++		if (gsi < NR_IRQS_LEGACY)
++			irq = gsi_top + gsi;
++	} else {
++		int pin = mp_find_ioapic_pin(ioapic_idx, gsi);
++
++		if (pin < 0)
++			return -1;
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
++	}
++
++	return irq;
++}
+ /*
+  * for the gsit that is not in first ioapic
+  * but could not use acpi_register_gsi()
 -- 
 1.7.7
 
