@@ -1,125 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:25701 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932383Ab2B2XI3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 18:08:29 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 19/39] x86, PCI: put busn resource in pci_root_info for no_crs path
-Date: Wed, 29 Feb 2012 15:07:18 -0800
-Message-Id: <1330556858-11768-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>
+Subject: [PATCH 10/13] x86, irq: Make ioapics loop code skip blank slot
+Date: Thu, 23 Feb 2012 19:48:56 -0800
+Message-Id: <1330055339-11662-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will put it in resources list and pass it for create_root_bus
+When multiple ioapics get added and removed, we could have blank slot in ioapics
+array.
+
+Add skip code in this case by check nr_registers.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Suresh Siddha <suresh.b.siddha@intel.com>
 ---
- arch/x86/pci/amd_bus.c  |    1 -
- arch/x86/pci/bus_numa.c |   22 ++++++++++++++--------
- arch/x86/pci/bus_numa.h |    3 +--
- 3 files changed, 15 insertions(+), 11 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   29 +++++++++++++++++++++++------
+ 1 files changed, 23 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index aff155d..03397ea 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -116,7 +116,6 @@ static int __init early_fill_mp_bus_info(void)
- 		link = (reg >> 8) & 0x03;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 4517713..da02320 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -819,7 +819,8 @@ int save_ioapic_entries(void)
+ 	int err = 0;
  
- 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
--		sprintf(info->name, "PCI Bus #%02x", min_bus);
+ 	for (apic = 0; apic < nr_ioapics; apic++) {
+-		if (!ioapics[apic].saved_registers) {
++		if (!ioapics[apic].saved_registers &&
++		    ioapics[apic].nr_registers) {
+ 			err = -ENOMEM;
+ 			continue;
+ 		}
+@@ -925,9 +926,12 @@ static int __init find_isa_irq_apic(int irq, int type)
+ 	if (i < mp_irq_entries) {
+ 		int ioapic_idx;
+ 
+-		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
++			if (!ioapics[ioapic_idx].nr_registers)
++				continue;
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic)
+ 				return ioapic_idx;
++		}
  	}
  
- 	/* get the default node and link for left over res */
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index 772949f..b5b9d91 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -14,7 +14,7 @@ static struct pci_root_info *x86_find_pci_root_info(int bus)
- 		return NULL;
+ 	return -1;
+@@ -1158,10 +1162,13 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 	for (i = 0; i < mp_irq_entries; i++) {
+ 		int lbus = mp_irqs[i].srcbus;
  
- 	list_for_each_entry(info, &pci_root_infos, list)
--		if (info->bus_min == bus)
-+		if (info->busn.start == bus)
- 			return info;
+-		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
++			if (!ioapics[ioapic_idx].nr_registers)
++				continue;
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
+ 			    mp_irqs[i].dstapic == MP_APIC_ALL)
+ 				break;
++		}
  
- 	return NULL;
-@@ -31,6 +31,8 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
- 	       bus);
- 
-+	pci_add_resource(resources, &info->busn);
+ 		if (!test_bit(lbus, mp_bus_not_pci) &&
+ 		    !mp_irqs[i].irqtype &&
+@@ -2188,6 +2195,9 @@ void __init setup_ioapic_ids_from_mpc_nocheck(void)
+ 	 * Set the IOAPIC ID to the value stored in the MPC table.
+ 	 */
+ 	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
++		if (!ioapics[ioapic_idx].nr_registers)
++			continue;
 +
- 	list_for_each_entry(root_res, &info->resources, list) {
- 		struct resource *res;
- 		struct resource *root;
-@@ -54,6 +56,7 @@ default_resources:
- 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
- 	pci_add_resource(resources, &ioport_resource);
- 	pci_add_resource(resources, &iomem_resource);
-+	pci_add_resource(resources, &busn_resource);
- }
- 
- struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
-@@ -66,9 +69,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
- 	if (!info)
- 		return info;
- 
-+	sprintf(info->name, "PCI Bus #%02x", bus_min);
-+
- 	INIT_LIST_HEAD(&info->resources);
--	info->bus_min = bus_min;
--	info->bus_max = bus_max;
-+	info->busn.name  = info->name;
-+	info->busn.start = bus_min;
-+	info->busn.end   = bus_max;
-+	info->busn.flags = IORESOURCE_BUS;
- 	info->node = node;
- 	info->link = link;
- 
-@@ -80,14 +87,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
- void print_pci_root_info(struct pci_root_info *info, char *name, bool nodelink)
+ 		/* Read the register 0 value */
+ 		raw_spin_lock_irqsave(&ioapic_lock, flags);
+ 		reg_00.raw = io_apic_read(ioapic_idx, 0);
+@@ -3153,8 +3163,12 @@ static void ioapic_resume(void)
  {
- 	struct pci_root_res *root_res;
--	int busnum = info->bus_min;
-+	int busnum = info->busn.start;
+ 	int ioapic_idx;
  
- 	if (!nodelink)
--		printk(KERN_DEBUG "%s: [%02x, %02x]\n", name,
--				info->bus_min, info->bus_max);
-+		printk(KERN_DEBUG "%s: %pR\n", name, &info->busn);
- 	else
--		printk(KERN_DEBUG "%s: [%02x, %02x] on node %x link %x\n", name,
--			info->bus_min, info->bus_max, info->node, info->link);
-+		printk(KERN_DEBUG "%s: %pR on node %x link %x\n", name,
-+			&info->busn, info->node, info->link);
+-	for (ioapic_idx = nr_ioapics - 1; ioapic_idx >= 0; ioapic_idx--)
++	for (ioapic_idx = nr_ioapics - 1; ioapic_idx >= 0; ioapic_idx--) {
++		if (!ioapics[ioapic_idx].nr_registers)
++			continue;
++
+ 		resume_ioapic_id(ioapic_idx);
++	}
  
- 	list_for_each_entry(root_res, &info->resources, list)
- 		printk(KERN_DEBUG "%s: %02x %pR\n", name, busnum,
-diff --git a/arch/x86/pci/bus_numa.h b/arch/x86/pci/bus_numa.h
-index deada6a..f9919c3 100644
---- a/arch/x86/pci/bus_numa.h
-+++ b/arch/x86/pci/bus_numa.h
-@@ -13,8 +13,7 @@ struct pci_root_info {
- 	struct list_head list;
- 	char name[12];
- 	struct list_head resources;
--	int bus_min;
--	int bus_max;
-+	struct resource busn;
- 	int node;
- 	int link;
- };
+ 	restore_ioapic_entries();
+ }
+@@ -4065,8 +4079,11 @@ int mp_find_ioapic(u32 gsi)
+ 	/* Find the IOAPIC that manages this GSI. */
+ 	for (i = 0; i < nr_ioapics; i++) {
+ 		struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(i);
+-		if ((gsi >= gsi_cfg->gsi_base)
+-		    && (gsi <= gsi_cfg->gsi_end))
++
++		if (!ioapics[i].nr_registers)
++			continue;
++
++		if ((gsi >= gsi_cfg->gsi_base) && (gsi <= gsi_cfg->gsi_end))
+ 			return i;
+ 	}
+ 
 -- 
 1.7.7
 
