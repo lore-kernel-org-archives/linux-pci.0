@@ -1,110 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:37218 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706Ab2BHFCt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Feb 2012 00:02:49 -0500
-Received: from /spool/local
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Tue, 7 Feb 2012 22:02:47 -0700
-Date: Wed, 8 Feb 2012 13:01:19 +0800
-From: Ram Pai <linuxram@us.ibm.com>
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:37390 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757290Ab2BXQuO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 11:50:14 -0500
+Date: Fri, 24 Feb 2012 08:50:05 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+Cc: Ram Pai <linuxram@us.ibm.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/9] PCI: Fix cardbus bridge resources as optional size
- handling
-Message-ID: <20120208050119.GE8930@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
- <1328424908-6385-5-git-send-email-yinghai@kernel.org>
- <20120208043517.GD8930@ram-ThinkPad-T61>
- <CAE9FiQUdRLmc-_hHWtaz=8QZiu4Ma6ZY7zavByJnwMDTBQLtzg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQUdRLmc-_hHWtaz=8QZiu4Ma6ZY7zavByJnwMDTBQLtzg@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: only enable pci realloc when SRIOV bar is not
+ assigned
+Message-ID: <20120224085005.59f55ff5@jbarnes-desktop>
+In-Reply-To: <1330053812-10316-5-git-send-email-yinghai@kernel.org>
+References: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
+	<1330053812-10316-5-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/PnU5VxREw/7_ZbBdQgSyv7_"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 07, 2012 at 08:48:36PM -0800, Yinghai Lu wrote:
-> On Tue, Feb 7, 2012 at 8:35 PM, Ram Pai <linuxram@us.ibm.com> wrote:
-> > On Sat, Feb 04, 2012 at 10:55:03PM -0800, Yinghai Lu wrote:
-> >> We should not set the requested size to -2.
-> >>
-> >> that will confuse the resource list sorting with align when SIZEALIGN is used.
-> >>
-> >> Change to STARTALIGN and pass align from start.
-> >>
-> >> We are safe to do that just as we do that regular pci bridge.
-> >>
-> >> In the long run, we should just treat cardbus like regular pci bridge.
-> >>
-> >> Also fix when realloc is not passed, should keep the requested size.
-> >>
-> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> ---
-> >>  drivers/pci/setup-bus.c |   63 ++++++++++++++++++++++++++--------------------
-> >>  1 files changed, 36 insertions(+), 27 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> >> index d5897c3..3b3932a 100644
-> >> --- a/drivers/pci/setup-bus.c
-> >> +++ b/drivers/pci/setup-bus.c
-> >> @@ -898,21 +898,30 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+--Sig_/PnU5VxREw/7_ZbBdQgSyv7_
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-..snip
+On Thu, 23 Feb 2012 19:23:32 -0800
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-> >> -             b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
-> >> -             if (realloc_head)
-> >> -                     add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size, 0 /* dont care */);
-> >
-> > The b_res_3_size has to be reduced to half here.
-> > Otherwise it will try allocate 2*pci_cardbus_mem_size to the BAR3..
-> >
-> >                b_res_3_size = pci_cardbus_mem_size;
-> >
-> >
-> >> -     } else {
-> >> -             b_res[3].start = 0;
-> >> -             b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
-> >> -             if (realloc_head)
-> >> -                     add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size * 2, 0 /* dont care */);
-> >> +             /* reduce that to half */
-> >> +             b_res_3_size = pci_cardbus_mem_size;
-> >
-> > b_res3_3_size should not be updated here, since BAR3 has to be allocated 2*pci_cardbus_mem_size
-> > resource.
-> >
-> 
-> looks like you did not read the patch correctly
-> 
-> that else {} get removed already in this patch
-> 
-> please check segment after patch...
-> 	/*
+> If bios does not assign those BAR or wrong address, then kernel will
+> try to do pci realloc.
+>=20
+> in that case, user still can use pci=3Drealloc=3Doff to override it.
+>=20
+> -v2: According to Jesse, adding one CONFIG option for distribution to
+>      disable it or enable it.
+>=20
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
 
-..snip..
-> 	 * If we have prefetchable memory support, allocate
-> 	 * two regions.  Otherwise, allocate one region of
-> 	 * twice the size.
-> 	 */
-> 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
-> 		b_res[2].start = pci_cardbus_mem_size;
-> 		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
-> 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
-> 				  IORESOURCE_STARTALIGN;
-> 		if (realloc_head) {
-> 			b_res[2].end -= pci_cardbus_mem_size;
-> 			add_to_list(realloc_head, bridge, b_res+2,
-> 				 pci_cardbus_mem_size, pci_cardbus_mem_size);
-> 		}
-> 
-> 		/* reduce that to half */
-> 		b_res_3_size = pci_cardbus_mem_size;
-> 	}
+Ok applied these, thanks for the cleanups Yinghai.
 
-ACK. Ok. got it. This looks correct.
-RP
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
+--Sig_/PnU5VxREw/7_ZbBdQgSyv7_
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPR7+9AAoJEIEoDkX4Qk9hrr0P/0ipSQ9Ep+2NIphBSDrT65Nw
+We5u0JcKnJGZRolacgm5cwYHseOw0rF6AkYN3Pqiw7PNE3B7bmUBxu4ENGZf2gNE
++0GAVOCXqkrTQ1N4BXn73vsId1RMVZlVXN8NVAYJM8Rtjb7VUOBz0hTNqOHnoNwh
+XCyJP3D0OmCxBIhglD3tdnSxBCaqsl8ZdOl6fi5J0I7Dv8xSbSun2av5lRMNrfkG
+CrD85j0xdea1B37tBk1NWZ47RD+5pXEgsZ7LP3aWA8hQL3LhEZi+UU1ldRaAixuy
+QBqIjZlMKD9upGiDV7Ibt1lhWQjjP/VuSfQ9g8vHsv77OyX/SIrUPxv0pl8KaxsF
+2s0oMhHYuLE1K45pfbZeMm7Dk3byhNJh0y2aYf0fq8MoiyYml3cM8KBodhtOR4FH
+TyDnGTTyLJnB4X14sxtDR50l5ji5oIKN2jloC0geWWVyhas4QEPC90AMMO7fbqYD
+4OTUipi99n6tGOz+r80KJbI9waxbVz/HU7zKvn3aVBWL9i69vgwM5+7XdXHGwvgf
+476+/1Jn6RkuswUycXkjwAclxRgofCYfX6xwUeNsC4X1d8SIp86gTEbOTLA9XKkV
+MNgA3GZjsp7nWfcwZ+Uiy7Wy/3DbDRaxJSyBtkR2BMS0elS6LHaKcx93aWJqmryu
+9NJU8dgM0731CGbQ4mHt
+=oWc0
+-----END PGP SIGNATURE-----
+
+--Sig_/PnU5VxREw/7_ZbBdQgSyv7_--
