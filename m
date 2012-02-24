@@ -1,73 +1,66 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120224142430.58f5e5ef@jbarnes-desktop>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-	<1328425088-6562-10-git-send-email-yinghai@kernel.org>
-	<CAErSpo6BwznWf3rq4J2Ao+rrgR4yWqQ0mQGygkd2KmBuA1OD8g@mail.gmail.com>
-	<1328738567.2903.45.camel@pasglop>
-	<CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
-	<1328823358.2903.77.camel@pasglop>
-	<20120223122536.6a2a7a6b@jbarnes-desktop>
-	<CAErSpo7_WGjitDZz4XH+77f65Uz1ynd5_USN+D17D09Eux1iQQ@mail.gmail.com>
-	<20120224142430.58f5e5ef@jbarnes-desktop>
-Date: Fri, 24 Feb 2012 23:47:26 -0800
-Message-ID: <CAE9FiQXx6wXaes1pbpM7SAHzndgr=N2D2g6LEWsB2_pf8+mgSA@mail.gmail.com>
-Subject: Re: [PATCH 09/24] PCI, powerpc: Register busn_res for root buses
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:16904 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754128Ab2BXKUO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 05:20:14 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 18/23] PCI, pciehp: Remove not needed bus number range checking
+Date: Fri, 24 Feb 2012 02:19:06 -0800
+Message-Id: <1330078751-7299-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
+References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 24, 2012 at 2:24 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Thu, 23 Feb 2012 12:51:30 -0800
-> Bjorn Helgaas <bhelgaas@google.com> wrote:
->> 2) We already have a way to add resources to a root bus: the
->> pci_add_resource() used to add I/O port and MMIO apertures.  I think
->> it'd be a lot simpler to just use that same interface for the bus
->> number aperture, e.g.,
->>
->>     pci_add_resource(&resources, hose->io_space);
->>     pci_add_resource(&resources, hose->mem_space);
->>     pci_add_resource(&resources, hose->busnr_space);
->>     bus = pci_scan_root_bus(dev, next_busno, pci_ops, sysdata, &resources);
->>
->> This is actually a bit redundant, since "next_busno" should be the
->> same as hose->busnr_space->start.  So if we adopted this approach, we
->> might want to eventually drop the "next_busno" argument.
->
-> Yeah that would be nice, the call would certainly make more sense that
-> way.
+Found hotplug adding one EM with bridge fail, bios only leave one bus range
+ for slot.
 
-no, I don't think so.
+[ 1169.621444] pciehp: No bus number available for hot-added bridge 0000:55:00.0
+[ 1169.633277] pcieport 0000:40:03.0: PCI bridge to [bus 55-55]
 
-using pci_add_resource will need to create dummy resource abut bus range.
+With busn_res tracking and allocating, we don't need that checking anymore.
 
-there is lots of pci_scan_root_bus(),  and those user does not bus end
-yet before scan.
-so could just hide pci_insert_busn_res in pci_scan_root_bus, and
-update busn_res end there.
+Parent bridges' bus number will be extended safely.
 
-other arch like x86, ia64, powerpc, sparc, will insert exact bus range
-between pci_create_root_bus and
-pci_scan_child_bus, will not need to update busn_res end.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/pciehp_pci.c |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
 
-please check v7 of this patchset.
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index a4031df..df1f3ed 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -37,18 +37,8 @@
+ static int __ref pciehp_add_bridge(struct pci_dev *dev)
+ {
+ 	struct pci_bus *parent = dev->bus;
+-	int pass, busnr, start = parent->secondary;
+-	int end = parent->subordinate;
++	int pass, busnr = parent->secondary;
+ 
+-	for (busnr = start; busnr <= end; busnr++) {
+-		if (!pci_find_bus(pci_domain_nr(parent), busnr))
+-			break;
+-	}
+-	if (busnr-- > end) {
+-		err("No bus number available for hot-added bridge %s\n",
+-				pci_name(dev));
+-		return -1;
+-	}
+ 	for (pass = 0; pass < 2; pass++)
+ 		busnr = pci_scan_bridge(parent, dev, busnr, pass);
+ 	if (!dev->subordinate)
+-- 
+1.7.7
 
-    	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-busn-alloc
-
-It should be clean and have minimum lines of change.
-
-Thanks
-
-      Yinghai
