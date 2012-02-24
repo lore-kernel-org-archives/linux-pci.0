@@ -1,42 +1,70 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:21264 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755462Ab2BXDtn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:43 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH 15/36] PCI: Add busn_res into struct pci_bus.
-Date: Wed, 29 Feb 2012 19:00:16 -0800
-Message-Id: <1330570837-26638-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 13/13] PCI: Disable mem in the ioapic removing path
+Date: Thu, 23 Feb 2012 19:48:59 -0800
+Message-Id: <1330055339-11662-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will use it to have bus number resource tree.
+For physical hot plug should be ok, but for remove/rescan path will need us
+to disable that.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+otherwise rescan mmio resource for pci ioapic device will not be sized and
+allocated, aka skiped.
+For ioapic_probe:pci_enable_device will not enable the device correctly, and
+will bail out early.
+
+So we can just disable mmio for all removing case. that will hurt real hotplug
+path.
+
+Signed-off-by: <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
 ---
- include/linux/pci.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/pci/ioapic.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d93d3ae..7c03852 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -419,6 +419,7 @@ struct pci_bus {
- 	struct list_head slots;		/* list of slots on this bus */
- 	struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
- 	struct list_head resources;	/* address space routed to this bus */
-+	struct resource busn_res;	/* track registered bus num range */
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 4183a5c..0b2c210 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -88,6 +88,17 @@ exit_free:
+ 	return -ENODEV;
+ }
  
- 	struct pci_ops	*ops;		/* configuration access functions */
- 	void		*sysdata;	/* hook for sys-specific extension */
++static void pci_disable_device_mem(struct pci_dev *dev)
++{
++	u16 pci_command;
++
++	pci_read_config_word(dev, PCI_COMMAND, &pci_command);
++	if (pci_command & PCI_COMMAND_MEMORY) {
++		pci_command &= ~PCI_COMMAND_MEMORY;
++		pci_write_config_word(dev, PCI_COMMAND, pci_command);
++	}
++}
++
+ static void __devexit ioapic_remove(struct pci_dev *dev)
+ {
+ 	struct ioapic *ioapic = pci_get_drvdata(dev);
+@@ -95,6 +106,8 @@ static void __devexit ioapic_remove(struct pci_dev *dev)
+ 	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+ 	pci_release_region(dev, 0);
+ 	pci_disable_device(dev);
++	/* need to disable it, otherwise remove/rescan will not work */
++	pci_disable_device_mem(dev);
+ 	kfree(ioapic);
+ }
+ 
 -- 
 1.7.7
 
