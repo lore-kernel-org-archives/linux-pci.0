@@ -1,87 +1,105 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 5/9] PCI: Skip reset cardbus assigned resource during pci bus rescan
-Date: Sat,  4 Feb 2012 22:55:04 -0800
-Message-Id: <1328424908-6385-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 20/23] PCI, sysfs: create rescan_bridge under /sys/.../pci/devices/... for pci bridges
+Date: Fri, 24 Feb 2012 02:19:08 -0800
+Message-Id: <1330078751-7299-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
+References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-otherwise when rescan is used for cardbus, assigned resource will get
-cleared.
+Current code will create rescan for every pci device under parent bus.
+that is not right. the device is already there, there is no reason to rescan it.
+
+We could have rescan for pci bridges. less confusing.
+
+Need to move rescan attr to pci dev bridge attribute group.
+And We should rescan bridge's secondary bus instead of primary bus.
+
+-v3: Use device_type for pci dev.
+-v4: Seperate pci device type change out
+-v5: add rescan_bridge for bridge type, and still keep the old rescan.
+	may remove the old rescan later.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
+ drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3b3932a..2991a89 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -901,6 +901,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
- 	u16 ctrl;
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 34f5110..95f0f37 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -111,6 +111,16 @@ Description:
+ 		from this part of the device tree.
+ 		Depends on CONFIG_HOTPLUG.
  
-+	if (b_res[0].parent)
-+		goto handle_b_res_1;
- 	/*
- 	 * Reserve some resources for CardBus.  We reserve
- 	 * a fixed amount of bus space for CardBus bridges.
-@@ -914,6 +916,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 				pci_cardbus_io_size);
- 	}
- 
-+handle_b_res_1:
-+	if (b_res[1].parent)
-+		goto handle_b_res_2;
- 	b_res[1].start = pci_cardbus_io_size;
- 	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
- 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
-@@ -923,6 +928,7 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 				 pci_cardbus_io_size);
- 	}
- 
-+handle_b_res_2:
- 	/* MEM1 must not be pref mmio */
- 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
- 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
-@@ -942,6 +948,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
- 	}
- 
-+	if (b_res[2].parent)
-+		goto handle_b_res_3;
- 	/*
- 	 * If we have prefetchable memory support, allocate
- 	 * two regions.  Otherwise, allocate one region of
-@@ -962,6 +970,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 		b_res_3_size = pci_cardbus_mem_size;
- 	}
- 
-+handle_b_res_3:
-+	if (b_res[3].parent)
-+		goto handle_done;
- 	b_res[3].start = pci_cardbus_mem_size;
- 	b_res[3].end = b_res[3].start + b_res_3_size - 1;
- 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
-@@ -970,6 +981,9 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
- 				 pci_cardbus_mem_size);
- 	}
++What:		/sys/bus/pci/devices/.../rescan_bridge
++Date:		February 2012
++Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
++Description:
++		Writing a non-zero value to this attribute will
++		force a rescan of the bridge and all child buses, and
++		re-discover devices removed earlier from this part of
++		the device tree.
++		Depends on CONFIG_HOTPLUG.
 +
-+handle_done:
-+	;
+ What:		/sys/bus/pci/devices/.../reset
+ Date:		July 2009
+ Contact:	Michael S. Tsirkin <mst@redhat.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 124e826..68caf29 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	return count;
  }
  
- void __ref __pci_bus_size_bridges(struct pci_bus *bus,
++static ssize_t
++dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
++		 const char *buf, size_t count)
++{
++	unsigned long val;
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (kstrtoul(buf, 0, &val) < 0)
++		return -EINVAL;
++
++	if (val) {
++		mutex_lock(&pci_remove_rescan_mutex);
++		pci_rescan_bus(pdev->subordinate);
++		mutex_unlock(&pci_remove_rescan_mutex);
++	}
++	return count;
++}
++
++static struct device_attribute pci_dev_bridge_rescan_attr =
++	__ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
++
+ static void remove_callback(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+@@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
+ late_initcall(pci_sysfs_init);
+ 
+ static struct attribute *pci_dev_bridge_attrs[] = {
++#ifdef CONFIG_HOTPLUG
++	&pci_dev_bridge_rescan_attr.attr,
++#endif
+ 	NULL,
+ };
+ 
 -- 
 1.7.7
 
