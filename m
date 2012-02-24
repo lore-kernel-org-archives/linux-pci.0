@@ -1,69 +1,60 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 13/36] x86, PCI: allocate temp range array in amd_bus pci_root_info probing
-Date: Wed, 29 Feb 2012 19:00:14 -0800
-Message-Id: <1330570837-26638-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:36051 "EHLO
+	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753741Ab2BXD6P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:58:15 -0500
+Message-ID: <4F470ABE.2010206@st.com>
+Date: Fri, 24 Feb 2012 09:27:50 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+MIME-Version: 1.0
+To: Tejun Heo <tj@kernel.org>
+Cc: "Pedanekar, Hemant" <hemantp@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Viresh KUMAR <viresh.kumar@st.com>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	Armando VISCONTI <armando.visconti@st.com>,
+	Vipin KUMAR <vipin.kumar@st.com>,
+	Deepak SIKRI <deepak.sikri@st.com>,
+	Rajeev KUMAR <rajeev-dlh.kumar@st.com>,
+	Vipul Kumar SAMAR <vipulkumar.samar@st.com>,
+	Amit VIRDI <Amit.VIRDI@st.com>,
+	Bhupesh SHARMA <bhupesh.sharma@st.com>
+Subject: Re: [PATCH] PCIE: pcie_set_readrq must not be allowed by PCIE EP
+ driver
+References: <1297937650-2558-1-git-send-email-pratyush.anand@st.com> <2A3DCF3DA181AD40BDE86A3150B27B6B0373799132@dbde02.ent.ti.com> <2A3DCF3DA181AD40BDE86A3150B27B6B03737991EA@dbde02.ent.ti.com> <4D78D6E3.50004@st.com> <2A3DCF3DA181AD40BDE86A3150B27B6B03743048FE@dbde02.ent.ti.com> <4D806132.1090704@st.com> <4F460E79.5000308@st.com> <20120223174228.GF22536@google.com>
+In-Reply-To: <20120223174228.GF22536@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/amd_bus.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
+On 2/23/2012 11:12 PM, Tejun Heo wrote:
+> Hello,
+>
+> On Thu, Feb 23, 2012 at 03:31:29PM +0530, Pratyush Anand wrote:
+>> Its a long pending patch.
+>> Any decision on this patch.
+>
+> Hmmm.... I really don't know what to do.  IIRC it was something lifted
+> from the proprietary sil driver and they probably added that to work
+> around performance oddities under certain configurations and I'm a bit
+> worried about changing it after all this time.  Is there any way to
+> make this conditional somehow?
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index 5f30a98..aff155d 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -30,7 +30,7 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
- 	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
- };
- 
--#define RANGE_NUM 16
-+#define RANGE_NUM 128
- 
- static struct pci_root_info __init *find_pci_root_info(int node, int link)
- {
-@@ -64,7 +64,7 @@ static int __init early_fill_mp_bus_info(void)
- 	u32 reg;
- 	u64 start;
- 	u64 end;
--	struct range range[RANGE_NUM];
-+	struct range *range;
- 	u64 val;
- 	u32 address;
- 	bool found;
-@@ -125,7 +125,10 @@ static int __init early_fill_mp_bus_info(void)
- 	reg = read_pci_config(bus, slot, 0, 0x64);
- 	def_link = (reg >> 8) & 0x03;
- 
--	memset(range, 0, sizeof(range));
-+	range = kcalloc(RANGE_NUM, sizeof(struct range), GFP_KERNEL);
-+	if (!range)
-+		return -ENOMEM;
-+
- 	add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
- 	/* io port resource */
- 	for (i = 0; i < 4; i++) {
-@@ -291,6 +294,8 @@ static int __init early_fill_mp_bus_info(void)
- 		}
- 	}
- 
-+	kfree(range);
-+
- 	print_all_pci_root_info("ht link", true);
- 
- 	return 0;
--- 
-1.7.7
+I see that there is a patch in the latest kernel.
+
+commit a1c473aa11e61bc871be16279c9bf976acf22504
+Author: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date:   Fri Oct 14 14:56:15 2011 -0500
+
+     pci: Clamp pcie_set_readrq() when using "performance" settings
+
+I think, this will resolve the issue.
+We are moving to the new kernel. Will check it there.
+
+Regards
+Pratyush
+
+>
+> Thanks.
+>
 
