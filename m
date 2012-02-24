@@ -1,64 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50634 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752394Ab2BPOd0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Feb 2012 09:33:26 -0500
-Date: Thu, 16 Feb 2012 06:33:21 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Oliver Neukum <oneukum@suse.de>
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
+Received: from rcsinet15.oracle.com ([148.87.113.117]:21289 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756007Ab2BXDts (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:48 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [RFC v2] USB: Fix handoff when BIOS disables host PCI device.
-Message-ID: <20120216143321.GA9127@xanatos>
-References: <20120209150823.GA5232@xanatos>
- <201202150948.07115.oneukum@suse.de>
- <20120215163807.GA5446@xanatos>
- <201202161115.48524.oneukum@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201202161115.48524.oneukum@suse.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Ingo Molnar <mingo@redhat.com>,
+	linux-pm@vger.kernel.org
+Subject: [PATCH 11/13] x86, acpi, irq: Enable pci device type ioapic hotplug
+Date: Thu, 23 Feb 2012 19:48:57 -0800
+Message-Id: <1330055339-11662-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2012 at 11:15:48AM +0100, Oliver Neukum wrote:
-> Am Mittwoch, 15. Februar 2012, 17:38:07 schrieb Sarah Sharp:
-> > On Wed, Feb 15, 2012 at 09:48:07AM +0100, Oliver Neukum wrote:
-> > > Am Dienstag, 14. Februar 2012, 21:33:11 schrieb Sarah Sharp:
-> > > > Hi Oliver,
-> > > > 
-> > > > Have you gotten a chance to test this patch on your test system?  I'd
-> > > > like to get it out, but I want to make sure it fixes your problem.
-> > > 
-> > > Did I forget to answer? Anyway, yes it works. However it seems a bad idea
-> > > to me to unconditionally disable the device, on second thought.
-> > 
-> > Why?  The USB core will re-enable the device during the PCI probe, so I
-> 
-> Provided the device is probed. Typically of course it wii be, but
-> we cannot assume that the xhci driver will always be loaded.
+Fill the blank stub of acpi_register_ioapic/acpi_unregister_ioapic.
 
-Sure.  That's why I want to balance the enable/disable calls in the PCI
-quirks handler.  If we don't disable the PCI device, and the driver
-never gets loaded, then the PCI device will remain enabled.  I'm not
-sure if that's a terrible thing, but it does mean the ref count never
-goes to zero.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <len.brown@intel.com>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-pm@vger.kernel.org
+---
+ arch/x86/kernel/acpi/boot.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-Jesse?
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index fa9473b..94af680 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -688,16 +688,14 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
+ 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	return	__mp_register_ioapic(0, phys_addr, gsi_base, true);
+ }
+ 
+ EXPORT_SYMBOL(acpi_register_ioapic);
+ 
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	return mp_unregister_ioapic(gsi_base);
+ }
+ 
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
+-- 
+1.7.7
 
-> > don't see the harm in it.  What else might be accessing the PCI device?
-> > Obviously the PCI core didn't care if the device was enabled or not
-> > pre-probe, or it would have enabled the PCI device itself.
-> 
-> The BIOS might touch it. Are you really willing to say that there won't
-> be BIOSes that assume that what they enabled must stay enabled?
-
-Once the xHCI PCI quirk handler runs, we've taken the host controller
-away from the BIOS with the BIOS/OS semaphore handshake.  (If the BIOS
-is smart enough to actually handle that.)  Any BIOS that touches the
-xHCI host controller after that point is just broken.  There is only so
-much we can do about the BIOS breakage. :)
-
-Sarah Sharp
