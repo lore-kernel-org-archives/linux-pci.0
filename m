@@ -1,53 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:56057 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962Ab2BXG7Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 01:59:25 -0500
-Date: Fri, 24 Feb 2012 07:59:21 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@nvidia.com>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"Olof Johansson (olof@lixom.net)" <olof@lixom.net>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: PCIe device tree support
-Message-ID: <20120224065921.GA28932@avionic-0098.mockup.avionic-design.de>
-References: <20120220191804.GA14499@avionic-0098.adnet.avionic-design.de>
- <74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
- <20120222082449.GA15157@avionic-0098.adnet.avionic-design.de>
- <CAErSpo4TfpGmx+HZ1ZnZwj3ZP_cQMCzkMT+6JK6ztYp2zWJcxw@mail.gmail.com>
- <20120223060355.GA21091@avionic-0098.mockup.avionic-design.de>
- <CAErSpo7wSB-uCjV4YeA-fUOHPtugn4ASXScN3MndVybfkk8mOw@mail.gmail.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:51172 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844Ab2BXFEZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 00:04:25 -0500
+Received: by wics10 with SMTP id s10so1197284wic.19
+        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 21:04:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
-In-Reply-To: <CAErSpo7wSB-uCjV4YeA-fUOHPtugn4ASXScN3MndVybfkk8mOw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 23 Feb 2012 21:04:04 -0800
+Message-ID: <CAErSpo67Y4xtctJ=a8LQLqopRyM9_3gYKwFSUw8kT6XEVsPZzA@mail.gmail.com>
+Subject: pci_probe_only and bus_to_resources patches rebased to pci linux-next branch
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Jesse,
 
---/9DWx/yDrRhgMJTb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I rebased these series:
 
-* Bjorn Helgaas wrote:
-> I agree that if the code isn't shared at all, there's no point in
-> putting it in a generic place like drivers/pci/.
+    v2 generic pci_probe_only flag
+    (http://marc.info/?l=linux-pci&m=133002621016744&w=2)
 
-Alright, I'll keep the driver in arch/arm/mach-tegra/ then.
+    v2 add PCI bus-to-resource offset support in core
+    (http://marc.info/?l=linux-pci&m=132884138928641&w=2)
 
-Thierry
+onto your current linux-next tree (based on commit 823806ff).  Minor
+conflict resolutions in include/linux/pci.h, and that's about it.
 
---/9DWx/yDrRhgMJTb
-Content-Type: application/pgp-signature
+You can examine the result here:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+    https://github.com/bjorn-helgaas/linux/tree/pci-next+probe_only+bus2res-fb127cb
 
-iEYEARECAAYFAk9HNUkACgkQZ+BJyKLjJp8dfACghzkzpY0Rxx/lKVHZF+b23Y0N
-LvwAnjFKIdGsPqvgLmPsHdGVvsbaYlJ4
-=y9xH
------END PGP SIGNATURE-----
+or pull both series with:
 
---/9DWx/yDrRhgMJTb--
+    git pull git://github.com/bjorn-helgaas/linux.git
+pci-next+probe_only+bus2res-fb127cb
+
+Bjorn
