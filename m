@@ -1,161 +1,147 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 01/11] PCI: Add class support in quirk handling
-Date: Thu, 23 Feb 2012 23:46:49 -0800
-Message-Id: <1330069619-14446-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
-References: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 05/23] PCI, x86: Register busn_res for root buses
+Date: Fri, 24 Feb 2012 02:18:53 -0800
+Message-Id: <1330078751-7299-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
+References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Recently there is new support to make quirk calling will report duration time.
-That will boot log get more print out with initcall_debug is specified.
+update x86_pci_root_bus_resources() to get bus_max for non-acpi case.
 
-Found a lot of quirks are calling for not related devices.
-
-Reason is quirk frame do not support class handling. So quirk code have to
-use PCI_ANY_ID for vendor/device and let quirk code itself to check class
-inside the func.
-
-The patch add class and cls_shift into struct pci_fixup.
-Also update related macro to accept the class and shift.
-
--v2: fix v1 that left over of sparated patch.
--v3: according to Jesse, change cls to class, cls_shift, to class_shift.
+update pci_acpi_scan_root_bus, and pci_scan_root_bus_on_node
+to insert busn_res before scan child bus.
+So could make root bus busn_res is kept the original large one.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/quirks.c |   12 +++++----
- include/linux/pci.h  |   63 +++++++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 59 insertions(+), 16 deletions(-)
+ arch/x86/include/asm/topology.h |    3 ++-
+ arch/x86/pci/acpi.c             |    8 +++++---
+ arch/x86/pci/bus_numa.c         |    8 +++++++-
+ arch/x86/pci/common.c           |   12 +++++++++---
+ 4 files changed, 23 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index fb544d6..2b4b1ea 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2961,17 +2961,19 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
- {
--	while (f < end) {
--		if ((f->vendor == dev->vendor || f->vendor == (u16) PCI_ANY_ID) &&
--		    (f->device == dev->device || f->device == (u16) PCI_ANY_ID)) {
-+	for (; f < end; f++)
-+		if ((f->class == (u32) (dev->class >> f->class_shift) ||
-+		     f->class == (u32) PCI_ANY_ID) &&
-+		    (f->vendor == dev->vendor ||
-+		     f->vendor == (u16) PCI_ANY_ID) &&
-+		    (f->device == dev->device ||
-+		     f->device == (u16) PCI_ANY_ID)) {
- 			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
- 			if (initcall_debug)
- 				do_one_fixup_debug(f->hook, dev);
- 			else
- 				f->hook(dev);
- 		}
--		f++;
--	}
+diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
+index b9676ae..8413481 100644
+--- a/arch/x86/include/asm/topology.h
++++ b/arch/x86/include/asm/topology.h
+@@ -172,7 +172,8 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
  }
  
- extern struct pci_fixup __start_pci_fixups_early[];
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index bcaa51c..ec32328 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1364,7 +1364,10 @@ static inline void pci_resource_to_user(const struct pci_dev *dev, int bar,
-  */
+ struct pci_bus;
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources);
++void x86_pci_root_bus_resources(int bus, int *bus_max,
++				 struct list_head *resources);
  
- struct pci_fixup {
--	u16 vendor, device;	/* You can use PCI_ANY_ID here of course */
-+	u16 vendor;		/* You can use PCI_ANY_ID here of course */
-+	u16 device;		/* You can use PCI_ANY_ID here of course */
-+	u32 class;		/* You can use PCI_ANY_ID here too */
-+	unsigned int class_shift;	/* should be 0, 8, 16 */
- 	void (*hook)(struct pci_dev *dev);
- };
+ #ifdef CONFIG_SMP
+ #define mc_capable()	((boot_cpu_data.x86_max_cores > 1) && \
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index daa4249..b25b5b1 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -348,6 +348,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct acpi_device *device = root->device;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
++	int busmax = root->secondary.end;
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+@@ -410,12 +411,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+ 		if (!pci_use_crs)
+-			x86_pci_root_bus_resources(busnum, &resources);
++			x86_pci_root_bus_resources(busnum, &busmax, &resources);
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+-		if (bus)
++		if (bus) {
++			pci_bus_insert_busn_res(bus, busnum, busmax);
+ 			bus->subordinate = pci_scan_child_bus(bus);
+-		else
++		} else
+ 			pci_free_resource_list(&resources);
+ 	}
  
-@@ -1379,30 +1382,68 @@ enum pci_fixup_pass {
- };
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index fd3f655..5213cd8 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -7,7 +7,8 @@
+ int pci_root_num;
+ struct pci_root_info pci_root_info[PCI_ROOT_NR];
  
- /* Anonymous variables would be nice... */
--#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, hook)	\
--	static const struct pci_fixup __pci_fixup_##name __used		\
--	__attribute__((__section__(#section))) = { vendor, device, hook };
-+#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, class,	\
-+				  class_shift, hook)			\
-+	static const struct pci_fixup const __pci_fixup_##name __used	\
-+	__attribute__((__section__(#section), aligned((sizeof(void *)))))    \
-+		= { vendor, device, class, class_shift, hook };
-+
-+#define DECLARE_PCI_FIXUP_CLASS_EARLY(vendor, device, class,		\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
-+		vendor##device##hook, vendor, device, class, class_shift, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_HEADER(vendor, device, class,		\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
-+		vendor##device##hook, vendor, device, class, class_shift, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_FINAL(vendor, device, class,		\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
-+		vendor##device##hook, vendor, device, class, class_shift, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_ENABLE(vendor, device, class,		\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
-+		vendor##device##hook, vendor, device, class, class_shift, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_RESUME(vendor, device, class,		\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
-+		resume##vendor##device##hook, vendor, device, class,	\
-+		class_shift, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(vendor, device, class,	\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
-+		resume_early##vendor##device##hook, vendor, device,	\
-+		class, class_shift, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_SUSPEND(vendor, device, class,		\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
-+		suspend##vendor##device##hook, vendor, device, class,	\
-+		class_shift, hook)
-+
- #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_HEADER(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_FINAL(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_ENABLE(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_RESUME(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
--			resume##vendor##device##hook, vendor, device, hook)
-+		resume##vendor##device##hook, vendor, device,		\
-+		PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_RESUME_EARLY(vendor, device, hook)		\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
--			resume_early##vendor##device##hook, vendor, device, hook)
-+		resume_early##vendor##device##hook, vendor, device,	\
-+		PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_SUSPEND(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
--			suspend##vendor##device##hook, vendor, device, hook)
-+		suspend##vendor##device##hook, vendor, device,		\
-+		PCI_ANY_ID, 0, hook)
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources)
++void x86_pci_root_bus_resources(int bus, int *bus_max,
++				struct list_head *resources)
+ {
+ 	int i;
+ 	int j;
+@@ -28,6 +29,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	       bus);
  
- #ifdef CONFIG_PCI_QUIRKS
- void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ 	info = &pci_root_info[i];
++	*bus_max = info->bus_max;
+ 	for (j = 0; j < info->res_num; j++) {
+ 		struct resource *res;
+ 		struct resource *root;
+@@ -51,6 +53,10 @@ default_resources:
+ 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
+ 	pci_add_resource(resources, &ioport_resource);
+ 	pci_add_resource(resources, &iomem_resource);
++	if (!bus)
++		*bus_max = 0xff;
++	else if (!*bus_max)
++		*bus_max = bus;
+ }
+ 
+ void __devinit update_res(struct pci_root_info *info, resource_size_t start,
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 8e04ec5..5115606 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -623,6 +623,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+ 	struct pci_sysdata *sd;
++	int bus_max;
+ 
+ 	/*
+ 	 * Allocate per-root-bus (not per bus) arch-specific data.
+@@ -635,13 +636,18 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 		return NULL;
+ 	}
+ 	sd->node = node;
+-	x86_pci_root_bus_resources(busno, &resources);
+-	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+-	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
++	x86_pci_root_bus_resources(busno, &bus_max, &resources);
++	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x-%02x)\n",
++			 busno, bus_max);
++	bus = pci_create_root_bus(NULL, busno, &pci_root_ops, sd, &resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
++		return bus;
+ 	}
++	pci_bus_insert_busn_res(bus, busno, bus_max);
++	bus->subordinate = pci_scan_child_bus(bus);
++	pci_bus_add_devices(bus);
+ 
+ 	return bus;
+ }
 -- 
 1.7.7
 
