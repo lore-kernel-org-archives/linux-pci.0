@@ -3,9 +3,9 @@ From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 07/11] PCI: Use class for quirk for legacy ATA NO_D3
-Date: Thu, 23 Feb 2012 23:46:55 -0800
-Message-Id: <1330069619-14446-8-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 10/11] PCI: Use class for quirk for ti816x class fixup
+Date: Thu, 23 Feb 2012 23:46:58 -0800
+Message-Id: <1330069619-14446-11-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
 References: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -13,41 +13,30 @@ List-ID: <linux-pci.vger.kernel.org>
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/quirks.c |   17 ++++++++++-------
- 1 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/pci/quirks.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f41e00d..a860812 100644
+index 91733a2..e198589 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -1166,17 +1166,20 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_10, qui
- 
- static void __devinit quirk_no_ata_d3(struct pci_dev *pdev)
+@@ -2822,12 +2822,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3c28, vtd_mask_spec_errors);
+ static void __devinit fixup_ti816x_class(struct pci_dev* dev)
  {
--	/* Quirk the legacy ATA devices only. The AHCI ones are ok */
--	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE)
--		pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
-+	pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
+ 	/* TI 816x devices do not have class code set when in PCIe boot mode */
+-	if (dev->class == PCI_CLASS_NOT_DEFINED) {
+-		dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
+-		dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
+-	}
++	dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
++	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
  }
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, PCI_ANY_ID, quirk_no_ata_d3);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, PCI_ANY_ID, quirk_no_ata_d3);
-+/* Quirk the legacy ATA devices only. The AHCI ones are ok */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_SERVERWORKS, PCI_ANY_ID,
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
- /* ALi loses some register settings that we cannot then restore */
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID, quirk_no_ata_d3);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID,
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
- /* VIA comes back fine but we need to keep it alive or ACPI GTM failures
-    occur when mode detecting */
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID, quirk_no_ata_d3);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_TI, 0xb800, fixup_ti816x_class);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_TI, 0xb800,
++				 PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
  
- /* This was originally an Alpha specific thing, but it really fits here.
-  * The i82375 PCI/EISA bridge appears as non-classified. Fix that.
+ /* Some PCIe devices do not work reliably with the claimed maximum
+  * payload size supported.
 -- 
 1.7.7
 
