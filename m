@@ -1,237 +1,49 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:38172 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755938Ab2BXHra (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 02:47:30 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 04/36] PCI: add generic device into pci_host_bridge struct
-Date: Wed, 29 Feb 2012 19:00:05 -0800
-Message-Id: <1330570837-26638-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 08/11] PCI: Use class for quirk for netmos class fixup
+Date: Thu, 23 Feb 2012 23:46:56 -0800
+Message-Id: <1330069619-14446-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
+References: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-use that device for pci_root_bus bridge pointer.
-
-With that make code more simple.
-
-Also we can use pci_release_bus_bridge_dev() to release allocated
-pci_host_bridge during removing path.
-
-At last, we can use root bus bridge pointer to get host bridge pointer instead
-of going over host bridge list, so could kill that host bridge list.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host-bridge.c |   15 +---------
- drivers/pci/pci.h         |    2 -
- drivers/pci/probe.c       |   65 +++++++++++++++++++++++---------------------
- include/linux/pci.h       |    4 ++-
- 4 files changed, 38 insertions(+), 48 deletions(-)
+ drivers/pci/quirks.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 78adcc0..a55c3f8 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -9,13 +9,6 @@
- 
- #include "pci.h"
- 
--static LIST_HEAD(pci_host_bridges);
--
--void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
--{
--	list_add_tail(&bridge->list, &pci_host_bridges);
--}
--
- static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
- {
- 	struct pci_bus *bus;
-@@ -30,14 +23,8 @@ static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
- static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
- {
- 	struct pci_bus *bus = find_pci_root_bus(dev);
--	struct pci_host_bridge *bridge;
--
--	list_for_each_entry(bridge, &pci_host_bridges, list) {
--		if (bridge->bus == bus)
--			return bridge;
--	}
- 
--	return NULL;
-+	return to_pci_host_bridge(bus->bridge);
- }
- 
- static bool resource_contains(struct resource *res1, struct resource *res2)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c695a92..e494347 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -231,8 +231,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- extern void pci_disable_bridge_window(struct pci_dev *dev);
- 
--void add_to_pci_host_bridges(struct pci_host_bridge *bridge);
--
- /* Single Root I/O Virtualization */
- struct pci_sriov {
- 	int pos;		/* capability position */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 89a82a3..fb3dd4b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -421,6 +421,19 @@ static struct pci_bus * pci_alloc_bus(void)
- 	return b;
- }
- 
-+static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-+{
-+	struct pci_host_bridge *bridge;
-+
-+	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-+	if (bridge) {
-+		INIT_LIST_HEAD(&bridge->windows);
-+		bridge->bus = b;
-+	}
-+
-+	return bridge;
-+}
-+
- static unsigned char pcix_bus_speed[] = {
- 	PCI_SPEED_UNKNOWN,		/* 0 */
- 	PCI_SPEED_66MHz_PCIX,		/* 1 */
-@@ -1121,7 +1134,13 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 
- static void pci_release_bus_bridge_dev(struct device *dev)
- {
--	kfree(dev);
-+	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-+
-+	/* TODO: need to free window->res */
-+
-+	pci_free_resource_list(&bridge->windows);
-+
-+	kfree(bridge);
- }
- 
- struct pci_dev *alloc_pci_dev(void)
-@@ -1570,28 +1589,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	int error;
- 	struct pci_host_bridge *bridge;
- 	struct pci_bus *b, *b2;
--	struct device *dev;
- 	struct pci_host_bridge_window *window, *n;
- 	struct resource *res;
- 	resource_size_t offset;
- 	char bus_addr[64];
- 	char *fmt;
- 
--	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
--	if (!bridge)
--		return NULL;
- 
- 	b = pci_alloc_bus();
- 	if (!b)
--		goto err_bus;
--
--	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
--	if (!dev)
--		goto err_dev;
-+		return NULL;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
--
- 	b2 = pci_find_bus(pci_domain_nr(b), bus);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
-@@ -1599,13 +1609,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		goto err_out;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a860812..03e455a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1878,8 +1878,7 @@ static void __devinit quirk_netmos(struct pci_dev *dev)
+ 	case PCI_DEVICE_ID_NETMOS_9745:
+ 	case PCI_DEVICE_ID_NETMOS_9845:
+ 	case PCI_DEVICE_ID_NETMOS_9855:
+-		if ((dev->class >> 8) == PCI_CLASS_COMMUNICATION_SERIAL &&
+-		    num_parallel) {
++		if (num_parallel) {
+ 			dev_info(&dev->dev, "Netmos %04x (%u parallel, "
+ 				"%u serial); changing class SERIAL to OTHER "
+ 				"(use parport_serial)\n",
+@@ -1889,7 +1888,8 @@ static void __devinit quirk_netmos(struct pci_dev *dev)
+ 		}
  	}
- 
--	dev->parent = parent;
--	dev->release = pci_release_bus_bridge_dev;
--	dev_set_name(dev, "pci%04x:%02x", pci_domain_nr(b), bus);
--	error = device_register(dev);
-+	bridge = pci_alloc_host_bridge(b);
-+	if (!bridge)
-+		goto err_out;
-+
-+	bridge->dev.parent = parent;
-+	bridge->dev.release = pci_release_bus_bridge_dev;
-+	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	error = device_register(&bridge->dev);
- 	if (error)
--		goto dev_reg_err;
--	b->bridge = get_device(dev);
-+		goto bridge_dev_reg_err;
-+	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
- 
-@@ -1624,9 +1638,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	b->number = b->secondary = bus;
- 
--	bridge->bus = b;
--	INIT_LIST_HEAD(&bridge->windows);
--
- 	if (parent)
- 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 	else
-@@ -1652,25 +1663,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	}
- 
- 	down_write(&pci_bus_sem);
--	add_to_pci_host_bridges(bridge);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
- 
- 	return b;
- 
- class_dev_reg_err:
--	device_unregister(dev);
--dev_reg_err:
--	down_write(&pci_bus_sem);
--	list_del(&bridge->list);
--	list_del(&b->node);
--	up_write(&pci_bus_sem);
-+	device_unregister(&bridge->dev);
-+bridge_dev_reg_err:
-+	kfree(bridge);
- err_out:
--	kfree(dev);
--err_dev:
- 	kfree(b);
--err_bus:
--	kfree(bridge);
- 	return NULL;
  }
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID, quirk_netmos);
++DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
++			 PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5584aac..310610e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -375,11 +375,13 @@ struct pci_host_bridge_window {
- };
- 
- struct pci_host_bridge {
--	struct list_head list;
-+	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* pci_host_bridge_windows */
- };
- 
-+#define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-+
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+ static void __devinit quirk_e100_interrupt(struct pci_dev *dev)
+ {
 -- 
 1.7.7
 
