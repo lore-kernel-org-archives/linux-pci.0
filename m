@@ -1,87 +1,85 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1328136242-17725-3-git-send-email-yinghai@kernel.org>
-References: <1328136242-17725-1-git-send-email-yinghai@kernel.org> <1328136242-17725-3-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 3 Feb 2012 08:36:02 -0800
-Message-ID: <CAErSpo44bef-Vj4LPB0QJ8HRjWxqRFK_=kpMq8hYEe=4t58zGQ@mail.gmail.com>
-Subject: Re: [PATCH 02/15] PCI: Add iobusn_resource
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:21263 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755367Ab2BXDtm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:42 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 12/13] PCI: Make sure hotplug ioapic driver get loaded early
+Date: Thu, 23 Feb 2012 19:48:58 -0800
+Message-Id: <1330055339-11662-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 1, 2012 at 2:43 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> also add busn_res into struct pci_bus.
->
-> will use them to have bus number resource tree.
+at least before port service.
 
-Will you make this tree visible in /proc?  Seems like that would be
-useful for debugging and for symmetry with /proc/iomem and
-/proc/ioports.
+Some system MADT will only have no hotplug entries even those devices are
+there before os is booting.
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  include/linux/ioport.h |    1 +
->  include/linux/pci.h    |    1 +
->  kernel/resource.c      |    8 ++++++++
->  3 files changed, 10 insertions(+), 0 deletions(-)
->
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index e885ba2..6fe9e19 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -136,6 +136,7 @@ struct resource {
->  /* PC/ISA/whatever - the normal PC address spaces: IO and memory */
->  extern struct resource ioport_resource;
->  extern struct resource iomem_resource;
-> +extern struct resource iobusn_resource;
->
->  extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
->  extern int request_resource(struct resource *root, struct resource *new);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index f8caaab..94ad468 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -419,6 +419,7 @@ struct pci_bus {
->        struct list_head slots;         /* list of slots on this bus */
->        struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
->        struct list_head resources;     /* address space routed to this bus */
-> +       struct resource busn_res;       /* track registered bus num range */
+So we need to enable those ioapic early before real device driver need to
+setup ioapic irq.
 
-Is this different from bus.secondary and bus.subordinate?  Do we need
-both busn_res and secondary/subordinate?  If we need both, in what
-circumstance with they contain different information?
+Signed-off-by: <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+---
+ drivers/pci/Kconfig  |    2 +-
+ drivers/pci/Makefile |    5 +++--
+ drivers/pci/ioapic.c |    6 ------
+ 3 files changed, 4 insertions(+), 9 deletions(-)
 
->        struct pci_ops  *ops;           /* configuration access functions */
->        void            *sysdata;       /* hook for sys-specific extension */
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index 7640b3a..53b42f0 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -38,6 +38,14 @@ struct resource iomem_resource = {
->  };
->  EXPORT_SYMBOL(iomem_resource);
->
-> +struct resource iobusn_resource = {
-> +       .name   = "PCI busn",
-> +       .start  = 0,
-> +       .end    = 0xffffff,
-> +       .flags  = IORESOURCE_BUS,
-> +};
-> +EXPORT_SYMBOL(iobusn_resource);
-> +
->  /* constraints to be met while allocating resources */
->  struct resource_constraint {
->        resource_size_t min, max, align;
-> --
-> 1.7.7
->
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 37856f7..c920a9d 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -98,7 +98,7 @@ config PCI_PASID
+ 	  If unsure, say N.
+ 
+ config PCI_IOAPIC
+-	tristate "PCI IO-APIC hotplug support" if X86
++	bool "PCI IO-APIC hotplug support" if X86
+ 	depends on PCI
+ 	depends on ACPI
+ 	depends on HOTPLUG
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 083a49f..7b4ff82 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -10,11 +10,12 @@ obj-$(CONFIG_SYSFS) += slot.o
+ 
+ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+ 
++# pre-installed hotplug ioapic need to be enabled at first
++obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
++
+ # Build PCI Express stuff if needed
+ obj-$(CONFIG_PCIEPORTBUS) += pcie/
+ 
+-obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+-
+ obj-$(CONFIG_HOTPLUG) += hotplug.o
+ 
+ # Build the PCI Hotplug drivers if we were asked to
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 205af8d..4183a5c 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -118,10 +118,4 @@ static int __init ioapic_init(void)
+ 	return pci_register_driver(&ioapic_driver);
+ }
+ 
+-static void __exit ioapic_exit(void)
+-{
+-	pci_unregister_driver(&ioapic_driver);
+-}
+-
+ module_init(ioapic_init);
+-module_exit(ioapic_exit);
+-- 
+1.7.7
+
