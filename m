@@ -1,105 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1330556858-11768-40-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org> <1330556858-11768-40-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 29 Feb 2012 16:32:30 -0700
-Message-ID: <CAErSpo63hAtPMFdSEuVCcgw5ERMkiKx2Z8pREc2PdiCwmWpvkg@mail.gmail.com>
-Subject: Re: [PATCH 39/39] x86, PCI: kill busn in acpi pci_root_info
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:41818 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756150Ab2BYVyy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Feb 2012 16:54:54 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/4] PCI: Rename pci_remove_behind_bridge to pci_stop_and_remove_behind_bridge
+Date: Sat, 25 Feb 2012 13:54:22 -0800
+Message-Id: <1330206863-31381-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330206863-31381-1-git-send-email-yinghai@kernel.org>
+References: <1330206863-31381-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 29, 2012 at 4:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Bjorn thought that we should just use that in acpi_root.
->
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  arch/x86/pci/acpi.c |   19 ++++++-------------
->  1 files changed, 6 insertions(+), 13 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index ff5243e..5178917 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -12,7 +12,6 @@ struct pci_root_info {
->        char name[16];
->        unsigned int res_num;
->        struct resource *res;
-> -       struct resource busn;
->        struct pci_sysdata sd;
->  };
->
-> @@ -283,9 +282,6 @@ static void add_resources(struct pci_root_info *info,
->        int i;
->        struct resource *res, *root, *conflict;
->
-> -       if (info->busn.flags & IORESOURCE_BUS)
-> -               pci_add_resource(resources, &info->busn);
-> -
->        coalesce_windows(info, IORESOURCE_MEM);
->        coalesce_windows(info, IORESOURCE_IO);
->
-> @@ -346,16 +342,12 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
->
->  static void
->  probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
-> -                   int busnum, int busmax, int domain)
-> +                   int busnum, int domain)
->  {
->        size_t size;
->
->        sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
->        info->bridge = device;
-> -       info->busn.name = info->name;
-> -       info->busn.start = busnum;
-> -       info->busn.end = busmax;
-> -       info->busn.flags = IORESOURCE_BUS;
+old pci_remove_behind_bridge actually do stop and remove.
 
-You just *added* this stuff in a prior patch that hasn't been merged
-yet.  Why can't you just fix that series rather than doing the
-add/remove churn?
+Make the name reflect that, and less confusing.
 
->        info->res_num = 0;
->        acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
-> @@ -379,7 +371,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->        struct pci_root_info *info = NULL;
->        int domain = root->segment;
->        int busnum = root->secondary.start;
-> -       int busmax = root->secondary.end;
->        LIST_HEAD(resources);
->        struct pci_bus *bus;
->        struct pci_sysdata *sd;
-> @@ -432,15 +423,17 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->                memcpy(bus->sysdata, sd, sizeof(*sd));
->                kfree(info);
->        } else {
-> -               probe_pci_root_info(info, device, busnum, busmax, domain);
-> +               probe_pci_root_info(info, device, busnum, domain);
->
->                /*
->                 * _CRS with no apertures is normal, so only fall back to
->                 * defaults or native bridge info if we're ignoring _CRS.
->                 */
-> -               if (pci_use_crs)
-> +               if (pci_use_crs) {
-> +                       /* insert busn res at first */
-> +                       pci_add_resource(&resources,  &root->secondary);
->                        add_resources(info, &resources);
-> -               else {
-> +               } else {
->                        free_pci_root_info_res(info);
->                        x86_pci_root_bus_resources(busnum, &resources);
->                }
-> --
-> 1.7.7
->
+Suggested-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/remove.c     |    7 ++++---
+ drivers/pcmcia/cardbus.c |    2 +-
+ include/linux/pci.h      |    2 +-
+ 3 files changed, 6 insertions(+), 5 deletions(-)
+
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -127,14 +127,15 @@ static void pci_stop_behind_bridge(struc
+ }
+ 
+ /**
+- * pci_remove_behind_bridge - remove all devices behind a PCI bridge
++ * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
++ *					 a PCI bridge
+  * @dev: PCI bridge device
+  *
+  * Remove all devices on the bus, except for the parent bridge.
+  * This also removes any child buses, and any devices they may
+  * contain in a depth-first manner.
+  */
+-void pci_remove_behind_bridge(struct pci_dev *dev)
++void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+ {
+ 	pci_stop_behind_bridge(dev);
+ 	__pci_remove_behind_bridge(dev);
+@@ -175,5 +176,5 @@ void pci_stop_bus_device(struct pci_dev
+ }
+ 
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+-EXPORT_SYMBOL(pci_remove_behind_bridge);
++EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
+ EXPORT_SYMBOL_GPL(pci_stop_bus_device);
+Index: linux-2.6/drivers/pcmcia/cardbus.c
+===================================================================
+--- linux-2.6.orig/drivers/pcmcia/cardbus.c
++++ linux-2.6/drivers/pcmcia/cardbus.c
+@@ -108,5 +108,5 @@ void cb_free(struct pcmcia_socket *s)
+ 	struct pci_dev *bridge = s->cb_dev;
+ 
+ 	if (bridge)
+-		pci_remove_behind_bridge(bridge);
++		pci_stop_and_remove_behind_bridge(bridge);
+ }
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -959,7 +959,7 @@ void pci_unregister_driver(struct pci_dr
+ 	module_driver(__pci_driver, pci_register_driver, \
+ 		       pci_unregister_driver)
+ 
+-void pci_remove_behind_bridge(struct pci_dev *dev);
++void pci_stop_and_remove_behind_bridge(struct pci_dev *dev);
+ struct pci_driver *pci_dev_driver(const struct pci_dev *dev);
+ int pci_add_dynid(struct pci_driver *drv,
+ 		  unsigned int vendor, unsigned int device,
