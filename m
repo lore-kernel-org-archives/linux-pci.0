@@ -1,124 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:51055 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932435Ab2BJTma (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2012 14:42:30 -0500
-Date: Fri, 10 Feb 2012 11:42:27 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-pci@vger.kernel.org, arjanvandeven@gmail.com
-Subject: Re: pci: Annotate PCI quirks in initcall_debug style
-Message-ID: <20120210114227.0b0679db@jbarnes-desktop>
-In-Reply-To: <20120130205207.41636a23@infradead.org>
-References: <20120130205207.41636a23@infradead.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/whBx5+E2RLSUpN2ormtUTjf"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120224142430.58f5e5ef@jbarnes-desktop>
+References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+	<1328425088-6562-10-git-send-email-yinghai@kernel.org>
+	<CAErSpo6BwznWf3rq4J2Ao+rrgR4yWqQ0mQGygkd2KmBuA1OD8g@mail.gmail.com>
+	<1328738567.2903.45.camel@pasglop>
+	<CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
+	<1328823358.2903.77.camel@pasglop>
+	<20120223122536.6a2a7a6b@jbarnes-desktop>
+	<CAErSpo7_WGjitDZz4XH+77f65Uz1ynd5_USN+D17D09Eux1iQQ@mail.gmail.com>
+	<20120224142430.58f5e5ef@jbarnes-desktop>
+Date: Fri, 24 Feb 2012 23:47:26 -0800
+Message-ID: <CAE9FiQXx6wXaes1pbpM7SAHzndgr=N2D2g6LEWsB2_pf8+mgSA@mail.gmail.com>
+Subject: Re: [PATCH 09/24] PCI, powerpc: Register busn_res for root buses
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/whBx5+E2RLSUpN2ormtUTjf
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Feb 24, 2012 at 2:24 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Thu, 23 Feb 2012 12:51:30 -0800
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> 2) We already have a way to add resources to a root bus: the
+>> pci_add_resource() used to add I/O port and MMIO apertures.  I think
+>> it'd be a lot simpler to just use that same interface for the bus
+>> number aperture, e.g.,
+>>
+>>     pci_add_resource(&resources, hose->io_space);
+>>     pci_add_resource(&resources, hose->mem_space);
+>>     pci_add_resource(&resources, hose->busnr_space);
+>>     bus = pci_scan_root_bus(dev, next_busno, pci_ops, sysdata, &resources);
+>>
+>> This is actually a bit redundant, since "next_busno" should be the
+>> same as hose->busnr_space->start.  So if we adopted this approach, we
+>> might want to eventually drop the "next_busno" argument.
+>
+> Yeah that would be nice, the call would certainly make more sense that
+> way.
 
-On Mon, 30 Jan 2012 20:52:07 -0800
-Arjan van de Ven <arjan@infradead.org> wrote:
+no, I don't think so.
 
-> From 77fcc610189853f9c8cf35f77bb8bcfc68833202 Mon Sep 17 00:00:00 2001
-> From: Arjan van de Ven <arjan@linux.intel.com>
-> Date: Mon, 30 Jan 2012 20:30:03 -0800
-> Subject: [PATCH] pci: Annotate PCI quirks in initcall_debug style
->=20
-> While diagnosing some boot time issues on a platform, all that I
-> could see in the bootgraph/dmesg was that the system was spending
-> a lot of time in applying one or more PCI quirks... which
-> was virtually undebuggable.
->=20
-> This patch adds printk's in "initcall_debug" style to the dmesg,
-> which are added when the user asks for the initcall_debug
-> (the nr one tool to use when debugging boot hangs or boot time issues)
-> kernel command line option.
->=20
-> CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-> CC: linux-pci@vger.kernel.org
->=20
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-> ---
->  drivers/pci/quirks.c |   21 ++++++++++++++++++++-
->  1 files changed, 20 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6476547..b3afa1c 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2906,6 +2906,22 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65=
-f8, quirk_intel_mc_errata);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_err=
-ata);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_err=
-ata);
-> =20
-> +
-> +static void do_one_fixup_debug(void (*fn)(struct pci_dev *dev), struct p=
-ci_dev *dev)
-> +{
-> +	ktime_t calltime, delta, rettime;
-> +	unsigned long long duration;
-> +
-> +	printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
-> +	calltime =3D ktime_get();
-> +	fn(dev);
-> +	rettime =3D ktime_get();
-> +	delta =3D ktime_sub(rettime, calltime);
-> +	duration =3D (unsigned long long) ktime_to_ns(delta) >> 10;
-> +	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
-> +		duration);
-> +}
-> +
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->  			  struct pci_fixup *end)
->  {
-> @@ -2913,7 +2929,10 @@ static void pci_do_fixups(struct pci_dev *dev, str=
-uct pci_fixup *f,
->  		if ((f->vendor =3D=3D dev->vendor || f->vendor =3D=3D (u16) PCI_ANY_ID=
-) &&
->  		    (f->device =3D=3D dev->device || f->device =3D=3D (u16) PCI_ANY_ID=
-)) {
->  			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
-> -			f->hook(dev);
-> +			if (initcall_debug)
-> +				do_one_fixup_debug(f->hook, dev);
-> +			else
-> +				f->hook(dev);
->  		}
->  		f++;
->  	}
+using pci_add_resource will need to create dummy resource abut bus range.
 
-Looks cool Arjan, thanks.  Applied to my -next branch.
+there is lots of pci_scan_root_bus(),  and those user does not bus end
+yet before scan.
+so could just hide pci_insert_busn_res in pci_scan_root_bus, and
+update busn_res end there.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+other arch like x86, ia64, powerpc, sparc, will insert exact bus range
+between pci_create_root_bus and
+pci_scan_child_bus, will not need to update busn_res end.
 
---Sig_/whBx5+E2RLSUpN2ormtUTjf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+please check v7 of this patchset.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+    	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-busn-alloc
 
-iQIcBAEBAgAGBQJPNXMjAAoJEIEoDkX4Qk9hIbsP/AsUA7OP15ypMDKc3SlvPXlA
-Qr382nLydAhaO+xdRYsvPkycuz55M8KYZcYXmhFAMB2aabnMMqcmPcFgT4PZC8ku
-+Xb4k8VYHXbJddLK2J6LNOu3zs6HQmKKHptT45ccejbjR/8nHvtiq7OxD66Isn4e
-ZeQfwpiDRwrPU5mRNbJrEKtqPcuC6Mt8M2pVeL8MIMueoTjXkdhQVGaZFfoW/u76
-3Xq6AfMxxVtbYEqi1riPxEItLPxLBqrU2EWHdMYsGs/1fhYX+6TQVuGMx1sYv/x8
-1wrs43OSN7U3m8UXVKV4ggjRM/7NJrchkjQCdcBzj4ig86pxwpSZYaeLHDlUFKvu
-QbRF+NB83Pock6Gd7HXXfzov2LF/9t4IfjSMw50VZFr+ynRBIn/YnBlIJOxtfU+s
-LpGPIUReIX77BQdNkGZZbfT7zI+pxgx1Cg02Oq+W9QMjjxQlnL3sHBGHMyKvsPvH
-HwKKI7Hw6ZeaEFD3/g9xWpKzAVP8GrrgRgOXgRXqVnShipFztHzn1OOLlzNgSNqM
-8GI+e73JldVA9ltM1ib9Lc2nFR8kAQWuEPrv1b2hW3QnLMoQlKzIrQ5aKC/PamEd
-qlmeElnKj4TBqftFCAryt/hRfph2f5zntJeC6UYYX6jTDWr225L/NjX4Apg7uaeG
-0cWnGaZMnDNu66ctpTL5
-=MFDq
------END PGP SIGNATURE-----
+It should be clean and have minimum lines of change.
 
---Sig_/whBx5+E2RLSUpN2ormtUTjf--
+Thanks
+
+      Yinghai
