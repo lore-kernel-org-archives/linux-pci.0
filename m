@@ -1,74 +1,46 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <4F46B1FC.4050002@gmail.com>
-Date: Thu, 23 Feb 2012 15:39:08 -0600
-From: Rob Herring <robherring2@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from isilmar-3.linta.de ([188.40.101.200]:43133 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752368Ab2BZSce (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 26 Feb 2012 13:32:34 -0500
+Date: Sun, 26 Feb 2012 19:32:26 +0100
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: d i <navilein@hotmail.com>, linux-pci@vger.kernel.org
+Cc: linux-pcmcia@lists.infradead.org
+Subject: Re: [yenta_cardbus: no PCI interrupts][>=linux-3.1.6][Bug?]
+Message-ID: <20120226183226.GA24698@comet.dominikbrodowski.net>
+References: <BLU144-W67A6260D2B364094239E8D16A0@phx.gbl>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 04/12] arm/PCI: remove arch pci_flags definition
-References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com> <20120223194322.20708.4942.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120223194322.20708.4942.stgit@bhelgaas.mtv.corp.google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BLU144-W67A6260D2B364094239E8D16A0@phx.gbl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+CC'ing linuc-pci for the IRQ stuff -- there were no changes in the PCMCIA
+code in this period (at least none I'm aware of)
 
-On 02/23/2012 01:43 PM, Bjorn Helgaas wrote:
-> The PCI core provides a pci_flags definition (currently __weak), so drop
-> the arm definition in favor of that.
+Could you send the dmesg and lspci output of the following runs, please:
+
+- linux-2.6.37-r4 -> dmesg-1, lspci-1
+- reboot into a new kernel (which should work now, if I understand you
+  correctly) -> dmesg-2, lspci-2
+- shut down, boot new kernel -> dmesg-3, lspci-3
+
+>From the differences between these three outputs, we should be able to track
+the problem down further.
+
+Best,
+	Dominik
+
+
+On Fri, Feb 24, 2012 at 12:42:59PM +0000, d i wrote:
 > 
-> We EXPORT_SYMBOL(pci_flags) as arm did previously.  I'm dubious about
-> this: no other architecture exports it, and I didn't see any modules in
-> the tree that reference it.
-
-I think you're right that it doesn't need to be exported.
-
-Rob
-
-> CC: Rob Herring <rob.herring@calxeda.com>
-> CC: Russell King <linux@arm.linux.org.uk>
-> CC: linux-arm-kernel@lists.infradead.org
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/arm/kernel/bios32.c |    2 ++
->  arch/arm/mm/iomap.c      |    3 ---
->  2 files changed, 2 insertions(+), 3 deletions(-)
+> Hello, I can't get my cardbus yenta_socket working any longer, for linux-3.1.6 and linux-3.2.1-r2. Apparently yenta_cardbus doesn't get a PCI interrupt (the boot log says: PCI irq 0)
 > 
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index f58ba35..f3fd52b 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -525,6 +525,7 @@ void __init pci_common_init(struct hw_pci *hw)
->  
->  	INIT_LIST_HEAD(&hw->buses);
->  
-> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
->  	if (hw->preinit)
->  		hw->preinit();
->  	pcibios_init_hw(hw);
-> @@ -559,6 +560,7 @@ void __init pci_common_init(struct hw_pci *hw)
->  		pci_bus_add_devices(bus);
->  	}
->  }
-> +EXPORT_SYMBOL(pci_flags);
->  
->  #ifndef CONFIG_PCI_HOST_ITE8152
->  void pcibios_set_master(struct pci_dev *dev)
-> diff --git a/arch/arm/mm/iomap.c b/arch/arm/mm/iomap.c
-> index e62956e..4614208 100644
-> --- a/arch/arm/mm/iomap.c
-> +++ b/arch/arm/mm/iomap.c
-> @@ -32,9 +32,6 @@ EXPORT_SYMBOL(pcibios_min_io);
->  unsigned long pcibios_min_mem = 0x01000000;
->  EXPORT_SYMBOL(pcibios_min_mem);
->  
-> -unsigned int pci_flags = PCI_REASSIGN_ALL_RSRC;
-> -EXPORT_SYMBOL(pci_flags);
-> -
->  void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
->  {
->  	if ((unsigned long)addr >= VMALLOC_START &&
+> It works without a problem in linux-2.6.37-r4. Also, if I reboot from linux-2.6.37-r4 and boot in linux-3.1.6 or linux-3.2.1-r2, it does work (as long as I don't shut down the laptop).
 > 
+> Initially I didn't have any pci parameters for the kernel. I've also tried with  "irqpoll pci=biosirq,noacpi" --- It still doesn't work.
+> Any help would be appreciated! (my network card is through this, and it's painful to be "disconnected" :)) -- please CC to my email address navilein@hotmail.com
+> 
+> May find attached/bellow my dmesg log and config for linux-3.2.1-r2 run.  
+> Thanks!
