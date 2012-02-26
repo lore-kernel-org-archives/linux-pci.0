@@ -1,59 +1,75 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: [PATCH] PCI / PM: Disable wakeup during shutdown for devices not enabled to wake up
-Date: Tue, 7 Feb 2012 00:50:35 +0100
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Alan Stern <stern@rowland.harvard.edu>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201202070050.35931.rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/8] x86, PCI: have own version for pcibios_bus_to_resource
+Date: Sun, 26 Feb 2012 15:33:16 -0800
+Message-Id: <1330299202-3838-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
+References: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rjw@sisk.pl>
+x86 does not need to offset the address. So we can skip that costing offset
+searching.
 
-If a PCI device is enabled to generate wakeup signals (PME) when put
-into a low-power state by runtime PM, it will be still enabled to
-generate those signals after the system shutdown, unless its driver's
-.shutdown() callback takes care of the wakeup signals generation
-setting.  Moreover, there are devices that are not enabled to wake
-up the system and that are configured by runtime PM to generate
-wakeup signals so that (runtime) remote wakeup works with them.
-Those devices should be reconfigured during system shutdown so that
-they don't generate wakeup signals, but at least some drivers don't
-do that.  However, that very well may be done by the PCI core so
-that drivers don't have to worry about it.  For this reason, modify
-pci_device_shutdown() to disable the generation of wakeup events for
-devices not supposed to wake up the system.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=37952
-Reported-and-tested-by: Kamil Iskra <kamil.54002@iskra.name>
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- drivers/pci/pci-driver.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ arch/x86/pci/i386.c       |   14 ++++++++++++++
+ drivers/pci/host-bridge.c |    9 +++++----
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-Index: linux/drivers/pci/pci-driver.c
+Index: linux-2.6/arch/x86/pci/i386.c
 ===================================================================
---- linux.orig/drivers/pci/pci-driver.c
-+++ linux/drivers/pci/pci-driver.c
-@@ -430,6 +430,16 @@ static void pci_device_shutdown(struct d
- 		drv->shutdown(pci_dev);
- 	pci_msi_shutdown(pci_dev);
- 	pci_msix_shutdown(pci_dev);
+--- linux-2.6.orig/arch/x86/pci/i386.c
++++ linux-2.6/arch/x86/pci/i386.c
+@@ -335,6 +335,20 @@ void __init pcibios_resource_survey(void
+  */
+ fs_initcall(pcibios_assign_resources);
+ 
++void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
++			     struct resource *res)
++{
++	region->start = res->start;
++	region->end = res->end;
++}
 +
-+	/*
-+	 * Devices may be enabled to wake up by runtime PM, but they need not
-+	 * be supposed to wake up the system from its "power off" state (e.g.
-+	 * ACPI S5).  Therefore disable wakeup for all devices that aren't
-+	 * supposed to wake up the system at this point.  The state argument
-+	 * will be ignored by pci_enable_wake().
-+	 */
-+	if (!device_may_wakeup(dev))
-+		pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
++void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++			     struct pci_bus_region *region)
++{
++	res->start = region->start;
++	res->end = region->end;
++}
++
+ static const struct vm_operations_struct pci_mmap_ops = {
+ 	.access = generic_access_phys,
+ };
+Index: linux-2.6/drivers/pci/host-bridge.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/host-bridge.c
++++ linux-2.6/drivers/pci/host-bridge.c
+@@ -38,8 +38,9 @@ static bool resource_contains(struct res
+ 	return res1->start <= res2->start && res1->end >= res2->end;
  }
  
- #ifdef CONFIG_PM
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
++void __weak pcibios_resource_to_bus(struct pci_dev *dev,
++				    struct pci_bus_region *region,
++				    struct resource *res)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+@@ -66,8 +67,8 @@ static bool region_contains(struct pci_b
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
++void __weak pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++				    struct pci_bus_region *region)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
