@@ -1,85 +1,33 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:21136 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830Ab2BZXdp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Feb 2012 18:33:45 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 01/23] x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
-Date: Fri, 24 Feb 2012 02:18:49 -0800
-Message-Id: <1330078751-7299-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 0/8] PCI: pci_host_bridge related cleanup
+Date: Sun, 26 Feb 2012 15:33:14 -0800
+Message-Id: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Those two almost the same.
-Let pcibios_scan_root call pci_scan_bus_on_node instead.
+[PATCH 1/8] PCI: Separate host_bridge code out from probe.c
+[PATCH 2/8] x86, PCI: have own version for pcibios_bus_to_resource
+[PATCH 3/8] x86, PCI: Fix memleak with get_current_resources
+[PATCH 4/8] PCI: make pci_host_bridge more robust
+[PATCH 5/8] PCI: add generic device into pci_host_bridge struct
+[PATCH 6/8] PCI: add host bridge release support
+[PATCH 7/8] x86, PCI: break down get_current_resource()
+[PATCH 8/8] x86, PCI: add host bridge resource release for using _CRS
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/common.c |   27 ++++-----------------------
- 1 files changed, 4 insertions(+), 23 deletions(-)
+will add struct device dev into host_bridge struct.
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 323481e..8e04ec5 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -430,9 +430,7 @@ void __init dmi_check_pciprobe(void)
- 
- struct pci_bus * __devinit pcibios_scan_root(int busnum)
- {
--	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
--	struct pci_sysdata *sd;
- 
- 	while ((bus = pci_find_next_bus(bus)) != NULL) {
- 		if (bus->number == busnum) {
-@@ -441,28 +439,10 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
- 		}
- 	}
- 
--	/* Allocate per-root-bus (not per bus) arch-specific data.
--	 * TODO: leak; this memory is never freed.
--	 * It's arguable whether it's worth the trouble to care.
--	 */
--	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
--	if (!sd) {
--		printk(KERN_ERR "PCI: OOM, not probing PCI bus %02x\n", busnum);
--		return NULL;
--	}
--
--	sd->node = get_mp_bus_to_node(busnum);
--
--	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
--	x86_pci_root_bus_resources(busnum, &resources);
--	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
--	if (!bus) {
--		pci_free_resource_list(&resources);
--		kfree(sd);
--	}
--
--	return bus;
-+	return pci_scan_bus_on_node(busnum, &pci_root_ops,
-+					get_mp_bus_to_node(busnum));
- }
-+
- void __init pcibios_set_cache_line_size(void)
- {
- 	struct cpuinfo_x86 *c = &boot_cpu_data;
-@@ -656,6 +636,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 	}
- 	sd->node = node;
- 	x86_pci_root_bus_resources(busno, &resources);
-+	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
- 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
--- 
-1.7.7
+also will add release support to make sure allocated resource get
+freed during root bus removal.
+
+Thanks
+
+Yinghai Lu
 
