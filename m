@@ -1,125 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 10 Feb 2012 13:00:29 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:42414 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753827Ab2B0Unl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 15:43:41 -0500
+MIME-Version: 1.0
+In-Reply-To: <20120227121932.24852506@jbarnes-desktop>
+References: <1330206863-31381-1-git-send-email-yinghai@kernel.org>
+	<1330206863-31381-5-git-send-email-yinghai@kernel.org>
+	<20120227121932.24852506@jbarnes-desktop>
+Date: Mon, 27 Feb 2012 12:43:41 -0800
+Message-ID: <CAE9FiQWGRgKRynj6xBoWM3CABFH6QYii1TbHBg8-9Qyz_vR6YA@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: acpihp user __pci_remove_bus_device instead
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 9/9] PCI: only enable pci realloc when SRIOV bar is not
- assigned
-Message-ID: <20120210130029.44d2a823@jbarnes-desktop>
-In-Reply-To: <1328424908-6385-10-git-send-email-yinghai@kernel.org>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-	<1328424908-6385-10-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/_6IeE_hVtx2YvmdFS1c=ZLy"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/_6IeE_hVtx2YvmdFS1c=ZLy
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Feb 27, 2012 at 12:19 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Sat, 25 Feb 2012 13:54:23 -0800
+> Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>> pci_stop_bus_device get called before in the same loop.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>
+>> ---
+>>  drivers/pci/hotplug/acpiphp_glue.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> Index: linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/pci/hotplug/acpiphp_glue.c
+>> +++ linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
+>> @@ -910,7 +910,7 @@ static int disable_device(struct acpiphp
+>>                               disable_bridges(pdev->subordinate);
+>>                               pci_disable_device(pdev);
+>>                       }
+>> -                     pci_stop_and_remove_bus_device(pdev);
+>> +                     __pci_remove_bus_device(pdev);
+>>                       pci_dev_put(pdev);
+>>               }
+>>       }
+>>
+>
+> Ok applied these.  How about another that converts in-tree users to
+> pci_remove_bus_device and marks the __ version deprecated though?
 
-On Sat,  4 Feb 2012 22:55:08 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+thanks.
 
-> If bios does not assign those BAR or wrong address, then kernel will
-> try to do pci realloc.
->=20
-> in that case, user still can use pci=3Drealloc=3Doff to override it.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/setup-bus.c |   28 ++++++++++++++++++++++++++++
->  1 files changed, 28 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 9526038..520f256 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1293,6 +1293,31 @@ static bool __init pci_realloc_enabled(void)
->  	return pci_realloc_enable >=3D enable_yes_user;
->  }
-> =20
-> +static void __init pci_realloc_detect(void)
-> +{
-> +	struct pci_dev *dev =3D NULL;
-> +
-> +	if (pci_realloc_enable !=3D enable_not_set)
-> +		return;
-> +
-> +#ifdef CONFIG_PCI_IOV
-> +	for_each_pci_dev(dev) {
-> +		int i;
-> +
-> +		for (i =3D PCI_IOV_RESOURCES; i <=3D PCI_IOV_RESOURCE_END; i++) {
-> +			struct resource *r =3D &dev->resource[i];
-> +
-> +			/* Not assigned, or rejected by kernel */
-> +			if (r->flags && !r->start) {
-> +				pci_realloc_enable =3D enable_yes_detected;
-> +
-> +				return;
-> +			}
-> +		}
-> +	}
-> +#endif
-> +}
-> +
->  /*
->   * first try will not touch pci bridge res
->   * second  and later try will clear small leaf bridge res
-> @@ -1314,6 +1339,7 @@ pci_assign_unassigned_resources(void)
->  	int pci_try_num =3D 1;
-> =20
->  	/* don't realloc if asked to do so */
-> +	pci_realloc_detect();
->  	if (pci_realloc_enabled()) {
->  		int max_depth =3D pci_get_max_depth();
-> =20
-> @@ -1348,6 +1374,8 @@ again:
->  	if (tried_times >=3D pci_try_num) {
->  		if (pci_realloc_enable =3D=3D enable_not_set)
->  			printk(KERN_INFO "Some pci devices resources are not assigned, please=
- try to boot with pci=3Drealloc\n");
-> +		else if (pci_realloc_enable =3D=3D enable_yes_detected)
-> +			printk(KERN_INFO "Automatically enabled pci realloc, if you have prob=
-lem, please try to boot with pci=3Drealloc=3Doff\n");
-> =20
->  		free_list(&fail_head);
->  		goto enable_and_dump;
+now the only user for  __pci_remove_bus_device is acpiphp
 
-Not sure I like this one either.  Distros will want to enable IOV by
-default, but in most configs users still won't use it, and many BIOSes
-won't bother to allocate IOV space.  So defaulting to trying to do so
-will likely cause a lot of unnecessary re-allocation.
+it will call stop bus devices at first, and then disable all bridges
+and then call __pci_remove_bus_device.
 
-So distro guidance would be appreciated here for the default behavior.
---=20
-Jesse Barnes, Intel Open Source Technology Center
+not sure why it need  to disable all bridges.
 
---Sig_/_6IeE_hVtx2YvmdFS1c=ZLy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPNYVtAAoJEIEoDkX4Qk9h5X4P/iRqZRAm0pOQzkmxb+Lvk1ph
-ji52XpGOALbgpPjs20+RhqwDDp4c3+tsKBy8WuDzLpVxo0nMhMTDc6UweC8bMKHj
-K4g8geMFZOC6bj9DL3QwP6BPKiwlSP6fyCbSsvUwsmvli8xHl2tgIcqahVj0qhfv
-hLxHr4yD40UoF8vGQzoH8qfLep6WBpvT9yY8U/ccEtGwNqGC79FTqgwnceaL6BrE
-aOtcYIBXx/FTRygUxEeI3Y15hGOG3Jl6Ls0I+REWR+KNj7MTo+az5x6OTDv4q7NA
-GmB54VKQna1Bl1bkiWAjNkNmyRDuzFlvGHDUNyT9TLCcprpp7zS3J4EQl23HrsoP
-cobdfUhQkHugEYbgbU2OWE2ecD2LK7Sitbq8yirR/7ASz2RBQIr1eTcyrwHiSzwJ
-ECLySRjP3sVJd6FAxzJPRiMOR6Z9qMHldKr/D/5pgWvLm2qz8WYgW33mS6A8X8zD
-sU31yl1xOb8e3USVZWlAP12Ddjy/pniAkdWvJxjDqnJkv0xHrUA3JfBSSI8dGv9S
-N+qMuFrt6FT7MibZwsJjuwrUA57qOTEDQA1Gox5fOrSzYha1TpyS6CYJgQFzqAyY
-X8a43lN0cj2N/4R0pmbsk1sMnW36b8A6a6lk3DLnFQyL4ZUUjgpyMBHulUcOnqlJ
-k1N74ERUCewnyyzJoVmW
-=MMzw
------END PGP SIGNATURE-----
-
---Sig_/_6IeE_hVtx2YvmdFS1c=ZLy--
+     Yinghai
