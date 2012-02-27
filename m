@@ -1,93 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:42216 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753875Ab2BKITA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Feb 2012 03:19:00 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: move pci_find_saved_cap out of linux/pci.h
-Date: Sat, 11 Feb 2012 00:18:41 -0800
-Message-Id: <1328948321-14791-1-git-send-email-yinghai@kernel.org>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:37773 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754005Ab2B0UWq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 15:22:46 -0500
+Date: Mon, 27 Feb 2012 12:22:40 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Ingo Molnar <mingo@elte.hu>,
+	"Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
+	linux-pci@vger.kernel.org, andreas.herrmann3@amd.com
+Subject: Re: [andreas.herrmann3@amd.com: [PATCH 1/2] x86/amd: Restore
+ early_fill_mp_bus_to_node]
+Message-ID: <20120227122240.778bcc5b@jbarnes-desktop>
+In-Reply-To: <20120227094406.GB10078@elte.hu>
+References: <20120227094406.GB10078@elte.hu>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/fkms5APvTCBRa2IRXtyFMmF"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Only have user in driver/pci/pci.c
+--Sig_/fkms5APvTCBRa2IRXtyFMmF
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Don't need to put it in global pci.h
+On Mon, 27 Feb 2012 10:44:06 +0100
+Ingo Molnar <mingo@elte.hu> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org.
+>=20
+> Yours?
+>=20
+> ----- Forwarded message from Andreas Herrmann <andreas.herrmann3@amd.com>=
+ -----
+>=20
+> Date: Fri, 24 Feb 2012 16:19:12 +0100
+> From: Andreas Herrmann <andreas.herrmann3@amd.com>
+> To: Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, "H=
+. Peter Anvin"
+> 	<hpa@zytor.com>
+> CC: linux-kernel@vger.kernel.org
+> Subject: [PATCH 1/2] x86/amd: Restore early_fill_mp_bus_to_node
+>=20
+>=20
+> Once upon a time this function was overloaded with quirky stuff to fix
+> resource detection on systems w/ _CRS defects (seems that some Sun and
+> HP systems were affected).
+>=20
+> See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
+> (x86: multi pci root bus with different io resource range, on 64-bit)
+>=20
+> Restore the old function and thus decouple it from the quirk that is
+> CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
+> I assume that the _CRS stuff is working on current systems.
+>=20
+> This is required to properly initilize the numa_node information of
+> PCI busses and associated devices.
+>=20
+> Signed-off-by: Andreas Herrmann <andreas.herrmann3@amd.com>
+> ---
+>  arch/x86/pci/amd_bus.c |   84 +++++++++++++++++++++++++++++++-----------=
+-----
 
----
- drivers/pci/pci.c   |   19 +++++++++++++++++++
- include/linux/pci.h |   19 -------------------
- 2 files changed, 19 insertions(+), 19 deletions(-)
+ISTR this function getting things wrong on some Nehalem based systems,
+and assigning all IO devices to node 0, resulting in bad NIC
+performance.
 
-Index: linux-2.6/drivers/pci/pci.c
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.c
-+++ linux-2.6/drivers/pci/pci.c
-@@ -825,6 +825,19 @@ EXPORT_SYMBOL(pci_choose_state);
- #define pcie_cap_has_sltctl2(type, flags)		\
- 		((flags & PCI_EXP_FLAGS_VERS) > 1)
- 
-+static struct pci_cap_saved_state *pci_find_saved_cap(
-+	struct pci_dev *pci_dev, char cap)
-+{
-+	struct pci_cap_saved_state *tmp;
-+	struct hlist_node *pos;
-+
-+	hlist_for_each_entry(tmp, pos, &pci_dev->saved_cap_space, next) {
-+		if (tmp->cap.cap_nr == cap)
-+			return tmp;
-+	}
-+	return NULL;
-+}
-+
- static int pci_save_pcie_state(struct pci_dev *dev)
- {
- 	int pos, i = 0;
-@@ -1869,6 +1882,12 @@ void platform_pci_wakeup_init(struct pci
- 	platform_pci_sleep_wake(dev, false);
- }
- 
-+static void pci_add_saved_cap(struct pci_dev *pci_dev,
-+	struct pci_cap_saved_state *new_cap)
-+{
-+	hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
-+}
-+
- /**
-  * pci_add_save_buffer - allocate buffer for saving given capability registers
-  * @dev: the PCI device
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -368,25 +368,6 @@ static inline int pci_channel_offline(st
- 	return (pdev->error_state != pci_channel_io_normal);
- }
- 
--static inline struct pci_cap_saved_state *pci_find_saved_cap(
--	struct pci_dev *pci_dev, char cap)
--{
--	struct pci_cap_saved_state *tmp;
--	struct hlist_node *pos;
--
--	hlist_for_each_entry(tmp, pos, &pci_dev->saved_cap_space, next) {
--		if (tmp->cap.cap_nr == cap)
--			return tmp;
--	}
--	return NULL;
--}
--
--static inline void pci_add_saved_cap(struct pci_dev *pci_dev,
--	struct pci_cap_saved_state *new_cap)
--{
--	hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
--}
--
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+Jesse, are things working ok now?  Care to test this patch to make sure
+it doesn't regress anything on one of the previously affected systems?
+
+Thanks,
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/fkms5APvTCBRa2IRXtyFMmF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPS+YQAAoJEIEoDkX4Qk9hqY0P/AiM8nd5lqfxrHlLtFwSbUxd
+4thnkgxjZMVPKV/tUbE63scMEb/wM2p5OYRIdCW121hRhWcczwPDEz8DMoXnSMWm
+nFJDs/b6cXq/DMg0pdNR/DF6iXZn4XsoNgVVFFycp08oD0FEthgMbRcj1uaRsz1w
+/Hv1lysJAa3xYsQQA/M6pQuDfQjZ5GdaOwpro0pKSwcCPqFApp5ua6Aap/LXPoqF
+hNqE2TnbCWaExz/LANI2VPmDIqKVYb2PrryIrVOUsnazOM76LkA/Ey6WdafcnYjK
+v/Bh/dWNv5eQzxBmIrk1KJIPaXy4BgDgbLq7iwXsUS2N16bLSB1kN1/kzeGftm61
+ieR3UJtnZaicJC2tFMXt5DQ3L35TLEmdSVoQi8QVDjCfmqEqM5ZJmPNffjMES1t9
+/0PY4eXL1wX1+Ko8cx2XiGE1egWj/uD2cDJonLaOfv8EKSK0mdqLN31Omli5VYhV
+YgbdJWjYausp0t2NlPuHHujJ5Auwx7FDn7MJlEx8u9o97bjrh5h00ExmFU3o/tOr
+ShYR8rlDTzyyLNLIlao9VsJ9kZmZriCPPb06y2k1P6r9AOKKoQ3dtvxCh+FuuyTP
+YK7thnIrNx9BKI0W/BL6QoL+vgD3raV8gN9/fnM4Z8iB9REsz8ejjLRms+BGMqni
+rrZDA5e/uLXLmlVTHgQP
+=S5xX
+-----END PGP SIGNATURE-----
+
+--Sig_/fkms5APvTCBRa2IRXtyFMmF--
