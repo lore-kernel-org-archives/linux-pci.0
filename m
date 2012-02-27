@@ -1,49 +1,98 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:54292 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754072Ab2B0TIv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 14:08:51 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5NOqnqWxCBV+NecA34z0YJHP7FCy6mNd5GUJ8q__CZHw@mail.gmail.com>
-References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-	<1330466863-28469-13-git-send-email-yinghai@kernel.org>
-	<CAErSpo66PD3+E3ZFqp73XHabL+8GavpX97pUkd28T6KWTBH-aA@mail.gmail.com>
-	<CAE9FiQWBvYZO-D+Z2zwdd0a-bkatF-0YPtmxKP4Se75vccgPrA@mail.gmail.com>
-	<CAErSpo5NOqnqWxCBV+NecA34z0YJHP7FCy6mNd5GUJ8q__CZHw@mail.gmail.com>
-Date: Tue, 28 Feb 2012 20:26:48 -0800
-Message-ID: <CAE9FiQXiCAxtNCafBtvx2Wj6=te5ciLjbC9icaPn788xQD06kQ@mail.gmail.com>
-Subject: Re: [PATCH 12/24] PCI, ia64: Register busn_res for root buses
+In-Reply-To: <CAErSpo4PMzuPdCZvbYFiQRGjGuMg+KYk0ZxJH0xr-n6AfqBAnA@mail.gmail.com>
+References: <1330299202-3838-1-git-send-email-yinghai@kernel.org>
+	<1330299202-3838-6-git-send-email-yinghai@kernel.org>
+	<CAErSpo4PMzuPdCZvbYFiQRGjGuMg+KYk0ZxJH0xr-n6AfqBAnA@mail.gmail.com>
+Date: Mon, 27 Feb 2012 11:08:51 -0800
+Message-ID: <CAE9FiQUDtJc5uwPXkQ7T7zr8=xa=VnPuQT4Q87SXbynuCHQ2Zg@mail.gmail.com>
+Subject: Re: [PATCH 5/8] PCI: add generic device into pci_host_bridge struct
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Fenghua Yu <fenghua.yu@intel.com>,
-	linux-ia64@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 28, 2012 at 4:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Feb 28, 2012 at 5:12 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>
->>> Why do you add a new struct resource here?  Can't you just use the one
->>> passed in from acpi_pci_root_add()?
+On Mon, Feb 27, 2012 at 9:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sun, Feb 26, 2012 at 4:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> use that device for pci_root_bus bridge pointer.
 >>
->> not quite sure about the life cycle for that object.
+>> With that make code more simple.
+>>
+>> Also we can use pci_release_bus_bridge_dev() to release allocated
+>> pci_host_bridge during removing path.
+>>
+>> At last, we can use root bus bridge pointer to get host bridge pointer instead
+>> of going over host bridge list, so could kill that host bridge list.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>
+>> ---
+>>  drivers/pci/host-bridge.c |   14 ---------
+>>  drivers/pci/pci.h         |    2 -
+>>  drivers/pci/probe.c       |   65 ++++++++++++++++++++++++----------------------
+>>  include/linux/pci.h       |    4 ++
+>>  4 files changed, 38 insertions(+), 47 deletions(-)
+>>
+>> Index: linux-2.6/drivers/pci/host-bridge.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/pci/host-bridge.c
+>> +++ linux-2.6/drivers/pci/host-bridge.c
+>> -       dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+>> -       if (!dev)
+>> -               goto err_dev;
+>> +               return NULL;
+>>
+...
+
+here old code allocate dummy struct device.
+
+>> +       bridge = pci_alloc_host_bridge(b);
+>> +       if (!bridge)
+>> +               goto err_out;
+>> +
+>> +       bridge->dev.parent = parent;
+>> +       bridge->dev.release = pci_release_bus_bridge_dev;
+>> +       dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+>> +       error = device_register(&bridge->dev);
+>>        if (error)
+>> -               goto dev_reg_err;
+>> -       b->bridge = get_device(dev);
+>> +               goto bridge_dev_reg_err;
+>> +       b->bridge = get_device(&bridge->dev);
+...
+>> --- linux-2.6.orig/include/linux/pci.h
+>> +++ linux-2.6/include/linux/pci.h
+>> @@ -375,11 +375,13 @@ struct pci_host_bridge_window {
+>>  };
+>>
+>>  struct pci_host_bridge {
+>> -       struct list_head list;
+>> +       struct device dev;
+>>        struct pci_bus *bus;            /* root bus */
+>>        struct list_head windows;       /* pci_host_bridge_windows */
+>>  };
 >
-> The struct acpi_pci_root is allocated in acpi_pci_root_add() and freed
-> in acpi_pci_root_remove(), so it should be safe for PCI to use.
+> This doesn't feel right to me.  You're allocating a new struct device
+> here, but the arch likely already has one.  In fact, I think we even
+> passed it in to pci_create_root_bus().
 
-ok will change that for ia64.
+no.
+
+original pci_create_root_bus() will create one dummy struct device and
+use it as parent for bus->dev.
 
 >
-> Same thing applies for x86, of course.
+> On x86, we already have an ACPI device for the host bridge, and now
+> we'll have a second one.  (Actually a *third* one, because PNPACPI
+> also has one, but that's a long-standing problem.)
 
-for x86, will have separate addon patch.
-
-Thanks
+not related.
 
       Yinghai
