@@ -1,90 +1,249 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:54937 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751803Ab2BWQRl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 11:17:41 -0500
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63572 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754179Ab2B0R5k convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 12:57:40 -0500
+Received: by wgbdr13 with SMTP id dr13so1926515wgb.1
+        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2012 09:57:39 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120223060355.GA21091@avionic-0098.mockup.avionic-design.de>
-References: <20120220191804.GA14499@avionic-0098.adnet.avionic-design.de>
-	<74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
-	<20120222082449.GA15157@avionic-0098.adnet.avionic-design.de>
-	<CAErSpo4TfpGmx+HZ1ZnZwj3ZP_cQMCzkMT+6JK6ztYp2zWJcxw@mail.gmail.com>
-	<20120223060355.GA21091@avionic-0098.mockup.avionic-design.de>
-Date: Thu, 23 Feb 2012 08:17:41 -0800
-Message-ID: <CAOesGMh2QfmPdnrEVO4K_oMSsYJ_+T150s3dJgVZs0HFkH_XpA@mail.gmail.com>
-Subject: Re: PCIe device tree support
-From: Olof Johansson <olof@lixom.net>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@nvidia.com>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
+In-Reply-To: <1330299202-3838-6-git-send-email-yinghai@kernel.org>
+References: <1330299202-3838-1-git-send-email-yinghai@kernel.org> <1330299202-3838-6-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 Feb 2012 10:57:18 -0700
+Message-ID: <CAErSpo4PMzuPdCZvbYFiQRGjGuMg+KYk0ZxJH0xr-n6AfqBAnA@mail.gmail.com>
+Subject: Re: [PATCH 5/8] PCI: add generic device into pci_host_bridge struct
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Wed, Feb 22, 2012 at 10:03 PM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> * Bjorn Helgaas wrote:
->> On Wed, Feb 22, 2012 at 12:24 AM, Thierry Reding
->> <thierry.reding@avionic-design.de> wrote:
->> > [Adding Jesse Barnes and the linux-pci mailing list to CC.]
->> >
->> > * Stephen Warren wrote:
->> >> Thierry Reding wrote at Monday, February 20, 2012 12:18 PM:
->> >> > I would like to add device tree support for the Tegra2 PCIe controller. From
->> >> > what I understand this will require the PCIe code to be rewritten as a proper
->> >> > platform driver in order to be able to instantiate it via the device tree. Is
->> >> > that correct?
->> >>
->> >> That's probably the cleanest way, yes.
->> >>
->> >> Is there a drivers/ directory for PCI/PCIe host controllers? Moving the
->> >> code there might be nice if so, although IIRC when I asked Olof about
->> >> that a number of months back, he said quite a few host controllers were
->> >> in arch/...
->> >
->> > Most PCI/PCIe host controller drivers seem to currently be in arch/. Is there
->> > a specific reason for this? Would it be acceptable to put any new drivers
->> > below drivers/pci/?
->>
->> PCI host bridges aren't architected, so discovering them and their
->> properties has historically been mostly architecture-specific.  ACPI
->> is one exception (with a driver in drivers/acpi/pci_root.c) and it
->> sounds like device tree might be a similar exception.  If you can make
->> a non-arch-specific driver and put it somewhere other than arch/, I'm
->> all in favor of that, especially if you can make it usable by other
->> arches that use device tree.  Where to put it?  I dunno.  drivers/pci/
->> sounds like a reasonable possibility.
+On Sun, Feb 26, 2012 at 4:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> use that device for pci_root_bus bridge pointer.
 >
-> I don't think it would be possible to write a driver that works for all
-> device tree based boards or architectures. As you said the implementation is
-> very hardware specific and probably couldn't even be generalized among two
-> chipsets of the same architecture.
+> With that make code more simple.
 >
-> However there has recently been a lot of work to move out arch-specific
-> drivers for PWM, GPIO and others out of arch/ and into respective directories
-> below drivers/. The reason I asked was because I think the same could be done
-> for PCI/PCIe.
+> Also we can use pci_release_bus_bridge_dev() to release allocated
+> pci_host_bridge during removing path.
+>
+> At last, we can use root bus bridge pointer to get host bridge pointer instead
+> of going over host bridge list, so could kill that host bridge list.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> ---
+>  drivers/pci/host-bridge.c |   14 ---------
+>  drivers/pci/pci.h         |    2 -
+>  drivers/pci/probe.c       |   65 ++++++++++++++++++++++++----------------------
+>  include/linux/pci.h       |    4 ++
+>  4 files changed, 38 insertions(+), 47 deletions(-)
+>
+> Index: linux-2.6/drivers/pci/host-bridge.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/host-bridge.c
+> +++ linux-2.6/drivers/pci/host-bridge.c
+> @@ -9,13 +9,6 @@
+>
+>  #include "pci.h"
+>
+> -static LIST_HEAD(pci_host_bridges);
+> -
+> -void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
+> -{
+> -       list_add_tail(&bridge->list, &pci_host_bridges);
+> -}
+> -
+>  static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+>  {
+>        struct pci_bus *bus;
+> @@ -33,16 +26,11 @@ static struct pci_bus *find_pci_root_bus
+>  static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+>  {
+>        struct pci_bus *bus = find_pci_root_bus(dev);
+> -       struct pci_host_bridge *bridge;
+>
+>        if (!bus)
+>                return NULL;
+>
+> -       list_for_each_entry(bridge, &pci_host_bridges, list)
+> -               if (bridge->bus == bus)
+> -                       return bridge;
+> -
+> -       return NULL;
+> +       return to_pci_host_bridge(bus->bridge);
+>  }
+>
+>  static bool resource_contains(struct resource *res1, struct resource *res2)
+> Index: linux-2.6/drivers/pci/pci.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.h
+> +++ linux-2.6/drivers/pci/pci.h
+> @@ -231,8 +231,6 @@ static inline int pci_ari_enabled(struct
+>  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+>  extern void pci_disable_bridge_window(struct pci_dev *dev);
+>
+> -void add_to_pci_host_bridges(struct pci_host_bridge *bridge);
+> -
+>  /* Single Root I/O Virtualization */
+>  struct pci_sriov {
+>        int pos;                /* capability position */
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -421,6 +421,19 @@ static struct pci_bus * pci_alloc_bus(vo
+>        return b;
+>  }
+>
+> +static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> +{
+> +       struct pci_host_bridge *bridge;
+> +
+> +       bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> +       if (bridge) {
+> +               INIT_LIST_HEAD(&bridge->windows);
+> +               bridge->bus = b;
+> +       }
+> +
+> +       return bridge;
+> +}
+> +
+>  static unsigned char pcix_bus_speed[] = {
+>        PCI_SPEED_UNKNOWN,              /* 0 */
+>        PCI_SPEED_66MHz_PCIX,           /* 1 */
+> @@ -1121,7 +1134,13 @@ int pci_cfg_space_size(struct pci_dev *d
+>
+>  static void pci_release_bus_bridge_dev(struct device *dev)
+>  {
+> -       kfree(dev);
+> +       struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
+> +
+> +       /* TODO: need to free window->res */
+> +
+> +       pci_free_resource_list(&bridge->windows);
+> +
+> +       kfree(bridge);
+>  }
+>
+>  struct pci_dev *alloc_pci_dev(void)
+> @@ -1570,28 +1589,19 @@ struct pci_bus *pci_create_root_bus(stru
+>        int error;
+>        struct pci_host_bridge *bridge;
+>        struct pci_bus *b, *b2;
+> -       struct device *dev;
+>        struct pci_host_bridge_window *window, *n;
+>        struct resource *res;
+>        resource_size_t offset;
+>        char bus_addr[64];
+>        char *fmt;
+>
+> -       bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> -       if (!bridge)
+> -               return NULL;
+>
+>        b = pci_alloc_bus();
+>        if (!b)
+> -               goto err_bus;
+> -
+> -       dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+> -       if (!dev)
+> -               goto err_dev;
+> +               return NULL;
+>
+>        b->sysdata = sysdata;
+>        b->ops = ops;
+> -
+>        b2 = pci_find_bus(pci_domain_nr(b), bus);
+>        if (b2) {
+>                /* If we already got to this bus through a different bridge, ignore it */
+> @@ -1599,13 +1609,17 @@ struct pci_bus *pci_create_root_bus(stru
+>                goto err_out;
+>        }
+>
+> -       dev->parent = parent;
+> -       dev->release = pci_release_bus_bridge_dev;
+> -       dev_set_name(dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> -       error = device_register(dev);
+> +       bridge = pci_alloc_host_bridge(b);
+> +       if (!bridge)
+> +               goto err_out;
+> +
+> +       bridge->dev.parent = parent;
+> +       bridge->dev.release = pci_release_bus_bridge_dev;
+> +       dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> +       error = device_register(&bridge->dev);
+>        if (error)
+> -               goto dev_reg_err;
+> -       b->bridge = get_device(dev);
+> +               goto bridge_dev_reg_err;
+> +       b->bridge = get_device(&bridge->dev);
+>        device_enable_async_suspend(b->bridge);
+>        pci_set_bus_of_node(b);
+>
+> @@ -1624,9 +1638,6 @@ struct pci_bus *pci_create_root_bus(stru
+>
+>        b->number = b->secondary = bus;
+>
+> -       bridge->bus = b;
+> -       INIT_LIST_HEAD(&bridge->windows);
+> -
+>        if (parent)
+>                dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
+>        else
+> @@ -1652,25 +1663,17 @@ struct pci_bus *pci_create_root_bus(stru
+>        }
+>
+>        down_write(&pci_bus_sem);
+> -       add_to_pci_host_bridges(bridge);
+>        list_add_tail(&b->node, &pci_root_buses);
+>        up_write(&pci_bus_sem);
+>
+>        return b;
+>
+>  class_dev_reg_err:
+> -       device_unregister(dev);
+> -dev_reg_err:
+> -       down_write(&pci_bus_sem);
+> -       list_del(&bridge->list);
+> -       list_del(&b->node);
+> -       up_write(&pci_bus_sem);
+> +       device_unregister(&bridge->dev);
+> +bridge_dev_reg_err:
+> +       kfree(bridge);
+>  err_out:
+> -       kfree(dev);
+> -err_dev:
+>        kfree(b);
+> -err_bus:
+> -       kfree(bridge);
+>        return NULL;
+>  }
+>
+> Index: linux-2.6/include/linux/pci.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/pci.h
+> +++ linux-2.6/include/linux/pci.h
+> @@ -375,11 +375,13 @@ struct pci_host_bridge_window {
+>  };
+>
+>  struct pci_host_bridge {
+> -       struct list_head list;
+> +       struct device dev;
+>        struct pci_bus *bus;            /* root bus */
+>        struct list_head windows;       /* pci_host_bridge_windows */
+>  };
 
+This doesn't feel right to me.  You're allocating a new struct device
+here, but the arch likely already has one.  In fact, I think we even
+passed it in to pci_create_root_bus().
 
-Right. PCI/PCIe host bridges tend to be custom. Well, I'm sure some
-vendors share some of the IP, but I'm not sure how much of the
-programming interface comes with that and how much is actually their
-own. So, either way, there's only a few ARM platforms so far with
-PCI/PCIe, and I think we can keep the logic under arch/arm for them
-for now. If more start to show up and we want to move it out, we can
-do so.
+On x86, we already have an ACPI device for the host bridge, and now
+we'll have a second one.  (Actually a *third* one, because PNPACPI
+also has one, but that's a long-standing problem.)
 
-Sorry for being silent on this thread as well -- I've been travelling
-and offline a bit. It shouldn't be too hard to modify the tegra pcie
-driver to probe through the device tree, to start with you pretty much
-just need to describe the register range with a reg property and a
-compatible field to bind against. Some of the powerpc platforms do
-similar things, so take a look at how they do it.
-
-
--Olof
+> +#define        to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+> +
+>  /*
+>  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+>  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
