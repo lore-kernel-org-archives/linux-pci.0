@@ -6,79 +6,42 @@ To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 03/36] PCI: rename pci_host_bridge() to find_pci_root_bridge()
-Date: Wed, 29 Feb 2012 19:00:04 -0800
-Message-Id: <1330570837-26638-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 06/24] PCI: insert busn_res in pci_create_root_bus
+Date: Tue, 28 Feb 2012 14:07:25 -0800
+Message-Id: <1330466863-28469-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Separate find_pci_root_bus out.
-
--v2: according to Bjorn, remove extra null checking.
+that busn_res is from resources list
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host-bridge.c |   18 +++++++++++++-----
- 1 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/pci/probe.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 5ca4220..78adcc0 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -16,15 +16,22 @@ void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
- 	list_add_tail(&bridge->list, &pci_host_bridges);
- }
- 
--static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-+static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
- {
- 	struct pci_bus *bus;
--	struct pci_host_bridge *bridge;
- 
- 	bus = dev->bus;
- 	while (bus->parent)
- 		bus = bus->parent;
- 
-+	return bus;
-+}
-+
-+static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = find_pci_root_bus(dev);
-+	struct pci_host_bridge *bridge;
-+
- 	list_for_each_entry(bridge, &pci_host_bridges, list) {
- 		if (bridge->bus == bus)
- 			return bridge;
-@@ -41,7 +48,7 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
- void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 			     struct resource *res)
- {
--	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -69,12 +76,13 @@ static bool region_contains(struct pci_bus_region *region1,
- void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 			     struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
--	struct pci_bus_region bus_region;
- 	resource_size_t offset = 0;
- 
- 	list_for_each_entry(window, &bridge->windows, list) {
-+		struct pci_bus_region bus_region;
-+
- 		if (resource_type(res) != resource_type(window->res))
- 			continue;
- 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ed82369..25a7ef8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1649,7 +1649,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		list_move_tail(&window->list, &bridge->windows);
+ 		res = window->res;
+ 		offset = window->offset;
+-		pci_bus_add_resource(b, res, 0);
++		if (res->flags & IORESOURCE_BUS)
++			pci_bus_insert_busn_res(b, res->start, res->end);
++		else
++			pci_bus_add_resource(b, res, 0);
+ 		if (offset) {
+ 			if (resource_type(res) == IORESOURCE_IO)
+ 				fmt = " (bus address [%#06llx-%#06llx])";
 -- 
 1.7.7
 
