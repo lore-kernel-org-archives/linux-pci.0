@@ -1,106 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9236 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753638Ab2BNEsJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Feb 2012 23:48:09 -0500
-Subject: Re: [RFT] USB: Try MSI first before line IRQ for Intel PCIe USB3
- HCD
-From: "Alex,Shi" <alex.shi@intel.com>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: stern@rowland.harvard.edu, Greg KH <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, andiry.xu@amd.com,
-	linux-kernel@vger.kernel.org, Oliver Neukum <oneukum@suse.de>,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
-In-Reply-To: <20120214002557.GA13003@xanatos>
-References: <20120214002557.GA13003@xanatos>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Feb 2012 12:43:56 +0800
-Message-ID: <1329194636.12669.1725.camel@debian>
-Mime-Version: 1.0
+Received: from mail-lpp01m010-f74.google.com ([209.85.215.74]:48794 "EHLO
+	mail-lpp01m010-f74.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966074Ab2B1SvN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 13:51:13 -0500
+Received: by laai8 with SMTP id i8so92180laa.1
+        for <linux-pci@vger.kernel.org>; Tue, 28 Feb 2012 10:51:11 -0800 (PST)
+Subject: [PATCH] x86/PCI: use host bridge _CRS info on MSI MS-7253
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>, linux-pci@vger.kernel.org,
+	Svante Signell <svante.signell@telia.com>
+Date: Tue, 28 Feb 2012 11:51:10 -0700
+Message-ID: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-02-13 at 16:25 -0800, Sarah Sharp wrote:
-> We have a PCI USB xhci host controller on a new platform. It doesn't
-> have a line IRQ definition in BIOS. The Linux driver refuses to
-> initial this controller, but Windows works well because it only depends
-> on MSI.
-> 
-> Actually, Linux also can work for MSI. This patch skips the first line
-> IRQ checking for our HCD in usb-core pci probe, then try to enable MSI
-> firstly. That make this HCD works well under Linux.
-> 
-> This patch should be backported to kernels as old as 2.6.32.
-> 
-> Signed-off-by: Alex Shi <alex.shi@intel.com>
-> Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-> Cc: stable@vger.kernel.org
-> ---
-> 
-> Hi Alex,
-> 
-> Please test this on your Panther Point system that doesn't have a BIOS
-> provided IRQ line.  I think this is a much simpler solution.
+From: Jonathan Nieder <jrnieder@gmail.com>
 
-It is Ok on the platform. 
-Thanks!
-> 
-> Sarah Sharp
-> 
->  drivers/usb/core/hcd-pci.c |    5 ++++-
->  drivers/usb/core/hcd.c     |    6 ++++--
->  drivers/usb/host/xhci.c    |    5 +++++
->  3 files changed, 13 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
-> index d136b8f..81e2c0d 100644
-> --- a/drivers/usb/core/hcd-pci.c
-> +++ b/drivers/usb/core/hcd-pci.c
-> @@ -187,7 +187,10 @@ int usb_hcd_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  		return -ENODEV;
->  	dev->current_state = PCI_D0;
->  
-> -	if (!dev->irq) {
-> +	/* The xHCI driver supports MSI and MSI-X,
-> +	 * so don't fail if the BIOS doesn't provide a legacy IRQ.
-> +	 */
-> +	if (!dev->irq && (driver->flags & HCD_MASK) != HCD_USB3) {
->  		dev_err(&dev->dev,
->  			"Found HC with no IRQ.  Check BIOS/PCI %s setup!\n",
->  			pci_name(dev));
-> diff --git a/drivers/usb/core/hcd.c b/drivers/usb/core/hcd.c
-> index eb19cba..e128232 100644
-> --- a/drivers/usb/core/hcd.c
-> +++ b/drivers/usb/core/hcd.c
-> @@ -2447,8 +2447,10 @@ int usb_add_hcd(struct usb_hcd *hcd,
->  			&& device_can_wakeup(&hcd->self.root_hub->dev))
->  		dev_dbg(hcd->self.controller, "supports USB remote wakeup\n");
->  
-> -	/* enable irqs just before we start the controller */
-> -	if (usb_hcd_is_primary_hcd(hcd)) {
-> +	/* enable irqs just before we start the controller,
-> +	 * if the BIOS provides legacy PCI irqs.
-> +	 */
-> +	if (usb_hcd_is_primary_hcd(hcd) && irqnum) {
->  		retval = usb_hcd_request_irqs(hcd, irqnum, irqflags);
->  		if (retval)
->  			goto err_request_irq;
-> diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
-> index 6bbe3c3..c939f5f 100644
-> --- a/drivers/usb/host/xhci.c
-> +++ b/drivers/usb/host/xhci.c
-> @@ -352,6 +352,11 @@ static int xhci_try_enable_msi(struct usb_hcd *hcd)
->  		/* hcd->irq is -1, we have MSI */
->  		return 0;
->  
-> +	if (!pdev->irq) {
-> +		xhci_err(xhci, "No msi-x/msi found and no IRQ in BIOS\n");
-> +		return -EINVAL;
-> +	}
-> +
->  	/* fall back to legacy interrupt*/
->  	ret = request_irq(pdev->irq, &usb_hcd_irq, IRQF_SHARED,
->  			hcd->irq_descr, hcd);
+In the spirit of commit 29cf7a30f8a0 ("x86/PCI: use host bridge _CRS
+info on ASUS M2V-MX SE"), this DMI quirk turns on "pci_use_crs" by
+default on a board that needs it.
 
+This fixes boot failures and oopses introduced in 3e3da00c01d0
+("x86/pci: AMD one chain system to use pci read out res").  The quirk
+is quite targetted (to a specific board and BIOS version) for two
+reasons:
+
+ (1) to emphasize that this method of tackling the problem one quirk
+     at a time is a little insane
+
+ (2) to give BIOS vendors an opportunity to use simpler tables and
+     allow us to return to generic behavior (whatever that happens to
+     be) with a later BIOS update
+
+In other words, I am not at all happy with having quirks like this.
+But it is even worse for the kernel not to work out of the box on
+these machines, so...
+
+Reference: https://bugzilla.kernel.org/show_bug.cgi?id=42619
+Reported-by: Svante Signell <svante.signell@telia.com>
+Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index a312e76..2c5cbdb 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -60,6 +60,17 @@ static const struct dmi_system_id pci_use_crs_table[] __initconst = {
+ 			DMI_MATCH(DMI_BIOS_VENDOR, "American Megatrends Inc."),
+ 		},
+ 	},
++	/* https://bugzilla.kernel.org/show_bug.cgi?id=42619 */
++	{
++		.callback = set_use_crs,
++		.ident = "MSI MS-7253",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_VENDOR, "MICRO-STAR INTERNATIONAL CO., LTD"),
++			DMI_MATCH(DMI_BOARD_NAME, "MS-7253"),
++			DMI_MATCH(DMI_BIOS_VENDOR, "Phoenix Technologies, LTD"),
++			DMI_MATCH(DMI_BIOS_VERSION, "V1.6"),
++		},
++	},
+ 
+ 	/* Now for the blacklist.. */
+ 
 
