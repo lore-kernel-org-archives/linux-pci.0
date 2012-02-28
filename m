@@ -1,46 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:58529 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756350Ab2BXVHK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 16:07:10 -0500
-Message-ID: <4F47FB6B.3050509@jp.fujitsu.com>
-Date: Fri, 24 Feb 2012 16:04:43 -0500
-From: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, greg@kroah.com,
-	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org
-Subject: Re: [PATCH v5] Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
- driver
-References: <20120202160922.4564.99032.sendpatchset@dhcp-189-101.bos.redhat.com> <20120223123003.662cf548@jbarnes-desktop>
-In-Reply-To: <20120223123003.662cf548@jbarnes-desktop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 09/24] PCI: add default res for pci_scan_bus
+Date: Tue, 28 Feb 2012 14:07:28 -0800
+Message-Id: <1330466863-28469-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 23 Feb 2012 12:30:03 -0800,
-Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> On Thu, 2 Feb 2012 11:09:22 -0500
-> MUNEDA Takahiro<muneda.takahiro@jp.fujitsu.com>  wrote:
->
->> Not to use MSI/MSI-X for pciehp, add a kernel parameter, pcie_hp=nomsi.
->>
->> In my environment, while shutting down, following stack trace is shown
->> sometimes.
->
-> Applied, thanks guys.
->
-> Now should we also have a platform/device blacklist to enable this
-> option automatically so people don't have to remember to use it?
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1149109..1c07aba 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1784,6 +1784,7 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
+ 
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
++	pci_add_resource(&resources, &busn_resource);
+ 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
+ 	if (b)
+ 		b->subordinate = pci_scan_child_bus(b);
+@@ -1801,6 +1802,7 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
+ 
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
++	pci_add_resource(&resources, &busn_resource);
+ 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+ 	if (b) {
+ 		b->subordinate = pci_scan_child_bus(b);
+-- 
+1.7.7
 
-Hi Jesse,
-
-I agree with you.
-However, I don't have a device which *officially* has a problem
-regarding this.  I'm waiting a statement from vendor.  We should start
-after statement becomes available.
-
-Thanks,
-Takahiro
