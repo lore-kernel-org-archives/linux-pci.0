@@ -1,140 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 02/36] x86, PCI: Fix memleak with get_current_resources
-Date: Wed, 29 Feb 2012 19:00:03 -0800
-Message-Id: <1330570837-26638-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:57386 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1030256Ab2B1TJw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 14:09:52 -0500
+Date: Tue, 28 Feb 2012 11:09:42 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>, linux-pci@vger.kernel.org,
+	Svante Signell <svante.signell@telia.com>
+Subject: Re: [PATCH] x86/PCI: use host bridge _CRS info on MSI MS-7253
+Message-ID: <20120228110942.3eb0cbdc@jbarnes-desktop>
+In-Reply-To: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/gwyYIJoV7bfu4DP.f1F4KmP"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-in pci_scan_acpi_root, when pci_use_crs is set, get_current_resources is used
-to get pci_root_info, and it will allocate name and res array.
+--Sig_/gwyYIJoV7bfu4DP.f1F4KmP
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-later if pci_create_root_bus can not create bus (could be already there...)
-it will only free bus res list. but the name and res array is not freed.
+On Tue, 28 Feb 2012 11:51:10 -0700
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-let get_current_resource take info pointer instead have local info.
+> From: Jonathan Nieder <jrnieder@gmail.com>
+>=20
+> In the spirit of commit 29cf7a30f8a0 ("x86/PCI: use host bridge _CRS
+> info on ASUS M2V-MX SE"), this DMI quirk turns on "pci_use_crs" by
+> default on a board that needs it.
+>=20
+> This fixes boot failures and oopses introduced in 3e3da00c01d0
+> ("x86/pci: AMD one chain system to use pci read out res").  The quirk
+> is quite targetted (to a specific board and BIOS version) for two
+> reasons:
+>=20
+>  (1) to emphasize that this method of tackling the problem one quirk
+>      at a time is a little insane
+>=20
+>  (2) to give BIOS vendors an opportunity to use simpler tables and
+>      allow us to return to generic behavior (whatever that happens to
+>      be) with a later BIOS update
+>=20
+> In other words, I am not at all happy with having quirks like this.
+> But it is even worse for the kernel not to work out of the box on
+> these machines, so...
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/acpi.c |   49 ++++++++++++++++++++++++++++++-------------------
- 1 files changed, 30 insertions(+), 19 deletions(-)
+Applied to my for-linus branch, thanks.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 7cc0a44..304ccf0 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -305,49 +305,55 @@ static void add_resources(struct pci_root_info *info)
- 	}
- }
- 
-+static void free_pci_root_info(struct pci_root_info *info)
-+{
-+	kfree(info->name);
-+	kfree(info->res);
-+	memset(info, 0, sizeof(struct pci_root_info));
-+}
-+
- static void
--get_current_resources(struct acpi_device *device, int busnum,
-+get_current_resources(struct pci_root_info *info,
-+		      struct acpi_device *device, int busnum,
- 		      int domain, struct list_head *resources)
- {
--	struct pci_root_info info;
- 	size_t size;
- 
--	info.bridge = device;
--	info.res_num = 0;
--	info.resources = resources;
-+	info->bridge = device;
-+	info->res_num = 0;
-+	info->resources = resources;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
--				&info);
--	if (!info.res_num)
-+				info);
-+	if (!info->res_num)
- 		return;
- 
--	size = sizeof(*info.res) * info.res_num;
--	info.res = kmalloc(size, GFP_KERNEL);
--	if (!info.res)
-+	size = sizeof(*info->res) * info->res_num;
-+	info->res = kmalloc(size, GFP_KERNEL);
-+	if (!info->res)
- 		return;
- 
--	info.name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
--	if (!info.name)
-+	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
-+	if (!info->name)
- 		goto name_alloc_fail;
- 
--	info.res_num = 0;
-+	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
--				&info);
-+				info);
- 
- 	if (pci_use_crs) {
--		add_resources(&info);
-+		add_resources(info);
- 
- 		return;
- 	}
- 
--	kfree(info.name);
--
- name_alloc_fail:
--	kfree(info.res);
-+	free_pci_root_info(info);
- }
- 
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-+	struct pci_root_info info;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
- 	LIST_HEAD(resources);
-@@ -392,6 +398,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 	sd->domain = domain;
- 	sd->node = node;
-+	memset(&info, 0, sizeof(struct pci_root_info));
- 	/*
- 	 * Maybe the desired pci bus has been already scanned. In such case
- 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
-@@ -405,7 +412,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(sd);
- 	} else {
--		get_current_resources(device, busnum, domain, &resources);
-+		get_current_resources(&info, device, busnum, domain,
-+					&resources);
- 
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
-@@ -419,6 +427,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 			bus->subordinate = pci_scan_child_bus(bus);
- 		else
- 			pci_free_resource_list(&resources);
-+
-+		if (!bus && pci_use_crs)
-+			free_pci_root_info(&info);
- 	}
- 
- 	/* After the PCI-E bus has been walked and all devices discovered,
--- 
-1.7.7
+--=20
+Jesse Barnes, Intel Open Source Technology Center
 
+--Sig_/gwyYIJoV7bfu4DP.f1F4KmP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPTSZ2AAoJEIEoDkX4Qk9htGMP/0ipncNRIDGYiGE1HMlgGuia
+PY3q9+AH+8ZgWMDI8bmOL4CK2TGFR94TuFK+kcKyRO0THlCwxGOty+jMdnsNwO0I
+CYSXufA4x0zIEkEAXedfMYk+f3dP4UK+Ya/tXDDzSrqg7/NAFGv4ISeXPAtFCm6v
+ym9OlR+5hBmUfrinbeLuR+jyUatGYtOGjJO3ARgltFkUT0wY+PAoqc2wB5fguZYt
+e2cgfbZ77/wO/iTE82WhxZedrgm6ncMIYweneAH2pVpSOACS5hTuxPWZ4ZqsuxYE
+KIv+EAJY/bTPhmC2wQ4fSNyrBzK6fNWmEvLsxcEXqd2MBLzrcTO2JQWD8vpHl1+l
+zoimJneHD0VYFKDJfvzWD0sbPn1u9fkwNpSF+2kLEu4puDn5xTF3LXf6IOYIPkKT
+qxIejkxBAhZjr4bsdoPgpUw8OChihihjPcZQTkjrFKSOCqzuDM4Ikt8Utqh9apKS
++yrsQnozFmnTRT+/FXiF3pS5E2ljEREAqVoVbm+i40korxyRd9Jv0cZUOwbQTZzg
+4mVYHojmDGdYV/QiObpKirG0coy7xHYxHF9vC7Wav6ku/ub/MnwKnqjGHf6KBrUG
+7D9s4q9rzSY8s3UVwMdssfyTUWW0YfAN93dLoyaI7NvldQ7m+Gk8KJSxvvcjsaew
+vNtKlVPJxEP0GoUJa64F
+=L4LZ
+-----END PGP SIGNATURE-----
+
+--Sig_/gwyYIJoV7bfu4DP.f1F4KmP--
