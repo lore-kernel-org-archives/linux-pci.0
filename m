@@ -1,110 +1,212 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:44047 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756596Ab2CAEcF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 23:32:05 -0500
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: "jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"Kay, Allen M" <allen.m.kay@intel.com>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: [PATCH V3] Quirk for IVB graphics FLR errata
-Date: Thu, 1 Mar 2012 04:30:52 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FCDB487@SHSMSX102.ccr.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from rcsinet15.oracle.com ([148.87.113.117]:26483 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753734Ab2B1WJl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 17:09:41 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 19/24] PCI: Allocate bus range instead of use max blindly
+Date: Tue, 28 Feb 2012 14:07:38 -0800
+Message-Id: <1330466863-28469-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For IvyBridge Mobile platform, a system hang may occur if a FLR(Function Level Reset) is asserted to internal graphics.
+every bus have extra busn_res, and linked them toghter to iobusn_resource.
 
-This quirk patch is workaround for the IVB FLR errata issue.
-We are disabling the FLR reset handshake between the PCH and CPU display, then manually powering down the panel power sequencing and resetting the PCH display.
+when need to find usable bus number range, try probe from iobusn_resource tree.
 
-Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
-Reviewed-by: Xiantao Zhang <xiantao.zhang@intel.com>
+To avoid falling to small hole in the middle, we try from 8 spare bus.
+if can not find 8 or more in the middle, will try to append 8 on top later.
+then if can not append, will try to find 7 from the middle, then will try to append 7 on top.
+then if can not append, will try to find 6 from the middle...
+
+for cardbus will only find 4 spare.
+
+if extend from top, at last will shrink back to really needed range...
+
+-v4: fix checking with pci rescan. Found by Bjorn.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/quirks.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 53 insertions(+), 0 deletions(-)
+ drivers/pci/probe.c |  100 ++++++++++++++++++++++++++++++---------------------
+ 1 files changed, 59 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index 6476547..c687218 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -27,6 +27,7 @@
- #include <linux/pci-aspm.h>
- #include <linux/ioport.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-+#include <asm/tsc.h>
- #include "pci.h"
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5c031f0..f22a209 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -839,10 +839,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ {
+ 	struct pci_bus *child;
+ 	int is_cardbus = (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS);
+-	u32 buses, i, j = 0;
++	u32 buses;
+ 	u16 bctl;
+ 	u8 primary, secondary, subordinate;
+ 	int broken = 0;
++	struct resource *parent_res = NULL;
  
- /*
-@@ -3069,11 +3070,63 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- 	return 0;
- }
+ 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
+ 	primary = buses & 0xFF;
+@@ -859,10 +860,16 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
  
-+#include "../gpu/drm/i915/i915_reg.h"
-+#define MSG_CTL	0x45010
-+static const int op_timeout = 10;	/* set timeout 10 seconds */
+ 	/* Check if setup is sensible at all */
+ 	if (!pass &&
+-	    (primary != bus->number || secondary <= bus->number)) {
+-		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
++	    (primary != bus->number || secondary <= bus->number))
+ 		broken = 1;
+-	}
 +
-+static int reset_ivb_igd(struct pci_dev *dev, int probe) {
-+	u8 *mmio_base;
-+	u32 val;
-+	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
++	/* more strict checking */
++	if (!pass && !broken && !dev->subordinate)
++		broken = pci_bridge_check_busn_broken(bus, dev,
++						   secondary, subordinate);
 +
-+	if (probe)
-+		return 0;
-+
-+	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-+				 pci_resource_len(dev, 0));
-+	if (!mmio_base)
-+		return -ENOMEM;
-+
-+	/* Work Around */
-+	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
-+	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
-+	 * driver loaded sets the right bits. However, this's a reset and
-+	 * the bits have been set by i915 previously, so we clobber
-+	 * SOUTH_CHICKEN2 register directly here.
-+	 */
-+	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
-+	val = *((u32 *)(mmio_base + PCH_PP_CONTROL)) & 0xfffffffe;
-+	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
-+	do {
-+		cycles_t start_time = get_cycles();
-+		while (1) {
-+			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
-+			if (((val & 0x80000000) == 0)
-+				&& ((val & 0x30000000) == 0))
-+				break;
-+			if (cyc_op_timeout < (get_cycles() - start_time))
-+				break;
-+			cpu_relax();
-+		}
-+	} while (0);
-+	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
-+
-+	iounmap(pci_resource_start(dev, 0));
-+	return 0;
-+}
-+
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-+#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-+#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
++	if (broken)
++		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
  
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-+		reset_ivb_igd },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-+		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 		reset_intel_generic_dev },
- 	{ 0 }
---
-1.6.0.rc1
-
+ 	/* Disable MasterAbortMode during probing to avoid reporting
+ 	   of bus errors (in some architectures) */ 
+@@ -895,6 +902,8 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 			child->primary = primary;
+ 			child->subordinate = subordinate;
+ 			child->bridge_ctl = bctl;
++
++			pci_bus_insert_busn_res(child, secondary, subordinate);
+ 		}
+ 
+ 		cmax = pci_scan_child_bus(child);
+@@ -907,6 +916,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		 * We need to assign a number to this bus which we always
+ 		 * do in the second pass.
+ 		 */
++		long shrink_size;
++		struct resource busn_res;
++		int ret = -ENOMEM;
++		int old_max = max;
++
+ 		if (!pass) {
+ 			if (pcibios_assign_all_busses() || broken)
+ 				/* Temporarily disable forwarding of the
+@@ -923,20 +937,43 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		/* Clear errors */
+ 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
+ 
+-		/* Prevent assigning a bus number that already exists.
+-		 * This can happen when a bridge is hot-plugged, so in
+-		 * this case we only re-scan this bus. */
+-		child = pci_find_bus(pci_domain_nr(bus), max+1);
+-		if (!child) {
+-			child = pci_add_new_bus(bus, dev, ++max);
+-			if (!child)
+-				goto out;
++		if (dev->subordinate) {
++			/* We get here only for cardbus */
++			child = dev->subordinate;
++			if  (!is_cardbus)
++				dev_warn(&dev->dev,
++				 "rescan scaned bridge as broken one again ?");
++
++			goto out;
+ 		}
++		/*
++		 * For CardBus bridges, we leave 4 bus numbers
++		 * as cards with a PCI-to-PCI bridge can be
++		 * inserted later.
++		 * other just allocate 8 bus to avoid we fall into
++		 *  small hole in the middle.
++		 */
++		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
++				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
++				&parent_res);
++
++		if (ret != 0)
++			goto out;
++
++		child = pci_add_new_bus(bus, dev, busn_res.start);
++		if (!child)
++			goto out;
++
++		child->subordinate = busn_res.end;
++		pci_bus_insert_busn_res(child, busn_res.start, busn_res.end);
++
+ 		buses = (buses & 0xff000000)
+ 		      | ((unsigned int)(child->primary)     <<  0)
+ 		      | ((unsigned int)(child->secondary)   <<  8)
+ 		      | ((unsigned int)(child->subordinate) << 16);
+ 
++		max = child->subordinate;
++
+ 		/*
+ 		 * yenta.c forces a secondary latency timer of 176.
+ 		 * Copy that behaviour here.
+@@ -967,43 +1004,24 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 			 * the real value of max.
+ 			 */
+ 			pci_fixup_parent_subordinate_busnr(child, max);
++
+ 		} else {
+-			/*
+-			 * For CardBus bridges, we leave 4 bus numbers
+-			 * as cards with a PCI-to-PCI bridge can be
+-			 * inserted later.
+-			 */
+-			for (i=0; i<CARDBUS_RESERVE_BUSNR; i++) {
+-				struct pci_bus *parent = bus;
+-				if (pci_find_bus(pci_domain_nr(bus),
+-							max+i+1))
+-					break;
+-				while (parent->parent) {
+-					if ((!pcibios_assign_all_busses()) &&
+-					    (parent->subordinate > max) &&
+-					    (parent->subordinate <= max+i)) {
+-						j = 1;
+-					}
+-					parent = parent->parent;
+-				}
+-				if (j) {
+-					/*
+-					 * Often, there are two cardbus bridges
+-					 * -- try to leave one valid bus number
+-					 * for each one.
+-					 */
+-					i /= 2;
+-					break;
+-				}
+-			}
+-			max += i;
+ 			pci_fixup_parent_subordinate_busnr(child, max);
+ 		}
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
++		shrink_size = child->subordinate - max;
+ 		child->subordinate = max;
+ 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
++		pci_bus_update_busn_res_end(child, max);
++
++		/* shrink some back, if we extend top before */
++		if (!is_cardbus && (shrink_size > 0) && parent_res)
++			pci_bus_shrink_top(bus, shrink_size, parent_res);
++
++		if (old_max > max)
++			max = old_max;
+ 	}
+ 
+ 	sprintf(child->name,
+-- 
+1.7.7
 
