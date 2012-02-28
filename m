@@ -1,68 +1,152 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 23 Feb 2012 12:10:12 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix device class print out
-Message-ID: <20120223121012.5933f563@jbarnes-desktop>
-In-Reply-To: <1329691812-23665-1-git-send-email-yinghai@kernel.org>
-References: <1329691812-23665-1-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/YtxB/K.l/6sTtVFmYmCYPzi"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 21/24] PCI: Seperate child bus scanning to two passes overall
+Date: Tue, 28 Feb 2012 14:07:40 -0800
+Message-Id: <1330466863-28469-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/YtxB/K.l/6sTtVFmYmCYPzi
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+In extreme case: Two bridges are properly setup.
+       bridge A
+               bridge AA
+               bridge AB
+       bridge B
+	       bridge BA
+	       bridge BB
+   but AA, AB are not setup properly.
+   bridge A has small range, and bridge AB could need more, when do the
+       first pass0 for bridge A, it will do pass0 and pass1 for AA and AB,
+	during that process, it will extend range of A for AB blindly.
+	because bridge B is not registered yet.
+       that could overlap range that is used by bridge B.
 
-On Sun, 19 Feb 2012 14:50:12 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Right way should be:
+       do pass0 for all good bridges at first.
+So we could do pass0 for bridge B before pass1 for bridge AB.
 
-> Found debug print out about class is shifted.
->=20
-> | pci 0000:f8:15.2: [8086:2b56] type 0 class 0x000600
->=20
-> code is trying to print class with 6 digits, but use shifted class with 4=
- digits
-> valid value as variable.
->=20
-> Change to original dev->class directly.
->=20
-> also remove not needed calculating of local variable class, because it wi=
-ll be
-> updated after pci_fixup_device(pci_fixup_early...)
->=20
-> Also unify type print out when class and header is not matched.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   50 ++++++++++++++++++++++++++++++++++----------------
+ 1 files changed, 34 insertions(+), 16 deletions(-)
 
-Applied to linux-next, thanks.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ba51902..4a38ef4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -809,6 +809,9 @@ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
+ 
+ 	return broken;
+ }
++
++static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
++						 int pass);
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+@@ -865,11 +868,10 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 	    !is_cardbus && !broken) {
+ 		unsigned int cmax;
+ 		/*
+-		 * Bus already configured by firmware, process it in the first
+-		 * pass and just note the configuration.
++		 * Bus already configured by firmware, still process it in two
++		 * passes in extreme case like two adjaced bridges have children
++		 * bridges that are not setup properly.
+ 		 */
+-		if (pass)
+-			goto out;
+ 
+ 		/*
+ 		 * If we already got to this bus through a different bridge,
+@@ -890,7 +892,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 			pci_bus_insert_busn_res(child, secondary, subordinate);
+ 		}
+ 
+-		cmax = pci_scan_child_bus(child);
++		cmax = __pci_scan_child_bus(child, pass);
+ 		if (cmax > max)
+ 			max = cmax;
+ 		if (child->subordinate > max)
+@@ -1704,12 +1706,13 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ }
+ EXPORT_SYMBOL_GPL(pcie_bus_configure_settings);
+ 
+-unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
++static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
++						 int pass)
+ {
+-	unsigned int devfn, pass, max = bus->secondary;
++	unsigned int devfn, max = bus->secondary;
+ 	struct pci_dev *dev;
+ 
+-	dev_dbg(&bus->dev, "scanning bus\n");
++	dev_dbg(&bus->dev, "scanning bus pass %d\n", pass);
+ 
+ 	/* Go find them, Rover! */
+ 	for (devfn = 0; devfn < 0x100; devfn += 8)
+@@ -1723,18 +1726,16 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
+ 	 * all PCI-to-PCI bridges on this bus.
+ 	 */
+ 	if (!bus->is_added) {
+-		dev_dbg(&bus->dev, "fixups for bus\n");
++		dev_dbg(&bus->dev, "fixups for bus pass %d\n", pass);
+ 		pcibios_fixup_bus(bus);
+ 		if (pci_is_root_bus(bus))
+ 			bus->is_added = 1;
+ 	}
+ 
+-	for (pass=0; pass < 2; pass++)
+-		list_for_each_entry(dev, &bus->devices, bus_list) {
+-			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+-			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
+-				max = pci_scan_bridge(bus, dev, max, pass);
+-		}
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
++		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
++			max = pci_scan_bridge(bus, dev, max, pass);
+ 
+ 	/*
+ 	 * We've scanned the bus and so we know all about what's on
+@@ -1743,7 +1744,24 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
+ 	 *
+ 	 * Return how far we've got finding sub-buses.
+ 	 */
+-	dev_dbg(&bus->dev, "bus scan returning with max=%02x\n", max);
++	dev_dbg(&bus->dev, "bus scan returning with max=%02x pass %d\n",
++			max, pass);
++
++	return max;
++}
++
++unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
++{
++	int pass;
++	unsigned int max = 0, tmp;
++
++	for (pass = 0; pass < 2;  pass++) {
++		tmp = __pci_scan_child_bus(bus, pass);
++
++		if (tmp > max)
++			max = tmp;
++	}
++
+ 	return max;
+ }
+ 
+-- 
+1.7.7
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/YtxB/K.l/6sTtVFmYmCYPzi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPRp0kAAoJEIEoDkX4Qk9hdT4P/i6WZXI37JWBKG/2dDFTqojz
-UUkgux8hCMsv9MOg35fBi4iLjjjwqt8vX3qwDPmnkvaxAZj8dLX0Vj9zUeFlJCkR
-TnYAqNE4vwkSqgGLZ49G6dk0xrlREm43/7USDVUy9ip844t/fF/QtnBS3zQQxeuG
-it4w+ZfMIVPk4pX5QkbcX2yY2imPAVG4vBfGSL88RtyrhQdnS+V1sv9KXYdh2THu
-u74ENZoerdBlc4wxBxYvo5Jv2aPMjnLb4jNibFuXOawhw5yL+w0ku8mdK6Ye/hiS
-fSykT4bmCdUYiDJk8gUNZ4KIhxxIoefjLcTtmGaazGcHPersuHG4K8GTSMY/Ur03
-WySphAXFmdf3V7waD87AsAUSGZefJmfXhaL+wNp+I6U0Y3ck5VVCn4CYfPPcxTH/
-uX/Qj1haty2htm/KtZWEK+lVj0OywGQwbvJFQ8h2T7JCvTS9AxYV2r5DlhuI6q/u
-+hZdf4iFtscw6K87MTIcdhTF9q/Up5qDxTFnEil/xMHgNQJUba7K9RGpasyQ88kF
-Q0Wm/aRdVh9Z/rcBLFDhmA0cUZTsfaYa02wGroxlXBsXxXWkkjyCDJCJtszNw7I9
-boUi6Tgo/jUOrkmaeX5JCeLtH2A+x76OAteyZXt01Bz9bqnGMSoNh3Zx/VBw0e5B
-8D7l+oB+acngEpYNpI0I
-=enx6
------END PGP SIGNATURE-----
-
---Sig_/YtxB/K.l/6sTtVFmYmCYPzi--
