@@ -1,47 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:25698 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462Ab2B1CEx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:04:53 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/9] PCI: Disable cardbus bridge MEM1 pref CTL
-Date: Sat,  4 Feb 2012 22:55:02 -0800
-Message-Id: <1328424908-6385-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 11/11] x86, PCI: Merge root info printing for nocrs path
+Date: Mon, 27 Feb 2012 18:03:51 -0800
+Message-Id: <1330394631-28978-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-Some BIOS enable both pref for MEM0 and MEM1.
-
-but we assume MEM1 is non-pref...
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ arch/x86/pci/amd_bus.c      |   12 +-----------
+ arch/x86/pci/broadcom_bus.c |    9 +--------
+ arch/x86/pci/bus_numa.c     |   17 +++++++++++++++++
+ arch/x86/pci/bus_numa.h     |    1 +
+ 4 files changed, 20 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 090217a..d5897c3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -914,6 +914,14 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	if (realloc_head)
- 		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 459a731..0b6abbe 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -291,17 +291,7 @@ static int __init early_fill_mp_bus_info(void)
+ 		}
+ 	}
  
-+	/* MEM1 must not be pref mmio */
-+	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
-+	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM1) {
-+		ctrl &= ~PCI_CB_BRIDGE_CTL_PREFETCH_MEM1;
-+		pci_write_config_word(bridge, PCI_CB_BRIDGE_CONTROL, ctrl);
-+		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
-+	}
+-	list_for_each_entry(info, &pci_root_infos, list) {
+-		int busnum;
+-		struct pci_root_res *root_res;
+-
+-		busnum = info->bus_min;
+-		printk(KERN_DEBUG "bus: [%02x, %02x] on node %x link %x\n",
+-		       info->bus_min, info->bus_max, info->node, info->link);
+-		list_for_each_entry(root_res, &info->resources, list)
+-			printk(KERN_DEBUG "bus: %02x %pR\n",
+-				       busnum, &root_res->res);
+-	}
++	print_pci_root_info(info, "bus:", true);
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
+index 521a374..ec5c66f 100644
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -79,14 +79,7 @@ static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
+ 		update_res(info, res.start, res.end, res.flags, 0);
+ 	}
+ 
+-	/* print information about this host bridge */
+-	res.start = fbus;
+-	res.end   = lbus;
+-	res.flags = IORESOURCE_BUS;
+-	printk(KERN_INFO "CNB20LE PCI Host Bridge (domain 0000 %pR)\n", &res);
+-
+-	list_for_each_entry(root_res, &info->resources, list)
+-		printk(KERN_INFO "host bridge window %pR\n", &root_res->res);
++	print_pci_root_info(info, "host bridge windows: ", false);
+ }
+ 
+ static int __init broadcom_postcore_init(void)
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index 306579f..7251011 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -77,6 +77,23 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+ 	return info;
+ }
+ 
++void print_pci_root_info(struct pci_root_info *info, char *name, bool nodelink)
++{
++	struct pci_root_res *root_res;
++	int busnum = info->bus_min;
 +
- 	/*
- 	 * Check whether prefetchable memory is supported
- 	 * by this bridge.
++	if (!nodelink)
++		printk(KERN_DEBUG "%s: [%02x, %02x]\n", name,
++				info->bus_min, info->bus_max);
++	else
++		printk(KERN_DEBUG "%s: [%02x, %02x] on node %x link %x\n", name,
++			info->bus_min, info->bus_max, info->node, info->link);
++
++	list_for_each_entry(root_res, &info->resources, list)
++		printk(KERN_DEBUG "%s: %02x %pR\n", name, busnum,
++				 &root_res->res);
++}
++
+ void __devinit update_res(struct pci_root_info *info, resource_size_t start,
+ 			  resource_size_t end, unsigned long flags, int merge)
+ {
+diff --git a/arch/x86/pci/bus_numa.h b/arch/x86/pci/bus_numa.h
+index 226a466..d19ac93 100644
+--- a/arch/x86/pci/bus_numa.h
++++ b/arch/x86/pci/bus_numa.h
+@@ -22,6 +22,7 @@ struct pci_root_info {
+ extern struct list_head pci_root_infos;
+ struct pci_root_info *alloc_pci_root_info(int bus_min, int bus_max,
+ 						int node, int link);
++void print_pci_root_info(struct pci_root_info *info, char *name, bool nodelink);
+ extern void update_res(struct pci_root_info *info, resource_size_t start,
+ 		      resource_size_t end, unsigned long flags, int merge);
+ #endif
 -- 
 1.7.7
 
