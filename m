@@ -1,81 +1,76 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:53504
+	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754175Ab2B1Rmm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 12:42:42 -0500
+Date: Tue, 28 Feb 2012 18:42:32 +0100
+From: Andreas Herrmann <andreas.herrmann3@amd.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Ingo Molnar <mingo@elte.hu>,
+	"Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [andreas.herrmann3@amd.com: [PATCH 1/2] x86/amd: Restore
+ early_fill_mp_bus_to_node]
+Message-ID: <20120228174232.GI31006@alberich.amd.com>
+References: <20120227094406.GB10078@elte.hu>
+ <20120227122240.778bcc5b@jbarnes-desktop>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6zHhpz+N6y3ybDVp-oabVWAYeTt9pPJS3nz+nD2C8xkg@mail.gmail.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-	<CAE9FiQWE-VGoh=8hyhWPMrTe7X1dqTyBCgAM=ozWMyZXEvwGTg@mail.gmail.com>
-	<CAErSpo7pxGA02uTDNoFpxU_6_B4CgvJM10zpFRjjhXHK5L3mtg@mail.gmail.com>
-	<CAE9FiQVx7=cSVkApbh_8dnoBqdrRYDOVtMqdC=mDCwq0fuVZpA@mail.gmail.com>
-	<CAErSpo6zHhpz+N6y3ybDVp-oabVWAYeTt9pPJS3nz+nD2C8xkg@mail.gmail.com>
-Date: Fri, 10 Feb 2012 09:20:22 -0800
-Message-ID: <CAE9FiQVqKZGacZYqXETVVaqzobiw01OyCmASUfxwZ075rdX7XA@mail.gmail.com>
-Subject: Re: [PATCH v2 00/18] add PCI bus-to-resource offset support in core
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120227122240.778bcc5b@jbarnes-desktop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-...
->>
->> I mean, we can unify sysdata usuage, make them all most the same.
->>
->> and for some sysdata, already acting like host_bridge struct with
->> domain, numa_node, and resources.
->>
->>> If you can show an example of what you mean, maybe it will help me understand.
->>
->> just looked the sys_data of different arch,
->>
->> looks like pci_sys_data for arm already include the io offset
->>
->> arch/arm/include/asm/mach/pci.h::
->>
->> struct pci_sys_data {
->> #ifdef CONFIG_PCI_DOMAINS
->>        int             domain;
->> #endif
->>        struct list_head node;
->>        int             busnr;          /* primary bus number
->>         */
->>        u64             mem_offset;     /* bus->cpu memory mapping
->> offset       */
->>        unsigned long   io_offset;      /* bus->cpu IO mapping offset
->>         */
->>        struct pci_bus  *bus;           /* PCI bus
->>         */
->>        struct list_head resources;     /* root bus resources (apertures)
->
-> Let me try again.  Maybe your idea is that we should create something
-> like "struct pcibios_sysdata" and require every arch to define a
-> struct with that name.  Every arch's struct would contain some members
-> such as "domain," "mem_offset," "io_offset," and "resources."  These
-> would have standard names & types across all arches and would be
-> referenced by the PCI core.  In addition, the struct could include
-> arch-specific data such as "acpi_handle," "iommu," etc.
->
-> That way, the core could implement things like pci_domain_nr() and
-> pci_bus_to_resource() by using the data in struct pcibios_sysdata.
-> The current "void *sysdata" parameters to pci_scan_bus() and friends
-> would become "struct pcibios_sysdata *sysdata".
->
-> I like the idea of unifying the sysdata struct name and changing from
-> a "void *" to something like "struct pcibios_sysdata *".  That might
-> be worth doing.
+On Mon, Feb 27, 2012 at 12:22:40PM -0800, Jesse Barnes wrote:
+> On Mon, 27 Feb 2012 10:44:06 +0100
+> Ingo Molnar <mingo@elte.hu> wrote:
+> 
+> > 
+> > Yours?
+> > 
+> > ----- Forwarded message from Andreas Herrmann <andreas.herrmann3@amd.com> -----
+> > 
+> > Date: Fri, 24 Feb 2012 16:19:12 +0100
+> > From: Andreas Herrmann <andreas.herrmann3@amd.com>
+> > To: Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, "H. Peter Anvin"
+> > 	<hpa@zytor.com>
+> > CC: linux-kernel@vger.kernel.org
+> > Subject: [PATCH 1/2] x86/amd: Restore early_fill_mp_bus_to_node
+> > 
+> > 
+> > Once upon a time this function was overloaded with quirky stuff to fix
+> > resource detection on systems w/ _CRS defects (seems that some Sun and
+> > HP systems were affected).
+> > 
+> > See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
+> > (x86: multi pci root bus with different io resource range, on 64-bit)
+> > 
+> > Restore the old function and thus decouple it from the quirk that is
+> > CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
+> > I assume that the _CRS stuff is working on current systems.
+> > 
+> > This is required to properly initilize the numa_node information of
+> > PCI busses and associated devices.
+> > 
+> > Signed-off-by: Andreas Herrmann <andreas.herrmann3@amd.com>
+> > ---
+> >  arch/x86/pci/amd_bus.c |   84 +++++++++++++++++++++++++++++++----------------
+> 
+> ISTR this function getting things wrong on some Nehalem based systems,
+> and assigning all IO devices to node 0, resulting in bad NIC
+> performance.
 
-what i am mean:
-1. make every arch to use same name for the struct, but could have
-different contents.
-   struct pci_sys_data.
-2. unify member field name, by changing name
-    pci_first_busno ==> first_busno
-    pci_last_busno ==> last_busno
-    or adding
-    first_busno
-    last_busno
-3. changing more filed like domain, node
-    and io_offset, mem_offset
-...
+Are you referring to the original early_fill_mp_bus_to_node function?
+I don't see how this can happen as it's only called in case of
+existence of AMD CPU NB devices. Those won't be detected on Intel at
+all.
 
-Yinghai
+> Jesse, are things working ok now?  Care to test this patch to make
+> sure it doesn't regress anything on one of the previously affected
+> systems?
+
+
+
+
+Andreas
+
+
