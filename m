@@ -1,158 +1,95 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 15/18] sh/PCI: get rid of device resource fixups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>
-Date: Thu, 09 Feb 2012 19:37:38 -0700
-Message-ID: <20120210023738.10311.36556.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:47422 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754989Ab2B1SRi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 13:17:38 -0500
+Received: by wejx9 with SMTP id x9so1167937wej.19
+        for <linux-pci@vger.kernel.org>; Tue, 28 Feb 2012 10:17:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7wSB-uCjV4YeA-fUOHPtugn4ASXScN3MndVybfkk8mOw@mail.gmail.com>
+References: <20120220191804.GA14499@avionic-0098.adnet.avionic-design.de>
+ <74CDBE0F657A3D45AFBB94109FB122FF17BD8BC302@HQMAIL01.nvidia.com>
+ <20120222082449.GA15157@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo4TfpGmx+HZ1ZnZwj3ZP_cQMCzkMT+6JK6ztYp2zWJcxw@mail.gmail.com>
+ <20120223060355.GA21091@avionic-0098.mockup.avionic-design.de> <CAErSpo7wSB-uCjV4YeA-fUOHPtugn4ASXScN3MndVybfkk8mOw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 Feb 2012 11:17:15 -0700
+Message-ID: <CAErSpo4ACvHS7CdL4MGDXkhJfrrTpp2Pb9YDrZ5dwCffLZ2Z-g@mail.gmail.com>
+Subject: Re: PCIe device tree support
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Stephen Warren <swarren@nvidia.com>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"Olof Johansson (olof@lixom.net)" <olof@lixom.net>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+On Thu, Feb 23, 2012 at 10:49 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Feb 22, 2012 at 10:03 PM, Thierry Reding
+> <thierry.reding@avionic-design.de> wrote:
+>> * Bjorn Helgaas wrote:
+>>> On Wed, Feb 22, 2012 at 12:24 AM, Thierry Reding
+>>> <thierry.reding@avionic-design.de> wrote:
+>>> > [Adding Jesse Barnes and the linux-pci mailing list to CC.]
+>>> >
+>>> > * Stephen Warren wrote:
+>>> >> Thierry Reding wrote at Monday, February 20, 2012 12:18 PM:
+>>> >> > I would like to add device tree support for the Tegra2 PCIe controller. From
+>>> >> > what I understand this will require the PCIe code to be rewritten as a proper
+>>> >> > platform driver in order to be able to instantiate it via the device tree. Is
+>>> >> > that correct?
+>>> >>
+>>> >> That's probably the cleanest way, yes.
+>>> >>
+>>> >> Is there a drivers/ directory for PCI/PCIe host controllers? Moving the
+>>> >> code there might be nice if so, although IIRC when I asked Olof about
+>>> >> that a number of months back, he said quite a few host controllers were
+>>> >> in arch/...
+>>> >
+>>> > Most PCI/PCIe host controller drivers seem to currently be in arch/. Is there
+>>> > a specific reason for this? Would it be acceptable to put any new drivers
+>>> > below drivers/pci/?
+>>>
+>>> PCI host bridges aren't architected, so discovering them and their
+>>> properties has historically been mostly architecture-specific.  ACPI
+>>> is one exception (with a driver in drivers/acpi/pci_root.c) and it
+>>> sounds like device tree might be a similar exception.  If you can make
+>>> a non-arch-specific driver and put it somewhere other than arch/, I'm
+>>> all in favor of that, especially if you can make it usable by other
+>>> arches that use device tree.  Where to put it?  I dunno.  drivers/pci/
+>>> sounds like a reasonable possibility.
+>>
+>> I don't think it would be possible to write a driver that works for all
+>> device tree based boards or architectures. As you said the implementation is
+>> very hardware specific and probably couldn't even be generalized among two
+>> chipsets of the same architecture.
+>
+> Host bridges may be hardware-specific, but the PCI core really only
+> needs an abstract description.  It needs the bus number aperture, the
+> I/O port apertures, the MMIO apertures, and associated offsets between
+> CPU and PCI bus addresses.  I don't know anything about device tree,
+> but I'd be surprised and disappointed if it encodes this basic
+> information in platform-specific ways.
 
-CC: Paul Mundt <lethal@linux-sh.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/sh/drivers/pci/pci.c |   75 +++++++--------------------------------------
- arch/sh/include/asm/pci.h |    6 +---
- 2 files changed, 12 insertions(+), 69 deletions(-)
+This made me curious, so I poked around at the callers of
+of_get_property("bus-range").  Most of these callers are basically PCI
+host bridge drivers, though they aren't really structured as drivers.
+They have a very consistent structure of the form:
 
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 1e7b0e2..9d10a3c 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -37,11 +37,20 @@ static void __devinit pcibios_scanbus(struct pci_channel *hose)
- 	static int next_busno;
- 	static int need_domain_info;
- 	LIST_HEAD(resources);
-+	struct resource *res;
-+	resource_size_t offset;
- 	int i;
- 	struct pci_bus *bus;
- 
--	for (i = 0; i < hose->nr_resources; i++)
--		pci_add_resource(&resources, hose->resources + i);
-+	for (i = 0; i < hose->nr_resources; i++) {
-+		res = hose->resources + i;
-+		offset = 0;
-+		if (res->flags & IORESOURCE_IO)
-+			offset = hose->io_offset;
-+		else if (res->flags & IORESOURCE_MEM)
-+			offset = hose->mem_offset;
-+		pci_add_resource_offset(&resources, res, offset);
-+	}
- 
- 	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
- 				&resources);
-@@ -143,42 +152,12 @@ static int __init pcibios_init(void)
- }
- subsys_initcall(pcibios_init);
- 
--static void pcibios_fixup_device_resources(struct pci_dev *dev,
--	struct pci_bus *bus)
--{
--	/* Update device resources.  */
--	struct pci_channel *hose = bus->sysdata;
--	unsigned long offset = 0;
--	int i;
--
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		if (!dev->resource[i].start)
--			continue;
--		if (dev->resource[i].flags & IORESOURCE_IO)
--			offset = hose->io_offset;
--		else if (dev->resource[i].flags & IORESOURCE_MEM)
--			offset = hose->mem_offset;
--
--		dev->resource[i].start += offset;
--		dev->resource[i].end += offset;
--	}
--}
--
- /*
-  *  Called after each bus is probed, but before its children
-  *  are examined.
-  */
- void __devinit pcibios_fixup_bus(struct pci_bus *bus)
- {
--	struct pci_dev *dev;
--	struct list_head *ln;
--
--	for (ln = bus->devices.next; ln != &bus->devices; ln = ln->next) {
--		dev = pci_dev_b(ln);
--
--		if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
--			pcibios_fixup_device_resources(dev, bus);
--	}
- }
- 
- /*
-@@ -208,36 +187,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct pci_channel *hose = dev->sysdata;
--	unsigned long offset = 0;
--
--	if (res->flags & IORESOURCE_IO)
--		offset = hose->io_offset;
--	else if (res->flags & IORESOURCE_MEM)
--		offset = hose->mem_offset;
--
--	region->start = res->start - offset;
--	region->end = res->end - offset;
--}
--
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct pci_channel *hose = dev->sysdata;
--	unsigned long offset = 0;
--
--	if (res->flags & IORESOURCE_IO)
--		offset = hose->io_offset;
--	else if (res->flags & IORESOURCE_MEM)
--		offset = hose->mem_offset;
--
--	res->start = region->start + offset;
--	res->end = region->end + offset;
--}
--
- int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
- 	return pci_enable_resources(dev, mask);
-@@ -381,8 +330,6 @@ EXPORT_SYMBOL(pci_iounmap);
- #endif /* CONFIG_GENERIC_IOMAP */
- 
- #ifdef CONFIG_HOTPLUG
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--EXPORT_SYMBOL(pcibios_bus_to_resource);
- EXPORT_SYMBOL(PCIBIOS_MIN_IO);
- EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
- #endif
-diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
-index cb21e23..3b5b6ab 100644
---- a/arch/sh/include/asm/pci.h
-+++ b/arch/sh/include/asm/pci.h
-@@ -114,11 +114,7 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- /* Board-specific fixup routines. */
- int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
- 
--extern void pcibios_resource_to_bus(struct pci_dev *dev,
--	struct pci_bus_region *region, struct resource *res);
--
--extern void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--				    struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- #define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
- 
+    for_each_compatible_node(np, "pci", "mpc10x-pci")
+        pcibios_alloc_controller()
+        of_get_property(dev, "bus-range", &len)
+        pci_process_bridge_OF_ranges()
+            of_get_property(dev, "ranges", &rlen)
+            ...
+        pci_create_root_bus()
 
+This basic pattern is used twenty or more times already!  There are
+definitely variations and some platform-specific pieces, but I think
+there's certainly the possibility of making some of this code more
+generic, since the information used by the PCI core seems to be
+described consistently across platforms.
+
+Bjorn
