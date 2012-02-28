@@ -1,127 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:41593 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1030185Ab2B2Sb6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 13:31:58 -0500
-Date: Wed, 29 Feb 2012 10:31:52 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: "Hao, Xudong" <xudong.hao@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"Kay, Allen M" <allen.m.kay@intel.com>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: Re: [PATCH V2] Quirk for IVB graphics FLR errata
-Message-ID: <20120229103152.59dcedd6@jbarnes-x220>
-In-Reply-To: <403610A45A2B5242BD291EDAE8B37D300FCDA04B@SHSMSX102.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FCDA04B@SHSMSX102.ccr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH 14/24] PCI, powerpc: Register busn_res for root buses
+Date: Tue, 28 Feb 2012 14:07:33 -0800
+Message-Id: <1330466863-28469-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 29 Feb 2012 03:11:24 +0000
-"Hao, Xudong" <xudong.hao@intel.com> wrote:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/include/asm/pci-bridge.h |    1 +
+ arch/powerpc/kernel/pci-common.c      |   10 +++++++++-
+ 2 files changed, 10 insertions(+), 1 deletions(-)
 
-> For IvyBridge Mobile platform, a system hang may occur if a
-> FLR(Function Level Reset) is asserted to internal graphics.
-> 
-> This quirk patch is workaround for the IVB FLR errata issue.
-> We are disabling the FLR reset handshake between the PCH and CPU
-> display, then manually powering down the panel power sequencing and
-> resetting the PCH display.
-> 
-> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-> Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
-> ---
->  drivers/pci/quirks.c |   49
-> +++++++++++++++++++++++++++++++++++++++++++++++++ 1 files changed, 49
-> insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
-> 6476547..5223b80 100644 --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -29,6 +29,11 @@
->  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
->  #include "pci.h"
->  
-> +#include "../gpu/drm/i915/i915_reg.h"
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 5d48765..11cebf0 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -30,6 +30,7 @@ struct pci_controller {
+ 	int first_busno;
+ 	int last_busno;
+ 	int self_busno;
++	struct resource busn;
+ 
+ 	void __iomem *io_base_virt;
+ #ifdef CONFIG_PPC64
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 910b9de..ee8c0c9 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1648,6 +1648,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
+ 	/* Wire up PHB bus resources */
+ 	pcibios_setup_phb_resources(hose, &resources);
+ 
++	hose->busn.start = hose->first_busno;
++	hose->busn.end	 = hose->last_busno;
++	hose->busn.flags = IORESOURCE_BUS;
++	pci_add_resource(&resources, &hose->busn);
++
+ 	/* Create an empty bus for the toplevel */
+ 	bus = pci_create_root_bus(hose->parent, hose->first_busno,
+ 				  hose->ops, hose, &resources);
+@@ -1670,8 +1675,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
+ 		of_scan_bus(node, bus);
+ 	}
+ 
+-	if (mode == PCI_PROBE_NORMAL)
++	if (mode == PCI_PROBE_NORMAL) {
++		pci_bus_update_busn_res_end(bus, 255);
+ 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
++		pci_bus_update_busn_res_end(bus, bus->subordinate);
++	}
+ 
+ 	/* Platform gets a chance to do some global fixups before
+ 	 * we proceed to resource allocation
+-- 
+1.7.7
 
-Ugg... this is ugly.  Should probably go near the definition of the
-quirk at any rate.
-
-> +#include <asm/tsc.h>
-> +/* 10 seconds */
-> +#define IGD_OPERATION_TIMEOUT ((cycles_t) tsc_khz*10*1000)
-> +
-
-Same here, the asm/tsc.h can go at the top, but the timeout definition
-should go near the reset function.
-
-May as well make it a static const cycles_t as well.
-
-> +#define MSG_CTL	0x45010
-> +
-> +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
-> +	u8 *mmio_base;
-> +	u32 val;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-> +				 pci_resource_len(dev, 0));
-> +	if (!mmio_base)
-> +		return -ENOMEM;
-> +
-> +	/* Work Around */
-> +	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
-> +	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
-> +	val = *((u32 *)(mmio_base + PCH_PP_CONTROL)) & 0xfffffffe;
-> +	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
-
-These clobber existing values.  Since we're doing a reset, clobbering
-PCH_PP_CONTROL should be ok, but clobbering SOUTH_CHICKEN2 is only ok
-if the next driver that loads sets the right bits (if i915 was
-previously using the device, it would have set a couple of bits).
-
-But again since it's it a reset that's probably ok, but you should put
-a comment indicating as much.
-
-> +	do {
-> +		cycles_t start_time = get_cycles();
-> +		while (1) {
-> +			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
-> +			if (((val & 0x80000000) == 0)
-> +				&& ((val & 0x30000000) == 0))
-> +				break;
-> +			if (IGD_OPERATION_TIMEOUT < (get_cycles() -
-> start_time))
-> +				break;
-> +			cpu_relax();
-> +		}
-> +	} while (0);
-> +	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
-> +
-> +	iounmap(pci_resource_start(dev, 0));
-> +	return 0;
-> +}
-> +
->  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-> +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
->  
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-> +		reset_ivb_igd },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-> +		reset_ivb_igd },
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
->  		reset_intel_generic_dev },
->  	{ 0 }
-
-Looks ok otherwise, thanks.
-
-Jesse
