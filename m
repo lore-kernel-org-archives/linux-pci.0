@@ -1,58 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:36003 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756404Ab2BWTnp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 14:43:45 -0500
-Received: by eekb15 with SMTP id b15so51949eek.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Feb 2012 11:43:44 -0800 (PST)
-Subject: [PATCH v2 08/12] mips/PCI: removed unused pci_probe configurability
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-mips@linux-mips.org,
-	Ralf Baechle <ralf@linux-mips.org>
-Date: Thu, 23 Feb 2012 12:43:43 -0700
-Message-ID: <20120223194343.20708.34965.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	sparclinux@vger.kernel.org
+Subject: [PATCH 13/24] PCI, sparc: Register busn_res for root buses
+Date: Tue, 28 Feb 2012 14:07:32 -0800
+Message-Id: <1330466863-28469-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We never assign anything other than PCI_ASSIGN_ALL_BUSSES to pci_probe,
-so just remove the indirection.  If configurability is required in the
-future, please use the pci_flags/PCI_REASSIGN_ALL_BUS functionality
-as is done for powerpc.
-
-CC: Ralf Baechle <ralf@linux-mips.org>
-CC: linux-mips@linux-mips.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
 ---
- arch/mips/pci/pci.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+ arch/sparc/kernel/pci.c      |    4 ++++
+ arch/sparc/kernel/pci_impl.h |    1 +
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index 2a11045..19f6d19 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -24,10 +24,6 @@
-  * assignments.
-  */
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 253e8ac..1687fed 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -695,6 +695,10 @@ struct pci_bus * __devinit pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				pbm->io_space.start);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+ 				pbm->mem_space.start);
++	pbm->busn.start = pbm->pci_first_busno;
++	pbm->busn.end	= pbm->pci_last_busn;
++	pbm->busn.flags	= IORESOURCE_BUS;
++	pci_add_resource(&resources, &pbm->busn);
+ 	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
+ 				  pbm, &resources);
+ 	if (!bus) {
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 6beb60d..918a203 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -97,6 +97,7 @@ struct pci_pbm_info {
+ 	/* PBM I/O and Memory space resources. */
+ 	struct resource			io_space;
+ 	struct resource			mem_space;
++	struct resource			busn;
  
--#define PCI_ASSIGN_ALL_BUSSES	1
--
--unsigned int pci_probe = PCI_ASSIGN_ALL_BUSSES;
--
- /*
-  * The PCI controller list.
-  */
-@@ -238,7 +234,7 @@ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
- 
- unsigned int pcibios_assign_all_busses(void)
- {
--	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
-+	return 1;
- }
- 
- int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
+ 	unsigned long			config_space;
+-- 
+1.7.7
 
