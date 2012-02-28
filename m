@@ -1,101 +1,232 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:24914 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756140Ab2BNAZ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Feb 2012 19:25:59 -0500
-Date: Mon, 13 Feb 2012 16:25:57 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Alex Shi <alex.shi@intel.com>
-Cc: stern@rowland.harvard.edu, Greg KH <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, andiry.xu@amd.com,
-	linux-kernel@vger.kernel.org, Oliver Neukum <oneukum@suse.de>,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
-Subject: [RFT] USB: Try MSI first before line IRQ for Intel PCIe USB3 HCD
-Message-ID: <20120214002557.GA13003@xanatos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120214002030.GA10364@xanatos>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 05/11] PCI: add generic device into pci_host_bridge struct
+Date: Mon, 27 Feb 2012 18:03:45 -0800
+Message-Id: <1330394631-28978-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have a PCI USB xhci host controller on a new platform. It doesn't
-have a line IRQ definition in BIOS. The Linux driver refuses to
-initial this controller, but Windows works well because it only depends
-on MSI.
+use that device for pci_root_bus bridge pointer.
 
-Actually, Linux also can work for MSI. This patch skips the first line
-IRQ checking for our HCD in usb-core pci probe, then try to enable MSI
-firstly. That make this HCD works well under Linux.
+With that make code more simple.
 
-This patch should be backported to kernels as old as 2.6.32.
+Also we can use pci_release_bus_bridge_dev() to release allocated
+pci_host_bridge during removing path.
 
-Signed-off-by: Alex Shi <alex.shi@intel.com>
-Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: stable@vger.kernel.org
+At last, we can use root bus bridge pointer to get host bridge pointer instead
+of going over host bridge list, so could kill that host bridge list.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/host-bridge.c |   15 +---------
+ drivers/pci/pci.h         |    2 -
+ drivers/pci/probe.c       |   65 +++++++++++++++++++++++---------------------
+ include/linux/pci.h       |    4 ++-
+ 4 files changed, 38 insertions(+), 48 deletions(-)
 
-Hi Alex,
-
-Please test this on your Panther Point system that doesn't have a BIOS
-provided IRQ line.  I think this is a much simpler solution.
-
-Sarah Sharp
-
- drivers/usb/core/hcd-pci.c |    5 ++++-
- drivers/usb/core/hcd.c     |    6 ++++--
- drivers/usb/host/xhci.c    |    5 +++++
- 3 files changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
-index d136b8f..81e2c0d 100644
---- a/drivers/usb/core/hcd-pci.c
-+++ b/drivers/usb/core/hcd-pci.c
-@@ -187,7 +187,10 @@ int usb_hcd_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 		return -ENODEV;
- 	dev->current_state = PCI_D0;
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index b3ddcc5..03d8db1 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -9,13 +9,6 @@
  
--	if (!dev->irq) {
-+	/* The xHCI driver supports MSI and MSI-X,
-+	 * so don't fail if the BIOS doesn't provide a legacy IRQ.
-+	 */
-+	if (!dev->irq && (driver->flags & HCD_MASK) != HCD_USB3) {
- 		dev_err(&dev->dev,
- 			"Found HC with no IRQ.  Check BIOS/PCI %s setup!\n",
- 			pci_name(dev));
-diff --git a/drivers/usb/core/hcd.c b/drivers/usb/core/hcd.c
-index eb19cba..e128232 100644
---- a/drivers/usb/core/hcd.c
-+++ b/drivers/usb/core/hcd.c
-@@ -2447,8 +2447,10 @@ int usb_add_hcd(struct usb_hcd *hcd,
- 			&& device_can_wakeup(&hcd->self.root_hub->dev))
- 		dev_dbg(hcd->self.controller, "supports USB remote wakeup\n");
+ #include "pci.h"
  
--	/* enable irqs just before we start the controller */
--	if (usb_hcd_is_primary_hcd(hcd)) {
-+	/* enable irqs just before we start the controller,
-+	 * if the BIOS provides legacy PCI irqs.
-+	 */
-+	if (usb_hcd_is_primary_hcd(hcd) && irqnum) {
- 		retval = usb_hcd_request_irqs(hcd, irqnum, irqflags);
- 		if (retval)
- 			goto err_request_irq;
-diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
-index 6bbe3c3..c939f5f 100644
---- a/drivers/usb/host/xhci.c
-+++ b/drivers/usb/host/xhci.c
-@@ -352,6 +352,11 @@ static int xhci_try_enable_msi(struct usb_hcd *hcd)
- 		/* hcd->irq is -1, we have MSI */
- 		return 0;
+-static LIST_HEAD(pci_host_bridges);
+-
+-void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
+-{
+-	list_add_tail(&bridge->list, &pci_host_bridges);
+-}
+-
+ static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus;
+@@ -30,14 +23,8 @@ static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+ static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus = find_pci_root_bus(dev);
+-	struct pci_host_bridge *bridge;
+-
+-	list_for_each_entry(bridge, &pci_host_bridges, list) {
+-		if (bridge->bus == bus)
+-			return bridge;
+-	}
  
-+	if (!pdev->irq) {
-+		xhci_err(xhci, "No msi-x/msi found and no IRQ in BIOS\n");
-+		return -EINVAL;
+-	return NULL;
++	return to_pci_host_bridge(bus->bridge);
+ }
+ 
+ static bool resource_contains(struct resource *res1, struct resource *res2)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c695a92..e494347 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -231,8 +231,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+ extern void pci_disable_bridge_window(struct pci_dev *dev);
+ 
+-void add_to_pci_host_bridges(struct pci_host_bridge *bridge);
+-
+ /* Single Root I/O Virtualization */
+ struct pci_sriov {
+ 	int pos;		/* capability position */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 89a82a3..fb3dd4b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -421,6 +421,19 @@ static struct pci_bus * pci_alloc_bus(void)
+ 	return b;
+ }
+ 
++static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
++{
++	struct pci_host_bridge *bridge;
++
++	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
++	if (bridge) {
++		INIT_LIST_HEAD(&bridge->windows);
++		bridge->bus = b;
 +	}
 +
- 	/* fall back to legacy interrupt*/
- 	ret = request_irq(pdev->irq, &usb_hcd_irq, IRQF_SHARED,
- 			hcd->irq_descr, hcd);
++	return bridge;
++}
++
+ static unsigned char pcix_bus_speed[] = {
+ 	PCI_SPEED_UNKNOWN,		/* 0 */
+ 	PCI_SPEED_66MHz_PCIX,		/* 1 */
+@@ -1121,7 +1134,13 @@ int pci_cfg_space_size(struct pci_dev *dev)
+ 
+ static void pci_release_bus_bridge_dev(struct device *dev)
+ {
+-	kfree(dev);
++	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
++
++	/* TODO: need to free window->res */
++
++	pci_free_resource_list(&bridge->windows);
++
++	kfree(bridge);
+ }
+ 
+ struct pci_dev *alloc_pci_dev(void)
+@@ -1570,28 +1589,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	int error;
+ 	struct pci_host_bridge *bridge;
+ 	struct pci_bus *b, *b2;
+-	struct device *dev;
+ 	struct pci_host_bridge_window *window, *n;
+ 	struct resource *res;
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
+-	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+-	if (!bridge)
+-		return NULL;
+ 
+ 	b = pci_alloc_bus();
+ 	if (!b)
+-		goto err_bus;
+-
+-	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+-	if (!dev)
+-		goto err_dev;
++		return NULL;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+-
+ 	b2 = pci_find_bus(pci_domain_nr(b), bus);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+@@ -1599,13 +1609,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		goto err_out;
+ 	}
+ 
+-	dev->parent = parent;
+-	dev->release = pci_release_bus_bridge_dev;
+-	dev_set_name(dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+-	error = device_register(dev);
++	bridge = pci_alloc_host_bridge(b);
++	if (!bridge)
++		goto err_out;
++
++	bridge->dev.parent = parent;
++	bridge->dev.release = pci_release_bus_bridge_dev;
++	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	error = device_register(&bridge->dev);
+ 	if (error)
+-		goto dev_reg_err;
+-	b->bridge = get_device(dev);
++		goto bridge_dev_reg_err;
++	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+@@ -1624,9 +1638,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	b->number = b->secondary = bus;
+ 
+-	bridge->bus = b;
+-	INIT_LIST_HEAD(&bridge->windows);
+-
+ 	if (parent)
+ 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
+ 	else
+@@ -1652,25 +1663,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	}
+ 
+ 	down_write(&pci_bus_sem);
+-	add_to_pci_host_bridges(bridge);
+ 	list_add_tail(&b->node, &pci_root_buses);
+ 	up_write(&pci_bus_sem);
+ 
+ 	return b;
+ 
+ class_dev_reg_err:
+-	device_unregister(dev);
+-dev_reg_err:
+-	down_write(&pci_bus_sem);
+-	list_del(&bridge->list);
+-	list_del(&b->node);
+-	up_write(&pci_bus_sem);
++	device_unregister(&bridge->dev);
++bridge_dev_reg_err:
++	kfree(bridge);
+ err_out:
+-	kfree(dev);
+-err_dev:
+ 	kfree(b);
+-err_bus:
+-	kfree(bridge);
+ 	return NULL;
+ }
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5584aac..310610e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -375,11 +375,13 @@ struct pci_host_bridge_window {
+ };
+ 
+ struct pci_host_bridge {
+-	struct list_head list;
++	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ };
+ 
++#define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
++
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
 -- 
-1.7.9
+1.7.7
 
