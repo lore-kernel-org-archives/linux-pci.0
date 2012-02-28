@@ -1,73 +1,153 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 28/39] PCI, powerpc: Register busn_res for root buses
-Date: Wed, 29 Feb 2012 15:07:27 -0800
-Message-Id: <1330556858-11768-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 08/11] x86, PCI: add host bridge resource release for using _CRS
+Date: Mon, 27 Feb 2012 18:03:48 -0800
+Message-Id: <1330394631-28978-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci-common.c      |   10 +++++++++-
- 2 files changed, 10 insertions(+), 1 deletions(-)
+1. allocate pci_root_info instead of use local stack. we need to pass around info
+   for release fn.
+2. add release_pci_root_info
+3. set x86 own host bridge release fn, so will make sure root bridge
+   related resources get freed during root bus removal.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 5d48765..11cebf0 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -30,6 +30,7 @@ struct pci_controller {
- 	int first_busno;
- 	int last_busno;
- 	int self_busno;
-+	struct resource busn;
- 
- 	void __iomem *io_base_virt;
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 910b9de..ee8c0c9 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1648,6 +1648,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	/* Wire up PHB bus resources */
- 	pcibios_setup_phb_resources(hose, &resources);
- 
-+	hose->busn.start = hose->first_busno;
-+	hose->busn.end	 = hose->last_busno;
-+	hose->busn.flags = IORESOURCE_BUS;
-+	pci_add_resource(&resources, &hose->busn);
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/acpi.c |   66 +++++++++++++++++++++++++++++++++++++++++----------
+ 1 files changed, 53 insertions(+), 13 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 763f7bb..208f257 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -309,7 +309,33 @@ static void free_pci_root_info(struct pci_root_info *info)
+ {
+ 	kfree(info->name);
+ 	kfree(info->res);
+-	memset(info, 0, sizeof(struct pci_root_info));
++	kfree(info);
++}
 +
- 	/* Create an empty bus for the toplevel */
- 	bus = pci_create_root_bus(hose->parent, hose->first_busno,
- 				  hose->ops, hose, &resources);
-@@ -1670,8 +1675,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		of_scan_bus(node, bus);
++static void __release_pci_root_info(struct pci_root_info *info)
++{
++	int i;
++	struct resource *res;
++
++	for (i = 0; i < info->res_num; i++) {
++		res = &info->res[i];
++
++		if (!res->parent)
++			continue;
++
++		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			continue;
++
++		release_resource(res);
++	}
++
++	free_pci_root_info(info);
++}
++static void release_pci_root_info(struct pci_host_bridge *bridge)
++{
++	struct pci_root_info *info = bridge->release_data;
++
++	__release_pci_root_info(info);
+ }
+ 
+ static void
+@@ -342,7 +368,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+-	struct pci_root_info info;
++	struct pci_root_info *info = NULL;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
+ 	LIST_HEAD(resources);
+@@ -379,15 +405,16 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * It's arguable whether it's worth the trouble to care.
+ 	 */
+ 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
+-		printk(KERN_WARNING "pci_bus %04x:%02x: "
+-		       "ignored (out of memory)\n", domain, busnum);
+-		return NULL;
+-	}
++	if (!sd)
++		goto out_no_memory;
+ 
+ 	sd->domain = domain;
+ 	sd->node = node;
+-	memset(&info, 0, sizeof(struct pci_root_info));
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		kfree(sd);
++		goto out_no_memory;
++	}
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -399,20 +426,22 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * be replaced by sd.
+ 		 */
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
++		kfree(info);
+ 		kfree(sd);
+ 	} else {
+-		probe_pci_root_info(&info, device, busnum, domain);
++		probe_pci_root_info(info, device, busnum, domain);
+ 
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+ 		if (pci_use_crs)
+-			add_resources(&info, &resources);
++			add_resources(info, &resources);
+ 		else {
+-			free_pci_root_info(&info);
++			free_pci_root_info(info);
+ 			x86_pci_root_bus_resources(busnum, &resources);
+ 		}
++
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+ 		if (bus)
+@@ -420,8 +449,14 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		else
+ 			pci_free_resource_list(&resources);
+ 
+-		if (!bus && pci_use_crs)
+-			free_pci_root_info(&info);
++		if (pci_use_crs) {
++			if (bus)
++				pci_set_host_bridge_release(
++					to_pci_host_bridge(bus->bridge),
++					release_pci_root_info, info);
++			else
++				__release_pci_root_info(info);
++		}
  	}
  
--	if (mode == PCI_PROBE_NORMAL)
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
- 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, bus->subordinate);
-+	}
+ 	/* After the PCI-E bus has been walked and all devices discovered,
+@@ -452,6 +487,11 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
  
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
+ 	return bus;
++
++out_no_memory:
++	printk(KERN_WARNING "pci_bus %04x:%02x: "
++	       "ignored (out of memory)\n", domain, busnum);
++	return NULL;
+ }
+ 
+ int __init pci_acpi_init(void)
 -- 
 1.7.7
 
