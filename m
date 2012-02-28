@@ -1,77 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 23 Feb 2012 12:10:02 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: fix memleak for pci dev removing during hotplug
-Message-ID: <20120223121002.0572b9db@jbarnes-desktop>
-In-Reply-To: <1328948310-14748-1-git-send-email-yinghai@kernel.org>
-References: <1328948310-14748-1-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Qmq+9=X/5XqXa7Pq1xNbS0l"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:43131 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752736Ab2B1CLQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:11:16 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 01/18] x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
+Date: Mon, 27 Feb 2012 18:09:52 -0800
+Message-Id: <1330395009-29260-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
+References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/Qmq+9=X/5XqXa7Pq1xNbS0l
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Those two almost the same.
+Let pcibios_scan_root call pci_scan_bus_on_node instead.
 
-On Sat, 11 Feb 2012 00:18:30 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/common.c |   27 ++++-----------------------
+ 1 files changed, 4 insertions(+), 23 deletions(-)
 
-> unreferenced object 0xffff880276d17700 (size 64):
->   comm "swapper/0", pid 1, jiffies 4294897182 (age 3976.028s)
->   hex dump (first 32 bytes):
->     00 00 00 00 00 00 00 00 18 f9 de 76 02 88 ff ff  ...........v....
->     10 00 00 00 0e 00 00 00 0f 28 40 00 00 00 00 00  .........(@.....
->   backtrace:
->     [<ffffffff81c8aede>] kmemleak_alloc+0x26/0x43
->     [<ffffffff811385f0>] __kmalloc+0x121/0x183
->     [<ffffffff813cf821>] pci_add_cap_save_buffer+0x35/0x7c
->     [<ffffffff813d12b7>] pci_allocate_cap_save_buffers+0x1d/0x65
->     [<ffffffff813cdb52>] pci_device_add+0x92/0xf1
->     [<ffffffff81c8afe6>] pci_scan_single_device+0x9f/0xa1
->     [<ffffffff813cdbd2>] pci_scan_slot.part.20+0x21/0x106
->     [<ffffffff813cdce2>] pci_scan_slot+0x2b/0x35
->     [<ffffffff81c8dae4>] __pci_scan_child_bus+0x51/0x107
->     [<ffffffff81c8d75b>] pci_scan_bridge+0x376/0x6ae
->     [<ffffffff81c8db60>] __pci_scan_child_bus+0xcd/0x107
->     [<ffffffff81c8dbab>] pci_scan_child_bus+0x11/0x2a
->     [<ffffffff81cca58c>] pci_acpi_scan_root+0x18b/0x21c
->     [<ffffffff81c916be>] acpi_pci_root_add+0x1e1/0x42a
->     [<ffffffff81406210>] acpi_device_probe+0x50/0x190
->     [<ffffffff814a0227>] really_probe+0x99/0x126
->=20
-> Need to free saved_buffer for capabilities.
->=20
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 323481e..8e04ec5 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -430,9 +430,7 @@ void __init dmi_check_pciprobe(void)
+ 
+ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ {
+-	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+-	struct pci_sysdata *sd;
+ 
+ 	while ((bus = pci_find_next_bus(bus)) != NULL) {
+ 		if (bus->number == busnum) {
+@@ -441,28 +439,10 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 		}
+ 	}
+ 
+-	/* Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+-	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
+-		printk(KERN_ERR "PCI: OOM, not probing PCI bus %02x\n", busnum);
+-		return NULL;
+-	}
+-
+-	sd->node = get_mp_bus_to_node(busnum);
+-
+-	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+-	x86_pci_root_bus_resources(busnum, &resources);
+-	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
+-	if (!bus) {
+-		pci_free_resource_list(&resources);
+-		kfree(sd);
+-	}
+-
+-	return bus;
++	return pci_scan_bus_on_node(busnum, &pci_root_ops,
++					get_mp_bus_to_node(busnum));
+ }
++
+ void __init pcibios_set_cache_line_size(void)
+ {
+ 	struct cpuinfo_x86 *c = &boot_cpu_data;
+@@ -656,6 +636,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	}
+ 	sd->node = node;
+ 	x86_pci_root_bus_resources(busno, &resources);
++	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+ 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+-- 
+1.7.7
 
-Applied to linux-next, thanks.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/Qmq+9=X/5XqXa7Pq1xNbS0l
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPRp0aAAoJEIEoDkX4Qk9h3iAP/1Zv2L7ivjgW7j/Fi5UBwa3h
-JB6bZ32FLuueJPcJbQr56pEv7lrcjuYxFVCt0lsfhRGN165cjD5v+FmvHNsOQ04R
-ed8GA+UrfS1AY7JzVzMUN4UMmgzGClz8NfDMYO1fC9y4mvScyoE4UDIDFFfzBNeZ
-+xjcCLM95LuZxMmn/gCZLBU+KHSG6LFzxZ+NLs171dKaZUQjQNaYba7wkcmy/SPc
-Qm1f+RxysXs+pFuP9d28hk9ZpWIbCd6C5xI34sF7YTcK1GH2bB+riFlMKEQVoUAD
-Cijr95nK9Pl8wRj2R3PaSrFeHl2qywSg4B5FvcncPeNIvCXNbUZ0z6g6vyFSSsWp
-Z3PHdrVI4vVfj/zL3u/UTmvQQ8ck4pPoaySfbNbZJk7mejuDXYEF/C3Zdq2I+e/x
-/NGG17hOkdvCdFwQopo4O9pNAfeszxm3c0tqB/IfZinQRyAqsCMc+toCOWGEjIOz
-CV+q5lxI5dU2hSl3fgHUbuq+2IupxHnu7GvAbifkeB7zz/C5tLtBU/iBhIt0fbnT
-ZQqsAwPRIv6uA6MnTCs2PK6HRZEcrUJPMMMsiIKmWlaVvYN5Uo5WUbNwADZzg97u
-8xSdkumy0wBw+7Kd/2S1El8tjwSebmWYTRi2eEEdFdtX3MaiRXtQmJzPmq5xi6Lg
-enjJeY9zBSmzb1+/5DBg
-=YGqm
------END PGP SIGNATURE-----
-
---Sig_/Qmq+9=X/5XqXa7Pq1xNbS0l--
