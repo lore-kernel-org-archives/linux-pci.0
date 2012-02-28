@@ -2,151 +2,99 @@ Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 07/24] PCI, x86: Register busn_res for root buses
-Date: Sat,  4 Feb 2012 22:57:51 -0800
-Message-Id: <1328425088-6562-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 10/24] x86, PCI: put busn resource in pci_root_info for acpi path
+Date: Tue, 28 Feb 2012 14:07:29 -0800
+Message-Id: <1330466863-28469-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-update x86_pci_root_bus_resources() to get bus_max for non-acpi case.
+will put it in resources list and pass it for create_root_bus
+
+-v2: still have busn setting when no host bridge window setting from ACPI.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/include/asm/topology.h |    3 ++-
- arch/x86/pci/acpi.c             |    8 +++++---
- arch/x86/pci/bus_numa.c         |    8 +++++++-
- arch/x86/pci/common.c           |   11 +++++++----
- 4 files changed, 21 insertions(+), 9 deletions(-)
+ arch/x86/pci/acpi.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
-index b9676ae..ad4060e 100644
---- a/arch/x86/include/asm/topology.h
-+++ b/arch/x86/include/asm/topology.h
-@@ -172,7 +172,8 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
- }
- 
- struct pci_bus;
--void x86_pci_root_bus_resources(int bus, struct list_head *resources);
-+void x86_pci_root_bus_resources(int bus, int *bus_max,
-+				struct list_head *resources);
- 
- #ifdef CONFIG_SMP
- #define mc_capable()	((boot_cpu_data.x86_max_cores > 1) && \
 diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index daa4249..b25b5b1 100644
+index 7538fad..2eafc2a 100644
 --- a/arch/x86/pci/acpi.c
 +++ b/arch/x86/pci/acpi.c
-@@ -348,6 +348,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct acpi_device *device = root->device;
+@@ -12,7 +12,7 @@ struct pci_root_info {
+ 	char name[16];
+ 	unsigned int res_num;
+ 	struct resource *res;
+-	int busnum;
++	struct resource busn;
+ };
+ 
+ static bool pci_use_crs = true;
+@@ -282,6 +282,9 @@ static void add_resources(struct pci_root_info *info,
+ 	int i;
+ 	struct resource *res, *root, *conflict;
+ 
++	if (info->busn.flags & IORESOURCE_BUS)
++		pci_add_resource(resources, &info->busn);
++
+ 	coalesce_windows(info, IORESOURCE_MEM);
+ 	coalesce_windows(info, IORESOURCE_IO);
+ 
+@@ -339,11 +342,16 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
+ 
+ static void
+ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+-		    int busnum, int domain)
++		    int busnum, int busmax, int domain)
+ {
+ 	size_t size;
+ 
++	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 	info->bridge = device;
++	info->busn.start = busnum;
++	info->busn.end = busmax;
++	info->busn.flags = IORESOURCE_BUS;
++
+ 	info->res_num = 0;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+ 				info);
+@@ -356,8 +364,6 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	if (!info->res)
+ 		return;
+ 
+-	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+-
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				info);
+ }
+@@ -368,6 +374,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_root_info *info = NULL;
  	int domain = root->segment;
  	int busnum = root->secondary.start;
 +	int busmax = root->secondary.end;
  	LIST_HEAD(resources);
  	struct pci_bus *bus;
  	struct pci_sysdata *sd;
-@@ -410,12 +411,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
- 		if (!pci_use_crs)
--			x86_pci_root_bus_resources(busnum, &resources);
-+			x86_pci_root_bus_resources(busnum, &busmax, &resources);
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
--		if (bus)
-+		if (bus) {
-+			pci_bus_insert_busn_res(bus, busnum, busmax);
- 			bus->subordinate = pci_scan_child_bus(bus);
--		else
-+		} else
- 			pci_free_resource_list(&resources);
- 	}
- 
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index fd3f655..5213cd8 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -7,7 +7,8 @@
- int pci_root_num;
- struct pci_root_info pci_root_info[PCI_ROOT_NR];
- 
--void x86_pci_root_bus_resources(int bus, struct list_head *resources)
-+void x86_pci_root_bus_resources(int bus, int *bus_max,
-+				struct list_head *resources)
- {
- 	int i;
- 	int j;
-@@ -28,6 +29,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	       bus);
- 
- 	info = &pci_root_info[i];
-+	*bus_max = info->bus_max;
- 	for (j = 0; j < info->res_num; j++) {
- 		struct resource *res;
- 		struct resource *root;
-@@ -51,6 +53,10 @@ default_resources:
- 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
- 	pci_add_resource(resources, &ioport_resource);
- 	pci_add_resource(resources, &iomem_resource);
-+	if (!bus)
-+		*bus_max = 0xff;
-+	else if (!*bus_max)
-+		*bus_max = bus;
- }
- 
- void __devinit update_res(struct pci_root_info *info, resource_size_t start,
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 323481e..ce0aefc 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -433,6 +433,7 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
-+	int bus_max;
- 
- 	while ((bus = pci_find_next_bus(bus)) != NULL) {
- 		if (bus->number == busnum) {
-@@ -454,8 +455,9 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
- 	sd->node = get_mp_bus_to_node(busnum);
- 
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
--	x86_pci_root_bus_resources(busnum, &resources);
--	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
-+	x86_pci_root_bus_resources(busnum, &bus_max, &resources);
-+	bus = pci_scan_root_bus_max(NULL, busnum, bus_max, &pci_root_ops, sd,
-+				&resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
+@@ -426,7 +433,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		kfree(info);
  		kfree(sd);
-@@ -643,6 +645,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
-+	int bus_max;
+ 	} else {
+-		probe_pci_root_info(info, device, busnum, domain);
++		probe_pci_root_info(info, device, busnum, busmax, domain);
  
- 	/*
- 	 * Allocate per-root-bus (not per bus) arch-specific data.
-@@ -655,8 +658,8 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 		return NULL;
- 	}
- 	sd->node = node;
--	x86_pci_root_bus_resources(busno, &resources);
--	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
-+	x86_pci_root_bus_resources(busno, &bus_max, &resources);
-+	bus = pci_scan_root_bus_max(NULL, busno, bus_max, ops, sd, &resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
 -- 
 1.7.7
 
