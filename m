@@ -1,231 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:20976 "EHLO
+Received: from acsinet15.oracle.com ([141.146.126.227]:25655 "EHLO
 	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752750Ab2BPFlM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:41:12 -0500
+	with ESMTP id S1752491Ab2B1CEu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:04:50 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/4] PCI: Move out pci reassigndev resource alignment out of quirk
-Date: Wed, 15 Feb 2012 21:40:31 -0800
-Message-Id: <1329370832-2253-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
-References: <1329370832-2253-1-git-send-email-yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 03/11] x86, PCI: Fix memleak with get_current_resources
+Date: Mon, 27 Feb 2012 18:03:43 -0800
+Message-Id: <1330394631-28978-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-That looks like abusing quirk framework.
+in pci_scan_acpi_root, when pci_use_crs is set, get_current_resources is used
+to get pci_root_info, and it will allocate name and res array.
 
-calling it directly in pci_add_device. or do we have good place for it?
+later if pci_create_root_bus can not create bus (could be already there...)
+it will only free bus res list. but the name and res array is not freed.
+
+let get_current_resource take info pointer instead have local info.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
 ---
- drivers/pci/pci.c       |   62 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h       |    5 ---
- drivers/pci/probe.c     |    3 ++
- drivers/pci/quirks.c    |   63 ------------------------------------------------
- drivers/pci/setup-res.c |    4 ---
- 5 files changed, 66 insertions(+), 71 deletions(-)
+ arch/x86/pci/acpi.c |   49 ++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 30 insertions(+), 19 deletions(-)
 
-Index: linux-2.6/drivers/pci/pci.c
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.c
-+++ linux-2.6/drivers/pci/pci.c
-@@ -3694,6 +3694,68 @@ int pci_is_reassigndev(struct pci_dev *d
- 	return (pci_specified_resource_alignment(dev) != 0);
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 7cc0a44..304ccf0 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -305,49 +305,55 @@ static void add_resources(struct pci_root_info *info)
+ 	}
  }
  
-+/*
-+ * This function disables memory decoding and releases memory resources
-+ * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
-+ * It also rounds up size to specified alignment.
-+ * Later on, the kernel will assign page-aligned memory resource back
-+ * to the device.
-+ */
-+void pci_reassigndev_resource_alignment(struct pci_dev *dev)
++static void free_pci_root_info(struct pci_root_info *info)
 +{
-+	int i;
-+	struct resource *r;
-+	resource_size_t align, size;
-+	u16 command;
-+
-+	if (!pci_is_reassigndev(dev))
-+		return;
-+
-+	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
-+	    (dev->class >> 8) == PCI_CLASS_BRIDGE_HOST) {
-+		dev_warn(&dev->dev,
-+			"Can't reassign resources to host bridge.\n");
-+		return;
-+	}
-+
-+	dev_info(&dev->dev,
-+		"Disabling memory decoding and releasing memory resources.\n");
-+	pci_read_config_word(dev, PCI_COMMAND, &command);
-+	command &= ~PCI_COMMAND_MEMORY;
-+	pci_write_config_word(dev, PCI_COMMAND, command);
-+
-+	align = pci_specified_resource_alignment(dev);
-+	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
-+		r = &dev->resource[i];
-+		if (!(r->flags & IORESOURCE_MEM))
-+			continue;
-+		size = resource_size(r);
-+		if (size < align) {
-+			size = align;
-+			dev_info(&dev->dev,
-+				"Rounding up size of resource #%d to %#llx.\n",
-+				i, (unsigned long long)size);
-+		}
-+		r->end = size - 1;
-+		r->start = 0;
-+	}
-+	/* Need to disable bridge's resource window,
-+	 * to enable the kernel to reassign new resource
-+	 * window later on.
-+	 */
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
-+	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-+		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
-+			r = &dev->resource[i];
-+			if (!(r->flags & IORESOURCE_MEM))
-+				continue;
-+			r->end = resource_size(r) - 1;
-+			r->start = 0;
-+		}
-+		pci_disable_bridge_window(dev);
-+	}
++	kfree(info->name);
++	kfree(info->res);
++	memset(info, 0, sizeof(struct pci_root_info));
 +}
 +
- ssize_t pci_set_resource_alignment_param(const char *buf, size_t count)
+ static void
+-get_current_resources(struct acpi_device *device, int busnum,
++get_current_resources(struct pci_root_info *info,
++		      struct acpi_device *device, int busnum,
+ 		      int domain, struct list_head *resources)
  {
- 	if (count > RESOURCE_ALIGNMENT_PARAM_SIZE - 1)
-Index: linux-2.6/drivers/pci/pci.h
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.h
-+++ linux-2.6/drivers/pci/pci.h
-@@ -228,11 +228,8 @@ static inline int pci_ari_enabled(struct
- 	return bus->self && bus->self->ari_enabled;
+-	struct pci_root_info info;
+ 	size_t size;
+ 
+-	info.bridge = device;
+-	info.res_num = 0;
+-	info.resources = resources;
++	info->bridge = device;
++	info->res_num = 0;
++	info->resources = resources;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+-				&info);
+-	if (!info.res_num)
++				info);
++	if (!info->res_num)
+ 		return;
+ 
+-	size = sizeof(*info.res) * info.res_num;
+-	info.res = kmalloc(size, GFP_KERNEL);
+-	if (!info.res)
++	size = sizeof(*info->res) * info->res_num;
++	info->res = kmalloc(size, GFP_KERNEL);
++	if (!info->res)
+ 		return;
+ 
+-	info.name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+-	if (!info.name)
++	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
++	if (!info->name)
+ 		goto name_alloc_fail;
+ 
+-	info.res_num = 0;
++	info->res_num = 0;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+-				&info);
++				info);
+ 
+ 	if (pci_use_crs) {
+-		add_resources(&info);
++		add_resources(info);
+ 
+ 		return;
+ 	}
+ 
+-	kfree(info.name);
+-
+ name_alloc_fail:
+-	kfree(info.res);
++	free_pci_root_info(info);
  }
  
--#ifdef CONFIG_PCI_QUIRKS
--extern int pci_is_reassigndev(struct pci_dev *dev);
--resource_size_t pci_specified_resource_alignment(struct pci_dev *dev);
-+void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- extern void pci_disable_bridge_window(struct pci_dev *dev);
--#endif
- 
- /* Single Root I/O Virtualization */
- struct pci_sriov {
-Index: linux-2.6/drivers/pci/quirks.c
-===================================================================
---- linux-2.6.orig/drivers/pci/quirks.c
-+++ linux-2.6/drivers/pci/quirks.c
-@@ -32,69 +32,6 @@
- #include "pci.h"
- 
- /*
-- * This quirk function disables memory decoding and releases memory resources
-- * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
-- * It also rounds up size to specified alignment.
-- * Later on, the kernel will assign page-aligned memory resource back
-- * to the device.
-- */
--static void __devinit quirk_resource_alignment(struct pci_dev *dev)
--{
--	int i;
--	struct resource *r;
--	resource_size_t align, size;
--	u16 command;
--
--	if (!pci_is_reassigndev(dev))
--		return;
--
--	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
--	    (dev->class >> 8) == PCI_CLASS_BRIDGE_HOST) {
--		dev_warn(&dev->dev,
--			"Can't reassign resources to host bridge.\n");
--		return;
--	}
--
--	dev_info(&dev->dev,
--		"Disabling memory decoding and releasing memory resources.\n");
--	pci_read_config_word(dev, PCI_COMMAND, &command);
--	command &= ~PCI_COMMAND_MEMORY;
--	pci_write_config_word(dev, PCI_COMMAND, command);
--
--	align = pci_specified_resource_alignment(dev);
--	for (i=0; i < PCI_BRIDGE_RESOURCES; i++) {
--		r = &dev->resource[i];
--		if (!(r->flags & IORESOURCE_MEM))
--			continue;
--		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
--		}
--		r->end = size - 1;
--		r->start = 0;
--	}
--	/* Need to disable bridge's resource window,
--	 * to enable the kernel to reassign new resource
--	 * window later on.
--	 */
--	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
--	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
--		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
--			r = &dev->resource[i];
--			if (!(r->flags & IORESOURCE_MEM))
--				continue;
--			r->end = resource_size(r) - 1;
--			r->start = 0;
--		}
--		pci_disable_bridge_window(dev);
--	}
--}
--DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, quirk_resource_alignment);
--
--/*
-  * Decoding should be disabled for a PCI device during BAR sizing to avoid
-  * conflict. But doing so may cause problems on host bridge and perhaps other
-  * key system devices. For devices that need to have mmio decoding always-on,
-Index: linux-2.6/drivers/pci/setup-res.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-res.c
-+++ linux-2.6/drivers/pci/setup-res.c
-@@ -114,7 +114,6 @@ int pci_claim_resource(struct pci_dev *d
- }
- EXPORT_SYMBOL(pci_claim_resource);
- 
--#ifdef CONFIG_PCI_QUIRKS
- void pci_disable_bridge_window(struct pci_dev *dev)
+ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
  {
- 	dev_info(&dev->dev, "disabling bridge mem windows\n");
-@@ -127,9 +126,6 @@ void pci_disable_bridge_window(struct pc
- 	pci_write_config_dword(dev, PCI_PREF_MEMORY_BASE, 0x0000fff0);
- 	pci_write_config_dword(dev, PCI_PREF_BASE_UPPER32, 0xffffffff);
- }
--#endif	/* CONFIG_PCI_QUIRKS */
--
--
+ 	struct acpi_device *device = root->device;
++	struct pci_root_info info;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
+ 	LIST_HEAD(resources);
+@@ -392,6 +398,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
  
- static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 		int resno, resource_size_t size, resource_size_t align)
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1227,6 +1227,9 @@ void pci_device_add(struct pci_dev *dev,
- 	/* Fix up broken headers */
- 	pci_fixup_device(pci_fixup_header, dev);
+ 	sd->domain = domain;
+ 	sd->node = node;
++	memset(&info, 0, sizeof(struct pci_root_info));
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -405,7 +412,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(sd);
+ 	} else {
+-		get_current_resources(device, busnum, domain, &resources);
++		get_current_resources(&info, device, busnum, domain,
++					&resources);
  
-+	/* moved out from quirk header fixup code */
-+	pci_reassigndev_resource_alignment(dev);
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+@@ -419,6 +427,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 			bus->subordinate = pci_scan_child_bus(bus);
+ 		else
+ 			pci_free_resource_list(&resources);
 +
- 	/* Clear the state_saved flag. */
- 	dev->state_saved = false;
++		if (!bus && pci_use_crs)
++			free_pci_root_info(&info);
+ 	}
  
+ 	/* After the PCI-E bus has been walked and all devices discovered,
+-- 
+1.7.7
+
