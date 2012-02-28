@@ -1,68 +1,90 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 08/18] ia64/PCI: SN: convert to pci_scan_root_bus() for
-	correct root bus resources
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-	Jack Steiner <steiner@sgi.com>
-Date: Thu, 09 Feb 2012 19:37:02 -0700
-Message-ID: <20120210023702.10311.31450.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:25686 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964833Ab2B1WIY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 17:08:24 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 02/24] x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
+Date: Tue, 28 Feb 2012 14:07:21 -0800
+Message-Id: <1330466863-28469-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Convert from pci_scan_bus() to pci_scan_root_bus().  Supply the root
-bus resources from bussoft.  When we move the resource adjustment from
-pcibios_fixup_resources() to the PCI core, it will be important to have
-the root bus resources correct from the beginning.
+Those two almost the same.
+Let pcibios_scan_root call pci_scan_bus_on_node instead.
 
-CC: Tony Luck <tony.luck@intel.com>
-CC: Jack Steiner <steiner@sgi.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/ia64/sn/kernel/io_init.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+ arch/x86/pci/common.c |   27 ++++-----------------------
+ 1 files changed, 4 insertions(+), 23 deletions(-)
 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 0a36f08..c99c2ca 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -297,7 +297,8 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 	s64 status = 0;
- 	struct pci_controller *controller;
- 	struct pcibus_bussoft *prom_bussoft_ptr;
--
-+	LIST_HEAD(resources);
-+	int i;
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 323481e..8e04ec5 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -430,9 +430,7 @@ void __init dmi_check_pciprobe(void)
  
-  	status = sal_get_pcibus_info((u64) segment, (u64) busnum,
-  				     (u64) ia64_tpa(&prom_bussoft_ptr));
-@@ -315,7 +316,13 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 	 */
- 	controller->platform_data = prom_bussoft_ptr;
+ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ {
+-	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+-	struct pci_sysdata *sd;
  
--	bus = pci_scan_bus(busnum, &pci_root_ops, controller);
-+	sn_legacy_pci_window_fixup(controller,
-+				   prom_bussoft_ptr->bs_legacy_io,
-+				   prom_bussoft_ptr->bs_legacy_mem);
-+	for (i = 0; i < controller->windows; i++)
-+		pci_add_resource(&resources, &controller->window[i].resource);
-+	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
-+				&resources);
-  	if (bus == NULL)
-  		goto error_return; /* error, or bus already scanned */
- 
-@@ -348,9 +355,6 @@ sn_bus_fixup(struct pci_bus *bus)
- 			return;
+ 	while ((bus = pci_find_next_bus(bus)) != NULL) {
+ 		if (bus->number == busnum) {
+@@ -441,28 +439,10 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
  		}
- 		sn_common_bus_fixup(bus, prom_bussoft_ptr);
--		sn_legacy_pci_window_fixup(PCI_CONTROLLER(bus),
--					   prom_bussoft_ptr->bs_legacy_io,
--					   prom_bussoft_ptr->bs_legacy_mem);
-         }
-         list_for_each_entry(pci_dev, &bus->devices, bus_list) {
-                 sn_io_slot_fixup(pci_dev);
+ 	}
+ 
+-	/* Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+-	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
+-		printk(KERN_ERR "PCI: OOM, not probing PCI bus %02x\n", busnum);
+-		return NULL;
+-	}
+-
+-	sd->node = get_mp_bus_to_node(busnum);
+-
+-	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+-	x86_pci_root_bus_resources(busnum, &resources);
+-	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
+-	if (!bus) {
+-		pci_free_resource_list(&resources);
+-		kfree(sd);
+-	}
+-
+-	return bus;
++	return pci_scan_bus_on_node(busnum, &pci_root_ops,
++					get_mp_bus_to_node(busnum));
+ }
++
+ void __init pcibios_set_cache_line_size(void)
+ {
+ 	struct cpuinfo_x86 *c = &boot_cpu_data;
+@@ -656,6 +636,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	}
+ 	sd->node = node;
+ 	x86_pci_root_bus_resources(busno, &resources);
++	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+ 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+-- 
+1.7.7
 
