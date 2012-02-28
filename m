@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:38721 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754226Ab2B1WaE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 17:30:04 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -11,79 +15,53 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 23/24] PCI: Double checking setting for bus register and bus struct.
-Date: Tue, 28 Feb 2012 14:07:42 -0800
-Message-Id: <1330466863-28469-24-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 24/24] PCI, pciehp: Remove not needed bus number range checking
+Date: Tue, 28 Feb 2012 14:07:43 -0800
+Message-Id: <1330466863-28469-25-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
 References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-User could use setpci change bridge's bus register. that could make value of register
-and struct is out of sync.
-User later will use rescan to see the devices is moving.
+Found hotplug adding one EM with bridge fail, bios only leave one bus range
+ for slot.
 
-In the rescaning, we need to double check the range and remove the old struct at first.
+[ 1169.621444] pciehp: No bus number available for hot-added bridge 0000:55:00.0
+[ 1169.633277] pcieport 0000:40:03.0: PCI bridge to [bus 55-55]
 
-to make thing working user may need have script to remove children devices under bridge
-at first, and then use setpci update bus register and then rescan.
+With busn_res tracking and allocating, we don't need that checking anymore.
+
+Parent bridges' bus number will be extended safely.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 40 insertions(+), 0 deletions(-)
+ drivers/pci/hotplug/pciehp_pci.c |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 4a38ef4..67071b0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -850,6 +850,46 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 	    (primary != bus->number || secondary <= bus->number))
- 		broken = 1;
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 47d9dc0..e21171c 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -37,18 +37,8 @@
+ static int __ref pciehp_add_bridge(struct pci_dev *dev)
+ {
+ 	struct pci_bus *parent = dev->bus;
+-	int pass, busnr, start = parent->secondary;
+-	int end = parent->subordinate;
++	int pass, busnr = parent->secondary;
  
-+	if (!pass && dev->subordinate) {
-+		child = dev->subordinate;
-+		/*
-+		 * User could change bus register in bridge manually with
-+		 * setpci and rescan. So double check the setting, and remove
-+		 * old structs.  Don't set broken yet, let following check
-+		 * to see if the new setting good.
-+		 */
-+		if (primary != child->primary ||
-+		    secondary != child->secondary ||
-+		    subordinate != child->subordinate) {
-+			dev_info(&dev->dev,
-+				"someone changed bus register from pri:%02x, sec:%02x, sub:%02x to pri:%02x, sec:%02x, sub:%02x\n",
-+				child->primary, child->secondary, child->subordinate,
-+				primary, secondary, subordinate);
-+			if (!list_empty(&dev->subordinate->devices)) {
-+				u32 old_buses;
-+
-+				dev_info(&dev->dev,
-+				 "but children devices are not removed manually before that.\n");
-+				/*
-+				 * Try best to remove left children devices
-+				 * but we need to set bus register back, otherwise
-+				 * We can not access children device and stop them
-+				 */
-+				old_buses = (buses & 0xff000000)
-+				   | ((unsigned int)(child->primary)     <<  0)
-+				   | ((unsigned int)(child->secondary)   <<  8)
-+				   | ((unsigned int)(child->subordinate) << 16);
-+				pci_write_config_dword(dev, PCI_PRIMARY_BUS,
-+							 old_buses);
-+				pci_stop_and_remove_behind_bridge(dev);
-+				pci_write_config_dword(dev, PCI_PRIMARY_BUS,
-+							 buses);
-+			}
-+			pci_remove_bus(dev->subordinate);
-+			dev->subordinate = NULL;
-+		}
-+	}
-+
- 	/* more strict checking */
- 	if (!pass && !broken && !dev->subordinate)
- 		broken = pci_bridge_check_busn_broken(bus, dev,
+-	for (busnr = start; busnr <= end; busnr++) {
+-		if (!pci_find_bus(pci_domain_nr(parent), busnr))
+-			break;
+-	}
+-	if (busnr-- > end) {
+-		err("No bus number available for hot-added bridge %s\n",
+-				pci_name(dev));
+-		return -1;
+-	}
+ 	for (pass = 0; pass < 2; pass++)
+ 		busnr = pci_scan_bridge(parent, dev, busnr, pass);
+ 	if (!dev->subordinate)
 -- 
 1.7.7
 
