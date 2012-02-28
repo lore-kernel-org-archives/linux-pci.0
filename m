@@ -1,62 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:42975 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757237Ab2BPHH6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Feb 2012 02:07:58 -0500
-Message-ID: <1329376076.7658.4.camel@joe2Laptop>
-Subject: Re: [PATCH 4/4] PCI: quirk print dev name with duration
-From: Joe Perches <joe@perches.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Arjan van de Ven <arjan@infradead.org>
-Date: Wed, 15 Feb 2012 23:07:56 -0800
-In-Reply-To: <1329371019.5082.9.camel@joe2Laptop>
-References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
-	 <1329369296-4255-5-git-send-email-yinghai@kernel.org>
-	 <1329369930.5082.4.camel@joe2Laptop>
-	 <CAE9FiQUK8m5KKb0or59wH7BD6Eo5ddx9NaF7vszNeR0T3UYMRw@mail.gmail.com>
-	 <1329371019.5082.9.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 04/11] PCI: rename pci_host_bridge() to find_pci_root_bridge()
+Date: Mon, 27 Feb 2012 18:03:44 -0800
+Message-Id: <1330394631-28978-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-02-15 at 21:43 -0800, Joe Perches wrote:
-> On Wed, 2012-02-15 at 21:35 -0800, Yinghai Lu wrote:
-> > On Wed, Feb 15, 2012 at 9:25 PM, Joe Perches <joe@perches.com> wrote:
-> > > On Wed, 2012-02-15 at 21:14 -0800, Yinghai Lu wrote:
-> > >> So could find out which device is involved with the calling
-> > > []
-> > >> +++ linux-2.6/drivers/pci/quirks.c
-> > >> @@ -2854,14 +2854,15 @@ static void do_one_fixup_debug(void (*fn
-> > >>       ktime_t calltime, delta, rettime;
-> > >>       unsigned long long duration;
-> > >>
-> > >> -     printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
-> > >> +     printk(KERN_DEBUG "calling  %pF @ %i for %s\n",
-> > >> +                     fn, task_pid_nr(current), dev_name(&dev->dev));
-> > >
-> > > Might be better to use dev_dbg
-> > >
-> > >        dev_dbg(&dev->dev, "calling %pF @ %i\n", fn, task_pid_nr(current));
-> > >
-> > > []
-> > >
-> > >> -     printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
-> > >> -             duration);
-> > >> +     printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs for %s\n",
-> > >> +                     fn, duration, dev_name(&dev->dev));
-> > >
-> > >        dev_dbg(&dev->dev, "pci fixup %pF returned after %llu usecs\n",
-> > >                fn, duration);
-> > Not sure if that is going to break Arjan 's tool that analyze the boot time.
-> That depends on the tool code.
-[]
-> Do you have a link to the tool?
+Separate find_pci_root_bus out.
 
-That tool would be scripts/bootgraph.pl and using
-dev_dbg would break it unless it's adapted to the
-change.  Your change seems fine for now.
+-v2: according to Bjorn, remove extra null checking.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host-bridge.c |   18 +++++++++++++-----
+ 1 files changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index dfaff3f..b3ddcc5 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -16,15 +16,22 @@ void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
+ 	list_add_tail(&bridge->list, &pci_host_bridges);
+ }
+ 
+-static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
++static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus;
+-	struct pci_host_bridge *bridge;
+ 
+ 	bus = dev->bus;
+ 	while (bus->parent)
+ 		bus = bus->parent;
+ 
++	return bus;
++}
++
++static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
++{
++	struct pci_bus *bus = find_pci_root_bus(dev);
++	struct pci_host_bridge *bridge;
++
+ 	list_for_each_entry(bridge, &pci_host_bridges, list) {
+ 		if (bridge->bus == bus)
+ 			return bridge;
+@@ -42,7 +49,7 @@ void __weak pcibios_resource_to_bus(struct pci_dev *dev,
+ 				    struct pci_bus_region *region,
+ 				    struct resource *res)
+ {
+-	struct pci_host_bridge *bridge = pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -70,12 +77,13 @@ static bool region_contains(struct pci_bus_region *region1,
+ void __weak pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 				    struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+-	struct pci_bus_region bus_region;
+ 	resource_size_t offset = 0;
+ 
+ 	list_for_each_entry(window, &bridge->windows, list) {
++		struct pci_bus_region bus_region;
++
+ 		if (resource_type(res) != resource_type(window->res))
+ 			continue;
+ 
+-- 
+1.7.7
 
