@@ -1,67 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:37310 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755435Ab2BXDtm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:42 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 00/13] x86, irq: support ioapic device hotplug for x86
-Date: Thu, 23 Feb 2012 19:48:46 -0800
-Message-Id: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:34002 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754402Ab2B1VfY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 16:35:24 -0500
+Received: by wgbdt10 with SMTP id dt10so2592811wgb.1
+        for <linux-pci@vger.kernel.org>; Tue, 28 Feb 2012 13:35:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120228213135.GA30986@burratino>
+References: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com> <20120228213135.GA30986@burratino>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 Feb 2012 14:35:03 -0700
+Message-ID: <CAErSpo62a5mc5gngDcUUY6UKO8UD7tBbRcyGrdLFqNbBYWUKww@mail.gmail.com>
+Subject: Re: [PATCH] x86/PCI: do not tie MSI MS-7253 use_crs quirk to BIOS version
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	Svante Signell <svante.signell@telia.com>,
+	Carlos Luna <caralu74@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Thomas
+On Tue, Feb 28, 2012 at 2:31 PM, Jonathan Nieder <jrnieder@gmail.com> wrote:
+> Carlos was getting
+>
+>        WARNING: at drivers/pci/pci.c:118 pci_ioremap_bar+0x24/0x52()
+>
+> when probing his sound card, and sound did not work.  After adding
+> pci=use_crs to the kernel command line, no more trouble.
+>
+> Ok, we can add a quirk.  dmidecode output reveals that this is an MSI
+> MS-7253, for which we already have a quirk, but the short-sighted
+> author tied the quirk to a single BIOS version, making it not kick in
+> on Carlos's machine with BIOS V1.2.  If a later BIOS update makes it
+> no longer necessary to look at the _CRS info it will still be
+> harmless, so let's stop trying to guess which versions have and don't
+> have accurate _CRS tables.
+>
+> Addresses https://bugtrack.alsa-project.org/alsa-bug/view.php?id=5533
+> Also see <https://bugzilla.kernel.org/show_bug.cgi?id=42619>.
 
-Current x86 code does not support iapic hotplug yet.
+Thanks, Jonathan.  I was going to do this, but you saved me the trouble :)
 
-This patcheset will try to pre-reserve irq block in allocated_irqs bitmap.
-for hot add ioapic controller. also record irq_base in gsi_config, so later
-could use it to convert gsi to irq for pci device using that ioapic controller.
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 
-need to update x86/irq to support realloc_irq after those bit are pre-reserved.
-
-It is tested with pci remove/rescan method plus some test stubs.
-
-Please review them.
-
-could get them from:
-
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
-
-
-Thanks
-
-	Yinghai
-
-94738bb: PCI: Disable mem in the ioapic removing path
-6a53ea9: PCI: Make sure hotplug ioapic driver get loaded early
-77f4e2b: x86, acpi, irq: Enable pci device type ioapic hotplug
-b495bde: x86, irq: Make ioapics loop code skip blank slot
-56cb7ba: x86, irq: Add mp_unregister_ioapic could handle hotremove ioapic
-bd48b79: x86, irq: Make mp_register_ioapic could handle hotadd ioapic
-3b23367: x86, irq: more strict check for register ioapic
-996f15b: genirq: bail out early in free_desc()
-f83ad47: x86, irq: add ioapic_gsi_to_irq
-e864fc4: x86, irq: pre-reserve irq range that are used by ioapic
-16b8b29: x86, irq: Add realloc_irq_and_cfg_at()
-660c577: genirq: Split __irq_reserve_irqs from irq_alloc_descs
-1060703: x86, irq: Convert irq_2_pin list to generic list
-
- arch/x86/include/asm/hw_irq.h  |    2 +-
- arch/x86/include/asm/io_apic.h |    2 +
- arch/x86/include/asm/mpspec.h  |    2 +
- arch/x86/kernel/acpi/boot.c    |   28 +---
- arch/x86/kernel/apic/io_apic.c |  348 +++++++++++++++++++++++++++++++---------
- drivers/pci/Kconfig            |    2 +-
- drivers/pci/Makefile           |    5 +-
- drivers/pci/ioapic.c           |   19 ++-
- include/linux/irq.h            |    6 +
- kernel/irq/irqdesc.c           |   84 +++++++----
- 10 files changed, 366 insertions(+), 132 deletions(-)
-
-
+> Reported-by: Carlos Luna <caralu74@gmail.com>
+> Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
+> ---
+> Hi,
+>
+> Could you squash this into the patch "x86/PCI: use host bridge _CRS
+> info on MSI MS-7253", if it's not too late?  Sorry for the thinko.
+>
+> Thanks,
+> Jonathan
+>
+>  arch/x86/pci/acpi.c |    1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 2c5cbdb5d602..d066e11159f3 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -68,7 +68,6 @@ static const struct dmi_system_id pci_use_crs_table[] __initconst = {
+>                        DMI_MATCH(DMI_BOARD_VENDOR, "MICRO-STAR INTERNATIONAL CO., LTD"),
+>                        DMI_MATCH(DMI_BOARD_NAME, "MS-7253"),
+>                        DMI_MATCH(DMI_BIOS_VENDOR, "Phoenix Technologies, LTD"),
+> -                       DMI_MATCH(DMI_BIOS_VERSION, "V1.6"),
+>                },
+>        },
+>
+> --
+> 1.7.9.2
+>
