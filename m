@@ -1,96 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 17/39] x86, PCI: put busn resource in pci_root_info for acpi path
-Date: Wed, 29 Feb 2012 15:07:16 -0800
-Message-Id: <1330556858-11768-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35188 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753861Ab2B1S4L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2012 13:56:11 -0500
+Received: by wejx9 with SMTP id x9so1192579wej.19
+        for <linux-pci@vger.kernel.org>; Tue, 28 Feb 2012 10:56:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 Feb 2012 11:55:49 -0700
+Message-ID: <CAErSpo5FxTc63Cw_zWqcSON=6D7g=+yCpNpoJu1GYUV2GQ3WYw@mail.gmail.com>
+Subject: Re: [PATCH] x86/PCI: use host bridge _CRS info on MSI MS-7253
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Jonathan Nieder <jrnieder@gmail.com>, linux-pci@vger.kernel.org,
+	Svante Signell <svante.signell@telia.com>, caralu74@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will put it in resources list and pass it for create_root_bus
+On Tue, Feb 28, 2012 at 11:51 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> From: Jonathan Nieder <jrnieder@gmail.com>
+>
+> In the spirit of commit 29cf7a30f8a0 ("x86/PCI: use host bridge _CRS
+> info on ASUS M2V-MX SE"), this DMI quirk turns on "pci_use_crs" by
+> default on a board that needs it.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/acpi.c |   18 +++++++++++++-----
- 1 files changed, 13 insertions(+), 5 deletions(-)
+Hi Jesse,
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 2331ccb..ff5243e 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,7 +12,7 @@ struct pci_root_info {
- 	char name[16];
- 	unsigned int res_num;
- 	struct resource *res;
--	int busnum;
-+	struct resource busn;
- 	struct pci_sysdata sd;
- };
- 
-@@ -283,6 +283,9 @@ static void add_resources(struct pci_root_info *info,
- 	int i;
- 	struct resource *res, *root, *conflict;
- 
-+	if (info->busn.flags & IORESOURCE_BUS)
-+		pci_add_resource(resources, &info->busn);
-+
- 	coalesce_windows(info, IORESOURCE_MEM);
- 	coalesce_windows(info, IORESOURCE_IO);
- 
-@@ -343,11 +346,17 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
- 
- static void
- probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
--		    int busnum, int domain)
-+		    int busnum, int busmax, int domain)
- {
- 	size_t size;
- 
-+	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 	info->bridge = device;
-+	info->busn.name = info->name;
-+	info->busn.start = busnum;
-+	info->busn.end = busmax;
-+	info->busn.flags = IORESOURCE_BUS;
-+
- 	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
- 				info);
-@@ -360,8 +369,6 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	if (!info->res)
- 		return;
- 
--	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
--
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
- }
-@@ -372,6 +379,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_root_info *info = NULL;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
-+	int busmax = root->secondary.end;
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
-@@ -424,7 +432,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(info);
- 	} else {
--		probe_pci_root_info(info, device, busnum, domain);
-+		probe_pci_root_info(info, device, busnum, busmax, domain);
- 
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
--- 
-1.7.7
+This patch is against upstream (891003abb0d), and I think it also
+applies cleanly on your linux-next branch.  It fixes a regression and
+shouldn't affect other machines, so you might consider it even for
+3.3.  Otherwise it can go in the merge window.
 
+Bjorn
