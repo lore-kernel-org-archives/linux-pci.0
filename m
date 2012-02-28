@@ -1,148 +1,133 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v1 06/11] microblaze/PCI: remove unused pci_flags
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, microblaze-uclinux@itee.uq.edu.au,
-	Michal Simek <monstr@monstr.eu>
-Date: Wed, 22 Feb 2012 11:19:32 -0700
-Message-ID: <20120222181932.27513.54327.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	linux-pcmcia@lists.infradead.org
+Subject: [PATCH 16/18] pcmcia: remove workaround for fixing pci parent bus subordinate
+Date: Mon, 27 Feb 2012 18:10:07 -0800
+Message-Id: <1330395009-29260-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
+References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_flags is initialized to zero and never modified (I think this was just
-copied from powerpc).  Therefore, "(pci_flags & XX)" is always false and
-"!(pci_flags & XX)" is always true, and we can remove all references
-to pci_flags.
+Now pci busn allocation code is there, and it will preallocate bus number and it
+will make sure parent buses subordinate is right.
 
-CC: Michal Simek <monstr@monstr.eu>
-CC: microblaze-uclinux@itee.uq.edu.au
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+So remove workaround here.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: linux-pcmcia@lists.infradead.org
 ---
- arch/microblaze/include/asm/pci-bridge.h |    1 -
- arch/microblaze/pci/pci-common.c         |   48 ++++++------------------------
- 2 files changed, 9 insertions(+), 40 deletions(-)
+ drivers/pcmcia/yenta_socket.c |   75 -----------------------------------------
+ 1 files changed, 0 insertions(+), 75 deletions(-)
 
-diff --git a/arch/microblaze/include/asm/pci-bridge.h b/arch/microblaze/include/asm/pci-bridge.h
-index e9834b2..cb5d397 100644
---- a/arch/microblaze/include/asm/pci-bridge.h
-+++ b/arch/microblaze/include/asm/pci-bridge.h
-@@ -10,7 +10,6 @@
- #include <linux/pci.h>
- #include <linux/list.h>
- #include <linux/ioport.h>
--#include <asm-generic/pci-bridge.h>
- 
- struct device_node;
- 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 85f2ac1..8a257a7 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -46,9 +46,6 @@ static int global_phb_number;		/* Global phb counter */
- /* ISA Memory physical address */
- resource_size_t isa_mem_base;
- 
--/* Default PCI flags is 0 on ppc32, modified at boot on ppc64 */
--unsigned int pci_flags;
--
- static struct dma_map_ops *pci_dma_ops = &dma_direct_ops;
- 
- unsigned long isa_io_base;
-@@ -833,11 +830,7 @@ int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 
--	if (!(pci_flags & PCI_ENABLE_PROC_DOMAINS))
--		return 0;
--	if (pci_flags & PCI_COMPAT_DOMAIN_0)
--		return hose->global_number != 0;
--	return 1;
-+	return 0;
+diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
+index 849c0c1..5757cae 100644
+--- a/drivers/pcmcia/yenta_socket.c
++++ b/drivers/pcmcia/yenta_socket.c
+@@ -1064,79 +1064,6 @@ static void yenta_config_init(struct yenta_socket *socket)
+ 	config_writew(socket, CB_BRIDGE_CONTROL, bridge);
  }
  
- void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-@@ -910,13 +903,7 @@ static void __devinit pcibios_fixup_resources(struct pci_dev *dev)
- 		struct resource *res = dev->resource + i;
- 		if (!res->flags)
- 			continue;
--		/* On platforms that have PCI_PROBE_ONLY set, we don't
--		 * consider 0 as an unassigned BAR value. It's technically
--		 * a valid value, but linux doesn't like it... so when we can
--		 * re-assign things, we do so, but if we can't, we keep it
--		 * around and hope for the best...
--		 */
--		if (res->start == 0 && !(pci_flags & PCI_PROBE_ONLY)) {
-+		if (res->start == 0) {
- 			pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]" \
- 							"is unassigned\n",
- 				 pci_name(dev), i,
-@@ -959,10 +946,6 @@ static int __devinit pcibios_uninitialized_bridge_resource(struct pci_bus *bus,
- 	u16 command;
- 	int i;
- 
--	/* We don't do anything if PCI_PROBE_ONLY is set */
--	if (pci_flags & PCI_PROBE_ONLY)
--		return 0;
--
- 	/* Job is a bit different between memory and IO */
- 	if (res->flags & IORESOURCE_MEM) {
- 		/* If the BAR is non-0 (res != pci_mem_offset) then it's
-@@ -1107,9 +1090,6 @@ EXPORT_SYMBOL(pcibios_fixup_bus);
- 
- static int skip_isa_ioresource_align(struct pci_dev *dev)
- {
--	if ((pci_flags & PCI_CAN_SKIP_ISA_ALIGN) &&
--	    !(dev->bus->bridge_ctl & PCI_BRIDGE_CTL_ISA))
--		return 1;
- 	return 0;
- }
- 
-@@ -1236,8 +1216,6 @@ void pcibios_allocate_bus_resources(struct pci_bus *bus)
- 			 * and as such ensure proper re-allocation
- 			 * later.
- 			 */
--			if (pci_flags & PCI_REASSIGN_ALL_RSRC)
--				goto clear_resource;
- 			pr = pci_find_parent_resource(bus->self, res);
- 			if (pr == res) {
- 				/* this happens when the generic PCI
-@@ -1422,27 +1400,19 @@ void __init pcibios_resource_survey(void)
- 	list_for_each_entry(b, &pci_root_buses, node)
- 		pcibios_allocate_bus_resources(b);
- 
--	if (!(pci_flags & PCI_REASSIGN_ALL_RSRC)) {
--		pcibios_allocate_resources(0);
--		pcibios_allocate_resources(1);
--	}
-+	pcibios_allocate_resources(0);
-+	pcibios_allocate_resources(1);
- 
- 	/* Before we start assigning unassigned resource, we try to reserve
- 	 * the low IO area and the VGA memory area if they intersect the
- 	 * bus available resources to avoid allocating things on top of them
- 	 */
--	if (!(pci_flags & PCI_PROBE_ONLY)) {
--		list_for_each_entry(b, &pci_root_buses, node)
--			pcibios_reserve_legacy_regions(b);
--	}
-+	list_for_each_entry(b, &pci_root_buses, node)
-+		pcibios_reserve_legacy_regions(b);
- 
--	/* Now, if the platform didn't decide to blindly trust the firmware,
--	 * we proceed to assigning things that were left unassigned
+-/**
+- * yenta_fixup_parent_bridge - Fix subordinate bus# of the parent bridge
+- * @cardbus_bridge: The PCI bus which the CardBus bridge bridges to
+- *
+- * Checks if devices on the bus which the CardBus bridge bridges to would be
+- * invisible during PCI scans because of a misconfigured subordinate number
+- * of the parent brige - some BIOSes seem to be too lazy to set it right.
+- * Does the fixup carefully by checking how far it can go without conflicts.
+- * See http://bugzilla.kernel.org/show_bug.cgi?id=2944 for more information.
+- */
+-static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
+-{
+-	struct list_head *tmp;
+-	unsigned char upper_limit;
+-	/*
+-	 * We only check and fix the parent bridge: All systems which need
+-	 * this fixup that have been reviewed are laptops and the only bridge
+-	 * which needed fixing was the parent bridge of the CardBus bridge:
 -	 */
--	if (!(pci_flags & PCI_PROBE_ONLY)) {
--		pr_debug("PCI: Assigning unassigned resources...\n");
--		pci_assign_unassigned_resources();
+-	struct pci_bus *bridge_to_fix = cardbus_bridge->parent;
+-
+-	/* Check bus numbers are already set up correctly: */
+-	if (bridge_to_fix->subordinate >= cardbus_bridge->subordinate)
+-		return; /* The subordinate number is ok, nothing to do */
+-
+-	if (!bridge_to_fix->parent)
+-		return; /* Root bridges are ok */
+-
+-	/* stay within the limits of the bus range of the parent: */
+-	upper_limit = bridge_to_fix->parent->subordinate;
+-
+-	/* check the bus ranges of all silbling bridges to prevent overlap */
+-	list_for_each(tmp, &bridge_to_fix->parent->children) {
+-		struct pci_bus *silbling = pci_bus_b(tmp);
+-		/*
+-		 * If the silbling has a higher secondary bus number
+-		 * and it's secondary is equal or smaller than our
+-		 * current upper limit, set the new upper limit to
+-		 * the bus number below the silbling's range:
+-		 */
+-		if (silbling->secondary > bridge_to_fix->subordinate
+-		    && silbling->secondary <= upper_limit)
+-			upper_limit = silbling->secondary - 1;
 -	}
-+	/* Now proceed to assigning things that were left unassigned */
-+	pr_debug("PCI: Assigning unassigned resources...\n");
-+	pci_assign_unassigned_resources();
- }
+-
+-	/* Show that the wanted subordinate number is not possible: */
+-	if (cardbus_bridge->subordinate > upper_limit)
+-		dev_printk(KERN_WARNING, &cardbus_bridge->dev,
+-			   "Upper limit for fixing this "
+-			   "bridge's parent bridge: #%02x\n", upper_limit);
+-
+-	/* If we have room to increase the bridge's subordinate number, */
+-	if (bridge_to_fix->subordinate < upper_limit) {
+-
+-		/* use the highest number of the hidden bus, within limits */
+-		unsigned char subordinate_to_assign =
+-			min(cardbus_bridge->subordinate, upper_limit);
+-
+-		dev_printk(KERN_INFO, &bridge_to_fix->dev,
+-			   "Raising subordinate bus# of parent "
+-			   "bus (#%02x) from #%02x to #%02x\n",
+-			   bridge_to_fix->number,
+-			   bridge_to_fix->subordinate, subordinate_to_assign);
+-
+-		/* Save the new subordinate in the bus struct of the bridge */
+-		bridge_to_fix->subordinate = subordinate_to_assign;
+-
+-		/* and update the PCI config space with the new subordinate */
+-		pci_write_config_byte(bridge_to_fix->self,
+-			PCI_SUBORDINATE_BUS, bridge_to_fix->subordinate);
+-	}
+-}
+-
+ /*
+  * Initialize a cardbus controller. Make sure we have a usable
+  * interrupt, and that we can map the cardbus area. Fill in the
+@@ -1257,8 +1184,6 @@ static int __devinit yenta_probe(struct pci_dev *dev, const struct pci_device_id
+ 	dev_printk(KERN_INFO, &dev->dev,
+ 		   "Socket status: %08x\n", cb_readl(socket, CB_SOCKET_STATE));
  
- #ifdef CONFIG_HOTPLUG
+-	yenta_fixup_parent_bridge(dev->subordinate);
+-
+ 	/* Register it with the pcmcia layer.. */
+ 	ret = pcmcia_register_socket(&socket->socket);
+ 	if (ret == 0) {
+-- 
+1.7.7
 
