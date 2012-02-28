@@ -1,30 +1,61 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120203160146.GM889@n2100.arm.linux.org.uk>
-References: <20120130165430.3231.97740.stgit@bhelgaas.mtv.corp.google.com>
- <20120130165745.3231.37109.stgit@bhelgaas.mtv.corp.google.com> <20120203160146.GM889@n2100.arm.linux.org.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 3 Feb 2012 08:12:02 -0800
-Message-ID: <CAErSpo6Ytx06f0yMW5q=YQBTcLxRdbBbB6EzSAFWNG82t=Qe4g@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 07/18] arm/PCI: get rid of device resource fixups
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:25687 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753128Ab2B1CEw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:04:52 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 09/11] x86, PCI: embed name acpi version pci_root_info struct
+Date: Mon, 27 Feb 2012 18:03:49 -0800
+Message-Id: <1330394631-28978-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 3, 2012 at 8:01 AM, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
-> On Mon, Jan 30, 2012 at 09:57:45AM -0700, Bjorn Helgaas wrote:
->> Tell the PCI core about host bridge address translation so it can take
->> care of bus-to-resource conversion for us.
->
-> Are the rest of these patches (in particular whereever is introduced
-> the generic versions) available somewhere?
+Now We allocate info, and keep that in during whole life of hostbridge.
 
-Oh, sorry, this doesn't mean much without the context.  Here's a
-pointer to the overview, with a git tree and so on:
+So don't allocate info->name seperately, just put name into struct.
 
-http://marc.info/?l=linux-arch&m=132794281821723&w=2
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/acpi.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-Bjorn
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 208f257..7538fad 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -9,7 +9,7 @@
+ 
+ struct pci_root_info {
+ 	struct acpi_device *bridge;
+-	char *name;
++	char name[16];
+ 	unsigned int res_num;
+ 	struct resource *res;
+ 	int busnum;
+@@ -307,7 +307,6 @@ static void add_resources(struct pci_root_info *info,
+ 
+ static void free_pci_root_info(struct pci_root_info *info)
+ {
+-	kfree(info->name);
+ 	kfree(info->res);
+ 	kfree(info);
+ }
+@@ -357,9 +356,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	if (!info->res)
+ 		return;
+ 
+-	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+-	if (!info->name)
+-		return;
++	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				info);
+-- 
+1.7.7
+
