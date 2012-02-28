@@ -1,54 +1,52 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 05/12] arm/PCI: use pci_flags PCI_PROBE_ONLY instead of
-	arm-specific flag
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org
-Date: Thu, 23 Feb 2012 12:43:27 -0700
-Message-ID: <20120223194327.20708.30508.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120223194209.20708.54480.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [PATCH 06/18] PCI, ia64: Register busn_res for root buses
+Date: Mon, 27 Feb 2012 18:09:57 -0800
+Message-Id: <1330395009-29260-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
+References: <1330395009-29260-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CC: Russell King <linux@arm.linux.org.uk>
-CC: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
 ---
- arch/arm/kernel/bios32.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ arch/ia64/pci/pci.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index f3fd52b..8d7c22d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -16,7 +16,6 @@
- #include <asm/mach/pci.h>
- 
- static int debug_pci;
--static int use_firmware;
- 
- /*
-  * We can't use pci_find_device() here since we are
-@@ -537,7 +536,7 @@ void __init pci_common_init(struct hw_pci *hw)
- 	list_for_each_entry(sys, &hw->buses, node) {
- 		struct pci_bus *bus = sys->bus;
- 
--		if (!use_firmware) {
-+		if (!pci_has_flag(PCI_PROBE_ONLY)) {
- 			/*
- 			 * Size the bridge windows.
- 			 */
-@@ -575,7 +574,7 @@ char * __init pcibios_setup(char *str)
- 		debug_pci = 1;
- 		return NULL;
- 	} else if (!strcmp(str, "firmware")) {
--		use_firmware = 1;
-+		pci_add_flags(PCI_PROBE_ONLY);
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index d1ce320..bc59e950 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -332,6 +332,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct acpi_device *device = root->device;
+ 	int domain = root->segment;
+ 	int bus = root->secondary.start;
++	int busmax = root->secondary.end;
+ 	struct pci_controller *controller;
+ 	unsigned int windows = 0;
+ 	struct pci_root_info info;
+@@ -385,6 +386,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
  		return NULL;
  	}
- 	return str;
+ 
++	pci_bus_insert_busn_res(pbus, busnum, busmax);
+ 	pbus->subordinate = pci_scan_child_bus(pbus);
+ 	return pbus;
+ 
+-- 
+1.7.7
 
