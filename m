@@ -1,95 +1,77 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 21/23] PCI: Add pci_bus_add_single_device()
-Date: Fri, 24 Feb 2012 02:19:09 -0800
-Message-Id: <1330078751-7299-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
-References: <1330078751-7299-1-git-send-email-yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 02/11] x86, PCI: have own version for pcibios_bus_to_resource
+Date: Mon, 27 Feb 2012 18:03:42 -0800
+Message-Id: <1330394631-28978-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will use it to pci_bus_bridge_scan_resize(0 to make bridge will
-have pci_bus directory created.
+x86 does not need to offset the address. So we can skip that costing offset
+searching.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/bus.c   |   40 ++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 41 insertions(+), 0 deletions(-)
+ arch/x86/pci/i386.c       |   14 ++++++++++++++
+ drivers/pci/host-bridge.c |    9 +++++----
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 398f5d8..7b2ae85 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -247,6 +247,46 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 	}
- }
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 33e6a0b..eeed28e 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -335,6 +335,20 @@ void __init pcibios_resource_survey(void)
+  */
+ fs_initcall(pcibios_assign_resources);
  
-+void pci_bus_add_single_device(struct pci_dev *dev)
++void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
++			     struct resource *res)
 +{
-+	struct pci_bus *child;
-+	int retval;
-+
-+	/* Skip already-added devices */
-+	if (!dev->is_added) {
-+		retval = pci_bus_add_device(dev);
-+		if (retval)
-+			dev_err(&dev->dev, "Error adding device, continuing\n");
-+	}
-+
-+	BUG_ON(!dev->is_added);
-+
-+	child = dev->subordinate;
-+	/*
-+	 * If there is an unattached subordinate bus, attach
-+	 * it and then scan for unattached PCI devices.
-+	 */
-+	if (child) {
-+		if (list_empty(&child->node)) {
-+			down_write(&pci_bus_sem);
-+			list_add_tail(&child->node, &dev->bus->children);
-+			up_write(&pci_bus_sem);
-+		}
-+		pci_bus_add_devices(child);
-+
-+		/*
-+		 * register the bus with sysfs as the parent is now
-+		 * properly registered.
-+		 */
-+		if (!child->is_added) {
-+			retval = pci_bus_add_child(child);
-+			if (retval)
-+				dev_err(&dev->dev, "Error adding bus, continuing\n");
-+		}
-+	}
++	region->start = res->start;
++	region->end = res->end;
 +}
 +
++void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++			     struct pci_bus_region *region)
++{
++	res->start = region->start;
++	res->end = region->end;
++}
 +
- void pci_enable_bridges(struct pci_bus *bus)
+ static const struct vm_operations_struct pci_mmap_ops = {
+ 	.access = generic_access_phys,
+ };
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 5ca4220..dfaff3f 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -38,8 +38,9 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+ 	return res1->start <= res2->start && res1->end >= res2->end;
+ }
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
++void __weak pcibios_resource_to_bus(struct pci_dev *dev,
++				    struct pci_bus_region *region,
++				    struct resource *res)
  {
- 	struct pci_dev *dev;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9584ad6..715329e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -640,6 +640,7 @@ void pci_fixup_cardbus(struct pci_bus *);
- void pcibios_scan_specific_bus(int busn);
- extern struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
-+void pci_bus_add_single_device(struct pci_dev *dev);
- struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
- 				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ 	struct pci_host_bridge *bridge = pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+@@ -66,8 +67,8 @@ static bool region_contains(struct pci_bus_region *region1,
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
++void __weak pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++				    struct pci_bus_region *region)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
 -- 
 1.7.7
 
