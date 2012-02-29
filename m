@@ -1,78 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:25464 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756428Ab2BPClN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Feb 2012 21:41:13 -0500
-Subject: Re: [PATCH] usb: enable pci MSI/MSIX in usb core
-From: "Alex,Shi" <alex.shi@intel.com>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: stern@rowland.harvard.edu, Greg KH <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, andiry.xu@amd.com,
-	linux-kernel@vger.kernel.org, Oliver Neukum <oneukum@suse.de>,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
-In-Reply-To: <20120214002030.GA10364@xanatos>
-References: <1328531341-22705-1-git-send-email-alex.shi@intel.com>
-	 <4F311233.9070404@intel.com> <20120207144204.GA7214@kroah.com>
-	 <20120207172743.GA4780@xanatos> <20120207221317.GA6103@xanatos>
-	 <1328664392.12669.233.camel@debian> <1328682430.12669.443.camel@debian>
-	 <1328692300.12669.593.camel@debian>  <20120214002030.GA10364@xanatos>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Feb 2012 10:36:41 +0800
-Message-ID: <1329359801.12669.2872.camel@debian>
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo62VuJw+3caNUhmg5moh3h4cn5z4kCsqTWZW-XqSzpk4Q@mail.gmail.com>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+	<1330556858-11768-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo62VuJw+3caNUhmg5moh3h4cn5z4kCsqTWZW-XqSzpk4Q@mail.gmail.com>
+Date: Wed, 29 Feb 2012 15:33:36 -0800
+Message-ID: <CAE9FiQW=NXnaEY+fmUS_cyJy_BE-1+pWy8kfAoPA_s=vwDq4Mw@mail.gmail.com>
+Subject: Re: [PATCH 02/39] x86, PCI: have own version for pcibios_bus_to_resource
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Feb 29, 2012 at 3:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Feb 29, 2012 at 4:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> x86 does not need to offset the address. So we can skip that costing offset
+>> searching.
+>
+> I tried to start a discussion about this patch (and others), but I
+> don't think you responded:
+> http://marc.info/?l=linux-pci&m=133036414506921&w=2
 
-> Ugh, this is a giant patch.  It's too big for stable, and it adds new
-> host controller driver APIs.  We can't do that for stable.
+this patch does reduce some not needed ops.
 
-Yes, agree!
-> > +		return 1;
-> > +	} else if (!(hcd->driver->flags & HCD_MSI_FIRST))
-> > +		return 1;
-> 
-> You don't need the else statement here, since you always return in the
-> previous if block.
+and it does not affects your effects, and it just make x86 not get punished.
 
-Correct! remove 'else' here make code more clear. 
-> > +/* msi irq handler should be here, if driver has */
-> > +irqreturn_t hcd_msi_irq(int irq, struct usb_hcd *hcd)
-> > +{
-> > +	return hcd->driver->irq(hcd);
-> > +}
-> 
-> This works for now, but it isn't going to work in the future.  We need
-> the USB core to provide us with the irq number so we can map the MSI-X
-> interrupt to the event ring that generated the interrupt, whenever we
-> get around to adding multiple event rings.
-> 
-> I think you need to add a new USB hcd callback for MSI/MSI-X vectors.  The
-> xHCI usb_hcd can provide both pointers.
-> 
+let's let Jesse and x86 maintainers to decide if this patch is needed.
 
-Do you mean to add 2 new vectors for MSI/MSIX in hc_driver?
----
-@@ -205,11 +212,14 @@ struct hc_driver {
- 
-        /* irq handler */
-        irqreturn_t     (*irq) (struct usb_hcd *hcd);
-+       irqreturn_t     (*msi_irq) (struct usb_hcd *hcd);
-+       irqreturn_t     (*msix_irq) (struct usb_hcd *hcd);
- 
-        int     flags;
----
-It is reasonable. When I written the code, I thought it may need
-different MSI/MSIX irq handlers later for different driver. :) 
+Thanks
 
-Actually, There is 2 ways to implement this vectors for detail. 
-a, let driver's self code to do request_irq() for each of vectors for
-MSI/MSIX, and hc_driver just has a simple hook for them.
-b, do detailed request_irq() work in usb-core(in hcd-pci.c). 
-
-Consider all pci MSI/MSIX interface is similar, we may prefer the second
-way to save some code. 
-
-What's opinions for above 2 ways? 
-
+Yinghai
