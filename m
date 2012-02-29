@@ -1,71 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE2SPAaY0Svfwo6_i0k9G39WO-vN3OD-o4+o3xnyun1n=PAuMw@mail.gmail.com>
-References: <201201151255.41252.roucaries.bastien@gmail.com>
-	<CAE2SPAb3Ozk7LHrqE_asazZ7kEogXEH=2S8D5PUprqXZK2o9Ow@mail.gmail.com>
-	<m2mx9ev85j.fsf@bob.laptop.org>
-	<CAE2SPAbpeHiz_JByYGrMJ6s1_yCM3SaQ8xjx4heuT2_i2Gyxcw@mail.gmail.com>
-	<CAE2SPAaY0Svfwo6_i0k9G39WO-vN3OD-o4+o3xnyun1n=PAuMw@mail.gmail.com>
-Date: Tue, 14 Feb 2012 11:18:27 -0800
-Message-ID: <CAE9FiQXdrKZVCFb4zQ7C=B3sGVGLzBdtCgOkkyA9KdKOiqemww@mail.gmail.com>
-Subject: Re: Need pci rescan in order to get my mmc reader
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bastien ROUCARIES <roucaries.bastien@gmail.com>
-Cc: Chris Ball <cjb@laptop.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 15/39] x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
+Date: Wed, 29 Feb 2012 15:07:14 -0800
+Message-Id: <1330556858-11768-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 14, 2012 at 10:17 AM, Bastien ROUCARIES
-<roucaries.bastien@gmail.com> wrote:
-> ping **2
->
-> On Thu, Jan 26, 2012 at 10:54 AM, Bastien ROUCARIES
-> <roucaries.bastien@gmail.com> wrote:
->> On Mon, Jan 23, 2012 at 2:51 PM, Chris Ball <cjb@laptop.org> wrote:
->>> Hi,
->>>
->>> On Mon, Jan 23 2012, Bastien ROUCARIES wrote:
->>>> On Sun, Jan 15, 2012 at 12:55 PM, bastien ROUCARIES
->>>> <roucaries.bastien@gmail.com> wrote:
->>>>> I am hit by the same bug than here
->>>>> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/703180
->>>>>
->>>>> I order to get my mmc reader functionnal I need to put a mmc card
->>>>> and do a pci rescan manualy.
->>>>>
->>>>> What could be done  ?
->>>>>
->>>>> What do you need in order to help ?
->>>>>
->>>>> Thanks
->>>
->>> I'm not sure there's anything I (at the MMC layer) can do to help;
->>> having a visible PCI device is a prerequisite for working MMC.
->>>
->>> Have you tried a recent upstream kernel, and looked for any available
->>> BIOS updates for your laptop?
->>
->> BIOS is lasted and kernel is 3.1.
->>
->> I know that  PCI device is a prerequisite  but I believe it is
->> possible to run some quirk on this laptop, in order to get the mmc
->> reader up earlier.
->>
->> See also https://bugzilla.kernel.org/show_bug.cgi?id=40802
+Those two almost the same.
+Let pcibios_scan_root call pci_scan_bus_on_node instead.
 
-can you post full boot log with pci debug enabled?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/common.c |   27 ++++-----------------------
+ 1 files changed, 4 insertions(+), 23 deletions(-)
 
-CONFIG_PCI_DEBUG=y
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 323481e..8e04ec5 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -430,9 +430,7 @@ void __init dmi_check_pciprobe(void)
+ 
+ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ {
+-	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+-	struct pci_sysdata *sd;
+ 
+ 	while ((bus = pci_find_next_bus(bus)) != NULL) {
+ 		if (bus->number == busnum) {
+@@ -441,28 +439,10 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 		}
+ 	}
+ 
+-	/* Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+-	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
+-		printk(KERN_ERR "PCI: OOM, not probing PCI bus %02x\n", busnum);
+-		return NULL;
+-	}
+-
+-	sd->node = get_mp_bus_to_node(busnum);
+-
+-	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+-	x86_pci_root_bus_resources(busnum, &resources);
+-	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
+-	if (!bus) {
+-		pci_free_resource_list(&resources);
+-		kfree(sd);
+-	}
+-
+-	return bus;
++	return pci_scan_bus_on_node(busnum, &pci_root_ops,
++					get_mp_bus_to_node(busnum));
+ }
++
+ void __init pcibios_set_cache_line_size(void)
+ {
+ 	struct cpuinfo_x86 *c = &boot_cpu_data;
+@@ -656,6 +636,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	}
+ 	sd->node = node;
+ 	x86_pci_root_bus_resources(busno, &resources);
++	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+ 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
+-- 
+1.7.7
 
-and "debug ignore_loglevel" in boot command line.
-
-also post:
-lspci -tv
-lspci -vvxxx
-lspci
-
-should have one booted with card inserted and one booted without card inserted.
-
-Yinghai
