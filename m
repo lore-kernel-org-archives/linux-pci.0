@@ -1,47 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:49519 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754362Ab2BXDYD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:24:03 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/4] PCI: print out suggestion about using pci=realloc
-Date: Thu, 23 Feb 2012 19:23:31 -0800
-Message-Id: <1330053812-10316-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
-References: <1330053812-10316-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 04/39] PCI: rename pci_host_bridge() to find_pci_root_bridge()
+Date: Wed, 29 Feb 2012 15:07:03 -0800
+Message-Id: <1330556858-11768-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-let user know they could try if pci=realloc could help.
+Separate find_pci_root_bus out.
 
--v2: update suggestion text.
+-v2: according to Bjorn, remove extra null checking.
 
-Suggested-by: Jesse Barnes <jbarnes@virtuousgeek.org>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/pci/host-bridge.c |   18 +++++++++++++-----
+ 1 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 219722d..e21e1c2 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1347,6 +1347,9 @@ again:
- 		goto enable_and_dump;
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index dfaff3f..b3ddcc5 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -16,15 +16,22 @@ void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
+ 	list_add_tail(&bridge->list, &pci_host_bridges);
+ }
  
- 	if (tried_times >= pci_try_num) {
-+		if (pci_realloc_enable == undefined)
-+			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
+-static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
++static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus;
+-	struct pci_host_bridge *bridge;
+ 
+ 	bus = dev->bus;
+ 	while (bus->parent)
+ 		bus = bus->parent;
+ 
++	return bus;
++}
 +
- 		free_list(&fail_head);
- 		goto enable_and_dump;
- 	}
++static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
++{
++	struct pci_bus *bus = find_pci_root_bus(dev);
++	struct pci_host_bridge *bridge;
++
+ 	list_for_each_entry(bridge, &pci_host_bridges, list) {
+ 		if (bridge->bus == bus)
+ 			return bridge;
+@@ -42,7 +49,7 @@ void __weak pcibios_resource_to_bus(struct pci_dev *dev,
+ 				    struct pci_bus_region *region,
+ 				    struct resource *res)
+ {
+-	struct pci_host_bridge *bridge = pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -70,12 +77,13 @@ static bool region_contains(struct pci_bus_region *region1,
+ void __weak pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 				    struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+-	struct pci_bus_region bus_region;
+ 	resource_size_t offset = 0;
+ 
+ 	list_for_each_entry(window, &bridge->windows, list) {
++		struct pci_bus_region bus_region;
++
+ 		if (resource_type(res) != resource_type(window->res))
+ 			continue;
+ 
 -- 
 1.7.7
 
