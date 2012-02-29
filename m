@@ -1,66 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:32163 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752577Ab2CADCF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 22:02:05 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 08/36] x86, PCI: embed name acpi version pci_root_info struct
-Date: Wed, 29 Feb 2012 19:00:09 -0800
-Message-Id: <1330570837-26638-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:49024 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756206Ab2B2WFk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Feb 2012 17:05:40 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: [PATCH] PCI / PCIe: Introduce command line option to disable ARI
+Date: Wed, 29 Feb 2012 23:09:41 +0100
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201202292309.42051.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now We allocate info, and keep that in during whole life of hostbridge.
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
-So don't allocate info->name seperately, just put name into struct.
+There are PCIe devices on the market that report ARI support but
+then fail to initialize correctly when ARI is actually used.  This
+leads to situations in which kernels 2.6.34 and newer fail to handle
+systems where the previous kernels worked without any apparent
+problems.  Unfortunately, it is currently unknown how many such
+devices are there.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+For this reason, introduce a new kernel command line option,
+pci=noari, allowing users to disable PCIe ARI altogether if they
+see problems with PCIe device initialization.
+
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- arch/x86/pci/acpi.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/pci/pci.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index c7a230f..11c3ae7 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -9,7 +9,7 @@
+Index: linux/drivers/pci/pci.c
+===================================================================
+--- linux.orig/drivers/pci/pci.c
++++ linux/drivers/pci/pci.c
+@@ -94,6 +94,9 @@ u8 pci_cache_line_size;
+  */
+ unsigned int pcibios_max_latency = 255;
  
- struct pci_root_info {
- 	struct acpi_device *bridge;
--	char *name;
-+	char name[16];
- 	unsigned int res_num;
- 	struct resource *res;
- 	int busnum;
-@@ -307,7 +307,6 @@ static void add_resources(struct pci_root_info *info,
++/* If set, the PCIe ARI capability will not be used. */
++static bool pcie_ari_disabled;
++
+ /**
+  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
+  * @bus: pointer to PCI bus structure to search
+@@ -1922,7 +1925,7 @@ void pci_enable_ari(struct pci_dev *dev)
+ 	u16 flags, ctrl;
+ 	struct pci_dev *bridge;
  
- static void free_pci_root_info_res(struct pci_root_info *info)
- {
--	kfree(info->name);
- 	kfree(info->res);
- 	info->res = NULL;
- 	info->res_num = 0;
-@@ -360,9 +359,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	if (!info->res)
+-	if (!pci_is_pcie(dev) || dev->devfn)
++	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
  		return;
  
--	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
--	if (!info->name)
--		return;
-+	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
--- 
-1.7.7
-
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI);
+@@ -3718,6 +3721,8 @@ static int __init pci_setup(char *str)
+ 				pci_realloc();
+ 			} else if (!strcmp(str, "nodomains")) {
+ 				pci_no_domains();
++			} else if (!strncmp(str, "noari", 5)) {
++				pcie_ari_disabled = true;
+ 			} else if (!strncmp(str, "cbiosize=", 9)) {
+ 				pci_cardbus_io_size = memparse(str + 9, &str);
+ 			} else if (!strncmp(str, "cbmemsize=", 10)) {
