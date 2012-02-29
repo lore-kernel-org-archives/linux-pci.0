@@ -1,194 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:38812 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994Ab2BPFPT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:15:19 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/4] PCI: Specify class for quirk entry with PCI_ANY_ID
-Date: Wed, 15 Feb 2012 21:14:54 -0800
-Message-Id: <1329369296-4255-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
-References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 35/39] PCI: Seperate child bus scanning to two passes overall
+Date: Wed, 29 Feb 2012 15:07:34 -0800
+Message-Id: <1330556858-11768-36-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use quirk framework class checking instead check class inside every quirk func.
+In extreme case: Two bridges are properly setup.
+       bridge A
+               bridge AA
+               bridge AB
+       bridge B
+	       bridge BA
+	       bridge BB
+   but AA, AB are not setup properly.
+   bridge A has small range, and bridge AB could need more, when do the
+       first pass0 for bridge A, it will do pass0 and pass1 for AA and AB,
+	during that process, it will extend range of A for AB blindly.
+	because bridge B is not registered yet.
+       that could overlap range that is used by bridge B.
 
-That reduce quirk calling significent esp on Intel 8 sockets systems that have
-lots of device.
-- quirk_e100_interrupt
-- quirk_usb_early_handoff
-- pci_fixup_video
-- quirk_mmio_always_on
-- quirk_cardbus_legacy
+Right way should be:
+       do pass0 for all good bridges at first.
+So we could do pass0 for bridge B before pass1 for bridge AB.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
 ---
- arch/x86/kernel/pci-dma.c     |    5 ++--
- arch/x86/pci/fixup.c          |   12 ++++-------
- drivers/pci/quirks.c          |   43 ++++++++++++++++++++++--------------------
- drivers/usb/host/pci-quirks.c |    3 +-
- 4 files changed, 33 insertions(+), 30 deletions(-)
+ drivers/pci/probe.c |   50 ++++++++++++++++++++++++++++++++++----------------
+ 1 files changed, 34 insertions(+), 16 deletions(-)
 
-Index: linux-2.6/arch/x86/kernel/pci-dma.c
-===================================================================
---- linux-2.6.orig/arch/x86/kernel/pci-dma.c
-+++ linux-2.6/arch/x86/kernel/pci-dma.c
-@@ -262,10 +262,11 @@ rootfs_initcall(pci_iommu_init);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ba51902..4a38ef4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -809,6 +809,9 @@ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
  
- static __devinit void via_no_dac(struct pci_dev *dev)
+ 	return broken;
+ }
++
++static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
++						 int pass);
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+@@ -865,11 +868,10 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 	    !is_cardbus && !broken) {
+ 		unsigned int cmax;
+ 		/*
+-		 * Bus already configured by firmware, process it in the first
+-		 * pass and just note the configuration.
++		 * Bus already configured by firmware, still process it in two
++		 * passes in extreme case like two adjaced bridges have children
++		 * bridges that are not setup properly.
+ 		 */
+-		if (pass)
+-			goto out;
+ 
+ 		/*
+ 		 * If we already got to this bus through a different bridge,
+@@ -890,7 +892,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 			pci_bus_insert_busn_res(child, secondary, subordinate);
+ 		}
+ 
+-		cmax = pci_scan_child_bus(child);
++		cmax = __pci_scan_child_bus(child, pass);
+ 		if (cmax > max)
+ 			max = cmax;
+ 		if (child->subordinate > max)
+@@ -1704,12 +1706,13 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ }
+ EXPORT_SYMBOL_GPL(pcie_bus_configure_settings);
+ 
+-unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
++static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
++						 int pass)
  {
--	if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI && forbid_dac == 0) {
-+	if (forbid_dac == 0) {
- 		dev_info(&dev->dev, "disabling DAC on VIA PCI bridge\n");
- 		forbid_dac = 1;
+-	unsigned int devfn, pass, max = bus->secondary;
++	unsigned int devfn, max = bus->secondary;
+ 	struct pci_dev *dev;
+ 
+-	dev_dbg(&bus->dev, "scanning bus\n");
++	dev_dbg(&bus->dev, "scanning bus pass %d\n", pass);
+ 
+ 	/* Go find them, Rover! */
+ 	for (devfn = 0; devfn < 0x100; devfn += 8)
+@@ -1723,18 +1726,16 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
+ 	 * all PCI-to-PCI bridges on this bus.
+ 	 */
+ 	if (!bus->is_added) {
+-		dev_dbg(&bus->dev, "fixups for bus\n");
++		dev_dbg(&bus->dev, "fixups for bus pass %d\n", pass);
+ 		pcibios_fixup_bus(bus);
+ 		if (pci_is_root_bus(bus))
+ 			bus->is_added = 1;
  	}
+ 
+-	for (pass=0; pass < 2; pass++)
+-		list_for_each_entry(dev, &bus->devices, bus_list) {
+-			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+-			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
+-				max = pci_scan_bridge(bus, dev, max, pass);
+-		}
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
++		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
++			max = pci_scan_bridge(bus, dev, max, pass);
+ 
+ 	/*
+ 	 * We've scanned the bus and so we know all about what's on
+@@ -1743,7 +1744,24 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
+ 	 *
+ 	 * Return how far we've got finding sub-buses.
+ 	 */
+-	dev_dbg(&bus->dev, "bus scan returning with max=%02x\n", max);
++	dev_dbg(&bus->dev, "bus scan returning with max=%02x pass %d\n",
++			max, pass);
++
++	return max;
++}
++
++unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
++{
++	int pass;
++	unsigned int max = 0, tmp;
++
++	for (pass = 0; pass < 2;  pass++) {
++		tmp = __pci_scan_child_bus(bus, pass);
++
++		if (tmp > max)
++			max = tmp;
++	}
++
+ 	return max;
  }
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_ANY_ID, via_no_dac);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
-+				PCI_CLASS_BRIDGE_PCI, 8, via_no_dac);
- #endif
-Index: linux-2.6/arch/x86/pci/fixup.c
-===================================================================
---- linux-2.6.orig/arch/x86/pci/fixup.c
-+++ linux-2.6/arch/x86/pci/fixup.c
-@@ -164,11 +164,11 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_V
-  */
- static void __devinit pci_fixup_transparent_bridge(struct pci_dev *dev)
- {
--	if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
--	    (dev->device & 0xff00) == 0x2400)
-+	if ((dev->device & 0xff00) == 0x2400)
- 		dev->transparent = 1;
- }
--DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_fixup_transparent_bridge);
-+DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-+			 PCI_CLASS_BRIDGE_PCI, 8, pci_fixup_transparent_bridge);
  
- /*
-  * Fixup for C1 Halt Disconnect problem on nForce2 systems.
-@@ -322,9 +322,6 @@ static void __devinit pci_fixup_video(st
- 	struct pci_bus *bus;
- 	u16 config;
- 
--	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--		return;
--
- 	/* Is VGA routed to us? */
- 	bus = pdev->bus;
- 	while (bus) {
-@@ -353,7 +350,8 @@ static void __devinit pci_fixup_video(st
- 		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
- 	}
- }
--DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pci_fixup_video);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
- 
- 
- static const struct dmi_system_id __devinitconst msi_k8t_dmi_table[] = {
-Index: linux-2.6/drivers/pci/quirks.c
-===================================================================
---- linux-2.6.orig/drivers/pci/quirks.c
-+++ linux-2.6/drivers/pci/quirks.c
-@@ -102,10 +102,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI
-  */
- static void __devinit quirk_mmio_always_on(struct pci_dev *dev)
- {
--	if ((dev->class >> 8) == PCI_CLASS_BRIDGE_HOST)
--		dev->mmio_always_on = 1;
-+	dev->mmio_always_on = 1;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, quirk_mmio_always_on);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
-+				PCI_CLASS_BRIDGE_HOST, 8, quirk_mmio_always_on);
- 
- /* The Mellanox Tavor device gives false positive parity errors
-  * Mark this device with a broken_parity_status, to allow
-@@ -1004,12 +1004,12 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_V
-  */
- static void quirk_cardbus_legacy(struct pci_dev *dev)
- {
--	if ((PCI_CLASS_BRIDGE_CARDBUS << 8) ^ dev->class)
--		return;
- 	pci_write_config_dword(dev, PCI_CB_LEGACY_MODE_BASE, 0);
- }
--DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_cardbus_legacy);
--DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_ANY_ID, PCI_ANY_ID, quirk_cardbus_legacy);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+			PCI_CLASS_BRIDGE_CARDBUS, 8, quirk_cardbus_legacy);
-+DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(PCI_ANY_ID, PCI_ANY_ID,
-+			PCI_CLASS_BRIDGE_CARDBUS, 8, quirk_cardbus_legacy);
- 
- /*
-  * Following the PCI ordering rules is optional on the AMD762. I'm not
-@@ -1166,17 +1166,20 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IN
- 
- static void __devinit quirk_no_ata_d3(struct pci_dev *pdev)
- {
--	/* Quirk the legacy ATA devices only. The AHCI ones are ok */
--	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE)
--		pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
-+	pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, PCI_ANY_ID, quirk_no_ata_d3);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, PCI_ANY_ID, quirk_no_ata_d3);
-+/* Quirk the legacy ATA devices only. The AHCI ones are ok */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_SERVERWORKS, PCI_ANY_ID,
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
- /* ALi loses some register settings that we cannot then restore */
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID, quirk_no_ata_d3);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID,
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
- /* VIA comes back fine but we need to keep it alive or ACPI GTM failures
-    occur when mode detecting */
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID, quirk_no_ata_d3);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
- 
- /* This was originally an Alpha specific thing, but it really fits here.
-  * The i82375 PCI/EISA bridge appears as non-classified. Fix that.
-@@ -1954,7 +1957,8 @@ static void __devinit quirk_e100_interru
- 
- 	iounmap(csr);
- }
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_ANY_ID, quirk_e100_interrupt);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-+			PCI_CLASS_NETWORK_ETHERNET, 8, quirk_e100_interrupt);
- 
- /*
-  * The 82575 and 82598 may experience data corruption issues when transitioning
-@@ -2818,12 +2822,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IN
- static void __devinit fixup_ti816x_class(struct pci_dev* dev)
- {
- 	/* TI 816x devices do not have class code set when in PCIe boot mode */
--	if (dev->class == PCI_CLASS_NOT_DEFINED) {
--		dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
--		dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
--	}
-+	dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
-+	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_TI, 0xb800, fixup_ti816x_class);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_TI, 0xb800,
-+				 PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
- 
- /* Some PCIe devices do not work reliably with the claimed maximum
-  * payload size supported.
-Index: linux-2.6/drivers/usb/host/pci-quirks.c
-===================================================================
---- linux-2.6.orig/drivers/usb/host/pci-quirks.c
-+++ linux-2.6/drivers/usb/host/pci-quirks.c
-@@ -901,4 +901,5 @@ static void __devinit quirk_usb_early_ha
- 	else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
- 		quirk_usb_handoff_xhci(pdev);
- }
--DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_usb_early_handoff);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+			PCI_CLASS_SERIAL_USB, 8, quirk_usb_early_handoff);
+-- 
+1.7.7
+
