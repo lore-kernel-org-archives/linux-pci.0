@@ -1,72 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog108.obsmtp.com ([207.126.144.125]:35114 "EHLO
-	eu1sys200aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754230Ab2BXGJo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 01:09:44 -0500
-Message-ID: <4F472990.2010304@st.com>
-Date: Fri, 24 Feb 2012 11:39:20 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-MIME-Version: 1.0
-To: "Pedanekar, Hemant" <hemantp@ti.com>
-Cc: Tejun Heo <tj@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Viresh KUMAR <viresh.kumar@st.com>,
-	Shiraz HASHIM <shiraz.hashim@st.com>,
-	Armando VISCONTI <armando.visconti@st.com>,
-	Vipin KUMAR <vipin.kumar@st.com>,
-	Deepak SIKRI <deepak.sikri@st.com>,
-	Rajeev KUMAR <rajeev-dlh.kumar@st.com>,
-	Vipul Kumar SAMAR <vipulkumar.samar@st.com>,
-	Amit VIRDI <Amit.VIRDI@st.com>,
-	Bhupesh SHARMA <bhupesh.sharma@st.com>
-Subject: Re: [PATCH] PCIE: pcie_set_readrq must not be allowed by PCIE EP
- driver
-References: <1297937650-2558-1-git-send-email-pratyush.anand@st.com> <2A3DCF3DA181AD40BDE86A3150B27B6B0373799132@dbde02.ent.ti.com> <2A3DCF3DA181AD40BDE86A3150B27B6B03737991EA@dbde02.ent.ti.com> <4D78D6E3.50004@st.com> <2A3DCF3DA181AD40BDE86A3150B27B6B03743048FE@dbde02.ent.ti.com> <4D806132.1090704@st.com> <4F460E79.5000308@st.com> <20120223174228.GF22536@google.com> <4F470ABE.2010206@st.com> <DDE393F022194E4FB9AE108B0AECD70C317CA30B@DBDE01.ent.ti.com>
-In-Reply-To: <DDE393F022194E4FB9AE108B0AECD70C317CA30B@DBDE01.ent.ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 30/39] PCI: Add pci_bus_extend/shrink_top()
+Date: Wed, 29 Feb 2012 15:07:29 -0800
+Message-Id: <1330556858-11768-31-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/24/2012 11:08 AM, Pedanekar, Hemant wrote:
-> Hi,
->
-> Pratyush Anand wrote on Friday, February 24, 2012 9:28 AM:
->
->> On 2/23/2012 11:12 PM, Tejun Heo wrote:
->>> Hello,
->>>
->>> On Thu, Feb 23, 2012 at 03:31:29PM +0530, Pratyush Anand wrote:
->>>> Its a long pending patch.
->>>> Any decision on this patch.
->>>
->>> Hmmm.... I really don't know what to do.  IIRC it was something lifted
->>> from the proprietary sil driver and they probably added that to work
->>> around performance oddities under certain configurations and I'm a bit
->>> worried about changing it after all this time.  Is there any way to
->>> make this conditional somehow?
->>
->> I see that there is a patch in the latest kernel.
->>
->> commit a1c473aa11e61bc871be16279c9bf976acf22504
->> Author: Benjamin Herrenschmidt<benh@kernel.crashing.org>
->> Date:   Fri Oct 14 14:56:15 2011 -0500
->>
->>       pci: Clamp pcie_set_readrq() when using "performance" settings
->>
->> I think, this will resolve the issue.
->> We are moving to the new kernel. Will check it there.
->>
-> I see that the patch above considers MPS to clamp RRQ size, while I think
-> both should be independent, or perhaps I am missing something.
->
+extend or shrink bus and parent buses top (subordinate)
 
-Please also see following patch for completeness.
+extended range is verified safe range, and stop at recorded parent_res.
 
-commit b03e7495a862b028294f59fc87286d6d78ee7fa1
-Author: Jon Mason <mason@myri.com>
-Date:   Wed Jul 20 15:20:54 2011 -0500
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   36 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 36 insertions(+), 0 deletions(-)
 
-     PCI: Set PCI-E Max Payload Size on fabric
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1c07aba..96259f8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -655,6 +655,42 @@ static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
+ 	}
+ }
+ 
++static void __devinit pci_bus_update_top(struct pci_bus *parent,
++		 long size, struct resource *parent_res)
++{
++	struct resource *res;
++
++	if (!size)
++		return;
++
++	while (parent) {
++		res = &parent->busn_res;
++		if (res == parent_res)
++			break;
++		res->end += size;
++		parent->subordinate += size;
++		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
++					 parent->subordinate);
++		dev_printk(KERN_DEBUG, &parent->dev,
++				"busn_res: %s %02lx to %pR\n",
++				(size > 0) ? "extended" : "shrunk",
++				abs(size), res);
++		parent = parent->parent;
++	}
++}
++
++static void __devinit pci_bus_extend_top(struct pci_bus *parent,
++		 long size, struct resource *parent_res)
++{
++	pci_bus_update_top(parent, size, parent_res);
++}
++
++static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
++		 long size, struct resource *parent_res)
++{
++	pci_bus_update_top(parent, -size, parent_res);
++}
++
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+-- 
+1.7.7
 
-Regards
-Pratyush
