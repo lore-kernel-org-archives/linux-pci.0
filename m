@@ -8,138 +8,81 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 07/36] x86, PCI: add host bridge resource release for using _CRS
-Date: Wed, 29 Feb 2012 19:00:08 -0800
-Message-Id: <1330570837-26638-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 10/39] x86, PCI: embed pci_sysdata into pci_root_info on acpi path
+Date: Wed, 29 Feb 2012 15:07:09 -0800
+Message-Id: <1330556858-11768-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. allocate pci_root_info instead of use local stack. we need to pass around info
-   for release fn.
-2. add release_pci_root_info
-3. set x86 own host bridge release fn, so will make sure root bridge
-   related resources get freed during root bus removal.
+So that part memory will be released on remove path.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/acpi.c |   63 +++++++++++++++++++++++++++++++++++++++++---------
- 1 files changed, 51 insertions(+), 12 deletions(-)
+ arch/x86/pci/acpi.c |   21 ++++-----------------
+ 1 files changed, 4 insertions(+), 17 deletions(-)
 
 diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 763f7bb..c7a230f 100644
+index 11c3ae7..2331ccb 100644
 --- a/arch/x86/pci/acpi.c
 +++ b/arch/x86/pci/acpi.c
-@@ -305,11 +305,40 @@ static void add_resources(struct pci_root_info *info,
- 	}
- }
+@@ -13,6 +13,7 @@ struct pci_root_info {
+ 	unsigned int res_num;
+ 	struct resource *res;
+ 	int busnum;
++	struct pci_sysdata sd;
+ };
  
--static void free_pci_root_info(struct pci_root_info *info)
-+static void free_pci_root_info_res(struct pci_root_info *info)
- {
- 	kfree(info->name);
- 	kfree(info->res);
--	memset(info, 0, sizeof(struct pci_root_info));
-+	info->res = NULL;
-+	info->res_num = 0;
-+}
-+
-+static void __release_pci_root_info(struct pci_root_info *info)
-+{
-+	int i;
-+	struct resource *res;
-+
-+	for (i = 0; i < info->res_num; i++) {
-+		res = &info->res[i];
-+
-+		if (!res->parent)
-+			continue;
-+
-+		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-+			continue;
-+
-+		release_resource(res);
-+	}
-+
-+	free_pci_root_info_res(info);
-+
-+	kfree(info);
-+}
-+static void release_pci_root_info(struct pci_host_bridge *bridge)
-+{
-+	struct pci_root_info *info = bridge->release_data;
-+
-+	__release_pci_root_info(info);
- }
+ static bool pci_use_crs = true;
+@@ -400,26 +401,16 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (node != -1 && !node_online(node))
+ 		node = -1;
  
- static void
-@@ -342,7 +371,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
--	struct pci_root_info info;
-+	struct pci_root_info *info = NULL;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
- 	LIST_HEAD(resources);
-@@ -387,7 +416,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 	sd->domain = domain;
- 	sd->node = node;
--	memset(&info, 0, sizeof(struct pci_root_info));
+-	/* Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+-	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
 +	info = kzalloc(sizeof(*info), GFP_KERNEL);
 +	if (!info) {
-+		kfree(sd);
-+		printk(KERN_WARNING "pci_bus %04x:%02x: "
-+		       "ignored (out of memory)\n", domain, busnum);
-+		return NULL;
-+	}
+ 		printk(KERN_WARNING "pci_bus %04x:%02x: "
+ 		       "ignored (out of memory)\n", domain, busnum);
+ 		return NULL;
+ 	}
+ 
++	sd = &info->sd;
+ 	sd->domain = domain;
+ 	sd->node = node;
+-	info = kzalloc(sizeof(*info), GFP_KERNEL);
+-	if (!info) {
+-		kfree(sd);
+-		printk(KERN_WARNING "pci_bus %04x:%02x: "
+-		       "ignored (out of memory)\n", domain, busnum);
+-		return NULL;
+-	}
  	/*
  	 * Maybe the desired pci bus has been already scanned. In such case
  	 * it is unnecessary to scan the pci bus with the given domain,busnum.
-@@ -399,29 +434,33 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 * be replaced by sd.
+@@ -432,7 +423,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
  		 */
  		memcpy(bus->sysdata, sd, sizeof(*sd));
-+		kfree(info);
- 		kfree(sd);
+ 		kfree(info);
+-		kfree(sd);
  	} else {
--		probe_pci_root_info(&info, device, busnum, domain);
-+		probe_pci_root_info(info, device, busnum, domain);
+ 		probe_pci_root_info(info, device, busnum, domain);
  
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
- 		if (pci_use_crs)
--			add_resources(&info, &resources);
-+			add_resources(info, &resources);
- 		else {
--			free_pci_root_info(&info);
-+			free_pci_root_info_res(info);
- 			x86_pci_root_bus_resources(busnum, &resources);
+@@ -474,9 +464,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
  		}
-+
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
--		if (bus)
-+		if (bus) {
- 			bus->subordinate = pci_scan_child_bus(bus);
--		else
-+			pci_set_host_bridge_release(
-+				to_pci_host_bridge(bus->bridge),
-+				release_pci_root_info, info);
-+		} else {
- 			pci_free_resource_list(&resources);
--
--		if (!bus && pci_use_crs)
--			free_pci_root_info(&info);
-+			__release_pci_root_info(info);
-+		}
  	}
  
- 	/* After the PCI-E bus has been walked and all devices discovered,
+-	if (!bus)
+-		kfree(sd);
+-
+ 	if (bus && node != -1) {
+ #ifdef CONFIG_ACPI_NUMA
+ 		if (pxm >= 0)
 -- 
 1.7.7
 
