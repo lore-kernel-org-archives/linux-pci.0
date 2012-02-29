@@ -1,85 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:21263 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755367Ab2BXDtm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:42 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 12/13] PCI: Make sure hotplug ioapic driver get loaded early
-Date: Thu, 23 Feb 2012 19:48:58 -0800
-Message-Id: <1330055339-11662-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 24/39] PCI: checking busn_res in pci_scan_root_bus
+Date: Wed, 29 Feb 2012 15:07:23 -0800
+Message-Id: <1330556858-11768-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-at least before port service.
+some calling may not have end decided yet, and may not pass busn_res in
+resources list.
 
-Some system MADT will only have no hotplug entries even those devices are
-there before os is booting.
+try to do insert big one and shrink.
 
-So we need to enable those ioapic early before real device driver need to
-setup ioapic irq.
-
-Signed-off-by: <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/Kconfig  |    2 +-
- drivers/pci/Makefile |    5 +++--
- drivers/pci/ioapic.c |    6 ------
- 3 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/pci/probe.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 37856f7..c920a9d 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -98,7 +98,7 @@ config PCI_PASID
- 	  If unsure, say N.
- 
- config PCI_IOAPIC
--	tristate "PCI IO-APIC hotplug support" if X86
-+	bool "PCI IO-APIC hotplug support" if X86
- 	depends on PCI
- 	depends on ACPI
- 	depends on HOTPLUG
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 083a49f..7b4ff82 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -10,11 +10,12 @@ obj-$(CONFIG_SYSFS) += slot.o
- 
- obj-$(CONFIG_PCI_QUIRKS) += quirks.o
- 
-+# pre-installed hotplug ioapic need to be enabled at first
-+obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e32f1b7..1149109 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1742,12 +1742,34 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+ 	struct pci_bus *b;
++	struct pci_host_bridge_window *window, *n;
++	struct resource *res;
++	bool found;
 +
- # Build PCI Express stuff if needed
- obj-$(CONFIG_PCIEPORTBUS) += pcie/
++	list_for_each_entry_safe(window, n, resources, list) {
++		res = window->res;
++		if (res->flags & IORESOURCE_BUS) {
++			found = true;
++			break;
++		}
++	}
  
--obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
--
- obj-$(CONFIG_HOTPLUG) += hotplug.o
+ 	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
+ 	if (!b)
+ 		return NULL;
  
- # Build the PCI Hotplug drivers if we were asked to
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-index 205af8d..4183a5c 100644
---- a/drivers/pci/ioapic.c
-+++ b/drivers/pci/ioapic.c
-@@ -118,10 +118,4 @@ static int __init ioapic_init(void)
- 	return pci_register_driver(&ioapic_driver);
++	if (!found) {
++		dev_info(&b->dev,
++		 "No busn resource found for root bus, will use [%02x, ff]\n",
++			bus);
++		pci_bus_insert_busn_res(b, bus, 255);
++	}
++
+ 	b->subordinate = pci_scan_child_bus(b);
++
++	if (!found)
++		pci_bus_update_busn_res_end(b, b->subordinate);
++
+ 	pci_bus_add_devices(b);
+ 	return b;
  }
- 
--static void __exit ioapic_exit(void)
--{
--	pci_unregister_driver(&ioapic_driver);
--}
--
- module_init(ioapic_init);
--module_exit(ioapic_exit);
 -- 
 1.7.7
 
