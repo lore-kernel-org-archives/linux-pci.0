@@ -1,139 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25655 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491Ab2B1CEu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:04:50 -0500
+Received: from rcsinet15.oracle.com ([148.87.113.117]:25701 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932383Ab2B2XI3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 18:08:29 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 03/11] x86, PCI: Fix memleak with get_current_resources
-Date: Mon, 27 Feb 2012 18:03:43 -0800
-Message-Id: <1330394631-28978-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-References: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 19/39] x86, PCI: put busn resource in pci_root_info for no_crs path
+Date: Wed, 29 Feb 2012 15:07:18 -0800
+Message-Id: <1330556858-11768-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-in pci_scan_acpi_root, when pci_use_crs is set, get_current_resources is used
-to get pci_root_info, and it will allocate name and res array.
-
-later if pci_create_root_bus can not create bus (could be already there...)
-it will only free bus res list. but the name and res array is not freed.
-
-let get_current_resource take info pointer instead have local info.
+will put it in resources list and pass it for create_root_bus
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/acpi.c |   49 ++++++++++++++++++++++++++++++-------------------
- 1 files changed, 30 insertions(+), 19 deletions(-)
+ arch/x86/pci/amd_bus.c  |    1 -
+ arch/x86/pci/bus_numa.c |   22 ++++++++++++++--------
+ arch/x86/pci/bus_numa.h |    3 +--
+ 3 files changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 7cc0a44..304ccf0 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -305,49 +305,55 @@ static void add_resources(struct pci_root_info *info)
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index aff155d..03397ea 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -116,7 +116,6 @@ static int __init early_fill_mp_bus_info(void)
+ 		link = (reg >> 8) & 0x03;
+ 
+ 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+-		sprintf(info->name, "PCI Bus #%02x", min_bus);
  	}
+ 
+ 	/* get the default node and link for left over res */
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index 772949f..b5b9d91 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -14,7 +14,7 @@ static struct pci_root_info *x86_find_pci_root_info(int bus)
+ 		return NULL;
+ 
+ 	list_for_each_entry(info, &pci_root_infos, list)
+-		if (info->bus_min == bus)
++		if (info->busn.start == bus)
+ 			return info;
+ 
+ 	return NULL;
+@@ -31,6 +31,8 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
+ 	       bus);
+ 
++	pci_add_resource(resources, &info->busn);
++
+ 	list_for_each_entry(root_res, &info->resources, list) {
+ 		struct resource *res;
+ 		struct resource *root;
+@@ -54,6 +56,7 @@ default_resources:
+ 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
+ 	pci_add_resource(resources, &ioport_resource);
+ 	pci_add_resource(resources, &iomem_resource);
++	pci_add_resource(resources, &busn_resource);
  }
  
-+static void free_pci_root_info(struct pci_root_info *info)
-+{
-+	kfree(info->name);
-+	kfree(info->res);
-+	memset(info, 0, sizeof(struct pci_root_info));
-+}
+ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+@@ -66,9 +69,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+ 	if (!info)
+ 		return info;
+ 
++	sprintf(info->name, "PCI Bus #%02x", bus_min);
 +
- static void
--get_current_resources(struct acpi_device *device, int busnum,
-+get_current_resources(struct pci_root_info *info,
-+		      struct acpi_device *device, int busnum,
- 		      int domain, struct list_head *resources)
+ 	INIT_LIST_HEAD(&info->resources);
+-	info->bus_min = bus_min;
+-	info->bus_max = bus_max;
++	info->busn.name  = info->name;
++	info->busn.start = bus_min;
++	info->busn.end   = bus_max;
++	info->busn.flags = IORESOURCE_BUS;
+ 	info->node = node;
+ 	info->link = link;
+ 
+@@ -80,14 +87,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+ void print_pci_root_info(struct pci_root_info *info, char *name, bool nodelink)
  {
--	struct pci_root_info info;
- 	size_t size;
+ 	struct pci_root_res *root_res;
+-	int busnum = info->bus_min;
++	int busnum = info->busn.start;
  
--	info.bridge = device;
--	info.res_num = 0;
--	info.resources = resources;
-+	info->bridge = device;
-+	info->res_num = 0;
-+	info->resources = resources;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
--				&info);
--	if (!info.res_num)
-+				info);
-+	if (!info->res_num)
- 		return;
+ 	if (!nodelink)
+-		printk(KERN_DEBUG "%s: [%02x, %02x]\n", name,
+-				info->bus_min, info->bus_max);
++		printk(KERN_DEBUG "%s: %pR\n", name, &info->busn);
+ 	else
+-		printk(KERN_DEBUG "%s: [%02x, %02x] on node %x link %x\n", name,
+-			info->bus_min, info->bus_max, info->node, info->link);
++		printk(KERN_DEBUG "%s: %pR on node %x link %x\n", name,
++			&info->busn, info->node, info->link);
  
--	size = sizeof(*info.res) * info.res_num;
--	info.res = kmalloc(size, GFP_KERNEL);
--	if (!info.res)
-+	size = sizeof(*info->res) * info->res_num;
-+	info->res = kmalloc(size, GFP_KERNEL);
-+	if (!info->res)
- 		return;
- 
--	info.name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
--	if (!info.name)
-+	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
-+	if (!info->name)
- 		goto name_alloc_fail;
- 
--	info.res_num = 0;
-+	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
--				&info);
-+				info);
- 
- 	if (pci_use_crs) {
--		add_resources(&info);
-+		add_resources(info);
- 
- 		return;
- 	}
- 
--	kfree(info.name);
--
- name_alloc_fail:
--	kfree(info.res);
-+	free_pci_root_info(info);
- }
- 
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-+	struct pci_root_info info;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
- 	LIST_HEAD(resources);
-@@ -392,6 +398,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 	sd->domain = domain;
- 	sd->node = node;
-+	memset(&info, 0, sizeof(struct pci_root_info));
- 	/*
- 	 * Maybe the desired pci bus has been already scanned. In such case
- 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
-@@ -405,7 +412,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(sd);
- 	} else {
--		get_current_resources(device, busnum, domain, &resources);
-+		get_current_resources(&info, device, busnum, domain,
-+					&resources);
- 
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
-@@ -419,6 +427,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 			bus->subordinate = pci_scan_child_bus(bus);
- 		else
- 			pci_free_resource_list(&resources);
-+
-+		if (!bus && pci_use_crs)
-+			free_pci_root_info(&info);
- 	}
- 
- 	/* After the PCI-E bus has been walked and all devices discovered,
+ 	list_for_each_entry(root_res, &info->resources, list)
+ 		printk(KERN_DEBUG "%s: %02x %pR\n", name, busnum,
+diff --git a/arch/x86/pci/bus_numa.h b/arch/x86/pci/bus_numa.h
+index deada6a..f9919c3 100644
+--- a/arch/x86/pci/bus_numa.h
++++ b/arch/x86/pci/bus_numa.h
+@@ -13,8 +13,7 @@ struct pci_root_info {
+ 	struct list_head list;
+ 	char name[12];
+ 	struct list_head resources;
+-	int bus_min;
+-	int bus_max;
++	struct resource busn;
+ 	int node;
+ 	int link;
+ };
 -- 
 1.7.7
 
