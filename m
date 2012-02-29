@@ -1,127 +1,125 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 04/15] PCI: Add busn_res tracking in core
-Date: Wed,  1 Feb 2012 14:43:51 -0800
-Message-Id: <1328136242-17725-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:49082 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756841Ab2B2XCd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Feb 2012 18:02:33 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [PATCH] PCI / PCIe: Introduce command line option to disable ARI
+Date: Thu, 1 Mar 2012 00:06:33 +0100
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+References: <201202292309.42051.rjw@sisk.pl> <4F4EA7B1.9060607@xenotime.net>
+In-Reply-To: <4F4EA7B1.9060607@xenotime.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201203010006.33723.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-update pci_scan_root_bus, and pci_scan_bus to insert root bus busn into
-iobusn_resource tree.
+On Wednesday, February 29, 2012, Randy Dunlap wrote:
+> On 02/29/2012 02:09 PM, Rafael J. Wysocki wrote:
+> 
+> > From: Rafael J. Wysocki <rjw@sisk.pl>
+> > 
+> > There are PCIe devices on the market that report ARI support but
+> > then fail to initialize correctly when ARI is actually used.  This
+> > leads to situations in which kernels 2.6.34 and newer fail to handle
+> > systems where the previous kernels worked without any apparent
+> > problems.  Unfortunately, it is currently unknown how many such
+> > devices are there.
+> > 
+> > For this reason, introduce a new kernel command line option,
+> > pci=noari, allowing users to disable PCIe ARI altogether if they
+> > see problems with PCIe device initialization.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > ---
+> >  drivers/pci/pci.c |    7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > 
+> > Index: linux/drivers/pci/pci.c
+> > ===================================================================
+> > --- linux.orig/drivers/pci/pci.c
+> > +++ linux/drivers/pci/pci.c
+> > @@ -94,6 +94,9 @@ u8 pci_cache_line_size;
+> >   */
+> >  unsigned int pcibios_max_latency = 255;
+> >  
+> > +/* If set, the PCIe ARI capability will not be used. */
+> > +static bool pcie_ari_disabled;
+> 
+> 
+> Please update Documentation/kernel-parameters.txt .
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Ah, sorry for the omission, updated patch follows.
+
+Thanks,
+Rafael
+
 ---
- drivers/pci/probe.c  |   30 ++++++++++++++++++++++++++----
- drivers/pci/remove.c |    1 +
- include/linux/pci.h  |    4 ++++
- 3 files changed, 31 insertions(+), 4 deletions(-)
+From: Rafael J. Wysocki <rjw@sisk.pl>
+Subject: PCI / PCIe: Introduce command line option to disable ARI
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 957c2bc..79de0dd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1658,8 +1658,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 	release_resource(&b->busn_res);
- }
+There are PCIe devices on the market that report ARI support but
+then fail to initialize correctly when ARI is actually used.  This
+leads to situations in which kernels 2.6.34 and newer fail to handle
+systems where the previous kernels worked without any apparent
+problems.  Unfortunately, it is currently unknown how many such
+devices are there.
+
+For this reason, introduce a new kernel command line option,
+pci=noari, allowing users to disable PCIe ARI altogether if they
+see problems with PCIe device initialization.
+
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ Documentation/kernel-parameters.txt |    1 +
+ drivers/pci/pci.c                   |    7 ++++++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+Index: linux/drivers/pci/pci.c
+===================================================================
+--- linux.orig/drivers/pci/pci.c
++++ linux/drivers/pci/pci.c
+@@ -94,6 +94,9 @@ u8 pci_cache_line_size;
+  */
+ unsigned int pcibios_max_latency = 255;
  
--struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
-+		int bus_max, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources)
- {
- 	struct pci_bus *b;
++/* If set, the PCIe ARI capability will not be used. */
++static bool pcie_ari_disabled;
++
+ /**
+  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
+  * @bus: pointer to PCI bus structure to search
+@@ -1922,7 +1925,7 @@ void pci_enable_ari(struct pci_dev *dev)
+ 	u16 flags, ctrl;
+ 	struct pci_dev *bridge;
  
-@@ -1667,10 +1668,26 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 	if (!b)
- 		return NULL;
- 
-+	pci_bus_insert_busn_res(b, bus, bus_max);
- 	b->subordinate = pci_scan_child_bus(b);
- 	pci_bus_add_devices(b);
- 	return b;
- }
-+EXPORT_SYMBOL(pci_scan_root_bus_max);
-+
-+struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources)
-+{
-+	struct pci_bus *b;
-+
-+	b = pci_scan_root_bus_max(parent, bus, 255, ops, sysdata, resources);
-+
-+	if (b)
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+
-+	return b;
-+}
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
- /* Deprecated; use pci_scan_root_bus() instead */
-@@ -1683,9 +1700,11 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
-+	if (b) {
-+		pci_bus_insert_busn_res(b, bus, 255);
- 		b->subordinate = pci_scan_child_bus(b);
--	else
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+	} else
- 		pci_free_resource_list(&resources);
- 	return b;
- }
-@@ -1701,7 +1720,10 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
- 	pci_add_resource(&resources, &iomem_resource);
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
-+		pci_bus_insert_busn_res(b, bus, 255);
- 		b->subordinate = pci_scan_child_bus(b);
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+
- 		pci_bus_add_devices(b);
- 	} else {
- 		pci_free_resource_list(&resources);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index bd70f23..8056e6a 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- 
- 	down_write(&pci_bus_sem);
- 	list_del(&pci_bus->node);
-+	pci_bus_release_busn_res(pci_bus);
- 	up_write(&pci_bus_sem);
- 	if (!pci_bus->is_added)
+-	if (!pci_is_pcie(dev) || dev->devfn)
++	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
  		return;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3da935c..d5b6786 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -668,6 +668,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
-+struct pci_bus * __devinit pci_scan_root_bus_max(struct device *parent, int bus,
-+					     int busmax, struct pci_ops *ops,
-+					     void *sysdata,
-+					     struct list_head *resources);
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
--- 
-1.7.7
-
+ 
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI);
+@@ -3718,6 +3721,8 @@ static int __init pci_setup(char *str)
+ 				pci_realloc();
+ 			} else if (!strcmp(str, "nodomains")) {
+ 				pci_no_domains();
++			} else if (!strncmp(str, "noari", 5)) {
++				pcie_ari_disabled = true;
+ 			} else if (!strncmp(str, "cbiosize=", 9)) {
+ 				pci_cardbus_io_size = memparse(str + 9, &str);
+ 			} else if (!strncmp(str, "cbmemsize=", 10)) {
+Index: linux/Documentation/kernel-parameters.txt
+===================================================================
+--- linux.orig/Documentation/kernel-parameters.txt
++++ linux/Documentation/kernel-parameters.txt
+@@ -2111,6 +2111,7 @@ bytes respectively. Such letter suffixes
+ 				on: Turn ECRC on.
+ 		realloc		reallocate PCI resources if allocations done by BIOS
+ 				are erroneous.
++		noari		do not use PCIe ARI.
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
