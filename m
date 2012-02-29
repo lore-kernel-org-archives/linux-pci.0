@@ -1,143 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:37320 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755605Ab2BXDto (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2012 22:49:44 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>
-Subject: [PATCH 08/13] x86, irq: Make mp_register_ioapic could handle hotadd ioapic
-Date: Thu, 23 Feb 2012 19:48:54 -0800
-Message-Id: <1330055339-11662-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-References: <1330055339-11662-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 34/39] PCI: kill pci_fixup_parent_subordinate_busnr()
+Date: Wed, 29 Feb 2012 15:07:33 -0800
+Message-Id: <1330556858-11768-35-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-it will reserve irq block in allocated_irqs bit maps
-and irq_base will be used to get right irq for ioapic/pin or gsi.
+Now we can safely extend parent top and shrink them according iobusn_resource tree.
+
+Don't need that any more.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Suresh Siddha <suresh.b.siddha@intel.com>
 ---
- arch/x86/include/asm/mpspec.h  |    1 +
- arch/x86/kernel/apic/io_apic.c |   53 ++++++++++++++++++++++++++++++++-------
- 2 files changed, 44 insertions(+), 10 deletions(-)
+ drivers/pci/probe.c |   32 --------------------------------
+ 1 files changed, 0 insertions(+), 32 deletions(-)
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index 9c7d95f..aca26fa 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -96,6 +96,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
- 
- void __cpuinit generic_processor_info(int apicid, int version);
- #ifdef CONFIG_ACPI
-+int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				   u32 gsi);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 57ffa86..2e8497c 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -4080,7 +4080,7 @@ static __init int bad_ioapic(int idx, unsigned long address)
- 	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index f22a209..ba51902 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -639,22 +639,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
+ 	return child;
  }
  
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
- {
- 	int idx;
- 	int entries;
-@@ -4088,11 +4088,19 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 
- 	idx = mp_find_ioapic(gsi_base);
- 	if (idx >= 0)
+-static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
+-{
+-	struct pci_bus *parent = child->parent;
+-
+-	/* Attempts to fix that up are really dangerous unless
+-	   we're going to re-assign all bus numbers. */
+-	if (!pcibios_assign_all_busses())
 -		return;
-+		return -EINVAL;
- 
- 	idx = nr_ioapics;
-+	if (hotadd) {
-+		/* find free spot */
-+		for (idx = 0; idx < nr_ioapics; idx++)
-+			if (!ioapics[idx].nr_registers &&
-+			    ioapics[idx].mp_config.apicid == 0xff)
-+				break;
-+	}
-+
- 	if (bad_ioapic(idx, address))
--		return;
-+		return -EINVAL;
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
-@@ -4108,10 +4116,8 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
- 
--	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
--		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
--		return;
+-
+-	while (parent->parent && parent->subordinate < max) {
+-		parent->subordinate = max;
+-		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
+-		parent = parent->parent;
 -	}
-+	if (!entries || entries > MP_MAX_IOAPIC_PIN)
-+		goto failed;
+-}
+-
+ static void __devinit pci_bus_update_top(struct pci_bus *parent,
+ 		 long size, struct resource *parent_res)
+ {
+@@ -990,23 +974,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
  
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
-@@ -4122,15 +4128,42 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 */
- 	ioapics[idx].nr_registers = entries;
- 
--	if (gsi_cfg->gsi_end >= gsi_top)
--		gsi_top = gsi_cfg->gsi_end + 1;
-+	if (!hotadd) {
-+		/*
-+		 * irqs will be reserved in arch_early_irq_init()
-+		 * don't need to update gsi_top for hot add case
-+		 */
-+		if (gsi_cfg->gsi_end >= gsi_top)
-+			gsi_top = gsi_cfg->gsi_end + 1;
-+	} else {
-+		int irq = reserve_ioapic_gsi_irq_base(idx);
-+
-+		if (irq < 0)
-+			goto failed;
-+
-+		alloc_ioapic_saved_registers(idx);
-+	}
- 
- 	printk(KERN_INFO "IOAPIC[%d]: apic_id %d, version %d, address 0x%x, "
- 	       "GSI %d-%d\n", idx, mpc_ioapic_id(idx),
- 	       mpc_ioapic_ver(idx), mpc_ioapic_addr(idx),
- 	       gsi_cfg->gsi_base, gsi_cfg->gsi_end);
- 
--	nr_ioapics++;
-+	if (idx == nr_ioapics)
-+		nr_ioapics++;
-+
-+	return 0;
-+
-+failed:
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+	memset(&ioapics[idx], 0, sizeof(struct ioapic));
-+	ioapics[idx].mp_config.apicid = 0xff;
-+	return -EINVAL;
-+}
-+
-+void mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+{
-+	__mp_register_ioapic(id, address, gsi_base, false);
- }
- 
- /* Enable IOAPIC early just for system timer */
+ 		if (!is_cardbus) {
+ 			child->bridge_ctl = bctl;
+-			/*
+-			 * Adjust subordinate busnr in parent buses.
+-			 * We do this before scanning for children because
+-			 * some devices may not be detected if the bios
+-			 * was lazy.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+-			/* Now we can scan all subordinate buses... */
+ 			max = pci_scan_child_bus(child);
+-			/*
+-			 * now fix it up again since we have found
+-			 * the real value of max.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+-
+-		} else {
+-			pci_fixup_parent_subordinate_busnr(child, max);
+ 		}
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
 -- 
 1.7.7
 
