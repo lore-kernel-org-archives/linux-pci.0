@@ -1,56 +1,144 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <1328823358.2903.77.camel@pasglop>
-Subject: Re: [PATCH 09/24] PCI, powerpc: Register busn_res for root buses
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:25589 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932355Ab2B2XIY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 18:08:24 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Date: Fri, 10 Feb 2012 08:35:58 +1100
-In-Reply-To: <CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-	 <1328425088-6562-10-git-send-email-yinghai@kernel.org>
-	 <CAErSpo6BwznWf3rq4J2Ao+rrgR4yWqQ0mQGygkd2KmBuA1OD8g@mail.gmail.com>
-	 <1328738567.2903.45.camel@pasglop>
-	 <CAErSpo7ekGn-+Mnyz7KL=fVFH3Ed19AeE3MKkZWJ4bd0Jo7kCw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 03/39] x86, PCI: Fix memleak with get_current_resources
+Date: Wed, 29 Feb 2012 15:07:02 -0800
+Message-Id: <1330556858-11768-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-02-09 at 11:24 -0800, Bjorn Helgaas wrote:
-> My point is that the interface between the arch and the PCI core
-> should be simply the arch telling the core "this is the range of bus
-> numbers you can use."  If the firmware doesn't give you the HW limits,
-> that's the arch's problem.  If you want to assume 0..255 are
-> available, again, that's the arch's decision.
-> 
-> But the answer to the question "what bus numbers are available to me"
-> depends only on the host bridge HW configuration.  It does not depend
-> on what pci_scan_child_bus() found.  Therefore, I think we can come up
-> with a design where pci_bus_update_busn_res_end() is unnecessary.
+in pci_scan_acpi_root, when pci_use_crs is set, get_current_resources is used
+to get pci_root_info, and it will allocate name and res array.
 
-In an ideal world yes. In a world where there are reverse engineered
-platforms on which we aren't 100% sure how thing actually work under the
-hood and have the code just adapt on "what's there" (and try to fix it
-up -sometimes-), thinks can get a bit murky :-)
+later if pci_create_root_bus can not create bus (could be already there...)
+it will only free bus res list. but the name and res array is not freed.
 
-But yes, I see your point. As for what is the "correct" setting that
-needs to be done so that the patch doesn't end up a regression for us,
-I'll have to dig into some ancient HW to dbl check a few things. I hope
-0...255 will just work but I can't guarantee it.
+let get_current_resource take info pointer instead have local info.
 
-What I'll probably do is constraint the core to the values in
-hose->min/max, and update selected platforms to put 0..255 in there when
-I know for sure they can cope.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/acpi.c |   49 ++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 30 insertions(+), 19 deletions(-)
 
-Cheers,
-Ben.
-
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 7cc0a44..304ccf0 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -305,49 +305,55 @@ static void add_resources(struct pci_root_info *info)
+ 	}
+ }
+ 
++static void free_pci_root_info(struct pci_root_info *info)
++{
++	kfree(info->name);
++	kfree(info->res);
++	memset(info, 0, sizeof(struct pci_root_info));
++}
++
+ static void
+-get_current_resources(struct acpi_device *device, int busnum,
++get_current_resources(struct pci_root_info *info,
++		      struct acpi_device *device, int busnum,
+ 		      int domain, struct list_head *resources)
+ {
+-	struct pci_root_info info;
+ 	size_t size;
+ 
+-	info.bridge = device;
+-	info.res_num = 0;
+-	info.resources = resources;
++	info->bridge = device;
++	info->res_num = 0;
++	info->resources = resources;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+-				&info);
+-	if (!info.res_num)
++				info);
++	if (!info->res_num)
+ 		return;
+ 
+-	size = sizeof(*info.res) * info.res_num;
+-	info.res = kmalloc(size, GFP_KERNEL);
+-	if (!info.res)
++	size = sizeof(*info->res) * info->res_num;
++	info->res = kmalloc(size, GFP_KERNEL);
++	if (!info->res)
+ 		return;
+ 
+-	info.name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+-	if (!info.name)
++	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
++	if (!info->name)
+ 		goto name_alloc_fail;
+ 
+-	info.res_num = 0;
++	info->res_num = 0;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+-				&info);
++				info);
+ 
+ 	if (pci_use_crs) {
+-		add_resources(&info);
++		add_resources(info);
+ 
+ 		return;
+ 	}
+ 
+-	kfree(info.name);
+-
+ name_alloc_fail:
+-	kfree(info.res);
++	free_pci_root_info(info);
+ }
+ 
+ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
++	struct pci_root_info info;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
+ 	LIST_HEAD(resources);
+@@ -392,6 +398,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 	sd->domain = domain;
+ 	sd->node = node;
++	memset(&info, 0, sizeof(struct pci_root_info));
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -405,7 +412,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(sd);
+ 	} else {
+-		get_current_resources(device, busnum, domain, &resources);
++		get_current_resources(&info, device, busnum, domain,
++					&resources);
+ 
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+@@ -419,6 +427,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 			bus->subordinate = pci_scan_child_bus(bus);
+ 		else
+ 			pci_free_resource_list(&resources);
++
++		if (!bus && pci_use_crs)
++			free_pci_root_info(&info);
+ 	}
+ 
+ 	/* After the PCI-E bus has been walked and all devices discovered,
+-- 
+1.7.7
 
