@@ -8,79 +8,53 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 35/36] PCI: Double checking setting for bus register and bus struct.
-Date: Wed, 29 Feb 2012 19:00:36 -0800
-Message-Id: <1330570837-26638-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 18/39] PCI: default busn_resource
+Date: Wed, 29 Feb 2012 15:07:17 -0800
+Message-Id: <1330556858-11768-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-User could use setpci change bridge's bus register. that could make value of register
-and struct is out of sync.
-User later will use rescan to see the devices is moving.
-
-In the rescaning, we need to double check the range and remove the old struct at first.
-
-to make thing working user may need have script to remove children devices under bridge
-at first, and then use setpci update bus register and then rescan.
+We need to put into the resources list
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 40 insertions(+), 0 deletions(-)
+ drivers/pci/probe.c |    7 +++++++
+ include/linux/pci.h |    2 ++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 4a38ef4..67071b0 100644
+index 3bdc421..a4a20d6 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -850,6 +850,46 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 	    (primary != bus->number || secondary <= bus->number))
- 		broken = 1;
+@@ -15,6 +15,13 @@
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+ #define CARDBUS_RESERVE_BUSNR	3
  
-+	if (!pass && dev->subordinate) {
-+		child = dev->subordinate;
-+		/*
-+		 * User could change bus register in bridge manually with
-+		 * setpci and rescan. So double check the setting, and remove
-+		 * old structs.  Don't set broken yet, let following check
-+		 * to see if the new setting good.
-+		 */
-+		if (primary != child->primary ||
-+		    secondary != child->secondary ||
-+		    subordinate != child->subordinate) {
-+			dev_info(&dev->dev,
-+				"someone changed bus register from pri:%02x, sec:%02x, sub:%02x to pri:%02x, sec:%02x, sub:%02x\n",
-+				child->primary, child->secondary, child->subordinate,
-+				primary, secondary, subordinate);
-+			if (!list_empty(&dev->subordinate->devices)) {
-+				u32 old_buses;
++struct resource busn_resource = {
++	.name	= "PCI busn",
++	.start	= 0,
++	.end	= 255,
++	.flags	= IORESOURCE_BUS,
++};
 +
-+				dev_info(&dev->dev,
-+				 "but children devices are not removed manually before that.\n");
-+				/*
-+				 * Try best to remove left children devices
-+				 * but we need to set bus register back, otherwise
-+				 * We can not access children device and stop them
-+				 */
-+				old_buses = (buses & 0xff000000)
-+				   | ((unsigned int)(child->primary)     <<  0)
-+				   | ((unsigned int)(child->secondary)   <<  8)
-+				   | ((unsigned int)(child->subordinate) << 16);
-+				pci_write_config_dword(dev, PCI_PRIMARY_BUS,
-+							 old_buses);
-+				pci_stop_and_remove_behind_bridge(dev);
-+				pci_write_config_dword(dev, PCI_PRIMARY_BUS,
-+							 buses);
-+			}
-+			pci_remove_bus(dev->subordinate);
-+			dev->subordinate = NULL;
-+		}
-+	}
+ /* Ugh.  Need to stop exporting this to modules. */
+ LIST_HEAD(pci_root_buses);
+ EXPORT_SYMBOL(pci_root_buses);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d93d3ae..c40fc04 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -368,6 +368,8 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 	return (pdev->error_state != pci_channel_io_normal);
+ }
+ 
++extern struct resource busn_resource;
 +
- 	/* more strict checking */
- 	if (!pass && !broken && !dev->subordinate)
- 		broken = pci_bridge_check_busn_broken(bus, dev,
+ struct pci_host_bridge_window {
+ 	struct list_head list;
+ 	struct resource *res;		/* host bridge aperture (CPU address) */
 -- 
 1.7.7
 
