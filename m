@@ -1,59 +1,82 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo63hAtPMFdSEuVCcgw5ERMkiKx2Z8pREc2PdiCwmWpvkg@mail.gmail.com>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+	<1330556858-11768-40-git-send-email-yinghai@kernel.org>
+	<CAErSpo63hAtPMFdSEuVCcgw5ERMkiKx2Z8pREc2PdiCwmWpvkg@mail.gmail.com>
+Date: Wed, 29 Feb 2012 15:37:53 -0800
+Message-ID: <CAE9FiQUeRno4ZCy37XQ+cwrFYG-XoDq7q=XjKrOVy5E85bS-ig@mail.gmail.com>
+Subject: Re: [PATCH 39/39] x86, PCI: kill busn in acpi pci_root_info
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 07/22] PCI, powerpc: Register busn_res for root buses
-Date: Fri, 10 Feb 2012 20:06:10 -0800
-Message-Id: <1328933185-15154-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
-References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci-common.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+On Wed, Feb 29, 2012 at 3:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Feb 29, 2012 at 4:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Bjorn thought that we should just use that in acpi_root.
+>>
+>> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  arch/x86/pci/acpi.c |   19 ++++++-------------
+>>  1 files changed, 6 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index ff5243e..5178917 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -12,7 +12,6 @@ struct pci_root_info {
+>>        char name[16];
+>>        unsigned int res_num;
+>>        struct resource *res;
+>> -       struct resource busn;
+>>        struct pci_sysdata sd;
+>>  };
+>>
+>> @@ -283,9 +282,6 @@ static void add_resources(struct pci_root_info *info,
+>>        int i;
+>>        struct resource *res, *root, *conflict;
+>>
+>> -       if (info->busn.flags & IORESOURCE_BUS)
+>> -               pci_add_resource(resources, &info->busn);
+>> -
+>>        coalesce_windows(info, IORESOURCE_MEM);
+>>        coalesce_windows(info, IORESOURCE_IO);
+>>
+>> @@ -346,16 +342,12 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
+>>
+>>  static void
+>>  probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+>> -                   int busnum, int busmax, int domain)
+>> +                   int busnum, int domain)
+>>  {
+>>        size_t size;
+>>
+>>        sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+>>        info->bridge = device;
+>> -       info->busn.name = info->name;
+>> -       info->busn.start = busnum;
+>> -       info->busn.end = busmax;
+>> -       info->busn.flags = IORESOURCE_BUS;
+>
+> You just *added* this stuff in a prior patch that hasn't been merged
+> yet.  Why can't you just fix that series rather than doing the
+> add/remove churn?
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index cce98d7..501f29b 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1732,6 +1732,8 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	bus->secondary = hose->first_busno;
- 	hose->bus = bus;
- 
-+	pci_bus_insert_busn_res(bus, hose->first_busno, hose->last_busno);
-+
- 	/* Get probe mode and perform scan */
- 	mode = PCI_PROBE_NORMAL;
- 	if (node && ppc_md.pci_probe_mode)
-@@ -1742,8 +1744,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		of_scan_bus(node, bus);
- 	}
- 
--	if (mode == PCI_PROBE_NORMAL)
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
- 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, bus->subordinate);
-+	}
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
--- 
-1.7.7
+as i said before, I'm not quite sure about the life cycle about that object.
 
+still need to wait some months to verify that on system that does
+support pci root bus hot plug etc.
+
+or we can just this patch for now.
+
+Yinghai
