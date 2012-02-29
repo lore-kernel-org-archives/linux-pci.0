@@ -1,59 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 02/24] PCI: add busn inline helper
-Date: Sat,  4 Feb 2012 22:57:46 -0800
-Message-Id: <1328425088-6562-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 08/39] x86, PCI: add host bridge resource release for using _CRS
+Date: Wed, 29 Feb 2012 15:07:07 -0800
+Message-Id: <1330556858-11768-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-convert back and forth with busn and domain_nr/bus_nr
+1. allocate pci_root_info instead of use local stack. we need to pass around info
+   for release fn.
+2. add release_pci_root_info
+3. set x86 own host bridge release fn, so will make sure root bridge
+   related resources get freed during root bus removal.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- include/linux/ioport.h |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+ arch/x86/pci/acpi.c |   63 +++++++++++++++++++++++++++++++++++++++++---------
+ 1 files changed, 51 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 6fe9e19..f80c0cc 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -138,6 +138,23 @@ extern struct resource ioport_resource;
- extern struct resource iomem_resource;
- extern struct resource iobusn_resource;
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 763f7bb..c7a230f 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -305,11 +305,40 @@ static void add_resources(struct pci_root_info *info,
+ 	}
+ }
  
-+static inline int busn_domain_nr(resource_size_t busn)
-+{
-+	return busn >> 8;
-+}
-+static inline int busn_bus_nr(resource_size_t busn)
-+{
-+	return busn & 0xff;
-+}
-+static inline resource_size_t busn_update_bus_nr(resource_size_t busn, int b_nr)
-+{
-+	return (busn & ~0xff) | (b_nr & 0xff);
-+}
-+static inline resource_size_t busn(int d_nr, int b_nr)
-+{
-+	return  ((d_nr & 0xffff) << 8) | (b_nr & 0xff);
+-static void free_pci_root_info(struct pci_root_info *info)
++static void free_pci_root_info_res(struct pci_root_info *info)
+ {
+ 	kfree(info->name);
+ 	kfree(info->res);
+-	memset(info, 0, sizeof(struct pci_root_info));
++	info->res = NULL;
++	info->res_num = 0;
 +}
 +
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
- extern int release_resource(struct resource *new);
++static void __release_pci_root_info(struct pci_root_info *info)
++{
++	int i;
++	struct resource *res;
++
++	for (i = 0; i < info->res_num; i++) {
++		res = &info->res[i];
++
++		if (!res->parent)
++			continue;
++
++		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			continue;
++
++		release_resource(res);
++	}
++
++	free_pci_root_info_res(info);
++
++	kfree(info);
++}
++static void release_pci_root_info(struct pci_host_bridge *bridge)
++{
++	struct pci_root_info *info = bridge->release_data;
++
++	__release_pci_root_info(info);
+ }
+ 
+ static void
+@@ -342,7 +371,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+-	struct pci_root_info info;
++	struct pci_root_info *info = NULL;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
+ 	LIST_HEAD(resources);
+@@ -387,7 +416,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 	sd->domain = domain;
+ 	sd->node = node;
+-	memset(&info, 0, sizeof(struct pci_root_info));
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		kfree(sd);
++		printk(KERN_WARNING "pci_bus %04x:%02x: "
++		       "ignored (out of memory)\n", domain, busnum);
++		return NULL;
++	}
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -399,29 +434,33 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * be replaced by sd.
+ 		 */
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
++		kfree(info);
+ 		kfree(sd);
+ 	} else {
+-		probe_pci_root_info(&info, device, busnum, domain);
++		probe_pci_root_info(info, device, busnum, domain);
+ 
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+ 		if (pci_use_crs)
+-			add_resources(&info, &resources);
++			add_resources(info, &resources);
+ 		else {
+-			free_pci_root_info(&info);
++			free_pci_root_info_res(info);
+ 			x86_pci_root_bus_resources(busnum, &resources);
+ 		}
++
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+-		if (bus)
++		if (bus) {
+ 			bus->subordinate = pci_scan_child_bus(bus);
+-		else
++			pci_set_host_bridge_release(
++				to_pci_host_bridge(bus->bridge),
++				release_pci_root_info, info);
++		} else {
+ 			pci_free_resource_list(&resources);
+-
+-		if (!bus && pci_use_crs)
+-			free_pci_root_info(&info);
++			__release_pci_root_info(info);
++		}
+ 	}
+ 
+ 	/* After the PCI-E bus has been walked and all devices discovered,
 -- 
 1.7.7
 
