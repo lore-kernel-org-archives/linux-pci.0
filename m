@@ -1,88 +1,105 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: fix memleak for pci dev removing during hotplug
-Date: Sat, 11 Feb 2012 00:18:30 -0800
-Message-Id: <1328948310-14748-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1330556858-11768-40-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org> <1330556858-11768-40-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 29 Feb 2012 16:32:30 -0700
+Message-ID: <CAErSpo63hAtPMFdSEuVCcgw5ERMkiKx2Z8pREc2PdiCwmWpvkg@mail.gmail.com>
+Subject: Re: [PATCH 39/39] x86, PCI: kill busn in acpi pci_root_info
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-unreferenced object 0xffff880276d17700 (size 64):
-  comm "swapper/0", pid 1, jiffies 4294897182 (age 3976.028s)
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 18 f9 de 76 02 88 ff ff  ...........v....
-    10 00 00 00 0e 00 00 00 0f 28 40 00 00 00 00 00  .........(@.....
-  backtrace:
-    [<ffffffff81c8aede>] kmemleak_alloc+0x26/0x43
-    [<ffffffff811385f0>] __kmalloc+0x121/0x183
-    [<ffffffff813cf821>] pci_add_cap_save_buffer+0x35/0x7c
-    [<ffffffff813d12b7>] pci_allocate_cap_save_buffers+0x1d/0x65
-    [<ffffffff813cdb52>] pci_device_add+0x92/0xf1
-    [<ffffffff81c8afe6>] pci_scan_single_device+0x9f/0xa1
-    [<ffffffff813cdbd2>] pci_scan_slot.part.20+0x21/0x106
-    [<ffffffff813cdce2>] pci_scan_slot+0x2b/0x35
-    [<ffffffff81c8dae4>] __pci_scan_child_bus+0x51/0x107
-    [<ffffffff81c8d75b>] pci_scan_bridge+0x376/0x6ae
-    [<ffffffff81c8db60>] __pci_scan_child_bus+0xcd/0x107
-    [<ffffffff81c8dbab>] pci_scan_child_bus+0x11/0x2a
-    [<ffffffff81cca58c>] pci_acpi_scan_root+0x18b/0x21c
-    [<ffffffff81c916be>] acpi_pci_root_add+0x1e1/0x42a
-    [<ffffffff81406210>] acpi_device_probe+0x50/0x190
-    [<ffffffff814a0227>] really_probe+0x99/0x126
+On Wed, Feb 29, 2012 at 4:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Bjorn thought that we should just use that in acpi_root.
+>
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  arch/x86/pci/acpi.c |   19 ++++++-------------
+>  1 files changed, 6 insertions(+), 13 deletions(-)
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index ff5243e..5178917 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -12,7 +12,6 @@ struct pci_root_info {
+>        char name[16];
+>        unsigned int res_num;
+>        struct resource *res;
+> -       struct resource busn;
+>        struct pci_sysdata sd;
+>  };
+>
+> @@ -283,9 +282,6 @@ static void add_resources(struct pci_root_info *info,
+>        int i;
+>        struct resource *res, *root, *conflict;
+>
+> -       if (info->busn.flags & IORESOURCE_BUS)
+> -               pci_add_resource(resources, &info->busn);
+> -
+>        coalesce_windows(info, IORESOURCE_MEM);
+>        coalesce_windows(info, IORESOURCE_IO);
+>
+> @@ -346,16 +342,12 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
+>
+>  static void
+>  probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+> -                   int busnum, int busmax, int domain)
+> +                   int busnum, int domain)
+>  {
+>        size_t size;
+>
+>        sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+>        info->bridge = device;
+> -       info->busn.name = info->name;
+> -       info->busn.start = busnum;
+> -       info->busn.end = busmax;
+> -       info->busn.flags = IORESOURCE_BUS;
 
-Need to free saved_buffer for capabilities.
+You just *added* this stuff in a prior patch that hasn't been merged
+yet.  Why can't you just fix that series rather than doing the
+add/remove churn?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/pci.c   |    9 +++++++++
- drivers/pci/pci.h   |    1 +
- drivers/pci/probe.c |    1 +
- 3 files changed, 11 insertions(+)
-
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1225,6 +1225,7 @@ static void pci_release_capabilities(str
- {
- 	pci_vpd_release(dev);
- 	pci_iov_release(dev);
-+	pci_free_cap_save_buffers(dev);
- }
- 
- /**
-Index: linux-2.6/drivers/pci/pci.c
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.c
-+++ linux-2.6/drivers/pci/pci.c
-@@ -1916,6 +1916,15 @@ void pci_allocate_cap_save_buffers(struc
- 			"unable to preallocate PCI-X save buffer\n");
- }
- 
-+void pci_free_cap_save_buffers(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *tmp;
-+	struct hlist_node *pos, *n;
-+
-+	hlist_for_each_entry_safe(tmp, pos, n, &dev->saved_cap_space, next)
-+		kfree(tmp);
-+}
-+
- /**
-  * pci_enable_ari - enable ARI forwarding if hardware support it
-  * @dev: the PCI device
-Index: linux-2.6/drivers/pci/pci.h
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.h
-+++ linux-2.6/drivers/pci/pci.h
-@@ -73,6 +73,7 @@ extern int __pci_pme_wakeup(struct pci_d
- extern void pci_pm_init(struct pci_dev *dev);
- extern void platform_pci_wakeup_init(struct pci_dev *dev);
- extern void pci_allocate_cap_save_buffers(struct pci_dev *dev);
-+void pci_free_cap_save_buffers(struct pci_dev *dev);
- 
- static inline void pci_wakeup_event(struct pci_dev *dev)
- {
+>        info->res_num = 0;
+>        acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+> @@ -379,7 +371,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>        struct pci_root_info *info = NULL;
+>        int domain = root->segment;
+>        int busnum = root->secondary.start;
+> -       int busmax = root->secondary.end;
+>        LIST_HEAD(resources);
+>        struct pci_bus *bus;
+>        struct pci_sysdata *sd;
+> @@ -432,15 +423,17 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>                memcpy(bus->sysdata, sd, sizeof(*sd));
+>                kfree(info);
+>        } else {
+> -               probe_pci_root_info(info, device, busnum, busmax, domain);
+> +               probe_pci_root_info(info, device, busnum, domain);
+>
+>                /*
+>                 * _CRS with no apertures is normal, so only fall back to
+>                 * defaults or native bridge info if we're ignoring _CRS.
+>                 */
+> -               if (pci_use_crs)
+> +               if (pci_use_crs) {
+> +                       /* insert busn res at first */
+> +                       pci_add_resource(&resources,  &root->secondary);
+>                        add_resources(info, &resources);
+> -               else {
+> +               } else {
+>                        free_pci_root_info_res(info);
+>                        x86_pci_root_bus_resources(busnum, &resources);
+>                }
+> --
+> 1.7.7
+>
