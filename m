@@ -6,95 +6,77 @@ To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 10/24] x86, PCI: put busn resource in pci_root_info for acpi path
-Date: Tue, 28 Feb 2012 14:07:29 -0800
-Message-Id: <1330466863-28469-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
-References: <1330466863-28469-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 02/39] x86, PCI: have own version for pcibios_bus_to_resource
+Date: Wed, 29 Feb 2012 15:07:01 -0800
+Message-Id: <1330556858-11768-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will put it in resources list and pass it for create_root_bus
-
--v2: still have busn setting when no host bridge window setting from ACPI.
+x86 does not need to offset the address. So we can skip that costing offset
+searching.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/acpi.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
+ arch/x86/pci/i386.c       |   14 ++++++++++++++
+ drivers/pci/host-bridge.c |    9 +++++----
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 7538fad..2eafc2a 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,7 +12,7 @@ struct pci_root_info {
- 	char name[16];
- 	unsigned int res_num;
- 	struct resource *res;
--	int busnum;
-+	struct resource busn;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 33e6a0b..eeed28e 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -335,6 +335,20 @@ void __init pcibios_resource_survey(void)
+  */
+ fs_initcall(pcibios_assign_resources);
+ 
++void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
++			     struct resource *res)
++{
++	region->start = res->start;
++	region->end = res->end;
++}
++
++void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++			     struct pci_bus_region *region)
++{
++	res->start = region->start;
++	res->end = region->end;
++}
++
+ static const struct vm_operations_struct pci_mmap_ops = {
+ 	.access = generic_access_phys,
  };
- 
- static bool pci_use_crs = true;
-@@ -282,6 +282,9 @@ static void add_resources(struct pci_root_info *info,
- 	int i;
- 	struct resource *res, *root, *conflict;
- 
-+	if (info->busn.flags & IORESOURCE_BUS)
-+		pci_add_resource(resources, &info->busn);
-+
- 	coalesce_windows(info, IORESOURCE_MEM);
- 	coalesce_windows(info, IORESOURCE_IO);
- 
-@@ -339,11 +342,16 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
- 
- static void
- probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
--		    int busnum, int domain)
-+		    int busnum, int busmax, int domain)
- {
- 	size_t size;
- 
-+	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 	info->bridge = device;
-+	info->busn.start = busnum;
-+	info->busn.end = busmax;
-+	info->busn.flags = IORESOURCE_BUS;
-+
- 	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
- 				info);
-@@ -356,8 +364,6 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	if (!info->res)
- 		return;
- 
--	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
--
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 5ca4220..dfaff3f 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -38,8 +38,9 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+ 	return res1->start <= res2->start && res1->end >= res2->end;
  }
-@@ -368,6 +374,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_root_info *info = NULL;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
-+	int busmax = root->secondary.end;
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
-@@ -426,7 +433,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		kfree(info);
- 		kfree(sd);
- 	} else {
--		probe_pci_root_info(info, device, busnum, domain);
-+		probe_pci_root_info(info, device, busnum, busmax, domain);
  
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
++void __weak pcibios_resource_to_bus(struct pci_dev *dev,
++				    struct pci_bus_region *region,
++				    struct resource *res)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+@@ -66,8 +67,8 @@ static bool region_contains(struct pci_bus_region *region1,
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
++void __weak pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++				    struct pci_bus_region *region)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
 -- 
 1.7.7
 
