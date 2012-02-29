@@ -1,140 +1,114 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 02/18] PCI: add struct pci_host_bridge and a list of all
-	bridges found
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org
-Date: Thu, 09 Feb 2012 19:36:31 -0700
-Message-ID: <20120210023631.10311.37307.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43585 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030714Ab2B2RLz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 12:11:55 -0500
+Received: by yenl12 with SMTP id l12so1408841yen.19
+        for <linux-pci@vger.kernel.org>; Wed, 29 Feb 2012 09:11:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <7CA7CC8661C64A85926B8624168F24BA@SonyVAIO>
+References: <7CA7CC8661C64A85926B8624168F24BA@SonyVAIO>
+Date: Wed, 29 Feb 2012 09:11:54 -0800
+Message-ID: <CANEJEGs+tpLx539wtC0wLB=zu_o_3YkMfMk0QDiCo-_dHRM7aw@mail.gmail.com>
+Subject: Re: PCIe latency / your MMIO latency
+From: Grant Grundler <grantgrundler@gmail.com>
+To: Anton Murashov <anton.murashov@gmail.com>
+Cc: Robert.Olsson@data.slu.se, buytenh@wantstofly.org,
+	laforge@gnumonks.org, grundler@parisc-linux.org,
+	derbenev@quantstellation.ru, Evgeny Vasin <gevorr@gmail.com>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds a list of all PCI host bridges we find and a way to look up
-the host bridge from a pci_dev.
++linux-pci  [ re: http://svn.gnumonks.org/trunk/mmio_test/ ]
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |   39 ++++++++++++++++++++++++++++++++++-----
- include/linux/pci.h |    5 +++++
- 2 files changed, 39 insertions(+), 5 deletions(-)
+Hi Anton,
+Please CC linux-pci. mmio_test is a public tool - please use a public
+mailing list when asking for advice. Secondly, *current* linux pci
+expertise resides on this list.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index da0d655..2ffe8a3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -15,6 +15,8 @@
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
- #define CARDBUS_RESERVE_BUSNR	3
- 
-+static LIST_HEAD(pci_host_bridges);
-+
- /* Ugh.  Need to stop exporting this to modules. */
- LIST_HEAD(pci_root_buses);
- EXPORT_SYMBOL(pci_root_buses);
-@@ -42,6 +44,23 @@ int no_pci_devices(void)
- }
- EXPORT_SYMBOL(no_pci_devices);
- 
-+static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus;
-+	struct pci_host_bridge *bridge;
-+
-+	bus = dev->bus;
-+	while (bus->parent)
-+		bus = bus->parent;
-+
-+	list_for_each_entry(bridge, &pci_host_bridges, list) {
-+		if (bridge->bus == bus)
-+			return bridge;
-+	}
-+
-+	return NULL;
-+}
-+
- /*
-  * PCI Bus Class
-  */
-@@ -1526,20 +1545,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
- 	int error, i;
-+	struct pci_host_bridge *bridge;
- 	struct pci_bus *b, *b2;
- 	struct device *dev;
- 	struct pci_bus_resource *bus_res, *n;
- 	struct resource *res;
- 
-+	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-+	if (!bridge)
-+		return NULL;
-+
- 	b = pci_alloc_bus();
- 	if (!b)
--		return NULL;
-+		goto err_bus;
- 
- 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
--	if (!dev) {
--		kfree(b);
--		return NULL;
--	}
-+	if (!dev)
-+		goto err_dev;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
-@@ -1576,6 +1598,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	b->number = b->secondary = bus;
- 
-+	bridge->bus = b;
-+
- 	/* Add initial resources to the bus */
- 	list_for_each_entry_safe(bus_res, n, resources, list)
- 		list_move_tail(&bus_res->list, &b->resources);
-@@ -1591,6 +1615,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	}
- 
- 	down_write(&pci_bus_sem);
-+	list_add_tail(&bridge->list, &pci_host_bridges);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
- 
-@@ -1600,11 +1625,15 @@ class_dev_reg_err:
- 	device_unregister(dev);
- dev_reg_err:
- 	down_write(&pci_bus_sem);
-+	list_del(&bridge->list);
- 	list_del(&b->node);
- 	up_write(&pci_bus_sem);
- err_out:
- 	kfree(dev);
-+err_dev:
- 	kfree(b);
-+err_bus:
-+	kfree(bridge);
- 	return NULL;
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a16b1df..dfb2b64 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -388,6 +388,11 @@ static inline void pci_add_saved_cap(struct pci_dev *pci_dev,
- 	hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
- }
- 
-+struct pci_host_bridge {
-+	struct list_head list;
-+	struct pci_bus *bus;		/* root bus */
-+};
-+
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+On Tue, Feb 28, 2012 at 11:42 PM, Anton Murashov
+<anton.murashov@gmail.com> wrote:
+> Hello, Gents.
+>
+> I am writing to you because you are the authors of great MMIO tool.
+>
+> We are developing very latency-sensitive hardware/software complex and part
+> of this project is a very fast (=low-latency) interconnect between CPU and
+> PCIe card. Theoretically PCIe latency (non-posted read request – completion
+> or posted write-write pair from/to the device) should be around 250ns (=
+> 875 clock cycles @ our 3.5 Ghz CPU).
 
+How did you arrive at this theoretical number of 250ns? What did you consider?
+
+MMIO is measuring in CPU cycles (TSC) the time from CPU
+
+> Cache coherence and other issues can
+> vary this figure.
+
+MMIO space is generally non-coherent and uncached. Is that not true
+for your device?
+I'm wondering why cache coherency traffic should interfere with your
+measurement.
+
+> – but measuring real-world machine we`ve never got anything
+> even close to these 250ns. We tried different motherboards, different CPUs,
+> different slots within one motherboard, etc.
+
+Can you post chip set models/vendors and times measured so we can
+duplicate the results with other devices?
+
+> Results vary deadly – from 0.7 us to 2 us, what is much bigger figures than
+> we were expecting. More of that – this dispersion depending on particular
+> setup means that problem is not inside our hardware (actually, we tried
+> multiply hardware options as well) but in PCIe hardware / settings.
+
+0.7us-2us seems quite reasonable for PCIe MMIO read based on my
+previous experience. 700ns is about 4x-5x longer than an "open page"
+memory fetch.  250ns would be roughly 2x-3x a memory fetch. 250ns
+seems unrealistic given memory operations are generally all occur on
+one chip (crossing timing domains but all within one chip) and MMIO
+operations must traverse many more timing domains and "bridges".
+
+> So, my questions to you gents are:
+>
+> Do you have any experience with PCIe from this perspective?
+
+Not recently. See
+http://www.parisc-linux.org/~grundler/talks/ols_2002/4_6MMIO_Reads_are.html
+
+> Do you have ideas how to make it work around it`s theoretical 250ns? Have you ever seen
+> figures like this while working on MMIO or other things?
+
+No. I've never seen 250us PCIe MMIO read completion time. In general,
+to get those sorts of transaction times, one has to have a "flow" of
+transactions (ie all DMA, no MMIO reads or writes) and one can then
+just measure the time a device needs to DMA in a command queue and
+emit a completion message in another queue (CPU polled). And even with
+that, I'm skeptical the "round trip time" will be below ~400-500ns on
+conventional x86 HW.
+
+> We will really appreciate any comments from you regarding this issue. The
+> fact that you`ve written MMIO means you have a lot of great experience in
+> this filed!
+
+Uhm. Not really. It just means we were curious and wanted other people
+to help us measure MMIO access times.
+
+mmio_test is also an "education tool" so HW vendors become more aware
+of how expensive MMIO reads are and why they should design interfaces
+that do NOT use MMIO read in the "performance path".
+
+More "tips" on developing high performance PCI devices here:
+    "09_Advanced Programming Interfaces for PCI Devices"
+    http://www.pcisig.com/developers/main/training_materials/get_document?doc_id=00941b570381863f8cc97850d46c0597e919a34b
+
+cheers,
+grant
+
+>
+> Thank you!
+>
+> Kind regards,
+>         Anton.
