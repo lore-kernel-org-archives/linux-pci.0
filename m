@@ -1,79 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:38942 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354Ab2BPRtV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 12:49:21 -0500
-Received: by werb13 with SMTP id b13so1417542wer.19
-        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2012 09:49:20 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1329376076.7658.4.camel@joe2Laptop>
-References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
- <1329369296-4255-5-git-send-email-yinghai@kernel.org> <1329369930.5082.4.camel@joe2Laptop>
- <CAE9FiQUK8m5KKb0or59wH7BD6Eo5ddx9NaF7vszNeR0T3UYMRw@mail.gmail.com>
- <1329371019.5082.9.camel@joe2Laptop> <1329376076.7658.4.camel@joe2Laptop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Feb 2012 09:49:00 -0800
-Message-ID: <CAErSpo57hL9dFyFDvdEQcLKCPOeCh3MY3UCURvrXKPpA8W3y3A@mail.gmail.com>
-Subject: Re: [PATCH 4/4] PCI: quirk print dev name with duration
-To: Joe Perches <joe@perches.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Arjan van de Ven <arjan@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 17/39] x86, PCI: put busn resource in pci_root_info for acpi path
+Date: Wed, 29 Feb 2012 15:07:16 -0800
+Message-Id: <1330556858-11768-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 15, 2012 at 11:07 PM, Joe Perches <joe@perches.com> wrote:
-> On Wed, 2012-02-15 at 21:43 -0800, Joe Perches wrote:
->> On Wed, 2012-02-15 at 21:35 -0800, Yinghai Lu wrote:
->> > On Wed, Feb 15, 2012 at 9:25 PM, Joe Perches <joe@perches.com> wrote:
->> > > On Wed, 2012-02-15 at 21:14 -0800, Yinghai Lu wrote:
->> > >> So could find out which device is involved with the calling
->> > > []
->> > >> +++ linux-2.6/drivers/pci/quirks.c
->> > >> @@ -2854,14 +2854,15 @@ static void do_one_fixup_debug(void (*fn
->> > >>       ktime_t calltime, delta, rettime;
->> > >>       unsigned long long duration;
->> > >>
->> > >> -     printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
->> > >> +     printk(KERN_DEBUG "calling  %pF @ %i for %s\n",
->> > >> +                     fn, task_pid_nr(current), dev_name(&dev->dev));
->> > >
->> > > Might be better to use dev_dbg
->> > >
->> > >        dev_dbg(&dev->dev, "calling %pF @ %i\n", fn, task_pid_nr(current));
->> > >
->> > > []
->> > >
->> > >> -     printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
->> > >> -             duration);
->> > >> +     printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs for %s\n",
->> > >> +                     fn, duration, dev_name(&dev->dev));
->> > >
->> > >        dev_dbg(&dev->dev, "pci fixup %pF returned after %llu usecs\n",
->> > >                fn, duration);
->> > Not sure if that is going to break Arjan 's tool that analyze the boot time.
->> That depends on the tool code.
-> []
->> Do you have a link to the tool?
->
-> That tool would be scripts/bootgraph.pl and using
-> dev_dbg would break it unless it's adapted to the
-> change.  Your change seems fine for now.
+will put it in resources list and pass it for create_root_bus
 
-Since we're adding new functionality (analyzing quirk durations), I
-think it would be fair game to update the tool at the same time so it
-could parse the dev_dbg() format.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/acpi.c |   18 +++++++++++++-----
+ 1 files changed, 13 insertions(+), 5 deletions(-)
 
-For things related specifically to a device, we have a pretty good
-record of trying to use dev_*() consistently, so I do have a
-preference for continuing that.
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 2331ccb..ff5243e 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -12,7 +12,7 @@ struct pci_root_info {
+ 	char name[16];
+ 	unsigned int res_num;
+ 	struct resource *res;
+-	int busnum;
++	struct resource busn;
+ 	struct pci_sysdata sd;
+ };
+ 
+@@ -283,6 +283,9 @@ static void add_resources(struct pci_root_info *info,
+ 	int i;
+ 	struct resource *res, *root, *conflict;
+ 
++	if (info->busn.flags & IORESOURCE_BUS)
++		pci_add_resource(resources, &info->busn);
++
+ 	coalesce_windows(info, IORESOURCE_MEM);
+ 	coalesce_windows(info, IORESOURCE_IO);
+ 
+@@ -343,11 +346,17 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
+ 
+ static void
+ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+-		    int busnum, int domain)
++		    int busnum, int busmax, int domain)
+ {
+ 	size_t size;
+ 
++	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 	info->bridge = device;
++	info->busn.name = info->name;
++	info->busn.start = busnum;
++	info->busn.end = busmax;
++	info->busn.flags = IORESOURCE_BUS;
++
+ 	info->res_num = 0;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+ 				info);
+@@ -360,8 +369,6 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	if (!info->res)
+ 		return;
+ 
+-	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+-
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				info);
+ }
+@@ -372,6 +379,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_root_info *info = NULL;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
++	int busmax = root->secondary.end;
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+@@ -424,7 +432,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(info);
+ 	} else {
+-		probe_pci_root_info(info, device, busnum, domain);
++		probe_pci_root_info(info, device, busnum, busmax, domain);
+ 
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+-- 
+1.7.7
 
-If you do change, remember that dev_dbg() is different from
-printk(KERN_DEBUG) in that printk(KERN_DEBUG) is always compiled-in
-and always goes to the dmesg, but dev_dbg() is only compiled in when
-DEBUG is defined, so dev_printk(KERN_DEBUG) would be a more direct
-replacement for printk(KERN_DEBUG).
-
-Bjorn
