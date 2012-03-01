@@ -1,72 +1,145 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:46017 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754817Ab2BXWfe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2012 17:35:34 -0500
-Date: Fri, 24 Feb 2012 14:35:30 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/11] PCI: Add class support in quirk handling
-Message-ID: <20120224143530.14459752@jbarnes-desktop>
-In-Reply-To: <1330069619-14446-2-git-send-email-yinghai@kernel.org>
-References: <1330069619-14446-1-git-send-email-yinghai@kernel.org>
-	<1330069619-14446-2-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/myL8qmXQ3v77_Fybr464V/J"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 07/36] x86, PCI: add host bridge resource release for using _CRS
+Date: Wed, 29 Feb 2012 19:00:08 -0800
+Message-Id: <1330570837-26638-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/myL8qmXQ3v77_Fybr464V/J
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+1. allocate pci_root_info instead of use local stack. we need to pass around info
+   for release fn.
+2. add release_pci_root_info
+3. set x86 own host bridge release fn, so will make sure root bridge
+   related resources get freed during root bus removal.
 
-On Thu, 23 Feb 2012 23:46:49 -0800
-Yinghai Lu <yinghai@kernel.org> wrote:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/acpi.c |   63 +++++++++++++++++++++++++++++++++++++++++---------
+ 1 files changed, 51 insertions(+), 12 deletions(-)
 
-> Recently there is new support to make quirk calling will report duration =
-time.
-> That will boot log get more print out with initcall_debug is specified.
->=20
-> Found a lot of quirks are calling for not related devices.
->=20
-> Reason is quirk frame do not support class handling. So quirk code have to
-> use PCI_ANY_ID for vendor/device and let quirk code itself to check class
-> inside the func.
->=20
-> The patch add class and cls_shift into struct pci_fixup.
-> Also update related macro to accept the class and shift.
->=20
-> -v2: fix v1 that left over of sparated patch.
-> -v3: according to Jesse, change cls to class, cls_shift, to class_shift.
->=20
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 763f7bb..c7a230f 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -305,11 +305,40 @@ static void add_resources(struct pci_root_info *info,
+ 	}
+ }
+ 
+-static void free_pci_root_info(struct pci_root_info *info)
++static void free_pci_root_info_res(struct pci_root_info *info)
+ {
+ 	kfree(info->name);
+ 	kfree(info->res);
+-	memset(info, 0, sizeof(struct pci_root_info));
++	info->res = NULL;
++	info->res_num = 0;
++}
++
++static void __release_pci_root_info(struct pci_root_info *info)
++{
++	int i;
++	struct resource *res;
++
++	for (i = 0; i < info->res_num; i++) {
++		res = &info->res[i];
++
++		if (!res->parent)
++			continue;
++
++		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			continue;
++
++		release_resource(res);
++	}
++
++	free_pci_root_info_res(info);
++
++	kfree(info);
++}
++static void release_pci_root_info(struct pci_host_bridge *bridge)
++{
++	struct pci_root_info *info = bridge->release_data;
++
++	__release_pci_root_info(info);
+ }
+ 
+ static void
+@@ -342,7 +371,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+-	struct pci_root_info info;
++	struct pci_root_info *info = NULL;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
+ 	LIST_HEAD(resources);
+@@ -387,7 +416,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 	sd->domain = domain;
+ 	sd->node = node;
+-	memset(&info, 0, sizeof(struct pci_root_info));
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		kfree(sd);
++		printk(KERN_WARNING "pci_bus %04x:%02x: "
++		       "ignored (out of memory)\n", domain, busnum);
++		return NULL;
++	}
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -399,29 +434,33 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * be replaced by sd.
+ 		 */
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
++		kfree(info);
+ 		kfree(sd);
+ 	} else {
+-		probe_pci_root_info(&info, device, busnum, domain);
++		probe_pci_root_info(info, device, busnum, domain);
+ 
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+ 		if (pci_use_crs)
+-			add_resources(&info, &resources);
++			add_resources(info, &resources);
+ 		else {
+-			free_pci_root_info(&info);
++			free_pci_root_info_res(info);
+ 			x86_pci_root_bus_resources(busnum, &resources);
+ 		}
++
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+-		if (bus)
++		if (bus) {
+ 			bus->subordinate = pci_scan_child_bus(bus);
+-		else
++			pci_set_host_bridge_release(
++				to_pci_host_bridge(bus->bridge),
++				release_pci_root_info, info);
++		} else {
+ 			pci_free_resource_list(&resources);
+-
+-		if (!bus && pci_use_crs)
+-			free_pci_root_info(&info);
++			__release_pci_root_info(info);
++		}
+ 	}
+ 
+ 	/* After the PCI-E bus has been walked and all devices discovered,
+-- 
+1.7.7
 
-Applied these, thanks Yinghai.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/myL8qmXQ3v77_Fybr464V/J
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPSBCyAAoJEIEoDkX4Qk9hG6MP/RWmLp0cCVL40gE9KDsDwJH8
-3Ab+CGivGkeDFpBwDN3eyNPT94qHxgwVObpohxi+QPtUjpEKIKafglNbdYyRVa9O
-xxnc6+F12dTzxWnEWmU7R2VZmcI4RGTeUGxoRFoTvlGv2oEcIS08aCJEoco/XlrE
-e7CTWX+A9ZrUuXXtqZhY06R+JcKhOmAm392WmgMhqDllY5xXLdtNv+L08QZ9zaqh
-rRHW/RrWSuhNrcVFUUBVwRkxML5SFkjVCvgfxZ1GupC1Tv+Kq4HWO5piWs3gY2d4
-Y96ij7eDzMR7lhwUODRzYfPP1bUGwohbGSJEAra9b8rcCGCmwxPHuQ+AjyHjuv2u
-zg6qEHuDN++RQEOjPA9hcwRyr+ZUyb9ibSAuDz0q46DAknhpCsOtXd5SQ3BPFxNj
-oSfct+pnDvQbiwHbr+gfL/b0jNFBZWcHJFy6snqH3bP06MyHWAu7s9z8cHKBVltQ
-n5atbugxgILrHazo0s+PauaH2UtLVLMGEbeS0h8ZGszpxllKnwg5a5PfVTC9Vjm2
-cJZ5OtNsa5rudfi9lOuje33GaDcb+oe1Uc7SOlEPHPsCp7M78EyoleCjRi+t1p+F
-xT0GnoyrSLktPhAEi7uVbMkTcYMlUy6zHQuI5IAG4ETJJrz/5H4XEzWj04gd7XrO
-xGfq4TB1jn7qTDNS+q97
-=yHzM
------END PGP SIGNATURE-----
-
---Sig_/myL8qmXQ3v77_Fybr464V/J--
