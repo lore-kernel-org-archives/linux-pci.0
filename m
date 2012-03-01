@@ -1,42 +1,56 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 08/26] PCI, acpiphp: Use for_each_pci_dev_resource helper
-Date: Sun, 18 Mar 2012 22:48:31 -0700
-Message-Id: <1332136129-14010-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Date: Thu, 1 Mar 2012 12:07:50 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH] usb, PCI: split quirk for usb host controller to
+ three
+Message-ID: <20120301200750.GB5155@xanatos>
+References: <1330622227-4209-1-git-send-email-yinghai@kernel.org>
+ <20120301172435.GA8505@kroah.com>
+ <20120301190323.GA5155@xanatos>
+ <CAE9FiQXPi2VY+cVOxaQr=MBy_m3Dr0BKG6DRTCP1TrbuDcMCfg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQXPi2VY+cVOxaQr=MBy_m3Dr0BKG6DRTCP1TrbuDcMCfg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+On Thu, Mar 01, 2012 at 11:19:06AM -0800, Yinghai Lu wrote:
+> On Thu, Mar 1, 2012 at 11:03 AM, Sarah Sharp
+> <sarah.a.sharp@linux.intel.com> wrote:
+> > On Thu, Mar 01, 2012 at 09:24:35AM -0800, Greg Kroah-Hartman wrote:
+> >> On Thu, Mar 01, 2012 at 09:17:07AM -0800, Yinghai Lu wrote:
+> >> > so we avoid checking class again and again in that quirk.
+> >> >
+> >> > need to be applied after pci/linux-next and usb/usb-next
+> >>
+> >> As those are two independant trees, this needs to wait until after
+> >> 3.4-rc1 is out.
+> >>
+> >> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> >> >
+> >> > ---
+> >> >  drivers/usb/host/pci-quirks.c |   42 ++++++++++++++++++++++++++++--------------
+> >> >  1 file changed, 28 insertions(+), 14 deletions(-)
+> >>
+> >> Is this really helping anything here?  You added code overall :(
+> >
+> > I agree with Greg.  Why change this?  Does it shave off any boot time?
+> > Please show hard numbers for what improvements this makes.  I really
+> > don't want to change PCI init and break people's systems.
+> 
+> but your code make pci init change to call disable/enable for non-xhci
+> for fixing xhci problem.
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 9d781a7..90e68670d 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1025,10 +1025,10 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
- 	struct pci_dev *dev;
- 	int i;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
-+	struct resource *res;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
--		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
--			struct resource *res = &dev->resource[i];
-+		for_each_pci_dev_nobridge_resource(dev, res, i) {
- 			if ((res->flags & type_mask) && !res->start &&
- 					res->end) {
- 				/* Could not assign a required resources
--- 
-1.7.7
+We discussed this, and agreed it was safe to do so for all USB host
+controllers.  It's possible some other BIOS will disable the PCI host
+controller before handing it off to the OS, so we have to handle that
+case.  So it's fine that we enable/disable the device for all USB host
+controllers.  I tried to make sure we weren't enabling/disabling for
+non-USB PCI devices.
 
+Sarah Sharp
