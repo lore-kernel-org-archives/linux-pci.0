@@ -1,147 +1,69 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120210023631.10311.37307.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-	<20120210023631.10311.37307.stgit@bhelgaas.mtv.corp.google.com>
-Date: Thu, 9 Feb 2012 19:47:00 -0800
-Message-ID: <CAE9FiQXtYfcqjSKLxiYqgtMfqZts2kvM8G1M5Kw0VemmtvTBPA@mail.gmail.com>
-Subject: Re: [PATCH v2 02/18] PCI: add struct pci_host_bridge and a list of
- all bridges found
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 13/36] x86, PCI: allocate temp range array in amd_bus pci_root_info probing
+Date: Wed, 29 Feb 2012 19:00:14 -0800
+Message-Id: <1330570837-26638-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 9, 2012 at 6:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> This adds a list of all PCI host bridges we find and a way to look up
-> the host bridge from a pci_dev.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/probe.c |   39 ++++++++++++++++++++++++++++++++++-----
->  include/linux/pci.h |    5 +++++
->  2 files changed, 39 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index da0d655..2ffe8a3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -15,6 +15,8 @@
->  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
->  #define CARDBUS_RESERVE_BUSNR  3
->
-> +static LIST_HEAD(pci_host_bridges);
-> +
->  /* Ugh.  Need to stop exporting this to modules. */
->  LIST_HEAD(pci_root_buses);
->  EXPORT_SYMBOL(pci_root_buses);
-> @@ -42,6 +44,23 @@ int no_pci_devices(void)
->  }
->  EXPORT_SYMBOL(no_pci_devices);
->
-> +static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-> +{
-> +       struct pci_bus *bus;
-> +       struct pci_host_bridge *bridge;
-> +
-> +       bus = dev->bus;
-> +       while (bus->parent)
-> +               bus = bus->parent;
-> +
-> +       list_for_each_entry(bridge, &pci_host_bridges, list) {
-> +               if (bridge->bus == bus)
-> +                       return bridge;
-> +       }
-> +
-> +       return NULL;
-> +}
-> +
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/amd_bus.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
 
-so pci_host_bridge(dev) still is expensive.
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 5f30a98..aff155d 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -30,7 +30,7 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
+ 	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
+ };
+ 
+-#define RANGE_NUM 16
++#define RANGE_NUM 128
+ 
+ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ {
+@@ -64,7 +64,7 @@ static int __init early_fill_mp_bus_info(void)
+ 	u32 reg;
+ 	u64 start;
+ 	u64 end;
+-	struct range range[RANGE_NUM];
++	struct range *range;
+ 	u64 val;
+ 	u32 address;
+ 	bool found;
+@@ -125,7 +125,10 @@ static int __init early_fill_mp_bus_info(void)
+ 	reg = read_pci_config(bus, slot, 0, 0x64);
+ 	def_link = (reg >> 8) & 0x03;
+ 
+-	memset(range, 0, sizeof(range));
++	range = kcalloc(RANGE_NUM, sizeof(struct range), GFP_KERNEL);
++	if (!range)
++		return -ENOMEM;
++
+ 	add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
+ 	/* io port resource */
+ 	for (i = 0; i < 4; i++) {
+@@ -291,6 +294,8 @@ static int __init early_fill_mp_bus_info(void)
+ 		}
+ 	}
+ 
++	kfree(range);
++
+ 	print_all_pci_root_info("ht link", true);
+ 
+ 	return 0;
+-- 
+1.7.7
 
-
-
->  /*
->  * PCI Bus Class
->  */
-> @@ -1526,20 +1545,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->                struct pci_ops *ops, void *sysdata, struct list_head *resources)
->  {
->        int error, i;
-> +       struct pci_host_bridge *bridge;
->        struct pci_bus *b, *b2;
->        struct device *dev;
->        struct pci_bus_resource *bus_res, *n;
->        struct resource *res;
->
-> +       bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-> +       if (!bridge)
-> +               return NULL;
-> +
->        b = pci_alloc_bus();
->        if (!b)
-> -               return NULL;
-> +               goto err_bus;
->
->        dev = kzalloc(sizeof(*dev), GFP_KERNEL);
-> -       if (!dev) {
-> -               kfree(b);
-> -               return NULL;
-> -       }
-> +       if (!dev)
-> +               goto err_dev;
->
->        b->sysdata = sysdata;
->        b->ops = ops;
-> @@ -1576,6 +1598,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->
->        b->number = b->secondary = bus;
->
-> +       bridge->bus = b;
-> +
->        /* Add initial resources to the bus */
->        list_for_each_entry_safe(bus_res, n, resources, list)
->                list_move_tail(&bus_res->list, &b->resources);
-> @@ -1591,6 +1615,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->        }
->
->        down_write(&pci_bus_sem);
-> +       list_add_tail(&bridge->list, &pci_host_bridges);
->        list_add_tail(&b->node, &pci_root_buses);
->        up_write(&pci_bus_sem);
->
-> @@ -1600,11 +1625,15 @@ class_dev_reg_err:
->        device_unregister(dev);
->  dev_reg_err:
->        down_write(&pci_bus_sem);
-> +       list_del(&bridge->list);
->        list_del(&b->node);
->        up_write(&pci_bus_sem);
->  err_out:
->        kfree(dev);
-> +err_dev:
->        kfree(b);
-> +err_bus:
-> +       kfree(bridge);
->        return NULL;
->  }
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a16b1df..dfb2b64 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -388,6 +388,11 @@ static inline void pci_add_saved_cap(struct pci_dev *pci_dev,
->        hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
->  }
->
-> +struct pci_host_bridge {
-> +       struct list_head list;
-> +       struct pci_bus *bus;            /* root bus */
-> +};
-> +
-
-also still have two list: one for host bridges and one for root buses.
-
-Yinghai
