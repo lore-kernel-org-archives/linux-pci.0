@@ -1,66 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:45148 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754026Ab2BSWuf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Feb 2012 17:50:35 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: Fix device class print out
-Date: Sun, 19 Feb 2012 14:50:12 -0800
-Message-Id: <1329691812-23665-1-git-send-email-yinghai@kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:44047 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756596Ab2CAEcF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 23:32:05 -0500
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: "jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"Kay, Allen M" <allen.m.kay@intel.com>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Subject: [PATCH V3] Quirk for IVB graphics FLR errata
+Date: Thu, 1 Mar 2012 04:30:52 +0000
+Message-ID: <403610A45A2B5242BD291EDAE8B37D300FCDB487@SHSMSX102.ccr.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found debug print out about class is shifted.
+For IvyBridge Mobile platform, a system hang may occur if a FLR(Function Level Reset) is asserted to internal graphics.
 
-| pci 0000:f8:15.2: [8086:2b56] type 0 class 0x000600
+This quirk patch is workaround for the IVB FLR errata issue.
+We are disabling the FLR reset handshake between the PCH and CPU display, then manually powering down the panel power sequencing and resetting the PCH display.
 
-code is trying to print class with 6 digits, but use shifted class with 4 digits
-valid value as variable.
-
-Change to original dev->class directly.
-
-also remove not needed calculating of local variable class, because it will be
-updated after pci_fixup_device(pci_fixup_early...)
-
-Also unify type print out when class and header is not matched.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
+Reviewed-by: Xiantao Zhang <xiantao.zhang@intel.com>
 ---
- drivers/pci/probe.c |   12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/pci/quirks.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 53 insertions(+), 0 deletions(-)
 
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1125,12 +1125,10 @@ int pci_setup_device(struct pci_dev *dev
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index 6476547..c687218 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -27,6 +27,7 @@
+ #include <linux/pci-aspm.h>
+ #include <linux/ioport.h>
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
++#include <asm/tsc.h>
+ #include "pci.h"
  
- 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
- 	dev->revision = class & 0xff;
--	class >>= 8;				    /* upper 3 bytes */
--	dev->class = class;
--	class >>= 8;
-+	dev->class = class >> 8;		    /* upper 3 bytes */
+ /*
+@@ -3069,11 +3070,63 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
  
--	dev_printk(KERN_DEBUG, &dev->dev, "[%04x:%04x] type %d class %#08x\n",
--		   dev->vendor, dev->device, dev->hdr_type, class);
-+	dev_printk(KERN_DEBUG, &dev->dev, "[%04x:%04x] type %02x class %#08x\n",
-+		   dev->vendor, dev->device, dev->hdr_type, dev->class);
++#include "../gpu/drm/i915/i915_reg.h"
++#define MSG_CTL	0x45010
++static const int op_timeout = 10;	/* set timeout 10 seconds */
++
++static int reset_ivb_igd(struct pci_dev *dev, int probe) {
++	u8 *mmio_base;
++	u32 val;
++	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
++
++	if (probe)
++		return 0;
++
++	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
++				 pci_resource_len(dev, 0));
++	if (!mmio_base)
++		return -ENOMEM;
++
++	/* Work Around */
++	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
++	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
++	 * driver loaded sets the right bits. However, this's a reset and
++	 * the bits have been set by i915 previously, so we clobber
++	 * SOUTH_CHICKEN2 register directly here.
++	 */
++	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
++	val = *((u32 *)(mmio_base + PCH_PP_CONTROL)) & 0xfffffffe;
++	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
++	do {
++		cycles_t start_time = get_cycles();
++		while (1) {
++			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
++			if (((val & 0x80000000) == 0)
++				&& ((val & 0x30000000) == 0))
++				break;
++			if (cyc_op_timeout < (get_cycles() - start_time))
++				break;
++			cpu_relax();
++		}
++	} while (0);
++	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
++
++	iounmap(pci_resource_start(dev, 0));
++	return 0;
++}
++
+ #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
++#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
++#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
  
- 	/* need to have dev->class ready */
- 	dev->cfg_size = pci_cfg_space_size(dev);
-@@ -1212,8 +1210,8 @@ int pci_setup_device(struct pci_dev *dev
- 		return -EIO;
- 
- 	bad:
--		dev_err(&dev->dev, "ignoring class %02x (doesn't match header "
--			"type %02x)\n", class, dev->hdr_type);
-+		dev_err(&dev->dev, "ignoring class %#08x (doesn't match header "
-+			"type %02x)\n", dev->class, dev->hdr_type);
- 		dev->class = PCI_CLASS_NOT_DEFINED;
- 	}
- 
+ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+ 		 reset_intel_82599_sfp_virtfn },
++	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
++		reset_ivb_igd },
++	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
++		reset_ivb_igd },
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+ 		reset_intel_generic_dev },
+ 	{ 0 }
+--
+1.6.0.rc1
+
+
