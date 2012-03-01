@@ -1,84 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:29470 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161506Ab2CSFsG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:06 -0400
+Received: from rcsinet15.oracle.com ([148.87.113.117]:23013 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287Ab2CATZD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2012 14:25:03 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH -v3 29/47] PCI, ACPI: Add alloc_acpi_hp_work()
-Date: Sun, 18 Mar 2012 22:46:18 -0700
-Message-Id: <1332135996-13860-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [RFC PATCH 2/3] usb, PCI: remove disable/enable device with non-xhci quirk
+Date: Thu,  1 Mar 2012 11:24:02 -0800
+Message-Id: <1330629843-6027-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330629843-6027-1-git-send-email-yinghai@kernel.org>
+References: <1330629843-6027-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will use it with acpiphp and pci_root_hp events handling
+| commit cab928ee1f221c9cc48d6615070fefe2e444384a
+|    USB: Fix handoff when BIOS disables host PCI device.
+
+mention only need to do disable/enable for xhci controller.
+
+So just remove that for non-xhci controller and restore old behavior for them.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
+
 ---
- drivers/acpi/osl.c      |   21 +++++++++++++++++++++
- include/acpi/acpiosxf.h |    9 +++++++++
- 2 files changed, 30 insertions(+), 0 deletions(-)
+ drivers/usb/host/pci-quirks.c |   18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 412a1e0..fdcf4a5 100644
---- a/drivers/acpi/osl.c
-+++ b/drivers/acpi/osl.c
-@@ -1641,3 +1641,24 @@ acpi_status acpi_os_terminate(void)
+Index: linux-2.6/drivers/usb/host/pci-quirks.c
+===================================================================
+--- linux-2.6.orig/drivers/usb/host/pci-quirks.c
++++ linux-2.6/drivers/usb/host/pci-quirks.c
+@@ -889,13 +889,7 @@ static void __devinit quirk_usb_early_ha
+ 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+ 		return;
  
- 	return AE_OK;
+-	if (pci_enable_device(pdev) < 0) {
+-		dev_warn(&pdev->dev, "Can't enable PCI device, "
+-				"BIOS handoff failed.\n");
+-		return;
+-	}
+ 	quirk_usb_handoff_uhci(pdev);
+-	pci_disable_device(pdev);
  }
-+
-+void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
-+			void (*func)(struct work_struct *work))
-+{
-+	struct acpi_hp_work *hp_work;
-+	int ret;
-+
-+	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
-+	if (!hp_work)
-+		return;
-+
-+	hp_work->handle = handle;
-+	hp_work->type = type;
-+	hp_work->context = context;
-+
-+	INIT_WORK(&hp_work->work, func);
-+	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
-+	if (!ret)
-+		kfree(hp_work);
-+}
-+EXPORT_SYMBOL(alloc_acpi_hp_work);
-diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
-index 7c9aebe..62326ae 100644
---- a/include/acpi/acpiosxf.h
-+++ b/include/acpi/acpiosxf.h
-@@ -191,6 +191,15 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
-  */
- extern struct workqueue_struct *kacpi_hotplug_wq;
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_SERIAL_USB_UHCI, 0, quirk_usb_early_handoff_uhci);
+@@ -908,13 +902,7 @@ static void __devinit quirk_usb_early_ha
+ 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+ 		return;
  
-+struct acpi_hp_work {
-+	struct work_struct work;
-+	acpi_handle handle;
-+	u32 type;
-+	void *context;
-+};
-+void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
-+			void (*func)(struct work_struct *work));
-+
- acpi_thread_id acpi_os_get_thread_id(void);
+-	if (pci_enable_device(pdev) < 0) {
+-		dev_warn(&pdev->dev, "Can't enable PCI device, "
+-				"BIOS handoff failed.\n");
+-		return;
+-	}
+ 	quirk_usb_handoff_ohci(pdev);
+-	pci_disable_device(pdev);
+ }
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_SERIAL_USB_OHCI, 0, quirk_usb_early_handoff_ohci);
+@@ -924,13 +912,7 @@ static void __devinit quirk_usb_early_ha
+ 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+ 		return;
  
- acpi_status
--- 
-1.7.7
-
+-	if (pci_enable_device(pdev) < 0) {
+-		dev_warn(&pdev->dev, "Can't enable PCI device, "
+-				"BIOS handoff failed.\n");
+-		return;
+-	}
+ 	quirk_usb_handoff_ehci(pdev);
+-	pci_disable_device(pdev);
+ }
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_SERIAL_USB_EHCI, 0, quirk_usb_early_handoff_ehci);
