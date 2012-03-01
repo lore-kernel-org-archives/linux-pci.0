@@ -1,95 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:33773 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757699Ab2BAWoa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Feb 2012 17:44:30 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 03/15] PCI: Add busn_res operation functions
-Date: Wed,  1 Feb 2012 14:43:50 -0800
-Message-Id: <1328136242-17725-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-References: <1328136242-17725-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 22/36] x86, PCI: add busn into resources list for acpi path
+Date: Wed, 29 Feb 2012 19:00:23 -0800
+Message-Id: <1330570837-26638-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will use them insert/update busn res in pci_bus
+will put it in resources list and pass it for create_root_bus
 
+Bjorn thought that we should just use that in acpi_root.
+
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |   36 ++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 39 insertions(+), 0 deletions(-)
+ arch/x86/pci/acpi.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index a114173..957c2bc 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1622,6 +1622,42 @@ err_out:
- 	return NULL;
- }
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 2331ccb..5178917 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -12,7 +12,6 @@ struct pci_root_info {
+ 	char name[16];
+ 	unsigned int res_num;
+ 	struct resource *res;
+-	int busnum;
+ 	struct pci_sysdata sd;
+ };
  
-+void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
-+{
-+	struct resource *res = &b->busn_res;
-+	struct resource *parent_res = &iobusn_resource;
-+	int ret;
-+
-+	res->start = (pci_domain_nr(b) << 8) | bus;
-+	res->end = (pci_domain_nr(b) << 8) | bus_max;
-+	res->flags = IORESOURCE_BUS;
-+
-+	if (!pci_is_root_bus(b))
-+		parent_res = &b->parent->busn_res;
-+
-+	ret = insert_resource(parent_res, res);
-+
-+	dev_printk(KERN_DEBUG, &b->dev,
-+			"busn_res: %pR %s inserted under %pR\n",
-+			res, ret ? "can not be" : "is", parent_res);
-+}
-+
-+void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
-+{
-+	struct resource *res = &b->busn_res;
-+	struct resource old_res = *res;
-+
-+	res->end &= ~0xff;
-+	res->end |= bus_max;
-+	dev_printk(KERN_DEBUG, &b->dev, "busn_res: %pR end updated to %pR\n",
-+			&old_res, res);
-+}
-+
-+void pci_bus_release_busn_res(struct pci_bus *b)
-+{
-+	release_resource(&b->busn_res);
-+}
-+
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+@@ -347,7 +346,9 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
  {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 94ad468..3da935c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -665,6 +665,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
-+void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
-+void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
-+void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
+ 	size_t size;
+ 
++	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 	info->bridge = device;
++
+ 	info->res_num = 0;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+ 				info);
+@@ -360,8 +361,6 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	if (!info->res)
+ 		return;
+ 
+-	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+-
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				info);
+ }
+@@ -430,9 +429,11 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * _CRS with no apertures is normal, so only fall back to
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+-		if (pci_use_crs)
++		if (pci_use_crs) {
++                       /* insert busn res at first */
++			pci_add_resource(&resources,  &root->secondary);
+ 			add_resources(info, &resources);
+-		else {
++		} else {
+ 			free_pci_root_info_res(info);
+ 			x86_pci_root_bus_resources(busnum, &resources);
+ 		}
 -- 
 1.7.7
 
