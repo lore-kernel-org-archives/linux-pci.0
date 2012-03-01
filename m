@@ -1,39 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:40257 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752613Ab2BUQXX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Feb 2012 11:23:23 -0500
-From: Anthony PERARD <anthony.perard@citrix.com>
-To: linux-kernel@vger.kernel.org
-CC: Anthony PERARD <anthony.perard@citrix.com>,
-	linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Michael S . Tsirkin" <mst@redhat.com>,
-	QEMU-devel <qemu-devel@nongnu.org>
-Subject: PCI: Add PCI_EXP_TYPE_PCIE_BRIDGE value
-Date: Tue, 21 Feb 2012 16:22:10 +0000
-Message-ID: <1329841330-14902-1-git-send-email-anthony.perard@citrix.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 30/36] PCI: Strict checking of valid range for bridge
+Date: Wed, 29 Feb 2012 19:00:31 -0800
+Message-Id: <1330570837-26638-31-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Anthony PERARD <anthony.perard@citrix.com>
+children bridges busn range should be able to be allocated from parent bus range.
 
+to avoid overlapping between sibling bridges on same bus.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- include/linux/pci_regs.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/pci/probe.c |   24 ++++++++++++++++++++++++
+ 1 files changed, 24 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-index e41a10f..4b608f5 100644
---- a/include/linux/pci_regs.h
-+++ b/include/linux/pci_regs.h
-@@ -391,6 +391,7 @@
- #define  PCI_EXP_TYPE_UPSTREAM	0x5	/* Upstream Port */
- #define  PCI_EXP_TYPE_DOWNSTREAM 0x6	/* Downstream Port */
- #define  PCI_EXP_TYPE_PCI_BRIDGE 0x7	/* PCI/PCI-X Bridge */
-+#define  PCI_EXP_TYPE_PCIE_BRIDGE 0x8	/* PCI/PCI-X to PCIE Bridge */
- #define  PCI_EXP_TYPE_RC_END	0x9	/* Root Complex Integrated Endpoint */
- #define  PCI_EXP_TYPE_RC_EC	0xa	/* Root Complex Event Collector */
- #define PCI_EXP_FLAGS_SLOT	0x0100	/* Slot implemented */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c540022..5c031f0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -801,6 +801,30 @@ reduce_needed_size:
+ 	return ret;
+ }
+ 
++static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
++				struct pci_dev *dev,
++				int secondary, int subordinate)
++{
++	int broken = 0;
++
++	struct resource busn_res;
++	int ret;
++
++	memset(&busn_res, 0, sizeof(struct resource));
++	dev_printk(KERN_DEBUG, &dev->dev,
++		 "check if busn %02x-%02x is in busn_res: %pR\n",
++		 secondary, subordinate, &bus->busn_res);
++	ret = allocate_resource(&bus->busn_res, &busn_res,
++			 (subordinate - secondary + 1),
++			 secondary, subordinate,
++			 1, NULL, NULL);
++	if (ret)
++		broken = 1;
++	else
++		release_resource(&busn_res);
++
++	return broken;
++}
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
 -- 
-tg: (27e74da..) add-new-pci-value (depends on: master)
+1.7.7
+
