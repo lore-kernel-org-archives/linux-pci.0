@@ -1,112 +1,57 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 05/18] PCI: add generic pcibios_resource_to_bus()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org
-Date: Thu, 09 Feb 2012 19:36:46 -0700
-Message-ID: <20120210023646.10311.11159.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120210023424.10311.82445.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Date: Wed, 29 Feb 2012 16:27:43 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Subject: Re: [PATCH 39/39] x86, PCI: kill busn in acpi pci_root_info
+Message-ID: <20120229162743.49d78c21@jbarnes-x220>
+In-Reply-To: <20120229235128.GA5484@kroah.com>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+	<1330556858-11768-40-git-send-email-yinghai@kernel.org>
+	<CAErSpo63hAtPMFdSEuVCcgw5ERMkiKx2Z8pREc2PdiCwmWpvkg@mail.gmail.com>
+	<CAE9FiQUeRno4ZCy37XQ+cwrFYG-XoDq7q=XjKrOVy5E85bS-ig@mail.gmail.com>
+	<20120229235128.GA5484@kroah.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This replaces the generic versions of pcibios_resource_to_bus() and
-pcibios_bus_to_resource() in asm-generic/pci.h with versions that use
-pci_resource_to_bus() and pci_bus_to_resource().
+On Wed, 29 Feb 2012 15:51:28 -0800
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-The replacements are equivalent except that they can apply host
-bridge window offsets when the arch has supplied them by using
-pci_add_resource_offset().
+> On Wed, Feb 29, 2012 at 03:37:53PM -0800, Yinghai Lu wrote:
+> > On Wed, Feb 29, 2012 at 3:32 PM, Bjorn Helgaas
 
-Each arch can convert to using pci_add_resource_offset() individually by
-removing its device resource fixups from pcibios_fixup_bus() and supplying
-ARCH_HAS_GENERIC_PCI_OFFSETS.  ARCH_HAS_GENERIC_PCI_OFFSETS can be removed
-after all have converted.
+> > > You just *added* this stuff in a prior patch that hasn't been
+> > > merged yet.  Why can't you just fix that series rather than doing
+> > > the add/remove churn?
+> > 
+> > as i said before, I'm not quite sure about the life cycle about
+> > that object.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c       |   16 ++++++++++++++++
- include/asm-generic/pci.h |   24 +-----------------------
- include/linux/pci.h       |    4 ++++
- 3 files changed, 21 insertions(+), 23 deletions(-)
+I thought Bjorn figured that out for you in the last thread?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3ae6304..f3c503a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -118,6 +118,22 @@ void pci_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 	res->end = region->end + offset;
- }
- 
-+#ifdef ARCH_HAS_GENERIC_PCI_OFFSETS
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res)
-+{
-+	pci_resource_to_bus(dev, region, res);
-+}
-+EXPORT_SYMBOL(pcibios_resource_to_bus);
-+
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region)
-+{
-+	pci_bus_to_resource(dev, res, region);
-+}
-+EXPORT_SYMBOL(pcibios_bus_to_resource);
-+#endif
-+
- /*
-  * PCI Bus Class
-  */
-diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-index 26373cf..0410346 100644
---- a/include/asm-generic/pci.h
-+++ b/include/asm-generic/pci.h
-@@ -6,29 +6,7 @@
- #ifndef _ASM_GENERIC_PCI_H
- #define _ASM_GENERIC_PCI_H
- 
--/**
-- * pcibios_resource_to_bus - convert resource to PCI bus address
-- * @dev: device which owns this resource
-- * @region: converted bus-centric region (start,end)
-- * @res: resource to convert
-- *
-- * Convert a resource to a PCI device bus address or bus window.
-- */
--static inline void
--pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			 struct resource *res)
--{
--	region->start = res->start;
--	region->end = res->end;
--}
--
--static inline void
--pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			struct pci_bus_region *region)
--{
--	res->start = region->start;
--	res->end = region->end;
--}
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline struct resource *
- pcibios_select_root(struct pci_dev *pdev, struct resource *res)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 35ef2d1..a422217 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -668,6 +668,10 @@ void pci_fixup_cardbus(struct pci_bus *);
- 
- /* Generic PCI functions used internally */
- 
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res);
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region);
- void pcibios_scan_specific_bus(int busn);
- extern struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+> > 
+> > still need to wait some months to verify that on system that does
+> > support pci root bus hot plug etc.
+> > 
+> > or we can just this patch for now.
+> 
+> A statement like that would cause all of these patches to be instantly
+> deleted from any queue that I had control over, and I strongly
+> recommend that Jesse just ignore them all.
+> 
+> If you don't know this thing, then you have no right to change it,
+> flat out.  Why do we trust these patches from you?  I sure don't.
 
+Oh don't worry, this patch set isn't going upstream anytime soon.
+Bjorn has raised several good points that Yinghai has yet to
+address...  I trust Bjorn's judgment on these, so until he's happy I
+likely won't be merging them.
