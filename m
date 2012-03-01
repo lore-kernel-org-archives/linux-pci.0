@@ -1,117 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:64371 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756633Ab2C3S1i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2012 14:27:38 -0400
+Received: from mga14.intel.com ([143.182.124.37]:5758 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751976Ab2CARSV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Mar 2012 12:18:21 -0500
+Date: Thu, 01 Mar 2012 17:18:14 +0000
+From: tadeusz.struk@intel.com
+To: jbarnes@virtuousgeek.org
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org, tadeusz.struk@intel.com
+Subject: [PATCH] Added functionality that allows dynamically add and
+ remove device specific reset functions
+Message-ID: <4f4faf56.55WpOIn/0L6OUf5o%tadeusz.struk@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Date: Fri, 30 Mar 2012 11:27:37 -0700
-Message-ID: <CAE9FiQWydpUdy9NVZH23DQYovSFBkEX1gZPf9SwzN9nXyDQhMA@mail.gmail.com>
-Subject: Re: [PATCH 00/47] PCI, x86: pci root bus hotplug support
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: multipart/mixed; boundary=047d7b2eded3c32f7004bc79fe4f
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b2eded3c32f7004bc79fe4f
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+>From b4cf24d5987475862de799c78773f13f25ed2af8 Mon Sep 17 00:00:00 2001
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+Date: Tue, 17 Jan 2012 16:45:46 +0000
+Subject: [PATCH] Added functionality that allows dynamically add and remove
+ device specific reset functions
 
-On Sun, Mar 18, 2012 at 10:45 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> will add pci_stop_and_remove_bus() to support remove bus in
-> /sys/devices/pci.../pci_bus/...
->
-> To rescan root, need to
-> echo 1 > /sys/bus/pci/rescan_root
->
-> It supports acpi path root bus and legacy root bus.
->
-> This patcheset include some IOMM and dmar and pnpacpi fix with device ref=
-count leaking.
-> =A0 =A0 =A0 =A0also include some bus remove/rescan cleanup.
->
-> The patches need to apply to pci/for-linus and pci/linux-next
-> =A0 =A0 =A0 =A0[PATCH -v3] PCI: pci_host_bridge related cleanup
-> =A0 =A0 =A0 =A0[PATCH -v11] PCI: allocate pci bus num range for unassigne=
-d bridge busn
->
-> could get from
-> =A0 =A0 =A0 =A0git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linu=
-x-yinghai.git for-pci-root-bus-hotplug
->
-> -v2: Address most of Bjorn's review, except still keeping .../pci_bus/...=
-/remove
-> =A0 =A0 Separate pci root hot add support from acpiphp to pci_root_hp
-> =A0 =A0 add hot removal to pci_root_hp
-> -v3: Reordering the patches about /sys changes at last that Bjorn objects=
-.
-> =A0 =A0 Claim hw/fw allocated bus after root bus hot add.
-> =A0 =A0 add two patches for Jiang Liu about removal.
+I have a use case where I need to cleanup resource allocated for Virtual
+Functions after a guest OS that used it crashed. This cleanup needs to
+be done before the VF is being FLRed. The only possible way to do this
+seems to be by using pci_dev_specific_reset() function. Unfortunately
+this function only works for devices defined in a static table in the
+drivers/pci/quirks.c file. This patch changes it so that specific reset
+functions can be added and deleted dynamically.
 
-Add attached patch to the tree for making ioapic and iommu hotplug working.
+Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
 
-Thanks
+---
+ drivers/pci/pci.h    |   19 ++++++++++++++-
+ drivers/pci/quirks.c |   63 ++++++++++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 71 insertions(+), 11 deletions(-)
 
-Yinghai
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 1009a5e..10929d8 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -312,18 +312,35 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ extern void pci_enable_acs(struct pci_dev *dev);
+ 
+ struct pci_dev_reset_methods {
++	struct list_head list;
+ 	u16 vendor;
+ 	u16 device;
+ 	int (*reset)(struct pci_dev *dev, int probe);
+ };
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+-extern int pci_dev_specific_reset(struct pci_dev *dev, int probe);
++extern int
++pci_dev_specific_reset(struct pci_dev *dev, int probe);
++extern int
++pci_dev_specific_reset_add(const struct pci_dev_reset_methods *reset_method);
++extern int
++pci_dev_specific_reset_remove(const struct pci_dev_reset_methods *reset_method);
++
+ #else
+ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ {
+ 	return -ENOTTY;
+ }
++int
++pci_dev_specific_reset_add(const struct pci_dev_reset_methods *reset_method)
++{
++	return 0;
++}
++int
++pci_dev_specific_reset_remove(const struct pci_dev_reset_methods *reset_method)
++{
++	return 0;
++}
+ #endif
+ 
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6476547..963e527 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3070,26 +3070,69 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+ }
+ 
+ #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
++static struct pci_dev_reset_methods intel_82599_sfp_vf_reset = {
++	.vendor = PCI_VENDOR_ID_INTEL,
++	.device = PCI_DEVICE_ID_INTEL_82599_SFP_VF,
++	.reset = reset_intel_82599_sfp_virtfn,
++	.list = LIST_HEAD_INIT(intel_82599_sfp_vf_reset.list)
++} ;
+ 
+-static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+-	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+-		 reset_intel_82599_sfp_virtfn },
+-	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+-		reset_intel_generic_dev },
+-	{ 0 }
+-};
++static struct pci_dev_reset_methods intel_generic_reset = {
++	.vendor = PCI_VENDOR_ID_INTEL,
++	.device = PCI_ANY_ID,
++	.reset = reset_intel_generic_dev,
++	.list = LIST_HEAD_INIT(intel_generic_reset.list)
++} ;
++
++static DEFINE_SPINLOCK(reset_list_lock);
++static LIST_HEAD(reset_list);
++
++
++static int __init pci_dev_specific_reset_init(void)
++{
++	pci_dev_specific_reset_add(&intel_82599_sfp_vf_reset);
++	pci_dev_specific_reset_add(&intel_generic_reset);
++	return 0;
++}
++
++late_initcall(pci_dev_specific_reset_init);
++
++int
++pci_dev_specific_reset_add(const struct pci_dev_reset_methods *reset_method)
++{
++	if (reset_method && reset_method->reset) {
++		spin_lock(&reset_list_lock);
++		list_add((struct list_head *)&reset_method->list,
++			 &reset_list);
++		spin_unlock(&reset_list_lock);
++		return 0;
++	}
++	return -EINVAL;
++}
++EXPORT_SYMBOL(pci_dev_specific_reset_add);
++
++int
++pci_dev_specific_reset_remove(const struct pci_dev_reset_methods *reset_method)
++{
++	if (reset_method) {
++		spin_lock(&reset_list_lock);
++		list_del((struct list_head *)(&reset_method->list));
++		spin_unlock(&reset_list_lock);
++		return 0;
++	}
++	return -EINVAL;
++}
++EXPORT_SYMBOL(pci_dev_specific_reset_remove);
+ 
+ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ {
+ 	const struct pci_dev_reset_methods *i;
+-
+-	for (i = pci_dev_reset_methods; i->reset; i++) {
++	list_for_each_entry(i, &reset_list, list) {
+ 		if ((i->vendor == dev->vendor ||
+ 		     i->vendor == (u16)PCI_ANY_ID) &&
+ 		    (i->device == dev->device ||
+ 		     i->device == (u16)PCI_ANY_ID))
+ 			return i->reset(dev, probe);
+ 	}
+-
+ 	return -ENOTTY;
+ }
+-- 
+1.7.7.6
 
---047d7b2eded3c32f7004bc79fe4f
-Content-Type: application/octet-stream;
-	name="stop_pci_drivers_before_ioapic_dmar.patch"
-Content-Disposition: attachment;
-	filename="stop_pci_drivers_before_ioapic_dmar.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h0fkchcl0
+--------------------------------------------------------------
+Intel Shannon Limited
+Registered in Ireland
+Registered Office: Collinstown Industrial Park, Leixlip, County Kildare
+Registered Number: 308263
+Business address: Dromore House, East Park, Shannon, Co. Clare
 
-U3ViamVjdDogW1BBVENIXSBBQ1BJLCBQQ0k6IFN0b3AgcGNpIGRldmljZXMgYmVmb3JlIGFjcGlf
-cGNpX2RyaXZlciByZW1vdmUgY2FsbGluZwoKRHVyaW5nIHN0b3AgcGNpIGRyaXZlcnMsIGl0IHN0
-aWxsIG5lZWQgdG8gYWNjZXNzIGlvYXBpYyBhbmQgaW9tbXUuClNvIG5lZWQgdG8gbWFrZSBzdXJl
-IHRob3NlIGRyaXZlcnMgbmVlZCB0byBiZSBzdG9wIGF0IGZpcnN0LgoKQWxzbyBjaGFuZ2UgdGhl
-IGFjcGlfcGNpX2RyaXZlcnMgcmVtb3ZlIGNhbGxpbmcgc2VxdWVuY2UgdG8gcmV2ZXJzZS4KClNp
-Z25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVy
-cy9hY3BpL3BjaV9yb290LmMgfCAgIDExICsrKysrKystLS0tCiBkcml2ZXJzL3BjaS9yZW1vdmUu
-YyAgICB8ICAgIDIgKy0KIGluY2x1ZGUvbGludXgvcGNpLmggICAgIHwgICAgMSArCiAzIGZpbGVz
-IGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0y
-LjYvZHJpdmVycy9hY3BpL3BjaV9yb290LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcv
-ZHJpdmVycy9hY3BpL3BjaV9yb290LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL2FjcGkvcGNpX3Jv
-b3QuYwpAQCAtNjU3LDEwICs2NTcsNiBAQCBzdGF0aWMgaW50IGFjcGlfcGNpX3Jvb3RfcmVtb3Zl
-KHN0cnVjdCBhCiAKIAltdXRleF9sb2NrKCZhY3BpX3BjaV9yb290X2xvY2spOwogCi0JbGlzdF9m
-b3JfZWFjaF9lbnRyeShkcml2ZXIsICZhY3BpX3BjaV9kcml2ZXJzLCBub2RlKQotCQlpZiAoZHJp
-dmVyLT5yZW1vdmUpCi0JCQlkcml2ZXItPnJlbW92ZShyb290LT5kZXZpY2UtPmhhbmRsZSk7Ci0K
-IAkvKiB0aGF0IHJvb3QgYnVzIGNvdWxkIGJlIHJlbW92ZWQgYWxyZWFkeSAqLwogCWlmICghcGNp
-X2ZpbmRfYnVzKHJvb3QtPnNlZ21lbnQsIHJvb3QtPnNlY29uZGFyeS5zdGFydCkpIHsKIAkJZGV2
-X3ByaW50ayhLRVJOX0RFQlVHLCAmZGV2aWNlLT5kZXYsCkBAIC02NjgsNiArNjY0LDEzIEBAIHN0
-YXRpYyBpbnQgYWNwaV9wY2lfcm9vdF9yZW1vdmUoc3RydWN0IGEKIAkJZ290byBvdXQ7CiAJfQog
-CisJLyogc3RvcCBub3JtYWwgcGNpIGRyaXZlcnMgYmVmb3JlIHdlIHN0b3AgaW9hcGljIGFuZCBk
-bWFyIGV0YyAqLworCXBjaV9zdG9wX2J1c19kZXZpY2VzKHJvb3QtPmJ1cyk7CisKKwlsaXN0X2Zv
-cl9lYWNoX2VudHJ5X3JldmVyc2UoZHJpdmVyLCAmYWNwaV9wY2lfZHJpdmVycywgbm9kZSkKKwkJ
-aWYgKGRyaXZlci0+cmVtb3ZlKQorCQkJZHJpdmVyLT5yZW1vdmUocm9vdC0+ZGV2aWNlLT5oYW5k
-bGUpOworCiAJZGV2aWNlX3NldF9ydW5fd2FrZShyb290LT5idXMtPmJyaWRnZSwgZmFsc2UpOwog
-CXBjaV9hY3BpX3JlbW92ZV9idXNfcG1fbm90aWZpZXIoZGV2aWNlKTsKIApJbmRleDogbGludXgt
-Mi42L2RyaXZlcnMvcGNpL3JlbW92ZS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2Ry
-aXZlcnMvcGNpL3JlbW92ZS5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcmVtb3ZlLmMKQEAg
-LTExNyw3ICsxMTcsNyBAQCBzdGF0aWMgdm9pZCBfX3BjaV9yZW1vdmVfYnVzX2RldmljZXMoc3Ry
-CiAJCV9fcGNpX3JlbW92ZV9idXNfZGV2aWNlKGRldik7CiB9CiAKLXN0YXRpYyB2b2lkIHBjaV9z
-dG9wX2J1c19kZXZpY2VzKHN0cnVjdCBwY2lfYnVzICpidXMpCit2b2lkIHBjaV9zdG9wX2J1c19k
-ZXZpY2VzKHN0cnVjdCBwY2lfYnVzICpidXMpCiB7CiAJc3RydWN0IHBjaV9kZXYgKmRldiwgKnRt
-cDsKIApJbmRleDogbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKPT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0g
-bGludXgtMi42Lm9yaWcvaW5jbHVkZS9saW51eC9wY2kuaAorKysgbGludXgtMi42L2luY2x1ZGUv
-bGludXgvcGNpLmgKQEAgLTc4Miw2ICs3ODIsNyBAQCBleHRlcm4gdm9pZCBwY2lfZGV2X3B1dChz
-dHJ1Y3QgcGNpX2RldiAqCiBleHRlcm4gdm9pZCBwY2lfcmVtb3ZlX2J1cyhzdHJ1Y3QgcGNpX2J1
-cyAqYik7CiBleHRlcm4gdm9pZCBfX3BjaV9yZW1vdmVfYnVzX2RldmljZShzdHJ1Y3QgcGNpX2Rl
-diAqZGV2KTsKIGV4dGVybiB2b2lkIHBjaV9zdG9wX2FuZF9yZW1vdmVfYnVzX2RldmljZShzdHJ1
-Y3QgcGNpX2RldiAqZGV2KTsKK3ZvaWQgcGNpX3N0b3BfYnVzX2RldmljZXMoc3RydWN0IHBjaV9i
-dXMgKmJ1cyk7CiB2b2lkIHBjaV9zdG9wX2FuZF9yZW1vdmVfYnVzKHN0cnVjdCBwY2lfYnVzICpi
-dXMpOwogZXh0ZXJuIHZvaWQgcGNpX3N0b3BfYnVzX2RldmljZShzdHJ1Y3QgcGNpX2RldiAqZGV2
-KTsKIHZvaWQgcGNpX3NldHVwX2NhcmRidXMoc3RydWN0IHBjaV9idXMgKmJ1cyk7Cg==
---047d7b2eded3c32f7004bc79fe4f--
+This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). Any review or distribution by others is strictly prohibited. If you are not the intended recipient, please contact the sender and delete all copies.
+
+
