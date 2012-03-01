@@ -1,62 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25636 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024Ab2B1CEs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2012 21:04:48 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 00/11] PCI: pci_host_bridge related cleanup
-Date: Mon, 27 Feb 2012 18:03:40 -0800
-Message-Id: <1330394631-28978-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 32/36] PCI: kill pci_fixup_parent_subordinate_busnr()
+Date: Wed, 29 Feb 2012 19:00:33 -0800
+Message-Id: <1330570837-26638-33-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will add struct device dev into host_bridge struct.
+Now we can safely extend parent top and shrink them according iobusn_resource tree.
 
-also will add release support to make sure allocated resource get
-freed during root bus removal.
+Don't need that any more.
 
-The patches need to apply to pci/for-linus and pci/linux-next
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   32 --------------------------------
+ 1 files changed, 0 insertions(+), 32 deletions(-)
 
-because one patch that is needed only get into pci/for-linus only
-
-
-could get from
-
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-next
-
-
--v2: remove several null checking requested by Bjorn
-
-64c033c: x86, PCI: Merge root info printing for nocrs path
-690fe82: x86, PCI: Allocating pci_root_info for nocrs path
-2f7ea95: x86, PCI: embed name acpi version pci_root_info struct
-2f79741: x86, PCI: add host bridge resource release for using _CRS
-698ed24: x86, PCI: break down get_current_resource()
-5acc80e: PCI: add host bridge release support
-6068c94: PCI: add generic device into pci_host_bridge struct
-6d34e92: PCI: rename pci_host_bridge() to find_pci_root_bridge()
-bd114df: x86, PCI: Fix memleak with get_current_resources
-e92c582: x86, PCI: have own version for pcibios_bus_to_resource
-56f109d: PCI: Separate host_bridge code out from probe.c
-
-
-Thanks
-
-Yinghai Lu
-
- arch/x86/pci/acpi.c         |  116 +++++++++++++++++++++++-----------
- arch/x86/pci/amd_bus.c      |   78 +++++++----------------
- arch/x86/pci/broadcom_bus.c |   14 +---
- arch/x86/pci/bus_numa.c     |   86 +++++++++++++++++++-------
- arch/x86/pci/bus_numa.h     |   19 +++---
- arch/x86/pci/i386.c         |   14 ++++
- drivers/pci/Makefile        |    2 +-
- drivers/pci/host-bridge.c   |   97 +++++++++++++++++++++++++++++
- drivers/pci/probe.c         |  145 ++++++++++--------------------------------
- include/linux/pci.h         |    9 +++-
- 10 files changed, 334 insertions(+), 246 deletions(-)
- create mode 100644 drivers/pci/host-bridge.c
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index f22a209..ba51902 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -639,22 +639,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
+ 	return child;
+ }
+ 
+-static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
+-{
+-	struct pci_bus *parent = child->parent;
+-
+-	/* Attempts to fix that up are really dangerous unless
+-	   we're going to re-assign all bus numbers. */
+-	if (!pcibios_assign_all_busses())
+-		return;
+-
+-	while (parent->parent && parent->subordinate < max) {
+-		parent->subordinate = max;
+-		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
+-		parent = parent->parent;
+-	}
+-}
+-
+ static void __devinit pci_bus_update_top(struct pci_bus *parent,
+ 		 long size, struct resource *parent_res)
+ {
+@@ -990,23 +974,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ 		if (!is_cardbus) {
+ 			child->bridge_ctl = bctl;
+-			/*
+-			 * Adjust subordinate busnr in parent buses.
+-			 * We do this before scanning for children because
+-			 * some devices may not be detected if the bios
+-			 * was lazy.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+-			/* Now we can scan all subordinate buses... */
+ 			max = pci_scan_child_bus(child);
+-			/*
+-			 * now fix it up again since we have found
+-			 * the real value of max.
+-			 */
+-			pci_fixup_parent_subordinate_busnr(child, max);
+-
+-		} else {
+-			pci_fixup_parent_subordinate_busnr(child, max);
+ 		}
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+-- 
+1.7.7
 
