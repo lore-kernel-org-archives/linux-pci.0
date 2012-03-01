@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:33487 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758424Ab2CADDH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 22:03:07 -0500
+Received: from rcsinet15.oracle.com ([148.87.113.117]:34298 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758427Ab2CADDI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 22:03:08 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -11,67 +11,77 @@ To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 26/36] PCI, powerpc: Register busn_res for root buses
-Date: Wed, 29 Feb 2012 19:00:27 -0800
-Message-Id: <1330570837-26638-27-git-send-email-yinghai@kernel.org>
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 14/36] x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
+Date: Wed, 29 Feb 2012 19:00:15 -0800
+Message-Id: <1330570837-26638-15-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
 References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci-common.c      |   10 +++++++++-
- 2 files changed, 10 insertions(+), 1 deletions(-)
+Those two almost the same.
+Let pcibios_scan_root call pci_scan_bus_on_node instead.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 5d48765..11cebf0 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -30,6 +30,7 @@ struct pci_controller {
- 	int first_busno;
- 	int last_busno;
- 	int self_busno;
-+	struct resource busn;
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/common.c |   27 ++++-----------------------
+ 1 files changed, 4 insertions(+), 23 deletions(-)
+
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 323481e..8e04ec5 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -430,9 +430,7 @@ void __init dmi_check_pciprobe(void)
  
- 	void __iomem *io_base_virt;
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 910b9de..ee8c0c9 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1648,6 +1648,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	/* Wire up PHB bus resources */
- 	pcibios_setup_phb_resources(hose, &resources);
+ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ {
+-	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+-	struct pci_sysdata *sd;
  
-+	hose->busn.start = hose->first_busno;
-+	hose->busn.end	 = hose->last_busno;
-+	hose->busn.flags = IORESOURCE_BUS;
-+	pci_add_resource(&resources, &hose->busn);
-+
- 	/* Create an empty bus for the toplevel */
- 	bus = pci_create_root_bus(hose->parent, hose->first_busno,
- 				  hose->ops, hose, &resources);
-@@ -1670,8 +1675,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		of_scan_bus(node, bus);
+ 	while ((bus = pci_find_next_bus(bus)) != NULL) {
+ 		if (bus->number == busnum) {
+@@ -441,28 +439,10 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ 		}
  	}
  
--	if (mode == PCI_PROBE_NORMAL)
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
- 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, bus->subordinate);
-+	}
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
+-	/* Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+-	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
+-		printk(KERN_ERR "PCI: OOM, not probing PCI bus %02x\n", busnum);
+-		return NULL;
+-	}
+-
+-	sd->node = get_mp_bus_to_node(busnum);
+-
+-	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+-	x86_pci_root_bus_resources(busnum, &resources);
+-	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
+-	if (!bus) {
+-		pci_free_resource_list(&resources);
+-		kfree(sd);
+-	}
+-
+-	return bus;
++	return pci_scan_bus_on_node(busnum, &pci_root_ops,
++					get_mp_bus_to_node(busnum));
+ }
++
+ void __init pcibios_set_cache_line_size(void)
+ {
+ 	struct cpuinfo_x86 *c = &boot_cpu_data;
+@@ -656,6 +636,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	}
+ 	sd->node = node;
+ 	x86_pci_root_bus_resources(busno, &resources);
++	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+ 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
+ 	if (!bus) {
+ 		pci_free_resource_list(&resources);
 -- 
 1.7.7
 
