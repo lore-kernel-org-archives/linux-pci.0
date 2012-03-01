@@ -1,41 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33106 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753943Ab2BCQTF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:19:05 -0500
-From: Oliver Neukum <oneukum@suse.de>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] USB:xhci: fix port switching on PantherPoint
-Date: Fri, 3 Feb 2012 17:21:22 +0100
-Cc: linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Takashi Iwai <tiwai@suse.de>, trenn@suse.de,
-	linux-pci@vger.kernel.org, Michal Marek <MMarek@suse.com>
-References: <Pine.LNX.4.44L0.1202031015360.1598-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1202031015360.1598-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201202031721.22474.oneukum@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 20/36] PCI: default busn_resource
+Date: Wed, 29 Feb 2012 19:00:21 -0800
+Message-Id: <1330570837-26638-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, 3. Februar 2012, 16:16:58 schrieb Alan Stern:
-> On Fri, 3 Feb 2012, Oliver Neukum wrote:
-> 
-> > From be9bdcf88b2974cfe95c1afea327b46135b65391 Mon Sep 17 00:00:00 2001
-> > From: Oliver Neukum <oliver@neukum.org>
-> > Date: Fri, 3 Feb 2012 12:01:12 +0100
-> > Subject: [PATCH] USB:xhci: fix port switching on PantherPoint
-> > 
-> > The quirks of XHCI were called to early so that the
-> > PCI device hadn't been enabled and the quirk handler bailed out.
-> > The fix is to call it later.
-> 
-> I don't understand.  How can PCI_FIXUP_FINAL be too late?  And if it 
-> is, why do all the other BIOS-handover routines work okay?
+We need to put into the resources list
 
-I don't understand it either. I can only report experimental findings.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    7 +++++++
+ include/linux/pci.h |    2 ++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-	Regards
-		Oliver
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6f3bdbc..1149109 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -15,6 +15,13 @@
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+ #define CARDBUS_RESERVE_BUSNR	3
+ 
++struct resource busn_resource = {
++	.name	= "PCI busn",
++	.start	= 0,
++	.end	= 255,
++	.flags	= IORESOURCE_BUS,
++};
++
+ /* Ugh.  Need to stop exporting this to modules. */
+ LIST_HEAD(pci_root_buses);
+ EXPORT_SYMBOL(pci_root_buses);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e494759..40606c1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -368,6 +368,8 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 	return (pdev->error_state != pci_channel_io_normal);
+ }
+ 
++extern struct resource busn_resource;
++
+ struct pci_host_bridge_window {
+ 	struct list_head list;
+ 	struct resource *res;		/* host bridge aperture (CPU address) */
+-- 
+1.7.7
+
