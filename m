@@ -1,133 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:48888 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754179Ab2BANCS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Feb 2012 08:02:18 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <svaidy@linux.vnet.ibm.com>;
-	Wed, 1 Feb 2012 12:56:31 +1000
-Date: Wed, 1 Feb 2012 18:32:06 +0530
-From: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [BUGFIX][PATCH] pci: check for 4k resource_size alignment in
- sriov_init
-Message-ID: <20120201130206.GD3510@dirshya.in.ibm.com>
-Reply-To: svaidy@linux.vnet.ibm.com
-References: <20120127191032.GA22999@dirshya.in.ibm.com>
- <20120130031845.GA2359@ram-ThinkPad-T61>
- <20120131174402.GA6172@dirshya.in.ibm.com>
- <20120201062145.GA11505@ram-ThinkPad-T61>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20120201062145.GA11505@ram-ThinkPad-T61>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 23/36] x86, PCI: put busn resource in pci_root_info for no_crs path
+Date: Wed, 29 Feb 2012 19:00:24 -0800
+Message-Id: <1330570837-26638-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Ram Pai <linuxram@us.ibm.com> [2012-02-01 14:21:45]:
+will put it in resources list and pass it for create_root_bus
 
-> On Tue, Jan 31, 2012 at 11:14:02PM +0530, Vaidyanathan Srinivasan wrote:
-> > * Ram Pai <linuxram@us.ibm.com> [2012-01-30 11:18:45]:
-> > 
-> > > On Sat, Jan 28, 2012 at 12:40:32AM +0530, Vaidyanathan Srinivasan wrote:
-> > > > Hi Ram and Jesse,
-> > > > 
-> > > > I found a trivial issue with page size alignment check on IBM POWER
-> > > > box with 64k base page size.  In sriov_init(), changing the check from
-> > > > PAGE_SIZE (arch and config dependent) to HW_PAGE_SIZE (always 4k) was
-> > > > required to use one of the sriov adapter as PF since the
-> > > > resource_size() comes up as 0x8000 and PAGE_SIZE would be 0x10000 for
-> > > > pseries boxes.
-> > > > 
-> > > > I think resource_size() could be less than SystemPageSize, but I would
-> > > > like your comments/ack/nack on any consequences of checking for only
-> > > > 4k alignment here in a system with larger base page size.
-> > > 
-> > > As per the SRIOV specs, the  resource has to be System page size aligned.
-> > > 
-> > > PFs are required to support 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB
-> > > page sizes. In your case if your adapter's PF is not supporting 64K page size
-> > > then I think it is not conforming to the PCI SRIOV spec.
-> > 
-> > Hi Ram,
-> > 
-> > Thanks for the pointer.  I did some more experiments and found that
-> > the card does support 64k page size, but the PCI_SRIOV_SYS_PGSIZE was
-> > set to default 4k when we do the query and check resource_size().
-> > 
-> > You were correct, the resource_size() has to come up with 64k on 64k
-> > PAGE_SIZE system.  We should not change that check.  I was able to
-> > get a working solution by setting PCI_SRIOV_SYS_PGSIZE to 64k before
-> > we do the query.
-> > 
-> > This was the case in the original code before you moved these to
-> > sriov_enable().  If it is ok to leave the SYS_PGSIZE setting in
-> > sriov_init(), then I have the following fix that works for me.
-> > 
-> > Please review and let me know your comments.
-> > 
-> > Thanks,
-> > Vaidy
-> > ---
-> > 
-> >     	pci: set pci sriov page size before reading sriov bar
-> >     
-> >     	For an SRIOV device, PCI_SRIOV_SYS_PGSIZE should be set before
-> >     	the PCI_SRIOV_BAR is queried.  The sys pagesize defaults to 4k,
-> >     	so this change is required on powerpc box with 64k base page size.
-> >     
-> >     	This is a regression caused due to moving SRIOV init to sriov_enable().
-> >     
-> >     	| commit afd24ece5c76af87f6fc477f2747b83a764f161c
-> >     	| Author: Ram Pai <linuxram@us.ibm.com>
-> >     
-> >     	| PCI: delay configuration of SRIOV capability
-> >     	| The SRIOV capability, namely page size and total_vfs of a device are
-> >     	| configured during enumeration phase of the device.  This can potentially
-> >     	| interfere with the PCI operations of the platform, if the IOV capability
-> >     	| of the device is not enabled.
-> >     
-> >     Signed-off-by: Vaidyanathan Srinivasan <svaidy@linux.vnet.ibm.com>
-> > 
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > index 0321fa3..0dab5ec 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -347,8 +347,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> >  			return rc;
-> >  	}
-> > 
-> > -	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
-> > -
-> >  	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
-> >  	pci_cfg_access_lock(dev);
-> >  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> > @@ -466,6 +464,7 @@ found:
-> >  		return -EIO;
-> > 
-> >  	pgsz &= ~(pgsz - 1);
-> > +	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
-> > 
-> >  	nres = 0;
-> >  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> 
-> 
-> ACK. I think it is better to revert  afd24ece5c76af87f6fc477f2747b83a764f161c.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/amd_bus.c  |    1 -
+ arch/x86/pci/bus_numa.c |   22 ++++++++++++++--------
+ arch/x86/pci/bus_numa.h |    3 +--
+ 3 files changed, 15 insertions(+), 11 deletions(-)
 
-Hi Ram,
-
-Thanks for the ack.  But afd24ece5c76af87f6fc477f2747b83a764f161c has
-one more change of moving 
-pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, total) to sriov_enable().
-
-This change is required so that we set the PCI_SRIOV_NUM_VF only
-during sriov_enable.
-
-So we should not revert the entire commit, we can just add this change.
-
---Vaidy
-
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index aff155d..03397ea 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -116,7 +116,6 @@ static int __init early_fill_mp_bus_info(void)
+ 		link = (reg >> 8) & 0x03;
+ 
+ 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+-		sprintf(info->name, "PCI Bus #%02x", min_bus);
+ 	}
+ 
+ 	/* get the default node and link for left over res */
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index 772949f..b5b9d91 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -14,7 +14,7 @@ static struct pci_root_info *x86_find_pci_root_info(int bus)
+ 		return NULL;
+ 
+ 	list_for_each_entry(info, &pci_root_infos, list)
+-		if (info->bus_min == bus)
++		if (info->busn.start == bus)
+ 			return info;
+ 
+ 	return NULL;
+@@ -31,6 +31,8 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
+ 	       bus);
+ 
++	pci_add_resource(resources, &info->busn);
++
+ 	list_for_each_entry(root_res, &info->resources, list) {
+ 		struct resource *res;
+ 		struct resource *root;
+@@ -54,6 +56,7 @@ default_resources:
+ 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
+ 	pci_add_resource(resources, &ioport_resource);
+ 	pci_add_resource(resources, &iomem_resource);
++	pci_add_resource(resources, &busn_resource);
+ }
+ 
+ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+@@ -66,9 +69,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+ 	if (!info)
+ 		return info;
+ 
++	sprintf(info->name, "PCI Bus #%02x", bus_min);
++
+ 	INIT_LIST_HEAD(&info->resources);
+-	info->bus_min = bus_min;
+-	info->bus_max = bus_max;
++	info->busn.name  = info->name;
++	info->busn.start = bus_min;
++	info->busn.end   = bus_max;
++	info->busn.flags = IORESOURCE_BUS;
+ 	info->node = node;
+ 	info->link = link;
+ 
+@@ -80,14 +87,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+ void print_pci_root_info(struct pci_root_info *info, char *name, bool nodelink)
+ {
+ 	struct pci_root_res *root_res;
+-	int busnum = info->bus_min;
++	int busnum = info->busn.start;
+ 
+ 	if (!nodelink)
+-		printk(KERN_DEBUG "%s: [%02x, %02x]\n", name,
+-				info->bus_min, info->bus_max);
++		printk(KERN_DEBUG "%s: %pR\n", name, &info->busn);
+ 	else
+-		printk(KERN_DEBUG "%s: [%02x, %02x] on node %x link %x\n", name,
+-			info->bus_min, info->bus_max, info->node, info->link);
++		printk(KERN_DEBUG "%s: %pR on node %x link %x\n", name,
++			&info->busn, info->node, info->link);
+ 
+ 	list_for_each_entry(root_res, &info->resources, list)
+ 		printk(KERN_DEBUG "%s: %02x %pR\n", name, busnum,
+diff --git a/arch/x86/pci/bus_numa.h b/arch/x86/pci/bus_numa.h
+index deada6a..f9919c3 100644
+--- a/arch/x86/pci/bus_numa.h
++++ b/arch/x86/pci/bus_numa.h
+@@ -13,8 +13,7 @@ struct pci_root_info {
+ 	struct list_head list;
+ 	char name[12];
+ 	struct list_head resources;
+-	int bus_min;
+-	int bus_max;
++	struct resource busn;
+ 	int node;
+ 	int link;
+ };
+-- 
+1.7.7
 
