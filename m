@@ -1,41 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40949 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933866Ab2C2U76 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2012 16:59:58 -0400
-Date: Thu, 29 Mar 2012 13:59:56 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Jonathan Nieder <jrnieder@gmail.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	stable@vger.kernel.org, Romain Francoise <romain@orebokech.com>,
-	Chris Holland <bandidoirlandes@gmail.com>,
-	Colin Ian King <colin.king@canonical.com>,
-	Hatem Masmoudi <hatem.masmoudi@gmail.com>,
-	janek <jan0x6c@gmail.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH resend] ASPM: Fix pcie devices with non-pcie children
-Message-Id: <20120329135956.7034cd9d.akpm@linux-foundation.org>
-In-Reply-To: <20120329205635.GA2072@srcf.ucam.org>
-References: <1332857861-11562-1-git-send-email-mjg@redhat.com>
-	<20120329163206.GA3480@burratino>
-	<20120329134614.438e8aaf.akpm@linux-foundation.org>
-	<20120329205635.GA2072@srcf.ucam.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 1 Mar 2012 11:03:23 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH] usb, PCI: split quirk for usb host controller to
+ three
+Message-ID: <20120301190323.GA5155@xanatos>
+References: <1330622227-4209-1-git-send-email-yinghai@kernel.org>
+ <20120301172435.GA8505@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120301172435.GA8505@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 29 Mar 2012 21:56:35 +0100
-Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-
-> On Thu, Mar 29, 2012 at 01:46:14PM -0700, Andrew Morton wrote:
+On Thu, Mar 01, 2012 at 09:24:35AM -0800, Greg Kroah-Hartman wrote:
+> On Thu, Mar 01, 2012 at 09:17:07AM -0800, Yinghai Lu wrote:
+> > so we avoid checking class again and again in that quirk.
+> > 
+> > need to be applied after pci/linux-next and usb/usb-next
 > 
-> > Just about the only person who wasn't copied on this email is, umm, the
-> > PCI maintainer!
+> As those are two independant trees, this needs to wait until after
+> 3.4-rc1 is out.
 > 
-> Jesse just handed that off to Bjorn…
+> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> > 
+> > ---
+> >  drivers/usb/host/pci-quirks.c |   42 ++++++++++++++++++++++++++++--------------
+> >  1 file changed, 28 insertions(+), 14 deletions(-)
+> 
+> Is this really helping anything here?  You added code overall :(
 
-Oh.  So he did.   My search of MAINTAINERS turned up the probably wrong
+I agree with Greg.  Why change this?  Does it shave off any boot time?
+Please show hard numbers for what improvements this makes.  I really
+don't want to change PCI init and break people's systems.
 
-T:      git git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci.git
+Sarah Sharp
