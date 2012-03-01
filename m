@@ -1,127 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:32163 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752577Ab2CADCF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 22:02:05 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/9] PCI: Fix cardbus bridge resources as optional size handling
-Date: Sat,  4 Feb 2012 22:55:03 -0800
-Message-Id: <1328424908-6385-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-References: <1328424908-6385-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 08/36] x86, PCI: embed name acpi version pci_root_info struct
+Date: Wed, 29 Feb 2012 19:00:09 -0800
+Message-Id: <1330570837-26638-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not set the requested size to -2.
+Now We allocate info, and keep that in during whole life of hostbridge.
 
-that will confuse the resource list sorting with align when SIZEALIGN is used.
-
-Change to STARTALIGN and pass align from start.
-
-We are safe to do that just as we do that regular pci bridge.
-
-In the long run, we should just treat cardbus like regular pci bridge.
-
-Also fix when realloc is not passed, should keep the requested size.
+So don't allocate info->name seperately, just put name into struct.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c |   63 ++++++++++++++++++++++++++--------------------
- 1 files changed, 36 insertions(+), 27 deletions(-)
+ arch/x86/pci/acpi.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d5897c3..3b3932a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -898,21 +898,30 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index c7a230f..11c3ae7 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -9,7 +9,7 @@
+ 
+ struct pci_root_info {
+ 	struct acpi_device *bridge;
+-	char *name;
++	char name[16];
+ 	unsigned int res_num;
+ 	struct resource *res;
+ 	int busnum;
+@@ -307,7 +307,6 @@ static void add_resources(struct pci_root_info *info,
+ 
+ static void free_pci_root_info_res(struct pci_root_info *info)
  {
- 	struct pci_dev *bridge = bus->self;
- 	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-+	resource_size_t b_res_3_size = pci_cardbus_mem_size * 2;
- 	u16 ctrl;
+-	kfree(info->name);
+ 	kfree(info->res);
+ 	info->res = NULL;
+ 	info->res_num = 0;
+@@ -360,9 +359,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	if (!info->res)
+ 		return;
  
- 	/*
- 	 * Reserve some resources for CardBus.  We reserve
- 	 * a fixed amount of bus space for CardBus bridges.
- 	 */
--	b_res[0].start = 0;
--	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
--	if (realloc_head)
--		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size, 0 /* dont care */);
-+	b_res[0].start = pci_cardbus_io_size;
-+	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
-+	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
-+	if (realloc_head) {
-+		b_res[0].end -= pci_cardbus_io_size;
-+		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
-+				pci_cardbus_io_size);
-+	}
+-	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+-	if (!info->name)
+-		return;
++	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
  
--	b_res[1].start = 0;
--	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_SIZEALIGN;
--	if (realloc_head)
--		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size, 0 /* dont care */);
-+	b_res[1].start = pci_cardbus_io_size;
-+	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
-+	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
-+	if (realloc_head) {
-+		b_res[1].end -= pci_cardbus_io_size;
-+		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
-+				 pci_cardbus_io_size);
-+	}
- 
- 	/* MEM1 must not be pref mmio */
- 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
-@@ -939,28 +948,28 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	 * twice the size.
- 	 */
- 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
--		b_res[2].start = 0;
--		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_SIZEALIGN;
--		if (realloc_head)
--			add_to_list(realloc_head, bridge, b_res+2, pci_cardbus_mem_size, 0 /* dont care */);
-+		b_res[2].start = pci_cardbus_mem_size;
-+		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
-+		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
-+				  IORESOURCE_STARTALIGN;
-+		if (realloc_head) {
-+			b_res[2].end -= pci_cardbus_mem_size;
-+			add_to_list(realloc_head, bridge, b_res+2,
-+				 pci_cardbus_mem_size, pci_cardbus_mem_size);
-+		}
- 
--		b_res[3].start = 0;
--		b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
--		if (realloc_head)
--			add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size, 0 /* dont care */);
--	} else {
--		b_res[3].start = 0;
--		b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_SIZEALIGN;
--		if (realloc_head)
--			add_to_list(realloc_head, bridge, b_res+3, pci_cardbus_mem_size * 2, 0 /* dont care */);
-+		/* reduce that to half */
-+		b_res_3_size = pci_cardbus_mem_size;
- 	}
- 
--	/* set the size of the resource to zero, so that the resource does not
--	 * get assigned during required-resource allocation cycle but gets assigned
--	 * during the optional-resource allocation cycle.
-- 	 */
--	b_res[0].start = b_res[1].start = b_res[2].start = b_res[3].start = 1;
--	b_res[0].end = b_res[1].end = b_res[2].end = b_res[3].end = 0;
-+	b_res[3].start = pci_cardbus_mem_size;
-+	b_res[3].end = b_res[3].start + b_res_3_size - 1;
-+	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
-+	if (realloc_head) {
-+		b_res[3].end -= b_res_3_size;
-+		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
-+				 pci_cardbus_mem_size);
-+	}
- }
- 
- void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				info);
 -- 
 1.7.7
 
