@@ -2,77 +2,87 @@ Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 01/24] PCI: Add iobusn_resource
-Date: Sat,  4 Feb 2012 22:57:45 -0800
-Message-Id: <1328425088-6562-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
-References: <1328425088-6562-1-git-send-email-yinghai@kernel.org>
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 09/36] x86, PCI: embed pci_sysdata into pci_root_info on acpi path
+Date: Wed, 29 Feb 2012 19:00:10 -0800
+Message-Id: <1330570837-26638-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-also add busn_res into struct pci_bus.
-
-will use them to have bus number resource tree.
+So that part memory will be released on remove path.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- include/linux/ioport.h |    1 +
- include/linux/pci.h    |    1 +
- kernel/resource.c      |    8 ++++++++
- 3 files changed, 10 insertions(+), 0 deletions(-)
+ arch/x86/pci/acpi.c |   21 ++++-----------------
+ 1 files changed, 4 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index e885ba2..6fe9e19 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -136,6 +136,7 @@ struct resource {
- /* PC/ISA/whatever - the normal PC address spaces: IO and memory */
- extern struct resource ioport_resource;
- extern struct resource iomem_resource;
-+extern struct resource iobusn_resource;
- 
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f8caaab..94ad468 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -419,6 +419,7 @@ struct pci_bus {
- 	struct list_head slots;		/* list of slots on this bus */
- 	struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
- 	struct list_head resources;	/* address space routed to this bus */
-+	struct resource busn_res;	/* track registered bus num range */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
- 	void		*sysdata;	/* hook for sys-specific extension */
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 7640b3a..53b42f0 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -38,6 +38,14 @@ struct resource iomem_resource = {
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 11c3ae7..2331ccb 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -13,6 +13,7 @@ struct pci_root_info {
+ 	unsigned int res_num;
+ 	struct resource *res;
+ 	int busnum;
++	struct pci_sysdata sd;
  };
- EXPORT_SYMBOL(iomem_resource);
  
-+struct resource iobusn_resource = {
-+	.name	= "PCI busn",
-+	.start	= 0,
-+	.end	= 0xffffff,
-+	.flags	= IORESOURCE_BUS,
-+};
-+EXPORT_SYMBOL(iobusn_resource);
-+
- /* constraints to be met while allocating resources */
- struct resource_constraint {
- 	resource_size_t min, max, align;
+ static bool pci_use_crs = true;
+@@ -400,26 +401,16 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (node != -1 && !node_online(node))
+ 		node = -1;
+ 
+-	/* Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+-	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
+ 		printk(KERN_WARNING "pci_bus %04x:%02x: "
+ 		       "ignored (out of memory)\n", domain, busnum);
+ 		return NULL;
+ 	}
+ 
++	sd = &info->sd;
+ 	sd->domain = domain;
+ 	sd->node = node;
+-	info = kzalloc(sizeof(*info), GFP_KERNEL);
+-	if (!info) {
+-		kfree(sd);
+-		printk(KERN_WARNING "pci_bus %04x:%02x: "
+-		       "ignored (out of memory)\n", domain, busnum);
+-		return NULL;
+-	}
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -432,7 +423,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 */
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(info);
+-		kfree(sd);
+ 	} else {
+ 		probe_pci_root_info(info, device, busnum, domain);
+ 
+@@ -474,9 +464,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		}
+ 	}
+ 
+-	if (!bus)
+-		kfree(sd);
+-
+ 	if (bus && node != -1) {
+ #ifdef CONFIG_ACPI_NUMA
+ 		if (pxm >= 0)
 -- 
 1.7.7
 
