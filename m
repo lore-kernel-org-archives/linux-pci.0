@@ -1,55 +1,89 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWPCZ-2Xjk2fHZfuQC1fm3WpR9BRbgb9RJCDe_KKEKvZQ@mail.gmail.com>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
- <1330570837-26638-29-git-send-email-yinghai@kernel.org> <CAErSpo7JS6N3XzVm=_A-oFF_VpmuQaAG_KagxAOEzpEPnhRP_g@mail.gmail.com>
- <CAE9FiQWPCZ-2Xjk2fHZfuQC1fm3WpR9BRbgb9RJCDe_KKEKvZQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 16 Mar 2012 15:04:19 -0600
-Message-ID: <CAErSpo4GxBP1TRJijsq99jcBbF+JMM-_SfC-9NXCD0B_8yjV7Q@mail.gmail.com>
-Subject: Re: [PATCH 28/36] PCI: Add pci_bus_extend/shrink_top()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [RFC PATCH] usb, PCI: split quirk for usb host controller to three
+Date: Thu,  1 Mar 2012 09:17:07 -0800
+Message-Id: <1330622227-4209-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 16, 2012 at 2:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Mar 16, 2012 at 12:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I've objected to this before on the grounds that it's not safe to
->> update res->end because res is already linked into the resource tree,
->> but I just noticed another problem.
->>
->> Tree updates are protected by resource_lock, but we don't hold that
->> here.  I'm sure you "know" that this update can't race with any other
->> conflicting resource operations, but its safety certainly is not
->> obvious from the patch.
->>
->> I think a better implementation would be to add something like
->> "resource_extend()" that could live in kernel/resource.c so it could
->> do the appropriate locking and checking.  Such an interface could also
->> be independent of the resource type, which may be useful when doing
->> mem/io resource reassignment.
->
-> Thanks for point it out.
->
-> Let me thinking about it.
->
->>
->> This patch is already in Jesse's linux-next branch (commit
->> c901d4c0407), so I'm leaving it up to you and Jesse to figure out
->> what, if anything, to do about this.
->
-> No, this patch is one in busn_alloc patchset. Jesse did NOT pick that
-> patchset yet.
+so we avoid checking class again and again in that quirk.
 
-Ah, right you are.  I guess I still had your for-pci-root-bus-hotplug
-branch checked out when this occurred to me.  Sorry for the confusion.
+need to be applied after pci/linux-next and usb/usb-next
 
-Bjorn
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/usb/host/pci-quirks.c |   42 ++++++++++++++++++++++++++++--------------
+ 1 file changed, 28 insertions(+), 14 deletions(-)
+
+Index: linux-2.6/drivers/usb/host/pci-quirks.c
+===================================================================
+--- linux-2.6.orig/drivers/usb/host/pci-quirks.c
++++ linux-2.6/drivers/usb/host/pci-quirks.c
+@@ -884,33 +884,47 @@ static void __devinit quirk_usb_handoff_
+ 	iounmap(base);
+ }
+ 
+-static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
++static void __devinit quirk_usb_early_handoff_uhci(struct pci_dev *pdev)
++{
++	quirk_usb_handoff_uhci(pdev);
++}
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
++		PCI_CLASS_SERIAL_USB_UHCI, 0, quirk_usb_early_handoff_uhci);
++
++static void __devinit quirk_usb_early_handoff_ohci(struct pci_dev *pdev)
+ {
+ 	/* Skip Netlogic mips SoC's internal PCI USB controller.
+ 	 * This device does not need/support EHCI/OHCI handoff
+ 	 */
+ 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+ 		return;
+-	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
+-			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
+-			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
+-			pdev->class != PCI_CLASS_SERIAL_USB_XHCI)
++
++	quirk_usb_handoff_ohci(pdev);
++}
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
++		PCI_CLASS_SERIAL_USB_OHCI, 0, quirk_usb_early_handoff_ohci);
++
++static void __devinit quirk_usb_early_handoff_ehci(struct pci_dev *pdev)
++{
++	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+ 		return;
+ 
++	quirk_usb_handoff_ehci(pdev);
++}
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
++		PCI_CLASS_SERIAL_USB_EHCI, 0, quirk_usb_early_handoff_ehci);
++
++static void __devinit quirk_usb_early_handoff_xhci(struct pci_dev *pdev)
++{
+ 	if (pci_enable_device(pdev) < 0) {
+ 		dev_warn(&pdev->dev, "Can't enable PCI device, "
+ 				"BIOS handoff failed.\n");
+ 		return;
+ 	}
+-	if (pdev->class == PCI_CLASS_SERIAL_USB_UHCI)
+-		quirk_usb_handoff_uhci(pdev);
+-	else if (pdev->class == PCI_CLASS_SERIAL_USB_OHCI)
+-		quirk_usb_handoff_ohci(pdev);
+-	else if (pdev->class == PCI_CLASS_SERIAL_USB_EHCI)
+-		quirk_usb_handoff_ehci(pdev);
+-	else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
+-		quirk_usb_handoff_xhci(pdev);
++
++	quirk_usb_handoff_xhci(pdev);
++
+ 	pci_disable_device(pdev);
+ }
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+-			PCI_CLASS_SERIAL_USB, 8, quirk_usb_early_handoff);
++		PCI_CLASS_SERIAL_USB_XHCI, 0, quirk_usb_early_handoff_xhci);
