@@ -1,108 +1,132 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 18/22] PCI, sys: Use device_type and attr_groups with pci dev
-Date: Fri, 10 Feb 2012 20:06:21 -0800
-Message-Id: <1328933185-15154-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
-References: <1328933185-15154-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Subject: [PATCH 06/36] x86, PCI: break down get_current_resource()
+Date: Wed, 29 Feb 2012 19:00:07 -0800
+Message-Id: <1330570837-26638-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to create rescan in sys only for pci bridge instead of all pci dev.
+change it to probe_pci_root_info, aka only do one thing.
 
-We could use attribute_groups/is_visible method to do that.
-
-Now pci dev does not use device type yet. So add pci_dev_type to take
-attr_groups with it.
-
-Add pci_dev_bridge_attrs_are_visible() to control attr_bridge_group only create
-attr for bridge.
-
-This is the framework related change, later could attr to bridge_attr_group,
-to make those attr only show up on pci bridge device.
-
-Also We could add more attr groups with is_visible to reduce messness in
-	pci_create_sysfs_dev_files. ( at least for boot_vga one )
+1. remove resource list head from pci_root_info
+2. make get_current_resources() not pass resources
+   move out add_resources calling out of yet.
+3. rename get_current_resourcs name to probe_pci_root_info
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci-sysfs.c |   30 ++++++++++++++++++++++++++++++
- drivers/pci/pci.h       |    1 +
- drivers/pci/probe.c     |    1 +
- 3 files changed, 32 insertions(+), 0 deletions(-)
+ arch/x86/pci/acpi.c |   34 +++++++++++++---------------------
+ 1 files changed, 13 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index d972303..124e826 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1335,3 +1335,33 @@ static int __init pci_sysfs_init(void)
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 304ccf0..763f7bb 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -12,7 +12,6 @@ struct pci_root_info {
+ 	char *name;
+ 	unsigned int res_num;
+ 	struct resource *res;
+-	struct list_head *resources;
+ 	int busnum;
+ };
+ 
+@@ -277,7 +276,8 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+ 	}
  }
  
- late_initcall(pci_sysfs_init);
-+
-+static struct attribute *pci_dev_bridge_attrs[] = {
-+	NULL,
-+};
-+
-+static umode_t pci_dev_bridge_attrs_are_visible(struct kobject *kobj,
-+						struct attribute *a, int n)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (!pdev->subordinate)
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+static struct attribute_group pci_dev_bridge_attr_group = {
-+	.attrs = pci_dev_bridge_attrs,
-+	.is_visible = pci_dev_bridge_attrs_are_visible,
-+};
-+
-+static const struct attribute_group *pci_dev_attr_groups[] = {
-+	&pci_dev_bridge_attr_group,
-+	NULL,
-+};
-+
-+struct device_type pci_dev_type = {
-+	.groups = pci_dev_attr_groups,
-+};
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index f862a5a..8d17a1c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -161,6 +161,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+-static void add_resources(struct pci_root_info *info)
++static void add_resources(struct pci_root_info *info,
++			  struct list_head *resources)
+ {
+ 	int i;
+ 	struct resource *res, *root, *conflict;
+@@ -301,7 +301,7 @@ static void add_resources(struct pci_root_info *info)
+ 				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
+ 				 res, conflict->name, conflict);
+ 		else
+-			pci_add_resource(info->resources, res);
++			pci_add_resource(resources, res);
+ 	}
  }
- extern struct device_attribute pci_dev_attrs[];
- extern struct device_attribute pcibus_dev_attrs[];
-+extern struct device_type pci_dev_type;
- #ifdef CONFIG_HOTPLUG
- extern struct bus_attribute pci_bus_attrs[];
- #else
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 009946a..b24fa1f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1100,6 +1100,7 @@ int pci_setup_device(struct pci_dev *dev)
- 	dev->sysdata = dev->bus->sysdata;
- 	dev->dev.parent = dev->bus->bridge;
- 	dev->dev.bus = &pci_bus_type;
-+	dev->dev.type = &pci_dev_type;
- 	dev->hdr_type = hdr_type & 0x7f;
- 	dev->multifunction = !!(hdr_type & 0x80);
- 	dev->error_state = pci_channel_io_normal;
+ 
+@@ -313,41 +313,30 @@ static void free_pci_root_info(struct pci_root_info *info)
+ }
+ 
+ static void
+-get_current_resources(struct pci_root_info *info,
+-		      struct acpi_device *device, int busnum,
+-		      int domain, struct list_head *resources)
++probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
++		    int busnum, int domain)
+ {
+ 	size_t size;
+ 
+ 	info->bridge = device;
+ 	info->res_num = 0;
+-	info->resources = resources;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+ 				info);
+ 	if (!info->res_num)
+ 		return;
+ 
+ 	size = sizeof(*info->res) * info->res_num;
++	info->res_num = 0;
+ 	info->res = kmalloc(size, GFP_KERNEL);
+ 	if (!info->res)
+ 		return;
+ 
+ 	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+ 	if (!info->name)
+-		goto name_alloc_fail;
++		return;
+ 
+-	info->res_num = 0;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				info);
+-
+-	if (pci_use_crs) {
+-		add_resources(info);
+-
+-		return;
+-	}
+-
+-name_alloc_fail:
+-	free_pci_root_info(info);
+ }
+ 
+ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+@@ -412,15 +401,18 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(sd);
+ 	} else {
+-		get_current_resources(&info, device, busnum, domain,
+-					&resources);
++		probe_pci_root_info(&info, device, busnum, domain);
+ 
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+-		if (!pci_use_crs)
++		if (pci_use_crs)
++			add_resources(&info, &resources);
++		else {
++			free_pci_root_info(&info);
+ 			x86_pci_root_bus_resources(busnum, &resources);
++		}
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+ 		if (bus)
 -- 
 1.7.7
 
