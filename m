@@ -1,48 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25414 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161893Ab2CSFtf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:35 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 04/26] PCI: Update pci_resource_start to use pci_dev_resource_n()
-Date: Sun, 18 Mar 2012 22:48:27 -0700
-Message-Id: <1332136129-14010-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:39317 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757236Ab2CAULx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Mar 2012 15:11:53 -0500
+Date: Thu, 1 Mar 2012 12:10:50 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 2/3] usb, PCI: remove disable/enable device with
+ non-xhci quirk
+Message-ID: <20120301201050.GC5155@xanatos>
+References: <1330629843-6027-1-git-send-email-yinghai@kernel.org>
+ <1330629843-6027-2-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1330629843-6027-2-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-instead of use resource[bar], to prepare for addon resource usages.
+On Thu, Mar 01, 2012 at 11:24:02AM -0800, Yinghai Lu wrote:
+> | commit cab928ee1f221c9cc48d6615070fefe2e444384a
+> |    USB: Fix handoff when BIOS disables host PCI device.
+> 
+> mention only need to do disable/enable for xhci controller.
+> 
+> So just remove that for non-xhci controller and restore old behavior for them.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- include/linux/pci.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+As I said, we do need to do the enable/disable for all USB hosts.  Jesse
+Barnes confirms that the PCI core doesn't do that for us, so we can't
+rely on the BIOS always enabling the PCI device.  I don't think we need
+this patch, because we should always be doing the enable/disable for all
+USB hosts.  We just never had a BIOS that caused this bug to be
+discovered until the xHCI BIOS for the Intel system in question.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e3f9ae1..c7a2806 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1400,9 +1400,9 @@ static inline int pci_domain_nr(struct pci_bus *bus)
- 
- /* these helpers provide future and backwards compatibility
-  * for accessing popular PCI BAR info */
--#define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
--#define pci_resource_end(dev, bar)	((dev)->resource[(bar)].end)
--#define pci_resource_flags(dev, bar)	((dev)->resource[(bar)].flags)
-+#define pci_resource_start(dev, bar)	(pci_dev_resource_n(dev, (bar))->start)
-+#define pci_resource_end(dev, bar)	(pci_dev_resource_n(dev, (bar))->end)
-+#define pci_resource_flags(dev, bar)	(pci_dev_resource_n(dev, (bar))->flags)
- #define pci_resource_len(dev,bar) \
- 	((pci_resource_start((dev), (bar)) == 0 &&	\
- 	  pci_resource_end((dev), (bar)) ==		\
--- 
-1.7.7
-
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/usb/host/pci-quirks.c |   18 ------------------
+>  1 file changed, 18 deletions(-)
+> 
+> Index: linux-2.6/drivers/usb/host/pci-quirks.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/usb/host/pci-quirks.c
+> +++ linux-2.6/drivers/usb/host/pci-quirks.c
+> @@ -889,13 +889,7 @@ static void __devinit quirk_usb_early_ha
+>  	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+>  		return;
+>  
+> -	if (pci_enable_device(pdev) < 0) {
+> -		dev_warn(&pdev->dev, "Can't enable PCI device, "
+> -				"BIOS handoff failed.\n");
+> -		return;
+> -	}
+>  	quirk_usb_handoff_uhci(pdev);
+> -	pci_disable_device(pdev);
+>  }
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+>  		PCI_CLASS_SERIAL_USB_UHCI, 0, quirk_usb_early_handoff_uhci);
+> @@ -908,13 +902,7 @@ static void __devinit quirk_usb_early_ha
+>  	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+>  		return;
+>  
+> -	if (pci_enable_device(pdev) < 0) {
+> -		dev_warn(&pdev->dev, "Can't enable PCI device, "
+> -				"BIOS handoff failed.\n");
+> -		return;
+> -	}
+>  	quirk_usb_handoff_ohci(pdev);
+> -	pci_disable_device(pdev);
+>  }
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+>  		PCI_CLASS_SERIAL_USB_OHCI, 0, quirk_usb_early_handoff_ohci);
+> @@ -924,13 +912,7 @@ static void __devinit quirk_usb_early_ha
+>  	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+>  		return;
+>  
+> -	if (pci_enable_device(pdev) < 0) {
+> -		dev_warn(&pdev->dev, "Can't enable PCI device, "
+> -				"BIOS handoff failed.\n");
+> -		return;
+> -	}
+>  	quirk_usb_handoff_ehci(pdev);
+> -	pci_disable_device(pdev);
+>  }
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+>  		PCI_CLASS_SERIAL_USB_EHCI, 0, quirk_usb_early_handoff_ehci);
