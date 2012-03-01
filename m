@@ -1,168 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:38805 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941Ab2BPFPS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2012 00:15:18 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/4] PCI: Add class support in quirk handling
-Date: Wed, 15 Feb 2012 21:14:53 -0800
-Message-Id: <1329369296-4255-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
-References: <1329369296-4255-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 31/36] PCI: Allocate bus range instead of use max blindly
+Date: Wed, 29 Feb 2012 19:00:32 -0800
+Message-Id: <1330570837-26638-32-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Recently there is new support to make quirk calling will report duration time.
-That will boot log get more print out with initcall_debug is specified.
+every bus have extra busn_res, and linked them toghter to iobusn_resource.
 
-Found a lot of quirks are calling for not related devices.
+when need to find usable bus number range, try probe from iobusn_resource tree.
 
-Reason is quirk frame do not support class handling. So quirk code have to
-use PCI_ANY_ID for vendor/device and let quirk code itself to check class
-inside the func.
+To avoid falling to small hole in the middle, we try from 8 spare bus.
+if can not find 8 or more in the middle, will try to append 8 on top later.
+then if can not append, will try to find 7 from the middle, then will try to append 7 on top.
+then if can not append, will try to find 6 from the middle...
 
-The patch add class and cls_shift into struct pci_fixup.
-Also update related macro to accept the class and shift.
+for cardbus will only find 4 spare.
+
+if extend from top, at last will shrink back to really needed range...
+
+-v4: fix checking with pci rescan. Found by Bjorn.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/quirks.c |   19 ++++++++++--------
- include/linux/pci.h  |   53 ++++++++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 53 insertions(+), 19 deletions(-)
+ drivers/pci/probe.c |  100 ++++++++++++++++++++++++++++++---------------------
+ 1 files changed, 59 insertions(+), 41 deletions(-)
 
-Index: linux-2.6/drivers/pci/quirks.c
-===================================================================
---- linux-2.6.orig/drivers/pci/quirks.c
-+++ linux-2.6/drivers/pci/quirks.c
-@@ -2914,14 +2914,15 @@ static void do_one_fixup_debug(void (*fn
- 	ktime_t calltime, delta, rettime;
- 	unsigned long long duration;
- 
--	printk(KERN_DEBUG "calling  %pF @ %i\n", fn, task_pid_nr(current));
-+	printk(KERN_DEBUG "calling  %pF @ %i for %s\n",
-+			fn, task_pid_nr(current), dev_name(&dev->dev));
- 	calltime = ktime_get();
- 	fn(dev);
- 	rettime = ktime_get();
- 	delta = ktime_sub(rettime, calltime);
- 	duration = (unsigned long long) ktime_to_ns(delta) >> 10;
--	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs\n", fn,
--		duration);
-+	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs for %s\n",
-+			fn, duration, dev_name(&dev->dev));
- }
- 
- /*
-@@ -2961,17 +2962,19 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5c031f0..f22a209 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -839,10 +839,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
  {
--	while (f < end) {
--		if ((f->vendor == dev->vendor || f->vendor == (u16) PCI_ANY_ID) &&
--		    (f->device == dev->device || f->device == (u16) PCI_ANY_ID)) {
-+	for (; f < end; f++)
-+		if ((f->class == (u32) (dev->class >> f->cls_shift) ||
-+		     f->class == (u32) PCI_ANY_ID) &&
-+		    (f->vendor == dev->vendor ||
-+		     f->vendor == (u16) PCI_ANY_ID) &&
-+		    (f->device == dev->device ||
-+		     f->device == (u16) PCI_ANY_ID)) {
- 			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
- 			if (initcall_debug)
- 				do_one_fixup_debug(f->hook, dev);
- 			else
- 				f->hook(dev);
- 		}
--		f++;
+ 	struct pci_bus *child;
+ 	int is_cardbus = (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS);
+-	u32 buses, i, j = 0;
++	u32 buses;
+ 	u16 bctl;
+ 	u8 primary, secondary, subordinate;
+ 	int broken = 0;
++	struct resource *parent_res = NULL;
+ 
+ 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
+ 	primary = buses & 0xFF;
+@@ -859,10 +860,16 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ 	/* Check if setup is sensible at all */
+ 	if (!pass &&
+-	    (primary != bus->number || secondary <= bus->number)) {
+-		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
++	    (primary != bus->number || secondary <= bus->number))
+ 		broken = 1;
 -	}
- }
- 
- extern struct pci_fixup __start_pci_fixups_early[];
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -1389,7 +1389,10 @@ static inline void pci_resource_to_user(
-  */
- 
- struct pci_fixup {
--	u16 vendor, device;	/* You can use PCI_ANY_ID here of course */
-+	u16 vendor;		/* You can use PCI_ANY_ID here of course */
-+	u16 device;		/* You can use PCI_ANY_ID here of course */
-+	u32 class;		/* You can use PCI_ANY_ID here too */
-+	unsigned int cls_shift;	/* should be 0, 8, 16 */
- 	void (*hook)(struct pci_dev *dev);
- };
- 
-@@ -1404,30 +1407,58 @@ enum pci_fixup_pass {
- };
- 
- /* Anonymous variables would be nice... */
--#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, hook)	\
--	static const struct pci_fixup __pci_fixup_##name __used		\
--	__attribute__((__section__(#section))) = { vendor, device, hook };
-+#define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, c, cs, hook)\
-+	static const struct pci_fixup const __pci_fixup_##name __used	     \
-+	__attribute__((__section__(#section), aligned((sizeof(void *)))))    \
-+		= { vendor, device, c, cs, hook };
 +
-+#define DECLARE_PCI_FIXUP_CLASS_EARLY(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
-+		vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_HEADER(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
-+		vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_FINAL(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
-+		vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_ENABLE(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
-+		vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_RESUME(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
-+		resume##vendor##device##hook, vendor, device, cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(vendor, device, cls, clt, hook) \
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
-+		resume_early##vendor##device##hook, vendor, device,	\
-+		cls, clt, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_SUSPEND(vendor, device, cls, clt, hook)	\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
-+		suspend##vendor##device##hook, vendor, device, cls, clt, hook)
++	/* more strict checking */
++	if (!pass && !broken && !dev->subordinate)
++		broken = pci_bridge_check_busn_broken(bus, dev,
++						   secondary, subordinate);
 +
- #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_HEADER(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_header,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_FINAL(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_ENABLE(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
--			vendor##device##hook, vendor, device, hook)
-+		vendor##device##hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_RESUME(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
--			resume##vendor##device##hook, vendor, device, hook)
-+		resume##vendor##device##hook, vendor, device,		\
-+		PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_RESUME_EARLY(vendor, device, hook)		\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
--			resume_early##vendor##device##hook, vendor, device, hook)
-+		resume_early##vendor##device##hook, vendor, device,	\
-+		PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_SUSPEND(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
--			suspend##vendor##device##hook, vendor, device, hook)
-+		suspend##vendor##device##hook, vendor, device,		\
-+		PCI_ANY_ID, 0, hook)
++	if (broken)
++		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
  
- #ifdef CONFIG_PCI_QUIRKS
- void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ 	/* Disable MasterAbortMode during probing to avoid reporting
+ 	   of bus errors (in some architectures) */ 
+@@ -895,6 +902,8 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 			child->primary = primary;
+ 			child->subordinate = subordinate;
+ 			child->bridge_ctl = bctl;
++
++			pci_bus_insert_busn_res(child, secondary, subordinate);
+ 		}
+ 
+ 		cmax = pci_scan_child_bus(child);
+@@ -907,6 +916,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		 * We need to assign a number to this bus which we always
+ 		 * do in the second pass.
+ 		 */
++		long shrink_size;
++		struct resource busn_res;
++		int ret = -ENOMEM;
++		int old_max = max;
++
+ 		if (!pass) {
+ 			if (pcibios_assign_all_busses() || broken)
+ 				/* Temporarily disable forwarding of the
+@@ -923,20 +937,43 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		/* Clear errors */
+ 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
+ 
+-		/* Prevent assigning a bus number that already exists.
+-		 * This can happen when a bridge is hot-plugged, so in
+-		 * this case we only re-scan this bus. */
+-		child = pci_find_bus(pci_domain_nr(bus), max+1);
+-		if (!child) {
+-			child = pci_add_new_bus(bus, dev, ++max);
+-			if (!child)
+-				goto out;
++		if (dev->subordinate) {
++			/* We get here only for cardbus */
++			child = dev->subordinate;
++			if  (!is_cardbus)
++				dev_warn(&dev->dev,
++				 "rescan scaned bridge as broken one again ?");
++
++			goto out;
+ 		}
++		/*
++		 * For CardBus bridges, we leave 4 bus numbers
++		 * as cards with a PCI-to-PCI bridge can be
++		 * inserted later.
++		 * other just allocate 8 bus to avoid we fall into
++		 *  small hole in the middle.
++		 */
++		ret = pci_bridge_probe_busn_res(bus, dev, &busn_res,
++				is_cardbus ? (CARDBUS_RESERVE_BUSNR + 1) : 8,
++				&parent_res);
++
++		if (ret != 0)
++			goto out;
++
++		child = pci_add_new_bus(bus, dev, busn_res.start);
++		if (!child)
++			goto out;
++
++		child->subordinate = busn_res.end;
++		pci_bus_insert_busn_res(child, busn_res.start, busn_res.end);
++
+ 		buses = (buses & 0xff000000)
+ 		      | ((unsigned int)(child->primary)     <<  0)
+ 		      | ((unsigned int)(child->secondary)   <<  8)
+ 		      | ((unsigned int)(child->subordinate) << 16);
+ 
++		max = child->subordinate;
++
+ 		/*
+ 		 * yenta.c forces a secondary latency timer of 176.
+ 		 * Copy that behaviour here.
+@@ -967,43 +1004,24 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 			 * the real value of max.
+ 			 */
+ 			pci_fixup_parent_subordinate_busnr(child, max);
++
+ 		} else {
+-			/*
+-			 * For CardBus bridges, we leave 4 bus numbers
+-			 * as cards with a PCI-to-PCI bridge can be
+-			 * inserted later.
+-			 */
+-			for (i=0; i<CARDBUS_RESERVE_BUSNR; i++) {
+-				struct pci_bus *parent = bus;
+-				if (pci_find_bus(pci_domain_nr(bus),
+-							max+i+1))
+-					break;
+-				while (parent->parent) {
+-					if ((!pcibios_assign_all_busses()) &&
+-					    (parent->subordinate > max) &&
+-					    (parent->subordinate <= max+i)) {
+-						j = 1;
+-					}
+-					parent = parent->parent;
+-				}
+-				if (j) {
+-					/*
+-					 * Often, there are two cardbus bridges
+-					 * -- try to leave one valid bus number
+-					 * for each one.
+-					 */
+-					i /= 2;
+-					break;
+-				}
+-			}
+-			max += i;
+ 			pci_fixup_parent_subordinate_busnr(child, max);
+ 		}
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
++		shrink_size = child->subordinate - max;
+ 		child->subordinate = max;
+ 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
++		pci_bus_update_busn_res_end(child, max);
++
++		/* shrink some back, if we extend top before */
++		if (!is_cardbus && (shrink_size > 0) && parent_res)
++			pci_bus_shrink_top(bus, shrink_size, parent_res);
++
++		if (old_max > max)
++			max = old_max;
+ 	}
+ 
+ 	sprintf(child->name,
+-- 
+1.7.7
+
