@@ -1,76 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 10 Feb 2012 11:40:45 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Danny Kukawka <danny.kukawka@bisect.de>
-Cc: Scott Murray <scott@spiteful.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 06/16] cpcihp: fix debug module parameter to be bool
-Message-ID: <20120210114045.08a2d313@jbarnes-desktop>
-In-Reply-To: <1327960820-11867-7-git-send-email-danny.kukawka@bisect.de>
-References: <1327960820-11867-1-git-send-email-danny.kukawka@bisect.de>
-	<1327960820-11867-7-git-send-email-danny.kukawka@bisect.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6hjhN3Y_sVpvC31tPMYTa5q"; protocol="application/pgp-signature"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:61100 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755762Ab2CAB0I convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Feb 2012 20:26:08 -0500
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"Kay, Allen M" <allen.m.kay@intel.com>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Subject: RE: [PATCH V2] Quirk for IVB graphics FLR errata
+Date: Thu, 1 Mar 2012 01:25:32 +0000
+Message-ID: <403610A45A2B5242BD291EDAE8B37D300FCDB21A@SHSMSX102.ccr.corp.intel.com>
+References: <403610A45A2B5242BD291EDAE8B37D300FCDA04B@SHSMSX102.ccr.corp.intel.com>
+ <20120229103152.59dcedd6@jbarnes-x220>
+In-Reply-To: <20120229103152.59dcedd6@jbarnes-x220>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/6hjhN3Y_sVpvC31tPMYTa5q
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+> -----Original Message-----
+> From: Jesse Barnes [mailto:jbarnes@virtuousgeek.org]
+> Sent: Thursday, March 01, 2012 2:32 AM
+> To: Hao, Xudong
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> kvm@vger.kernel.org; Kay, Allen M; Zhang, Xiantao
+> Subject: Re: [PATCH V2] Quirk for IVB graphics FLR errata
+> 
+> On Wed, 29 Feb 2012 03:11:24 +0000
+> "Hao, Xudong" <xudong.hao@intel.com> wrote:
+> 
+> > For IvyBridge Mobile platform, a system hang may occur if a
+> > FLR(Function Level Reset) is asserted to internal graphics.
+> >
+> > This quirk patch is workaround for the IVB FLR errata issue.
+> > We are disabling the FLR reset handshake between the PCH and CPU
+> > display, then manually powering down the panel power sequencing and
+> > resetting the PCH display.
+> >
+> > Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+> > Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
+> > ---
+> >  drivers/pci/quirks.c |   49
+> > +++++++++++++++++++++++++++++++++++++++++++++++++ 1 files changed,
+> 49
+> > insertions(+), 0 deletions(-)
+> >
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
+> > 6476547..5223b80 100644 --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -29,6 +29,11 @@
+> >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+> >  #include "pci.h"
+> >
+> > +#include "../gpu/drm/i915/i915_reg.h"
+> 
+> Ugg... this is ugly.  Should probably go near the definition of the quirk at any
+> rate.
+> 
 
-On Mon, 30 Jan 2012 23:00:10 +0100
-Danny Kukawka <danny.kukawka@bisect.de> wrote:
+OK, I'll move it just above the reset_ivb_igd function.
 
-> Fix debug variable from module parameter to be really bool to
-> fix 'warning: return from incompatible pointer type'.
->=20
-> Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
-> ---
->  drivers/pci/hotplug/cpcihp_generic.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/c=
-pcihp_generic.c
-> index fb3f846..81af764 100644
-> --- a/drivers/pci/hotplug/cpcihp_generic.c
-> +++ b/drivers/pci/hotplug/cpcihp_generic.c
-> @@ -62,7 +62,7 @@
->  #define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_=
-NAME , ## arg)
-> =20
->  /* local variables */
-> -static int debug;
-> +static bool debug;
->  static char *bridge;
->  static u8 bridge_busnr;
->  static u8 bridge_slot;
+> > +#include <asm/tsc.h>
+> > +/* 10 seconds */
+> > +#define IGD_OPERATION_TIMEOUT ((cycles_t) tsc_khz*10*1000)
+> > +
+> 
+> Same here, the asm/tsc.h can go at the top, but the timeout definition should
+> go near the reset function.
+> 
+> May as well make it a static const cycles_t as well.
+> 
+Will modify it.
+ 
+> > +#define MSG_CTL	0x45010
+> > +
+> > +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
+> > +	u8 *mmio_base;
+> > +	u32 val;
+> > +
+> > +	if (probe)
+> > +		return 0;
+> > +
+> > +	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
+> > +				 pci_resource_len(dev, 0));
+> > +	if (!mmio_base)
+> > +		return -ENOMEM;
+> > +
+> > +	/* Work Around */
+> > +	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
+> > +	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
+> > +	val = *((u32 *)(mmio_base + PCH_PP_CONTROL)) & 0xfffffffe;
+> > +	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
+> 
+> These clobber existing values.  Since we're doing a reset, clobbering
+> PCH_PP_CONTROL should be ok, but clobbering SOUTH_CHICKEN2 is only ok if
+> the next driver that loads sets the right bits (if i915 was previously using the
+> device, it would have set a couple of bits).
+> 
+> But again since it's it a reset that's probably ok, but you should put a comment
+> indicating as much.
+> 
 
-Applied to my -next branch, thanks.
+I'll add comment here, thanks Jesse.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/6hjhN3Y_sVpvC31tPMYTa5q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPNXK9AAoJEIEoDkX4Qk9hj08QAJUJzT3ENcJrI5ZN/N+XpQFi
-uOzllqJJffnN2DA/i3dMV7EtSdPAVtMRa38V2He09fAvNjbGF3gq8iw3+Q9I8h57
-tmQq/KkIKoJJERo36LC5YDeykLl4fPmW7pWe1vPyCpGBvxcDbN4lsmhVb/enkLoD
-nV09PlYL1e6/Ve/9biP5uSQb74HaWIS669/APrK7xRDSVJ15O/QkxKWPv0flJEkz
-voOrPKZLGM5ZGM3AdL9/lrsU0nCDilBFjUdj3LcZ5u/4DKyrLUzJdhgpn5+3CiJM
-yhC9zD29UFMWmycn0F2wiO4FLe1k9cplzd0Xve+bCmRTlrFlTzykzQNejnMcUJiV
-EGDuv7fg3sar3k6/qE7rwQ3oqUF9LviawT9fLJnkHbcTHtofMwMALmeErxf0fKYC
-y2i5v1uAw5TDpBLEls3zLjtBdFH2qqEAq1GC+aodtB9KepFFe/VunO46GL3ssQ0e
-HKnvVFmYa/Jgq91Fxn+iSuKVWIniFHJbni4tbjShsEd/aoa24UoDwRMbthezYsC5
-XVA1ONaVhNso6Vcom49f/GDS0Zhc6EO2AyccfHJ/3WDA387euXAyk3nW51H8x6y5
-gPZBYCFifU7b5bWEey4J2LRep7bZZs8BKjZpmQoBoWECrIA2P8yu/P85eHGbOf7a
-lxxKSMi8JUip2zb1OJ7I
-=LJfC
------END PGP SIGNATURE-----
-
---Sig_/6hjhN3Y_sVpvC31tPMYTa5q--
+> > +	do {
+> > +		cycles_t start_time = get_cycles();
+> > +		while (1) {
+> > +			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
+> > +			if (((val & 0x80000000) == 0)
+> > +				&& ((val & 0x30000000) == 0))
+> > +				break;
+> > +			if (IGD_OPERATION_TIMEOUT < (get_cycles() -
+> > start_time))
+> > +				break;
+> > +			cpu_relax();
+> > +		}
+> > +	} while (0);
+> > +	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
+> > +
+> > +	iounmap(pci_resource_start(dev, 0));
+> > +	return 0;
+> > +}
+> > +
+> >  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+> > +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+> > +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+> >
+> >  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+> >  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+> >  		 reset_intel_82599_sfp_virtfn },
+> > +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
+> > +		reset_ivb_igd },
+> > +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
+> > +		reset_ivb_igd },
+> >  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+> >  		reset_intel_generic_dev },
+> >  	{ 0 }
+> 
+> Looks ok otherwise, thanks.
+> 
+> Jesse
