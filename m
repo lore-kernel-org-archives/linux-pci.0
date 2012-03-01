@@ -1,99 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:30290 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758331Ab2C1UWz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2012 16:22:55 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH] PCI: move mutex locking out of pci_dev_reset function.
-Date: Wed, 28 Mar 2012 16:18:20 -0400
-Message-Id: <1332965900-1732-1-git-send-email-konrad.wilk@oracle.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:55689 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755826Ab2CATDQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2012 14:03:16 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAL-B5D0Phxhx-2ipYwoKfZCTvCfuh6bX-iqQkQS0cLmRqQHGbg@mail.gmail.com>
+References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
+	<CAL-B5D0Phxhx-2ipYwoKfZCTvCfuh6bX-iqQkQS0cLmRqQHGbg@mail.gmail.com>
+Date: Thu, 1 Mar 2012 11:03:15 -0800
+Message-ID: <CAE9FiQX57=cmfgJJv5E_rTQD1umCsmqJas0Sa22sN_xhdCSUgw@mail.gmail.com>
+Subject: Re: [PATCH 00/39] PCI: pci_host_bridge related cleanup and busn_alloc
+From: Yinghai Lu <yinghai@kernel.org>
+To: Myron Stowe <myron.stowe@gmail.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The intent of git commit 6fbf9e7a90862988c278462d85ce9684605a52b2
-"PCI: Introduce __pci_reset_function_locked to be used when holding device_lock."
-was to have a non-locking function that would call pci_dev_reset function.
+On Thu, Mar 1, 2012 at 10:51 AM, Myron Stowe <myron.stowe@gmail.com> wrote:
+> On Wed, Feb 29, 2012 at 4:06 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> The first 14 patches are hostbridge clean up.
+>> will add struct device dev into host_bridge struct.
+>> also will add release support to make sure allocated resource get
+>> freed during root bus removal including hostbridge and pci_sysdata.
+>>
+>> others 25 patches are busn_alloc related.
+>> Set up iobusn_resource tree, and register bus number range to it.
+>> Later when need to find bus range, will try to allocate from the tree
+>> Need to test on arches other than x86. esp for ia64 and powerpc that support
+>>  more than on peer root buses.
+>
+> Why did you collapse these two series into one at this point?
+>
+> Last I was keeping up with - there was a -v9 00/23 series related to
+> bus_num and a -v2 00/11 series for pci_host_bridge related cleanup.
 
-But it failed sort of that by just probing and not actually reseting
-the device. To make that work we need a way to move the lock
-around device_lock to not be in pci_dev_reset (as the caller of
-__pci_reset_function_locked already holds said lock). We do this by
-renaming pci_dev_reset to __pci_dev_reset and bubbling said mutex out
-of __pci_dev_reset to pci_dev_reset (a wrapper around __pci_dev_reset).
-The __pci_reset_function_locked  can now call __pci_dev_reset without
-having to worry about the dead-lock.
+the updated busn_alloc patchset, need to be applied on top of
+pci_host_bridge related cleanup.
 
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- drivers/pci/pci.c |   27 +++++++++++++++++----------
- 1 files changed, 17 insertions(+), 10 deletions(-)
+So i was thinking put them together would be better to be reviewed
+first 14 for hostbridge clean up. and others for busn_res_alloc.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8156744..79e080f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3137,18 +3137,12 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
--static int pci_dev_reset(struct pci_dev *dev, int probe)
-+static int __pci_dev_reset(struct pci_dev *dev, int probe)
- {
- 	int rc;
- 
- 	might_sleep();
- 
--	if (!probe) {
--		pci_cfg_access_lock(dev);
--		/* block PM suspend, driver probe, etc. */
--		device_lock(&dev->dev);
--	}
--
- 	rc = pci_dev_specific_reset(dev, probe);
- 	if (rc != -ENOTTY)
- 		goto done;
-@@ -3167,14 +3161,27 @@ static int pci_dev_reset(struct pci_dev *dev, int probe)
- 
- 	rc = pci_parent_bus_reset(dev, probe);
- done:
-+	return rc;
-+}
-+
-+static int pci_dev_reset(struct pci_dev *dev, int probe)
-+{
-+	int rc;
-+
-+	if (!probe) {
-+		pci_cfg_access_lock(dev);
-+		/* block PM suspend, driver probe, etc. */
-+		device_lock(&dev->dev);
-+	}
-+
-+	rc = __pci_dev_reset(dev, probe);
-+
- 	if (!probe) {
- 		device_unlock(&dev->dev);
- 		pci_cfg_access_unlock(dev);
- 	}
--
- 	return rc;
- }
--
- /**
-  * __pci_reset_function - reset a PCI device function
-  * @dev: PCI device to reset
-@@ -3219,7 +3226,7 @@ EXPORT_SYMBOL_GPL(__pci_reset_function);
-  */
- int __pci_reset_function_locked(struct pci_dev *dev)
- {
--	return pci_dev_reset(dev, 1);
-+	return __pci_dev_reset(dev, 0);
- }
- EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
- 
--- 
-1.7.7.5
+>
+> As a distro maintainer I need to try and keep up with what is occurring
+> here and actions like this - coalescing multiple series - unnecessarily
+> complicates things.  It also masks the fact that the bus_num series is
+> now on -v10 within a very short time frame (which implies a lot).
 
+I will separate them in next revision, if Jesse would not pick up
+first 14 shortly.
+
+Thanks
+
+Yinghai
