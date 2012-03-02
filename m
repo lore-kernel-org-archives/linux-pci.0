@@ -1,58 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v2 28/37] PCI, ACPI: Make kacpi_hotplug_wq static
-Date: Fri,  9 Mar 2012 23:00:28 -0800
-Message-Id: <1331362837-10740-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from netrider.rowland.org ([192.131.102.5]:48225 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758575Ab2CBSJA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 13:09:00 -0500
+Date: Fri, 2 Mar 2012 13:08:58 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+cc: Francois Romieu <romieu@fr.zoreil.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI / PM: Disable wakeup during shutdown for devices
+ not enabled to wake up
+In-Reply-To: <20120302093712.6cd513a3@jbarnes-desktop>
+Message-ID: <Pine.LNX.4.44L0.1203021302460.8942-100000@netrider.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No external user anymore.
+On Fri, 2 Mar 2012, Jesse Barnes wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/osl.c      |    3 +--
- include/acpi/acpiosxf.h |    2 --
- 2 files changed, 1 insertions(+), 4 deletions(-)
+> On Fri, 2 Mar 2012 15:44:27 +0100
+> Francois Romieu <romieu@fr.zoreil.com> wrote:
+> 
+> > Rafael J. Wysocki <rjw@sisk.pl> :
+> > [...]
+> > > If a PCI device is enabled to generate wakeup signals (PME) when put
+> > > into a low-power state by runtime PM, it will be still enabled to
+> > > generate those signals after the system shutdown, unless its driver's
+> > > .shutdown() callback takes care of the wakeup signals generation
+> > > setting.  Moreover, there are devices that are not enabled to wake
+> > > up the system and that are configured by runtime PM to generate
+> > > wakeup signals so that (runtime) remote wakeup works with them.
+> > > Those devices should be reconfigured during system shutdown so that
+> > > they don't generate wakeup signals, but at least some drivers don't
+> > > do that.  However, that very well may be done by the PCI core so
+> > > that drivers don't have to worry about it.  For this reason, modify
+> > > pci_device_shutdown() to disable the generation of wakeup events for
+> > > devices not supposed to wake up the system.
+> > 
+> > On a tangent side, if register writes are ignored by the PCI device
+> > after its .runtime_suspend() handler has been called, whose
+> > responsibility is it to bring back the device in a state from where
+> > the .shutdown() callback can operate ?
+> > 
+> > The r8169 driver exhibits this problem. Its .runtime_xyz() callbacks
+> > are called on link activity. Thus, after a link loss - or no link at
+> > all - .runtime_suspend() and an ineffective .shutdown(), the device is
+> > brought back up as soon as the link recovers.
+> > 
+> > The device driver can monitor .runtime_{suspend / resume} activity
+> > and take appropriate action in .shutdown(). Sameer Nanda has sent
+> > such a patch (see below). I am not sure this is the adequate fix:
+> > 1. the driver ought essentially to perform the hardware part of a
+> >    .runtime_resume() on its own behalf. Mildly engaging.
+> > 2. by the same line as above, could it make more sense to call
+> >    pm_runtime_resume() in driver/base/core.c::device_shutdown ?
+> 
+> I thought there would be a more elegant way of increasing the device
+> use count on entering .shutdown, either from the wifi core or at the
+> driver level, so you don't have to track things with a separate flag.
 
-diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index fdcf4a5..09be602 100644
---- a/drivers/acpi/osl.c
-+++ b/drivers/acpi/osl.c
-@@ -81,8 +81,7 @@ static acpi_osd_handler acpi_irq_handler;
- static void *acpi_irq_context;
- static struct workqueue_struct *kacpid_wq;
- static struct workqueue_struct *kacpi_notify_wq;
--struct workqueue_struct *kacpi_hotplug_wq;
--EXPORT_SYMBOL(kacpi_hotplug_wq);
-+static struct workqueue_struct *kacpi_hotplug_wq;
- 
- /*
-  * This list of permanent mappings is for memory that may be accessed from
-diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
-index 62326ae..2326622 100644
---- a/include/acpi/acpiosxf.h
-+++ b/include/acpi/acpiosxf.h
-@@ -189,8 +189,6 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
- /*
-  * Threads and Scheduling
-  */
--extern struct workqueue_struct *kacpi_hotplug_wq;
--
- struct acpi_hp_work {
- 	struct work_struct work;
- 	acpi_handle handle;
--- 
-1.7.7
+That's right.  For example, instead of keeping its own flag to know
+whether or not the device is runtime-suspended, the shutdown routine
+could just always call pm_runtime_resume_sync().  Or it could ask the
+PCI core to put the device into D0, regardless of the device's current
+state.
+
+The driver core doesn't do this because most devices don't need it, and
+it would slow down the whole shutdown procedure if every suspended
+device were always resumed.
+
+Alan Stern
 
