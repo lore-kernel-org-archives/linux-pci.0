@@ -1,52 +1,33 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v3 08/34] mips/PCI: removed unused pci_probe configurability
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:33450 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753914Ab2CBEZ3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2012 23:25:29 -0500
+Received: by iagz16 with SMTP id z16so1781185iag.19
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2012 20:25:29 -0800 (PST)
+Date: Thu, 1 Mar 2012 22:25:23 -0600
+From: Jonathan Nieder <jrnieder@gmail.com>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org
-Date: Wed, 07 Mar 2012 15:32:44 -0700
-Message-ID: <20120307223244.25669.85258.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Svante Signell <svante.signell@telia.com>,
+	Carlos Luna <caralu74@gmail.com>
+Subject: Re: [PATCH] x86/PCI: do not tie MSI MS-7253 use_crs quirk to BIOS
+ version
+Message-ID: <20120302042523.GH5248@burratino>
+References: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
+ <20120228213135.GA30986@burratino>
+ <20120301105701.62ad4144@jbarnes-desktop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120301105701.62ad4144@jbarnes-desktop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We never assign anything other than PCI_ASSIGN_ALL_BUSSES to pci_probe,
-so just remove the indirection.  If configurability is required in the
-future, please use the pci_flags/PCI_REASSIGN_ALL_BUS functionality
-as is done for powerpc.
+Hi Bjorn and Jesse,
 
-CC: Ralf Baechle <ralf@linux-mips.org>
-CC: linux-mips@linux-mips.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/mips/pci/pci.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+Jesse Barnes wrote:
 
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index 2a11045..19f6d19 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -24,10 +24,6 @@
-  * assignments.
-  */
- 
--#define PCI_ASSIGN_ALL_BUSSES	1
--
--unsigned int pci_probe = PCI_ASSIGN_ALL_BUSSES;
--
- /*
-  * The PCI controller list.
-  */
-@@ -238,7 +234,7 @@ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
- 
- unsigned int pcibios_assign_all_busses(void)
- {
--	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
-+	return 1;
- }
- 
- int pcibios_enable_device(struct pci_dev *dev, int mask)
+> Applied to my for-linus branch, thanks.
 
+Thanks for taking care of it.  I'll look into submitting these to
+-stable once they hit mainline if I notice.
