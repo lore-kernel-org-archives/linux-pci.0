@@ -1,46 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:51086 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946304Ab2CPXsF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:48:05 -0400
-Received: by mail-fa0-f74.google.com with SMTP id a19so214757faa.1
-        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:48:05 -0700 (PDT)
-Subject: [PATCH v2 2/7] arm/PCI: don't export pci_flags
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <rob.herring@calxeda.com>
-Date: Fri, 16 Mar 2012 17:48:04 -0600
-Message-ID: <20120316234804.6649.3554.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:56333 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990Ab2CBRSP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 12:18:15 -0500
+Received: by bkcik5 with SMTP id ik5so1687513bkc.19
+        for <linux-pci@vger.kernel.org>; Fri, 02 Mar 2012 09:18:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4F50FE1B.7090008@intel.com>
+References: <4f50b540.6AzyOmpHR+z7jLk1%tadeusz.struk@intel.com>
+ <CAErSpo6JaNXvJf_KEkRUYLed8ET4vSunfCAq9BWq3yd3+dZQpA@mail.gmail.com> <4F50FE1B.7090008@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 2 Mar 2012 10:17:53 -0700
+Message-ID: <CAErSpo6QzCy7cgN8boXu4zhGhTbjEG7RyJ6avaVKL_u=vGMOUw@mail.gmail.com>
+Subject: Re: [PATCH v2] Dynamically add and remove device specific reset functions
+To: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: jbarnes@virtuousgeek.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no need to export pci_flags; it's not exported by any other
-architecture, and no modules reference it.
+On Fri, Mar 2, 2012 at 10:06 AM, Tadeusz Struk <tadeusz.struk@intel.com> wrote:
+> On 02/03/12 16:29, Bjorn Helgaas wrote:
+>> Where do you plan to add calls to pci_dev_specific_reset_add()?  In
+>> drivers?
+>
+> Yes, I'm working on a driver for a device with SRIOV capability.
+> I'll call it from there.
+>
+>> Did you consider adding a "reset" function pointer to struct
+>> pci_driver?  That might be more natural -- the reset function is right
+>> with all the other code that knows about the device, and there's no
+>> issue with looking up the correct reset function.
+>> With this patch, we sort of have two different ways to map
+>> vendor/device IDs to code: the usual pci_register_driver() approach,
+>> and this one using reset_list.  If pci_driver had a "reset" pointer,
+>> that would be used most of the time.  You might still need the
+>> reset_list for generic things, e.g., the reset_intel_generic_dev()
+>> function, but it would be a fallback.  It might look something like:
+>>
+>>     struct pci_driver *drv = dev->driver;
+>>
+>>     if (drv && drv->reset) {
+>>         drv->reset(dev);
+>>         return;
+>>     }
+>>
+>>     list_for_each_entry(i, &reset_list, list) {
+>>         ...
+>
+> No, I didn't think about it.
+> This is good idea, but for me the pci_dev_specific_reset() works fine.
 
-CC: Rob Herring <rob.herring@calxeda.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/arm/kernel/bios32.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+I know your patch works fine, but I think we should have the
+discussion about whether adding a struct pci_driver pointer is a
+better long-term solution.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index be5d3b2..632df9a 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -498,7 +498,6 @@ void __init pci_common_init(struct hw_pci *hw)
- 		pci_bus_add_devices(bus);
- 	}
- }
--EXPORT_SYMBOL(pci_flags);
- 
- #ifndef CONFIG_PCI_HOST_ITE8152
- void pcibios_set_master(struct pci_dev *dev)
+Greg, Jesse, others, chime in if you have any thoughts.
 
+Bjorn
