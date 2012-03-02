@@ -1,74 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:27710 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759367Ab2CMH0z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 03:26:55 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 00/12] PCI, x86: More pci hotplug related cleanup
-Date: Tue, 13 Mar 2012 00:26:22 -0700
-Message-Id: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:52908 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750745Ab2CBUxX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 2 Mar 2012 15:53:23 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] PCI / PM: Disable wakeup during shutdown for devices not enabled to wake up
+Date: Fri, 2 Mar 2012 21:57:26 +0100
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+References: <Pine.LNX.4.44L0.1203021302460.8942-100000@netrider.rowland.org> <201203022149.27595.rjw@sisk.pl>
+In-Reply-To: <201203022149.27595.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201203022157.27093.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will claim hw/fw allocated resource.
-also add addon_resource support, and make cpc_hotplug/shpchp configure
-devices more like pciehp.
+On Friday, March 02, 2012, Rafael J. Wysocki wrote:
+> On Friday, March 02, 2012, Alan Stern wrote:
+> > On Fri, 2 Mar 2012, Jesse Barnes wrote:
+> > 
+> > > On Fri, 2 Mar 2012 15:44:27 +0100
+> > > Francois Romieu <romieu@fr.zoreil.com> wrote:
+> > > 
+> > > > Rafael J. Wysocki <rjw@sisk.pl> :
+> > > > [...]
+> > > > > If a PCI device is enabled to generate wakeup signals (PME) when put
+> > > > > into a low-power state by runtime PM, it will be still enabled to
+> > > > > generate those signals after the system shutdown, unless its driver's
+> > > > > .shutdown() callback takes care of the wakeup signals generation
+> > > > > setting.  Moreover, there are devices that are not enabled to wake
+> > > > > up the system and that are configured by runtime PM to generate
+> > > > > wakeup signals so that (runtime) remote wakeup works with them.
+> > > > > Those devices should be reconfigured during system shutdown so that
+> > > > > they don't generate wakeup signals, but at least some drivers don't
+> > > > > do that.  However, that very well may be done by the PCI core so
+> > > > > that drivers don't have to worry about it.  For this reason, modify
+> > > > > pci_device_shutdown() to disable the generation of wakeup events for
+> > > > > devices not supposed to wake up the system.
+> > > > 
+> > > > On a tangent side, if register writes are ignored by the PCI device
+> > > > after its .runtime_suspend() handler has been called, whose
+> > > > responsibility is it to bring back the device in a state from where
+> > > > the .shutdown() callback can operate ?
+> > > > 
+> > > > The r8169 driver exhibits this problem. Its .runtime_xyz() callbacks
+> > > > are called on link activity. Thus, after a link loss - or no link at
+> > > > all - .runtime_suspend() and an ineffective .shutdown(), the device is
+> > > > brought back up as soon as the link recovers.
+> > > > 
+> > > > The device driver can monitor .runtime_{suspend / resume} activity
+> > > > and take appropriate action in .shutdown(). Sameer Nanda has sent
+> > > > such a patch (see below). I am not sure this is the adequate fix:
+> > > > 1. the driver ought essentially to perform the hardware part of a
+> > > >    .runtime_resume() on its own behalf. Mildly engaging.
+> > > > 2. by the same line as above, could it make more sense to call
+> > > >    pm_runtime_resume() in driver/base/core.c::device_shutdown ?
+> > > 
+> > > I thought there would be a more elegant way of increasing the device
+> > > use count on entering .shutdown, either from the wifi core or at the
+> > > driver level, so you don't have to track things with a separate flag.
+> > 
+> > That's right.  For example, instead of keeping its own flag to know
+> > whether or not the device is runtime-suspended, the shutdown routine
+> > could just always call pm_runtime_resume_sync().  Or it could ask the
+> > PCI core to put the device into D0, regardless of the device's current
+> > state.
+> > 
+> > The driver core doesn't do this because most devices don't need it, and
+> > it would slow down the whole shutdown procedure if every suspended
+> > device were always resumed.
+> 
+> For devices known to have this problem I think calling pm_runtime_resume_sync()
+> unconditionally at the beginning of .suspend() would be a good approach in
+> general.
 
-The patches need to apply to pci/for-linus and pci/linux-next
-and [PATCH 00/36] PCI: pci_host_bridge related cleanup and busn_alloc
-and [PATCH v2 00/37] PCI, x86: pci root bus hotplug support
+Or even call pm_runtime_get_sync() at the beginning and then
+pm_runtime_put_noidle() after .shutdown() has done its own stuff.  Then, you
+have a guarantee that runtime PM won't interfere with the shutdown operations.
 
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-hotplug-more
-
-Thanks
-
-Yinghai
-
-Yinghai Lu (12):
-  PCI: Add debug print out for pci related dev release
-  x86, PCI: Let pcibios_allocate_bus_resources() take bus instead
-  PCI: Claim hw/fw allocated resources in hot add path.
-  PCI: Kill pci_is_reassignedev()
-  PCI: Add addon_resource support for pci_dev
-  PCI: Use for_each_pci_dev_resource helper
-  PCI: Make piix4 quirk to use addon_resource support
-  PCI: Make quirk_io_region to use addon_resource support
-  PCI: Use addon_fixed_resource with ati fixed resource
-  PCI, pciehp: Separate pci_hp_add_bridge()
-  PCI, cphi_hotplug: Simplify configure_slot
-  PCI, shpchp: Simplify configure_device
-
- arch/x86/pci/common.c                  |    3 +-
- arch/x86/pci/i386.c                    |  164 +++++++++++---------
- arch/x86/pci/mrst.c                    |    7 +-
- drivers/pci/bus.c                      |    2 +
- drivers/pci/hotplug-pci.c              |   13 ++
- drivers/pci/hotplug/acpiphp_glue.c     |    4 +-
- drivers/pci/hotplug/cpci_hotplug_pci.c |   35 +----
- drivers/pci/hotplug/pciehp_hpc.c       |    5 +-
- drivers/pci/hotplug/pciehp_pci.c       |   18 +--
- drivers/pci/hotplug/shpchp_pci.c       |   45 ++----
- drivers/pci/iov.c                      |   31 ++--
- drivers/pci/pci-driver.c               |    6 +-
- drivers/pci/pci.c                      |   45 +++---
- drivers/pci/pci.h                      |    1 +
- drivers/pci/probe.c                    |  117 ++++++++++++++-
- drivers/pci/quirks.c                   |  256 +++++++++++++++++++-------------
- drivers/pci/remove.c                   |    5 +-
- drivers/pci/setup-bus.c                |   32 ++--
- drivers/pci/setup-res.c                |   38 +++--
- drivers/pci/xen-pcifront.c             |    4 +-
- include/linux/pci.h                    |   78 +++++++++-
- 21 files changed, 564 insertions(+), 345 deletions(-)
-
--- 
-1.7.7
-
+Thanks,
+Rafael
