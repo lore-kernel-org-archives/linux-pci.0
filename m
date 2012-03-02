@@ -1,52 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([119.145.14.67]:44102 "EHLO
-	szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759355Ab2CMHYy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 03:24:54 -0400
-Date: Tue, 13 Mar 2012 15:23:30 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 2/5] Correctly clean up pci root buses in function
- pci_remove_bus()
-In-reply-to: <CAE9FiQVRMBHN+QbFpVv4j2xPfco2X0bt9OzzcSE-BrrDY4Oqgg@mail.gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Youquan Song <youquan.song@intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chenkeping@huawei.com
-Message-id: <4F5EF5F2.2000507@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
- <1331488109-13466-3-git-send-email-jiang.liu@huawei.com>
- <CAE9FiQVRMBHN+QbFpVv4j2xPfco2X0bt9OzzcSE-BrrDY4Oqgg@mail.gmail.com>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:42175 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756986Ab2CBUYK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 15:24:10 -0500
+Date: Fri, 2 Mar 2012 12:24:05 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: add spinlock held check to
+ 'pcibios_fwaddrmap_lookup()'
+Message-ID: <20120302122405.050ab634@jbarnes-desktop>
+In-Reply-To: <20120302200027.GA4817@kroah.com>
+References: <20120302194501.26152.22845.stgit@amt.stowe>
+	<20120302200027.GA4817@kroah.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/QVGSX+fSXxkzpY_ybZsmfvg"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
-	Good points! It's safe with current implementation because
-all root bus hotplug operations are under protection of 
-pci_remove_rescan_mutex.
+--Sig_/QVGSX+fSXxkzpY_ybZsmfvg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On 2012-3-13 14:24, Yinghai Lu wrote:
-> On Sun, Mar 11, 2012 at 10:48 AM, Jiang Liu<liuj97@gmail.com>  wrote:
->> The function pci_create_root_bus() allocates the pci bus structure,
->> registers the bus device and creates the legacy files for a pci root
->> bus, but returns without setting the is_added flag. The is_added flag
->> for a pci root bus will be set by function pci_scan_child_bus().
->
->> If a pci root bus is destroyed before calling pci_scan_child_bus(),
->> the is_added flag will not be set.
->
-> how that can be met?
->
-> Do we have pci_remove_rescan_mutex around them?
->
-> Yinghai
->
->
+On Fri, 2 Mar 2012 12:00:27 -0800
+Greg KH <gregkh@linuxfoundation.org> wrote:
+
+> On Fri, Mar 02, 2012 at 12:45:01PM -0700, Myron Stowe wrote:
+> > 'pcibios_fwaddrmap_lookup()' is used to maintain FW-assigned BIOS BAR
+> > values for reinstatement when normal resource assignment attempts
+> > fail and must be called with the 'pcibios_fwaddrmap_lock' spinlock
+> > held.
+> >=20
+> > This patch adds a WARN_ON notification if the spinlock is not currently
+> > held by the caller.
+> >=20
+> > Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> > ---
+> >=20
+> >  arch/x86/pci/i386.c |    2 ++
+> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> >=20
+> > diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+> > index 33e6a0b..831971e 100644
+> > --- a/arch/x86/pci/i386.c
+> > +++ b/arch/x86/pci/i386.c
+> > @@ -57,6 +57,8 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lo=
+okup(struct pci_dev *dev)
+> >  {
+> >  	struct pcibios_fwaddrmap *map;
+> > =20
+> > +	WARN_ON(!spin_is_locked(&pcibios_fwaddrmap_lock));
+> > +
+>=20
+> What is this going to help with?  How can someone then recover from this
+> issue?  Just adding a warning message isn't going to fix any problems
+> here, why not fix the root cause?
+
+It's just a self-documenting assert; doesn't trigger anything and has
+more functionality than
+  /* Must hold the fwaddrmap_lock here */
 
 
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/QVGSX+fSXxkzpY_ybZsmfvg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPUSxlAAoJEIEoDkX4Qk9hotcQAMv2Rq4j6HAXSJN11wR8NDhe
+Ns9MmDLYGkJCL5HLWYDrvwc4yQbYhH4Cty671sBE5+G5XOwGTsIrFZ1w4A+jcVuv
+Hj2OkGjWfF78l5aZfMrLvpukDUdU+hTLBvlVmkgsDgzNyvwRDYwq/bWPXl5Tswc/
+duTpCvyh5sxF+HJSvnbE0WdkfgtTebyRgCbMJZGVUM8N97uFzLxxH277PHlNaUwt
+J/2vI1C2LT1J5iyg9foKlCXqxm4WoebUFdqw0F0Z6fwK1HErCe948y/Hdox3Jq5E
+XU3GvRhDbOQnhXLxgVu4YcTpBswHwpWtVfR5NSr3tMUMcfYgS81KE/UxpWquTDzF
+fIkjoN+DtVUDsudaEjLvbWrSIIE51jlV7w0rxXG5AVt/5mmWyasVZosICNWcO7Dw
+Dysht2DT6IEl2Lutj11mVtFnQMI6i/svZRGAxwkPYMCWoldQ2HLBsub/x84qKdOa
+QBSH54ArdDDQKw7y9ATV4kMx1mTsIEo8wHaD7ZmUiPClNMBiuJvXSaq1maRLupgG
+2g4q3vT749KXUizAxarTg4HcKp+3O2sYlz0RwG+RFplRZs2mzH38XzwvJN3Jlfgq
+PclfKxLXMCComHp9fTNes2QSVOZdPEYhEBAS0df2a+03QxhqVZrehZBQyQa0Kx22
+mWamW22l89pEYhQQXu2z
+=NPgZ
+-----END PGP SIGNATURE-----
+
+--Sig_/QVGSX+fSXxkzpY_ybZsmfvg--
