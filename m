@@ -1,55 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25455 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161952Ab2CSFtm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:42 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 09/26] PCI, pciehp: Use for_each_pci_dev_resource helper
-Date: Sun, 18 Mar 2012 22:48:32 -0700
-Message-Id: <1332136129-14010-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:35054 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756927Ab2CBUEU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 15:04:20 -0500
+Date: Fri, 2 Mar 2012 12:04:10 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: add spinlock held check to
+ 'pcibios_fwaddrmap_lookup()'
+Message-ID: <20120302120410.27cea21c@jbarnes-desktop>
+In-Reply-To: <20120302194501.26152.22845.stgit@amt.stowe>
+References: <20120302194501.26152.22845.stgit@amt.stowe>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/MCYpBC5OYh8763MegqY=qNS"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/pciehp_hpc.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+--Sig_/MCYpBC5OYh8763MegqY=qNS
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index a960fae..ef10429 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -899,6 +899,7 @@ static inline void dbg_ctrl(struct controller *ctrl)
- 	int i;
- 	u16 reg16;
- 	struct pci_dev *pdev = ctrl->pcie->port;
-+	struct resource *res;
- 
- 	if (!pciehp_debug)
- 		return;
-@@ -914,11 +915,11 @@ static inline void dbg_ctrl(struct controller *ctrl)
- 		  pdev->subsystem_vendor);
- 	ctrl_info(ctrl, "  PCIe Cap offset      : 0x%02x\n",
- 		  pci_pcie_cap(pdev));
--	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+	for_each_pci_dev_all_resource(pdev, res, i) {
- 		if (!pci_resource_len(pdev, i))
- 			continue;
- 		ctrl_info(ctrl, "  PCI resource [%d]     : %pR\n",
--			  i, &pdev->resource[i]);
-+			  i, res);
- 	}
- 	ctrl_info(ctrl, "Slot Capabilities      : 0x%08x\n", ctrl->slot_cap);
- 	ctrl_info(ctrl, "  Physical Slot Number : %d\n", PSN(ctrl));
--- 
-1.7.7
+On Fri, 02 Mar 2012 12:45:01 -0700
+Myron Stowe <myron.stowe@redhat.com> wrote:
 
+> 'pcibios_fwaddrmap_lookup()' is used to maintain FW-assigned BIOS BAR
+> values for reinstatement when normal resource assignment attempts
+> fail and must be called with the 'pcibios_fwaddrmap_lock' spinlock
+> held.
+>=20
+> This patch adds a WARN_ON notification if the spinlock is not currently
+> held by the caller.
+>=20
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
+>=20
+>  arch/x86/pci/i386.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+> index 33e6a0b..831971e 100644
+> --- a/arch/x86/pci/i386.c
+> +++ b/arch/x86/pci/i386.c
+> @@ -57,6 +57,8 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_look=
+up(struct pci_dev *dev)
+>  {
+>  	struct pcibios_fwaddrmap *map;
+> =20
+> +	WARN_ON(!spin_is_locked(&pcibios_fwaddrmap_lock));
+> +
+>  	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
+>  		if (map->dev =3D=3D dev)
+>  			return map;
+>=20
+>=20
+
+Applied, thanks.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/MCYpBC5OYh8763MegqY=qNS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPUSe6AAoJEIEoDkX4Qk9hzokP/R0b2ld/PC5EKBHQHGPiQc1D
+SkVv+W9pLmXFI3zmO1FzBLfvqY8NDjqrBYDH+AxbWT+Cyrk6GH8Lr01OjfcqBJei
+jHgZ/xc9HSXUpjzxYq1cKHP/a5chyl1Swx7p8Pye7jxID+GodRfh/eMJxWmjoGaK
+wMKvhQme8s2CrwuSrFQZFuZrEwM/8GoWcZMZObsT0NsGK4Shy48KnSztd7LN4hUY
+2GILGm05kso3qMJVD7dx2K0kxk8morI6t2XRBBLdC50Wkw+0s3vhoBZ4t0n3Wfes
+wB4+fcbV3ENObaUnUyiJdm5Cyl5D0TDVlv8LjAFvxD40MPJLQFw8ITBnTpqoy580
+/uU6TLfyuUl+eclP919fJWYb+lPChtmqYkb+YWA3NM9xhzCOn/kaBZ4XprKfVGdC
+4PLh1t0KUuk+KwhNcm7RlOW9ohgKCWt9Adunt2EWa5N5DcuELPmHaEj63RWshupC
+LkGkkXb/c/bNOQ1U/iikp3zuIKAf4W6x+uH/VjpZR3qHFu8/xeeTLlVhoc7T0/oS
+gXt8PULqusRFqi0zimsTNN6v55jkmC4Yfn9CEcD1vR7jhf3MQplZXzrN00Uid+l7
+2HH10OoY7Ncdiayzoh4Wx4eZqRH46tyd4OjC6V4IgbOIPhofVxhsomYeAcEfZ4uP
+S7ApAig5SveTqNIT2MPP
+=k1wN
+-----END PGP SIGNATURE-----
+
+--Sig_/MCYpBC5OYh8763MegqY=qNS--
