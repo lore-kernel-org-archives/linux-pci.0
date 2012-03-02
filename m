@@ -1,85 +1,64 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1331362837-10740-34-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-34-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Mar 2012 21:37:03 -0600
-Message-ID: <CAErSpo6EEf7=tT1ZWQ8+izTwop-KdFGsQszgWSVVyq7J0W1n0g@mail.gmail.com>
-Subject: Re: [PATCH v2 33/37] x86, PCI: Add pcibios_root_rescan()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20120301201050.GC5155@xanatos>
+References: <1330629843-6027-1-git-send-email-yinghai@kernel.org>
+	<1330629843-6027-2-git-send-email-yinghai@kernel.org>
+	<20120301201050.GC5155@xanatos>
+Date: Thu, 1 Mar 2012 17:04:41 -0800
+Message-ID: <CAE9FiQWDwraftUnr8ryStOWX5XxXK6sBPS7fbbqD8bWWF_ASfg@mail.gmail.com>
+Subject: Re: [RFC PATCH 2/3] usb, PCI: remove disable/enable device with
+ non-xhci quirk
+From: Yinghai Lu <yinghai@kernel.org>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Need use it to rescan root bus that was not added via acpi probe.
+On Thu, Mar 1, 2012 at 12:10 PM, Sarah Sharp
+<sarah.a.sharp@linux.intel.com> wrote:
+> On Thu, Mar 01, 2012 at 11:24:02AM -0800, Yinghai Lu wrote:
+>> | commit cab928ee1f221c9cc48d6615070fefe2e444384a
+>> |    USB: Fix handoff when BIOS disables host PCI device.
+>>
+>> mention only need to do disable/enable for xhci controller.
+>>
+>> So just remove that for non-xhci controller and restore old behavior for them.
+>
+> As I said, we do need to do the enable/disable for all USB hosts.  Jesse
+> Barnes confirms that the PCI core doesn't do that for us, so we can't
+> rely on the BIOS always enabling the PCI device.  I don't think we need
+> this patch, because we should always be doing the enable/disable for all
+> USB hosts.  We just never had a BIOS that caused this bug to be
+> discovered until the xHCI BIOS for the Intel system in question.
 
-Why would we ever need to rescan for this?  If we're doing host
-bridge hotplug on x86, it's via ACPI, so we'll always have an ACPI
-host bridge object.
+ok
 
-There's no way to even express the idea of "adding or removing buses
-we found by blindly probing," so there's no need to do any kind of
-rescanning to find them again.  We find them once at boot-time, and
-that's more than enough.
+after
+-DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+                                                quirk_usb_early_handoff);
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+                        PCI_CLASS_SERIAL_USB, 8, quirk_usb_early_handoff);
+in pci-next get merged,
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  arch/x86/include/asm/pci.h |    2 ++
->  arch/x86/pci/legacy.c      |   25 +++++++++++++++++++++++++
->  2 files changed, 27 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index bb015c7..332c191 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -30,6 +30,8 @@ extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
->                                            int node);
->  extern struct pci_bus *pci_scan_bus_with_sysdata(int busno);
->
-> +void pcibios_root_rescan(void);
-> +
->  #ifdef CONFIG_PCI
->
->  #ifdef CONFIG_PCI_DOMAINS
-> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-> index aab0e41..251f838 100644
-> --- a/arch/x86/pci/legacy.c
-> +++ b/arch/x86/pci/legacy.c
-> @@ -79,3 +79,28 @@ int __init pci_subsys_init(void)
->        return 0;
->  }
->  subsys_initcall(pci_subsys_init);
-> +
-> +void __ref pcibios_root_rescan(void)
-> +{
-> +       int busn;
-> +       struct pci_bus *bus;
-> +
-> +       if (pcibios_last_bus <= 0 || pcibios_last_bus > 0xff)
-> +               return;
-> +
-> +       for (busn = 0; busn <= pcibios_last_bus; busn++) {
-> +               bus = pci_find_bus(0, busn);
-> +
-> +               if (bus)
-> +                       continue;
-> +
-> +               bus = __pcibios_scan_specific_bus(busn, false);
-> +
-> +               if (!bus)
-> +                       continue;
-> +
-> +               pci_assign_unassigned_bus_resources(bus);
-> +
-> +               pci_bus_add_devices(bus);
-> +       }
-> +}
-> --
-> 1.7.7
->
+how about following change ?
+
+Index: linux-2.6/drivers/usb/host/pci-quirks.c
+===================================================================
+--- linux-2.6.orig/drivers/usb/host/pci-quirks.c
++++ linux-2.6/drivers/usb/host/pci-quirks.c
+@@ -891,11 +891,6 @@ static void __devinit quirk_usb_early_ha
+ 	 */
+ 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
+ 		return;
+-	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
+-			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
+-			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
+-			pdev->class != PCI_CLASS_SERIAL_USB_XHCI)
+-		return;
+
+ 	if (pci_enable_device(pdev) < 0) {
+ 		dev_warn(&pdev->dev, "Can't enable PCI device, "
