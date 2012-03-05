@@ -1,76 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:43258 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1031544Ab2CFXOE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Mar 2012 18:14:04 -0500
-Received: by lahj13 with SMTP id j13so6624790lah.19
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 15:14:02 -0800 (PST)
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:46907 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757040Ab2CEQxr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Mar 2012 11:53:47 -0500
+Received: by mail-pw0-f46.google.com with SMTP id un15so2970293pbc.19
+        for <linux-pci@vger.kernel.org>; Mon, 05 Mar 2012 08:53:47 -0800 (PST)
+Date: Mon, 5 Mar 2012 08:45:18 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: bhelgaas@google.com, jbarnes@virtuousgeek.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/1 v3] PCI: Device specific reset function
+Message-ID: <20120305164518.GF2459@kroah.com>
+References: <4f548ed1.4o6PhHmCeKTSPZXU%tadeusz.struk@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1331018040-30725-24-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-24-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 6 Mar 2012 16:13:42 -0700
-Message-ID: <CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
-Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4f548ed1.4o6PhHmCeKTSPZXU%tadeusz.struk@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 12:14 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> need use it to rescan root bus that was not added via acpi probe.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On Mon, Mar 05, 2012 at 10:00:49AM +0000, Tadeusz Struk wrote:
+> 
 > ---
->  arch/x86/pci/legacy.c |   25 +++++++++++++++++++++++++
->  1 files changed, 25 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-> index aab0e41..7a7c78f 100644
-> --- a/arch/x86/pci/legacy.c
-> +++ b/arch/x86/pci/legacy.c
-> @@ -79,3 +79,28 @@ int __init pci_subsys_init(void)
->        return 0;
->  }
->  subsys_initcall(pci_subsys_init);
-> +
-> +void __devinit pcibios_root_rescan(void)
-> +{
-> +       int busn;
-> +       struct pci_bus *bus;
-> +
-> +       if (pcibios_last_bus <= 0 || pcibios_last_bus > 0xff)
-> +               return;
-> +
-> +       for (busn = 0; busn <= pcibios_last_bus; busn++) {
-> +               bus = pci_find_bus(0, busn);
-> +
-> +               if (bus)
-> +                       continue;
-> +
-> +               bus = __pcibios_scan_specific_bus(busn, false);
-> +
-> +               if (!bus)
-> +                       continue;
-> +
-> +               pci_assign_unassigned_bus_resources(bus);
-> +
-> +               pci_bus_add_devices(bus);
-> +       }
-> +}
+>  drivers/pci/pci.h    |    1 +
+>  drivers/pci/quirks.c |   33 +++++++++++++++++++++++++++------
+>  include/linux/pci.h  |    1 +
+>  3 files changed, 29 insertions(+), 6 deletions(-)
 
-Does anybody call this?
+Please read Documentation/SubmittingPatches for how to properly create,
+and send, patches that are in a format that can be accepted.
 
-Do we need it?  I assume we only care about host bridge hotplug via ACPI on x86.
+Hint, also run your patch through scripts/checkpatch.pl to find the
+obvious problems that are in it, to keep us from having to do that for
+you...
 
-Please wait a while (at least a day or two) before reposting your
-series so people have time to take a look at the current one.  It's a
-real nuisance to be working through a large series like this and get
-bombed with a repost of the whole thing that tweaks some minor detail.
- I'd rather take some time and get as much of the discussion out of
-the way on V1 as possible before getting to V2, V3, V4, etc.
+> 
+> This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). Any review or distribution by others is strictly prohibited. If you are not the intended recipient, please contact the sender and delete all copies.
 
-Bjorn
+I have been told that such email footers require that the patch be
+deleted and never be accepted.  Please fix this if you expect your
+patches to be able to be applied.
+
+greg k-h
