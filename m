@@ -1,75 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([58.251.152.66]:49491 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756617Ab2CUDhz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 23:37:55 -0400
-Received: from huawei.com (szxga03-in [172.24.2.9])
- by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M17003JCTUPZU@szxga03-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 21 Mar 2012 11:32:49 +0800 (CST)
-Received: from szxrg02-dlp.huawei.com ([172.24.2.119])
- by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M1700GK3TUO1S@szxga03-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 21 Mar 2012 11:32:49 +0800 (CST)
-Date: Wed, 21 Mar 2012 11:32:31 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 2/6] x86,IRQ: Mark unused entries in 'ioapics' array as
- free at startup
-In-reply-to: <CAE9FiQX9NJ4n09_OWJVf7n579=JWDUi+XF79aMKUFunCXL3PJw@mail.gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-	chenkeping@huawei.com
-Message-id: <4F694BCF.80106@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
- <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
- <1332260463-13924-4-git-send-email-jiang.liu@huawei.com>
- <CAE9FiQX9NJ4n09_OWJVf7n579=JWDUi+XF79aMKUFunCXL3PJw@mail.gmail.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:64551 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756101Ab2CED7i convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Mar 2012 22:59:38 -0500
+Received: by wejx9 with SMTP id x9so2074484wej.19
+        for <linux-pci@vger.kernel.org>; Sun, 04 Mar 2012 19:59:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120305035451.GB32675@quad.lixom.net>
+References: <20120222181556.27513.9413.stgit@bhelgaas.mtv.corp.google.com>
+	<20120222181948.27513.96215.stgit@bhelgaas.mtv.corp.google.com>
+	<1329946899.20389.9.camel@pasglop>
+	<20120305035451.GB32675@quad.lixom.net>
+Date: Sun, 4 Mar 2012 19:59:36 -0800
+Message-ID: <CAOesGMipY2fTcNOSKwtCmkcQBzc0OFZrrWEWk8D7vkfNdRTf9g@mail.gmail.com>
+Subject: Re: [PATCH v1 09/11] powerpc/PCI: replace pci_probe_only with pci_flags
+From: Olof Johansson <olof@lixom.net>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So seems another patch is needed to search all entries in the ioapics
-array to find a free entry for real hot-added IOAPICs. Current
-implementation can only support hot-replace scenario, but can't support
-real hot-add. If needed, I will work out another patch to address that.
-
-Gerry
-
-On 2012-3-21 11:25, Yinghai Lu wrote:
-> On Tue, Mar 20, 2012 at 9:20 AM, Jiang Liu<liuj97@gmail.com>  wrote:
->> Unused entries in ioapics array should be marked as free at startup,
->> so they could be used by hot-added IOAPICs.
+On Sun, Mar 4, 2012 at 7:54 PM, Olof Johansson <olof@lixom.net> wrote:
+> On Thu, Feb 23, 2012 at 08:41:39AM +1100, Benjamin Herrenschmidt wrote:
+>> On Wed, 2012-02-22 at 11:19 -0700, Bjorn Helgaas wrote:
+>> >  int maple_pci_get_legacy_ide_irq(struct pci_dev *pdev, int channel)
+>> > diff --git a/arch/powerpc/platforms/pasemi/pci.c
+>> > b/arch/powerpc/platforms/pasemi/pci.c
+>> > index b6a0ec4..b27d886 100644
+>> > --- a/arch/powerpc/platforms/pasemi/pci.c
+>> > +++ b/arch/powerpc/platforms/pasemi/pci.c
+>> > @@ -231,7 +231,7 @@ void __init pas_pci_init(void)
+>> >         pci_devs_phb_init();
+>> >
+>> >         /* Use the common resource allocation mechanism */
+>> > -       pci_probe_only = 1;
+>> > +       pci_add_flags(PCI_PROBE_ONLY);
+>> >  }
 >>
->> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->> ---
->>   arch/x86/kernel/apic/io_apic.c |    4 ++++
->>   1 files changed, 4 insertions(+), 0 deletions(-)
->>
->> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
->> index 7412eb8..622374f 100644
->> --- a/arch/x86/kernel/apic/io_apic.c
->> +++ b/arch/x86/kernel/apic/io_apic.c
->> @@ -392,6 +392,10 @@ int __init arch_early_irq_init(void)
->>                 cpumask_set_cpu(0, cfg->domain);
->>         }
->>
->> +       /* Mark all left entries as free for IOAPIC hot-adding. */
->> +       for (i = nr_ioapics; i<  MAX_IO_APICS; i++)
->> +               ioapics[i].mp_config.apicid = 0xff;
->> +
->>         return 0;
->>   }
+>> Olof, do you remember why you used to set that on pasemi ?
 >
-> this one looks like not needed, we did not search that after
-> nr_ioapics, and just use nr_ioapics if open spot is found.
+> Oops, going through email backlog. Sorry for the slow response.
 >
-> Yinghai
+>> I would have expected it to be clear, so the kernel can re-assign things
+>> if needed. We really only want it set for pseries because of the
+>> hypervisor being a PITA :-)
 >
+> Well, we did have some hypervisor work done at PA Semi too, and chances
+> are it's from there. But it's unlikely since I think we booted pseries
+> (PAPR) kernels under rHype.
 >
+> I suspect we just went with it for whatever legacy reasons and didn't
+> revisit later -- since our firmware enumerated busses reliably there
+> was no reason to redo it from the kernel.
+>
+> I've booted a system with pci_probe_only off here, and it seems happy
+> enough. I'll send you a patch.
+>
+> Bjorn, that means you can drop this chunk of the patch, I suppose.
+
+Sorry to comment to myself so quickly but since I just noticed that
+the patch is in -next, don't worry about rebasing your work -- we'll
+take out the flag use later.
 
 
+-Olof
