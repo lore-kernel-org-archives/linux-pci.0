@@ -1,89 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30717 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161298Ab2CSFr5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:57 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 24/47] PCI: Add pci_stop_and_remove_bus()
-Date: Sun, 18 Mar 2012 22:46:13 -0700
-Message-Id: <1332135996-13860-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:47569 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754421Ab2CFD1m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Mar 2012 22:27:42 -0500
+From: Rusty Russell <rusty@rustcorp.com.au>
+To: Santosh Jodh <Santosh.Jodh@citrix.com>,
+	"konrad.wilk\@oracle.com" <konrad.wilk@oracle.com>,
+	"jeremy\@goop.org" <jeremy@goop.org>,
+	Ian Campbell <Ian.Campbell@citrix.com>,
+	"jbarnes\@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"jbeulich\@novell.com" <jbeulich@novell.com>,
+	"joe.jin\@oracle.com" <joe.jin@oracle.com>,
+	"lersek\@redhat.com" <lersek@redhat.com>,
+	"weiyi.huang\@gmail.com" <weiyi.huang@gmail.com>,
+	"dgdegra\@tycho.nsa.gov" <dgdegra@tycho.nsa.gov>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"paul.gortmaker\@windriver.com" <paul.gortmaker@windriver.com>,
+	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
+	"waldi\@debian.org" <waldi@debian.org>,
+	"virtualization\@lists.linux-foundation.org"
+	<virtualization@lists.linux-foundation.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xen-devel\@lists.xen.org" <xen-devel@lists.xen.org>
+Cc: Santosh Jodh <Santosh.Jodh@citrix.com>,
+	Paul Durrant <Paul.Durrant@citrix.com>
+Subject: Re: [PATCH 0001/001] xen: multi page ring support for block devices
+In-Reply-To: <7914B38A4445B34AA16EB9F1352942F1010A1FA12364@SJCPMAILBOX01.citrite.net>
+References: <1330701099-18281-1-git-send-email-santoshprasadnayak@gmail.com> <7914B38A4445B34AA16EB9F1352942F1010A1FA12364@SJCPMAILBOX01.citrite.net>
+Date: Tue, 06 Mar 2012 13:12:49 +1030
+Message-ID: <87ty22xxee.fsf@rustcorp.com.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It supports both pci root bus and pci bus under pci bridge.
+On Mon, 5 Mar 2012 13:49:07 -0800, Santosh Jodh <Santosh.Jodh@citrix.com> wrote:
+> +/* Order of maximum shared ring size advertised to the front end. */
+> +int xen_blkif_max_ring_order = XENBUS_MAX_RING_ORDER;
+> +
+> +#define BLK_RING_SIZE(_order) __CONST_RING_SIZE(blkif, PAGE_SIZE << (_order))
+> +
+> +static int set_max_ring_order(const char *buf, struct kernel_param *kp)
+> +{
+> +       int err;
+> +       unsigned long order;
+> +
+> +       err = kstrtol(buf, 0, &order);
+> +       if (err ||
+> +           order < 0 ||
+> +           order > XENBUS_MAX_RING_ORDER)
+> +               return -EINVAL;
 
--v2: clear pci_bridge's subordinate.
+Hmm, order can't be < 0, since it's unsigned.  So did you mean
+kstrtoull?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/remove.c |   32 ++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    1 +
- 2 files changed, 33 insertions(+), 0 deletions(-)
+And I think returning err is cleaner (it's -EINVAL for malformed
+strings, -ERANGE for ones too big).
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 64ba5b1..75b0092 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -169,6 +169,38 @@ void pci_stop_bus_device(struct pci_dev *dev)
- 	pci_stop_dev(dev);
- }
- 
-+static void pci_stop_host_bridge(struct pci_host_bridge *bridge)
-+{
-+	device_unregister(&bridge->dev);
-+}
-+/*
-+ * it will support pci root bus too, in that case we need
-+ *  stop and remove host bridge
-+ */
-+void pci_stop_and_remove_bus(struct pci_bus *bus)
-+{
-+	struct pci_host_bridge *host_bridge = NULL;
-+	struct pci_dev *pci_bridge = NULL;
-+
-+	pci_stop_bus_devices(bus);
-+
-+	if (pci_is_root_bus(bus)) {
-+		host_bridge = to_pci_host_bridge(bus->bridge);
-+		pci_stop_host_bridge(host_bridge);
-+	} else
-+		pci_bridge = bus->self;
-+
-+	__pci_remove_bus_devices(bus);
-+
-+	pci_remove_bus(bus);
-+
-+	if (host_bridge)
-+		host_bridge->bus = NULL;
-+
-+	if (pci_bridge)
-+		pci_bridge->subordinate = NULL;
-+}
-+
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
- EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
- EXPORT_SYMBOL_GPL(pci_stop_bus_device);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b434401..aec945d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -703,6 +703,7 @@ extern void pci_dev_put(struct pci_dev *dev);
- extern void pci_remove_bus(struct pci_bus *b);
- extern void __pci_remove_bus_device(struct pci_dev *dev);
- extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-+void pci_stop_and_remove_bus(struct pci_bus *bus);
- extern void pci_stop_bus_device(struct pci_dev *dev);
- void pci_setup_cardbus(struct pci_bus *bus);
- extern void pci_sort_breadthfirst(void);
+> +       if (xen_blkif_reqs < BLK_RING_SIZE(order))
+> +               printk(KERN_WARNING "WARNING: "
+> +                      "I/O request space (%d reqs) < ring order %ld, "
+> +                      "consider increasing %s.reqs to >= %ld.",
+> +                      xen_blkif_reqs, order, KBUILD_MODNAME,
+> +                      roundup_pow_of_two(BLK_RING_SIZE(order)));
+
+This message doesn't mention the module namr or parameter name
+anywhere.  Think of the poor sysadmins!
+
+Thanks,
+Rusty.
 -- 
-1.7.7
-
+  How could I marry someone with more hair than me?  http://baldalex.org
