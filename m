@@ -1,80 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:31814 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758414Ab2CFHQB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:16:01 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 00/26] PCI, x86: Add for_each_res and addon resource support
-Date: Sun, 18 Mar 2012 22:48:23 -0700
-Message-Id: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 11/23] PCI: separate out pci_assign_unassigned_bus_resources()
+Date: Mon,  5 Mar 2012 23:13:48 -0800
+Message-Id: <1331018040-30725-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make device resource loop easier and readable.
-Also add addon_resource support about non-stanard resources.
+it is main portion of pci_rescan_bus().
 
-The patches need to apply to pci/for-linus and pci/linux-next
-        [PATCH -v3] PCI: pci_host_bridge related cleanup
-        [PATCH -v11] PCI: allocate pci bus num range for unassigned bridge busn
-	[PATCH -v3] PCI, x86: pci root bus hotplug support
+Separate it out and will use it later for pci root bus rescan.
 
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-for-each-res-addon
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   34 ++++++++++++++++++++--------------
+ include/linux/pci.h     |    1 +
+ 2 files changed, 21 insertions(+), 14 deletions(-)
 
--v2: Split to small patches.
-
-Thanks
-
-Yinghai
-
-Yinghai Lu (26):
-  PCI: Add pci_dev_resource_n()
-  PCI: Add for_each_resource helpers to make resource loop easier.
-  PCI: Add pci_dev_resource_idx()
-  PCI: Update pci_resource_start to use pci_dev_resource_n()
-  x86, PCI: Use for_each_res with pci_allocate_bridge_resources
-  x86, PCI: Use for_each_res with pci_allocate_dev_resources
-  PCI: Use for_each_res with IOV releated funcs
-  PCI, acpiphp: Use for_each_pci_dev_resource helper
-  PCI, pciehp: Use for_each_pci_dev_resource helper
-  PCI: Use for_each_pci_dev_resource pci_enable_dev
-  PCI: Use for_each_pci_dev_resource pci_reassigndev
-  PCI: Use for_each_res with pci bar reassign funcs
-  PCI: Use for_each_res pci_assign_resource
-  PCI: Use for_each_res with noassign_bars
-  PCI: Use for_each_res pci bases pci_dev_driver()
-  PCI: Use for_each_res pci release release
-  PCI: Use for_each_res pci bases reading
-  PCI: Use for_each_res with mrs
-  PCI: Use for_each_res with xen pci
-  PCI: Add addon_resource support for pci_dev
-  PCI: Add helpers for add addon_resource
-  PCI: Update pci_resource_bar() to support addon_resource
-  PCI: Make assign/update resource to support addon_res
-  PCI: Make piix4 quirk to use addon_resource support
-  PCI: Make quirk_io_region to use addon_resource support
-  PCI: Use addon_fixed_resource with ati fixed resource
-
- arch/x86/pci/common.c              |    3 +-
- arch/x86/pci/i386.c                |   57 +++-----
- arch/x86/pci/mrst.c                |    7 +-
- drivers/pci/hotplug/acpiphp_glue.c |    4 +-
- drivers/pci/hotplug/pciehp_hpc.c   |    5 +-
- drivers/pci/iov.c                  |   31 ++---
- drivers/pci/pci-driver.c           |    6 +-
- drivers/pci/pci.c                  |   28 +++--
- drivers/pci/probe.c                |  114 ++++++++++++++++-
- drivers/pci/quirks.c               |  256 +++++++++++++++++++++---------------
- drivers/pci/remove.c               |    5 +-
- drivers/pci/setup-bus.c            |   28 ++---
- drivers/pci/setup-res.c            |   38 ++++--
- drivers/pci/xen-pcifront.c         |    4 +-
- include/linux/pci.h                |   79 +++++++++++-
- 15 files changed, 446 insertions(+), 219 deletions(-)
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8fa2d4b..6a66139 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1488,25 +1488,12 @@ enable_all:
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+ 
+-#ifdef CONFIG_HOTPLUG
+-/**
+- * pci_rescan_bus - scan a PCI bus for devices.
+- * @bus: PCI bus to scan
+- *
+- * Scan a PCI bus and child buses for new devices, adds them,
+- * and enables them.
+- *
+- * Returns the max number of subordinate bus discovered.
+- */
+-unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+-	unsigned int max;
+ 	struct pci_dev *dev;
+ 	LIST_HEAD(add_list); /* list of resources that
+ 					want additional resources */
+ 
+-	max = pci_scan_child_bus(bus);
+-
+ 	down_read(&pci_bus_sem);
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+ 		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+@@ -1519,6 +1506,25 @@ unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
+ 	BUG_ON(!list_empty(&add_list));
+ 
+ 	pci_enable_bridges(bus);
++}
++#ifdef CONFIG_HOTPLUG
++/**
++ * pci_rescan_bus - scan a PCI bus for devices.
++ * @bus: PCI bus to scan
++ *
++ * Scan a PCI bus and child buses for new devices, adds them,
++ * and enables them.
++ *
++ * Returns the max number of subordinate bus discovered.
++ */
++unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++{
++	unsigned int max;
++
++	max = pci_scan_child_bus(bus);
++
++	pci_assign_unassigned_bus_resources(bus);
++
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 28556cb..4f30cd1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -910,6 +910,7 @@ void pci_bus_size_bridges(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
++void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
 -- 
 1.7.7
 
