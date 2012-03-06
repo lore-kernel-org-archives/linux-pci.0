@@ -1,107 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30645 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161244Ab2CSFrr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:47 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 17/47] x86, PCI: Separate pcibios_allocate_dev_resources()
-Date: Sun, 18 Mar 2012 22:46:06 -0700
-Message-Id: <1332135996-13860-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 15/23] PCI: add pci_stop_and_remove_bus()
+Date: Mon,  5 Mar 2012 23:13:52 -0800
+Message-Id: <1331018040-30725-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thus pcibios_allocate_resources() could more simple and clean
+it supports both pci root bus and pci bus under pci bridge.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/i386.c |   42 +++++++++++++++++++++++-------------------
- 1 files changed, 23 insertions(+), 19 deletions(-)
+ drivers/pci/remove.c |   27 +++++++++++++++++++++++++++
+ include/linux/pci.h  |    1 +
+ 2 files changed, 28 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index c06f60f..bb84ff0 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -232,9 +232,8 @@ struct pci_check_idx_range {
- 	int end;
- };
- 
--static void __init pcibios_allocate_resources(int pass)
-+static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- {
--	struct pci_dev *dev = NULL;
- 	int idx, disabled, i;
- 	u16 command;
- 	struct resource *r;
-@@ -246,14 +245,13 @@ static void __init pcibios_allocate_resources(int pass)
- #endif
- 	};
- 
--	for_each_pci_dev(dev) {
--		pci_read_config_word(dev, PCI_COMMAND, &command);
--		for (i = 0; i < ARRAY_SIZE(idx_range); i++)
-+	pci_read_config_word(dev, PCI_COMMAND, &command);
-+	for (i = 0; i < ARRAY_SIZE(idx_range); i++)
- 		for (idx = idx_range[i].start; idx <= idx_range[i].end; idx++) {
- 			r = &dev->resource[idx];
--			if (r->parent)		/* Already allocated */
-+			if (r->parent)	/* Already allocated */
- 				continue;
--			if (!r->start)		/* Address not assigned at all */
-+			if (!r->start)	/* Address not assigned at all */
- 				continue;
- 			if (r->flags & IORESOURCE_IO)
- 				disabled = !(command & PCI_COMMAND_IO);
-@@ -272,23 +270,29 @@ static void __init pcibios_allocate_resources(int pass)
- 				}
- 			}
- 		}
--		if (!pass) {
--			r = &dev->resource[PCI_ROM_RESOURCE];
--			if (r->flags & IORESOURCE_ROM_ENABLE) {
--				/* Turn the ROM off, leave the resource region,
--				 * but keep it unregistered. */
--				u32 reg;
--				dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
--				r->flags &= ~IORESOURCE_ROM_ENABLE;
--				pci_read_config_dword(dev,
--						dev->rom_base_reg, &reg);
--				pci_write_config_dword(dev, dev->rom_base_reg,
-+	if (!pass) {
-+		r = &dev->resource[PCI_ROM_RESOURCE];
-+		if (r->flags & IORESOURCE_ROM_ENABLE) {
-+			/* Turn the ROM off, leave the resource region,
-+			 * but keep it unregistered. */
-+			u32 reg;
-+			dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
-+			r->flags &= ~IORESOURCE_ROM_ENABLE;
-+			pci_read_config_dword(dev, dev->rom_base_reg, &reg);
-+			pci_write_config_dword(dev, dev->rom_base_reg,
- 						reg & ~PCI_ROM_ADDRESS_ENABLE);
--			}
- 		}
- 	}
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 62c348c..13a1555 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -172,6 +172,33 @@ void pci_stop_bus_device(struct pci_dev *dev)
+ 	pci_stop_dev(dev);
  }
  
-+static void __init pcibios_allocate_resources(int pass)
++static void pci_stop_host_bridge(struct pci_host_bridge *bridge)
 +{
-+	struct pci_dev *dev = NULL;
++	device_unregister(&bridge->dev);
++}
++/*
++ * it will support pci root bus too, in that case we need
++ *  stop and remove host bridge
++ */
++void pci_stop_and_remove_bus(struct pci_bus *bus)
++{
++	struct pci_host_bridge *host_bridge = NULL;
 +
-+	for_each_pci_dev(dev)
-+		pcibios_allocate_dev_resources(dev, pass);
++	pci_stop_bus_devices(bus);
++
++	if (pci_is_root_bus(bus)) {
++		host_bridge = to_pci_host_bridge(bus->bridge);
++		pci_stop_host_bridge(host_bridge);
++	}
++
++	__pci_remove_bus_devices(bus);
++
++	pci_remove_bus(bus);
++
++	if (host_bridge)
++		host_bridge->bus = NULL;
 +}
 +
- static int __init pcibios_assign_resources(void)
- {
- 	struct pci_dev *dev = NULL;
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+ EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
+ EXPORT_SYMBOL_GPL(pci_stop_bus_device);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4f30cd1..3d5feda 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -702,6 +702,7 @@ extern void pci_dev_put(struct pci_dev *dev);
+ extern void pci_remove_bus(struct pci_bus *b);
+ extern void __pci_remove_bus_device(struct pci_dev *dev);
+ extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++void pci_stop_and_remove_bus(struct pci_bus *bus);
+ extern void pci_stop_bus_device(struct pci_dev *dev);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
 -- 
 1.7.7
 
