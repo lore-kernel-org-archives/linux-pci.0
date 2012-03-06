@@ -1,45 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:55731 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703Ab2CZTEX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Mar 2012 15:04:23 -0400
-Date: Mon, 26 Mar 2012 21:04:20 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Yevgeny Petrilin <yevgenyp@mellanox.com>
-cc: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yael Shenhav <yaeli@mellanox.com>
-Subject: RE: IRQ affinity enforced only after first interrupt.
-In-Reply-To: <953B660C027164448AE903364AC447D2618E1A8B@MTLDAG02.mtl.com>
-Message-ID: <alpine.LFD.2.02.1203262059070.2542@ionos>
-References: <4F7031A4.70601@mellanox.co.il> <CAErSpo7ciBYG1-jCL3F6bFcktmJj4H-SXn_1NcRnhc-gPDsHUw@mail.gmail.com> <4F707E39.50502@gmail.com> <953B660C027164448AE903364AC447D2618E1A8B@MTLDAG02.mtl.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@kernel.org,
+	Len Brown <lenb@kernel.org>, Adam Belay <abelay@mit.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org
+Subject: [PATCH 08/23] PNPACPI: Fix device ref leaking in acpi_pnp_match
+Date: Mon,  5 Mar 2012 23:13:45 -0800
+Message-Id: <1331018040-30725-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 26 Mar 2012, Yevgeny Petrilin wrote:
+During testing pci root bus removal, found some root bus bridge is not freed.
 
-> > 
-> > The architecture specific code will determine whether the IRQ could be migrated
-> > in process context. For example, the IRQ_MOVE_PCNTXT flag will be set on x86
-> > systems if interrupt remapping is enabled.
->
-> Actually I am encountering this issue with x86, and see different
-> behavior with different HW devices (NICs). On same machine I have
-> one device that responds immediately to affinity changes while the
-> other one changes the affinity only after first interrupt.
+If booting with pnpacpi=off, those hostbridge could be freed without problem.
 
-That simply depends on the underlying hardware. On certain hardware we
-can change the affinity only in hard interrupt context, that means
-right when a interrupt of that device is delivered.
+It turns out that some devices reference are not released during acpi_pnp_match.
 
-On the other devices we can change it right away and the corresponding
-interrupt chips set IRQ_MOVE_PCNTXT to indicate that.
+that match should not hold one device ref during every calling.
 
-There is nothing we can do about this. It's dictated by hardware.
+Add put_device calling before returning.
 
-Thanks,
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@kernel.org
+Cc: Len Brown <lenb@kernel.org>
+Cc: Adam Belay <abelay@mit.edu>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/pnp/pnpacpi/core.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-	tglx
+diff --git a/drivers/pnp/pnpacpi/core.c b/drivers/pnp/pnpacpi/core.c
+index b00c176..d21e8f5 100644
+--- a/drivers/pnp/pnpacpi/core.c
++++ b/drivers/pnp/pnpacpi/core.c
+@@ -321,9 +321,14 @@ static int __init acpi_pnp_match(struct device *dev, void *_pnp)
+ {
+ 	struct acpi_device *acpi = to_acpi_device(dev);
+ 	struct pnp_dev *pnp = _pnp;
++	struct device *physical_device;
++
++	physical_device = acpi_get_physical_device(acpi->handle);
++	if (physical_device)
++		put_device(physical_device);
+ 
+ 	/* true means it matched */
+-	return !acpi_get_physical_device(acpi->handle)
++	return !physical_device
+ 	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
+ }
+ 
+-- 
+1.7.7
+
