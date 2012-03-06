@@ -1,61 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 08/11] x86, PCI: Embed name into pci_root_info struct
-Date: Sun, 18 Mar 2012 22:40:21 -0700
-Message-Id: <1332135624-13528-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
-References: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:12700 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758822Ab2CFJDO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 04:03:14 -0500
+From: Zhao Chenhui <chenhui.zhao@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>
+CC: <leoli@freescale.com>
+Subject: [PATCH 1/9] pci_ids: Add device ID for IBM PCI-X bridge
+Date: Tue, 6 Mar 2012 17:05:07 +0800
+Message-ID: <1331024707-15891-1-git-send-email-chenhui.zhao@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we allocate info, and keep that in during whole life of host bridge.
-
-So don't allocate info->name seperately, just put name into struct.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Zhao Chenhui <chenhui.zhao@freescale.com>
 ---
- arch/x86/pci/acpi.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ include/linux/pci_ids.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 2b74a16..23e7361 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -9,7 +9,7 @@
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 31d77af..8f026c0 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -484,6 +484,7 @@
+ #define PCI_DEVICE_ID_IBM_ICOM_V2_ONE_PORT_RVX_ONE_PORT_MDM	0x0251
+ #define PCI_DEVICE_ID_IBM_ICOM_V2_ONE_PORT_RVX_ONE_PORT_MDM_PCIE 0x0361
+ #define PCI_DEVICE_ID_IBM_ICOM_FOUR_PORT_MODEL	0x252
++#define PCI_DEVICE_ID_IBM_PCIX_BRIDGE	0x01a7
  
- struct pci_root_info {
- 	struct acpi_device *bridge;
--	char *name;
-+	char name[16];
- 	unsigned int res_num;
- 	struct resource *res;
- 	int busnum;
-@@ -317,7 +317,6 @@ static void add_resources(struct pci_root_info *info,
- 
- static void free_pci_root_info_res(struct pci_root_info *info)
- {
--	kfree(info->name);
- 	kfree(info->res);
- 	info->res = NULL;
- 	info->res_num = 0;
-@@ -370,9 +369,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	if (!info->res)
- 		return;
- 
--	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
--	if (!info->name)
--		return;
-+	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
+ #define PCI_SUBVENDOR_ID_IBM		0x1014
+ #define PCI_SUBDEVICE_ID_IBM_SATURN_SERIAL_ONE_PORT	0x03d4
 -- 
-1.7.7
+1.6.4.1
+
 
