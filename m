@@ -1,78 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qy0-f202.google.com ([209.85.216.202]:50124 "EHLO
-	mail-qy0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031691Ab2CGBAn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 20:00:43 -0500
-Received: by mail-qy0-f202.google.com with SMTP id p5so724827qcs.1
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 17:00:43 -0800 (PST)
-Subject: [PATCH v1 7/9] PCI: allow P2P bridge windows starting at PCI bus
-	address zero
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 06 Mar 2012 18:00:43 -0700
-Message-ID: <20120307010043.27465.55829.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from acsinet15.oracle.com ([141.146.126.227]:31396 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757670Ab2CFHO6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:14:58 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 02/23] PCI, sysfs: create rescan_bridge under /sys/.../pci/devices/... for pci bridges
+Date: Mon,  5 Mar 2012 23:13:39 -0800
+Message-Id: <1331018040-30725-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-cd81e1ea1a4c added checks that prevent us from using P2P bridge windows
-that start at PCI bus address zero.  The reason was to "prevent us from
-overwriting resources that are unassigned."
+Current code will create rescan for every pci device under parent bus.
+that is not right. the device is already there, there is no reason to rescan it.
 
-But generic code should allow address zero in both BARs and bridge
-windows, so I think that commit was a mistake.
+We could have rescan for pci bridges. less confusing.
 
-Windows at bus address zero are legal and likely to exist on machines with
-an offset between bus addresses and CPU addresses.  For example, in the
-following hypothetical scenario, the bridge at 00:01.0 has a window at bus
-address zero and the device at 01:00.0 has a BAR at bus address zero, and
-I think both are perfectly valid:
+Need to move rescan attr to pci dev bridge attribute group.
+And We should rescan bridge's secondary bus instead of primary bus.
 
-    PCI host bridge to bus 0000:00
-    pci_bus 0000:00: root bus resource [mem 0x100000000-0x1ffffffff] (bus address [0x00000000-0xffffffff])
-    pci 0000:00:01.0: PCI bridge to [bus 01]
-    pci 0000:00:01.0:   bridge window [mem 0x100000000-0x100ffffff]
-    pci 0000:01:00.0: reg 10: [mem 0x100000000-0x100ffffff]
+-v3: Use device_type for pci dev.
+-v4: Seperate pci device type change out
+-v5: add rescan_bridge for bridge type, and still keep the old rescan.
+	may remove the old rescan later.
 
-CC: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/pci/probe.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
+ drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5e1ca3c..dcfa448 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -365,7 +365,7 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
- 		limit |= (io_limit_hi << 16);
- 	}
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 34f5110..95f0f37 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -111,6 +111,16 @@ Description:
+ 		from this part of the device tree.
+ 		Depends on CONFIG_HOTPLUG.
  
--	if (base && base <= limit) {
-+	if (base <= limit) {
- 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
- 		res2.flags = res->flags;
- 		region.start = base;
-@@ -392,7 +392,7 @@ static void __devinit pci_read_bridge_mmio(struct pci_bus *child)
- 	pci_read_config_word(dev, PCI_MEMORY_LIMIT, &mem_limit_lo);
- 	base = (mem_base_lo & PCI_MEMORY_RANGE_MASK) << 16;
- 	limit = (mem_limit_lo & PCI_MEMORY_RANGE_MASK) << 16;
--	if (base && base <= limit) {
-+	if (base <= limit) {
- 		res->flags = (mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) | IORESOURCE_MEM;
- 		region.start = base;
- 		region.end = limit + 0xfffff;
-@@ -438,7 +438,7 @@ static void __devinit pci_read_bridge_mmio_pref(struct pci_bus *child)
- #endif
- 		}
- 	}
--	if (base && base <= limit) {
-+	if (base <= limit) {
- 		res->flags = (mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) |
- 					 IORESOURCE_MEM | IORESOURCE_PREFETCH;
- 		if (res->flags & PCI_PREF_RANGE_TYPE_64)
++What:		/sys/bus/pci/devices/.../rescan_bridge
++Date:		February 2012
++Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
++Description:
++		Writing a non-zero value to this attribute will
++		force a rescan of the bridge and all child buses, and
++		re-discover devices removed earlier from this part of
++		the device tree.
++		Depends on CONFIG_HOTPLUG.
++
+ What:		/sys/bus/pci/devices/.../reset
+ Date:		July 2009
+ Contact:	Michael S. Tsirkin <mst@redhat.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 39d15e6..d5c8ffb 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	return count;
+ }
+ 
++static ssize_t
++dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
++		 const char *buf, size_t count)
++{
++	unsigned long val;
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (kstrtoul(buf, 0, &val) < 0)
++		return -EINVAL;
++
++	if (val) {
++		mutex_lock(&pci_remove_rescan_mutex);
++		pci_rescan_bus(pdev->subordinate);
++		mutex_unlock(&pci_remove_rescan_mutex);
++	}
++	return count;
++}
++
++static struct device_attribute pci_dev_bridge_rescan_attr =
++	__ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
++
+ static void remove_callback(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+@@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
+ late_initcall(pci_sysfs_init);
+ 
+ static struct attribute *pci_dev_bridge_attrs[] = {
++#ifdef CONFIG_HOTPLUG
++	&pci_dev_bridge_rescan_attr.attr,
++#endif
+ 	NULL,
+ };
+ 
+-- 
+1.7.7
 
