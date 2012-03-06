@@ -1,74 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:17461 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758322Ab2CFHRA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:17:00 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Randy Dunlap <rdunlap@xenotime.net>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH -v3 41/47] PCI, ACPI: Add acpi_pci_root_rescan()
-Date: Sun, 18 Mar 2012 22:46:30 -0700
-Message-Id: <1332135996-13860-42-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-doc@vger.kernel.org
+Subject: [PATCH 19/23] PCI: add /sys/bus/pci/rescan_root
+Date: Mon,  5 Mar 2012 23:13:56 -0800
+Message-Id: <1331018040-30725-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will rescan all acpi pci root if related pci root bus get removed before.
+It will be used to rediscover removed pci root buses.
 
-Signed-off-by: Yinghai <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-doc@vger.kernel.org
 ---
- drivers/acpi/pci_root_hp.c |   17 +++++++++++++++++
- include/linux/pci-acpi.h   |    7 +++++++
- 2 files changed, 24 insertions(+), 0 deletions(-)
+ Documentation/ABI/testing/sysfs-bus-pci |    9 +++++++++
+ drivers/pci/pci-sysfs.c                 |   21 +++++++++++++++++++++
+ 2 files changed, 30 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-index d2ace81..e16b53d 100644
---- a/drivers/acpi/pci_root_hp.c
-+++ b/drivers/acpi/pci_root_hp.c
-@@ -269,3 +269,20 @@ static int __init acpi_pci_root_hp_init(void)
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 22392de..eb826bd 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -66,6 +66,15 @@ Description:
+ 		re-discover previously removed devices.
+ 		Depends on CONFIG_HOTPLUG.
+ 
++What:		/sys/bus/pci/rescan_root
++Date:		March 2012
++Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
++Description:
++		Writing a non-zero value to this attribute will
++		cause a rescan of all PCI root buses in the system, and
++		re-discover previously removed PCI root buses.
++		Depends on CONFIG_HOTPLUG.
++
+ What:		/sys/bus/pci/devices/.../msi_irqs/
+ Date:		September, 2011
+ Contact:	Neil Horman <nhorman@tuxdriver.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index f855b4b..d6221e5 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -302,8 +302,29 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 	return count;
  }
  
- subsys_initcall(acpi_pci_root_hp_init);
++void __weak acpi_pci_root_rescan(void) { }
++void __weak pcibios_root_rescan(void) { }
 +
-+static acpi_status
-+rescan_root_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
++static ssize_t bus_rescan_root_store(struct bus_type *bus, const char *buf,
++				size_t count)
 +{
-+	if (!acpi_is_root_bridge(handle))
-+		return AE_OK;
++	unsigned long val;
 +
-+	handle_root_bridge_insertion(handle);
++	if (strict_strtoul(buf, 0, &val) < 0)
++		return -EINVAL;
 +
-+	return AE_OK;
++	if (val) {
++		mutex_lock(&pci_remove_rescan_mutex);
++		acpi_pci_root_rescan();
++		pcibios_root_rescan();
++		mutex_unlock(&pci_remove_rescan_mutex);
++	}
++	return count;
 +}
 +
-+void acpi_pci_root_rescan(void)
-+{
-+	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
-+		ACPI_UINT32_MAX, rescan_root_bridge, NULL, NULL, NULL);
-+}
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 4462350..ac93634 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -35,6 +35,13 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
- 	return acpi_get_pci_rootbridge_handle(pci_domain_nr(pbus),
- 					      pbus->number);
- }
-+
-+void acpi_pci_root_rescan(void);
-+
-+#else
-+
-+static inline void acpi_pci_root_rescan(void) { }
-+
- #endif
+ struct bus_attribute pci_bus_attrs[] = {
+ 	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, bus_rescan_store),
++	__ATTR(rescan_root, (S_IWUSR|S_IWGRP), NULL, bus_rescan_root_store),
+ 	__ATTR_NULL
+ };
  
- #ifdef CONFIG_ACPI_APEI
 -- 
 1.7.7
 
