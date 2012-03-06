@@ -1,115 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy9.bluehost.com ([69.89.24.6]:59779 "HELO
-	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755465Ab2CBVJm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 16:09:42 -0500
-Date: Fri, 2 Mar 2012 13:09:34 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: add spinlock held check to
- 'pcibios_fwaddrmap_lookup()'
-Message-ID: <20120302130934.1dceca8b@jbarnes-desktop>
-In-Reply-To: <20120302204136.GB24752@kroah.com>
-References: <20120302194501.26152.22845.stgit@amt.stowe>
-	<20120302200027.GA4817@kroah.com>
-	<20120302122405.050ab634@jbarnes-desktop>
-	<20120302204136.GB24752@kroah.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+LoprM_kDg2S+okOI_yyxKn"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH 18/23] PCI, ACPI: add acpi_pci_root_rescan()
+Date: Mon,  5 Mar 2012 23:13:55 -0800
+Message-Id: <1331018040-30725-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/+LoprM_kDg2S+okOI_yyxKn
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+it will rescan all acpi pci root if related pci root bus get removed before.
 
-On Fri, 2 Mar 2012 12:41:36 -0800
-Greg KH <gregkh@linuxfoundation.org> wrote:
+Signed-off-by: Yinghai <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/acpi/pci_root.c |   52 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 52 insertions(+), 0 deletions(-)
 
-> On Fri, Mar 02, 2012 at 12:24:05PM -0800, Jesse Barnes wrote:
-> > On Fri, 2 Mar 2012 12:00:27 -0800
-> > Greg KH <gregkh@linuxfoundation.org> wrote:
-> >=20
-> > > On Fri, Mar 02, 2012 at 12:45:01PM -0700, Myron Stowe wrote:
-> > > > 'pcibios_fwaddrmap_lookup()' is used to maintain FW-assigned BIOS B=
-AR
-> > > > values for reinstatement when normal resource assignment attempts
-> > > > fail and must be called with the 'pcibios_fwaddrmap_lock' spinlock
-> > > > held.
-> > > >=20
-> > > > This patch adds a WARN_ON notification if the spinlock is not curre=
-ntly
-> > > > held by the caller.
-> > > >=20
-> > > > Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> > > > ---
-> > > >=20
-> > > >  arch/x86/pci/i386.c |    2 ++
-> > > >  1 files changed, 2 insertions(+), 0 deletions(-)
-> > > >=20
-> > > > diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-> > > > index 33e6a0b..831971e 100644
-> > > > --- a/arch/x86/pci/i386.c
-> > > > +++ b/arch/x86/pci/i386.c
-> > > > @@ -57,6 +57,8 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrma=
-p_lookup(struct pci_dev *dev)
-> > > >  {
-> > > >  	struct pcibios_fwaddrmap *map;
-> > > > =20
-> > > > +	WARN_ON(!spin_is_locked(&pcibios_fwaddrmap_lock));
-> > > > +
-> > >=20
-> > > What is this going to help with?  How can someone then recover from t=
-his
-> > > issue?  Just adding a warning message isn't going to fix any problems
-> > > here, why not fix the root cause?
-> >=20
-> > It's just a self-documenting assert; doesn't trigger anything and has
-> > more functionality than
-> >   /* Must hold the fwaddrmap_lock here */
->=20
-> Don't we have sparse markups that we can use to verify this instead
-> somehow?  Adding asserts isn't the nicest, as what will a user really do
-> about this if it ever gets hit?  And if a user isn't supposed to do
-> anything, then yes, a comment would be best I would think.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index b38e347..e1814e0 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -679,3 +679,55 @@ static int __init acpi_pci_root_init(void)
+ }
+ 
+ subsys_initcall(acpi_pci_root_init);
++
++static acpi_status
++rescan_root_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
++{
++	struct acpi_device *device, *pdevice;
++	struct acpi_pci_root *root;
++	acpi_handle phandle;
++	int ret_val;
++
++	if (!acpi_is_root_bridge(handle))
++		return AE_OK;
++
++	acpi_get_parent(handle, &phandle);
++	if (acpi_bus_get_device(phandle, &pdevice)) {
++		printk(KERN_DEBUG "no parent device, assuming NULL\n");
++		pdevice = NULL;
++	}
++
++	if (!acpi_bus_get_device(handle, &device)) {
++		/* check if  pci root_bus is removed */
++		root = acpi_driver_data(device);
++		if (pci_find_bus(root->segment, root->secondary.start))
++			return AE_OK;
++
++		printk(KERN_DEBUG "bus exists... trim\n");
++		/* this shouldn't be in here, so remove
++		 * the bus then re-add it...
++		 */
++		ret_val = acpi_bus_trim(device, 1);
++		printk(KERN_DEBUG "acpi_bus_trim return %x\n", ret_val);
++	}
++
++	ret_val = acpi_bus_add(&device, pdevice, handle, ACPI_BUS_TYPE_DEVICE);
++	if (ret_val) {
++		printk(KERN_ERR "error adding bus, %x\n", -ret_val);
++		goto out;
++	}
++
++	root = acpi_driver_data(device);
++	pci_assign_unassigned_bus_resources(root->bus);
++
++	ret_val = acpi_bus_start(device);
++
++out:
++	return ret_val;
++}
++
++void acpi_pci_root_rescan(void)
++{
++	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
++		ACPI_UINT32_MAX, rescan_root_bridge, NULL, NULL, NULL);
++}
+-- 
+1.7.7
 
-The user is supposed to report a bug, but it likely won't cause a
-crash, just a worrying message in the log.
-
-And yeah I think we have some sparse bits for this, and at one point I
-thought we had an assert_spin_is_locked or somesuch.
-
-I like the idea of self-documenting code checks better than just
-comments.  Sparse annotations are a good second solution, but not as
-nice since sparse isn't always run, and has a harder time with control
-flow dependent stuff like this.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/+LoprM_kDg2S+okOI_yyxKn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPUTcOAAoJEIEoDkX4Qk9h7D0P+QFntwMSrv3sVpfGLIEMHQ+n
-u4QVik3FRkVDSsY2RZJIBPabxWM7rReNHy1pU3wDuCJJfEqbbBM+/sbIROmTpUEQ
-NXTq7rN/fjGNKP+l3Aevs4wufNQz+nmgFQe1mJ/eL8w/Uq0NLiFSPCdg03lDtbfz
-aLvnn9ahyFaB8enSNTM2ideOYJKfm78Z4LEhc05NWLG0DXYHb1TW1ue7p5JMaOwc
-UhgZtYhFr51HyU5AyPhdB2MG+jMRTBltnscaSOBPyB6T9PZrEIJ2QAMnWOAt8GFm
-Ij8m3gAHfxEwOdScHppOYrz84DrOHQtrfLpmlUQQOZxz13Cxp8gKQjN41KpPGZu8
-/qWpNG96pprUXY4QcUat9+qg2JR/cYfbV6XX1a1LLJyhIhrTpF/4yls1Bi0ZgMVE
-4J2kZfUwWM3MGCXeSGzbmNdd03OVftyGZZEoZb8QwCto1jaYjMgOwkrCZI/n0cPM
-WFt0uOlq5pwSB8wS1f0OXAUbhdPen86GQ+78P15ENl7Ms+pQoMuREM17uQ6tKPt7
-UsPDgP+EOcEZzXGSnC35+bQbP/IYn3ZzFHxIAd9feaFdlrHt8l7sefNcjc7JmKo4
-VSX98lH/cYdkojfhF3+A2ePM+752DSWZiJcXaYAggLHAcoi6Uf1zXqr1VmFSNpGl
-8Ksh4E+WbxpGAxlVNsXu
-=Jovo
------END PGP SIGNATURE-----
-
---Sig_/+LoprM_kDg2S+okOI_yyxKn--
