@@ -1,73 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:46758 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757363Ab2CBSRg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 13:17:36 -0500
-Date: Fri, 2 Mar 2012 10:04:50 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Francois Romieu <romieu@fr.zoreil.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] PCI / PM: Disable wakeup during shutdown for devices
- not enabled to wake up
-Message-ID: <20120302100450.5752ff2f@jbarnes-desktop>
-In-Reply-To: <20120302093712.6cd513a3@jbarnes-desktop>
-References: <201202070050.35931.rjw@sisk.pl>
-	<20120302144427.GD31240@electric-eye.fr.zoreil.com>
-	<20120302093712.6cd513a3@jbarnes-desktop>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/XJZ=nW/3ffyBPy4+dp+g_dE"; protocol="application/pgp-signature"
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:43258 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1031544Ab2CFXOE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Mar 2012 18:14:04 -0500
+Received: by lahj13 with SMTP id j13so6624790lah.19
+        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 15:14:02 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1331018040-30725-24-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-24-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 6 Mar 2012 16:13:42 -0700
+Message-ID: <CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
+Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/XJZ=nW/3ffyBPy4+dp+g_dE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Mar 6, 2012 at 12:14 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> need use it to rescan root bus that was not added via acpi probe.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  arch/x86/pci/legacy.c |   25 +++++++++++++++++++++++++
+>  1 files changed, 25 insertions(+), 0 deletions(-)
+>
+> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+> index aab0e41..7a7c78f 100644
+> --- a/arch/x86/pci/legacy.c
+> +++ b/arch/x86/pci/legacy.c
+> @@ -79,3 +79,28 @@ int __init pci_subsys_init(void)
+>        return 0;
+>  }
+>  subsys_initcall(pci_subsys_init);
+> +
+> +void __devinit pcibios_root_rescan(void)
+> +{
+> +       int busn;
+> +       struct pci_bus *bus;
+> +
+> +       if (pcibios_last_bus <= 0 || pcibios_last_bus > 0xff)
+> +               return;
+> +
+> +       for (busn = 0; busn <= pcibios_last_bus; busn++) {
+> +               bus = pci_find_bus(0, busn);
+> +
+> +               if (bus)
+> +                       continue;
+> +
+> +               bus = __pcibios_scan_specific_bus(busn, false);
+> +
+> +               if (!bus)
+> +                       continue;
+> +
+> +               pci_assign_unassigned_bus_resources(bus);
+> +
+> +               pci_bus_add_devices(bus);
+> +       }
+> +}
 
-On Fri, 2 Mar 2012 09:37:12 -0800
-Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> > The device driver can monitor .runtime_{suspend / resume} activity
-> > and take appropriate action in .shutdown(). Sameer Nanda has sent
-> > such a patch (see below). I am not sure this is the adequate fix:
-> > 1. the driver ought essentially to perform the hardware part of a
-> >    .runtime_resume() on its own behalf. Mildly engaging.
-> > 2. by the same line as above, could it make more sense to call
-> >    pm_runtime_resume() in driver/base/core.c::device_shutdown ?
->=20
-> I thought there would be a more elegant way of increasing the device
-> use count on entering .shutdown, either from the wifi core or at the
-> driver level, so you don't have to track things with a separate flag.
->=20
-> Rafael?
+Does anybody call this?
 
-s/wifi/net of course.
+Do we need it?  I assume we only care about host bridge hotplug via ACPI on x86.
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Please wait a while (at least a day or two) before reposting your
+series so people have time to take a look at the current one.  It's a
+real nuisance to be working through a large series like this and get
+bombed with a repost of the whole thing that tweaks some minor detail.
+ I'd rather take some time and get as much of the discussion out of
+the way on V1 as possible before getting to V2, V3, V4, etc.
 
---Sig_/XJZ=nW/3ffyBPy4+dp+g_dE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPUQvCAAoJEIEoDkX4Qk9hiQUP/2ZFsPscQHShg6VlWjQ7232t
-UURE1BTtei+jF1GGjoHdAQ47Az35n4BuzBUStuuNSZWKqPDv2tG6ceK86gKnxoEs
-fcvCfieuFrwHsWz8nglC6eP1+hvIDeZgPSNjw9nLRnNQUOYkxzcKIzbBsesJ/Cxw
-aWaTWxMAgT1OVudPojQxDfVlNwPmWbhrK637gEgISJhTRHBM01er8DIP9hXXgG79
-bhD9C6QQHY5VKylTCVIhBsADPDljVmjd56+6rE+8LyBfwXc8YoYIAVgbnZub4I5Q
-0yuxg/WEHabhjFJWv8iPuNzDIpPdPuI1n+tvDA0P7w6dBWLp6MAV3XW9t0KytKbR
-ZzT23rJRlIXbX0UrLRU0CioAP2KGCo6w7qsLyK4uan+ytPYpAePig/ZgVXyQTuTj
-oLl8PjOeHxvCxazaIbt/YnWZQJKbVHtxsVod9grlIwLh8XqKHLEOtqtGxJdT0qDw
-x9DjqYplcmyf3xKTfovY1kMAMtEkTBqbpZv+0pwUOrkje9t4gd8QMGvKd8QzSb2k
-bSw/zfY3ssEj4bFYcA+u+olGYnlWxdvxB39pXO78vDE0t6EavHstmkTtmvpEJazi
-+KdogM506P0Fz6Y+Be3tj38gILqUo/YbcT0OAVYVjFgiAo5EoO7fdUUcFPezh3oc
-4Nj6gXjVPg5YFFB10WhV
-=tajG
------END PGP SIGNATURE-----
-
---Sig_/XJZ=nW/3ffyBPy4+dp+g_dE--
+Bjorn
