@@ -1,50 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60405 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760273Ab2CTQXY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 12:23:24 -0400
-Received: by iagz16 with SMTP id z16so215351iag.19
-        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 09:23:24 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-	chenkeping@huawei.com
-Subject: [PATCH 0/6] Improvements to Yinghai's x86 IOAPIC hotplug work
-Date: Wed, 21 Mar 2012 00:20:56 +0800
-Message-Id: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
-References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+Received: from mail-ee0-f74.google.com ([74.125.83.74]:65294 "EHLO
+	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757123Ab2CFSNn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 13:13:43 -0500
+Received: by eekc41 with SMTP id c41so208714eek.1
+        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 10:13:41 -0800 (PST)
+Subject: [PATCH RFC] PCI: allow P2P bridge windows starting at PCI bus address
+	zero
+To: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 06 Mar 2012 11:13:40 -0700
+Message-ID: <20120306181340.8566.79920.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset is based on Yinghua's work for IOAPIC hotplug on x86 systems,
-please refer to http://lwn.net/Articles/483671/. It applies to:
-94738bb PCI: Disable mem in the ioapic removing path
-at
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
+This patch is for discussion.  I didn't include a Signed-off-by line
+because I suspect the patch is incomplete as it stands.
 
-Due to resource limitation, (only an Intel Atom system available for building
-and testing), only the boot logic has been tested until now, so need more tests
-for the hotplug logic when having access to systems with IOAPIC hotplug feature.
+cd81e1ea1a4c added checks that prevent us from using P2P bridge windows
+that start at PCI bus address zero.  The reason was to "prevent us from
+overwriting resources that are unassigned."
 
-BTW, it's really a nightmare to build and test kernel on an Intel Atom system.
+But I don't think generic code should disallow address zero in either BARs or
+bridge windows, so I think that commit was a mistake.
 
-Jiang Liu (6):
-  x86,IRQ: Fix possible invalid memory access after IOAPIC hot-plugging
-  x86,IRQ: Mark unused entries in 'ioapics' array as free at startup
-  x86,IRQ: Enhance irq allocation policy for hot-added IOAPICs
-  x86,IRQ: split out function ioapic_setup_resource()
-  x86,IRQ: Correctly manage MMIO resource used by IOAPIC when
-    hot-plugging IOPAICs
-  x86,IRQ: Use memory barriers to protect searching side code
+Windows at bus address zero are legal and likely to exist on machines with an
+offset between bus addresses and CPU addresses.  For example, in the following
+hypothetical scenario, the bridge at 00:01.0 has a window at bus address zero
+and the device at 01:00.0 has a BAR at bus address zero, and I think both are
+perfectly valid:
 
- arch/x86/kernel/apic/io_apic.c |  150 +++++++++++++++++++++++++++++-----------
- 1 files changed, 110 insertions(+), 40 deletions(-)
+    PCI host bridge to bus 0000:00
+    pci_bus 0000:00: root bus resource [mem 0x100000000-0x1ffffffff] (bus address [0x00000000-0xffffffff])
+    pci 0000:00:01.0: PCI bridge to [bus 01]
+    pci 0000:00:01.0:   bridge window [mem 0x100000000-0x100ffffff]
+    pci 0000:01:00.0: reg 10: [mem 0x100000000-0x100ffffff]
 
--- 
-1.7.5.4
+I don't want to reintroduce whatever bug cd81e1ea1a4c fixed.  So please comment
+on whether my reasoning above is correct and what problem would be caused if we
+applied the following patch.
+
+CC: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 944e05a..1725866 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -365,7 +365,7 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
+ 		limit |= (io_limit_hi << 16);
+ 	}
+ 
+-	if (base && base <= limit) {
++	if (base <= limit) {
+ 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
+ 		region.start = base;
+ 		region.end = limit + 0xfff;
+@@ -391,7 +391,7 @@ static void __devinit pci_read_bridge_mmio(struct pci_bus *child)
+ 	pci_read_config_word(dev, PCI_MEMORY_LIMIT, &mem_limit_lo);
+ 	base = (mem_base_lo & PCI_MEMORY_RANGE_MASK) << 16;
+ 	limit = (mem_limit_lo & PCI_MEMORY_RANGE_MASK) << 16;
+-	if (base && base <= limit) {
++	if (base <= limit) {
+ 		res->flags = (mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) | IORESOURCE_MEM;
+ 		region.start = base;
+ 		region.end = limit + 0xfffff;
+@@ -437,7 +437,7 @@ static void __devinit pci_read_bridge_mmio_pref(struct pci_bus *child)
+ #endif
+ 		}
+ 	}
+-	if (base && base <= limit) {
++	if (base <= limit) {
+ 		res->flags = (mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) |
+ 					 IORESOURCE_MEM | IORESOURCE_PREFETCH;
+ 		if (res->flags & PCI_PREF_RANGE_TYPE_64)
 
