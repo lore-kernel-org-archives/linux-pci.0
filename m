@@ -1,54 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:40490 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750896Ab2CVEHn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Mar 2012 00:07:43 -0400
-Received: by pbcun15 with SMTP id un15so1273842pbc.19
-        for <linux-pci@vger.kernel.org>; Wed, 21 Mar 2012 21:07:43 -0700 (PDT)
-Message-ID: <4F6AA586.70403@kernel.org>
-Date: Thu, 22 Mar 2012 12:07:34 +0800
-From: Shaohua Li <shli@kernel.org>
-MIME-Version: 1.0
-To: mjg@redhat.com, jbarnes@virtuousgeek.org
-CC: linux-pci@vger.kernel.org
-Subject: [patch]pci: fix a panic in pcie_aspm_init_link_state
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from rcsinet15.oracle.com ([148.87.113.117]:17592 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186Ab2CFHRU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:17:20 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 22/23] x86, PCI: add __pcibios_scan_specific_bus that can skip bus_add
+Date: Mon,  5 Mar 2012 23:13:59 -0800
+Message-Id: <1331018040-30725-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+So could insert pci_assign_unassigned_bus_resources() before do bus_add.
 
-My desktop always painc in pcie_aspm_init_link_state. Looks commit
-4949be16822e92 causes it. The FADT declaims the system doesn't support ASPM.
-Below patch fixes the painc for me. I'm quite strange we still touch aspm
-registers even aspm_disabled.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/legacy.c |   19 +++++++++++++------
+ 1 files changed, 13 insertions(+), 6 deletions(-)
 
-Signed-off-by: Shaohua Li <shli@kernel.org>
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 24f049e..2e8eb86 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -500,9 +500,6 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
-  	int pos;
-  	u32 reg32;
-
--	if (aspm_disabled)
--		return 0;
+diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+index a1df191..aab0e41 100644
+--- a/arch/x86/pci/legacy.c
++++ b/arch/x86/pci/legacy.c
+@@ -34,25 +34,32 @@ int __init pci_legacy_init(void)
+ 	return 0;
+ }
+ 
+-void __devinit pcibios_scan_specific_bus(int busn)
++static __devinit struct pci_bus *__pcibios_scan_specific_bus(int busn,
++					 bool bus_add)
+ {
+ 	int devfn;
+ 	long node;
+ 	u32 l;
+ 
+-	if (pci_find_bus(0, busn))
+-		return;
 -
-  	/*
-  	 * Some functions in a slot might not all be PCIe functions,
-  	 * very strange. Disable ASPM for the whole slot
-@@ -566,7 +563,11 @@ static struct pcie_link_state 
-*alloc_pcie_link_state(struct pci_dev *pdev)
-  void pcie_aspm_init_link_state(struct pci_dev *pdev)
-  {
-  	struct pcie_link_state *link;
--	int blacklist = !!pcie_aspm_sanity_check(pdev);
-+	int blacklist;
+ 	node = get_mp_bus_to_node(busn);
+ 	for (devfn = 0; devfn < 256; devfn += 8) {
+ 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
+ 		    l != 0x0000 && l != 0xffff) {
+ 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+ 			printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
+-			pci_scan_bus_on_node(busn, &pci_root_ops, node);
+-			return;
++			return __pci_scan_bus_on_node(busn, &pci_root_ops, node,
++					 bus_add);
+ 		}
+ 	}
 +
-+	if (aspm_disabled)
++	return NULL;
++}
++void __devinit pcibios_scan_specific_bus(int busn)
++{
++	if (pci_find_bus(0, busn))
 +		return;
-+	blacklist = !!pcie_aspm_sanity_check(pdev);
++
++	__pcibios_scan_specific_bus(busn, true);
+ }
+ EXPORT_SYMBOL_GPL(pcibios_scan_specific_bus);
+ 
+-- 
+1.7.7
 
-  	if (!pci_is_pcie(pdev) || pdev->link_state)
-  		return;
