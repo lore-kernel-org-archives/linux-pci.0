@@ -1,371 +1,268 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:58814 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030794Ab2CGWee (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:34:34 -0500
-Received: by mail-ee0-f74.google.com with SMTP id c41so256707eek.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:34:33 -0800 (PST)
-Subject: [PATCH v3 29/34] sparc/PCI: get rid of device resource fixups
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	sparclinux@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
-Date: Wed, 07 Mar 2012 15:34:32 -0700
-Message-ID: <20120307223432.25669.51388.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from nat28.tlf.novell.com ([130.57.49.28]:21138 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758632Ab2CFIfC convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:12:2>);
+	Tue, 6 Mar 2012 03:35:02 -0500
+Message-Id: <4F55DA3E0200007800076916@nat28.tlf.novell.com>
+Date: Tue, 06 Mar 2012 08:34:54 +0000
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Santosh Jodh" <Santosh.Jodh@citrix.com>
+Cc: "David Vrabel" <david.vrabel@citrix.com>,
+	"Ian Campbell" <Ian.Campbell@citrix.com>,
+	"Paul Durrant" <Paul.Durrant@citrix.com>,
+	"waldi@debian.org" <waldi@debian.org>,
+	"weiyi.huang@gmail.com" <weiyi.huang@gmail.com>,
+	"jeremy@goop.org" <jeremy@goop.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"virtualization@lists.linux-foundation.org"
+	<virtualization@lists.linux-foundation.org>,
+	"xen-devel@lists.xen.org" <xen-devel@lists.xen.org>,
+	"joe.jin@oracle.com" <joe.jin@oracle.com>,
+	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+	"lersek@redhat.com" <lersek@redhat.com>,
+	"rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
+	"dgdegra@tycho.nsa.gov" <dgdegra@tycho.nsa.gov>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH 0001/001] xen: multi page ring support for block
+ devices
+References: <1330701099-18281-1-git-send-email-santoshprasadnayak@gmail.com>
+ <7914B38A4445B34AA16EB9F1352942F1010A1FA12364@SJCPMAILBOX01.citrite.net>
+In-Reply-To: <7914B38A4445B34AA16EB9F1352942F1010A1FA12364@SJCPMAILBOX01.citrite.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+>>> On 05.03.12 at 22:49, Santosh Jodh <Santosh.Jodh@citrix.com> wrote:
 
-Previously, when enumerating PCI devices from the OF device tree, sparc
-used pci_resource_adjust() to perform this address fixup for P2P bridge
-windows in the following places:
+Could this be split up into 3 patches, for easier reviewing:
+- one adjusting the xenbus interface to allow for multiple ring pages (and
+  maybe even that one should be split into the backend and frontend
+  related parts), syncing with the similar netback effort?
+- one for the blkback changes
+- one for the blkfront changes?
 
-    pci_cfg_fake_ranges()
-    apb_fake_ranges()
-    of_scan_pci_bridge()
+> --- a/drivers/block/xen-blkback/xenbus.c
+> +++ b/drivers/block/xen-blkback/xenbus.c
+> @@ -122,8 +122,8 @@ static struct xen_blkif *xen_blkif_alloc(domid_t domid)
+>         return blkif;
+>  }
+> 
+> -static int xen_blkif_map(struct xen_blkif *blkif, unsigned long shared_page,
+> -                        unsigned int evtchn)
+> +static int xen_blkif_map(struct xen_blkif *blkif, int ring_ref[],
 
-This patch replaces pci_resource_adjust() with the generic
-pcibios_bus_to_resource() and the appropriate pci_add_resource_offset()
-use to tell the PCI core about host bridge apertures and offsets.
+As you need to touch this anyway, can you please switch this to the
+proper type (grant_ref_t) rather than using plain "int" (not just here)?
 
-Resources of non-P2P bridge devices are set in pci_parse_of_addrs() and,
-as far as I can see, never converted to CPU addresses.
+> +                        unsigned int ring_order, unsigned int evtchn)
+>  {
+>         int err;
+> 
+> --- a/drivers/block/xen-blkfront.c
+> +++ b/drivers/block/xen-blkfront.c
+> @@ -135,7 +139,7 @@ static DEFINE_SPINLOCK(minor_lock);
+>  static int get_id_from_freelist(struct blkfront_info *info)
+>  {
+>         unsigned long free = info->shadow_free;
+> -       BUG_ON(free >= BLK_RING_SIZE);
+> +       BUG_ON(free >= BLK_MAX_RING_SIZE);
 
-CC: "David S. Miller" <davem@davemloft.net>
-CC: sparclinux@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/sparc/include/asm/pci_32.h |    8 ---
- arch/sparc/include/asm/pci_64.h |    8 ---
- arch/sparc/kernel/leon_pci.c    |   47 +++--------------
- arch/sparc/kernel/pci.c         |  106 +++++++++++----------------------------
- 4 files changed, 38 insertions(+), 131 deletions(-)
+Wouldn't you better check against the actual limit here?
 
-diff --git a/arch/sparc/include/asm/pci_32.h b/arch/sparc/include/asm/pci_32.h
-index 6de7f7b..6384f30 100644
---- a/arch/sparc/include/asm/pci_32.h
-+++ b/arch/sparc/include/asm/pci_32.h
-@@ -52,13 +52,7 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
-  * 64Kbytes by the Host controller.
-  */
- 
--extern void
--pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			struct resource *res);
--
--extern void
--pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
-diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
-index 755a4bb..2918bd1 100644
---- a/arch/sparc/include/asm/pci_64.h
-+++ b/arch/sparc/include/asm/pci_64.h
-@@ -73,13 +73,7 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			       enum pci_mmap_state mmap_state,
- 			       int write_combine);
- 
--extern void
--pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			struct resource *res);
--
--extern void
--pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
-diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-index c7bec25..aba6b95 100644
---- a/arch/sparc/kernel/leon_pci.c
-+++ b/arch/sparc/kernel/leon_pci.c
-@@ -15,14 +15,19 @@
- 
- /* The LEON architecture does not rely on a BIOS or bootloader to setup
-  * PCI for us. The Linux generic routines are used to setup resources,
-- * reset values of confuration-space registers settings ae preseved.
-+ * reset values of configuration-space register settings are preserved.
-+ *
-+ * PCI Memory and Prefetchable Memory is direct-mapped. However I/O Space is
-+ * accessed through a Window which is translated to low 64KB in PCI space, the
-+ * first 4KB is not used so 60KB is available.
-  */
- void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
- {
- 	LIST_HEAD(resources);
- 	struct pci_bus *root_bus;
- 
--	pci_add_resource(&resources, &info->io_space);
-+	pci_add_resource_offset(&resources, &info->io_space,
-+				info->io_space.start - 0x1000);
- 	pci_add_resource(&resources, &info->mem_space);
- 
- 	root_bus = pci_scan_root_bus(&ofdev->dev, 0, info->ops, info,
-@@ -38,44 +43,6 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
- 	}
- }
- 
--/* PCI Memory and Prefetchable Memory is direct-mapped. However I/O Space is
-- * accessed through a Window which is translated to low 64KB in PCI space, the
-- * first 4KB is not used so 60KB is available.
-- *
-- * This function is used by generic code to translate resource addresses into
-- * PCI addresses.
-- */
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct leon_pci_info *info = dev->bus->sysdata;
--
--	region->start = res->start;
--	region->end = res->end;
--
--	if (res->flags & IORESOURCE_IO) {
--		region->start -= (info->io_space.start - 0x1000);
--		region->end -= (info->io_space.start - 0x1000);
--	}
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--/* see pcibios_resource_to_bus() comment */
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct leon_pci_info *info = dev->bus->sysdata;
--
--	res->start = region->start;
--	res->end = region->end;
--
--	if (res->flags & IORESOURCE_IO) {
--		res->start += (info->io_space.start - 0x1000);
--		res->end += (info->io_space.start - 0x1000);
--	}
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
- void __devinit pcibios_fixup_bus(struct pci_bus *pbus)
- {
- 	struct leon_pci_info *info = pbus->sysdata;
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index bb8bc2e..fdaf218 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -375,13 +375,6 @@ static void __devinit apb_calc_first_last(u8 map, u32 *first_p, u32 *last_p)
- 	*last_p = last;
- }
- 
--static void pci_resource_adjust(struct resource *res,
--				struct resource *root)
--{
--	res->start += root->start;
--	res->end += root->start;
--}
--
- /* For PCI bus devices which lack a 'ranges' property we interrogate
-  * the config space values to set the resources, just like the generic
-  * Linux PCI probing code does.
-@@ -390,7 +383,8 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 					  struct pci_bus *bus,
- 					  struct pci_pbm_info *pbm)
- {
--	struct resource *res;
-+	struct pci_bus_region region;
-+	struct resource *res, res2;
- 	u8 io_base_lo, io_limit_lo;
- 	u16 mem_base_lo, mem_limit_lo;
- 	unsigned long base, limit;
-@@ -412,11 +406,14 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	res = bus->resource[0];
- 	if (base <= limit) {
- 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
-+		res2.flags = res->flags;
-+		region.start = base;
-+		region.end = limit + 0xfff;
-+		pcibios_bus_to_resource(dev, &res2, &region);
- 		if (!res->start)
--			res->start = base;
-+			res->start = res2.start;
- 		if (!res->end)
--			res->end = limit + 0xfff;
--		pci_resource_adjust(res, &pbm->io_space);
-+			res->end = res2.end;
- 	}
- 
- 	pci_read_config_word(dev, PCI_MEMORY_BASE, &mem_base_lo);
-@@ -428,9 +425,9 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	if (base <= limit) {
- 		res->flags = ((mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) |
- 			      IORESOURCE_MEM);
--		res->start = base;
--		res->end = limit + 0xfffff;
--		pci_resource_adjust(res, &pbm->mem_space);
-+		region.start = base;
-+		region.end = limit + 0xfffff;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- 
- 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
-@@ -459,9 +456,9 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	if (base <= limit) {
- 		res->flags = ((mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) |
- 			      IORESOURCE_MEM | IORESOURCE_PREFETCH);
--		res->start = base;
--		res->end = limit + 0xfffff;
--		pci_resource_adjust(res, &pbm->mem_space);
-+		region.start = base;
-+		region.end = limit + 0xfffff;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- }
- 
-@@ -472,6 +469,7 @@ static void __devinit apb_fake_ranges(struct pci_dev *dev,
- 				      struct pci_bus *bus,
- 				      struct pci_pbm_info *pbm)
- {
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	u32 first, last;
- 	u8 map;
-@@ -479,18 +477,18 @@ static void __devinit apb_fake_ranges(struct pci_dev *dev,
- 	pci_read_config_byte(dev, APB_IO_ADDRESS_MAP, &map);
- 	apb_calc_first_last(map, &first, &last);
- 	res = bus->resource[0];
--	res->start = (first << 21);
--	res->end = (last << 21) + ((1 << 21) - 1);
- 	res->flags = IORESOURCE_IO;
--	pci_resource_adjust(res, &pbm->io_space);
-+	region.start = (first << 21);
-+	region.end = (last << 21) + ((1 << 21) - 1);
-+	pcibios_bus_to_resource(dev, res, &region);
- 
- 	pci_read_config_byte(dev, APB_MEM_ADDRESS_MAP, &map);
- 	apb_calc_first_last(map, &first, &last);
- 	res = bus->resource[1];
--	res->start = (first << 21);
--	res->end = (last << 21) + ((1 << 21) - 1);
- 	res->flags = IORESOURCE_MEM;
--	pci_resource_adjust(res, &pbm->mem_space);
-+	region.start = (first << 21);
-+	region.end = (last << 21) + ((1 << 21) - 1);
-+	pcibios_bus_to_resource(dev, res, &region);
- }
- 
- static void __devinit pci_of_scan_bus(struct pci_pbm_info *pbm,
-@@ -506,6 +504,7 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 	struct pci_bus *bus;
- 	const u32 *busrange, *ranges;
- 	int len, i, simba;
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	unsigned int flags;
- 	u64 size;
-@@ -556,8 +555,6 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 	}
- 	i = 1;
- 	for (; len >= 32; len -= 32, ranges += 8) {
--		struct resource *root;
--
- 		flags = pci_parse_of_flags(ranges[0]);
- 		size = GET_64BIT(ranges, 6);
- 		if (flags == 0 || size == 0)
-@@ -569,7 +566,6 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
--			root = &pbm->io_space;
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
-@@ -578,18 +574,12 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 			}
- 			res = bus->resource[i];
- 			++i;
--			root = &pbm->mem_space;
- 		}
- 
--		res->start = GET_64BIT(ranges, 1);
--		res->end = res->start + size - 1;
- 		res->flags = flags;
--
--		/* Another way to implement this would be to add an of_device
--		 * layer routine that can calculate a resource for a given
--		 * range property value in a PCI device.
--		 */
--		pci_resource_adjust(res, root);
-+		region.start = GET_64BIT(ranges, 1);
-+		region.end = region.start + size - 1;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- after_ranges:
- 	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
-@@ -691,8 +681,10 @@ struct pci_bus * __devinit pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
--	pci_add_resource(&resources, &pbm->io_space);
--	pci_add_resource(&resources, &pbm->mem_space);
-+	pci_add_resource_offset(&resources, &pbm->io_space,
-+				pbm->io_space.start);
-+	pci_add_resource_offset(&resources, &pbm->mem_space,
-+				pbm->mem_space.start);
- 	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
- 				  pbm, &resources);
- 	if (!bus) {
-@@ -755,46 +747,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *pdev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	struct pci_pbm_info *pbm = pdev->bus->sysdata;
--	struct resource zero_res, *root;
--
--	zero_res.start = 0;
--	zero_res.end = 0;
--	zero_res.flags = res->flags;
--
--	if (res->flags & IORESOURCE_IO)
--		root = &pbm->io_space;
--	else
--		root = &pbm->mem_space;
--
--	pci_resource_adjust(&zero_res, root);
--
--	region->start = res->start - zero_res.start;
--	region->end = res->end - zero_res.start;
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--void pcibios_bus_to_resource(struct pci_dev *pdev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	struct pci_pbm_info *pbm = pdev->bus->sysdata;
--	struct resource *root;
--
--	res->start = region->start;
--	res->end = region->end;
--
--	if (res->flags & IORESOURCE_IO)
--		root = &pbm->io_space;
--	else
--		root = &pbm->mem_space;
--
--	pci_resource_adjust(res, root);
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
- char * __devinit pcibios_setup(char *str)
- {
- 	return str;
+>         info->shadow_free = info->shadow[free].req.u.rw.id;
+>         info->shadow[free].req.u.rw.id = 0x0fffffee; /* debug */
+>         return free;
+> @@ -698,16 +704,19 @@ static void blkif_free(struct blkfront_info *info, int suspend)
+>         flush_work_sync(&info->work);
+> 
+>         /* Free resources associated with old device channel. */
+> -       if (info->ring_ref != GRANT_INVALID_REF) {
+> -               gnttab_end_foreign_access(info->ring_ref, 0,
+> -                                         (unsigned long)info->ring.sring);
+> -               info->ring_ref = GRANT_INVALID_REF;
+> -               info->ring.sring = NULL;
+> +       for (i = 0; i < (1 << info->ring_order); i++) {
+> +               if (info->ring_ref[i] != GRANT_INVALID_REF) {
+> +                       gnttab_end_foreign_access(info->ring_ref[i], 0, 0);
+> +                       info->ring_ref[i] = GRANT_INVALID_REF;
+> +               }
+>         }
+> +
+> +       free_pages((unsigned long)info->ring.sring, info->ring_order);
+
+No. The freeing must continue happen in gnttab_end_foreign_access()
+(with the sole exception when a page was allocated but the grant
+didn't get established), since it must be suppressed/delayed when the
+grant is still in use (otherwise the kernel will die on the first re-use of
+the page). I just happened to fix that problem at the end of last week
+in the variant of the patch that we pulled into our tree.
+
+Further, rather than doing a non-zero order allocation here, I'd
+suggest allocating individual pages and vmap()-ing them.
+
+> +       info->ring.sring = NULL;
+> +
+>         if (info->irq)
+>                 unbind_from_irqhandler(info->irq, info);
+>         info->evtchn = info->irq = 0;
+> -
+>  }
+> 
+>  static void blkif_completion(struct blk_shadow *s)
+> @@ -875,8 +883,27 @@ static int talk_to_blkback(struct xenbus_device *dev,
+>  {
+>         const char *message = NULL;
+>         struct xenbus_transaction xbt;
+> +       unsigned int ring_order;
+> +       int legacy_backend;
+> +       int i;
+>         int err;
+> 
+> +       for (i = 0; i < (1 << info->ring_order); i++)
+> +               info->ring_ref[i] = GRANT_INVALID_REF;
+> +
+> +       err = xenbus_scanf(XBT_NIL, dev->otherend, "max-ring-page-order", "%u",
+> +                          &ring_order);
+
+At least the frontend should imo also support the alternative interface
+(using "max-ring-pages" etc).
+
+> +
+> +       legacy_backend = !(err == 1);
+> +
+> +       if (legacy_backend) {
+> +               info->ring_order = 0;
+> +       } else {
+> +               info->ring_order = (ring_order <= xen_blkif_ring_order) ?
+> +                                  ring_order :
+> +                                  xen_blkif_ring_order;
+
+min()?
+
+> +       }
+> +
+>         /* Create shared ring, alloc event channel. */
+>         err = setup_blkring(dev, info);
+>         if (err)
+> @@ -889,12 +916,35 @@ again:
+>                 goto destroy_blkring;
+>         }
+> 
+> -       err = xenbus_printf(xbt, dev->nodename,
+> -                           "ring-ref", "%u", info->ring_ref);
+> -       if (err) {
+> -               message = "writing ring-ref";
+> -               goto abort_transaction;
+> +       if (legacy_backend) {
+
+Why not use the simpler interface always when info->ring_order == 0?
+
+> +               err = xenbus_printf(xbt, dev->nodename,
+> +                                   "ring-ref", "%d", info->ring_ref[0]);
+> +               if (err) {
+> +                       message = "writing ring-ref";
+> +                       goto abort_transaction;
+> +               }
+> +       } else {
+> +               for (i = 0; i < (1 << info->ring_order); i++) {
+> +                       char key[sizeof("ring-ref") + 2];
+> +
+> +                       sprintf(key, "ring-ref%d", i);
+> +
+> +                       err = xenbus_printf(xbt, dev->nodename,
+> +                                           key, "%d", info->ring_ref[i]);
+> +                       if (err) {
+> +                               message = "writing ring-ref";
+> +                               goto abort_transaction;
+> +                       }
+> +               }
+> +
+> +               err = xenbus_printf(xbt, dev->nodename,
+> +                                   "ring-page-order", "%u", info->ring_order);
+> +               if (err) {
+> +                       message = "writing ring-order";
+> +                       goto abort_transaction;
+> +               }
+>         }
+> +
+>         err = xenbus_printf(xbt, dev->nodename,
+>                             "event-channel", "%u", info->evtchn);
+>         if (err) {
+> @@ -996,21 +1046,14 @@ static int blkfront_probe(struct xenbus_device *dev,
+>         info->connected = BLKIF_STATE_DISCONNECTED;
+>         INIT_WORK(&info->work, blkif_restart_queue);
+> 
+> -       for (i = 0; i < BLK_RING_SIZE; i++)
+> +       for (i = 0; i < BLK_MAX_RING_SIZE; i++)
+>                 info->shadow[i].req.u.rw.id = i+1;
+> -       info->shadow[BLK_RING_SIZE-1].req.u.rw.id = 0x0fffffff;
+> +       info->shadow[BLK_MAX_RING_SIZE-1].req.u.rw.id = 0x0fffffff;
+
+A proper terminator must also be written in talk_to_blkback() once
+the actual ring size is known.
+
+Further, blkif_recover() must be able to deal with a change of the
+allowed upper bound.
+
+>         /* Front end dir is a number, which is used as the id. */
+>         info->handle = simple_strtoul(strrchr(dev->nodename, '/')+1, NULL, 0);
+>         dev_set_drvdata(&dev->dev, info);
+> 
+> -       err = talk_to_blkback(dev, info);
+
+Completely removing this here is wrong afaict - what if the backend
+already is in InitWait when the frontend starts?
+
+Further, whatever is done to this call here also needs to be done in
+blkfront_resume().
+
+> -       if (err) {
+> -               kfree(info);
+> -               dev_set_drvdata(&dev->dev, NULL);
+> -               return err;
+> -       }
+> -
+>         return 0;
+>  }
+> 
+> @@ -1307,6 +1349,10 @@ static void blkback_changed(struct xenbus_device *dev,
+>         case XenbusStateClosed:
+>                 break;
+> 
+> +       case XenbusStateInitWait:
+> +               talk_to_blkback(dev, info);
+
+This call can return an error.
+
+> +               break;
+> +
+>         case XenbusStateConnected:
+>                 blkfront_connect(info);
+>                 break;
+> --- a/include/xen/xenbus.h
+> +++ b/include/xen/xenbus.h
+> @@ -195,15 +195,23 @@ int xenbus_watch_pathfmt(struct xenbus_device *dev, struct xenbus_watch *watch,
+>                          const char *pathfmt, ...);
+> 
+>  int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state new_state);
+> -int xenbus_grant_ring(struct xenbus_device *dev, unsigned long ring_mfn);
+> -int xenbus_map_ring_valloc(struct xenbus_device *dev,
+> -                          int gnt_ref, void **vaddr);
+> -int xenbus_map_ring(struct xenbus_device *dev, int gnt_ref,
+> -                          grant_handle_t *handle, void *vaddr);
+> +
+> +#define        XENBUS_MAX_RING_ORDER   2
+> +#define        XENBUS_MAX_RING_PAGES   (1 << XENBUS_MAX_RING_ORDER)
+
+Why do you need an artificial global limit here? Each driver can decide
+individually what its limit should be.
+
+Jan
+
 
