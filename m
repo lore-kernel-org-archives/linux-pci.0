@@ -1,139 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1331362837-10740-25-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-25-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Mar 2012 21:25:45 -0600
-Message-ID: <CAErSpo6g3pei2+oW0wLEpytBTh6wGTyzo28oVVzFECxZdta+FA@mail.gmail.com>
-Subject: Re: [PATCH v2 24/37] PCI, ACPI: Add pci_root_hp hot removal
- notification support.
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:31427 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757820Ab2CFHPB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:15:01 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 03/23] PCI: Add pci_bus_add_single_device()
+Date: Mon,  5 Mar 2012 23:13:40 -0800
+Message-Id: <1331018040-30725-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Add missing hot_remove support for root device.
->
-> How to use it?
-> Find out root bus number to acpi root name mapping from dmesg or /sys
->
->  echo "\_SB.PCIB 3" > /proc/acpi/sci/notify
-> to remove root bus
+will use it to pci_bus_bridge_scan_resize(0 to make bridge will
+have pci_bus directory created.
 
-Same comments as before: this is definitely NOT the way users should
-use this.  If you want to do that for debugging the ACPI notification
-path, fine, but the normal way is for the platform to generate this
-notification.  I think the normal way for users to manually remove an
-ACPI device should be something like:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c   |   39 +++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    1 +
+ 2 files changed, 40 insertions(+), 0 deletions(-)
 
-    echo 1 > /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4ce5ef2..1eb7944 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -255,6 +255,45 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 	}
+ }
+ 
++void pci_bus_add_single_device(struct pci_dev *dev)
++{
++	struct pci_bus *child;
++	int retval;
++
++	/* Skip already-added devices */
++	if (!dev->is_added) {
++		retval = pci_bus_add_device(dev);
++		if (retval)
++			dev_err(&dev->dev, "Error adding device, continuing\n");
++	}
++
++	BUG_ON(!dev->is_added);
++
++	child = dev->subordinate;
++	/*
++	 * If there is an unattached subordinate bus, attach
++	 * it and then scan for unattached PCI devices.
++	 */
++	if (child) {
++		if (list_empty(&child->node)) {
++			down_write(&pci_bus_sem);
++			list_add_tail(&child->node, &dev->bus->children);
++			up_write(&pci_bus_sem);
++		}
++		pci_bus_add_devices(child);
++
++		/*
++		 * register the bus with sysfs as the parent is now
++		 * properly registered.
++		 */
++		if (!child->is_added) {
++			retval = pci_bus_add_child(child);
++			if (retval)
++				dev_err(&dev->dev, "Error adding bus, continuing\n");
++		}
++	}
++}
++
+ void pci_enable_bridges(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 40606c1..28556cb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -665,6 +665,7 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ extern struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
++void pci_bus_add_single_device(struct pci_dev *dev);
+ struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+ 				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+-- 
+1.7.7
 
-just like we do for PCI devices.
-
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: linux-acpi@vger.kernel.org
-> ---
->  drivers/acpi/pci_root_hp.c |   61 ++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 61 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-> index dc11e81..f5585f5 100644
-> --- a/drivers/acpi/pci_root_hp.c
-> +++ b/drivers/acpi/pci_root_hp.c
-> @@ -73,6 +73,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
->        list_add(&bridge->list, &acpi_root_bridge_list);
->  }
->
-> +static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
-> +{
-> +       list_del(&bridge->list);
-> +       kfree(bridge);
-> +}
-> +
->  struct acpi_root_hp_work {
->        struct work_struct work;
->        acpi_handle handle;
-> @@ -142,6 +148,55 @@ static void handle_root_bridge_insertion(acpi_handle handle)
->                printk(KERN_ERR "cannot start bridge\n");
->  }
->
-> +static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
-> +{
-> +       acpi_status status;
-> +       struct acpi_object_list arg_list;
-> +       union acpi_object arg;
-> +
-> +       arg_list.count = 1;
-> +       arg_list.pointer = &arg;
-> +       arg.type = ACPI_TYPE_INTEGER;
-> +       arg.integer.value = val;
-> +
-> +       status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
-> +       if (ACPI_FAILURE(status)) {
-> +               printk(KERN_WARNING "%s: %s to %d failed\n",
-> +                                __func__, cmd, val);
-> +               return -1;
-> +       }
-> +
-> +       return 0;
-
-This function really has nothing to do with host bridges.  Are you
-sure there's no generic function you can use instead?
-
-> +}
-> +
-> +static void handle_root_bridge_removal(acpi_handle handle,
-> +                struct acpi_root_bridge *bridge)
-> +{
-> +       u32 flags = 0;
-> +       struct acpi_device *device;
-> +
-> +       if (bridge) {
-> +               flags = bridge->flags;
-> +               remove_acpi_root_bridge(bridge);
-> +       }
-> +
-> +       if (!acpi_bus_get_device(handle, &device)) {
-> +               int ret_val = acpi_bus_trim(device, 1);
-> +
-> +               printk(KERN_DEBUG "acpi_bus_trim return %x\n", ret_val);
-> +       }
-> +
-> +       if (flags & ROOT_BRIDGE_HAS_PS3) {
-> +               acpi_status status;
-> +
-> +               status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
-> +               if (ACPI_FAILURE(status))
-> +                       printk(KERN_WARNING "%s: _PS3 failed\n", __func__);
-> +       }
-> +       if (flags & ROOT_BRIDGE_HAS_EJ0)
-> +               acpi_root_evaluate_object(handle, "_EJ0", 1);
-> +}
-> +
->  static void _handle_hotplug_event_root(struct work_struct *work)
->  {
->        struct acpi_root_bridge *bridge;
-> @@ -182,6 +237,12 @@ static void _handle_hotplug_event_root(struct work_struct *work)
->                }
->                break;
->
-> +       case ACPI_NOTIFY_EJECT_REQUEST:
-> +               /* request device eject */
-> +               printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
-> +                                objname);
-> +               handle_root_bridge_removal(handle, bridge);
-> +               break;
->        default:
->                printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
->                                 type, objname);
-> --
-> 1.7.7
->
