@@ -1,74 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30945 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161719Ab2CSFs3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:29 -0400
+Received: from acsinet15.oracle.com ([141.146.126.227]:31937 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758497Ab2CFHQV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:16:21 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 44/47] x86, PCI: add __pcibios_scan_specific_bus that can skip bus_add
-Date: Sun, 18 Mar 2012 22:46:33 -0700
-Message-Id: <1332135996-13860-45-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 14/23] PCI: add __pci_remove_bus_devices()
+Date: Mon,  5 Mar 2012 23:13:51 -0800
+Message-Id: <1331018040-30725-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could insert pci_assign_unassigned_bus_resources() before do bus_add.
+will use it with pci_stop_and_remove_bus later.
+
+also remove __pci_remove_behind_bridge and pci_stop_behind_bridge.
+
+they are same except one take bridge and one take bus.
+
+and we already have pci_stop_bus_devices()
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/legacy.c |   19 +++++++++++++------
- 1 files changed, 13 insertions(+), 6 deletions(-)
+ drivers/pci/remove.c |   28 +++++++++++-----------------
+ 1 files changed, 11 insertions(+), 17 deletions(-)
 
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index a1df191..aab0e41 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -34,25 +34,32 @@ int __init pci_legacy_init(void)
- 	return 0;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 243d59b..62c348c 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -78,7 +78,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
  }
+ EXPORT_SYMBOL(pci_remove_bus);
  
--void __devinit pcibios_scan_specific_bus(int busn)
-+static __devinit struct pci_bus *__pcibios_scan_specific_bus(int busn,
-+					 bool bus_add)
- {
- 	int devfn;
- 	long node;
- 	u32 l;
+-static void __pci_remove_behind_bridge(struct pci_dev *dev);
++static void __pci_remove_bus_devices(struct pci_bus *bus);
+ /**
+  * pci_stop_and_remove_bus_device - remove a PCI device and any children
+  * @dev: the device to remove
+@@ -96,7 +96,7 @@ void __pci_remove_bus_device(struct pci_dev *dev)
+ 	if (dev->subordinate) {
+ 		struct pci_bus *b = dev->subordinate;
  
--	if (pci_find_bus(0, busn))
--		return;
--
- 	node = get_mp_bus_to_node(busn);
- 	for (devfn = 0; devfn < 256; devfn += 8) {
- 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
- 		    l != 0x0000 && l != 0xffff) {
- 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
- 			printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
--			pci_scan_bus_on_node(busn, &pci_root_ops, node);
--			return;
-+			return __pci_scan_bus_on_node(busn, &pci_root_ops, node,
-+					 bus_add);
- 		}
+-		__pci_remove_behind_bridge(dev);
++		__pci_remove_bus_devices(b);
+ 		pci_remove_bus(b);
+ 		dev->subordinate = NULL;
  	}
-+
-+	return NULL;
-+}
-+void __devinit pcibios_scan_specific_bus(int busn)
-+{
-+	if (pci_find_bus(0, busn))
-+		return;
-+
-+	__pcibios_scan_specific_bus(busn, true);
+@@ -111,22 +111,12 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ 	__pci_remove_bus_device(dev);
  }
- EXPORT_SYMBOL_GPL(pcibios_scan_specific_bus);
  
+-static void __pci_remove_behind_bridge(struct pci_dev *dev)
++static void __pci_remove_bus_devices(struct pci_bus *bus)
+ {
+ 	struct list_head *l, *n;
+ 
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			__pci_remove_bus_device(pci_dev_b(l));
+-}
+-
+-static void pci_stop_behind_bridge(struct pci_dev *dev)
+-{
+-	struct list_head *l, *n;
+-
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			pci_stop_bus_device(pci_dev_b(l));
++	list_for_each_safe(l, n, &bus->devices)
++		__pci_remove_bus_device(pci_dev_b(l));
+ }
+ 
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+@@ -158,8 +148,12 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+  */
+ void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+ {
+-	pci_stop_behind_bridge(dev);
+-	__pci_remove_behind_bridge(dev);
++	struct pci_bus *bus = dev->subordinate;
++
++	if (bus) {
++		pci_stop_bus_devices(bus);
++		__pci_remove_bus_devices(bus);
++	}
+ }
+ 
+ /**
 -- 
 1.7.7
 
