@@ -1,167 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60778 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758815Ab2CNIN0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Mar 2012 04:13:26 -0400
-Message-ID: <4F60532E.4070103@intel.com>
-Date: Wed, 14 Mar 2012 10:13:34 +0200
-From: Adrian Hunter <adrian.hunter@intel.com>
-MIME-Version: 1.0
-To: Alexander Stein <alexander.stein@systec-electronic.com>
-CC: Chris Ball <cjb@laptop.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] mmc: sdhci: check interrupt flags in ISR again
-References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com> <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com> <4F604B16.606@intel.com> <1994979.AaWWmIIAYQ@ws-stein>
-In-Reply-To: <1994979.AaWWmIIAYQ@ws-stein>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from rcsinet15.oracle.com ([148.87.113.117]:17636 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186Ab2CFHR1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:17:27 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
+Date: Mon,  5 Mar 2012 23:14:00 -0800
+Message-Id: <1331018040-30725-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/03/12 09:53, Alexander Stein wrote:
-> Hello,
-> 
-> Am Mittwoch, 14. März 2012, 09:39:02 schrieb Adrian Hunter:
->> On 13/03/12 19:16, Alexander Stein wrote:
->>> When using MSI it is possible that a new MSI is sent while an earlier
->>> MSI is currently handled. In this case SDHCI_INT_STATUS only contains
->>> SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
->>> of the ISR SDHCI_INT_DATA_END is now also pending which would be
->>> ignored.
->>>
->>> Fix this by rereading the interrupt flags in the ISR until no interrupt
->>> we care is pending.
->>>
->>> Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
->> [...]
->>> @@ -2336,6 +2338,14 @@ static irqreturn_t sdhci_irq(int irq, void
->>> *dev_id)> 
->>>  		sdhci_writel(host, SDHCI_INT_BUS_POWER, SDHCI_INT_STATUS);
->>>  	
->>>  	}
->>>
->>> +	intmask_unhandled = intmask;
->>> +
->>> +	intmask = sdhci_readl(host, SDHCI_INT_STATUS);
->>> +
->>> +	/* Do interrupt handling again if we got new flags */
->>> +	if (intmask & ~intmask_unhandled)
->>> +		goto again;
->>> +
->>>
->>>  	intmask &= ~SDHCI_INT_BUS_POWER;
->>>  	
->>>  	if (intmask & SDHCI_INT_CARD_INT)
->>
->> Why not just replace mmiowb() i.e.
->>
->>
->> diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
->> index 8d66706..da8a101 100644
->> --- a/drivers/mmc/host/sdhci.c
->> +++ b/drivers/mmc/host/sdhci.c
->> @@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
->>
->>         result = IRQ_HANDLED;
->>
->> -       mmiowb();
->> +       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
->> +       if (intmask)
->> +               goto again;
->>  out:
->>         spin_unlock(&host->lock);
->>
-> 
-> Well, I chose this way to only printk the error once. With your suggestion it 
-> might be printed in each loop, dunno how often/fast these IRQ stats are set 
-> again after clearing. This would end in an endless loop if error flags are set 
-> again fast enough, but see below.
-> But in general I like this approach.
-> 
->> But maybe it would be safer limiting the number of loops i.e.
->>
->>
->> diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
->> index 8d66706..d88247d 100644
->> --- a/drivers/mmc/host/sdhci.c
->> +++ b/drivers/mmc/host/sdhci.c
->> @@ -2268,7 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
->>         irqreturn_t result;
->>         struct sdhci_host *host = dev_id;
->>         u32 intmask;
->> -       int cardint = 0;
->> +       int cardint = 0, max_loops = 16;
->>
->>         spin_lock(&host->lock);
->>
->> @@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
->>
->>         result = IRQ_HANDLED;
->>
->> -       mmiowb();
->> +       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
->> +       if (intmask && --max_loops)
->> +               goto again;
->>  out:
->>         spin_unlock(&host->lock);
-> 
-> The actual problem I saw was a CMD6 command with an R1b response where the IRQ 
-> for the 'not busy' event was sent during ISR for the response. So I think 
-> normally this should only occur once.
-> Regarding error flags I masked the unhandled flags out in order to print an 
-> error only once, even if they might be set again in the next loop. With a 
-> simple check on intmask they might occur up to 16 times in the kernel log.
-> IMHO it makes no sense to repeatedly print errors about interrupt flags we 
-> don't handle.
-> 
-> Suggestions to get a more clean way?
+need use it to rescan root bus that was not added via acpi probe.
 
-I don't know about clean, but there is this:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/legacy.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
-
-diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
-index 8d66706..e0909da 100644
---- a/drivers/mmc/host/sdhci.c
-+++ b/drivers/mmc/host/sdhci.c
-@@ -2267,8 +2267,8 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
- {
-        irqreturn_t result;
-        struct sdhci_host *host = dev_id;
--       u32 intmask;
--       int cardint = 0;
-+       u32 intmask, unexpected = 0;
-+       int cardint = 0, max_loops = 16;
-
-        spin_lock(&host->lock);
-
-@@ -2344,19 +2344,24 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
-        intmask &= ~SDHCI_INT_CARD_INT;
-
-        if (intmask) {
--               pr_err("%s: Unexpected interrupt 0x%08x.\n",
--                       mmc_hostname(host->mmc), intmask);
--               sdhci_dumpregs(host);
--
-+               unexpected |= intmask;
-                sdhci_writel(host, intmask, SDHCI_INT_STATUS);
-        }
-
-        result = IRQ_HANDLED;
-
--       mmiowb();
-+       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
-+       if (intmask && --max_loops)
-+               goto again;
- out:
-        spin_unlock(&host->lock);
-
-+       if (unexpected) {
-+               pr_err("%s: Unexpected interrupt 0x%08x.\n",
-+                       mmc_hostname(host->mmc), unexpected);
-+               sdhci_dumpregs(host);
-+       }
+diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+index aab0e41..7a7c78f 100644
+--- a/arch/x86/pci/legacy.c
++++ b/arch/x86/pci/legacy.c
+@@ -79,3 +79,28 @@ int __init pci_subsys_init(void)
+ 	return 0;
+ }
+ subsys_initcall(pci_subsys_init);
 +
-        /*
-         * We have to delay this as it calls back into the driver.
-         */
++void __devinit pcibios_root_rescan(void)
++{
++	int busn;
++	struct pci_bus *bus;
++
++	if (pcibios_last_bus <= 0 || pcibios_last_bus > 0xff)
++		return;
++
++	for (busn = 0; busn <= pcibios_last_bus; busn++) {
++		bus = pci_find_bus(0, busn);
++
++		if (bus)
++			continue;
++
++		bus = __pcibios_scan_specific_bus(busn, false);
++
++		if (!bus)
++			continue;
++
++		pci_assign_unassigned_bus_resources(bus);
++
++		pci_bus_add_devices(bus);
++	}
++}
+-- 
+1.7.7
+
