@@ -1,140 +1,314 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:44836 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217Ab2COGk3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2012 02:40:29 -0400
-Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 8C93E3EE0BC
-	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:27 +0900 (JST)
-Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 7776C45DE50
-	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:27 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 606F045DE4F
-	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:27 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 5246F1DB802F
-	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:27 +0900 (JST)
-Received: from m105.s.css.fujitsu.com (m105.s.css.fujitsu.com [10.240.81.145])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id F3526E08001
-	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:26 +0900 (JST)
-From: "Taku Izumi" <izumi.taku@jp.fujitsu.com>
-To: "'Yinghai Lu'" <yinghai@kernel.org>
-Cc: <linux-pci@vger.kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-Subject: RE: [PATCH -v2 00/36] PCI: pci_host_bridge related cleanup and busn_alloc
-Date: Thu, 15 Mar 2012 15:40:14 +0900
-Message-ID: <0bb101cd0276$7aa36ee0$6fea4ca0$@jp.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Received: from acsinet15.oracle.com ([141.146.126.227]:31805 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757703Ab2CFHP6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:15:58 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	iommu@lists.linux-foundation.org
+Subject: [PATCH 07/23] pci, dmar: Update dmar units devices list during hotplug
+Date: Mon,  5 Mar 2012 23:13:44 -0800
+Message-Id: <1331018040-30725-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> 
-> The first 13 patches are hostbridge clean up.
-> will add struct device dev into host_bridge struct.
-> also will add release support to make sure allocated resource get
-> freed during root bus removal including hostbridge and pci_sysdata.
-> 
-> others 23 patches are busn_alloc related.
-> Set up iobusn_resource tree, and register bus number range to it.
-> Later when need to find bus range, will try to allocate from the tree
-> Need to test on arches other than x86. esp for ia64 and powerpc that support
->   more than on peer root buses.
-> 
-> The patches need to apply to pci/for-linus and pci/linux-next
-> because one patch that is needed only is only in pci/for-linus
+When do pci remove/rescan on system that have more iommus, got
 
- I can't apply your patchset to pci/linux-next.
- I reckon your patchset needs refresh, or did I do something wrong?
+[  894.089745] Set context mapping for c4:00.0
+[  894.110890] mpt2sas3: Allocated physical memory: size(4293 kB)
+[  894.112556] mpt2sas3: Current Controller Queue Depth(1883), Max Controller Queue Depth(2144)
+[  894.127278] mpt2sas3: Scatter Gather Elements per IO(128)
+[  894.361295] DRHD: handling fault status reg 2
+[  894.364053] DMAR:[DMA Read] Request device [c4:00.0] fault addr fffbe000
+[  894.364056] DMAR:[fault reason 02] Present bit in context entry is cl
 
- My impression is you should split your patchset between hostbridge part and
- bus-allocation part.
+it turns out when remove/rescan, pci dev will be freed and will get another new dev.
+but drhd units still keep old one... so dmar_find_matched_drhd_unit will
+return wrong drhd and iommu for the device that is not on first iommu.
 
- Taku Izumi
+So need to update devices in drhd_units during pci remove/rescan.
 
-> 
-> could get from
->         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-next
-> 
-> please put them into pci/linux-next branch for more testing.
-> 
-> -v2: dropped the patch that is with x86 pcibios_bus_to_resource that Bjorn objected.
->      reorder the patchesset to mold one appended patch into previous patch.
-> 
-> Thanks
-> 
-> Yinghai
-> 
-> Yinghai Lu (36):
->   PCI: Separate host_bridge code out from probe.c
->   x86, PCI: Fix memleak with get_current_resources
->   PCI: rename pci_host_bridge() to find_pci_root_bridge()
->   PCI: add generic device into pci_host_bridge struct
->   PCI: add host bridge release support
->   x86, PCI: break down get_current_resource()
->   x86, PCI: add host bridge resource release for using _CRS
->   x86, PCI: embed name acpi version pci_root_info struct
->   x86, PCI: embed pci_sysdata into pci_root_info on acpi path
->   x86, PCI: Allocating pci_root_info for not using _CRS path
->   x86, PCI: Merge root info printing for nocrs path
->   x86, PCI: add print all root info for nocrs path
->   x86, PCI: allocate temp range array in amd_bus pci_root_info probing
->   x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
->   PCI: Add busn_res into struct pci_bus.
->   PCI: Add busn_res operation functions
->   PCI: release busn when removing bus
->   PCI: insert busn_res in pci_create_root_bus
->   PCI: checking busn_res in pci_scan_root_bus
->   PCI: default busn_resource
->   PCI: add default res for pci_scan_bus
->   x86, PCI: add busn into resources list for acpi path
->   x86, PCI: put busn resource in pci_root_info for no_crs path
->   PCI, ia64: Register busn_res for root buses
->   PCI, sparc: Register busn_res for root buses
->   PCI, powerpc: Register busn_res for root buses
->   PCI, parisc: Register busn_res for root buses
->   PCI: Add pci_bus_extend/shrink_top()
->   PCI: Probe safe range that we can use for unassigned bridge.
->   PCI: Strict checking of valid range for bridge
->   PCI: Allocate bus range instead of use max blindly
->   PCI: kill pci_fixup_parent_subordinate_busnr()
->   PCI: Seperate child bus scanning to two passes overall
->   pcmcia: remove workaround for fixing pci parent bus subordinate
->   PCI: Double checking setting for bus register and bus struct.
->   PCI, pciehp: Remove not needed bus number range checking
-> 
->  arch/ia64/pci/pci.c                   |    2 +
->  arch/powerpc/include/asm/pci-bridge.h |    1 +
->  arch/powerpc/kernel/pci-common.c      |   10 +-
->  arch/sparc/kernel/pci.c               |    4 +
->  arch/sparc/kernel/pci_impl.h          |    1 +
->  arch/x86/pci/acpi.c                   |  121 ++++---
->  arch/x86/pci/amd_bus.c                |   88 ++----
->  arch/x86/pci/broadcom_bus.c           |   17 +-
->  arch/x86/pci/bus_numa.c               |  100 +++++--
->  arch/x86/pci/bus_numa.h               |   23 +-
->  arch/x86/pci/common.c                 |   27 +--
->  drivers/parisc/dino.c                 |    5 +
->  drivers/parisc/lba_pci.c              |    3 +
->  drivers/pci/Makefile                  |    2 +-
->  drivers/pci/host-bridge.c             |   96 ++++++
->  drivers/pci/hotplug/pciehp_pci.c      |   12 +-
->  drivers/pci/probe.c                   |  601 ++++++++++++++++++++++-----------
->  drivers/pci/remove.c                  |    1 +
->  drivers/pcmcia/yenta_socket.c         |   75 ----
->  include/linux/pci.h                   |   15 +-
->  20 files changed, 752 insertions(+), 452 deletions(-)
->  create mode 100644 drivers/pci/host-bridge.c
-> 
-> --
-> 1.7.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Could save domain/bus/device/function aside in the list and according that info
+restore new dev to drhd_units later.
+Then dmar_find_matched_drdh_unit and device_to_iommu could return right drhd and iommu.
 
+Add remove_dev_from_drhd/restore_dev_to_drhd functions to do the real work.
+call them in device ADD_DEVICE and UNBOUND_DRIVER
+
+Need to do the samething to atsr.  (expose dmar_atsr_units and add atsru->segment)
+
+After patch, will right iommu for the new dev and will not get DMAR error any more.
+
+-v2: add pci_dev_put/pci_dev_get to make refcount consistent.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: Vinod Koul <vinod.koul@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: iommu@lists.linux-foundation.org
+---
+ drivers/iommu/intel-iommu.c |  187 ++++++++++++++++++++++++++++++++++++++++---
+ include/linux/dmar.h        |    4 +
+ 2 files changed, 181 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index c9c6053..39ef2ce 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -665,6 +665,159 @@ static struct intel_iommu *device_to_iommu(int segment, u8 bus, u8 devfn)
+ 	return NULL;
+ }
+ 
++#ifdef CONFIG_HOTPLUG
++struct dev_dmaru {
++	struct list_head list;
++	void *dmaru;
++	int index;
++	int segment;
++	unsigned char bus;
++	unsigned int devfn;
++};
++
++static int
++save_dev_dmaru(int segment, unsigned char bus, unsigned int devfn,
++		 void *dmaru, int index, struct list_head *lh)
++{
++	struct dev_dmaru *m;
++
++	m = kzalloc(sizeof(*m), GFP_KERNEL);
++	if (!m)
++		return -ENOMEM;
++
++	m->segment = segment;
++	m->bus     = bus;
++	m->devfn   = devfn;
++	m->dmaru   = dmaru;
++	m->index   = index;
++
++	list_add(&m->list, lh);
++
++	return 0;
++}
++
++static void
++*get_dev_dmaru(int segment, unsigned char bus, unsigned int devfn,
++		int *index, struct list_head *lh)
++{
++	struct dev_dmaru *m;
++	void *dmaru = NULL;
++
++	list_for_each_entry(m, lh, list) {
++		if (m->segment == segment &&
++		    m->bus == bus && m->devfn == devfn) {
++			*index = m->index;
++			dmaru  = m->dmaru;
++			list_del(&m->list);
++			kfree(m);
++			break;
++		}
++	}
++
++	return dmaru;
++}
++
++static LIST_HEAD(saved_dev_drhd_list);
++
++static void remove_dev_from_drhd(struct pci_dev *dev)
++{
++	struct dmar_drhd_unit *drhd = NULL;
++	int segment = pci_domain_nr(dev->bus);
++	int i;
++
++	for_each_drhd_unit(drhd) {
++		if (drhd->ignored)
++			continue;
++		if (segment != drhd->segment)
++			continue;
++
++		for (i = 0; i < drhd->devices_cnt; i++) {
++			if (drhd->devices[i] == dev) {
++				/* save it at first if it is in drhd */
++				save_dev_dmaru(segment, dev->bus->number,
++						dev->devfn, drhd, i,
++						&saved_dev_drhd_list);
++				/* always remove it */
++				pci_dev_put(dev);
++				drhd->devices[i] = NULL;
++				return;
++			}
++		}
++	}
++}
++
++static void restore_dev_to_drhd(struct pci_dev *dev)
++{
++	struct dmar_drhd_unit *drhd = NULL;
++	int i;
++
++	/* find the stored drhd */
++	drhd = get_dev_dmaru(pci_domain_nr(dev->bus), dev->bus->number,
++				 dev->devfn, &i, &saved_dev_drhd_list);
++	/* restore that into drhd */
++	if (drhd)
++		drhd->devices[i] = pci_dev_get(dev);
++}
++#else
++static void remove_dev_from_drhd(struct pci_dev *dev)
++{
++}
++
++static void restore_dev_to_drhd(struct pci_dev *dev)
++{
++}
++#endif
++
++#if defined(CONFIG_DMAR) && defined(CONFIG_HOTPLUG)
++static LIST_HEAD(saved_dev_atsr_list);
++
++static void remove_dev_from_atsr(struct pci_dev *dev)
++{
++	struct dmar_atsr_unit *atsr = NULL;
++	int segment = pci_domain_nr(dev->bus);
++	int i;
++
++	for_each_atsr_unit(atsr) {
++		if (segment != atsr->segment)
++			continue;
++
++		for (i = 0; i < atsr->devices_cnt; i++) {
++			if (atsr->devices[i] == dev) {
++				/* save it at first if it is in drhd */
++				save_dev_dmaru(segment, dev->bus->number,
++						dev->devfn, atsr, i,
++						&saved_dev_atsr_list);
++				/* always remove it */
++				pci_dev_put(dev);
++				atsr->devices[i] = NULL;
++				return;
++			}
++		}
++	}
++}
++
++static void restore_dev_to_atsr(struct pci_dev *dev)
++{
++	struct dmar_atsr_unit *atsr = NULL;
++	int i;
++
++	/* find the stored atsr */
++	atsr = get_dev_dmaru(pci_domain_nr(dev->bus), dev->bus->number,
++				 dev->devfn, &i, &saved_dev_atsr_list);
++	/* restore that into atsr */
++	if (atsr)
++		atsr->devices[i] = pci_dev_get(dev);
++}
++#else
++static void remove_dev_from_atsr(struct pci_dev *dev)
++{
++}
++
++static void restore_dev_to_atsr(struct pci_dev *dev)
++{
++}
++#endif
++
+ static void domain_flush_cache(struct dmar_domain *domain,
+ 			       void *addr, int size)
+ {
+@@ -3474,6 +3627,7 @@ int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr)
+ 
+ 	atsru->hdr = hdr;
+ 	atsru->include_all = atsr->flags & 0x1;
++	atsru->segment = atsr->segment;
+ 
+ 	list_add(&atsru->list, &dmar_atsr_units);
+ 
+@@ -3505,16 +3659,13 @@ int dmar_find_matched_atsr_unit(struct pci_dev *dev)
+ {
+ 	int i;
+ 	struct pci_bus *bus;
+-	struct acpi_dmar_atsr *atsr;
+ 	struct dmar_atsr_unit *atsru;
+ 
+ 	dev = pci_physfn(dev);
+ 
+-	list_for_each_entry(atsru, &dmar_atsr_units, list) {
+-		atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
+-		if (atsr->segment == pci_domain_nr(dev->bus))
++	list_for_each_entry(atsru, &dmar_atsr_units, list)
++		if (atsru->segment == pci_domain_nr(dev->bus))
+ 			goto found;
+-	}
+ 
+ 	return 0;
+ 
+@@ -3574,20 +3725,36 @@ static int device_notifier(struct notifier_block *nb,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct dmar_domain *domain;
+ 
+-	if (iommu_no_mapping(dev))
++	if (unlikely(dev->bus != &pci_bus_type))
+ 		return 0;
+ 
+-	domain = find_domain(pdev);
+-	if (!domain)
+-		return 0;
++	switch (action) {
++	case BUS_NOTIFY_UNBOUND_DRIVER:
++		if (iommu_no_mapping(dev))
++			goto out;
++
++		if (iommu_pass_through)
++			goto out;
++
++		domain = find_domain(pdev);
++		if (!domain)
++			goto out;
+ 
+-	if (action == BUS_NOTIFY_UNBOUND_DRIVER && !iommu_pass_through) {
+ 		domain_remove_one_dev_info(domain, pdev);
+ 
+ 		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
+ 		    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
+ 		    list_empty(&domain->devices))
+ 			domain_exit(domain);
++out:
++		remove_dev_from_drhd(pdev);
++		remove_dev_from_atsr(pdev);
++
++		break;
++	case BUS_NOTIFY_ADD_DEVICE:
++		restore_dev_to_drhd(pdev);
++		restore_dev_to_atsr(pdev);
++		break;
+ 	}
+ 
+ 	return 0;
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index 731a609..57e1375 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -236,9 +236,13 @@ struct dmar_atsr_unit {
+ 	struct acpi_dmar_header *hdr;	/* ACPI header */
+ 	struct pci_dev **devices;	/* target devices */
+ 	int devices_cnt;		/* target device count */
++	u16 segment;			/* PCI domain */
+ 	u8 include_all:1;		/* include all ports */
+ };
+ 
++#define for_each_atsr_unit(atsr) \
++	list_for_each_entry(atsr, &dmar_atsr_units, list)
++
+ int dmar_parse_rmrr_atsr_dev(void);
+ extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
+ extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
+-- 
+1.7.7
 
