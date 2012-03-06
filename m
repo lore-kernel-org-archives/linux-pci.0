@@ -1,120 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:30562 "EHLO
+Received: from acsinet15.oracle.com ([141.146.126.227]:32260 "EHLO
 	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932287Ab2CATYb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2012 14:24:31 -0500
+	with ESMTP id S1758528Ab2CFHRM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:17:12 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [RFC PATCH 1/3] usb, PCI: split quirk for usb host controller to four
-Date: Thu,  1 Mar 2012 11:24:01 -0800
-Message-Id: <1330629843-6027-1-git-send-email-yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 21/23] x86, PCI: add __pci_scan_root_bus_on_node() that can skip bus_add
+Date: Mon,  5 Mar 2012 23:13:58 -0800
+Message-Id: <1331018040-30725-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-so we avoid checking class again and again in that quirk.
-
-following patches will remove disable/enable for non-xhci
-and nelogic vendor checking for uhci/xhci
-
-So total lines will increase 8 at last.
-
-need to be applied after pci/linux-next and usb/usb-next
+So could insert pus pci_assign_unassigned_bus_resources() before do bus_add.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
 ---
- drivers/usb/host/pci-quirks.c |   64 ++++++++++++++++++++++++++++++++----------
- 1 file changed, 50 insertions(+), 14 deletions(-)
+ arch/x86/include/asm/pci.h |    2 ++
+ arch/x86/pci/common.c      |   11 ++++++++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-Index: linux-2.6/drivers/usb/host/pci-quirks.c
-===================================================================
---- linux-2.6.orig/drivers/usb/host/pci-quirks.c
-+++ linux-2.6/drivers/usb/host/pci-quirks.c
-@@ -884,17 +884,60 @@ static void __devinit quirk_usb_handoff_
- 	iounmap(base);
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index df75d07..bb015c7 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -24,6 +24,8 @@ extern int noioapicquirk;
+ extern int noioapicreroute;
+ 
+ /* scan a bus after allocating a pci_sysdata for it */
++struct pci_bus * __devinit __pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node, bool bus_add);
+ extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 					    int node);
+ extern struct pci_bus *pci_scan_bus_with_sysdata(int busno);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 35931f6..2ebdc231 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -625,7 +625,8 @@ static void release_pci_sysdata(struct pci_host_bridge *bridge)
+ 	kfree(sd);
  }
  
--static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
-+static void __devinit quirk_usb_early_handoff_uhci(struct pci_dev *pdev)
-+{
-+	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
-+		return;
-+
-+	if (pci_enable_device(pdev) < 0) {
-+		dev_warn(&pdev->dev, "Can't enable PCI device, "
-+				"BIOS handoff failed.\n");
-+		return;
-+	}
-+	quirk_usb_handoff_uhci(pdev);
-+	pci_disable_device(pdev);
-+}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_SERIAL_USB_UHCI, 0, quirk_usb_early_handoff_uhci);
-+
-+static void __devinit quirk_usb_early_handoff_ohci(struct pci_dev *pdev)
+-struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
++struct pci_bus * __devinit __pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node, bool bus_add)
  {
- 	/* Skip Netlogic mips SoC's internal PCI USB controller.
- 	 * This device does not need/support EHCI/OHCI handoff
- 	 */
- 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
--	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_XHCI)
-+
-+	if (pci_enable_device(pdev) < 0) {
-+		dev_warn(&pdev->dev, "Can't enable PCI device, "
-+				"BIOS handoff failed.\n");
-+		return;
-+	}
-+	quirk_usb_handoff_ohci(pdev);
-+	pci_disable_device(pdev);
-+}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_SERIAL_USB_OHCI, 0, quirk_usb_early_handoff_ohci);
-+
-+static void __devinit quirk_usb_early_handoff_ehci(struct pci_dev *pdev)
-+{
-+	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
-+		return;
-+
-+	if (pci_enable_device(pdev) < 0) {
-+		dev_warn(&pdev->dev, "Can't enable PCI device, "
-+				"BIOS handoff failed.\n");
-+		return;
-+	}
-+	quirk_usb_handoff_ehci(pdev);
-+	pci_disable_device(pdev);
-+}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_SERIAL_USB_EHCI, 0, quirk_usb_early_handoff_ehci);
-+
-+static void __devinit quirk_usb_early_handoff_xhci(struct pci_dev *pdev)
-+{
-+	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+@@ -639,7 +640,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	sd->node = node;
+ 	x86_pci_root_bus_resources(busno, &resources);
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+-	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
++	bus = __pci_scan_root_bus(NULL, busno, ops, sd, &resources, bus_add);
+ 	if (bus)
+ 		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
+ 					release_pci_sysdata, sd);
+@@ -650,7 +651,11 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
  
- 	if (pci_enable_device(pdev) < 0) {
-@@ -902,15 +945,8 @@ static void __devinit quirk_usb_early_ha
- 				"BIOS handoff failed.\n");
- 		return;
- 	}
--	if (pdev->class == PCI_CLASS_SERIAL_USB_UHCI)
--		quirk_usb_handoff_uhci(pdev);
--	else if (pdev->class == PCI_CLASS_SERIAL_USB_OHCI)
--		quirk_usb_handoff_ohci(pdev);
--	else if (pdev->class == PCI_CLASS_SERIAL_USB_EHCI)
--		quirk_usb_handoff_ehci(pdev);
--	else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
--		quirk_usb_handoff_xhci(pdev);
-+	quirk_usb_handoff_xhci(pdev);
- 	pci_disable_device(pdev);
+ 	return bus;
  }
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
--			PCI_CLASS_SERIAL_USB, 8, quirk_usb_early_handoff);
-+		PCI_CLASS_SERIAL_USB_XHCI, 0, quirk_usb_early_handoff_xhci);
+-
++struct pci_bus * __devinit pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node)
++{
++	return __pci_scan_bus_on_node(busno, ops, node, true);
++}
+ struct pci_bus * __devinit pci_scan_bus_with_sysdata(int busno)
+ {
+ 	return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
+-- 
+1.7.7
+
