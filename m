@@ -1,41 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 14/26] PCI: Use for_each_res with noassign_bars
-Date: Sun, 18 Mar 2012 22:48:37 -0700
-Message-Id: <1332136129-14010-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:63921 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031691Ab2CGBAZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 20:00:25 -0500
+Received: by faaa19 with SMTP id a19so214649faa.1
+        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 17:00:23 -0800 (PST)
+Subject: [PATCH v1 3/9] powerpc/PCI: convert devtree bus addresses to resource
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Tue, 06 Mar 2012 18:00:22 -0700
+Message-ID: <20120307010022.27465.51474.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace those open code, and make code more readable.
+Normal PCI enumeration via PCI config space uses __pci_read_base(), where
+the PCI core applies any bus-to-resource offset.  But powerpc doesn't use
+that path when enumerating via the device tree.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+This adds the corresponding bus-to-resource conversion in the paths that
+read BAR values from the OF device tree.
+
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/pci/common.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ arch/powerpc/kernel/pci_of_scan.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 0ec860f..7ea09f8 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -136,8 +136,7 @@ static void __devinit pcibios_fixup_device_resources(struct pci_dev *dev)
- 		* resource so the kernel doesn't attmept to assign
- 		* it later on in pci_assign_unassigned_resources
- 		*/
--		for (bar = 0; bar <= PCI_STD_RESOURCE_END; bar++) {
--			bar_r = &dev->resource[bar];
-+		for_each_pci_dev_base_norom_resource(dev, bar_r, bar) {
- 			if (bar_r->start == 0 && bar_r->end != 0) {
- 				bar_r->flags = 0;
- 				bar_r->end = 0;
--- 
-1.7.7
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index b37d0b5..89dde17 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -75,6 +75,7 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
+ {
+ 	u64 base, size;
+ 	unsigned int flags;
++	struct pci_bus_region region;
+ 	struct resource *res;
+ 	const u32 *addrs;
+ 	u32 i;
+@@ -106,10 +107,11 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
+ 			printk(KERN_ERR "PCI: bad cfg reg num 0x%x\n", i);
+ 			continue;
+ 		}
+-		res->start = base;
+-		res->end = base + size - 1;
+ 		res->flags = flags;
+ 		res->name = pci_name(dev);
++		region.start = base;
++		region.end = base + size - 1;
++		pcibios_bus_to_resource(dev, res, &region);
+ 	}
+ }
+ 
+@@ -209,6 +211,7 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
+ 	struct pci_bus *bus;
+ 	const u32 *busrange, *ranges;
+ 	int len, i, mode;
++	struct pci_bus_region region;
+ 	struct resource *res;
+ 	unsigned int flags;
+ 	u64 size;
+@@ -270,9 +273,10 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
+ 			res = bus->resource[i];
+ 			++i;
+ 		}
+-		res->start = of_read_number(&ranges[1], 2);
+-		res->end = res->start + size - 1;
+ 		res->flags = flags;
++		region.start = of_read_number(&ranges[1], 2);
++		region.end = region.start + size - 1;
++		pcibios_bus_to_resource(dev, res, &region);
+ 	}
+ 	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
+ 		bus->number);
 
