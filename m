@@ -1,261 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25676 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932483Ab2CJHCq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 02:02:46 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 22/37] PCI, acpiphp: remove hot-add support of pci host bridge
-Date: Fri,  9 Mar 2012 23:00:22 -0800
-Message-Id: <1331362837-10740-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:46383 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752030Ab2CGX1v convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Mar 2012 18:27:51 -0500
+Received: by lahj13 with SMTP id j13so7891797lah.19
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 15:27:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120307223432.25669.51388.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com> <20120307223432.25669.51388.stgit@bhelgaas.mtv.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 7 Mar 2012 16:27:30 -0700
+Message-ID: <CAErSpo5Z10UrstkGLhCrEQm_vrMA0a7TNk=D256FixrG_V6n6w@mail.gmail.com>
+Subject: Re: [PATCH v3 29/34] sparc/PCI: get rid of device resource fixups
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	sparclinux@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It causes confusing.
+On Wed, Mar 7, 2012 at 3:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Tell the PCI core about host bridge address translation so it can take
+> care of bus-to-resource conversion for us.
+>
+> Previously, when enumerating PCI devices from the OF device tree, sparc
+> used pci_resource_adjust() to perform this address fixup for P2P bridge
+> windows in the following places:
+>
+>    pci_cfg_fake_ranges()
+>    apb_fake_ranges()
+>    of_scan_pci_bridge()
+>
+> This patch replaces pci_resource_adjust() with the generic
+> pcibios_bus_to_resource() and the appropriate pci_add_resource_offset()
+> use to tell the PCI core about host bridge apertures and offsets.
+>
+> Resources of non-P2P bridge devices are set in pci_parse_of_addrs() and,
+> as far as I can see, never converted to CPU addresses.
 
-We may only need acpi hp for pci host bridge.
+I'm concerned about this -- the fact that we seem to do bus-to-CPU
+conversions on P2P bridge windows, but not on endpoint BARs.
 
-Split host bridge hot-add support to another file, and keep acpiphp simple.
+Is it really the case that the OF device tree has bus addresses for
+P2P windows but CPU addresses for other BARs?  That would be
+surprising to me.  Or did I miss a conversion somewhere?
 
-Also remove not used res_lock in the struct.
+Help :)  Any sparc experts want to enlighten me?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/acpiphp.h      |    9 +---
- drivers/pci/hotplug/acpiphp_glue.c |  104 +++++++-----------------------------
- 2 files changed, 21 insertions(+), 92 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index 7722108..1a62e7b 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -79,18 +79,15 @@ struct acpiphp_bridge {
- 	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
- 	struct acpiphp_func *func;
- 
--	int type;
- 	int nr_slots;
- 
- 	u32 flags;
- 
--	/* This bus (host bridge) or Secondary bus (PCI-to-PCI bridge) */
-+	/* Secondary bus (PCI-to-PCI bridge) */
- 	struct pci_bus *pci_bus;
- 
- 	/* PCI-to-PCI bridge device */
- 	struct pci_dev *pci_dev;
--
--	spinlock_t res_lock;
- };
- 
- 
-@@ -148,10 +145,6 @@ struct acpiphp_attention_info
- /* PCI bus bridge HID */
- #define ACPI_PCI_HOST_HID		"PNP0A03"
- 
--/* PCI BRIDGE type */
--#define BRIDGE_TYPE_HOST		0
--#define BRIDGE_TYPE_P2P			1
--
- /* ACPI _STA method value (ignore bit 4; battery present) */
- #define ACPI_STA_PRESENT		(0x00000001)
- #define ACPI_STA_ENABLED		(0x00000002)
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 10b2122..1ca82ae 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -283,7 +283,7 @@ static int detect_ejectable_slots(acpi_handle handle)
- 	return found;
- }
- 
--/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
-+/* initialize miscellaneous stuff for PCI-to-PCI bridge */
- static void init_bridge_misc(struct acpiphp_bridge *bridge)
- {
- 	acpi_status status;
-@@ -300,25 +300,21 @@ static void init_bridge_misc(struct acpiphp_bridge *bridge)
- 	}
- 
- 	/* install notify handler */
--	if (bridge->type != BRIDGE_TYPE_HOST) {
--		if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
--			status = acpi_remove_notify_handler(bridge->func->handle,
--						ACPI_SYSTEM_NOTIFY,
--						handle_hotplug_event_func);
--			if (ACPI_FAILURE(status))
--				err("failed to remove notify handler\n");
--		}
--		status = acpi_install_notify_handler(bridge->handle,
--					     ACPI_SYSTEM_NOTIFY,
--					     handle_hotplug_event_bridge,
--					     bridge);
--
--		if (ACPI_FAILURE(status)) {
--			err("failed to register interrupt notify handler\n");
--		}
-+	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
-+		status = acpi_remove_notify_handler(bridge->func->handle,
-+					ACPI_SYSTEM_NOTIFY,
-+					handle_hotplug_event_func);
-+		if (ACPI_FAILURE(status))
-+			err("failed to remove notify handler\n");
- 	}
--}
-+	status = acpi_install_notify_handler(bridge->handle,
-+				     ACPI_SYSTEM_NOTIFY,
-+				     handle_hotplug_event_bridge,
-+				     bridge);
- 
-+	if (ACPI_FAILURE(status))
-+		err("failed to register interrupt notify handler\n");
-+}
- 
- /* find acpiphp_func from acpiphp_bridge */
- static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
-@@ -375,28 +371,6 @@ static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
- 	}
- }
- 
--
--/* allocate and initialize host bridge data structure */
--static void add_host_bridge(acpi_handle *handle)
--{
--	struct acpiphp_bridge *bridge;
--	struct acpi_pci_root *root = acpi_pci_find_root(handle);
--
--	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
--	if (bridge == NULL)
--		return;
--
--	bridge->type = BRIDGE_TYPE_HOST;
--	bridge->handle = handle;
--
--	bridge->pci_bus = root->bus;
--
--	spin_lock_init(&bridge->res_lock);
--
--	init_bridge_misc(bridge);
--}
--
--
- /* allocate and initialize PCI-to-PCI bridge data structure */
- static void add_p2p_bridge(acpi_handle *handle)
- {
-@@ -408,7 +382,6 @@ static void add_p2p_bridge(acpi_handle *handle)
- 		return;
- 	}
- 
--	bridge->type = BRIDGE_TYPE_P2P;
- 	bridge->handle = handle;
- 	config_p2p_bridge_flags(bridge);
- 
-@@ -425,7 +398,6 @@ static void add_p2p_bridge(acpi_handle *handle)
- 	 * (which we access during module unload).
- 	 */
- 	get_device(&bridge->pci_bus->dev);
--	spin_lock_init(&bridge->res_lock);
- 
- 	init_bridge_misc(bridge);
- 	return;
-@@ -485,12 +457,6 @@ static int add_bridge(acpi_handle handle)
- 			return 0;
- 	}
- 
--	/* check if this bridge has ejectable slots */
--	if (detect_ejectable_slots(handle) > 0) {
--		dbg("found PCI host-bus bridge with hot-pluggable slots\n");
--		add_host_bridge(handle);
--	}
--
- 	/* search P2P bridges under this host bridge */
- 	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
- 				     find_p2p_bridge, NULL, NULL, NULL);
-@@ -524,8 +490,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 	if (ACPI_FAILURE(status))
- 		err("failed to remove notify handler\n");
- 
--	if ((bridge->type != BRIDGE_TYPE_HOST) &&
--	    ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)) {
-+	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
- 		status = acpi_install_notify_handler(bridge->func->handle,
- 						ACPI_SYSTEM_NOTIFY,
- 						handle_hotplug_event_func,
-@@ -1078,15 +1043,10 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
- static int acpiphp_configure_bridge (acpi_handle handle)
- {
- 	struct pci_bus *bus;
-+	struct pci_dev *pdev = acpi_get_pci_dev(handle);
- 
--	if (acpi_is_root_bridge(handle)) {
--		struct acpi_pci_root *root = acpi_pci_find_root(handle);
--		bus = root->bus;
--	} else {
--		struct pci_dev *pdev = acpi_get_pci_dev(handle);
--		bus = pdev->subordinate;
--		pci_dev_put(pdev);
--	}
-+	bus = pdev->subordinate;
-+	pci_dev_put(pdev);
- 
- 	pci_bus_size_bridges(bus);
- 	pci_bus_assign_resources(bus);
-@@ -1249,8 +1209,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
- 		dbg("%s: Device eject notify on %s\n", __func__, objname);
--		if ((bridge->type != BRIDGE_TYPE_HOST) &&
--		    (bridge->flags & BRIDGE_HAS_EJ0)) {
-+		if (bridge->flags & BRIDGE_HAS_EJ0) {
- 			struct acpiphp_slot *slot;
- 			slot = bridge->func->slot;
- 			if (!acpiphp_disable_slot(slot))
-@@ -1381,21 +1340,6 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
- 			      _handle_hotplug_event_func);
- }
- 
--static acpi_status
--find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
--{
--	int *count = (int *)context;
--
--	if (!acpi_is_root_bridge(handle))
--		return AE_OK;
--
--	(*count)++;
--	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				    handle_hotplug_event_bridge, NULL);
--
--	return AE_OK ;
--}
--
- static struct acpi_pci_driver acpi_pci_hp_driver = {
- 	.add =		add_bridge,
- 	.remove =	remove_bridge,
-@@ -1406,15 +1350,7 @@ static struct acpi_pci_driver acpi_pci_hp_driver = {
-  */
- int __init acpiphp_glue_init(void)
- {
--	int num = 0;
--
--	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
--			ACPI_UINT32_MAX, find_root_bridges, NULL, &num, NULL);
--
--	if (num <= 0)
--		return -1;
--	else
--		acpi_pci_register_driver(&acpi_pci_hp_driver);
-+	acpi_pci_register_driver(&acpi_pci_hp_driver);
- 
- 	return 0;
- }
--- 
-1.7.7
-
+Bjorn
