@@ -1,49 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:55306 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199Ab2CVQts (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Mar 2012 12:49:48 -0400
-From: Colin King <colin.king@canonical.com>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Matthew Garrett <mjg@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Allow pcie_aspm=force to work even when FADT indicates it is unsupported
-Date: Thu, 22 Mar 2012 16:49:45 +0000
-Message-Id: <1332434985-11522-1-git-send-email-colin.king@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+MIME-Version: 1.0
+In-Reply-To: <1331018040-30725-9-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+	<1331018040-30725-9-git-send-email-yinghai@kernel.org>
+Date: Tue, 6 Mar 2012 20:53:50 -0700
+Message-ID: <CABhMZUXsZD7YgViGxtvFyu8Pi2+QXfJ4rJwqZq9ybQt8UGTM9w@mail.gmail.com>
+Subject: Re: [PATCH 08/23] PNPACPI: Fix device ref leaking in acpi_pnp_match
+From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@kernel.org, Len Brown <lenb@kernel.org>,
+	Adam Belay <abelay@mit.edu>, Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> During testing pci root bus removal, found some root bus bridge is not fr=
+eed.
+>
+> If booting with pnpacpi=3Doff, those hostbridge could be freed without pr=
+oblem.
+>
+> It turns out that some devices reference are not released during acpi_pnp=
+_match.
+>
+> that match should not hold one device ref during every calling.
+>
+> Add put_device calling before returning.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: stable@kernel.org
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: Adam Belay <abelay@mit.edu>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-acpi@vger.kernel.org
+> ---
+> =A0drivers/pnp/pnpacpi/core.c | =A0 =A07 ++++++-
+> =A01 files changed, 6 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pnp/pnpacpi/core.c b/drivers/pnp/pnpacpi/core.c
+> index b00c176..d21e8f5 100644
+> --- a/drivers/pnp/pnpacpi/core.c
+> +++ b/drivers/pnp/pnpacpi/core.c
+> @@ -321,9 +321,14 @@ static int __init acpi_pnp_match(struct device *dev,=
+ void *_pnp)
+> =A0{
+> =A0 =A0 =A0 =A0struct acpi_device *acpi =3D to_acpi_device(dev);
+> =A0 =A0 =A0 =A0struct pnp_dev *pnp =3D _pnp;
+> + =A0 =A0 =A0 struct device *physical_device;
+> +
+> + =A0 =A0 =A0 physical_device =3D acpi_get_physical_device(acpi->handle);
+> + =A0 =A0 =A0 if (physical_device)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 put_device(physical_device);
+>
+> =A0 =A0 =A0 =A0/* true means it matched */
+> - =A0 =A0 =A0 return !acpi_get_physical_device(acpi->handle)
+> + =A0 =A0 =A0 return !physical_device
+> =A0 =A0 =A0 =A0 =A0 =A0&& compare_pnp_id(pnp->id, acpi_device_hid(acpi));
+> =A0}
+>
 
-Right now using pcie_aspm=force will not enable ASPM if the FADT indicates
-ASPM is unsupported.  However, the semantics of force should probably allow
-for this, especially as they did before the ASPM disable rework with commit
-3c076351c4027a56d5005a39a0b518a4ba393ce2
+I spent about an hour convincing myself that this patch does the right
+thing.  I *think* it does, but it certainly is not obvious.  It's
+always nicer if the get/put are in the same function or in functions
+that obviously correspond to each other.  But you didn't create this
+mess, so I don't hold you responsible for fixing it :)
 
-This patch just skips the clearing of any ASPM setup that the firmware has
-carried out on this bus if pcie_aspm=force is being used.
-
-BugLink: https://bugs.launchpad.net/ubuntu/+bug/962038
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/pci/pcie/aspm.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 24f049e..e406429 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -783,6 +783,9 @@ void pcie_clear_aspm(struct pci_bus *bus)
- {
- 	struct pci_dev *child;
- 
-+	if (aspm_force)
-+		return;
-+
- 	/*
- 	 * Clear any ASPM setup that the firmware has carried out on this bus
- 	 */
--- 
-1.7.9.1
-
+Bjorn
