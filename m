@@ -1,177 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:5758 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751976Ab2CARSV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Mar 2012 12:18:21 -0500
-Date: Thu, 01 Mar 2012 17:18:14 +0000
-From: tadeusz.struk@intel.com
-To: jbarnes@virtuousgeek.org
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org, tadeusz.struk@intel.com
-Subject: [PATCH] Added functionality that allows dynamically add and
- remove device specific reset functions
-Message-ID: <4f4faf56.55WpOIn/0L6OUf5o%tadeusz.struk@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQXsY7Dn5TGtD1ARM_KFdz1V1hJOvYAy6e4msM=i3VfhDg@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+	<1331018040-30725-24-git-send-email-yinghai@kernel.org>
+	<CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
+	<CAE9FiQXsY7Dn5TGtD1ARM_KFdz1V1hJOvYAy6e4msM=i3VfhDg@mail.gmail.com>
+Date: Tue, 6 Mar 2012 20:42:33 -0700
+Message-ID: <CABhMZUVOE2QJXPoXAdzX0275J+PRT_CFbJAWFtV7gzm_tD7suw@mail.gmail.com>
+Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
+From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/alternative; boundary=00248c0eec2c2823cd04ba9ef3d1
 List-ID: <linux-pci.vger.kernel.org>
 
->From b4cf24d5987475862de799c78773f13f25ed2af8 Mon Sep 17 00:00:00 2001
-From: Tadeusz Struk <tadeusz.struk@intel.com>
-Date: Tue, 17 Jan 2012 16:45:46 +0000
-Subject: [PATCH] Added functionality that allows dynamically add and remove
- device specific reset functions
+--00248c0eec2c2823cd04ba9ef3d1
+Content-Type: text/plain; charset=ISO-8859-1
 
-I have a use case where I need to cleanup resource allocated for Virtual
-Functions after a guest OS that used it crashed. This cleanup needs to
-be done before the VF is being FLRed. The only possible way to do this
-seems to be by using pci_dev_specific_reset() function. Unfortunately
-this function only works for devices defined in a static table in the
-drivers/pci/quirks.c file. This patch changes it so that specific reset
-functions can be added and deleted dynamically.
+On Tue, Mar 6, 2012 at 5:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
 
-Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
-
----
- drivers/pci/pci.h    |   19 ++++++++++++++-
- drivers/pci/quirks.c |   63 ++++++++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 71 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 1009a5e..10929d8 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -312,18 +312,35 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- extern void pci_enable_acs(struct pci_dev *dev);
- 
- struct pci_dev_reset_methods {
-+	struct list_head list;
- 	u16 vendor;
- 	u16 device;
- 	int (*reset)(struct pci_dev *dev, int probe);
- };
- 
- #ifdef CONFIG_PCI_QUIRKS
--extern int pci_dev_specific_reset(struct pci_dev *dev, int probe);
-+extern int
-+pci_dev_specific_reset(struct pci_dev *dev, int probe);
-+extern int
-+pci_dev_specific_reset_add(const struct pci_dev_reset_methods *reset_method);
-+extern int
-+pci_dev_specific_reset_remove(const struct pci_dev_reset_methods *reset_method);
-+
- #else
- static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- {
- 	return -ENOTTY;
- }
-+int
-+pci_dev_specific_reset_add(const struct pci_dev_reset_methods *reset_method)
-+{
-+	return 0;
-+}
-+int
-+pci_dev_specific_reset_remove(const struct pci_dev_reset_methods *reset_method)
-+{
-+	return 0;
-+}
- #endif
- 
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6476547..963e527 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3070,26 +3070,69 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- }
- 
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-+static struct pci_dev_reset_methods intel_82599_sfp_vf_reset = {
-+	.vendor = PCI_VENDOR_ID_INTEL,
-+	.device = PCI_DEVICE_ID_INTEL_82599_SFP_VF,
-+	.reset = reset_intel_82599_sfp_virtfn,
-+	.list = LIST_HEAD_INIT(intel_82599_sfp_vf_reset.list)
-+} ;
- 
--static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
--		 reset_intel_82599_sfp_virtfn },
--	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
--		reset_intel_generic_dev },
--	{ 0 }
--};
-+static struct pci_dev_reset_methods intel_generic_reset = {
-+	.vendor = PCI_VENDOR_ID_INTEL,
-+	.device = PCI_ANY_ID,
-+	.reset = reset_intel_generic_dev,
-+	.list = LIST_HEAD_INIT(intel_generic_reset.list)
-+} ;
-+
-+static DEFINE_SPINLOCK(reset_list_lock);
-+static LIST_HEAD(reset_list);
-+
-+
-+static int __init pci_dev_specific_reset_init(void)
-+{
-+	pci_dev_specific_reset_add(&intel_82599_sfp_vf_reset);
-+	pci_dev_specific_reset_add(&intel_generic_reset);
-+	return 0;
-+}
-+
-+late_initcall(pci_dev_specific_reset_init);
-+
-+int
-+pci_dev_specific_reset_add(const struct pci_dev_reset_methods *reset_method)
-+{
-+	if (reset_method && reset_method->reset) {
-+		spin_lock(&reset_list_lock);
-+		list_add((struct list_head *)&reset_method->list,
-+			 &reset_list);
-+		spin_unlock(&reset_list_lock);
-+		return 0;
-+	}
-+	return -EINVAL;
-+}
-+EXPORT_SYMBOL(pci_dev_specific_reset_add);
-+
-+int
-+pci_dev_specific_reset_remove(const struct pci_dev_reset_methods *reset_method)
-+{
-+	if (reset_method) {
-+		spin_lock(&reset_list_lock);
-+		list_del((struct list_head *)(&reset_method->list));
-+		spin_unlock(&reset_list_lock);
-+		return 0;
-+	}
-+	return -EINVAL;
-+}
-+EXPORT_SYMBOL(pci_dev_specific_reset_remove);
- 
- int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- {
- 	const struct pci_dev_reset_methods *i;
--
--	for (i = pci_dev_reset_methods; i->reset; i++) {
-+	list_for_each_entry(i, &reset_list, list) {
- 		if ((i->vendor == dev->vendor ||
- 		     i->vendor == (u16)PCI_ANY_ID) &&
- 		    (i->device == dev->device ||
- 		     i->device == (u16)PCI_ANY_ID))
- 			return i->reset(dev, probe);
- 	}
--
- 	return -ENOTTY;
- }
--- 
-1.7.7.6
-
---------------------------------------------------------------
-Intel Shannon Limited
-Registered in Ireland
-Registered Office: Collinstown Industrial Park, Leixlip, County Kildare
-Registered Number: 308263
-Business address: Dromore House, East Park, Shannon, Co. Clare
-
-This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). Any review or distribution by others is strictly prohibited. If you are not the intended recipient, please contact the sender and delete all copies.
+> On Tue, Mar 6, 2012 at 3:13 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Tue, Mar 6, 2012 at 12:14 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> need use it to rescan root bus that was not added via acpi probe.
+> >>
+> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> >> ---
+> >>  arch/x86/pci/legacy.c |   25 +++++++++++++++++++++++++
+> >>  1 files changed, 25 insertions(+), 0 deletions(-)
+> >>
+> >> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+> >> index aab0e41..7a7c78f 100644
+> >> --- a/arch/x86/pci/legacy.c
+> >> +++ b/arch/x86/pci/legacy.c
+> >> @@ -79,3 +79,28 @@ int __init pci_subsys_init(void)
+> >>        return 0;
+> >>  }
+> >>  subsys_initcall(pci_subsys_init);
+> >> +
+> >> +void __devinit pcibios_root_rescan(void)
+> >> +{
+> >> +       int busn;
+> >> +       struct pci_bus *bus;
+> >> +
+> >> +       if (pcibios_last_bus <= 0 || pcibios_last_bus > 0xff)
+> >> +               return;
+> >> +
+> >> +       for (busn = 0; busn <= pcibios_last_bus; busn++) {
+> >> +               bus = pci_find_bus(0, busn);
+> >> +
+> >> +               if (bus)
+> >> +                       continue;
+> >> +
+> >> +               bus = __pcibios_scan_specific_bus(busn, false);
+> >> +
+> >> +               if (!bus)
+> >> +                       continue;
+> >> +
+> >> +               pci_assign_unassigned_bus_resources(bus);
+> >> +
+> >> +               pci_bus_add_devices(bus);
+> >> +       }
+> >> +}
+> >
+> > Do we need it?  I assume we only care about host bridge hotplug via ACPI
+> on x86.
+>
+> my sandbridge system has cpu bus 0x7f, and 0xff in DSDT.
+>
+> but nehalem and westmere system does not have cpu bus 0xf8, ... 0xff.
 
 
+I think you're saying that on some machines, the BIOS decided not to expose
+host bridges leading to CPU devices, and you want to discover those devices
+anyway.  (What's the reason you want to discover them?)
+
+I guess that's OK for now, but I don't like this strategy in general.  The
+expectation of BIOS writers is that the OS will discover things using the
+ACPI namespace and not go grubbing around outside that.  Sometimes the BIOS
+has good reasons to hide things from the OS, e.g., to keep the OS from
+tripping over hardware defects, to reduce support calls by preventing users
+from making dangerous changes, etc.
+
+Bjorn
+
+--00248c0eec2c2823cd04ba9ef3d1
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Mar 6, 2012 at 5:09 PM, Yinghai Lu <span dir=3D"ltr">&lt;<a href=3D=
+"mailto:yinghai@kernel.org" target=3D"_blank">yinghai@kernel.org</a>&gt;</s=
+pan> wrote:<br><div class=3D"gmail_quote"><blockquote class=3D"gmail_quote"=
+ style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+
+<div><div>On Tue, Mar 6, 2012 at 3:13 PM, Bjorn Helgaas &lt;<a href=3D"mail=
+to:bhelgaas@google.com" target=3D"_blank">bhelgaas@google.com</a>&gt; wrote=
+:<br>
+&gt; On Tue, Mar 6, 2012 at 12:14 AM, Yinghai Lu &lt;<a href=3D"mailto:ying=
+hai@kernel.org" target=3D"_blank">yinghai@kernel.org</a>&gt; wrote:<br>
+&gt;&gt; need use it to rescan root bus that was not added via acpi probe.<=
+br>
+&gt;&gt;<br>
+&gt;&gt; Signed-off-by: Yinghai Lu &lt;<a href=3D"mailto:yinghai@kernel.org=
+" target=3D"_blank">yinghai@kernel.org</a>&gt;<br>
+&gt;&gt; ---<br>
+&gt;&gt; =A0arch/x86/pci/legacy.c | =A0 25 +++++++++++++++++++++++++<br>
+&gt;&gt; =A01 files changed, 25 insertions(+), 0 deletions(-)<br>
+&gt;&gt;<br>
+&gt;&gt; diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c<br>
+&gt;&gt; index aab0e41..7a7c78f 100644<br>
+&gt;&gt; --- a/arch/x86/pci/legacy.c<br>
+&gt;&gt; +++ b/arch/x86/pci/legacy.c<br>
+&gt;&gt; @@ -79,3 +79,28 @@ int __init pci_subsys_init(void)<br>
+&gt;&gt; =A0 =A0 =A0 =A0return 0;<br>
+&gt;&gt; =A0}<br>
+&gt;&gt; =A0subsys_initcall(pci_subsys_init);<br>
+&gt;&gt; +<br>
+&gt;&gt; +void __devinit pcibios_root_rescan(void)<br>
+&gt;&gt; +{<br>
+&gt;&gt; + =A0 =A0 =A0 int busn;<br>
+&gt;&gt; + =A0 =A0 =A0 struct pci_bus *bus;<br>
+&gt;&gt; +<br>
+&gt;&gt; + =A0 =A0 =A0 if (pcibios_last_bus &lt;=3D 0 || pcibios_last_bus &=
+gt; 0xff)<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;<br>
+&gt;&gt; +<br>
+&gt;&gt; + =A0 =A0 =A0 for (busn =3D 0; busn &lt;=3D pcibios_last_bus; busn=
+++) {<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 bus =3D pci_find_bus(0, busn);<br>
+&gt;&gt; +<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (bus)<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 continue;<br>
+&gt;&gt; +<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 bus =3D __pcibios_scan_specific_bus(=
+busn, false);<br>
+&gt;&gt; +<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!bus)<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 continue;<br>
+&gt;&gt; +<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pci_assign_unassigned_bus_resources(=
+bus);<br>
+&gt;&gt; +<br>
+&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pci_bus_add_devices(bus);<br>
+&gt;&gt; + =A0 =A0 =A0 }<br>
+&gt;&gt; +}<br>
+&gt;<br>&gt; Do we need it? =A0I assume we only care about host bridge hotp=
+lug via ACPI on x86.</div></div><div>
+<br>
+</div>my sandbridge system has cpu bus 0x7f, and 0xff in DSDT.<br>
+<br>
+but nehalem and westmere system does not have cpu bus 0xf8, ... 0xff.</bloc=
+kquote><div><br></div><div>I think you&#39;re saying that on some machines,=
+ the BIOS decided not to expose host bridges leading to CPU devices, and yo=
+u want to discover those devices anyway. =A0(What&#39;s the reason you want=
+ to discover them?)</div>
+
+<div><br></div><div>I guess that&#39;s OK for now, but I don&#39;t like thi=
+s strategy in general. =A0The expectation of BIOS writers is that the OS wi=
+ll discover things using the ACPI namespace and not go grubbing around outs=
+ide that. =A0Sometimes the BIOS has good reasons to hide things from the OS=
+, e.g., to keep the OS from tripping over hardware defects, to reduce suppo=
+rt calls by preventing users from making dangerous changes, etc.</div>
+
+<div><br></div><div>Bjorn</div></div>
+
+--00248c0eec2c2823cd04ba9ef3d1--
