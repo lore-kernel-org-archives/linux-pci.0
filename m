@@ -1,202 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:51504 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946201Ab2CPXs1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:48:27 -0400
-Received: by eekc41 with SMTP id c41so218658eek.1
-        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:48:25 -0700 (PDT)
-Subject: [PATCH v2 6/7] sparc/PCI: convert devtree and arch-probed bus
-	addresses to resource
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v3 21/34] ia64/PCI: SN: convert to pci_scan_root_bus() for
+	correct root bus resources
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Date: Fri, 16 Mar 2012 17:48:24 -0600
-Message-ID: <20120316234824.6649.79503.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	Tony Luck <tony.luck@intel.com>, Jack Steiner <steiner@sgi.com>
+Date: Wed, 07 Mar 2012 15:33:51 -0700
+Message-ID: <20120307223351.25669.74415.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Normal PCI enumeration via PCI config space uses __pci_read_base(), where
-the PCI core applies any bus-to-resource offset.  But sparc sometimes
-reads PCI config space itself, and sometimes it gets addresses from the
-device tree.
+Convert from pci_scan_bus() to pci_scan_root_bus().  Supply the root
+bus resources from bussoft.  When we move the resource adjustment from
+pcibios_fixup_resources() to the PCI core, it will be important to have
+the root bus resources correct from the beginning.
 
-In ac1edcc579b6, I converted sparc to use the PCI core bus-to-resource
-conversion, but I missed these sparc-specific paths.  I don't have a way
-to test it, but I think sparc is broken between that commit and this one.
-
-This patch replaces the sparc-specific pci_resource_adjust() with the
-generic pcibios_bus_to_resource() in the following paths:
-
-    pci_cfg_fake_ranges()       (addresses read from PCI config)
-    apb_fake_ranges()           (addresses computed based on PCI config)
-    of_scan_pci_bridge()        (addresses from OF "ranges" property)
-
-N.B.: Resources of non-P2P bridge devices are set in pci_parse_of_addrs()
-and, as far as I can see, never converted to CPU addresses.  I do not
-understand why these would be treated differently than bridge windows.
-
-CC: "David S. Miller" <davem@davemloft.net>
-CC: sparclinux@vger.kernel.org
+CC: Tony Luck <tony.luck@intel.com>
+CC: Jack Steiner <steiner@sgi.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/sparc/kernel/pci.c |   60 ++++++++++++++++++++---------------------------
- 1 files changed, 25 insertions(+), 35 deletions(-)
+ arch/ia64/sn/kernel/io_init.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 253e8ac..fdaf218 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -375,13 +375,6 @@ static void __devinit apb_calc_first_last(u8 map, u32 *first_p, u32 *last_p)
- 	*last_p = last;
- }
- 
--static void pci_resource_adjust(struct resource *res,
--				struct resource *root)
--{
--	res->start += root->start;
--	res->end += root->start;
--}
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index 0a36f08..c99c2ca 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -297,7 +297,8 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 	s64 status = 0;
+ 	struct pci_controller *controller;
+ 	struct pcibus_bussoft *prom_bussoft_ptr;
 -
- /* For PCI bus devices which lack a 'ranges' property we interrogate
-  * the config space values to set the resources, just like the generic
-  * Linux PCI probing code does.
-@@ -390,7 +383,8 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 					  struct pci_bus *bus,
- 					  struct pci_pbm_info *pbm)
- {
--	struct resource *res;
-+	struct pci_bus_region region;
-+	struct resource *res, res2;
- 	u8 io_base_lo, io_limit_lo;
- 	u16 mem_base_lo, mem_limit_lo;
- 	unsigned long base, limit;
-@@ -412,11 +406,14 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	res = bus->resource[0];
- 	if (base <= limit) {
- 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
-+		res2.flags = res->flags;
-+		region.start = base;
-+		region.end = limit + 0xfff;
-+		pcibios_bus_to_resource(dev, &res2, &region);
- 		if (!res->start)
--			res->start = base;
-+			res->start = res2.start;
- 		if (!res->end)
--			res->end = limit + 0xfff;
--		pci_resource_adjust(res, &pbm->io_space);
-+			res->end = res2.end;
- 	}
++	LIST_HEAD(resources);
++	int i;
  
- 	pci_read_config_word(dev, PCI_MEMORY_BASE, &mem_base_lo);
-@@ -428,9 +425,9 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	if (base <= limit) {
- 		res->flags = ((mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) |
- 			      IORESOURCE_MEM);
--		res->start = base;
--		res->end = limit + 0xfffff;
--		pci_resource_adjust(res, &pbm->mem_space);
-+		region.start = base;
-+		region.end = limit + 0xfffff;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
+  	status = sal_get_pcibus_info((u64) segment, (u64) busnum,
+  				     (u64) ia64_tpa(&prom_bussoft_ptr));
+@@ -315,7 +316,13 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 	 */
+ 	controller->platform_data = prom_bussoft_ptr;
  
- 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
-@@ -459,9 +456,9 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	if (base <= limit) {
- 		res->flags = ((mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) |
- 			      IORESOURCE_MEM | IORESOURCE_PREFETCH);
--		res->start = base;
--		res->end = limit + 0xfffff;
--		pci_resource_adjust(res, &pbm->mem_space);
-+		region.start = base;
-+		region.end = limit + 0xfffff;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- }
+-	bus = pci_scan_bus(busnum, &pci_root_ops, controller);
++	sn_legacy_pci_window_fixup(controller,
++				   prom_bussoft_ptr->bs_legacy_io,
++				   prom_bussoft_ptr->bs_legacy_mem);
++	for (i = 0; i < controller->windows; i++)
++		pci_add_resource(&resources, &controller->window[i].resource);
++	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
++				&resources);
+  	if (bus == NULL)
+  		goto error_return; /* error, or bus already scanned */
  
-@@ -472,6 +469,7 @@ static void __devinit apb_fake_ranges(struct pci_dev *dev,
- 				      struct pci_bus *bus,
- 				      struct pci_pbm_info *pbm)
- {
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	u32 first, last;
- 	u8 map;
-@@ -479,18 +477,18 @@ static void __devinit apb_fake_ranges(struct pci_dev *dev,
- 	pci_read_config_byte(dev, APB_IO_ADDRESS_MAP, &map);
- 	apb_calc_first_last(map, &first, &last);
- 	res = bus->resource[0];
--	res->start = (first << 21);
--	res->end = (last << 21) + ((1 << 21) - 1);
- 	res->flags = IORESOURCE_IO;
--	pci_resource_adjust(res, &pbm->io_space);
-+	region.start = (first << 21);
-+	region.end = (last << 21) + ((1 << 21) - 1);
-+	pcibios_bus_to_resource(dev, res, &region);
- 
- 	pci_read_config_byte(dev, APB_MEM_ADDRESS_MAP, &map);
- 	apb_calc_first_last(map, &first, &last);
- 	res = bus->resource[1];
--	res->start = (first << 21);
--	res->end = (last << 21) + ((1 << 21) - 1);
- 	res->flags = IORESOURCE_MEM;
--	pci_resource_adjust(res, &pbm->mem_space);
-+	region.start = (first << 21);
-+	region.end = (last << 21) + ((1 << 21) - 1);
-+	pcibios_bus_to_resource(dev, res, &region);
- }
- 
- static void __devinit pci_of_scan_bus(struct pci_pbm_info *pbm,
-@@ -506,6 +504,7 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 	struct pci_bus *bus;
- 	const u32 *busrange, *ranges;
- 	int len, i, simba;
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	unsigned int flags;
- 	u64 size;
-@@ -556,8 +555,6 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 	}
- 	i = 1;
- 	for (; len >= 32; len -= 32, ranges += 8) {
--		struct resource *root;
--
- 		flags = pci_parse_of_flags(ranges[0]);
- 		size = GET_64BIT(ranges, 6);
- 		if (flags == 0 || size == 0)
-@@ -569,7 +566,6 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
--			root = &pbm->io_space;
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
-@@ -578,18 +574,12 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 			}
- 			res = bus->resource[i];
- 			++i;
--			root = &pbm->mem_space;
+@@ -348,9 +355,6 @@ sn_bus_fixup(struct pci_bus *bus)
+ 			return;
  		}
- 
--		res->start = GET_64BIT(ranges, 1);
--		res->end = res->start + size - 1;
- 		res->flags = flags;
--
--		/* Another way to implement this would be to add an of_device
--		 * layer routine that can calculate a resource for a given
--		 * range property value in a PCI device.
--		 */
--		pci_resource_adjust(res, root);
-+		region.start = GET_64BIT(ranges, 1);
-+		region.end = region.start + size - 1;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- after_ranges:
- 	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
+ 		sn_common_bus_fixup(bus, prom_bussoft_ptr);
+-		sn_legacy_pci_window_fixup(PCI_CONTROLLER(bus),
+-					   prom_bussoft_ptr->bs_legacy_io,
+-					   prom_bussoft_ptr->bs_legacy_mem);
+         }
+         list_for_each_entry(pci_dev, &bus->devices, bus_list) {
+                 sn_io_slot_fixup(pci_dev);
 
