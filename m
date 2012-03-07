@@ -1,141 +1,296 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from b-mail.com.ua ([195.68.202.242]:59865 "EHLO b-mail.com.ua"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750711Ab2CCPh6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 3 Mar 2012 10:37:58 -0500
-From: Mikhail Zolotaryov <lebon@lebon.org.ua>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v3 27/34] powerpc/PCI: get rid of device resource fixups
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Mikhail Zolotaryov <lebon@lebon.org.ua>
-Subject: [PATCH 1/1] PCI: pciehp: Fast presence change handling
-Date: Sat,  3 Mar 2012 17:13:33 +0200
-Message-Id: <1330787613-24170-1-git-send-email-lebon@lebon.org.ua>
-Sender: linux-pci-owner@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Wed, 07 Mar 2012 15:34:22 -0700
+Message-ID: <20120307223422.25669.72561.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the device is being removed and re-connected back fast enough (for
-instance, due to the endpoint reset) the kernel is unable to handle a series
-of resulting presence change events properly, the output is (twice):
-   pciehp_check_link_status: lnk_status = 3011
-   Device 0000:02:00.0 already exists at 0000:02:00, cannot hot-add
-As a consequence, memory mappings are not enabled so the device is no
-longer operating.
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-It should be a mistake to handle the Presence Detect function the same way
-as the Attention Button: for the first the slot provides a current status
-information (PCI_EXP_SLTSTA: Presence Detect State) together with a change
-event itself (PCI_EXP_SLTSTA: Presence Detect Changed), the second is only
-an event (Slot Status: Attention Button Pressed). As a consequence the
-Attention Button handling should be based on the current slot power status
-(existing implementation), the Presence Detect should rely on the register
-data from ISR.
+Previously, powerpc used a HEADER quirk to perform this address fixup
+in the following path:
 
-Another problem involved is a race condition requesting the
-pciehp_power_thread work: instead of POWEROFF_STATE, POWERON_STATE sequence
-execution it tries to run POWERON_STATE change twice - the shared variable
-(slot status) is used to deliver the request. The solution is to separate
-the latest slot status information from the power work request itself.
+    pci_device_add()
+      pci_fixup_device(pci_fixup_header, dev)
+        pcibios_fixup_resources()
+	  fixup_resource()
 
-Both changes are required to make the presence change handled properly.
+This happened for both generic (via pci_scan_child_bus()) and
+OF device tree enumeration (via of_scan_bus()).
 
-Signed-off-by: Mikhail Zolotaryov <lebon@lebon.org.ua>
+This patch removes fixup_resource(), so the HEADER quirk no longer does
+address fixup.  The generic path now does the fixup in __pci_read_base()
+using the offsets supplied with pci_add_resource_offset().  The OF path
+now does the fixup with new pcibios_bus_to_resource() calls in
+of_pci_parse_addrs() and of_scan_pci_bridge().
+
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/hotplug/pciehp_ctrl.c |   30 ++++++++++++++++++------------
- 1 files changed, 18 insertions(+), 12 deletions(-)
+ arch/powerpc/include/asm/pci.h    |    9 +---
+ arch/powerpc/kernel/pci-common.c  |   83 ++++---------------------------------
+ arch/powerpc/kernel/pci_32.c      |    6 +--
+ arch/powerpc/kernel/pci_64.c      |    2 -
+ arch/powerpc/kernel/pci_of_scan.c |   12 ++++-
+ 5 files changed, 23 insertions(+), 89 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 27f4429..4552244 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -276,6 +276,7 @@ static int remove_board(struct slot *p_slot)
- struct power_work_info {
- 	struct slot *p_slot;
- 	struct work_struct work;
-+	u8 statereq;
- };
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index f54b3d2..21fbeeb 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -154,13 +154,7 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
  
- /**
-@@ -292,7 +293,7 @@ static void pciehp_power_thread(struct work_struct *work)
- 	struct slot *p_slot = info->p_slot;
+ #endif /* CONFIG_PPC64 */
  
- 	mutex_lock(&p_slot->lock);
--	switch (p_slot->state) {
-+	switch (info->statereq) {
- 	case POWEROFF_STATE:
- 		mutex_unlock(&p_slot->lock);
- 		ctrl_dbg(p_slot->ctrl,
-@@ -301,14 +302,18 @@ static void pciehp_power_thread(struct work_struct *work)
- 			 p_slot->ctrl->pcie->port->subordinate->number);
- 		pciehp_disable_slot(p_slot);
- 		mutex_lock(&p_slot->lock);
--		p_slot->state = STATIC_STATE;
-+		/* Change to static only if request matches latest slot state */
-+		if (p_slot->state == info->statereq)
-+			p_slot->state = STATIC_STATE;
- 		break;
- 	case POWERON_STATE:
- 		mutex_unlock(&p_slot->lock);
- 		if (pciehp_enable_slot(p_slot) && PWR_LED(p_slot->ctrl))
- 			pciehp_green_led_off(p_slot);
- 		mutex_lock(&p_slot->lock);
--		p_slot->state = STATIC_STATE;
-+		/* Change to static only if request matches latest slot state */
-+		if (p_slot->state == info->statereq)
-+			p_slot->state = STATIC_STATE;
- 		break;
- 	default:
- 		break;
-@@ -335,10 +340,10 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
- 	mutex_lock(&p_slot->lock);
- 	switch (p_slot->state) {
- 	case BLINKINGOFF_STATE:
--		p_slot->state = POWEROFF_STATE;
-+		info->statereq = p_slot->state = POWEROFF_STATE;
- 		break;
- 	case BLINKINGON_STATE:
--		p_slot->state = POWERON_STATE;
-+		info->statereq = p_slot->state = POWERON_STATE;
- 		break;
- 	default:
- 		kfree(info);
-@@ -419,9 +424,8 @@ static void handle_button_press_event(struct slot *p_slot)
- /*
-  * Note: This function must be called with slot->lock held
-  */
--static void handle_surprise_event(struct slot *p_slot)
-+static void handle_surprise_event(struct slot *p_slot, int poweroff)
- {
--	u8 getstatus;
- 	struct power_work_info *info;
+-extern void pcibios_resource_to_bus(struct pci_dev *dev,
+-			struct pci_bus_region *region,
+-			struct resource *res);
+-
+-extern void pcibios_bus_to_resource(struct pci_dev *dev,
+-			struct resource *res,
+-			struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
  
- 	info = kmalloc(sizeof(*info), GFP_KERNEL);
-@@ -433,11 +437,10 @@ static void handle_surprise_event(struct slot *p_slot)
- 	info->p_slot = p_slot;
- 	INIT_WORK(&info->work, pciehp_power_thread);
+ extern void pcibios_claim_one_bus(struct pci_bus *b);
  
--	pciehp_get_adapter_status(p_slot, &getstatus);
--	if (!getstatus)
--		p_slot->state = POWEROFF_STATE;
-+	if (poweroff)
-+		info->statereq = p_slot->state = POWEROFF_STATE;
- 	else
--		p_slot->state = POWERON_STATE;
-+		info->statereq = p_slot->state = POWERON_STATE;
+@@ -190,6 +184,7 @@ extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 				 const struct resource *rsrc,
+ 				 resource_size_t *start, resource_size_t *end);
  
- 	queue_work(pciehp_wq, &info->work);
++extern resource_size_t pcibios_io_space_offset(struct pci_controller *hose);
+ extern void pcibios_setup_bus_devices(struct pci_bus *bus);
+ extern void pcibios_setup_bus_self(struct pci_bus *bus);
+ extern void pcibios_setup_phb_io_space(struct pci_controller *hose);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 6d03da4..2efd52d 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -846,60 +846,6 @@ int pci_proc_domain(struct pci_bus *bus)
+ 	return 1;
  }
-@@ -466,7 +469,10 @@ static void interrupt_event_handler(struct work_struct *work)
- 		if (!HP_SUPR_RM(ctrl))
- 			break;
- 		ctrl_dbg(ctrl, "Surprise Removal\n");
--		handle_surprise_event(p_slot);
-+		if (info->event_type == INT_PRESENCE_OFF)
-+			handle_surprise_event(p_slot, 1);
-+		else
-+			handle_surprise_event(p_slot, 0);
- 		break;
- 	default:
- 		break;
--- 
-1.7.3.4
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
+-{
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-
+-	if (!hose)
+-		return;
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-
+-	region->start = (res->start - offset) & mask;
+-	region->end = (res->end - offset) & mask;
+-}
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
+-{
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-
+-	if (!hose)
+-		return;
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-	res->start = (region->start + offset) & mask;
+-	res->end = (region->end + offset) & mask;
+-}
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+-
+-/* Fixup a bus resource into a linux resource */
+-static void __devinit fixup_resource(struct resource *res, struct pci_dev *dev)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-	resource_size_t offset = 0, mask = (resource_size_t)-1;
+-
+-	if (res->flags & IORESOURCE_IO) {
+-		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		mask = 0xffffffffu;
+-	} else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->pci_mem_offset;
+-
+-	res->start = (res->start + offset) & mask;
+-	res->end = (res->end + offset) & mask;
+-}
+-
+-
+ /* This header fixup will do the resource fixup for all devices as they are
+  * probed, but not for bridge ranges
+  */
+@@ -939,18 +885,11 @@ static void __devinit pcibios_fixup_resources(struct pci_dev *dev)
+ 			continue;
+ 		}
+ 
+-		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x] fixup...\n",
++		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]\n",
+ 			 pci_name(dev), i,
+ 			 (unsigned long long)res->start,\
+ 			 (unsigned long long)res->end,
+ 			 (unsigned int)res->flags);
+-
+-		fixup_resource(res, dev);
+-
+-		pr_debug("PCI:%s            %016llx-%016llx\n",
+-			 pci_name(dev),
+-			 (unsigned long long)res->start,
+-			 (unsigned long long)res->end);
+ 	}
+ 
+ 	/* Call machine specific resource fixup */
+@@ -1052,27 +991,18 @@ static void __devinit pcibios_fixup_bridge(struct pci_bus *bus)
+ 			continue;
+ 		}
+ 
+-		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x] fixup...\n",
++		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x]\n",
+ 			 pci_name(dev), i,
+ 			 (unsigned long long)res->start,\
+ 			 (unsigned long long)res->end,
+ 			 (unsigned int)res->flags);
+ 
+-		/* Perform fixup */
+-		fixup_resource(res, dev);
+-
+ 		/* Try to detect uninitialized P2P bridge resources,
+ 		 * and clear them out so they get re-assigned later
+ 		 */
+ 		if (pcibios_uninitialized_bridge_resource(bus, res)) {
+ 			res->flags = 0;
+ 			pr_debug("PCI:%s            (unassigned)\n", pci_name(dev));
+-		} else {
+-
+-			pr_debug("PCI:%s            %016llx-%016llx\n",
+-				 pci_name(dev),
+-				 (unsigned long long)res->start,
+-				 (unsigned long long)res->end);
+ 		}
+ 	}
+ }
+@@ -1562,6 +1492,11 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return pci_enable_resources(dev, mask);
+ }
+ 
++resource_size_t pcibios_io_space_offset(struct pci_controller *hose)
++{
++	return (unsigned long) hose->io_base_virt - _IO_BASE;
++}
++
+ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, struct list_head *resources)
+ {
+ 	struct resource *res;
+@@ -1586,7 +1521,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
+ 		 (unsigned long long)res->start,
+ 		 (unsigned long long)res->end,
+ 		 (unsigned long)res->flags);
+-	pci_add_resource(resources, res);
++	pci_add_resource_offset(resources, res, pcibios_io_space_offset(hose));
+ 
+ 	/* Hookup PHB Memory resources */
+ 	for (i = 0; i < 3; ++i) {
+@@ -1609,7 +1544,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
+ 			 (unsigned long long)res->start,
+ 			 (unsigned long long)res->end,
+ 			 (unsigned long)res->flags);
+-		pci_add_resource(resources, res);
++		pci_add_resource_offset(resources, res, hose->pci_mem_offset);
+ 	}
+ 
+ 	pr_debug("PCI: PHB MEM offset     = %016llx\n",
+diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
+index fdd1a3d..4b06ec5 100644
+--- a/arch/powerpc/kernel/pci_32.c
++++ b/arch/powerpc/kernel/pci_32.c
+@@ -219,9 +219,9 @@ void __devinit pcibios_setup_phb_io_space(struct pci_controller *hose)
+ 	struct resource *res = &hose->io_resource;
+ 
+ 	/* Fixup IO space offset */
+-	io_offset = (unsigned long)hose->io_base_virt - isa_io_base;
+-	res->start = (res->start + io_offset) & 0xffffffffu;
+-	res->end = (res->end + io_offset) & 0xffffffffu;
++	io_offset = pcibios_io_space_offset(hose);
++	res->start += io_offset;
++	res->end += io_offset;
+ }
+ 
+ static int __init pcibios_init(void)
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index 75417fd..94a54f6 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -168,7 +168,7 @@ static int __devinit pcibios_map_phb_io_space(struct pci_controller *hose)
+ 		return -ENOMEM;
+ 
+ 	/* Fixup hose IO resource */
+-	io_virt_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
++	io_virt_offset = pcibios_io_space_offset(hose);
+ 	hose->io_resource.start += io_virt_offset;
+ 	hose->io_resource.end += io_virt_offset;
+ 
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index b37d0b5..89dde17 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -75,6 +75,7 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
+ {
+ 	u64 base, size;
+ 	unsigned int flags;
++	struct pci_bus_region region;
+ 	struct resource *res;
+ 	const u32 *addrs;
+ 	u32 i;
+@@ -106,10 +107,11 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
+ 			printk(KERN_ERR "PCI: bad cfg reg num 0x%x\n", i);
+ 			continue;
+ 		}
+-		res->start = base;
+-		res->end = base + size - 1;
+ 		res->flags = flags;
+ 		res->name = pci_name(dev);
++		region.start = base;
++		region.end = base + size - 1;
++		pcibios_bus_to_resource(dev, res, &region);
+ 	}
+ }
+ 
+@@ -209,6 +211,7 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
+ 	struct pci_bus *bus;
+ 	const u32 *busrange, *ranges;
+ 	int len, i, mode;
++	struct pci_bus_region region;
+ 	struct resource *res;
+ 	unsigned int flags;
+ 	u64 size;
+@@ -270,9 +273,10 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
+ 			res = bus->resource[i];
+ 			++i;
+ 		}
+-		res->start = of_read_number(&ranges[1], 2);
+-		res->end = res->start + size - 1;
+ 		res->flags = flags;
++		region.start = of_read_number(&ranges[1], 2);
++		region.end = region.start + size - 1;
++		pcibios_bus_to_resource(dev, res, &region);
+ 	}
+ 	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
+ 		bus->number);
 
