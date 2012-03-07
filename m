@@ -1,104 +1,113 @@
-Return-Path: <bhelgaas@google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUHm2YOJvoxWZ57AXPcAV7T1QJnFzsWXGNAT160X3Rd6g@mail.gmail.com>
+In-Reply-To: <1331018040-30725-19-git-send-email-yinghai@kernel.org>
 References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
- <1331018040-30725-24-git-send-email-yinghai@kernel.org> <CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
- <CAE9FiQXsY7Dn5TGtD1ARM_KFdz1V1hJOvYAy6e4msM=i3VfhDg@mail.gmail.com>
- <CABhMZUWDngY6jL8jkxQ+SHzEHqTS4i3DqtCD7DUBtL4QS58ovA@mail.gmail.com>
- <CAE9FiQV23maKVMrk7h1cJxYfxrqJcKu7GfwFYUJfSDfh8g-KFQ@mail.gmail.com>
- <CAErSpo5T8-hrtMufDeo_EfupQX3neyoA9ufjN2UYro7-2SXc+Q@mail.gmail.com> <CAE9FiQUHm2YOJvoxWZ57AXPcAV7T1QJnFzsWXGNAT160X3Rd6g@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 7 Mar 2012 21:27:47 -0700
-Message-ID: <CAErSpo6Eh5W7ZB5aZt9fhp3h9EmYTM-vN3yY=0UJauJWY9Tm6w@mail.gmail.com>
-Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
+	<1331018040-30725-19-git-send-email-yinghai@kernel.org>
+Date: Tue, 6 Mar 2012 21:40:32 -0700
+Message-ID: <CABhMZUWvsZ2fSp2nGqiFuP8QoZ0A0uEUY9LfcAB-HemiLaqbwA@mail.gmail.com>
+Subject: Re: [PATCH 18/23] PCI, ACPI: add acpi_pci_root_rescan()
+From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jan Beulich <JBeulich@suse.com>, Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+	mjg@redhat.com
 Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 7, 2012 at 5:58 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Mar 7, 2012 at 3:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote=
-:
->>
->> What's the reason we need to discover those CPU devices in the first pla=
-ce?
->>
->> I don't think the current policy of blindly probing for things should
->> be continued forever.
+On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> it will rescan all acpi pci root if related pci root bus get removed befo=
+re.
 >
-> Do you want to revert follow commit?
+> Signed-off-by: Yinghai <yinghai@kernel.org>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: linux-acpi@vger.kernel.org
+> ---
+> =A0drivers/acpi/pci_root.c | =A0 52 +++++++++++++++++++++++++++++++++++++=
+++++++++++
+> =A01 files changed, 52 insertions(+), 0 deletions(-)
 >
-> BTW, edac never work on nehalem-ex and westmere-ex.
-
-Oh, yes, now I remember.  Apparently the i7core-edac driver relies on
-these devices.  We had a discussion about this a year ago:
-
-    http://www.spinics.net/lists/linux-pci/msg10426.html
-
-[+cc Jan and Mauro]
-
-Personally, I think we should put a stake in the ground and say "For
-machines newer than 2013, Linux will not blindly probe for PCI
-devices.  If you want EDAC functionality, make sure your BIOS exposes
-the appropriate PCI host bridges."  If OEMs do care about EDAC, it's a
-simple BIOS change to do this.
-
-I certainly don't think we need to add hotplug or bus rescan
-functionality to cover this case.  This sort of stuff makes
-maintenance MUCH harder because we have to worry about all these
-corner cases.
-
-Bjorn
-
-> commit a3170c1f924ce2565c4e160b9b095e65c03b2dc6
-> Author: Jan Beulich <JBeulich@novell.com>
-> Date: =A0 Wed Feb 23 10:08:10 2011 +0000
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index b38e347..e1814e0 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -679,3 +679,55 @@ static int __init acpi_pci_root_init(void)
+> =A0}
 >
-> =A0 =A0x86/PCI: derive pcibios_last_bus from ACPI MCFG
->
-> =A0 =A0On various newer Intel systems the PCI bus(ses) the non-core devic=
-es
-> =A0 =A0live on aren't getting announced by ACPI except through the bus ra=
-nge
-> =A0 =A0covered by mmconfig. At least the i7core-edac driver depends on th=
-ese
-> =A0 =A0devices getting detected.
->
-> =A0 =A0Mauro, could you check whether with this change the Xeon 55xx hack=
- in
-> =A0 =A0that driver can go away altogether, and with it the bogus exportin=
-g of
-> =A0 =A0pcibios_scan_specific_bus()?
->
-> =A0 =A0Signed-off-by: Jan Beulich <jbeulich@novell.com>
-> =A0 =A0Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-> =A0 =A0Cc: Aristeu Sergio <arozansk@redhat.com>
-> =A0 =A0Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
->
-> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-share=
-d.c
-> index e282886..750c346 100644
-> --- a/arch/x86/pci/mmconfig-shared.c
-> +++ b/arch/x86/pci/mmconfig-shared.c
-> @@ -606,6 +606,16 @@ static void __init __pci_mmcfg_init(int early)
-> =A0 =A0 =A0 =A0if (list_empty(&pci_mmcfg_list))
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
->
-> + =A0 =A0 =A0 if (pcibios_last_bus < 0) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 const struct pci_mmcfg_region *cfg;
+> =A0subsys_initcall(acpi_pci_root_init);
 > +
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_for_each_entry(cfg, &pci_mmcfg_list, l=
-ist) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (cfg->segment)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pcibios_last_bus =3D cfg->e=
-nd_bus;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> +static acpi_status
+> +rescan_root_bridge(acpi_handle handle, u32 lvl, void *context, void **rv=
+)
+> +{
+> + =A0 =A0 =A0 struct acpi_device *device, *pdevice;
+> + =A0 =A0 =A0 struct acpi_pci_root *root;
+> + =A0 =A0 =A0 acpi_handle phandle;
+> + =A0 =A0 =A0 int ret_val;
+> +
+> + =A0 =A0 =A0 if (!acpi_is_root_bridge(handle))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return AE_OK;
+> +
+> + =A0 =A0 =A0 acpi_get_parent(handle, &phandle);
+> + =A0 =A0 =A0 if (acpi_bus_get_device(phandle, &pdevice)) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_DEBUG "no parent device, assumi=
+ng NULL\n");
+
+This printk (and the others below) does not have enough context.  A
+user or developer will have no clue what it relates to.  Ideally they
+would at least be dev_printk().
+
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pdevice =3D NULL;
+
+Is a host bridge without a parent possible?  Seems dubious to me.
+
 > + =A0 =A0 =A0 }
 > +
-> =A0 =A0 =A0 =A0if (pci_mmcfg_arch_init())
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pci_probe =3D (pci_probe & ~PCI_PROBE_MASK=
-) | PCI_PROBE_MMCONF;
-> =A0 =A0 =A0 =A0else {
+> + =A0 =A0 =A0 if (!acpi_bus_get_device(handle, &device)) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* check if =A0pci root_bus is removed */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 root =3D acpi_driver_data(device);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (pci_find_bus(root->segment, root->secon=
+dary.start))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return AE_OK;
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_DEBUG "bus exists... trim\n");
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* this shouldn't be in here, so remove
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* the bus then re-add it...
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret_val =3D acpi_bus_trim(device, 1);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_DEBUG "acpi_bus_trim return %x\=
+n", ret_val);
+> + =A0 =A0 =A0 }
+> +
+> + =A0 =A0 =A0 ret_val =3D acpi_bus_add(&device, pdevice, handle, ACPI_BUS=
+_TYPE_DEVICE);
+> + =A0 =A0 =A0 if (ret_val) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_ERR "error adding bus, %x\n", -=
+ret_val);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+> + =A0 =A0 =A0 }
+> +
+> + =A0 =A0 =A0 root =3D acpi_driver_data(device);
+> + =A0 =A0 =A0 pci_assign_unassigned_bus_resources(root->bus);
+> +
+> + =A0 =A0 =A0 ret_val =3D acpi_bus_start(device);
+> +
+> +out:
+> + =A0 =A0 =A0 return ret_val;
+> +}
+> +
+> +void acpi_pci_root_rescan(void)
+> +{
+> + =A0 =A0 =A0 acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ACPI_UINT32_MAX, rescan_root_bridge, NULL, =
+NULL, NULL);
+> +}
+
+Walking the ACPI namespace is rarely the right thing to do.  Why do we
+need it here?
+
+Is this because we don't handle hotplug of ACPI devices in general?
+The ACPI core *should* be noticing device removal and addition and
+calling the driver .remove() and .add() methods directly.  I don't
+think that's completely implemented, but I wish somebody would put
+some effort into that rather than adding more hacky workarounds.
+
++cc Matthew Garrett, because I think he cares about this area too.
