@@ -1,78 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:23013 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932287Ab2CATZD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2012 14:25:03 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [RFC PATCH 2/3] usb, PCI: remove disable/enable device with non-xhci quirk
-Date: Thu,  1 Mar 2012 11:24:02 -0800
-Message-Id: <1330629843-6027-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330629843-6027-1-git-send-email-yinghai@kernel.org>
-References: <1330629843-6027-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v3 08/34] mips/PCI: removed unused pci_probe configurability
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org
+Date: Wed, 07 Mar 2012 15:32:44 -0700
+Message-ID: <20120307223244.25669.85258.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-| commit cab928ee1f221c9cc48d6615070fefe2e444384a
-|    USB: Fix handoff when BIOS disables host PCI device.
+We never assign anything other than PCI_ASSIGN_ALL_BUSSES to pci_probe,
+so just remove the indirection.  If configurability is required in the
+future, please use the pci_flags/PCI_REASSIGN_ALL_BUS functionality
+as is done for powerpc.
 
-mention only need to do disable/enable for xhci controller.
-
-So just remove that for non-xhci controller and restore old behavior for them.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+CC: Ralf Baechle <ralf@linux-mips.org>
+CC: linux-mips@linux-mips.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/usb/host/pci-quirks.c |   18 ------------------
- 1 file changed, 18 deletions(-)
+ arch/mips/pci/pci.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-Index: linux-2.6/drivers/usb/host/pci-quirks.c
-===================================================================
---- linux-2.6.orig/drivers/usb/host/pci-quirks.c
-+++ linux-2.6/drivers/usb/host/pci-quirks.c
-@@ -889,13 +889,7 @@ static void __devinit quirk_usb_early_ha
- 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 2a11045..19f6d19 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -24,10 +24,6 @@
+  * assignments.
+  */
  
--	if (pci_enable_device(pdev) < 0) {
--		dev_warn(&pdev->dev, "Can't enable PCI device, "
--				"BIOS handoff failed.\n");
--		return;
--	}
- 	quirk_usb_handoff_uhci(pdev);
--	pci_disable_device(pdev);
- }
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_SERIAL_USB_UHCI, 0, quirk_usb_early_handoff_uhci);
-@@ -908,13 +902,7 @@ static void __devinit quirk_usb_early_ha
- 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
+-#define PCI_ASSIGN_ALL_BUSSES	1
+-
+-unsigned int pci_probe = PCI_ASSIGN_ALL_BUSSES;
+-
+ /*
+  * The PCI controller list.
+  */
+@@ -238,7 +234,7 @@ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
  
--	if (pci_enable_device(pdev) < 0) {
--		dev_warn(&pdev->dev, "Can't enable PCI device, "
--				"BIOS handoff failed.\n");
--		return;
--	}
- 	quirk_usb_handoff_ohci(pdev);
--	pci_disable_device(pdev);
+ unsigned int pcibios_assign_all_busses(void)
+ {
+-	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
++	return 1;
  }
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_SERIAL_USB_OHCI, 0, quirk_usb_early_handoff_ohci);
-@@ -924,13 +912,7 @@ static void __devinit quirk_usb_early_ha
- 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
  
--	if (pci_enable_device(pdev) < 0) {
--		dev_warn(&pdev->dev, "Can't enable PCI device, "
--				"BIOS handoff failed.\n");
--		return;
--	}
- 	quirk_usb_handoff_ehci(pdev);
--	pci_disable_device(pdev);
- }
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_SERIAL_USB_EHCI, 0, quirk_usb_early_handoff_ehci);
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+
