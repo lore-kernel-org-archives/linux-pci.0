@@ -1,40 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out5-smtp.messagingengine.com ([66.111.4.29]:47226 "EHLO
-	out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030769Ab2CFOpB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 09:45:01 -0500
-Received: from compute2.internal (compute2.nyi.mail.srv.osa [10.202.2.42])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 506DC20219
-	for <linux-pci@vger.kernel.org>; Tue,  6 Mar 2012 09:45:00 -0500 (EST)
-Date: Tue, 6 Mar 2012 06:32:57 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Zhao Chenhui <chenhui.zhao@freescale.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	leoli@freescale.com
-Subject: Re: [PATCH 1/9] pci_ids: Add device ID for IBM PCI-X bridge
-Message-ID: <20120306143257.GA23303@kroah.com>
-References: <1331024707-15891-1-git-send-email-chenhui.zhao@freescale.com>
+Received: from mail-ey0-f202.google.com ([209.85.215.202]:58185 "EHLO
+	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030715Ab2CGWc4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:32:56 -0500
+Received: by mail-ey0-f202.google.com with SMTP id q10so249452eaa.1
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:32:56 -0800 (PST)
+Subject: [PATCH v3 10/34] powerpc/PCI: allow reallocation on PA Semi
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	Olof Johansson <olof@lixom.net>, linuxppc-dev@lists.ozlabs.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Wed, 07 Mar 2012 15:32:55 -0700
+Message-ID: <20120307223255.25669.42520.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1331024707-15891-1-git-send-email-chenhui.zhao@freescale.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 06, 2012 at 05:05:07PM +0800, Zhao Chenhui wrote:
-> Signed-off-by: Zhao Chenhui <chenhui.zhao@freescale.com>
-> ---
->  include/linux/pci_ids.h |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 31d77af..8f026c0 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -484,6 +484,7 @@
->  #define PCI_DEVICE_ID_IBM_ICOM_V2_ONE_PORT_RVX_ONE_PORT_MDM	0x0251
->  #define PCI_DEVICE_ID_IBM_ICOM_V2_ONE_PORT_RVX_ONE_PORT_MDM_PCIE 0x0361
->  #define PCI_DEVICE_ID_IBM_ICOM_FOUR_PORT_MODEL	0x252
-> +#define PCI_DEVICE_ID_IBM_PCIX_BRIDGE	0x01a7
+We believe there's no reason to prevent reallocation on PA Semi, so
+revert to the default of "allow reallocation if necessary."
 
-Did you read the comment at the top of this file?
+CC: Olof Johansson <olof@lixom.net>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/platforms/pasemi/pci.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+index b6a0ec4..aa86271 100644
+--- a/arch/powerpc/platforms/pasemi/pci.c
++++ b/arch/powerpc/platforms/pasemi/pci.c
+@@ -229,9 +229,6 @@ void __init pas_pci_init(void)
+ 
+ 	/* Setup the linkage between OF nodes and PHBs */
+ 	pci_devs_phb_init();
+-
+-	/* Use the common resource allocation mechanism */
+-	pci_probe_only = 1;
+ }
+ 
+ void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
 
