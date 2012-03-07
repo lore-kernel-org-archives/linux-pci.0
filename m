@@ -1,33 +1,29 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 6 Mar 2012 21:48:59 -0800
-From: Greg KH <greg@kroah.com>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	jbarnes@virtuousgeek.org, stable@kernel.org
-Subject: Re: [PATCH] Ignore pre-1.1 ASPM quirking when ASPM is disabled
-Message-ID: <20120307054859.GB7775@kroah.com>
-References: <1331059309-4335-1-git-send-email-mjg@redhat.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1331059309-4335-1-git-send-email-mjg@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20120307223255.25669.42520.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+	<20120307223255.25669.42520.stgit@bhelgaas.mtv.corp.google.com>
+Date: Wed, 7 Mar 2012 14:35:29 -0800
+Message-ID: <CAOesGMiPJg1gbsq_iBc6_6JrOtTonSoic-gGudBNpmz2BEHv8g@mail.gmail.com>
+Subject: Re: [PATCH v3 10/34] powerpc/PCI: allow reallocation on PA Semi
+From: Olof Johansson <olof@lixom.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 06, 2012 at 01:41:49PM -0500, Matthew Garrett wrote:
-> Right now we won't touch ASPM state if ASPM is disabled, except in the case
-> where we find a device that appears to be too old to reliably support ASPM.
-> Right now we'll clear it in that case, which is almost certainly the wrong
-> thing to do. The easiest way around this is just to disable the blacklisting
-> when ASPM is disabled.
-> 
-> Signed-off-by: Matthew Garrett <mjg@redhat.com>
-> Cc: stable@kernel.org
+On Wed, Mar 7, 2012 at 2:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> We believe there's no reason to prevent reallocation on PA Semi, so
+> revert to the default of "allow reallocation if necessary."
+>
+> CC: Olof Johansson <olof@lixom.net>
+> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> CC: linuxppc-dev@lists.ozlabs.org
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-That's <stable@vger.kernel.org> if we want to get it right :)
-
-Anyway, Jesse, this needs to get into 3.3-final to prevent
-regressions...
-
-thanks,
-
-greg k-h
+Tested-by: Olof Johansson <olof@lixom.net>
+Acked-by: Olof Johansson <olof@lixom.net>
