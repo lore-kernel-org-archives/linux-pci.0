@@ -1,133 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:39095 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759401Ab2CIA4r convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Mar 2012 19:56:47 -0500
-Received: by lahj13 with SMTP id j13so1146502lah.19
-        for <linux-pci@vger.kernel.org>; Thu, 08 Mar 2012 16:56:45 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1331018040-30725-7-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-7-git-send-email-yinghai@kernel.org>
+Received: from mail-ey0-f202.google.com ([209.85.215.202]:43040 "EHLO
+	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031691Ab2CGBAJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 20:00:09 -0500
+Received: by eaaq10 with SMTP id q10so213220eaa.1
+        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 17:00:08 -0800 (PST)
+Subject: [PATCH v1 0/9] PCI core support for bus-to-resource offsets (fixes)
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 8 Mar 2012 17:56:25 -0700
-Message-ID: <CAErSpo4ynKbMWUUo2QdVr6fbRYoexSXpQrgYbE+AXhXgg5yzvA@mail.gmail.com>
-Subject: Re: [PATCH 06/23] PCI: rescan with bus or bridge using callback
- method too
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-pci@vger.kernel.org
+Date: Tue, 06 Mar 2012 18:00:06 -0700
+Message-ID: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Just like removal.
->
-> Because We could add new bus under the bridges...
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/pci-sysfs.c |   43 +++++++++++++++++++++++++++++++------------
->  1 files changed, 31 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 2049b2f..1794508 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -325,21 +325,31 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->        return count;
->  }
->
-> +static void bridge_rescan_callback(struct device *dev)
-> +{
-> +       struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +       mutex_lock(&pci_remove_rescan_mutex);
-> +       pci_rescan_bus_bridge_resize(pdev);
-> +       mutex_unlock(&pci_remove_rescan_mutex);
-> +}
-> +
->  static ssize_t
->  dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
->                 const char *buf, size_t count)
->  {
-> +       int ret = 0;
->        unsigned long val;
-> -       struct pci_dev *pdev = to_pci_dev(dev);
->
->        if (kstrtoul(buf, 0, &val) < 0)
->                return -EINVAL;
->
-> -       if (val) {
-> -               mutex_lock(&pci_remove_rescan_mutex);
-> -               pci_rescan_bus_bridge_resize(pdev);
-> -               mutex_unlock(&pci_remove_rescan_mutex);
-> -       }
-> +       if (val)
-> +               ret = device_schedule_callback(dev, bridge_rescan_callback);
-> +
-> +       if (ret)
-> +               count = ret;
-> +
->        return count;
+This is a set of fixes related to my recent "remove device resource fixups"
+series.  Patches [1-4] are essential; they fix bugs that prevent machines from
+booting.  Patches [5-9] don't fix any current issues, so they could be
+deferred.
 
-I see that you copied this style from remove_store(), but it's ugly
-and hard to follow.  I think this would be more readable:
+[1] ("fix bridge I/O window bus-to-resource conversion") fixes a mistake
+so bus-to-resource conversion of I/O port addresses will work correctly.
 
-    if (!val)
-        return count;
+[2-4] ("compute I/O space bus-to-resource" and "convert devtree bus
+addresses" for powerpc and sparc) fix an oversight: I forgot to apply
+bus-to-resource when reading bus addresses from the OF device tree, so
+machines using the device tree don't boot.
 
-    err = device_schedule_callback(dev, bridge_rescan_callback);
-    if (err)
-        return err;
+[5-6] ("don't export pci_flags" and "move <asm-generic/pci-bridge.h>
+include") are simple no-op cleanups.
 
-    return count;
+[7-9] are basically a reimplementation of the "EN1K" (1K granularity
+for P2P I/O windows) functionality, and removal of the sparc bridge
+window reading code, since it is now functionally equivalent to the
+generic code.
+---
 
->  }
->
-> @@ -375,21 +385,30 @@ remove_store(struct device *dev, struct device_attribute *dummy,
->        return count;
->  }
->
-> +static void bus_rescan_callback(struct device *dev)
-> +{
-> +       struct pci_bus *bus = to_pci_bus(dev);
-> +
-> +       mutex_lock(&pci_remove_rescan_mutex);
-> +       pci_rescan_bus(bus);
-> +       mutex_unlock(&pci_remove_rescan_mutex);
-> +}
->  static ssize_t
->  dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
->                 const char *buf, size_t count)
->  {
-> +       int ret = 0;
->        unsigned long val;
-> -       struct pci_bus *bus = to_pci_bus(dev);
->
->        if (strict_strtoul(buf, 0, &val) < 0)
->                return -EINVAL;
->
-> -       if (val) {
-> -               mutex_lock(&pci_remove_rescan_mutex);
-> -               pci_rescan_bus(bus);
-> -               mutex_unlock(&pci_remove_rescan_mutex);
-> -       }
-> +       if (val)
-> +               ret = device_schedule_callback(dev, bus_rescan_callback);
-> +
-> +       if (ret)
-> +               count = ret;
-> +
->        return count;
->  }
->
-> --
-> 1.7.7
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Bjorn Helgaas (9):
+      PCI: fix bridge I/O window bus-to-resource conversion
+      powerpc/PCI: compute I/O space bus-to-resource offset consistently
+      powerpc/PCI: convert devtree bus addresses to resource
+      sparc/PCI: convert devtree bus addresses to resource
+      arm/PCI: don't export pci_flags
+      unicore32/PCI: move <asm-generic/pci-bridge.h> include to asm/pci.h
+      PCI: allow P2P bridge windows starting at PCI bus address zero
+      PCI: reimplement P2P bridge 1K I/O windows (Intel P64H2)
+      sparc/PCI: replace pci_cfg_fake_ranges() with pci_read_bridge_bases()
+
+
+ arch/arm/kernel/bios32.c          |    1 
+ arch/powerpc/include/asm/pci.h    |    1 
+ arch/powerpc/kernel/pci-common.c  |    8 ++
+ arch/powerpc/kernel/pci_32.c      |    6 +-
+ arch/powerpc/kernel/pci_64.c      |    2 -
+ arch/powerpc/kernel/pci_of_scan.c |   12 ++-
+ arch/sparc/kernel/pci.c           |  127 +++++--------------------------------
+ arch/unicore32/include/asm/pci.h  |    1 
+ arch/unicore32/kernel/pci.c       |    1 
+ drivers/pci/probe.c               |   30 +++++----
+ drivers/pci/quirks.c              |   39 -----------
+ drivers/pci/setup-bus.c           |   11 +++
+ include/linux/pci.h               |    1 
+ include/linux/pci_regs.h          |    3 +
+ 14 files changed, 66 insertions(+), 177 deletions(-)
+
+-- 
+Bjorn
