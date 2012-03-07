@@ -1,98 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 36/47] PCI, shpchp: Simplify configure_device
-Date: Sun, 18 Mar 2012 22:46:25 -0700
-Message-Id: <1332135996-13860-37-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <bhelgaas@google.com>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQV23maKVMrk7h1cJxYfxrqJcKu7GfwFYUJfSDfh8g-KFQ@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+ <1331018040-30725-24-git-send-email-yinghai@kernel.org> <CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
+ <CAE9FiQXsY7Dn5TGtD1ARM_KFdz1V1hJOvYAy6e4msM=i3VfhDg@mail.gmail.com>
+ <CABhMZUWDngY6jL8jkxQ+SHzEHqTS4i3DqtCD7DUBtL4QS58ovA@mail.gmail.com> <CAE9FiQV23maKVMrk7h1cJxYfxrqJcKu7GfwFYUJfSDfh8g-KFQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 7 Mar 2012 16:32:31 -0700
+Message-ID: <CAErSpo5T8-hrtMufDeo_EfupQX3neyoA9ufjN2UYro7-2SXc+Q@mail.gmail.com>
+Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-For child p2p bridge hotplug support should use pci_scan_bridge instead.
+On Tue, Mar 6, 2012 at 11:29 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Mar 6, 2012 at 7:49 PM, Bjorn Helgaas <bjorn.helgaas@gmail.com> w=
+rote:
+>
+>>> my sandbridge system has cpu bus 0x7f, and 0xff in DSDT.
+>>>
+>>> but nehalem and westmere system does not have cpu bus 0xf8, ... 0xff.
+>>
+>> I think you're saying that on some machines, the BIOS decided not to
+>> expose host bridges leading to CPU devices, and you want to discover
+>> those devices anyway. =A0(What's the reason you want to discover them?)
+>
+> current code for mmconf will set pcibios_last_bios according to mmconf
+> bus range.
+>
+> so it legacy peer root bus fix up will discover those cpu buses.
+>
+> then if some one remove them through
+> echo 1 > /sys/devices/pci0000:ff/pci_bus/0000:ff/remove
+>
+> then
+>
+> echo 1 > /sys/bus/pci/rescan_root
+>
+> will not recover those cpu buses without this patch.
 
-Make it more simillar to pciehp, just use pci_hp_add_bridge()
+What's the reason we need to discover those CPU devices in the first place?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/shpchp_pci.c |   45 ++++++++++++-------------------------
- 1 files changed, 15 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
-index d92807b..c627ed9 100644
---- a/drivers/pci/hotplug/shpchp_pci.c
-+++ b/drivers/pci/hotplug/shpchp_pci.c
-@@ -37,9 +37,10 @@
- int __ref shpchp_configure_device(struct slot *p_slot)
- {
- 	struct pci_dev *dev;
--	struct pci_bus *parent = p_slot->ctrl->pci_dev->subordinate;
--	int num, fn;
- 	struct controller *ctrl = p_slot->ctrl;
-+	struct pci_dev *bridge = ctrl->pci_dev;
-+	struct pci_bus *parent = bridge->subordinate;
-+	int num, fn;
- 
- 	dev = pci_get_slot(parent, PCI_DEVFN(p_slot->device, 0));
- 	if (dev) {
-@@ -61,39 +62,23 @@ int __ref shpchp_configure_device(struct slot *p_slot)
- 		if (!dev)
- 			continue;
- 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
--				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
--			/* Find an unused bus number for the new bridge */
--			struct pci_bus *child;
--			unsigned char busnr, start = parent->secondary;
--			unsigned char end = parent->subordinate;
--			for (busnr = start; busnr <= end; busnr++) {
--				if (!pci_find_bus(pci_domain_nr(parent),
--							busnr))
--					break;
--			}
--			if (busnr > end) {
--				ctrl_err(ctrl,
--					 "No free bus for hot-added bridge\n");
--				pci_dev_put(dev);
--				continue;
--			}
--			child = pci_add_new_bus(parent, dev, busnr);
--			if (!child) {
--				ctrl_err(ctrl, "Cannot add new bus for %s\n",
--					 pci_name(dev));
--				pci_dev_put(dev);
--				continue;
--			}
--			child->subordinate = pci_do_scan_bus(child);
--			pci_bus_size_bridges_with_self(child);
--		}
-+		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
-+			pci_hp_add_bridge(dev);
-+		pci_dev_put(dev);
-+	}
-+
-+	pci_assign_unassigned_bridge_resources(bridge);
-+
-+	for (fn = 0; fn < 8; fn++) {
-+		dev = pci_get_slot(parent, PCI_DEVFN(p_slot->device, fn));
-+		if (!dev)
-+			continue;
- 		pci_configure_slot(dev);
- 		pci_dev_put(dev);
- 	}
- 
--	pci_bus_assign_resources(parent);
- 	pci_bus_add_devices(parent);
--	pci_enable_bridges(parent);
-+
- 	return 0;
- }
- 
--- 
-1.7.7
-
+I don't think the current policy of blindly probing for things should
+be continued forever.
