@@ -1,76 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:57488 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754075Ab2CLO3Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 10:29:25 -0400
-Date: Mon, 12 Mar 2012 15:28:58 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Mark Brown <broonie@opensource.wolfsonmicro.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, Liam Girdwood <lrg@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Olof Johansson <olof@lixom.net>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 11/11] ARM: tegra: pcie: Add device tree support
-Message-ID: <20120312142857.GA6694@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-12-git-send-email-thierry.reding@avionic-design.de>
- <4F59253D.7070100@wwwdotorg.org>
- <20120312120610.GA14020@sirena.org.uk>
- <20120312141705.GA16395@avionic-0098.mockup.avionic-design.de>
- <20120312142340.GI3110@opensource.wolfsonmicro.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v3 11/34] powerpc/PCI: replace pci_probe_only with pci_flags
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Wed, 07 Mar 2012 15:33:00 -0700
+Message-ID: <20120307223300.25669.54100.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
-In-Reply-To: <20120312142340.GI3110@opensource.wolfsonmicro.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+We already use pci_flags, so this just sets pci_flags directly and removes
+the intermediate step of figuring out pci_probe_only, then using it to set
+pci_flags.
 
---XsQoSWH+UP9D9v3l
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The PCI core provides a pci_flags definition (currently __weak), so drop
+the powerpc definitions in favor of that.
 
-* Mark Brown wrote:
-> On Mon, Mar 12, 2012 at 03:17:05PM +0100, Thierry Reding wrote:
->=20
-> > My understanding of the fixed regulator was that it was meant to be use=
-d for
-> > fixed voltage supplies that can still be enabled or disabled (for examp=
-le as
-> > supplied by a GPIO) but not regulators that are fix in the sense that t=
-hey
-> > cannot be enabled or disabled at all but are always on.
->=20
-> No, not at all.  It's for any random supply that doesn't have much
-> meaningful control - as you'll see from the code the GPIO is totally
-> optional if you look at the git history you'll see that the GPIO was
-> added some time after the driver was originally merged.
->=20
-> > Is that how it is supposed to work?
->=20
-> Yes.
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/include/asm/ppc-pci.h        |    2 --
+ arch/powerpc/kernel/pci-common.c          |    3 ---
+ arch/powerpc/kernel/pci_64.c              |    5 -----
+ arch/powerpc/kernel/rtas_pci.c            |   10 +++++++---
+ arch/powerpc/platforms/iseries/pci.c      |    2 +-
+ arch/powerpc/platforms/maple/pci.c        |    2 +-
+ arch/powerpc/platforms/powernv/pci-ioda.c |    5 ++---
+ arch/powerpc/platforms/powernv/pci.c      |    2 +-
+ arch/powerpc/platforms/pseries/setup.c    |    4 ++--
+ 9 files changed, 14 insertions(+), 21 deletions(-)
 
-In that case I'll mark the *-supply properties required. Would it be a good
-idea to mention this (or even give an example with fixed regulators) in the
-binding documentation or can I assume this to be common knowledge?
+diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+index 43268f1..f4f7ad8 100644
+--- a/arch/powerpc/include/asm/ppc-pci.h
++++ b/arch/powerpc/include/asm/ppc-pci.h
+@@ -45,8 +45,6 @@ extern void init_pci_config_tokens (void);
+ extern unsigned long get_phb_buid (struct device_node *);
+ extern int rtas_setup_phb(struct pci_controller *phb);
+ 
+-extern unsigned long pci_probe_only;
+-
+ /* ---- EEH internal-use-only related routines ---- */
+ #ifdef CONFIG_EEH
+ 
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index cce98d7..6d03da4 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -50,9 +50,6 @@ static int global_phb_number;		/* Global phb counter */
+ /* ISA Memory physical address */
+ resource_size_t isa_mem_base;
+ 
+-/* Default PCI flags is 0 on ppc32, modified at boot on ppc64 */
+-unsigned int pci_flags = 0;
+-
+ 
+ static struct dma_map_ops *pci_dma_ops = &dma_direct_ops;
+ 
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index f627eb7..75417fd 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -33,8 +33,6 @@
+ #include <asm/machdep.h>
+ #include <asm/ppc-pci.h>
+ 
+-unsigned long pci_probe_only = 0;
+-
+ /* pci_io_base -- the base address from which io bars are offsets.
+  * This is the lowest I/O base address (so bar values are always positive),
+  * and it *must* be the start of ISA space if an ISA bus exists because
+@@ -55,9 +53,6 @@ static int __init pcibios_init(void)
+ 	 */
+ 	ppc_md.phys_mem_access_prot = pci_phys_mem_access_prot;
+ 
+-	if (pci_probe_only)
+-		pci_add_flags(PCI_PROBE_ONLY);
+-
+ 	/* On ppc64, we always enable PCI domains and we keep domain 0
+ 	 * backward compatible in /proc for video cards
+ 	 */
+diff --git a/arch/powerpc/kernel/rtas_pci.c b/arch/powerpc/kernel/rtas_pci.c
+index 6cd8f01..140735c 100644
+--- a/arch/powerpc/kernel/rtas_pci.c
++++ b/arch/powerpc/kernel/rtas_pci.c
+@@ -276,7 +276,7 @@ void __init find_and_init_phbs(void)
+ 	pci_devs_phb_init();
+ 
+ 	/*
+-	 * pci_probe_only and pci_assign_all_buses can be set via properties
++	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
+ 	 * in chosen.
+ 	 */
+ 	if (of_chosen) {
+@@ -284,8 +284,12 @@ void __init find_and_init_phbs(void)
+ 
+ 		prop = of_get_property(of_chosen,
+ 				"linux,pci-probe-only", NULL);
+-		if (prop)
+-			pci_probe_only = *prop;
++		if (prop) {
++			if (*prop)
++				pci_add_flags(PCI_PROBE_ONLY);
++			else
++				pci_clear_flags(PCI_PROBE_ONLY);
++		}
+ 
+ #ifdef CONFIG_PPC32 /* Will be made generic soon */
+ 		prop = of_get_property(of_chosen,
+diff --git a/arch/powerpc/platforms/iseries/pci.c b/arch/powerpc/platforms/iseries/pci.c
+index c754128..171b2f3 100644
+--- a/arch/powerpc/platforms/iseries/pci.c
++++ b/arch/powerpc/platforms/iseries/pci.c
+@@ -868,7 +868,7 @@ void __init iSeries_pcibios_init(void)
+ 	/* Install IO hooks */
+ 	ppc_pci_io = iseries_pci_io;
+ 
+-	pci_probe_only = 1;
++	pci_add_flags(PCI_PROBE_ONLY);
+ 
+ 	/* iSeries has no IO space in the common sense, it needs to set
+ 	 * the IO base to 0
+diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
+index 401e3f3..465ee8f 100644
+--- a/arch/powerpc/platforms/maple/pci.c
++++ b/arch/powerpc/platforms/maple/pci.c
+@@ -620,7 +620,7 @@ void __init maple_pci_init(void)
+ 	}
+ 
+ 	/* Tell pci.c to not change any resource allocations.  */
+-	pci_probe_only = 1;
++	pci_add_flags(PCI_PROBE_ONLY);
+ }
+ 
+ int maple_pci_get_legacy_ide_irq(struct pci_dev *pdev, int channel)
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 5e155df..fbdd74d 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1299,15 +1299,14 @@ void __init pnv_pci_init_ioda1_phb(struct device_node *np)
+ 	/* Setup MSI support */
+ 	pnv_pci_init_ioda_msis(phb);
+ 
+-	/* We set both probe_only and PCI_REASSIGN_ALL_RSRC. This is an
++	/* We set both PCI_PROBE_ONLY and PCI_REASSIGN_ALL_RSRC. This is an
+ 	 * odd combination which essentially means that we skip all resource
+ 	 * fixups and assignments in the generic code, and do it all
+ 	 * ourselves here
+ 	 */
+-	pci_probe_only = 1;
+ 	ppc_md.pcibios_fixup_phb = pnv_pci_ioda_fixup_phb;
+ 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+-	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
++	pci_add_flags(PCI_PROBE_ONLY | PCI_REASSIGN_ALL_RSRC);
+ 
+ 	/* Reset IODA tables to a clean state */
+ 	rc = opal_pci_reset(phb_id, OPAL_PCI_IODA_TABLE_RESET, OPAL_ASSERT_RESET);
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index a053f4f..69dca5a 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -555,7 +555,7 @@ void __init pnv_pci_init(void)
+ {
+ 	struct device_node *np;
+ 
+-	pci_set_flags(PCI_CAN_SKIP_ISA_ALIGN);
++	pci_add_flags(PCI_CAN_SKIP_ISA_ALIGN);
+ 
+ 	/* OPAL absent, try POPAL first then RTAS detection of PHBs */
+ 	if (!firmware_has_feature(FW_FEATURE_OPAL)) {
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 386e265..fc2a6f6 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -380,8 +380,8 @@ static void __init pSeries_setup_arch(void)
+ 
+ 	fwnmi_init();
+ 
+-	/* By default, only probe PCI (can be overriden by rtas_pci */
+-	pci_probe_only = 1;
++	/* By default, only probe PCI (can be overriden by rtas_pci) */
++	pci_add_flags(PCI_PROBE_ONLY);
+ 
+ 	/* Find and initialize PCI host bridges */
+ 	init_pci_config_tokens();
 
-Thierry
-
---XsQoSWH+UP9D9v3l
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9eCCkACgkQZ+BJyKLjJp9I1ACgiMzqgAdYjfb+BL10fzPhkzop
-EqkAn3JIOG3z+7homikIN0PSCRHrOtnv
-=J/oZ
------END PGP SIGNATURE-----
-
---XsQoSWH+UP9D9v3l--
