@@ -1,73 +1,107 @@
 Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
 Sender: yhlu.kernel@gmail.com
-In-Reply-To: <CAErSpo5T8-hrtMufDeo_EfupQX3neyoA9ufjN2UYro7-2SXc+Q@mail.gmail.com>
+In-Reply-To: <CABhMZUX_pv2Wx4u+kqwcyCOpUnZ3yi68cVpV9TAzsqx2DF5DRQ@mail.gmail.com>
 References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<1331018040-30725-24-git-send-email-yinghai@kernel.org>
-	<CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
-	<CAE9FiQXsY7Dn5TGtD1ARM_KFdz1V1hJOvYAy6e4msM=i3VfhDg@mail.gmail.com>
-	<CABhMZUWDngY6jL8jkxQ+SHzEHqTS4i3DqtCD7DUBtL4QS58ovA@mail.gmail.com>
-	<CAE9FiQV23maKVMrk7h1cJxYfxrqJcKu7GfwFYUJfSDfh8g-KFQ@mail.gmail.com>
-	<CAErSpo5T8-hrtMufDeo_EfupQX3neyoA9ufjN2UYro7-2SXc+Q@mail.gmail.com>
-Date: Wed, 7 Mar 2012 16:58:39 -0800
-Message-ID: <CAE9FiQUHm2YOJvoxWZ57AXPcAV7T1QJnFzsWXGNAT160X3Rd6g@mail.gmail.com>
-Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
+	<1331018040-30725-20-git-send-email-yinghai@kernel.org>
+	<CABhMZUX_pv2Wx4u+kqwcyCOpUnZ3yi68cVpV9TAzsqx2DF5DRQ@mail.gmail.com>
+Date: Tue, 6 Mar 2012 22:37:43 -0800
+Message-ID: <CAE9FiQXy6dAbHrymyCVuO_C=c20Td=ymHzH+H-N8XzsQc8QeTQ@mail.gmail.com>
+Subject: Re: [PATCH 19/23] PCI: add /sys/bus/pci/rescan_root
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-doc@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 7, 2012 at 3:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Tue, Mar 6, 2012 at 8:31 PM, Bjorn Helgaas <bjorn.helgaas@gmail.com> wro=
+te:
+> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>
+>> It will be used to rediscover removed pci root buses.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Randy Dunlap <rdunlap@xenotime.net>
+>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Cc: linux-doc@vger.kernel.org
+>> ---
+>> =A0Documentation/ABI/testing/sysfs-bus-pci | =A0 =A09 +++++++++
+>> =A0drivers/pci/pci-sysfs.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 | =A0 21 ++++=
++++++++++++++++++
+>> =A02 files changed, 30 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/Documentation/ABI/testing/sysfs-bus-pci
+>> b/Documentation/ABI/testing/sysfs-bus-pci
+>> index 22392de..eb826bd 100644
+>> --- a/Documentation/ABI/testing/sysfs-bus-pci
+>> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+>> @@ -66,6 +66,15 @@ Description:
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0re-discover previously removed devices.
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Depends on CONFIG_HOTPLUG.
+>>
+>> +What: =A0 =A0 =A0 =A0 =A0/sys/bus/pci/rescan_root
+>> +Date: =A0 =A0 =A0 =A0 =A0March 2012
+>> +Contact: =A0 =A0 =A0 Linux PCI developers <linux-pci@vger.kernel.org>
+>> +Description:
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 Writing a non-zero value to this attribute=
+ will
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 cause a rescan of all PCI root buses in th=
+e system, and
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 re-discover previously removed PCI root bu=
+ses.
 >
-> What's the reason we need to discover those CPU devices in the first place?
+> This seems sort of backwards to me. =A0Architecture-specific code
+> enumerated the host bridges/root buses in the first place, not the PCI
+> core. =A0Now we're asking the PCI core (/sys/bus/pci) to re-enumerate
+> them.
 >
-> I don't think the current policy of blindly probing for things should
-> be continued forever.
+> But maybe it's still the right answer, I dunno.
+>
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 Depends on CONFIG_HOTPLUG.
+>> +
+>> =A0What: =A0 =A0 =A0 =A0 =A0/sys/bus/pci/devices/.../msi_irqs/
+>> =A0Date: =A0 =A0 =A0 =A0 =A0September, 2011
+>> =A0Contact: =A0 =A0 =A0 Neil Horman <nhorman@tuxdriver.com>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index f855b4b..d6221e5 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -302,8 +302,29 @@ static ssize_t bus_rescan_store(struct bus_type *bu=
+s,
+>> const char *buf,
+>> =A0 =A0 =A0 =A0return count;
+>> =A0}
+>>
+>> +void __weak acpi_pci_root_rescan(void) { }
+>> +void __weak pcibios_root_rescan(void) { }
+>> +
+>> +static ssize_t bus_rescan_root_store(struct bus_type *bus, const char
+>> *buf,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 size_t cou=
+nt)
+>> +{
+>> + =A0 =A0 =A0 unsigned long val;
+>> +
+>> + =A0 =A0 =A0 if (strict_strtoul(buf, 0, &val) < 0)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+>> +
+>> + =A0 =A0 =A0 if (val) {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mutex_lock(&pci_remove_rescan_mutex);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 acpi_pci_root_rescan();
+>
+> This architecture-dependent function name should not be here. =A0How
+> will we make this work for powerpc, sparc, etc.?
+>
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pcibios_root_rescan();
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mutex_unlock(&pci_remove_rescan_mutex);
 
-Do you want to revert follow commit?
+how about arch_pci_root_rescan(), and for x86 will let include
+arch_pci_root_rescan()
+pcibios_root_rescan().
 
-BTW, edac never work on nehalem-ex and westmere-ex.
+need to check arch like powerpc,  sparc  to see if could
+add pcibios_root_rescan()
 
-commit a3170c1f924ce2565c4e160b9b095e65c03b2dc6
-Author: Jan Beulich <JBeulich@novell.com>
-Date:   Wed Feb 23 10:08:10 2011 +0000
-
-    x86/PCI: derive pcibios_last_bus from ACPI MCFG
-
-    On various newer Intel systems the PCI bus(ses) the non-core devices
-    live on aren't getting announced by ACPI except through the bus range
-    covered by mmconfig. At least the i7core-edac driver depends on these
-    devices getting detected.
-
-    Mauro, could you check whether with this change the Xeon 55xx hack in
-    that driver can go away altogether, and with it the bogus exporting of
-    pcibios_scan_specific_bus()?
-
-    Signed-off-by: Jan Beulich <jbeulich@novell.com>
-    Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-    Cc: Aristeu Sergio <arozansk@redhat.com>
-    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
-
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index e282886..750c346 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -606,6 +606,16 @@ static void __init __pci_mmcfg_init(int early)
-        if (list_empty(&pci_mmcfg_list))
-                return;
-
-+       if (pcibios_last_bus < 0) {
-+               const struct pci_mmcfg_region *cfg;
-+
-+               list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-+                       if (cfg->segment)
-+                               break;
-+                       pcibios_last_bus = cfg->end_bus;
-+               }
-+       }
-+
-        if (pci_mmcfg_arch_init())
-                pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
-        else {
+Yinghai
