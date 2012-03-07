@@ -1,36 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:45781 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758289Ab2CHTu0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 14:50:26 -0500
-Message-ID: <4F590D7D.70308@wwwdotorg.org>
-Date: Thu, 08 Mar 2012 12:50:21 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-ww0-f74.google.com ([74.125.82.74]:63353 "EHLO
+	mail-ww0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758552Ab2CGWcL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:32:11 -0500
+Received: by wgbdt11 with SMTP id dt11so247772wgb.1
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:32:09 -0800 (PST)
+Subject: [PATCH v3 01/34] PCI: make pci_flags always available
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 07 Mar 2012 15:32:09 -0700
+Message-ID: <20120307223209.25669.37360.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 08/11] ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-9-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1331218291-16119-9-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2012 07:51 AM, Thierry Reding wrote:
-> The PMC code already accesses the PMC registers so it makes sense to
-> move this function there as well. While at it, rename the function to
-> tegra_pmc_pcie_xclk_clamp() for consistency.
-> 
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+If we move resource assignment functions into the core, we'll still
+need a way for architectures to prevent reassignment, e.g., the
+"pci_probe_only" functionality, and we'll need a generic, always
+available way the core can test for that.  The "pci_flags"
+arrangement used by several architectures seems like a convenient
+way to do this.
 
-Acked-by: Stephen Warren <swarren@wwwdotorg.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/setup-bus.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 2991a89..6db307f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -25,8 +25,11 @@
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
+ #include <linux/slab.h>
++#include <asm-generic/pci-bridge.h>
+ #include "pci.h"
+ 
++unsigned int __weak pci_flags;
++
+ struct pci_dev_resource {
+ 	struct list_head list;
+ 	struct resource *res;
+
