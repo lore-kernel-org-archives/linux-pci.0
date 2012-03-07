@@ -1,75 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50881 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757842Ab2CMDMQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 23:12:16 -0400
-Received: by lbbgm6 with SMTP id gm6so34372lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 12 Mar 2012 20:12:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1331362837-10740-22-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-22-git-send-email-yinghai@kernel.org>
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:56488 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030794Ab2CGWei (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:34:38 -0500
+Received: by yenq2 with SMTP id q2so866942yen.1
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:34:38 -0800 (PST)
+Subject: [PATCH v3 30/34] xtensa/PCI: get rid of device resource fixups
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Mar 2012 21:11:55 -0600
-Message-ID: <CAErSpo4j31natwy0uFO=DL6Wn+w7fgE4k83o_mKb8KePO0FLDA@mail.gmail.com>
-Subject: Re: [PATCH v2 21/37] PCI, ACPI: Make acpi_pci_root_remove remove pci
- root bus too
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	Chris Zankel <chris@zankel.net>
+Date: Wed, 07 Mar 2012 15:34:37 -0700
+Message-ID: <20120307223437.25669.49157.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> It will call new added pci_stop_and_remove_bus() to stop/remove pci root bus.
->
-> Also checking if that pci_root_bus get removed already in bus remove in /sys
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: linux-acpi@vger.kernel.org
-> ---
->  drivers/acpi/pci_root.c |   14 ++++++++++++++
->  1 files changed, 14 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 7aff631..b38e347 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -643,10 +643,24 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
->  {
->        struct acpi_pci_root *root = acpi_driver_data(device);
->
-> +       /* that root bus could be removed already */
-> +       if (!pci_find_bus(root->segment, root->secondary.start)) {
-> +               dev_printk(KERN_DEBUG, &device->dev,
-> +                 "freeing acpi_pci_root, but pci root bus was removed before");
-> +               goto out;
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-I don't think we should handle the root bus separately from the host
-bridge, as I mentioned before.  If we handle them together, checks
-like this won't be needed.
+CC: Chris Zankel <chris@zankel.net>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/xtensa/kernel/pci.c |   17 +----------------
+ 1 files changed, 1 insertions(+), 16 deletions(-)
 
-> +       }
-> +
->        device_set_run_wake(root->bus->bridge, false);
->        pci_acpi_remove_bus_pm_notifier(device);
->
-> +       dev_printk(KERN_DEBUG, &device->dev,
-> +               "freeing acpi_pci_root, will remove pci root bus at first");
-> +       pci_stop_and_remove_bus(root->bus);
-> +
-> +out:
-> +       list_del(&root->node);
->        kfree(root);
-> +
->        return 0;
->  }
->
-> --
-> 1.7.7
->
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index 61045c1..eb30e35 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -153,7 +153,7 @@ static void __init pci_controller_apertures(struct pci_controller *pci_ctrl,
+ 	}
+ 	res->start += io_offset;
+ 	res->end += io_offset;
+-	pci_add_resource(resources, res);
++	pci_add_resource_offset(resources, res, io_offset);
+ 
+ 	for (i = 0; i < 3; i++) {
+ 		res = &pci_ctrl->mem_resources[i];
+@@ -200,24 +200,9 @@ subsys_initcall(pcibios_init);
+ 
+ void __init pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	struct pci_controller *pci_ctrl = bus->sysdata;
+-	struct resource *res;
+-	unsigned long io_offset;
+-	int i;
+-
+-	io_offset = (unsigned long)pci_ctrl->io_space.base;
+ 	if (bus->parent) {
+ 		/* This is a subordinate bridge */
+ 		pci_read_bridge_bases(bus);
+-
+-		for (i = 0; i < 4; i++) {
+-			if ((res = bus->resource[i]) == NULL || !res->flags)
+-				continue;
+-			if (io_offset && (res->flags & IORESOURCE_IO)) {
+-				res->start += io_offset;
+-				res->end += io_offset;
+-			}
+-		}
+ 	}
+ }
+ 
+
