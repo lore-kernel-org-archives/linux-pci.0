@@ -1,118 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ey0-f202.google.com ([209.85.215.202]:59619 "EHLO
-	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030745Ab2CGWdi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:33:38 -0500
-Received: by eaaq10 with SMTP id q10so249482eaa.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:33:37 -0800 (PST)
-Subject: [PATCH v3 18/34] PCI: add generic pcibios_resource_to_bus()
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v3 19/34] alpha/PCI: get rid of device resource fixups
 To: Jesse Barnes <jbarnes@virtuousgeek.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 07 Mar 2012 15:33:36 -0700
-Message-ID: <20120307223336.25669.60286.stgit@bhelgaas.mtv.corp.google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-alpha@vger.kernel.org
+Date: Wed, 07 Mar 2012 15:33:41 -0700
+Message-ID: <20120307223341.25669.45002.stgit@bhelgaas.mtv.corp.google.com>
 In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
 References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This replaces the generic versions of pcibios_resource_to_bus() and
-pcibios_bus_to_resource() in asm-generic/pci.h with versions that use
-pci_resource_to_bus() and pci_bus_to_resource().
+Tell the PCI core about host bridge address translation so it can take
+care of bus-to-resource conversion for us.
 
-The replacements are equivalent except that they can apply host
-bridge window offsets when the arch has supplied them by using
-pci_add_resource_offset().
-
-Each arch can convert to using pci_add_resource_offset() individually by
-removing its device resource fixups from pcibios_fixup_bus() and supplying
-ARCH_HAS_GENERIC_PCI_OFFSETS.  ARCH_HAS_GENERIC_PCI_OFFSETS can be removed
-after all have converted.
-
+CC: linux-alpha@vger.kernel.org
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/probe.c       |   16 ++++++++++++++++
- include/asm-generic/pci.h |   24 +-----------------------
- include/linux/pci.h       |    4 ++++
- 3 files changed, 21 insertions(+), 23 deletions(-)
+ arch/alpha/include/asm/pci.h |    6 +---
+ arch/alpha/kernel/pci.c      |   71 ++----------------------------------------
+ 2 files changed, 5 insertions(+), 72 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6713447..13fec71 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -118,6 +118,22 @@ void pci_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 	res->end = region->end + offset;
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index 6a3fe07..121c797 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -100,11 +100,7 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 	return channel ? 15 : 14;
  }
  
-+#ifdef ARCH_HAS_GENERIC_PCI_OFFSETS
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res)
-+{
-+	pci_resource_to_bus(dev, region, res);
-+}
-+EXPORT_SYMBOL(pcibios_resource_to_bus);
-+
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region)
-+{
-+	pci_bus_to_resource(dev, res, region);
-+}
-+EXPORT_SYMBOL(pcibios_bus_to_resource);
-+#endif
-+
- /*
-  * PCI Bus Class
-  */
-diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-index 26373cf..0410346 100644
---- a/include/asm-generic/pci.h
-+++ b/include/asm-generic/pci.h
-@@ -6,29 +6,7 @@
- #ifndef _ASM_GENERIC_PCI_H
- #define _ASM_GENERIC_PCI_H
+-extern void pcibios_resource_to_bus(struct pci_dev *, struct pci_bus_region *,
+-				    struct resource *);
+-
+-extern void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-				    struct pci_bus_region *region);
++#define ARCH_HAS_GENERIC_PCI_OFFSETS
  
--/**
-- * pcibios_resource_to_bus - convert resource to PCI bus address
-- * @dev: device which owns this resource
-- * @region: converted bus-centric region (start,end)
-- * @res: resource to convert
-- *
-- * Convert a resource to a PCI device bus address or bus window.
-- */
--static inline void
+ #define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
+ 
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 3a5cdf2..1a62963 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -251,32 +251,6 @@ pci_restore_srm_config(void)
+ #endif
+ 
+ void __devinit
+-pcibios_fixup_resource(struct resource *res, struct resource *root)
+-{
+-	res->start += root->start;
+-	res->end += root->start;
+-}
+-
+-void __devinit
+-pcibios_fixup_device_resources(struct pci_dev *dev, struct pci_bus *bus)
+-{
+-	/* Update device resources.  */
+-	struct pci_controller *hose = (struct pci_controller *)bus->sysdata;
+-	int i;
+-
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		if (!dev->resource[i].start)
+-			continue;
+-		if (dev->resource[i].flags & IORESOURCE_IO)
+-			pcibios_fixup_resource(&dev->resource[i],
+-					       hose->io_space);
+-		else if (dev->resource[i].flags & IORESOURCE_MEM)
+-			pcibios_fixup_resource(&dev->resource[i],
+-					       hose->mem_space);
+-	}
+-}
+-
+-void __devinit
+ pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev = bus->self;
+@@ -284,13 +258,10 @@ pcibios_fixup_bus(struct pci_bus *bus)
+ 	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+  		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+  		pci_read_bridge_bases(bus);
+- 		pcibios_fixup_device_resources(dev, bus);
+ 	} 
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		pdev_save_srm_config(dev);
+-		if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
+-			pcibios_fixup_device_resources(dev, bus);
+ 	}
+ }
+ 
+@@ -300,42 +271,6 @@ pcibios_update_irq(struct pci_dev *dev, int irq)
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+ }
+ 
+-void
 -pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
 -			 struct resource *res)
 -{
--	region->start = res->start;
--	region->end = res->end;
+-	struct pci_controller *hose = (struct pci_controller *)dev->sysdata;
+-	unsigned long offset = 0;
+-
+-	if (res->flags & IORESOURCE_IO)
+-		offset = hose->io_space->start;
+-	else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->mem_space->start;
+-
+-	region->start = res->start - offset;
+-	region->end = res->end - offset;
 -}
 -
--static inline void
--pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			struct pci_bus_region *region)
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
 -{
--	res->start = region->start;
--	res->end = region->end;
+-	struct pci_controller *hose = (struct pci_controller *)dev->sysdata;
+-	unsigned long offset = 0;
+-
+-	if (res->flags & IORESOURCE_IO)
+-		offset = hose->io_space->start;
+-	else if (res->flags & IORESOURCE_MEM)
+-		offset = hose->mem_space->start;
+-
+-	res->start = region->start + offset;
+-	res->end = region->end + offset;
 -}
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
+-
+-#ifdef CONFIG_HOTPLUG
+-EXPORT_SYMBOL(pcibios_resource_to_bus);
+-EXPORT_SYMBOL(pcibios_bus_to_resource);
+-#endif
+-
+ int
+ pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+@@ -415,8 +350,10 @@ common_init_pci(void)
+ 			hose->mem_space->end = end;
  
- static inline struct resource *
- pcibios_select_root(struct pci_dev *pdev, struct resource *res)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 419f78f..be58a51 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -648,6 +648,10 @@ void pci_fixup_cardbus(struct pci_bus *);
+ 		INIT_LIST_HEAD(&resources);
+-		pci_add_resource(&resources, hose->io_space);
+-		pci_add_resource(&resources, hose->mem_space);
++		pci_add_resource_offset(&resources, hose->io_space,
++					hose->io_space->start);
++		pci_add_resource_offset(&resources, hose->mem_space,
++					hose->mem_space->start);
  
- /* Generic PCI functions used internally */
- 
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res);
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region);
- void pcibios_scan_specific_bus(int busn);
- extern struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+ 		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
+ 					hose, &resources);
 
