@@ -1,87 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:52908 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750745Ab2CBUxX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:53:23 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] PCI / PM: Disable wakeup during shutdown for devices not enabled to wake up
-Date: Fri, 2 Mar 2012 21:57:26 +0100
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-References: <Pine.LNX.4.44L0.1203021302460.8942-100000@netrider.rowland.org> <201203022149.27595.rjw@sisk.pl>
-In-Reply-To: <201203022149.27595.rjw@sisk.pl>
+Received: from mail-we0-f202.google.com ([74.125.82.202]:39069 "EHLO
+	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030715Ab2CGWcm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:32:42 -0500
+Received: by mail-we0-f202.google.com with SMTP id x9so269745wej.1
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:32:40 -0800 (PST)
+Subject: [PATCH v3 07/34] mips/PCI: replace pci_probe_only with pci_flags
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org
+Date: Wed, 07 Mar 2012 15:32:39 -0700
+Message-ID: <20120307223239.25669.48116.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201203022157.27093.rjw@sisk.pl>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, March 02, 2012, Rafael J. Wysocki wrote:
-> On Friday, March 02, 2012, Alan Stern wrote:
-> > On Fri, 2 Mar 2012, Jesse Barnes wrote:
-> > 
-> > > On Fri, 2 Mar 2012 15:44:27 +0100
-> > > Francois Romieu <romieu@fr.zoreil.com> wrote:
-> > > 
-> > > > Rafael J. Wysocki <rjw@sisk.pl> :
-> > > > [...]
-> > > > > If a PCI device is enabled to generate wakeup signals (PME) when put
-> > > > > into a low-power state by runtime PM, it will be still enabled to
-> > > > > generate those signals after the system shutdown, unless its driver's
-> > > > > .shutdown() callback takes care of the wakeup signals generation
-> > > > > setting.  Moreover, there are devices that are not enabled to wake
-> > > > > up the system and that are configured by runtime PM to generate
-> > > > > wakeup signals so that (runtime) remote wakeup works with them.
-> > > > > Those devices should be reconfigured during system shutdown so that
-> > > > > they don't generate wakeup signals, but at least some drivers don't
-> > > > > do that.  However, that very well may be done by the PCI core so
-> > > > > that drivers don't have to worry about it.  For this reason, modify
-> > > > > pci_device_shutdown() to disable the generation of wakeup events for
-> > > > > devices not supposed to wake up the system.
-> > > > 
-> > > > On a tangent side, if register writes are ignored by the PCI device
-> > > > after its .runtime_suspend() handler has been called, whose
-> > > > responsibility is it to bring back the device in a state from where
-> > > > the .shutdown() callback can operate ?
-> > > > 
-> > > > The r8169 driver exhibits this problem. Its .runtime_xyz() callbacks
-> > > > are called on link activity. Thus, after a link loss - or no link at
-> > > > all - .runtime_suspend() and an ineffective .shutdown(), the device is
-> > > > brought back up as soon as the link recovers.
-> > > > 
-> > > > The device driver can monitor .runtime_{suspend / resume} activity
-> > > > and take appropriate action in .shutdown(). Sameer Nanda has sent
-> > > > such a patch (see below). I am not sure this is the adequate fix:
-> > > > 1. the driver ought essentially to perform the hardware part of a
-> > > >    .runtime_resume() on its own behalf. Mildly engaging.
-> > > > 2. by the same line as above, could it make more sense to call
-> > > >    pm_runtime_resume() in driver/base/core.c::device_shutdown ?
-> > > 
-> > > I thought there would be a more elegant way of increasing the device
-> > > use count on entering .shutdown, either from the wifi core or at the
-> > > driver level, so you don't have to track things with a separate flag.
-> > 
-> > That's right.  For example, instead of keeping its own flag to know
-> > whether or not the device is runtime-suspended, the shutdown routine
-> > could just always call pm_runtime_resume_sync().  Or it could ask the
-> > PCI core to put the device into D0, regardless of the device's current
-> > state.
-> > 
-> > The driver core doesn't do this because most devices don't need it, and
-> > it would slow down the whole shutdown procedure if every suspended
-> > device were always resumed.
-> 
-> For devices known to have this problem I think calling pm_runtime_resume_sync()
-> unconditionally at the beginning of .suspend() would be a good approach in
-> general.
+Some architectures (alpha, mips, powerpc) have an arch-specific
+"pci_probe_only" flag.  Others use PCI_PROBE_ONLY in pci_flags for
+the same purpose.  This moves mips to the pci_flags approach so
+generic code can use the same test across all architectures.
 
-Or even call pm_runtime_get_sync() at the beginning and then
-pm_runtime_put_noidle() after .shutdown() has done its own stuff.  Then, you
-have a guarantee that runtime PM won't interfere with the shutdown operations.
+CC: Ralf Baechle <ralf@linux-mips.org>
+CC: linux-mips@linux-mips.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/mips/include/asm/pci.h |    3 +--
+ arch/mips/pci/pci-bcm1480.c |    2 +-
+ arch/mips/pci/pci-ip27.c    |    2 +-
+ arch/mips/pci/pci-lantiq.c  |    3 ++-
+ arch/mips/pci/pci-sb1250.c  |    2 +-
+ arch/mips/pci/pci-xlr.c     |    2 +-
+ arch/mips/pci/pci.c         |   13 +++++--------
+ 7 files changed, 12 insertions(+), 15 deletions(-)
 
-Thanks,
-Rafael
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 576397c..1e4fa3d 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -92,6 +92,7 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ #include <asm/scatterlist.h>
+ #include <linux/string.h>
+ #include <asm/io.h>
++#include <asm-generic/pci-bridge.h>
+ 
+ struct pci_dev;
+ 
+@@ -145,8 +146,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ #define arch_setup_msi_irqs arch_setup_msi_irqs
+ #endif
+ 
+-extern int pci_probe_only;
+-
+ extern char * (*pcibios_plat_setup)(char *str);
+ 
+ #endif /* _ASM_PCI_H */
+diff --git a/arch/mips/pci/pci-bcm1480.c b/arch/mips/pci/pci-bcm1480.c
+index af8c319..37b52dc 100644
+--- a/arch/mips/pci/pci-bcm1480.c
++++ b/arch/mips/pci/pci-bcm1480.c
+@@ -204,7 +204,7 @@ static int __init bcm1480_pcibios_init(void)
+ 	uint64_t reg;
+ 
+ 	/* CFE will assign PCI resources */
+-	pci_probe_only = 1;
++	pci_set_flags(PCI_PROBE_ONLY);
+ 
+ 	/* Avoid ISA compat ranges.  */
+ 	PCIBIOS_MIN_IO = 0x00008000UL;
+diff --git a/arch/mips/pci/pci-ip27.c b/arch/mips/pci/pci-ip27.c
+index 193e949..0fbe4c0 100644
+--- a/arch/mips/pci/pci-ip27.c
++++ b/arch/mips/pci/pci-ip27.c
+@@ -50,7 +50,7 @@ int __cpuinit bridge_probe(nasid_t nasid, int widget_id, int masterwid)
+ 	bridge_t *bridge;
+ 	int slot;
+ 
+-	pci_probe_only = 1;
++	pci_set_flags(PCI_PROBE_ONLY);
+ 
+ 	printk("a bridge\n");
+ 
+diff --git a/arch/mips/pci/pci-lantiq.c b/arch/mips/pci/pci-lantiq.c
+index be1e1af..030c77e 100644
+--- a/arch/mips/pci/pci-lantiq.c
++++ b/arch/mips/pci/pci-lantiq.c
+@@ -270,7 +270,8 @@ static int __devinit ltq_pci_probe(struct platform_device *pdev)
+ {
+ 	struct ltq_pci_data *ltq_pci_data =
+ 		(struct ltq_pci_data *) pdev->dev.platform_data;
+-	pci_probe_only = 0;
++
++	pci_clear_flags(PCI_PROBE_ONLY);
+ 	ltq_pci_irq_map = ltq_pci_data->irq;
+ 	ltq_pci_membase = ioremap_nocache(PCI_CR_BASE_ADDR, PCI_CR_SIZE);
+ 	ltq_pci_mapped_cfg =
+diff --git a/arch/mips/pci/pci-sb1250.c b/arch/mips/pci/pci-sb1250.c
+index 1711e8e..dd97f3a 100644
+--- a/arch/mips/pci/pci-sb1250.c
++++ b/arch/mips/pci/pci-sb1250.c
+@@ -213,7 +213,7 @@ static int __init sb1250_pcibios_init(void)
+ 	uint64_t reg;
+ 
+ 	/* CFE will assign PCI resources */
+-	pci_probe_only = 1;
++	pci_set_flags(PCI_PROBE_ONLY);
+ 
+ 	/* Avoid ISA compat ranges.  */
+ 	PCIBIOS_MIN_IO = 0x00008000UL;
+diff --git a/arch/mips/pci/pci-xlr.c b/arch/mips/pci/pci-xlr.c
+index 3d701a9..1644805 100644
+--- a/arch/mips/pci/pci-xlr.c
++++ b/arch/mips/pci/pci-xlr.c
+@@ -292,7 +292,7 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
+ static int __init pcibios_init(void)
+ {
+ 	/* PSB assigns PCI resources */
+-	pci_probe_only = 1;
++	pci_set_flags(PCI_PROBE_ONLY);
+ 	pci_config_base = ioremap(DEFAULT_PCI_CONFIG_BASE, 16 << 20);
+ 
+ 	/* Extend IO port for memory mapped io */
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index aec2b11..2a11045 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -20,12 +20,9 @@
+ #include <asm/cpu-info.h>
+ 
+ /*
+- * Indicate whether we respect the PCI setup left by the firmware.
+- *
+- * Make this long-lived  so that we know when shutting down
+- * whether we probed only or not.
++ * If PCI_PROBE_ONLY in pci_flags is set, we don't change any PCI resource
++ * assignments.
+  */
+-int pci_probe_only;
+ 
+ #define PCI_ASSIGN_ALL_BUSSES	1
+ 
+@@ -92,7 +89,7 @@ static void __devinit pcibios_scanbus(struct pci_controller *hose)
+ 	if (!hose->iommu)
+ 		PCI_DMA_BUS_IS_PHYS = 1;
+ 
+-	if (hose->get_busno && pci_probe_only)
++	if (hose->get_busno && pci_has_flag(PCI_PROBE_ONLY))
+ 		next_busno = (*hose->get_busno)();
+ 
+ 	pci_add_resource(&resources, hose->mem_resource);
+@@ -115,7 +112,7 @@ static void __devinit pcibios_scanbus(struct pci_controller *hose)
+ 			need_domain_info = 1;
+ 		}
+ 
+-		if (!pci_probe_only) {
++		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 			pci_bus_size_bridges(bus);
+ 			pci_bus_assign_resources(bus);
+ 			pci_enable_bridges(bus);
+@@ -282,7 +279,7 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+ 	struct list_head *ln;
+ 	struct pci_dev *dev = bus->self;
+ 
+-	if (pci_probe_only && dev &&
++	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+ 	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+ 		pci_read_bridge_bases(bus);
+ 		pcibios_fixup_device_resources(dev, bus);
+
