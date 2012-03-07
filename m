@@ -1,65 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25406 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161768Ab2CSFte (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:34 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 03/26] PCI: Add pci_dev_resource_idx()
-Date: Sun, 18 Mar 2012 22:48:26 -0700
-Message-Id: <1332136129-14010-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Received: from mail-gx0-f202.google.com ([209.85.161.202]:64913 "EHLO
+	mail-gx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030758Ab2CGWe7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:34:59 -0500
+Received: by ggnd2 with SMTP id d2so864958ggn.1
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:34:58 -0800 (PST)
+Subject: [PATCH v3 34/34] sparc/PCI: replace pci_cfg_fake_ranges() with
+	pci_read_bridge_bases()
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	sparclinux@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Date: Wed, 07 Mar 2012 15:34:58 -0700
+Message-ID: <20120307223458.25669.55751.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   12 ++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 13 insertions(+), 0 deletions(-)
+The generic code to read P2P bridge windows is functionally equivalent
+to the sparc-specific pci_cfg_fake_ranges(), so use the generic code.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 87e87b5..7d5550a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -85,6 +85,18 @@ struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
- 	return NULL;
+CC: "David S. Miller" <davem@davemloft.net>
+CC: sparclinux@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/sparc/kernel/pci.c |   92 +----------------------------------------------
+ 1 files changed, 1 insertions(+), 91 deletions(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 86610de..fa53d55 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -375,96 +375,6 @@ static void __devinit apb_calc_first_last(u8 map, u32 *first_p, u32 *last_p)
+ 	*last_p = last;
  }
  
-+int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
-+{
-+	int i;
-+	struct resource *r;
-+
-+	for_each_pci_dev_all_resource(dev, r, i)
-+		if (r == res)
-+			return i;
-+
-+	return -1;
-+}
-+
- static u64 pci_size(u64 base, u64 maxbase, u64 mask)
- {
- 	u64 size = mask & maxbase;	/* Find the significant bits */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2b1fff8..e3f9ae1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -348,6 +348,7 @@ struct pci_dev {
- };
- 
- struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
-+int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
- 
- #define resno_is_for_bridge(n)						\
- 	((n) >= PCI_BRIDGE_RESOURCES && (n) <= PCI_BRIDGE_RESOURCE_END)
--- 
-1.7.7
+-/* For PCI bus devices which lack a 'ranges' property we interrogate
+- * the config space values to set the resources, just like the generic
+- * Linux PCI probing code does.
+- */
+-static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
+-					  struct pci_bus *bus,
+-					  struct pci_pbm_info *pbm)
+-{
+-	struct pci_bus_region region;
+-	struct resource *res;
+-	u8 io_base_lo, io_limit_lo;
+-	u16 mem_base_lo, mem_limit_lo;
+-	unsigned long io_mask, io_granularity, base, limit;
+-
+-	io_mask = PCI_IO_RANGE_MASK;
+-	io_granularity = 0x1000;
+-	if (dev->io_window_1k) {
+-		/* Support 1K I/O space granularity */
+-		io_mask = PCI_IO_1K_RANGE_MASK;
+-		io_granularity = 0x400;
+-	}
+-
+-	pci_read_config_byte(dev, PCI_IO_BASE, &io_base_lo);
+-	pci_read_config_byte(dev, PCI_IO_LIMIT, &io_limit_lo);
+-	base = (io_base_lo & io_mask) << 8;
+-	limit = (io_limit_lo & io_mask) << 8;
+-
+-	if ((io_base_lo & PCI_IO_RANGE_TYPE_MASK) == PCI_IO_RANGE_TYPE_32) {
+-		u16 io_base_hi, io_limit_hi;
+-
+-		pci_read_config_word(dev, PCI_IO_BASE_UPPER16, &io_base_hi);
+-		pci_read_config_word(dev, PCI_IO_LIMIT_UPPER16, &io_limit_hi);
+-		base |= (io_base_hi << 16);
+-		limit |= (io_limit_hi << 16);
+-	}
+-
+-	res = bus->resource[0];
+-	if (base <= limit) {
+-		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
+-		region.start = base;
+-		region.end = limit + io_granularity - 1;
+-		pcibios_bus_to_resource(dev, res, &region);
+-	}
+-
+-	pci_read_config_word(dev, PCI_MEMORY_BASE, &mem_base_lo);
+-	pci_read_config_word(dev, PCI_MEMORY_LIMIT, &mem_limit_lo);
+-	base = (mem_base_lo & PCI_MEMORY_RANGE_MASK) << 16;
+-	limit = (mem_limit_lo & PCI_MEMORY_RANGE_MASK) << 16;
+-
+-	res = bus->resource[1];
+-	if (base <= limit) {
+-		res->flags = ((mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) |
+-			      IORESOURCE_MEM);
+-		region.start = base;
+-		region.end = limit + 0xfffff;
+-		pcibios_bus_to_resource(dev, res, &region);
+-	}
+-
+-	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
+-	pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
+-	base = (mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
+-	limit = (mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
+-
+-	if ((mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
+-		u32 mem_base_hi, mem_limit_hi;
+-
+-		pci_read_config_dword(dev, PCI_PREF_BASE_UPPER32, &mem_base_hi);
+-		pci_read_config_dword(dev, PCI_PREF_LIMIT_UPPER32, &mem_limit_hi);
+-
+-		/*
+-		 * Some bridges set the base > limit by default, and some
+-		 * (broken) BIOSes do not initialize them.  If we find
+-		 * this, just assume they are not being used.
+-		 */
+-		if (mem_base_hi <= mem_limit_hi) {
+-			base |= ((long) mem_base_hi) << 32;
+-			limit |= ((long) mem_limit_hi) << 32;
+-		}
+-	}
+-
+-	res = bus->resource[2];
+-	if (base <= limit) {
+-		res->flags = ((mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) |
+-			      IORESOURCE_MEM | IORESOURCE_PREFETCH);
+-		region.start = base;
+-		region.end = limit + 0xfffff;
+-		pcibios_bus_to_resource(dev, res, &region);
+-	}
+-}
+-
+ /* Cook up fake bus resources for SUNW,simba PCI bridges which lack
+  * a proper 'ranges' property.
+  */
+@@ -553,7 +463,7 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 		apb_fake_ranges(dev, bus, pbm);
+ 		goto after_ranges;
+ 	} else if (ranges == NULL) {
+-		pci_cfg_fake_ranges(dev, bus, pbm);
++		pci_read_bridge_bases(bus);
+ 		goto after_ranges;
+ 	}
+ 	i = 1;
 
