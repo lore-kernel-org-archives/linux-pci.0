@@ -1,11 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:56149 "EHLO
+Received: from moutng.kundenserver.de ([212.227.17.10]:50482 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561Ab2CHOvn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 09:51:43 -0500
+	with ESMTP id S1752802Ab2CHShh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 13:37:37 -0500
+Date: Thu, 8 Mar 2012 19:37:31 +0100
 From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Liam Girdwood <lrg@ti.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
 	Mark Brown <broonie@opensource.wolfsonmicro.com>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>,
 	linux-pci@vger.kernel.org,
@@ -16,41 +17,51 @@ Cc: Liam Girdwood <lrg@ti.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Colin Cross <ccross@android.com>,
 	Olof Johansson <olof@lixom.net>
-Subject: [PATCH 07/11] ARM: pci: Keep pci_common_init() around after init
-Date: Thu,  8 Mar 2012 15:51:27 +0100
-Message-Id: <1331218291-16119-8-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+Subject: Re: [PATCH 06/11] PCI: Keep pci_fixup_irqs() around after init
+Message-ID: <20120308183731.GA25254@avionic-0098.mockup.avionic-design.de>
 References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-7-git-send-email-thierry.reding@avionic-design.de>
+ <CAErSpo6hbWjteESST1+O2WzbtmZq6hC-pnUB4o3MAXWG-EgU+g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="CE+1k2dSO48ffgeK"
+In-Reply-To: <CAErSpo6hbWjteESST1+O2WzbtmZq6hC-pnUB4o3MAXWG-EgU+g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- arch/arm/kernel/bios32.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index be5d3b2..c88dcf5 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -411,7 +411,7 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 	return irq;
- }
- 
--static void __init pcibios_init_hw(struct hw_pci *hw)
-+static void pcibios_init_hw(struct hw_pci *hw)
- {
- 	struct pci_sys_data *sys = NULL;
- 	int ret;
-@@ -457,7 +457,7 @@ static void __init pcibios_init_hw(struct hw_pci *hw)
- 	}
- }
- 
--void __init pci_common_init(struct hw_pci *hw)
-+void pci_common_init(struct hw_pci *hw)
- {
- 	struct pci_sys_data *sys;
- 
--- 
-1.7.9.3
+--CE+1k2dSO48ffgeK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+* Bjorn Helgaas wrote:
+> Hmm, your patch looks OK as far as it goes, but the implementation of
+> pci_fixup_irqs() as a call-once-at-boot-time thing with a loop through
+> all the PCI devices we've found so far looks completely broken with
+> regard to hotplug.
+>=20
+> Who does the swizzle for devices hot-added after boot?
+
+Perhaps I should have mentioned this in the commit message, but the patch
+isn't actually used in a hotplug scenario. In fact, the code is still run
+once at boot time, only very late. Grant's deferred probing allows the
+PCIe controller driver to postpone initialization until all the devices
+that it depends on (regulators) have been probed. This has the side-effect
+that the probing actually takes place *after* code and data annotated with
+__init have already been freed.
+
+Thierry
+
+--CE+1k2dSO48ffgeK
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk9Y/GsACgkQZ+BJyKLjJp8qLACfYNrcwrYDwS7KUKwaRVj+cS6S
+pU8AmgM4GdvwiXkJqH4QTT/CljdHZjbS
+=DeUC
+-----END PGP SIGNATURE-----
+
+--CE+1k2dSO48ffgeK--
