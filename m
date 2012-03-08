@@ -1,82 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:52885 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030592Ab2CBUpX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:45:23 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] PCI / PM: Disable wakeup during shutdown for devices not enabled to wake up
-Date: Fri, 2 Mar 2012 21:49:27 +0100
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-References: <Pine.LNX.4.44L0.1203021302460.8942-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1203021302460.8942-100000@netrider.rowland.org>
+Received: from opensource.wolfsonmicro.com ([80.75.67.52]:50619 "EHLO
+	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753738Ab2CHTIa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 14:08:30 -0500
+Date: Thu, 8 Mar 2012 19:08:27 +0000
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 04/11] regulator: tps6586x: fix typo in debug message
+Message-ID: <20120308190827.GB3638@opensource.wolfsonmicro.com>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-5-git-send-email-thierry.reding@avionic-design.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201203022149.27595.rjw@sisk.pl>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Hmb9n29fjuiORm2l"
+In-Reply-To: <1331218291-16119-5-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, March 02, 2012, Alan Stern wrote:
-> On Fri, 2 Mar 2012, Jesse Barnes wrote:
-> 
-> > On Fri, 2 Mar 2012 15:44:27 +0100
-> > Francois Romieu <romieu@fr.zoreil.com> wrote:
-> > 
-> > > Rafael J. Wysocki <rjw@sisk.pl> :
-> > > [...]
-> > > > If a PCI device is enabled to generate wakeup signals (PME) when put
-> > > > into a low-power state by runtime PM, it will be still enabled to
-> > > > generate those signals after the system shutdown, unless its driver's
-> > > > .shutdown() callback takes care of the wakeup signals generation
-> > > > setting.  Moreover, there are devices that are not enabled to wake
-> > > > up the system and that are configured by runtime PM to generate
-> > > > wakeup signals so that (runtime) remote wakeup works with them.
-> > > > Those devices should be reconfigured during system shutdown so that
-> > > > they don't generate wakeup signals, but at least some drivers don't
-> > > > do that.  However, that very well may be done by the PCI core so
-> > > > that drivers don't have to worry about it.  For this reason, modify
-> > > > pci_device_shutdown() to disable the generation of wakeup events for
-> > > > devices not supposed to wake up the system.
-> > > 
-> > > On a tangent side, if register writes are ignored by the PCI device
-> > > after its .runtime_suspend() handler has been called, whose
-> > > responsibility is it to bring back the device in a state from where
-> > > the .shutdown() callback can operate ?
-> > > 
-> > > The r8169 driver exhibits this problem. Its .runtime_xyz() callbacks
-> > > are called on link activity. Thus, after a link loss - or no link at
-> > > all - .runtime_suspend() and an ineffective .shutdown(), the device is
-> > > brought back up as soon as the link recovers.
-> > > 
-> > > The device driver can monitor .runtime_{suspend / resume} activity
-> > > and take appropriate action in .shutdown(). Sameer Nanda has sent
-> > > such a patch (see below). I am not sure this is the adequate fix:
-> > > 1. the driver ought essentially to perform the hardware part of a
-> > >    .runtime_resume() on its own behalf. Mildly engaging.
-> > > 2. by the same line as above, could it make more sense to call
-> > >    pm_runtime_resume() in driver/base/core.c::device_shutdown ?
-> > 
-> > I thought there would be a more elegant way of increasing the device
-> > use count on entering .shutdown, either from the wifi core or at the
-> > driver level, so you don't have to track things with a separate flag.
-> 
-> That's right.  For example, instead of keeping its own flag to know
-> whether or not the device is runtime-suspended, the shutdown routine
-> could just always call pm_runtime_resume_sync().  Or it could ask the
-> PCI core to put the device into D0, regardless of the device's current
-> state.
-> 
-> The driver core doesn't do this because most devices don't need it, and
-> it would slow down the whole shutdown procedure if every suspended
-> device were always resumed.
 
-For devices known to have this problem I think calling pm_runtime_resume_sync()
-unconditionally at the beginning of .suspend() would be a good approach in
-general.
+--Hmb9n29fjuiORm2l
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thanks,
-Rafael
+On Thu, Mar 08, 2012 at 03:51:24PM +0100, Thierry Reding wrote:
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+
+Applied, thanks.
+
+--Hmb9n29fjuiORm2l
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPWQOEAAoJEBus8iNuMP3dfu4QAJhJpCq99CRu3OoF3uPsZweM
++Rc3/bWQya+dZoAPYcytvVTJj0Ijv4rp12TMMBCgrGj0s2nIxWDeIdAtp1XFqOXB
+ubv0dI/mzGLEvPnPNHSD4in2TnKuuabopQkLI1044F5tW4/pQS+OyswyCE7QtaXQ
+mXHMYusZgTQb5IlzL/I4knGEi5DQgB2aJrRI7FeWTTvtUl7+YMF0X8ynMWtU9g80
+h0PtlXc9MSmFICnLGcOr2faYvpUi9IJKGbHno/jgxc0WyJR5QChTwUlNWvzi7qfi
+mXbIOy4todXMpD+a+Egfc8RARf3sWk/IYGJGAwAFSznqo5JmMBrWX6b19kweFvis
+YEiw2jO6wlApJ82E4x0pEsx1mCQRDfML1CWm5VqJGeTLwvcuzHERZrOBwGj8VAr+
+6StLMtMMuDor30ZjkYN/6/3MP69rW0gtG42lNfK3mPN8X++/FL/yD/9Bwn5uZPEt
+d5vUGCgDk3/CSIkUefZeuyMTOwxxf/fO1Tzi0yK1X15ygCqHi7AQA/UcpxBLQslE
+n/7wzU+jCMVaseDWrM0aY94TyNQv/iBVeeio+gHcco8MMsjoiJbbjkNO65pz2PfI
+lKVBD8ORE4Vtd7ziGF4bye29l7ZoTKyLtUbEcekedqyIEi6kKp4iuW4y1QQ0X82A
+T9z9haiuKd8QN1vk7XXg
+=WNKZ
+-----END PGP SIGNATURE-----
+
+--Hmb9n29fjuiORm2l--
