@@ -1,92 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:40491 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759244Ab2CMFy2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 01:54:28 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5WKLf4C_f+roqDtbvs0vU_qTKp6OZ83AXXZggPrynt2A@mail.gmail.com>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-	<1331362837-10740-21-git-send-email-yinghai@kernel.org>
-	<CAErSpo5WKLf4C_f+roqDtbvs0vU_qTKp6OZ83AXXZggPrynt2A@mail.gmail.com>
-Date: Mon, 12 Mar 2012 22:54:27 -0700
-Message-ID: <CAE9FiQWwzS2SFvzO2BL-aoVFVEMFpwJPKPODArkKtQSeAoTYGw@mail.gmail.com>
-Subject: Re: [PATCH v2 20/37] PCI: Add pci bus removal through /sys/.../pci_bus/.../remove
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from moutng.kundenserver.de ([212.227.126.171]:56023 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755584Ab2CHOvr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 09:51:47 -0500
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Liam Girdwood <lrg@ti.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: [PATCH 00/11] ARM: tegra: Add PCIe device tree support
+Date: Thu,  8 Mar 2012 15:51:20 +0100
+Message-Id: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2012 at 8:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> it supports both pci root bus and pci bus under pci bridge.
->>
->> -v2: Change to three returns way in dev_bus_remove_store.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Randy Dunlap <rdunlap@xenotime.net>
->> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> Cc: linux-doc@vger.kernel.org
->> ---
->>  Documentation/ABI/testing/sysfs-bus-pci |    8 ++++++++
->>  drivers/pci/pci-sysfs.c                 |   30 ++++++++++++++++++++++++++++++
->>  2 files changed, 38 insertions(+), 0 deletions(-)
->>
->> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
->> index 95f0f37..22392de 100644
->> --- a/Documentation/ABI/testing/sysfs-bus-pci
->> +++ b/Documentation/ABI/testing/sysfs-bus-pci
->> @@ -92,6 +92,14 @@ Description:
->>                hot-remove the PCI device and any of its children.
->>                Depends on CONFIG_HOTPLUG.
->>
->> +What:          /sys/bus/pci/devices/.../pci_bus/.../remove
->> +Date:          March 2012
->> +Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
->> +Description:
->> +               Writing a non-zero value to this attribute will
->> +               hot-remove the PCI bus and any of its children.
->> +               Depends on CONFIG_HOTPLUG.
->
-> I don't think this interface makes sense.  This stops every device on
-> the bus, removes the bus, unregisters the host bridge device if we're
-> removing a root bus.
+This patch series adds support for device tree based probing of the PCIe
+controller found on Tegra SoCs.
 
-it is some kind of handy. otherwise if there is several devices on the
-bus, will need to
-remove the devices one by one.
+Patches 1 and 2 have already been posted by Grant and Mark respectively
+but I've included them here for reference. Both patches are dependencies
+for the subsequent patches.
 
->
-> I think we should just have a "remove *bridge*" interface.  It makes
-> no sense to me to remove a bus but leave the bridge, and it makes the
-> code quite complicated.
+Patches 3, 4 and 5 add support for obtaining the regulators required to
+power the PCIe controller from the device tree. Patches 6 and 7 are
+required to make some common PCI functions available after the init
+phase because the deferred probing will postpone the probing of the PCIe
+controller driver until that point.
 
-I want to remove all devices under the bridge and then rescan the
-bridge. then if the bridge get removed.
-then we have to rescan bridge's parent bus.
+Patches 8 and 9 make the PCIe controller code available as a driver and
+add the corresponding platform devices to the boards that enable PCIe
+(Harmony and TrimSlice). Patch 10 adds MSI support and patch 11 finally
+adds a device tree binding with documentation.
 
->
-> The point of hotplug is to add and remove devices.  We'll get
-> interrupts saying "please remove this device" or "please rescan the
-> bus behind this bridge because something might have changed."
->
-> If we're removing a host bridge, the platform, e.g., ACPI, will tell
-> us about the bridge that is going away.  The notification is attached
-> to the *bridge*, not the bus it leads to.
->
-> The expected mechanism on x86 is an SCI from the platform, but if we
-> need a sysfs way to start host bridge removal, I think it should be
-> something like this:
->
->    echo 1 > /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove
+The code in patch 10 (MSI support) is based on the Vibrante kernel and I
+wasn't able to get a proper Signed-off-by or even copyright information.
+Perhaps somebody at NVIDIA can find out?
 
-for that,  let just use
-echo "\_SB.PCI0 3" > /proc/acpi/sci/notify
+Thierry
 
-Yinghai
+Grant Likely (1):
+  drivercore: Add driver probe deferral mechanism
+
+Mark Brown (1):
+  regulator: Support driver probe deferral
+
+Thierry Reding (9):
+  regulator: fixed: Support driver probe deferral
+  regulator: tps6586x: fix typo in debug message
+  tps6586x: Add device-tree support
+  PCI: Keep pci_fixup_irqs() around after init
+  ARM: pci: Keep pci_common_init() around after init
+  ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+  ARM: tegra: Rewrite PCIe support as a driver
+  ARM: tegra: pcie: Add MSI support
+  ARM: tegra: pcie: Add device tree support
+
+ .../devicetree/bindings/pci/tegra-pcie.txt         |   23 +
+ .../devicetree/bindings/regulator/tps6586x.txt     |   98 +++
+ arch/arm/boot/dts/tegra20.dtsi                     |    8 +
+ arch/arm/kernel/bios32.c                           |    4 +-
+ arch/arm/mach-tegra/Kconfig                        |    1 +
+ arch/arm/mach-tegra/board-harmony-pcie.c           |   38 +-
+ arch/arm/mach-tegra/board-harmony.c                |    1 +
+ arch/arm/mach-tegra/board-harmony.h                |    1 +
+ arch/arm/mach-tegra/board-trimslice.c              |   16 +-
+ arch/arm/mach-tegra/board.h                        |   11 +-
+ arch/arm/mach-tegra/devices.c                      |   32 +
+ arch/arm/mach-tegra/devices.h                      |    1 +
+ arch/arm/mach-tegra/include/mach/iomap.h           |    6 +
+ arch/arm/mach-tegra/include/mach/irqs.h            |    5 +-
+ arch/arm/mach-tegra/pcie.c                         |  895 +++++++++++++++-----
+ arch/arm/mach-tegra/pmc.c                          |   16 +
+ arch/arm/mach-tegra/pmc.h                          |    1 +
+ drivers/base/base.h                                |    1 +
+ drivers/base/core.c                                |    2 +
+ drivers/base/dd.c                                  |  138 ++-
+ drivers/mfd/tps6586x.c                             |   66 ++
+ drivers/pci/setup-irq.c                            |    4 +-
+ drivers/regulator/core.c                           |    4 +-
+ drivers/regulator/fixed.c                          |   14 +-
+ drivers/regulator/tps6586x-regulator.c             |    4 +-
+ include/linux/device.h                             |    5 +
+ include/linux/errno.h                              |    1 +
+ include/linux/mfd/tps6586x.h                       |    1 +
+ 28 files changed, 1136 insertions(+), 261 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/tegra-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/regulator/tps6586x.txt
+
+-- 
+1.7.9.3
+
