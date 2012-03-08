@@ -1,61 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from opensource.wolfsonmicro.com ([80.75.67.52]:36694 "EHLO
+	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753775Ab2CHPGK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 10:06:10 -0500
+Date: Thu, 8 Mar 2012 15:06:07 +0000
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 05/11] tps6586x: Add device-tree support
+Message-ID: <20120308150607.GP3638@opensource.wolfsonmicro.com>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-6-git-send-email-thierry.reding@avionic-design.de>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5cCC4HySedQ85BFKkPQ0VuYWX+NTjZLd4GpcATh1ix3g@mail.gmail.com>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-	<1331362837-10740-24-git-send-email-yinghai@kernel.org>
-	<CAErSpo5cCC4HySedQ85BFKkPQ0VuYWX+NTjZLd4GpcATh1ix3g@mail.gmail.com>
-Date: Mon, 12 Mar 2012 23:03:30 -0700
-Message-ID: <CAE9FiQWvOpJ1N=QLQ3MHRqVGw7pz1Fuma60pJSwzqP5Jc5PF3Q@mail.gmail.com>
-Subject: Re: [PATCH v2 23/37] PCI, ACPI: Add pci_root_hp hot add hotplug notification
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="eBTWNsZZiigckDWV"
+In-Reply-To: <1331218291-16119-6-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2012 at 8:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> It is from acpiphp_glue.c
->>
->> How to use it?
->> Find out root bus number to acpi root name mapping from dmesg or /sys
->>
->>  echo "\_SB.PCIB 0" > /proc/acpi/sci/notify
->> to add it back
->
-> Nope.  That might be a way to exercise this for debug purposes (and it
-> only works when /proc/acpi/sci/notify is compiled in), but we
-> definitely don't want normal users to deal with ACPI pathnames like
-> this.
 
-before this patch set, only way is: Users really put one root bus in
-and press buton etc to trigger notification
-to get it work.
+--eBTWNsZZiigckDWV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
->
-> Most of this functionality belongs in the ACPI core, not here.  The
-> core should be handling these notify events and turning them into
-> .add() and .remove() calls to the driver.
->
-> But since the ACPI core doesn't do that yet, we have to do it in the
-> driver, like we do for CPU, memory, etc.  That part is fine.  But I
-> think it at least belongs *in* the driver, i.e., in pci_root.c, not in
-> a new pci_root_hp.c file.
+On Thu, Mar 08, 2012 at 03:51:25PM +0100, Thierry Reding wrote:
 
-don't want to pollute pci_root.c.
+> +- gpio-controller: mark the device as a GPIO controller
+> +- regulators: list of regulators provided by this controller, must be in the
+> +  following order:
+> +    SM0, SM1, SM2, LDO0, LDO1, LDO2, LDO3, LDO4, LDO5, LDO6, LDO7, LDO8, LDO9
 
-in separated file, we can use CONFIG_HOTPLUG in Makefile instead of pci_root.c
+This ordering requirement is fairly sad, if there are unused regulators
+they still need to be listed even though...
 
->
-> There definitely should not be another acpi_walk_namespace() and
-> another list of ACPI host bridges.  The core *does* already walk the
-> namespace and call acpi_pci_root_add() for us.  And the driver already
-> has a list of host bridges (acpi_pci_roots).
+> +			sm0_reg: sm0 {
+> +				regulator-min-microvolt = < 725000>;
+> +				regulator-max-microvolt = <1500000>;
+> +				regulator-boot-on;
+> +				regulator-always-on;
+> +			};
+> +
+> +			sm1_reg: sm1 {
 
-no, we may not have acpi_pci_root there.
+...they all seem to be explicitly named in the device tree so presumably
+there's enough information in there for the driver to pick any set of
+regulators in any order.  This would be much nicer to use.
+
+Otherwise this looks good.
+
+--eBTWNsZZiigckDWV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPWMp6AAoJEBus8iNuMP3dHwoP/Rb4lgEnjRg/O8qzx0ReG0cR
+PxTWrDHrtdUOjLI8E75ZrqZZjlhWuiN5ZtmoPeua+5WK0GjItCEJCvMlJRgOl8Ij
+4G4m0ibMCOHWCy/aw60TfH25oPDMtXX/y5if97Rwm5whpggr/Eb2B6P5ujJJL79B
+Hkgk2sSeQIqJKV9DGrcTtewQXvJswqo8quG2biV+UTwZAtel1eWf4aX3ZYjic6d8
+lZM7TxF43A0E4EYoJPBRCBMsqIbcmVPQl+vRktz0DS0fN33jhrkcTeHWJBYPg5fy
+0fabjXDM6nGrPl7BP0H4VdLb57GZ1woCkxJ2zl+Ew4C2E3UKRipj1d5+sHhfP4A7
+E6xRRw2OUhdihI0gT3xyp+Aj+2L/JIvIvYbse8ORRTyp6+lsD6ONUgA2al1E2A+V
+cgpHOPxcVlc1qRktrs+FZ/mGzbceb/3BDJarX9ZCmoMfvmNKR9GgNNgQH5F0Dh3z
+is02SQXzl1F7dtVMnwqYbJtMg3PXCQX/ZM5DEeQ+GI1PtlzuPaHpKo8T0AAPYbLR
+PkmfGKz3jWUgTSJQy8odKr9Ay5Jj/ZPySVTsJbRAEGqwPw0DkPnmzORrOYc3q9Th
+5+7BRxdj6KMw9aU7flO/NQn5Kp4EeQmdtXV2QH/nmddJnVjEKyBqtqlEAZFAK0WC
+yZ0vh0h5B8IQwPcpfvxO
+=dfDH
+-----END PGP SIGNATURE-----
+
+--eBTWNsZZiigckDWV--
