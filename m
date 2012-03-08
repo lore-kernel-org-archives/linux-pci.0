@@ -1,51 +1,69 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:37288 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753299Ab2CHUJN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 15:09:13 -0500
+Message-ID: <4F5911E0.6060802@wwwdotorg.org>
+Date: Thu, 08 Mar 2012 13:09:04 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7JS6N3XzVm=_A-oFF_VpmuQaAG_KagxAOEzpEPnhRP_g@mail.gmail.com>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
-	<1330570837-26638-29-git-send-email-yinghai@kernel.org>
-	<CAErSpo7JS6N3XzVm=_A-oFF_VpmuQaAG_KagxAOEzpEPnhRP_g@mail.gmail.com>
-Date: Fri, 16 Mar 2012 13:42:16 -0700
-Message-ID: <CAE9FiQWPCZ-2Xjk2fHZfuQC1fm3WpR9BRbgb9RJCDe_KKEKvZQ@mail.gmail.com>
-Subject: Re: [PATCH 28/36] PCI: Add pci_bus_extend/shrink_top()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 09/11] ARM: tegra: Rewrite PCIe support as a driver
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-10-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1331218291-16119-10-git-send-email-thierry.reding@avionic-design.de>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 16, 2012 at 12:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I've objected to this before on the grounds that it's not safe to
-> update res->end because res is already linked into the resource tree,
-> but I just noticed another problem.
->
-> Tree updates are protected by resource_lock, but we don't hold that
-> here.  I'm sure you "know" that this update can't race with any other
-> conflicting resource operations, but its safety certainly is not
-> obvious from the patch.
->
-> I think a better implementation would be to add something like
-> "resource_extend()" that could live in kernel/resource.c so it could
-> do the appropriate locking and checking.  Such an interface could also
-> be independent of the resource type, which may be useful when doing
-> mem/io resource reassignment.
+On 03/08/2012 07:51 AM, Thierry Reding wrote:
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 
-Thanks for point it out.
+Patch description?
 
-Let me thinking about it.
+> diff --git a/arch/arm/mach-tegra/board-harmony-pcie.c b/arch/arm/mach-tegra/board-harmony-pcie.c
+...
+> -static int __init harmony_pcie_init(void)
+> +static int tegra_pcie_init(struct platform_device *pdev)
 
->
-> This patch is already in Jesse's linux-next branch (commit
-> c901d4c0407), so I'm leaving it up to you and Jesse to figure out
-> what, if anything, to do about this.
+That name should probably still be called harmony_something() since it's
+still board-specific.
 
-No, this patch is one in busn_alloc patchset. Jesse did NOT pick that
-patchset yet.
+I wonder how having a per-board callback will integrate with device
+tree. I guess I'll find out when I review patch 11:-)
 
-Yinghai
+> diff --git a/arch/arm/mach-tegra/board-trimslice.c b/arch/arm/mach-tegra/board-trimslice.c
+
+> +static int __init trimslice_pci_init(void)
+>  {
+>  	if (!machine_is_trimslice())
+>  		return 0;
+
+You can remove that test now.
+
+> diff --git a/arch/arm/mach-tegra/board.h b/arch/arm/mach-tegra/board.h
+
+> +#define TEGRA_PCIE_MAX_PORTS 2
+> +
+> +struct tegra_pcie_pdata {
+> +	int (*init)(struct platform_device *pdev);
+> +	int (*exit)(struct platform_device *pdev);
+> +	bool enable_ports[TEGRA_PCIE_MAX_PORTS];
+> +};
+
+That's a somewhat odd place to put the header; a dedicated
+mach-tegra/include/mach/tegra_pcie_pdata.h or
+include/linux/platform_data/tegra_pcie.h might make more sense.
+
+Aside from those pretty minor issues, this all looks great. Thanks for
+fixing our driver!
