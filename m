@@ -1,58 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@kernel.org,
-	Len Brown <lenb@kernel.org>, Adam Belay <abelay@mit.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org
-Subject: [PATCH 08/23] PNPACPI: Fix device ref leaking in acpi_pnp_match
-Date: Mon,  5 Mar 2012 23:13:45 -0800
-Message-Id: <1331018040-30725-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:45781 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758289Ab2CHTu0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 14:50:26 -0500
+Message-ID: <4F590D7D.70308@wwwdotorg.org>
+Date: Thu, 08 Mar 2012 12:50:21 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 08/11] ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-9-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1331218291-16119-9-git-send-email-thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During testing pci root bus removal, found some root bus bridge is not freed.
+On 03/08/2012 07:51 AM, Thierry Reding wrote:
+> The PMC code already accesses the PMC registers so it makes sense to
+> move this function there as well. While at it, rename the function to
+> tegra_pmc_pcie_xclk_clamp() for consistency.
+> 
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 
-If booting with pnpacpi=off, those hostbridge could be freed without problem.
-
-It turns out that some devices reference are not released during acpi_pnp_match.
-
-that match should not hold one device ref during every calling.
-
-Add put_device calling before returning.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@kernel.org
-Cc: Len Brown <lenb@kernel.org>
-Cc: Adam Belay <abelay@mit.edu>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/pnp/pnpacpi/core.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pnp/pnpacpi/core.c b/drivers/pnp/pnpacpi/core.c
-index b00c176..d21e8f5 100644
---- a/drivers/pnp/pnpacpi/core.c
-+++ b/drivers/pnp/pnpacpi/core.c
-@@ -321,9 +321,14 @@ static int __init acpi_pnp_match(struct device *dev, void *_pnp)
- {
- 	struct acpi_device *acpi = to_acpi_device(dev);
- 	struct pnp_dev *pnp = _pnp;
-+	struct device *physical_device;
-+
-+	physical_device = acpi_get_physical_device(acpi->handle);
-+	if (physical_device)
-+		put_device(physical_device);
- 
- 	/* true means it matched */
--	return !acpi_get_physical_device(acpi->handle)
-+	return !physical_device
- 	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
- }
- 
--- 
-1.7.7
-
+Acked-by: Stephen Warren <swarren@wwwdotorg.org>
