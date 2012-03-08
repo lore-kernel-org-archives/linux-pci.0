@@ -1,63 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41876 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750977Ab2C0OSA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Mar 2012 10:18:00 -0400
-From: Matthew Garrett <mjg@redhat.com>
-To: bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Matthew Garrett <mjg@redhat.com>, stable@vger.kernel.org
-Subject: [PATCH] ASPM: Fix pcie devices with non-pcie children
-Date: Tue, 27 Mar 2012 10:17:41 -0400
-Message-Id: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+Received: from moutng.kundenserver.de ([212.227.17.9]:50864 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756738Ab2CHPoJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 10:44:09 -0500
+Date: Thu, 8 Mar 2012 16:43:59 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Rob Herring <robherring2@gmail.com>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 00/11] ARM: tegra: Add PCIe device tree support
+Message-ID: <20120308154359.GA544@avionic-0098.mockup.avionic-design.de>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <4F58CE9D.3070605@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
+In-Reply-To: <4F58CE9D.3070605@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 4949be16822e92a18ea0cc1616319926628092ee changed the behaviour of
-pcie_aspm_sanity_check() to always return 0 if aspm is disabled, in order
-to avoid cases where we changed ASPM state on pre-PCIe 1.1 devices. This
-skipped the secondary function of pcie_aspm_sanity_check which was to avoid
-us enabling ASPM on devices that had non-PCIe children, causing us to hit
-a BUG_ON later on. Move the aspm_disabled check so we continue to honour
-that scenario.
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/pcie/aspm.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+--sdtB3X0nJg68CQEu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 86111d9..41e367b 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -521,9 +521,6 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
- 	int pos;
- 	u32 reg32;
- 
--	if (aspm_disabled)
--		return 0;
--
- 	/*
- 	 * Some functions in a slot might not all be PCIe functions,
- 	 * very strange. Disable ASPM for the whole slot
-@@ -532,6 +529,16 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
- 		pos = pci_pcie_cap(child);
- 		if (!pos)
- 			return -EINVAL;
-+
-+		/*
-+		 * If ASPM is disabled then we're not going to change
-+		 * the BIOS state. It's safe to continue even if it's a
-+		 * pre-1.1 device
-+		 */
-+
-+		if (aspm_disabled)
-+			continue;
-+
- 		/*
- 		 * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
- 		 * RBER bit to determine if a function is 1.1 version device
--- 
-1.7.7.6
+* Rob Herring wrote:
+> There is a whole bunch of PCI DT code sitting in the powerpc tree that
+> probably needs to be moved to common location and used here.
+>=20
+> This looks way too simple to be what's needed if I compare to PCI
+> bindings in powerpc dts files.
 
+My particular setup may be much simpler than the average PowerPC machine. T=
+he
+patchset is only what I need to get PCIe running on the platform, which has
+an FPGA connected to the Tegra via PCIe. For instance there is no legacy
+interrupt support (only MSI), so interrupt remapping is not required. I also
+know that OF nodes are not properly hooked up with the PCI devices yet, whi=
+ch
+I will need, among other things, to provide platform data for an SPI flash
+connected to an SPI master implemented within the FPGA. I also haven't look=
+ed
+at specifying the memory ranges via the device tree.
+
+So quite a lot may still be missing, but does that prevent any of this from
+being added to mainline? Things can be added on an as-needed basis, can't
+they?
+
+Thierry
+
+--sdtB3X0nJg68CQEu
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk9Y078ACgkQZ+BJyKLjJp9sGgCfTbY0+6cn/DT17IdqAu4BGFre
+5pEAn2EOzwyLrmdsqCYnvHfH+jgNwgWQ
+=oemR
+-----END PGP SIGNATURE-----
+
+--sdtB3X0nJg68CQEu--
