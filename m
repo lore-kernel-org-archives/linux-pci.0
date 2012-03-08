@@ -1,43 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:51086 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946434Ab2CPXsB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:48:01 -0400
-Received: by faaa19 with SMTP id a19so214757faa.1
-        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:48:00 -0700 (PDT)
-Subject: [PATCH v2 1/7] PCI: fix bridge I/O window bus-to-resource conversion
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 16 Mar 2012 17:47:59 -0600
-Message-ID: <20120316234758.6649.22169.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+Received: from moutng.kundenserver.de ([212.227.17.8]:53647 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753839Ab2CHPpH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 10:45:07 -0500
+Date: Thu, 8 Mar 2012 16:45:03 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 05/11] tps6586x: Add device-tree support
+Message-ID: <20120308154502.GA4617@avionic-0098.mockup.avionic-design.de>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-6-git-send-email-thierry.reding@avionic-design.de>
+ <20120308150607.GP3638@opensource.wolfsonmicro.com>
+ <20120308151545.GA23934@avionic-0098.mockup.avionic-design.de>
+ <20120308151756.GQ3638@opensource.wolfsonmicro.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="jRHKVT23PllUwdXP"
+In-Reply-To: <20120308151756.GQ3638@opensource.wolfsonmicro.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In 5bfa14ed9f3c, I forgot to initialize res2.flags before calling
-pcibios_bus_to_resource(), which depends on the resource type to locate the
-correct aperture.  This bug won't hurt x86, which currently never has an
-offset between bus and CPU addresses, but will affect other architectures.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+--jRHKVT23PllUwdXP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 944e05a..5e1ca3c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -367,6 +367,7 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
- 
- 	if (base && base <= limit) {
- 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
-+		res2.flags = res->flags;
- 		region.start = base;
- 		region.end = limit + 0xfff;
- 		pcibios_bus_to_resource(dev, &res2, &region);
+* Mark Brown wrote:
+> On Thu, Mar 08, 2012 at 04:15:46PM +0100, Thierry Reding wrote:
+> > * Mark Brown wrote:
+>=20
+> > > ...they all seem to be explicitly named in the device tree so presuma=
+bly
+> > > there's enough information in there for the driver to pick any set of
+> > > regulators in any order.  This would be much nicer to use.
+>=20
+> > I don't like it much either. The only reason that requirement exists is
+> > because it makes the assignment of the regulator ID (as defined in the
+> > include/linux/mfd/tps6586x.h header) very trivial. Would it be better to
+> > look up the ID based on the node name (sm0 --> TPS6586X_ID_SM_0, ...)?
+>=20
+> > Then the only requirement would be that the names match.
+>=20
+> Yes, that's going to be more code but much nicer for users.
 
+Okay, I'll add that for the next round.
+
+Thierry
+
+--jRHKVT23PllUwdXP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk9Y0/4ACgkQZ+BJyKLjJp/XWACfSbtn+4tz2T6Ecd04OpaxGvGO
+7KgAoIkY9l7mkfZBVXw9wM5y8bPWcz6l
+=e97C
+-----END PGP SIGNATURE-----
+
+--jRHKVT23PllUwdXP--
