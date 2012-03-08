@@ -1,72 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f202.google.com ([74.125.82.202]:39069 "EHLO
-	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030605Ab2CGWdH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:33:07 -0500
-Received: by mail-we0-f202.google.com with SMTP id x9so269745wej.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:33:06 -0800 (PST)
-Subject: [PATCH v3 12/34] unicore32/PCI: use pci_flags PCI_PROBE_ONLY instead
-	of arm-specific flag
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>
-Date: Wed, 07 Mar 2012 15:33:05 -0700
-Message-ID: <20120307223305.25669.46919.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48019 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755410Ab2CHAEB convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Mar 2012 19:04:01 -0500
+Received: by lahj13 with SMTP id j13so7919279lah.19
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 16:03:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1331018040-30725-17-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-17-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 7 Mar 2012 17:03:39 -0700
+Message-ID: <CAErSpo59kzBL1ApWuWWcymd9UR3m3vB3zkUoJezn66As+-97dQ@mail.gmail.com>
+Subject: Re: [PATCH 16/23] PCI: add pci bus removal through /sys/.../pci_bus/.../remove
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-doc@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/unicore32/include/asm/pci.h |    1 +
- arch/unicore32/kernel/pci.c      |    5 ++---
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> it supports both pci root bus and pci bus under pci bridge.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Randy Dunlap <rdunlap@xenotime.net>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: linux-doc@vger.kernel.org
+> ---
+>  Documentation/ABI/testing/sysfs-bus-pci |    8 ++++++++
+>  drivers/pci/pci-sysfs.c                 |   28 ++++++++++++++++++++++++++++
+>  2 files changed, 36 insertions(+), 0 deletions(-)
+>
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 95f0f37..22392de 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -92,6 +92,14 @@ Description:
+>                hot-remove the PCI device and any of its children.
+>                Depends on CONFIG_HOTPLUG.
+>
+> +What:          /sys/bus/pci/devices/.../pci_bus/.../remove
+> +Date:          March 2012
+> +Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
+> +Description:
+> +               Writing a non-zero value to this attribute will
+> +               hot-remove the PCI bus and any of its children.
 
-diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
-index dd38677..f5e108f 100644
---- a/arch/unicore32/include/asm/pci.h
-+++ b/arch/unicore32/include/asm/pci.h
-@@ -14,6 +14,7 @@
- 
- #ifdef __KERNEL__
- #include <asm-generic/pci-dma-compat.h>
-+#include <asm-generic/pci-bridge.h>
- #include <asm-generic/pci.h>
- #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
- 
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index a8f07fe..2fc2b1b 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -21,7 +21,6 @@
- #include <linux/io.h>
- 
- static int debug_pci;
--static int use_firmware;
- 
- #define CONFIG_CMD(bus, devfn, where)	\
- 	(0x80000000 | (bus->number << 16) | (devfn << 8) | (where & ~3))
-@@ -276,7 +275,7 @@ static int __init pci_common_init(void)
- 
- 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
- 
--	if (!use_firmware) {
-+	if (!pci_has_flag(PCI_PROBE_ONLY)) {
- 		/*
- 		 * Size the bridge windows.
- 		 */
-@@ -303,7 +302,7 @@ char * __devinit pcibios_setup(char *str)
- 		debug_pci = 1;
- 		return NULL;
- 	} else if (!strcmp(str, "firmware")) {
--		use_firmware = 1;
-+		pci_add_flags(PCI_PROBE_ONLY);
- 		return NULL;
- 	}
- 	return str;
+Is this the interface we want?  It seems like the ultimate goal is to
+remove the *host bridge*, i.e., the PNP0A08 device on x86.  If that's
+the case, the logical thing seems like a
+/sys/bus/acpi/devices/PNP0A08:00/remove file.
 
+All the current "remove" attributes are for *devices*, e.g.,
+/sys/devices/pci0000:00/0000:00:03.0/remove, not for *buses*.
+
+I'm not sure it makes sense to talk about removing a "bus" and leaving
+the upstream bridge (either a host bridge or a P2P bridge).  I think
+it'd make more sense to remove the bridge itself, which would of
+course have the consequence of removing the secondary bus.
+
+> +               Depends on CONFIG_HOTPLUG.
+> +
+>  What:          /sys/bus/pci/devices/.../pci_bus/.../rescan
+>  Date:          May 2011
+>  Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 1794508..f855b4b 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -385,6 +385,33 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+>        return count;
+>  }
+>
+> +static void bus_remove_callback(struct device *dev)
+> +{
+> +       struct pci_bus *bus = to_pci_bus(dev);
+> +
+> +       mutex_lock(&pci_remove_rescan_mutex);
+> +       pci_stop_and_remove_bus(bus);
+> +       mutex_unlock(&pci_remove_rescan_mutex);
+> +}
+> +static ssize_t
+> +dev_bus_remove_store(struct device *dev, struct device_attribute *attr,
+> +                const char *buf, size_t count)
+> +{
+> +       int ret = 0;
+> +       unsigned long val;
+> +
+> +       if (kstrtoul(buf, 0, &val) < 0)
+> +               return -EINVAL;
+> +
+> +       if (val)
+> +               ret = device_schedule_callback(dev, bus_remove_callback);
+> +
+> +       if (ret)
+> +               count = ret;
+> +
+> +       return count;
+> +}
+> +
+>  static void bus_rescan_callback(struct device *dev)
+>  {
+>        struct pci_bus *bus = to_pci_bus(dev);
+> @@ -444,6 +471,7 @@ struct device_attribute pci_dev_attrs[] = {
+>  struct device_attribute pcibus_dev_attrs[] = {
+>  #ifdef CONFIG_HOTPLUG
+>        __ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store),
+> +       __ATTR(remove, (S_IWUSR|S_IWGRP), NULL, dev_bus_remove_store),
+>  #endif
+>        __ATTR(cpuaffinity, S_IRUGO, pci_bus_show_cpumaskaffinity, NULL),
+>        __ATTR(cpulistaffinity, S_IRUGO, pci_bus_show_cpulistaffinity, NULL),
+> --
+> 1.7.7
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
