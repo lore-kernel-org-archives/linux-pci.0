@@ -1,47 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:62606 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755001Ab2CWV3e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 17:29:34 -0400
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:62278 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753986Ab2CHSle (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 13:41:34 -0500
+Received: by lahj13 with SMTP id j13so807130lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 08 Mar 2012 10:41:33 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFx+dXoJ=MGmpyzepDjBDv8LpXqdxUBCbdrakMKBsKpmTw@mail.gmail.com>
-References: <20120322144817.796e3a8a@jbarnes-desktop>
-	<CAE9FiQV96Uz9fU=v4=eBbAogOeehuBM3eHgSr0QW_C68ceADcQ@mail.gmail.com>
-	<CA+55aFx+dXoJ=MGmpyzepDjBDv8LpXqdxUBCbdrakMKBsKpmTw@mail.gmail.com>
-Date: Fri, 23 Mar 2012 14:29:33 -0700
-Message-ID: <CAE9FiQVs5+BVmn46xeXR_GwOYBkYy73-aSKYHQUv3EoTTiUtYQ@mail.gmail.com>
-Subject: Re: [git pull] PCI changes (including maintainer change)
-From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <20120308183731.GA25254@avionic-0098.mockup.avionic-design.de>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-7-git-send-email-thierry.reding@avionic-design.de>
+ <CAErSpo6hbWjteESST1+O2WzbtmZq6hC-pnUB4o3MAXWG-EgU+g@mail.gmail.com> <20120308183731.GA25254@avionic-0098.mockup.avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 8 Mar 2012 11:41:13 -0700
+Message-ID: <CAErSpo5rsepKu5yP=f83CadfX3acpV+WP9NuC4nf3FqhPW5Enw@mail.gmail.com>
+Subject: Re: [PATCH 06/11] PCI: Keep pci_fixup_irqs() around after init
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Rob Herring <rob.herring@calxeda.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	devicetree-discuss@lists.ozlabs.org
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 23, 2012 at 2:10 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Fri, Mar 23, 2012 at 12:58 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+On Thu, Mar 8, 2012 at 11:37 AM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> * Bjorn Helgaas wrote:
+>> Hmm, your patch looks OK as far as it goes, but the implementation of
+>> pci_fixup_irqs() as a call-once-at-boot-time thing with a loop through
+>> all the PCI devices we've found so far looks completely broken with
+>> regard to hotplug.
 >>
->> There are some merge conflicts. Hope attached patch could help Linus a
->> little bit.
+>> Who does the swizzle for devices hot-added after boot?
 >
-> Hmm. My merge does not agree with yours at all in the MIPS
-> pcibios_fixup_bus() area.
->
-> Your patch re-introduces the device resource fixup that Bjorn removed,
-> for example.
->
-> I think my merge is correct, but hey, people should double-check.
+> Perhaps I should have mentioned this in the commit message, but the patch
+> isn't actually used in a hotplug scenario. In fact, the code is still run
+> once at boot time, only very late. Grant's deferred probing allows the
+> PCIe controller driver to postpone initialization until all the devices
+> that it depends on (regulators) have been probed. This has the side-effect
+> that the probing actually takes place *after* code and data annotated with
+> __init have already been freed.
 
-yes, you are right.
+Oh, I know *you're* not using the hotplug scenario.  I'm just thinking
+that the PCi core looks a little broken in that scenario.
 
-Yinghai
+I think your patch is fine; it's just that I think the PCI core needs
+a little more attention in this area.
+
+Bjorn
