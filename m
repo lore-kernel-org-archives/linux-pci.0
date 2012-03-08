@@ -1,56 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56869 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753553Ab2CUDZR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 23:25:17 -0400
-Received: by pbcun15 with SMTP id un15so483782pbc.19
-        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 20:25:17 -0700 (PDT)
+Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1332260463-13924-4-git-send-email-jiang.liu@huawei.com>
-References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
-	<1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
-	<1332260463-13924-4-git-send-email-jiang.liu@huawei.com>
-Date: Tue, 20 Mar 2012 20:25:17 -0700
-Message-ID: <CAE9FiQX9NJ4n09_OWJVf7n579=JWDUi+XF79aMKUFunCXL3PJw@mail.gmail.com>
-Subject: Re: [PATCH 2/6] x86,IRQ: Mark unused entries in 'ioapics' array as
- free at startup
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <CAErSpo5T8-hrtMufDeo_EfupQX3neyoA9ufjN2UYro7-2SXc+Q@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+	<1331018040-30725-24-git-send-email-yinghai@kernel.org>
+	<CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
+	<CAE9FiQXsY7Dn5TGtD1ARM_KFdz1V1hJOvYAy6e4msM=i3VfhDg@mail.gmail.com>
+	<CABhMZUWDngY6jL8jkxQ+SHzEHqTS4i3DqtCD7DUBtL4QS58ovA@mail.gmail.com>
+	<CAE9FiQV23maKVMrk7h1cJxYfxrqJcKu7GfwFYUJfSDfh8g-KFQ@mail.gmail.com>
+	<CAErSpo5T8-hrtMufDeo_EfupQX3neyoA9ufjN2UYro7-2SXc+Q@mail.gmail.com>
+Date: Wed, 7 Mar 2012 16:58:39 -0800
+Message-ID: <CAE9FiQUHm2YOJvoxWZ57AXPcAV7T1QJnFzsWXGNAT160X3Rd6g@mail.gmail.com>
+Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-	chenkeping@huawei.com
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 20, 2012 at 9:20 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Unused entries in ioapics array should be marked as free at startup,
-> so they could be used by hot-added IOAPICs.
+On Wed, Mar 7, 2012 at 3:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  arch/x86/kernel/apic/io_apic.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
+> What's the reason we need to discover those CPU devices in the first place?
 >
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index 7412eb8..622374f 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -392,6 +392,10 @@ int __init arch_early_irq_init(void)
->                cpumask_set_cpu(0, cfg->domain);
->        }
->
-> +       /* Mark all left entries as free for IOAPIC hot-adding. */
-> +       for (i = nr_ioapics; i < MAX_IO_APICS; i++)
-> +               ioapics[i].mp_config.apicid = 0xff;
-> +
->        return 0;
->  }
+> I don't think the current policy of blindly probing for things should
+> be continued forever.
 
-this one looks like not needed, we did not search that after
-nr_ioapics, and just use nr_ioapics if open spot is found.
+Do you want to revert follow commit?
 
-Yinghai
+BTW, edac never work on nehalem-ex and westmere-ex.
+
+commit a3170c1f924ce2565c4e160b9b095e65c03b2dc6
+Author: Jan Beulich <JBeulich@novell.com>
+Date:   Wed Feb 23 10:08:10 2011 +0000
+
+    x86/PCI: derive pcibios_last_bus from ACPI MCFG
+
+    On various newer Intel systems the PCI bus(ses) the non-core devices
+    live on aren't getting announced by ACPI except through the bus range
+    covered by mmconfig. At least the i7core-edac driver depends on these
+    devices getting detected.
+
+    Mauro, could you check whether with this change the Xeon 55xx hack in
+    that driver can go away altogether, and with it the bogus exporting of
+    pcibios_scan_specific_bus()?
+
+    Signed-off-by: Jan Beulich <jbeulich@novell.com>
+    Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+    Cc: Aristeu Sergio <arozansk@redhat.com>
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index e282886..750c346 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -606,6 +606,16 @@ static void __init __pci_mmcfg_init(int early)
+        if (list_empty(&pci_mmcfg_list))
+                return;
+
++       if (pcibios_last_bus < 0) {
++               const struct pci_mmcfg_region *cfg;
++
++               list_for_each_entry(cfg, &pci_mmcfg_list, list) {
++                       if (cfg->segment)
++                               break;
++                       pcibios_last_bus = cfg->end_bus;
++               }
++       }
++
+        if (pci_mmcfg_arch_init())
+                pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+        else {
