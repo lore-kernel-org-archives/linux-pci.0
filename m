@@ -1,132 +1,294 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <4F75334E.5000003@jp.fujitsu.com>
-Date: Fri, 30 Mar 2012 13:15:10 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.171]:49603 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756327Ab2CHOvt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 09:51:49 -0500
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Grant Likely <grant.likely@secretlab.ca>,
+	Liam Girdwood <lrg@ti.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Len Brown <lenb@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 00/11] Enhancements and bugfixes to PCI hotplug subsystem
-References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com> <4F7134ED.4040602@jp.fujitsu.com> <4F71CF55.2020909@gmail.com>
-In-Reply-To: <4F71CF55.2020909@gmail.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: [PATCH 01/11] drivercore: Add driver probe deferral mechanism
+Date: Thu,  8 Mar 2012 15:51:21 +0100
+Message-Id: <1331218291-16119-2-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/03/27 23:31), Jiang Liu wrote:
-> Hi Kenji,
-> 	Thanks for your comments!
-> 	As you have mentioned, I have a TODO list for all PCI hotplug drivers
-> under drivers/pci/hotplug. I plan to modify those drivers after doing stress
-> tests against the acpiphp driver. But one difficulty I'm facing is to find
-> hardware platforms to test those hotplug drivers, currently I could only find
-> platforms to test the acpiphp and pcie hotplug drivers.
+From: Grant Likely <grant.likely@secretlab.ca>
 
-I might be able to access the platform to test the shpchp driver.
+Allow drivers to report at probe time that they cannot get all the resources
+required by the device, and should be retried at a later time.
 
-> 	For the lock granularity issue,	I have thought about providing a more
-> fine-grained lock schema, such as "branch lock" which locks PCI sub trees.
-> But that solution needs much more changes and careful inspection over
-> the PCI code to avoid deadlock issues. So I think it would be better for us
-> to globally serialize all PCI hotplug operations first and optimize the lock
-> schema in future. Is that OK to you?
+This should completely solve the problem of getting devices
+initialized in the right order.  Right now this is mostly handled by
+mucking about with initcall ordering which is a complete hack, and
+doesn't even remotely handle the case where device drivers are in
+modules.  This approach completely sidesteps the issues by allowing
+driver registration to occur in any order, and any driver can request
+to be retried after a few more other drivers get probed.
 
-Yes, it's OK.
+v4: - Integrate Manjunath's addition of a separate workqueue
+    - Change -EAGAIN to -EPROBE_DEFER for drivers to trigger deferral
+    - Update comment blocks to reflect how the code really works
+v3: - Hold off workqueue scheduling until late_initcall so that the bulk
+      of driver probes are complete before we start retrying deferred devices.
+    - Tested with simple use cases.  Still needs more testing though.
+      Using it to get rid of the gpio early_initcall madness, or to replace
+      the ASoC internal probe deferral code would be ideal.
+v2: - added locking so it should no longer be utterly broken in that regard
+    - remove device from deferred list at device_del time.
+    - Still completely untested with any real use case, but has been
+      boot tested.
 
-By the way, your lock mechanism is required even without host bridge hotplug.
-So I think you should implement it against the latest PCI source tree.
+Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+[Cc list stripped in order not to get on people's nerves]
+---
+ drivers/base/base.h    |    1 +
+ drivers/base/core.c    |    2 +
+ drivers/base/dd.c      |  138 +++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/device.h |    5 ++
+ include/linux/errno.h  |    1 +
+ 5 files changed, 146 insertions(+), 1 deletion(-)
 
-Regards,
-Kenji Kaneshige
-
-
-
-> 	Thanks!
-> 	Gerry
-> 
-> On 03/27/2012 11:33 AM, Kenji Kaneshige wrote:
->>> The second prososal is to introduce a recursive mutex lock to
->>> serialize all hotplug operations triggered by sysfs interfaces,
->>> PCI HPC hardware events, ACPI hotplug events and other sources.
->>
->> The pciehp (and other hotplug controllers) needs this too.
->>
->> There is only one mutex in the current implementation. I think it
->> would be better if we can have the mutex per host bridge or per bus
->> or something so that we can run multiple hot-plug operation in
->> parallel on the independent PCI sub trees.
->>
->> Regards,
->> Kenji Kaneshige
->>
->>
->>
->> (2012/03/23 23:58), Jiang Liu wrote:
->>> This is a series of RFC patches, to make sure we are doing the
->>> right thing in the right way.  The patchset hasn't been tested yet.
->>> There are several minor bugfixes and two proposals.
->>>
->>> The first proposal is to add notification chain for PCI hotplug events,
->>> so other components interested in PCI root/bus/device hotplug events
->>> could subscribe to the chain.
->>>
->>> The second prososal is to introduce a recursive mutex lock to
->>> serialize all hotplug operations triggered by sysfs interfaces,
->>> PCI HPC hardware events, ACPI hotplug events and other sources.
->>>
->>> There are still works left in driver/pci/hotplug directory to apply
->>> the above two proposals.
->>>
->>> The patchset applies to Yinghai's work on PCI root bus hotplug at
->>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
->>> And it depends on my previous patchset, please refer to
->>> http://www.spinics.net/lists/linux-pci/msg14472.html
->>>
->>> Thanks!
->>>
->>> Jiang Liu (11):
->>>     PCI: Fix device reference count leakage in pci_dev_present()
->>>     PCI: introduce pci_bus_get()/pci_bus_put() to hide implementation
->>>       details
->>>     PCI: clean up root bridge related logic in acpiphp driver
->>>     ACPI,PCI: fix race windows caused by alloc_acpi_hotplug_work()
->>>     PCI: Add notification interfaces for PCI root/bus/device hotplug
->>>       events
->>>     ACPI,PCI: update ACPI<->PCI binding information when pci hotplug
->>>       event happens
->>>     ACPI,PCI: update ACPI slots when PCI hotplug event happens
->>>     PCI: Introduce recursive mutex to serialize PCI hotplug operations
->>>     PCI: serialize hotplug operations triggered by PCI hotplug sysfs
->>>       interfaces
->>>     PCI,ACPI: serialize hotplug operations triggered by ACPI subsystem
->>>     PCI: Serialize hotplug operations triggered by acpiphp driver
->>>
->>>    drivers/acpi/pci_bind.c                |  115 +++++++++++++++++++++++++
->>>    drivers/acpi/pci_root.c                |    8 ++
->>>    drivers/acpi/pci_slot.c                |   81 ++++++++++++++++++-
->>>    drivers/pci/bus.c                      |   20 ++++-
->>>    drivers/pci/hotplug.c                  |   47 +++++++++++
->>>    drivers/pci/hotplug/acpiphp.h          |    7 ++-
->>>    drivers/pci/hotplug/acpiphp_glue.c     |  143 ++++++++++++--------------------
->>>    drivers/pci/hotplug/pci_hotplug_core.c |    2 +
->>>    drivers/pci/pci-sysfs.c                |   29 +++----
->>>    drivers/pci/pci.h                      |    8 ++
->>>    drivers/pci/probe.c                    |   10 ++-
->>>    drivers/pci/remove.c                   |   20 ++++-
->>>    drivers/pci/search.c                   |   10 +-
->>>    include/linux/pci.h                    |   57 +++++++++++++
->>>    14 files changed, 437 insertions(+), 120 deletions(-)
->>>
->>
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/base/base.h b/drivers/base/base.h
+index b858dfd..2c13dea 100644
+--- a/drivers/base/base.h
++++ b/drivers/base/base.h
+@@ -105,6 +105,7 @@ extern void bus_remove_driver(struct device_driver *drv);
+ 
+ extern void driver_detach(struct device_driver *drv);
+ extern int driver_probe_device(struct device_driver *drv, struct device *dev);
++extern void driver_deferred_probe_del(struct device *dev);
+ static inline int driver_match_device(struct device_driver *drv,
+ 				      struct device *dev)
+ {
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 0841a36..946094f 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -649,6 +649,7 @@ void device_initialize(struct device *dev)
+ {
+ 	dev->kobj.kset = devices_kset;
+ 	kobject_init(&dev->kobj, &device_ktype);
++	INIT_LIST_HEAD(&dev->deferred_probe);
+ 	INIT_LIST_HEAD(&dev->dma_pools);
+ 	mutex_init(&dev->mutex);
+ 	lockdep_set_novalidate_class(&dev->mutex);
+@@ -1193,6 +1194,7 @@ void device_del(struct device *dev)
+ 	device_remove_file(dev, &uevent_attr);
+ 	device_remove_attrs(dev);
+ 	bus_remove_device(dev);
++	driver_deferred_probe_del(dev);
+ 
+ 	/*
+ 	 * Some platform devices are driven without driver attached
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 142e3d600..442b764 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -28,6 +28,133 @@
+ #include "base.h"
+ #include "power/power.h"
+ 
++/*
++ * Deferred Probe infrastructure.
++ *
++ * Sometimes driver probe order matters, but the kernel doesn't always have
++ * dependency information which means some drivers will get probed before a
++ * resource it depends on is available.  For example, an SDHCI driver may
++ * first need a GPIO line from an i2c GPIO controller before it can be
++ * initialized.  If a required resource is not available yet, a driver can
++ * request probing to be deferred by returning -EPROBE_DEFER from its probe hook
++ *
++ * Deferred probe maintains two lists of devices, a pending list and an active
++ * list.  A driver returning -EPROBE_DEFER causes the device to be added to the
++ * pending list.  A successful driver probe will trigger moving all devices
++ * from the pending to the active list so that the workqueue will eventually
++ * retry them.
++ *
++ * The deferred_probe_mutex must be held any time the deferred_probe_*_list
++ * of the (struct device*)->deferred_probe pointers are manipulated
++ */
++static DEFINE_MUTEX(deferred_probe_mutex);
++static LIST_HEAD(deferred_probe_pending_list);
++static LIST_HEAD(deferred_probe_active_list);
++static struct workqueue_struct *deferred_wq;
++
++/**
++ * deferred_probe_work_func() - Retry probing devices in the active list.
++ */
++static void deferred_probe_work_func(struct work_struct *work)
++{
++	struct device *dev;
++	/*
++	 * This block processes every device in the deferred 'active' list.
++	 * Each device is removed from the active list and passed to
++	 * bus_probe_device() to re-attempt the probe.  The loop continues
++	 * until every device in the active list is removed and retried.
++	 *
++	 * Note: Once the device is removed from the list and the mutex is
++	 * released, it is possible for the device get freed by another thread
++	 * and cause a illegal pointer dereference.  This code uses
++	 * get/put_device() to ensure the device structure cannot disappear
++	 * from under our feet.
++	 */
++	mutex_lock(&deferred_probe_mutex);
++	while (!list_empty(&deferred_probe_active_list)) {
++		dev = list_first_entry(&deferred_probe_active_list,
++					typeof(*dev), deferred_probe);
++		list_del_init(&dev->deferred_probe);
++
++		get_device(dev);
++
++		/* Drop the mutex while probing each device; the probe path
++		 * may manipulate the deferred list */
++		mutex_unlock(&deferred_probe_mutex);
++		dev_dbg(dev, "Retrying from deferred list\n");
++		bus_probe_device(dev);
++		mutex_lock(&deferred_probe_mutex);
++
++		put_device(dev);
++	}
++	mutex_unlock(&deferred_probe_mutex);
++}
++static DECLARE_WORK(deferred_probe_work, deferred_probe_work_func);
++
++static void driver_deferred_probe_add(struct device *dev)
++{
++	mutex_lock(&deferred_probe_mutex);
++	if (list_empty(&dev->deferred_probe)) {
++		dev_dbg(dev, "Added to deferred list\n");
++		list_add(&dev->deferred_probe, &deferred_probe_pending_list);
++	}
++	mutex_unlock(&deferred_probe_mutex);
++}
++
++void driver_deferred_probe_del(struct device *dev)
++{
++	mutex_lock(&deferred_probe_mutex);
++	if (!list_empty(&dev->deferred_probe)) {
++		dev_dbg(dev, "Removed from deferred list\n");
++		list_del_init(&dev->deferred_probe);
++	}
++	mutex_unlock(&deferred_probe_mutex);
++}
++
++static bool driver_deferred_probe_enable = false;
++/**
++ * driver_deferred_probe_trigger() - Kick off re-probing deferred devices
++ *
++ * This functions moves all devices from the pending list to the active
++ * list and schedules the deferred probe workqueue to process them.  It
++ * should be called anytime a driver is successfully bound to a device.
++ */
++static void driver_deferred_probe_trigger(void)
++{
++	if (!driver_deferred_probe_enable)
++		return;
++
++	/* A successful probe means that all the devices in the pending list
++	 * should be triggered to be reprobed.  Move all the deferred devices
++	 * into the active list so they can be retried by the workqueue */
++	mutex_lock(&deferred_probe_mutex);
++	list_splice_tail_init(&deferred_probe_pending_list,
++			      &deferred_probe_active_list);
++	mutex_unlock(&deferred_probe_mutex);
++
++	/* Kick the re-probe thread.  It may already be scheduled, but
++	 * it is safe to kick it again. */
++	queue_work(deferred_wq, &deferred_probe_work);
++}
++
++/**
++ * deferred_probe_initcall() - Enable probing of deferred devices
++ *
++ * We don't want to get in the way when the bulk of drivers are getting probed.
++ * Instead, this initcall makes sure that deferred probing is delayed until
++ * late_initcall time.
++ */
++static int deferred_probe_initcall(void)
++{
++	deferred_wq = create_singlethread_workqueue("deferwq");
++	if (WARN_ON(!deferred_wq))
++		return -ENOMEM;
++
++	driver_deferred_probe_enable = true;
++	driver_deferred_probe_trigger();
++	return 0;
++}
++late_initcall(deferred_probe_initcall);
+ 
+ static void driver_bound(struct device *dev)
+ {
+@@ -42,6 +169,11 @@ static void driver_bound(struct device *dev)
+ 
+ 	klist_add_tail(&dev->p->knode_driver, &dev->driver->p->klist_devices);
+ 
++	/* Make sure the device is no longer in one of the deferred lists
++	 * and kick off retrying all pending devices */
++	driver_deferred_probe_del(dev);
++	driver_deferred_probe_trigger();
++
+ 	if (dev->bus)
+ 		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
+ 					     BUS_NOTIFY_BOUND_DRIVER, dev);
+@@ -142,7 +274,11 @@ probe_failed:
+ 	driver_sysfs_remove(dev);
+ 	dev->driver = NULL;
+ 
+-	if (ret != -ENODEV && ret != -ENXIO) {
++	if (ret == -EPROBE_DEFER) {
++		/* Driver requested deferred probing */
++		dev_info(dev, "Driver %s requests probe deferral\n", drv->name);
++		driver_deferred_probe_add(dev);
++	} else if (ret != -ENODEV && ret != -ENXIO) {
+ 		/* driver matched but the probe failed */
+ 		printk(KERN_WARNING
+ 		       "%s: probe of %s failed with error %d\n",
+diff --git a/include/linux/device.h b/include/linux/device.h
+index f62e216..22d6938 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -585,6 +585,10 @@ struct device_dma_parameters {
+  * @mutex:	Mutex to synchronize calls to its driver.
+  * @bus:	Type of bus device is on.
+  * @driver:	Which driver has allocated this
++ * @deferred_probe: entry in deferred_probe_list which is used to retry the
++ * 		binding of drivers which were unable to get all the resources
++ * 		needed by the device; typically because it depends on another
++ * 		driver getting probed first.
+  * @platform_data: Platform data specific to the device.
+  * 		Example: For devices on custom boards, as typical of embedded
+  * 		and SOC based hardware, Linux often uses platform_data to point
+@@ -644,6 +648,7 @@ struct device {
+ 	struct bus_type	*bus;		/* type of bus device is on */
+ 	struct device_driver *driver;	/* which driver has allocated this
+ 					   device */
++	struct list_head	deferred_probe;
+ 	void		*platform_data;	/* Platform specific data, device
+ 					   core doesn't touch it */
+ 	struct dev_pm_info	power;
+diff --git a/include/linux/errno.h b/include/linux/errno.h
+index 4668583..2d09bfa 100644
+--- a/include/linux/errno.h
++++ b/include/linux/errno.h
+@@ -16,6 +16,7 @@
+ #define ERESTARTNOHAND	514	/* restart if no handler.. */
+ #define ENOIOCTLCMD	515	/* No ioctl command */
+ #define ERESTART_RESTARTBLOCK 516 /* restart by calling sys_restart_syscall */
++#define EPROBE_DEFER	517	/* Driver requests probe retry */
+ 
+ /* Defined for the NFSv3 protocol */
+ #define EBADHANDLE	521	/* Illegal NFS file handle */
+-- 
+1.7.9.3
 
