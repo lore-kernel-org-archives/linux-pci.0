@@ -1,136 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:36089 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754110Ab2CIAwZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Mar 2012 19:52:25 -0500
-Received: by lahj13 with SMTP id j13so1143940lah.19
-        for <linux-pci@vger.kernel.org>; Thu, 08 Mar 2012 16:52:23 -0800 (PST)
+Return-Path: <bhelgaas@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1331018040-30725-3-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <CAE9FiQUHm2YOJvoxWZ57AXPcAV7T1QJnFzsWXGNAT160X3Rd6g@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+ <1331018040-30725-24-git-send-email-yinghai@kernel.org> <CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
+ <CAE9FiQXsY7Dn5TGtD1ARM_KFdz1V1hJOvYAy6e4msM=i3VfhDg@mail.gmail.com>
+ <CABhMZUWDngY6jL8jkxQ+SHzEHqTS4i3DqtCD7DUBtL4QS58ovA@mail.gmail.com>
+ <CAE9FiQV23maKVMrk7h1cJxYfxrqJcKu7GfwFYUJfSDfh8g-KFQ@mail.gmail.com>
+ <CAErSpo5T8-hrtMufDeo_EfupQX3neyoA9ufjN2UYro7-2SXc+Q@mail.gmail.com> <CAE9FiQUHm2YOJvoxWZ57AXPcAV7T1QJnFzsWXGNAT160X3Rd6g@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 8 Mar 2012 17:52:03 -0700
-Message-ID: <CAErSpo72gJAPvyvo6EpcuEwqFaZQ_viUrgLAuA0CHttuxXkCXw@mail.gmail.com>
-Subject: Re: [PATCH 02/23] PCI, sysfs: create rescan_bridge under
- /sys/.../pci/devices/... for pci bridges
+Date: Wed, 7 Mar 2012 21:27:47 -0700
+Message-ID: <CAErSpo6Eh5W7ZB5aZt9fhp3h9EmYTM-vN3yY=0UJauJWY9Tm6w@mail.gmail.com>
+Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jan Beulich <JBeulich@suse.com>, Mauro Carvalho Chehab <mchehab@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Current code will create rescan for every pci device under parent bus.
-> that is not right. the device is already there, there is no reason to rescan it.
+On Wed, Mar 7, 2012 at 5:58 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Mar 7, 2012 at 3:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote=
+:
+>>
+>> What's the reason we need to discover those CPU devices in the first pla=
+ce?
+>>
+>> I don't think the current policy of blindly probing for things should
+>> be continued forever.
 >
-> We could have rescan for pci bridges. less confusing.
-
-Yes, but now we have *three* rescan attributes for a single bridge/bus:
-
-    /sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/rescan
-    /sys/devices/pci0000:00/0000:00:01.0/rescan_bridge
-    /sys/devices/pci0000:00/0000:00:01.0/rescan
-
-and this for an endpoint:
-
-    /sys/devices/pci0000:00/0000:00:05.0/rescan
-
-I think endpoints should not have a "rescan" attribute at all, and
-bridges should have only a "rescan" attribute (not "rescan" and
-"rescan_bridge").
-
-I'm not sure about "pci_bus/.../rescan".  I know you didn't add that,
-but I'm not sure it makes sense to have both that and a "rescan" on
-the bridge device.  If we have both, what's the difference between
-them?
-
-> Need to move rescan attr to pci dev bridge attribute group.
-> And We should rescan bridge's secondary bus instead of primary bus.
+> Do you want to revert follow commit?
 >
-> -v3: Use device_type for pci dev.
-> -v4: Seperate pci device type change out
-> -v5: add rescan_bridge for bridge type, and still keep the old rescan.
->        may remove the old rescan later.
+> BTW, edac never work on nehalem-ex and westmere-ex.
+
+Oh, yes, now I remember.  Apparently the i7core-edac driver relies on
+these devices.  We had a discussion about this a year ago:
+
+    http://www.spinics.net/lists/linux-pci/msg10426.html
+
+[+cc Jan and Mauro]
+
+Personally, I think we should put a stake in the ground and say "For
+machines newer than 2013, Linux will not blindly probe for PCI
+devices.  If you want EDAC functionality, make sure your BIOS exposes
+the appropriate PCI host bridges."  If OEMs do care about EDAC, it's a
+simple BIOS change to do this.
+
+I certainly don't think we need to add hotplug or bus rescan
+functionality to cover this case.  This sort of stuff makes
+maintenance MUCH harder because we have to worry about all these
+corner cases.
+
+Bjorn
+
+> commit a3170c1f924ce2565c4e160b9b095e65c03b2dc6
+> Author: Jan Beulich <JBeulich@novell.com>
+> Date: =A0 Wed Feb 23 10:08:10 2011 +0000
 >
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Randy Dunlap <rdunlap@xenotime.net>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->  Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
->  drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
->  2 files changed, 34 insertions(+), 0 deletions(-)
+> =A0 =A0x86/PCI: derive pcibios_last_bus from ACPI MCFG
 >
-> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-> index 34f5110..95f0f37 100644
-> --- a/Documentation/ABI/testing/sysfs-bus-pci
-> +++ b/Documentation/ABI/testing/sysfs-bus-pci
-> @@ -111,6 +111,16 @@ Description:
->                from this part of the device tree.
->                Depends on CONFIG_HOTPLUG.
+> =A0 =A0On various newer Intel systems the PCI bus(ses) the non-core devic=
+es
+> =A0 =A0live on aren't getting announced by ACPI except through the bus ra=
+nge
+> =A0 =A0covered by mmconfig. At least the i7core-edac driver depends on th=
+ese
+> =A0 =A0devices getting detected.
 >
-> +What:          /sys/bus/pci/devices/.../rescan_bridge
-> +Date:          February 2012
-> +Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
-> +Description:
-> +               Writing a non-zero value to this attribute will
-> +               force a rescan of the bridge and all child buses, and
-> +               re-discover devices removed earlier from this part of
-> +               the device tree.
-> +               Depends on CONFIG_HOTPLUG.
+> =A0 =A0Mauro, could you check whether with this change the Xeon 55xx hack=
+ in
+> =A0 =A0that driver can go away altogether, and with it the bogus exportin=
+g of
+> =A0 =A0pcibios_scan_specific_bus()?
+>
+> =A0 =A0Signed-off-by: Jan Beulich <jbeulich@novell.com>
+> =A0 =A0Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+> =A0 =A0Cc: Aristeu Sergio <arozansk@redhat.com>
+> =A0 =A0Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+>
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-share=
+d.c
+> index e282886..750c346 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -606,6 +606,16 @@ static void __init __pci_mmcfg_init(int early)
+> =A0 =A0 =A0 =A0if (list_empty(&pci_mmcfg_list))
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
+>
+> + =A0 =A0 =A0 if (pcibios_last_bus < 0) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 const struct pci_mmcfg_region *cfg;
 > +
->  What:          /sys/bus/pci/devices/.../reset
->  Date:          July 2009
->  Contact:       Michael S. Tsirkin <mst@redhat.com>
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 39d15e6..d5c8ffb 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->        return count;
->  }
->
-> +static ssize_t
-> +dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
-> +                const char *buf, size_t count)
-> +{
-> +       unsigned long val;
-> +       struct pci_dev *pdev = to_pci_dev(dev);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_for_each_entry(cfg, &pci_mmcfg_list, l=
+ist) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (cfg->segment)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pcibios_last_bus =3D cfg->e=
+nd_bus;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> + =A0 =A0 =A0 }
 > +
-> +       if (kstrtoul(buf, 0, &val) < 0)
-> +               return -EINVAL;
-> +
-> +       if (val) {
-> +               mutex_lock(&pci_remove_rescan_mutex);
-> +               pci_rescan_bus(pdev->subordinate);
-> +               mutex_unlock(&pci_remove_rescan_mutex);
-> +       }
-> +       return count;
-> +}
-> +
-> +static struct device_attribute pci_dev_bridge_rescan_attr =
-> +       __ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
-> +
->  static void remove_callback(struct device *dev)
->  {
->        struct pci_dev *pdev = to_pci_dev(dev);
-> @@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
->  late_initcall(pci_sysfs_init);
->
->  static struct attribute *pci_dev_bridge_attrs[] = {
-> +#ifdef CONFIG_HOTPLUG
-> +       &pci_dev_bridge_rescan_attr.attr,
-> +#endif
->        NULL,
->  };
->
-> --
-> 1.7.7
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> =A0 =A0 =A0 =A0if (pci_mmcfg_arch_init())
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pci_probe =3D (pci_probe & ~PCI_PROBE_MASK=
+) | PCI_PROBE_MMCONF;
+> =A0 =A0 =A0 =A0else {
