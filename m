@@ -1,118 +1,38 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v2 26/37] PCI, acpiphp: Use acpi_hp_work
-Date: Fri,  9 Mar 2012 23:00:26 -0800
-Message-Id: <1331362837-10740-27-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <bhelgaas@google.com>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQVxno4xGg_SSrbBVs+nifP8+=cqS8SzD5kvVr2cvJD0wA@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+ <CABhMZUU_YNMXAU0Mr5zQMzxrk_XkFzk1HrwAN0SQxDf8n+F9kA@mail.gmail.com>
+ <CAE9FiQVNYWnZzfdNsW38P4vsD1ZpXeA+SwqqDK45SZAAphz_6A@mail.gmail.com>
+ <CAErSpo7W_2skcxsgFia+4caf1MgXCt3jqXCrKdX7q3EZ-KLP2Q@mail.gmail.com> <CAE9FiQVxno4xGg_SSrbBVs+nifP8+=cqS8SzD5kvVr2cvJD0wA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 9 Mar 2012 10:34:36 -0700
+Message-ID: <CAErSpo5dXP0H77Ph91HUTA+Do4q2=sL_tdikOQpTiCLQqw1x-Q@mail.gmail.com>
+Subject: Re: [PATCH 00/23] PCI, x86: pci root bus hotplug support
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove local defined acpiphp_hp_work.
+On Fri, Mar 9, 2012 at 1:19 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Mar 8, 2012 at 4:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote=
+:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/pci/hotplug/acpiphp_glue.c |   42 +++++------------------------------
- 1 files changed, 6 insertions(+), 36 deletions(-)
+>> The notes about "-v2, -v3, -v4, etc." are not really useful in the
+>> commit changelogs. =A0They're helpful in the [00/] message, but not in
+>> the changelogs.
+>
+> But Jesse may still need mark to figure out which one is latest?
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 1ca82ae..9f1a195 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1118,34 +1118,6 @@ check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	return AE_OK ;
- }
- 
--struct acpiphp_hp_work {
--	struct work_struct work;
--	acpi_handle handle;
--	u32 type;
--	void *context;
--};
--
--static void alloc_acpiphp_hp_work(acpi_handle handle, u32 type,
--				  void *context,
--				  void (*func)(struct work_struct *work))
--{
--	struct acpiphp_hp_work *hp_work;
--	int ret;
--
--	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
--	if (!hp_work)
--		return;
--
--	hp_work->handle = handle;
--	hp_work->type = type;
--	hp_work->context = context;
--
--	INIT_WORK(&hp_work->work, func);
--	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
--	if (!ret)
--		kfree(hp_work);
--}
--
- static void _handle_hotplug_event_bridge(struct work_struct *work)
- {
- 	struct acpiphp_bridge *bridge;
-@@ -1154,11 +1126,11 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
- 				      .pointer = objname };
- 	struct acpi_device *device;
- 	int num_sub_bridges = 0;
--	struct acpiphp_hp_work *hp_work;
-+	struct acpi_hp_work *hp_work;
- 	acpi_handle handle;
- 	u32 type;
- 
--	hp_work = container_of(work, struct acpiphp_hp_work, work);
-+	hp_work = container_of(work, struct acpi_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 
-@@ -1260,8 +1232,7 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
- 	 * For now just re-add this work to the kacpi_hotplug_wq so we
- 	 * don't deadlock on hotplug actions.
- 	 */
--	alloc_acpiphp_hp_work(handle, type, context,
--			      _handle_hotplug_event_bridge);
-+	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
- }
- 
- static void _handle_hotplug_event_func(struct work_struct *work)
-@@ -1270,12 +1241,12 @@ static void _handle_hotplug_event_func(struct work_struct *work)
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
--	struct acpiphp_hp_work *hp_work;
-+	struct acpi_hp_work *hp_work;
- 	acpi_handle handle;
- 	u32 type;
- 	void *context;
- 
--	hp_work = container_of(work, struct acpiphp_hp_work, work);
-+	hp_work = container_of(work, struct acpi_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 	context = hp_work->context;
-@@ -1336,8 +1307,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
- 	 * For now just re-add this work to the kacpi_hotplug_wq so we
- 	 * don't deadlock on hotplug actions.
- 	 */
--	alloc_acpiphp_hp_work(handle, type, context,
--			      _handle_hotplug_event_func);
-+	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
- }
- 
- static struct acpi_pci_driver acpi_pci_hp_driver = {
--- 
-1.7.7
+The way I do that is with "stg mail -v v3", which puts "[PATCH v3
+01/10]" in the subject.  IMO, that's much more useful because when you
+post a 23-patch series, I don't want to be bothered with v1, v2, v3 on
+a per-patch basis.
 
+It's true that when you post v2, many of those 23 patches will be
+unchanged from v1, and you do have to describe that in the [v2 00/23]
+mail.  But at least it's easy to identify the entire set of v2
+patches.
+
+Bjorn
