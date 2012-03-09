@@ -1,97 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:39798 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937Ab2C0Dek (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Mar 2012 23:34:40 -0400
-Message-ID: <4F7134ED.4040602@jp.fujitsu.com>
-Date: Tue, 27 Mar 2012 12:33:01 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:39095 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759401Ab2CIA4r convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Mar 2012 19:56:47 -0500
+Received: by lahj13 with SMTP id j13so1146502lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 08 Mar 2012 16:56:45 -0800 (PST)
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Len Brown <lenb@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 00/11] Enhancements and bugfixes to PCI hotplug subsystem
-References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+In-Reply-To: <1331018040-30725-7-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-7-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 8 Mar 2012 17:56:25 -0700
+Message-ID: <CAErSpo4ynKbMWUUo2QdVr6fbRYoexSXpQrgYbE+AXhXgg5yzvA@mail.gmail.com>
+Subject: Re: [PATCH 06/23] PCI: rescan with bus or bridge using callback
+ method too
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> The second prososal is to introduce a recursive mutex lock to
-> serialize all hotplug operations triggered by sysfs interfaces,
-> PCI HPC hardware events, ACPI hotplug events and other sources.
+On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Just like removal.
+>
+> Because We could add new bus under the bridges...
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/pci-sysfs.c |   43 +++++++++++++++++++++++++++++++------------
+>  1 files changed, 31 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 2049b2f..1794508 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -325,21 +325,31 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>        return count;
+>  }
+>
+> +static void bridge_rescan_callback(struct device *dev)
+> +{
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +       mutex_lock(&pci_remove_rescan_mutex);
+> +       pci_rescan_bus_bridge_resize(pdev);
+> +       mutex_unlock(&pci_remove_rescan_mutex);
+> +}
+> +
+>  static ssize_t
+>  dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+>                 const char *buf, size_t count)
+>  {
+> +       int ret = 0;
+>        unsigned long val;
+> -       struct pci_dev *pdev = to_pci_dev(dev);
+>
+>        if (kstrtoul(buf, 0, &val) < 0)
+>                return -EINVAL;
+>
+> -       if (val) {
+> -               mutex_lock(&pci_remove_rescan_mutex);
+> -               pci_rescan_bus_bridge_resize(pdev);
+> -               mutex_unlock(&pci_remove_rescan_mutex);
+> -       }
+> +       if (val)
+> +               ret = device_schedule_callback(dev, bridge_rescan_callback);
+> +
+> +       if (ret)
+> +               count = ret;
+> +
+>        return count;
 
-The pciehp (and other hotplug controllers) needs this too.
+I see that you copied this style from remove_store(), but it's ugly
+and hard to follow.  I think this would be more readable:
 
-There is only one mutex in the current implementation. I think it
-would be better if we can have the mutex per host bridge or per bus
-or something so that we can run multiple hot-plug operation in
-parallel on the independent PCI sub trees.
+    if (!val)
+        return count;
 
-Regards,
-Kenji Kaneshige
+    err = device_schedule_callback(dev, bridge_rescan_callback);
+    if (err)
+        return err;
 
+    return count;
 
-
-(2012/03/23 23:58), Jiang Liu wrote:
-> This is a series of RFC patches, to make sure we are doing the
-> right thing in the right way.  The patchset hasn't been tested yet.
-> There are several minor bugfixes and two proposals.
-> 
-> The first proposal is to add notification chain for PCI hotplug events,
-> so other components interested in PCI root/bus/device hotplug events
-> could subscribe to the chain.
-> 
-> The second prososal is to introduce a recursive mutex lock to
-> serialize all hotplug operations triggered by sysfs interfaces,
-> PCI HPC hardware events, ACPI hotplug events and other sources.
-> 
-> There are still works left in driver/pci/hotplug directory to apply
-> the above two proposals.
-> 
-> The patchset applies to Yinghai's work on PCI root bus hotplug at
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
-> And it depends on my previous patchset, please refer to
-> http://www.spinics.net/lists/linux-pci/msg14472.html
-> 
-> Thanks!
-> 
-> Jiang Liu (11):
->    PCI: Fix device reference count leakage in pci_dev_present()
->    PCI: introduce pci_bus_get()/pci_bus_put() to hide implementation
->      details
->    PCI: clean up root bridge related logic in acpiphp driver
->    ACPI,PCI: fix race windows caused by alloc_acpi_hotplug_work()
->    PCI: Add notification interfaces for PCI root/bus/device hotplug
->      events
->    ACPI,PCI: update ACPI<->PCI binding information when pci hotplug
->      event happens
->    ACPI,PCI: update ACPI slots when PCI hotplug event happens
->    PCI: Introduce recursive mutex to serialize PCI hotplug operations
->    PCI: serialize hotplug operations triggered by PCI hotplug sysfs
->      interfaces
->    PCI,ACPI: serialize hotplug operations triggered by ACPI subsystem
->    PCI: Serialize hotplug operations triggered by acpiphp driver
-> 
->   drivers/acpi/pci_bind.c                |  115 +++++++++++++++++++++++++
->   drivers/acpi/pci_root.c                |    8 ++
->   drivers/acpi/pci_slot.c                |   81 ++++++++++++++++++-
->   drivers/pci/bus.c                      |   20 ++++-
->   drivers/pci/hotplug.c                  |   47 +++++++++++
->   drivers/pci/hotplug/acpiphp.h          |    7 ++-
->   drivers/pci/hotplug/acpiphp_glue.c     |  143 ++++++++++++--------------------
->   drivers/pci/hotplug/pci_hotplug_core.c |    2 +
->   drivers/pci/pci-sysfs.c                |   29 +++----
->   drivers/pci/pci.h                      |    8 ++
->   drivers/pci/probe.c                    |   10 ++-
->   drivers/pci/remove.c                   |   20 ++++-
->   drivers/pci/search.c                   |   10 +-
->   include/linux/pci.h                    |   57 +++++++++++++
->   14 files changed, 437 insertions(+), 120 deletions(-)
-> 
-
+>  }
+>
+> @@ -375,21 +385,30 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+>        return count;
+>  }
+>
+> +static void bus_rescan_callback(struct device *dev)
+> +{
+> +       struct pci_bus *bus = to_pci_bus(dev);
+> +
+> +       mutex_lock(&pci_remove_rescan_mutex);
+> +       pci_rescan_bus(bus);
+> +       mutex_unlock(&pci_remove_rescan_mutex);
+> +}
+>  static ssize_t
+>  dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+>                 const char *buf, size_t count)
+>  {
+> +       int ret = 0;
+>        unsigned long val;
+> -       struct pci_bus *bus = to_pci_bus(dev);
+>
+>        if (strict_strtoul(buf, 0, &val) < 0)
+>                return -EINVAL;
+>
+> -       if (val) {
+> -               mutex_lock(&pci_remove_rescan_mutex);
+> -               pci_rescan_bus(bus);
+> -               mutex_unlock(&pci_remove_rescan_mutex);
+> -       }
+> +       if (val)
+> +               ret = device_schedule_callback(dev, bus_rescan_callback);
+> +
+> +       if (ret)
+> +               count = ret;
+> +
+>        return count;
+>  }
+>
+> --
+> 1.7.7
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
