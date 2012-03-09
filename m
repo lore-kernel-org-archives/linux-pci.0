@@ -1,83 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:63921 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031691Ab2CGBAZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 20:00:25 -0500
-Received: by faaa19 with SMTP id a19so214649faa.1
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 17:00:23 -0800 (PST)
-Subject: [PATCH v1 3/9] powerpc/PCI: convert devtree bus addresses to resource
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Date: Tue, 06 Mar 2012 18:00:22 -0700
-Message-ID: <20120307010022.27465.51474.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <CAErSpo7W_2skcxsgFia+4caf1MgXCt3jqXCrKdX7q3EZ-KLP2Q@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+	<CABhMZUU_YNMXAU0Mr5zQMzxrk_XkFzk1HrwAN0SQxDf8n+F9kA@mail.gmail.com>
+	<CAE9FiQVNYWnZzfdNsW38P4vsD1ZpXeA+SwqqDK45SZAAphz_6A@mail.gmail.com>
+	<CAErSpo7W_2skcxsgFia+4caf1MgXCt3jqXCrKdX7q3EZ-KLP2Q@mail.gmail.com>
+Date: Fri, 9 Mar 2012 00:19:30 -0800
+Message-ID: <CAE9FiQVxno4xGg_SSrbBVs+nifP8+=cqS8SzD5kvVr2cvJD0wA@mail.gmail.com>
+Subject: Re: [PATCH 00/23] PCI, x86: pci root bus hotplug support
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-Normal PCI enumeration via PCI config space uses __pci_read_base(), where
-the PCI core applies any bus-to-resource offset.  But powerpc doesn't use
-that path when enumerating via the device tree.
+On Thu, Mar 8, 2012 at 4:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Mar 6, 2012 at 11:58 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, Mar 6, 2012 at 8:44 PM, Bjorn Helgaas <bjorn.helgaas@gmail.com> =
+wrote:
+>>> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> Does this series support hot-add, too, or just removal?
+>>>
+>>> If it is intended to support hot-add, I didn't see any support for
+>>> _CBA, which I *think* is the way hotplug-capable host bridges are
+>>> required to report MMCONFIG areas.
+>>
+>> to make the whole hotplug working with intel new cpus with IIO,
+>> in addition to physical cpu and memory hotplug, will still need
+>> a. ioapic controller hotplug
+>> b. intr-remapping hotplug
+>> c. intel-iommu hotplug
+>> d. mmconf support.
+>> e. root bus hotplug
+>>
+>> this patch set is only involved with partitally root bus removal/add bac=
+k.
+>> and assume ioapic, intr-remap, intel-iommu, and mmconf related are
+>> working from early initialization.
+>>
+>> that will help us to help to fix bugs like devices refcount leaking.
+>
+> OK, so this series only supports host bridge removal. =A0There are some
+> situations where it allows a bridge to be added, but only if the other
+> things you mentioned (ioapic, intr-remapping, etc.) are already
+> present, probably because we didn't remove them when removing the host
+> bridge.
 
-This adds the corresponding bus-to-resource conversion in the paths that
-read BAR values from the OF device tree.
+yes.
 
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/powerpc/kernel/pci_of_scan.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
+pci based ioapic support is there for x86....
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index b37d0b5..89dde17 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -75,6 +75,7 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
- {
- 	u64 base, size;
- 	unsigned int flags;
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	const u32 *addrs;
- 	u32 i;
-@@ -106,10 +107,11 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
- 			printk(KERN_ERR "PCI: bad cfg reg num 0x%x\n", i);
- 			continue;
- 		}
--		res->start = base;
--		res->end = base + size - 1;
- 		res->flags = flags;
- 		res->name = pci_name(dev);
-+		region.start = base;
-+		region.end = base + size - 1;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- }
- 
-@@ -209,6 +211,7 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
- 	struct pci_bus *bus;
- 	const u32 *busrange, *ranges;
- 	int len, i, mode;
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	unsigned int flags;
- 	u64 size;
-@@ -270,9 +273,10 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
- 			res = bus->resource[i];
- 			++i;
- 		}
--		res->start = of_read_number(&ranges[1], 2);
--		res->end = res->start + size - 1;
- 		res->flags = flags;
-+		region.start = of_read_number(&ranges[1], 2);
-+		region.end = region.start + size - 1;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- 	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
- 		bus->number);
+still need to look at acpi based: ioapic, iommu. etc.
 
+>
+> In the case of MMCONFIG in particular, I think this should be moved
+> into the host bridge add path, e.g., in acpi_pci_root_add(). =A0The fact
+> that it's totally separate today is a mistake. =A0But that can be fixed
+> later.
+
+could have different pci_ops to make it simple.
+
+but need to kill direct using of raw_pci_read/writing at first.
+
+>
+> Overall nits, because kernel development is obsessive by nature:
+> Please format your changelogs with textwidth=3D75, so that when you read
+> them with "git log" in an 80-column terminal, the normal text doesn't
+> wrap across a line ending.
+>
+> Please make your subject lines lines consistent in style and
+> capitalization. =A0Sometimes you have "PCI", sometimes "pci". =A0Sometime=
+s
+> the first word after "PCI: " is capitalized, sometimes not. =A0One of
+> your intel-iommu.c patches is "IOMMU:"; the other is "pci, dmar:" (and
+> these patches are not adjacent in the series, even though they could
+> be). =A0This is just sloppy and distracting.
+
+Sorry, that patch sit on local directly for some time,  and forget to updat=
+e
+subject this time.
+
+>
+> In English, the first word of a sentence is capitalized. =A0Words in the
+> middle are not, unless they are acronyms or proper nouns. =A0It would be
+> helpful if you could follow these conventions in your changelogs,
+> because I expect to be reading them for years to come, and I'm easily
+> distracted.
+...
+>
+> The notes about "-v2, -v3, -v4, etc." are not really useful in the
+> commit changelogs. =A0They're helpful in the [00/] message, but not in
+> the changelogs.
+
+But Jesse may still need mark to figure out which one is latest?
+
+>
+> I appreciate the effort you're making to write changelogs. =A0They're
+> definitely starting to contain some useful information.
+
+Sure, will try my best on that part.
+
+Thanks
+
+Yinghai
