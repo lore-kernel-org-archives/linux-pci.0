@@ -1,73 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:47165 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759395Ab2CMClP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 22:41:15 -0400
-Received: by lbbgm6 with SMTP id gm6so27113lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 12 Mar 2012 19:41:13 -0700 (PDT)
+Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1331362837-10740-3-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-3-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Mar 2012 20:40:53 -0600
-Message-ID: <CAErSpo5jCx5MdMOWgNQ+KVbn-6XDJSVvoO35J2DnpSMJyU-a4Q@mail.gmail.com>
-Subject: Re: [PATCH v2 02/37] PNPACPI: Fix device ref leaking in acpi_pnp_match
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@kernel.org, Len Brown <lenb@kernel.org>,
-	Adam Belay <abelay@mit.edu>, linux-acpi@vger.kernel.org
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <CAErSpo5dXP0H77Ph91HUTA+Do4q2=sL_tdikOQpTiCLQqw1x-Q@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+	<CABhMZUU_YNMXAU0Mr5zQMzxrk_XkFzk1HrwAN0SQxDf8n+F9kA@mail.gmail.com>
+	<CAE9FiQVNYWnZzfdNsW38P4vsD1ZpXeA+SwqqDK45SZAAphz_6A@mail.gmail.com>
+	<CAErSpo7W_2skcxsgFia+4caf1MgXCt3jqXCrKdX7q3EZ-KLP2Q@mail.gmail.com>
+	<CAE9FiQVxno4xGg_SSrbBVs+nifP8+=cqS8SzD5kvVr2cvJD0wA@mail.gmail.com>
+	<CAErSpo5dXP0H77Ph91HUTA+Do4q2=sL_tdikOQpTiCLQqw1x-Q@mail.gmail.com>
+Date: Fri, 9 Mar 2012 10:55:16 -0800
+Message-ID: <CAE9FiQW3_hDg7qRpAmmar3b-d8Yj1HvPZnCna_JrnxP=yxf6Tw@mail.gmail.com>
+Subject: Re: [PATCH 00/23] PCI, x86: pci root bus hotplug support
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> During testing pci root bus removal, found some root bus bridge is not freed.
+On Fri, Mar 9, 2012 at 9:34 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Mar 9, 2012 at 1:19 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Thu, Mar 8, 2012 at 4:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrot=
+e:
 >
-> If booting with pnpacpi=off, those hostbridge could be freed without problem.
+>>> The notes about "-v2, -v3, -v4, etc." are not really useful in the
+>>> commit changelogs. =A0They're helpful in the [00/] message, but not in
+>>> the changelogs.
+>>
+>> But Jesse may still need mark to figure out which one is latest?
 >
-> It turns out that some devices reference are not released during acpi_pnp_match.
->
-> That match should not hold one device ref during every calling.
->
-> Add put_device calling before returning.
+> The way I do that is with "stg mail -v v3", which puts "[PATCH v3
+> 01/10]" in the subject. =A0IMO, that's much more useful because when you
+> post a 23-patch series, I don't want to be bothered with v1, v2, v3 on
+> a per-patch basis.
 
-Changelog doesn't fit in 80 columns when using "git log".  I mentioned
-this before; please try it yourself.
+For that, I could just sed to replace PATCH to PATCH v3
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: stable@kernel.org
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: Adam Belay <abelay@mit.edu>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-acpi@vger.kernel.org
-> ---
->  drivers/pnp/pnpacpi/core.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
 >
-> diff --git a/drivers/pnp/pnpacpi/core.c b/drivers/pnp/pnpacpi/core.c
-> index b00c176..d21e8f5 100644
-> --- a/drivers/pnp/pnpacpi/core.c
-> +++ b/drivers/pnp/pnpacpi/core.c
-> @@ -321,9 +321,14 @@ static int __init acpi_pnp_match(struct device *dev, void *_pnp)
->  {
->        struct acpi_device *acpi = to_acpi_device(dev);
->        struct pnp_dev *pnp = _pnp;
-> +       struct device *physical_device;
-> +
-> +       physical_device = acpi_get_physical_device(acpi->handle);
-> +       if (physical_device)
-> +               put_device(physical_device);
->
->        /* true means it matched */
-> -       return !acpi_get_physical_device(acpi->handle)
-> +       return !physical_device
->            && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
->  }
->
-> --
-> 1.7.7
->
+> It's true that when you post v2, many of those 23 patches will be
+> unchanged from v1, and you do have to describe that in the [v2 00/23]
+> mail. =A0But at least it's easy to identify the entire set of v2
+> patches.
+
+Version number of the entire set could be different from individual patch.
+That could be more confusing.
+
+Yinghai
