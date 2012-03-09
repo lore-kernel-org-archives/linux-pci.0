@@ -1,64 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:59973 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758389Ab2CIR24 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Mar 2012 12:28:56 -0500
+Received: by lahj13 with SMTP id j13so1889412lah.19
+        for <linux-pci@vger.kernel.org>; Fri, 09 Mar 2012 09:28:54 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120301201050.GC5155@xanatos>
-References: <1330629843-6027-1-git-send-email-yinghai@kernel.org>
-	<1330629843-6027-2-git-send-email-yinghai@kernel.org>
-	<20120301201050.GC5155@xanatos>
-Date: Thu, 1 Mar 2012 17:04:41 -0800
-Message-ID: <CAE9FiQWDwraftUnr8ryStOWX5XxXK6sBPS7fbbqD8bWWF_ASfg@mail.gmail.com>
-Subject: Re: [RFC PATCH 2/3] usb, PCI: remove disable/enable device with
- non-xhci quirk
-From: Yinghai Lu <yinghai@kernel.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <CAE9FiQUGCazRAJ3vaej6wndk9e-kedU7tuaw8VSRcu2RB0qQAg@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+ <1331018040-30725-15-git-send-email-yinghai@kernel.org> <CAErSpo6VyKpBygK3vV25q+X5YisNVPwh64jaJ_KtMO1WB=ocpw@mail.gmail.com>
+ <CAE9FiQUGCazRAJ3vaej6wndk9e-kedU7tuaw8VSRcu2RB0qQAg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 9 Mar 2012 10:28:34 -0700
+Message-ID: <CAErSpo5KgLWiegOtOyVb7CeMyk2yicuFJC_vfiFmeEO8hj_Muw@mail.gmail.com>
+Subject: Re: [PATCH 14/23] PCI: add __pci_remove_bus_devices()
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 1, 2012 at 12:10 PM, Sarah Sharp
-<sarah.a.sharp@linux.intel.com> wrote:
-> On Thu, Mar 01, 2012 at 11:24:02AM -0800, Yinghai Lu wrote:
->> | commit cab928ee1f221c9cc48d6615070fefe2e444384a
->> |    USB: Fix handoff when BIOS disables host PCI device.
+On Fri, Mar 9, 2012 at 12:17 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Mar 8, 2012 at 5:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> will use it with pci_stop_and_remove_bus later.
+>>>
+>>> also remove __pci_remove_behind_bridge and pci_stop_behind_bridge.
+>>>
+>>> they are same except one take bridge and one take bus.
+>>>
+>>> and we already have pci_stop_bus_devices()
+>>>
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> ---
+>>>  drivers/pci/remove.c |   28 +++++++++++-----------------
+>>>  1 files changed, 11 insertions(+), 17 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>>> index 243d59b..62c348c 100644
+>>> --- a/drivers/pci/remove.c
+>>> +++ b/drivers/pci/remove.c
+>>> @@ -78,7 +78,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+>>>  }
+>>>  EXPORT_SYMBOL(pci_remove_bus);
+>>>
+>>> -static void __pci_remove_behind_bridge(struct pci_dev *dev);
+>>> +static void __pci_remove_bus_devices(struct pci_bus *bus);
+>>>  /**
+>>>  * pci_stop_and_remove_bus_device - remove a PCI device and any children
+>>>  * @dev: the device to remove
+>>> @@ -96,7 +96,7 @@ void __pci_remove_bus_device(struct pci_dev *dev)
+>>>        if (dev->subordinate) {
+>>>                struct pci_bus *b = dev->subordinate;
+>>>
+>>> -               __pci_remove_behind_bridge(dev);
+>>> +               __pci_remove_bus_devices(b);
+>>>                pci_remove_bus(b);
+>>>                dev->subordinate = NULL;
+>>>        }
+>>> @@ -111,22 +111,12 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+>>>        __pci_remove_bus_device(dev);
+>>>  }
+>>>
+>>> -static void __pci_remove_behind_bridge(struct pci_dev *dev)
+>>> +static void __pci_remove_bus_devices(struct pci_bus *bus)
+>>>  {
+>>>        struct list_head *l, *n;
+>>>
+>>> -       if (dev->subordinate)
+>>> -               list_for_each_safe(l, n, &dev->subordinate->devices)
+>>> -                       __pci_remove_bus_device(pci_dev_b(l));
+>>> -}
+>>> -
+>>> -static void pci_stop_behind_bridge(struct pci_dev *dev)
+>>> -{
+>>> -       struct list_head *l, *n;
+>>> -
+>>> -       if (dev->subordinate)
+>>> -               list_for_each_safe(l, n, &dev->subordinate->devices)
+>>> -                       pci_stop_bus_device(pci_dev_b(l));
+>>> +       list_for_each_safe(l, n, &bus->devices)
+>>> +               __pci_remove_bus_device(pci_dev_b(l));
 >>
->> mention only need to do disable/enable for xhci controller.
->>
->> So just remove that for non-xhci controller and restore old behavior for them.
+>> Use list_for_each_entry_safe() so you don't need pci_dev_b().
 >
-> As I said, we do need to do the enable/disable for all USB hosts.  Jesse
-> Barnes confirms that the PCI core doesn't do that for us, so we can't
-> rely on the BIOS always enabling the PCI device.  I don't think we need
-> this patch, because we should always be doing the enable/disable for all
-> USB hosts.  We just never had a BIOS that caused this bug to be
-> discovered until the xHCI BIOS for the Intel system in question.
+> just want to keep the patch to simple, and looks like just name renaming.
+>
+> also use list_for_each_safe instead of list_for_each_entry_safe
+>
+> could have less conversion.
 
-ok
+Sorry, I didn't understand the above.
 
-after
--DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-                                                quirk_usb_early_handoff);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-                        PCI_CLASS_SERIAL_USB, 8, quirk_usb_early_handoff);
-in pci-next get merged,
+It is OK to improve code as you change it :)  list_for_each_entry() is
+clearly an improvement over list_for_each() + some conversion macro.
 
-how about following change ?
+>>>  }
+>>>
+>>>  static void pci_stop_bus_devices(struct pci_bus *bus)
+>>> @@ -158,8 +148,12 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+>>>  */
+>>>  void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+>>>  {
+>>> -       pci_stop_behind_bridge(dev);
+>>> -       __pci_remove_behind_bridge(dev);
+>>> +       struct pci_bus *bus = dev->subordinate;
+>>> +
+>>> +       if (bus) {
+>>
+>> Don't check "bus" here.  If the caller screws up and passes a
+>> non-bridge pointer, I want to learn about it rather than ignore it.
+>
+> old code have that
+>           if (dev->subordinate)
+>
+> checking.
 
-Index: linux-2.6/drivers/usb/host/pci-quirks.c
-===================================================================
---- linux-2.6.orig/drivers/usb/host/pci-quirks.c
-+++ linux-2.6/drivers/usb/host/pci-quirks.c
-@@ -891,11 +891,6 @@ static void __devinit quirk_usb_early_ha
- 	 */
- 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
--	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_XHCI)
--		return;
+Removing a test that could silently cover a programming error is also
+an improvement.
 
- 	if (pci_enable_device(pdev) < 0) {
- 		dev_warn(&pdev->dev, "Can't enable PCI device, "
+Bjorn
