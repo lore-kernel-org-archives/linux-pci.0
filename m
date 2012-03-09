@@ -1,86 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:35054 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756927Ab2CBUEU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 15:04:20 -0500
-Date: Fri, 2 Mar 2012 12:04:10 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: add spinlock held check to
- 'pcibios_fwaddrmap_lookup()'
-Message-ID: <20120302120410.27cea21c@jbarnes-desktop>
-In-Reply-To: <20120302194501.26152.22845.stgit@amt.stowe>
-References: <20120302194501.26152.22845.stgit@amt.stowe>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/MCYpBC5OYh8763MegqY=qNS"; protocol="application/pgp-signature"
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:36089 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754110Ab2CIAwZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Mar 2012 19:52:25 -0500
+Received: by lahj13 with SMTP id j13so1143940lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 08 Mar 2012 16:52:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1331018040-30725-3-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-3-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 8 Mar 2012 17:52:03 -0700
+Message-ID: <CAErSpo72gJAPvyvo6EpcuEwqFaZQ_viUrgLAuA0CHttuxXkCXw@mail.gmail.com>
+Subject: Re: [PATCH 02/23] PCI, sysfs: create rescan_bridge under
+ /sys/.../pci/devices/... for pci bridges
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/MCYpBC5OYh8763MegqY=qNS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Current code will create rescan for every pci device under parent bus.
+> that is not right. the device is already there, there is no reason to rescan it.
+>
+> We could have rescan for pci bridges. less confusing.
 
-On Fri, 02 Mar 2012 12:45:01 -0700
-Myron Stowe <myron.stowe@redhat.com> wrote:
+Yes, but now we have *three* rescan attributes for a single bridge/bus:
 
-> 'pcibios_fwaddrmap_lookup()' is used to maintain FW-assigned BIOS BAR
-> values for reinstatement when normal resource assignment attempts
-> fail and must be called with the 'pcibios_fwaddrmap_lock' spinlock
-> held.
->=20
-> This patch adds a WARN_ON notification if the spinlock is not currently
-> held by the caller.
->=20
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+    /sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/rescan
+    /sys/devices/pci0000:00/0000:00:01.0/rescan_bridge
+    /sys/devices/pci0000:00/0000:00:01.0/rescan
+
+and this for an endpoint:
+
+    /sys/devices/pci0000:00/0000:00:05.0/rescan
+
+I think endpoints should not have a "rescan" attribute at all, and
+bridges should have only a "rescan" attribute (not "rescan" and
+"rescan_bridge").
+
+I'm not sure about "pci_bus/.../rescan".  I know you didn't add that,
+but I'm not sure it makes sense to have both that and a "rescan" on
+the bridge device.  If we have both, what's the difference between
+them?
+
+> Need to move rescan attr to pci dev bridge attribute group.
+> And We should rescan bridge's secondary bus instead of primary bus.
+>
+> -v3: Use device_type for pci dev.
+> -v4: Seperate pci device type change out
+> -v5: add rescan_bridge for bridge type, and still keep the old rescan.
+>        may remove the old rescan later.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Randy Dunlap <rdunlap@xenotime.net>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > ---
->=20
->  arch/x86/pci/i386.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-> index 33e6a0b..831971e 100644
-> --- a/arch/x86/pci/i386.c
-> +++ b/arch/x86/pci/i386.c
-> @@ -57,6 +57,8 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_look=
-up(struct pci_dev *dev)
->  {
->  	struct pcibios_fwaddrmap *map;
-> =20
-> +	WARN_ON(!spin_is_locked(&pcibios_fwaddrmap_lock));
+>  Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
+>  drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
+>  2 files changed, 34 insertions(+), 0 deletions(-)
+>
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 34f5110..95f0f37 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -111,6 +111,16 @@ Description:
+>                from this part of the device tree.
+>                Depends on CONFIG_HOTPLUG.
+>
+> +What:          /sys/bus/pci/devices/.../rescan_bridge
+> +Date:          February 2012
+> +Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
+> +Description:
+> +               Writing a non-zero value to this attribute will
+> +               force a rescan of the bridge and all child buses, and
+> +               re-discover devices removed earlier from this part of
+> +               the device tree.
+> +               Depends on CONFIG_HOTPLUG.
 > +
->  	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
->  		if (map->dev =3D=3D dev)
->  			return map;
->=20
->=20
-
-Applied, thanks.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/MCYpBC5OYh8763MegqY=qNS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPUSe6AAoJEIEoDkX4Qk9hzokP/R0b2ld/PC5EKBHQHGPiQc1D
-SkVv+W9pLmXFI3zmO1FzBLfvqY8NDjqrBYDH+AxbWT+Cyrk6GH8Lr01OjfcqBJei
-jHgZ/xc9HSXUpjzxYq1cKHP/a5chyl1Swx7p8Pye7jxID+GodRfh/eMJxWmjoGaK
-wMKvhQme8s2CrwuSrFQZFuZrEwM/8GoWcZMZObsT0NsGK4Shy48KnSztd7LN4hUY
-2GILGm05kso3qMJVD7dx2K0kxk8morI6t2XRBBLdC50Wkw+0s3vhoBZ4t0n3Wfes
-wB4+fcbV3ENObaUnUyiJdm5Cyl5D0TDVlv8LjAFvxD40MPJLQFw8ITBnTpqoy580
-/uU6TLfyuUl+eclP919fJWYb+lPChtmqYkb+YWA3NM9xhzCOn/kaBZ4XprKfVGdC
-4PLh1t0KUuk+KwhNcm7RlOW9ohgKCWt9Adunt2EWa5N5DcuELPmHaEj63RWshupC
-LkGkkXb/c/bNOQ1U/iikp3zuIKAf4W6x+uH/VjpZR3qHFu8/xeeTLlVhoc7T0/oS
-gXt8PULqusRFqi0zimsTNN6v55jkmC4Yfn9CEcD1vR7jhf3MQplZXzrN00Uid+l7
-2HH10OoY7Ncdiayzoh4Wx4eZqRH46tyd4OjC6V4IgbOIPhofVxhsomYeAcEfZ4uP
-S7ApAig5SveTqNIT2MPP
-=k1wN
------END PGP SIGNATURE-----
-
---Sig_/MCYpBC5OYh8763MegqY=qNS--
+>  What:          /sys/bus/pci/devices/.../reset
+>  Date:          July 2009
+>  Contact:       Michael S. Tsirkin <mst@redhat.com>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 39d15e6..d5c8ffb 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>        return count;
+>  }
+>
+> +static ssize_t
+> +dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+> +                const char *buf, size_t count)
+> +{
+> +       unsigned long val;
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +       if (kstrtoul(buf, 0, &val) < 0)
+> +               return -EINVAL;
+> +
+> +       if (val) {
+> +               mutex_lock(&pci_remove_rescan_mutex);
+> +               pci_rescan_bus(pdev->subordinate);
+> +               mutex_unlock(&pci_remove_rescan_mutex);
+> +       }
+> +       return count;
+> +}
+> +
+> +static struct device_attribute pci_dev_bridge_rescan_attr =
+> +       __ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
+> +
+>  static void remove_callback(struct device *dev)
+>  {
+>        struct pci_dev *pdev = to_pci_dev(dev);
+> @@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
+>  late_initcall(pci_sysfs_init);
+>
+>  static struct attribute *pci_dev_bridge_attrs[] = {
+> +#ifdef CONFIG_HOTPLUG
+> +       &pci_dev_bridge_rescan_attr.attr,
+> +#endif
+>        NULL,
+>  };
+>
+> --
+> 1.7.7
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
