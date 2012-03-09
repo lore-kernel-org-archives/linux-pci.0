@@ -1,51 +1,33 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 05/23] PCI: clean up rescan_bus_bridge_resize
-Date: Mon,  5 Mar 2012 23:13:42 -0800
-Message-Id: <1331018040-30725-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Return-Path: <yhlu.kernel@gmail.com>
+MIME-Version: 1.0
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <CAErSpo7dJ4K=4zbpLzs6d_vEp53F89_FuWFDD+6oYCeBidyTPw@mail.gmail.com>
 References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	<CABhMZUU_YNMXAU0Mr5zQMzxrk_XkFzk1HrwAN0SQxDf8n+F9kA@mail.gmail.com>
+	<CAE9FiQVNYWnZzfdNsW38P4vsD1ZpXeA+SwqqDK45SZAAphz_6A@mail.gmail.com>
+	<CAErSpo7W_2skcxsgFia+4caf1MgXCt3jqXCrKdX7q3EZ-KLP2Q@mail.gmail.com>
+	<CAE9FiQVxno4xGg_SSrbBVs+nifP8+=cqS8SzD5kvVr2cvJD0wA@mail.gmail.com>
+	<CAErSpo5dXP0H77Ph91HUTA+Do4q2=sL_tdikOQpTiCLQqw1x-Q@mail.gmail.com>
+	<CAE9FiQW3_hDg7qRpAmmar3b-d8Yj1HvPZnCna_JrnxP=yxf6Tw@mail.gmail.com>
+	<CAErSpo7dJ4K=4zbpLzs6d_vEp53F89_FuWFDD+6oYCeBidyTPw@mail.gmail.com>
+Date: Fri, 9 Mar 2012 11:29:32 -0800
+Message-ID: <CAE9FiQXJUiq+YucT3f-RJ-xa99ikzNVDjwvPaVNrEMCi30UvtQ@mail.gmail.com>
+Subject: Re: [PATCH 00/23] PCI, x86: pci root bus hotplug support
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-Should only use it with bridge instead of bus.
-it could get new subordinate. so can not use it with reguar bus.
+On Fri, Mar 9, 2012 at 11:10 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Mar 9, 2012 at 11:55 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+> You already post the entire series several times, so you have series
+> v1, series v2, etc. =A0Trying to talk about series v2 and patch v3
+> within that series is too complicated. =A0The version number of the
+> entire series is enough, in my opinion.
 
-in that case, use may need to make all children devices get removed already.
+I like to keep the history about patch reviewing in the change log.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci-sysfs.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index d5c8ffb..2049b2f 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -337,7 +337,7 @@ dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
- 
- 	if (val) {
- 		mutex_lock(&pci_remove_rescan_mutex);
--		pci_rescan_bus(pdev->subordinate);
-+		pci_rescan_bus_bridge_resize(pdev);
- 		mutex_unlock(&pci_remove_rescan_mutex);
- 	}
- 	return count;
-@@ -387,10 +387,7 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
- 
- 	if (val) {
- 		mutex_lock(&pci_remove_rescan_mutex);
--		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
--			pci_rescan_bus_bridge_resize(bus->self);
--		else
--			pci_rescan_bus(bus);
-+		pci_rescan_bus(bus);
- 		mutex_unlock(&pci_remove_rescan_mutex);
- 	}
- 	return count;
--- 
-1.7.7
-
+Yinghai
