@@ -1,71 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 04/47] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
-Date: Sun, 18 Mar 2012 22:45:53 -0700
-Message-Id: <1332135996-13860-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:39984 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754557Ab2CIQp1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 11:45:27 -0500
+Message-ID: <4F5A33A2.4000305@wwwdotorg.org>
+Date: Fri, 09 Mar 2012 09:45:22 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 10/11] ARM: tegra: pcie: Add MSI support
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-11-git-send-email-thierry.reding@avionic-design.de> <4F59213F.6070107@wwwdotorg.org> <20120309065004.GD25208@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20120309065004.GD25208@avionic-0098.mockup.avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Non acpi path, or root is not probed from acpi, during root bus removal
-will get warning about leaking from pci_scan_bus_on_node.
+On 03/08/2012 11:50 PM, Thierry Reding wrote:
+> * Stephen Warren wrote:
+>> On 03/08/2012 07:51 AM, Thierry Reding wrote:
+>>> This commit adds support for message signaled interrupts to the Tegra
+>>> PCIe controller.
+>>>
+>>> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+>>> ---
+>>> This code is taken from the NVIDIA Vibrante kernel and therefore has no
+>>> appropriate Signed-off-by from the original author. Maybe someone at
+>>> NVIDIA can find out who wrote this code and maybe provide a proper
+>>> Signed-off-by that I can add?
+>>
+>> I think if you look in:
+>> git://nv-tegra.nvidia.com/linux-2.6.git android-tegra-2.6.36
+>>
+>> the following commits are what you're after:
+>>
+>> de7fd8768b32da66eaf4eaf58473c65f7a76808d
+>> arm: tegra: pcie: enabling MSI support for pcie
+>>
+>> ac1f8310811c64a084511d2afc27f66334b31a81
+>> ARM: tegra: pcie: fix return value from MSI irq routine
+>>
+>> Although the patch below only partially resembles those patches, I guess
+>> because you've rewritten the code a lot to conform to the current kernel
+>> APIs, clean stuff up, etc. Perhaps just saying "based on code by Krishna
+>> Kishore <kthota@nvidia.com>" is enough...
+> 
+> Yes, it is indeed a major rewrite because the original code had some
+> peculiarities and FIXME that I thought wouldn't make it through the review
+> anyway so I fixed them up.
+> 
+> I'll add some comment about the original authorship. There is no official
+> Signed-off-by in the original commit. Do I still need one or is it enough to
+> mention the original authors in the commit message and add keep my own
+> Signed-off-by?
 
-Fix it with setting pci_host_bridge release function.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/common.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 8e04ec5..35931f6 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -618,17 +618,19 @@ int pci_ext_cfg_avail(struct pci_dev *dev)
- 		return 0;
- }
- 
-+static void release_pci_sysdata(struct pci_host_bridge *bridge)
-+{
-+	struct pci_sysdata *sd = bridge->release_data;
-+
-+	kfree(sd);
-+}
-+
- struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
- {
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
- 
--	/*
--	 * Allocate per-root-bus (not per bus) arch-specific data.
--	 * TODO: leak; this memory is never freed.
--	 * It's arguable whether it's worth the trouble to care.
--	 */
- 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
- 	if (!sd) {
- 		printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busno);
-@@ -638,7 +640,10 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 	x86_pci_root_bus_resources(busno, &resources);
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
- 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
--	if (!bus) {
-+	if (bus)
-+		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
-+					release_pci_sysdata, sd);
-+	else {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
- 	}
--- 
-1.7.7
-
+Yes, I think just mentioning the original code author in free-form text,
+and including only your S-o-b sounds good to me.
