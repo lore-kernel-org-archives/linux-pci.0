@@ -1,70 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:17592 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932186Ab2CFHRU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:17:20 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 22/23] x86, PCI: add __pcibios_scan_specific_bus that can skip bus_add
-Date: Mon,  5 Mar 2012 23:13:59 -0800
-Message-Id: <1331018040-30725-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:47963 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964781Ab2CIRiF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 12:38:05 -0500
+Received: by lbbgm6 with SMTP id gm6so388054lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 09 Mar 2012 09:38:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXMhEkMBTjnPJkB21ob9L9jNp_-8_h+xo6mOt3fFQ7xQQ@mail.gmail.com>
 References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+ <1331018040-30725-8-git-send-email-yinghai@kernel.org> <CAErSpo6jqr44JS4Cyfc0cR_TNbo_ETjPJUO=x2gj-Q_x4TckVA@mail.gmail.com>
+ <CAE9FiQWPk-s5F5ofO=nU05tnRhmpav+f8Cs_mBG9A-MPuK9stw@mail.gmail.com>
+ <CAErSpo5QGqW8OL10H_PajnWi0JT=UsfX4c6pXJ_hsqXPcd+NPw@mail.gmail.com> <CAE9FiQXMhEkMBTjnPJkB21ob9L9jNp_-8_h+xo6mOt3fFQ7xQQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 9 Mar 2012 10:37:44 -0700
+Message-ID: <CAErSpo55k_pJP2X_9jp+oBGAT_1y9hS8QNs0SgomwR-NpvimNA@mail.gmail.com>
+Subject: Re: [PATCH 07/23] pci, dmar: Update dmar units devices list during hotplug
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	iommu@lists.linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could insert pci_assign_unassigned_bus_resources() before do bus_add.
+On Fri, Mar 9, 2012 at 10:32 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Mar 9, 2012 at 9:25 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> Well, it looks like you can change both save_dev_dmaru() *and*
+>> get_dev_dmaru() to take a struct pci_dev *.  I assumed that would be
+>> obvious.
+>
+> no.
+>
+> get_dev_dmaru() have to use bus/devfn to retrieve the dev pointer.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/legacy.c |   19 +++++++++++++------
- 1 files changed, 13 insertions(+), 6 deletions(-)
+I expected something like that, but all I see in the patch is this:
 
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index a1df191..aab0e41 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -34,25 +34,32 @@ int __init pci_legacy_init(void)
- 	return 0;
- }
- 
--void __devinit pcibios_scan_specific_bus(int busn)
-+static __devinit struct pci_bus *__pcibios_scan_specific_bus(int busn,
-+					 bool bus_add)
- {
- 	int devfn;
- 	long node;
- 	u32 l;
- 
--	if (pci_find_bus(0, busn))
--		return;
--
- 	node = get_mp_bus_to_node(busn);
- 	for (devfn = 0; devfn < 256; devfn += 8) {
- 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
- 		    l != 0x0000 && l != 0xffff) {
- 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
- 			printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
--			pci_scan_bus_on_node(busn, &pci_root_ops, node);
--			return;
-+			return __pci_scan_bus_on_node(busn, &pci_root_ops, node,
-+					 bus_add);
- 		}
- 	}
-+
-+	return NULL;
-+}
-+void __devinit pcibios_scan_specific_bus(int busn)
-+{
-+	if (pci_find_bus(0, busn))
-+		return;
-+
-+	__pcibios_scan_specific_bus(busn, true);
- }
- EXPORT_SYMBOL_GPL(pcibios_scan_specific_bus);
- 
--- 
-1.7.7
++static void restore_dev_to_drhd(struct pci_dev *dev)
++       drhd = get_dev_dmaru(pci_domain_nr(dev->bus), dev->bus->number,
++                                dev->devfn, &i, &saved_dev_drhd_list);
 
++static void restore_dev_to_atsr(struct pci_dev *dev)
++       atsr = get_dev_dmaru(pci_domain_nr(dev->bus), dev->bus->number,
++                                dev->devfn, &i, &saved_dev_atsr_list);
+
+In both those cases, you have the struct pci_dev *.
