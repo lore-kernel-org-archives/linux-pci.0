@@ -1,160 +1,85 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUVCM4BTxV6qNa0a73bHrgYXWj_Y0Ys9WnJn6jBKiXM0w@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+ <1331018040-30725-3-git-send-email-yinghai@kernel.org> <CAErSpo72gJAPvyvo6EpcuEwqFaZQ_viUrgLAuA0CHttuxXkCXw@mail.gmail.com>
+ <CAE9FiQUVCM4BTxV6qNa0a73bHrgYXWj_Y0Ys9WnJn6jBKiXM0w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 9 Mar 2012 10:07:49 -0700
+Message-ID: <CAErSpo6JzfnfS+Vhnz_nNBB2oNvXdUaWmR4BPgCS=tTOV4ZvGA@mail.gmail.com>
+Subject: Re: [PATCH 02/23] PCI, sysfs: create rescan_bridge under
+ /sys/.../pci/devices/... for pci bridges
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 24/26] PCI: Make piix4 quirk to use addon_resource support
-Date: Sun, 18 Mar 2012 22:48:47 -0700
-Message-Id: <1332136129-14010-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-after they are put in add-on resources, they will be safely claimed later.
+On Thu, Mar 8, 2012 at 11:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Mar 8, 2012 at 4:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> Current code will create rescan for every pci device under parent bus.
+>>> that is not right. the device is already there, there is no reason to rescan it.
+>>>
+>>> We could have rescan for pci bridges. less confusing.
+>>
+>> Yes, but now we have *three* rescan attributes for a single bridge/bus:
+>>
+>>    /sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/rescan
+>
+> no, that one is not there, and should not be added.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/quirks.c |   93 +++++++++++++++++++++++++++++++++++++++++--------
- 1 files changed, 77 insertions(+), 16 deletions(-)
+Yes, it is!  I pasted that directly from the output of "find /sys
+-name rescan\*".  Your series didn't add it, but it definitely exists.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7ef4183..cbe7dd9 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -383,14 +383,14 @@ static void __devinit quirk_ali7101_acpi(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
- 
--static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-+static int piix4_read_io(struct pci_dev *dev, struct resource *res, int port)
- {
- 	u32 devres;
- 	u32 mask, size, base;
-+	struct pci_bus_region bus_region;
- 
- 	pci_read_config_dword(dev, port, &devres);
--	if ((devres & enable) != enable)
--		return;
-+
- 	mask = (devres >> 16) & 15;
- 	base = devres & 0xffff;
- 	size = 16;
-@@ -400,23 +400,53 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
- 			break;
- 		size = bit;
- 	}
--	/*
--	 * For now we only print it out. Eventually we'll want to
--	 * reserve it (at least if it's in the 0x1000+ range), but
--	 * let's get enough confirmation reports first. 
--	 */
- 	base &= -size;
--	dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
-+
-+	bus_region.start = base;
-+	bus_region.end = base + size - 1;
-+	res->flags |= IORESOURCE_IO;
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+	dev_info(&dev->dev, "PIO at %pR\n", res);
-+
-+	return 0;
- }
-+static int piix4_write_io(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	struct pci_bus_region bus_region;
-+
-+	pcibios_resource_to_bus(dev, &bus_region, res);
- 
--static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-+	pci_read_config_dword(dev, port, &devres);
-+	devres &= 0xffff0000;
-+	devres |= bus_region.start & 0xffff;
-+	pci_write_config_dword(dev, port, devres);
-+
-+	return 0;
-+}
-+static struct resource_ops piix4_io_ops = {
-+	.read = piix4_read_io,
-+	.write = piix4_write_io,
-+};
-+static void piix4_io_quirk(struct pci_dev *dev, char *name, unsigned int port,
-+				unsigned int enable)
- {
- 	u32 devres;
--	u32 mask, size, base;
- 
- 	pci_read_config_dword(dev, port, &devres);
- 	if ((devres & enable) != enable)
- 		return;
-+
-+	add_pci_dev_addon_resource(dev, port, 0, &piix4_io_ops, name);
-+}
-+
-+static int piix4_read_mem(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	u32 mask, size, base;
-+	struct pci_bus_region bus_region;
-+
-+	pci_read_config_dword(dev, port, &devres);
- 	base = devres & 0xffff0000;
- 	mask = (devres & 0x3f) << 16;
- 	size = 128 << 16;
-@@ -426,12 +456,43 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
- 			break;
- 		size = bit;
- 	}
--	/*
--	 * For now we only print it out. Eventually we'll want to
--	 * reserve it, but let's get enough confirmation reports first. 
--	 */
- 	base &= -size;
--	dev_info(&dev->dev, "%s MMIO at %04x-%04x\n", name, base, base + size - 1);
-+	bus_region.start = base;
-+	bus_region.end = base + size - 1;
-+	res->flags |= IORESOURCE_MEM;
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+	dev_info(&dev->dev, "MMIO at %pR\n", res);
-+
-+	return 0;
-+}
-+static int piix4_write_mem(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	struct pci_bus_region bus_region;
-+
-+	pcibios_resource_to_bus(dev, &bus_region, res);
-+
-+	pci_read_config_dword(dev, port, &devres);
-+	devres &= 0x0000ffff;
-+	devres |= bus_region.start & 0xffff0000;
-+	pci_write_config_dword(dev, port, devres);
-+
-+	return 0;
-+}
-+static struct resource_ops piix4_mem_ops = {
-+	.read = piix4_read_mem,
-+	.write = piix4_write_mem,
-+};
-+static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
-+				unsigned int enable)
-+{
-+	u32 devres;
-+
-+	pci_read_config_dword(dev, port, &devres);
-+	if ((devres & enable) != enable)
-+		return;
-+
-+	add_pci_dev_addon_resource(dev, port, 0, &piix4_mem_ops, name);
- }
- 
- /*
--- 
-1.7.7
+> But I do suggest to add
+> /sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/remove
 
+Yes, your "[16/23] PCI: add pci bus removal through
+/sys/.../pci_bus/.../remove" patch adds this "remove" file.  I think
+it is a mistake.
+
+A bus is just a collection of wires that connect devices.  The
+*devices* are the interesting things, not the wires.  You can ask the
+upstream bridge to look for devices on its secondary bus, you can add
+or remove devices on the secondary side, you can remove the bridge
+itself, etc.
+
+You're using "pci_bus/.../remove" as shorthand for "remove all the
+devices on this bus and remove the bus itself."  But I think that's
+nonsense.  The bridge still exists, so the secondary bus still exists.
+ You can already remove all the secondary devices by using the
+*device* remove files, e.g., ".../0000:00:00.0/remove".  And you can
+remove the bridge the same way.
+
+So I don't think "pci_bus/.../remove" adds useful new functionality.
+I think it *does* add a way to remove the internal struct pci_bus, but
+I don't think that's a good thing to expose to users.
+
+>> I think endpoints should not have a "rescan" attribute at all, and
+>> bridges should have only a "rescan" attribute (not "rescan" and
+>> "rescan_bridge").
+>
+> agreed,  that rescan actually is doing rescan of it's parent bus.
+>
+> I have suggested to remove it. but Alex said some HP internal
+> application will need
+> that, so it can not be removed.
+>
+> at last I have to use rescan_bridge for bridge device.
+
+Here's that previous discussion, for reference:
+http://www.spinics.net/lists/linux-pci/msg10825.html
+
+The way I read that discussion is that it's fine to mark endpoint
+"rescan" as deprecated and to use "rescan" for bridges only.
+Unfortunately, you didn't follow through with the deprecation process.
+ If you had, we could be removing endpoint "rescan" now, and we'd be
+all set.
+
+I think deprecating endpoint "rescan" is still the right thing to do.
+
+Bjorn
