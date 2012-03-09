@@ -1,85 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUVCM4BTxV6qNa0a73bHrgYXWj_Y0Ys9WnJn6jBKiXM0w@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
- <1331018040-30725-3-git-send-email-yinghai@kernel.org> <CAErSpo72gJAPvyvo6EpcuEwqFaZQ_viUrgLAuA0CHttuxXkCXw@mail.gmail.com>
- <CAE9FiQUVCM4BTxV6qNa0a73bHrgYXWj_Y0Ys9WnJn6jBKiXM0w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 9 Mar 2012 10:07:49 -0700
-Message-ID: <CAErSpo6JzfnfS+Vhnz_nNBB2oNvXdUaWmR4BPgCS=tTOV4ZvGA@mail.gmail.com>
-Subject: Re: [PATCH 02/23] PCI, sysfs: create rescan_bridge under
- /sys/.../pci/devices/... for pci bridges
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48429 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003Ab2CIFYY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 00:24:24 -0500
+Received: by iagz16 with SMTP id z16so1743992iag.19
+        for <linux-pci@vger.kernel.org>; Thu, 08 Mar 2012 21:24:23 -0800 (PST)
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH 05/11] tps6586x: Add device-tree support
+To: Thierry Reding <thierry.reding@avionic-design.de>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+In-Reply-To: <20120308151545.GA23934@avionic-0098.mockup.avionic-design.de>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-6-git-send-email-thierry.reding@avionic-design.de> <20120308150607.GP3638@opensource.wolfsonmicro.com> <20120308151545.GA23934@avionic-0098.mockup.avionic-design.de>
+Date: Thu, 08 Mar 2012 22:15:06 -0700
+Message-Id: <20120309051506.761B63E090F@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 8, 2012 at 11:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Mar 8, 2012 at 4:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> Current code will create rescan for every pci device under parent bus.
->>> that is not right. the device is already there, there is no reason to rescan it.
->>>
->>> We could have rescan for pci bridges. less confusing.
->>
->> Yes, but now we have *three* rescan attributes for a single bridge/bus:
->>
->>    /sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/rescan
->
-> no, that one is not there, and should not be added.
+On Thu, 8 Mar 2012 16:15:46 +0100, Thierry Reding <thierry.reding@avionic-design.de> wrote:
+> * Mark Brown wrote:
+> > On Thu, Mar 08, 2012 at 03:51:25PM +0100, Thierry Reding wrote:
+> > 
+> > > +- gpio-controller: mark the device as a GPIO controller
+> > > +- regulators: list of regulators provided by this controller, must be in the
+> > > +  following order:
+> > > +    SM0, SM1, SM2, LDO0, LDO1, LDO2, LDO3, LDO4, LDO5, LDO6, LDO7, LDO8, LDO9
+> > 
+> > This ordering requirement is fairly sad, if there are unused regulators
+> > they still need to be listed even though...
 
-Yes, it is!  I pasted that directly from the output of "find /sys
--name rescan\*".  Your series didn't add it, but it definitely exists.
+It's worse than that; the DT provides absolutely no guarantees about the
+ordering of either child nodes or properties.
 
-> But I do suggest to add
-> /sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/remove
+> > 
+> > > +			sm0_reg: sm0 {
+> > > +				regulator-min-microvolt = < 725000>;
+> > > +				regulator-max-microvolt = <1500000>;
+> > > +				regulator-boot-on;
+> > > +				regulator-always-on;
+> > > +			};
+> > > +
+> > > +			sm1_reg: sm1 {
+> > 
+> > ...they all seem to be explicitly named in the device tree so presumably
+> > there's enough information in there for the driver to pick any set of
+> > regulators in any order.  This would be much nicer to use.
+> 
+> I don't like it much either. The only reason that requirement exists is
+> because it makes the assignment of the regulator ID (as defined in the
+> include/linux/mfd/tps6586x.h header) very trivial. Would it be better to
+> look up the ID based on the node name (sm0 --> TPS6586X_ID_SM_0, ...)?
+> 
+> Then the only requirement would be that the names match.
 
-Yes, your "[16/23] PCI: add pci bus removal through
-/sys/.../pci_bus/.../remove" patch adds this "remove" file.  I think
-it is a mistake.
+Yes, please look up id via name.  Alternately you can give each child node
+a 'reg' property and put #address-cells = <1>; #size-cells = <0>; in the
+parent (assuming the regulator number is a documented attribute of the
+hardware and not just a convenient linux construct).
 
-A bus is just a collection of wires that connect devices.  The
-*devices* are the interesting things, not the wires.  You can ask the
-upstream bridge to look for devices on its secondary bus, you can add
-or remove devices on the secondary side, you can remove the bridge
-itself, etc.
-
-You're using "pci_bus/.../remove" as shorthand for "remove all the
-devices on this bus and remove the bus itself."  But I think that's
-nonsense.  The bridge still exists, so the secondary bus still exists.
- You can already remove all the secondary devices by using the
-*device* remove files, e.g., ".../0000:00:00.0/remove".  And you can
-remove the bridge the same way.
-
-So I don't think "pci_bus/.../remove" adds useful new functionality.
-I think it *does* add a way to remove the internal struct pci_bus, but
-I don't think that's a good thing to expose to users.
-
->> I think endpoints should not have a "rescan" attribute at all, and
->> bridges should have only a "rescan" attribute (not "rescan" and
->> "rescan_bridge").
->
-> agreed,  that rescan actually is doing rescan of it's parent bus.
->
-> I have suggested to remove it. but Alex said some HP internal
-> application will need
-> that, so it can not be removed.
->
-> at last I have to use rescan_bridge for bridge device.
-
-Here's that previous discussion, for reference:
-http://www.spinics.net/lists/linux-pci/msg10825.html
-
-The way I read that discussion is that it's fine to mark endpoint
-"rescan" as deprecated and to use "rescan" for bridges only.
-Unfortunately, you didn't follow through with the deprecation process.
- If you had, we could be removing endpoint "rescan" now, and we'd be
-all set.
-
-I think deprecating endpoint "rescan" is still the right thing to do.
-
-Bjorn
+g.
