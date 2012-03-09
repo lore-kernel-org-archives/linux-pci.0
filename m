@@ -1,90 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:56929 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031267Ab2CFWpK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 17:45:10 -0500
-Received: by ghrr11 with SMTP id r11so2602372ghr.19
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 14:45:09 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120306181340.8566.79920.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120306181340.8566.79920.stgit@bhelgaas.mtv.corp.google.com>
-Date: Tue, 6 Mar 2012 14:45:09 -0800
-Message-ID: <CAE9FiQU0b1iLHMyRMyTHTPXdF26H=siytor4o3bi_gJw59GN=g@mail.gmail.com>
-Subject: Re: [PATCH RFC] PCI: allow P2P bridge windows starting at PCI bus
- address zero
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+In-Reply-To: <1331018040-30725-15-git-send-email-yinghai@kernel.org>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-15-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 8 Mar 2012 18:11:35 -0700
+Message-ID: <CAErSpo6VyKpBygK3vV25q+X5YisNVPwh64jaJ_KtMO1WB=ocpw@mail.gmail.com>
+Subject: Re: [PATCH 14/23] PCI: add __pci_remove_bus_devices()
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 10:13 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> This patch is for discussion.  I didn't include a Signed-off-by line
-> because I suspect the patch is incomplete as it stands.
+On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> will use it with pci_stop_and_remove_bus later.
 >
-> cd81e1ea1a4c added checks that prevent us from using P2P bridge windows
-> that start at PCI bus address zero.  The reason was to "prevent us from
-> overwriting resources that are unassigned."
+> also remove __pci_remove_behind_bridge and pci_stop_behind_bridge.
 >
-> But I don't think generic code should disallow address zero in either BARs or
-> bridge windows, so I think that commit was a mistake.
+> they are same except one take bridge and one take bus.
 >
-> Windows at bus address zero are legal and likely to exist on machines with an
-> offset between bus addresses and CPU addresses.  For example, in the following
-> hypothetical scenario, the bridge at 00:01.0 has a window at bus address zero
-> and the device at 01:00.0 has a BAR at bus address zero, and I think both are
-> perfectly valid:
+> and we already have pci_stop_bus_devices()
 >
->    PCI host bridge to bus 0000:00
->    pci_bus 0000:00: root bus resource [mem 0x100000000-0x1ffffffff] (bus address [0x00000000-0xffffffff])
->    pci 0000:00:01.0: PCI bridge to [bus 01]
->    pci 0000:00:01.0:   bridge window [mem 0x100000000-0x100ffffff]
->    pci 0000:01:00.0: reg 10: [mem 0x100000000-0x100ffffff]
->
-> I don't want to reintroduce whatever bug cd81e1ea1a4c fixed.  So please comment
-> on whether my reasoning above is correct and what problem would be caused if we
-> applied the following patch.
->
-> CC: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 > ---
->  drivers/pci/probe.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
+>  drivers/pci/remove.c |   28 +++++++++++-----------------
+>  1 files changed, 11 insertions(+), 17 deletions(-)
 >
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 944e05a..1725866 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -365,7 +365,7 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
->                limit |= (io_limit_hi << 16);
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 243d59b..62c348c 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -78,7 +78,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+>  }
+>  EXPORT_SYMBOL(pci_remove_bus);
+>
+> -static void __pci_remove_behind_bridge(struct pci_dev *dev);
+> +static void __pci_remove_bus_devices(struct pci_bus *bus);
+>  /**
+>  * pci_stop_and_remove_bus_device - remove a PCI device and any children
+>  * @dev: the device to remove
+> @@ -96,7 +96,7 @@ void __pci_remove_bus_device(struct pci_dev *dev)
+>        if (dev->subordinate) {
+>                struct pci_bus *b = dev->subordinate;
+>
+> -               __pci_remove_behind_bridge(dev);
+> +               __pci_remove_bus_devices(b);
+>                pci_remove_bus(b);
+>                dev->subordinate = NULL;
 >        }
+> @@ -111,22 +111,12 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+>        __pci_remove_bus_device(dev);
+>  }
 >
-> -       if (base && base <= limit) {
-> +       if (base <= limit) {
->                res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
->                region.start = base;
->                region.end = limit + 0xfff;
-> @@ -391,7 +391,7 @@ static void __devinit pci_read_bridge_mmio(struct pci_bus *child)
->        pci_read_config_word(dev, PCI_MEMORY_LIMIT, &mem_limit_lo);
->        base = (mem_base_lo & PCI_MEMORY_RANGE_MASK) << 16;
->        limit = (mem_limit_lo & PCI_MEMORY_RANGE_MASK) << 16;
-> -       if (base && base <= limit) {
-> +       if (base <= limit) {
->                res->flags = (mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) | IORESOURCE_MEM;
->                region.start = base;
->                region.end = limit + 0xfffff;
-> @@ -437,7 +437,7 @@ static void __devinit pci_read_bridge_mmio_pref(struct pci_bus *child)
->  #endif
->                }
->        }
-> -       if (base && base <= limit) {
-> +       if (base <= limit) {
->                res->flags = (mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) |
->                                         IORESOURCE_MEM | IORESOURCE_PREFETCH;
->                if (res->flags & PCI_PREF_RANGE_TYPE_64)
+> -static void __pci_remove_behind_bridge(struct pci_dev *dev)
+> +static void __pci_remove_bus_devices(struct pci_bus *bus)
+>  {
+>        struct list_head *l, *n;
 >
+> -       if (dev->subordinate)
+> -               list_for_each_safe(l, n, &dev->subordinate->devices)
+> -                       __pci_remove_bus_device(pci_dev_b(l));
+> -}
+> -
+> -static void pci_stop_behind_bridge(struct pci_dev *dev)
+> -{
+> -       struct list_head *l, *n;
+> -
+> -       if (dev->subordinate)
+> -               list_for_each_safe(l, n, &dev->subordinate->devices)
+> -                       pci_stop_bus_device(pci_dev_b(l));
+> +       list_for_each_safe(l, n, &bus->devices)
+> +               __pci_remove_bus_device(pci_dev_b(l));
 
+Use list_for_each_entry_safe() so you don't need pci_dev_b().
 
-yes, you can remove that base checking.
+>  }
+>
+>  static void pci_stop_bus_devices(struct pci_bus *bus)
+> @@ -158,8 +148,12 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+>  */
+>  void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+>  {
+> -       pci_stop_behind_bridge(dev);
+> -       __pci_remove_behind_bridge(dev);
+> +       struct pci_bus *bus = dev->subordinate;
+> +
+> +       if (bus) {
 
-Yinghai
+Don't check "bus" here.  If the caller screws up and passes a
+non-bridge pointer, I want to learn about it rather than ignore it.
+
+> +               pci_stop_bus_devices(bus);
+> +               __pci_remove_bus_devices(bus);
+> +       }
+>  }
+>
+>  /**
+> --
+> 1.7.7
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
