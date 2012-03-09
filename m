@@ -1,70 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:51617 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106Ab2CIGmw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 01:42:52 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo72gJAPvyvo6EpcuEwqFaZQ_viUrgLAuA0CHttuxXkCXw@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+	<1331018040-30725-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo72gJAPvyvo6EpcuEwqFaZQ_viUrgLAuA0CHttuxXkCXw@mail.gmail.com>
+Date: Thu, 8 Mar 2012 22:42:51 -0800
+Message-ID: <CAE9FiQUVCM4BTxV6qNa0a73bHrgYXWj_Y0Ys9WnJn6jBKiXM0w@mail.gmail.com>
+Subject: Re: [PATCH 02/23] PCI, sysfs: create rescan_bridge under
+ /sys/.../pci/devices/... for pci bridges
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 32/37] x86, PCI: add __pcibios_scan_specific_bus that can skip bus_add
-Date: Fri,  9 Mar 2012 23:00:32 -0800
-Message-Id: <1331362837-10740-33-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could insert pci_assign_unassigned_bus_resources() before do bus_add.
+On Thu, Mar 8, 2012 at 4:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Current code will create rescan for every pci device under parent bus.
+>> that is not right. the device is already there, there is no reason to rescan it.
+>>
+>> We could have rescan for pci bridges. less confusing.
+>
+> Yes, but now we have *three* rescan attributes for a single bridge/bus:
+>
+>    /sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/rescan
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/legacy.c |   19 +++++++++++++------
- 1 files changed, 13 insertions(+), 6 deletions(-)
+no, that one is not there, and should not be added.
 
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index a1df191..aab0e41 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -34,25 +34,32 @@ int __init pci_legacy_init(void)
- 	return 0;
- }
- 
--void __devinit pcibios_scan_specific_bus(int busn)
-+static __devinit struct pci_bus *__pcibios_scan_specific_bus(int busn,
-+					 bool bus_add)
- {
- 	int devfn;
- 	long node;
- 	u32 l;
- 
--	if (pci_find_bus(0, busn))
--		return;
--
- 	node = get_mp_bus_to_node(busn);
- 	for (devfn = 0; devfn < 256; devfn += 8) {
- 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
- 		    l != 0x0000 && l != 0xffff) {
- 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
- 			printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
--			pci_scan_bus_on_node(busn, &pci_root_ops, node);
--			return;
-+			return __pci_scan_bus_on_node(busn, &pci_root_ops, node,
-+					 bus_add);
- 		}
- 	}
-+
-+	return NULL;
-+}
-+void __devinit pcibios_scan_specific_bus(int busn)
-+{
-+	if (pci_find_bus(0, busn))
-+		return;
-+
-+	__pcibios_scan_specific_bus(busn, true);
- }
- EXPORT_SYMBOL_GPL(pcibios_scan_specific_bus);
- 
--- 
-1.7.7
+But I do suggest to add
+/sys/devices/pci0000:00/0000:00:01.0/pci_bus/0000:01/remove
 
+>    /sys/devices/pci0000:00/0000:00:01.0/rescan_bridge
+>    /sys/devices/pci0000:00/0000:00:01.0/rescan
+>
+> and this for an endpoint:
+>
+>    /sys/devices/pci0000:00/0000:00:05.0/rescan
+>
+> I think endpoints should not have a "rescan" attribute at all, and
+> bridges should have only a "rescan" attribute (not "rescan" and
+> "rescan_bridge").
+
+agreed,  that rescan actually is doing rescan of it's parent bus.
+
+I have suggested to remove it. but Alex said some HP internal
+application will need
+that, so it can not be removed.
+
+at last I have to use rescan_bridge for bridge device.
+
+>
+> I'm not sure about "pci_bus/.../rescan".  I know you didn't add that,
+> but I'm not sure it makes sense to have both that and a "rescan" on
+> the bridge device.  If we have both, what's the difference between
+> them?
+
+rescan : for device parent bus, that is really weird.
+rescan_bridge: will only show up that device is bridge, and rescan that bridge.
+
+Yinghai
