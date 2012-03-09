@@ -1,34 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48877 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758014Ab2C1Ute convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Mar 2012 16:49:34 -0400
-Received: by lahj13 with SMTP id j13so1622908lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 28 Mar 2012 13:49:33 -0700 (PDT)
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:44108 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382Ab2CIHRU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 02:17:20 -0500
 MIME-Version: 1.0
-In-Reply-To: <jkvsjr$a3$1@dough.gmane.org>
-References: <jkvsjr$a3$1@dough.gmane.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Mar 2012 14:49:12 -0600
-Message-ID: <CAErSpo68=vx=bv1OqFrR4Mn39wKM9bwdY=9o1TM0_GYC70Ty-g@mail.gmail.com>
-Subject: Re: Kernel 3.3 boot panic (with screenshot) - ACPI related?
-To: =?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>
-Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <CAErSpo6VyKpBygK3vV25q+X5YisNVPwh64jaJ_KtMO1WB=ocpw@mail.gmail.com>
+References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+	<1331018040-30725-15-git-send-email-yinghai@kernel.org>
+	<CAErSpo6VyKpBygK3vV25q+X5YisNVPwh64jaJ_KtMO1WB=ocpw@mail.gmail.com>
+Date: Thu, 8 Mar 2012 23:17:20 -0800
+Message-ID: <CAE9FiQUGCazRAJ3vaej6wndk9e-kedU7tuaw8VSRcu2RB0qQAg@mail.gmail.com>
+Subject: Re: [PATCH 14/23] PCI: add __pci_remove_bus_devices()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 28, 2012 at 2:34 PM, Dâniel Fraga <fragabr@gmail.com> wrote:
->        Could you take a look at this bug report?
+On Thu, Mar 8, 2012 at 5:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> will use it with pci_stop_and_remove_bus later.
+>>
+>> also remove __pci_remove_behind_bridge and pci_stop_behind_bridge.
+>>
+>> they are same except one take bridge and one take bus.
+>>
+>> and we already have pci_stop_bus_devices()
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/remove.c |   28 +++++++++++-----------------
+>>  1 files changed, 11 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>> index 243d59b..62c348c 100644
+>> --- a/drivers/pci/remove.c
+>> +++ b/drivers/pci/remove.c
+>> @@ -78,7 +78,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+>>  }
+>>  EXPORT_SYMBOL(pci_remove_bus);
+>>
+>> -static void __pci_remove_behind_bridge(struct pci_dev *dev);
+>> +static void __pci_remove_bus_devices(struct pci_bus *bus);
+>>  /**
+>>  * pci_stop_and_remove_bus_device - remove a PCI device and any children
+>>  * @dev: the device to remove
+>> @@ -96,7 +96,7 @@ void __pci_remove_bus_device(struct pci_dev *dev)
+>>        if (dev->subordinate) {
+>>                struct pci_bus *b = dev->subordinate;
+>>
+>> -               __pci_remove_behind_bridge(dev);
+>> +               __pci_remove_bus_devices(b);
+>>                pci_remove_bus(b);
+>>                dev->subordinate = NULL;
+>>        }
+>> @@ -111,22 +111,12 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+>>        __pci_remove_bus_device(dev);
+>>  }
+>>
+>> -static void __pci_remove_behind_bridge(struct pci_dev *dev)
+>> +static void __pci_remove_bus_devices(struct pci_bus *bus)
+>>  {
+>>        struct list_head *l, *n;
+>>
+>> -       if (dev->subordinate)
+>> -               list_for_each_safe(l, n, &dev->subordinate->devices)
+>> -                       __pci_remove_bus_device(pci_dev_b(l));
+>> -}
+>> -
+>> -static void pci_stop_behind_bridge(struct pci_dev *dev)
+>> -{
+>> -       struct list_head *l, *n;
+>> -
+>> -       if (dev->subordinate)
+>> -               list_for_each_safe(l, n, &dev->subordinate->devices)
+>> -                       pci_stop_bus_device(pci_dev_b(l));
+>> +       list_for_each_safe(l, n, &bus->devices)
+>> +               __pci_remove_bus_device(pci_dev_b(l));
 >
-> https://bugzilla.kernel.org/show_bug.cgi?id=43003
+> Use list_for_each_entry_safe() so you don't need pci_dev_b().
+
+just want to keep the patch to simple, and looks like just name renaming.
+
+also use list_for_each_safe instead of list_for_each_entry_safe
+
+could have less conversion.
+
 >
->        I attached the screenshot. Thanks.
+>>  }
+>>
+>>  static void pci_stop_bus_devices(struct pci_bus *bus)
+>> @@ -158,8 +148,12 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+>>  */
+>>  void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+>>  {
+>> -       pci_stop_behind_bridge(dev);
+>> -       __pci_remove_behind_bridge(dev);
+>> +       struct pci_bus *bus = dev->subordinate;
+>> +
+>> +       if (bus) {
+>
+> Don't check "bus" here.  If the caller screws up and passes a
+> non-bridge pointer, I want to learn about it rather than ignore it.
 
-Might be the same as this report:
-http://www.spinics.net/lists/linux-pci/msg14497.html
+old code have that
+           if (dev->subordinate)
 
-Matthew, the screenshot in bugzilla has a partial backtrace, but I
-doubt it's enough to be useful.
+checking.
+
+Yinghai
