@@ -1,89 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [RFC PATCH] usb, PCI: split quirk for usb host controller to three
-Date: Thu,  1 Mar 2012 09:17:07 -0800
-Message-Id: <1330622227-4209-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:55703 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019Ab2CIGh5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 01:37:57 -0500
+Date: Fri, 9 Mar 2012 07:37:40 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 09/11] ARM: tegra: Rewrite PCIe support as a driver
+Message-ID: <20120309063739.GC25208@avionic-0098.mockup.avionic-design.de>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-10-git-send-email-thierry.reding@avionic-design.de>
+ <4F5911E0.6060802@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="uh9ZiVrAOUUm9fzH"
+In-Reply-To: <4F5911E0.6060802@wwwdotorg.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-so we avoid checking class again and again in that quirk.
 
-need to be applied after pci/linux-next and usb/usb-next
+--uh9ZiVrAOUUm9fzH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+* Stephen Warren wrote:
+> On 03/08/2012 07:51 AM, Thierry Reding wrote:
+> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+>=20
+> Patch description?
 
----
- drivers/usb/host/pci-quirks.c |   42 ++++++++++++++++++++++++++++--------------
- 1 file changed, 28 insertions(+), 14 deletions(-)
+I actually sat in front of the editor for a couple of minutes and I just
+couldn't think of anything. I'll try harder for the next version.
 
-Index: linux-2.6/drivers/usb/host/pci-quirks.c
-===================================================================
---- linux-2.6.orig/drivers/usb/host/pci-quirks.c
-+++ linux-2.6/drivers/usb/host/pci-quirks.c
-@@ -884,33 +884,47 @@ static void __devinit quirk_usb_handoff_
- 	iounmap(base);
- }
- 
--static void __devinit quirk_usb_early_handoff(struct pci_dev *pdev)
-+static void __devinit quirk_usb_early_handoff_uhci(struct pci_dev *pdev)
-+{
-+	quirk_usb_handoff_uhci(pdev);
-+}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_SERIAL_USB_UHCI, 0, quirk_usb_early_handoff_uhci);
-+
-+static void __devinit quirk_usb_early_handoff_ohci(struct pci_dev *pdev)
- {
- 	/* Skip Netlogic mips SoC's internal PCI USB controller.
- 	 * This device does not need/support EHCI/OHCI handoff
- 	 */
- 	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
--	if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
--			pdev->class != PCI_CLASS_SERIAL_USB_XHCI)
-+
-+	quirk_usb_handoff_ohci(pdev);
-+}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_SERIAL_USB_OHCI, 0, quirk_usb_early_handoff_ohci);
-+
-+static void __devinit quirk_usb_early_handoff_ehci(struct pci_dev *pdev)
-+{
-+	if (pdev->vendor == 0x184e)	/* vendor Netlogic */
- 		return;
- 
-+	quirk_usb_handoff_ehci(pdev);
-+}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_SERIAL_USB_EHCI, 0, quirk_usb_early_handoff_ehci);
-+
-+static void __devinit quirk_usb_early_handoff_xhci(struct pci_dev *pdev)
-+{
- 	if (pci_enable_device(pdev) < 0) {
- 		dev_warn(&pdev->dev, "Can't enable PCI device, "
- 				"BIOS handoff failed.\n");
- 		return;
- 	}
--	if (pdev->class == PCI_CLASS_SERIAL_USB_UHCI)
--		quirk_usb_handoff_uhci(pdev);
--	else if (pdev->class == PCI_CLASS_SERIAL_USB_OHCI)
--		quirk_usb_handoff_ohci(pdev);
--	else if (pdev->class == PCI_CLASS_SERIAL_USB_EHCI)
--		quirk_usb_handoff_ehci(pdev);
--	else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
--		quirk_usb_handoff_xhci(pdev);
-+
-+	quirk_usb_handoff_xhci(pdev);
-+
- 	pci_disable_device(pdev);
- }
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
--			PCI_CLASS_SERIAL_USB, 8, quirk_usb_early_handoff);
-+		PCI_CLASS_SERIAL_USB_XHCI, 0, quirk_usb_early_handoff_xhci);
+> > diff --git a/arch/arm/mach-tegra/board-harmony-pcie.c b/arch/arm/mach-t=
+egra/board-harmony-pcie.c
+> ...
+> > -static int __init harmony_pcie_init(void)
+> > +static int tegra_pcie_init(struct platform_device *pdev)
+>=20
+> That name should probably still be called harmony_something() since it's
+> still board-specific.
+
+Okay, I'll rename it to harmony_pcie_init().
+
+> I wonder how having a per-board callback will integrate with device
+> tree. I guess I'll find out when I review patch 11:-)
+>=20
+> > diff --git a/arch/arm/mach-tegra/board-trimslice.c b/arch/arm/mach-tegr=
+a/board-trimslice.c
+>=20
+> > +static int __init trimslice_pci_init(void)
+> >  {
+> >  	if (!machine_is_trimslice())
+> >  		return 0;
+>=20
+> You can remove that test now.
+
+Okay.
+
+> > diff --git a/arch/arm/mach-tegra/board.h b/arch/arm/mach-tegra/board.h
+>=20
+> > +#define TEGRA_PCIE_MAX_PORTS 2
+> > +
+> > +struct tegra_pcie_pdata {
+> > +	int (*init)(struct platform_device *pdev);
+> > +	int (*exit)(struct platform_device *pdev);
+> > +	bool enable_ports[TEGRA_PCIE_MAX_PORTS];
+> > +};
+>=20
+> That's a somewhat odd place to put the header; a dedicated
+> mach-tegra/include/mach/tegra_pcie_pdata.h or
+> include/linux/platform_data/tegra_pcie.h might make more sense.
+
+mach-tegra/include/mach/pcie.h perhaps? That would be less redundant.
+
+Thierry
+
+--uh9ZiVrAOUUm9fzH
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk9ZpTMACgkQZ+BJyKLjJp/pSwCfdVVc3xBYZSgaFzcanO8KldvB
+K1oAoI0BXl/hmtAwRf8YgxPKSxKK+Gf9
+=F9LR
+-----END PGP SIGNATURE-----
+
+--uh9ZiVrAOUUm9fzH--
