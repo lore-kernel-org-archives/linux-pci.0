@@ -1,87 +1,85 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120313081235.GC15333@redhat.com>
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
- <20120313081235.GC15333@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 15 Mar 2012 15:08:43 -0600
-Message-ID: <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
-Subject: Re: Initializing iwl3945 error
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 19/37] PCI: Add pci_stop_and_remove_bus()
+Date: Fri,  9 Mar 2012 23:00:19 -0800
+Message-Id: <1331362837-10740-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2012 at 2:12 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Sun, Mar 11, 2012 at 05:43:26PM +0000, Kamil Grzebien wrote:
->> I've initialisation problem with my iwl3945 network card in Dell XPS
->> M1530 laptop. The issue is known and described in couple of bug
->> reports (eg. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143).
->> There are workarounds but I'd like to solve the problem permanently.
->> Basically when initializing I get:
->>
->> iwl3945 0000:0b:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
->> iwl3945 0000:0b:00.0: setting latency timer to 64
->> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->> ....
->> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->> iwl3945 0000:0b:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
->> iwl3945 0000:0b:00.0: EEPROM not found, EEPROM_GP=0xffffffff
-> It's worth to mansion that this problem happen after wakeup from suspend
-> to ram.
->
->> 1. Driver can't initialize card as all ioread32/iowrite32 seems to not
->> do their job. All reads finalize with 0xffffffff.
->>
->> However I can see that:
->> - pci_iomap(pdev, 0, 0) doesn't return error,
->> - pci_resource_start(pdev, 0) seems gives correct address (I can
->> compare it with the one I can see in /proc/iomem).
->>
->> If I access the memory directly, not by mapping, I can write and read
->> pci memory but driver load fails anyway. I don't understand why can't
->> access using mapped memory.
-> How do you access memory directly ?
->
->> 2. If I check BASE_ADDRESS with setpci it doesn't give correct values:
->>
->> # setpci -v -s 0b:00.0 BASE_ADDRESS_0 BASE_ADDRESS_1
->> 0000:0b:00.0 @10 = 00000000
->> 0000:0b:00.0 @14 = 00000000
->>
->> Not sure if it's done by driver itself or it should point correct
->> values even if the driver wasn't fully loaded.
->>
->> Have you got any idea of:
->> - why IO memory isn't accessible? what could cause that?
->> - how APIC could change the load process in this particular case? (if
->> I boot with noapic kernel option it usually works fine)
-> Is this really noapic or maybe noacpi ? ACPI manage PCIe devices.
->
->> This issue is reproducible in 100% on my system when I turn on the
->> machine. It doesn't occur after some work on it. I'd be very happy to
->> get rid of the issue.
->>
->> Could you point some ideas that might be worth checking in driver or
->> kernel please? I've tried couple of ideas but none worked for me.
->
-> Would be good to check if pcie bridge is configured correctly after
-> suspend to ram. But I don't know how to do this, that's why we are
-> on linux-pci mailing list :-)
->
-> Note we have similar bug report, which was actual regression and
-> that problem is already fixed by PCI patch:
-> http://marc.info/?l=linux-kernel&m=132577331232330&w=2
+It supports both pci root bus and pci bus under pci bridge.
 
-The bug report (http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143)
-has a lot of logs, but they're pretty old and I can't tell how
-applicable they are to your situation.
+-v2: clear pci_bridge's subordinate.
 
-It would be useful to see a complete dmesg log, /proc/iomem, and
-"lspci -vv" output from your machine after the problem occurs, and
-also the same information when it works (when using the noapic flag).
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c |   32 ++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    1 +
+ 2 files changed, 33 insertions(+), 0 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index d4fdf7b..9ffc071 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -170,6 +170,38 @@ void pci_stop_bus_device(struct pci_dev *dev)
+ 	pci_stop_dev(dev);
+ }
+ 
++static void pci_stop_host_bridge(struct pci_host_bridge *bridge)
++{
++	device_unregister(&bridge->dev);
++}
++/*
++ * it will support pci root bus too, in that case we need
++ *  stop and remove host bridge
++ */
++void pci_stop_and_remove_bus(struct pci_bus *bus)
++{
++	struct pci_host_bridge *host_bridge = NULL;
++	struct pci_dev *pci_bridge = NULL;
++
++	pci_stop_bus_devices(bus);
++
++	if (pci_is_root_bus(bus)) {
++		host_bridge = to_pci_host_bridge(bus->bridge);
++		pci_stop_host_bridge(host_bridge);
++	} else
++		pci_bridge = bus->self;
++
++	__pci_remove_bus_devices(bus);
++
++	pci_remove_bus(bus);
++
++	if (host_bridge)
++		host_bridge->bus = NULL;
++
++	if (pci_bridge)
++		pci_bridge->subordinate = NULL;
++}
++
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+ EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
+ EXPORT_SYMBOL_GPL(pci_stop_bus_device);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 860091f..8874b90 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -702,6 +702,7 @@ extern void pci_dev_put(struct pci_dev *dev);
+ extern void pci_remove_bus(struct pci_bus *b);
+ extern void __pci_remove_bus_device(struct pci_dev *dev);
+ extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++void pci_stop_and_remove_bus(struct pci_bus *bus);
+ extern void pci_stop_bus_device(struct pci_dev *dev);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
+-- 
+1.7.7
+
