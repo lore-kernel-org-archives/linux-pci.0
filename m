@@ -1,69 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:37288 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299Ab2CHUJN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 15:09:13 -0500
-Message-ID: <4F5911E0.6060802@wwwdotorg.org>
-Date: Thu, 08 Mar 2012 13:09:04 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 09/11] ARM: tegra: Rewrite PCIe support as a driver
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-10-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1331218291-16119-10-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 16/37] PCI: Move pci_stop_and_remove_behind_bridge() down
+Date: Fri,  9 Mar 2012 23:00:16 -0800
+Message-Id: <1331362837-10740-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2012 07:51 AM, Thierry Reding wrote:
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Later it will use pci_stop_bus_devices instead of pci_stop_behind_bridge.
 
-Patch description?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c |   30 +++++++++++++++---------------
+ 1 files changed, 15 insertions(+), 15 deletions(-)
 
-> diff --git a/arch/arm/mach-tegra/board-harmony-pcie.c b/arch/arm/mach-tegra/board-harmony-pcie.c
-...
-> -static int __init harmony_pcie_init(void)
-> +static int tegra_pcie_init(struct platform_device *pdev)
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 04a4861..243d59b 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -129,21 +129,6 @@ static void pci_stop_behind_bridge(struct pci_dev *dev)
+ 			pci_stop_bus_device(pci_dev_b(l));
+ }
+ 
+-/**
+- * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
+- *					 a PCI bridge
+- * @dev: PCI bridge device
+- *
+- * Remove all devices on the bus, except for the parent bridge.
+- * This also removes any child buses, and any devices they may
+- * contain in a depth-first manner.
+- */
+-void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+-{
+-	pci_stop_behind_bridge(dev);
+-	__pci_remove_behind_bridge(dev);
+-}
+-
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+ {
+ 	struct list_head *l, *n;
+@@ -163,6 +148,21 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+ }
+ 
+ /**
++ * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
++ *					 a PCI bridge
++ * @dev: PCI bridge device
++ *
++ * Remove all devices on the bus, except for the parent bridge.
++ * This also removes any child buses, and any devices they may
++ * contain in a depth-first manner.
++ */
++void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
++{
++	pci_stop_behind_bridge(dev);
++	__pci_remove_behind_bridge(dev);
++}
++
++/**
+  * pci_stop_bus_device - stop a PCI device and any children
+  * @dev: the device to stop
+  *
+-- 
+1.7.7
 
-That name should probably still be called harmony_something() since it's
-still board-specific.
-
-I wonder how having a per-board callback will integrate with device
-tree. I guess I'll find out when I review patch 11:-)
-
-> diff --git a/arch/arm/mach-tegra/board-trimslice.c b/arch/arm/mach-tegra/board-trimslice.c
-
-> +static int __init trimslice_pci_init(void)
->  {
->  	if (!machine_is_trimslice())
->  		return 0;
-
-You can remove that test now.
-
-> diff --git a/arch/arm/mach-tegra/board.h b/arch/arm/mach-tegra/board.h
-
-> +#define TEGRA_PCIE_MAX_PORTS 2
-> +
-> +struct tegra_pcie_pdata {
-> +	int (*init)(struct platform_device *pdev);
-> +	int (*exit)(struct platform_device *pdev);
-> +	bool enable_ports[TEGRA_PCIE_MAX_PORTS];
-> +};
-
-That's a somewhat odd place to put the header; a dedicated
-mach-tegra/include/mach/tegra_pcie_pdata.h or
-include/linux/platform_data/tegra_pcie.h might make more sense.
-
-Aside from those pretty minor issues, this all looks great. Thanks for
-fixing our driver!
