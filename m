@@ -1,129 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:50152 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757285Ab2CESEA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Mar 2012 13:04:00 -0500
-Received: by lahj13 with SMTP id j13so4929356lah.19
-        for <linux-pci@vger.kernel.org>; Mon, 05 Mar 2012 10:03:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4f548ed1.4o6PhHmCeKTSPZXU%tadeusz.struk@intel.com>
-References: <4f548ed1.4o6PhHmCeKTSPZXU%tadeusz.struk@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 5 Mar 2012 11:03:38 -0700
-Message-ID: <CAErSpo4yiMrBcBPSV5MLKYsLQwhBA4L-fOHr4ocHDO9NwBpG7Q@mail.gmail.com>
-Subject: Re: [PATCH 1/1 v3] PCI: Device specific reset function
-To: Tadeusz Struk <tadeusz.struk@intel.com>
-Cc: jbarnes@virtuousgeek.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from acsinet15.oracle.com ([141.146.126.227]:25743 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753294Ab2CJHDO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 02:03:14 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 30/37] PCI: Add __pci_scan_root_bus() that can skip bus_add
+Date: Fri,  9 Mar 2012 23:00:30 -0800
+Message-Id: <1331362837-10740-31-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 5, 2012 at 3:00 AM, Tadeusz Struk <tadeusz.struk@intel.com> wrote:
->
-> ---
->  drivers/pci/pci.h    |    1 +
->  drivers/pci/quirks.c |   33 +++++++++++++++++++++++++++------
->  include/linux/pci.h  |    1 +
->  3 files changed, 29 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 1009a5e..4d10479 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -315,6 +315,7 @@ struct pci_dev_reset_methods {
->        u16 vendor;
->        u16 device;
->        int (*reset)(struct pci_dev *dev, int probe);
-> +       struct list_head list;
->  };
->
->  #ifdef CONFIG_PCI_QUIRKS
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6476547..f423d2f 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3070,26 +3070,47 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
->  }
->
->  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> -
-> -static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
-> +static struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->        { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
-> -                reset_intel_82599_sfp_virtfn },
-> +               reset_intel_82599_sfp_virtfn },
->        { PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
->                reset_intel_generic_dev },
-> -       { 0 }
->  };
->
-> +static LIST_HEAD(reset_list);
-> +
-> +void pci_dev_specific_reset_add(struct pci_dev_reset_methods *reset_method)
-> +{
-> +       INIT_LIST_HEAD(&reset_method->list);
-> +       list_add(&reset_method->list, &reset_list);
-> +}
-> +
-> +static int __init pci_dev_specific_reset_init(void)
-> +{
-> +       int i;
-> +
-> +       for (i = 0; i < ARRAY_SIZE(pci_dev_reset_methods); i++) {
-> +               pci_dev_specific_reset_add(&pci_dev_reset_methods[i]);
-> +       }
-> +       return 0;
-> +}
-> +
-> +late_initcall(pci_dev_specific_reset_init);
-> +
->  int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  {
->        const struct pci_dev_reset_methods *i;
-> +       struct pci_driver *drv = dev->driver;
-> +
-> +       if (drv && drv->reset)
-> +               return drv->reset(dev, probe);
->
-> -       for (i = pci_dev_reset_methods; i->reset; i++) {
-> +       list_for_each_entry(i, &reset_list, list) {
->                if ((i->vendor == dev->vendor ||
->                     i->vendor == (u16)PCI_ANY_ID) &&
->                    (i->device == dev->device ||
->                     i->device == (u16)PCI_ANY_ID))
->                        return i->reset(dev, probe);
->        }
-> -
->        return -ENOTTY;
->  }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a16b1df..a3a0bc5 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -560,6 +560,7 @@ struct pci_driver {
->        int  (*resume_early) (struct pci_dev *dev);
->        int  (*resume) (struct pci_dev *dev);                   /* Device woken up */
->        void (*shutdown) (struct pci_dev *dev);
-> +       int  (*reset) (struct pci_dev *dev, int probe); /* Device specific reset */
->        struct pci_error_handlers *err_handler;
->        struct device_driver    driver;
->        struct pci_dynids dynids;
+So could insert pus pci_assign_unassigned_bus_resources() before do bus_add.
 
-This patch now consists of two pieces:
-  1) Convert the reset method table to a list, and
-  2) Add the "reset" function pointer in struct pci_driver and the "if
-(drv && drv->reset)" block.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   13 ++++++++++---
+ include/linux/pci.h |    3 +++
+ 2 files changed, 13 insertions(+), 3 deletions(-)
 
-These should be split into two patches.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8512e0d..0ca213c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1953,8 +1953,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus * __devinit __pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources,
++		bool bus_add)
+ {
+ 	struct pci_bus *b;
+ 	struct pci_host_bridge_window *window, *n;
+@@ -1985,9 +1986,15 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!found)
+ 		pci_bus_update_busn_res_end(b, b->subordinate);
+ 
+-	pci_bus_add_devices(b);
++	if (bus_add)
++		pci_bus_add_devices(b);
+ 	return b;
+ }
++struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	return __pci_scan_root_bus(parent, bus, ops, sysdata, resources, true);
++}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ /* Deprecated; use pci_scan_root_bus() instead */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8874b90..ec8c4cf 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -675,6 +675,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
++struct pci_bus * __devinit __pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources,
++		bool bus_add);
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+-- 
+1.7.7
 
-After you split them, I don't think you even need part 1, so you
-should probably just drop it.
-
-Common practice would be to also include your driver patch that
-actually uses the pci_driver.reset pointer as an additional patch in
-the same series.  That gives us more confidence that this solution
-actually works and will be used.
-
-Bjorn
