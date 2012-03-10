@@ -7,101 +7,68 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 15/37] PCI, sysfs: Clean up rescan/remove with scheule_callback
-Date: Fri,  9 Mar 2012 23:00:15 -0800
-Message-Id: <1331362837-10740-16-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v2 33/37] x86, PCI: Add pcibios_root_rescan()
+Date: Fri,  9 Mar 2012 23:00:33 -0800
+Message-Id: <1331362837-10740-34-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
 References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change to use three return according to Bjorn.
+Need use it to rescan root bus that was not added via acpi probe.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci-sysfs.c |   37 ++++++++++++++++++++-----------------
- 1 files changed, 20 insertions(+), 17 deletions(-)
+ arch/x86/include/asm/pci.h |    2 ++
+ arch/x86/pci/legacy.c      |   25 +++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 1794508..4697afe 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -338,17 +338,17 @@ static ssize_t
- dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
- 		 const char *buf, size_t count)
- {
--	int ret = 0;
-+	int err;
- 	unsigned long val;
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index bb015c7..332c191 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -30,6 +30,8 @@ extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 					    int node);
+ extern struct pci_bus *pci_scan_bus_with_sysdata(int busno);
  
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
-+	if (!val)
-+		return count;
- 
--	if (val)
--		ret = device_schedule_callback(dev, bridge_rescan_callback);
--
--	if (ret)
--		count = ret;
-+	err = device_schedule_callback(dev, bridge_rescan_callback);
-+	if (err)
-+		return err;
- 
- 	return count;
- }
-@@ -369,7 +369,7 @@ static ssize_t
- remove_store(struct device *dev, struct device_attribute *dummy,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
-+	int err;
- 	unsigned long val;
- 
- 	if (strict_strtoul(buf, 0, &val) < 0)
-@@ -378,10 +378,13 @@ remove_store(struct device *dev, struct device_attribute *dummy,
- 	/* An attribute cannot be unregistered by one of its own methods,
- 	 * so we have to use this roundabout approach.
- 	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
-+	if (!val)
-+		return count;
++void pcibios_root_rescan(void);
 +
-+	err = device_schedule_callback(dev, remove_callback);
-+	if (err)
-+		return err;
+ #ifdef CONFIG_PCI
+ 
+ #ifdef CONFIG_PCI_DOMAINS
+diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+index aab0e41..251f838 100644
+--- a/arch/x86/pci/legacy.c
++++ b/arch/x86/pci/legacy.c
+@@ -79,3 +79,28 @@ int __init pci_subsys_init(void)
+ 	return 0;
+ }
+ subsys_initcall(pci_subsys_init);
 +
- 	return count;
- }
- 
-@@ -397,17 +400,17 @@ static ssize_t
- dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
- 		 const char *buf, size_t count)
- {
--	int ret = 0;
-+	int err;
- 	unsigned long val;
- 
- 	if (strict_strtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
-+	if (!val)
-+		return count;
- 
--	if (val)
--		ret = device_schedule_callback(dev, bus_rescan_callback);
--
--	if (ret)
--		count = ret;
-+	err = device_schedule_callback(dev, bus_rescan_callback);
-+	if (err)
-+		return err;
- 
- 	return count;
- }
++void __ref pcibios_root_rescan(void)
++{
++	int busn;
++	struct pci_bus *bus;
++
++	if (pcibios_last_bus <= 0 || pcibios_last_bus > 0xff)
++		return;
++
++	for (busn = 0; busn <= pcibios_last_bus; busn++) {
++		bus = pci_find_bus(0, busn);
++
++		if (bus)
++			continue;
++
++		bus = __pcibios_scan_specific_bus(busn, false);
++
++		if (!bus)
++			continue;
++
++		pci_assign_unassigned_bus_resources(bus);
++
++		pci_bus_add_devices(bus);
++	}
++}
 -- 
 1.7.7
 
