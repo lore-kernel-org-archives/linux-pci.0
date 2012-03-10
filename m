@@ -6,83 +6,54 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 13/26] PCI: Use for_each_res pci_assign_resource
-Date: Sun, 18 Mar 2012 22:48:36 -0700
-Message-Id: <1332136129-14010-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Subject: [PATCH v2 03/37] IOMMU: Fix tboot force iommu logic
+Date: Fri,  9 Mar 2012 23:00:03 -0800
+Message-Id: <1331362837-10740-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-res.c |   14 ++++++--------
- 1 files changed, 6 insertions(+), 8 deletions(-)
+Should check dmar_disabled just after tboot_force_iommu.
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index eea85da..161a015 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -92,7 +92,7 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+Otherwise when tboot is not used, and intel_iommu=off, and nointrmap
+still get dmar_table_init() called. that will cause some get_device
+calling, and it will have some device refcount leaking.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: iommu@lists.linux-foundation.org
+---
+ drivers/iommu/intel-iommu.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 49eb412..7c71a3a 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3768,6 +3768,9 @@ int __init intel_iommu_init(void)
+ 	/* VT-d is required for a TXT/tboot launch, so enforce that */
+ 	force_on = tboot_force_iommu();
  
- int pci_claim_resource(struct pci_dev *dev, int resource)
- {
--	struct resource *res = &dev->resource[resource];
-+	struct resource *res = pci_dev_resource_n(dev, resource);
- 	struct resource *root, *conflict;
++	if (no_iommu || dmar_disabled)
++		return -ENODEV;
++
+ 	if (dmar_table_init()) {
+ 		if (force_on)
+ 			panic("tboot: Failed to initialize DMAR table\n");
+@@ -3780,9 +3783,6 @@ int __init intel_iommu_init(void)
+ 		return 	-ENODEV;
+ 	}
  
- 	root = pci_find_parent_resource(dev, res);
-@@ -130,7 +130,7 @@ void pci_disable_bridge_window(struct pci_dev *dev)
- static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 		int resno, resource_size_t size, resource_size_t align)
- {
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 	resource_size_t min;
- 	int ret;
- 
-@@ -208,7 +208,7 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
- 
- static int _pci_assign_resource(struct pci_dev *dev, int resno, int size, resource_size_t min_align)
- {
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 	struct pci_bus *bus;
- 	int ret;
- 	char *type;
-@@ -241,7 +241,7 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno, int size, resour
- int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsize,
- 			resource_size_t min_align)
- {
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 	resource_size_t new_size;
- 	int ret;
- 
-@@ -265,7 +265,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 
- int pci_assign_resource(struct pci_dev *dev, int resno)
- {
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 	resource_size_t align, size;
- 	struct pci_bus *bus;
- 	int ret;
-@@ -307,12 +307,10 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
- 	pci_read_config_word(dev, PCI_COMMAND, &cmd);
- 	old_cmd = cmd;
- 
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+	for_each_pci_dev_all_resource(dev, r, i) {
- 		if (!(mask & (1 << i)))
- 			continue;
- 
--		r = &dev->resource[i];
+-	if (no_iommu || dmar_disabled)
+-		return -ENODEV;
 -
- 		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
- 			continue;
- 		if ((i == PCI_ROM_RESOURCE) &&
+ 	if (iommu_init_mempool()) {
+ 		if (force_on)
+ 			panic("tboot: Failed to initialize iommu memory\n");
 -- 
 1.7.7
 
