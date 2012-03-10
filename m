@@ -1,53 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:34452 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758129Ab2CIQmj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 11:42:39 -0500
-Message-ID: <4F5A32F8.80001@wwwdotorg.org>
-Date: Fri, 09 Mar 2012 09:42:32 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 09/11] ARM: tegra: Rewrite PCIe support as a driver
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-10-git-send-email-thierry.reding@avionic-design.de> <4F5911E0.6060802@wwwdotorg.org> <20120309063739.GC25208@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120309063739.GC25208@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 06/37] PCI: Move back pci_rescan_bus()
+Date: Fri,  9 Mar 2012 23:00:06 -0800
+Message-Id: <1331362837-10740-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2012 11:37 PM, Thierry Reding wrote:
-> * Stephen Warren wrote:
->> On 03/08/2012 07:51 AM, Thierry Reding wrote:
->>> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-...
->>> diff --git a/arch/arm/mach-tegra/board.h b/arch/arm/mach-tegra/board.h
->>
->>> +#define TEGRA_PCIE_MAX_PORTS 2
->>> +
->>> +struct tegra_pcie_pdata {
->>> +	int (*init)(struct platform_device *pdev);
->>> +	int (*exit)(struct platform_device *pdev);
->>> +	bool enable_ports[TEGRA_PCIE_MAX_PORTS];
->>> +};
->>
->> That's a somewhat odd place to put the header; a dedicated
->> mach-tegra/include/mach/tegra_pcie_pdata.h or
->> include/linux/platform_data/tegra_pcie.h might make more sense.
-> 
-> mach-tegra/include/mach/pcie.h perhaps? That would be less redundant.
+Now we have pci_assign_unassigned_bus_resources() in place.
 
-New files in that directory should have tegra in the name somewhere, so
-that when multi-SoC kernels are built, and multiple mach-*/include/mach
-directories are in the include path (or files get moved from those paths
-into a single common place), you know which include file you're getting.
+So move back pci_rescan_bus to probe.c where it should be.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c     |   21 +++++++++++++++++++++
+ drivers/pci/setup-bus.c |   22 ----------------------
+ 2 files changed, 21 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 67071b0..0d779f6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2054,6 +2054,27 @@ unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+ 	return max;
+ }
+ 
++/**
++ * pci_rescan_bus - scan a PCI bus for devices.
++ * @bus: PCI bus to scan
++ *
++ * Scan a PCI bus and child buses for new devices, adds them,
++ * and enables them.
++ *
++ * Returns the max number of subordinate bus discovered.
++ */
++unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++{
++	unsigned int max;
++
++	max = pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
++	pci_bus_add_devices(bus);
++
++	return max;
++}
++EXPORT_SYMBOL_GPL(pci_rescan_bus);
++
+ EXPORT_SYMBOL(pci_add_new_bus);
+ EXPORT_SYMBOL(pci_scan_slot);
+ EXPORT_SYMBOL(pci_scan_bridge);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6443c81..f35a679 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1507,25 +1507,3 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 
+ 	pci_enable_bridges(bus);
+ }
+-#ifdef CONFIG_HOTPLUG
+-/**
+- * pci_rescan_bus - scan a PCI bus for devices.
+- * @bus: PCI bus to scan
+- *
+- * Scan a PCI bus and child buses for new devices, adds them,
+- * and enables them.
+- *
+- * Returns the max number of subordinate bus discovered.
+- */
+-unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
+-{
+-	unsigned int max;
+-
+-	max = pci_scan_child_bus(bus);
+-	pci_assign_unassigned_bus_resources(bus);
+-	pci_bus_add_devices(bus);
+-
+-	return max;
+-}
+-EXPORT_SYMBOL_GPL(pci_rescan_bus);
+-#endif
+-- 
+1.7.7
+
