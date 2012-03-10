@@ -1,62 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from opensource.wolfsonmicro.com ([80.75.67.52]:50619 "EHLO
-	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753738Ab2CHTIa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 14:08:30 -0500
-Date: Thu, 8 Mar 2012 19:08:27 +0000
-From: Mark Brown <broonie@opensource.wolfsonmicro.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 04/11] regulator: tps6586x: fix typo in debug message
-Message-ID: <20120308190827.GB3638@opensource.wolfsonmicro.com>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-5-git-send-email-thierry.reding@avionic-design.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Hmb9n29fjuiORm2l"
-In-Reply-To: <1331218291-16119-5-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 07/37] PCI: pci_bus_size_bridges() should not size own bridge
+Date: Fri,  9 Mar 2012 23:00:07 -0800
+Message-Id: <1331362837-10740-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+During checking acpiphp code, found following sequence:
+        pci_bus_size_bridges(bus);
+        pci_bus_assign_resources(bus);
+	pci_enable_bridges(bus);
 
---Hmb9n29fjuiORm2l
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+The problem is that when bus is not root bus, pci_bus_size_bridges would also size
+own pci bridge bus->self if that bridge resource is not inserted before.
+but later pci_bus_assign_resources will not allocate those size bridge res.
 
-On Thu, Mar 08, 2012 at 03:51:24PM +0100, Thierry Reding wrote:
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+So try make it less confusing, let it does not include self sizing.
+and add with_self parameter info __pci_bus_size_bridge()
 
-Applied, thanks.
+Fixes caller in pci hotplug componets.
 
---Hmb9n29fjuiORm2l
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/acpiphp_glue.c     |    2 +-
+ drivers/pci/hotplug/cpci_hotplug_pci.c |    2 +-
+ drivers/pci/hotplug/shpchp_pci.c       |    2 +-
+ drivers/pci/setup-bus.c                |   24 +++++++++++++++---------
+ include/linux/pci.h                    |    1 +
+ 5 files changed, 19 insertions(+), 12 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 806c44f..10b2122 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -816,7 +816,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+ 				max = pci_scan_bridge(bus, dev, max, pass);
+ 				if (pass && dev->subordinate)
+-					pci_bus_size_bridges(dev->subordinate);
++					pci_bus_size_bridges_with_self(dev->subordinate);
+ 			}
+ 		}
+ 	}
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index ae853cc..4ef80ad 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -313,7 +313,7 @@ int __ref cpci_configure_slot(struct slot *slot)
+ 				continue;
+ 			}
+ 			child->subordinate = pci_do_scan_bus(child);
+-			pci_bus_size_bridges(child);
++			pci_bus_size_bridges_with_self(child);
+ 		}
+ 		pci_dev_put(dev);
+ 	}
+diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
+index df7e4bf..d92807b 100644
+--- a/drivers/pci/hotplug/shpchp_pci.c
++++ b/drivers/pci/hotplug/shpchp_pci.c
+@@ -85,7 +85,7 @@ int __ref shpchp_configure_device(struct slot *p_slot)
+ 				continue;
+ 			}
+ 			child->subordinate = pci_do_scan_bus(child);
+-			pci_bus_size_bridges(child);
++			pci_bus_size_bridges_with_self(child);
+ 		}
+ 		pci_configure_slot(dev);
+ 		pci_dev_put(dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f35a679..ec2026c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -982,8 +982,8 @@ handle_done:
+ 	;
+ }
+ 
+-void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+-			struct list_head *realloc_head)
++static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
++			struct list_head *realloc_head, bool with_self)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask;
+@@ -1001,13 +1001,13 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 
+ 		case PCI_CLASS_BRIDGE_PCI:
+ 		default:
+-			__pci_bus_size_bridges(b, realloc_head);
++			__pci_bus_size_bridges(b, realloc_head, true);
+ 			break;
+ 		}
+ 	}
+ 
+-	/* The root bus? */
+-	if (!bus->self)
++	/* Is root bus or not wanted? */
++	if (!bus->self || !with_self)
+ 		return;
+ 
+ 	switch (bus->self->class >> 8) {
+@@ -1047,9 +1047,15 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 	}
+ }
+ 
++void __ref pci_bus_size_bridges_with_self(struct pci_bus *bus)
++{
++	__pci_bus_size_bridges(bus, NULL, true);
++}
++EXPORT_SYMBOL(pci_bus_size_bridges_with_self);
++
+ void __ref pci_bus_size_bridges(struct pci_bus *bus)
+ {
+-	__pci_bus_size_bridges(bus, NULL);
++	__pci_bus_size_bridges(bus, NULL, false);
+ }
+ EXPORT_SYMBOL(pci_bus_size_bridges);
+ 
+@@ -1362,7 +1368,7 @@ again:
+ 	/* Depth first, calculate sizes and alignments of all
+ 	   subordinate buses. */
+ 	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_size_bridges(bus, add_list);
++		__pci_bus_size_bridges(bus, add_list, false);
+ 
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	list_for_each_entry(bus, &pci_root_buses, node)
+@@ -1439,7 +1445,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 				  IORESOURCE_PREFETCH;
+ 
+ again:
+-	__pci_bus_size_bridges(parent, &add_list);
++	__pci_bus_size_bridges(parent, &add_list, true);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+ 	BUG_ON(!list_empty(&add_list));
+ 	tried_times++;
+@@ -1500,7 +1506,7 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
+ 			if (dev->subordinate)
+ 				__pci_bus_size_bridges(dev->subordinate,
+-							 &add_list);
++						 &add_list, true);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	BUG_ON(!list_empty(&add_list));
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 634bbf5..87dceca 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -906,6 +906,7 @@ int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+ void pci_bus_assign_resources(const struct pci_bus *bus);
+ void pci_bus_size_bridges(struct pci_bus *bus);
++void pci_bus_size_bridges_with_self(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+-- 
+1.7.7
 
-iQIcBAEBAgAGBQJPWQOEAAoJEBus8iNuMP3dfu4QAJhJpCq99CRu3OoF3uPsZweM
-+Rc3/bWQya+dZoAPYcytvVTJj0Ijv4rp12TMMBCgrGj0s2nIxWDeIdAtp1XFqOXB
-ubv0dI/mzGLEvPnPNHSD4in2TnKuuabopQkLI1044F5tW4/pQS+OyswyCE7QtaXQ
-mXHMYusZgTQb5IlzL/I4knGEi5DQgB2aJrRI7FeWTTvtUl7+YMF0X8ynMWtU9g80
-h0PtlXc9MSmFICnLGcOr2faYvpUi9IJKGbHno/jgxc0WyJR5QChTwUlNWvzi7qfi
-mXbIOy4todXMpD+a+Egfc8RARf3sWk/IYGJGAwAFSznqo5JmMBrWX6b19kweFvis
-YEiw2jO6wlApJ82E4x0pEsx1mCQRDfML1CWm5VqJGeTLwvcuzHERZrOBwGj8VAr+
-6StLMtMMuDor30ZjkYN/6/3MP69rW0gtG42lNfK3mPN8X++/FL/yD/9Bwn5uZPEt
-d5vUGCgDk3/CSIkUefZeuyMTOwxxf/fO1Tzi0yK1X15ygCqHi7AQA/UcpxBLQslE
-n/7wzU+jCMVaseDWrM0aY94TyNQv/iBVeeio+gHcco8MMsjoiJbbjkNO65pz2PfI
-lKVBD8ORE4Vtd7ziGF4bye29l7ZoTKyLtUbEcekedqyIEi6kKp4iuW4y1QQ0X82A
-T9z9haiuKd8QN1vk7XXg
-=WNKZ
------END PGP SIGNATURE-----
-
---Hmb9n29fjuiORm2l--
