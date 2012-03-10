@@ -1,48 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60405 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964783Ab2CTQXc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 12:23:32 -0400
-Received: by mail-iy0-f174.google.com with SMTP id z16so215351iag.19
-        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 09:23:32 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Ashok Raj <ashok.raj@intel.com>,
-	linux-pci@vger.kernel.org, chenkeping@huawei.com
-Subject: [PATCH 0/5] Improvements to Yinghai's IOAPIC hotplug work on x86
-Date: Wed, 21 Mar 2012 00:20:57 +0800
-Message-Id: <1332260463-13924-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
-References: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 31/37] x86, PCI: add __pci_scan_root_bus_on_node() that can skip bus_add
+Date: Fri,  9 Mar 2012 23:00:31 -0800
+Message-Id: <1331362837-10740-32-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset is based on Yinghua's work for IOAPIC hotplug on x86,
-please refer to http://lwn.net/Articles/483671/.
-The first two patches are minor bugfixes, the third and fourth are
-enhancement to Yinghai's implementation, and the fifth is a RFC patch.
+So could insert pus pci_assign_unassigned_bus_resources() before do bus_add.
 
-I only have an Atom system at hand to build and test the patchset,
-so only the boot logic has been tested until now, need more tests
-about the hotplug logic when having access to systems which support
-IOAPIC hotplug feature.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/pci.h |    2 ++
+ arch/x86/pci/common.c      |   11 ++++++++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-BTW, it's really a nightmare to build and test kernel on an Atom system.
-
-Jiang Liu (5):
-  x86:IRQ: Fix possible invalid memory access when hot-plugging IOAPICs
-  x86:IRQ: Mark unused entries in 'ioapics' array as free at startup
-  x86:IRQ: Enhance irq allocation policy for hot-added IOAPICs
-  x86:IRQ: Correctly manage MMIO resource used by IOAPIC when
-    hot-plugging
-  x86:IRQ: Use memory barriers to protect searching side code
-
- arch/x86/kernel/apic/io_apic.c |  159 ++++++++++++++++++++++++++++------------
- 1 files changed, 113 insertions(+), 46 deletions(-)
-
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index df75d07..bb015c7 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -24,6 +24,8 @@ extern int noioapicquirk;
+ extern int noioapicreroute;
+ 
+ /* scan a bus after allocating a pci_sysdata for it */
++struct pci_bus * __devinit __pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node, bool bus_add);
+ extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 					    int node);
+ extern struct pci_bus *pci_scan_bus_with_sysdata(int busno);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 35931f6..2ebdc231 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -625,7 +625,8 @@ static void release_pci_sysdata(struct pci_host_bridge *bridge)
+ 	kfree(sd);
+ }
+ 
+-struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
++struct pci_bus * __devinit __pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node, bool bus_add)
+ {
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+@@ -639,7 +640,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	sd->node = node;
+ 	x86_pci_root_bus_resources(busno, &resources);
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+-	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
++	bus = __pci_scan_root_bus(NULL, busno, ops, sd, &resources, bus_add);
+ 	if (bus)
+ 		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
+ 					release_pci_sysdata, sd);
+@@ -650,7 +651,11 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 
+ 	return bus;
+ }
+-
++struct pci_bus * __devinit pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node)
++{
++	return __pci_scan_bus_on_node(busno, ops, node, true);
++}
+ struct pci_bus * __devinit pci_scan_bus_with_sysdata(int busno)
+ {
+ 	return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
 -- 
-1.7.5.4
+1.7.7
 
