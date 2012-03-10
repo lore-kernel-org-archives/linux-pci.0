@@ -1,107 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:51801 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758430Ab2C2QcR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2012 12:32:17 -0400
-Date: Thu, 29 Mar 2012 11:32:06 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Matthew Garrett <mjg@redhat.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	stable@vger.kernel.org, Romain Francoise <romain@orebokech.com>,
-	Chris Holland <bandidoirlandes@gmail.com>,
-	Colin Ian King <colin.king@canonical.com>,
-	Hatem Masmoudi <hatem.masmoudi@gmail.com>,
-	janek <jan0x6c@gmail.com>
-Subject: [PATCH resend] ASPM: Fix pcie devices with non-pcie children
-Message-ID: <20120329163206.GA3480@burratino>
-References: <1332857861-11562-1-git-send-email-mjg@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:39380 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932620Ab2CJHC6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 02:02:58 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH v2 27/37] PCI, pci_root_hp: Use acpi_hp_work
+Date: Fri,  9 Mar 2012 23:00:27 -0800
+Message-Id: <1331362837-10740-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Garrett <mjg@redhat.com>
-Date: Tue, 27 Mar 2012 10:17:41 -0400
+Remove local copy: acpi_root_hp_work
 
-Since 3.2.12 and 3.3, some systems are failing to boot with a BUG_ON.
-Some other systems using the pata_jmicron driver fail to boot because
-no disks are detected.  Passing pcie_aspm=force on the kernel command
-line works around it.
-
-The cause: commit 4949be16822e ("PCI: ignore pre-1.1 ASPM quirking
-when ASPM is disabled") changed the behaviour of
-pcie_aspm_sanity_check() to always return 0 if aspm is disabled, in
-order to avoid cases where we changed ASPM state on pre-PCIe 1.1
-devices.  This skipped the secondary function of
-pcie_aspm_sanity_check which was to avoid us enabling ASPM on devices
-that had non-PCIe children, causing trouble later on.  Move the
-aspm_disabled check so we continue to honour that scenario.
-
-Addresses https://bugzilla.kernel.org/show_bug.cgi?id=42979 and
-          http://bugs.debian.org/665420
-
-[jn: with more symptoms in log message]
-
-Reported-by: Romain Francoise <romain@orebokech.com> # kernel panic
-Reported-by: Chris Holland <bandidoirlandes@gmail.com> # disk detection trouble
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
-Cc: stable@vger.kernel.org
-Tested-by: Hatem Masmoudi <hatem.masmoudi@gmail.com> # Dell Latitude E5520
-Tested-by: janek <jan0x6c@gmail.com> # pata_jmicron with JMB362/JMB363
-Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
-Hi Andrew,
+ drivers/acpi/pci_root_hp.c |   34 +++-------------------------------
+ 1 files changed, 3 insertions(+), 31 deletions(-)
 
-This patch only appeared a couple of days ago[1], but it fixes a
-noticeable regression so I would like to make sure the patch becomes
-part of mainline and the 3.2.y- and 3.3.y-stable trees soon.  Could
-you pick it up for linux-next until it makes its way to the PCI tree?
-
-Regression was introduced between 3.3-rc7 and 3.3 and between 3.2.11
-and 3.2.12.  Prevents boot on affected machines, though there is a
-workaround.  Details about the symptoms and fix are above.
-
-Thanks,
-Jonathan
-
-[1] http://thread.gmane.org/gmane.linux.kernel.pci/14503
-
- drivers/pci/pcie/aspm.c |   13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 4bdef24cd412..b500840a143b 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -508,9 +508,6 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
- 	int pos;
- 	u32 reg32;
+diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
+index f5585f5..b453181 100644
+--- a/drivers/acpi/pci_root_hp.c
++++ b/drivers/acpi/pci_root_hp.c
+@@ -79,34 +79,6 @@ static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
+ 	kfree(bridge);
+ }
  
--	if (aspm_disabled)
--		return 0;
+-struct acpi_root_hp_work {
+-	struct work_struct work;
+-	acpi_handle handle;
+-	u32 type;
+-	void *context;
+-};
 -
- 	/*
- 	 * Some functions in a slot might not all be PCIe functions,
- 	 * very strange. Disable ASPM for the whole slot
-@@ -519,6 +516,16 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
- 		pos = pci_pcie_cap(child);
- 		if (!pos)
- 			return -EINVAL;
-+
-+		/*
-+		 * If ASPM is disabled then we're not going to change
-+		 * the BIOS state. It's safe to continue even if it's a
-+		 * pre-1.1 device
-+		 */
-+
-+		if (aspm_disabled)
-+			continue;
-+
- 		/*
- 		 * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
- 		 * RBER bit to determine if a function is 1.1 version device
+-static void alloc_acpi_root_hp_work(acpi_handle handle, u32 type,
+-					void *context,
+-					void (*func)(struct work_struct *work))
+-{
+-	struct acpi_root_hp_work *hp_work;
+-	int ret;
+-
+-	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+-	if (!hp_work)
+-		return;
+-
+-	hp_work->handle = handle;
+-	hp_work->type = type;
+-	hp_work->context = context;
+-
+-	INIT_WORK(&hp_work->work, func);
+-	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+-	if (!ret)
+-		kfree(hp_work);
+-}
+-
+ /* Program resources in newly inserted bridge */
+ static void acpi_root_configure_bridge(acpi_handle handle)
+ {
+@@ -203,11 +175,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_root_hp_work *hp_work;
++	struct acpi_hp_work *hp_work;
+ 	acpi_handle handle;
+ 	u32 type;
+ 
+-	hp_work = container_of(work, struct acpi_root_hp_work, work);
++	hp_work = container_of(work, struct acpi_hp_work, work);
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 
+@@ -255,7 +227,7 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+ 					void *context)
+ {
+-	alloc_acpi_root_hp_work(handle, type, context,
++	alloc_acpi_hp_work(handle, type, context,
+ 				_handle_hotplug_event_root);
+ }
+ 
 -- 
-1.7.10.rc1
+1.7.7
 
