@@ -1,68 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:40012 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754557Ab2CIQrP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 11:47:15 -0500
-Message-ID: <4F5A340F.6080303@wwwdotorg.org>
-Date: Fri, 09 Mar 2012 09:47:11 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 11/11] ARM: tegra: pcie: Add device tree support
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-12-git-send-email-thierry.reding@avionic-design.de> <4F59253D.7070100@wwwdotorg.org> <20120309063115.GA25208@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120309063115.GA25208@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from rcsinet15.oracle.com ([148.87.113.117]:39483 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932684Ab2CJHDX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 02:03:23 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 34/37] x86, PCI: Add arch version pci_root_rescan()
+Date: Fri,  9 Mar 2012 23:00:34 -0800
+Message-Id: <1331362837-10740-35-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2012 11:31 PM, Thierry Reding wrote:
-> * Stephen Warren wrote:
->> On 03/08/2012 07:51 AM, Thierry Reding wrote:
->>> This commit adds support for instantiating the Tegra PCIe controller
->>> from a device tree.
->>>
->>> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
->>
->>> diff --git a/Documentation/devicetree/bindings/pci/tegra-pcie.txt b/Documentation/devicetree/bindings/pci/tegra-pcie.txt
->>
->>> +NVIDIA Tegra PCIe controller
->>> +
->>> +Required properties:
->>> +- compatible: "nvidia,tegra20-pcie"
->>> +- reg: physical base address and length of the controller's registers
->>> +- interrupts: the interrupt outputs of the controller
->>> +
->>> +Optional properties:
->>> +- pex-clk-supply: supply voltage for internal reference clock
->>> +- vdd-supply: power supply for controller (1.05V)
->>
->> Mark, Liam,
->>
->> Should those *-supply properties really be optional? I got the
->> impression talking to Mark in a different thread that all regulators
->> should exist, although their implementation may be via a fixed
->> regulator, with no GPIO, as determined by the board design.
-> 
-> If I read the TrimSlice code correctly, there is no regulator setup required
-> to make PCIe work there presumably because they hardwire the proper voltages.
+It will call acpi version pci_root_rescan and legacy pci_root_rescan.
 
-Yes. I believe that's exactly what the fixed regulator is for.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/common.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-> On the other hand, maybe a better solution in this case would be to use the
-> dummy regulator in those cases.
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 2ebdc231..0ec860f 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -10,6 +10,7 @@
+ #include <linux/init.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/pci-acpi.h>
+ 
+ #include <asm/acpi.h>
+ #include <asm/segment.h>
+@@ -661,6 +662,12 @@ struct pci_bus * __devinit pci_scan_bus_with_sysdata(int busno)
+ 	return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
+ }
+ 
++void arch_pci_root_rescan(void)
++{
++	acpi_pci_root_rescan();
++	pcibios_root_rescan();
++}
++
+ /*
+  * NUMA info for PCI busses
+  *
+-- 
+1.7.7
 
-Mark indicated dummy regulators weren't the preferred mechanism:
-
-http://lkml.org/lkml/2012/2/25/30
