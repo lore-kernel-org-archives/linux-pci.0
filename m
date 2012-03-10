@@ -1,167 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:14615 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755214Ab2CBL4T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 Mar 2012 06:56:19 -0500
-Date: Fri, 02 Mar 2012 11:55:44 +0000
-From: tadeusz.struk@intel.com
-To: jbarnes@virtuousgeek.org, bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org, tadeusz.struk@intel.com
-Subject: [PATCH v2] Dynamically add and remove device specific reset
- functions
-Message-ID: <4f50b540.6AzyOmpHR+z7jLk1%tadeusz.struk@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH v2 26/37] PCI, acpiphp: Use acpi_hp_work
+Date: Fri,  9 Mar 2012 23:00:26 -0800
+Message-Id: <1331362837-10740-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-Reworked according to comments.
-I have a use case where I need to cleanup resource allocated for Virtual
-Functions after a guest OS that used it crashed. This cleanup needs to
-be done before the VF is being FLRed. The only possible way to do this
-seems to be by using pci_dev_specific_reset() function. Unfortunately
-this function only works for devices defined in a static table in the
-drivers/pci/quirks.c file. This patch changes it so that specific reset
-functions can be added and deleted dynamically.
+Remove local defined acpiphp_hp_work.
 
-Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
-
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
- drivers/pci/pci.h    |   14 +++++++++++
- drivers/pci/quirks.c |   61 +++++++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 65 insertions(+), 10 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   42 +++++------------------------------
+ 1 files changed, 6 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 1009a5e..3e95df6 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -312,6 +312,7 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- extern void pci_enable_acs(struct pci_dev *dev);
- 
- struct pci_dev_reset_methods {
-+	struct list_head list;
- 	u16 vendor;
- 	u16 device;
- 	int (*reset)(struct pci_dev *dev, int probe);
-@@ -319,11 +320,24 @@ struct pci_dev_reset_methods {
- 
- #ifdef CONFIG_PCI_QUIRKS
- extern int pci_dev_specific_reset(struct pci_dev *dev, int probe);
-+extern int pci_dev_specific_reset_add(struct pci_dev_reset_methods
-+					*reset_method);
-+extern int pci_dev_specific_reset_remove(struct pci_dev_reset_methods
-+					*reset_method);
- #else
- static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- {
- 	return -ENOTTY;
- }
-+int pci_dev_specific_reset_add(struct pci_dev_reset_methods *reset_method)
-+{
-+	return 0;
-+}
-+int
-+pci_dev_specific_reset_remove(struct pci_dev_reset_methods *reset_method)
-+{
-+	return 0;
-+}
- #endif
- 
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6476547..a0152fd 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3070,26 +3070,67 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 1ca82ae..9f1a195 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1118,34 +1118,6 @@ check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	return AE_OK ;
  }
  
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+-struct acpiphp_hp_work {
+-	struct work_struct work;
+-	acpi_handle handle;
+-	u32 type;
+-	void *context;
+-};
 -
--static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
--		 reset_intel_82599_sfp_virtfn },
--	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-+static struct pci_dev_reset_methods pci_dev_reset_methods[] = {
-+	{ {NULL, NULL}, PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
-+		reset_intel_82599_sfp_virtfn },
-+	{ {NULL, NULL}, PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 		reset_intel_generic_dev },
--	{ 0 }
- };
- 
-+static DEFINE_SPINLOCK(reset_list_lock);
-+static LIST_HEAD(reset_list);
-+
-+static int __init pci_dev_specific_reset_init(void)
-+{
-+	int i;
-+	for (i = 0; i < ARRAY_SIZE(pci_dev_reset_methods); i++) {
-+		pci_dev_specific_reset_add(&pci_dev_reset_methods[i]);
-+	}
-+	return 0;
-+}
-+
-+late_initcall(pci_dev_specific_reset_init);
-+
-+int pci_dev_specific_reset_add(struct pci_dev_reset_methods *reset_method)
-+{
-+	WARN_ON(!reset_method->reset);
-+	INIT_LIST_HEAD(&reset_method->list);
-+	spin_lock(&reset_list_lock);
-+	list_add(&reset_method->list, &reset_list);
-+	spin_unlock(&reset_list_lock);
-+	return 0;
-+}
-+EXPORT_SYMBOL(pci_dev_specific_reset_add);
-+
-+int pci_dev_specific_reset_remove(struct pci_dev_reset_methods *reset_method)
-+{
-+	spin_lock(&reset_list_lock);
-+	list_del(&reset_method->list);
-+	spin_unlock(&reset_list_lock);
-+	return 0;
-+}
-+EXPORT_SYMBOL(pci_dev_specific_reset_remove);
-+
- int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- {
- 	const struct pci_dev_reset_methods *i;
-+	spin_lock(&reset_list_lock);
-+	list_for_each_entry(i, &reset_list, list) {
-+		if (i->vendor == dev->vendor &&
-+		    i->device == dev->device) {
-+			spin_unlock(&reset_list_lock);
-+			return i->reset(dev, probe);
-+		}
-+	}
- 
--	for (i = pci_dev_reset_methods; i->reset; i++) {
-+	list_for_each_entry(i, &reset_list, list) {
- 		if ((i->vendor == dev->vendor ||
- 		     i->vendor == (u16)PCI_ANY_ID) &&
--		    (i->device == dev->device ||
--		     i->device == (u16)PCI_ANY_ID))
-+		     i->device == (u16)PCI_ANY_ID) {
-+			spin_unlock(&reset_list_lock);
- 			return i->reset(dev, probe);
-+		}
- 	}
+-static void alloc_acpiphp_hp_work(acpi_handle handle, u32 type,
+-				  void *context,
+-				  void (*func)(struct work_struct *work))
+-{
+-	struct acpiphp_hp_work *hp_work;
+-	int ret;
 -
-+	spin_unlock(&reset_list_lock);
- 	return -ENOTTY;
+-	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+-	if (!hp_work)
+-		return;
+-
+-	hp_work->handle = handle;
+-	hp_work->type = type;
+-	hp_work->context = context;
+-
+-	INIT_WORK(&hp_work->work, func);
+-	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+-	if (!ret)
+-		kfree(hp_work);
+-}
+-
+ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ {
+ 	struct acpiphp_bridge *bridge;
+@@ -1154,11 +1126,11 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ 				      .pointer = objname };
+ 	struct acpi_device *device;
+ 	int num_sub_bridges = 0;
+-	struct acpiphp_hp_work *hp_work;
++	struct acpi_hp_work *hp_work;
+ 	acpi_handle handle;
+ 	u32 type;
+ 
+-	hp_work = container_of(work, struct acpiphp_hp_work, work);
++	hp_work = container_of(work, struct acpi_hp_work, work);
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 
+@@ -1260,8 +1232,7 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 	 * For now just re-add this work to the kacpi_hotplug_wq so we
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+-	alloc_acpiphp_hp_work(handle, type, context,
+-			      _handle_hotplug_event_bridge);
++	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
  }
+ 
+ static void _handle_hotplug_event_func(struct work_struct *work)
+@@ -1270,12 +1241,12 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpiphp_hp_work *hp_work;
++	struct acpi_hp_work *hp_work;
+ 	acpi_handle handle;
+ 	u32 type;
+ 	void *context;
+ 
+-	hp_work = container_of(work, struct acpiphp_hp_work, work);
++	hp_work = container_of(work, struct acpi_hp_work, work);
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 	context = hp_work->context;
+@@ -1336,8 +1307,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+ 	 * For now just re-add this work to the kacpi_hotplug_wq so we
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+-	alloc_acpiphp_hp_work(handle, type, context,
+-			      _handle_hotplug_event_func);
++	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
+ }
+ 
+ static struct acpi_pci_driver acpi_pci_hp_driver = {
 -- 
-1.7.7.6
-
---------------------------------------------------------------
-Intel Shannon Limited
-Registered in Ireland
-Registered Office: Collinstown Industrial Park, Leixlip, County Kildare
-Registered Number: 308263
-Business address: Dromore House, East Park, Shannon, Co. Clare
-
-This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). Any review or distribution by others is strictly prohibited. If you are not the intended recipient, please contact the sender and delete all copies.
-
+1.7.7
 
