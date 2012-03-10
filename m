@@ -1,117 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60748 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757070Ab2CWPBj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 11:01:39 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC PATCH 02/11] PCI: introduce pci_bus_get()/pci_bus_put() to hide implementation details
-Date: Fri, 23 Mar 2012 22:58:18 +0800
-Message-Id: <1332514707-9673-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
-References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:39324 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932423Ab2CJHCl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 02:02:41 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
+Subject: [PATCH v2 20/37] PCI: Add pci bus removal through /sys/.../pci_bus/.../remove
+Date: Fri,  9 Mar 2012 23:00:20 -0800
+Message-Id: <1331362837-10740-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_bus_get()/pci_bus_put() to hide implementation details
+it supports both pci root bus and pci bus under pci bridge.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+-v2: Change to three returns way in dev_bus_remove_store.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-doc@vger.kernel.org
 ---
- drivers/acpi/pci_slot.c            |    4 ++--
- drivers/pci/bus.c                  |   15 +++++++++++++++
- drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
- include/linux/pci.h                |    2 ++
- 4 files changed, 21 insertions(+), 4 deletions(-)
+ Documentation/ABI/testing/sysfs-bus-pci |    8 ++++++++
+ drivers/pci/pci-sysfs.c                 |   30 ++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
-index e50e31a..323797a 100644
---- a/drivers/acpi/pci_slot.c
-+++ b/drivers/acpi/pci_slot.c
-@@ -166,7 +166,7 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	list_add(&slot->list, &slot_list);
- 	mutex_unlock(&slot_list_lock);
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 95f0f37..22392de 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -92,6 +92,14 @@ Description:
+ 		hot-remove the PCI device and any of its children.
+ 		Depends on CONFIG_HOTPLUG.
  
--	get_device(&pci_bus->dev);
-+	pci_bus_get(pci_bus);
- 
- 	dbg("pci_slot: %p, pci_bus: %x, device: %d, name: %s\n",
- 		pci_slot, pci_bus->number, device, name);
-@@ -322,7 +322,7 @@ acpi_pci_slot_remove(acpi_handle handle)
- 			list_del(&slot->list);
- 			pbus = slot->pci_slot->bus;
- 			pci_destroy_slot(slot->pci_slot);
--			put_device(&pbus->dev);
-+			pci_bus_put(pbus);
- 			kfree(slot);
- 		}
- 	}
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 672ffc8..2803120 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -35,6 +35,21 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
++What:		/sys/bus/pci/devices/.../pci_bus/.../remove
++Date:		March 2012
++Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
++Description:
++		Writing a non-zero value to this attribute will
++		hot-remove the PCI bus and any of its children.
++		Depends on CONFIG_HOTPLUG.
++
+ What:		/sys/bus/pci/devices/.../pci_bus/.../rescan
+ Date:		May 2011
+ Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 4697afe..4d122cb 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -388,6 +388,35 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	return count;
  }
- EXPORT_SYMBOL(pci_add_resource_offset);
  
-+struct pci_bus *pci_bus_get(struct pci_bus *bus)
++static void bus_remove_callback(struct device *dev)
 +{
-+	if (bus)
-+		get_device(&bus->dev);
-+	return bus;
-+}
-+EXPORT_SYMBOL(pci_bus_get);
++	struct pci_bus *bus = to_pci_bus(dev);
 +
-+void pci_bus_put(struct pci_bus *bus)
++	mutex_lock(&pci_remove_rescan_mutex);
++	pci_stop_and_remove_bus(bus);
++	mutex_unlock(&pci_remove_rescan_mutex);
++}
++static ssize_t
++dev_bus_remove_store(struct device *dev, struct device_attribute *attr,
++		 const char *buf, size_t count)
 +{
-+	if (bus)
-+		put_device(&bus->dev);
-+}
-+EXPORT_SYMBOL(pci_bus_put);
++	int err;
++	unsigned long val;
 +
- void pci_add_resource(struct list_head *resources, struct resource *res)
++	if (kstrtoul(buf, 0, &val) < 0)
++		return -EINVAL;
++
++	if (!val)
++		return count;
++
++	err = device_schedule_callback(dev, bus_remove_callback);
++
++	if (err)
++		return err;
++
++	return count;
++}
++
+ static void bus_rescan_callback(struct device *dev)
  {
- 	pci_add_resource_offset(resources, res, 0);
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 9d781a7..11155ef 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -397,7 +397,7 @@ static void add_p2p_bridge(acpi_handle *handle)
- 	 * removed via PCI core logical hotplug. The ref pins the bus
- 	 * (which we access during module unload).
- 	 */
--	get_device(&bridge->pci_bus->dev);
-+	pci_bus_get(bridge->pci_bus);
- 
- 	init_bridge_misc(bridge);
- 	return;
-@@ -527,7 +527,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 	 * Only P2P bridges have a pci_dev
- 	 */
- 	if (bridge->pci_dev)
--		put_device(&bridge->pci_bus->dev);
-+		pci_bus_put(bridge->pci_bus);
- 
- 	pci_dev_put(bridge->pci_dev);
- 	list_del(&bridge->list);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 161f6c0..427ea42 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -933,6 +933,8 @@ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
- void pci_release_selected_regions(struct pci_dev *, int);
- 
- /* drivers/pci/bus.c */
-+struct pci_bus *pci_bus_get(struct pci_bus *bus);
-+void pci_bus_put(struct pci_bus *bus);
- void pci_add_resource(struct list_head *resources, struct resource *res);
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 			     resource_size_t offset);
+ 	struct pci_bus *bus = to_pci_bus(dev);
+@@ -447,6 +476,7 @@ struct device_attribute pci_dev_attrs[] = {
+ struct device_attribute pcibus_dev_attrs[] = {
+ #ifdef CONFIG_HOTPLUG
+ 	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store),
++	__ATTR(remove, (S_IWUSR|S_IWGRP), NULL, dev_bus_remove_store),
+ #endif
+ 	__ATTR(cpuaffinity, S_IRUGO, pci_bus_show_cpumaskaffinity, NULL),
+ 	__ATTR(cpulistaffinity, S_IRUGO, pci_bus_show_cpulistaffinity, NULL),
 -- 
-1.7.5.4
+1.7.7
 
