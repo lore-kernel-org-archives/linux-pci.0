@@ -1,45 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:46907 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757040Ab2CEQxr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Mar 2012 11:53:47 -0500
-Received: by mail-pw0-f46.google.com with SMTP id un15so2970293pbc.19
-        for <linux-pci@vger.kernel.org>; Mon, 05 Mar 2012 08:53:47 -0800 (PST)
-Date: Mon, 5 Mar 2012 08:45:18 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tadeusz Struk <tadeusz.struk@intel.com>
-Cc: bhelgaas@google.com, jbarnes@virtuousgeek.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/1 v3] PCI: Device specific reset function
-Message-ID: <20120305164518.GF2459@kroah.com>
-References: <4f548ed1.4o6PhHmCeKTSPZXU%tadeusz.struk@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48006 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753519Ab2CKRn2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2012 13:43:28 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4f548ed1.4o6PhHmCeKTSPZXU%tadeusz.struk@intel.com>
+Date: Sun, 11 Mar 2012 17:43:26 +0000
+Message-ID: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
+Subject: Initializing iwl3945 error
+From: Kamil Grzebien <ciptok@gmail.com>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Cc: sgruszka@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 05, 2012 at 10:00:49AM +0000, Tadeusz Struk wrote:
-> 
-> ---
->  drivers/pci/pci.h    |    1 +
->  drivers/pci/quirks.c |   33 +++++++++++++++++++++++++++------
->  include/linux/pci.h  |    1 +
->  3 files changed, 29 insertions(+), 6 deletions(-)
+Hello,
 
-Please read Documentation/SubmittingPatches for how to properly create,
-and send, patches that are in a format that can be accepted.
+I've initialisation problem with my iwl3945 network card in Dell XPS
+M1530 laptop. The issue is known and described in couple of bug
+reports (eg. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143).
+There are workarounds but I'd like to solve the problem permanently.
+Basically when initializing I get:
 
-Hint, also run your patch through scripts/checkpatch.pl to find the
-obvious problems that are in it, to keep us from having to do that for
-you...
+iwl3945 0000:0b:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+iwl3945 0000:0b:00.0: setting latency timer to 64
+iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+....
+iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:0b:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
+iwl3945 0000:0b:00.0: EEPROM not found, EEPROM_GP=0xffffffff
 
-> 
-> This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). Any review or distribution by others is strictly prohibited. If you are not the intended recipient, please contact the sender and delete all copies.
+Currently I'm working on Fedora 16 with 3.1.5-6.fc16.i686 kernel. I
+did some investigation/debugging on iwlegacy driver and found out few
+things.
 
-I have been told that such email footers require that the patch be
-deleted and never be accepted.  Please fix this if you expect your
-patches to be able to be applied.
+1. Driver can't initialize card as all ioread32/iowrite32 seems to not
+do their job. All reads finalize with 0xffffffff.
 
-greg k-h
+However I can see that:
+- pci_iomap(pdev, 0, 0) doesn't return error,
+- pci_resource_start(pdev, 0) seems gives correct address (I can
+compare it with the one I can see in /proc/iomem).
+
+If I access the memory directly, not by mapping, I can write and read
+pci memory but driver load fails anyway. I don't understand why can't
+access using mapped memory.
+
+2. If I check BASE_ADDRESS with setpci it doesn't give correct values:
+
+# setpci -v -s 0b:00.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+0000:0b:00.0 @10 = 00000000
+0000:0b:00.0 @14 = 00000000
+
+Not sure if it's done by driver itself or it should point correct
+values even if the driver wasn't fully loaded.
+
+Have you got any idea of:
+- why IO memory isn't accessible? what could cause that?
+- how APIC could change the load process in this particular case? (if
+I boot with noapic kernel option it usually works fine)
+- is there a way to check the status or rescan the device from driver itself?
+
+This issue is reproducible in 100% on my system when I turn on the
+machine. It doesn't occur after some work on it. I'd be very happy to
+get rid of the issue.
+
+Could you point some ideas that might be worth checking in driver or
+kernel please? I've tried couple of ideas but none worked for me.
+
+Regards,
+Kamil Grzebien
