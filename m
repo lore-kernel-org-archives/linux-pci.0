@@ -1,74 +1,52 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 15/23] PCI: add pci_stop_and_remove_bus()
-Date: Mon,  5 Mar 2012 23:13:52 -0800
-Message-Id: <1331018040-30725-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Ashok Raj <ashok.raj@intel.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Youquan Song <youquan.song@intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chenkeping@huawei.com
+Subject: [PATCH 1/5] Fix device reference count leakage in pci_dev_present()
+Date: Mon, 12 Mar 2012 01:48:25 +0800
+Message-Id: <1331488109-13466-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
+References: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-it supports both pci root bus and pci bus under pci bridge.
+This patch fixes a pci device reference count leakage issue in function
+pci_dev_present().
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/remove.c |   27 +++++++++++++++++++++++++++
- include/linux/pci.h  |    1 +
- 2 files changed, 28 insertions(+), 0 deletions(-)
+ drivers/pci/search.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 62c348c..13a1555 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -172,6 +172,33 @@ void pci_stop_bus_device(struct pci_dev *dev)
- 	pci_stop_dev(dev);
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 9d75dc8..b572730 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -338,13 +338,13 @@ int pci_dev_present(const struct pci_device_id *ids)
+ 	WARN_ON(in_interrupt());
+ 	while (ids->vendor || ids->subvendor || ids->class_mask) {
+ 		found = pci_get_dev_by_id(ids, NULL);
+-		if (found)
+-			goto exit;
++		if (found) {
++			pci_dev_put(found);
++			return 1;
++		}
+ 		ids++;
+ 	}
+-exit:
+-	if (found)
+-		return 1;
++
+ 	return 0;
  }
- 
-+static void pci_stop_host_bridge(struct pci_host_bridge *bridge)
-+{
-+	device_unregister(&bridge->dev);
-+}
-+/*
-+ * it will support pci root bus too, in that case we need
-+ *  stop and remove host bridge
-+ */
-+void pci_stop_and_remove_bus(struct pci_bus *bus)
-+{
-+	struct pci_host_bridge *host_bridge = NULL;
-+
-+	pci_stop_bus_devices(bus);
-+
-+	if (pci_is_root_bus(bus)) {
-+		host_bridge = to_pci_host_bridge(bus->bridge);
-+		pci_stop_host_bridge(host_bridge);
-+	}
-+
-+	__pci_remove_bus_devices(bus);
-+
-+	pci_remove_bus(bus);
-+
-+	if (host_bridge)
-+		host_bridge->bus = NULL;
-+}
-+
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
- EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
- EXPORT_SYMBOL_GPL(pci_stop_bus_device);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4f30cd1..3d5feda 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -702,6 +702,7 @@ extern void pci_dev_put(struct pci_dev *dev);
- extern void pci_remove_bus(struct pci_bus *b);
- extern void __pci_remove_bus_device(struct pci_dev *dev);
- extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-+void pci_stop_and_remove_bus(struct pci_bus *bus);
- extern void pci_stop_bus_device(struct pci_dev *dev);
- void pci_setup_cardbus(struct pci_bus *bus);
- extern void pci_sort_breadthfirst(void);
+ EXPORT_SYMBOL(pci_dev_present);
 -- 
-1.7.7
+1.7.5.4
 
