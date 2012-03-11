@@ -1,81 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:62153 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932425Ab2CORrl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Mar 2012 13:47:41 -0400
-Received: by lahj13 with SMTP id j13so2599705lah.19
-        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 10:47:38 -0700 (PDT)
+Received: from opensource.wolfsonmicro.com ([80.75.67.52]:41536 "EHLO
+	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751879Ab2CKM6F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2012 08:58:05 -0400
+Date: Sun, 11 Mar 2012 12:58:00 +0000
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 03/11] regulator: fixed: Support driver probe deferral
+Message-ID: <20120311125759.GH3233@opensource.wolfsonmicro.com>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-4-git-send-email-thierry.reding@avionic-design.de>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWvOpJ1N=QLQ3MHRqVGw7pz1Fuma60pJSwzqP5Jc5PF3Q@mail.gmail.com>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
- <1331362837-10740-24-git-send-email-yinghai@kernel.org> <CAErSpo5cCC4HySedQ85BFKkPQ0VuYWX+NTjZLd4GpcATh1ix3g@mail.gmail.com>
- <CAE9FiQWvOpJ1N=QLQ3MHRqVGw7pz1Fuma60pJSwzqP5Jc5PF3Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 15 Mar 2012 11:47:18 -0600
-Message-ID: <CAErSpo7qi8pE-tiXriMcF5LLY6c=BWnVy-G3MYmjh=1XrqypGA@mail.gmail.com>
-Subject: Re: [PATCH v2 23/37] PCI, ACPI: Add pci_root_hp hot add hotplug notification
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Enx9fNJ0XV5HaWRu"
+In-Reply-To: <1331218291-16119-4-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2012 at 12:03 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Mar 12, 2012 at 8:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> It is from acpiphp_glue.c
->>>
->>> How to use it?
->>> Find out root bus number to acpi root name mapping from dmesg or /sys
->>>
->>>  echo "\_SB.PCIB 0" > /proc/acpi/sci/notify
->>> to add it back
->>
->> Nope.  That might be a way to exercise this for debug purposes (and it
->> only works when /proc/acpi/sci/notify is compiled in), but we
->> definitely don't want normal users to deal with ACPI pathnames like
->> this.
->
-> before this patch set, only way is: Users really put one root bus in
-> and press buton etc to trigger notification
-> to get it work.
->
->>
->> Most of this functionality belongs in the ACPI core, not here.  The
->> core should be handling these notify events and turning them into
->> .add() and .remove() calls to the driver.
->>
->> But since the ACPI core doesn't do that yet, we have to do it in the
->> driver, like we do for CPU, memory, etc.  That part is fine.  But I
->> think it at least belongs *in* the driver, i.e., in pci_root.c, not in
->> a new pci_root_hp.c file.
->
-> don't want to pollute pci_root.c.
->
-> in separated file, we can use CONFIG_HOTPLUG in Makefile instead of pci_root.c
 
-I don't buy this argument.  Most of this functionality should someday
-be in the ACPI core.  Until then, it is intimately connected to the
-stuff in pci_root.c.  It is not "pollution."
+--Enx9fNJ0XV5HaWRu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
->> There definitely should not be another acpi_walk_namespace() and
->> another list of ACPI host bridges.  The core *does* already walk the
->> namespace and call acpi_pci_root_add() for us.  And the driver already
->> has a list of host bridges (acpi_pci_roots).
->
-> no, we may not have acpi_pci_root there.
+On Thu, Mar 08, 2012 at 03:51:23PM +0100, Thierry Reding wrote:
+> If the specified GPIO is not found, return -EPROBE_DEFER. This will
+> cause the driver to be probed again later when the required GPIO may
+> have become available.
 
-I don't understand what you're saying here.  I think you should be
-basically implementing the "turn notify events into add/remove calls"
-functionality.  This is what *should* be in the ACPI core, but isn't
-yet.  If you put this in the driver, and hopefully follow the style
-already used by the processor/memory/etc. drivers, it will be easier
-to someday move it into the ACPI core.
+Might be worth pushing this into gpiolib?  It seems like wanting to
+defer if a GPIO is not found will be the overwhelmingly common case
+given that the GPIO numbers need to be explicitly specified.
 
-Bjorn
+--Enx9fNJ0XV5HaWRu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPXKFQAAoJEBus8iNuMP3dz7AP/3Dk+fPk0N59gRitOBUApI78
+OjAmynj4JG0OeDs+5u0VsDOn7Xc8KlaXgTQ7T+q1PW98dM/frOoRdZ/g1/KoNCkE
+c0hEIcAzDVE3LrLhgGPBTGxYK5lGW9E/wJw0b3ARzS1bd28fNHqn9Be2gTafEIlx
+N7y4cR0Y0huUAw3UyJacism1L7jQsT1q5S7SfHmQpWP/Nf1DRWNWzvH54IHQFxKn
+PiFf19lZLr38s1GXL0ucUSnYB8thX1aNn8/Xnj4K9lipzMMFDmmEhS7DQakPvh8P
+DRYrh92THwczX+X9YSnAEr3Pmkr8hPbajK+vitnZUg+bosLYJdMaNOtOzBLZWoN8
+Qt/8/hs9AevUhIoAH+4AHDO2UmVy5UVabWdVfaJTYG9eujhbkehNGMIVb+cJZ/nG
+QPWNsUVXEyA8+BT3kUd4Rv7S5K5pmjqcwTE8M1NZEmeYVVHlNeBVpL/z7uNaYXhA
+Fo07eo+/sooprGNwoQyZsbb3g0Rmz/zzqLir9OWnuD9VsgSeqHzcyKpSEg/sYZDN
+oWbs6VshCZ6BLCRp3WkiHcDITabnhKityzyl9tpS65vnVSq5cRpKIuM6X3VSTl4R
+zSTbtXf8siIV/08sNKjDcVVXVuS0MqUoOZrk1b7v6kewRp2yw2nuab8TplQ2eBrx
+MYMuv8Siqqqdn55xx7Yf
+=f9Aw
+-----END PGP SIGNATURE-----
+
+--Enx9fNJ0XV5HaWRu--
