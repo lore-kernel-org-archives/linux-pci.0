@@ -1,62 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:55689 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755826Ab2CATDQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2012 14:03:16 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAL-B5D0Phxhx-2ipYwoKfZCTvCfuh6bX-iqQkQS0cLmRqQHGbg@mail.gmail.com>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-	<CAL-B5D0Phxhx-2ipYwoKfZCTvCfuh6bX-iqQkQS0cLmRqQHGbg@mail.gmail.com>
-Date: Thu, 1 Mar 2012 11:03:15 -0800
-Message-ID: <CAE9FiQX57=cmfgJJv5E_rTQD1umCsmqJas0Sa22sN_xhdCSUgw@mail.gmail.com>
-Subject: Re: [PATCH 00/39] PCI: pci_host_bridge related cleanup and busn_alloc
-From: Yinghai Lu <yinghai@kernel.org>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:55385 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753699Ab2CKRxZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2012 13:53:25 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Ashok Raj <ashok.raj@intel.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Youquan Song <youquan.song@intel.com>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	chenkeping@huawei.com
+Subject: [PATCH 3/5] Fix an access-after-free issue in function pci_stop_and_remove_bus()
+Date: Mon, 12 Mar 2012 01:48:27 +0800
+Message-Id: <1331488109-13466-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
+References: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 1, 2012 at 10:51 AM, Myron Stowe <myron.stowe@gmail.com> wrote:
-> On Wed, Feb 29, 2012 at 4:06 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> The first 14 patches are hostbridge clean up.
->> will add struct device dev into host_bridge struct.
->> also will add release support to make sure allocated resource get
->> freed during root bus removal including hostbridge and pci_sysdata.
->>
->> others 25 patches are busn_alloc related.
->> Set up iobusn_resource tree, and register bus number range to it.
->> Later when need to find bus range, will try to allocate from the tree
->> Need to test on arches other than x86. esp for ia64 and powerpc that support
->>  more than on peer root buses.
->
-> Why did you collapse these two series into one at this point?
->
-> Last I was keeping up with - there was a -v9 00/23 series related to
-> bus_num and a -v2 00/11 series for pci_host_bridge related cleanup.
+If pci_stop_and_remove_bus() is called to remove a pci root bus,
+the host_bridge structure may have already been freed after returning
+from pci_remove_bus(), so don't access the structure any more.
 
-the updated busn_alloc patchset, need to be applied on top of
-pci_host_bridge related cleanup.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/pci/remove.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-So i was thinking put them together would be better to be reviewed
-first 14 for hostbridge clean up. and others for busn_res_alloc.
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 75b0092..25f368e 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -194,9 +194,6 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
+ 
+ 	pci_remove_bus(bus);
+ 
+-	if (host_bridge)
+-		host_bridge->bus = NULL;
+-
+ 	if (pci_bridge)
+ 		pci_bridge->subordinate = NULL;
+ }
+-- 
+1.7.5.4
 
->
-> As a distro maintainer I need to try and keep up with what is occurring
-> here and actions like this - coalescing multiple series - unnecessarily
-> complicates things.  It also masks the fact that the bus_num series is
-> now on -v10 within a very short time frame (which implies a lot).
-
-I will separate them in next revision, if Jesse would not pick up
-first 14 shortly.
-
-Thanks
-
-Yinghai
