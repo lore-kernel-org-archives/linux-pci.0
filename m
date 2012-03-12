@@ -1,105 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:39324 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932423Ab2CJHCl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 02:02:41 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
-Subject: [PATCH v2 20/37] PCI: Add pci bus removal through /sys/.../pci_bus/.../remove
-Date: Fri,  9 Mar 2012 23:00:20 -0800
-Message-Id: <1331362837-10740-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:65259 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752613Ab2CLQzT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Mar 2012 12:55:19 -0400
+Date: Mon, 12 Mar 2012 16:55:15 +0000
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+To: bhelgaas@google.com, jbarnes@virtuousgeek.org
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org, tadeusz.struk@intel.com
+Subject: [PATCH] PCI: Device specific reset function
+Message-ID: <4f5e2a73.YyO0Gu2m5JhSVsu6%tadeusz.struk@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-it supports both pci root bus and pci bus under pci bridge.
+I have a use case where I need to cleanup resource allocated for Virtual
+Functions after a guest OS that used it crashed. This cleanup needs to
+be done before the VF is being FLRed. The only possible way to do this
+seems to be by using pci_dev_specific_reset() function.
+This patch adds specific reset function to the pci_driver struct.
 
--v2: Change to three returns way in dev_bus_remove_store.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-doc@vger.kernel.org
+Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
 ---
- Documentation/ABI/testing/sysfs-bus-pci |    8 ++++++++
- drivers/pci/pci-sysfs.c                 |   30 ++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+), 0 deletions(-)
+ drivers/pci/quirks.c |    4 ++++
+ include/linux/pci.h  |    1 +
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 95f0f37..22392de 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -92,6 +92,14 @@ Description:
- 		hot-remove the PCI device and any of its children.
- 		Depends on CONFIG_HOTPLUG.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6476547..13d224b 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3081,8 +3081,12 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
  
-+What:		/sys/bus/pci/devices/.../pci_bus/.../remove
-+Date:		March 2012
-+Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
-+Description:
-+		Writing a non-zero value to this attribute will
-+		hot-remove the PCI bus and any of its children.
-+		Depends on CONFIG_HOTPLUG.
-+
- What:		/sys/bus/pci/devices/.../pci_bus/.../rescan
- Date:		May 2011
- Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 4697afe..4d122cb 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -388,6 +388,35 @@ remove_store(struct device *dev, struct device_attribute *dummy,
- 	return count;
- }
- 
-+static void bus_remove_callback(struct device *dev)
-+{
-+	struct pci_bus *bus = to_pci_bus(dev);
-+
-+	mutex_lock(&pci_remove_rescan_mutex);
-+	pci_stop_and_remove_bus(bus);
-+	mutex_unlock(&pci_remove_rescan_mutex);
-+}
-+static ssize_t
-+dev_bus_remove_store(struct device *dev, struct device_attribute *attr,
-+		 const char *buf, size_t count)
-+{
-+	int err;
-+	unsigned long val;
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if (!val)
-+		return count;
-+
-+	err = device_schedule_callback(dev, bus_remove_callback);
-+
-+	if (err)
-+		return err;
-+
-+	return count;
-+}
-+
- static void bus_rescan_callback(struct device *dev)
+ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
  {
- 	struct pci_bus *bus = to_pci_bus(dev);
-@@ -447,6 +476,7 @@ struct device_attribute pci_dev_attrs[] = {
- struct device_attribute pcibus_dev_attrs[] = {
- #ifdef CONFIG_HOTPLUG
- 	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store),
-+	__ATTR(remove, (S_IWUSR|S_IWGRP), NULL, dev_bus_remove_store),
- #endif
- 	__ATTR(cpuaffinity, S_IRUGO, pci_bus_show_cpumaskaffinity, NULL),
- 	__ATTR(cpulistaffinity, S_IRUGO, pci_bus_show_cpulistaffinity, NULL),
++	struct pci_driver *drv = dev->driver;
+ 	const struct pci_dev_reset_methods *i;
+ 
++	if (drv && drv->reset)
++		return drv->reset(dev, probe);
++
+ 	for (i = pci_dev_reset_methods; i->reset; i++) {
+ 		if ((i->vendor == dev->vendor ||
+ 		     i->vendor == (u16)PCI_ANY_ID) &&
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a16b1df..2ccd838 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -560,6 +560,7 @@ struct pci_driver {
+ 	int  (*resume_early) (struct pci_dev *dev);
+ 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
+ 	void (*shutdown) (struct pci_dev *dev);
++	int  (*reset) (struct pci_dev *dev, int probe);
+ 	struct pci_error_handlers *err_handler;
+ 	struct device_driver	driver;
+ 	struct pci_dynids dynids;
 -- 
-1.7.7
+1.7.7.6
 
