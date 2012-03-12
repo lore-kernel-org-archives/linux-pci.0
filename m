@@ -1,231 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from opensource.wolfsonmicro.com ([80.75.67.52]:38221 "EHLO
+	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754728Ab2CLOcN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 10:32:13 -0400
+Date: Mon, 12 Mar 2012 14:32:11 +0000
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, Liam Girdwood <lrg@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Olof Johansson <olof@lixom.net>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, chenkeping@huawei.com,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH 3/3] ACPI,PCI: protect global lists in drivers/acpi/pci_root.c
-Date: Thu, 22 Mar 2012 00:22:37 +0800
-Message-Id: <1332346957-10070-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1332346957-10070-1-git-send-email-jiang.liu@huawei.com>
-References: <1332346957-10070-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 11/11] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120312143210.GJ3110@opensource.wolfsonmicro.com>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-12-git-send-email-thierry.reding@avionic-design.de>
+ <4F59253D.7070100@wwwdotorg.org>
+ <20120312120610.GA14020@sirena.org.uk>
+ <20120312141705.GA16395@avionic-0098.mockup.avionic-design.de>
+ <20120312142340.GI3110@opensource.wolfsonmicro.com>
+ <20120312142857.GA6694@avionic-0098.mockup.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OX7PPUk8qMPP4++R"
+In-Reply-To: <20120312142857.GA6694@avionic-0098.mockup.avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
 
-There are two global lists inf file drivers/acpi/pci_root.c.
-One is for registered acpi_pci_drivers, the other is for
-enumerated ACPI PCI root bridge objects. These two global
-lists may change dynamically when registering/deregistering
-acpi_pci_drivers or adding/removing ACPI PCI root bridge
-objects. So protect them by mutex lock and RCU list.
+--OX7PPUk8qMPP4++R
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/acpi/pci_root.c |   85 ++++++++++++++++++++++++++++-------------------
- 1 files changed, 51 insertions(+), 34 deletions(-)
+On Mon, Mar 12, 2012 at 03:28:58PM +0100, Thierry Reding wrote:
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ff73357..24afd66 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -27,7 +27,8 @@
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/types.h>
--#include <linux/spinlock.h>
-+#include <linux/mutex.h>
-+#include <linux/rculist.h>
- #include <linux/pm.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci.h>
-@@ -71,6 +72,8 @@ static struct acpi_driver acpi_pci_root_driver = {
- 		},
- };
- 
-+/* Lock to protect both acpi_pci_roots and acpi_pci_drivers lists */
-+static DEFINE_MUTEX(acpi_pci_root_lock);
- static LIST_HEAD(acpi_pci_roots);
- static LIST_HEAD(acpi_pci_drivers);
- 
-@@ -81,47 +84,48 @@ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
- 	int n = 0;
- 	struct acpi_pci_root *root;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_add_tail(&driver->node, &acpi_pci_drivers);
--
--	if (!driver->add)
--		return 0;
--
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		driver->add(root->device->handle);
--		n++;
--	}
-+	if (driver->add)
-+		list_for_each_entry_rcu(root, &acpi_pci_roots, node) {
-+			driver->add(root->device->handle);
-+			n++;
-+		}
-+	mutex_unlock(&acpi_pci_root_lock);
- 
- 	return n;
- }
--
- EXPORT_SYMBOL(acpi_pci_register_driver);
- 
- void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
- {
- 	struct acpi_pci_root *root;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_del(&driver->node);
--
--	if (!driver->remove)
--		return;
--
--	list_for_each_entry(root, &acpi_pci_roots, node)
--		driver->remove(root->device->handle);
-+	if (driver->remove)
-+		list_for_each_entry_rcu(root, &acpi_pci_roots, node)
-+			driver->remove(root->device->handle);
-+	mutex_unlock(&acpi_pci_root_lock);
- }
--
- EXPORT_SYMBOL(acpi_pci_unregister_driver);
- 
- acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
- {
- 	struct acpi_pci_root *root;
-+	struct acpi_handle *handle = NULL;
- 	
--	list_for_each_entry(root, &acpi_pci_roots, node)
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(root, &acpi_pci_roots, node)
- 		if ((root->segment == (u16) seg) &&
--		    (root->secondary.start == (u16) bus))
--			return root->device->handle;
--	return NULL;		
--}
-+		    (root->secondary.start == (u16) bus)) {
-+			handle = root->device->handle;
-+			break;
-+		}
-+	rcu_read_unlock();
- 
-+	return handle;
-+}
- EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
- 
- /**
-@@ -268,10 +272,15 @@ struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle)
- {
- 	struct acpi_pci_root *root;
- 
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		if (root->device->handle == handle)
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(root, &acpi_pci_roots, node) {
-+		if (root->device->handle == handle) {
-+			rcu_read_unlock();
- 			return root;
-+		}
- 	}
-+	rcu_read_unlock();
-+
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(acpi_pci_find_root);
-@@ -460,7 +469,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
- 		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
- 		result = -ENODEV;
--		goto end;
-+		goto out_free;
- 	}
- 
- 	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
-@@ -485,7 +494,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 		else {
- 			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
- 			result = -ENODEV;
--			goto end;
-+			goto out_free;
- 		}
- 	}
- 
-@@ -507,8 +516,8 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
- 	 */
- 
--	/* TBD: Locking */
--	list_add_tail(&root->node, &acpi_pci_roots);
-+	mutex_lock(&acpi_pci_root_lock);
-+	list_add_tail_rcu(&root->node, &acpi_pci_roots);
- 
- 	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
-@@ -527,7 +536,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 			    "Bus %04x:%02x not present in PCI namespace\n",
- 			    root->segment, (unsigned int)root->secondary.start);
- 		result = -ENODEV;
--		goto end;
-+		goto out_del_root;
- 	}
- 
- 	/*
-@@ -537,7 +546,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	 */
- 	result = acpi_pci_bind_root(device);
- 	if (result)
--		goto end;
-+		goto out_del_root;
- 
- 	/*
- 	 * PCI Routing Table
-@@ -617,11 +626,15 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 		if (driver->add)
- 			driver->add(device->handle);
- 
-+	mutex_unlock(&acpi_pci_root_lock);
-+
- 	return 0;
- 
--end:
--	if (!list_empty(&root->node))
--		list_del(&root->node);
-+out_del_root:
-+	list_del_rcu(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+	synchronize_rcu();
-+out_free:
- 	kfree(root);
- 	return result;
- }
-@@ -639,6 +652,8 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-+	mutex_lock(&acpi_pci_root_lock);
-+
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->remove)
- 			driver->remove(root->device->handle);
-@@ -658,7 +673,9 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- 	pci_stop_and_remove_bus(root->bus);
- 
- out:
--	list_del(&root->node);
-+	list_del_rcu(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+	synchronize_rcu();
- 	kfree(root);
- 
- 	return 0;
--- 
-1.7.5.4
+> In that case I'll mark the *-supply properties required. Would it be a good
+> idea to mention this (or even give an example with fixed regulators) in the
+> binding documentation or can I assume this to be common knowledge?
 
+Probably the best thing here is to just reference the regulator binding
+documentation which mentions -supply properties (or should do) and then
+clarify that if need be.  No sense in putting things like this into the
+binding document for a specific driver, there's nothing driver specific.
+
+--OX7PPUk8qMPP4++R
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPXgi/AAoJEBus8iNuMP3dtrUP/jdURXjgr3P59n7MLL/cQxOS
+mwJKy5iOzNaTD8hx7zRXiw1HiJIudZhhpNJbF69EIcbm+7z8XPtvQKEA4Xy4inds
+5Coa2fuRnTN1c0py8XOqUaDvtzxkjnipbfS5AUuHU346cdQLaqhG9quTowwT1JeE
+rgJG+m9df9d5tywd2I9GTRDXNQpY5YxlBhi84lIG5diN4a9wjhRSY/xi/02RH0Na
+Ay0F0/2OPRIiEuEYH9k8bJPJsMW5Qt0jcIikTlaiDScX+Y5CK26HFAvd8X1tPSes
+2dwtVciIQ9bqFAGis6pOhPOJ5Ye48tmSmw7pSTHgj0PeY2ZwfA0xjbzoqpjlxdk6
+tUjNNWoM59Jt4wZ+pN5RmlOD7kQKm0YEI2ZwtZTDtqary5XNlCPr53k071iGia+5
+5zIH+p9HSw1q6pWcRkRmKle8LtkHpr2xn1R/S21o139u9DvsGwZQV+89ulhYGU3M
+8zRO1Q7CYP9t040REFaEEG6CLCfMMmG5fxQsjJJ3XFGopwbEdCkAGXcDLyCxef/d
+sa+gd8E45EUgd0hhZ7xZQduo5Gf59/fZ0o54V9KlUKqXxescKZuWUp+MZ2Sz5+Rc
+fxgxkZVb7pT9VJaRU6ZWBCeU+pBWUJQ6b0EnjO0t/yAN0FIdxtsFRxs7lalRuA22
+qsJDVoeXg1LA8t4E0b8f
+=6xXw
+-----END PGP SIGNATURE-----
+
+--OX7PPUk8qMPP4++R--
