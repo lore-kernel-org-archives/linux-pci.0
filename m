@@ -1,116 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:43700 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161596Ab2COVmg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Mar 2012 17:42:36 -0400
-Received: by lahj13 with SMTP id j13so2779711lah.19
-        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 14:42:34 -0700 (PDT)
+Received: from moutng.kundenserver.de ([212.227.17.9]:57488 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754075Ab2CLO3Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 10:29:25 -0400
+Date: Mon, 12 Mar 2012 15:28:58 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, Liam Girdwood <lrg@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Olof Johansson <olof@lixom.net>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 11/11] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120312142857.GA6694@avionic-0098.mockup.avionic-design.de>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-12-git-send-email-thierry.reding@avionic-design.de>
+ <4F59253D.7070100@wwwdotorg.org>
+ <20120312120610.GA14020@sirena.org.uk>
+ <20120312141705.GA16395@avionic-0098.mockup.avionic-design.de>
+ <20120312142340.GI3110@opensource.wolfsonmicro.com>
 MIME-Version: 1.0
-In-Reply-To: <1331623594-30543-11-git-send-email-yinghai@kernel.org>
-References: <1331623594-30543-1-git-send-email-yinghai@kernel.org> <1331623594-30543-11-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 15 Mar 2012 15:42:14 -0600
-Message-ID: <CAErSpo4=czJci=Yqv2DkU6w592pyWn5fg7+Domc0qKUi+kZ=Yw@mail.gmail.com>
-Subject: Re: [PATCH 10/12] PCI, pciehp: Separate pci_hp_add_bridge()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
+In-Reply-To: <20120312142340.GI3110@opensource.wolfsonmicro.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2012 at 1:26 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Will use it for other pci hp hotplug support
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/hotplug-pci.c        |   13 +++++++++++++
->  drivers/pci/hotplug/pciehp_pci.c |   18 ++----------------
->  drivers/pci/pci.h                |    1 +
->  3 files changed, 16 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
-> index d3509cd..d0999b1 100644
-> --- a/drivers/pci/hotplug-pci.c
-> +++ b/drivers/pci/hotplug-pci.c
-> @@ -4,6 +4,19 @@
->  #include <linux/export.h>
->  #include "pci.h"
->
-> +int __ref pci_hp_add_bridge(struct pci_dev *dev)
-> +{
-> +       struct pci_bus *parent = dev->bus;
-> +       int pass, busnr = parent->secondary;
-> +
-> +       for (pass = 0; pass < 2; pass++)
-> +               busnr = pci_scan_bridge(parent, dev, busnr, pass);
-> +       if (!dev->subordinate)
-> +               return -1;
-> +
-> +       return 0;
-> +}
-> +EXPORT_SYMBOL(pci_hp_add_bridge);
 
-I'm not sure this is baked enough to use EXPORT_SYMBOL() rather than
-EXPORT_SYMBOL_GPL().  For example, maybe we can use the same "add
-bridge" interface we normally use, rather than inventing a new
-hotplug-specific one.  Using EXPORT_SYMBOL() would force us to keep
-this interface longer than we might want to.
+--XsQoSWH+UP9D9v3l
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  unsigned int __devinit pci_do_scan_bus(struct pci_bus *bus)
->  {
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index e21171c..b9a9fce 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -34,19 +34,6 @@
->  #include "../pci.h"
->  #include "pciehp.h"
->
-> -static int __ref pciehp_add_bridge(struct pci_dev *dev)
-> -{
-> -       struct pci_bus *parent = dev->bus;
-> -       int pass, busnr = parent->secondary;
-> -
-> -       for (pass = 0; pass < 2; pass++)
-> -               busnr = pci_scan_bridge(parent, dev, busnr, pass);
-> -       if (!dev->subordinate)
-> -               return -1;
-> -
-> -       return 0;
-> -}
-> -
->  int pciehp_configure_device(struct slot *p_slot)
->  {
->        struct pci_dev *dev;
-> @@ -75,9 +62,8 @@ int pciehp_configure_device(struct slot *p_slot)
->                if (!dev)
->                        continue;
->                if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
-> -                               (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
-> -                       pciehp_add_bridge(dev);
-> -               }
-> +                   (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
-> +                       pci_hp_add_bridge(dev);
->                pci_dev_put(dev);
->        }
->
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 13b1159..9378d81 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -124,6 +124,7 @@ static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
->  #endif
->
->  /* Functions for PCI Hotplug drivers to use */
-> +int pci_hp_add_bridge(struct pci_dev *dev);
->  extern unsigned int pci_do_scan_bus(struct pci_bus *bus);
->
->  #ifdef HAVE_PCI_LEGACY
-> --
-> 1.7.7
->
+* Mark Brown wrote:
+> On Mon, Mar 12, 2012 at 03:17:05PM +0100, Thierry Reding wrote:
+>=20
+> > My understanding of the fixed regulator was that it was meant to be use=
+d for
+> > fixed voltage supplies that can still be enabled or disabled (for examp=
+le as
+> > supplied by a GPIO) but not regulators that are fix in the sense that t=
+hey
+> > cannot be enabled or disabled at all but are always on.
+>=20
+> No, not at all.  It's for any random supply that doesn't have much
+> meaningful control - as you'll see from the code the GPIO is totally
+> optional if you look at the git history you'll see that the GPIO was
+> added some time after the driver was originally merged.
+>=20
+> > Is that how it is supposed to work?
+>=20
+> Yes.
+
+In that case I'll mark the *-supply properties required. Would it be a good
+idea to mention this (or even give an example with fixed regulators) in the
+binding documentation or can I assume this to be common knowledge?
+
+Thierry
+
+--XsQoSWH+UP9D9v3l
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk9eCCkACgkQZ+BJyKLjJp9I1ACgiMzqgAdYjfb+BL10fzPhkzop
+EqkAn3JIOG3z+7homikIN0PSCRHrOtnv
+=J/oZ
+-----END PGP SIGNATURE-----
+
+--XsQoSWH+UP9D9v3l--
