@@ -1,59 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:31773 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758305Ab2CFHPx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:15:53 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Subject: [PATCH 09/23] IOMMU: Fix tboot force iommu logic
-Date: Mon,  5 Mar 2012 23:13:46 -0800
-Message-Id: <1331018040-30725-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:38332 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841Ab2CLP6W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 11:58:22 -0400
+Message-ID: <4F5E1D11.8050101@gmail.com>
+Date: Mon, 12 Mar 2012 23:58:09 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 19/37] PCI: Add pci_stop_and_remove_bus()
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331362837-10740-20-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Should check dmar_disabled just after tboot_force_iommu.
-
-otherwise when tboot is not used, and intel_iommu=off, and nointrmap
-still get dmar_table_init() called. that will cause some get_device
-calling, and it will have some device refcount leaking.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: iommu@lists.linux-foundation.org
----
- drivers/iommu/intel-iommu.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 39ef2ce..f1879d3 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3771,6 +3771,9 @@ int __init intel_iommu_init(void)
- 	/* VT-d is required for a TXT/tboot launch, so enforce that */
- 	force_on = tboot_force_iommu();
- 
-+	if (no_iommu || dmar_disabled)
-+		return -ENODEV;
-+
- 	if (dmar_table_init()) {
- 		if (force_on)
- 			panic("tboot: Failed to initialize DMAR table\n");
-@@ -3783,9 +3786,6 @@ int __init intel_iommu_init(void)
- 		return 	-ENODEV;
- 	}
- 
--	if (no_iommu || dmar_disabled)
--		return -ENODEV;
--
- 	if (iommu_init_mempool()) {
- 		if (force_on)
- 			panic("tboot: Failed to initialize iommu memory\n");
--- 
-1.7.7
+On 03/10/2012 03:00 PM, Yinghai Lu wrote:
+> It supports both pci root bus and pci bus under pci bridge.
+> 
+> -v2: clear pci_bridge's subordinate.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/remove.c |   32 ++++++++++++++++++++++++++++++++
+>  include/linux/pci.h  |    1 +
+>  2 files changed, 33 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index d4fdf7b..9ffc071 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -170,6 +170,38 @@ void pci_stop_bus_device(struct pci_dev *dev)
+>  	pci_stop_dev(dev);
+>  }
+>  
+> +static void pci_stop_host_bridge(struct pci_host_bridge *bridge)
+> +{
+> +	device_unregister(&bridge->dev);
+> +}
+> +/*
+> + * it will support pci root bus too, in that case we need
+> + *  stop and remove host bridge
+> + */
+> +void pci_stop_and_remove_bus(struct pci_bus *bus)
+> +{
+> +	struct pci_host_bridge *host_bridge = NULL;
+> +	struct pci_dev *pci_bridge = NULL;
+> +
+> +	pci_stop_bus_devices(bus);
+> +
+> +	if (pci_is_root_bus(bus)) {
+> +		host_bridge = to_pci_host_bridge(bus->bridge);
+> +		pci_stop_host_bridge(host_bridge);
+> +	} else
+> +		pci_bridge = bus->self;
+> +
+> +	__pci_remove_bus_devices(bus);
+> +
+> +	pci_remove_bus(bus);
+> +
+It seems that the bus and host_bridge structures may have already been freed here,
+so should not access host_bridge structure any more.
+> +	if (host_bridge)
+> +		host_bridge->bus = NULL;
+> +
+> +	if (pci_bridge)
+> +		pci_bridge->subordinate = NULL;
+> +}
+> +
+>  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+>  EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
+>  EXPORT_SYMBOL_GPL(pci_stop_bus_device);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 860091f..8874b90 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -702,6 +702,7 @@ extern void pci_dev_put(struct pci_dev *dev);
+>  extern void pci_remove_bus(struct pci_bus *b);
+>  extern void __pci_remove_bus_device(struct pci_dev *dev);
+>  extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+> +void pci_stop_and_remove_bus(struct pci_bus *bus);
+>  extern void pci_stop_bus_device(struct pci_dev *dev);
+>  void pci_setup_cardbus(struct pci_bus *bus);
+>  extern void pci_sort_breadthfirst(void);
 
