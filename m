@@ -1,33 +1,98 @@
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:54999 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885Ab2CLORK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 10:17:10 -0400
+Date: Mon, 12 Mar 2012 15:17:05 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, Liam Girdwood <lrg@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Olof Johansson <olof@lixom.net>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 11/11] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120312141705.GA16395@avionic-0098.mockup.avionic-design.de>
+References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
+ <1331218291-16119-12-git-send-email-thierry.reding@avionic-design.de>
+ <4F59253D.7070100@wwwdotorg.org>
+ <20120312120610.GA14020@sirena.org.uk>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <CAErSpo7dJ4K=4zbpLzs6d_vEp53F89_FuWFDD+6oYCeBidyTPw@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<CABhMZUU_YNMXAU0Mr5zQMzxrk_XkFzk1HrwAN0SQxDf8n+F9kA@mail.gmail.com>
-	<CAE9FiQVNYWnZzfdNsW38P4vsD1ZpXeA+SwqqDK45SZAAphz_6A@mail.gmail.com>
-	<CAErSpo7W_2skcxsgFia+4caf1MgXCt3jqXCrKdX7q3EZ-KLP2Q@mail.gmail.com>
-	<CAE9FiQVxno4xGg_SSrbBVs+nifP8+=cqS8SzD5kvVr2cvJD0wA@mail.gmail.com>
-	<CAErSpo5dXP0H77Ph91HUTA+Do4q2=sL_tdikOQpTiCLQqw1x-Q@mail.gmail.com>
-	<CAE9FiQW3_hDg7qRpAmmar3b-d8Yj1HvPZnCna_JrnxP=yxf6Tw@mail.gmail.com>
-	<CAErSpo7dJ4K=4zbpLzs6d_vEp53F89_FuWFDD+6oYCeBidyTPw@mail.gmail.com>
-Date: Fri, 9 Mar 2012 11:29:32 -0800
-Message-ID: <CAE9FiQXJUiq+YucT3f-RJ-xa99ikzNVDjwvPaVNrEMCi30UvtQ@mail.gmail.com>
-Subject: Re: [PATCH 00/23] PCI, x86: pci root bus hotplug support
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
+In-Reply-To: <20120312120610.GA14020@sirena.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 9, 2012 at 11:10 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Mar 9, 2012 at 11:55 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->
-> You already post the entire series several times, so you have series
-> v1, series v2, etc. =A0Trying to talk about series v2 and patch v3
-> within that series is too complicated. =A0The version number of the
-> entire series is enough, in my opinion.
 
-I like to keep the history about patch reviewing in the change log.
+--YiEDa0DAkWCtVeE4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Yinghai
+* Mark Brown wrote:
+> On Thu, Mar 08, 2012 at 02:31:41PM -0700, Stephen Warren wrote:
+> > On 03/08/2012 07:51 AM, Thierry Reding wrote:
+>=20
+> > > +- vdd-supply: power supply for controller (1.05V)
+>=20
+> > Should those *-supply properties really be optional? I got the
+> > impression talking to Mark in a different thread that all regulators
+> > should exist, although their implementation may be via a fixed
+> > regulator, with no GPIO, as determined by the board design.
+>=20
+> Depends on the electronics, if the device can function without a supply
+> then it is OK for it to be optional.  This is moderately unusual but not
+> unknown.  It's obviously also OK to omit the supply if the system
+> doesn't use software regulators at all, though a kernel with regulator
+> support enabled would need to use dummy regulators to stub things out.
+
+The PCIe controller actually needs those supplies and won't work without
+them. However on TrimSlice both of these supplies seem to be hardwired and
+always on. At least that's what I deduce from the code because there is no
+code that enables either the 1.05V or the pex-clk supplies.
+
+My understanding of the fixed regulator was that it was meant to be used for
+fixed voltage supplies that can still be enabled or disabled (for example as
+supplied by a GPIO) but not regulators that are fix in the sense that they
+cannot be enabled or disabled at all but are always on.
+
+Then again, the fixed regulator binding says that the gpio property is
+optional, so perhaps doing something like the following will work:
+
+	pex_clk_reg: fixedregulator@0 {
+		compatible =3D "regulator-fixed";
+		regulator-name =3D "PCIE CLK";
+		regulator-min-microvolt =3D <3300000>;
+		regulator-max-microvolt =3D <3300000>;
+		regulator-always-on;
+	};
+
+	pcie_reg: fixedregulator@1 {
+		compatible =3D "regulator-fixed";
+		regulator-name =3D "PCIE VDD";
+		regulator-min-microvolt =3D <1050000>;
+		regulator-max-microvolt =3D <1050000>;
+		regulator-always-on;
+	};
+
+Is that how it is supposed to work?
+
+Thierry
+
+--YiEDa0DAkWCtVeE4
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk9eBWEACgkQZ+BJyKLjJp+X5ACbBB/dOq1D5GnTAN4XS7SXKpvA
+1ikAn05C46XDZYeV0tCQtPuhHMdnwz6x
+=LV1A
+-----END PGP SIGNATURE-----
+
+--YiEDa0DAkWCtVeE4--
