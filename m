@@ -1,38 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:50812 "EHLO
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58405 "EHLO
 	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754659Ab2CITFg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 14:05:36 -0500
+	with ESMTP id S1758780Ab2CMGYM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 02:24:12 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo59nU_GVA4i_x4m_jaxD1Aq6k62NXZVE3Xev0QP9ytnUg@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<1331018040-30725-7-git-send-email-yinghai@kernel.org>
-	<CAErSpo4ynKbMWUUo2QdVr6fbRYoexSXpQrgYbE+AXhXgg5yzvA@mail.gmail.com>
-	<CAE9FiQWjsfduRrFqgxq-_ceg8kC-Bi-g4nGUYp0t1sZk3gM95g@mail.gmail.com>
-	<CAErSpo59nU_GVA4i_x4m_jaxD1Aq6k62NXZVE3Xev0QP9ytnUg@mail.gmail.com>
-Date: Fri, 9 Mar 2012 11:05:35 -0800
-Message-ID: <CAE9FiQVTOM=GUDusgmV31mbyBOuNKsxnm+v1cx-Liq=CNUWLfQ@mail.gmail.com>
-Subject: Re: [PATCH 06/23] PCI: rescan with bus or bridge using callback
- method too
+In-Reply-To: <1331488109-13466-3-git-send-email-jiang.liu@huawei.com>
+References: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
+	<1331488109-13466-3-git-send-email-jiang.liu@huawei.com>
+Date: Mon, 12 Mar 2012 23:24:11 -0700
+Message-ID: <CAE9FiQVRMBHN+QbFpVv4j2xPfco2X0bt9OzzcSE-BrrDY4Oqgg@mail.gmail.com>
+Subject: Re: [PATCH 2/5] Correctly clean up pci root buses in function pci_remove_bus()
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Youquan Song <youquan.song@intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chenkeping@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 9, 2012 at 9:22 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> Why did you just repeat my proposal, changing "err" to "ret"?  I
-> missed the point you're trying to make.  The name "err" gives an
-> important clue that device_schedule_callback() returns 0 or errno.
-> That's essential to understanding the code.
->
-> Your original patch has one "return."  Mine proposal has three.  All
-> that means is that the reader of your patch has to manage more stuff
-> in her head to understand the code.  That's not a benefit!
+On Sun, Mar 11, 2012 at 10:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> The function pci_create_root_bus() allocates the pci bus structure,
+> registers the bus device and creates the legacy files for a pci root
+> bus, but returns without setting the is_added flag. The is_added flag
+> for a pci root bus will be set by function pci_scan_child_bus().
 
-ok, can we have separated patch to fix them all?
+> If a pci root bus is destroyed before calling pci_scan_child_bus(),
+> the is_added flag will not be set.
+
+how that can be met?
+
+Do we have pci_remove_rescan_mutex around them?
 
 Yinghai
