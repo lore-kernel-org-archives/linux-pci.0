@@ -1,55 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:54795 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756423Ab2CBUIJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 15:08:09 -0500
-Received: by pbcun15 with SMTP id un15so469671pbc.19
-        for <linux-pci@vger.kernel.org>; Fri, 02 Mar 2012 12:08:08 -0800 (PST)
-Date: Fri, 2 Mar 2012 12:00:27 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: add spinlock held check to
- 'pcibios_fwaddrmap_lookup()'
-Message-ID: <20120302200027.GA4817@kroah.com>
-References: <20120302194501.26152.22845.stgit@amt.stowe>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120302194501.26152.22845.stgit@amt.stowe>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1331362837-10740-11-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-11-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 12 Mar 2012 20:55:19 -0600
+Message-ID: <CAErSpo6uBpEYrZPBxwrg_B8j7F9XAyDUvKTS4=++xze5KVmx1g@mail.gmail.com>
+Subject: Re: [PATCH v2 10/37] PCI, sysfs: create rescan_bridge under
+ /sys/.../pci/devices/... for pci bridges
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 02, 2012 at 12:45:01PM -0700, Myron Stowe wrote:
-> 'pcibios_fwaddrmap_lookup()' is used to maintain FW-assigned BIOS BAR
-> values for reinstatement when normal resource assignment attempts
-> fail and must be called with the 'pcibios_fwaddrmap_lock' spinlock
-> held.
-> 
-> This patch adds a WARN_ON notification if the spinlock is not currently
-> held by the caller.
-> 
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Current code will create rescan for every pci device under parent bus.
+> that is not right. the device is already there, there is no reason to rescan it.
+
+"The device" (not "the device").
+
+> We could have rescan for pci bridges. less confusing.
+>
+> Need to move rescan attr to pci dev bridge attribute group.
+> And We should rescan bridge's secondary bus instead of primary bus.
+
+"And we" (not "And We").
+
+I think the idea of this patch makes sense.
+
+You might want to consider having this actually read the bridge config
+again.  That way, if the user manually changed the secondary bus
+number or the bridge windows using setpci or something, this rescan
+could use that new config if possible.
+
+I still hate the fact that we will have three different rescan files
+(four if you count /sys/bus/pci/rescan), but I don't have a solution
+to offer:
+    device/rescan
+    device/rescan_bridge
+    bus/rescan
+
+> -v3: Use device_type for pci dev.
+> -v4: Seperate pci device type change out
+> -v5: add rescan_bridge for bridge type, and still keep the old rescan.
+>        may remove the old rescan later.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Randy Dunlap <rdunlap@xenotime.net>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > ---
-> 
->  arch/x86/pci/i386.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-> index 33e6a0b..831971e 100644
-> --- a/arch/x86/pci/i386.c
-> +++ b/arch/x86/pci/i386.c
-> @@ -57,6 +57,8 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
->  {
->  	struct pcibios_fwaddrmap *map;
->  
-> +	WARN_ON(!spin_is_locked(&pcibios_fwaddrmap_lock));
+>  Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
+>  drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
+>  2 files changed, 34 insertions(+), 0 deletions(-)
+>
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 34f5110..95f0f37 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -111,6 +111,16 @@ Description:
+>                from this part of the device tree.
+>                Depends on CONFIG_HOTPLUG.
+>
+> +What:          /sys/bus/pci/devices/.../rescan_bridge
+> +Date:          February 2012
+> +Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
+> +Description:
+> +               Writing a non-zero value to this attribute will
+> +               force a rescan of the bridge and all child buses, and
+> +               re-discover devices removed earlier from this part of
+> +               the device tree.
+> +               Depends on CONFIG_HOTPLUG.
 > +
-
-What is this going to help with?  How can someone then recover from this
-issue?  Just adding a warning message isn't going to fix any problems
-here, why not fix the root cause?
-
-thanks,
-
-greg k-h
+>  What:          /sys/bus/pci/devices/.../reset
+>  Date:          July 2009
+>  Contact:       Michael S. Tsirkin <mst@redhat.com>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 39d15e6..d5c8ffb 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>        return count;
+>  }
+>
+> +static ssize_t
+> +dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+> +                const char *buf, size_t count)
+> +{
+> +       unsigned long val;
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +       if (kstrtoul(buf, 0, &val) < 0)
+> +               return -EINVAL;
+> +
+> +       if (val) {
+> +               mutex_lock(&pci_remove_rescan_mutex);
+> +               pci_rescan_bus(pdev->subordinate);
+> +               mutex_unlock(&pci_remove_rescan_mutex);
+> +       }
+> +       return count;
+> +}
+> +
+> +static struct device_attribute pci_dev_bridge_rescan_attr =
+> +       __ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
+> +
+>  static void remove_callback(struct device *dev)
+>  {
+>        struct pci_dev *pdev = to_pci_dev(dev);
+> @@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
+>  late_initcall(pci_sysfs_init);
+>
+>  static struct attribute *pci_dev_bridge_attrs[] = {
+> +#ifdef CONFIG_HOTPLUG
+> +       &pci_dev_bridge_rescan_attr.attr,
+> +#endif
+>        NULL,
+>  };
+>
+> --
+> 1.7.7
+>
