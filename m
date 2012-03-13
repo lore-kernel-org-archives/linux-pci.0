@@ -1,168 +1,264 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:51236 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751881Ab2CIGuh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 01:50:37 -0500
-Date: Fri, 9 Mar 2012 07:50:04 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 10/11] ARM: tegra: pcie: Add MSI support
-Message-ID: <20120309065004.GD25208@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-11-git-send-email-thierry.reding@avionic-design.de>
- <4F59213F.6070107@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tEFtbjk+mNEviIIX"
-In-Reply-To: <4F59213F.6070107@wwwdotorg.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 08/12] PCI: Make quirk_io_region to use addon_resource support
+Date: Tue, 13 Mar 2012 00:26:30 -0700
+Message-Id: <1331623594-30543-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+References: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+after they are put in add-on resources, they will be safely claimed later.
 
---tEFtbjk+mNEviIIX
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/quirks.c |  155 ++++++++++++++++++++++---------------------------
+ 1 files changed, 70 insertions(+), 85 deletions(-)
 
-* Stephen Warren wrote:
-> On 03/08/2012 07:51 AM, Thierry Reding wrote:
-> > This commit adds support for message signaled interrupts to the Tegra
-> > PCIe controller.
-> >=20
-> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> > ---
-> > This code is taken from the NVIDIA Vibrante kernel and therefore has no
-> > appropriate Signed-off-by from the original author. Maybe someone at
-> > NVIDIA can find out who wrote this code and maybe provide a proper
-> > Signed-off-by that I can add?
->=20
-> I think if you look in:
-> git://nv-tegra.nvidia.com/linux-2.6.git android-tegra-2.6.36
->=20
-> the following commits are what you're after:
->=20
-> de7fd8768b32da66eaf4eaf58473c65f7a76808d
-> arm: tegra: pcie: enabling MSI support for pcie
->=20
-> ac1f8310811c64a084511d2afc27f66334b31a81
-> ARM: tegra: pcie: fix return value from MSI irq routine
->=20
-> Although the patch below only partially resembles those patches, I guess
-> because you've rewritten the code a lot to conform to the current kernel
-> APIs, clean stuff up, etc. Perhaps just saying "based on code by Krishna
-> Kishore <kthota@nvidia.com>" is enough...
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index cbe7dd9..4561610 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -324,29 +324,61 @@ static void __devinit quirk_cs5536_vsa(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA, quirk_cs5536_vsa);
+ 
+-static void __devinit quirk_io_region(struct pci_dev *dev, unsigned region,
+-	unsigned size, int nr, const char *name)
++static int quirk_read_io(struct pci_dev *dev, struct resource *res, int port)
+ {
+-	region &= ~(size-1);
+-	if (region) {
+-		struct pci_bus_region bus_region;
+-		struct resource *res = dev->resource + nr;
++	struct pci_bus_region bus_region;
++	u16 region;
++	unsigned size = to_pci_dev_addon_resource(res)->size;
+ 
+-		res->name = pci_name(dev);
+-		res->start = region;
+-		res->end = region + size - 1;
+-		res->flags = IORESOURCE_IO;
++	pci_read_config_word(dev, port, &region);
++	region &= ~(size - 1);
+ 
+-		/* Convert from PCI bus to resource space.  */
+-		bus_region.start = res->start;
+-		bus_region.end = res->end;
+-		pcibios_bus_to_resource(dev, res, &bus_region);
++	/* Convert from PCI bus to resource space.  */
++	bus_region.start = region;
++	bus_region.end = region + size - 1;
+ 
+-		if (pci_claim_resource(dev, nr) == 0)
+-			dev_info(&dev->dev, "quirk: %pR claimed by %s\n",
+-				 res, name);
+-	}
+-}	
++	pcibios_bus_to_resource(dev, res, &bus_region);
++
++	res->flags |= IORESOURCE_IO;
++	dev_info(&dev->dev, "PIO at %pR\n", res);
++
++	return 0;
++}
++static int quirk_write_io(struct pci_dev *dev, struct resource *res, int port)
++{
++	struct pci_bus_region bus_region;
++	u16 region;
++	unsigned size = to_pci_dev_addon_resource(res)->size;
++
++	pci_read_config_word(dev, port, &region);
++	region &= size - 1;
++
++	/* Convert to PCI bus space.  */
++	pcibios_resource_to_bus(dev, &bus_region, res);
++	region |= bus_region.start & (~(size - 1));
++
++	pci_write_config_word(dev, port, region);
++
++	return 0;
++}
++static struct resource_ops quirk_io_ops = {
++	.read = quirk_read_io,
++	.write = quirk_write_io,
++};
++
++static void __devinit quirk_io_region(struct pci_dev *dev, int port,
++					unsigned size, char *name)
++{
++	u16 region;
++
++	pci_read_config_word(dev, port, &region);
++	region &= size - 1;
++
++	if (!region)
++		return;
++
++	add_pci_dev_addon_resource(dev, port, size, &quirk_io_ops, name);
++}
+ 
+ /*
+  *	ATI Northbridge setups MCE the processor if you even
+@@ -374,12 +406,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
+  */
+ static void __devinit quirk_ali7101_acpi(struct pci_dev *dev)
+ {
+-	u16 region;
+-
+-	pci_read_config_word(dev, 0xE0, &region);
+-	quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
+-	pci_read_config_word(dev, 0xE2, &region);
+-	quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
++	quirk_io_region(dev, 0xE0, 64, "ali7101 ACPI");
++	quirk_io_region(dev, 0xE2, 32, "ali7101 SMB");
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
+ 
+@@ -503,12 +531,10 @@ static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
+  */
+ static void __devinit quirk_piix4_acpi(struct pci_dev *dev)
+ {
+-	u32 region, res_a;
++	u32 res_a;
+ 
+-	pci_read_config_dword(dev, 0x40, &region);
+-	quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "PIIX4 ACPI");
+-	pci_read_config_dword(dev, 0x90, &region);
+-	quirk_io_region(dev, region, 16, PCI_BRIDGE_RESOURCES+1, "PIIX4 SMB");
++	quirk_io_region(dev, 0x40, 64, "PIIX4 ACPI");
++	quirk_io_region(dev, 0x90, 16, "PIIX4 SMB");
+ 
+ 	/* Device resource A has enables for some of the other ones */
+ 	pci_read_config_dword(dev, 0x5c, &res_a);
+@@ -552,7 +578,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82443MX_3,	qui
+  */
+ static void __devinit quirk_ich4_lpc_acpi(struct pci_dev *dev)
+ {
+-	u32 region;
+ 	u8 enable;
+ 
+ 	/*
+@@ -564,22 +589,12 @@ static void __devinit quirk_ich4_lpc_acpi(struct pci_dev *dev)
+ 	*/
+ 
+ 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
+-	if (enable & ICH4_ACPI_EN) {
+-		pci_read_config_dword(dev, ICH_PMBASE, &region);
+-		region &= PCI_BASE_ADDRESS_IO_MASK;
+-		if (region >= PCIBIOS_MIN_IO)
+-			quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
+-					"ICH4 ACPI/GPIO/TCO");
+-	}
++	if (enable & ICH4_ACPI_EN)
++		quirk_io_region(dev, ICH_PMBASE, 128, "ICH4 ACPI/GPIO/TCO");
+ 
+ 	pci_read_config_byte(dev, ICH4_GPIO_CNTL, &enable);
+-	if (enable & ICH4_GPIO_EN) {
+-		pci_read_config_dword(dev, ICH4_GPIOBASE, &region);
+-		region &= PCI_BASE_ADDRESS_IO_MASK;
+-		if (region >= PCIBIOS_MIN_IO)
+-			quirk_io_region(dev, region, 64,
+-					PCI_BRIDGE_RESOURCES + 1, "ICH4 GPIO");
+-	}
++	if (enable & ICH4_GPIO_EN)
++		quirk_io_region(dev, ICH4_GPIOBASE, 64, "ICH4 GPIO");
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AA_0,		quirk_ich4_lpc_acpi);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AB_0,		quirk_ich4_lpc_acpi);
+@@ -594,26 +609,15 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_ESB_1,		qui
+ 
+ static void __devinit ich6_lpc_acpi_gpio(struct pci_dev *dev)
+ {
+-	u32 region;
+ 	u8 enable;
+ 
+ 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
+-	if (enable & ICH6_ACPI_EN) {
+-		pci_read_config_dword(dev, ICH_PMBASE, &region);
+-		region &= PCI_BASE_ADDRESS_IO_MASK;
+-		if (region >= PCIBIOS_MIN_IO)
+-			quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
+-					"ICH6 ACPI/GPIO/TCO");
+-	}
++	if (enable & ICH6_ACPI_EN)
++		quirk_io_region(dev, ICH_PMBASE, 128, "ICH6 ACPI/GPIO/TCO");
+ 
+ 	pci_read_config_byte(dev, ICH6_GPIO_CNTL, &enable);
+-	if (enable & ICH6_GPIO_EN) {
+-		pci_read_config_dword(dev, ICH6_GPIOBASE, &region);
+-		region &= PCI_BASE_ADDRESS_IO_MASK;
+-		if (region >= PCIBIOS_MIN_IO)
+-			quirk_io_region(dev, region, 64,
+-					PCI_BRIDGE_RESOURCES + 1, "ICH6 GPIO");
+-	}
++	if (enable & ICH6_GPIO_EN)
++		quirk_io_region(dev, ICH6_GPIOBASE, 64, "ICH6 GPIO");
+ }
+ 
+ static void __devinit ich6_lpc_generic_decode(struct pci_dev *dev, unsigned reg, const char *name, int dynsize)
+@@ -711,13 +715,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,   PCI_DEVICE_ID_INTEL_ICH10_1, qui
+  */
+ static void __devinit quirk_vt82c586_acpi(struct pci_dev *dev)
+ {
+-	u32 region;
+-
+-	if (dev->revision & 0x10) {
+-		pci_read_config_dword(dev, 0x48, &region);
+-		region &= PCI_BASE_ADDRESS_IO_MASK;
+-		quirk_io_region(dev, region, 256, PCI_BRIDGE_RESOURCES, "vt82c586 ACPI");
+-	}
++	if (dev->revision & 0x10)
++		quirk_io_region(dev, 0x48, 256, "vt82c586 ACPI");
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C586_3,	quirk_vt82c586_acpi);
+ 
+@@ -729,18 +728,11 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C586_3,	quirk_vt
+  */
+ static void __devinit quirk_vt82c686_acpi(struct pci_dev *dev)
+ {
+-	u16 hm;
+-	u32 smb;
+-
+ 	quirk_vt82c586_acpi(dev);
+ 
+-	pci_read_config_word(dev, 0x70, &hm);
+-	hm &= PCI_BASE_ADDRESS_IO_MASK;
+-	quirk_io_region(dev, hm, 128, PCI_BRIDGE_RESOURCES + 1, "vt82c686 HW-mon");
++	quirk_io_region(dev, 0x70, 128, "vt82c686 HW-mon");
+ 
+-	pci_read_config_dword(dev, 0x90, &smb);
+-	smb &= PCI_BASE_ADDRESS_IO_MASK;
+-	quirk_io_region(dev, smb, 16, PCI_BRIDGE_RESOURCES + 2, "vt82c686 SMB");
++	quirk_io_region(dev, 0x90, 16, "vt82c686 SMB");
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt82c686_acpi);
+ 
+@@ -751,15 +743,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt
+  */
+ static void __devinit quirk_vt8235_acpi(struct pci_dev *dev)
+ {
+-	u16 pm, smb;
+-
+-	pci_read_config_word(dev, 0x88, &pm);
+-	pm &= PCI_BASE_ADDRESS_IO_MASK;
+-	quirk_io_region(dev, pm, 128, PCI_BRIDGE_RESOURCES, "vt8235 PM");
+-
+-	pci_read_config_word(dev, 0xd0, &smb);
+-	smb &= PCI_BASE_ADDRESS_IO_MASK;
+-	quirk_io_region(dev, smb, 16, PCI_BRIDGE_RESOURCES + 1, "vt8235 SMB");
++	quirk_io_region(dev, 0x88, 128, "vt8235 PM");
++	quirk_io_region(dev, 0xd0, 16, "vt8235 SMB");
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8235,	quirk_vt8235_acpi);
+ 
+-- 
+1.7.7
 
-Yes, it is indeed a major rewrite because the original code had some
-peculiarities and FIXME that I thought wouldn't make it through the review
-anyway so I fixed them up.
-
-I'll add some comment about the original authorship. There is no official
-Signed-off-by in the original commit. Do I still need one or is it enough to
-mention the original authors in the commit message and add keep my own
-Signed-off-by?
-
-Thierry
-
->=20
-> > diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
->=20
-> > +static int tegra_pcie_enable_msi(struct platform_device *pdev)
-> > +{
-> > +	struct tegra_pcie_info *pcie =3D platform_get_drvdata(pdev);
-> > +	volatile void *pages;
-> > +	unsigned long base;
-> > +	unsigned int msi;
-> > +	int msi_base;
-> > +	int err;
-> > +	u32 reg;
-> > +
-> > +	mutex_init(&pcie->msi_lock);
-> > +
-> > +	msi_base =3D irq_alloc_descs(-1, 0, INT_PCI_MSI_NR, 0);
-> > +	if (msi_base < 0) {
-> > +		dev_err(&pdev->dev, "failed to allocate IRQs\n");
-> > +		return msi_base;
-> > +	}
-> > +
-> > +	pcie->msi_domain =3D irq_domain_add_legacy(pcie->dev->of_node,
-> > +						 INT_PCI_MSI_NR, msi_base,
-> > +						 0, &irq_domain_simple_ops,
-> > +						 NULL);
-> > +	if (!pcie->msi_domain) {
-> > +		dev_err(&pdev->dev, "failed to create IRQ domain\n");
->=20
-> Free the IRQ descriptors in the error paths?
-
-Yes, that would make sense.
-
-> > +		return -ENOMEM;
-> > +	}
-> > +
-> > +	pcie->msi_chip.name =3D "PCIe-MSI";
-> > +	pcie->msi_chip.irq_enable =3D unmask_msi_irq;
-> > +	pcie->msi_chip.irq_disable =3D mask_msi_irq;
-> > +	pcie->msi_chip.irq_mask =3D mask_msi_irq;
-> > +	pcie->msi_chip.irq_unmask =3D unmask_msi_irq;
-> > +
-> > +	for (msi =3D 0; msi < INT_PCI_MSI_NR; msi++) {
-> > +		unsigned int irq =3D irq_find_mapping(pcie->msi_domain, msi);
-> > +
-> > +		irq_set_chip_data(irq, pcie);
-> > +		irq_set_chip_and_handler(irq, &pcie->msi_chip,
-> > +					 handle_simple_irq);
-> > +		set_irq_flags(irq, IRQF_VALID);
-> > +	}
-> > +
-> > +	err =3D platform_get_irq(pdev, 1);
-> > +	if (err < 0) {
-> > +		dev_err(&pdev->dev, "failed to get IRQ: %d\n", err);
->=20
-> Same here, and undo setting IRQF_VALID?
-
-Right. I assume it would be best to also free the struct irq_domain and set
-the chip data and handler back to NULL? AFAICT there is no canonical way to
-teardown an irq_domain.
-
-> > +		return err;
-> > +	}
-> ...
->=20
-> > +static int tegra_pcie_disable_msi(struct platform_device *pdev)
-> > +{
-> > +	return 0;
-> > +}
->=20
-> This is empty in both the ifdef(CONFIG_PCI_MSI) case and otherwise. It
-> should probably clean everything up here right?
-
-Yes, initially this contained a call to free_irq(), which I removed when I
-switched to using a chained handler. I can probably put all of the cleanup
-code from your comments above in here and perhaps even call that in the err=
-or
-paths of tegra_pcie_enable_msi().
-
-Thierry
-
---tEFtbjk+mNEviIIX
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9ZqBwACgkQZ+BJyKLjJp/ZpwCeNAJ/dD84LzakiCrMID7j8QL8
-PBYAmgLAWIaxNcMPXqR7cHGsUoZoC/KX
-=Mq/s
------END PGP SIGNATURE-----
-
---tEFtbjk+mNEviIIX--
