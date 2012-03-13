@@ -1,118 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52404 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752034Ab2CNHiy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Mar 2012 03:38:54 -0400
-Message-ID: <4F604B16.606@intel.com>
-Date: Wed, 14 Mar 2012 09:39:02 +0200
-From: Adrian Hunter <adrian.hunter@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 13 Mar 2012 09:12:36 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kamil Grzebien <ciptok@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Initializing iwl3945 error
+Message-ID: <20120313081235.GC15333@redhat.com>
+References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
 MIME-Version: 1.0
-To: Alexander Stein <alexander.stein@systec-electronic.com>
-CC: Chris Ball <cjb@laptop.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] mmc: sdhci: check interrupt flags in ISR again
-References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com> <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com>
-In-Reply-To: <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/03/12 19:16, Alexander Stein wrote:
-> When using MSI it is possible that a new MSI is sent while an earlier
-> MSI is currently handled. In this case SDHCI_INT_STATUS only contains
-> SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
-> of the ISR SDHCI_INT_DATA_END is now also pending which would be ignored.
+On Sun, Mar 11, 2012 at 05:43:26PM +0000, Kamil Grzebien wrote:
+> I've initialisation problem with my iwl3945 network card in Dell XPS
+> M1530 laptop. The issue is known and described in couple of bug
+> reports (eg. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143).
+> There are workarounds but I'd like to solve the problem permanently.
+> Basically when initializing I get:
 > 
-> Fix this by rereading the interrupt flags in the ISR until no interrupt
-> we care is pending.
+> iwl3945 0000:0b:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+> iwl3945 0000:0b:00.0: setting latency timer to 64
+> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> ....
+> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> iwl3945 0000:0b:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
+> iwl3945 0000:0b:00.0: EEPROM not found, EEPROM_GP=0xffffffff
+It's worth to mansion that this problem happen after wakeup from suspend
+to ram.
+
+> 1. Driver can't initialize card as all ioread32/iowrite32 seems to not
+> do their job. All reads finalize with 0xffffffff.
 > 
-> Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
-> ---
->  drivers/mmc/host/sdhci.c |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
+> However I can see that:
+> - pci_iomap(pdev, 0, 0) doesn't return error,
+> - pci_resource_start(pdev, 0) seems gives correct address (I can
+> compare it with the one I can see in /proc/iomem).
 > 
-> diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
-> index 8d66706..654ab32 100644
-> --- a/drivers/mmc/host/sdhci.c
-> +++ b/drivers/mmc/host/sdhci.c
-> @@ -2268,6 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
->  	irqreturn_t result;
->  	struct sdhci_host *host = dev_id;
->  	u32 intmask;
-> +	u32 intmask_unhandled;
->  	int cardint = 0;
->  
->  	spin_lock(&host->lock);
-> @@ -2286,6 +2287,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
->  		goto out;
->  	}
->  
-> +again:
->  	DBG("*** %s got interrupt: 0x%08x\n",
->  		mmc_hostname(host->mmc), intmask);
->  
-> @@ -2336,6 +2338,14 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
->  		sdhci_writel(host, SDHCI_INT_BUS_POWER, SDHCI_INT_STATUS);
->  	}
->  
-> +	intmask_unhandled = intmask;
-> +
-> +	intmask = sdhci_readl(host, SDHCI_INT_STATUS);
-> +
-> +	/* Do interrupt handling again if we got new flags */
-> +	if (intmask & ~intmask_unhandled)
-> +		goto again;
-> +
->  	intmask &= ~SDHCI_INT_BUS_POWER;
->  
->  	if (intmask & SDHCI_INT_CARD_INT)
+> If I access the memory directly, not by mapping, I can write and read
+> pci memory but driver load fails anyway. I don't understand why can't
+> access using mapped memory.
+How do you access memory directly ?
 
-Why not just replace mmiowb() i.e.
+> 2. If I check BASE_ADDRESS with setpci it doesn't give correct values:
+> 
+> # setpci -v -s 0b:00.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+> 0000:0b:00.0 @10 = 00000000
+> 0000:0b:00.0 @14 = 00000000
+> 
+> Not sure if it's done by driver itself or it should point correct
+> values even if the driver wasn't fully loaded.
+> 
+> Have you got any idea of:
+> - why IO memory isn't accessible? what could cause that?
+> - how APIC could change the load process in this particular case? (if
+> I boot with noapic kernel option it usually works fine)
+Is this really noapic or maybe noacpi ? ACPI manage PCIe devices.
 
+> This issue is reproducible in 100% on my system when I turn on the
+> machine. It doesn't occur after some work on it. I'd be very happy to
+> get rid of the issue.
+> 
+> Could you point some ideas that might be worth checking in driver or
+> kernel please? I've tried couple of ideas but none worked for me.
 
-diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
-index 8d66706..da8a101 100644
---- a/drivers/mmc/host/sdhci.c
-+++ b/drivers/mmc/host/sdhci.c
-@@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+Would be good to check if pcie bridge is configured correctly after
+suspend to ram. But I don't know how to do this, that's why we are
+on linux-pci mailing list :-)
 
-        result = IRQ_HANDLED;
+Note we have similar bug report, which was actual regression and
+that problem is already fixed by PCI patch:
+http://marc.info/?l=linux-kernel&m=132577331232330&w=2
 
--       mmiowb();
-+       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
-+       if (intmask)
-+               goto again;
- out:
-        spin_unlock(&host->lock);
-
-
-But maybe it would be safer limiting the number of loops i.e.
-
-
-diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
-index 8d66706..d88247d 100644
---- a/drivers/mmc/host/sdhci.c
-+++ b/drivers/mmc/host/sdhci.c
-@@ -2268,7 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
-        irqreturn_t result;
-        struct sdhci_host *host = dev_id;
-        u32 intmask;
--       int cardint = 0;
-+       int cardint = 0, max_loops = 16;
-
-        spin_lock(&host->lock);
-
-@@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
-
-        result = IRQ_HANDLED;
-
--       mmiowb();
-+       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
-+       if (intmask && --max_loops)
-+               goto again;
- out:
-        spin_unlock(&host->lock);
-
+Stanislaw
 
