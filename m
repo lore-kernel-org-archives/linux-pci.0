@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30765 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161460Ab2CSFsD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:03 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -11,513 +7,356 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 27/47] PCI, acpiphp: Separate out hot-add support of pci host bridge
-Date: Sun, 18 Mar 2012 22:46:16 -0700
-Message-Id: <1332135996-13860-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 05/12] PCI: Add addon_resource support for pci_dev
+Date: Tue, 13 Mar 2012 00:26:27 -0700
+Message-Id: <1331623594-30543-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+References: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It causes confusion.
+Will add addon_resources list in pci_dev, it will be used for resources
+other than stand, rom, sriov, bridges.
+Some could be same as std reg, but using different register.
+Some could have own way to read/write to them.
 
-We may only need acpi hp for pci host bridge.
+Kernel using different way to hack those resources like abusing
+pci bridge resource spot on non bridge pci device.
 
-Split host bridge hot-add support to pci_root_hp, and keep acpiphp simple.
+With this patch, will treat addon-resource like standard resource with
+special ops.
 
-Also remove not used res_lock in the struct.
-
--v2: put back pci_root_hp change in one patch
--v3: add pcibios_resource_survey_bus() calling
+Also adding bunch of for_each... helpers to make resource loop easier.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/acpi/Makefile              |    1 +
- drivers/acpi/pci_root_hp.c         |  238 ++++++++++++++++++++++++++++++++++++
- drivers/pci/hotplug/acpiphp.h      |    9 +--
- drivers/pci/hotplug/acpiphp_glue.c |  104 +++-------------
- 4 files changed, 260 insertions(+), 92 deletions(-)
- create mode 100644 drivers/acpi/pci_root_hp.c
+ drivers/pci/pci.c       |    7 +++
+ drivers/pci/probe.c     |  108 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/setup-res.c |   24 ++++++++---
+ include/linux/pci.h     |   77 ++++++++++++++++++++++++++++++++-
+ 4 files changed, 207 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index 1567028..bc6e53f 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -36,6 +36,7 @@ acpi-y				+= processor_core.o
- acpi-y				+= ec.o
- acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
- acpi-y				+= pci_root.o pci_link.o pci_irq.o pci_bind.o
-+acpi-$(CONFIG_HOTPLUG)		+= pci_root_hp.o
- acpi-y				+= power.o
- acpi-y				+= event.o
- acpi-y				+= sysfs.o
-diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-new file mode 100644
-index 0000000..e07c31b
---- /dev/null
-+++ b/drivers/acpi/pci_root_hp.c
-@@ -0,0 +1,238 @@
-+/*
-+ * Separated from drivers/pci/hotplug/acpiphp_glue.c
-+ *	only support root bridge
-+ */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 32ab301..af84abf 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3545,6 +3545,13 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
+ 		reg = pci_iov_resource_bar(dev, resno, type);
+ 		if (reg)
+ 			return reg;
++	} else if (resno >= PCI_NUM_RESOURCES) {
++		struct resource *res = pci_dev_resource_n(dev, resno);
 +
-+#include <linux/init.h>
-+#include <linux/module.h>
-+
-+#include <linux/kernel.h>
-+#include <linux/pci.h>
-+#include <linux/mutex.h>
-+#include <linux/slab.h>
-+#include <linux/acpi.h>
-+
-+static LIST_HEAD(acpi_root_bridge_list);
-+struct acpi_root_bridge {
-+	struct list_head list;
-+	acpi_handle handle;
-+	u32 flags;
-+};
-+
-+/* bridge flags */
-+#define ROOT_BRIDGE_HAS_EJ0	(0x00000002)
-+#define ROOT_BRIDGE_HAS_PS3	(0x00000080)
-+
-+#define ACPI_STA_FUNCTIONING	(0x00000008)
-+
-+static struct acpi_root_bridge *acpi_root_handle_to_bridge(acpi_handle handle)
++		if (res) {
++			*type = pci_bar_unknown;
++			return to_pci_dev_addon_resource(res)->reg_addr;
++		}
+ 	}
+ 
+ 	dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 972553b..dac829f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -75,6 +75,111 @@ static int __init pcibus_class_init(void)
+ }
+ postcore_initcall(pcibus_class_init);
+ 
++struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
 +{
-+	struct acpi_root_bridge *bridge;
++	struct pci_dev_addon_resource *addon_res;
 +
-+	list_for_each_entry(bridge, &acpi_root_bridge_list, list)
-+		if (bridge->handle == handle)
-+			return bridge;
++	if (n < PCI_NUM_RESOURCES)
++		return &dev->resource[n];
 +
++	n -= PCI_NUM_RESOURCES;
++	list_for_each_entry(addon_res, &dev->addon_resources, list) {
++		if (n-- == 0)
++			return &addon_res->res;
++	}
 +	return NULL;
 +}
 +
-+/* allocate and initialize host bridge data structure */
-+static void add_acpi_root_bridge(acpi_handle handle)
++int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
 +{
-+	struct acpi_root_bridge *bridge;
-+	acpi_handle dummy_handle;
-+	acpi_status status;
++	int i;
++	struct resource *r;
 +
-+	/* if the bridge doesn't have _STA, we assume it is always there */
-+	status = acpi_get_handle(handle, "_STA", &dummy_handle);
-+	if (ACPI_SUCCESS(status)) {
-+		unsigned long long tmp;
++	for_each_pci_dev_all_resource(dev, r, i)
++		if (r == res)
++			return i;
 +
-+		status = acpi_evaluate_integer(handle, "_STA", NULL, &tmp);
-+		if (ACPI_FAILURE(status)) {
-+			printk(KERN_DEBUG "%s: _STA evaluation failure\n",
-+						 __func__);
++	return -1;
++}
++
++struct pci_dev_addon_resource *__add_pci_dev_addon_resource(
++		 struct pci_dev *dev, int addr, char *name)
++{
++	struct pci_dev_addon_resource *addon_res;
++
++	addon_res = kzalloc(sizeof(*addon_res), GFP_KERNEL);
++
++	if (!addon_res)
++		return NULL;
++
++	addon_res->reg_addr = addr;
++
++	if (name)
++		addon_res->res.name = name;
++	else
++		addon_res->res.name = pci_name(dev);
++
++	list_add_tail(&addon_res->list, &dev->addon_resources);
++
++	return addon_res;
++}
++
++struct pci_dev_addon_resource *add_pci_dev_addon_fixed_resource(
++		 struct pci_dev *dev, int start, int size, int flags,
++		 int addr, char *name)
++{
++	struct pci_dev_addon_resource *addon_res;
++	struct resource *res;
++
++	addon_res = __add_pci_dev_addon_resource(dev, addr, name);
++	if (addon_res)
++		return NULL;
++
++	res = &addon_res->res;
++	res->start = start;
++	res->end = start + size - 1;
++	res->flags = flags | IORESOURCE_PCI_FIXED;
++
++	dev_printk(KERN_DEBUG, &dev->dev,
++		   "addon fixed resource %s %pR added\n", res->name, res);
++
++	return addon_res;
++}
++
++struct pci_dev_addon_resource *add_pci_dev_addon_resource(struct pci_dev *dev,
++		 int addr, int size, struct resource_ops *ops, char *name)
++{
++	struct pci_dev_addon_resource *addon_res;
++	struct resource *res;
++
++	addon_res = __add_pci_dev_addon_resource(dev, addr, name);
++	if (!addon_res)
++		return NULL;
++
++	res = &addon_res->res;
++	if (ops) {
++		addon_res->ops = ops;
++		addon_res->size = size;
++		ops->read(dev, res, addr);
++	} else
++		__pci_read_base(dev, pci_bar_unknown, res, addr);
++
++	dev_printk(KERN_DEBUG, &dev->dev,
++		   "addon resource %s %pR added\n", res->name, res);
++
++	return addon_res;
++}
++
++static void pci_release_dev_addon_res(struct pci_dev *dev)
++{
++	struct pci_dev_addon_resource *addon_res, *tmp;
++
++	list_for_each_entry_safe(addon_res, tmp, &dev->addon_resources, list) {
++		list_del(&addon_res->list);
++		kfree(addon_res);
++	}
++}
++
+ static u64 pci_size(u64 base, u64 maxbase, u64 mask)
+ {
+ 	u64 size = mask & maxbase;	/* Find the significant bits */
+@@ -1283,6 +1388,7 @@ static void pci_release_dev(struct device *dev)
+ 	pci_dev = to_pci_dev(dev);
+ 	pci_release_capabilities(pci_dev);
+ 	pci_release_of_node(pci_dev);
++	pci_release_dev_addon_res(pci_dev);
+ 	kfree(pci_dev);
+ }
+ 
+@@ -1362,11 +1468,13 @@ struct pci_dev *alloc_pci_dev(void)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&dev->bus_list);
++	INIT_LIST_HEAD(&dev->addon_resources);
+ 
+ 	return dev;
+ }
+ EXPORT_SYMBOL(alloc_pci_dev);
+ 
++
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 				 int crs_timeout)
+ {
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index eea85da..48251e3 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -33,7 +33,7 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 	u32 new, check, mask;
+ 	int reg;
+ 	enum pci_bar_type type;
+-	struct resource *res = dev->resource + resno;
++	struct resource *res = pci_dev_resource_n(dev, resno);
+ 
+ 	/*
+ 	 * Ignore resources for unimplemented BARs and unused resource slots
+@@ -50,6 +50,21 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 	if (res->flags & IORESOURCE_PCI_FIXED)
+ 		return;
+ 
++	if (resno >= PCI_NUM_RESOURCES) {
++		struct pci_dev_addon_resource *addon_res;
++
++		addon_res = to_pci_dev_addon_resource(res);
++		reg = addon_res->reg_addr;
++		if (addon_res->ops) {
++			addon_res->ops->write(dev, res, reg);
 +			return;
 +		}
-+		if ((tmp & ACPI_STA_FUNCTIONING) == 0)
-+			/* don't register this object */
-+			return;
-+	}
++	} else
++		reg = pci_resource_bar(dev, resno, &type);
 +
-+	bridge = kzalloc(sizeof(struct acpi_root_bridge), GFP_KERNEL);
-+	if (!bridge)
++	if (!reg)
 +		return;
 +
-+	bridge->handle = handle;
-+
-+	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &dummy_handle)))
-+		bridge->flags |= ROOT_BRIDGE_HAS_EJ0;
-+	if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &dummy_handle)))
-+		bridge->flags |= ROOT_BRIDGE_HAS_PS3;
-+
-+	list_add(&bridge->list, &acpi_root_bridge_list);
-+}
-+
-+struct acpi_root_hp_work {
-+	struct work_struct work;
-+	acpi_handle handle;
-+	u32 type;
-+	void *context;
-+};
-+
-+static void alloc_acpi_root_hp_work(acpi_handle handle, u32 type,
-+					void *context,
-+					void (*func)(struct work_struct *work))
-+{
-+	struct acpi_root_hp_work *hp_work;
-+	int ret;
-+
-+	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
-+	if (!hp_work)
-+		return;
-+
-+	hp_work->handle = handle;
-+	hp_work->type = type;
-+	hp_work->context = context;
-+
-+	INIT_WORK(&hp_work->work, func);
-+	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
-+	if (!ret)
-+		kfree(hp_work);
-+}
-+
-+/* Program resources in newly inserted bridge */
-+static void acpi_root_configure_bridge(acpi_handle handle)
-+{
-+	struct acpi_pci_root *root = acpi_pci_find_root(handle);
-+
-+	pcibios_resource_survey_bus(root->bus);
-+	pci_assign_unassigned_bus_resources(root->bus);
-+}
-+
-+static void handle_root_bridge_insertion(acpi_handle handle)
-+{
-+	struct acpi_device *device, *pdevice;
-+	acpi_handle phandle;
-+	int ret_val;
-+
-+	acpi_get_parent(handle, &phandle);
-+	if (acpi_bus_get_device(phandle, &pdevice)) {
-+		printk(KERN_DEBUG "no parent device, assuming NULL\n");
-+		pdevice = NULL;
-+	}
-+	if (!acpi_bus_get_device(handle, &device)) {
-+		/* check if  pci root_bus is removed */
-+		struct acpi_pci_root *root = acpi_driver_data(device);
-+		if (pci_find_bus(root->segment, root->secondary.start))
-+			return;
-+
-+		printk(KERN_DEBUG "bus exists... trim\n");
-+		/* this shouldn't be in here, so remove
-+		 * the bus then re-add it...
-+		 */
-+		ret_val = acpi_bus_trim(device, 1);
-+		printk(KERN_DEBUG "acpi_bus_trim return %x\n", ret_val);
-+	}
-+	if (acpi_bus_add(&device, pdevice, handle, ACPI_BUS_TYPE_DEVICE)) {
-+		printk(KERN_ERR "cannot add bridge to acpi list\n");
-+		return;
-+	}
-+	acpi_root_configure_bridge(handle);
-+	if (acpi_bus_start(device))
-+		printk(KERN_ERR "cannot start bridge\n");
-+}
-+
-+static void _handle_hotplug_event_root(struct work_struct *work)
-+{
-+	struct acpi_root_bridge *bridge;
-+	char objname[64];
-+	struct acpi_buffer buffer = { .length = sizeof(objname),
-+				      .pointer = objname };
-+	struct acpi_root_hp_work *hp_work;
-+	acpi_handle handle;
-+	u32 type;
-+
-+	hp_work = container_of(work, struct acpi_root_hp_work, work);
-+	handle = hp_work->handle;
-+	type = hp_work->type;
-+
-+	bridge = acpi_root_handle_to_bridge(handle);
-+
-+	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-+
-+	switch (type) {
-+	case ACPI_NOTIFY_BUS_CHECK:
-+		/* bus enumerate */
-+		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
-+				 objname);
-+		if (!bridge) {
-+			handle_root_bridge_insertion(handle);
-+			add_acpi_root_bridge(handle);
-+		}
-+
-+		break;
-+
-+	case ACPI_NOTIFY_DEVICE_CHECK:
-+		/* device check */
-+		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
-+				 objname);
-+		if (!bridge) {
-+			handle_root_bridge_insertion(handle);
-+			add_acpi_root_bridge(handle);
-+		}
-+		break;
-+
-+	default:
-+		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
-+				 type, objname);
-+		break;
-+	}
-+
-+	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
-+}
-+
-+static void handle_hotplug_event_root(acpi_handle handle, u32 type,
-+					void *context)
-+{
-+	alloc_acpi_root_hp_work(handle, type, context,
-+				_handle_hotplug_event_root);
-+}
-+
-+static acpi_status __init
-+find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-+{
-+	char objname[64];
-+	struct acpi_buffer buffer = { .length = sizeof(objname),
-+				      .pointer = objname };
-+	int *count = (int *)context;
-+
-+	if (!acpi_is_root_bridge(handle))
-+		return AE_OK;
-+
-+	(*count)++;
-+
-+	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-+
-+	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+				handle_hotplug_event_root, NULL);
-+	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
-+
-+	add_acpi_root_bridge(handle);
-+
-+	return AE_OK;
-+}
-+
-+static int __init acpi_pci_root_hp_init(void)
-+{
-+	int num = 0;
-+
-+	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
-+		ACPI_UINT32_MAX, find_root_bridges, NULL, &num, NULL);
-+
-+	printk(KERN_DEBUG "Found %d acpi root devices\n", num);
-+
-+	return 0;
-+}
-+
-+subsys_initcall(acpi_pci_root_hp_init);
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index 7722108..1a62e7b 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -79,18 +79,15 @@ struct acpiphp_bridge {
- 	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
- 	struct acpiphp_func *func;
+ 	pcibios_resource_to_bus(dev, &region, res);
  
--	int type;
- 	int nr_slots;
+ 	new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
+@@ -58,9 +73,6 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 	else
+ 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
  
- 	u32 flags;
+-	reg = pci_resource_bar(dev, resno, &type);
+-	if (!reg)
+-		return;
+ 	if (type != pci_bar_unknown) {
+ 		if (!(res->flags & IORESOURCE_ROM_ENABLE))
+ 			return;
+@@ -257,7 +269,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 	if (!ret) {
+ 		res->flags &= ~IORESOURCE_STARTALIGN;
+ 		dev_info(&dev->dev, "BAR %d: reassigned %pR\n", resno, res);
+-		if (resno < PCI_BRIDGE_RESOURCES)
++		if (!resno_is_for_bridge(resno))
+ 			pci_update_resource(dev, resno);
+ 	}
+ 	return ret;
+@@ -292,7 +304,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+ 	if (!ret) {
+ 		res->flags &= ~IORESOURCE_STARTALIGN;
+ 		dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
+-		if (resno < PCI_BRIDGE_RESOURCES)
++		if (!resno_is_for_bridge(resno))
+ 			pci_update_resource(dev, resno);
+ 	}
+ 	return ret;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 161f6c0..173b8fe 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -299,6 +299,7 @@ struct pci_dev {
+ 	 */
+ 	unsigned int	irq;
+ 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
++	struct list_head addon_resources; /* addon I/O and memory resource */
  
--	/* This bus (host bridge) or Secondary bus (PCI-to-PCI bridge) */
-+	/* Secondary bus (PCI-to-PCI bridge) */
- 	struct pci_bus *pci_bus;
- 
- 	/* PCI-to-PCI bridge device */
- 	struct pci_dev *pci_dev;
--
--	spinlock_t res_lock;
+ 	/* These fields are used by common fixups */
+ 	unsigned int	transparent:1;	/* Transparent PCI bridge */
+@@ -347,6 +348,76 @@ struct pci_dev {
+ #endif
  };
  
- 
-@@ -148,10 +145,6 @@ struct acpiphp_attention_info
- /* PCI bus bridge HID */
- #define ACPI_PCI_HOST_HID		"PNP0A03"
- 
--/* PCI BRIDGE type */
--#define BRIDGE_TYPE_HOST		0
--#define BRIDGE_TYPE_P2P			1
--
- /* ACPI _STA method value (ignore bit 4; battery present) */
- #define ACPI_STA_PRESENT		(0x00000001)
- #define ACPI_STA_ENABLED		(0x00000002)
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 6aaf9ff..ae78c3d 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -283,7 +283,7 @@ static int detect_ejectable_slots(acpi_handle handle)
- 	return found;
- }
- 
--/* initialize miscellaneous stuff for both root and PCI-to-PCI bridge */
-+/* initialize miscellaneous stuff for PCI-to-PCI bridge */
- static void init_bridge_misc(struct acpiphp_bridge *bridge)
++struct resource_ops {
++	int (*read)(struct pci_dev *dev, struct resource *res, int addr);
++	int (*write)(struct pci_dev *dev, struct resource *res, int addr);
++};
++
++struct pci_dev_addon_resource {
++	struct list_head list;
++	int reg_addr;
++	int size;
++	struct resource res;
++	struct resource_ops *ops;
++};
++#define	to_pci_dev_addon_resource(n) container_of(n, struct pci_dev_addon_resource, res)
++
++struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
++int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
++struct pci_dev_addon_resource *add_pci_dev_addon_fixed_resource(
++		 struct pci_dev *dev, int start, int size, int flags,
++		 int addr, char *name);
++struct pci_dev_addon_resource *add_pci_dev_addon_resource(struct pci_dev *dev,
++		 int addr, int size, struct resource_ops *ops, char *name);
++
++#define resno_is_for_bridge(n) ((n)>=PCI_BRIDGE_RESOURCES && (n)<=PCI_BRIDGE_RESOURCE_END)
++
++/* all (include bridge) resources */
++#define for_each_pci_dev_all_resource(dev, res, i)			\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i++)
++/* exclude bridge resources */
++#define for_each_pci_dev_nobridge_resource(dev, res, i)			\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i = (i != (PCI_BRIDGE_RESOURCES - 1)) ? (i+1) : PCI_NUM_RESOURCES)
++/* exclude bridge and IOV resources */
++#define for_each_pci_dev_base_resource(dev, res, i)			\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i = (i != PCI_ROM_RESOURCE) ? (i+1) : PCI_NUM_RESOURCES)
++/* exclude ROM and bridge and IOV resources */
++#define for_each_pci_dev_base_norom_resource(dev, res, i)		\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i = (i != (PCI_ROM_RESOURCE-1)) ? (i+1) : PCI_NUM_RESOURCES)
++/* exclude IOV resources */
++#define for_each_pci_dev_noiov_resource(dev, res, i)			\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i = (i != PCI_ROM_RESOURCE) ? (i+1) : PCI_BRIDGE_RESOURCES)
++/* only std resources */
++#define for_each_pci_dev_std_resource(dev, res, i)			\
++	for (i = PCI_STD_RESOURCES;					\
++	   (res = pci_dev_resource_n(dev, i)) && i < (PCI_STD_RESOURCE_END+1); \
++	     i++)
++/* only IOV resources */
++#define for_each_pci_dev_iov_resource(dev, res, i)			\
++	for (i = PCI_IOV_RESOURCES;					\
++	   (res = pci_dev_resource_n(dev, i)) && i < (PCI_IOV_RESOURCE_END+1); \
++	     i++)
++/* only bridge resources */
++#define for_each_pci_dev_bridge_resource(dev, res, i)			\
++	for (i = PCI_BRIDGE_RESOURCES;					\
++	(res = pci_dev_resource_n(dev, i)) && i < (PCI_BRIDGE_RESOURCE_END+1); \
++	     i++)
++/* only addon resources */
++#define for_each_pci_dev_addon_resource(dev, res, i)			\
++	for (i = PCI_NUM_RESOURCES;					\
++	     (res = pci_dev_resource_n(dev, i));			\
++	     i++)
++
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
  {
- 	acpi_status status;
-@@ -300,25 +300,21 @@ static void init_bridge_misc(struct acpiphp_bridge *bridge)
- 	}
+ #ifdef CONFIG_PCI_IOV
+@@ -1348,9 +1419,9 @@ static inline int pci_domain_nr(struct pci_bus *bus)
  
- 	/* install notify handler */
--	if (bridge->type != BRIDGE_TYPE_HOST) {
--		if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
--			status = acpi_remove_notify_handler(bridge->func->handle,
--						ACPI_SYSTEM_NOTIFY,
--						handle_hotplug_event_func);
--			if (ACPI_FAILURE(status))
--				err("failed to remove notify handler\n");
--		}
--		status = acpi_install_notify_handler(bridge->handle,
--					     ACPI_SYSTEM_NOTIFY,
--					     handle_hotplug_event_bridge,
--					     bridge);
--
--		if (ACPI_FAILURE(status)) {
--			err("failed to register interrupt notify handler\n");
--		}
-+	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
-+		status = acpi_remove_notify_handler(bridge->func->handle,
-+					ACPI_SYSTEM_NOTIFY,
-+					handle_hotplug_event_func);
-+		if (ACPI_FAILURE(status))
-+			err("failed to remove notify handler\n");
- 	}
--}
-+	status = acpi_install_notify_handler(bridge->handle,
-+				     ACPI_SYSTEM_NOTIFY,
-+				     handle_hotplug_event_bridge,
-+				     bridge);
- 
-+	if (ACPI_FAILURE(status))
-+		err("failed to register interrupt notify handler\n");
-+}
- 
- /* find acpiphp_func from acpiphp_bridge */
- static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle)
-@@ -375,28 +371,6 @@ static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
- 	}
- }
- 
--
--/* allocate and initialize host bridge data structure */
--static void add_host_bridge(acpi_handle *handle)
--{
--	struct acpiphp_bridge *bridge;
--	struct acpi_pci_root *root = acpi_pci_find_root(handle);
--
--	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
--	if (bridge == NULL)
--		return;
--
--	bridge->type = BRIDGE_TYPE_HOST;
--	bridge->handle = handle;
--
--	bridge->pci_bus = root->bus;
--
--	spin_lock_init(&bridge->res_lock);
--
--	init_bridge_misc(bridge);
--}
--
--
- /* allocate and initialize PCI-to-PCI bridge data structure */
- static void add_p2p_bridge(acpi_handle *handle)
- {
-@@ -408,7 +382,6 @@ static void add_p2p_bridge(acpi_handle *handle)
- 		return;
- 	}
- 
--	bridge->type = BRIDGE_TYPE_P2P;
- 	bridge->handle = handle;
- 	config_p2p_bridge_flags(bridge);
- 
-@@ -425,7 +398,6 @@ static void add_p2p_bridge(acpi_handle *handle)
- 	 * (which we access during module unload).
- 	 */
- 	get_device(&bridge->pci_bus->dev);
--	spin_lock_init(&bridge->res_lock);
- 
- 	init_bridge_misc(bridge);
- 	return;
-@@ -485,12 +457,6 @@ static int add_bridge(acpi_handle handle)
- 			return 0;
- 	}
- 
--	/* check if this bridge has ejectable slots */
--	if (detect_ejectable_slots(handle) > 0) {
--		dbg("found PCI host-bus bridge with hot-pluggable slots\n");
--		add_host_bridge(handle);
--	}
--
- 	/* search P2P bridges under this host bridge */
- 	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
- 				     find_p2p_bridge, NULL, NULL, NULL);
-@@ -524,8 +490,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 	if (ACPI_FAILURE(status))
- 		err("failed to remove notify handler\n");
- 
--	if ((bridge->type != BRIDGE_TYPE_HOST) &&
--	    ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)) {
-+	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
- 		status = acpi_install_notify_handler(bridge->func->handle,
- 						ACPI_SYSTEM_NOTIFY,
- 						handle_hotplug_event_func,
-@@ -1079,15 +1044,10 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
- static int acpiphp_configure_bridge (acpi_handle handle)
- {
- 	struct pci_bus *bus;
-+	struct pci_dev *pdev = acpi_get_pci_dev(handle);
- 
--	if (acpi_is_root_bridge(handle)) {
--		struct acpi_pci_root *root = acpi_pci_find_root(handle);
--		bus = root->bus;
--	} else {
--		struct pci_dev *pdev = acpi_get_pci_dev(handle);
--		bus = pdev->subordinate;
--		pci_dev_put(pdev);
--	}
-+	bus = pdev->subordinate;
-+	pci_dev_put(pdev);
- 
- 	pci_bus_size_bridges(bus);
- 	pci_bus_assign_resources(bus);
-@@ -1250,8 +1210,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
- 		dbg("%s: Device eject notify on %s\n", __func__, objname);
--		if ((bridge->type != BRIDGE_TYPE_HOST) &&
--		    (bridge->flags & BRIDGE_HAS_EJ0)) {
-+		if (bridge->flags & BRIDGE_HAS_EJ0) {
- 			struct acpiphp_slot *slot;
- 			slot = bridge->func->slot;
- 			if (!acpiphp_disable_slot(slot))
-@@ -1382,21 +1341,6 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
- 			      _handle_hotplug_event_func);
- }
- 
--static acpi_status
--find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
--{
--	int *count = (int *)context;
--
--	if (!acpi_is_root_bridge(handle))
--		return AE_OK;
--
--	(*count)++;
--	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				    handle_hotplug_event_bridge, NULL);
--
--	return AE_OK ;
--}
--
- static struct acpi_pci_driver acpi_pci_hp_driver = {
- 	.add =		add_bridge,
- 	.remove =	remove_bridge,
-@@ -1407,15 +1351,7 @@ static struct acpi_pci_driver acpi_pci_hp_driver = {
-  */
- int __init acpiphp_glue_init(void)
- {
--	int num = 0;
--
--	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
--			ACPI_UINT32_MAX, find_root_bridges, NULL, &num, NULL);
--
--	if (num <= 0)
--		return -1;
--	else
--		acpi_pci_register_driver(&acpi_pci_hp_driver);
-+	acpi_pci_register_driver(&acpi_pci_hp_driver);
- 
- 	return 0;
- }
+ /* these helpers provide future and backwards compatibility
+  * for accessing popular PCI BAR info */
+-#define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+-#define pci_resource_end(dev, bar)	((dev)->resource[(bar)].end)
+-#define pci_resource_flags(dev, bar)	((dev)->resource[(bar)].flags)
++#define pci_resource_start(dev, bar)	(pci_dev_resource_n(dev, (bar))->start)
++#define pci_resource_end(dev, bar)	(pci_dev_resource_n(dev, (bar))->end)
++#define pci_resource_flags(dev, bar)	(pci_dev_resource_n(dev, (bar))->flags)
+ #define pci_resource_len(dev,bar) \
+ 	((pci_resource_start((dev), (bar)) == 0 &&	\
+ 	  pci_resource_end((dev), (bar)) ==		\
 -- 
 1.7.7
 
