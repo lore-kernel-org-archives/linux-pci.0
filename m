@@ -1,41 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:52704 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987Ab2CJVUM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 16:20:12 -0500
-MIME-Version: 1.0
-In-Reply-To: <20090320205656.12275.64680.stgit@bob.kio>
-References: <20090320204327.12275.43010.stgit@bob.kio>
-	<20090320205656.12275.64680.stgit@bob.kio>
-Date: Sat, 10 Mar 2012 13:20:10 -0800
-Message-ID: <CAE9FiQXsJJWQPRaya2ReWHtgvBTXYAa6SJ+SSm-gh2-_0cbYRg@mail.gmail.com>
-Subject: Re: [PATCH v5 13/13] PCI Hotplug: schedule fakephp for feature removal
-From: Yinghai Lu <yinghai@kernel.org>
-To: Alex Chiang <achiang@canonical.com>
-Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from szxga04-in.huawei.com ([119.145.14.67]:44102 "EHLO
+	szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759355Ab2CMHYy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 03:24:54 -0400
+Date: Tue, 13 Mar 2012 15:23:30 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH 2/5] Correctly clean up pci root buses in function
+ pci_remove_bus()
+In-reply-to: <CAE9FiQVRMBHN+QbFpVv4j2xPfco2X0bt9OzzcSE-BrrDY4Oqgg@mail.gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Youquan Song <youquan.song@intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chenkeping@huawei.com
+Message-id: <4F5EF5F2.2000507@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
+ <1331488109-13466-3-git-send-email-jiang.liu@huawei.com>
+ <CAE9FiQVRMBHN+QbFpVv4j2xPfco2X0bt9OzzcSE-BrrDY4Oqgg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 20, 2009 at 1:56 PM, Alex Chiang <achiang@hp.com> wrote:
-> Now that the PCI core is capable of function-level remove and rescan
-> as well as bus-level rescan, there's no functional need to keep fakephp
-> anymore.
+Hi Yinghai,
+	Good points! It's safe with current implementation because
+all root bus hotplug operations are under protection of 
+pci_remove_rescan_mutex.
+
+On 2012-3-13 14:24, Yinghai Lu wrote:
+> On Sun, Mar 11, 2012 at 10:48 AM, Jiang Liu<liuj97@gmail.com>  wrote:
+>> The function pci_create_root_bus() allocates the pci bus structure,
+>> registers the bus device and creates the legacy files for a pci root
+>> bus, but returns without setting the is_added flag. The is_added flag
+>> for a pci root bus will be set by function pci_scan_child_bus().
 >
-> We keep it around for userspace compatibility reasons, schedule removal
-> in three years.
-...
-> +
-> +What:  fakephp and associated sysfs files in /sys/bus/pci/slots/
-> +When:  2011
+>> If a pci root bus is destroyed before calling pci_scan_child_bus(),
+>> the is_added flag will not be set.
+>
+> how that can be met?
+>
+> Do we have pci_remove_rescan_mutex around them?
+>
+> Yinghai
+>
+>
 
-Hi, Alex,
 
-So it passed three years!
-
-Can you please submit patch to remove fakephp ?
-
-Thanks
-
-Yinghai Lu
