@@ -1,134 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:38570 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753959Ab2C1NUN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2012 09:20:13 -0400
-Received: by iagz16 with SMTP id z16so1481636iag.19
-        for <linux-pci@vger.kernel.org>; Wed, 28 Mar 2012 06:20:13 -0700 (PDT)
-Message-ID: <4F731005.6000506@gmail.com>
-Date: Wed, 28 Mar 2012 21:20:05 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-CC: linux-pci@vger.kernel.org
-Subject: Re: How acpi_walk_resources() find specific _CRS for one device
-References: <20120328093004.GA31647@richard>
-In-Reply-To: <20120328093004.GA31647@richard>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:38379 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751582Ab2CMCmj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Mar 2012 22:42:39 -0400
+Message-ID: <1331606555.22608.6.camel@ul30vt>
+Subject: Re: [PATCH] PCI: Device specific reset function
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: bhelgaas@google.com, jbarnes@virtuousgeek.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Mon, 12 Mar 2012 20:42:35 -0600
+In-Reply-To: <4f5e2a73.YyO0Gu2m5JhSVsu6%tadeusz.struk@intel.com>
+References: <4f5e2a73.YyO0Gu2m5JhSVsu6%tadeusz.struk@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/28/2012 05:30 PM, Richard Yang wrote:
-> Experts
+On Mon, 2012-03-12 at 16:55 +0000, Tadeusz Struk wrote:
+> I have a use case where I need to cleanup resource allocated for Virtual
+> Functions after a guest OS that used it crashed. This cleanup needs to
+> be done before the VF is being FLRed. The only possible way to do this
+> seems to be by using pci_dev_specific_reset() function.
+> This patch adds specific reset function to the pci_driver struct.
 > 
-> I am reading the PCI enumeration code on x86. One thing on ACPI
-> namespace puzzles me.
+> Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
+> ---
+>  drivers/pci/quirks.c |    4 ++++
+>  include/linux/pci.h  |    1 +
+>  2 files changed, 5 insertions(+), 0 deletions(-)
 > 
-> In the initialize process, the call flow is like this
-> acpi_pci_root_add()
-> 	try_get_root_bridge_busnr()
-> 		acpi_walk_resources(handle, METHOD_NAME__CRS,
-> 		         get_root_bridge_busnr_callback, res)
-This piece of code is to invoke ACPI method "_CRS" for "handle", and call
-get_root_bridge_busnr_callback for each resource descriptor returned by
-this method.
-Here "handle" is the object for the pci root bus or PCI host bridge.
-"_CRS" is the name of ACPI method, which exists under "handle".
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6476547..13d224b 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3081,8 +3081,12 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  
+>  int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>  {
+> +	struct pci_driver *drv = dev->driver;
+>  	const struct pci_dev_reset_methods *i;
+>  
+> +	if (drv && drv->reset)
+> +		return drv->reset(dev, probe);
+> +
 
-> 
-> By reading the ACPI spec, this is trying to go through the namespace and
-> find  the _CRS method/object.
-> 
-> 1. Hmm... I want to know this function is trying to go through the whole
->    namespace or just the device related namespace? 
-> 2. If it is searching the whole namespace, how could this function find the
->    device specific resource just by given the "_CRS" as a parameter?
-> 3. Also, if it just go through the device specific namespace, which
->    parameter identify this.
-> 
-> Here is an example in the ACPI specification in 9.11.1:
-> Device (PCI0) { // PCI Root Bridge
-> 	Name (_HID, EISAID("PNP0A03"))
-> 	Name (_UID, 0)
-> 	Name (_BBN, 0x00)
-> 	Name (_SEG, 0x00) // assign segment 0 of module device to PCI0
-> 	Name (_CRS, ResourceTemplate () {
-> 		WordBusNumber (
-> 			ResourceProducer,
-> 			MinFixed, // _MIF
-> 			MaxFixed,, // _MAF
-> 			0x00, // _GRA
-> 			0x00, // _MIN
-> 			0xFF, // _MAX
-> 			0x0, // _TRA
-> 			0x80) // _LEN
-> 		WordIO (
-> 			ResourceProducer,
-> 			MinFixed, // _MIF
-> 			MaxFixed,,, // _MAF
-> 			0x0000, // _GRA
-> 			0x0000, // _MIN
-> 			0x0CF7, // _MAX
-> 			0x0, // _TRA
-> 			0x0CF8) // _LEN
-> 		DWordMemory (
-> 			ResourceProducer,,
-> 			MinNotFixed, // _MIF
-> 			MaxNotFixed, // _MAF
-> 			NonCacheable, // _MEM
-> 			ReadWrite, // _RW
-> 			0x0FFFFFFF, // _GRA
-> 			0x40000000, // _MIN
-> 			0x5FFFFFFF, // _MAX
-> 			0x0, // _TRA
-> 			0x00000000) // _LEN
-> 	})
-> 	}
-> }
-> 
-> Device (PCI1) { // PCI Root Bridge
-> 	Name (_HID, EISAID("PNP0A03"))
-> 	Name (_UID, 0)
-> 	Name (_BBN, 0x00)
-> 	Name (_SEG, 0x01) // assign segment 1 of module device to PCI1
-> 	Name (_CRS, ResourceTemplate () {
-> 		WordBusNumber (
-> 			ResourceProducer,
-> 			MinFixed, //
-> 			MaxFixed,, //
-> 			0x00, //
-> 			0x00, //
-> 			0x7F, //
-> 			0x0, //
-> 			0x80) //
-> 		WordIO (
-> 			ResourceProducer,
-> 			MinFixed, //
-> 			MaxFixed, //
-> 			0x0000, //
-> 			0x0D00, //
-> 			0x7FFF, //
-> 			0x0, //
-> 			0x7300) //
-> 		DWordMemory (
-> 			ResourceProducer,
-> 			MinNotFixed,
-> 			MaxNotFixed,
-> 			NonCacheable,
-> 			ReadWrite,
-> 			0x0FFFFFFF,
-> 			0x60000000,
-> 			0x7FFFFFFF,
-> 			0x0,
-> 			0x00000000)
-> 	})
-> 	}
-> }
-> 
-> We can see there are two PCI Root Bridge, and each has its own _CRS
-> field. And each field has its own busnumber/iores/memios.
-> 
-> So, in the acpi_walk_resources() function, how to find the proper _CRS
-> infomation for a root device?
-> 
+Isn't this exactly what the below code is for (pci_dev_reset_methods)?
+In the case of KVM device assignment, the device should be reset via
+this path if the guest crashes, but it may or may not be attached to
+pci-stub at the time.  I assume you're not adding a reset handler to
+pci-stub, so we'll pass through here and use FLR, violating the premise
+of the patch.  Thanks,
+
+Alex
+
+>  	for (i = pci_dev_reset_methods; i->reset; i++) {
+>  		if ((i->vendor == dev->vendor ||
+>  		     i->vendor == (u16)PCI_ANY_ID) &&
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a16b1df..2ccd838 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -560,6 +560,7 @@ struct pci_driver {
+>  	int  (*resume_early) (struct pci_dev *dev);
+>  	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
+>  	void (*shutdown) (struct pci_dev *dev);
+> +	int  (*reset) (struct pci_dev *dev, int probe);
+>  	struct pci_error_handlers *err_handler;
+>  	struct device_driver	driver;
+>  	struct pci_dynids dynids;
+
+
 
