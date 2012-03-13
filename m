@@ -1,55 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f202.google.com ([209.85.212.202]:34610 "EHLO
-	mail-wi0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032736Ab2CPXsc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:48:32 -0400
-Received: by wibhj13 with SMTP id hj13so60096wib.1
-        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:48:30 -0700 (PDT)
-Subject: [PATCH v2 7/7] unicore32/PCI: move <asm-generic/pci-bridge.h> include
-	to asm/pci.h
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Guan Xuetao <gxt@mprc.pku.edu.cn>
-Date: Fri, 16 Mar 2012 17:48:29 -0600
-Message-ID: <20120316234829.6649.19734.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 10/12] PCI, pciehp: Separate pci_hp_add_bridge()
+Date: Tue, 13 Mar 2012 00:26:32 -0700
+Message-Id: <1331623594-30543-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+References: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move this include to be consistent with other architectures.
+Will use it for other pci hp hotplug support
 
-CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/unicore32/include/asm/pci.h |    1 +
- arch/unicore32/kernel/pci.c      |    1 -
- 2 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/pci/hotplug-pci.c        |   13 +++++++++++++
+ drivers/pci/hotplug/pciehp_pci.c |   18 ++----------------
+ drivers/pci/pci.h                |    1 +
+ 3 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
-index dd38677..f5e108f 100644
---- a/arch/unicore32/include/asm/pci.h
-+++ b/arch/unicore32/include/asm/pci.h
-@@ -14,6 +14,7 @@
+diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
+index d3509cd..d0999b1 100644
+--- a/drivers/pci/hotplug-pci.c
++++ b/drivers/pci/hotplug-pci.c
+@@ -4,6 +4,19 @@
+ #include <linux/export.h>
+ #include "pci.h"
  
- #ifdef __KERNEL__
- #include <asm-generic/pci-dma-compat.h>
-+#include <asm-generic/pci-bridge.h>
- #include <asm-generic/pci.h>
- #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
++int __ref pci_hp_add_bridge(struct pci_dev *dev)
++{
++	struct pci_bus *parent = dev->bus;
++	int pass, busnr = parent->secondary;
++
++	for (pass = 0; pass < 2; pass++)
++		busnr = pci_scan_bridge(parent, dev, busnr, pass);
++	if (!dev->subordinate)
++		return -1;
++
++	return 0;
++}
++EXPORT_SYMBOL(pci_hp_add_bridge);
  
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 6c1248f..2fc2b1b 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -19,7 +19,6 @@
- #include <linux/slab.h>
- #include <linux/init.h>
- #include <linux/io.h>
--#include <asm-generic/pci-bridge.h>
+ unsigned int __devinit pci_do_scan_bus(struct pci_bus *bus)
+ {
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index e21171c..b9a9fce 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -34,19 +34,6 @@
+ #include "../pci.h"
+ #include "pciehp.h"
  
- static int debug_pci;
+-static int __ref pciehp_add_bridge(struct pci_dev *dev)
+-{
+-	struct pci_bus *parent = dev->bus;
+-	int pass, busnr = parent->secondary;
+-
+-	for (pass = 0; pass < 2; pass++)
+-		busnr = pci_scan_bridge(parent, dev, busnr, pass);
+-	if (!dev->subordinate)
+-		return -1;
+-
+-	return 0;
+-}
+-
+ int pciehp_configure_device(struct slot *p_slot)
+ {
+ 	struct pci_dev *dev;
+@@ -75,9 +62,8 @@ int pciehp_configure_device(struct slot *p_slot)
+ 		if (!dev)
+ 			continue;
+ 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+-				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
+-			pciehp_add_bridge(dev);
+-		}
++		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
++			pci_hp_add_bridge(dev);
+ 		pci_dev_put(dev);
+ 	}
  
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 13b1159..9378d81 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -124,6 +124,7 @@ static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
+ #endif
+ 
+ /* Functions for PCI Hotplug drivers to use */
++int pci_hp_add_bridge(struct pci_dev *dev);
+ extern unsigned int pci_do_scan_bus(struct pci_bus *bus);
+ 
+ #ifdef HAVE_PCI_LEGACY
+-- 
+1.7.7
 
