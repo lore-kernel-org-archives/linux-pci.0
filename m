@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30668 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030960Ab2CSFru (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:50 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -11,12 +7,12 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 19/47] PCI: Claim hw/fw allocated resources in hot add path.
-Date: Sun, 18 Mar 2012 22:46:08 -0700
-Message-Id: <1332135996-13860-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 03/12] PCI: Claim hw/fw allocated resources in hot add path.
+Date: Tue, 13 Mar 2012 00:26:25 -0700
+Message-Id: <1331623594-30543-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+References: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 During testing remove/rescan root bus 00, found
@@ -37,60 +33,17 @@ for us.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/i386.c |   20 ++++++++++++++++----
- drivers/pci/bus.c   |    2 ++
- include/linux/pci.h |    1 +
- 3 files changed, 19 insertions(+), 4 deletions(-)
+ arch/x86/pci/i386.c     |   10 ++++++++++
+ drivers/pci/bus.c       |    2 ++
+ drivers/pci/setup-bus.c |    4 ++++
+ include/linux/pci.h     |    1 +
+ 4 files changed, 17 insertions(+), 0 deletions(-)
 
 diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index cecb842..e1ff375 100644
+index 111bcef..3e1dd0e 100644
 --- a/arch/x86/pci/i386.c
 +++ b/arch/x86/pci/i386.c
-@@ -193,13 +193,15 @@ EXPORT_SYMBOL(pcibios_align_resource);
-  *	    as well.
-  */
- 
--static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
-+static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- {
- 	int idx;
- 	struct resource *r;
- 
- 	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
- 		r = &dev->resource[idx];
-+		if (r->parent)	/* Already allocated */
-+			continue;
- 		if (!r->flags)
- 			continue;
- 		if (!r->start || pci_claim_resource(dev, idx) < 0) {
-@@ -215,7 +217,7 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 	}
- }
- 
--static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
-+static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- {
- 	struct pci_bus *child;
- 
-@@ -231,7 +233,7 @@ struct pci_check_idx_range {
- 	int end;
- };
- 
--static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
-+static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- {
- 	int idx, disabled, i;
- 	u16 command;
-@@ -284,7 +286,7 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 	}
- }
- 
--static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
-+static void pcibios_allocate_resources(struct pci_bus *bus, int pass)
- {
- 	struct pci_dev *dev;
- 	struct pci_bus *child;
-@@ -326,6 +328,16 @@ static int __init pcibios_assign_resources(void)
+@@ -325,6 +325,16 @@ static int __init pcibios_assign_resources(void)
  	return 0;
  }
  
@@ -120,8 +73,30 @@ index 1eb7944..672ffc8 100644
  /**
   * pci_bus_alloc_resource - allocate a resource from a parent bus
   * @bus: PCI bus
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d9a5500..33f0fcd 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1444,6 +1444,8 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 
++	pcibios_resource_survey_bus(parent);
++
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list, true);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+@@ -1499,6 +1501,8 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 	LIST_HEAD(add_list); /* list of resources that
+ 					want additional resources */
+ 
++	pcibios_resource_survey_bus(bus);
++
+ 	down_read(&pci_bus_sem);
+ 	__pci_bus_size_bridges(bus, &add_list, false);
+ 	up_read(&pci_bus_sem);
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 860091f..b434401 100644
+index ec8c4cf..161f6c0 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
 @@ -643,6 +643,7 @@ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
