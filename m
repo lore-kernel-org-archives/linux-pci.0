@@ -1,61 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54086 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758326Ab2CMGWM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 02:22:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F5E1D11.8050101@gmail.com>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+	<1331362837-10740-20-git-send-email-yinghai@kernel.org>
+	<4F5E1D11.8050101@gmail.com>
+Date: Mon, 12 Mar 2012 23:22:12 -0700
+Message-ID: <CAE9FiQWM6+iGk0YNSgrvtZKjfxMbrxMYU_Qh0gAs1gLDtS8ZaQ@mail.gmail.com>
+Subject: Re: [PATCH v2 19/37] PCI: Add pci_stop_and_remove_bus()
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH -v3 26/47] PCI, ACPI: Make acpi_pci_root_remove remove pci root bus too
-Date: Sun, 18 Mar 2012 22:46:15 -0700
-Message-Id: <1332135996-13860-27-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will call new added pci_stop_and_remove_bus() to stop/remove pci root bus.
+>> +void pci_stop_and_remove_bus(struct pci_bus *bus)
+>> +{
+>> +     struct pci_host_bridge *host_bridge = NULL;
+>> +     struct pci_dev *pci_bridge = NULL;
+>> +
+>> +     pci_stop_bus_devices(bus);
+>> +
+>> +     if (pci_is_root_bus(bus)) {
+>> +             host_bridge = to_pci_host_bridge(bus->bridge);
+>> +             pci_stop_host_bridge(host_bridge);
+>> +     } else
+>> +             pci_bridge = bus->self;
+>> +
+>> +     __pci_remove_bus_devices(bus);
+>> +
+>> +     pci_remove_bus(bus);
+>> +
+> It seems that the bus and host_bridge structures may have already been freed here,
+> so should not access host_bridge structure any more.
+>> +     if (host_bridge)
+>> +             host_bridge->bus = NULL;
+>> +
 
-Also checking if that pci_root_bus get removed already in bus remove in /sys
+not really.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/pci_root.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 7aff631..b38e347 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -643,10 +643,24 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 
-+	/* that root bus could be removed already */
-+	if (!pci_find_bus(root->segment, root->secondary.start)) {
-+		dev_printk(KERN_DEBUG, &device->dev,
-+		  "freeing acpi_pci_root, but pci root bus was removed before");
-+		goto out;
-+	}
-+
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
-+	dev_printk(KERN_DEBUG, &device->dev,
-+		"freeing acpi_pci_root, will remove pci root bus at first");
-+	pci_stop_and_remove_bus(root->bus);
-+
-+out:
-+	list_del(&root->node);
- 	kfree(root);
-+
- 	return 0;
- }
- 
--- 
-1.7.7
-
+Yinghai
