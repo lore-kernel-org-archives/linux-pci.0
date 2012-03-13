@@ -1,111 +1,139 @@
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1331018040-30725-20-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<1331018040-30725-20-git-send-email-yinghai@kernel.org>
-Date: Tue, 6 Mar 2012 21:31:24 -0700
-Message-ID: <CABhMZUX_pv2Wx4u+kqwcyCOpUnZ3yi68cVpV9TAzsqx2DF5DRQ@mail.gmail.com>
-Subject: Re: [PATCH 19/23] PCI: add /sys/bus/pci/rescan_root
-From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+In-Reply-To: <1331362837-10740-25-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-25-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 12 Mar 2012 21:25:45 -0600
+Message-ID: <CAErSpo6g3pei2+oW0wLEpytBTh6wGTyzo28oVVzFECxZdta+FA@mail.gmail.com>
+Subject: Re: [PATCH v2 24/37] PCI, ACPI: Add pci_root_hp hot removal
+ notification support.
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-doc@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Add missing hot_remove support for root device.
 >
-> It will be used to rediscover removed pci root buses.
+> How to use it?
+> Find out root bus number to acpi root name mapping from dmesg or /sys
 >
+>  echo "\_SB.PCIB 3" > /proc/acpi/sci/notify
+> to remove root bus
+
+Same comments as before: this is definitely NOT the way users should
+use this.  If you want to do that for debugging the ACPI notification
+path, fine, but the normal way is for the platform to generate this
+notification.  I think the normal way for users to manually remove an
+ACPI device should be something like:
+
+    echo 1 > /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove
+
+just like we do for PCI devices.
+
 > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Randy Dunlap <rdunlap@xenotime.net>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: linux-doc@vger.kernel.org
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: linux-acpi@vger.kernel.org
 > ---
-> =A0Documentation/ABI/testing/sysfs-bus-pci | =A0 =A09 +++++++++
-> =A0drivers/pci/pci-sysfs.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 | =A0 21 +++++=
-++++++++++++++++
-> =A02 files changed, 30 insertions(+), 0 deletions(-)
+>  drivers/acpi/pci_root_hp.c |   61 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 61 insertions(+), 0 deletions(-)
 >
-> diff --git a/Documentation/ABI/testing/sysfs-bus-pci
-> b/Documentation/ABI/testing/sysfs-bus-pci
-> index 22392de..eb826bd 100644
-> --- a/Documentation/ABI/testing/sysfs-bus-pci
-> +++ b/Documentation/ABI/testing/sysfs-bus-pci
-> @@ -66,6 +66,15 @@ Description:
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0re-discover previously removed devices.
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Depends on CONFIG_HOTPLUG.
+> diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
+> index dc11e81..f5585f5 100644
+> --- a/drivers/acpi/pci_root_hp.c
+> +++ b/drivers/acpi/pci_root_hp.c
+> @@ -73,6 +73,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
+>        list_add(&bridge->list, &acpi_root_bridge_list);
+>  }
 >
-> +What: =A0 =A0 =A0 =A0 =A0/sys/bus/pci/rescan_root
-> +Date: =A0 =A0 =A0 =A0 =A0March 2012
-> +Contact: =A0 =A0 =A0 Linux PCI developers <linux-pci@vger.kernel.org>
-> +Description:
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 Writing a non-zero value to this attribute =
-will
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 cause a rescan of all PCI root buses in the=
- system, and
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 re-discover previously removed PCI root bus=
-es.
-
-This seems sort of backwards to me.  Architecture-specific code
-enumerated the host bridges/root buses in the first place, not the PCI
-core.  Now we're asking the PCI core (/sys/bus/pci) to re-enumerate
-them.
-
-But maybe it's still the right answer, I dunno.
-
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 Depends on CONFIG_HOTPLUG.
-> +
-> =A0What: =A0 =A0 =A0 =A0 =A0/sys/bus/pci/devices/.../msi_irqs/
-> =A0Date: =A0 =A0 =A0 =A0 =A0September, 2011
-> =A0Contact: =A0 =A0 =A0 Neil Horman <nhorman@tuxdriver.com>
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index f855b4b..d6221e5 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -302,8 +302,29 @@ static ssize_t bus_rescan_store(struct bus_type *bus=
-,
-> const char *buf,
-> =A0 =A0 =A0 =A0return count;
-> =A0}
->
-> +void __weak acpi_pci_root_rescan(void) { }
-> +void __weak pcibios_root_rescan(void) { }
-> +
-> +static ssize_t bus_rescan_root_store(struct bus_type *bus, const char
-> *buf,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 size_t coun=
-t)
+> +static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
 > +{
-> + =A0 =A0 =A0 unsigned long val;
-> +
-> + =A0 =A0 =A0 if (strict_strtoul(buf, 0, &val) < 0)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
-> +
-> + =A0 =A0 =A0 if (val) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mutex_lock(&pci_remove_rescan_mutex);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 acpi_pci_root_rescan();
-
-This architecture-dependent function name should not be here.  How
-will we make this work for powerpc, sparc, etc.?
-
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pcibios_root_rescan();
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mutex_unlock(&pci_remove_rescan_mutex);
-> + =A0 =A0 =A0 }
-> + =A0 =A0 =A0 return count;
+> +       list_del(&bridge->list);
+> +       kfree(bridge);
 > +}
 > +
-> =A0struct bus_attribute pci_bus_attrs[] =3D {
-> =A0 =A0 =A0 =A0__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, bus_rescan_store),
-> + =A0 =A0 =A0 __ATTR(rescan_root, (S_IWUSR|S_IWGRP), NULL,
-> bus_rescan_root_store),
-> =A0 =A0 =A0 =A0__ATTR_NULL
-> =A0};
+>  struct acpi_root_hp_work {
+>        struct work_struct work;
+>        acpi_handle handle;
+> @@ -142,6 +148,55 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+>                printk(KERN_ERR "cannot start bridge\n");
+>  }
 >
+> +static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
+> +{
+> +       acpi_status status;
+> +       struct acpi_object_list arg_list;
+> +       union acpi_object arg;
+> +
+> +       arg_list.count = 1;
+> +       arg_list.pointer = &arg;
+> +       arg.type = ACPI_TYPE_INTEGER;
+> +       arg.integer.value = val;
+> +
+> +       status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
+> +       if (ACPI_FAILURE(status)) {
+> +               printk(KERN_WARNING "%s: %s to %d failed\n",
+> +                                __func__, cmd, val);
+> +               return -1;
+> +       }
+> +
+> +       return 0;
+
+This function really has nothing to do with host bridges.  Are you
+sure there's no generic function you can use instead?
+
+> +}
+> +
+> +static void handle_root_bridge_removal(acpi_handle handle,
+> +                struct acpi_root_bridge *bridge)
+> +{
+> +       u32 flags = 0;
+> +       struct acpi_device *device;
+> +
+> +       if (bridge) {
+> +               flags = bridge->flags;
+> +               remove_acpi_root_bridge(bridge);
+> +       }
+> +
+> +       if (!acpi_bus_get_device(handle, &device)) {
+> +               int ret_val = acpi_bus_trim(device, 1);
+> +
+> +               printk(KERN_DEBUG "acpi_bus_trim return %x\n", ret_val);
+> +       }
+> +
+> +       if (flags & ROOT_BRIDGE_HAS_PS3) {
+> +               acpi_status status;
+> +
+> +               status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
+> +               if (ACPI_FAILURE(status))
+> +                       printk(KERN_WARNING "%s: _PS3 failed\n", __func__);
+> +       }
+> +       if (flags & ROOT_BRIDGE_HAS_EJ0)
+> +               acpi_root_evaluate_object(handle, "_EJ0", 1);
+> +}
+> +
+>  static void _handle_hotplug_event_root(struct work_struct *work)
+>  {
+>        struct acpi_root_bridge *bridge;
+> @@ -182,6 +237,12 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+>                }
+>                break;
+>
+> +       case ACPI_NOTIFY_EJECT_REQUEST:
+> +               /* request device eject */
+> +               printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
+> +                                objname);
+> +               handle_root_bridge_removal(handle, bridge);
+> +               break;
+>        default:
+>                printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
+>                                 type, objname);
 > --
 > 1.7.7
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
