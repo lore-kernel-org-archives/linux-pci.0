@@ -1,98 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:54999 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885Ab2CLORK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 10:17:10 -0400
-Date: Mon, 12 Mar 2012 15:17:05 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Mark Brown <broonie@opensource.wolfsonmicro.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, Liam Girdwood <lrg@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Olof Johansson <olof@lixom.net>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 11/11] ARM: tegra: pcie: Add device tree support
-Message-ID: <20120312141705.GA16395@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-12-git-send-email-thierry.reding@avionic-design.de>
- <4F59253D.7070100@wwwdotorg.org>
- <20120312120610.GA14020@sirena.org.uk>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:50881 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757842Ab2CMDMQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 23:12:16 -0400
+Received: by lbbgm6 with SMTP id gm6so34372lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 12 Mar 2012 20:12:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
-In-Reply-To: <20120312120610.GA14020@sirena.org.uk>
+In-Reply-To: <1331362837-10740-22-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-22-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 12 Mar 2012 21:11:55 -0600
+Message-ID: <CAErSpo4j31natwy0uFO=DL6Wn+w7fgE4k83o_mKb8KePO0FLDA@mail.gmail.com>
+Subject: Re: [PATCH v2 21/37] PCI, ACPI: Make acpi_pci_root_remove remove pci
+ root bus too
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> It will call new added pci_stop_and_remove_bus() to stop/remove pci root bus.
+>
+> Also checking if that pci_root_bus get removed already in bus remove in /sys
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: linux-acpi@vger.kernel.org
+> ---
+>  drivers/acpi/pci_root.c |   14 ++++++++++++++
+>  1 files changed, 14 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 7aff631..b38e347 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -643,10 +643,24 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+>  {
+>        struct acpi_pci_root *root = acpi_driver_data(device);
+>
+> +       /* that root bus could be removed already */
+> +       if (!pci_find_bus(root->segment, root->secondary.start)) {
+> +               dev_printk(KERN_DEBUG, &device->dev,
+> +                 "freeing acpi_pci_root, but pci root bus was removed before");
+> +               goto out;
 
---YiEDa0DAkWCtVeE4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I don't think we should handle the root bus separately from the host
+bridge, as I mentioned before.  If we handle them together, checks
+like this won't be needed.
 
-* Mark Brown wrote:
-> On Thu, Mar 08, 2012 at 02:31:41PM -0700, Stephen Warren wrote:
-> > On 03/08/2012 07:51 AM, Thierry Reding wrote:
->=20
-> > > +- vdd-supply: power supply for controller (1.05V)
->=20
-> > Should those *-supply properties really be optional? I got the
-> > impression talking to Mark in a different thread that all regulators
-> > should exist, although their implementation may be via a fixed
-> > regulator, with no GPIO, as determined by the board design.
->=20
-> Depends on the electronics, if the device can function without a supply
-> then it is OK for it to be optional.  This is moderately unusual but not
-> unknown.  It's obviously also OK to omit the supply if the system
-> doesn't use software regulators at all, though a kernel with regulator
-> support enabled would need to use dummy regulators to stub things out.
-
-The PCIe controller actually needs those supplies and won't work without
-them. However on TrimSlice both of these supplies seem to be hardwired and
-always on. At least that's what I deduce from the code because there is no
-code that enables either the 1.05V or the pex-clk supplies.
-
-My understanding of the fixed regulator was that it was meant to be used for
-fixed voltage supplies that can still be enabled or disabled (for example as
-supplied by a GPIO) but not regulators that are fix in the sense that they
-cannot be enabled or disabled at all but are always on.
-
-Then again, the fixed regulator binding says that the gpio property is
-optional, so perhaps doing something like the following will work:
-
-	pex_clk_reg: fixedregulator@0 {
-		compatible =3D "regulator-fixed";
-		regulator-name =3D "PCIE CLK";
-		regulator-min-microvolt =3D <3300000>;
-		regulator-max-microvolt =3D <3300000>;
-		regulator-always-on;
-	};
-
-	pcie_reg: fixedregulator@1 {
-		compatible =3D "regulator-fixed";
-		regulator-name =3D "PCIE VDD";
-		regulator-min-microvolt =3D <1050000>;
-		regulator-max-microvolt =3D <1050000>;
-		regulator-always-on;
-	};
-
-Is that how it is supposed to work?
-
-Thierry
-
---YiEDa0DAkWCtVeE4
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9eBWEACgkQZ+BJyKLjJp+X5ACbBB/dOq1D5GnTAN4XS7SXKpvA
-1ikAn05C46XDZYeV0tCQtPuhHMdnwz6x
-=LV1A
------END PGP SIGNATURE-----
-
---YiEDa0DAkWCtVeE4--
+> +       }
+> +
+>        device_set_run_wake(root->bus->bridge, false);
+>        pci_acpi_remove_bus_pm_notifier(device);
+>
+> +       dev_printk(KERN_DEBUG, &device->dev,
+> +               "freeing acpi_pci_root, will remove pci root bus at first");
+> +       pci_stop_and_remove_bus(root->bus);
+> +
+> +out:
+> +       list_del(&root->node);
+>        kfree(root);
+> +
+>        return 0;
+>  }
+>
+> --
+> 1.7.7
+>
