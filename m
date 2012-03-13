@@ -1,72 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:53647 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753839Ab2CHPpH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 10:45:07 -0500
-Date: Thu, 8 Mar 2012 16:45:03 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Mark Brown <broonie@opensource.wolfsonmicro.com>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 05/11] tps6586x: Add device-tree support
-Message-ID: <20120308154502.GA4617@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-6-git-send-email-thierry.reding@avionic-design.de>
- <20120308150607.GP3638@opensource.wolfsonmicro.com>
- <20120308151545.GA23934@avionic-0098.mockup.avionic-design.de>
- <20120308151756.GQ3638@opensource.wolfsonmicro.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:47165 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759395Ab2CMClP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 22:41:15 -0400
+Received: by lbbgm6 with SMTP id gm6so27113lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 12 Mar 2012 19:41:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="jRHKVT23PllUwdXP"
-In-Reply-To: <20120308151756.GQ3638@opensource.wolfsonmicro.com>
+In-Reply-To: <1331362837-10740-3-git-send-email-yinghai@kernel.org>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-3-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 12 Mar 2012 20:40:53 -0600
+Message-ID: <CAErSpo5jCx5MdMOWgNQ+KVbn-6XDJSVvoO35J2DnpSMJyU-a4Q@mail.gmail.com>
+Subject: Re: [PATCH v2 02/37] PNPACPI: Fix device ref leaking in acpi_pnp_match
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@kernel.org, Len Brown <lenb@kernel.org>,
+	Adam Belay <abelay@mit.edu>, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> During testing pci root bus removal, found some root bus bridge is not freed.
+>
+> If booting with pnpacpi=off, those hostbridge could be freed without problem.
+>
+> It turns out that some devices reference are not released during acpi_pnp_match.
+>
+> That match should not hold one device ref during every calling.
+>
+> Add put_device calling before returning.
 
---jRHKVT23PllUwdXP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Changelog doesn't fit in 80 columns when using "git log".  I mentioned
+this before; please try it yourself.
 
-* Mark Brown wrote:
-> On Thu, Mar 08, 2012 at 04:15:46PM +0100, Thierry Reding wrote:
-> > * Mark Brown wrote:
->=20
-> > > ...they all seem to be explicitly named in the device tree so presuma=
-bly
-> > > there's enough information in there for the driver to pick any set of
-> > > regulators in any order.  This would be much nicer to use.
->=20
-> > I don't like it much either. The only reason that requirement exists is
-> > because it makes the assignment of the regulator ID (as defined in the
-> > include/linux/mfd/tps6586x.h header) very trivial. Would it be better to
-> > look up the ID based on the node name (sm0 --> TPS6586X_ID_SM_0, ...)?
->=20
-> > Then the only requirement would be that the names match.
->=20
-> Yes, that's going to be more code but much nicer for users.
-
-Okay, I'll add that for the next round.
-
-Thierry
-
---jRHKVT23PllUwdXP
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9Y0/4ACgkQZ+BJyKLjJp/XWACfSbtn+4tz2T6Ecd04OpaxGvGO
-7KgAoIkY9l7mkfZBVXw9wM5y8bPWcz6l
-=e97C
------END PGP SIGNATURE-----
-
---jRHKVT23PllUwdXP--
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: stable@kernel.org
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: Adam Belay <abelay@mit.edu>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-acpi@vger.kernel.org
+> ---
+>  drivers/pnp/pnpacpi/core.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pnp/pnpacpi/core.c b/drivers/pnp/pnpacpi/core.c
+> index b00c176..d21e8f5 100644
+> --- a/drivers/pnp/pnpacpi/core.c
+> +++ b/drivers/pnp/pnpacpi/core.c
+> @@ -321,9 +321,14 @@ static int __init acpi_pnp_match(struct device *dev, void *_pnp)
+>  {
+>        struct acpi_device *acpi = to_acpi_device(dev);
+>        struct pnp_dev *pnp = _pnp;
+> +       struct device *physical_device;
+> +
+> +       physical_device = acpi_get_physical_device(acpi->handle);
+> +       if (physical_device)
+> +               put_device(physical_device);
+>
+>        /* true means it matched */
+> -       return !acpi_get_physical_device(acpi->handle)
+> +       return !physical_device
+>            && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
+>  }
+>
+> --
+> 1.7.7
+>
