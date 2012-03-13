@@ -1,72 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:50864 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756738Ab2CHPoJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 10:44:09 -0500
-Date: Thu, 8 Mar 2012 16:43:59 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Rob Herring <robherring2@gmail.com>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Stein <alexander.stein@systec-electronic.com>
+To: Chris Ball <cjb@laptop.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 00/11] ARM: tegra: Add PCIe device tree support
-Message-ID: <20120308154359.GA544@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <4F58CE9D.3070605@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
-In-Reply-To: <4F58CE9D.3070605@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Alexander Stein <alexander.stein@systec-electronic.com>
+Subject: [PATCH 2/3] mmc: sdhci: check interrupt flags in ISR again
+Date: Tue, 13 Mar 2012 18:16:41 +0100
+Message-Id: <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com>
+In-Reply-To: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com>
+References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+When using MSI it is possible that a new MSI is sent while an earlier
+MSI is currently handled. In this case SDHCI_INT_STATUS only contains
+SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
+of the ISR SDHCI_INT_DATA_END is now also pending which would be ignored.
 
---sdtB3X0nJg68CQEu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Fix this by rereading the interrupt flags in the ISR until no interrupt
+we care is pending.
 
-* Rob Herring wrote:
-> There is a whole bunch of PCI DT code sitting in the powerpc tree that
-> probably needs to be moved to common location and used here.
->=20
-> This looks way too simple to be what's needed if I compare to PCI
-> bindings in powerpc dts files.
+Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
+---
+ drivers/mmc/host/sdhci.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-My particular setup may be much simpler than the average PowerPC machine. T=
-he
-patchset is only what I need to get PCIe running on the platform, which has
-an FPGA connected to the Tegra via PCIe. For instance there is no legacy
-interrupt support (only MSI), so interrupt remapping is not required. I also
-know that OF nodes are not properly hooked up with the PCI devices yet, whi=
-ch
-I will need, among other things, to provide platform data for an SPI flash
-connected to an SPI master implemented within the FPGA. I also haven't look=
-ed
-at specifying the memory ranges via the device tree.
+diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
+index 8d66706..654ab32 100644
+--- a/drivers/mmc/host/sdhci.c
++++ b/drivers/mmc/host/sdhci.c
+@@ -2268,6 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+ 	irqreturn_t result;
+ 	struct sdhci_host *host = dev_id;
+ 	u32 intmask;
++	u32 intmask_unhandled;
+ 	int cardint = 0;
+ 
+ 	spin_lock(&host->lock);
+@@ -2286,6 +2287,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+ 		goto out;
+ 	}
+ 
++again:
+ 	DBG("*** %s got interrupt: 0x%08x\n",
+ 		mmc_hostname(host->mmc), intmask);
+ 
+@@ -2336,6 +2338,14 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+ 		sdhci_writel(host, SDHCI_INT_BUS_POWER, SDHCI_INT_STATUS);
+ 	}
+ 
++	intmask_unhandled = intmask;
++
++	intmask = sdhci_readl(host, SDHCI_INT_STATUS);
++
++	/* Do interrupt handling again if we got new flags */
++	if (intmask & ~intmask_unhandled)
++		goto again;
++
+ 	intmask &= ~SDHCI_INT_BUS_POWER;
+ 
+ 	if (intmask & SDHCI_INT_CARD_INT)
+-- 
+1.7.3.4
 
-So quite a lot may still be missing, but does that prevent any of this from
-being added to mainline? Things can be added on an as-needed basis, can't
-they?
-
-Thierry
-
---sdtB3X0nJg68CQEu
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9Y078ACgkQZ+BJyKLjJp9sGgCfTbY0+6cn/DT17IdqAu4BGFre
-5pEAn2EOzwyLrmdsqCYnvHfH+jgNwgWQ
-=oemR
------END PGP SIGNATURE-----
-
---sdtB3X0nJg68CQEu--
