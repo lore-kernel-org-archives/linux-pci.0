@@ -1,76 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:51187 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150Ab2CIHyA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 02:54:00 -0500
-Date: Fri, 9 Mar 2012 08:53:47 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Grant Likely <grant.likely@secretlab.ca>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 05/11] tps6586x: Add device-tree support
-Message-ID: <20120309075347.GA27270@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-6-git-send-email-thierry.reding@avionic-design.de>
- <20120308150607.GP3638@opensource.wolfsonmicro.com>
- <20120308151545.GA23934@avionic-0098.mockup.avionic-design.de>
- <20120309051506.761B63E090F@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="fdj2RfSjLxBAspz7"
-In-Reply-To: <20120309051506.761B63E090F@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6uBpEYrZPBxwrg_B8j7F9XAyDUvKTS4=++xze5KVmx1g@mail.gmail.com>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+	<1331362837-10740-11-git-send-email-yinghai@kernel.org>
+	<CAErSpo6uBpEYrZPBxwrg_B8j7F9XAyDUvKTS4=++xze5KVmx1g@mail.gmail.com>
+Date: Mon, 12 Mar 2012 22:48:27 -0700
+Message-ID: <CAE9FiQXaDgBRrZ5dCxz9mjrzCAwH_rHrUSQGYQnHc5k7aXnU8Q@mail.gmail.com>
+Subject: Re: [PATCH v2 10/37] PCI, sysfs: create rescan_bridge under
+ /sys/.../pci/devices/... for pci bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Mar 12, 2012 at 7:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Current code will create rescan for every pci device under parent bus.
+>> that is not right. the device is already there, there is no reason to rescan it.
+>
+> "The device" (not "the device").
 
---fdj2RfSjLxBAspz7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+ok
 
-* Grant Likely wrote:
-> On Thu, 8 Mar 2012 16:15:46 +0100, Thierry Reding <thierry.reding@avionic=
--design.de> wrote:
-> > * Mark Brown wrote:
-> > > ...they all seem to be explicitly named in the device tree so presuma=
-bly
-> > > there's enough information in there for the driver to pick any set of
-> > > regulators in any order.  This would be much nicer to use.
-> >=20
-> > I don't like it much either. The only reason that requirement exists is
-> > because it makes the assignment of the regulator ID (as defined in the
-> > include/linux/mfd/tps6586x.h header) very trivial. Would it be better to
-> > look up the ID based on the node name (sm0 --> TPS6586X_ID_SM_0, ...)?
-> >=20
-> > Then the only requirement would be that the names match.
->=20
-> Yes, please look up id via name.  Alternately you can give each child node
-> a 'reg' property and put #address-cells =3D <1>; #size-cells =3D <0>; in =
-the
-> parent (assuming the regulator number is a documented attribute of the
-> hardware and not just a convenient linux construct).
+>
+>> We could have rescan for pci bridges. less confusing.
+>>
+>> Need to move rescan attr to pci dev bridge attribute group.
+>> And We should rescan bridge's secondary bus instead of primary bus.
+>
+> "And we" (not "And We").
 
-I'll go with the lookup via name then because as far as I can tell the
-datasheet doesn't list any specific ordering of the regulators.
+ok
 
-Thierry
+>
+> I think the idea of this patch makes sense.
+>
+> You might want to consider having this actually read the bridge config
+> again.  That way, if the user manually changed the secondary bus
+> number or the bridge windows using setpci or something, this rescan
+> could use that new config if possible.
 
---fdj2RfSjLxBAspz7
-Content-Type: application/pgp-signature
+yes, in the following patches, change that to
+pci_rescan_bus_bridge_resize()
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+and
 
-iEYEARECAAYFAk9ZtwsACgkQZ+BJyKLjJp/izwCfVM7Tst3EVFGbwVsUtkFh7OXm
-vloAoLAdqyysfycOnJE3uK0rbfRIDUZ5
-=NxOj
------END PGP SIGNATURE-----
+will be
+unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+{
+        unsigned int max = 0;
+        int pass;
+        struct pci_bus *bus = bridge->bus;
 
---fdj2RfSjLxBAspz7--
+        for (pass = 0; pass < 2; pass++)
+                max = pci_scan_bridge(bus, bridge, max, pass);
+
+        pci_assign_unassigned_bridge_resources(bridge);
+
+        pci_bus_add_single_device(bridge);
+
+at last pci_scan_bridge will check the bus register in the bridge.
+
+>
+> I still hate the fact that we will have three different rescan files
+> (four if you count /sys/bus/pci/rescan), but I don't have a solution
+> to offer:
+>    device/rescan
+>    device/rescan_bridge
+>    bus/rescan
+
+looks like we only need
+/sys/devices/pci.../device/rescan_bridge
+/sys/bus/pci/bus/rescan
+
+device rescan and bus rescan should be removed.
+
+Yinghai
