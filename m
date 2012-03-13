@@ -1,74 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:52701 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254Ab2C2GMd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2012 02:12:33 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 29 Mar 2012 11:42:27 +0530
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q2T6CMMH4526232
-	for <linux-pci@vger.kernel.org>; Thu, 29 Mar 2012 11:42:24 +0530
-Received: from d28av04.in.ibm.com (loopback [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q2TBgAUe017854
-	for <linux-pci@vger.kernel.org>; Thu, 29 Mar 2012 22:42:10 +1100
-Date: Thu, 29 Mar 2012 14:12:20 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:64400 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758683Ab2CMRZT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 13:25:19 -0400
+Received: by iagz16 with SMTP id z16so1037657iag.19
+        for <linux-pci@vger.kernel.org>; Tue, 13 Mar 2012 10:25:18 -0700 (PDT)
+Date: Tue, 13 Mar 2012 10:25:14 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Alexander Stein <alexander.stein@systec-electronic.com>
+Cc: Chris Ball <cjb@laptop.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: Re: How acpi_walk_resources() find specific _CRS for one device
-Message-ID: <20120329061219.GB9782@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120328093004.GA31647@richard>
- <4F731005.6000506@gmail.com>
+Subject: Re: [PATCH 3/3] mmc: sdhci-pci: allow 8-bit bus width for Intel PCH
+Message-ID: <20120313172514.GA28309@kroah.com>
+References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com>
+ <1331659002-13743-3-git-send-email-alexander.stein@systec-electronic.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F731005.6000506@gmail.com>
+In-Reply-To: <1331659002-13743-3-git-send-email-alexander.stein@systec-electronic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 28, 2012 at 09:20:05PM +0800, Jiang Liu wrote:
->On 03/28/2012 05:30 PM, Richard Yang wrote:
->> Experts
->> 
->> I am reading the PCI enumeration code on x86. One thing on ACPI
->> namespace puzzles me.
->> 
->> In the initialize process, the call flow is like this
->> acpi_pci_root_add()
->> 	try_get_root_bridge_busnr()
->> 		acpi_walk_resources(handle, METHOD_NAME__CRS,
->> 		         get_root_bridge_busnr_callback, res)
->This piece of code is to invoke ACPI method "_CRS" for "handle", and call
->get_root_bridge_busnr_callback for each resource descriptor returned by
->this method.
->Here "handle" is the object for the pci root bus or PCI host bridge.
->"_CRS" is the name of ACPI method, which exists under "handle".
->
->> 
-Thanks for your clarification.
+On Tue, Mar 13, 2012 at 06:16:42PM +0100, Alexander Stein wrote:
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2800,6 +2800,8 @@
+>  #define PCI_DEVICE_ID_INTEL_82454NX     0x84cb
+>  #define PCI_DEVICE_ID_INTEL_84460GX	0x84ea
+>  #define PCI_DEVICE_ID_INTEL_IXP4XX	0x8500
+> +#define PCI_DEVICE_ID_INTEL_PCH_SDIO0	0x8809
+> +#define PCI_DEVICE_ID_INTEL_PCH_SDIO1	0x880a
+>  #define PCI_DEVICE_ID_INTEL_IXP2800	0x9004
+>  #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
 
-I read the acpi code again. And found the namespace tree is created in
-acpi_scan_init()
-{
-	...
-	result = acpi_bus_scan(ACPI_ROOT_OBJECT, &ops, &acpi_root);
-	...
-}
+Did you read the comment at the top of this file before adding your new
+device ids?
 
-And then call the acpi_walk_namespace() to go through the whole
-namespace. Am I right? And form those handles
+If not, please do so, and redo your patch.
 
-I look at the SPEC and code again and find the namespace is loaded
-by acpi_ns_load_namespace() right?
+thanks,
 
-It will read DSDT/SSDT/PSDT by calling acpi_ns_load_table_by_type. 
-
-While I grep the whole source code, but not find the definition of this
-function. 
--- 
-Richard Yang
-Help you, Help me
-
+greg k-h
