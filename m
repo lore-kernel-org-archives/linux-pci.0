@@ -1,84 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
-Cc: Liu Jiang <jiang.liu@huawei.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, chenkeping@huawei.com
-Subject: [PATCH 1/3] ACPI,PCI: Use normal list for struct acpi_pci_driver
-Date: Thu, 22 Mar 2012 00:22:35 +0800
-Message-Id: <1332346957-10070-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1332346957-10070-1-git-send-email-jiang.liu@huawei.com>
-References: <1332346957-10070-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:49449 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759735Ab2CMH17 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 03:27:59 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 04/12] PCI: Kill pci_is_reassignedev()
+Date: Tue, 13 Mar 2012 00:26:26 -0700
+Message-Id: <1331623594-30543-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+References: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Liu Jiang <jiang.liu@huawei.com>
+Only one user. Just use pci_specified_resource_alignement() directly.
+So could only get get align one time for the dev that in the list
 
-Use normal list for struct acpi_pci_driver to simplify code.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/acpi/pci_root.c |   16 +++-------------
- include/linux/acpi.h    |    2 +-
- 2 files changed, 4 insertions(+), 14 deletions(-)
+ drivers/pci/pci.c |   17 +++--------------
+ 1 files changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index b38e347..c2d2b7b 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -72,8 +72,8 @@ static struct acpi_driver acpi_pci_root_driver = {
- };
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b832f0f..32ab301 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3682,18 +3682,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	return align;
+ }
  
- static LIST_HEAD(acpi_pci_roots);
-+static LIST_HEAD(acpi_pci_drivers);
+-/**
+- * pci_is_reassigndev - check if specified PCI is target device to reassign
+- * @dev: the PCI device to check
+- *
+- * RETURNS: non-zero for PCI device is a target device to reassign,
+- *          or zero is not.
+- */
+-int pci_is_reassigndev(struct pci_dev *dev)
+-{
+-	return (pci_specified_resource_alignment(dev) != 0);
+-}
+-
+ /*
+  * This function disables memory decoding and releases memory resources
+  * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
+@@ -3708,7 +3696,9 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	resource_size_t align, size;
+ 	u16 command;
  
--static struct acpi_pci_driver *sub_driver;
- static DEFINE_MUTEX(osc_lock);
- 
- int acpi_pci_register_driver(struct acpi_pci_driver *driver)
-@@ -81,10 +81,7 @@ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
- 	int n = 0;
- 	struct acpi_pci_root *root;
- 
--	struct acpi_pci_driver **pptr = &sub_driver;
--	while (*pptr)
--		pptr = &(*pptr)->next;
--	*pptr = driver;
-+	list_add_tail(&driver->node, &acpi_pci_drivers);
- 
- 	if (!driver->add)
- 		return 0;
-@@ -103,14 +100,7 @@ void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
- {
- 	struct acpi_pci_root *root;
- 
--	struct acpi_pci_driver **pptr = &sub_driver;
--	while (*pptr) {
--		if (*pptr == driver)
--			break;
--		pptr = &(*pptr)->next;
--	}
--	BUG_ON(!*pptr);
--	*pptr = (*pptr)->next;
-+	list_del(&driver->node);
- 
- 	if (!driver->remove)
+-	if (!pci_is_reassigndev(dev))
++	/* check if specified PCI is target device to reassign */
++	align = pci_specified_resource_alignment(dev);
++	if (!align)
  		return;
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 3f96866..efcc6c4 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -138,7 +138,7 @@ void acpi_penalize_isa_irq(int irq, int active);
- void acpi_pci_irq_disable (struct pci_dev *dev);
  
- struct acpi_pci_driver {
--	struct acpi_pci_driver *next;
-+	struct list_head node;
- 	int (*add)(acpi_handle handle);
- 	void (*remove)(acpi_handle handle);
- };
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
+@@ -3724,7 +3714,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
+ 
+-	align = pci_specified_resource_alignment(dev);
+ 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
 -- 
-1.7.5.4
+1.7.7
 
