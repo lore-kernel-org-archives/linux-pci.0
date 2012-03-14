@@ -1,96 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:31858 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758364Ab2CFHQJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:16:09 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 12/23] PCI: Move back pci_rescan_bus()
-Date: Mon,  5 Mar 2012 23:13:49 -0800
-Message-Id: <1331018040-30725-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:47274 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030711Ab2CNJYT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Mar 2012 05:24:19 -0400
+Message-ID: <4F60638F.20300@intel.com>
+Date: Wed, 14 Mar 2012 11:23:27 +0200
+From: Adrian Hunter <adrian.hunter@intel.com>
+MIME-Version: 1.0
+To: Alexander Stein <alexander.stein@systec-electronic.com>
+CC: Chris Ball <cjb@laptop.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] mmc: sdhci: check interrupt flags in ISR again
+References: <4F60532E.4070103@intel.com> <1331715130-8505-1-git-send-email-alexander.stein@systec-electronic.com>
+In-Reply-To: <1331715130-8505-1-git-send-email-alexander.stein@systec-electronic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have pci_assign_unassigned_bus_resources() in place.
+On 14/03/12 10:52, Alexander Stein wrote:
+> When using MSI it is possible that a new MSI is sent while an earlier
+> MSI is currently handled. In this case SDHCI_INT_STATUS only contains
+> SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
+> of the ISR SDHCI_INT_DATA_END is now also pending which would be ignored.
+> 
+> Fix this by rereading the interrupt flags in the ISR until no interrupt
+> we care is pending.
+> 
+> Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
+> ---
+> Changes in v2:
+> * rearranged code a bit and added a maximum loop counter as suggested
+>   by Adrian
+> 
+>  drivers/mmc/host/sdhci.c |   19 ++++++++++++-------
+>  1 files changed, 12 insertions(+), 7 deletions(-)
 
-So move back pci_rescan_bus to probe.c
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c     |   23 +++++++++++++++++++++++
- drivers/pci/setup-bus.c |   24 ------------------------
- 2 files changed, 23 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5e39819..6240d2c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2057,6 +2057,29 @@ unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
- 	return max;
- }
- 
-+/**
-+ * pci_rescan_bus - scan a PCI bus for devices.
-+ * @bus: PCI bus to scan
-+ *
-+ * Scan a PCI bus and child buses for new devices, adds them,
-+ * and enables them.
-+ *
-+ * Returns the max number of subordinate bus discovered.
-+ */
-+unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
-+{
-+	unsigned int max;
-+
-+	max = pci_scan_child_bus(bus);
-+
-+	pci_assign_unassigned_bus_resources(bus);
-+
-+	pci_bus_add_devices(bus);
-+
-+	return max;
-+}
-+EXPORT_SYMBOL_GPL(pci_rescan_bus);
-+
- EXPORT_SYMBOL(pci_add_new_bus);
- EXPORT_SYMBOL(pci_scan_slot);
- EXPORT_SYMBOL(pci_scan_bridge);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6a66139..f35a679 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1507,27 +1507,3 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 
- 	pci_enable_bridges(bus);
- }
--#ifdef CONFIG_HOTPLUG
--/**
-- * pci_rescan_bus - scan a PCI bus for devices.
-- * @bus: PCI bus to scan
-- *
-- * Scan a PCI bus and child buses for new devices, adds them,
-- * and enables them.
-- *
-- * Returns the max number of subordinate bus discovered.
-- */
--unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
--{
--	unsigned int max;
--
--	max = pci_scan_child_bus(bus);
--
--	pci_assign_unassigned_bus_resources(bus);
--
--	pci_bus_add_devices(bus);
--
--	return max;
--}
--EXPORT_SYMBOL_GPL(pci_rescan_bus);
--#endif
--- 
-1.7.7
-
+Acked-by: Adrian Hunter <adrian.hunter@intel.com>
