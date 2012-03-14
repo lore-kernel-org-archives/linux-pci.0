@@ -1,96 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:39380 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932620Ab2CJHC6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 02:02:58 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v2 27/37] PCI, pci_root_hp: Use acpi_hp_work
-Date: Fri,  9 Mar 2012 23:00:27 -0800
-Message-Id: <1331362837-10740-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:6062 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030750Ab2CNKcU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Mar 2012 06:32:20 -0400
+Date: Wed, 14 Mar 2012 12:31:50 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Amos Kong <akong@redhat.com>, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, jasowang@redhat.com, scott@spiteful.org,
+	mtosatti@redhat.com, Shaohua Li <shaohua.li@intel.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] PCI: Can continually add funcs after adding func0
+Message-ID: <20120314103149.GA7714@redhat.com>
+References: <1322204587-3636-1-git-send-email-akong@redhat.com>
+ <20111205112124.2e7d2ff9@jbarnes-desktop>
+ <20120127091721.1e7bb56d@jbarnes-desktop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120127091721.1e7bb56d@jbarnes-desktop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove local copy: acpi_root_hp_work
+On Fri, Jan 27, 2012 at 09:17:21AM -0800, Jesse Barnes wrote:
+> On Mon, 5 Dec 2011 11:21:24 -0800
+> Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> 
+> > On Fri, 25 Nov 2011 15:03:07 +0800
+> > Amos Kong <akong@redhat.com> wrote:
+> > 
+> > > Boot up a KVM guest, and hotplug multifunction
+> > > devices(func1,func2,func0,func3) to guest.
+> > > 
+> > > for i in 1 2 0 3;do
+> > > qemu-img create /tmp/resize$i.qcow2 1G -f qcow2
+> > > (qemu) drive_add 0x11.$i id=drv11$i,if=none,file=/tmp/resize$i.qcow2
+> > > (qemu) device_add virtio-blk-pci,id=dev11$i,drive=drv11$i,addr=0x11.$i,multifunction=on
+> > > done
+> > > 
+> > > In linux kernel, when func0 of the slot is hot-added, the whole
+> > > slot will be marked as 'enabled', then driver will ignore other new
+> > > hotadded funcs.
+> > > But in Win7 & WinXP, we can continaully add other funcs after adding
+> > > func0, all funcs will be added in guest.
+> > > 
+> > > drivers/pci/hotplug/acpiphp_glue.c:
+> > > static int acpiphp_check_bridge(struct acpiphp_bridge *bridge)
+> > > {
+> > > ....
+> > >         for (slot = bridge->slots; slot; slot = slot->next) {
+> > >                 if (slot->flags & SLOT_ENABLED) {
+> > >                         acpiphp_disable_slot()
+> > >                 else
+> > >                         acpiphp_enable_slot()
+> > > ....                              |
+> > > }                                 v
+> > >                             enable_device()
+> > >                                   |
+> > >                                   v
+> > >         //only don't enable slot if func0 is not added
+> > > 	list_for_each_entry(func, &slot->funcs, sibling) {
+> > >                ...
+> > >         }
+> > >        slot->flags |= SLOT_ENABLED; //mark slot to 'enabled'
+> > > 
+> > > This patch just make pci driver can continaully add funcs after adding
+> > > func 0. Only mark slot to 'enabled' when all funcs are added.
+> > > 
+> > > For pci multifunction hotplug, we can add functions one by one(func 0 is
+> > > necessary), and all functions will be removed in one time.
+> > > 
+> > > Signed-off-by: Amos Kong <akong@redhat.com>
+> > > ---
+> > 
+> > Rafael, Prarit or Shaohua, any comments?  Would be good to get some
+> > tested-bys too.
+> 
+> Missed the last merge window, but there have been no comments so I'm
+> assuming people are ok with this and applying to -next.
+> 
+> Thanks,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/pci_root_hp.c |   34 +++-------------------------------
- 1 files changed, 3 insertions(+), 31 deletions(-)
+I finally found this supporting statement in the acpi spec:
 
-diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-index f5585f5..b453181 100644
---- a/drivers/acpi/pci_root_hp.c
-+++ b/drivers/acpi/pci_root_hp.c
-@@ -79,34 +79,6 @@ static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
- 	kfree(bridge);
- }
- 
--struct acpi_root_hp_work {
--	struct work_struct work;
--	acpi_handle handle;
--	u32 type;
--	void *context;
--};
--
--static void alloc_acpi_root_hp_work(acpi_handle handle, u32 type,
--					void *context,
--					void (*func)(struct work_struct *work))
--{
--	struct acpi_root_hp_work *hp_work;
--	int ret;
--
--	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
--	if (!hp_work)
--		return;
--
--	hp_work->handle = handle;
--	hp_work->type = type;
--	hp_work->context = context;
--
--	INIT_WORK(&hp_work->work, func);
--	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
--	if (!ret)
--		kfree(hp_work);
--}
--
- /* Program resources in newly inserted bridge */
- static void acpi_root_configure_bridge(acpi_handle handle)
- {
-@@ -203,11 +175,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
--	struct acpi_root_hp_work *hp_work;
-+	struct acpi_hp_work *hp_work;
- 	acpi_handle handle;
- 	u32 type;
- 
--	hp_work = container_of(work, struct acpi_root_hp_work, work);
-+	hp_work = container_of(work, struct acpi_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 
-@@ -255,7 +227,7 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- static void handle_hotplug_event_root(acpi_handle handle, u32 type,
- 					void *context)
- {
--	alloc_acpi_root_hp_work(handle, type, context,
-+	alloc_acpi_hp_work(handle, type, context,
- 				_handle_hotplug_event_root);
- }
- 
--- 
-1.7.7
+"For any device, the BIOS provides only information that is added to the
+device in a non-hardware standard manner."
+Since extra functions can be enumerated in a hardware-standard manner,
+it seems clear that it's ok to skip their description in ACPI.
+
+So, belatedly
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
+
+> -- 
+> Jesse Barnes, Intel Open Source Technology Center
+
 
