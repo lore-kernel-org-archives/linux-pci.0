@@ -1,83 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:61317 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756422Ab2CHPP4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 10:15:56 -0500
-Date: Thu, 8 Mar 2012 16:15:46 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Mark Brown <broonie@opensource.wolfsonmicro.com>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 05/11] tps6586x: Add device-tree support
-Message-ID: <20120308151545.GA23934@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-6-git-send-email-thierry.reding@avionic-design.de>
- <20120308150607.GP3638@opensource.wolfsonmicro.com>
+Received: from mga01.intel.com ([192.55.52.88]:52404 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752034Ab2CNHiy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Mar 2012 03:38:54 -0400
+Message-ID: <4F604B16.606@intel.com>
+Date: Wed, 14 Mar 2012 09:39:02 +0200
+From: Adrian Hunter <adrian.hunter@intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
-In-Reply-To: <20120308150607.GP3638@opensource.wolfsonmicro.com>
+To: Alexander Stein <alexander.stein@systec-electronic.com>
+CC: Chris Ball <cjb@laptop.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/3] mmc: sdhci: check interrupt flags in ISR again
+References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com> <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com>
+In-Reply-To: <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 13/03/12 19:16, Alexander Stein wrote:
+> When using MSI it is possible that a new MSI is sent while an earlier
+> MSI is currently handled. In this case SDHCI_INT_STATUS only contains
+> SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
+> of the ISR SDHCI_INT_DATA_END is now also pending which would be ignored.
+> 
+> Fix this by rereading the interrupt flags in the ISR until no interrupt
+> we care is pending.
+> 
+> Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
+> ---
+>  drivers/mmc/host/sdhci.c |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
+> index 8d66706..654ab32 100644
+> --- a/drivers/mmc/host/sdhci.c
+> +++ b/drivers/mmc/host/sdhci.c
+> @@ -2268,6 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+>  	irqreturn_t result;
+>  	struct sdhci_host *host = dev_id;
+>  	u32 intmask;
+> +	u32 intmask_unhandled;
+>  	int cardint = 0;
+>  
+>  	spin_lock(&host->lock);
+> @@ -2286,6 +2287,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+>  		goto out;
+>  	}
+>  
+> +again:
+>  	DBG("*** %s got interrupt: 0x%08x\n",
+>  		mmc_hostname(host->mmc), intmask);
+>  
+> @@ -2336,6 +2338,14 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+>  		sdhci_writel(host, SDHCI_INT_BUS_POWER, SDHCI_INT_STATUS);
+>  	}
+>  
+> +	intmask_unhandled = intmask;
+> +
+> +	intmask = sdhci_readl(host, SDHCI_INT_STATUS);
+> +
+> +	/* Do interrupt handling again if we got new flags */
+> +	if (intmask & ~intmask_unhandled)
+> +		goto again;
+> +
+>  	intmask &= ~SDHCI_INT_BUS_POWER;
+>  
+>  	if (intmask & SDHCI_INT_CARD_INT)
 
---ibTvN161/egqYuK8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Why not just replace mmiowb() i.e.
 
-* Mark Brown wrote:
-> On Thu, Mar 08, 2012 at 03:51:25PM +0100, Thierry Reding wrote:
->=20
-> > +- gpio-controller: mark the device as a GPIO controller
-> > +- regulators: list of regulators provided by this controller, must be =
-in the
-> > +  following order:
-> > +    SM0, SM1, SM2, LDO0, LDO1, LDO2, LDO3, LDO4, LDO5, LDO6, LDO7, LDO=
-8, LDO9
->=20
-> This ordering requirement is fairly sad, if there are unused regulators
-> they still need to be listed even though...
->=20
-> > +			sm0_reg: sm0 {
-> > +				regulator-min-microvolt =3D < 725000>;
-> > +				regulator-max-microvolt =3D <1500000>;
-> > +				regulator-boot-on;
-> > +				regulator-always-on;
-> > +			};
-> > +
-> > +			sm1_reg: sm1 {
->=20
-> ...they all seem to be explicitly named in the device tree so presumably
-> there's enough information in there for the driver to pick any set of
-> regulators in any order.  This would be much nicer to use.
 
-I don't like it much either. The only reason that requirement exists is
-because it makes the assignment of the regulator ID (as defined in the
-include/linux/mfd/tps6586x.h header) very trivial. Would it be better to
-look up the ID based on the node name (sm0 --> TPS6586X_ID_SM_0, ...)?
+diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
+index 8d66706..da8a101 100644
+--- a/drivers/mmc/host/sdhci.c
++++ b/drivers/mmc/host/sdhci.c
+@@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
 
-Then the only requirement would be that the names match.
+        result = IRQ_HANDLED;
 
-Thierry
+-       mmiowb();
++       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
++       if (intmask)
++               goto again;
+ out:
+        spin_unlock(&host->lock);
 
---ibTvN161/egqYuK8
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+But maybe it would be safer limiting the number of loops i.e.
 
-iEYEARECAAYFAk9YzSEACgkQZ+BJyKLjJp9GeQCcD3Z6QXhg+wzIrceicGsT9WQm
-2goAn2GRlFv1JP3R4lJoVr93UIaXkvmX
-=AneN
------END PGP SIGNATURE-----
 
---ibTvN161/egqYuK8--
+diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
+index 8d66706..d88247d 100644
+--- a/drivers/mmc/host/sdhci.c
++++ b/drivers/mmc/host/sdhci.c
+@@ -2268,7 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+        irqreturn_t result;
+        struct sdhci_host *host = dev_id;
+        u32 intmask;
+-       int cardint = 0;
++       int cardint = 0, max_loops = 16;
+
+        spin_lock(&host->lock);
+
+@@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+
+        result = IRQ_HANDLED;
+
+-       mmiowb();
++       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
++       if (intmask && --max_loops)
++               goto again;
+ out:
+        spin_unlock(&host->lock);
+
+
