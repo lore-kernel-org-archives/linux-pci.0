@@ -1,48 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44352 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933223Ab2C2VCj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2012 17:02:39 -0400
-Date: Thu, 29 Mar 2012 16:02:33 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Matthew Garrett <mjg@redhat.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	stable@vger.kernel.org, Romain Francoise <romain@orebokech.com>,
-	Chris Holland <bandidoirlandes@gmail.com>,
-	Colin Ian King <colin.king@canonical.com>,
-	Hatem Masmoudi <hatem.masmoudi@gmail.com>,
-	janek <jan0x6c@gmail.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH resend] ASPM: Fix pcie devices with non-pcie children
-Message-ID: <20120329210233.GD18784@burratino>
-References: <1332857861-11562-1-git-send-email-mjg@redhat.com>
- <20120329163206.GA3480@burratino>
- <20120329134614.438e8aaf.akpm@linux-foundation.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <4F605A9E.3020205@intel.com>
+Date: Wed, 14 Mar 2012 08:45:18 +0000
+From: Tadeusz Struk <tadeusz.struk@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120329134614.438e8aaf.akpm@linux-foundation.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: bhelgaas@google.com, jbarnes@virtuousgeek.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Device specific reset function
+References: <4f5e2a73.YyO0Gu2m5JhSVsu6%tadeusz.struk@intel.com> <1331606555.22608.6.camel@ul30vt>
+In-Reply-To: <1331606555.22608.6.camel@ul30vt>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andrew Morton wrote:
-> Jonathan Nieder <jrnieder@gmail.com> wrote:
+On 13/03/12 02:42, Alex Williamson wrote:
+> On Mon, 2012-03-12 at 16:55 +0000, Tadeusz Struk wrote:
+>> I have a use case where I need to cleanup resource allocated for Virtual
+>> Functions after a guest OS that used it crashed. This cleanup needs to
+>> be done before the VF is being FLRed. The only possible way to do this
+>> seems to be by using pci_dev_specific_reset() function.
+>> This patch adds specific reset function to the pci_driver struct.
+>>
+>> Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
+>> ---
+>>  drivers/pci/quirks.c |    4 ++++
+>>  include/linux/pci.h  |    1 +
+>>  2 files changed, 5 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 6476547..13d224b 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3081,8 +3081,12 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>>  
+>>  int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>>  {
+>> +	struct pci_driver *drv = dev->driver;
+>>  	const struct pci_dev_reset_methods *i;
+>>  
+>> +	if (drv && drv->reset)
+>> +		return drv->reset(dev, probe);
+>> +
+> 
+> Isn't this exactly what the below code is for (pci_dev_reset_methods)?
+> In the case of KVM device assignment, the device should be reset via
+> this path if the guest crashes, but it may or may not be attached to
+> pci-stub at the time.  I assume you're not adding a reset handler to
+> pci-stub, so we'll pass through here and use FLR, violating the premise
+> of the patch.  Thanks,
+> 
+> Alex
 
->> From: Matthew Garrett <mjg@redhat.com>
->> Date: Tue, 27 Mar 2012 10:17:41 -0400
-[...]
->>            commit 4949be16822e ("PCI: ignore pre-1.1 ASPM quirking
->> when ASPM is disabled") changed the behaviour of
->> pcie_aspm_sanity_check() to always return 0 if aspm is disabled, in
->> order to avoid cases where we changed ASPM state on pre-PCIe 1.1
->> devices.  This skipped the secondary function of
->> pcie_aspm_sanity_check which was to avoid us enabling ASPM on devices
->> that had non-PCIe children, causing trouble later on.
-[...]
->>                                                               Could
->> you pick it up for linux-next until it makes its way to the PCI tree?
-[...]
-> Just about the only person who wasn't copied on this email is, umm, the
-> PCI maintainer!
+Hi,
+The reset handler supposed to be in the "real" driver not in the pci-stub.
+You are right, at this stage the VF can still be assigned to the pci-stub, which makes it useless in my case.
+I think the only option for me will be to go with the v2 of the patch.
+I'll do a bit more testing to make sure this is the case and resend the v2.
+Thanks,
+Tadeusz
 
-Well spotted.  Thanks for catching it.
+
