@@ -1,101 +1,50 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 34/47] PCI, pciehp: Separate pci_hp_add_bridge()
-Date: Sun, 18 Mar 2012 22:46:23 -0700
-Message-Id: <1332135996-13860-35-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+From: Alexander Stein <alexander.stein@systec-electronic.com>
+To: Tomoya MORINAGA <tomoya.rohm@gmail.com>
+Cc: Chris Ball <cjb@laptop.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3] mmc: sdhci-pci: allow 8-bit bus width for Intel PCH
+Date: Wed, 14 Mar 2012 08:26:07 +0100
+Message-ID: <2073158.vCQHRDAdga@ws-stein>
+In-Reply-To: <CANKRQniUQNJmf=H-pY3Wha4qWGh9OJR9GfdTUhMw_t7ZFSnPzA@mail.gmail.com>
+References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com> <1331659002-13743-3-git-send-email-alexander.stein@systec-electronic.com> <CANKRQniUQNJmf=H-pY3Wha4qWGh9OJR9GfdTUhMw_t7ZFSnPzA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will use it for other pci hp hotplug support
+Hello Tomoya,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug-pci.c        |   13 +++++++++++++
- drivers/pci/hotplug/pciehp_pci.c |   18 ++----------------
- drivers/pci/pci.h                |    1 +
- 3 files changed, 16 insertions(+), 16 deletions(-)
+Am Mittwoch, 14. März 2012, 10:17:35 schrieb Tomoya MORINAGA:
+> Hi Alexander
+> 
+> As a matter of interest,
+> do you mean that current MMC of eg20t on Linux doesn't support 8-bit access?
 
-diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
-index d3509cd..24de840 100644
---- a/drivers/pci/hotplug-pci.c
-+++ b/drivers/pci/hotplug-pci.c
-@@ -4,6 +4,19 @@
- #include <linux/export.h>
- #include "pci.h"
- 
-+int __ref pci_hp_add_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *parent = dev->bus;
-+	int pass, busnr = parent->secondary;
-+
-+	for (pass = 0; pass < 2; pass++)
-+		busnr = pci_scan_bridge(parent, dev, busnr, pass);
-+	if (!dev->subordinate)
-+		return -1;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_hp_add_bridge);
- 
- unsigned int __devinit pci_do_scan_bus(struct pci_bus *bus)
- {
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index e21171c..b9a9fce 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -34,19 +34,6 @@
- #include "../pci.h"
- #include "pciehp.h"
- 
--static int __ref pciehp_add_bridge(struct pci_dev *dev)
--{
--	struct pci_bus *parent = dev->bus;
--	int pass, busnr = parent->secondary;
--
--	for (pass = 0; pass < 2; pass++)
--		busnr = pci_scan_bridge(parent, dev, busnr, pass);
--	if (!dev->subordinate)
--		return -1;
--
--	return 0;
--}
--
- int pciehp_configure_device(struct slot *p_slot)
- {
- 	struct pci_dev *dev;
-@@ -75,9 +62,8 @@ int pciehp_configure_device(struct slot *p_slot)
- 		if (!dev)
- 			continue;
- 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
--				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
--			pciehp_add_bridge(dev);
--		}
-+		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
-+			pci_hp_add_bridge(dev);
- 		pci_dev_put(dev);
- 	}
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 13b1159..9378d81 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -124,6 +124,7 @@ static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
- #endif
- 
- /* Functions for PCI Hotplug drivers to use */
-+int pci_hp_add_bridge(struct pci_dev *dev);
- extern unsigned int pci_do_scan_bus(struct pci_bus *bus);
- 
- #ifdef HAVE_PCI_LEGACY
+We have a board with an 8-bit connected eMMC and Linux only used 4-bit wide 
+bus access. After some research IMO the device is only matched to the default 
+PCI id class
+> PCI_DEVICE_CLASS((PCI_CLASS_SYSTEM_SDHCI << 8), 0xFFFF00)
+
+AFAICS it's the same issue with the Medfield eMMC where 8-bit bus support is 
+added in 0d013bcf5c272faea1f8e7a5ef3cb2e98103d5cb
+This also states the default is 4-bit bus width which I saw before.
+
+Regards,
+Alexander
 -- 
-1.7.7
+Dipl.-Inf. Alexander Stein
 
+SYS TEC electronic GmbH
+August-Bebel-Str. 29
+D-07973 Greiz
+
+Tel: +49-3661-6279-0, Fax: +49-3661-6279-99
+eMail:    Alexander.Stein@systec-electronic.com
+Internet: http://www.systec-electronic.com
+
+Managing Director: Dipl.-Phys. Siegmar Schmidt
+Commercial registry: Amtsgericht Jena, HRB 205563
