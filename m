@@ -1,65 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:47566 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932764Ab2CGWc0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:32:26 -0500
-Received: by mail-ee0-f74.google.com with SMTP id c41so256667eek.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:32:25 -0800 (PST)
-Subject: [PATCH v3 04/34] arm/PCI: remove arch pci_flags definition
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <rob.herring@calxeda.com>
-Date: Wed, 07 Mar 2012 15:32:24 -0700
-Message-ID: <20120307223224.25669.89103.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+Received: from webbox1416.server-home.net ([77.236.96.61]:57005 "EHLO
+	webbox1416.server-home.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751673Ab2CNHxH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Mar 2012 03:53:07 -0400
+From: Alexander Stein <alexander.stein@systec-electronic.com>
+To: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Chris Ball <cjb@laptop.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/3] mmc: sdhci: check interrupt flags in ISR again
+Date: Wed, 14 Mar 2012 08:53:05 +0100
+Message-ID: <1994979.AaWWmIIAYQ@ws-stein>
+In-Reply-To: <4F604B16.606@intel.com>
+References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com> <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com> <4F604B16.606@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI core provides a pci_flags definition (currently __weak), so drop
-the arm definition in favor of that.
+Hello,
 
-arm previously had EXPORT_SYMBOL(pci_flags), but no other architecture does
-this, and no modules reference it, so I removed the export.
+Am Mittwoch, 14. März 2012, 09:39:02 schrieb Adrian Hunter:
+> On 13/03/12 19:16, Alexander Stein wrote:
+> > When using MSI it is possible that a new MSI is sent while an earlier
+> > MSI is currently handled. In this case SDHCI_INT_STATUS only contains
+> > SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
+> > of the ISR SDHCI_INT_DATA_END is now also pending which would be
+> > ignored.
+> > 
+> > Fix this by rereading the interrupt flags in the ISR until no interrupt
+> > we care is pending.
+> > 
+> > Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
+> [...]
+> > @@ -2336,6 +2338,14 @@ static irqreturn_t sdhci_irq(int irq, void
+> > *dev_id)> 
+> >  		sdhci_writel(host, SDHCI_INT_BUS_POWER, SDHCI_INT_STATUS);
+> >  	
+> >  	}
+> > 
+> > +	intmask_unhandled = intmask;
+> > +
+> > +	intmask = sdhci_readl(host, SDHCI_INT_STATUS);
+> > +
+> > +	/* Do interrupt handling again if we got new flags */
+> > +	if (intmask & ~intmask_unhandled)
+> > +		goto again;
+> > +
+> > 
+> >  	intmask &= ~SDHCI_INT_BUS_POWER;
+> >  	
+> >  	if (intmask & SDHCI_INT_CARD_INT)
+> 
+> Why not just replace mmiowb() i.e.
+> 
+> 
+> diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
+> index 8d66706..da8a101 100644
+> --- a/drivers/mmc/host/sdhci.c
+> +++ b/drivers/mmc/host/sdhci.c
+> @@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+> 
+>         result = IRQ_HANDLED;
+> 
+> -       mmiowb();
+> +       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
+> +       if (intmask)
+> +               goto again;
+>  out:
+>         spin_unlock(&host->lock);
+> 
 
-CC: Rob Herring <rob.herring@calxeda.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/arm/kernel/bios32.c |    1 +
- arch/arm/mm/iomap.c      |    3 ---
- 2 files changed, 1 insertions(+), 3 deletions(-)
+Well, I chose this way to only printk the error once. With your suggestion it 
+might be printed in each loop, dunno how often/fast these IRQ stats are set 
+again after clearing. This would end in an endless loop if error flags are set 
+again fast enough, but see below.
+But in general I like this approach.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index f58ba35..d13b6c2 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -525,6 +525,7 @@ void __init pci_common_init(struct hw_pci *hw)
- 
- 	INIT_LIST_HEAD(&hw->buses);
- 
-+	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 	if (hw->preinit)
- 		hw->preinit();
- 	pcibios_init_hw(hw);
-diff --git a/arch/arm/mm/iomap.c b/arch/arm/mm/iomap.c
-index e62956e..4614208 100644
---- a/arch/arm/mm/iomap.c
-+++ b/arch/arm/mm/iomap.c
-@@ -32,9 +32,6 @@ EXPORT_SYMBOL(pcibios_min_io);
- unsigned long pcibios_min_mem = 0x01000000;
- EXPORT_SYMBOL(pcibios_min_mem);
- 
--unsigned int pci_flags = PCI_REASSIGN_ALL_RSRC;
--EXPORT_SYMBOL(pci_flags);
--
- void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
- {
- 	if ((unsigned long)addr >= VMALLOC_START &&
+> But maybe it would be safer limiting the number of loops i.e.
+> 
+> 
+> diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
+> index 8d66706..d88247d 100644
+> --- a/drivers/mmc/host/sdhci.c
+> +++ b/drivers/mmc/host/sdhci.c
+> @@ -2268,7 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+>         irqreturn_t result;
+>         struct sdhci_host *host = dev_id;
+>         u32 intmask;
+> -       int cardint = 0;
+> +       int cardint = 0, max_loops = 16;
+> 
+>         spin_lock(&host->lock);
+> 
+> @@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
+> 
+>         result = IRQ_HANDLED;
+> 
+> -       mmiowb();
+> +       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
+> +       if (intmask && --max_loops)
+> +               goto again;
+>  out:
+>         spin_unlock(&host->lock);
 
+The actual problem I saw was a CMD6 command with an R1b response where the IRQ 
+for the 'not busy' event was sent during ISR for the response. So I think 
+normally this should only occur once.
+Regarding error flags I masked the unhandled flags out in order to print an 
+error only once, even if they might be set again in the next loop. With a 
+simple check on intmask they might occur up to 16 times in the kernel log.
+IMHO it makes no sense to repeatedly print errors about interrupt flags we 
+don't handle.
+
+Suggestions to get a more clean way?
+
+Best regards,
+Alexander
+-- 
+Dipl.-Inf. Alexander Stein
+
+SYS TEC electronic GmbH
+August-Bebel-Str. 29
+D-07973 Greiz
+
+Tel: +49-3661-6279-0, Fax: +49-3661-6279-99
+eMail:    Alexander.Stein@systec-electronic.com
+Internet: http://www.systec-electronic.com
+
+Managing Director: Dipl.-Phys. Siegmar Schmidt
+Commercial registry: Amtsgericht Jena, HRB 205563
