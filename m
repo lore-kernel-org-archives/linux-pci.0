@@ -1,62 +1,116 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:43700 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161596Ab2COVmg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Mar 2012 17:42:36 -0400
+Received: by lahj13 with SMTP id j13so2779711lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 14:42:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1331623594-30543-11-git-send-email-yinghai@kernel.org>
+References: <1331623594-30543-1-git-send-email-yinghai@kernel.org> <1331623594-30543-11-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 15 Mar 2012 15:42:14 -0600
+Message-ID: <CAErSpo4=czJci=Yqv2DkU6w592pyWn5fg7+Domc0qKUi+kZ=Yw@mail.gmail.com>
+Subject: Re: [PATCH 10/12] PCI, pciehp: Separate pci_hp_add_bridge()
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@kernel.org,
-	Len Brown <lenb@kernel.org>, Adam Belay <abelay@mit.edu>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v2 02/37] PNPACPI: Fix device ref leaking in acpi_pnp_match
-Date: Fri,  9 Mar 2012 23:00:02 -0800
-Message-Id: <1331362837-10740-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During testing pci root bus removal, found some root bus bridge is not freed.
+On Tue, Mar 13, 2012 at 1:26 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Will use it for other pci hp hotplug support
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/hotplug-pci.c        |   13 +++++++++++++
+>  drivers/pci/hotplug/pciehp_pci.c |   18 ++----------------
+>  drivers/pci/pci.h                |    1 +
+>  3 files changed, 16 insertions(+), 16 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
+> index d3509cd..d0999b1 100644
+> --- a/drivers/pci/hotplug-pci.c
+> +++ b/drivers/pci/hotplug-pci.c
+> @@ -4,6 +4,19 @@
+>  #include <linux/export.h>
+>  #include "pci.h"
+>
+> +int __ref pci_hp_add_bridge(struct pci_dev *dev)
+> +{
+> +       struct pci_bus *parent = dev->bus;
+> +       int pass, busnr = parent->secondary;
+> +
+> +       for (pass = 0; pass < 2; pass++)
+> +               busnr = pci_scan_bridge(parent, dev, busnr, pass);
+> +       if (!dev->subordinate)
+> +               return -1;
+> +
+> +       return 0;
+> +}
+> +EXPORT_SYMBOL(pci_hp_add_bridge);
 
-If booting with pnpacpi=off, those hostbridge could be freed without problem.
+I'm not sure this is baked enough to use EXPORT_SYMBOL() rather than
+EXPORT_SYMBOL_GPL().  For example, maybe we can use the same "add
+bridge" interface we normally use, rather than inventing a new
+hotplug-specific one.  Using EXPORT_SYMBOL() would force us to keep
+this interface longer than we might want to.
 
-It turns out that some devices reference are not released during acpi_pnp_match.
-
-That match should not hold one device ref during every calling.
-
-Add put_device calling before returning.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@kernel.org
-Cc: Len Brown <lenb@kernel.org>
-Cc: Adam Belay <abelay@mit.edu>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/pnp/pnpacpi/core.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pnp/pnpacpi/core.c b/drivers/pnp/pnpacpi/core.c
-index b00c176..d21e8f5 100644
---- a/drivers/pnp/pnpacpi/core.c
-+++ b/drivers/pnp/pnpacpi/core.c
-@@ -321,9 +321,14 @@ static int __init acpi_pnp_match(struct device *dev, void *_pnp)
- {
- 	struct acpi_device *acpi = to_acpi_device(dev);
- 	struct pnp_dev *pnp = _pnp;
-+	struct device *physical_device;
-+
-+	physical_device = acpi_get_physical_device(acpi->handle);
-+	if (physical_device)
-+		put_device(physical_device);
- 
- 	/* true means it matched */
--	return !acpi_get_physical_device(acpi->handle)
-+	return !physical_device
- 	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
- }
- 
--- 
-1.7.7
-
+>  unsigned int __devinit pci_do_scan_bus(struct pci_bus *bus)
+>  {
+> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+> index e21171c..b9a9fce 100644
+> --- a/drivers/pci/hotplug/pciehp_pci.c
+> +++ b/drivers/pci/hotplug/pciehp_pci.c
+> @@ -34,19 +34,6 @@
+>  #include "../pci.h"
+>  #include "pciehp.h"
+>
+> -static int __ref pciehp_add_bridge(struct pci_dev *dev)
+> -{
+> -       struct pci_bus *parent = dev->bus;
+> -       int pass, busnr = parent->secondary;
+> -
+> -       for (pass = 0; pass < 2; pass++)
+> -               busnr = pci_scan_bridge(parent, dev, busnr, pass);
+> -       if (!dev->subordinate)
+> -               return -1;
+> -
+> -       return 0;
+> -}
+> -
+>  int pciehp_configure_device(struct slot *p_slot)
+>  {
+>        struct pci_dev *dev;
+> @@ -75,9 +62,8 @@ int pciehp_configure_device(struct slot *p_slot)
+>                if (!dev)
+>                        continue;
+>                if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+> -                               (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
+> -                       pciehp_add_bridge(dev);
+> -               }
+> +                   (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
+> +                       pci_hp_add_bridge(dev);
+>                pci_dev_put(dev);
+>        }
+>
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 13b1159..9378d81 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -124,6 +124,7 @@ static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
+>  #endif
+>
+>  /* Functions for PCI Hotplug drivers to use */
+> +int pci_hp_add_bridge(struct pci_dev *dev);
+>  extern unsigned int pci_do_scan_bus(struct pci_bus *bus);
+>
+>  #ifdef HAVE_PCI_LEGACY
+> --
+> 1.7.7
+>
