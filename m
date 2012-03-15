@@ -1,273 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:29840 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755158Ab2CSFp0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:45:26 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v11 17/30] resources: Add probe_resource()
-Date: Sun, 18 Mar 2012 22:42:48 -0700
-Message-Id: <1332135781-13695-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:44836 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217Ab2COGk3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2012 02:40:29 -0400
+Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 8C93E3EE0BC
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:27 +0900 (JST)
+Received: from smail (m4 [127.0.0.1])
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 7776C45DE50
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:27 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 606F045DE4F
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:27 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 5246F1DB802F
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:27 +0900 (JST)
+Received: from m105.s.css.fujitsu.com (m105.s.css.fujitsu.com [10.240.81.145])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id F3526E08001
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 15:40:26 +0900 (JST)
+From: "Taku Izumi" <izumi.taku@jp.fujitsu.com>
+To: "'Yinghai Lu'" <yinghai@kernel.org>
+Cc: <linux-pci@vger.kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+Subject: RE: [PATCH -v2 00/36] PCI: pci_host_bridge related cleanup and busn_alloc
+Date: Thu, 15 Mar 2012 15:40:14 +0900
+Message-ID: <0bb101cd0276$7aa36ee0$6fea4ca0$@jp.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is changed from busn_res only version, because Bjorn found that version
-was not holding resource_lock.
-Even it may be ok for busn_res not holding resource_lock.
-It would be better to have it to be generic and use lock and we would
-use it for other resources.
+> 
+> The first 13 patches are hostbridge clean up.
+> will add struct device dev into host_bridge struct.
+> also will add release support to make sure allocated resource get
+> freed during root bus removal including hostbridge and pci_sysdata.
+> 
+> others 23 patches are busn_alloc related.
+> Set up iobusn_resource tree, and register bus number range to it.
+> Later when need to find bus range, will try to allocate from the tree
+> Need to test on arches other than x86. esp for ia64 and powerpc that support
+>   more than on peer root buses.
+> 
+> The patches need to apply to pci/for-linus and pci/linux-next
+> because one patch that is needed only is only in pci/for-linus
 
-probe_resource() will try to find specified size or more in parent bus.
-If can not find current parent resource, and it will try to expand parents
-top.
-If still can not find that specified on top, it will try to reduce target size
-until find one.
+ I can't apply your patchset to pci/linux-next.
+ I reckon your patchset needs refresh, or did I do something wrong?
 
-It will return 0, if it find any resource that it could use.
+ My impression is you should split your patchset between hostbridge part and
+ bus-allocation part.
 
-Returned resource already register in the tree.
+ Taku Izumi
 
-So caller may still need call resource_replace to put real resource in
-the tree.
+> 
+> could get from
+>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-next
+> 
+> please put them into pci/linux-next branch for more testing.
+> 
+> -v2: dropped the patch that is with x86 pcibios_bus_to_resource that Bjorn objected.
+>      reorder the patchesset to mold one appended patch into previous patch.
+> 
+> Thanks
+> 
+> Yinghai
+> 
+> Yinghai Lu (36):
+>   PCI: Separate host_bridge code out from probe.c
+>   x86, PCI: Fix memleak with get_current_resources
+>   PCI: rename pci_host_bridge() to find_pci_root_bridge()
+>   PCI: add generic device into pci_host_bridge struct
+>   PCI: add host bridge release support
+>   x86, PCI: break down get_current_resource()
+>   x86, PCI: add host bridge resource release for using _CRS
+>   x86, PCI: embed name acpi version pci_root_info struct
+>   x86, PCI: embed pci_sysdata into pci_root_info on acpi path
+>   x86, PCI: Allocating pci_root_info for not using _CRS path
+>   x86, PCI: Merge root info printing for nocrs path
+>   x86, PCI: add print all root info for nocrs path
+>   x86, PCI: allocate temp range array in amd_bus pci_root_info probing
+>   x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
+>   PCI: Add busn_res into struct pci_bus.
+>   PCI: Add busn_res operation functions
+>   PCI: release busn when removing bus
+>   PCI: insert busn_res in pci_create_root_bus
+>   PCI: checking busn_res in pci_scan_root_bus
+>   PCI: default busn_resource
+>   PCI: add default res for pci_scan_bus
+>   x86, PCI: add busn into resources list for acpi path
+>   x86, PCI: put busn resource in pci_root_info for no_crs path
+>   PCI, ia64: Register busn_res for root buses
+>   PCI, sparc: Register busn_res for root buses
+>   PCI, powerpc: Register busn_res for root buses
+>   PCI, parisc: Register busn_res for root buses
+>   PCI: Add pci_bus_extend/shrink_top()
+>   PCI: Probe safe range that we can use for unassigned bridge.
+>   PCI: Strict checking of valid range for bridge
+>   PCI: Allocate bus range instead of use max blindly
+>   PCI: kill pci_fixup_parent_subordinate_busnr()
+>   PCI: Seperate child bus scanning to two passes overall
+>   pcmcia: remove workaround for fixing pci parent bus subordinate
+>   PCI: Double checking setting for bus register and bus struct.
+>   PCI, pciehp: Remove not needed bus number range checking
+> 
+>  arch/ia64/pci/pci.c                   |    2 +
+>  arch/powerpc/include/asm/pci-bridge.h |    1 +
+>  arch/powerpc/kernel/pci-common.c      |   10 +-
+>  arch/sparc/kernel/pci.c               |    4 +
+>  arch/sparc/kernel/pci_impl.h          |    1 +
+>  arch/x86/pci/acpi.c                   |  121 ++++---
+>  arch/x86/pci/amd_bus.c                |   88 ++----
+>  arch/x86/pci/broadcom_bus.c           |   17 +-
+>  arch/x86/pci/bus_numa.c               |  100 +++++--
+>  arch/x86/pci/bus_numa.h               |   23 +-
+>  arch/x86/pci/common.c                 |   27 +--
+>  drivers/parisc/dino.c                 |    5 +
+>  drivers/parisc/lba_pci.c              |    3 +
+>  drivers/pci/Makefile                  |    2 +-
+>  drivers/pci/host-bridge.c             |   96 ++++++
+>  drivers/pci/hotplug/pciehp_pci.c      |   12 +-
+>  drivers/pci/probe.c                   |  601 ++++++++++++++++++++++-----------
+>  drivers/pci/remove.c                  |    1 +
+>  drivers/pcmcia/yenta_socket.c         |   75 ----
+>  include/linux/pci.h                   |   15 +-
+>  20 files changed, 752 insertions(+), 452 deletions(-)
+>  create mode 100644 drivers/pci/host-bridge.c
+> 
+> --
+> 1.7.7
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
----
- include/linux/ioport.h |    7 ++
- kernel/resource.c      |  160 ++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 162 insertions(+), 5 deletions(-)
-
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index e885ba2..20a30df 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -156,6 +156,13 @@ extern int allocate_resource(struct resource *root, struct resource *new,
- 						       resource_size_t,
- 						       resource_size_t),
- 			     void *alignf_data);
-+void resource_shrink_parents_top(struct resource *b_res,
-+				 long size, struct resource *parent_res);
-+struct device;
-+int probe_resource(struct resource *b_res,
-+			struct device *dev, struct resource *busn_res,
-+			resource_size_t needed_size, struct resource **p,
-+			int skip_nr, int limit, char *name);
- struct resource *lookup_resource(struct resource *root, resource_size_t start);
- int adjust_resource(struct resource *res, resource_size_t start,
- 		    resource_size_t size);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 7640b3a..0c9616f 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -521,14 +521,14 @@ out:
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-  */
--int allocate_resource(struct resource *root, struct resource *new,
-+static int __allocate_resource(struct resource *root, struct resource *new,
- 		      resource_size_t size, resource_size_t min,
- 		      resource_size_t max, resource_size_t align,
- 		      resource_size_t (*alignf)(void *,
- 						const struct resource *,
- 						resource_size_t,
- 						resource_size_t),
--		      void *alignf_data)
-+		      void *alignf_data, bool lock)
- {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -542,19 +542,33 @@ int allocate_resource(struct resource *root, struct resource *new,
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
- 
--	if ( new->parent ) {
-+	if (new->parent && lock) {
- 		/* resource is already allocated, try reallocating with
- 		   the new constraints */
- 		return reallocate_resource(root, new, size, &constraint);
- 	}
- 
--	write_lock(&resource_lock);
-+	if (lock)
-+		write_lock(&resource_lock);
- 	err = find_resource(root, new, size, &constraint);
- 	if (err >= 0 && __request_resource(root, new))
- 		err = -EBUSY;
--	write_unlock(&resource_lock);
-+	if (lock)
-+		write_unlock(&resource_lock);
- 	return err;
- }
-+int allocate_resource(struct resource *root, struct resource *new,
-+		      resource_size_t size, resource_size_t min,
-+		      resource_size_t max, resource_size_t align,
-+		      resource_size_t (*alignf)(void *,
-+						const struct resource *,
-+						resource_size_t,
-+						resource_size_t),
-+		      void *alignf_data)
-+{
-+	return __allocate_resource(root, new, size, min, max, align,
-+				   alignf, alignf_data, true);
-+}
- 
- EXPORT_SYMBOL(allocate_resource);
- 
-@@ -962,6 +976,142 @@ void __release_region(struct resource *parent, resource_size_t start,
- }
- EXPORT_SYMBOL(__release_region);
- 
-+static void __resource_update_parents_top(struct resource *b_res,
-+		 long size, struct resource *parent_res)
-+{
-+	struct resource *res = b_res;
-+
-+	if (!size)
-+		return;
-+
-+	while (res) {
-+		if (res == parent_res)
-+			break;
-+		res->end += size;
-+		res = res->parent;
-+	}
-+}
-+
-+static void __resource_extend_parents_top(struct resource *b_res,
-+		 long size, struct resource *parent_res)
-+{
-+	__resource_update_parents_top(b_res, size, parent_res);
-+}
-+
-+void resource_shrink_parents_top(struct resource *b_res,
-+		 long size, struct resource *parent_res)
-+{
-+	write_lock(&resource_lock);
-+	__resource_update_parents_top(b_res, -size, parent_res);
-+	write_unlock(&resource_lock);
-+}
-+
-+static resource_size_t __find_res_top_free_size(struct resource *res)
-+{
-+	resource_size_t n_size;
-+	struct resource tmp_res;
-+
-+	/*
-+	 *   find out number below res->end, that we can use at first
-+	 *	res->start can not be used.
-+	 */
-+	n_size = resource_size(res) - 1;
-+	memset(&tmp_res, 0, sizeof(struct resource));
-+	while (n_size > 0) {
-+		int ret;
-+
-+		ret = __allocate_resource(res, &tmp_res, n_size,
-+			res->end - n_size + 1, res->end,
-+			1, NULL, NULL, false);
-+		if (ret == 0) {
-+			__release_resource(&tmp_res);
-+			break;
-+		}
-+		n_size--;
-+	}
-+
-+	return n_size;
-+}
-+
-+int probe_resource(struct resource *b_res,
-+			 struct device *dev, struct resource *busn_res,
-+			 resource_size_t needed_size, struct resource **p,
-+			 int skip_nr, int limit, char *name)
-+{
-+	int ret = -ENOMEM;
-+	resource_size_t n_size;
-+	struct resource *parent_res = NULL;
-+	resource_size_t tmp = b_res->end + 1;
-+
-+again:
-+	/*
-+	 * find biggest range in b_res that we can use in the middle
-+	 *  and we can not use some spots from start of b_res.
-+	 */
-+	n_size = resource_size(b_res);
-+	if (n_size > skip_nr)
-+		n_size -= skip_nr;
-+	else
-+		n_size = 0;
-+
-+	memset(busn_res, 0, sizeof(struct resource));
-+	dev_printk(KERN_DEBUG, dev, "find free %s in res: %pR\n", name, b_res);
-+	while (n_size >= needed_size) {
-+		ret = allocate_resource(b_res, busn_res, n_size,
-+				b_res->start + skip_nr, b_res->end,
-+				1, NULL, NULL);
-+		if (!ret)
-+			return ret;
-+		n_size--;
-+	}
-+
-+	/* try extend the top of parent bus, find free under top at first */
-+	write_lock(&resource_lock);
-+	n_size = __find_res_top_free_size(b_res);
-+	dev_printk(KERN_DEBUG, dev, "found free %s %ld in res: %pR top\n",
-+			name, (unsigned long)n_size, b_res);
-+
-+	/* can not extend cross local boundary */
-+	if ((limit - b_res->end) < (needed_size - n_size))
-+		goto reduce_needed_size;
-+
-+	/* find extended range */
-+	memset(busn_res, 0, sizeof(struct resource));
-+	parent_res = b_res;
-+	while (parent_res) {
-+		ret = __allocate_resource(parent_res, busn_res,
-+			 needed_size - n_size,
-+			 tmp, tmp + needed_size - n_size - 1,
-+			 1, NULL, NULL, false);
-+		if (!ret) {
-+			/* save parent_res, we need it as stopper later */
-+			*p = parent_res;
-+
-+			/* prepare busn_res for return */
-+			__release_resource(busn_res);
-+			busn_res->start -= n_size;
-+
-+			/* extend parent bus top*/
-+			__resource_extend_parents_top(b_res,
-+					 needed_size - n_size, parent_res);
-+			__request_resource(b_res, busn_res);
-+
-+			write_unlock(&resource_lock);
-+			return ret;
-+		}
-+		parent_res = parent_res->parent;
-+	}
-+
-+reduce_needed_size:
-+	write_unlock(&resource_lock);
-+	/* ret must not be 0 here */
-+	needed_size--;
-+	if (needed_size)
-+		goto again;
-+
-+	return ret;
-+}
-+
- /*
-  * Managed region resource
-  */
--- 
-1.7.7
 
