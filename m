@@ -1,75 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:40787 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865Ab2CHR13 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 12:27:29 -0500
-Received: by lbbgm6 with SMTP id gm6so124650lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 08 Mar 2012 09:27:27 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1331218291-16119-7-git-send-email-thierry.reding@avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-7-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <CAE9FiQWfYxD2OAmXF5UdQMkPt33xeoSu489N6KtU3k5VE3jUXw@mail.gmail.com>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+ <1331362837-10740-25-git-send-email-yinghai@kernel.org> <CAErSpo6g3pei2+oW0wLEpytBTh6wGTyzo28oVVzFECxZdta+FA@mail.gmail.com>
+ <CAE9FiQWfYxD2OAmXF5UdQMkPt33xeoSu489N6KtU3k5VE3jUXw@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 8 Mar 2012 10:27:07 -0700
-Message-ID: <CAErSpo6hbWjteESST1+O2WzbtmZq6hC-pnUB4o3MAXWG-EgU+g@mail.gmail.com>
-Subject: Re: [PATCH 06/11] PCI: Keep pci_fixup_irqs() around after init
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
+Date: Thu, 15 Mar 2012 11:53:59 -0600
+Message-ID: <CAErSpo4KhQJOpKk8OOtcSxWc3wwkhLix8ECZhGtTnQ2WgQH7iw@mail.gmail.com>
+Subject: Re: [PATCH v2 24/37] PCI, ACPI: Add pci_root_hp hot removal
+ notification support.
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 8, 2012 at 7:51 AM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> ---
->  drivers/pci/setup-irq.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+On Tue, Mar 13, 2012 at 12:06 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Mar 12, 2012 at 8:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> Add missing hot_remove support for root device.
+>>>
+>>> How to use it?
+>>> Find out root bus number to acpi root name mapping from dmesg or /sys
+>>>
+>>>  echo "\_SB.PCIB 3" > /proc/acpi/sci/notify
+>>> to remove root bus
+>>
+>> Same comments as before: this is definitely NOT the way users should
+>> use this.  If you want to do that for debugging the ACPI notification
+>> path, fine, but the normal way is for the platform to generate this
+>> notification.  I think the normal way for users to manually remove an
+>> ACPI device should be something like:
+>>
+>>    echo 1 > /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove
+>>
+>> just like we do for PCI devices.
 >
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index eb219a1..270ae7b 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -18,7 +18,7 @@
->  #include <linux/cache.h>
+> notify way looks more like really physical hotadd/remove.
+
+Sure, the 'echo "\_SB.PCIB 3" > /proc/acpi/sci/notify' way looks more
+like physical hotadd/remove because it is basically injecting the
+notify event that the hardware/BIOS should be generating itself.  But
+it is platform-specific and therefore unacceptable as a general user
+interface.
+
+Using /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove would be a
+more generic way.  The PNP0A08:00/remove implementation would
+basically turn into an acpi_pci_root_remove() call, just like the
+'echo "\_SB.PCIB 3" > /proc/acpi/sci/notify' does.
+
+Both ways should exercise the same code path.  The only difference is
+that using /proc/acpi/sci/notify should go through a little more of
+the ACPI notify path before reaching acpi_pci_root_remove().
+
+> pci bus/remove and other is not really, because when you are using
+> /sys, you may still need to hold
+> one reference to bus or device.
 >
+>>
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> Cc: Len Brown <lenb@kernel.org>
+>>> Cc: linux-acpi@vger.kernel.org
+>>> ---
+>>>  drivers/acpi/pci_root_hp.c |   61 ++++++++++++++++++++++++++++++++++++++++++++
+>>>  1 files changed, 61 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
+>>> index dc11e81..f5585f5 100644
+>>> --- a/drivers/acpi/pci_root_hp.c
+>>> +++ b/drivers/acpi/pci_root_hp.c
+>>> @@ -73,6 +73,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
+>>>        list_add(&bridge->list, &acpi_root_bridge_list);
+>>>  }
+>>>
+>>> +static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
+>>> +{
+>>> +       list_del(&bridge->list);
+>>> +       kfree(bridge);
+>>> +}
+>>> +
+>>>  struct acpi_root_hp_work {
+>>>        struct work_struct work;
+>>>        acpi_handle handle;
+>>> @@ -142,6 +148,55 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+>>>                printk(KERN_ERR "cannot start bridge\n");
+>>>  }
+>>>
+>>> +static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
+>>> +{
+>>> +       acpi_status status;
+>>> +       struct acpi_object_list arg_list;
+>>> +       union acpi_object arg;
+>>> +
+>>> +       arg_list.count = 1;
+>>> +       arg_list.pointer = &arg;
+>>> +       arg.type = ACPI_TYPE_INTEGER;
+>>> +       arg.integer.value = val;
+>>> +
+>>> +       status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
+>>> +       if (ACPI_FAILURE(status)) {
+>>> +               printk(KERN_WARNING "%s: %s to %d failed\n",
+>>> +                                __func__, cmd, val);
+>>> +               return -1;
+>>> +       }
+>>> +
+>>> +       return 0;
+>>
+>> This function really has nothing to do with host bridges.  Are you
+>> sure there's no generic function you can use instead?
 >
-> -static void __init
-> +static void
->  pdev_fixup_irq(struct pci_dev *dev,
->               u8 (*swizzle)(struct pci_dev *, u8 *),
->               int (*map_irq)(const struct pci_dev *, u8, u8))
-> @@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
->        pcibios_update_irq(dev, irq);
->  }
->
-> -void __init
-> +void
->  pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->               int (*map_irq)(const struct pci_dev *, u8, u8))
->  {
-
-
-        struct pci_dev *dev = NULL;
-        for_each_pci_dev(dev)
-                pdev_fixup_irq(dev, swizzle, map_irq);
-}
-
-Hmm, your patch looks OK as far as it goes, but the implementation of
-pci_fixup_irqs() as a call-once-at-boot-time thing with a loop through
-all the PCI devices we've found so far looks completely broken with
-regard to hotplug.
-
-Who does the swizzle for devices hot-added after boot?
-
-Bjorn
+> seems not.
