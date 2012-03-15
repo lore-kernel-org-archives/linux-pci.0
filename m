@@ -1,76 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60405 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030383Ab2CTQX6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 12:23:58 -0400
-Received: by mail-iy0-f174.google.com with SMTP id z16so215351iag.19
-        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 09:23:58 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-	chenkeping@huawei.com
-Subject: [PATCH 3/6] x86,IRQ: Enhance irq allocation policy for hot-added IOAPICs
-Date: Wed, 21 Mar 2012 00:21:00 +0800
-Message-Id: <1332260463-13924-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
-References: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
-References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:46831 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032046Ab2CORoO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2012 13:44:14 -0400
+Received: by dajr28 with SMTP id r28so4830748daj.19
+        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 10:44:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <0bec01cd0287$2b74ae40$825e0ac0$@jp.fujitsu.com>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+	<1330570837-26638-3-git-send-email-yinghai@kernel.org>
+	<0bec01cd0287$2b74ae40$825e0ac0$@jp.fujitsu.com>
+Date: Thu, 15 Mar 2012 10:44:14 -0700
+Message-ID: <CAE9FiQWj5vv+Ff5Kd0xT3Ko01PCSTaHyxGCKn3B8ZwmXo8ZO=Q@mail.gmail.com>
+Subject: Re: [PATCH 02/36] x86, PCI: Fix memleak with get_current_resources
+From: Yinghai Lu <yinghai@kernel.org>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For hot-added IOAPICs, try to allocate irqs starting from
-ioapic->gsi_base first, and fallback to starting from 0.
+On Thu, Mar 15, 2012 at 1:39 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>
+>
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Yinghai Lu
+>> Sent: Thursday, March 01, 2012 12:00 PM
+>> To: Jesse Barnes; Benjamin Herrenschmidt; Tony Luck; David Miller; x86
+>> Cc: Bjorn Helgaas; Dominik Brodowski; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+>> linux-arch@vger.kernel.org; Yinghai Lu
+>> Subject: [PATCH 02/36] x86, PCI: Fix memleak with get_current_resources
+>>
+>> in pci_scan_acpi_root, when pci_use_crs is set, get_current_resources is used
+>> to get pci_root_info, and it will allocate name and res array.
+>>
+>> later if pci_create_root_bus can not create bus (could be already there...)
+>> it will only free bus res list. but the name and res array is not freed.
+>>
+>> let get_current_resource take info pointer instead have local info.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  arch/x86/pci/acpi.c |   49 ++++++++++++++++++++++++++++++-------------------
+>>  1 files changed, 30 insertions(+), 19 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index 7cc0a44..304ccf0 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -305,49 +305,55 @@ static void add_resources(struct pci_root_info *info)
+>>       }
+>>  }
+>>
+>> +static void free_pci_root_info(struct pci_root_info *info)
+>> +{
+>> +     kfree(info->name);
+>> +     kfree(info->res);
+>> +     memset(info, 0, sizeof(struct pci_root_info));
+>> +}
+>> +
+>
+>  This function leads to misunderstanding.
+>  I'm convinced that the function of the name starts with "free"
+>  should free resources completely.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- arch/x86/kernel/apic/io_apic.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+after patchset it will become:
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 622374f..e5b6ca4 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -294,13 +294,16 @@ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
- 	return alloc_irq_and_cfg_at(at, node);
- }
- 
--static int reserve_ioapic_gsi_irq_base(int idx)
-+static int reserve_ioapic_gsi_irq_base(int idx, bool hotadd)
- {
- 	int irq;
- 	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	int cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
- 
- 	irq = __irq_reserve_irqs(-1, gsi_cfg->gsi_base, cnt);
-+	if (irq < 0 && hotadd)
-+		irq = __irq_reserve_irqs(-1, 0, cnt);
-+
- 	if (irq >= 0) {
- 		gsi_cfg->irq_base = irq;
- 		printk(KERN_INFO
-@@ -378,7 +381,7 @@ int __init arch_early_irq_init(void)
- 		alloc_ioapic_saved_registers(i);
- 
- 	for (i = 0; i < nr_ioapics; i++)
--		reserve_ioapic_gsi_irq_base(i);
-+		reserve_ioapic_gsi_irq_base(i, false);
- 
- 	reserve_ioapic_gsi_irq_extra();
- 
-@@ -4181,7 +4184,7 @@ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
- 		if (gsi_cfg->gsi_end >= gsi_top)
- 			gsi_top = gsi_cfg->gsi_end + 1;
- 	} else {
--		int irq = reserve_ioapic_gsi_irq_base(idx);
-+		int irq = reserve_ioapic_gsi_irq_base(idx, true);
- 
- 		if (irq < 0)
- 			goto failed;
--- 
-1.7.5.4
+static void free_pci_root_info_res(struct pci_root_info *info)
+{
+        kfree(info->res);
+        info->res = NULL;
+        info->res_num = 0;
+}
 
+static void __release_pci_root_info(struct pci_root_info *info)
+{
+        int i;
+        struct resource *res;
+
+        for (i = 0; i < info->res_num; i++) {
+                res = &info->res[i];
+
+                if (!res->parent)
+                        continue;
+
+                if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+                        continue;
+
+                release_resource(res);
+        }
+
+        free_pci_root_info_res(info);
+
+        kfree(info);
+}
+static void release_pci_root_info(struct pci_host_bridge *bridge)
+{
+        struct pci_root_info *info = bridge->release_data;
+
+        __release_pci_root_info(info);
+}
+
+Is that still confusing?
+
+Thanks
+
+Yinghai
