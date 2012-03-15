@@ -1,81 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:47533 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976Ab2CASUd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2012 13:20:33 -0500
-Received: by bkcik5 with SMTP id ik5so792383bkc.19
-        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2012 10:20:32 -0800 (PST)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:62153 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932425Ab2CORrl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Mar 2012 13:47:41 -0400
+Received: by lahj13 with SMTP id j13so2599705lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 10:47:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXTJArPua7RbAVZBRp5CrdtXbHXziU+3L4ygAkn2VqTFQ@mail.gmail.com>
-References: <1330622227-4209-1-git-send-email-yinghai@kernel.org>
- <20120301172435.GA8505@kroah.com> <CAE9FiQXTJArPua7RbAVZBRp5CrdtXbHXziU+3L4ygAkn2VqTFQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQWvOpJ1N=QLQ3MHRqVGw7pz1Fuma60pJSwzqP5Jc5PF3Q@mail.gmail.com>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+ <1331362837-10740-24-git-send-email-yinghai@kernel.org> <CAErSpo5cCC4HySedQ85BFKkPQ0VuYWX+NTjZLd4GpcATh1ix3g@mail.gmail.com>
+ <CAE9FiQWvOpJ1N=QLQ3MHRqVGw7pz1Fuma60pJSwzqP5Jc5PF3Q@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 1 Mar 2012 11:20:12 -0700
-Message-ID: <CAErSpo4fp9fOR-N9RBnGW3m_SjnL_85fuhjQNNLrPygSPX0SYQ@mail.gmail.com>
-Subject: Re: [RFC PATCH] usb, PCI: split quirk for usb host controller to three
+Date: Thu, 15 Mar 2012 11:47:18 -0600
+Message-ID: <CAErSpo7qi8pE-tiXriMcF5LLY6c=BWnVy-G3MYmjh=1XrqypGA@mail.gmail.com>
+Subject: Re: [PATCH v2 23/37] PCI, ACPI: Add pci_root_hp hot add hotplug notification
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 1, 2012 at 10:45 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Mar 1, 2012 at 9:24 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
->> On Thu, Mar 01, 2012 at 09:17:07AM -0800, Yinghai Lu wrote:
->>> so we avoid checking class again and again in that quirk.
+On Tue, Mar 13, 2012 at 12:03 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Mar 12, 2012 at 8:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> It is from acpiphp_glue.c
 >>>
->>> need to be applied after pci/linux-next and usb/usb-next
->>
->> As those are two independant trees, this needs to wait until after
->> 3.4-rc1 is out.
->
-> ok.
->
->>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> How to use it?
+>>> Find out root bus number to acpi root name mapping from dmesg or /sys
 >>>
->>> ---
->>>  drivers/usb/host/pci-quirks.c |   42 ++++++++++++++++++++++++++++--------------
->>>  1 file changed, 28 insertions(+), 14 deletions(-)
+>>>  echo "\_SB.PCIB 0" > /proc/acpi/sci/notify
+>>> to add it back
 >>
->> Is this really helping anything here?  You added code overall :(
+>> Nope.  That might be a way to exercise this for debug purposes (and it
+>> only works when /proc/acpi/sci/notify is compiled in), but we
+>> definitely don't want normal users to deal with ACPI pathnames like
+>> this.
 >
-> just make the code looks simple by removing
+> before this patch set, only way is: Users really put one root bus in
+> and press buton etc to trigger notification
+> to get it work.
 >
->        if (pdev->class != PCI_CLASS_SERIAL_USB_UHCI &&
->                        pdev->class != PCI_CLASS_SERIAL_USB_OHCI &&
->                        pdev->class != PCI_CLASS_SERIAL_USB_EHCI &&
->                        pdev->class != PCI_CLASS_SERIAL_USB_XHCI)
->                return;
-> ...
->        if (pdev->class == PCI_CLASS_SERIAL_USB_UHCI)
->   ...
->        else if (pdev->class == PCI_CLASS_SERIAL_USB_OHCI)
->   ...
->        else if (pdev->class == PCI_CLASS_SERIAL_USB_EHCI)
->    ...
->        else if (pdev->class == PCI_CLASS_SERIAL_USB_XHCI)
->    ...
+>>
+>> Most of this functionality belongs in the ACPI core, not here.  The
+>> core should be handling these notify events and turning them into
+>> .add() and .remove() calls to the driver.
+>>
+>> But since the ACPI core doesn't do that yet, we have to do it in the
+>> driver, like we do for CPU, memory, etc.  That part is fine.  But I
+>> think it at least belongs *in* the driver, i.e., in pci_root.c, not in
+>> a new pci_root_hp.c file.
 >
+> don't want to pollute pci_root.c.
 >
-> also skip disable/enable device on non xhci controller.
+> in separated file, we can use CONFIG_HOTPLUG in Makefile instead of pci_root.c
 
-Hmm...  From the description, I thought this patch only took advantage
-of DECLARE_PCI_FIXUP_CLASS_FINAL to remove the "if (pdev->class ==
-XXX)" tests.
+I don't buy this argument.  Most of this functionality should someday
+be in the ACPI core.  Until then, it is intimately connected to the
+stuff in pci_root.c.  It is not "pollution."
 
-If it *also* skips a disable/enable sequence on non-xhci controllers,
-please make that a separate patch so it's clear what's happening.
+>> There definitely should not be another acpi_walk_namespace() and
+>> another list of ACPI host bridges.  The core *does* already walk the
+>> namespace and call acpi_pci_root_add() for us.  And the driver already
+>> has a list of host bridges (acpi_pci_roots).
+>
+> no, we may not have acpi_pci_root there.
 
-It's very important to be clear about these things for people who are
-deciding whether to backport patches into distros.  All the zillions
-of PCI changes we're doing make their lives hard enough without having
-subtle behavior changes hidden in patches that seem to be "code
-restructure only, no behavior change."
+I don't understand what you're saying here.  I think you should be
+basically implementing the "turn notify events into add/remove calls"
+functionality.  This is what *should* be in the ACPI core, but isn't
+yet.  If you put this in the driver, and hopefully follow the style
+already used by the processor/memory/etc. drivers, it will be easier
+to someday move it into the ACPI core.
 
 Bjorn
