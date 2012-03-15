@@ -1,81 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:65294 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757123Ab2CFSNn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 13:13:43 -0500
-Received: by eekc41 with SMTP id c41so208714eek.1
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 10:13:41 -0800 (PST)
-Subject: [PATCH RFC] PCI: allow P2P bridge windows starting at PCI bus address
-	zero
-To: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 06 Mar 2012 11:13:40 -0700
-Message-ID: <20120306181340.8566.79920.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:50651 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754919Ab2COReH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Mar 2012 13:34:07 -0400
+Received: by lahj13 with SMTP id j13so2588567lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 10:34:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAE9FiQWwzS2SFvzO2BL-aoVFVEMFpwJPKPODArkKtQSeAoTYGw@mail.gmail.com>
+References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
+ <1331362837-10740-21-git-send-email-yinghai@kernel.org> <CAErSpo5WKLf4C_f+roqDtbvs0vU_qTKp6OZ83AXXZggPrynt2A@mail.gmail.com>
+ <CAE9FiQWwzS2SFvzO2BL-aoVFVEMFpwJPKPODArkKtQSeAoTYGw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 15 Mar 2012 11:33:45 -0600
+Message-ID: <CAErSpo6Prmn9aAwC=e_1nC7QKzovp81KyZkOudgg7r8Gv0YWHA@mail.gmail.com>
+Subject: Re: [PATCH v2 20/37] PCI: Add pci bus removal through /sys/.../pci_bus/.../remove
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is for discussion.  I didn't include a Signed-off-by line
-because I suspect the patch is incomplete as it stands.
+On Mon, Mar 12, 2012 at 11:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Mar 12, 2012 at 8:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> it supports both pci root bus and pci bus under pci bridge.
+>>>
+>>> -v2: Change to three returns way in dev_bus_remove_store.
+>>>
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> Cc: Randy Dunlap <rdunlap@xenotime.net>
+>>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>>> Cc: linux-doc@vger.kernel.org
+>>> ---
+>>>  Documentation/ABI/testing/sysfs-bus-pci |    8 ++++++++
+>>>  drivers/pci/pci-sysfs.c                 |   30 ++++++++++++++++++++++++++++++
+>>>  2 files changed, 38 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+>>> index 95f0f37..22392de 100644
+>>> --- a/Documentation/ABI/testing/sysfs-bus-pci
+>>> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+>>> @@ -92,6 +92,14 @@ Description:
+>>>                hot-remove the PCI device and any of its children.
+>>>                Depends on CONFIG_HOTPLUG.
+>>>
+>>> +What:          /sys/bus/pci/devices/.../pci_bus/.../remove
+>>> +Date:          March 2012
+>>> +Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
+>>> +Description:
+>>> +               Writing a non-zero value to this attribute will
+>>> +               hot-remove the PCI bus and any of its children.
+>>> +               Depends on CONFIG_HOTPLUG.
+>>
+>> I don't think this interface makes sense.  This stops every device on
+>> the bus, removes the bus, unregisters the host bridge device if we're
+>> removing a root bus.
+>
+> it is some kind of handy. otherwise if there is several devices on the
+> bus, will need to
+> remove the devices one by one.
 
-cd81e1ea1a4c added checks that prevent us from using P2P bridge windows
-that start at PCI bus address zero.  The reason was to "prevent us from
-overwriting resources that are unassigned."
+It might be handy, but that's not enough.  You're doing a sysfs
+operation in the PCI namespace.  It should not have effects outside
+that namespace.  Host bridges are by definition outside the PCI
+namespace.
 
-But I don't think generic code should disallow address zero in either BARs or
-bridge windows, so I think that commit was a mistake.
+>> I think we should just have a "remove *bridge*" interface.  It makes
+>> no sense to me to remove a bus but leave the bridge, and it makes the
+>> code quite complicated.
+>
+> I want to remove all devices under the bridge and then rescan the
+> bridge. then if the bridge get removed.
+> then we have to rescan bridge's parent bus.
+>
+>>
+>> The point of hotplug is to add and remove devices.  We'll get
+>> interrupts saying "please remove this device" or "please rescan the
+>> bus behind this bridge because something might have changed."
+>>
+>> If we're removing a host bridge, the platform, e.g., ACPI, will tell
+>> us about the bridge that is going away.  The notification is attached
+>> to the *bridge*, not the bus it leads to.
+>>
+>> The expected mechanism on x86 is an SCI from the platform, but if we
+>> need a sysfs way to start host bridge removal, I think it should be
+>> something like this:
+>>
+>>    echo 1 > /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove
+>
+> for that,  let just use
+> echo "\_SB.PCI0 3" > /proc/acpi/sci/notify
 
-Windows at bus address zero are legal and likely to exist on machines with an
-offset between bus addresses and CPU addresses.  For example, in the following
-hypothetical scenario, the bridge at 00:01.0 has a window at bus address zero
-and the device at 01:00.0 has a BAR at bus address zero, and I think both are
-perfectly valid:
+That's a totally broken user interface.  There's no way for the user
+to look at the sysfs tree and figure out how to do that.  The ACPI
+namespace names like "PCI0" are platform-dependent internal things and
+should not be part of any user interface.
 
-    PCI host bridge to bus 0000:00
-    pci_bus 0000:00: root bus resource [mem 0x100000000-0x1ffffffff] (bus address [0x00000000-0xffffffff])
-    pci 0000:00:01.0: PCI bridge to [bus 01]
-    pci 0000:00:01.0:   bridge window [mem 0x100000000-0x100ffffff]
-    pci 0000:01:00.0: reg 10: [mem 0x100000000-0x100ffffff]
+I don't object to /proc/acpi/sci/notify.  That looks like a useful way
+to inject notification events that would normally come from the
+hardware/BIOS.  But it's a development tool, not something that can be
+part of the normal user interface.
 
-I don't want to reintroduce whatever bug cd81e1ea1a4c fixed.  So please comment
-on whether my reasoning above is correct and what problem would be caused if we
-applied the following patch.
-
-CC: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 944e05a..1725866 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -365,7 +365,7 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
- 		limit |= (io_limit_hi << 16);
- 	}
- 
--	if (base && base <= limit) {
-+	if (base <= limit) {
- 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
- 		region.start = base;
- 		region.end = limit + 0xfff;
-@@ -391,7 +391,7 @@ static void __devinit pci_read_bridge_mmio(struct pci_bus *child)
- 	pci_read_config_word(dev, PCI_MEMORY_LIMIT, &mem_limit_lo);
- 	base = (mem_base_lo & PCI_MEMORY_RANGE_MASK) << 16;
- 	limit = (mem_limit_lo & PCI_MEMORY_RANGE_MASK) << 16;
--	if (base && base <= limit) {
-+	if (base <= limit) {
- 		res->flags = (mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) | IORESOURCE_MEM;
- 		region.start = base;
- 		region.end = limit + 0xfffff;
-@@ -437,7 +437,7 @@ static void __devinit pci_read_bridge_mmio_pref(struct pci_bus *child)
- #endif
- 		}
- 	}
--	if (base && base <= limit) {
-+	if (base <= limit) {
- 		res->flags = (mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) |
- 					 IORESOURCE_MEM | IORESOURCE_PREFETCH;
- 		if (res->flags & PCI_PREF_RANGE_TYPE_64)
-
+Bjorn
