@@ -1,67 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:56075 "HELO
-	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932303Ab2CZPZD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 26 Mar 2012 11:25:03 -0400
-From: Yevgeny Petrilin <yevgenyp@mellanox.com>
-To: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yael Shenhav <yaeli@mellanox.com>
-Subject: RE: IRQ affinity enforced only after first interrupt.
-Date: Mon, 26 Mar 2012 15:24:57 +0000
-Message-ID: <953B660C027164448AE903364AC447D2618E1A8B@MTLDAG02.mtl.com>
-References: <4F7031A4.70601@mellanox.co.il>
- <CAErSpo7ciBYG1-jCL3F6bFcktmJj4H-SXn_1NcRnhc-gPDsHUw@mail.gmail.com>
- <4F707E39.50502@gmail.com>
-In-Reply-To: <4F707E39.50502@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:38979 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759555Ab2COIjr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2012 04:39:47 -0400
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 2FB1C3EE0BC
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 17:39:46 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 1961145DE50
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 17:39:46 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 0207145DD74
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 17:39:46 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id E9E7C1DB803F
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 17:39:45 +0900 (JST)
+Received: from m106.s.css.fujitsu.com (m106.s.css.fujitsu.com [10.240.81.146])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 957FC1DB8038
+	for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 17:39:45 +0900 (JST)
+From: "Taku Izumi" <izumi.taku@jp.fujitsu.com>
+To: "'Yinghai Lu'" <yinghai@kernel.org>
+Cc: <linux-pci@vger.kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org> <1330570837-26638-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1330570837-26638-3-git-send-email-yinghai@kernel.org>
+Subject: RE: [PATCH 02/36] x86, PCI: Fix memleak with get_current_resources
+Date: Thu, 15 Mar 2012 17:39:43 +0900
+Message-ID: <0bec01cd0287$2b74ae40$825e0ac0$@jp.fujitsu.com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> 
-> The architecture specific code will determine whether the IRQ could be migrated
-> in process context. For example, the IRQ_MOVE_PCNTXT flag will be set on x86
-> systems if interrupt remapping is enabled.
 
-Actually I am encountering this issue with x86, and see different behavior with different
-HW devices (NICs). On same machine I have one device that responds immediately to affinity changes
-while the other one changes the affinity only after first interrupt.
 
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Yinghai Lu
+> Sent: Thursday, March 01, 2012 12:00 PM
+> To: Jesse Barnes; Benjamin Herrenschmidt; Tony Luck; David Miller; x86
+> Cc: Bjorn Helgaas; Dominik Brodowski; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> linux-arch@vger.kernel.org; Yinghai Lu
+> Subject: [PATCH 02/36] x86, PCI: Fix memleak with get_current_resources
 > 
-> On 03/26/2012 10:28 PM, Bjorn Helgaas wrote:
-> > [This is not really a PCI question, so +cc Thomas, LKML.]
-> >
-> > On Mon, Mar 26, 2012 at 3:06 AM, Yevgeny Petrilin
-> > <yevgenyp@mellanox.co.il> wrote:
-> >> Hello,
-> >>
-> >> I'm working on an issue where affinity changes to IRQ only have effect after the first interrupt which still happens on the original core.
-> >> I understand that the decision regarding it takes place in this code:
-> >>
-> >>        if (irq_can_move_pcntxt(data)) {
-> >>                ret = chip->irq_set_affinity(data, mask, false);
-> >>                switch (ret) {
-> >>                case IRQ_SET_MASK_OK:
-> >>                        cpumask_copy(data->affinity, mask);
-> >>                case IRQ_SET_MASK_OK_NOCOPY:
-> >>                        irq_set_thread_affinity(desc);
-> >>                        ret = 0;
-> >>                }
-> >>        } else {
-> >>                irqd_set_move_pending(data);
-> >>                irq_copy_pending(desc, mask);
-> >>        }
-> >>
-> >> Which means that the "IRQD_MOVE_PCNTXT" flag is not set in irq_data->state_use_accessors.
-> >> I was able to add this flag using irq_modify_status(), which is probably not the way to go.
-> >> This option also doesn't exist in older kernels (2.6.32)
-> >>
-> >> So the question is, when irq_desc is created, how is it determined that "IRQD_MOVE_PCNTXT" flag is set?
-> >>
-> >> Thanks,
-> >> Yevgeny
+> in pci_scan_acpi_root, when pci_use_crs is set, get_current_resources is used
+> to get pci_root_info, and it will allocate name and res array.
+> 
+> later if pci_create_root_bus can not create bus (could be already there...)
+> it will only free bus res list. but the name and res array is not freed.
+> 
+> let get_current_resource take info pointer instead have local info.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  arch/x86/pci/acpi.c |   49 ++++++++++++++++++++++++++++++-------------------
+>  1 files changed, 30 insertions(+), 19 deletions(-)
+> 
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 7cc0a44..304ccf0 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -305,49 +305,55 @@ static void add_resources(struct pci_root_info *info)
+>  	}
+>  }
+> 
+> +static void free_pci_root_info(struct pci_root_info *info)
+> +{
+> +	kfree(info->name);
+> +	kfree(info->res);
+> +	memset(info, 0, sizeof(struct pci_root_info));
+> +}
+> +
+
+  This function leads to misunderstanding.
+  I'm convinced that the function of the name starts with "free" 
+  should free resources completely.
+
+
+>  static void
+> -get_current_resources(struct acpi_device *device, int busnum,
+> +get_current_resources(struct pci_root_info *info,
+> +		      struct acpi_device *device, int busnum,
+>  		      int domain, struct list_head *resources)
+>  {
+> -	struct pci_root_info info;
+>  	size_t size;
+> 
+> -	info.bridge = device;
+> -	info.res_num = 0;
+> -	info.resources = resources;
+> +	info->bridge = device;
+> +	info->res_num = 0;
+> +	info->resources = resources;
+>  	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+> -				&info);
+> -	if (!info.res_num)
+> +				info);
+> +	if (!info->res_num)
+>  		return;
+> 
+> -	size = sizeof(*info.res) * info.res_num;
+> -	info.res = kmalloc(size, GFP_KERNEL);
+> -	if (!info.res)
+> +	size = sizeof(*info->res) * info->res_num;
+> +	info->res = kmalloc(size, GFP_KERNEL);
+> +	if (!info->res)
+>  		return;
+> 
+> -	info.name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+> -	if (!info.name)
+> +	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+> +	if (!info->name)
+>  		goto name_alloc_fail;
+> 
+> -	info.res_num = 0;
+> +	info->res_num = 0;
+>  	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+> -				&info);
+> +				info);
+> 
+>  	if (pci_use_crs) {
+> -		add_resources(&info);
+> +		add_resources(info);
+> 
+>  		return;
+>  	}
+> 
+> -	kfree(info.name);
+> -
+>  name_alloc_fail:
+> -	kfree(info.res);
+> +	free_pci_root_info(info);
+>  }
+> 
+>  struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>  {
+>  	struct acpi_device *device = root->device;
+> +	struct pci_root_info info;
+>  	int domain = root->segment;
+>  	int busnum = root->secondary.start;
+>  	LIST_HEAD(resources);
+> @@ -392,6 +398,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+> 
+>  	sd->domain = domain;
+>  	sd->node = node;
+> +	memset(&info, 0, sizeof(struct pci_root_info));
+>  	/*
+>  	 * Maybe the desired pci bus has been already scanned. In such case
+>  	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+> @@ -405,7 +412,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>  		memcpy(bus->sysdata, sd, sizeof(*sd));
+>  		kfree(sd);
+>  	} else {
+> -		get_current_resources(device, busnum, domain, &resources);
+> +		get_current_resources(&info, device, busnum, domain,
+> +					&resources);
+> 
+>  		/*
+>  		 * _CRS with no apertures is normal, so only fall back to
+> @@ -419,6 +427,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>  			bus->subordinate = pci_scan_child_bus(bus);
+>  		else
+>  			pci_free_resource_list(&resources);
+> +
+> +		if (!bus && pci_use_crs)
+> +			free_pci_root_info(&info);
+>  	}
+> 
+>  	/* After the PCI-E bus has been walked and all devices discovered,
+> --
+> 1.7.7
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
