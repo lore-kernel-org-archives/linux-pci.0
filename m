@@ -1,314 +1,378 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:31805 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757703Ab2CFHP6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:15:58 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	iommu@lists.linux-foundation.org
-Subject: [PATCH 07/23] pci, dmar: Update dmar units devices list during hotplug
-Date: Mon,  5 Mar 2012 23:13:44 -0800
-Message-Id: <1331018040-30725-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:37098 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756405Ab2COVap convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2012 17:30:45 -0400
+Received: by lbbgm6 with SMTP id gm6so1706273lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 14:30:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1331623594-30543-6-git-send-email-yinghai@kernel.org>
+References: <1331623594-30543-1-git-send-email-yinghai@kernel.org> <1331623594-30543-6-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 15 Mar 2012 15:30:22 -0600
+Message-ID: <CAErSpo4nnY27oB3tShgL8DLStHk+ApYFUGWo_=cAEqRJnVK91A@mail.gmail.com>
+Subject: Re: [PATCH 05/12] PCI: Add addon_resource support for pci_dev
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When do pci remove/rescan on system that have more iommus, got
+On Tue, Mar 13, 2012 at 1:26 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Will add addon_resources list in pci_dev, it will be used for resources
+> other than stand, rom, sriov, bridges.
+> Some could be same as std reg, but using different register.
+> Some could have own way to read/write to them.
+>
+> Kernel using different way to hack those resources like abusing
+> pci bridge resource spot on non bridge pci device.
+>
+> With this patch, will treat addon-resource like standard resource with
+> special ops.
+>
+> Also adding bunch of for_each... helpers to make resource loop easier.
 
-[  894.089745] Set context mapping for c4:00.0
-[  894.110890] mpt2sas3: Allocated physical memory: size(4293 kB)
-[  894.112556] mpt2sas3: Current Controller Queue Depth(1883), Max Controller Queue Depth(2144)
-[  894.127278] mpt2sas3: Scatter Gather Elements per IO(128)
-[  894.361295] DRHD: handling fault status reg 2
-[  894.364053] DMAR:[DMA Read] Request device [c4:00.0] fault addr fffbe000
-[  894.364056] DMAR:[fault reason 02] Present bit in context entry is cl
+There are some interesting ideas here.  Do they all have to be in the
+same patch?
 
-it turns out when remove/rescan, pci dev will be freed and will get another new dev.
-but drhd units still keep old one... so dmar_find_matched_drhd_unit will
-return wrong drhd and iommu for the device that is not on first iommu.
+  - for_each...() helpers
+  - pci_dev_resource_n() stuff
+  - addon resource stuff
+  - addon resource ops
 
-So need to update devices in drhd_units during pci remove/rescan.
-
-Could save domain/bus/device/function aside in the list and according that info
-restore new dev to drhd_units later.
-Then dmar_find_matched_drdh_unit and device_to_iommu could return right drhd and iommu.
-
-Add remove_dev_from_drhd/restore_dev_to_drhd functions to do the real work.
-call them in device ADD_DEVICE and UNBOUND_DRIVER
-
-Need to do the samething to atsr.  (expose dmar_atsr_units and add atsru->segment)
-
-After patch, will right iommu for the new dev and will not get DMAR error any more.
-
--v2: add pci_dev_put/pci_dev_get to make refcount consistent.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: Vinod Koul <vinod.koul@intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: iommu@lists.linux-foundation.org
----
- drivers/iommu/intel-iommu.c |  187 ++++++++++++++++++++++++++++++++++++++++---
- include/linux/dmar.h        |    4 +
- 2 files changed, 181 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index c9c6053..39ef2ce 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -665,6 +665,159 @@ static struct intel_iommu *device_to_iommu(int segment, u8 bus, u8 devfn)
- 	return NULL;
- }
- 
-+#ifdef CONFIG_HOTPLUG
-+struct dev_dmaru {
-+	struct list_head list;
-+	void *dmaru;
-+	int index;
-+	int segment;
-+	unsigned char bus;
-+	unsigned int devfn;
-+};
-+
-+static int
-+save_dev_dmaru(int segment, unsigned char bus, unsigned int devfn,
-+		 void *dmaru, int index, struct list_head *lh)
-+{
-+	struct dev_dmaru *m;
-+
-+	m = kzalloc(sizeof(*m), GFP_KERNEL);
-+	if (!m)
-+		return -ENOMEM;
-+
-+	m->segment = segment;
-+	m->bus     = bus;
-+	m->devfn   = devfn;
-+	m->dmaru   = dmaru;
-+	m->index   = index;
-+
-+	list_add(&m->list, lh);
-+
-+	return 0;
-+}
-+
-+static void
-+*get_dev_dmaru(int segment, unsigned char bus, unsigned int devfn,
-+		int *index, struct list_head *lh)
-+{
-+	struct dev_dmaru *m;
-+	void *dmaru = NULL;
-+
-+	list_for_each_entry(m, lh, list) {
-+		if (m->segment == segment &&
-+		    m->bus == bus && m->devfn == devfn) {
-+			*index = m->index;
-+			dmaru  = m->dmaru;
-+			list_del(&m->list);
-+			kfree(m);
-+			break;
-+		}
-+	}
-+
-+	return dmaru;
-+}
-+
-+static LIST_HEAD(saved_dev_drhd_list);
-+
-+static void remove_dev_from_drhd(struct pci_dev *dev)
-+{
-+	struct dmar_drhd_unit *drhd = NULL;
-+	int segment = pci_domain_nr(dev->bus);
-+	int i;
-+
-+	for_each_drhd_unit(drhd) {
-+		if (drhd->ignored)
-+			continue;
-+		if (segment != drhd->segment)
-+			continue;
-+
-+		for (i = 0; i < drhd->devices_cnt; i++) {
-+			if (drhd->devices[i] == dev) {
-+				/* save it at first if it is in drhd */
-+				save_dev_dmaru(segment, dev->bus->number,
-+						dev->devfn, drhd, i,
-+						&saved_dev_drhd_list);
-+				/* always remove it */
-+				pci_dev_put(dev);
-+				drhd->devices[i] = NULL;
-+				return;
-+			}
-+		}
-+	}
-+}
-+
-+static void restore_dev_to_drhd(struct pci_dev *dev)
-+{
-+	struct dmar_drhd_unit *drhd = NULL;
-+	int i;
-+
-+	/* find the stored drhd */
-+	drhd = get_dev_dmaru(pci_domain_nr(dev->bus), dev->bus->number,
-+				 dev->devfn, &i, &saved_dev_drhd_list);
-+	/* restore that into drhd */
-+	if (drhd)
-+		drhd->devices[i] = pci_dev_get(dev);
-+}
-+#else
-+static void remove_dev_from_drhd(struct pci_dev *dev)
-+{
-+}
-+
-+static void restore_dev_to_drhd(struct pci_dev *dev)
-+{
-+}
-+#endif
-+
-+#if defined(CONFIG_DMAR) && defined(CONFIG_HOTPLUG)
-+static LIST_HEAD(saved_dev_atsr_list);
-+
-+static void remove_dev_from_atsr(struct pci_dev *dev)
-+{
-+	struct dmar_atsr_unit *atsr = NULL;
-+	int segment = pci_domain_nr(dev->bus);
-+	int i;
-+
-+	for_each_atsr_unit(atsr) {
-+		if (segment != atsr->segment)
-+			continue;
-+
-+		for (i = 0; i < atsr->devices_cnt; i++) {
-+			if (atsr->devices[i] == dev) {
-+				/* save it at first if it is in drhd */
-+				save_dev_dmaru(segment, dev->bus->number,
-+						dev->devfn, atsr, i,
-+						&saved_dev_atsr_list);
-+				/* always remove it */
-+				pci_dev_put(dev);
-+				atsr->devices[i] = NULL;
-+				return;
-+			}
-+		}
-+	}
-+}
-+
-+static void restore_dev_to_atsr(struct pci_dev *dev)
-+{
-+	struct dmar_atsr_unit *atsr = NULL;
-+	int i;
-+
-+	/* find the stored atsr */
-+	atsr = get_dev_dmaru(pci_domain_nr(dev->bus), dev->bus->number,
-+				 dev->devfn, &i, &saved_dev_atsr_list);
-+	/* restore that into atsr */
-+	if (atsr)
-+		atsr->devices[i] = pci_dev_get(dev);
-+}
-+#else
-+static void remove_dev_from_atsr(struct pci_dev *dev)
-+{
-+}
-+
-+static void restore_dev_to_atsr(struct pci_dev *dev)
-+{
-+}
-+#endif
-+
- static void domain_flush_cache(struct dmar_domain *domain,
- 			       void *addr, int size)
- {
-@@ -3474,6 +3627,7 @@ int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr)
- 
- 	atsru->hdr = hdr;
- 	atsru->include_all = atsr->flags & 0x1;
-+	atsru->segment = atsr->segment;
- 
- 	list_add(&atsru->list, &dmar_atsr_units);
- 
-@@ -3505,16 +3659,13 @@ int dmar_find_matched_atsr_unit(struct pci_dev *dev)
- {
- 	int i;
- 	struct pci_bus *bus;
--	struct acpi_dmar_atsr *atsr;
- 	struct dmar_atsr_unit *atsru;
- 
- 	dev = pci_physfn(dev);
- 
--	list_for_each_entry(atsru, &dmar_atsr_units, list) {
--		atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
--		if (atsr->segment == pci_domain_nr(dev->bus))
-+	list_for_each_entry(atsru, &dmar_atsr_units, list)
-+		if (atsru->segment == pci_domain_nr(dev->bus))
- 			goto found;
--	}
- 
- 	return 0;
- 
-@@ -3574,20 +3725,36 @@ static int device_notifier(struct notifier_block *nb,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct dmar_domain *domain;
- 
--	if (iommu_no_mapping(dev))
-+	if (unlikely(dev->bus != &pci_bus_type))
- 		return 0;
- 
--	domain = find_domain(pdev);
--	if (!domain)
--		return 0;
-+	switch (action) {
-+	case BUS_NOTIFY_UNBOUND_DRIVER:
-+		if (iommu_no_mapping(dev))
-+			goto out;
-+
-+		if (iommu_pass_through)
-+			goto out;
-+
-+		domain = find_domain(pdev);
-+		if (!domain)
-+			goto out;
- 
--	if (action == BUS_NOTIFY_UNBOUND_DRIVER && !iommu_pass_through) {
- 		domain_remove_one_dev_info(domain, pdev);
- 
- 		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
- 		    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
- 		    list_empty(&domain->devices))
- 			domain_exit(domain);
-+out:
-+		remove_dev_from_drhd(pdev);
-+		remove_dev_from_atsr(pdev);
-+
-+		break;
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		restore_dev_to_drhd(pdev);
-+		restore_dev_to_atsr(pdev);
-+		break;
- 	}
- 
- 	return 0;
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 731a609..57e1375 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -236,9 +236,13 @@ struct dmar_atsr_unit {
- 	struct acpi_dmar_header *hdr;	/* ACPI header */
- 	struct pci_dev **devices;	/* target devices */
- 	int devices_cnt;		/* target device count */
-+	u16 segment;			/* PCI domain */
- 	u8 include_all:1;		/* include all ports */
- };
- 
-+#define for_each_atsr_unit(atsr) \
-+	list_for_each_entry(atsr, &dmar_atsr_units, list)
-+
- int dmar_parse_rmrr_atsr_dev(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
--- 
-1.7.7
-
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/pci.c       |    7 +++
+>  drivers/pci/probe.c     |  108 +++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/setup-res.c |   24 ++++++++---
+>  include/linux/pci.h     |   77 ++++++++++++++++++++++++++++++++-
+>  4 files changed, 207 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 32ab301..af84abf 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3545,6 +3545,13 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
+>                reg = pci_iov_resource_bar(dev, resno, type);
+>                if (reg)
+>                        return reg;
+> +       } else if (resno >= PCI_NUM_RESOURCES) {
+> +               struct resource *res = pci_dev_resource_n(dev, resno);
+> +
+> +               if (res) {
+> +                       *type = pci_bar_unknown;
+> +                       return to_pci_dev_addon_resource(res)->reg_addr;
+> +               }
+>        }
+>
+>        dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 972553b..dac829f 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -75,6 +75,111 @@ static int __init pcibus_class_init(void)
+>  }
+>  postcore_initcall(pcibus_class_init);
+>
+> +struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
+> +{
+> +       struct pci_dev_addon_resource *addon_res;
+> +
+> +       if (n < PCI_NUM_RESOURCES)
+> +               return &dev->resource[n];
+> +
+> +       n -= PCI_NUM_RESOURCES;
+> +       list_for_each_entry(addon_res, &dev->addon_resources, list) {
+> +               if (n-- == 0)
+> +                       return &addon_res->res;
+> +       }
+> +       return NULL;
+> +}
+> +
+> +int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
+> +{
+> +       int i;
+> +       struct resource *r;
+> +
+> +       for_each_pci_dev_all_resource(dev, r, i)
+> +               if (r == res)
+> +                       return i;
+> +
+> +       return -1;
+> +}
+> +
+> +struct pci_dev_addon_resource *__add_pci_dev_addon_resource(
+> +                struct pci_dev *dev, int addr, char *name)
+> +{
+> +       struct pci_dev_addon_resource *addon_res;
+> +
+> +       addon_res = kzalloc(sizeof(*addon_res), GFP_KERNEL);
+> +
+> +       if (!addon_res)
+> +               return NULL;
+> +
+> +       addon_res->reg_addr = addr;
+> +
+> +       if (name)
+> +               addon_res->res.name = name;
+> +       else
+> +               addon_res->res.name = pci_name(dev);
+> +
+> +       list_add_tail(&addon_res->list, &dev->addon_resources);
+> +
+> +       return addon_res;
+> +}
+> +
+> +struct pci_dev_addon_resource *add_pci_dev_addon_fixed_resource(
+> +                struct pci_dev *dev, int start, int size, int flags,
+> +                int addr, char *name)
+> +{
+> +       struct pci_dev_addon_resource *addon_res;
+> +       struct resource *res;
+> +
+> +       addon_res = __add_pci_dev_addon_resource(dev, addr, name);
+> +       if (addon_res)
+> +               return NULL;
+> +
+> +       res = &addon_res->res;
+> +       res->start = start;
+> +       res->end = start + size - 1;
+> +       res->flags = flags | IORESOURCE_PCI_FIXED;
+> +
+> +       dev_printk(KERN_DEBUG, &dev->dev,
+> +                  "addon fixed resource %s %pR added\n", res->name, res);
+> +
+> +       return addon_res;
+> +}
+> +
+> +struct pci_dev_addon_resource *add_pci_dev_addon_resource(struct pci_dev *dev,
+> +                int addr, int size, struct resource_ops *ops, char *name)
+> +{
+> +       struct pci_dev_addon_resource *addon_res;
+> +       struct resource *res;
+> +
+> +       addon_res = __add_pci_dev_addon_resource(dev, addr, name);
+> +       if (!addon_res)
+> +               return NULL;
+> +
+> +       res = &addon_res->res;
+> +       if (ops) {
+> +               addon_res->ops = ops;
+> +               addon_res->size = size;
+> +               ops->read(dev, res, addr);
+> +       } else
+> +               __pci_read_base(dev, pci_bar_unknown, res, addr);
+> +
+> +       dev_printk(KERN_DEBUG, &dev->dev,
+> +                  "addon resource %s %pR added\n", res->name, res);
+> +
+> +       return addon_res;
+> +}
+> +
+> +static void pci_release_dev_addon_res(struct pci_dev *dev)
+> +{
+> +       struct pci_dev_addon_resource *addon_res, *tmp;
+> +
+> +       list_for_each_entry_safe(addon_res, tmp, &dev->addon_resources, list) {
+> +               list_del(&addon_res->list);
+> +               kfree(addon_res);
+> +       }
+> +}
+> +
+>  static u64 pci_size(u64 base, u64 maxbase, u64 mask)
+>  {
+>        u64 size = mask & maxbase;      /* Find the significant bits */
+> @@ -1283,6 +1388,7 @@ static void pci_release_dev(struct device *dev)
+>        pci_dev = to_pci_dev(dev);
+>        pci_release_capabilities(pci_dev);
+>        pci_release_of_node(pci_dev);
+> +       pci_release_dev_addon_res(pci_dev);
+>        kfree(pci_dev);
+>  }
+>
+> @@ -1362,11 +1468,13 @@ struct pci_dev *alloc_pci_dev(void)
+>                return NULL;
+>
+>        INIT_LIST_HEAD(&dev->bus_list);
+> +       INIT_LIST_HEAD(&dev->addon_resources);
+>
+>        return dev;
+>  }
+>  EXPORT_SYMBOL(alloc_pci_dev);
+>
+> +
+>  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+>                                 int crs_timeout)
+>  {
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index eea85da..48251e3 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -33,7 +33,7 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+>        u32 new, check, mask;
+>        int reg;
+>        enum pci_bar_type type;
+> -       struct resource *res = dev->resource + resno;
+> +       struct resource *res = pci_dev_resource_n(dev, resno);
+>
+>        /*
+>         * Ignore resources for unimplemented BARs and unused resource slots
+> @@ -50,6 +50,21 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+>        if (res->flags & IORESOURCE_PCI_FIXED)
+>                return;
+>
+> +       if (resno >= PCI_NUM_RESOURCES) {
+> +               struct pci_dev_addon_resource *addon_res;
+> +
+> +               addon_res = to_pci_dev_addon_resource(res);
+> +               reg = addon_res->reg_addr;
+> +               if (addon_res->ops) {
+> +                       addon_res->ops->write(dev, res, reg);
+> +                       return;
+> +               }
+> +       } else
+> +               reg = pci_resource_bar(dev, resno, &type);
+> +
+> +       if (!reg)
+> +               return;
+> +
+>        pcibios_resource_to_bus(dev, &region, res);
+>
+>        new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
+> @@ -58,9 +73,6 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+>        else
+>                mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>
+> -       reg = pci_resource_bar(dev, resno, &type);
+> -       if (!reg)
+> -               return;
+>        if (type != pci_bar_unknown) {
+>                if (!(res->flags & IORESOURCE_ROM_ENABLE))
+>                        return;
+> @@ -257,7 +269,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+>        if (!ret) {
+>                res->flags &= ~IORESOURCE_STARTALIGN;
+>                dev_info(&dev->dev, "BAR %d: reassigned %pR\n", resno, res);
+> -               if (resno < PCI_BRIDGE_RESOURCES)
+> +               if (!resno_is_for_bridge(resno))
+>                        pci_update_resource(dev, resno);
+>        }
+>        return ret;
+> @@ -292,7 +304,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+>        if (!ret) {
+>                res->flags &= ~IORESOURCE_STARTALIGN;
+>                dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
+> -               if (resno < PCI_BRIDGE_RESOURCES)
+> +               if (!resno_is_for_bridge(resno))
+>                        pci_update_resource(dev, resno);
+>        }
+>        return ret;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 161f6c0..173b8fe 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -299,6 +299,7 @@ struct pci_dev {
+>         */
+>        unsigned int    irq;
+>        struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+> +       struct list_head addon_resources; /* addon I/O and memory resource */
+>
+>        /* These fields are used by common fixups */
+>        unsigned int    transparent:1;  /* Transparent PCI bridge */
+> @@ -347,6 +348,76 @@ struct pci_dev {
+>  #endif
+>  };
+>
+> +struct resource_ops {
+> +       int (*read)(struct pci_dev *dev, struct resource *res, int addr);
+> +       int (*write)(struct pci_dev *dev, struct resource *res, int addr);
+> +};
+> +
+> +struct pci_dev_addon_resource {
+> +       struct list_head list;
+> +       int reg_addr;
+> +       int size;
+> +       struct resource res;
+> +       struct resource_ops *ops;
+> +};
+> +#define        to_pci_dev_addon_resource(n) container_of(n, struct pci_dev_addon_resource, res)
+> +
+> +struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
+> +int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
+> +struct pci_dev_addon_resource *add_pci_dev_addon_fixed_resource(
+> +                struct pci_dev *dev, int start, int size, int flags,
+> +                int addr, char *name);
+> +struct pci_dev_addon_resource *add_pci_dev_addon_resource(struct pci_dev *dev,
+> +                int addr, int size, struct resource_ops *ops, char *name);
+> +
+> +#define resno_is_for_bridge(n) ((n)>=PCI_BRIDGE_RESOURCES && (n)<=PCI_BRIDGE_RESOURCE_END)
+> +
+> +/* all (include bridge) resources */
+> +#define for_each_pci_dev_all_resource(dev, res, i)                     \
+> +       for (i = 0;                                                     \
+> +            (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
+> +            i++)
+> +/* exclude bridge resources */
+> +#define for_each_pci_dev_nobridge_resource(dev, res, i)                        \
+> +       for (i = 0;                                                     \
+> +            (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
+> +            i = (i != (PCI_BRIDGE_RESOURCES - 1)) ? (i+1) : PCI_NUM_RESOURCES)
+> +/* exclude bridge and IOV resources */
+> +#define for_each_pci_dev_base_resource(dev, res, i)                    \
+> +       for (i = 0;                                                     \
+> +            (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
+> +            i = (i != PCI_ROM_RESOURCE) ? (i+1) : PCI_NUM_RESOURCES)
+> +/* exclude ROM and bridge and IOV resources */
+> +#define for_each_pci_dev_base_norom_resource(dev, res, i)              \
+> +       for (i = 0;                                                     \
+> +            (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
+> +            i = (i != (PCI_ROM_RESOURCE-1)) ? (i+1) : PCI_NUM_RESOURCES)
+> +/* exclude IOV resources */
+> +#define for_each_pci_dev_noiov_resource(dev, res, i)                   \
+> +       for (i = 0;                                                     \
+> +            (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
+> +            i = (i != PCI_ROM_RESOURCE) ? (i+1) : PCI_BRIDGE_RESOURCES)
+> +/* only std resources */
+> +#define for_each_pci_dev_std_resource(dev, res, i)                     \
+> +       for (i = PCI_STD_RESOURCES;                                     \
+> +          (res = pci_dev_resource_n(dev, i)) && i < (PCI_STD_RESOURCE_END+1); \
+> +            i++)
+> +/* only IOV resources */
+> +#define for_each_pci_dev_iov_resource(dev, res, i)                     \
+> +       for (i = PCI_IOV_RESOURCES;                                     \
+> +          (res = pci_dev_resource_n(dev, i)) && i < (PCI_IOV_RESOURCE_END+1); \
+> +            i++)
+> +/* only bridge resources */
+> +#define for_each_pci_dev_bridge_resource(dev, res, i)                  \
+> +       for (i = PCI_BRIDGE_RESOURCES;                                  \
+> +       (res = pci_dev_resource_n(dev, i)) && i < (PCI_BRIDGE_RESOURCE_END+1); \
+> +            i++)
+> +/* only addon resources */
+> +#define for_each_pci_dev_addon_resource(dev, res, i)                   \
+> +       for (i = PCI_NUM_RESOURCES;                                     \
+> +            (res = pci_dev_resource_n(dev, i));                        \
+> +            i++)
+> +
+>  static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+>  {
+>  #ifdef CONFIG_PCI_IOV
+> @@ -1348,9 +1419,9 @@ static inline int pci_domain_nr(struct pci_bus *bus)
+>
+>  /* these helpers provide future and backwards compatibility
+>  * for accessing popular PCI BAR info */
+> -#define pci_resource_start(dev, bar)   ((dev)->resource[(bar)].start)
+> -#define pci_resource_end(dev, bar)     ((dev)->resource[(bar)].end)
+> -#define pci_resource_flags(dev, bar)   ((dev)->resource[(bar)].flags)
+> +#define pci_resource_start(dev, bar)   (pci_dev_resource_n(dev, (bar))->start)
+> +#define pci_resource_end(dev, bar)     (pci_dev_resource_n(dev, (bar))->end)
+> +#define pci_resource_flags(dev, bar)   (pci_dev_resource_n(dev, (bar))->flags)
+>  #define pci_resource_len(dev,bar) \
+>        ((pci_resource_start((dev), (bar)) == 0 &&      \
+>          pci_resource_end((dev), (bar)) ==             \
+> --
+> 1.7.7
+>
