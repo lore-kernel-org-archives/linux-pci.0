@@ -1,102 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:55703 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019Ab2CIGh5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 01:37:57 -0500
-Date: Fri, 9 Mar 2012 07:37:40 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 09/11] ARM: tegra: Rewrite PCIe support as a driver
-Message-ID: <20120309063739.GC25208@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-10-git-send-email-thierry.reding@avionic-design.de>
- <4F5911E0.6060802@wwwdotorg.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="uh9ZiVrAOUUm9fzH"
-In-Reply-To: <4F5911E0.6060802@wwwdotorg.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20120313081235.GC15333@redhat.com>
+References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
+ <20120313081235.GC15333@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 15 Mar 2012 15:08:43 -0600
+Message-ID: <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
+Subject: Re: Initializing iwl3945 error
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Mar 13, 2012 at 2:12 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Sun, Mar 11, 2012 at 05:43:26PM +0000, Kamil Grzebien wrote:
+>> I've initialisation problem with my iwl3945 network card in Dell XPS
+>> M1530 laptop. The issue is known and described in couple of bug
+>> reports (eg. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143).
+>> There are workarounds but I'd like to solve the problem permanently.
+>> Basically when initializing I get:
+>>
+>> iwl3945 0000:0b:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+>> iwl3945 0000:0b:00.0: setting latency timer to 64
+>> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+>> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+>> ....
+>> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+>> iwl3945 0000:0b:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
+>> iwl3945 0000:0b:00.0: EEPROM not found, EEPROM_GP=0xffffffff
+> It's worth to mansion that this problem happen after wakeup from suspend
+> to ram.
+>
+>> 1. Driver can't initialize card as all ioread32/iowrite32 seems to not
+>> do their job. All reads finalize with 0xffffffff.
+>>
+>> However I can see that:
+>> - pci_iomap(pdev, 0, 0) doesn't return error,
+>> - pci_resource_start(pdev, 0) seems gives correct address (I can
+>> compare it with the one I can see in /proc/iomem).
+>>
+>> If I access the memory directly, not by mapping, I can write and read
+>> pci memory but driver load fails anyway. I don't understand why can't
+>> access using mapped memory.
+> How do you access memory directly ?
+>
+>> 2. If I check BASE_ADDRESS with setpci it doesn't give correct values:
+>>
+>> # setpci -v -s 0b:00.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+>> 0000:0b:00.0 @10 = 00000000
+>> 0000:0b:00.0 @14 = 00000000
+>>
+>> Not sure if it's done by driver itself or it should point correct
+>> values even if the driver wasn't fully loaded.
+>>
+>> Have you got any idea of:
+>> - why IO memory isn't accessible? what could cause that?
+>> - how APIC could change the load process in this particular case? (if
+>> I boot with noapic kernel option it usually works fine)
+> Is this really noapic or maybe noacpi ? ACPI manage PCIe devices.
+>
+>> This issue is reproducible in 100% on my system when I turn on the
+>> machine. It doesn't occur after some work on it. I'd be very happy to
+>> get rid of the issue.
+>>
+>> Could you point some ideas that might be worth checking in driver or
+>> kernel please? I've tried couple of ideas but none worked for me.
+>
+> Would be good to check if pcie bridge is configured correctly after
+> suspend to ram. But I don't know how to do this, that's why we are
+> on linux-pci mailing list :-)
+>
+> Note we have similar bug report, which was actual regression and
+> that problem is already fixed by PCI patch:
+> http://marc.info/?l=linux-kernel&m=132577331232330&w=2
 
---uh9ZiVrAOUUm9fzH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The bug report (http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143)
+has a lot of logs, but they're pretty old and I can't tell how
+applicable they are to your situation.
 
-* Stephen Warren wrote:
-> On 03/08/2012 07:51 AM, Thierry Reding wrote:
-> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
->=20
-> Patch description?
+It would be useful to see a complete dmesg log, /proc/iomem, and
+"lspci -vv" output from your machine after the problem occurs, and
+also the same information when it works (when using the noapic flag).
 
-I actually sat in front of the editor for a couple of minutes and I just
-couldn't think of anything. I'll try harder for the next version.
-
-> > diff --git a/arch/arm/mach-tegra/board-harmony-pcie.c b/arch/arm/mach-t=
-egra/board-harmony-pcie.c
-> ...
-> > -static int __init harmony_pcie_init(void)
-> > +static int tegra_pcie_init(struct platform_device *pdev)
->=20
-> That name should probably still be called harmony_something() since it's
-> still board-specific.
-
-Okay, I'll rename it to harmony_pcie_init().
-
-> I wonder how having a per-board callback will integrate with device
-> tree. I guess I'll find out when I review patch 11:-)
->=20
-> > diff --git a/arch/arm/mach-tegra/board-trimslice.c b/arch/arm/mach-tegr=
-a/board-trimslice.c
->=20
-> > +static int __init trimslice_pci_init(void)
-> >  {
-> >  	if (!machine_is_trimslice())
-> >  		return 0;
->=20
-> You can remove that test now.
-
-Okay.
-
-> > diff --git a/arch/arm/mach-tegra/board.h b/arch/arm/mach-tegra/board.h
->=20
-> > +#define TEGRA_PCIE_MAX_PORTS 2
-> > +
-> > +struct tegra_pcie_pdata {
-> > +	int (*init)(struct platform_device *pdev);
-> > +	int (*exit)(struct platform_device *pdev);
-> > +	bool enable_ports[TEGRA_PCIE_MAX_PORTS];
-> > +};
->=20
-> That's a somewhat odd place to put the header; a dedicated
-> mach-tegra/include/mach/tegra_pcie_pdata.h or
-> include/linux/platform_data/tegra_pcie.h might make more sense.
-
-mach-tegra/include/mach/pcie.h perhaps? That would be less redundant.
-
-Thierry
-
---uh9ZiVrAOUUm9fzH
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9ZpTMACgkQZ+BJyKLjJp/pSwCfdVVc3xBYZSgaFzcanO8KldvB
-K1oAoI0BXl/hmtAwRf8YgxPKSxKK+Gf9
-=F9LR
------END PGP SIGNATURE-----
-
---uh9ZiVrAOUUm9fzH--
+Bjorn
