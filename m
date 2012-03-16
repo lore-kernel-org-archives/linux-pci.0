@@ -1,327 +1,85 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v3 31/34] PCI: collapse pcibios_resource_to_bus
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 07 Mar 2012 15:34:42 -0700
-Message-ID: <20120307223442.25669.78431.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:50668 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753402Ab2CPRtl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Mar 2012 13:49:41 -0400
+Date: Fri, 16 Mar 2012 10:49:34 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Tom Goetz <tom.goetz@virtualcomputer.com>
+Cc: linux-usb@vger.kernel.org, xen-devel@lists.xen.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: xHCI not waking up from D3 after S3 Resume on Ivybridge
+Message-ID: <20120316174934.GC6077@xanatos>
+References: <loom.20120312T142127-400@post.gmane.org>
+ <20120313211859.GA16020@xanatos>
+ <567DD8FC-9951-4EE3-BA65-51736CD141F8@virtualcomputer.com>
+ <20120314165715.GA19308@xanatos>
+ <0477B653-4ECF-4D24-A87E-7A2786F4A34B@virtualcomputer.com>
+ <C5DCD920-A72C-40B4-B616-DA952FB5B00F@virtualcomputer.com>
+ <6A33BBC0-83E3-4D4E-94C5-9594DF32AF97@virtualcomputer.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6A33BBC0-83E3-4D4E-94C5-9594DF32AF97@virtualcomputer.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Everybody uses the generic pcibios_resource_to_bus() supplied by the core
-now, so remove the ARCH_HAS_GENERIC_PCI_OFFSETS used during conversion.
+Cross posting to the linux-acpi and linux-pci list for help.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/alpha/include/asm/pci.h      |    2 --
- arch/arm/include/asm/pci.h        |    2 --
- arch/ia64/include/asm/pci.h       |    2 --
- arch/microblaze/include/asm/pci.h |    2 --
- arch/mips/include/asm/pci.h       |    2 --
- arch/mn10300/include/asm/pci.h    |    2 --
- arch/parisc/include/asm/pci.h     |    2 --
- arch/powerpc/include/asm/pci.h    |    2 --
- arch/sh/include/asm/pci.h         |    2 --
- arch/sparc/include/asm/pci_32.h   |    2 --
- arch/sparc/include/asm/pci_64.h   |    2 --
- drivers/pci/probe.c               |   44 +++++++++++++------------------------
- include/asm-generic/pci.h         |    2 --
- 13 files changed, 15 insertions(+), 53 deletions(-)
+Summary:  After an Ivy Bridge laptop is resumed from S3 and the USB 3.0
+host controller is in D3, under Xen, the host controller will never come
+out of D3 to report a USB device connection.  The same laptop with a
+standard Ubuntu install with the same 3.2.11 kernel works fine.
 
-diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
-index 121c797..d01afb7 100644
---- a/arch/alpha/include/asm/pci.h
-+++ b/arch/alpha/include/asm/pci.h
-@@ -100,8 +100,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- 	return channel ? 15 : 14;
- }
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- #define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
- 
- static inline int pci_proc_domain(struct pci_bus *bus)
-diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
-index 4748a75..a98a2e1 100644
---- a/arch/arm/include/asm/pci.h
-+++ b/arch/arm/include/asm/pci.h
-@@ -57,8 +57,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-                                enum pci_mmap_state mmap_state, int write_combine);
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- /*
-  * Dummy implementation; always return 0.
-  */
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 519bb5c..b22e5f5 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -108,8 +108,6 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- 	return (pci_domain_nr(bus) != 0);
- }
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- static inline struct resource *
- pcibios_select_root(struct pci_dev *pdev, struct resource *res)
- {
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index 8db01f7..a0da88b 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -94,8 +94,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
-  */
- #define PCI_DMA_BUS_IS_PHYS     (1)
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- static inline struct resource *pcibios_select_root(struct pci_dev *pdev,
- 			struct resource *res)
- {
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index 6420e8d..fcd4060 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -113,8 +113,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- }
- #endif
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- #define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
- 
- static inline int pci_proc_domain(struct pci_bus *bus)
-diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
-index dfe1581..8137c25 100644
---- a/arch/mn10300/include/asm/pci.h
-+++ b/arch/mn10300/include/asm/pci.h
-@@ -85,8 +85,6 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- /* implement the pci_ DMA API in terms of the generic device dma_ one */
- #include <asm-generic/pci-dma-compat.h>
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- static inline struct resource *
- pcibios_select_root(struct pci_dev *pdev, struct resource *res)
- {
-diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
-index a8b591f..3234f49 100644
---- a/arch/parisc/include/asm/pci.h
-+++ b/arch/parisc/include/asm/pci.h
-@@ -215,8 +215,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- }
- #endif
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- static inline void pcibios_penalize_isa_irq(int irq, int active)
- {
- 	/* We don't need to penalize isa irq's */
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 21fbeeb..6653f27 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -154,8 +154,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- 
- #endif /* CONFIG_PPC64 */
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- extern void pcibios_claim_one_bus(struct pci_bus *b);
- 
- extern void pcibios_finish_adding_to_bus(struct pci_bus *bus);
-diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
-index 3b5b6ab..bff96c2 100644
---- a/arch/sh/include/asm/pci.h
-+++ b/arch/sh/include/asm/pci.h
-@@ -114,8 +114,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- /* Board-specific fixup routines. */
- int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- #define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
- 
- static inline int pci_proc_domain(struct pci_bus *bus)
-diff --git a/arch/sparc/include/asm/pci_32.h b/arch/sparc/include/asm/pci_32.h
-index 6384f30..dc50329 100644
---- a/arch/sparc/include/asm/pci_32.h
-+++ b/arch/sparc/include/asm/pci_32.h
-@@ -52,8 +52,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
-  * 64Kbytes by the Host controller.
-  */
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
- 	return PCI_IRQ_NONE;
-diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
-index 2918bd1..1633b71 100644
---- a/arch/sparc/include/asm/pci_64.h
-+++ b/arch/sparc/include/asm/pci_64.h
-@@ -73,8 +73,6 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			       enum pci_mmap_state mmap_state,
- 			       int write_combine);
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
- 	return PCI_IRQ_NONE;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 13fec71..d181e48 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -66,8 +66,8 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
- 	return res1->start <= res2->start && res1->end >= res2->end;
- }
- 
--void pci_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			struct resource *res)
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res)
- {
- 	struct pci_host_bridge *bridge = pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
-@@ -86,6 +86,7 @@ void pci_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 	region->start = res->start - offset;
- 	region->end = res->end - offset;
- }
-+EXPORT_SYMBOL(pcibios_resource_to_bus);
- 
- static bool region_contains(struct pci_bus_region *region1,
- 			    struct pci_bus_region *region2)
-@@ -93,8 +94,8 @@ static bool region_contains(struct pci_bus_region *region1,
- 	return region1->start <= region2->start && region1->end >= region2->end;
- }
- 
--void pci_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			 struct pci_bus_region *region)
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region)
- {
- 	struct pci_host_bridge *bridge = pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
-@@ -117,22 +118,7 @@ void pci_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 	res->start = region->start + offset;
- 	res->end = region->end + offset;
- }
--
--#ifdef ARCH_HAS_GENERIC_PCI_OFFSETS
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	pci_resource_to_bus(dev, region, res);
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	pci_bus_to_resource(dev, res, region);
--}
- EXPORT_SYMBOL(pcibios_bus_to_resource);
--#endif
- 
- /*
-  * PCI Bus Class
-@@ -309,11 +295,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			pci_write_config_dword(dev, pos + 4, 0);
- 			region.start = 0;
- 			region.end = sz64;
--			pci_bus_to_resource(dev, res, &region);
-+			pcibios_bus_to_resource(dev, res, &region);
- 		} else {
- 			region.start = l64;
- 			region.end = l64 + sz64;
--			pci_bus_to_resource(dev, res, &region);
-+			pcibios_bus_to_resource(dev, res, &region);
- 			dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n",
- 				   pos, res);
- 		}
-@@ -325,7 +311,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 
- 		region.start = l;
- 		region.end = l + sz;
--		pci_bus_to_resource(dev, res, &region);
-+		pcibios_bus_to_resource(dev, res, &region);
- 
- 		dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n", pos, res);
- 	}
-@@ -384,7 +370,7 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
- 		res2.flags = res->flags;
- 		region.start = base;
- 		region.end = limit + 0xfff;
--		pci_bus_to_resource(dev, &res2, &region);
-+		pcibios_bus_to_resource(dev, &res2, &region);
- 		if (!res->start)
- 			res->start = res2.start;
- 		if (!res->end)
-@@ -410,7 +396,7 @@ static void __devinit pci_read_bridge_mmio(struct pci_bus *child)
- 		res->flags = (mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) | IORESOURCE_MEM;
- 		region.start = base;
- 		region.end = limit + 0xfffff;
--		pci_bus_to_resource(dev, res, &region);
-+		pcibios_bus_to_resource(dev, res, &region);
- 		dev_printk(KERN_DEBUG, &dev->dev, "  bridge window %pR\n", res);
- 	}
- }
-@@ -459,7 +445,7 @@ static void __devinit pci_read_bridge_mmio_pref(struct pci_bus *child)
- 			res->flags |= IORESOURCE_MEM_64;
- 		region.start = base;
- 		region.end = limit + 0xfffff;
--		pci_bus_to_resource(dev, res, &region);
-+		pcibios_bus_to_resource(dev, res, &region);
- 		dev_printk(KERN_DEBUG, &dev->dev, "  bridge window %pR\n", res);
- 	}
- }
-@@ -1072,24 +1058,24 @@ int pci_setup_device(struct pci_dev *dev)
- 				region.end = 0x1F7;
- 				res = &dev->resource[0];
- 				res->flags = LEGACY_IO_RESOURCE;
--				pci_bus_to_resource(dev, res, &region);
-+				pcibios_bus_to_resource(dev, res, &region);
- 				region.start = 0x3F6;
- 				region.end = 0x3F6;
- 				res = &dev->resource[1];
- 				res->flags = LEGACY_IO_RESOURCE;
--				pci_bus_to_resource(dev, res, &region);
-+				pcibios_bus_to_resource(dev, res, &region);
- 			}
- 			if ((progif & 4) == 0) {
- 				region.start = 0x170;
- 				region.end = 0x177;
- 				res = &dev->resource[2];
- 				res->flags = LEGACY_IO_RESOURCE;
--				pci_bus_to_resource(dev, res, &region);
-+				pcibios_bus_to_resource(dev, res, &region);
- 				region.start = 0x376;
- 				region.end = 0x376;
- 				res = &dev->resource[3];
- 				res->flags = LEGACY_IO_RESOURCE;
--				pci_bus_to_resource(dev, res, &region);
-+				pcibios_bus_to_resource(dev, res, &region);
- 			}
- 		}
- 		break;
-diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-index 0410346..e80a049 100644
---- a/include/asm-generic/pci.h
-+++ b/include/asm-generic/pci.h
-@@ -6,8 +6,6 @@
- #ifndef _ASM_GENERIC_PCI_H
- #define _ASM_GENERIC_PCI_H
- 
--#define ARCH_HAS_GENERIC_PCI_OFFSETS
--
- static inline struct resource *
- pcibios_select_root(struct pci_dev *pdev, struct resource *res)
- {
+I'm not sure what to make of the ACPI details about wakeup events being
+routed to e1000e instead of the xHCI host.  Can someone help out here?
 
+On Thu, Mar 15, 2012 at 04:25:45PM -0400, Tom Goetz wrote:
+> On Mar 15, 2012, at 10:35 AM, Tom Goetz wrote:
+> > On Mar 14, 2012, at 1:46 PM, Tom Goetz wrote:
+> >> On Mar 14, 2012, at 12:57 PM, Sarah Sharp wrote:
+> >>> On Wed, Mar 14, 2012 at 09:52:28AM -0400, Tom Goetz wrote:
+> >>>>> Why were you posting there in particular?  You're much more
+> >>>>> likely to get your USB questions answered on this mailing list.
+> >>>>> :)
+> >>>> 
+> >>>> I'm concerned that this may be a bug in the Xen PVOPs MSI code.
+> >>>> To that end I've posted updates on xen-devel here:
+> >>>> 
+> >>>> http://lists.xen.org/archives/html/xen-devel/2012-03/msg00904.html
+> >>>> http://lists.xen.org/archives/html/xen-devel/2012-03/msg00727.html
+> >>>> http://lists.xen.org/archives/html/xen-devel/2012-03/msg00978.html
+> >>> 
+> >>> Does the xHCI host work fine without Xen?  I.e. running Linux
+> >>> directly as the host OS, suspending, resuming, and then plugging
+> >>> in a device?
+> >> 
+> >> It works in Ubuntu 12.04 Beta 1 with Linux 3.2.0. So it's either
+> >> broken between 3.2.0 and 3.2.5 or it's broken in Xen. I haven't
+> >> made a direct comparison yet. I'm putting Ubuntu on my SDP now to
+> >> test that.
+> > 
+> > xHCI wakes up from D3 on the SDP with Ubuntu 12.04 Beta 1 and
+> > 3.2.11. This fails with the same 3.2.11 kernel and Xen. So the
+> > problem is Xen related.
+> 
+> Another update.
+> 
+> On the Ivybridge laptop, xHCI is not waking up because when I plug a
+> device into a xHCI port the ACPI wakeup events are going to the
+> e1000e. Pre S3, it eventually gets a interrupt from the device that
+> wakes it up. Post S3 it never gets an interrupt from the device.
+> 
+> On the SDP, I get ACPI wake up calls for the xHCI before S3, but not
+> after. Both cases work with out Xen. I'm assuming Xen/PVOPs is leaving
+> the device in a state the causes the ACPI wake up events to be masked.
+> Can you tell me what what state that could be? I can look at
+> decompiling the ASL to find out, but that's not my first choice.
+> Toggling the power policy (auto->on->auto) does not fix delivery of
+> ACPI wake up events for this device. I am still getting ACPI wake ups
+> for the e1000e, so it's not all wake ups that are blocked.
+> 
+> Thanks for any help.
+> 
+> -Tom-- To unsubscribe from this list: send the line "unsubscribe
+> linux-usb" in the body of a message to majordomo@vger.kernel.org More
+> majordomo info at  http://vger.kernel.org/majordomo-info.html
