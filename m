@@ -1,64 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30770 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161488Ab2CSFsE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:04 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 25/47] Fix an access-after-free issue in function pci_stop_and_remove_bus()
-Date: Sun, 18 Mar 2012 22:46:14 -0700
-Message-Id: <1332135996-13860-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:51086 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946304Ab2CPXsF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:48:05 -0400
+Received: by mail-fa0-f74.google.com with SMTP id a19so214757faa.1
+        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:48:05 -0700 (PDT)
+Subject: [PATCH v2 2/7] arm/PCI: don't export pci_flags
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Rob Herring <rob.herring@calxeda.com>
+Date: Fri, 16 Mar 2012 17:48:04 -0600
+Message-ID: <20120316234804.6649.3554.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+There's no need to export pci_flags; it's not exported by any other
+architecture, and no modules reference it.
 
-If pci_stop_and_remove_bus() is called to remove a pci root bus,
-the host_bridge structure may have already been freed after returning
-from pci_remove_bus(). To avoid that, hold an extra reference count
-to the root bus before calling pci_remove_bus(), so we can safely
-access the pci_host_bridge structure after returning from function
-pci_remove_bus().
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+CC: Rob Herring <rob.herring@calxeda.com>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: linux-arm-kernel@lists.infradead.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/remove.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ arch/arm/kernel/bios32.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 75b0092..18efb31 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -186,6 +186,7 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index be5d3b2..632df9a 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -498,7 +498,6 @@ void __init pci_common_init(struct hw_pci *hw)
+ 		pci_bus_add_devices(bus);
+ 	}
+ }
+-EXPORT_SYMBOL(pci_flags);
  
- 	if (pci_is_root_bus(bus)) {
- 		host_bridge = to_pci_host_bridge(bus->bridge);
-+		get_device(&host_bridge->dev);
- 		pci_stop_host_bridge(host_bridge);
- 	} else
- 		pci_bridge = bus->self;
-@@ -194,8 +195,10 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
- 
- 	pci_remove_bus(bus);
- 
--	if (host_bridge)
-+	if (host_bridge) {
- 		host_bridge->bus = NULL;
-+		put_device(&host_bridge->dev);
-+	}
- 
- 	if (pci_bridge)
- 		pci_bridge->subordinate = NULL;
--- 
-1.7.7
+ #ifndef CONFIG_PCI_HOST_ITE8152
+ void pcibios_set_master(struct pci_dev *dev)
 
