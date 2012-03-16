@@ -1,98 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 18/47] x86, PCI: Let pcibios_allocate_bus_resources() take bus instead
-Date: Sun, 18 Mar 2012 22:46:07 -0700
-Message-Id: <1332135996-13860-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:44312 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946331Ab2CPXsL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:48:11 -0400
+Received: by yenq2 with SMTP id q2so763302yen.1
+        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:48:09 -0700 (PDT)
+Subject: [PATCH v2 3/7] powerpc/PCI: compute I/O space bus-to-resource offset
+	consistently
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 16 Mar 2012 17:48:09 -0600
+Message-ID: <20120316234809.6649.97788.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will need call the same code for one single root bus during hot add.
-So try to make it take bus instead of bus_list.
+Make sure we compute CPU addresses (resource start/end) the same way both
+when we set up the I/O aperture (hose->io_resource) and when we use
+pcibios_bus_to_resource() to convert BAR values into resources.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+This fixes a build failure ("cast from pointer to integer of different
+size" in configs where resource_size_t is 64 bits but pointers are 32 bits)
+I introduced in 6c5705fec63d.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/pci/i386.c |   38 +++++++++++++++++++++++++-------------
- 1 files changed, 25 insertions(+), 13 deletions(-)
+ arch/powerpc/include/asm/pci.h   |    1 +
+ arch/powerpc/kernel/pci-common.c |    8 ++++++--
+ arch/powerpc/kernel/pci_32.c     |    6 +++---
+ arch/powerpc/kernel/pci_64.c     |    2 +-
+ 4 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index bb84ff0..cecb842 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -215,16 +215,15 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 	}
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 201e352..6653f27 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -182,6 +182,7 @@ extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 				 const struct resource *rsrc,
+ 				 resource_size_t *start, resource_size_t *end);
+ 
++extern resource_size_t pcibios_io_space_offset(struct pci_controller *hose);
+ extern void pcibios_setup_bus_devices(struct pci_bus *bus);
+ extern void pcibios_setup_bus_self(struct pci_bus *bus);
+ extern void pcibios_setup_phb_io_space(struct pci_controller *hose);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 910b9de..2efd52d 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1492,6 +1492,11 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return pci_enable_resources(dev, mask);
  }
  
--static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
-+static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
++resource_size_t pcibios_io_space_offset(struct pci_controller *hose)
++{
++	return (unsigned long) hose->io_base_virt - _IO_BASE;
++}
++
+ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, struct list_head *resources)
  {
--	struct pci_bus *bus;
-+	struct pci_bus *child;
+ 	struct resource *res;
+@@ -1516,8 +1521,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
+ 		 (unsigned long long)res->start,
+ 		 (unsigned long long)res->end,
+ 		 (unsigned long)res->flags);
+-	pci_add_resource_offset(resources, res,
+-			(resource_size_t) hose->io_base_virt - _IO_BASE);
++	pci_add_resource_offset(resources, res, pcibios_io_space_offset(hose));
  
- 	/* Depth-First Search on bus tree */
--	list_for_each_entry(bus, bus_list, node) {
--		if (bus->self)
--			pcibios_allocate_bridge_resources(bus->self);
--		pcibios_allocate_bus_resources(&bus->children);
--	}
-+	if (bus->self)
-+		pcibios_allocate_bridge_resources(bus->self);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcibios_allocate_bus_resources(child);
+ 	/* Hookup PHB Memory resources */
+ 	for (i = 0; i < 3; ++i) {
+diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
+index fdd1a3d..4b06ec5 100644
+--- a/arch/powerpc/kernel/pci_32.c
++++ b/arch/powerpc/kernel/pci_32.c
+@@ -219,9 +219,9 @@ void __devinit pcibios_setup_phb_io_space(struct pci_controller *hose)
+ 	struct resource *res = &hose->io_resource;
+ 
+ 	/* Fixup IO space offset */
+-	io_offset = (unsigned long)hose->io_base_virt - isa_io_base;
+-	res->start = (res->start + io_offset) & 0xffffffffu;
+-	res->end = (res->end + io_offset) & 0xffffffffu;
++	io_offset = pcibios_io_space_offset(hose);
++	res->start += io_offset;
++	res->end += io_offset;
  }
  
- struct pci_check_idx_range {
-@@ -285,12 +284,18 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 	}
- }
+ static int __init pcibios_init(void)
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index 75417fd..94a54f6 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -168,7 +168,7 @@ static int __devinit pcibios_map_phb_io_space(struct pci_controller *hose)
+ 		return -ENOMEM;
  
--static void __init pcibios_allocate_resources(int pass)
-+static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
- {
--	struct pci_dev *dev = NULL;
-+	struct pci_dev *dev;
-+	struct pci_bus *child;
+ 	/* Fixup hose IO resource */
+-	io_virt_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
++	io_virt_offset = pcibios_io_space_offset(hose);
+ 	hose->io_resource.start += io_virt_offset;
+ 	hose->io_resource.end += io_virt_offset;
  
--	for_each_pci_dev(dev)
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		pcibios_allocate_dev_resources(dev, pass);
-+
-+		child = dev->subordinate;
-+		if (child)
-+			pcibios_allocate_resources(child, pass);
-+	}
- }
- 
- static int __init pcibios_assign_resources(void)
-@@ -323,10 +328,17 @@ static int __init pcibios_assign_resources(void)
- 
- void __init pcibios_resource_survey(void)
- {
-+	struct pci_bus *bus;
-+
- 	DBG("PCI: Allocating resources\n");
--	pcibios_allocate_bus_resources(&pci_root_buses);
--	pcibios_allocate_resources(0);
--	pcibios_allocate_resources(1);
-+
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_bus_resources(bus);
-+
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_resources(bus, 0);
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_resources(bus, 1);
- 
- 	e820_reserve_resources_late();
- 	/*
--- 
-1.7.7
 
