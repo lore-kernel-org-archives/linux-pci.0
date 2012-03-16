@@ -1,101 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:51086 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946434Ab2CPXsB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:48:01 -0400
+Received: by faaa19 with SMTP id a19so214757faa.1
+        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:48:00 -0700 (PDT)
+Subject: [PATCH v2 1/7] PCI: fix bridge I/O window bus-to-resource conversion
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 16 Mar 2012 17:47:59 -0600
+Message-ID: <20120316234758.6649.22169.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6g3pei2+oW0wLEpytBTh6wGTyzo28oVVzFECxZdta+FA@mail.gmail.com>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-	<1331362837-10740-25-git-send-email-yinghai@kernel.org>
-	<CAErSpo6g3pei2+oW0wLEpytBTh6wGTyzo28oVVzFECxZdta+FA@mail.gmail.com>
-Date: Mon, 12 Mar 2012 23:06:42 -0700
-Message-ID: <CAE9FiQWfYxD2OAmXF5UdQMkPt33xeoSu489N6KtU3k5VE3jUXw@mail.gmail.com>
-Subject: Re: [PATCH v2 24/37] PCI, ACPI: Add pci_root_hp hot removal
- notification support.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2012 at 8:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> Add missing hot_remove support for root device.
->>
->> How to use it?
->> Find out root bus number to acpi root name mapping from dmesg or /sys
->>
->>  echo "\_SB.PCIB 3" > /proc/acpi/sci/notify
->> to remove root bus
->
-> Same comments as before: this is definitely NOT the way users should
-> use this.  If you want to do that for debugging the ACPI notification
-> path, fine, but the normal way is for the platform to generate this
-> notification.  I think the normal way for users to manually remove an
-> ACPI device should be something like:
->
->    echo 1 > /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove
->
-> just like we do for PCI devices.
+In 5bfa14ed9f3c, I forgot to initialize res2.flags before calling
+pcibios_bus_to_resource(), which depends on the resource type to locate the
+correct aperture.  This bug won't hurt x86, which currently never has an
+offset between bus and CPU addresses, but will affect other architectures.
 
-notify way looks more like really physical hotadd/remove.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-pci bus/remove and other is not really, because when you are using
-/sys, you may still need to hold
-one reference to bus or device.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 944e05a..5e1ca3c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -367,6 +367,7 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
+ 
+ 	if (base && base <= limit) {
+ 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
++		res2.flags = res->flags;
+ 		region.start = base;
+ 		region.end = limit + 0xfff;
+ 		pcibios_bus_to_resource(dev, &res2, &region);
 
->
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Len Brown <lenb@kernel.org>
->> Cc: linux-acpi@vger.kernel.org
->> ---
->>  drivers/acpi/pci_root_hp.c |   61 ++++++++++++++++++++++++++++++++++++++++++++
->>  1 files changed, 61 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
->> index dc11e81..f5585f5 100644
->> --- a/drivers/acpi/pci_root_hp.c
->> +++ b/drivers/acpi/pci_root_hp.c
->> @@ -73,6 +73,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
->>        list_add(&bridge->list, &acpi_root_bridge_list);
->>  }
->>
->> +static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
->> +{
->> +       list_del(&bridge->list);
->> +       kfree(bridge);
->> +}
->> +
->>  struct acpi_root_hp_work {
->>        struct work_struct work;
->>        acpi_handle handle;
->> @@ -142,6 +148,55 @@ static void handle_root_bridge_insertion(acpi_handle handle)
->>                printk(KERN_ERR "cannot start bridge\n");
->>  }
->>
->> +static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
->> +{
->> +       acpi_status status;
->> +       struct acpi_object_list arg_list;
->> +       union acpi_object arg;
->> +
->> +       arg_list.count = 1;
->> +       arg_list.pointer = &arg;
->> +       arg.type = ACPI_TYPE_INTEGER;
->> +       arg.integer.value = val;
->> +
->> +       status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
->> +       if (ACPI_FAILURE(status)) {
->> +               printk(KERN_WARNING "%s: %s to %d failed\n",
->> +                                __func__, cmd, val);
->> +               return -1;
->> +       }
->> +
->> +       return 0;
->
-> This function really has nothing to do with host bridges.  Are you
-> sure there's no generic function you can use instead?
-
-seems not.
