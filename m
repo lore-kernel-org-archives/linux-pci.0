@@ -1,68 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25658 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932177Ab2CJHCg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Mar 2012 02:02:36 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7JS6N3XzVm=_A-oFF_VpmuQaAG_KagxAOEzpEPnhRP_g@mail.gmail.com>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org>
+	<1330570837-26638-29-git-send-email-yinghai@kernel.org>
+	<CAErSpo7JS6N3XzVm=_A-oFF_VpmuQaAG_KagxAOEzpEPnhRP_g@mail.gmail.com>
+Date: Fri, 16 Mar 2012 13:42:16 -0700
+Message-ID: <CAE9FiQWPCZ-2Xjk2fHZfuQC1fm3WpR9BRbgb9RJCDe_KKEKvZQ@mail.gmail.com>
+Subject: Re: [PATCH 28/36] PCI: Add pci_bus_extend/shrink_top()
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 18/37] PCI: Use list_for_each_entry_safe instead of list_for_each_safe
-Date: Fri,  9 Mar 2012 23:00:18 -0800
-Message-Id: <1331362837-10740-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could skip using pci_dev_b().
+On Fri, Mar 16, 2012 at 12:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> I've objected to this before on the grounds that it's not safe to
+> update res->end because res is already linked into the resource tree,
+> but I just noticed another problem.
+>
+> Tree updates are protected by resource_lock, but we don't hold that
+> here.  I'm sure you "know" that this update can't race with any other
+> conflicting resource operations, but its safety certainly is not
+> obvious from the patch.
+>
+> I think a better implementation would be to add something like
+> "resource_extend()" that could live in kernel/resource.c so it could
+> do the appropriate locking and checking.  Such an interface could also
+> be independent of the resource type, which may be useful when doing
+> mem/io resource reassignment.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/remove.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+Thanks for point it out.
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 62c348c..d4fdf7b 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -113,15 +113,15 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- 
- static void __pci_remove_bus_devices(struct pci_bus *bus)
- {
--	struct list_head *l, *n;
-+	struct pci_dev *dev, *tmp;
- 
--	list_for_each_safe(l, n, &bus->devices)
--		__pci_remove_bus_device(pci_dev_b(l));
-+	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
-+		__pci_remove_bus_device(dev);
- }
- 
- static void pci_stop_bus_devices(struct pci_bus *bus)
- {
--	struct list_head *l, *n;
-+	struct pci_dev *dev, *tmp;
- 
- 	/*
- 	 * VFs could be removed by pci_stop_and_remove_bus_device() in the
-@@ -131,10 +131,8 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
- 	 * We can iterate the list backwards to get prev valid PF instead
- 	 *  of removed VF.
- 	 */
--	list_for_each_prev_safe(l, n, &bus->devices) {
--		struct pci_dev *dev = pci_dev_b(l);
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list)
- 		pci_stop_bus_device(dev);
--	}
- }
- 
- /**
--- 
-1.7.7
+Let me thinking about it.
 
+>
+> This patch is already in Jesse's linux-next branch (commit
+> c901d4c0407), so I'm leaving it up to you and Jesse to figure out
+> what, if anything, to do about this.
+
+No, this patch is one in busn_alloc patchset. Jesse did NOT pick that
+patchset yet.
+
+Yinghai
