@@ -1,47 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV8XsLZfZLLWsdkQ+EVvPV7Z70Xaz_utOcaDBU8hm4gpg@mail.gmail.com>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
- <1331362837-10740-25-git-send-email-yinghai@kernel.org> <CAErSpo6g3pei2+oW0wLEpytBTh6wGTyzo28oVVzFECxZdta+FA@mail.gmail.com>
- <CAE9FiQWfYxD2OAmXF5UdQMkPt33xeoSu489N6KtU3k5VE3jUXw@mail.gmail.com>
- <CAErSpo4KhQJOpKk8OOtcSxWc3wwkhLix8ECZhGtTnQ2WgQH7iw@mail.gmail.com> <CAE9FiQV8XsLZfZLLWsdkQ+EVvPV7Z70Xaz_utOcaDBU8hm4gpg@mail.gmail.com>
+In-Reply-To: <1330570837-26638-29-git-send-email-yinghai@kernel.org>
+References: <1330570837-26638-1-git-send-email-yinghai@kernel.org> <1330570837-26638-29-git-send-email-yinghai@kernel.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 15 Mar 2012 12:09:53 -0600
-Message-ID: <CAErSpo5ekRrLbs_53rvV4=7qKBucR0K-1hPqEHQG=Abau5A6XQ@mail.gmail.com>
-Subject: Re: [PATCH v2 24/37] PCI, ACPI: Add pci_root_hp hot removal
- notification support.
+Date: Fri, 16 Mar 2012 13:36:23 -0600
+Message-ID: <CAErSpo7JS6N3XzVm=_A-oFF_VpmuQaAG_KagxAOEzpEPnhRP_g@mail.gmail.com>
+Subject: Re: [PATCH 28/36] PCI: Add pci_bus_extend/shrink_top()
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+	linux-arch@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 15, 2012 at 12:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Mar 15, 2012 at 10:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Sure, the 'echo "\_SB.PCIB 3" > /proc/acpi/sci/notify' way looks more
->> like physical hotadd/remove because it is basically injecting the
->> notify event that the hardware/BIOS should be generating itself.  But
->> it is platform-specific and therefore unacceptable as a general user
->> interface.
->>
->> Using /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove would be a
->> more generic way.  The PNP0A08:00/remove implementation would
->> basically turn into an acpi_pci_root_remove() call, just like the
->> 'echo "\_SB.PCIB 3" > /proc/acpi/sci/notify' does.
+On Wed, Feb 29, 2012 at 8:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> extend or shrink bus and parent buses top (subordinate)
 >
-> if the users can not find _SB.PCIB etc, they may not find
-> LNXSYSTM:00/device:00/PNP0A08:00.
+> extended range is verified safe range, and stop at recorded parent_res.
 >
-> so /sys/class/pci_bus/0000:80/remove is more easy for them?
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/probe.c |   36 ++++++++++++++++++++++++++++++++++++
+>  1 files changed, 36 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 1c07aba..96259f8 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -655,6 +655,42 @@ static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
+>        }
+>  }
+>
+> +static void __devinit pci_bus_update_top(struct pci_bus *parent,
+> +                long size, struct resource *parent_res)
+> +{
+> +       struct resource *res;
+> +
+> +       if (!size)
+> +               return;
+> +
+> +       while (parent) {
+> +               res = &parent->busn_res;
+> +               if (res == parent_res)
+> +                       break;
+> +               res->end += size;
 
-I don't think so.  LNXSYSTM:00/... is the canonical machine
-description on x86.  I think there should probably be a link from the
-PCI device to the upstream bridge.  The upstream bridge could be
-either a P2P bridge or a host bridge.
+I've objected to this before on the grounds that it's not safe to
+update res->end because res is already linked into the resource tree,
+but I just noticed another problem.
+
+Tree updates are protected by resource_lock, but we don't hold that
+here.  I'm sure you "know" that this update can't race with any other
+conflicting resource operations, but its safety certainly is not
+obvious from the patch.
+
+I think a better implementation would be to add something like
+"resource_extend()" that could live in kernel/resource.c so it could
+do the appropriate locking and checking.  Such an interface could also
+be independent of the resource type, which may be useful when doing
+mem/io resource reassignment.
+
+This patch is already in Jesse's linux-next branch (commit
+c901d4c0407), so I'm leaving it up to you and Jesse to figure out
+what, if anything, to do about this.
 
 Bjorn
+
+> +               parent->subordinate += size;
+> +               pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
+> +                                        parent->subordinate);
+> +               dev_printk(KERN_DEBUG, &parent->dev,
+> +                               "busn_res: %s %02lx to %pR\n",
+> +                               (size > 0) ? "extended" : "shrunk",
+> +                               abs(size), res);
+> +               parent = parent->parent;
+> +       }
+> +}
+> +
+> +static void __devinit pci_bus_extend_top(struct pci_bus *parent,
+> +                long size, struct resource *parent_res)
+> +{
+> +       pci_bus_update_top(parent, size, parent_res);
+> +}
+> +
+> +static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
+> +                long size, struct resource *parent_res)
+> +{
+> +       pci_bus_update_top(parent, -size, parent_res);
+> +}
+> +
+>  /*
+>  * If it's a bridge, configure it and scan the bus behind it.
+>  * For CardBus bridges, we don't scan behind as the devices will
+> --
+> 1.7.7
+>
