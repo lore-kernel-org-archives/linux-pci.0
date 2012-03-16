@@ -1,77 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 45/47] x86, PCI: Add pcibios_root_rescan()
-Date: Sun, 18 Mar 2012 22:46:34 -0700
-Message-Id: <1332135996-13860-46-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from void.printf.net ([89.145.121.20]:50581 "EHLO void.printf.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965275Ab2CPDl7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Mar 2012 23:41:59 -0400
+From: Chris Ball <cjb@laptop.org>
+To: Alexander Stein <alexander.stein@systec-electronic.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/3] mmc: sdhci-pci: Add MSI support
+References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com>
+Date: Thu, 15 Mar 2012 23:41:37 -0400
+In-Reply-To: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com>
+	(Alexander Stein's message of "Tue, 13 Mar 2012 18:16:40 +0100")
+Message-ID: <87ty1pb4b2.fsf@laptop.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Need use it to rescan root bus that was not added via acpi probe.
+Hi Alexander,
 
--v2: add pcibios_resource_survey_bus() calling...
+On Tue, Mar 13 2012, Alexander Stein wrote:
+> Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
+> ---
+>  drivers/mmc/host/sdhci-pci.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/mmc/host/sdhci-pci.c b/drivers/mmc/host/sdhci-pci.c
+> index 7165e6a..9382f27 100644
+> --- a/drivers/mmc/host/sdhci-pci.c
+> +++ b/drivers/mmc/host/sdhci-pci.c
+> @@ -1379,6 +1379,8 @@ static int __devinit sdhci_pci_probe(struct pci_dev *pdev,
+>  
+>  	slots = chip->num_slots;	/* Quirk may have changed this */
+>  
+> +	pci_enable_msi(pdev);
+> +
+>  	for (i = 0; i < slots; i++) {
+>  		slot = sdhci_pci_probe_slot(pdev, chip, first_bar, i);
+>  		if (IS_ERR(slot)) {
+> @@ -1397,6 +1399,8 @@ static int __devinit sdhci_pci_probe(struct pci_dev *pdev,
+>  	return 0;
+>  
+>  free:
+> +	pci_disable_msi(pdev);
+> +
+>  	pci_set_drvdata(pdev, NULL);
+>  	kfree(chip);
+>  
+> @@ -1419,6 +1423,8 @@ static void __devexit sdhci_pci_remove(struct pci_dev *pdev)
+>  		for (i = 0; i < chip->num_slots; i++)
+>  			sdhci_pci_remove_slot(chip->slots[i]);
+>  
+> +		pci_disable_msi(pdev);
+> +
+>  		pci_set_drvdata(pdev, NULL);
+>  		kfree(chip);
+>  	}
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/include/asm/pci.h |    2 ++
- arch/x86/pci/legacy.c      |   26 ++++++++++++++++++++++++++
- 2 files changed, 28 insertions(+), 0 deletions(-)
+Thanks, I've merged all three patches to mmc-next for 3.4, using v2 of
+patches 2 and 3, and adding Adrian's ACK to patch 2.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index bb015c7..332c191 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -30,6 +30,8 @@ extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 					    int node);
- extern struct pci_bus *pci_scan_bus_with_sysdata(int busno);
- 
-+void pcibios_root_rescan(void);
-+
- #ifdef CONFIG_PCI
- 
- #ifdef CONFIG_PCI_DOMAINS
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index aab0e41..8b6048a 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -79,3 +79,29 @@ int __init pci_subsys_init(void)
- 	return 0;
- }
- subsys_initcall(pci_subsys_init);
-+
-+void __ref pcibios_root_rescan(void)
-+{
-+	int busn;
-+	struct pci_bus *bus;
-+
-+	if (pcibios_last_bus <= 0 || pcibios_last_bus > 0xff)
-+		return;
-+
-+	for (busn = 0; busn <= pcibios_last_bus; busn++) {
-+		bus = pci_find_bus(0, busn);
-+
-+		if (bus)
-+			continue;
-+
-+		bus = __pcibios_scan_specific_bus(busn, false);
-+
-+		if (!bus)
-+			continue;
-+
-+		pcibios_resource_survey_bus(bus);
-+		pci_assign_unassigned_bus_resources(bus);
-+
-+		pci_bus_add_devices(bus);
-+	}
-+}
+- Chris.
 -- 
-1.7.7
-
+Chris Ball   <cjb@laptop.org>   <http://printf.net/>
+One Laptop Per Child
