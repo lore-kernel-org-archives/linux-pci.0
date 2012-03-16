@@ -1,134 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webbox1416.server-home.net ([77.236.96.61]:57005 "EHLO
-	webbox1416.server-home.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751673Ab2CNHxH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Mar 2012 03:53:07 -0400
-From: Alexander Stein <alexander.stein@systec-electronic.com>
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Chris Ball <cjb@laptop.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] mmc: sdhci: check interrupt flags in ISR again
-Date: Wed, 14 Mar 2012 08:53:05 +0100
-Message-ID: <1994979.AaWWmIIAYQ@ws-stein>
-In-Reply-To: <4F604B16.606@intel.com>
-References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com> <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com> <4F604B16.606@intel.com>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:51086 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946291Ab2CPXsQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:48:16 -0400
+Received: by mail-fa0-f74.google.com with SMTP id a19so214757faa.1
+        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:48:15 -0700 (PDT)
+Subject: [PATCH v2 4/7] powerpc/PCI: convert devtree bus addresses to resource
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Anton Blanchard <anton@samba.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Fri, 16 Mar 2012 17:48:14 -0600
+Message-ID: <20120316234814.6649.47469.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Normal PCI enumeration via PCI config space uses __pci_read_base(), where
+the PCI core applies any bus-to-resource offset.  But powerpc doesn't use
+that path when enumerating via the device tree.
 
-Am Mittwoch, 14. März 2012, 09:39:02 schrieb Adrian Hunter:
-> On 13/03/12 19:16, Alexander Stein wrote:
-> > When using MSI it is possible that a new MSI is sent while an earlier
-> > MSI is currently handled. In this case SDHCI_INT_STATUS only contains
-> > SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
-> > of the ISR SDHCI_INT_DATA_END is now also pending which would be
-> > ignored.
-> > 
-> > Fix this by rereading the interrupt flags in the ISR until no interrupt
-> > we care is pending.
-> > 
-> > Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
-> [...]
-> > @@ -2336,6 +2338,14 @@ static irqreturn_t sdhci_irq(int irq, void
-> > *dev_id)> 
-> >  		sdhci_writel(host, SDHCI_INT_BUS_POWER, SDHCI_INT_STATUS);
-> >  	
-> >  	}
-> > 
-> > +	intmask_unhandled = intmask;
-> > +
-> > +	intmask = sdhci_readl(host, SDHCI_INT_STATUS);
-> > +
-> > +	/* Do interrupt handling again if we got new flags */
-> > +	if (intmask & ~intmask_unhandled)
-> > +		goto again;
-> > +
-> > 
-> >  	intmask &= ~SDHCI_INT_BUS_POWER;
-> >  	
-> >  	if (intmask & SDHCI_INT_CARD_INT)
-> 
-> Why not just replace mmiowb() i.e.
-> 
-> 
-> diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
-> index 8d66706..da8a101 100644
-> --- a/drivers/mmc/host/sdhci.c
-> +++ b/drivers/mmc/host/sdhci.c
-> @@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
-> 
->         result = IRQ_HANDLED;
-> 
-> -       mmiowb();
-> +       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
-> +       if (intmask)
-> +               goto again;
->  out:
->         spin_unlock(&host->lock);
-> 
+In 6c5705fec63d, I converted powerpc to use the PCI core bus-to-resource
+conversion, but I missed these powerpc-specific paths.  Some powerpc
+platforms fail to boot ("Cannot allocate resource region," "device not
+available," etc.) between that commit and this one.
 
-Well, I chose this way to only printk the error once. With your suggestion it 
-might be printed in each loop, dunno how often/fast these IRQ stats are set 
-again after clearing. This would end in an endless loop if error flags are set 
-again fast enough, but see below.
-But in general I like this approach.
+This adds the corresponding bus-to-resource conversion in the paths that
+read BAR values from the OF device tree.
 
-> But maybe it would be safer limiting the number of loops i.e.
-> 
-> 
-> diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
-> index 8d66706..d88247d 100644
-> --- a/drivers/mmc/host/sdhci.c
-> +++ b/drivers/mmc/host/sdhci.c
-> @@ -2268,7 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
->         irqreturn_t result;
->         struct sdhci_host *host = dev_id;
->         u32 intmask;
-> -       int cardint = 0;
-> +       int cardint = 0, max_loops = 16;
-> 
->         spin_lock(&host->lock);
-> 
-> @@ -2353,7 +2353,9 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
-> 
->         result = IRQ_HANDLED;
-> 
-> -       mmiowb();
-> +       intmask = sdhci_readl(host, SDHCI_INT_STATUS);
-> +       if (intmask && --max_loops)
-> +               goto again;
->  out:
->         spin_unlock(&host->lock);
+CC: Anton Blanchard <anton@samba.org>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/kernel/pci_of_scan.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
 
-The actual problem I saw was a CMD6 command with an R1b response where the IRQ 
-for the 'not busy' event was sent during ISR for the response. So I think 
-normally this should only occur once.
-Regarding error flags I masked the unhandled flags out in order to print an 
-error only once, even if they might be set again in the next loop. With a 
-simple check on intmask they might occur up to 16 times in the kernel log.
-IMHO it makes no sense to repeatedly print errors about interrupt flags we 
-don't handle.
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index b37d0b5..89dde17 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -75,6 +75,7 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
+ {
+ 	u64 base, size;
+ 	unsigned int flags;
++	struct pci_bus_region region;
+ 	struct resource *res;
+ 	const u32 *addrs;
+ 	u32 i;
+@@ -106,10 +107,11 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
+ 			printk(KERN_ERR "PCI: bad cfg reg num 0x%x\n", i);
+ 			continue;
+ 		}
+-		res->start = base;
+-		res->end = base + size - 1;
+ 		res->flags = flags;
+ 		res->name = pci_name(dev);
++		region.start = base;
++		region.end = base + size - 1;
++		pcibios_bus_to_resource(dev, res, &region);
+ 	}
+ }
+ 
+@@ -209,6 +211,7 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
+ 	struct pci_bus *bus;
+ 	const u32 *busrange, *ranges;
+ 	int len, i, mode;
++	struct pci_bus_region region;
+ 	struct resource *res;
+ 	unsigned int flags;
+ 	u64 size;
+@@ -270,9 +273,10 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
+ 			res = bus->resource[i];
+ 			++i;
+ 		}
+-		res->start = of_read_number(&ranges[1], 2);
+-		res->end = res->start + size - 1;
+ 		res->flags = flags;
++		region.start = of_read_number(&ranges[1], 2);
++		region.end = region.start + size - 1;
++		pcibios_bus_to_resource(dev, res, &region);
+ 	}
+ 	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
+ 		bus->number);
 
-Suggestions to get a more clean way?
-
-Best regards,
-Alexander
--- 
-Dipl.-Inf. Alexander Stein
-
-SYS TEC electronic GmbH
-August-Bebel-Str. 29
-D-07973 Greiz
-
-Tel: +49-3661-6279-0, Fax: +49-3661-6279-99
-eMail:    Alexander.Stein@systec-electronic.com
-Internet: http://www.systec-electronic.com
-
-Managing Director: Dipl.-Phys. Siegmar Schmidt
-Commercial registry: Amtsgericht Jena, HRB 205563
