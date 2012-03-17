@@ -1,68 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30709 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161376Ab2CSFr4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 23/47] PCI: Use list_for_each_entry_safe instead of list_for_each_safe
-Date: Sun, 18 Mar 2012 22:46:12 -0700
-Message-Id: <1332135996-13860-24-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:56223 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752793Ab2CQDdc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Mar 2012 23:33:32 -0400
+Message-ID: <1331955202.3105.178.camel@pasglop>
+Subject: Re: [PATCH v2 5/7] powerpc/PCI: allow reallocation on PA Semi
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Olof Johansson <olof@lixom.net>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Date: Sat, 17 Mar 2012 14:33:22 +1100
+In-Reply-To: <20120316234819.6649.55979.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+	 <20120316234819.6649.55979.stgit@bhelgaas.mtv.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could skip using pci_dev_b().
+On Fri, 2012-03-16 at 17:48 -0600, Bjorn Helgaas wrote:
+> We believe there's no reason to prevent reallocation on PA Semi, so
+> revert to the default of "allow reallocation if necessary."
+> 
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/remove.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> CC: linuxppc-dev@lists.ozlabs.org
+> Tested-by: Olof Johansson <olof@lixom.net>
+> Acked-by: Olof Johansson <olof@lixom.net>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/powerpc/platforms/pasemi/pci.c |    3 ---
+>  1 files changed, 0 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+> index b27d886..aa86271 100644
+> --- a/arch/powerpc/platforms/pasemi/pci.c
+> +++ b/arch/powerpc/platforms/pasemi/pci.c
+> @@ -229,9 +229,6 @@ void __init pas_pci_init(void)
+>  
+>  	/* Setup the linkage between OF nodes and PHBs */
+>  	pci_devs_phb_init();
+> -
+> -	/* Use the common resource allocation mechanism */
+> -	pci_add_flags(PCI_PROBE_ONLY);
+>  }
+>  
+>  void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 4bdda43..64ba5b1 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -112,15 +112,15 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- 
- static void __pci_remove_bus_devices(struct pci_bus *bus)
- {
--	struct list_head *l, *n;
-+	struct pci_dev *dev, *tmp;
- 
--	list_for_each_safe(l, n, &bus->devices)
--		__pci_remove_bus_device(pci_dev_b(l));
-+	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
-+		__pci_remove_bus_device(dev);
- }
- 
- static void pci_stop_bus_devices(struct pci_bus *bus)
- {
--	struct list_head *l, *n;
-+	struct pci_dev *dev, *tmp;
- 
- 	/*
- 	 * VFs could be removed by pci_stop_and_remove_bus_device() in the
-@@ -130,10 +130,8 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
- 	 * We can iterate the list backwards to get prev valid PF instead
- 	 *  of removed VF.
- 	 */
--	list_for_each_prev_safe(l, n, &bus->devices) {
--		struct pci_dev *dev = pci_dev_b(l);
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list)
- 		pci_stop_bus_device(dev);
--	}
- }
- 
- /**
--- 
-1.7.7
 
