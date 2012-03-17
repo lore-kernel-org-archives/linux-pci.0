@@ -1,84 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
-Subject: [PATCH -v3 47/47] PCI: Add /sys/bus/pci/rescan_root
-Date: Sun, 18 Mar 2012 22:46:36 -0700
-Message-Id: <1332135996-13860-48-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:56217 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752793Ab2CQDdZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Mar 2012 23:33:25 -0400
+Message-ID: <1331955189.3105.177.camel@pasglop>
+Subject: Re: [PATCH v2 4/7] powerpc/PCI: convert devtree bus addresses to
+ resource
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, Anton Blanchard <anton@samba.org>
+Date: Sat, 17 Mar 2012 14:33:09 +1100
+In-Reply-To: <20120316234814.6649.47469.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+	 <20120316234814.6649.47469.stgit@bhelgaas.mtv.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will be used to rediscover removed pci root buses.
+On Fri, 2012-03-16 at 17:48 -0600, Bjorn Helgaas wrote:
+> Normal PCI enumeration via PCI config space uses __pci_read_base(), where
+> the PCI core applies any bus-to-resource offset.  But powerpc doesn't use
+> that path when enumerating via the device tree.
+> 
+> In 6c5705fec63d, I converted powerpc to use the PCI core bus-to-resource
+> conversion, but I missed these powerpc-specific paths.  Some powerpc
+> platforms fail to boot ("Cannot allocate resource region," "device not
+> available," etc.) between that commit and this one.
+> 
+> This adds the corresponding bus-to-resource conversion in the paths that
+> read BAR values from the OF device tree.
+> 
+> CC: Anton Blanchard <anton@samba.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-doc@vger.kernel.org
----
- Documentation/ABI/testing/sysfs-bus-pci |    9 +++++++++
- drivers/pci/pci-sysfs.c                 |   19 +++++++++++++++++++
- 2 files changed, 28 insertions(+), 0 deletions(-)
+Acked-By: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 22392de..eb826bd 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -66,6 +66,15 @@ Description:
- 		re-discover previously removed devices.
- 		Depends on CONFIG_HOTPLUG.
- 
-+What:		/sys/bus/pci/rescan_root
-+Date:		March 2012
-+Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
-+Description:
-+		Writing a non-zero value to this attribute will
-+		cause a rescan of all PCI root buses in the system, and
-+		re-discover previously removed PCI root buses.
-+		Depends on CONFIG_HOTPLUG.
-+
- What:		/sys/bus/pci/devices/.../msi_irqs/
- Date:		September, 2011
- Contact:	Neil Horman <nhorman@tuxdriver.com>
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index afba77b..c348048 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -302,8 +302,27 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 	return count;
- }
- 
-+void __weak arch_pci_root_rescan(void) { }
-+
-+static ssize_t bus_rescan_root_store(struct bus_type *bus, const char *buf,
-+				size_t count)
-+{
-+	unsigned long val;
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if (val) {
-+		mutex_lock(&pci_remove_rescan_mutex);
-+		arch_pci_root_rescan();
-+		mutex_unlock(&pci_remove_rescan_mutex);
-+	}
-+	return count;
-+}
-+
- struct bus_attribute pci_bus_attrs[] = {
- 	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, bus_rescan_store),
-+	__ATTR(rescan_root, (S_IWUSR|S_IWGRP), NULL, bus_rescan_root_store),
- 	__ATTR_NULL
- };
- 
--- 
-1.7.7
+> CC: linuxppc-dev@lists.ozlabs.org
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/powerpc/kernel/pci_of_scan.c |   12 ++++++++----
+>  1 files changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+> index b37d0b5..89dde17 100644
+> --- a/arch/powerpc/kernel/pci_of_scan.c
+> +++ b/arch/powerpc/kernel/pci_of_scan.c
+> @@ -75,6 +75,7 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
+>  {
+>  	u64 base, size;
+>  	unsigned int flags;
+> +	struct pci_bus_region region;
+>  	struct resource *res;
+>  	const u32 *addrs;
+>  	u32 i;
+> @@ -106,10 +107,11 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
+>  			printk(KERN_ERR "PCI: bad cfg reg num 0x%x\n", i);
+>  			continue;
+>  		}
+> -		res->start = base;
+> -		res->end = base + size - 1;
+>  		res->flags = flags;
+>  		res->name = pci_name(dev);
+> +		region.start = base;
+> +		region.end = base + size - 1;
+> +		pcibios_bus_to_resource(dev, res, &region);
+>  	}
+>  }
+>  
+> @@ -209,6 +211,7 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
+>  	struct pci_bus *bus;
+>  	const u32 *busrange, *ranges;
+>  	int len, i, mode;
+> +	struct pci_bus_region region;
+>  	struct resource *res;
+>  	unsigned int flags;
+>  	u64 size;
+> @@ -270,9 +273,10 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
+>  			res = bus->resource[i];
+>  			++i;
+>  		}
+> -		res->start = of_read_number(&ranges[1], 2);
+> -		res->end = res->start + size - 1;
+>  		res->flags = flags;
+> +		region.start = of_read_number(&ranges[1], 2);
+> +		region.end = region.start + size - 1;
+> +		pcibios_bus_to_resource(dev, res, &region);
+>  	}
+>  	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
+>  		bus->number);
+
 
