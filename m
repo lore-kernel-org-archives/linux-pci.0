@@ -1,48 +1,126 @@
-Return-Path: <yhlu.kernel@gmail.com>
-MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <CAErSpo5dXP0H77Ph91HUTA+Do4q2=sL_tdikOQpTiCLQqw1x-Q@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<CABhMZUU_YNMXAU0Mr5zQMzxrk_XkFzk1HrwAN0SQxDf8n+F9kA@mail.gmail.com>
-	<CAE9FiQVNYWnZzfdNsW38P4vsD1ZpXeA+SwqqDK45SZAAphz_6A@mail.gmail.com>
-	<CAErSpo7W_2skcxsgFia+4caf1MgXCt3jqXCrKdX7q3EZ-KLP2Q@mail.gmail.com>
-	<CAE9FiQVxno4xGg_SSrbBVs+nifP8+=cqS8SzD5kvVr2cvJD0wA@mail.gmail.com>
-	<CAErSpo5dXP0H77Ph91HUTA+Do4q2=sL_tdikOQpTiCLQqw1x-Q@mail.gmail.com>
-Date: Fri, 9 Mar 2012 10:55:16 -0800
-Message-ID: <CAE9FiQW3_hDg7qRpAmmar3b-d8Yj1HvPZnCna_JrnxP=yxf6Tw@mail.gmail.com>
-Subject: Re: [PATCH 00/23] PCI, x86: pci root bus hotplug support
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:29458 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161491Ab2CSFsE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:04 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	x86 <x86@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH -v3 28/47] PCI, ACPI: Add pci_root_hp hot removal notification support.
+Date: Sun, 18 Mar 2012 22:46:17 -0700
+Message-Id: <1332135996-13860-29-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 9, 2012 at 9:34 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Mar 9, 2012 at 1:19 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Thu, Mar 8, 2012 at 4:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrot=
-e:
->
->>> The notes about "-v2, -v3, -v4, etc." are not really useful in the
->>> commit changelogs. =A0They're helpful in the [00/] message, but not in
->>> the changelogs.
->>
->> But Jesse may still need mark to figure out which one is latest?
->
-> The way I do that is with "stg mail -v v3", which puts "[PATCH v3
-> 01/10]" in the subject. =A0IMO, that's much more useful because when you
-> post a 23-patch series, I don't want to be bothered with v1, v2, v3 on
-> a per-patch basis.
+Add missing hot_remove support for root device.
 
-For that, I could just sed to replace PATCH to PATCH v3
+How to use it?
+Find out root bus number to acpi root name mapping from dmesg or /sys
 
->
-> It's true that when you post v2, many of those 23 patches will be
-> unchanged from v1, and you do have to describe that in the [v2 00/23]
-> mail. =A0But at least it's easy to identify the entire set of v2
-> patches.
+  echo "\_SB.PCIB 3" > /proc/acpi/sci/notify
+to remove root bus
 
-Version number of the entire set could be different from individual patch.
-That could be more confusing.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/acpi/pci_root_hp.c |   61 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 61 insertions(+), 0 deletions(-)
 
-Yinghai
+diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
+index e07c31b..214adcb 100644
+--- a/drivers/acpi/pci_root_hp.c
++++ b/drivers/acpi/pci_root_hp.c
+@@ -73,6 +73,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
+ 	list_add(&bridge->list, &acpi_root_bridge_list);
+ }
+ 
++static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
++{
++	list_del(&bridge->list);
++	kfree(bridge);
++}
++
+ struct acpi_root_hp_work {
+ 	struct work_struct work;
+ 	acpi_handle handle;
+@@ -143,6 +149,55 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+ 		printk(KERN_ERR "cannot start bridge\n");
+ }
+ 
++static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
++{
++	acpi_status status;
++	struct acpi_object_list arg_list;
++	union acpi_object arg;
++
++	arg_list.count = 1;
++	arg_list.pointer = &arg;
++	arg.type = ACPI_TYPE_INTEGER;
++	arg.integer.value = val;
++
++	status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
++	if (ACPI_FAILURE(status)) {
++		printk(KERN_WARNING "%s: %s to %d failed\n",
++				 __func__, cmd, val);
++		return -1;
++	}
++
++	return 0;
++}
++
++static void handle_root_bridge_removal(acpi_handle handle,
++		 struct acpi_root_bridge *bridge)
++{
++	u32 flags = 0;
++	struct acpi_device *device;
++
++	if (bridge) {
++		flags = bridge->flags;
++		remove_acpi_root_bridge(bridge);
++	}
++
++	if (!acpi_bus_get_device(handle, &device)) {
++		int ret_val = acpi_bus_trim(device, 1);
++
++		printk(KERN_DEBUG "acpi_bus_trim return %x\n", ret_val);
++	}
++
++	if (flags & ROOT_BRIDGE_HAS_PS3) {
++		acpi_status status;
++
++		status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
++		if (ACPI_FAILURE(status))
++			printk(KERN_WARNING "%s: _PS3 failed\n", __func__);
++	}
++	if (flags & ROOT_BRIDGE_HAS_EJ0)
++		acpi_root_evaluate_object(handle, "_EJ0", 1);
++}
++
+ static void _handle_hotplug_event_root(struct work_struct *work)
+ {
+ 	struct acpi_root_bridge *bridge;
+@@ -183,6 +238,12 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ 		}
+ 		break;
+ 
++	case ACPI_NOTIFY_EJECT_REQUEST:
++		/* request device eject */
++		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
++				 objname);
++		handle_root_bridge_removal(handle, bridge);
++		break;
+ 	default:
+ 		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
+ 				 type, objname);
+-- 
+1.7.7
+
