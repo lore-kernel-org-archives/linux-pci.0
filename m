@@ -1,126 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1331362837-10740-11-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-11-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Mar 2012 20:55:19 -0600
-Message-ID: <CAErSpo6uBpEYrZPBxwrg_B8j7F9XAyDUvKTS4=++xze5KVmx1g@mail.gmail.com>
-Subject: Re: [PATCH v2 10/37] PCI, sysfs: create rescan_bridge under
- /sys/.../pci/devices/... for pci bridges
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31356 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162030Ab2CSFtz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:55 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 17/26] PCI: Use for_each_res pci bases reading
+Date: Sun, 18 Mar 2012 22:48:40 -0700
+Message-Id: <1332136129-14010-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Current code will create rescan for every pci device under parent bus.
-> that is not right. the device is already there, there is no reason to rescan it.
+Replace those open code, and make code more readable.
 
-"The device" (not "the device").
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> We could have rescan for pci bridges. less confusing.
->
-> Need to move rescan attr to pci dev bridge attribute group.
-> And We should rescan bridge's secondary bus instead of primary bus.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 7d5550a..dfa56fb 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -277,9 +277,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
+ {
+ 	unsigned int pos, reg;
++	struct resource *res;
+ 
+-	for (pos = 0; pos < howmany; pos++) {
+-		struct resource *res = &dev->resource[pos];
++	for_each_pci_dev_std_resource(dev, res, pos) {
++		if (pos >= howmany)
++			break;
+ 		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
+ 		pos += __pci_read_base(dev, pci_bar_unknown, res, reg);
+ 	}
+-- 
+1.7.7
 
-"And we" (not "And We").
-
-I think the idea of this patch makes sense.
-
-You might want to consider having this actually read the bridge config
-again.  That way, if the user manually changed the secondary bus
-number or the bridge windows using setpci or something, this rescan
-could use that new config if possible.
-
-I still hate the fact that we will have three different rescan files
-(four if you count /sys/bus/pci/rescan), but I don't have a solution
-to offer:
-    device/rescan
-    device/rescan_bridge
-    bus/rescan
-
-> -v3: Use device_type for pci dev.
-> -v4: Seperate pci device type change out
-> -v5: add rescan_bridge for bridge type, and still keep the old rescan.
->        may remove the old rescan later.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Randy Dunlap <rdunlap@xenotime.net>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->  Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
->  drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
->  2 files changed, 34 insertions(+), 0 deletions(-)
->
-> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-> index 34f5110..95f0f37 100644
-> --- a/Documentation/ABI/testing/sysfs-bus-pci
-> +++ b/Documentation/ABI/testing/sysfs-bus-pci
-> @@ -111,6 +111,16 @@ Description:
->                from this part of the device tree.
->                Depends on CONFIG_HOTPLUG.
->
-> +What:          /sys/bus/pci/devices/.../rescan_bridge
-> +Date:          February 2012
-> +Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
-> +Description:
-> +               Writing a non-zero value to this attribute will
-> +               force a rescan of the bridge and all child buses, and
-> +               re-discover devices removed earlier from this part of
-> +               the device tree.
-> +               Depends on CONFIG_HOTPLUG.
-> +
->  What:          /sys/bus/pci/devices/.../reset
->  Date:          July 2009
->  Contact:       Michael S. Tsirkin <mst@redhat.com>
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 39d15e6..d5c8ffb 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->        return count;
->  }
->
-> +static ssize_t
-> +dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
-> +                const char *buf, size_t count)
-> +{
-> +       unsigned long val;
-> +       struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +       if (kstrtoul(buf, 0, &val) < 0)
-> +               return -EINVAL;
-> +
-> +       if (val) {
-> +               mutex_lock(&pci_remove_rescan_mutex);
-> +               pci_rescan_bus(pdev->subordinate);
-> +               mutex_unlock(&pci_remove_rescan_mutex);
-> +       }
-> +       return count;
-> +}
-> +
-> +static struct device_attribute pci_dev_bridge_rescan_attr =
-> +       __ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
-> +
->  static void remove_callback(struct device *dev)
->  {
->        struct pci_dev *pdev = to_pci_dev(dev);
-> @@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
->  late_initcall(pci_sysfs_init);
->
->  static struct attribute *pci_dev_bridge_attrs[] = {
-> +#ifdef CONFIG_HOTPLUG
-> +       &pci_dev_bridge_rescan_attr.attr,
-> +#endif
->        NULL,
->  };
->
-> --
-> 1.7.7
->
