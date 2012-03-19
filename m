@@ -1,119 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:47957 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752841Ab2CHVOn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 16:14:43 -0500
-Message-ID: <4F59213F.6070107@wwwdotorg.org>
-Date: Thu, 08 Mar 2012 14:14:39 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 10/11] ARM: tegra: pcie: Add MSI support
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de> <1331218291-16119-11-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1331218291-16119-11-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31381 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162063Ab2CSFt7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:59 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 20/26] PCI: Add addon_resource support for pci_dev
+Date: Sun, 18 Mar 2012 22:48:43 -0700
+Message-Id: <1332136129-14010-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2012 07:51 AM, Thierry Reding wrote:
-> This commit adds support for message signaled interrupts to the Tegra
-> PCIe controller.
-> 
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> ---
-> This code is taken from the NVIDIA Vibrante kernel and therefore has no
-> appropriate Signed-off-by from the original author. Maybe someone at
-> NVIDIA can find out who wrote this code and maybe provide a proper
-> Signed-off-by that I can add?
+Will add addon_resources list in pci_dev, it will be used for resources
+other than standard, rom, sriov, bridges.
+Some could be same as std reg, but using different register.
+Some could have own way to read/write to them.
 
-I think if you look in:
-git://nv-tegra.nvidia.com/linux-2.6.git android-tegra-2.6.36
+Kernel using different way to hack those resources like abusing
+pci bridge resource spot on non bridge pci device.
 
-the following commits are what you're after:
+With this patch, will treat addon-resource like standard resource with
+special ops.
 
-de7fd8768b32da66eaf4eaf58473c65f7a76808d
-arm: tegra: pcie: enabling MSI support for pcie
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   18 ++++++++++++++++++
+ include/linux/pci.h |   16 ++++++++++++++++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-ac1f8310811c64a084511d2afc27f66334b31a81
-ARM: tegra: pcie: fix return value from MSI irq routine
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dfa56fb..6dbad5b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -82,6 +82,12 @@ struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
+ 	if (n < PCI_NUM_RESOURCES)
+ 		return &dev->resource[n];
+ 
++	n -= PCI_NUM_RESOURCES;
++	list_for_each_entry(addon_res, &dev->addon_resources, list) {
++		if (n-- == 0)
++			return &addon_res->res;
++	}
++
+ 	return NULL;
+ }
+ 
+@@ -97,6 +103,16 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
+ 	return -1;
+ }
+ 
++static void pci_release_dev_addon_res(struct pci_dev *dev)
++{
++	struct pci_dev_addon_resource *addon_res, *tmp;
++
++	list_for_each_entry_safe(addon_res, tmp, &dev->addon_resources, list) {
++		list_del(&addon_res->list);
++		kfree(addon_res);
++	}
++}
++
+ static u64 pci_size(u64 base, u64 maxbase, u64 mask)
+ {
+ 	u64 size = mask & maxbase;	/* Find the significant bits */
+@@ -1288,6 +1304,7 @@ static void pci_release_dev(struct device *dev)
+ 	pci_dev = to_pci_dev(dev);
+ 	pci_release_capabilities(pci_dev);
+ 	pci_release_of_node(pci_dev);
++	pci_release_dev_addon_res(pci_dev);
+ 	kfree(pci_dev);
+ }
+ 
+@@ -1367,6 +1384,7 @@ struct pci_dev *alloc_pci_dev(void)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&dev->bus_list);
++	INIT_LIST_HEAD(&dev->addon_resources);
+ 
+ 	return dev;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c7a2806..2c8b1a4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -299,6 +299,7 @@ struct pci_dev {
+ 	 */
+ 	unsigned int	irq;
+ 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
++	struct list_head addon_resources; /* addon I/O and memory resource */
+ 
+ 	/* These fields are used by common fixups */
+ 	unsigned int	transparent:1;	/* Transparent PCI bridge */
+@@ -347,6 +348,21 @@ struct pci_dev {
+ #endif
+ };
+ 
++struct resource_ops {
++	int (*read)(struct pci_dev *dev, struct resource *res, int addr);
++	int (*write)(struct pci_dev *dev, struct resource *res, int addr);
++};
++
++struct pci_dev_addon_resource {
++	struct list_head list;
++	int reg_addr;
++	int size;
++	struct resource res;
++	struct resource_ops *ops;
++};
++#define	to_pci_dev_addon_resource(n)					\
++	container_of(n, struct pci_dev_addon_resource, res)
++
+ struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
+ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
+ 
+-- 
+1.7.7
 
-Although the patch below only partially resembles those patches, I guess
-because you've rewritten the code a lot to conform to the current kernel
-APIs, clean stuff up, etc. Perhaps just saying "based on code by Krishna
-Kishore <kthota@nvidia.com>" is enough...
-
-> diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
-
-> +static int tegra_pcie_enable_msi(struct platform_device *pdev)
-> +{
-> +	struct tegra_pcie_info *pcie = platform_get_drvdata(pdev);
-> +	volatile void *pages;
-> +	unsigned long base;
-> +	unsigned int msi;
-> +	int msi_base;
-> +	int err;
-> +	u32 reg;
-> +
-> +	mutex_init(&pcie->msi_lock);
-> +
-> +	msi_base = irq_alloc_descs(-1, 0, INT_PCI_MSI_NR, 0);
-> +	if (msi_base < 0) {
-> +		dev_err(&pdev->dev, "failed to allocate IRQs\n");
-> +		return msi_base;
-> +	}
-> +
-> +	pcie->msi_domain = irq_domain_add_legacy(pcie->dev->of_node,
-> +						 INT_PCI_MSI_NR, msi_base,
-> +						 0, &irq_domain_simple_ops,
-> +						 NULL);
-> +	if (!pcie->msi_domain) {
-> +		dev_err(&pdev->dev, "failed to create IRQ domain\n");
-
-Free the IRQ descriptors in the error paths?
-
-> +		return -ENOMEM;
-> +	}
-> +
-> +	pcie->msi_chip.name = "PCIe-MSI";
-> +	pcie->msi_chip.irq_enable = unmask_msi_irq;
-> +	pcie->msi_chip.irq_disable = mask_msi_irq;
-> +	pcie->msi_chip.irq_mask = mask_msi_irq;
-> +	pcie->msi_chip.irq_unmask = unmask_msi_irq;
-> +
-> +	for (msi = 0; msi < INT_PCI_MSI_NR; msi++) {
-> +		unsigned int irq = irq_find_mapping(pcie->msi_domain, msi);
-> +
-> +		irq_set_chip_data(irq, pcie);
-> +		irq_set_chip_and_handler(irq, &pcie->msi_chip,
-> +					 handle_simple_irq);
-> +		set_irq_flags(irq, IRQF_VALID);
-> +	}
-> +
-> +	err = platform_get_irq(pdev, 1);
-> +	if (err < 0) {
-> +		dev_err(&pdev->dev, "failed to get IRQ: %d\n", err);
-
-Same here, and undo setting IRQF_VALID?
-
-> +		return err;
-> +	}
-...
-
-> +static int tegra_pcie_disable_msi(struct platform_device *pdev)
-> +{
-> +	return 0;
-> +}
-
-This is empty in both the ifdef(CONFIG_PCI_MSI) case and otherwise. It
-should probably clean everything up here right?
