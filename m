@@ -1,40 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58405 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758780Ab2CMGYM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 02:24:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <1331488109-13466-3-git-send-email-jiang.liu@huawei.com>
-References: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
-	<1331488109-13466-3-git-send-email-jiang.liu@huawei.com>
-Date: Mon, 12 Mar 2012 23:24:11 -0700
-Message-ID: <CAE9FiQVRMBHN+QbFpVv4j2xPfco2X0bt9OzzcSE-BrrDY4Oqgg@mail.gmail.com>
-Subject: Re: [PATCH 2/5] Correctly clean up pci root buses in function pci_remove_bus()
+Received: from acsinet15.oracle.com ([141.146.126.227]:28703 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030842Ab2CSFpt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:45:49 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Youquan Song <youquan.song@intel.com>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chenkeping@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v11 23/30] PCI: Strict checking of valid range for bridge
+Date: Sun, 18 Mar 2012 22:42:54 -0700
+Message-Id: <1332135781-13695-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 11, 2012 at 10:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> The function pci_create_root_bus() allocates the pci bus structure,
-> registers the bus device and creates the legacy files for a pci root
-> bus, but returns without setting the is_added flag. The is_added flag
-> for a pci root bus will be set by function pci_scan_child_bus().
+Children bridges busn range should be allocated from parent bus range.
 
-> If a pci root bus is destroyed before calling pci_scan_child_bus(),
-> the is_added flag will not be set.
+So we could avoid overlapping between sibling bridges on same bus.
 
-how that can be met?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
 
-Do we have pci_remove_rescan_mutex around them?
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index bf577e8..5710411 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -730,6 +730,28 @@ static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
+ 	return ret;
+ }
+ 
++static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
++				struct pci_dev *dev,
++				int secondary, int subordinate)
++{
++	int ret;
++	struct resource busn_res;
++
++	memset(&busn_res, 0, sizeof(struct resource));
++	dev_printk(KERN_DEBUG, &dev->dev,
++		 "check if busn %02x-%02x is in busn_res: %pR\n",
++		 secondary, subordinate, &bus->busn_res);
++	ret = allocate_resource(&bus->busn_res, &busn_res,
++			 (subordinate - secondary + 1),
++			 secondary, subordinate,
++			 1, NULL, NULL);
++	if (ret)
++		return 1;
++
++	release_resource(&busn_res);
++
++	return 0;
++}
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+@@ -768,6 +790,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 	    (primary != bus->number || secondary <= bus->number))
+ 		broken = 1;
+ 
++	/* more strict checking */
++	if (!pass && !broken && !dev->subordinate)
++		broken = pci_bridge_check_busn_broken(bus, dev,
++						   secondary, subordinate);
++
+ 	if (broken)
+ 		dev_dbg(&dev->dev, "bus configuration invalid, reconfiguring\n");
+ 
+-- 
+1.7.7
 
-Yinghai
