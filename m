@@ -1,428 +1,171 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 13 Mar 2012 16:13:06 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [RFC PATCH 4/5] PCI: Introduce hotplug-safe pci bus searching
- interfaces
-In-reply-to: <CAErSpo7u=_H=c0UBte7fuQAML4KWErDhsmZ+E8LTzW7OPWzpXA@mail.gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Youquan Song <youquan.song@intel.com>,
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chenkeping@huawei.com
-Message-id: <4F5F0192.3020209@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1331488109-13466-1-git-send-email-jiang.liu@huawei.com>
- <1331488109-13466-5-git-send-email-jiang.liu@huawei.com>
- <CAErSpo7u=_H=c0UBte7fuQAML4KWErDhsmZ+E8LTzW7OPWzpXA@mail.gmail.com>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 07/47] PCI: pci_bus_size_bridges() should not size own bridge
+Date: Sun, 18 Mar 2012 22:45:56 -0700
+Message-Id: <1332135996-13860-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-	As you have mentioned, for most cases they are safe to
-use pci_find_bus()/pci_find_next_bus(), as in following cases:
-	1) invoked by platform specific code during boot because
-it's single-threaded.
-	2) invoked by hotplug driver because hotplug driver has
-serialization mechanism.
-	3) invoked by driver has platform specific knowledge
-	After scanning the kernel source code, I have fount two
-cases which can't be covered by above scenario.
-	The first case is that PCIe PME driver invokes pci_find_bus()
-when handling PME events. The second case is that i7core_edac
-driver invokes pci_find_next_bus() from its probe method.
-AFAICT there's no mechanism to protect these two cases from hotplug
-operations currently.
+During checking acpiphp code, found following sequence:
+        pci_bus_size_bridges(bus);
+        pci_bus_assign_resources(bus);
+	pci_enable_bridges(bus);
 
-	Bjorn, you are right. I'm a little over-reacting here.
-The better solution here should be keeping the original
-pci_find_bus/pci_find_next_bus usage model and only introducing
-new mechanism to protect the above two cases. By that way,
-the code change will be much more smaller.
-	Thanks!
+The problem is that when bus is not root bus, pci_bus_size_bridges would also size
+own pci bridge bus->self if that bridge resource is not inserted before.
+but later pci_bus_assign_resources will not allocate those size bridge res.
 
-On 2012-3-13 11:49, Bjorn Helgaas wrote:
-> On Sun, Mar 11, 2012 at 11:48 AM, Jiang Liu<liuj97@gmail.com>  wrote:
->> By design, pci_find_bus() and pci_find_next_bus() should be used at boot
->> time only. But currently these two interfaces have been used at runtime
->> by other components. With the introduction of pci root bus hotplug,
->> the situation becomes more serious. So introduce several hotplug-safe pci
->> bus searching interfaces to be used at runtime.  The new interfaces use
->> rculist instead of the pci_bus_sem to protect themselves from dynamic changes.
->> The proposed interfaces are straight-forward replacement of the old ones:
->> pci_bus_get()/put(), pci_get_bus(), pci_get_next_bus() and pci_bus_present().
->> And the old interface may be deprecated or marked as __init in future.
->
-> This looks like a lot of work to fix something that shouldn't need to
-> be fixed.  I don't think we should be doing any of this blind probing
-> at hotplug-time.  If we do blind probing at all, it should only be
-> done at boot-time.
->
->> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->> ---
->>   drivers/pci/bus.c    |   20 ++++++-
->>   drivers/pci/probe.c  |    5 +-
->>   drivers/pci/remove.c |    5 +-
->>   drivers/pci/search.c |  165 ++++++++++++++++++++++++++++++++++++++++++--------
->>   include/linux/pci.h  |    8 +++
->>   5 files changed, 173 insertions(+), 30 deletions(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index 1eb7944..0543d47 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -15,6 +15,7 @@
->>   #include<linux/proc_fs.h>
->>   #include<linux/init.h>
->>   #include<linux/slab.h>
->> +#include<linux/rculist.h>
->>
->>   #include "pci.h"
->>
->> @@ -238,7 +239,7 @@ void pci_bus_add_devices(const struct pci_bus *bus)
->>                         continue;
->>                 if (list_empty(&child->node)) {
->>                         down_write(&pci_bus_sem);
->> -                       list_add_tail(&child->node,&dev->bus->children);
->> +                       list_add_tail_rcu(&child->node,&dev->bus->children);
->>                         up_write(&pci_bus_sem);
->>                 }
->>                 pci_bus_add_devices(child);
->> @@ -277,7 +278,7 @@ void pci_bus_add_single_device(struct pci_dev *dev)
->>         if (child) {
->>                 if (list_empty(&child->node)) {
->>                         down_write(&pci_bus_sem);
->> -                       list_add_tail(&child->node,&dev->bus->children);
->> +                       list_add_tail_rcu(&child->node,&dev->bus->children);
->>                         up_write(&pci_bus_sem);
->>                 }
->>                 pci_bus_add_devices(child);
->> @@ -364,6 +365,21 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->>   }
->>   EXPORT_SYMBOL_GPL(pci_walk_bus);
->>
->> +struct pci_bus *pci_bus_get(struct pci_bus *bus)
->> +{
->> +       if (bus)
->> +               get_device(&bus->dev);
->> +       return bus;
->> +}
->> +EXPORT_SYMBOL(pci_bus_get);
->> +
->> +void pci_bus_put(struct pci_bus *bus)
->> +{
->> +       if (bus)
->> +               put_device(&bus->dev);
->> +}
->> +EXPORT_SYMBOL(pci_bus_put);
->> +
->>   EXPORT_SYMBOL(pci_bus_alloc_resource);
->>   EXPORT_SYMBOL_GPL(pci_bus_add_device);
->>   EXPORT_SYMBOL(pci_bus_add_devices);
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 0ca213c..273c387 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -10,6 +10,7 @@
->>   #include<linux/module.h>
->>   #include<linux/cpumask.h>
->>   #include<linux/pci-aspm.h>
->> +#include<linux/rculist.h>
->>   #include "pci.h"
->>
->>   #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
->> @@ -633,7 +634,7 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
->>         child = pci_alloc_child_bus(parent, dev, busnr);
->>         if (child) {
->>                 down_write(&pci_bus_sem);
->> -               list_add_tail(&child->node,&parent->children);
->> +               list_add_tail_rcu(&child->node,&parent->children);
->>                 up_write(&pci_bus_sem);
->>         }
->>         return child;
->> @@ -1889,7 +1890,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>         }
->>
->>         down_write(&pci_bus_sem);
->> -       list_add_tail(&b->node,&pci_root_buses);
->> +       list_add_tail_rcu(&b->node,&pci_root_buses);
->>         up_write(&pci_bus_sem);
->>
->>         return b;
->> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->> index 25f368e..120bee9 100644
->> --- a/drivers/pci/remove.c
->> +++ b/drivers/pci/remove.c
->> @@ -1,6 +1,7 @@
->>   #include<linux/pci.h>
->>   #include<linux/module.h>
->>   #include<linux/pci-aspm.h>
->> +#include<linux/rculist.h>
->>   #include "pci.h"
->>
->>   static void pci_free_resources(struct pci_dev *dev)
->> @@ -67,9 +68,11 @@ void pci_remove_bus(struct pci_bus *pci_bus)
->>         pci_proc_detach_bus(pci_bus);
->>
->>         down_write(&pci_bus_sem);
->> -       list_del(&pci_bus->node);
->> +       list_del_rcu(&pci_bus->node);
->>         pci_bus_release_busn_res(pci_bus);
->>         up_write(&pci_bus_sem);
->> +       synchronize_rcu();
->> +
->>         if (pci_bus->is_added || pci_is_root_bus(pci_bus)) {
->>                 pci_remove_legacy_files(pci_bus);
->>                 device_unregister(&pci_bus->dev);
->> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
->> index b572730..de31957 100644
->> --- a/drivers/pci/search.c
->> +++ b/drivers/pci/search.c
->> @@ -12,6 +12,7 @@
->>   #include<linux/slab.h>
->>   #include<linux/module.h>
->>   #include<linux/interrupt.h>
->> +#include<linux/rculist.h>
->>   #include "pci.h"
->>
->>   DECLARE_RWSEM(pci_bus_sem);
->> @@ -52,20 +53,63 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
->>
->>   static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
->>   {
->> -       struct pci_bus* child;
->> -       struct list_head *tmp;
->> +       struct pci_bus *child;
->> +       struct pci_bus *tmp_bus;
->>
->>         if(bus->number == busnr)
->>                 return bus;
->>
->> -       list_for_each(tmp,&bus->children) {
->> -               child = pci_do_find_bus(pci_bus_b(tmp), busnr);
->> -               if(child)
->> -                       return child;
->> +       list_for_each_entry_rcu(child,&bus->children, node) {
->> +               tmp_bus = pci_do_find_bus(child, busnr);
->> +               if(tmp_bus)
->> +                       return tmp_bus;
->>         }
->>         return NULL;
->>   }
->>
->> +static struct pci_bus *__pci_find_bus(int domain, int busnr)
->> +{
->> +       struct pci_bus *bus;
->> +       struct pci_bus *tmp_bus;
->> +
->> +       list_for_each_entry_rcu(bus,&pci_root_buses, node) {
->> +               if (pci_domain_nr(bus) != domain)
->> +                       continue;
->> +               tmp_bus = pci_do_find_bus(bus, busnr);
->> +               if (tmp_bus)
->> +                       return tmp_bus;
->> +       }
->> +
->> +       return NULL;
->> +}
->> +
->> +static struct pci_bus *__pci_find_next_bus(const struct pci_bus *from)
->> +{
->> +       struct list_head *n;
->> +       struct pci_bus *b = NULL;
->> +
->> +       /* First search, start from the pci root bus list */
->> +       if (from == NULL) {
->> +               n = rcu_dereference(list_next_rcu(&pci_root_buses));
->> +               if (n !=&pci_root_buses)
->> +                       b = pci_bus_b(n);
->> +       /* Continue on the pci root bus list */
->> +       } else if (pci_is_root_bus((struct pci_bus *)from)) {
->> +               n = rcu_dereference(list_next_rcu(&from->node));
->> +               if (n !=&pci_root_buses)
->> +                       b = pci_bus_b(n);
->> +       /* Continue on other non pci root bus list */
->> +       } else {
->> +               struct pci_bus *parent = from->self->bus;
->> +
->> +               n = rcu_dereference(list_next_rcu(&from->node));
->> +               if (n !=&parent->children)
->> +                       b = pci_bus_b(n);
->> +       }
->> +
->> +       return b;
->> +}
->> +
->>   /**
->>   * pci_find_bus - locate PCI bus from a given domain and bus number
->>   * @domain: number of PCI domain to search
->> @@ -74,20 +118,19 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
->>   * Given a PCI bus number and domain number, the desired PCI bus is located
->>   * in the global list of PCI buses.  If the bus is found, a pointer to its
->>   * data structure is returned.  If no bus is found, %NULL is returned.
->> + *
->> + * TODO: By design, this function should only be called at boot time.
->> + * So either mark it as __init or deprecate it.
->>   */
->>   struct pci_bus * pci_find_bus(int domain, int busnr)
->>   {
->> -       struct pci_bus *bus = NULL;
->> -       struct pci_bus *tmp_bus;
->> +       struct pci_bus *bus;
->>
->> -       while ((bus = pci_find_next_bus(bus)) != NULL)  {
->> -               if (pci_domain_nr(bus) != domain)
->> -                       continue;
->> -               tmp_bus = pci_do_find_bus(bus, busnr);
->> -               if (tmp_bus)
->> -                       return tmp_bus;
->> -       }
->> -       return NULL;
->> +       rcu_read_lock();
->> +       bus = __pci_find_bus(domain, busnr);
->> +       rcu_read_unlock();
->> +
->> +       return bus;
->>   }
->>
->>   /**
->> @@ -98,21 +141,93 @@ struct pci_bus * pci_find_bus(int domain, int busnr)
->>   * initiated by passing %NULL as the @from argument.  Otherwise if
->>   * @from is not %NULL, searches continue from next device on the
->>   * global list.
->> + *
->> + * TODO: By design, this function should only be called at boot time.
->> + * So either mark it as __init or deprecate it.
->>   */
->>   struct pci_bus *
->>   pci_find_next_bus(const struct pci_bus *from)
->>   {
->> -       struct list_head *n;
->> -       struct pci_bus *b = NULL;
->> +       struct pci_bus *bus;
->>
->> -       WARN_ON(in_interrupt());
->> -       down_read(&pci_bus_sem);
->> -       n = from ? from->node.next : pci_root_buses.next;
->> -       if (n !=&pci_root_buses)
->> -               b = pci_bus_b(n);
->> -       up_read(&pci_bus_sem);
->> -       return b;
->> +       rcu_read_lock();
->> +       bus = __pci_find_next_bus(from);
->> +       rcu_read_unlock();
->> +
->> +       return bus;
->> +}
->> +
->> +/**
->> + * pci_get_bus - locate PCI bus from a given domain and bus number
->> + * @domain: number of PCI domain to search
->> + * @busnr: number of desired PCI bus
->> + *
->> + * Given a PCI bus number and domain number, the desired PCI bus is located
->> + * in the global list of PCI buses. If the bus is found, a pointer to its
->> + * data structure is returned, and the reference count to the bus is increased.
->> + * Otherwise, %NULL is returned.
->> + */
->> +struct pci_bus *
->> +pci_get_bus(int domain, int busnr)
->> +{
->> +       struct pci_bus *bus;
->> +
->> +       rcu_read_lock();
->> +       bus = pci_bus_get(__pci_find_bus(domain, busnr));
->> +       rcu_read_unlock();
->> +
->> +       return bus;
->> +}
->> +EXPORT_SYMBOL(pci_get_bus);
->> +
->> +/**
->> + * pci_get_next_bus - begin or continue searching for a PCI bus
->> + * @from: Previous PCI bus found, or %NULL for new search.
->> + *
->> + * Iterates through the list of known PCI busses.  A new search is
->> + * initiated by passing %NULL as the @from argument.  Otherwise if
->> + * @from is not %NULL, searches continue from next device on the
->> + * global list. If a bus is found, a pointer to its data structure
->> + * is returned, and the reference count to the bus is increased.
->> + * Otherwise, %NULL is returned.
->> + * The reference count for @from is always decremented if it is not %NULL.
->> + */
->> +struct pci_bus *
->> +pci_get_next_bus(struct pci_bus *from)
->> +{
->> +       struct pci_bus *bus;
->> +
->> +       rcu_read_lock();
->> +       bus = pci_bus_get(__pci_find_next_bus(from));
->> +       rcu_read_unlock();
->> +
->> +       return bus;
->> +}
->> +EXPORT_SYMBOL(pci_get_next_bus);
->> +
->> +/**
->> + * pci_bus_present - Returns true if a bus with the (@domain, @busnr)
->> + * is present, false if not.
->> + * @domain: number of PCI domain to search
->> + * @busnr: number of desired PCI bus
->> + *
->> + * Obvious fact: You do not have a reference to any bus that might be found
->> + * by this function, so if that bus is removed from the system right after
->> + * this function is finished, the value will be stale.  Use this function to
->> + * find buses that are usually built into a system, or for a general hint as
->> + * to if another device happens to be present at this specific moment in time.
->> + */
->> +bool pci_bus_present(int domain, int busnr)
->> +{
->> +       struct pci_bus *bus;
->> +
->> +       rcu_read_lock();
->> +       bus = __pci_find_bus(domain, busnr);
->> +       rcu_read_unlock();
->> +
->> +       return !!bus;
->>   }
->> +EXPORT_SYMBOL(pci_bus_present);
->>
->>   /**
->>   * pci_get_slot - locate PCI device for a given PCI slot
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index ec8c4cf..222bc88 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -731,6 +731,11 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
->>   int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
->>   struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
->>
->> +struct pci_bus *pci_bus_get(struct pci_bus *bus);
->> +void pci_bus_put(struct pci_bus *bus);
->> +struct pci_bus *pci_get_bus(int domain, int busnr);
->> +struct pci_bus *pci_get_next_bus(struct pci_bus *from);
->> +bool pci_bus_present(int domain, int busnr);
->>   struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
->>                                 struct pci_dev *from);
->>   struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
->> @@ -1321,6 +1326,9 @@ static inline void pci_unblock_cfg_access(struct pci_dev *dev)
->>   static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
->>   { return NULL; }
->>
->> +static inline struct pci_bus *pci_get_next_bus(const struct pci_bus *from)
->> +{ return NULL; }
->> +
->>   static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
->>                                                 unsigned int devfn)
->>   { return NULL; }
->> --
->> 1.7.5.4
->>
->
-> .
->
+So try make it less confusing, let it does not include self sizing.
+and add with_self parameter info __pci_bus_size_bridge()
 
+Fixes caller in pci hotplug componets.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/acpiphp_glue.c     |    3 ++-
+ drivers/pci/hotplug/cpci_hotplug_pci.c |    2 +-
+ drivers/pci/hotplug/shpchp_pci.c       |    2 +-
+ drivers/pci/setup-bus.c                |   24 +++++++++++++++---------
+ include/linux/pci.h                    |    1 +
+ 5 files changed, 20 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 806c44f..6aaf9ff 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -816,7 +816,8 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+ 				max = pci_scan_bridge(bus, dev, max, pass);
+ 				if (pass && dev->subordinate)
+-					pci_bus_size_bridges(dev->subordinate);
++					pci_bus_size_bridges_with_self(
++							dev->subordinate);
+ 			}
+ 		}
+ 	}
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index ae853cc..4ef80ad 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -313,7 +313,7 @@ int __ref cpci_configure_slot(struct slot *slot)
+ 				continue;
+ 			}
+ 			child->subordinate = pci_do_scan_bus(child);
+-			pci_bus_size_bridges(child);
++			pci_bus_size_bridges_with_self(child);
+ 		}
+ 		pci_dev_put(dev);
+ 	}
+diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
+index df7e4bf..d92807b 100644
+--- a/drivers/pci/hotplug/shpchp_pci.c
++++ b/drivers/pci/hotplug/shpchp_pci.c
+@@ -85,7 +85,7 @@ int __ref shpchp_configure_device(struct slot *p_slot)
+ 				continue;
+ 			}
+ 			child->subordinate = pci_do_scan_bus(child);
+-			pci_bus_size_bridges(child);
++			pci_bus_size_bridges_with_self(child);
+ 		}
+ 		pci_configure_slot(dev);
+ 		pci_dev_put(dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f35a679..ec2026c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -982,8 +982,8 @@ handle_done:
+ 	;
+ }
+ 
+-void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+-			struct list_head *realloc_head)
++static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
++			struct list_head *realloc_head, bool with_self)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask;
+@@ -1001,13 +1001,13 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 
+ 		case PCI_CLASS_BRIDGE_PCI:
+ 		default:
+-			__pci_bus_size_bridges(b, realloc_head);
++			__pci_bus_size_bridges(b, realloc_head, true);
+ 			break;
+ 		}
+ 	}
+ 
+-	/* The root bus? */
+-	if (!bus->self)
++	/* Is root bus or not wanted? */
++	if (!bus->self || !with_self)
+ 		return;
+ 
+ 	switch (bus->self->class >> 8) {
+@@ -1047,9 +1047,15 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 	}
+ }
+ 
++void __ref pci_bus_size_bridges_with_self(struct pci_bus *bus)
++{
++	__pci_bus_size_bridges(bus, NULL, true);
++}
++EXPORT_SYMBOL(pci_bus_size_bridges_with_self);
++
+ void __ref pci_bus_size_bridges(struct pci_bus *bus)
+ {
+-	__pci_bus_size_bridges(bus, NULL);
++	__pci_bus_size_bridges(bus, NULL, false);
+ }
+ EXPORT_SYMBOL(pci_bus_size_bridges);
+ 
+@@ -1362,7 +1368,7 @@ again:
+ 	/* Depth first, calculate sizes and alignments of all
+ 	   subordinate buses. */
+ 	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_size_bridges(bus, add_list);
++		__pci_bus_size_bridges(bus, add_list, false);
+ 
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	list_for_each_entry(bus, &pci_root_buses, node)
+@@ -1439,7 +1445,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 				  IORESOURCE_PREFETCH;
+ 
+ again:
+-	__pci_bus_size_bridges(parent, &add_list);
++	__pci_bus_size_bridges(parent, &add_list, true);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+ 	BUG_ON(!list_empty(&add_list));
+ 	tried_times++;
+@@ -1500,7 +1506,7 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
+ 			if (dev->subordinate)
+ 				__pci_bus_size_bridges(dev->subordinate,
+-							 &add_list);
++						 &add_list, true);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	BUG_ON(!list_empty(&add_list));
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 634bbf5..87dceca 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -906,6 +906,7 @@ int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+ void pci_bus_assign_resources(const struct pci_bus *bus);
+ void pci_bus_size_bridges(struct pci_bus *bus);
++void pci_bus_size_bridges_with_self(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+-- 
+1.7.7
 
