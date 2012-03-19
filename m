@@ -1,63 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4F605A9E.3020205@intel.com>
-Date: Wed, 14 Mar 2012 08:45:18 +0000
-From: Tadeusz Struk <tadeusz.struk@intel.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, jbarnes@virtuousgeek.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Device specific reset function
-References: <4f5e2a73.YyO0Gu2m5JhSVsu6%tadeusz.struk@intel.com> <1331606555.22608.6.camel@ul30vt>
-In-Reply-To: <1331606555.22608.6.camel@ul30vt>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:27626 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756936Ab2CSFn6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:43:58 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v11 02/30] x86, PCI: Allocate temp range array in amd_bus pci_root_info probing
+Date: Sun, 18 Mar 2012 22:42:33 -0700
+Message-Id: <1332135781-13695-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/03/12 02:42, Alex Williamson wrote:
-> On Mon, 2012-03-12 at 16:55 +0000, Tadeusz Struk wrote:
->> I have a use case where I need to cleanup resource allocated for Virtual
->> Functions after a guest OS that used it crashed. This cleanup needs to
->> be done before the VF is being FLRed. The only possible way to do this
->> seems to be by using pci_dev_specific_reset() function.
->> This patch adds specific reset function to the pci_driver struct.
->>
->> Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
->> ---
->>  drivers/pci/quirks.c |    4 ++++
->>  include/linux/pci.h  |    1 +
->>  2 files changed, 5 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 6476547..13d224b 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -3081,8 +3081,12 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->>  
->>  int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->>  {
->> +	struct pci_driver *drv = dev->driver;
->>  	const struct pci_dev_reset_methods *i;
->>  
->> +	if (drv && drv->reset)
->> +		return drv->reset(dev, probe);
->> +
-> 
-> Isn't this exactly what the below code is for (pci_dev_reset_methods)?
-> In the case of KVM device assignment, the device should be reset via
-> this path if the guest crashes, but it may or may not be attached to
-> pci-stub at the time.  I assume you're not adding a reset handler to
-> pci-stub, so we'll pass through here and use FLR, violating the premise
-> of the patch.  Thanks,
-> 
-> Alex
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/amd_bus.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
 
-Hi,
-The reset handler supposed to be in the "real" driver not in the pci-stub.
-You are right, at this stage the VF can still be assigned to the pci-stub, which makes it useless in my case.
-I think the only option for me will be to go with the v2 of the patch.
-I'll do a bit more testing to make sure this is the case and resend the v2.
-Thanks,
-Tadeusz
-
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 5f30a98..aff155d 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -30,7 +30,7 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
+ 	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
+ };
+ 
+-#define RANGE_NUM 16
++#define RANGE_NUM 128
+ 
+ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ {
+@@ -64,7 +64,7 @@ static int __init early_fill_mp_bus_info(void)
+ 	u32 reg;
+ 	u64 start;
+ 	u64 end;
+-	struct range range[RANGE_NUM];
++	struct range *range;
+ 	u64 val;
+ 	u32 address;
+ 	bool found;
+@@ -125,7 +125,10 @@ static int __init early_fill_mp_bus_info(void)
+ 	reg = read_pci_config(bus, slot, 0, 0x64);
+ 	def_link = (reg >> 8) & 0x03;
+ 
+-	memset(range, 0, sizeof(range));
++	range = kcalloc(RANGE_NUM, sizeof(struct range), GFP_KERNEL);
++	if (!range)
++		return -ENOMEM;
++
+ 	add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
+ 	/* io port resource */
+ 	for (i = 0; i < 4; i++) {
+@@ -291,6 +294,8 @@ static int __init early_fill_mp_bus_info(void)
+ 		}
+ 	}
+ 
++	kfree(range);
++
+ 	print_all_pci_root_info("ht link", true);
+ 
+ 	return 0;
+-- 
+1.7.7
 
