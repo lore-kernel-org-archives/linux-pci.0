@@ -6,82 +6,94 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 09/11] x86, PCI: Embed pci_sysdata into pci_root_info on acpi path
-Date: Sun, 18 Mar 2012 22:40:22 -0700
-Message-Id: <1332135624-13528-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
-References: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 06/26] x86, PCI: Use for_each_res with pci_allocate_dev_resources
+Date: Sun, 18 Mar 2012 22:48:29 -0700
+Message-Id: <1332136129-14010-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So that part memory will be released on root bus removing path.
-
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/acpi.c |   21 ++++-----------------
- 1 files changed, 4 insertions(+), 17 deletions(-)
+ arch/x86/pci/i386.c |   55 ++++++++++++++++++--------------------------------
+ 1 files changed, 20 insertions(+), 35 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 23e7361..8a17b23 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -13,6 +13,7 @@ struct pci_root_info {
- 	unsigned int res_num;
- 	struct resource *res;
- 	int busnum;
-+	struct pci_sysdata sd;
- };
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 570197e..83befee 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -228,49 +228,34 @@ static void pcibios_allocate_bus_resources(struct pci_bus *bus)
+ 		pcibios_allocate_bus_resources(child);
+ }
  
- static bool pci_use_crs = true;
-@@ -410,26 +411,16 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (node != -1 && !node_online(node))
- 		node = -1;
- 
--	/* Allocate per-root-bus (not per bus) arch-specific data.
--	 * TODO: leak; this memory is never freed.
--	 * It's arguable whether it's worth the trouble to care.
--	 */
--	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
--	if (!sd) {
-+	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	if (!info) {
- 		printk(KERN_WARNING "pci_bus %04x:%02x: "
- 		       "ignored (out of memory)\n", domain, busnum);
- 		return NULL;
- 	}
- 
-+	sd = &info->sd;
- 	sd->domain = domain;
- 	sd->node = node;
--	info = kzalloc(sizeof(*info), GFP_KERNEL);
--	if (!info) {
--		kfree(sd);
--		printk(KERN_WARNING "pci_bus %04x:%02x: "
--		       "ignored (out of memory)\n", domain, busnum);
--		return NULL;
--	}
- 	/*
- 	 * Maybe the desired pci bus has been already scanned. In such case
- 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
-@@ -442,7 +433,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 */
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(info);
--		kfree(sd);
- 	} else {
- 		probe_pci_root_info(info, device, busnum, domain);
- 
-@@ -484,9 +474,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		}
- 	}
- 
--	if (!bus)
--		kfree(sd);
+-struct pci_check_idx_range {
+-	int start;
+-	int end;
+-};
 -
- 	if (bus && node != -1) {
- #ifdef CONFIG_ACPI_NUMA
- 		if (pxm >= 0)
+ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ {
+-	int idx, disabled, i;
++	int idx, disabled;
+ 	u16 command;
+ 	struct resource *r;
+ 
+-	struct pci_check_idx_range idx_range[] = {
+-		{ PCI_STD_RESOURCES, PCI_STD_RESOURCE_END },
+-#ifdef CONFIG_PCI_IOV
+-		{ PCI_IOV_RESOURCES, PCI_IOV_RESOURCE_END },
+-#endif
+-	};
+-
+ 	pci_read_config_word(dev, PCI_COMMAND, &command);
+-	for (i = 0; i < ARRAY_SIZE(idx_range); i++)
+-		for (idx = idx_range[i].start; idx <= idx_range[i].end; idx++) {
+-			r = &dev->resource[idx];
+-			if (r->parent)	/* Already allocated */
+-				continue;
+-			if (!r->start)	/* Address not assigned at all */
+-				continue;
+-			if (r->flags & IORESOURCE_IO)
+-				disabled = !(command & PCI_COMMAND_IO);
+-			else
+-				disabled = !(command & PCI_COMMAND_MEMORY);
+-			if (pass == disabled) {
+-				dev_dbg(&dev->dev,
+-					"BAR %d: reserving %pr (d=%d, p=%d)\n",
+-					idx, r, disabled, pass);
+-				if (pci_claim_resource(dev, idx) < 0) {
+-					/* We'll assign a new address later */
+-					pcibios_save_fw_addr(dev,
+-							idx, r->start);
+-					r->end -= r->start;
+-					r->start = 0;
+-				}
++	for_each_pci_dev_base_norom_resource(dev, r, idx) {
++		if (r->parent)	/* Already allocated */
++			continue;
++		if (!r->start)	/* Address not assigned at all */
++			continue;
++		if (r->flags & IORESOURCE_IO)
++			disabled = !(command & PCI_COMMAND_IO);
++		else
++			disabled = !(command & PCI_COMMAND_MEMORY);
++		if (pass == disabled) {
++			dev_dbg(&dev->dev,
++				"BAR %d: reserving %pr (d=%d, p=%d)\n",
++				idx, r, disabled, pass);
++			if (pci_claim_resource(dev, idx) < 0) {
++				/* We'll assign a new address later */
++				pcibios_save_fw_addr(dev, idx, r->start);
++				r->end -= r->start;
++				r->start = 0;
+ 			}
+ 		}
++	}
+ 	if (!pass) {
+ 		r = &dev->resource[PCI_ROM_RESOURCE];
+ 		if (r->flags & IORESOURCE_ROM_ENABLE) {
 -- 
 1.7.7
 
