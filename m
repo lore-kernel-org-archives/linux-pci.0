@@ -1,45 +1,128 @@
-Return-Path: <yhlu.kernel@gmail.com>
-MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <CABhMZUWDngY6jL8jkxQ+SHzEHqTS4i3DqtCD7DUBtL4QS58ovA@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<1331018040-30725-24-git-send-email-yinghai@kernel.org>
-	<CAErSpo5TjhNv1W=PxSPO6qXfhW1Mi4dMp83vj82=O_hFOq1vow@mail.gmail.com>
-	<CAE9FiQXsY7Dn5TGtD1ARM_KFdz1V1hJOvYAy6e4msM=i3VfhDg@mail.gmail.com>
-	<CABhMZUWDngY6jL8jkxQ+SHzEHqTS4i3DqtCD7DUBtL4QS58ovA@mail.gmail.com>
-Date: Tue, 6 Mar 2012 22:29:46 -0800
-Message-ID: <CAE9FiQV23maKVMrk7h1cJxYfxrqJcKu7GfwFYUJfSDfh8g-KFQ@mail.gmail.com>
-Subject: Re: [PATCH 23/23] x86, PCI: add pcibios_root_rescan
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:28327 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030476Ab2CSFoj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:44:39 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bjorn.helgaas@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v11 12/30] x86, PCI: Put busn resource in pci_root_info for not using _CRS path
+Date: Sun, 18 Mar 2012 22:42:43 -0700
+Message-Id: <1332135781-13695-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 7:49 PM, Bjorn Helgaas <bjorn.helgaas@gmail.com> wro=
-te:
+Will put it in resources list and pass it for create_root_bus
 
->> my sandbridge system has cpu bus 0x7f, and 0xff in DSDT.
->>
->> but nehalem and westmere system does not have cpu bus 0xf8, ... 0xff.
->
-> I think you're saying that on some machines, the BIOS decided not to
-> expose host bridges leading to CPU devices, and you want to discover
-> those devices anyway. =A0(What's the reason you want to discover them?)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/amd_bus.c  |    1 -
+ arch/x86/pci/bus_numa.c |   22 ++++++++++++++--------
+ arch/x86/pci/bus_numa.h |    3 +--
+ 3 files changed, 15 insertions(+), 11 deletions(-)
 
-current code for mmconf will set pcibios_last_bios according to mmconf
-bus range.
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index aff155d..03397ea 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -116,7 +116,6 @@ static int __init early_fill_mp_bus_info(void)
+ 		link = (reg >> 8) & 0x03;
+ 
+ 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+-		sprintf(info->name, "PCI Bus #%02x", min_bus);
+ 	}
+ 
+ 	/* get the default node and link for left over res */
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index 772949f..b5b9d91 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -14,7 +14,7 @@ static struct pci_root_info *x86_find_pci_root_info(int bus)
+ 		return NULL;
+ 
+ 	list_for_each_entry(info, &pci_root_infos, list)
+-		if (info->bus_min == bus)
++		if (info->busn.start == bus)
+ 			return info;
+ 
+ 	return NULL;
+@@ -31,6 +31,8 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
+ 	       bus);
+ 
++	pci_add_resource(resources, &info->busn);
++
+ 	list_for_each_entry(root_res, &info->resources, list) {
+ 		struct resource *res;
+ 		struct resource *root;
+@@ -54,6 +56,7 @@ default_resources:
+ 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
+ 	pci_add_resource(resources, &ioport_resource);
+ 	pci_add_resource(resources, &iomem_resource);
++	pci_add_resource(resources, &busn_resource);
+ }
+ 
+ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+@@ -66,9 +69,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+ 	if (!info)
+ 		return info;
+ 
++	sprintf(info->name, "PCI Bus #%02x", bus_min);
++
+ 	INIT_LIST_HEAD(&info->resources);
+-	info->bus_min = bus_min;
+-	info->bus_max = bus_max;
++	info->busn.name  = info->name;
++	info->busn.start = bus_min;
++	info->busn.end   = bus_max;
++	info->busn.flags = IORESOURCE_BUS;
+ 	info->node = node;
+ 	info->link = link;
+ 
+@@ -80,14 +87,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
+ void print_pci_root_info(struct pci_root_info *info, char *name, bool nodelink)
+ {
+ 	struct pci_root_res *root_res;
+-	int busnum = info->bus_min;
++	int busnum = info->busn.start;
+ 
+ 	if (!nodelink)
+-		printk(KERN_DEBUG "%s: [%02x, %02x]\n", name,
+-				info->bus_min, info->bus_max);
++		printk(KERN_DEBUG "%s: %pR\n", name, &info->busn);
+ 	else
+-		printk(KERN_DEBUG "%s: [%02x, %02x] on node %x link %x\n", name,
+-			info->bus_min, info->bus_max, info->node, info->link);
++		printk(KERN_DEBUG "%s: %pR on node %x link %x\n", name,
++			&info->busn, info->node, info->link);
+ 
+ 	list_for_each_entry(root_res, &info->resources, list)
+ 		printk(KERN_DEBUG "%s: %02x %pR\n", name, busnum,
+diff --git a/arch/x86/pci/bus_numa.h b/arch/x86/pci/bus_numa.h
+index deada6a..f9919c3 100644
+--- a/arch/x86/pci/bus_numa.h
++++ b/arch/x86/pci/bus_numa.h
+@@ -13,8 +13,7 @@ struct pci_root_info {
+ 	struct list_head list;
+ 	char name[12];
+ 	struct list_head resources;
+-	int bus_min;
+-	int bus_max;
++	struct resource busn;
+ 	int node;
+ 	int link;
+ };
+-- 
+1.7.7
 
-so it legacy peer root bus fix up will discover those cpu buses.
-
-then if some one remove them through
-echo 1 > /sys/devices/pci0000:ff/pci_bus/0000:ff/remove
-
-then
-
-echo 1 > /sys/bus/pci/rescan_root
-
-will not recover those cpu buses without this patch.
-
-Yinghai
