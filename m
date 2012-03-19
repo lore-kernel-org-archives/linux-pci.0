@@ -1,173 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:40298 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438Ab2COVg1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2012 17:36:27 -0400
-Received: by lbbgm6 with SMTP id gm6so1708896lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 14:36:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1331623594-30543-8-git-send-email-yinghai@kernel.org>
-References: <1331623594-30543-1-git-send-email-yinghai@kernel.org> <1331623594-30543-8-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 15 Mar 2012 15:36:05 -0600
-Message-ID: <CAErSpo7d-pCZf9xj2i8K0gj=XRp4gOx3Fw=NoYTgFsqdNhciBA@mail.gmail.com>
-Subject: Re: [PATCH 07/12] PCI: Make piix4 quirk to use addon_resource support
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	linux-pcmcia@lists.infradead.org
+Subject: [PATCH -v11 26/30] pcmcia: Remove workaround for fixing pci parent bus subordinate
+Date: Sun, 18 Mar 2012 22:42:57 -0700
+Message-Id: <1332135781-13695-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2012 at 1:26 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> after they are put in add-on resources, they will be safely claimed later.
+Now pci busn allocation code is there, and it will preallocate bus number and it
+will make sure parent buses subordinate is right.
 
-Wow, this seems to do a lot more than you mention in the changelog.
-Is this really just doing the same thing as it used to, but using some
-new interfaces?  If so, too bad that it requires 60 more lines of code
-than it used to.
+So remove workaround here.
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/quirks.c |   93 +++++++++++++++++++++++++++++++++++++++++--------
->  1 files changed, 77 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7ef4183..cbe7dd9 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -383,14 +383,14 @@ static void __devinit quirk_ali7101_acpi(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,     PCI_DEVICE_ID_AL_M7101,         quirk_ali7101_acpi);
->
-> -static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-> +static int piix4_read_io(struct pci_dev *dev, struct resource *res, int port)
->  {
->        u32 devres;
->        u32 mask, size, base;
-> +       struct pci_bus_region bus_region;
->
->        pci_read_config_dword(dev, port, &devres);
-> -       if ((devres & enable) != enable)
-> -               return;
-> +
->        mask = (devres >> 16) & 15;
->        base = devres & 0xffff;
->        size = 16;
-> @@ -400,23 +400,53 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
->                        break;
->                size = bit;
->        }
-> -       /*
-> -        * For now we only print it out. Eventually we'll want to
-> -        * reserve it (at least if it's in the 0x1000+ range), but
-> -        * let's get enough confirmation reports first.
-> -        */
->        base &= -size;
-> -       dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
-> +
-> +       bus_region.start = base;
-> +       bus_region.end = base + size - 1;
-> +       res->flags |= IORESOURCE_IO;
-> +       pcibios_bus_to_resource(dev, res, &bus_region);
-> +       dev_info(&dev->dev, "PIO at %pR\n", res);
-> +
-> +       return 0;
->  }
-> +static int piix4_write_io(struct pci_dev *dev, struct resource *res, int port)
-> +{
-> +       u32 devres;
-> +       struct pci_bus_region bus_region;
-> +
-> +       pcibios_resource_to_bus(dev, &bus_region, res);
->
-> -static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-> +       pci_read_config_dword(dev, port, &devres);
-> +       devres &= 0xffff0000;
-> +       devres |= bus_region.start & 0xffff;
-> +       pci_write_config_dword(dev, port, devres);
-> +
-> +       return 0;
-> +}
-> +static struct resource_ops piix4_io_ops = {
-> +       .read = piix4_read_io,
-> +       .write = piix4_write_io,
-> +};
-> +static void piix4_io_quirk(struct pci_dev *dev, char *name, unsigned int port,
-> +                               unsigned int enable)
->  {
->        u32 devres;
-> -       u32 mask, size, base;
->
->        pci_read_config_dword(dev, port, &devres);
->        if ((devres & enable) != enable)
->                return;
-> +
-> +       add_pci_dev_addon_resource(dev, port, 0, &piix4_io_ops, name);
-> +}
-> +
-> +static int piix4_read_mem(struct pci_dev *dev, struct resource *res, int port)
-> +{
-> +       u32 devres;
-> +       u32 mask, size, base;
-> +       struct pci_bus_region bus_region;
-> +
-> +       pci_read_config_dword(dev, port, &devres);
->        base = devres & 0xffff0000;
->        mask = (devres & 0x3f) << 16;
->        size = 128 << 16;
-> @@ -426,12 +456,43 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
->                        break;
->                size = bit;
->        }
-> -       /*
-> -        * For now we only print it out. Eventually we'll want to
-> -        * reserve it, but let's get enough confirmation reports first.
-> -        */
->        base &= -size;
-> -       dev_info(&dev->dev, "%s MMIO at %04x-%04x\n", name, base, base + size - 1);
-> +       bus_region.start = base;
-> +       bus_region.end = base + size - 1;
-> +       res->flags |= IORESOURCE_MEM;
-> +       pcibios_bus_to_resource(dev, res, &bus_region);
-> +       dev_info(&dev->dev, "MMIO at %pR\n", res);
-> +
-> +       return 0;
-> +}
-> +static int piix4_write_mem(struct pci_dev *dev, struct resource *res, int port)
-> +{
-> +       u32 devres;
-> +       struct pci_bus_region bus_region;
-> +
-> +       pcibios_resource_to_bus(dev, &bus_region, res);
-> +
-> +       pci_read_config_dword(dev, port, &devres);
-> +       devres &= 0x0000ffff;
-> +       devres |= bus_region.start & 0xffff0000;
-> +       pci_write_config_dword(dev, port, devres);
-> +
-> +       return 0;
-> +}
-> +static struct resource_ops piix4_mem_ops = {
-> +       .read = piix4_read_mem,
-> +       .write = piix4_write_mem,
-> +};
-> +static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
-> +                               unsigned int enable)
-> +{
-> +       u32 devres;
-> +
-> +       pci_read_config_dword(dev, port, &devres);
-> +       if ((devres & enable) != enable)
-> +               return;
-> +
-> +       add_pci_dev_addon_resource(dev, port, 0, &piix4_mem_ops, name);
->  }
->
->  /*
-> --
-> 1.7.7
->
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: linux-pcmcia@lists.infradead.org
+---
+ drivers/pcmcia/yenta_socket.c |   75 -----------------------------------------
+ 1 files changed, 0 insertions(+), 75 deletions(-)
+
+diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
+index 849c0c1..5757cae 100644
+--- a/drivers/pcmcia/yenta_socket.c
++++ b/drivers/pcmcia/yenta_socket.c
+@@ -1064,79 +1064,6 @@ static void yenta_config_init(struct yenta_socket *socket)
+ 	config_writew(socket, CB_BRIDGE_CONTROL, bridge);
+ }
+ 
+-/**
+- * yenta_fixup_parent_bridge - Fix subordinate bus# of the parent bridge
+- * @cardbus_bridge: The PCI bus which the CardBus bridge bridges to
+- *
+- * Checks if devices on the bus which the CardBus bridge bridges to would be
+- * invisible during PCI scans because of a misconfigured subordinate number
+- * of the parent brige - some BIOSes seem to be too lazy to set it right.
+- * Does the fixup carefully by checking how far it can go without conflicts.
+- * See http://bugzilla.kernel.org/show_bug.cgi?id=2944 for more information.
+- */
+-static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
+-{
+-	struct list_head *tmp;
+-	unsigned char upper_limit;
+-	/*
+-	 * We only check and fix the parent bridge: All systems which need
+-	 * this fixup that have been reviewed are laptops and the only bridge
+-	 * which needed fixing was the parent bridge of the CardBus bridge:
+-	 */
+-	struct pci_bus *bridge_to_fix = cardbus_bridge->parent;
+-
+-	/* Check bus numbers are already set up correctly: */
+-	if (bridge_to_fix->subordinate >= cardbus_bridge->subordinate)
+-		return; /* The subordinate number is ok, nothing to do */
+-
+-	if (!bridge_to_fix->parent)
+-		return; /* Root bridges are ok */
+-
+-	/* stay within the limits of the bus range of the parent: */
+-	upper_limit = bridge_to_fix->parent->subordinate;
+-
+-	/* check the bus ranges of all silbling bridges to prevent overlap */
+-	list_for_each(tmp, &bridge_to_fix->parent->children) {
+-		struct pci_bus *silbling = pci_bus_b(tmp);
+-		/*
+-		 * If the silbling has a higher secondary bus number
+-		 * and it's secondary is equal or smaller than our
+-		 * current upper limit, set the new upper limit to
+-		 * the bus number below the silbling's range:
+-		 */
+-		if (silbling->secondary > bridge_to_fix->subordinate
+-		    && silbling->secondary <= upper_limit)
+-			upper_limit = silbling->secondary - 1;
+-	}
+-
+-	/* Show that the wanted subordinate number is not possible: */
+-	if (cardbus_bridge->subordinate > upper_limit)
+-		dev_printk(KERN_WARNING, &cardbus_bridge->dev,
+-			   "Upper limit for fixing this "
+-			   "bridge's parent bridge: #%02x\n", upper_limit);
+-
+-	/* If we have room to increase the bridge's subordinate number, */
+-	if (bridge_to_fix->subordinate < upper_limit) {
+-
+-		/* use the highest number of the hidden bus, within limits */
+-		unsigned char subordinate_to_assign =
+-			min(cardbus_bridge->subordinate, upper_limit);
+-
+-		dev_printk(KERN_INFO, &bridge_to_fix->dev,
+-			   "Raising subordinate bus# of parent "
+-			   "bus (#%02x) from #%02x to #%02x\n",
+-			   bridge_to_fix->number,
+-			   bridge_to_fix->subordinate, subordinate_to_assign);
+-
+-		/* Save the new subordinate in the bus struct of the bridge */
+-		bridge_to_fix->subordinate = subordinate_to_assign;
+-
+-		/* and update the PCI config space with the new subordinate */
+-		pci_write_config_byte(bridge_to_fix->self,
+-			PCI_SUBORDINATE_BUS, bridge_to_fix->subordinate);
+-	}
+-}
+-
+ /*
+  * Initialize a cardbus controller. Make sure we have a usable
+  * interrupt, and that we can map the cardbus area. Fill in the
+@@ -1257,8 +1184,6 @@ static int __devinit yenta_probe(struct pci_dev *dev, const struct pci_device_id
+ 	dev_printk(KERN_INFO, &dev->dev,
+ 		   "Socket status: %08x\n", cb_readl(socket, CB_SOCKET_STATE));
+ 
+-	yenta_fixup_parent_bridge(dev->subordinate);
+-
+ 	/* Register it with the pcmcia layer.. */
+ 	ret = pcmcia_register_socket(&socket->socket);
+ 	if (ret == 0) {
+-- 
+1.7.7
+
