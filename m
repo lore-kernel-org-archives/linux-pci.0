@@ -1,4 +1,8 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:29411 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161366Ab2CSFry (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:54 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -6,53 +10,70 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH -v3 32/47] PCI, ACPI: Make kacpi_hotplug_wq static
-Date: Sun, 18 Mar 2012 22:46:21 -0700
-Message-Id: <1332135996-13860-33-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 21/47] PCI: Move pci_stop_and_remove_behind_bridge() down
+Date: Sun, 18 Mar 2012 22:46:10 -0700
+Message-Id: <1332135996-13860-22-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No external user anymore.
+Later it will use pci_stop_bus_devices instead of pci_stop_behind_bridge.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
 ---
- drivers/acpi/osl.c      |    3 +--
- include/acpi/acpiosxf.h |    2 --
- 2 files changed, 1 insertions(+), 4 deletions(-)
+ drivers/pci/remove.c |   30 +++++++++++++++---------------
+ 1 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index fdcf4a5..09be602 100644
---- a/drivers/acpi/osl.c
-+++ b/drivers/acpi/osl.c
-@@ -81,8 +81,7 @@ static acpi_osd_handler acpi_irq_handler;
- static void *acpi_irq_context;
- static struct workqueue_struct *kacpid_wq;
- static struct workqueue_struct *kacpi_notify_wq;
--struct workqueue_struct *kacpi_hotplug_wq;
--EXPORT_SYMBOL(kacpi_hotplug_wq);
-+static struct workqueue_struct *kacpi_hotplug_wq;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index bf4b46b..3f540ce 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -128,21 +128,6 @@ static void pci_stop_behind_bridge(struct pci_dev *dev)
+ 			pci_stop_bus_device(pci_dev_b(l));
+ }
  
- /*
-  * This list of permanent mappings is for memory that may be accessed from
-diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
-index 62326ae..2326622 100644
---- a/include/acpi/acpiosxf.h
-+++ b/include/acpi/acpiosxf.h
-@@ -189,8 +189,6 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
- /*
-  * Threads and Scheduling
-  */
--extern struct workqueue_struct *kacpi_hotplug_wq;
+-/**
+- * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
+- *					 a PCI bridge
+- * @dev: PCI bridge device
+- *
+- * Remove all devices on the bus, except for the parent bridge.
+- * This also removes any child buses, and any devices they may
+- * contain in a depth-first manner.
+- */
+-void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+-{
+-	pci_stop_behind_bridge(dev);
+-	__pci_remove_behind_bridge(dev);
+-}
 -
- struct acpi_hp_work {
- 	struct work_struct work;
- 	acpi_handle handle;
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+ {
+ 	struct list_head *l, *n;
+@@ -162,6 +147,21 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+ }
+ 
+ /**
++ * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
++ *					 a PCI bridge
++ * @dev: PCI bridge device
++ *
++ * Remove all devices on the bus, except for the parent bridge.
++ * This also removes any child buses, and any devices they may
++ * contain in a depth-first manner.
++ */
++void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
++{
++	pci_stop_behind_bridge(dev);
++	__pci_remove_behind_bridge(dev);
++}
++
++/**
+  * pci_stop_bus_device - stop a PCI device and any children
+  * @dev: the device to stop
+  *
 -- 
 1.7.7
 
