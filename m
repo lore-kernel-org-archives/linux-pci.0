@@ -1,55 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f202.google.com ([209.85.220.202]:49856 "EHLO
-	mail-vx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031691Ab2CGBAj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 20:00:39 -0500
-Received: by vcbfk26 with SMTP id fk26so720506vcb.1
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 17:00:38 -0800 (PST)
-Subject: [PATCH v1 6/9] unicore32/PCI: move <asm-generic/pci-bridge.h> include
-	to asm/pci.h
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Guan Xuetao <gxt@mprc.pku.edu.cn>
-Date: Tue, 06 Mar 2012 18:00:38 -0700
-Message-ID: <20120307010037.27465.23622.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 09/11] x86, PCI: Embed pci_sysdata into pci_root_info on acpi path
+Date: Sun, 18 Mar 2012 22:40:22 -0700
+Message-Id: <1332135624-13528-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+References: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move this include to be consistent with other architectures.
+So that part memory will be released on root bus removing path.
 
-CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/unicore32/include/asm/pci.h |    1 +
- arch/unicore32/kernel/pci.c      |    1 -
- 2 files changed, 1 insertions(+), 1 deletions(-)
+ arch/x86/pci/acpi.c |   21 ++++-----------------
+ 1 files changed, 4 insertions(+), 17 deletions(-)
 
-diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
-index dd38677..f5e108f 100644
---- a/arch/unicore32/include/asm/pci.h
-+++ b/arch/unicore32/include/asm/pci.h
-@@ -14,6 +14,7 @@
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 23e7361..8a17b23 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -13,6 +13,7 @@ struct pci_root_info {
+ 	unsigned int res_num;
+ 	struct resource *res;
+ 	int busnum;
++	struct pci_sysdata sd;
+ };
  
- #ifdef __KERNEL__
- #include <asm-generic/pci-dma-compat.h>
-+#include <asm-generic/pci-bridge.h>
- #include <asm-generic/pci.h>
- #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
+ static bool pci_use_crs = true;
+@@ -410,26 +411,16 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (node != -1 && !node_online(node))
+ 		node = -1;
  
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 6c1248f..2fc2b1b 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -19,7 +19,6 @@
- #include <linux/slab.h>
- #include <linux/init.h>
- #include <linux/io.h>
--#include <asm-generic/pci-bridge.h>
+-	/* Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+-	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
+ 		printk(KERN_WARNING "pci_bus %04x:%02x: "
+ 		       "ignored (out of memory)\n", domain, busnum);
+ 		return NULL;
+ 	}
  
- static int debug_pci;
++	sd = &info->sd;
+ 	sd->domain = domain;
+ 	sd->node = node;
+-	info = kzalloc(sizeof(*info), GFP_KERNEL);
+-	if (!info) {
+-		kfree(sd);
+-		printk(KERN_WARNING "pci_bus %04x:%02x: "
+-		       "ignored (out of memory)\n", domain, busnum);
+-		return NULL;
+-	}
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -442,7 +433,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 */
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(info);
+-		kfree(sd);
+ 	} else {
+ 		probe_pci_root_info(info, device, busnum, domain);
  
+@@ -484,9 +474,6 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		}
+ 	}
+ 
+-	if (!bus)
+-		kfree(sd);
+-
+ 	if (bus && node != -1) {
+ #ifdef CONFIG_ACPI_NUMA
+ 		if (pxm >= 0)
+-- 
+1.7.7
 
