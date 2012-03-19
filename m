@@ -1,108 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v11 29/30] PCI: More strict checking of valid range for bridge
-Date: Sun, 18 Mar 2012 22:43:00 -0700
-Message-Id: <1332135781-13695-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 37/47] PCI: Kill pci_is_reassignedev()
+Date: Sun, 18 Mar 2012 22:46:26 -0700
+Message-Id: <1332135996-13860-38-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found one sick system with two sibling bridge have overlaping range from BIOS.
-00:02.1 bus range is 0x30-0x30
-00:02.2 bus range is 0x30-0x3f, and it have two children under it.
-
-RHEL 6.2 kernel, will just 00:02.1 have child bus 0x30, and bridge 00:02.2 will
-not have.
-
-before this patch, this patchset will have 00:02.1 to have bus 0x30,
-and 00:02.2 will have reallocate range bus 01.
-but 00:02.1 will have scaned at first, so later it will have two fake devices.
-
-To fix the problem, We need to check with unscaned sibling bridge about range
-overlapping.
-If there is overlapping found, will mark both sides to be broken.
-So we could prevent one side take too big range.
+Only one user. Just use pci_specified_resource_alignement() directly.
+So could only get get align one time for the dev that in the list
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |   45 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 44 insertions(+), 1 deletions(-)
+ drivers/pci/pci.c |   17 +++--------------
+ 1 files changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8a4e90f..01ba48e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -714,6 +714,48 @@ static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
- 	return ret;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8156744..82ed56a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3685,18 +3685,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	return align;
  }
  
-+static int __devinit pci_bridge_check_busn_broken_with_unscaned(
-+				struct pci_bus *bus,
-+				struct pci_dev *dev,
-+				int secondary, int subordinate)
-+{
-+	u32 buses2;
-+	int broken = 0;
-+	struct pci_dev *dev2;
-+	int secondary2, subordinate2;
-+	int common_start, common_end;
-+
-+	/* need to check with not scaned sibling bridges */
-+	list_for_each_entry(dev2, &bus->devices, bus_list) {
-+		if (dev2->hdr_type != PCI_HEADER_TYPE_BRIDGE &&
-+		    dev2->hdr_type != PCI_HEADER_TYPE_CARDBUS)
-+			continue;
-+		if (dev2->subordinate)
-+			continue;
-+		if (dev2 == dev)
-+			continue;
-+
-+		pci_read_config_dword(dev2, PCI_PRIMARY_BUS, &buses2);
-+		secondary2 = (buses2 >> 8) & 0xFF;
-+		subordinate2 = (buses2 >> 16) & 0xFF;
-+
-+		/* overlapping between them ? */
-+		common_start = max(secondary, secondary2);
-+		common_end = min(subordinate, subordinate2);
-+		if (common_start <= common_end) {
-+			/*
-+			 * Temporarily disable forwarding of the
-+			 * configuration cycles on this sibling bridge
-+			 */
-+			pci_write_config_dword(dev2, PCI_PRIMARY_BUS,
-+					       buses2 & ~0xffffff);
-+			broken = 1;
-+		}
-+	}
-+
-+	return broken;
-+}
-+
- static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
- 				struct pci_dev *dev,
- 				int secondary, int subordinate)
-@@ -734,7 +776,8 @@ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
+-/**
+- * pci_is_reassigndev - check if specified PCI is target device to reassign
+- * @dev: the PCI device to check
+- *
+- * RETURNS: non-zero for PCI device is a target device to reassign,
+- *          or zero is not.
+- */
+-int pci_is_reassigndev(struct pci_dev *dev)
+-{
+-	return (pci_specified_resource_alignment(dev) != 0);
+-}
+-
+ /*
+  * This function disables memory decoding and releases memory resources
+  * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
+@@ -3711,7 +3699,9 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	resource_size_t align, size;
+ 	u16 command;
  
- 	release_resource(&busn_res);
+-	if (!pci_is_reassigndev(dev))
++	/* check if specified PCI is target device to reassign */
++	align = pci_specified_resource_alignment(dev);
++	if (!align)
+ 		return;
  
--	return 0;
-+	return pci_bridge_check_busn_broken_with_unscaned(bus, dev,
-+					secondary, subordinate);
- }
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
+@@ -3727,7 +3717,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
  
- static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
+-	align = pci_specified_resource_alignment(dev);
+ 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
 -- 
 1.7.7
 
