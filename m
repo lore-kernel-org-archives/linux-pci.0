@@ -1,37 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:12700 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758822Ab2CFJDO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 04:03:14 -0500
-From: Zhao Chenhui <chenhui.zhao@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>
-CC: <leoli@freescale.com>
-Subject: [PATCH 1/9] pci_ids: Add device ID for IBM PCI-X bridge
-Date: Tue, 6 Mar 2012 17:05:07 +0800
-Message-ID: <1331024707-15891-1-git-send-email-chenhui.zhao@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from acsinet15.oracle.com ([141.146.126.227]:25578 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162073Ab2CSFuB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:50:01 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 22/26] PCI: Update pci_resource_bar() to support addon_resource
+Date: Sun, 18 Mar 2012 22:48:45 -0700
+Message-Id: <1332136129-14010-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Zhao Chenhui <chenhui.zhao@freescale.com>
+need to loop addon resource list to retrieve reg_addr in it.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- include/linux/pci_ids.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/pci/pci.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 31d77af..8f026c0 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -484,6 +484,7 @@
- #define PCI_DEVICE_ID_IBM_ICOM_V2_ONE_PORT_RVX_ONE_PORT_MDM	0x0251
- #define PCI_DEVICE_ID_IBM_ICOM_V2_ONE_PORT_RVX_ONE_PORT_MDM_PCIE 0x0361
- #define PCI_DEVICE_ID_IBM_ICOM_FOUR_PORT_MODEL	0x252
-+#define PCI_DEVICE_ID_IBM_PCIX_BRIDGE	0x01a7
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 5439033..8b9acf6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3549,6 +3549,13 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
+ 		reg = pci_iov_resource_bar(dev, resno, type);
+ 		if (reg)
+ 			return reg;
++	} else if (resno >= PCI_NUM_RESOURCES) {
++		struct resource *res = pci_dev_resource_n(dev, resno);
++
++		if (res) {
++			*type = pci_bar_unknown;
++			return to_pci_dev_addon_resource(res)->reg_addr;
++		}
+ 	}
  
- #define PCI_SUBVENDOR_ID_IBM		0x1014
- #define PCI_SUBDEVICE_ID_IBM_SATURN_SERIAL_ONE_PORT	0x03d4
+ 	dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
 -- 
-1.6.4.1
-
+1.7.7
 
