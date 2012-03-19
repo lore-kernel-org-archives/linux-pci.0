@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25578 "EHLO
+Received: from acsinet15.oracle.com ([141.146.126.227]:29541 "EHLO
 	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162073Ab2CSFuB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:50:01 -0400
+	with ESMTP id S1161518Ab2CSFsO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:14 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -11,39 +11,76 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 22/26] PCI: Update pci_resource_bar() to support addon_resource
-Date: Sun, 18 Mar 2012 22:48:45 -0700
-Message-Id: <1332136129-14010-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH -v3 35/47] PCI, cphi_hotplug: Simplify configure_slot
+Date: Sun, 18 Mar 2012 22:46:24 -0700
+Message-Id: <1332135996-13860-36-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-need to loop addon resource list to retrieve reg_addr in it.
+For child p2p bridge hotplug support should use pci_scan_bridge instead.
+
+Make it more simillar to pciehp, just use pci_hp_add_bridge()
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/pci/hotplug/cpci_hotplug_pci.c |   35 +++++--------------------------
+ 1 files changed, 6 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5439033..8b9acf6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3549,6 +3549,13 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
- 		reg = pci_iov_resource_bar(dev, resno, type);
- 		if (reg)
- 			return reg;
-+	} else if (resno >= PCI_NUM_RESOURCES) {
-+		struct resource *res = pci_dev_resource_n(dev, resno);
-+
-+		if (res) {
-+			*type = pci_bar_unknown;
-+			return to_pci_dev_addon_resource(res)->reg_addr;
-+		}
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index 4ef80ad..dcc75c7 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -285,42 +285,19 @@ int __ref cpci_configure_slot(struct slot *slot)
+ 	for (fn = 0; fn < 8; fn++) {
+ 		struct pci_dev *dev;
+ 
+-		dev = pci_get_slot(parent, PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
++		dev = pci_get_slot(parent,
++				   PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
+ 		if (!dev)
+ 			continue;
+ 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+-		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
+-			/* Find an unused bus number for the new bridge */
+-			struct pci_bus *child;
+-			unsigned char busnr, start = parent->secondary;
+-			unsigned char end = parent->subordinate;
+-
+-			for (busnr = start; busnr <= end; busnr++) {
+-				if (!pci_find_bus(pci_domain_nr(parent),
+-						  busnr))
+-					break;
+-			}
+-			if (busnr >= end) {
+-				err("No free bus for hot-added bridge\n");
+-				pci_dev_put(dev);
+-				continue;
+-			}
+-			child = pci_add_new_bus(parent, dev, busnr);
+-			if (!child) {
+-				err("Cannot add new bus for %s\n",
+-				    pci_name(dev));
+-				pci_dev_put(dev);
+-				continue;
+-			}
+-			child->subordinate = pci_do_scan_bus(child);
+-			pci_bus_size_bridges_with_self(child);
+-		}
++		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
++			pci_hp_add_bridge(dev);
+ 		pci_dev_put(dev);
  	}
  
- 	dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
+-	pci_bus_assign_resources(parent);
++	pci_assign_unassigned_bridge_resources(parent->self);
++
+ 	pci_bus_add_devices(parent);
+-	pci_enable_bridges(parent);
+ 
+ 	dbg("%s - exit", __func__);
+ 	return 0;
 -- 
 1.7.7
 
