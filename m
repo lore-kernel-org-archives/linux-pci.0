@@ -1,106 +1,52 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1331018040-30725-15-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org> <1331018040-30725-15-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 8 Mar 2012 18:11:35 -0700
-Message-ID: <CAErSpo6VyKpBygK3vV25q+X5YisNVPwh64jaJ_KtMO1WB=ocpw@mail.gmail.com>
-Subject: Re: [PATCH 14/23] PCI: add __pci_remove_bus_devices()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 08/47] PCI: Use __pci_bus_size_bridges() directly in pci_assign_unassigned_bus_resources()
+Date: Sun, 18 Mar 2012 22:45:57 -0700
+Message-Id: <1332135996-13860-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> will use it with pci_stop_and_remove_bus later.
->
-> also remove __pci_remove_behind_bridge and pci_stop_behind_bridge.
->
-> they are same except one take bridge and one take bus.
->
-> and we already have pci_stop_bus_devices()
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/remove.c |   28 +++++++++++-----------------
->  1 files changed, 11 insertions(+), 17 deletions(-)
->
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 243d59b..62c348c 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -78,7 +78,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
->  }
->  EXPORT_SYMBOL(pci_remove_bus);
->
-> -static void __pci_remove_behind_bridge(struct pci_dev *dev);
-> +static void __pci_remove_bus_devices(struct pci_bus *bus);
->  /**
->  * pci_stop_and_remove_bus_device - remove a PCI device and any children
->  * @dev: the device to remove
-> @@ -96,7 +96,7 @@ void __pci_remove_bus_device(struct pci_dev *dev)
->        if (dev->subordinate) {
->                struct pci_bus *b = dev->subordinate;
->
-> -               __pci_remove_behind_bridge(dev);
-> +               __pci_remove_bus_devices(b);
->                pci_remove_bus(b);
->                dev->subordinate = NULL;
->        }
-> @@ -111,22 +111,12 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
->        __pci_remove_bus_device(dev);
->  }
->
-> -static void __pci_remove_behind_bridge(struct pci_dev *dev)
-> +static void __pci_remove_bus_devices(struct pci_bus *bus)
->  {
->        struct list_head *l, *n;
->
-> -       if (dev->subordinate)
-> -               list_for_each_safe(l, n, &dev->subordinate->devices)
-> -                       __pci_remove_bus_device(pci_dev_b(l));
-> -}
-> -
-> -static void pci_stop_behind_bridge(struct pci_dev *dev)
-> -{
-> -       struct list_head *l, *n;
-> -
-> -       if (dev->subordinate)
-> -               list_for_each_safe(l, n, &dev->subordinate->devices)
-> -                       pci_stop_bus_device(pci_dev_b(l));
-> +       list_for_each_safe(l, n, &bus->devices)
-> +               __pci_remove_bus_device(pci_dev_b(l));
+Now __pci_bus_size_bridges() will not include self bridge.
+So we don't need to have our own version in
+ pci_assign_unassigned_bus_resources anymore.
 
-Use list_for_each_entry_safe() so you don't need pci_dev_b().
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
->  }
->
->  static void pci_stop_bus_devices(struct pci_bus *bus)
-> @@ -158,8 +148,12 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
->  */
->  void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
->  {
-> -       pci_stop_behind_bridge(dev);
-> -       __pci_remove_behind_bridge(dev);
-> +       struct pci_bus *bus = dev->subordinate;
-> +
-> +       if (bus) {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ec2026c..d9a5500 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1496,17 +1496,11 @@ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+ 
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+-	struct pci_dev *dev;
+ 	LIST_HEAD(add_list); /* list of resources that
+ 					want additional resources */
+ 
+ 	down_read(&pci_bus_sem);
+-	list_for_each_entry(dev, &bus->devices, bus_list)
+-		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+-		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
+-			if (dev->subordinate)
+-				__pci_bus_size_bridges(dev->subordinate,
+-						 &add_list, true);
++	__pci_bus_size_bridges(bus, &add_list, false);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	BUG_ON(!list_empty(&add_list));
+-- 
+1.7.7
 
-Don't check "bus" here.  If the caller screws up and passes a
-non-bridge pointer, I want to learn about it rather than ignore it.
-
-> +               pci_stop_bus_devices(bus);
-> +               __pci_remove_bus_devices(bus);
-> +       }
->  }
->
->  /**
-> --
-> 1.7.7
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
