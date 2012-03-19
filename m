@@ -1,67 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:52206 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752067Ab2CTRmm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 13:42:42 -0400
-Date: Tue, 20 Mar 2012 10:42:21 -0700
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/7] PCI core support for bus-to-resource offsets
- (fixes)
-Message-ID: <20120320104221.5104ba3a@jbarnes-desktop>
-In-Reply-To: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/3vgGHNYG95f3Q8HskCmjztN"; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 11/26] PCI: Use for_each_pci_dev_resource pci_reassigndev
+Date: Sun, 18 Mar 2012 22:48:34 -0700
+Message-Id: <1332136129-14010-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/3vgGHNYG95f3Q8HskCmjztN
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-On Fri, 16 Mar 2012 17:47:53 -0600
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 44b4835..5439033 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3718,8 +3718,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
+ 
+-	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+-		r = &dev->resource[i];
++	for_each_pci_dev_nobridge_resource(dev, r, i) {
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
+ 		size = resource_size(r);
+@@ -3738,8 +3737,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	 */
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+ 	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+-		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
+-			r = &dev->resource[i];
++		for_each_pci_dev_bridge_resource(dev, r, i) {
+ 			if (!(r->flags & IORESOURCE_MEM))
+ 				continue;
+ 			r->end = resource_size(r) - 1;
+-- 
+1.7.7
 
-> This is a set of incremental fixes related to my recent "remove device
-> resource fixups" series.
->=20
-> These apply to 63ab387ca0, the current head of Jesse's linux-next branch.
-> The result is the same as the updated patches I posted here:
->=20
->   git://github.com/bjorn-helgaas/linux.git pci-probe_only-and-offset-v3-5=
-eb2c1f
->=20
-> except that I removed the EN1K bridge I/O window rework, since it's not
-> necessary for the merge window.
-
-Finally applied to -next, thanks Bjorn.
-
---=20
-Jesse Barnes, Intel Open Source Technology Center
-
---Sig_/3vgGHNYG95f3Q8HskCmjztN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPaMF9AAoJEIEoDkX4Qk9h1t8QALXQHqRoyKNQPb1BVb3Latm5
-ICteTa8XYaIun6tsxDATXarsczZXgISeMKyf4Ig1NBzJ+7iV6sIk7t8oaUJiPqAM
-ioShh+39Fh4B8Si68AsXUpX0qKasiR6X4+pIGeqTHJ7ZNRMnVbICXhTFdLz4s153
-gqwapIaKrRXBBvLATz2oLUJ6gul/QjPhkJwfkf9ZYtKw7QC3v3L63ZO51bNgAhyx
-mBPv1CjiDeKyNUzdtFr31/x2y0I59FcBXKFNaHJ6ygasNQ4Jd0uNKm0Z4Mub+pmP
-jFoOBwwATd0njwHFzfSemGhswcPMa07k/dK1B4eMUCvWCRJStnjSITB29DGFhe6Z
-tbUB2myGYB94CAOvcikAsGsjcJM/DmVZC1SwkEbY28LAgGRZNXF8RBC4uYrfD7LF
-/px11VC7cC/4ZSv7HTBjOR8IuzgjH+mCfV6EArvxzJn07G3wf7ZpjczQ1FMdXNBF
-rfmezVxo7cBhfFAKHL0rRP9tKekvC/DcLFav6c/SSvIUYqGC2qzWE3gUC8Ftxzht
-Kj+oMTMuOpYJTa8KJ51JtHrdT9LjPZ0gqjczQ7+gd5IZ2Ou5hgEtkJUuFPJ3QLIj
-1Xnvv6HUaBkRJqvFqfxPVW/DkmsgdB8ObfiDenAWyQv7CXjYJf9LR2squ60/Bp2+
-DFnG7fgAKr/Ua1Ip80mU
-=eqUo
------END PGP SIGNATURE-----
-
---Sig_/3vgGHNYG95f3Q8HskCmjztN--
