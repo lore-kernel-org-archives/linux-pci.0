@@ -1,72 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43225 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461Ab2CUO4o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2012 10:56:44 -0400
-Received: by ghrr11 with SMTP id r11so991653ghr.19
-        for <linux-pci@vger.kernel.org>; Wed, 21 Mar 2012 07:56:43 -0700 (PDT)
-Message-ID: <4F69EC1F.1090901@gmail.com>
-Date: Wed, 21 Mar 2012 22:56:31 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@huawei.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-	chenkeping@huawei.com
-Subject: Re: [PATCH 2/6] x86,IRQ: Mark unused entries in 'ioapics' array as
- free at startup
-References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com> <1332260463-13924-1-git-send-email-jiang.liu@huawei.com> <1332260463-13924-4-git-send-email-jiang.liu@huawei.com> <CAE9FiQX9NJ4n09_OWJVf7n579=JWDUi+XF79aMKUFunCXL3PJw@mail.gmail.com> <4F694BCF.80106@huawei.com>
-In-Reply-To: <4F694BCF.80106@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 34/47] PCI, pciehp: Separate pci_hp_add_bridge()
+Date: Sun, 18 Mar 2012 22:46:23 -0700
+Message-Id: <1332135996-13860-35-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
-	Get your points now and will drop this patch from the series.
-	Thanks!
+Will use it for other pci hp hotplug support
 
-On 03/21/2012 11:32 AM, Jiang Liu wrote:
-> So seems another patch is needed to search all entries in the ioapics
-> array to find a free entry for real hot-added IOAPICs. Current
-> implementation can only support hot-replace scenario, but can't support
-> real hot-add. If needed, I will work out another patch to address that.
-> 
-> Gerry
-> 
-> On 2012-3-21 11:25, Yinghai Lu wrote:
->> On Tue, Mar 20, 2012 at 9:20 AM, Jiang Liu<liuj97@gmail.com>  wrote:
->>> Unused entries in ioapics array should be marked as free at startup,
->>> so they could be used by hot-added IOAPICs.
->>>
->>> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->>> ---
->>>   arch/x86/kernel/apic/io_apic.c |    4 ++++
->>>   1 files changed, 4 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
->>> index 7412eb8..622374f 100644
->>> --- a/arch/x86/kernel/apic/io_apic.c
->>> +++ b/arch/x86/kernel/apic/io_apic.c
->>> @@ -392,6 +392,10 @@ int __init arch_early_irq_init(void)
->>>                 cpumask_set_cpu(0, cfg->domain);
->>>         }
->>>
->>> +       /* Mark all left entries as free for IOAPIC hot-adding. */
->>> +       for (i = nr_ioapics; i<  MAX_IO_APICS; i++)
->>> +               ioapics[i].mp_config.apicid = 0xff;
->>> +
->>>         return 0;
->>>   }
->>
->> this one looks like not needed, we did not search that after
->> nr_ioapics, and just use nr_ioapics if open spot is found.
->>
->> Yinghai
->>
->>
-> 
-> 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug-pci.c        |   13 +++++++++++++
+ drivers/pci/hotplug/pciehp_pci.c |   18 ++----------------
+ drivers/pci/pci.h                |    1 +
+ 3 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
+index d3509cd..24de840 100644
+--- a/drivers/pci/hotplug-pci.c
++++ b/drivers/pci/hotplug-pci.c
+@@ -4,6 +4,19 @@
+ #include <linux/export.h>
+ #include "pci.h"
+ 
++int __ref pci_hp_add_bridge(struct pci_dev *dev)
++{
++	struct pci_bus *parent = dev->bus;
++	int pass, busnr = parent->secondary;
++
++	for (pass = 0; pass < 2; pass++)
++		busnr = pci_scan_bridge(parent, dev, busnr, pass);
++	if (!dev->subordinate)
++		return -1;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_hp_add_bridge);
+ 
+ unsigned int __devinit pci_do_scan_bus(struct pci_bus *bus)
+ {
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index e21171c..b9a9fce 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -34,19 +34,6 @@
+ #include "../pci.h"
+ #include "pciehp.h"
+ 
+-static int __ref pciehp_add_bridge(struct pci_dev *dev)
+-{
+-	struct pci_bus *parent = dev->bus;
+-	int pass, busnr = parent->secondary;
+-
+-	for (pass = 0; pass < 2; pass++)
+-		busnr = pci_scan_bridge(parent, dev, busnr, pass);
+-	if (!dev->subordinate)
+-		return -1;
+-
+-	return 0;
+-}
+-
+ int pciehp_configure_device(struct slot *p_slot)
+ {
+ 	struct pci_dev *dev;
+@@ -75,9 +62,8 @@ int pciehp_configure_device(struct slot *p_slot)
+ 		if (!dev)
+ 			continue;
+ 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+-				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
+-			pciehp_add_bridge(dev);
+-		}
++		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
++			pci_hp_add_bridge(dev);
+ 		pci_dev_put(dev);
+ 	}
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 13b1159..9378d81 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -124,6 +124,7 @@ static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
+ #endif
+ 
+ /* Functions for PCI Hotplug drivers to use */
++int pci_hp_add_bridge(struct pci_dev *dev);
+ extern unsigned int pci_do_scan_bus(struct pci_bus *bus);
+ 
+ #ifdef HAVE_PCI_LEGACY
+-- 
+1.7.7
 
