@@ -1,77 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:32260 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758528Ab2CFHRM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 02:17:12 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 21/23] x86, PCI: add __pci_scan_root_bus_on_node() that can skip bus_add
-Date: Mon,  5 Mar 2012 23:13:58 -0800
-Message-Id: <1331018040-30725-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH -v2 07/26] PCI: Use for_each_res with IOV releated funcs
+Date: Sun, 18 Mar 2012 22:48:30 -0700
+Message-Id: <1332136129-14010-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-So could insert pus pci_assign_unassigned_bus_resources() before do bus_add.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/include/asm/pci.h |    2 ++
- arch/x86/pci/common.c      |   11 ++++++++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/pci/iov.c |   31 +++++++++++++++----------------
+ 1 files changed, 15 insertions(+), 16 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index df75d07..bb015c7 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -24,6 +24,8 @@ extern int noioapicquirk;
- extern int noioapicreroute;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 6554e1a..f015764 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -99,17 +99,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	pci_setup_device(virtfn);
+ 	virtfn->dev.parent = dev->dev.parent;
  
- /* scan a bus after allocating a pci_sysdata for it */
-+struct pci_bus * __devinit __pci_scan_bus_on_node(int busno,
-+			 struct pci_ops *ops, int node, bool bus_add);
- extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 					    int node);
- extern struct pci_bus *pci_scan_bus_with_sysdata(int busno);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 35931f6..2ebdc231 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -625,7 +625,8 @@ static void release_pci_sysdata(struct pci_host_bridge *bridge)
- 	kfree(sd);
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_dev_iov_resource(dev, res, i) {
++		struct resource *virtfn_res;
++
+ 		if (!res->parent)
+ 			continue;
+-		virtfn->resource[i].name = pci_name(virtfn);
+-		virtfn->resource[i].flags = res->flags;
++
++		virtfn_res = pci_dev_resource_n(virtfn, i - PCI_IOV_RESOURCES);
++		virtfn_res->name = pci_name(virtfn);
++		virtfn_res->flags = res->flags;
+ 		size = resource_size(res);
+ 		do_div(size, iov->total);
+-		virtfn->resource[i].start = res->start + size * id;
+-		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
+-		rc = request_resource(res, &virtfn->resource[i]);
++		virtfn_res->start = res->start + size * id;
++		virtfn_res->end = virtfn_res->start + size - 1;
++		rc = request_resource(res, virtfn_res);
+ 		BUG_ON(rc);
+ 	}
+ 
+@@ -313,9 +316,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		return -EIO;
+ 
+ 	nres = 0;
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		bars |= (1 << (i + PCI_IOV_RESOURCES));
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_dev_iov_resource(dev, res, i) {
++		bars |= 1 << i;
+ 		if (res->parent)
+ 			nres++;
+ 	}
+@@ -473,10 +475,9 @@ found:
+ 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+ 
+ 	nres = 0;
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_dev_iov_resource(dev, res, i) {
+ 		i += __pci_read_base(dev, pci_bar_unknown, res,
+-				     pos + PCI_SRIOV_BAR + i * 4);
++			     pos + PCI_SRIOV_BAR + (i - PCI_IOV_RESOURCES) * 4);
+ 		if (!res->flags)
+ 			continue;
+ 		if (resource_size(res) & (PAGE_SIZE - 1)) {
+@@ -519,10 +520,8 @@ found:
+ 	return 0;
+ 
+ failed:
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_dev_iov_resource(dev, res, i)
+ 		res->flags = 0;
+-	}
+ 
+ 	return rc;
  }
- 
--struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
-+struct pci_bus * __devinit __pci_scan_bus_on_node(int busno,
-+			 struct pci_ops *ops, int node, bool bus_add)
- {
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
-@@ -639,7 +640,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 	sd->node = node;
- 	x86_pci_root_bus_resources(busno, &resources);
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
--	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
-+	bus = __pci_scan_root_bus(NULL, busno, ops, sd, &resources, bus_add);
- 	if (bus)
- 		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
- 					release_pci_sysdata, sd);
-@@ -650,7 +651,11 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 
- 	return bus;
- }
--
-+struct pci_bus * __devinit pci_scan_bus_on_node(int busno,
-+			 struct pci_ops *ops, int node)
-+{
-+	return __pci_scan_bus_on_node(busno, ops, node, true);
-+}
- struct pci_bus * __devinit pci_scan_bus_with_sysdata(int busno)
- {
- 	return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
 -- 
 1.7.7
 
