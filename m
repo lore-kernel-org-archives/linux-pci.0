@@ -1,49 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ww0-f74.google.com ([74.125.82.74]:63353 "EHLO
-	mail-ww0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758552Ab2CGWcL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2012 17:32:11 -0500
-Received: by wgbdt11 with SMTP id dt11so247772wgb.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2012 14:32:09 -0800 (PST)
-Subject: [PATCH v3 01/34] PCI: make pci_flags always available
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 07 Mar 2012 15:32:09 -0700
-Message-ID: <20120307223209.25669.37360.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 08/11] x86, PCI: Embed name into pci_root_info struct
+Date: Sun, 18 Mar 2012 22:40:21 -0700
+Message-Id: <1332135624-13528-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+References: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we move resource assignment functions into the core, we'll still
-need a way for architectures to prevent reassignment, e.g., the
-"pci_probe_only" functionality, and we'll need a generic, always
-available way the core can test for that.  The "pci_flags"
-arrangement used by several architectures seems like a convenient
-way to do this.
+Now we allocate info, and keep that in during whole life of host bridge.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+So don't allocate info->name seperately, just put name into struct.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ arch/x86/pci/acpi.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 2991a89..6db307f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -25,8 +25,11 @@
- #include <linux/ioport.h>
- #include <linux/cache.h>
- #include <linux/slab.h>
-+#include <asm-generic/pci-bridge.h>
- #include "pci.h"
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 2b74a16..23e7361 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -9,7 +9,7 @@
  
-+unsigned int __weak pci_flags;
-+
- struct pci_dev_resource {
- 	struct list_head list;
+ struct pci_root_info {
+ 	struct acpi_device *bridge;
+-	char *name;
++	char name[16];
+ 	unsigned int res_num;
  	struct resource *res;
+ 	int busnum;
+@@ -317,7 +317,6 @@ static void add_resources(struct pci_root_info *info,
+ 
+ static void free_pci_root_info_res(struct pci_root_info *info)
+ {
+-	kfree(info->name);
+ 	kfree(info->res);
+ 	info->res = NULL;
+ 	info->res_num = 0;
+@@ -370,9 +369,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	if (!info->res)
+ 		return;
+ 
+-	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+-	if (!info->name)
+-		return;
++	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				info);
+-- 
+1.7.7
 
