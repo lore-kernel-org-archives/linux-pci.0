@@ -1,71 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60748 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754019Ab2CWPDG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 11:03:06 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC PATCH 11/11] PCI: Serialize hotplug operations triggered by acpiphp driver
-Date: Fri, 23 Mar 2012 22:58:27 +0800
-Message-Id: <1332514707-9673-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
-References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:29872 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758097Ab2CSFpc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:45:32 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Kyle McMartin <kyle@mcmartin.ca>, Helge Deller <deller@gmx.de>,
+	linux-parisc@vger.kernel.org
+Subject: [PATCH -v11 16/30] PCI, parisc: Register busn_res for root buses
+Date: Sun, 18 Mar 2012 22:42:47 -0700
+Message-Id: <1332135781-13695-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-User pci_lock_hotplug()/pci_unlock_hotplug() to serialize PCI
-hotplug operations triggered by acpiphp driver.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Kyle McMartin <kyle@mcmartin.ca>
+Cc: Helge Deller <deller@gmx.de>
+Cc: linux-parisc@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/parisc/dino.c    |    5 +++++
+ drivers/parisc/lba_pci.c |    3 +++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 764891e..ee820a9 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1095,6 +1095,8 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 	bridge = (struct acpiphp_bridge *)hp_work->context;
-+
-+	pci_lock_hotplug();
- 	if (bridge->flags & BRIDGE_IS_DEAD)
- 		goto out;
+diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+index 0610e91..def94af 100644
+--- a/drivers/parisc/dino.c
++++ b/drivers/parisc/dino.c
+@@ -984,6 +984,10 @@ static int __init dino_probe(struct parisc_device *dev)
+ 	if (dino_dev->hba.gmmio_space.flags)
+ 		pci_add_resource(&resources, &dino_dev->hba.gmmio_space);
  
-@@ -1156,6 +1158,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
++	dino_dev->hba.bus_num.start = dino_current_bus;
++	dino_dev->hba.bus_num.end = 255;
++	dino_dev->hba.bus_num.flags |= IORESOURCE_BUS;
++	pci_add_resource(&resources, &dino_dev->hba.bus_num);
+ 	/*
+ 	** It's not used to avoid chicken/egg problems
+ 	** with configuration accessor functions.
+@@ -999,6 +1003,7 @@ static int __init dino_probe(struct parisc_device *dev)
+ 		return 0;
  	}
  
- out:
-+	pci_unlock_hotplug();
- 	kref_put(&bridge->kref, acpiphp_release_bridge);
- 	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
- }
-@@ -1201,6 +1204,8 @@ static void _handle_hotplug_event_func(struct work_struct *work)
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 	func = (struct acpiphp_func *)hp_work->context;
++	pci_bus_update_busn_res_end(bus, bus->subordinate);
+ 	bus->subordinate = pci_scan_child_bus(bus);
+ 
+ 	/* This code *depends* on scanning being single threaded
+diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+index e885764..df1e9f9 100644
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -1503,6 +1503,9 @@ lba_driver_probe(struct parisc_device *dev)
+ 	if (lba_dev->hba.gmmio_space.flags)
+ 		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
+ 
++	lba_dev->hba.bus_num.flags |= IORESOURCE_BUS;
++	pci_add_resource(&resources, &lba_dev->hba.bus_num);
 +
-+	pci_lock_hotplug();
- 	if (func->flags & FUNC_IS_DEAD)
- 		goto out;
- 
-@@ -1237,6 +1242,7 @@ static void _handle_hotplug_event_func(struct work_struct *work)
- 	}
- 
- out:
-+	pci_unlock_hotplug();
- 	kref_put(&func->kref, acpiphp_release_func);
- 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
- }
+ 	dev->dev.platform_data = lba_dev;
+ 	lba_bus = lba_dev->hba.hba_bus =
+ 		pci_create_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
 -- 
-1.7.5.4
+1.7.7
 
