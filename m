@@ -1,76 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31374 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162045Ab2CSFt6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:58 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v11 08/30] PCI: Checking busn_res in pci_scan_root_bus()
-Date: Sun, 18 Mar 2012 22:42:39 -0700
-Message-Id: <1332135781-13695-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 19/26] PCI: Use for_each_res with xen pci
+Date: Sun, 18 Mar 2012 22:48:42 -0700
+Message-Id: <1332136129-14010-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-Some calling may not have end decided yet, and may not pass busn_res in
-resources list.
-
-Try to do insert big one and shrink.
-
-Also print out one info about that, so we could find out which path
-does not have busn_res in resources list.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+ drivers/pci/xen-pcifront.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3d11836..654c727 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1736,12 +1736,34 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
- 	struct pci_bus *b;
-+	struct pci_host_bridge_window *window, *n;
-+	struct resource *res;
-+	bool found;
-+
-+	list_for_each_entry_safe(window, n, resources, list) {
-+		res = window->res;
-+		if (res->flags & IORESOURCE_BUS) {
-+			found = true;
-+			break;
-+		}
-+	}
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 9c43ab4..9ae41ba 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -393,9 +393,7 @@ static int pcifront_claim_resource(struct pci_dev *dev, void *data)
+ 	int i;
+ 	struct resource *r;
  
- 	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
- 	if (!b)
- 		return NULL;
- 
-+	if (!found) {
-+		dev_info(&b->dev,
-+		 "No busn resource found for root bus, will use [%02x, ff]\n",
-+			bus);
-+		pci_bus_insert_busn_res(b, bus, 255);
-+	}
-+
- 	b->subordinate = pci_scan_child_bus(b);
-+
-+	if (!found)
-+		pci_bus_update_busn_res_end(b, b->subordinate);
-+
- 	pci_bus_add_devices(b);
- 	return b;
- }
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		r = &dev->resource[i];
+-
++	for_each_pci_dev_all_resource(dev, r, i) {
+ 		if (!r->parent && r->start && r->flags) {
+ 			dev_info(&pdev->xdev->dev, "claiming resource %s/%d\n",
+ 				pci_name(dev), i);
 -- 
 1.7.7
 
