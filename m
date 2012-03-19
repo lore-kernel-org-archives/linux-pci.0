@@ -1,106 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:63777 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757929Ab2CIR0B convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Mar 2012 12:26:01 -0500
-Received: by lahj13 with SMTP id j13so1886009lah.19
-        for <linux-pci@vger.kernel.org>; Fri, 09 Mar 2012 09:25:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWPk-s5F5ofO=nU05tnRhmpav+f8Cs_mBG9A-MPuK9stw@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
- <1331018040-30725-8-git-send-email-yinghai@kernel.org> <CAErSpo6jqr44JS4Cyfc0cR_TNbo_ETjPJUO=x2gj-Q_x4TckVA@mail.gmail.com>
- <CAE9FiQWPk-s5F5ofO=nU05tnRhmpav+f8Cs_mBG9A-MPuK9stw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 9 Mar 2012 10:25:39 -0700
-Message-ID: <CAErSpo5QGqW8OL10H_PajnWi0JT=UsfX4c6pXJ_hsqXPcd+NPw@mail.gmail.com>
-Subject: Re: [PATCH 07/23] pci, dmar: Update dmar units devices list during hotplug
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 16/47] x86, PCI: Separate pcibios_allocate_bridge_resources()
+Date: Sun, 18 Mar 2012 22:46:05 -0700
+Message-Id: <1332135996-13860-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 9, 2012 at 12:06 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Mar 8, 2012 at 5:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> When do pci remove/rescan on system that have more iommus, got
->>>
->>> [  894.089745] Set context mapping for c4:00.0
->>> [  894.110890] mpt2sas3: Allocated physical memory: size(4293 kB)
->>> [  894.112556] mpt2sas3: Current Controller Queue Depth(1883), Max Controller Queue Depth(2144)
->>> [  894.127278] mpt2sas3: Scatter Gather Elements per IO(128)
->>> [  894.361295] DRHD: handling fault status reg 2
->>> [  894.364053] DMAR:[DMA Read] Request device [c4:00.0] fault addr fffbe000
->>> [  894.364056] DMAR:[fault reason 02] Present bit in context entry is cl
->>>
->>> it turns out when remove/rescan, pci dev will be freed and will get another new dev.
->>> but drhd units still keep old one... so dmar_find_matched_drhd_unit will
->>> return wrong drhd and iommu for the device that is not on first iommu.
->>>
->>> So need to update devices in drhd_units during pci remove/rescan.
->>>
->>> Could save domain/bus/device/function aside in the list and according that info
->>> restore new dev to drhd_units later.
->>> Then dmar_find_matched_drdh_unit and device_to_iommu could return right drhd and iommu.
->>>
->>> Add remove_dev_from_drhd/restore_dev_to_drhd functions to do the real work.
->>> call them in device ADD_DEVICE and UNBOUND_DRIVER
->>>
->>> Need to do the samething to atsr.  (expose dmar_atsr_units and add atsru->segment)
->>>
->>> After patch, will right iommu for the new dev and will not get DMAR error any more.
->>>
->>> -v2: add pci_dev_put/pci_dev_get to make refcount consistent.
->>>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> Cc: David Woodhouse <dwmw2@infradead.org>
->>> Cc: Vinod Koul <vinod.koul@intel.com>
->>> Cc: Dan Williams <dan.j.williams@intel.com>
->>> Cc: iommu@lists.linux-foundation.org
->>> ---
->>>  drivers/iommu/intel-iommu.c |  187 ++++++++++++++++++++++++++++++++++++++++---
->>>  include/linux/dmar.h        |    4 +
->>>  2 files changed, 181 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
->>> index c9c6053..39ef2ce 100644
->>> --- a/drivers/iommu/intel-iommu.c
->>> +++ b/drivers/iommu/intel-iommu.c
->>> @@ -665,6 +665,159 @@ static struct intel_iommu *device_to_iommu(int segment, u8 bus, u8 devfn)
->>>        return NULL;
->>>  }
->>>
->>> +#ifdef CONFIG_HOTPLUG
->>> +struct dev_dmaru {
->>> +       struct list_head list;
->>> +       void *dmaru;
->>> +       int index;
->>> +       int segment;
->>> +       unsigned char bus;
->>> +       unsigned int devfn;
->>> +};
->>> +
->>> +static int
->>> +save_dev_dmaru(int segment, unsigned char bus, unsigned int devfn,
->>> +                void *dmaru, int index, struct list_head *lh)
->>
->> Follow the indentation style used elsewhere in the file: as much of
->> the declaration on one line as will fit (here and below).
->>
->> I think the callers would read more naturally if you passed in the
->> struct pci_dev * to save_dev_dmaru() and extracted the
->> segment/bus/devfn here rather than in the callers.
->
-> Just want to keep save_dev_dmaru more consistent to get_dev_dmaru...
+Thus pcibios_allocate_bus_resources() could more simple and clean
 
-Well, it looks like you can change both save_dev_dmaru() *and*
-get_dev_dmaru() to take a struct pci_dev *.  I assumed that would be
-obvious.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/i386.c |   46 ++++++++++++++++++++++++----------------------
+ 1 files changed, 24 insertions(+), 22 deletions(-)
 
-Bjorn
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 831971e..c06f60f 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -193,34 +193,36 @@ EXPORT_SYMBOL(pcibios_align_resource);
+  *	    as well.
+  */
+ 
+-static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ {
+-	struct pci_bus *bus;
+-	struct pci_dev *dev;
+ 	int idx;
+ 	struct resource *r;
+ 
++	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
++		r = &dev->resource[idx];
++		if (!r->flags)
++			continue;
++		if (!r->start || pci_claim_resource(dev, idx) < 0) {
++			/*
++			 * Something is wrong with the region.
++			 * Invalidate the resource to prevent
++			 * child resource allocations in this
++			 * range.
++			 */
++			r->start = r->end = 0;
++			r->flags = 0;
++		}
++	}
++}
++
++static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++{
++	struct pci_bus *bus;
++
+ 	/* Depth-First Search on bus tree */
+ 	list_for_each_entry(bus, bus_list, node) {
+-		if ((dev = bus->self)) {
+-			for (idx = PCI_BRIDGE_RESOURCES;
+-			    idx < PCI_NUM_RESOURCES; idx++) {
+-				r = &dev->resource[idx];
+-				if (!r->flags)
+-					continue;
+-				if (!r->start ||
+-				    pci_claim_resource(dev, idx) < 0) {
+-					/*
+-					 * Something is wrong with the region.
+-					 * Invalidate the resource to prevent
+-					 * child resource allocations in this
+-					 * range.
+-					 */
+-					r->start = r->end = 0;
+-					r->flags = 0;
+-				}
+-			}
+-		}
++		if (bus->self)
++			pcibios_allocate_bridge_resources(bus->self);
+ 		pcibios_allocate_bus_resources(&bus->children);
+ 	}
+ }
+-- 
+1.7.7
+
