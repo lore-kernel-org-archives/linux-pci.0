@@ -1,93 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:56217 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752793Ab2CQDdZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 Mar 2012 23:33:25 -0400
-Message-ID: <1331955189.3105.177.camel@pasglop>
-Subject: Re: [PATCH v2 4/7] powerpc/PCI: convert devtree bus addresses to
- resource
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Anton Blanchard <anton@samba.org>
-Date: Sat, 17 Mar 2012 14:33:09 +1100
-In-Reply-To: <20120316234814.6649.47469.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
-	 <20120316234814.6649.47469.stgit@bhelgaas.mtv.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 07/11] x86, PCI: Add host bridge resource release for _CRS path
+Date: Sun, 18 Mar 2012 22:40:20 -0700
+Message-Id: <1332135624-13528-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+References: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-03-16 at 17:48 -0600, Bjorn Helgaas wrote:
-> Normal PCI enumeration via PCI config space uses __pci_read_base(), where
-> the PCI core applies any bus-to-resource offset.  But powerpc doesn't use
-> that path when enumerating via the device tree.
-> 
-> In 6c5705fec63d, I converted powerpc to use the PCI core bus-to-resource
-> conversion, but I missed these powerpc-specific paths.  Some powerpc
-> platforms fail to boot ("Cannot allocate resource region," "device not
-> available," etc.) between that commit and this one.
-> 
-> This adds the corresponding bus-to-resource conversion in the paths that
-> read BAR values from the OF device tree.
-> 
-> CC: Anton Blanchard <anton@samba.org>
+1. Allocate pci_root_info instead of use local stack. we need to pass around
+   info for release fn.
+2. Add release_pci_root_info
+3. Set x86 own host bridge release fn, so will make sure root bridge
+   related resources get freed during root bus removal.
 
-Acked-By: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/acpi.c |   63 +++++++++++++++++++++++++++++++++++++++++---------
+ 1 files changed, 51 insertions(+), 12 deletions(-)
 
-> CC: linuxppc-dev@lists.ozlabs.org
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/powerpc/kernel/pci_of_scan.c |   12 ++++++++----
->  1 files changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-> index b37d0b5..89dde17 100644
-> --- a/arch/powerpc/kernel/pci_of_scan.c
-> +++ b/arch/powerpc/kernel/pci_of_scan.c
-> @@ -75,6 +75,7 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
->  {
->  	u64 base, size;
->  	unsigned int flags;
-> +	struct pci_bus_region region;
->  	struct resource *res;
->  	const u32 *addrs;
->  	u32 i;
-> @@ -106,10 +107,11 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
->  			printk(KERN_ERR "PCI: bad cfg reg num 0x%x\n", i);
->  			continue;
->  		}
-> -		res->start = base;
-> -		res->end = base + size - 1;
->  		res->flags = flags;
->  		res->name = pci_name(dev);
-> +		region.start = base;
-> +		region.end = base + size - 1;
-> +		pcibios_bus_to_resource(dev, res, &region);
->  	}
->  }
->  
-> @@ -209,6 +211,7 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
->  	struct pci_bus *bus;
->  	const u32 *busrange, *ranges;
->  	int len, i, mode;
-> +	struct pci_bus_region region;
->  	struct resource *res;
->  	unsigned int flags;
->  	u64 size;
-> @@ -270,9 +273,10 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
->  			res = bus->resource[i];
->  			++i;
->  		}
-> -		res->start = of_read_number(&ranges[1], 2);
-> -		res->end = res->start + size - 1;
->  		res->flags = flags;
-> +		region.start = of_read_number(&ranges[1], 2);
-> +		region.end = region.start + size - 1;
-> +		pcibios_bus_to_resource(dev, res, &region);
->  	}
->  	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
->  		bus->number);
-
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index a858c1d..2b74a16 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -315,11 +315,40 @@ static void add_resources(struct pci_root_info *info,
+ 	}
+ }
+ 
+-static void free_pci_root_info(struct pci_root_info *info)
++static void free_pci_root_info_res(struct pci_root_info *info)
+ {
+ 	kfree(info->name);
+ 	kfree(info->res);
+-	memset(info, 0, sizeof(struct pci_root_info));
++	info->res = NULL;
++	info->res_num = 0;
++}
++
++static void __release_pci_root_info(struct pci_root_info *info)
++{
++	int i;
++	struct resource *res;
++
++	for (i = 0; i < info->res_num; i++) {
++		res = &info->res[i];
++
++		if (!res->parent)
++			continue;
++
++		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			continue;
++
++		release_resource(res);
++	}
++
++	free_pci_root_info_res(info);
++
++	kfree(info);
++}
++static void release_pci_root_info(struct pci_host_bridge *bridge)
++{
++	struct pci_root_info *info = bridge->release_data;
++
++	__release_pci_root_info(info);
+ }
+ 
+ static void
+@@ -352,7 +381,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+-	struct pci_root_info info;
++	struct pci_root_info *info = NULL;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
+ 	LIST_HEAD(resources);
+@@ -397,7 +426,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 	sd->domain = domain;
+ 	sd->node = node;
+-	memset(&info, 0, sizeof(struct pci_root_info));
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		kfree(sd);
++		printk(KERN_WARNING "pci_bus %04x:%02x: "
++		       "ignored (out of memory)\n", domain, busnum);
++		return NULL;
++	}
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -409,29 +444,33 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 * be replaced by sd.
+ 		 */
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
++		kfree(info);
+ 		kfree(sd);
+ 	} else {
+-		probe_pci_root_info(&info, device, busnum, domain);
++		probe_pci_root_info(info, device, busnum, domain);
+ 
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+ 		if (pci_use_crs)
+-			add_resources(&info, &resources);
++			add_resources(info, &resources);
+ 		else {
+-			free_pci_root_info(&info);
++			free_pci_root_info_res(info);
+ 			x86_pci_root_bus_resources(busnum, &resources);
+ 		}
++
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+-		if (bus)
++		if (bus) {
+ 			bus->subordinate = pci_scan_child_bus(bus);
+-		else
++			pci_set_host_bridge_release(
++				to_pci_host_bridge(bus->bridge),
++				release_pci_root_info, info);
++		} else {
+ 			pci_free_resource_list(&resources);
+-
+-		if (!bus && pci_use_crs)
+-			free_pci_root_info(&info);
++			__release_pci_root_info(info);
++		}
+ 	}
+ 
+ 	/* After the PCI-E bus has been walked and all devices discovered,
+-- 
+1.7.7
 
