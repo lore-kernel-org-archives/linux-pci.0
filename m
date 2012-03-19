@@ -1,68 +1,61 @@
-MIME-Version: 1.0
-In-Reply-To: <1331018040-30725-9-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<1331018040-30725-9-git-send-email-yinghai@kernel.org>
-Date: Tue, 6 Mar 2012 20:53:50 -0700
-Message-ID: <CABhMZUXsZD7YgViGxtvFyu8Pi2+QXfJ4rJwqZq9ybQt8UGTM9w@mail.gmail.com>
-Subject: Re: [PATCH 08/23] PNPACPI: Fix device ref leaking in acpi_pnp_match
-From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@kernel.org, Len Brown <lenb@kernel.org>,
-	Adam Belay <abelay@mit.edu>, Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:29931 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030796Ab2CSFpl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:45:41 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v11 21/30] PCI: Add pci_bus_replace_busn_res()
+Date: Sun, 18 Mar 2012 22:42:52 -0700
+Message-Id: <1332135781-13695-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> During testing pci root bus removal, found some root bus bridge is not fr=
-eed.
->
-> If booting with pnpacpi=3Doff, those hostbridge could be freed without pr=
-oblem.
->
-> It turns out that some devices reference are not released during acpi_pnp=
-_match.
->
-> that match should not hold one device ref during every calling.
->
-> Add put_device calling before returning.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: stable@kernel.org
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: Adam Belay <abelay@mit.edu>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-acpi@vger.kernel.org
-> ---
-> =A0drivers/pnp/pnpacpi/core.c | =A0 =A07 ++++++-
-> =A01 files changed, 6 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pnp/pnpacpi/core.c b/drivers/pnp/pnpacpi/core.c
-> index b00c176..d21e8f5 100644
-> --- a/drivers/pnp/pnpacpi/core.c
-> +++ b/drivers/pnp/pnpacpi/core.c
-> @@ -321,9 +321,14 @@ static int __init acpi_pnp_match(struct device *dev,=
- void *_pnp)
-> =A0{
-> =A0 =A0 =A0 =A0struct acpi_device *acpi =3D to_acpi_device(dev);
-> =A0 =A0 =A0 =A0struct pnp_dev *pnp =3D _pnp;
-> + =A0 =A0 =A0 struct device *physical_device;
-> +
-> + =A0 =A0 =A0 physical_device =3D acpi_get_physical_device(acpi->handle);
-> + =A0 =A0 =A0 if (physical_device)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 put_device(physical_device);
->
-> =A0 =A0 =A0 =A0/* true means it matched */
-> - =A0 =A0 =A0 return !acpi_get_physical_device(acpi->handle)
-> + =A0 =A0 =A0 return !physical_device
-> =A0 =A0 =A0 =A0 =A0 =A0&& compare_pnp_id(pnp->id, acpi_device_hid(acpi));
-> =A0}
->
+It will use resource_replace to put bus's busn_res in the resource tree.
 
-I spent about an hour convincing myself that this patch does the right
-thing.  I *think* it does, but it certainly is not obvious.  It's
-always nicer if the get/put are in the same function or in functions
-that obviously correspond to each other.  But you didn't create this
-mess, so I don't hold you responsible for fixing it :)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 67cd0a7..c5fe935 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -626,6 +626,21 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	return child;
+ }
+ 
++static void pci_bus_replace_busn_res(struct pci_bus *b,
++					 struct resource *busn_res)
++{
++	struct resource *res = &b->busn_res;
++
++	/* busn_res must be registered already*/
++	if (!busn_res->parent)
++		return;
++
++	resource_replace(busn_res, res);
++
++	dev_printk(KERN_DEBUG, &b->dev, "busn_res: %pR is updated under %pR\n",
++			res, res->parent);
++}
++
+ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev, int busnr)
+ {
+ 	struct pci_bus *child;
+-- 
+1.7.7
+
