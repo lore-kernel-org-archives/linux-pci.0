@@ -1,40 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47274 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030711Ab2CNJYT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Mar 2012 05:24:19 -0400
-Message-ID: <4F60638F.20300@intel.com>
-Date: Wed, 14 Mar 2012 11:23:27 +0200
-From: Adrian Hunter <adrian.hunter@intel.com>
-MIME-Version: 1.0
-To: Alexander Stein <alexander.stein@systec-electronic.com>
-CC: Chris Ball <cjb@laptop.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] mmc: sdhci: check interrupt flags in ISR again
-References: <4F60532E.4070103@intel.com> <1331715130-8505-1-git-send-email-alexander.stein@systec-electronic.com>
-In-Reply-To: <1331715130-8505-1-git-send-email-alexander.stein@systec-electronic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from acsinet15.oracle.com ([141.146.126.227]:28519 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756936Ab2CSFp1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:45:27 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH -v11 15/30] PCI, powerpc: Register busn_res for root buses
+Date: Sun, 18 Mar 2012 22:42:46 -0700
+Message-Id: <1332135781-13695-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/03/12 10:52, Alexander Stein wrote:
-> When using MSI it is possible that a new MSI is sent while an earlier
-> MSI is currently handled. In this case SDHCI_INT_STATUS only contains
-> SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
-> of the ISR SDHCI_INT_DATA_END is now also pending which would be ignored.
-> 
-> Fix this by rereading the interrupt flags in the ISR until no interrupt
-> we care is pending.
-> 
-> Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
-> ---
-> Changes in v2:
-> * rearranged code a bit and added a maximum loop counter as suggested
->   by Adrian
-> 
->  drivers/mmc/host/sdhci.c |   19 ++++++++++++-------
->  1 files changed, 12 insertions(+), 7 deletions(-)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/include/asm/pci-bridge.h |    1 +
+ arch/powerpc/kernel/pci-common.c      |   10 +++++++++-
+ 2 files changed, 10 insertions(+), 1 deletions(-)
 
-Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 5d48765..11cebf0 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -30,6 +30,7 @@ struct pci_controller {
+ 	int first_busno;
+ 	int last_busno;
+ 	int self_busno;
++	struct resource busn;
+ 
+ 	void __iomem *io_base_virt;
+ #ifdef CONFIG_PPC64
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 910b9de..ee8c0c9 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1648,6 +1648,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
+ 	/* Wire up PHB bus resources */
+ 	pcibios_setup_phb_resources(hose, &resources);
+ 
++	hose->busn.start = hose->first_busno;
++	hose->busn.end	 = hose->last_busno;
++	hose->busn.flags = IORESOURCE_BUS;
++	pci_add_resource(&resources, &hose->busn);
++
+ 	/* Create an empty bus for the toplevel */
+ 	bus = pci_create_root_bus(hose->parent, hose->first_busno,
+ 				  hose->ops, hose, &resources);
+@@ -1670,8 +1675,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
+ 		of_scan_bus(node, bus);
+ 	}
+ 
+-	if (mode == PCI_PROBE_NORMAL)
++	if (mode == PCI_PROBE_NORMAL) {
++		pci_bus_update_busn_res_end(bus, 255);
+ 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
++		pci_bus_update_busn_res_end(bus, bus->subordinate);
++	}
+ 
+ 	/* Platform gets a chance to do some global fixups before
+ 	 * we proceed to resource allocation
+-- 
+1.7.7
+
