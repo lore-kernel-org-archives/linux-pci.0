@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30597 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161132Ab2CSFrk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:40 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -11,52 +7,82 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 12/47] PCI: Make pci_rescan_bus_bridge_resize() use pci_scan_bridge instead
-Date: Sun, 18 Mar 2012 22:46:01 -0700
-Message-Id: <1332135996-13860-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH -v2 13/26] PCI: Use for_each_res pci_assign_resource
+Date: Sun, 18 Mar 2012 22:48:36 -0700
+Message-Id: <1332136129-14010-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-So after remove all children and then using setpci change bus register and rescan
-bridge could use new set bus number.
-
-Otherwise need to rescan parent bus, it would have too much overhead.
-
-also need to use pci_bus_add_single_device to make sure new change bus have directory
- /sys/../.../pci_bus.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/pci/setup-res.c |   14 ++++++--------
+ 1 files changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e51e1a5..a819e76 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2025,14 +2025,16 @@ EXPORT_SYMBOL(pci_scan_bus);
-  */
- unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index eea85da..161a015 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -92,7 +92,7 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 
+ int pci_claim_resource(struct pci_dev *dev, int resource)
  {
--	unsigned int max;
--	struct pci_bus *bus = bridge->subordinate;
-+	unsigned int max = 0;
-+	int pass;
-+	struct pci_bus *bus = bridge->bus;
+-	struct resource *res = &dev->resource[resource];
++	struct resource *res = pci_dev_resource_n(dev, resource);
+ 	struct resource *root, *conflict;
  
--	max = pci_scan_child_bus(bus);
-+	for (pass = 0; pass < 2; pass++)
-+		max = pci_scan_bridge(bus, bridge, max, pass);
+ 	root = pci_find_parent_resource(dev, res);
+@@ -130,7 +130,7 @@ void pci_disable_bridge_window(struct pci_dev *dev)
+ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 		int resno, resource_size_t size, resource_size_t align)
+ {
+-	struct resource *res = dev->resource + resno;
++	struct resource *res = pci_dev_resource_n(dev, resno);
+ 	resource_size_t min;
+ 	int ret;
  
- 	pci_assign_unassigned_bridge_resources(bridge);
+@@ -208,7 +208,7 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
  
--	pci_bus_add_devices(bus);
-+	pci_bus_add_single_device(bridge);
+ static int _pci_assign_resource(struct pci_dev *dev, int resno, int size, resource_size_t min_align)
+ {
+-	struct resource *res = dev->resource + resno;
++	struct resource *res = pci_dev_resource_n(dev, resno);
+ 	struct pci_bus *bus;
+ 	int ret;
+ 	char *type;
+@@ -241,7 +241,7 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno, int size, resour
+ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsize,
+ 			resource_size_t min_align)
+ {
+-	struct resource *res = dev->resource + resno;
++	struct resource *res = pci_dev_resource_n(dev, resno);
+ 	resource_size_t new_size;
+ 	int ret;
  
- 	return max;
- }
+@@ -265,7 +265,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 
+ int pci_assign_resource(struct pci_dev *dev, int resno)
+ {
+-	struct resource *res = dev->resource + resno;
++	struct resource *res = pci_dev_resource_n(dev, resno);
+ 	resource_size_t align, size;
+ 	struct pci_bus *bus;
+ 	int ret;
+@@ -307,12 +307,10 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
+ 	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+ 	old_cmd = cmd;
+ 
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++	for_each_pci_dev_all_resource(dev, r, i) {
+ 		if (!(mask & (1 << i)))
+ 			continue;
+ 
+-		r = &dev->resource[i];
+-
+ 		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
+ 			continue;
+ 		if ((i == PCI_ROM_RESOURCE) &&
 -- 
 1.7.7
 
