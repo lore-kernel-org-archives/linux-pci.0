@@ -1,71 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4F50FE1B.7090008@intel.com>
-Date: Fri, 02 Mar 2012 17:06:35 +0000
-From: Tadeusz Struk <tadeusz.struk@intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: jbarnes@virtuousgeek.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	"Struk, Tadeusz" <tadeusz.struk@intel.com>
-Subject: Re: [PATCH v2] Dynamically add and remove device specific reset functions
-References: <4f50b540.6AzyOmpHR+z7jLk1%tadeusz.struk@intel.com> <CAErSpo6JaNXvJf_KEkRUYLed8ET4vSunfCAq9BWq3yd3+dZQpA@mail.gmail.com>
-In-Reply-To: <CAErSpo6JaNXvJf_KEkRUYLed8ET4vSunfCAq9BWq3yd3+dZQpA@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30945 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161719Ab2CSFs3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:29 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 44/47] x86, PCI: add __pcibios_scan_specific_bus that can skip bus_add
+Date: Sun, 18 Mar 2012 22:46:33 -0700
+Message-Id: <1332135996-13860-45-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/03/12 16:29, Bjorn Helgaas wrote:
-> Where do you plan to add calls to pci_dev_specific_reset_add()?  In
-> drivers?
+So could insert pci_assign_unassigned_bus_resources() before do bus_add.
 
-Yes, I'm working on a driver for a device with SRIOV capability.
-I'll call it from there.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/legacy.c |   19 +++++++++++++------
+ 1 files changed, 13 insertions(+), 6 deletions(-)
 
-> Did you consider adding a "reset" function pointer to struct
-> pci_driver?  That might be more natural -- the reset function is right
-> with all the other code that knows about the device, and there's no
-> issue with looking up the correct reset function.
-> With this patch, we sort of have two different ways to map
-> vendor/device IDs to code: the usual pci_register_driver() approach,
-> and this one using reset_list.  If pci_driver had a "reset" pointer,
-> that would be used most of the time.  You might still need the
-> reset_list for generic things, e.g., the reset_intel_generic_dev()
-> function, but it would be a fallback.  It might look something like:
-> 
->     struct pci_driver *drv = dev->driver;
-> 
->     if (drv && drv->reset) {
->         drv->reset(dev);
->         return;
->     }
-> 
->     list_for_each_entry(i, &reset_list, list) {
->         ...
-> 
-
-No, I didn't think about it.
-This is good idea, but for me the pci_dev_specific_reset() works fine.
-
-> In that case, you might not even need the ability to dynamically add
-> things to the list, since the only things to add would be "generic"
-> things that would be more static.
-> 
-> Perhaps this approach was previously discussed and discarded; if so, I
-> missed it.
-> 
-> Bjorn
-
-Do you want me to send another patch that fixes these minor issues you pointed out?
-Thanks for you comments.
-Tadeusz
-
---------------------------------------------------------------
-Intel Shannon Limited
-Registered in Ireland
-Registered Office: Collinstown Industrial Park, Leixlip, County Kildare
-Registered Number: 308263
-Business address: Dromore House, East Park, Shannon, Co. Clare
-
-This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). Any review or distribution by others is strictly prohibited. If you are not the intended recipient, please contact the sender and delete all copies.
-
+diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+index a1df191..aab0e41 100644
+--- a/arch/x86/pci/legacy.c
++++ b/arch/x86/pci/legacy.c
+@@ -34,25 +34,32 @@ int __init pci_legacy_init(void)
+ 	return 0;
+ }
+ 
+-void __devinit pcibios_scan_specific_bus(int busn)
++static __devinit struct pci_bus *__pcibios_scan_specific_bus(int busn,
++					 bool bus_add)
+ {
+ 	int devfn;
+ 	long node;
+ 	u32 l;
+ 
+-	if (pci_find_bus(0, busn))
+-		return;
+-
+ 	node = get_mp_bus_to_node(busn);
+ 	for (devfn = 0; devfn < 256; devfn += 8) {
+ 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
+ 		    l != 0x0000 && l != 0xffff) {
+ 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+ 			printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
+-			pci_scan_bus_on_node(busn, &pci_root_ops, node);
+-			return;
++			return __pci_scan_bus_on_node(busn, &pci_root_ops, node,
++					 bus_add);
+ 		}
+ 	}
++
++	return NULL;
++}
++void __devinit pcibios_scan_specific_bus(int busn)
++{
++	if (pci_find_bus(0, busn))
++		return;
++
++	__pcibios_scan_specific_bus(busn, true);
+ }
+ EXPORT_SYMBOL_GPL(pcibios_scan_specific_bus);
+ 
+-- 
+1.7.7
 
