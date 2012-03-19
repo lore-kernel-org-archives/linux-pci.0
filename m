@@ -1,105 +1,108 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v3 09/34] powerpc/PCI: make pci_probe_only default to 0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Date: Wed, 07 Mar 2012 15:32:49 -0700
-Message-ID: <20120307223249.25669.73766.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 14/47] PCI: Rescan bus or bridge using callback method too
+Date: Sun, 18 Mar 2012 22:46:03 -0700
+Message-Id: <1332135996-13860-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Just like removal.
 
-pci_probe_only is set on ppc64 to prevent resource re-allocation
-by the core. It's meant to be used in very specific circumstances
-such as when operating under a hypervisor that may prevent such
-re-allocation.
+Because We could add new bus under the bridges...
 
-Instead of default to 1, we make it default to 0 and explicitly
-set it in the few cases where we need it.
-
-This fixes FSL PCI which wants it clear among others.
-
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/powerpc/kernel/pci_64.c           |    2 +-
- arch/powerpc/platforms/powermac/pci.c  |    3 ---
- arch/powerpc/platforms/powernv/pci.c   |    3 ---
- arch/powerpc/platforms/pseries/setup.c |    3 +++
- arch/powerpc/platforms/wsp/wsp_pci.c   |    1 -
- 5 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/pci/pci-sysfs.c |   43 +++++++++++++++++++++++++++++++------------
+ 1 files changed, 31 insertions(+), 12 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index 3318d39..f627eb7 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -33,7 +33,7 @@
- #include <asm/machdep.h>
- #include <asm/ppc-pci.h>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 2049b2f..1794508 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -325,21 +325,31 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	return count;
+ }
  
--unsigned long pci_probe_only = 1;
-+unsigned long pci_probe_only = 0;
- 
- /* pci_io_base -- the base address from which io bars are offsets.
-  * This is the lowest I/O base address (so bar values are always positive),
-diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
-index 31a7d3a..43bbe1b 100644
---- a/arch/powerpc/platforms/powermac/pci.c
-+++ b/arch/powerpc/platforms/powermac/pci.c
-@@ -1059,9 +1059,6 @@ void __init pmac_pci_init(void)
- 	}
- 	/* pmac_check_ht_link(); */
- 
--	/* We can allocate missing resources if any */
--	pci_probe_only = 0;
--
- #else /* CONFIG_PPC64 */
- 	init_p2pbridge();
- 	init_second_ohare();
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index a70bc1e..a053f4f 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -557,9 +557,6 @@ void __init pnv_pci_init(void)
- 
- 	pci_set_flags(PCI_CAN_SKIP_ISA_ALIGN);
- 
--	/* We do not want to just probe */
--	pci_probe_only = 0;
--
- 	/* OPAL absent, try POPAL first then RTAS detection of PHBs */
- 	if (!firmware_has_feature(FW_FEATURE_OPAL)) {
- #ifdef CONFIG_PPC_POWERNV_RTAS
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index f79f127..386e265 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -380,6 +380,9 @@ static void __init pSeries_setup_arch(void)
- 
- 	fwnmi_init();
- 
-+	/* By default, only probe PCI (can be overriden by rtas_pci */
-+	pci_probe_only = 1;
++static void bridge_rescan_callback(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
 +
- 	/* Find and initialize PCI host bridges */
- 	init_pci_config_tokens();
- 	find_and_init_phbs();
-diff --git a/arch/powerpc/platforms/wsp/wsp_pci.c b/arch/powerpc/platforms/wsp/wsp_pci.c
-index e0262cd..299157a 100644
---- a/arch/powerpc/platforms/wsp/wsp_pci.c
-+++ b/arch/powerpc/platforms/wsp/wsp_pci.c
-@@ -682,7 +682,6 @@ static int __init wsp_setup_one_phb(struct device_node *np)
- 	/* XXX Force re-assigning of everything for now */
- 	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC |
- 		      PCI_ENABLE_PROC_DOMAINS);
--	pci_probe_only = 0;
++	mutex_lock(&pci_remove_rescan_mutex);
++	pci_rescan_bus_bridge_resize(pdev);
++	mutex_unlock(&pci_remove_rescan_mutex);
++}
++
+ static ssize_t
+ dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
++	int ret = 0;
+ 	unsigned long val;
+-	struct pci_dev *pdev = to_pci_dev(dev);
  
- 	/* Calculate how the TCE space is divided */
- 	phb->dma32_base		= 0;
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+-	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus_bridge_resize(pdev);
+-		mutex_unlock(&pci_remove_rescan_mutex);
+-	}
++	if (val)
++		ret = device_schedule_callback(dev, bridge_rescan_callback);
++
++	if (ret)
++		count = ret;
++
+ 	return count;
+ }
+ 
+@@ -375,21 +385,30 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	return count;
+ }
+ 
++static void bus_rescan_callback(struct device *dev)
++{
++	struct pci_bus *bus = to_pci_bus(dev);
++
++	mutex_lock(&pci_remove_rescan_mutex);
++	pci_rescan_bus(bus);
++	mutex_unlock(&pci_remove_rescan_mutex);
++}
+ static ssize_t
+ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
++	int ret = 0;
+ 	unsigned long val;
+-	struct pci_bus *bus = to_pci_bus(dev);
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+-	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus(bus);
+-		mutex_unlock(&pci_remove_rescan_mutex);
+-	}
++	if (val)
++		ret = device_schedule_callback(dev, bus_rescan_callback);
++
++	if (ret)
++		count = ret;
++
+ 	return count;
+ }
+ 
+-- 
+1.7.7
 
