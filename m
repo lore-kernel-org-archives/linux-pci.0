@@ -1,268 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:21138 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758632Ab2CFIfC convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:12:2>);
-	Tue, 6 Mar 2012 03:35:02 -0500
-Message-Id: <4F55DA3E0200007800076916@nat28.tlf.novell.com>
-Date: Tue, 06 Mar 2012 08:34:54 +0000
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Santosh Jodh" <Santosh.Jodh@citrix.com>
-Cc: "David Vrabel" <david.vrabel@citrix.com>,
-	"Ian Campbell" <Ian.Campbell@citrix.com>,
-	"Paul Durrant" <Paul.Durrant@citrix.com>,
-	"waldi@debian.org" <waldi@debian.org>,
-	"weiyi.huang@gmail.com" <weiyi.huang@gmail.com>,
-	"jeremy@goop.org" <jeremy@goop.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"virtualization@lists.linux-foundation.org"
-	<virtualization@lists.linux-foundation.org>,
-	"xen-devel@lists.xen.org" <xen-devel@lists.xen.org>,
-	"joe.jin@oracle.com" <joe.jin@oracle.com>,
-	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-	"lersek@redhat.com" <lersek@redhat.com>,
-	"rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
-	"dgdegra@tycho.nsa.gov" <dgdegra@tycho.nsa.gov>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>
-Subject: Re: [PATCH 0001/001] xen: multi page ring support for block
- devices
-References: <1330701099-18281-1-git-send-email-santoshprasadnayak@gmail.com>
- <7914B38A4445B34AA16EB9F1352942F1010A1FA12364@SJCPMAILBOX01.citrite.net>
-In-Reply-To: <7914B38A4445B34AA16EB9F1352942F1010A1FA12364@SJCPMAILBOX01.citrite.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 00/26] PCI, x86: Add for_each_res and addon resource support
+Date: Sun, 18 Mar 2012 22:48:23 -0700
+Message-Id: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 05.03.12 at 22:49, Santosh Jodh <Santosh.Jodh@citrix.com> wrote:
+Make device resource loop easier and readable.
+Also add addon_resource support about non-stanard resources.
 
-Could this be split up into 3 patches, for easier reviewing:
-- one adjusting the xenbus interface to allow for multiple ring pages (and
-  maybe even that one should be split into the backend and frontend
-  related parts), syncing with the similar netback effort?
-- one for the blkback changes
-- one for the blkfront changes?
+The patches need to apply to pci/for-linus and pci/linux-next
+        [PATCH -v3] PCI: pci_host_bridge related cleanup
+        [PATCH -v11] PCI: allocate pci bus num range for unassigned bridge busn
+	[PATCH -v3] PCI, x86: pci root bus hotplug support
 
-> --- a/drivers/block/xen-blkback/xenbus.c
-> +++ b/drivers/block/xen-blkback/xenbus.c
-> @@ -122,8 +122,8 @@ static struct xen_blkif *xen_blkif_alloc(domid_t domid)
->         return blkif;
->  }
-> 
-> -static int xen_blkif_map(struct xen_blkif *blkif, unsigned long shared_page,
-> -                        unsigned int evtchn)
-> +static int xen_blkif_map(struct xen_blkif *blkif, int ring_ref[],
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-for-each-res-addon
 
-As you need to touch this anyway, can you please switch this to the
-proper type (grant_ref_t) rather than using plain "int" (not just here)?
+-v2: Split to small patches.
 
-> +                        unsigned int ring_order, unsigned int evtchn)
->  {
->         int err;
-> 
-> --- a/drivers/block/xen-blkfront.c
-> +++ b/drivers/block/xen-blkfront.c
-> @@ -135,7 +139,7 @@ static DEFINE_SPINLOCK(minor_lock);
->  static int get_id_from_freelist(struct blkfront_info *info)
->  {
->         unsigned long free = info->shadow_free;
-> -       BUG_ON(free >= BLK_RING_SIZE);
-> +       BUG_ON(free >= BLK_MAX_RING_SIZE);
+Thanks
 
-Wouldn't you better check against the actual limit here?
+Yinghai
 
->         info->shadow_free = info->shadow[free].req.u.rw.id;
->         info->shadow[free].req.u.rw.id = 0x0fffffee; /* debug */
->         return free;
-> @@ -698,16 +704,19 @@ static void blkif_free(struct blkfront_info *info, int suspend)
->         flush_work_sync(&info->work);
-> 
->         /* Free resources associated with old device channel. */
-> -       if (info->ring_ref != GRANT_INVALID_REF) {
-> -               gnttab_end_foreign_access(info->ring_ref, 0,
-> -                                         (unsigned long)info->ring.sring);
-> -               info->ring_ref = GRANT_INVALID_REF;
-> -               info->ring.sring = NULL;
-> +       for (i = 0; i < (1 << info->ring_order); i++) {
-> +               if (info->ring_ref[i] != GRANT_INVALID_REF) {
-> +                       gnttab_end_foreign_access(info->ring_ref[i], 0, 0);
-> +                       info->ring_ref[i] = GRANT_INVALID_REF;
-> +               }
->         }
-> +
-> +       free_pages((unsigned long)info->ring.sring, info->ring_order);
+Yinghai Lu (26):
+  PCI: Add pci_dev_resource_n()
+  PCI: Add for_each_resource helpers to make resource loop easier.
+  PCI: Add pci_dev_resource_idx()
+  PCI: Update pci_resource_start to use pci_dev_resource_n()
+  x86, PCI: Use for_each_res with pci_allocate_bridge_resources
+  x86, PCI: Use for_each_res with pci_allocate_dev_resources
+  PCI: Use for_each_res with IOV releated funcs
+  PCI, acpiphp: Use for_each_pci_dev_resource helper
+  PCI, pciehp: Use for_each_pci_dev_resource helper
+  PCI: Use for_each_pci_dev_resource pci_enable_dev
+  PCI: Use for_each_pci_dev_resource pci_reassigndev
+  PCI: Use for_each_res with pci bar reassign funcs
+  PCI: Use for_each_res pci_assign_resource
+  PCI: Use for_each_res with noassign_bars
+  PCI: Use for_each_res pci bases pci_dev_driver()
+  PCI: Use for_each_res pci release release
+  PCI: Use for_each_res pci bases reading
+  PCI: Use for_each_res with mrs
+  PCI: Use for_each_res with xen pci
+  PCI: Add addon_resource support for pci_dev
+  PCI: Add helpers for add addon_resource
+  PCI: Update pci_resource_bar() to support addon_resource
+  PCI: Make assign/update resource to support addon_res
+  PCI: Make piix4 quirk to use addon_resource support
+  PCI: Make quirk_io_region to use addon_resource support
+  PCI: Use addon_fixed_resource with ati fixed resource
 
-No. The freeing must continue happen in gnttab_end_foreign_access()
-(with the sole exception when a page was allocated but the grant
-didn't get established), since it must be suppressed/delayed when the
-grant is still in use (otherwise the kernel will die on the first re-use of
-the page). I just happened to fix that problem at the end of last week
-in the variant of the patch that we pulled into our tree.
+ arch/x86/pci/common.c              |    3 +-
+ arch/x86/pci/i386.c                |   57 +++-----
+ arch/x86/pci/mrst.c                |    7 +-
+ drivers/pci/hotplug/acpiphp_glue.c |    4 +-
+ drivers/pci/hotplug/pciehp_hpc.c   |    5 +-
+ drivers/pci/iov.c                  |   31 ++---
+ drivers/pci/pci-driver.c           |    6 +-
+ drivers/pci/pci.c                  |   28 +++--
+ drivers/pci/probe.c                |  114 ++++++++++++++++-
+ drivers/pci/quirks.c               |  256 +++++++++++++++++++++---------------
+ drivers/pci/remove.c               |    5 +-
+ drivers/pci/setup-bus.c            |   28 ++---
+ drivers/pci/setup-res.c            |   38 ++++--
+ drivers/pci/xen-pcifront.c         |    4 +-
+ include/linux/pci.h                |   79 +++++++++++-
+ 15 files changed, 446 insertions(+), 219 deletions(-)
 
-Further, rather than doing a non-zero order allocation here, I'd
-suggest allocating individual pages and vmap()-ing them.
-
-> +       info->ring.sring = NULL;
-> +
->         if (info->irq)
->                 unbind_from_irqhandler(info->irq, info);
->         info->evtchn = info->irq = 0;
-> -
->  }
-> 
->  static void blkif_completion(struct blk_shadow *s)
-> @@ -875,8 +883,27 @@ static int talk_to_blkback(struct xenbus_device *dev,
->  {
->         const char *message = NULL;
->         struct xenbus_transaction xbt;
-> +       unsigned int ring_order;
-> +       int legacy_backend;
-> +       int i;
->         int err;
-> 
-> +       for (i = 0; i < (1 << info->ring_order); i++)
-> +               info->ring_ref[i] = GRANT_INVALID_REF;
-> +
-> +       err = xenbus_scanf(XBT_NIL, dev->otherend, "max-ring-page-order", "%u",
-> +                          &ring_order);
-
-At least the frontend should imo also support the alternative interface
-(using "max-ring-pages" etc).
-
-> +
-> +       legacy_backend = !(err == 1);
-> +
-> +       if (legacy_backend) {
-> +               info->ring_order = 0;
-> +       } else {
-> +               info->ring_order = (ring_order <= xen_blkif_ring_order) ?
-> +                                  ring_order :
-> +                                  xen_blkif_ring_order;
-
-min()?
-
-> +       }
-> +
->         /* Create shared ring, alloc event channel. */
->         err = setup_blkring(dev, info);
->         if (err)
-> @@ -889,12 +916,35 @@ again:
->                 goto destroy_blkring;
->         }
-> 
-> -       err = xenbus_printf(xbt, dev->nodename,
-> -                           "ring-ref", "%u", info->ring_ref);
-> -       if (err) {
-> -               message = "writing ring-ref";
-> -               goto abort_transaction;
-> +       if (legacy_backend) {
-
-Why not use the simpler interface always when info->ring_order == 0?
-
-> +               err = xenbus_printf(xbt, dev->nodename,
-> +                                   "ring-ref", "%d", info->ring_ref[0]);
-> +               if (err) {
-> +                       message = "writing ring-ref";
-> +                       goto abort_transaction;
-> +               }
-> +       } else {
-> +               for (i = 0; i < (1 << info->ring_order); i++) {
-> +                       char key[sizeof("ring-ref") + 2];
-> +
-> +                       sprintf(key, "ring-ref%d", i);
-> +
-> +                       err = xenbus_printf(xbt, dev->nodename,
-> +                                           key, "%d", info->ring_ref[i]);
-> +                       if (err) {
-> +                               message = "writing ring-ref";
-> +                               goto abort_transaction;
-> +                       }
-> +               }
-> +
-> +               err = xenbus_printf(xbt, dev->nodename,
-> +                                   "ring-page-order", "%u", info->ring_order);
-> +               if (err) {
-> +                       message = "writing ring-order";
-> +                       goto abort_transaction;
-> +               }
->         }
-> +
->         err = xenbus_printf(xbt, dev->nodename,
->                             "event-channel", "%u", info->evtchn);
->         if (err) {
-> @@ -996,21 +1046,14 @@ static int blkfront_probe(struct xenbus_device *dev,
->         info->connected = BLKIF_STATE_DISCONNECTED;
->         INIT_WORK(&info->work, blkif_restart_queue);
-> 
-> -       for (i = 0; i < BLK_RING_SIZE; i++)
-> +       for (i = 0; i < BLK_MAX_RING_SIZE; i++)
->                 info->shadow[i].req.u.rw.id = i+1;
-> -       info->shadow[BLK_RING_SIZE-1].req.u.rw.id = 0x0fffffff;
-> +       info->shadow[BLK_MAX_RING_SIZE-1].req.u.rw.id = 0x0fffffff;
-
-A proper terminator must also be written in talk_to_blkback() once
-the actual ring size is known.
-
-Further, blkif_recover() must be able to deal with a change of the
-allowed upper bound.
-
->         /* Front end dir is a number, which is used as the id. */
->         info->handle = simple_strtoul(strrchr(dev->nodename, '/')+1, NULL, 0);
->         dev_set_drvdata(&dev->dev, info);
-> 
-> -       err = talk_to_blkback(dev, info);
-
-Completely removing this here is wrong afaict - what if the backend
-already is in InitWait when the frontend starts?
-
-Further, whatever is done to this call here also needs to be done in
-blkfront_resume().
-
-> -       if (err) {
-> -               kfree(info);
-> -               dev_set_drvdata(&dev->dev, NULL);
-> -               return err;
-> -       }
-> -
->         return 0;
->  }
-> 
-> @@ -1307,6 +1349,10 @@ static void blkback_changed(struct xenbus_device *dev,
->         case XenbusStateClosed:
->                 break;
-> 
-> +       case XenbusStateInitWait:
-> +               talk_to_blkback(dev, info);
-
-This call can return an error.
-
-> +               break;
-> +
->         case XenbusStateConnected:
->                 blkfront_connect(info);
->                 break;
-> --- a/include/xen/xenbus.h
-> +++ b/include/xen/xenbus.h
-> @@ -195,15 +195,23 @@ int xenbus_watch_pathfmt(struct xenbus_device *dev, struct xenbus_watch *watch,
->                          const char *pathfmt, ...);
-> 
->  int xenbus_switch_state(struct xenbus_device *dev, enum xenbus_state new_state);
-> -int xenbus_grant_ring(struct xenbus_device *dev, unsigned long ring_mfn);
-> -int xenbus_map_ring_valloc(struct xenbus_device *dev,
-> -                          int gnt_ref, void **vaddr);
-> -int xenbus_map_ring(struct xenbus_device *dev, int gnt_ref,
-> -                          grant_handle_t *handle, void *vaddr);
-> +
-> +#define        XENBUS_MAX_RING_ORDER   2
-> +#define        XENBUS_MAX_RING_PAGES   (1 << XENBUS_MAX_RING_ORDER)
-
-Why do you need an artificial global limit here? Each driver can decide
-individually what its limit should be.
-
-Jan
-
+-- 
+1.7.7
 
