@@ -1,113 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:44108 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382Ab2CIHRU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 02:17:20 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6VyKpBygK3vV25q+X5YisNVPwh64jaJ_KtMO1WB=ocpw@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<1331018040-30725-15-git-send-email-yinghai@kernel.org>
-	<CAErSpo6VyKpBygK3vV25q+X5YisNVPwh64jaJ_KtMO1WB=ocpw@mail.gmail.com>
-Date: Thu, 8 Mar 2012 23:17:20 -0800
-Message-ID: <CAE9FiQUGCazRAJ3vaej6wndk9e-kedU7tuaw8VSRcu2RB0qQAg@mail.gmail.com>
-Subject: Re: [PATCH 14/23] PCI: add __pci_remove_bus_devices()
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v11 29/30] PCI: More strict checking of valid range for bridge
+Date: Sun, 18 Mar 2012 22:43:00 -0700
+Message-Id: <1332135781-13695-30-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 8, 2012 at 5:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> will use it with pci_stop_and_remove_bus later.
->>
->> also remove __pci_remove_behind_bridge and pci_stop_behind_bridge.
->>
->> they are same except one take bridge and one take bus.
->>
->> and we already have pci_stop_bus_devices()
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/remove.c |   28 +++++++++++-----------------
->>  1 files changed, 11 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->> index 243d59b..62c348c 100644
->> --- a/drivers/pci/remove.c
->> +++ b/drivers/pci/remove.c
->> @@ -78,7 +78,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
->>  }
->>  EXPORT_SYMBOL(pci_remove_bus);
->>
->> -static void __pci_remove_behind_bridge(struct pci_dev *dev);
->> +static void __pci_remove_bus_devices(struct pci_bus *bus);
->>  /**
->>  * pci_stop_and_remove_bus_device - remove a PCI device and any children
->>  * @dev: the device to remove
->> @@ -96,7 +96,7 @@ void __pci_remove_bus_device(struct pci_dev *dev)
->>        if (dev->subordinate) {
->>                struct pci_bus *b = dev->subordinate;
->>
->> -               __pci_remove_behind_bridge(dev);
->> +               __pci_remove_bus_devices(b);
->>                pci_remove_bus(b);
->>                dev->subordinate = NULL;
->>        }
->> @@ -111,22 +111,12 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
->>        __pci_remove_bus_device(dev);
->>  }
->>
->> -static void __pci_remove_behind_bridge(struct pci_dev *dev)
->> +static void __pci_remove_bus_devices(struct pci_bus *bus)
->>  {
->>        struct list_head *l, *n;
->>
->> -       if (dev->subordinate)
->> -               list_for_each_safe(l, n, &dev->subordinate->devices)
->> -                       __pci_remove_bus_device(pci_dev_b(l));
->> -}
->> -
->> -static void pci_stop_behind_bridge(struct pci_dev *dev)
->> -{
->> -       struct list_head *l, *n;
->> -
->> -       if (dev->subordinate)
->> -               list_for_each_safe(l, n, &dev->subordinate->devices)
->> -                       pci_stop_bus_device(pci_dev_b(l));
->> +       list_for_each_safe(l, n, &bus->devices)
->> +               __pci_remove_bus_device(pci_dev_b(l));
->
-> Use list_for_each_entry_safe() so you don't need pci_dev_b().
+Found one sick system with two sibling bridge have overlaping range from BIOS.
+00:02.1 bus range is 0x30-0x30
+00:02.2 bus range is 0x30-0x3f, and it have two children under it.
 
-just want to keep the patch to simple, and looks like just name renaming.
+RHEL 6.2 kernel, will just 00:02.1 have child bus 0x30, and bridge 00:02.2 will
+not have.
 
-also use list_for_each_safe instead of list_for_each_entry_safe
+before this patch, this patchset will have 00:02.1 to have bus 0x30,
+and 00:02.2 will have reallocate range bus 01.
+but 00:02.1 will have scaned at first, so later it will have two fake devices.
 
-could have less conversion.
+To fix the problem, We need to check with unscaned sibling bridge about range
+overlapping.
+If there is overlapping found, will mark both sides to be broken.
+So we could prevent one side take too big range.
 
->
->>  }
->>
->>  static void pci_stop_bus_devices(struct pci_bus *bus)
->> @@ -158,8 +148,12 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
->>  */
->>  void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
->>  {
->> -       pci_stop_behind_bridge(dev);
->> -       __pci_remove_behind_bridge(dev);
->> +       struct pci_bus *bus = dev->subordinate;
->> +
->> +       if (bus) {
->
-> Don't check "bus" here.  If the caller screws up and passes a
-> non-bridge pointer, I want to learn about it rather than ignore it.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   45 ++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 44 insertions(+), 1 deletions(-)
 
-old code have that
-           if (dev->subordinate)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8a4e90f..01ba48e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -714,6 +714,48 @@ static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
+ 	return ret;
+ }
+ 
++static int __devinit pci_bridge_check_busn_broken_with_unscaned(
++				struct pci_bus *bus,
++				struct pci_dev *dev,
++				int secondary, int subordinate)
++{
++	u32 buses2;
++	int broken = 0;
++	struct pci_dev *dev2;
++	int secondary2, subordinate2;
++	int common_start, common_end;
++
++	/* need to check with not scaned sibling bridges */
++	list_for_each_entry(dev2, &bus->devices, bus_list) {
++		if (dev2->hdr_type != PCI_HEADER_TYPE_BRIDGE &&
++		    dev2->hdr_type != PCI_HEADER_TYPE_CARDBUS)
++			continue;
++		if (dev2->subordinate)
++			continue;
++		if (dev2 == dev)
++			continue;
++
++		pci_read_config_dword(dev2, PCI_PRIMARY_BUS, &buses2);
++		secondary2 = (buses2 >> 8) & 0xFF;
++		subordinate2 = (buses2 >> 16) & 0xFF;
++
++		/* overlapping between them ? */
++		common_start = max(secondary, secondary2);
++		common_end = min(subordinate, subordinate2);
++		if (common_start <= common_end) {
++			/*
++			 * Temporarily disable forwarding of the
++			 * configuration cycles on this sibling bridge
++			 */
++			pci_write_config_dword(dev2, PCI_PRIMARY_BUS,
++					       buses2 & ~0xffffff);
++			broken = 1;
++		}
++	}
++
++	return broken;
++}
++
+ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
+ 				struct pci_dev *dev,
+ 				int secondary, int subordinate)
+@@ -734,7 +776,8 @@ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
+ 
+ 	release_resource(&busn_res);
+ 
+-	return 0;
++	return pci_bridge_check_busn_broken_with_unscaned(bus, dev,
++					secondary, subordinate);
+ }
+ 
+ static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
+-- 
+1.7.7
 
-checking.
-
-Yinghai
