@@ -1,56 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:47667 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964801Ab2CATTI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2012 14:19:08 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120301190323.GA5155@xanatos>
-References: <1330622227-4209-1-git-send-email-yinghai@kernel.org>
-	<20120301172435.GA8505@kroah.com>
-	<20120301190323.GA5155@xanatos>
-Date: Thu, 1 Mar 2012 11:19:06 -0800
-Message-ID: <CAE9FiQXPi2VY+cVOxaQr=MBy_m3Dr0BKG6DRTCP1TrbuDcMCfg@mail.gmail.com>
-Subject: Re: [RFC PATCH] usb, PCI: split quirk for usb host controller to three
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31367 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161952Ab2CSFt4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:56 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 18/26] PCI: Use for_each_res with mrs
+Date: Sun, 18 Mar 2012 22:48:41 -0700
+Message-Id: <1332136129-14010-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 1, 2012 at 11:03 AM, Sarah Sharp
-<sarah.a.sharp@linux.intel.com> wrote:
-> On Thu, Mar 01, 2012 at 09:24:35AM -0800, Greg Kroah-Hartman wrote:
->> On Thu, Mar 01, 2012 at 09:17:07AM -0800, Yinghai Lu wrote:
->> > so we avoid checking class again and again in that quirk.
->> >
->> > need to be applied after pci/linux-next and usb/usb-next
->>
->> As those are two independant trees, this needs to wait until after
->> 3.4-rc1 is out.
->>
->> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> >
->> > ---
->> >  drivers/usb/host/pci-quirks.c |   42 ++++++++++++++++++++++++++++--------------
->> >  1 file changed, 28 insertions(+), 14 deletions(-)
->>
->> Is this really helping anything here?  You added code overall :(
->
-> I agree with Greg.  Why change this?  Does it shave off any boot time?
-> Please show hard numbers for what improvements this makes.  I really
-> don't want to change PCI init and break people's systems.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/mrst.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-but your code make pci init change to call disable/enable for non-xhci
-for fixing xhci problem.
+diff --git a/arch/x86/pci/mrst.c b/arch/x86/pci/mrst.c
+index 140942f..55e20d8 100644
+--- a/arch/x86/pci/mrst.c
++++ b/arch/x86/pci/mrst.c
+@@ -280,6 +280,7 @@ static void __devinit pci_fixed_bar_fixup(struct pci_dev *dev)
+ 	unsigned long offset;
+ 	u32 size;
+ 	int i;
++	struct resource *res;
+ 
+ 	if (!pci_soc_mode)
+ 		return;
+@@ -294,10 +295,10 @@ static void __devinit pci_fixed_bar_fixup(struct pci_dev *dev)
+ 	    PCI_DEVFN(2, 2) == dev->devfn)
+ 		return;
+ 
+-	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
++	for_each_pci_dev_std_resource(dev, res, i) {
+ 		pci_read_config_dword(dev, offset + 8 + (i * 4), &size);
+-		dev->resource[i].end = dev->resource[i].start + size - 1;
+-		dev->resource[i].flags |= IORESOURCE_PCI_FIXED;
++		res->end = res->start + size - 1;
++		res->flags |= IORESOURCE_PCI_FIXED;
+ 	}
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_fixed_bar_fixup);
+-- 
+1.7.7
 
-| commit cab928ee1f221c9cc48d6615070fefe2e444384a
-| Author: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-| Date:   Tue Feb 7 15:11:46 2012 -0800
-|
-|    USB: Fix handoff when BIOS disables host PCI device.
-
-Yinghai
