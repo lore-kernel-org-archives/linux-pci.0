@@ -1,296 +1,105 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v3 27/34] powerpc/PCI: get rid of device resource fixups
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Date: Wed, 07 Mar 2012 15:34:22 -0700
-Message-ID: <20120307223422.25669.72561.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 09/47] PCI, sysfs: Use device_type and attr_groups with pci dev
+Date: Sun, 18 Mar 2012 22:45:58 -0700
+Message-Id: <1332135996-13860-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tell the PCI core about host bridge address translation so it can take
-care of bus-to-resource conversion for us.
+We want to create rescan in sys only for pci bridge instead of all pci dev.
 
-Previously, powerpc used a HEADER quirk to perform this address fixup
-in the following path:
+We could use attribute_groups/is_visible method to do that.
 
-    pci_device_add()
-      pci_fixup_device(pci_fixup_header, dev)
-        pcibios_fixup_resources()
-	  fixup_resource()
+Now pci dev does not use device type yet. So add pci_dev_type to take
+attr_groups with it.
 
-This happened for both generic (via pci_scan_child_bus()) and
-OF device tree enumeration (via of_scan_bus()).
+Add pci_dev_bridge_attrs_are_visible() to control attr_bridge_group only create
+attr for bridge.
 
-This patch removes fixup_resource(), so the HEADER quirk no longer does
-address fixup.  The generic path now does the fixup in __pci_read_base()
-using the offsets supplied with pci_add_resource_offset().  The OF path
-now does the fixup with new pcibios_bus_to_resource() calls in
-of_pci_parse_addrs() and of_scan_pci_bridge().
+This is the framework related change, later could attr to bridge_attr_group,
+to make those attr only show up on pci bridge device.
 
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Also We could add more attr groups with is_visible to reduce messness in
+	pci_create_sysfs_dev_files. ( at least for boot_vga one )
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/powerpc/include/asm/pci.h    |    9 +---
- arch/powerpc/kernel/pci-common.c  |   83 ++++---------------------------------
- arch/powerpc/kernel/pci_32.c      |    6 +--
- arch/powerpc/kernel/pci_64.c      |    2 -
- arch/powerpc/kernel/pci_of_scan.c |   12 ++++-
- 5 files changed, 23 insertions(+), 89 deletions(-)
+ drivers/pci/pci-sysfs.c |   30 ++++++++++++++++++++++++++++++
+ drivers/pci/pci.h       |    1 +
+ drivers/pci/probe.c     |    1 +
+ 3 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index f54b3d2..21fbeeb 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -154,13 +154,7 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- 
- #endif /* CONFIG_PPC64 */
- 
--extern void pcibios_resource_to_bus(struct pci_dev *dev,
--			struct pci_bus_region *region,
--			struct resource *res);
--
--extern void pcibios_bus_to_resource(struct pci_dev *dev,
--			struct resource *res,
--			struct pci_bus_region *region);
-+#define ARCH_HAS_GENERIC_PCI_OFFSETS
- 
- extern void pcibios_claim_one_bus(struct pci_bus *b);
- 
-@@ -190,6 +184,7 @@ extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
- 				 const struct resource *rsrc,
- 				 resource_size_t *start, resource_size_t *end);
- 
-+extern resource_size_t pcibios_io_space_offset(struct pci_controller *hose);
- extern void pcibios_setup_bus_devices(struct pci_bus *bus);
- extern void pcibios_setup_bus_self(struct pci_bus *bus);
- extern void pcibios_setup_phb_io_space(struct pci_controller *hose);
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 6d03da4..2efd52d 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -846,60 +846,6 @@ int pci_proc_domain(struct pci_bus *bus)
- 	return 1;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index a55e248..39d15e6 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1335,3 +1335,33 @@ static int __init pci_sysfs_init(void)
  }
  
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
--{
--	resource_size_t offset = 0, mask = (resource_size_t)-1;
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--
--	if (!hose)
--		return;
--	if (res->flags & IORESOURCE_IO) {
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		mask = 0xffffffffu;
--	} else if (res->flags & IORESOURCE_MEM)
--		offset = hose->pci_mem_offset;
--
--	region->start = (res->start - offset) & mask;
--	region->end = (res->end - offset) & mask;
--}
--EXPORT_SYMBOL(pcibios_resource_to_bus);
--
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
--{
--	resource_size_t offset = 0, mask = (resource_size_t)-1;
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--
--	if (!hose)
--		return;
--	if (res->flags & IORESOURCE_IO) {
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		mask = 0xffffffffu;
--	} else if (res->flags & IORESOURCE_MEM)
--		offset = hose->pci_mem_offset;
--	res->start = (region->start + offset) & mask;
--	res->end = (region->end + offset) & mask;
--}
--EXPORT_SYMBOL(pcibios_bus_to_resource);
--
--/* Fixup a bus resource into a linux resource */
--static void __devinit fixup_resource(struct resource *res, struct pci_dev *dev)
--{
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	resource_size_t offset = 0, mask = (resource_size_t)-1;
--
--	if (res->flags & IORESOURCE_IO) {
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		mask = 0xffffffffu;
--	} else if (res->flags & IORESOURCE_MEM)
--		offset = hose->pci_mem_offset;
--
--	res->start = (res->start + offset) & mask;
--	res->end = (res->end + offset) & mask;
--}
--
--
- /* This header fixup will do the resource fixup for all devices as they are
-  * probed, but not for bridge ranges
-  */
-@@ -939,18 +885,11 @@ static void __devinit pcibios_fixup_resources(struct pci_dev *dev)
- 			continue;
- 		}
- 
--		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x] fixup...\n",
-+		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]\n",
- 			 pci_name(dev), i,
- 			 (unsigned long long)res->start,\
- 			 (unsigned long long)res->end,
- 			 (unsigned int)res->flags);
--
--		fixup_resource(res, dev);
--
--		pr_debug("PCI:%s            %016llx-%016llx\n",
--			 pci_name(dev),
--			 (unsigned long long)res->start,
--			 (unsigned long long)res->end);
- 	}
- 
- 	/* Call machine specific resource fixup */
-@@ -1052,27 +991,18 @@ static void __devinit pcibios_fixup_bridge(struct pci_bus *bus)
- 			continue;
- 		}
- 
--		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x] fixup...\n",
-+		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x]\n",
- 			 pci_name(dev), i,
- 			 (unsigned long long)res->start,\
- 			 (unsigned long long)res->end,
- 			 (unsigned int)res->flags);
- 
--		/* Perform fixup */
--		fixup_resource(res, dev);
--
- 		/* Try to detect uninitialized P2P bridge resources,
- 		 * and clear them out so they get re-assigned later
- 		 */
- 		if (pcibios_uninitialized_bridge_resource(bus, res)) {
- 			res->flags = 0;
- 			pr_debug("PCI:%s            (unassigned)\n", pci_name(dev));
--		} else {
--
--			pr_debug("PCI:%s            %016llx-%016llx\n",
--				 pci_name(dev),
--				 (unsigned long long)res->start,
--				 (unsigned long long)res->end);
- 		}
- 	}
- }
-@@ -1562,6 +1492,11 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return pci_enable_resources(dev, mask);
- }
- 
-+resource_size_t pcibios_io_space_offset(struct pci_controller *hose)
+ late_initcall(pci_sysfs_init);
++
++static struct attribute *pci_dev_bridge_attrs[] = {
++	NULL,
++};
++
++static umode_t pci_dev_bridge_attrs_are_visible(struct kobject *kobj,
++						struct attribute *a, int n)
 +{
-+	return (unsigned long) hose->io_base_virt - _IO_BASE;
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pdev->subordinate)
++		return 0;
++
++	return a->mode;
 +}
 +
- static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, struct list_head *resources)
- {
- 	struct resource *res;
-@@ -1586,7 +1521,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
- 		 (unsigned long long)res->start,
- 		 (unsigned long long)res->end,
- 		 (unsigned long)res->flags);
--	pci_add_resource(resources, res);
-+	pci_add_resource_offset(resources, res, pcibios_io_space_offset(hose));
- 
- 	/* Hookup PHB Memory resources */
- 	for (i = 0; i < 3; ++i) {
-@@ -1609,7 +1544,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
- 			 (unsigned long long)res->start,
- 			 (unsigned long long)res->end,
- 			 (unsigned long)res->flags);
--		pci_add_resource(resources, res);
-+		pci_add_resource_offset(resources, res, hose->pci_mem_offset);
- 	}
- 
- 	pr_debug("PCI: PHB MEM offset     = %016llx\n",
-diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
-index fdd1a3d..4b06ec5 100644
---- a/arch/powerpc/kernel/pci_32.c
-+++ b/arch/powerpc/kernel/pci_32.c
-@@ -219,9 +219,9 @@ void __devinit pcibios_setup_phb_io_space(struct pci_controller *hose)
- 	struct resource *res = &hose->io_resource;
- 
- 	/* Fixup IO space offset */
--	io_offset = (unsigned long)hose->io_base_virt - isa_io_base;
--	res->start = (res->start + io_offset) & 0xffffffffu;
--	res->end = (res->end + io_offset) & 0xffffffffu;
-+	io_offset = pcibios_io_space_offset(hose);
-+	res->start += io_offset;
-+	res->end += io_offset;
++static struct attribute_group pci_dev_bridge_attr_group = {
++	.attrs = pci_dev_bridge_attrs,
++	.is_visible = pci_dev_bridge_attrs_are_visible,
++};
++
++static const struct attribute_group *pci_dev_attr_groups[] = {
++	&pci_dev_bridge_attr_group,
++	NULL,
++};
++
++struct device_type pci_dev_type = {
++	.groups = pci_dev_attr_groups,
++};
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e494347..13b1159 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -162,6 +162,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
  }
- 
- static int __init pcibios_init(void)
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index 75417fd..94a54f6 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -168,7 +168,7 @@ static int __devinit pcibios_map_phb_io_space(struct pci_controller *hose)
- 		return -ENOMEM;
- 
- 	/* Fixup hose IO resource */
--	io_virt_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
-+	io_virt_offset = pcibios_io_space_offset(hose);
- 	hose->io_resource.start += io_virt_offset;
- 	hose->io_resource.end += io_virt_offset;
- 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index b37d0b5..89dde17 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -75,6 +75,7 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
- {
- 	u64 base, size;
- 	unsigned int flags;
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	const u32 *addrs;
- 	u32 i;
-@@ -106,10 +107,11 @@ static void of_pci_parse_addrs(struct device_node *node, struct pci_dev *dev)
- 			printk(KERN_ERR "PCI: bad cfg reg num 0x%x\n", i);
- 			continue;
- 		}
--		res->start = base;
--		res->end = base + size - 1;
- 		res->flags = flags;
- 		res->name = pci_name(dev);
-+		region.start = base;
-+		region.end = base + size - 1;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- }
- 
-@@ -209,6 +211,7 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
- 	struct pci_bus *bus;
- 	const u32 *busrange, *ranges;
- 	int len, i, mode;
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	unsigned int flags;
- 	u64 size;
-@@ -270,9 +273,10 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
- 			res = bus->resource[i];
- 			++i;
- 		}
--		res->start = of_read_number(&ranges[1], 2);
--		res->end = res->start + size - 1;
- 		res->flags = flags;
-+		region.start = of_read_number(&ranges[1], 2);
-+		region.end = region.start + size - 1;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- 	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
- 		bus->number);
+ extern struct device_attribute pci_dev_attrs[];
+ extern struct device_attribute pcibus_dev_attrs[];
++extern struct device_type pci_dev_type;
+ #ifdef CONFIG_HOTPLUG
+ extern struct bus_attribute pci_bus_attrs[];
+ #else
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 3dc92b9..e51e1a5 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1119,6 +1119,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->sysdata = dev->bus->sysdata;
+ 	dev->dev.parent = dev->bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
++	dev->dev.type = &pci_dev_type;
+ 	dev->hdr_type = hdr_type & 0x7f;
+ 	dev->multifunction = !!(hdr_type & 0x80);
+ 	dev->error_state = pci_channel_io_normal;
+-- 
+1.7.7
 
