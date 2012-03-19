@@ -1,98 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 12/12] PCI, shpchp: Simplify configure_device
-Date: Tue, 13 Mar 2012 00:26:34 -0700
-Message-Id: <1331623594-30543-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
-References: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [PATCH -v11 13/30] PCI, ia64: Register busn_res for root buses
+Date: Sun, 18 Mar 2012 22:42:44 -0700
+Message-Id: <1332135781-13695-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For child p2p bridge hotplug support should use pci_scan_bridge instead.
-
-Make it more simillar to pciehp, just use pci_hp_add_bridge()
+-v2: according to Bjorn, use root->secondary directly.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
 ---
- drivers/pci/hotplug/shpchp_pci.c |   45 ++++++++++++-------------------------
- 1 files changed, 15 insertions(+), 30 deletions(-)
+ arch/ia64/pci/pci.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
-index d92807b..c627ed9 100644
---- a/drivers/pci/hotplug/shpchp_pci.c
-+++ b/drivers/pci/hotplug/shpchp_pci.c
-@@ -37,9 +37,10 @@
- int __ref shpchp_configure_device(struct slot *p_slot)
- {
- 	struct pci_dev *dev;
--	struct pci_bus *parent = p_slot->ctrl->pci_dev->subordinate;
--	int num, fn;
- 	struct controller *ctrl = p_slot->ctrl;
-+	struct pci_dev *bridge = ctrl->pci_dev;
-+	struct pci_bus *parent = bridge->subordinate;
-+	int num, fn;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index d1ce320..6c7c4ae 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -352,6 +352,8 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ #endif
  
- 	dev = pci_get_slot(parent, PCI_DEVFN(p_slot->device, 0));
- 	if (dev) {
-@@ -61,39 +62,23 @@ int __ref shpchp_configure_device(struct slot *p_slot)
- 		if (!dev)
- 			continue;
- 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
--				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
--			/* Find an unused bus number for the new bridge */
--			struct pci_bus *child;
--			unsigned char busnr, start = parent->secondary;
--			unsigned char end = parent->subordinate;
--			for (busnr = start; busnr <= end; busnr++) {
--				if (!pci_find_bus(pci_domain_nr(parent),
--							busnr))
--					break;
--			}
--			if (busnr > end) {
--				ctrl_err(ctrl,
--					 "No free bus for hot-added bridge\n");
--				pci_dev_put(dev);
--				continue;
--			}
--			child = pci_add_new_bus(parent, dev, busnr);
--			if (!child) {
--				ctrl_err(ctrl, "Cannot add new bus for %s\n",
--					 pci_name(dev));
--				pci_dev_put(dev);
--				continue;
--			}
--			child->subordinate = pci_do_scan_bus(child);
--			pci_bus_size_bridges_with_self(child);
--		}
-+		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
-+			pci_hp_add_bridge(dev);
-+		pci_dev_put(dev);
-+	}
-+
-+	pci_assign_unassigned_bridge_resources(bridge);
-+
-+	for (fn = 0; fn < 8; fn++) {
-+		dev = pci_get_slot(parent, PCI_DEVFN(p_slot->device, fn));
-+		if (!dev)
-+			continue;
- 		pci_configure_slot(dev);
- 		pci_dev_put(dev);
- 	}
- 
--	pci_bus_assign_resources(parent);
- 	pci_bus_add_devices(parent);
--	pci_enable_bridges(parent);
-+
- 	return 0;
- }
- 
+ 	INIT_LIST_HEAD(&info.resources);
++	/* insert busn resource at first */
++	pci_add_resource(&info.resources, &root->secondary);
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+ 			&windows);
+ 	if (windows) {
 -- 
 1.7.7
 
