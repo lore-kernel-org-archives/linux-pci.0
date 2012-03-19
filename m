@@ -1,124 +1,139 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:59973 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758389Ab2CIR24 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Mar 2012 12:28:56 -0500
-Received: by lahj13 with SMTP id j13so1889412lah.19
-        for <linux-pci@vger.kernel.org>; Fri, 09 Mar 2012 09:28:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUGCazRAJ3vaej6wndk9e-kedU7tuaw8VSRcu2RB0qQAg@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
- <1331018040-30725-15-git-send-email-yinghai@kernel.org> <CAErSpo6VyKpBygK3vV25q+X5YisNVPwh64jaJ_KtMO1WB=ocpw@mail.gmail.com>
- <CAE9FiQUGCazRAJ3vaej6wndk9e-kedU7tuaw8VSRcu2RB0qQAg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 9 Mar 2012 10:28:34 -0700
-Message-ID: <CAErSpo5KgLWiegOtOyVb7CeMyk2yicuFJC_vfiFmeEO8hj_Muw@mail.gmail.com>
-Subject: Re: [PATCH 14/23] PCI: add __pci_remove_bus_devices()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 02/11] x86, PCI: Fix memleak with get_current_resources()
+Date: Sun, 18 Mar 2012 22:40:15 -0700
+Message-Id: <1332135624-13528-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+References: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 9, 2012 at 12:17 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Mar 8, 2012 at 5:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Mar 6, 2012 at 12:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> will use it with pci_stop_and_remove_bus later.
->>>
->>> also remove __pci_remove_behind_bridge and pci_stop_behind_bridge.
->>>
->>> they are same except one take bridge and one take bus.
->>>
->>> and we already have pci_stop_bus_devices()
->>>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> ---
->>>  drivers/pci/remove.c |   28 +++++++++++-----------------
->>>  1 files changed, 11 insertions(+), 17 deletions(-)
->>>
->>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->>> index 243d59b..62c348c 100644
->>> --- a/drivers/pci/remove.c
->>> +++ b/drivers/pci/remove.c
->>> @@ -78,7 +78,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
->>>  }
->>>  EXPORT_SYMBOL(pci_remove_bus);
->>>
->>> -static void __pci_remove_behind_bridge(struct pci_dev *dev);
->>> +static void __pci_remove_bus_devices(struct pci_bus *bus);
->>>  /**
->>>  * pci_stop_and_remove_bus_device - remove a PCI device and any children
->>>  * @dev: the device to remove
->>> @@ -96,7 +96,7 @@ void __pci_remove_bus_device(struct pci_dev *dev)
->>>        if (dev->subordinate) {
->>>                struct pci_bus *b = dev->subordinate;
->>>
->>> -               __pci_remove_behind_bridge(dev);
->>> +               __pci_remove_bus_devices(b);
->>>                pci_remove_bus(b);
->>>                dev->subordinate = NULL;
->>>        }
->>> @@ -111,22 +111,12 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
->>>        __pci_remove_bus_device(dev);
->>>  }
->>>
->>> -static void __pci_remove_behind_bridge(struct pci_dev *dev)
->>> +static void __pci_remove_bus_devices(struct pci_bus *bus)
->>>  {
->>>        struct list_head *l, *n;
->>>
->>> -       if (dev->subordinate)
->>> -               list_for_each_safe(l, n, &dev->subordinate->devices)
->>> -                       __pci_remove_bus_device(pci_dev_b(l));
->>> -}
->>> -
->>> -static void pci_stop_behind_bridge(struct pci_dev *dev)
->>> -{
->>> -       struct list_head *l, *n;
->>> -
->>> -       if (dev->subordinate)
->>> -               list_for_each_safe(l, n, &dev->subordinate->devices)
->>> -                       pci_stop_bus_device(pci_dev_b(l));
->>> +       list_for_each_safe(l, n, &bus->devices)
->>> +               __pci_remove_bus_device(pci_dev_b(l));
->>
->> Use list_for_each_entry_safe() so you don't need pci_dev_b().
->
-> just want to keep the patch to simple, and looks like just name renaming.
->
-> also use list_for_each_safe instead of list_for_each_entry_safe
->
-> could have less conversion.
+In pci_scan_acpi_root(), when pci_use_crs is set, get_current_resources() is
+used to get pci_root_info, and it will allocate name and resource array.
 
-Sorry, I didn't understand the above.
+Later if pci_create_root_bus() can not create bus (could be already there...)
+it will only free bus res list, but the name and res array is not freed.
 
-It is OK to improve code as you change it :)  list_for_each_entry() is
-clearly an improvement over list_for_each() + some conversion macro.
+Let get_current_resource() take info pointer instead of using local info.
 
->>>  }
->>>
->>>  static void pci_stop_bus_devices(struct pci_bus *bus)
->>> @@ -158,8 +148,12 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
->>>  */
->>>  void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
->>>  {
->>> -       pci_stop_behind_bridge(dev);
->>> -       __pci_remove_behind_bridge(dev);
->>> +       struct pci_bus *bus = dev->subordinate;
->>> +
->>> +       if (bus) {
->>
->> Don't check "bus" here.  If the caller screws up and passes a
->> non-bridge pointer, I want to learn about it rather than ignore it.
->
-> old code have that
->           if (dev->subordinate)
->
-> checking.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/acpi.c |   49 ++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 30 insertions(+), 19 deletions(-)
 
-Removing a test that could silently cover a programming error is also
-an improvement.
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index ed2835e..a99b7d7 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -315,49 +315,55 @@ static void add_resources(struct pci_root_info *info)
+ 	}
+ }
+ 
++static void free_pci_root_info(struct pci_root_info *info)
++{
++	kfree(info->name);
++	kfree(info->res);
++	memset(info, 0, sizeof(struct pci_root_info));
++}
++
+ static void
+-get_current_resources(struct acpi_device *device, int busnum,
++get_current_resources(struct pci_root_info *info,
++		      struct acpi_device *device, int busnum,
+ 		      int domain, struct list_head *resources)
+ {
+-	struct pci_root_info info;
+ 	size_t size;
+ 
+-	info.bridge = device;
+-	info.res_num = 0;
+-	info.resources = resources;
++	info->bridge = device;
++	info->res_num = 0;
++	info->resources = resources;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+-				&info);
+-	if (!info.res_num)
++				info);
++	if (!info->res_num)
+ 		return;
+ 
+-	size = sizeof(*info.res) * info.res_num;
+-	info.res = kmalloc(size, GFP_KERNEL);
+-	if (!info.res)
++	size = sizeof(*info->res) * info->res_num;
++	info->res = kmalloc(size, GFP_KERNEL);
++	if (!info->res)
+ 		return;
+ 
+-	info.name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
+-	if (!info.name)
++	info->name = kasprintf(GFP_KERNEL, "PCI Bus %04x:%02x", domain, busnum);
++	if (!info->name)
+ 		goto name_alloc_fail;
+ 
+-	info.res_num = 0;
++	info->res_num = 0;
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+-				&info);
++				info);
+ 
+ 	if (pci_use_crs) {
+-		add_resources(&info);
++		add_resources(info);
+ 
+ 		return;
+ 	}
+ 
+-	kfree(info.name);
+-
+ name_alloc_fail:
+-	kfree(info.res);
++	free_pci_root_info(info);
+ }
+ 
+ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
++	struct pci_root_info info;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
+ 	LIST_HEAD(resources);
+@@ -402,6 +408,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 	sd->domain = domain;
+ 	sd->node = node;
++	memset(&info, 0, sizeof(struct pci_root_info));
+ 	/*
+ 	 * Maybe the desired pci bus has been already scanned. In such case
+ 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+@@ -415,7 +422,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(sd);
+ 	} else {
+-		get_current_resources(device, busnum, domain, &resources);
++		get_current_resources(&info, device, busnum, domain,
++					&resources);
+ 
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+@@ -429,6 +437,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 			bus->subordinate = pci_scan_child_bus(bus);
+ 		else
+ 			pci_free_resource_list(&resources);
++
++		if (!bus && pci_use_crs)
++			free_pci_root_info(&info);
+ 	}
+ 
+ 	/* After the PCI-E bus has been walked and all devices discovered,
+-- 
+1.7.7
 
-Bjorn
