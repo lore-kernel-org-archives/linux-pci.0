@@ -1,90 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:27652 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756890Ab2CSFoC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:44:02 -0400
+Received: from acsinet15.oracle.com ([141.146.126.227]:25394 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161859Ab2CSFtd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:33 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v11 03/30] x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
-Date: Sun, 18 Mar 2012 22:42:34 -0700
-Message-Id: <1332135781-13695-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 02/26] PCI: Add for_each_resource helpers to make resource loop easier.
+Date: Sun, 18 Mar 2012 22:48:25 -0700
+Message-Id: <1332136129-14010-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Those two are almost the same.
-Let pcibios_scan_root call pci_scan_bus_on_node instead.
-
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/common.c |   27 ++++-----------------------
- 1 files changed, 4 insertions(+), 23 deletions(-)
+ include/linux/pci.h |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 49 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 323481e..8e04ec5 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -430,9 +430,7 @@ void __init dmi_check_pciprobe(void)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index bb81080..2b1fff8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -349,6 +349,55 @@ struct pci_dev {
  
- struct pci_bus * __devinit pcibios_scan_root(int busnum)
- {
--	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
--	struct pci_sysdata *sd;
+ struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
  
- 	while ((bus = pci_find_next_bus(bus)) != NULL) {
- 		if (bus->number == busnum) {
-@@ -441,28 +439,10 @@ struct pci_bus * __devinit pcibios_scan_root(int busnum)
- 		}
- 	}
- 
--	/* Allocate per-root-bus (not per bus) arch-specific data.
--	 * TODO: leak; this memory is never freed.
--	 * It's arguable whether it's worth the trouble to care.
--	 */
--	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
--	if (!sd) {
--		printk(KERN_ERR "PCI: OOM, not probing PCI bus %02x\n", busnum);
--		return NULL;
--	}
--
--	sd->node = get_mp_bus_to_node(busnum);
--
--	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
--	x86_pci_root_bus_resources(busnum, &resources);
--	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
--	if (!bus) {
--		pci_free_resource_list(&resources);
--		kfree(sd);
--	}
--
--	return bus;
-+	return pci_scan_bus_on_node(busnum, &pci_root_ops,
-+					get_mp_bus_to_node(busnum));
- }
++#define resno_is_for_bridge(n)						\
++	((n) >= PCI_BRIDGE_RESOURCES && (n) <= PCI_BRIDGE_RESOURCE_END)
 +
- void __init pcibios_set_cache_line_size(void)
++/* all (include bridge) resources */
++#define for_each_pci_dev_all_resource(dev, res, i)			\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i++)
++/* exclude bridge resources */
++#define for_each_pci_dev_nobridge_resource(dev, res, i)			\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i = (i != (PCI_BRIDGE_RESOURCES - 1)) ? (i+1) : PCI_NUM_RESOURCES)
++/* exclude bridge and IOV resources */
++#define for_each_pci_dev_base_resource(dev, res, i)			\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i = (i != PCI_ROM_RESOURCE) ? (i+1) : PCI_NUM_RESOURCES)
++/* exclude ROM and bridge and IOV resources */
++#define for_each_pci_dev_base_norom_resource(dev, res, i)		\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i = (i != (PCI_ROM_RESOURCE-1)) ? (i+1) : PCI_NUM_RESOURCES)
++/* exclude IOV resources */
++#define for_each_pci_dev_noiov_resource(dev, res, i)			\
++	for (i = 0;							\
++	     (res = pci_dev_resource_n(dev, i)) || i < PCI_NUM_RESOURCES; \
++	     i = (i != PCI_ROM_RESOURCE) ? (i+1) : PCI_BRIDGE_RESOURCES)
++/* only std resources */
++#define for_each_pci_dev_std_resource(dev, res, i)			\
++	for (i = PCI_STD_RESOURCES;					\
++	   (res = pci_dev_resource_n(dev, i)) && i < (PCI_STD_RESOURCE_END+1); \
++	     i++)
++/* only IOV resources */
++#define for_each_pci_dev_iov_resource(dev, res, i)			\
++	for (i = PCI_IOV_RESOURCES;					\
++	   (res = pci_dev_resource_n(dev, i)) && i < (PCI_IOV_RESOURCE_END+1); \
++	     i++)
++/* only bridge resources */
++#define for_each_pci_dev_bridge_resource(dev, res, i)			\
++	for (i = PCI_BRIDGE_RESOURCES;					\
++	(res = pci_dev_resource_n(dev, i)) && i < (PCI_BRIDGE_RESOURCE_END+1); \
++	     i++)
++/* only addon resources */
++#define for_each_pci_dev_addon_resource(dev, res, i)			\
++	for (i = PCI_NUM_RESOURCES;					\
++	     (res = pci_dev_resource_n(dev, i));			\
++	     i++)
++
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
  {
- 	struct cpuinfo_x86 *c = &boot_cpu_data;
-@@ -656,6 +636,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
- 	}
- 	sd->node = node;
- 	x86_pci_root_bus_resources(busno, &resources);
-+	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
- 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
+ #ifdef CONFIG_PCI_IOV
 -- 
 1.7.7
 
