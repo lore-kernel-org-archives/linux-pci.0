@@ -1,56 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:59458 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753599Ab2CHOvr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 09:51:47 -0500
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: [PATCH 06/11] PCI: Keep pci_fixup_irqs() around after init
-Date: Thu,  8 Mar 2012 15:51:26 +0100
-Message-Id: <1331218291-16119-7-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v11 09/30] PCI: Add default busn_resource
+Date: Sun, 18 Mar 2012 22:42:40 -0700
+Message-Id: <1332135781-13695-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- drivers/pci/setup-irq.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+We need to put into the resources list for legacy system.
 
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index eb219a1..270ae7b 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -18,7 +18,7 @@
- #include <linux/cache.h>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    7 +++++++
+ include/linux/pci.h |    2 ++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 654c727..2378531 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -15,6 +15,13 @@
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+ #define CARDBUS_RESERVE_BUSNR	3
  
- 
--static void __init
-+static void
- pdev_fixup_irq(struct pci_dev *dev,
- 	       u8 (*swizzle)(struct pci_dev *, u8 *),
- 	       int (*map_irq)(const struct pci_dev *, u8, u8))
-@@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
- 	pcibios_update_irq(dev, irq);
++struct resource busn_resource = {
++	.name	= "PCI busn",
++	.start	= 0,
++	.end	= 255,
++	.flags	= IORESOURCE_BUS,
++};
++
+ /* Ugh.  Need to stop exporting this to modules. */
+ LIST_HEAD(pci_root_buses);
+ EXPORT_SYMBOL(pci_root_buses);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e494759..40606c1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -368,6 +368,8 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 	return (pdev->error_state != pci_channel_io_normal);
  }
  
--void __init
-+void
- pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 	       int (*map_irq)(const struct pci_dev *, u8, u8))
- {
++extern struct resource busn_resource;
++
+ struct pci_host_bridge_window {
+ 	struct list_head list;
+ 	struct resource *res;		/* host bridge aperture (CPU address) */
 -- 
-1.7.9.3
+1.7.7
 
