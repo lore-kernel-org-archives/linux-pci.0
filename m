@@ -1,266 +1,160 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v3 17/34] PCI: convert bus addresses to resource when reading
-	BARs
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 07 Mar 2012 15:33:31 -0700
-Message-ID: <20120307223331.25669.11682.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 24/26] PCI: Make piix4 quirk to use addon_resource support
+Date: Sun, 18 Mar 2012 22:48:47 -0700
+Message-Id: <1332136129-14010-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some PCI host bridges translate CPU addresses to PCI bus addresses.
-Previously, we initialized pci_dev resources with PCI bus addresses,
-then converted them to CPU addresses later in arch-specific code
-(pcibios_fixup_resources()), which leaves a window of time where the
-pci_dev resources are incorrect.
+after they are put in add-on resources, they will be safely claimed later.
 
-This patch adds support in the core for this address translation.
-When the arch creates the root bus, it can supply the host bridge
-address translation information, and the core can use it to set the
-pci_dev resources correctly from the beginning.
-
-This gives us a way to fix the problem that quirks that run between device
-discovery and pcibios_fixup_resources() fail because they use pci_dev
-resources that haven't been converted.  The reference below is to one
-such problem that affected ARM and ia64.
-
-Note that this patch has no effect until an arch starts using
-pci_add_resource_offset() with a non-zero offset: before that, all
-all host bridge windows have a zero offset and pci_bus_to_resource()
-copies the pci_bus_region directly to the struct resource.
-
-Reference: https://lkml.org/lkml/2009/10/12/405
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c |  130 +++++++++++++++++++++++++++++++++++++++++----------
- 1 files changed, 105 insertions(+), 25 deletions(-)
+ drivers/pci/quirks.c |   93 +++++++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 77 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3f07cb6..6713447 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -61,6 +61,63 @@ static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
- 	return NULL;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7ef4183..cbe7dd9 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -383,14 +383,14 @@ static void __devinit quirk_ali7101_acpi(struct pci_dev *dev)
  }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
  
-+static bool resource_contains(struct resource *res1, struct resource *res2)
-+{
-+	return res1->start <= res2->start && res1->end >= res2->end;
-+}
-+
-+void pci_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			struct resource *res)
-+{
-+	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge_window *window;
-+	resource_size_t offset = 0;
-+
-+	list_for_each_entry(window, &bridge->windows, list) {
-+		if (resource_type(res) != resource_type(window->res))
-+			continue;
-+
-+		if (resource_contains(window->res, res)) {
-+			offset = window->offset;
-+			break;
-+		}
-+	}
-+
-+	region->start = res->start - offset;
-+	region->end = res->end - offset;
-+}
-+
-+static bool region_contains(struct pci_bus_region *region1,
-+			    struct pci_bus_region *region2)
-+{
-+	return region1->start <= region2->start && region1->end >= region2->end;
-+}
-+
-+void pci_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			 struct pci_bus_region *region)
-+{
-+	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge_window *window;
-+	struct pci_bus_region bus_region;
-+	resource_size_t offset = 0;
-+
-+	list_for_each_entry(window, &bridge->windows, list) {
-+		if (resource_type(res) != resource_type(window->res))
-+			continue;
-+
-+		bus_region.start = window->res->start - window->offset;
-+		bus_region.end = window->res->end - window->offset;
-+
-+		if (region_contains(&bus_region, region)) {
-+			offset = window->offset;
-+			break;
-+		}
-+	}
-+
-+	res->start = region->start + offset;
-+	res->end = region->end + offset;
-+}
-+
- /*
-  * PCI Bus Class
-  */
-@@ -154,6 +211,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+-static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
++static int piix4_read_io(struct pci_dev *dev, struct resource *res, int port)
  {
- 	u32 l, sz, mask;
- 	u16 orig_cmd;
-+	struct pci_bus_region region;
+ 	u32 devres;
+ 	u32 mask, size, base;
++	struct pci_bus_region bus_region;
  
- 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
- 
-@@ -233,11 +291,13 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			/* Address above 32-bit boundary; disable the BAR */
- 			pci_write_config_dword(dev, pos, 0);
- 			pci_write_config_dword(dev, pos + 4, 0);
--			res->start = 0;
--			res->end = sz64;
-+			region.start = 0;
-+			region.end = sz64;
-+			pci_bus_to_resource(dev, res, &region);
- 		} else {
--			res->start = l64;
--			res->end = l64 + sz64;
-+			region.start = l64;
-+			region.end = l64 + sz64;
-+			pci_bus_to_resource(dev, res, &region);
- 			dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n",
- 				   pos, res);
- 		}
-@@ -247,8 +307,9 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		if (!sz)
- 			goto fail;
- 
--		res->start = l;
--		res->end = l + sz;
-+		region.start = l;
-+		region.end = l + sz;
-+		pci_bus_to_resource(dev, res, &region);
- 
- 		dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n", pos, res);
+ 	pci_read_config_dword(dev, port, &devres);
+-	if ((devres & enable) != enable)
+-		return;
++
+ 	mask = (devres >> 16) & 15;
+ 	base = devres & 0xffff;
+ 	size = 16;
+@@ -400,23 +400,53 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
+ 			break;
+ 		size = bit;
  	}
-@@ -285,7 +346,8 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
- 	struct pci_dev *dev = child->self;
- 	u8 io_base_lo, io_limit_lo;
- 	unsigned long base, limit;
--	struct resource *res;
-+	struct pci_bus_region region;
-+	struct resource *res, res2;
- 
- 	res = child->resource[0];
- 	pci_read_config_byte(dev, PCI_IO_BASE, &io_base_lo);
-@@ -303,10 +365,14 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
- 
- 	if (base && base <= limit) {
- 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
-+		res2.flags = res->flags;
-+		region.start = base;
-+		region.end = limit + 0xfff;
-+		pci_bus_to_resource(dev, &res2, &region);
- 		if (!res->start)
--			res->start = base;
-+			res->start = res2.start;
- 		if (!res->end)
--			res->end = limit + 0xfff;
-+			res->end = res2.end;
- 		dev_printk(KERN_DEBUG, &dev->dev, "  bridge window %pR\n", res);
- 	}
+-	/*
+-	 * For now we only print it out. Eventually we'll want to
+-	 * reserve it (at least if it's in the 0x1000+ range), but
+-	 * let's get enough confirmation reports first. 
+-	 */
+ 	base &= -size;
+-	dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
++
++	bus_region.start = base;
++	bus_region.end = base + size - 1;
++	res->flags |= IORESOURCE_IO;
++	pcibios_bus_to_resource(dev, res, &bus_region);
++	dev_info(&dev->dev, "PIO at %pR\n", res);
++
++	return 0;
  }
-@@ -316,6 +382,7 @@ static void __devinit pci_read_bridge_mmio(struct pci_bus *child)
- 	struct pci_dev *dev = child->self;
- 	u16 mem_base_lo, mem_limit_lo;
- 	unsigned long base, limit;
-+	struct pci_bus_region region;
- 	struct resource *res;
++static int piix4_write_io(struct pci_dev *dev, struct resource *res, int port)
++{
++	u32 devres;
++	struct pci_bus_region bus_region;
++
++	pcibios_resource_to_bus(dev, &bus_region, res);
  
- 	res = child->resource[1];
-@@ -325,8 +392,9 @@ static void __devinit pci_read_bridge_mmio(struct pci_bus *child)
- 	limit = (mem_limit_lo & PCI_MEMORY_RANGE_MASK) << 16;
- 	if (base && base <= limit) {
- 		res->flags = (mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) | IORESOURCE_MEM;
--		res->start = base;
--		res->end = limit + 0xfffff;
-+		region.start = base;
-+		region.end = limit + 0xfffff;
-+		pci_bus_to_resource(dev, res, &region);
- 		dev_printk(KERN_DEBUG, &dev->dev, "  bridge window %pR\n", res);
+-static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
++	pci_read_config_dword(dev, port, &devres);
++	devres &= 0xffff0000;
++	devres |= bus_region.start & 0xffff;
++	pci_write_config_dword(dev, port, devres);
++
++	return 0;
++}
++static struct resource_ops piix4_io_ops = {
++	.read = piix4_read_io,
++	.write = piix4_write_io,
++};
++static void piix4_io_quirk(struct pci_dev *dev, char *name, unsigned int port,
++				unsigned int enable)
+ {
+ 	u32 devres;
+-	u32 mask, size, base;
+ 
+ 	pci_read_config_dword(dev, port, &devres);
+ 	if ((devres & enable) != enable)
+ 		return;
++
++	add_pci_dev_addon_resource(dev, port, 0, &piix4_io_ops, name);
++}
++
++static int piix4_read_mem(struct pci_dev *dev, struct resource *res, int port)
++{
++	u32 devres;
++	u32 mask, size, base;
++	struct pci_bus_region bus_region;
++
++	pci_read_config_dword(dev, port, &devres);
+ 	base = devres & 0xffff0000;
+ 	mask = (devres & 0x3f) << 16;
+ 	size = 128 << 16;
+@@ -426,12 +456,43 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
+ 			break;
+ 		size = bit;
  	}
+-	/*
+-	 * For now we only print it out. Eventually we'll want to
+-	 * reserve it, but let's get enough confirmation reports first. 
+-	 */
+ 	base &= -size;
+-	dev_info(&dev->dev, "%s MMIO at %04x-%04x\n", name, base, base + size - 1);
++	bus_region.start = base;
++	bus_region.end = base + size - 1;
++	res->flags |= IORESOURCE_MEM;
++	pcibios_bus_to_resource(dev, res, &bus_region);
++	dev_info(&dev->dev, "MMIO at %pR\n", res);
++
++	return 0;
++}
++static int piix4_write_mem(struct pci_dev *dev, struct resource *res, int port)
++{
++	u32 devres;
++	struct pci_bus_region bus_region;
++
++	pcibios_resource_to_bus(dev, &bus_region, res);
++
++	pci_read_config_dword(dev, port, &devres);
++	devres &= 0x0000ffff;
++	devres |= bus_region.start & 0xffff0000;
++	pci_write_config_dword(dev, port, devres);
++
++	return 0;
++}
++static struct resource_ops piix4_mem_ops = {
++	.read = piix4_read_mem,
++	.write = piix4_write_mem,
++};
++static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
++				unsigned int enable)
++{
++	u32 devres;
++
++	pci_read_config_dword(dev, port, &devres);
++	if ((devres & enable) != enable)
++		return;
++
++	add_pci_dev_addon_resource(dev, port, 0, &piix4_mem_ops, name);
  }
-@@ -336,6 +404,7 @@ static void __devinit pci_read_bridge_mmio_pref(struct pci_bus *child)
- 	struct pci_dev *dev = child->self;
- 	u16 mem_base_lo, mem_limit_lo;
- 	unsigned long base, limit;
-+	struct pci_bus_region region;
- 	struct resource *res;
  
- 	res = child->resource[2];
-@@ -372,8 +441,9 @@ static void __devinit pci_read_bridge_mmio_pref(struct pci_bus *child)
- 					 IORESOURCE_MEM | IORESOURCE_PREFETCH;
- 		if (res->flags & PCI_PREF_RANGE_TYPE_64)
- 			res->flags |= IORESOURCE_MEM_64;
--		res->start = base;
--		res->end = limit + 0xfffff;
-+		region.start = base;
-+		region.end = limit + 0xfffff;
-+		pci_bus_to_resource(dev, res, &region);
- 		dev_printk(KERN_DEBUG, &dev->dev, "  bridge window %pR\n", res);
- 	}
- }
-@@ -919,6 +989,8 @@ int pci_setup_device(struct pci_dev *dev)
- 	u8 hdr_type;
- 	struct pci_slot *slot;
- 	int pos = 0;
-+	struct pci_bus_region region;
-+	struct resource *res;
- 
- 	if (pci_read_config_byte(dev, PCI_HEADER_TYPE, &hdr_type))
- 		return -EIO;
-@@ -980,20 +1052,28 @@ int pci_setup_device(struct pci_dev *dev)
- 			u8 progif;
- 			pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
- 			if ((progif & 1) == 0) {
--				dev->resource[0].start = 0x1F0;
--				dev->resource[0].end = 0x1F7;
--				dev->resource[0].flags = LEGACY_IO_RESOURCE;
--				dev->resource[1].start = 0x3F6;
--				dev->resource[1].end = 0x3F6;
--				dev->resource[1].flags = LEGACY_IO_RESOURCE;
-+				region.start = 0x1F0;
-+				region.end = 0x1F7;
-+				res = &dev->resource[0];
-+				res->flags = LEGACY_IO_RESOURCE;
-+				pci_bus_to_resource(dev, res, &region);
-+				region.start = 0x3F6;
-+				region.end = 0x3F6;
-+				res = &dev->resource[1];
-+				res->flags = LEGACY_IO_RESOURCE;
-+				pci_bus_to_resource(dev, res, &region);
- 			}
- 			if ((progif & 4) == 0) {
--				dev->resource[2].start = 0x170;
--				dev->resource[2].end = 0x177;
--				dev->resource[2].flags = LEGACY_IO_RESOURCE;
--				dev->resource[3].start = 0x376;
--				dev->resource[3].end = 0x376;
--				dev->resource[3].flags = LEGACY_IO_RESOURCE;
-+				region.start = 0x170;
-+				region.end = 0x177;
-+				res = &dev->resource[2];
-+				res->flags = LEGACY_IO_RESOURCE;
-+				pci_bus_to_resource(dev, res, &region);
-+				region.start = 0x376;
-+				region.end = 0x376;
-+				res = &dev->resource[3];
-+				res->flags = LEGACY_IO_RESOURCE;
-+				pci_bus_to_resource(dev, res, &region);
- 			}
- 		}
- 		break;
+ /*
+-- 
+1.7.7
 
