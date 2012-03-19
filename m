@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30645 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161244Ab2CSFrr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:47 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -7,64 +11,97 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 37/47] PCI: Kill pci_is_reassignedev()
-Date: Sun, 18 Mar 2012 22:46:26 -0700
-Message-Id: <1332135996-13860-38-git-send-email-yinghai@kernel.org>
+Subject: [PATCH -v3 17/47] x86, PCI: Separate pcibios_allocate_dev_resources()
+Date: Sun, 18 Mar 2012 22:46:06 -0700
+Message-Id: <1332135996-13860-18-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Only one user. Just use pci_specified_resource_alignement() directly.
-So could only get get align one time for the dev that in the list
+Thus pcibios_allocate_resources() could more simple and clean
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci.c |   17 +++--------------
- 1 files changed, 3 insertions(+), 14 deletions(-)
+ arch/x86/pci/i386.c |   42 +++++++++++++++++++++++-------------------
+ 1 files changed, 23 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8156744..82ed56a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3685,18 +3685,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 	return align;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index c06f60f..bb84ff0 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -232,9 +232,8 @@ struct pci_check_idx_range {
+ 	int end;
+ };
+ 
+-static void __init pcibios_allocate_resources(int pass)
++static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ {
+-	struct pci_dev *dev = NULL;
+ 	int idx, disabled, i;
+ 	u16 command;
+ 	struct resource *r;
+@@ -246,14 +245,13 @@ static void __init pcibios_allocate_resources(int pass)
+ #endif
+ 	};
+ 
+-	for_each_pci_dev(dev) {
+-		pci_read_config_word(dev, PCI_COMMAND, &command);
+-		for (i = 0; i < ARRAY_SIZE(idx_range); i++)
++	pci_read_config_word(dev, PCI_COMMAND, &command);
++	for (i = 0; i < ARRAY_SIZE(idx_range); i++)
+ 		for (idx = idx_range[i].start; idx <= idx_range[i].end; idx++) {
+ 			r = &dev->resource[idx];
+-			if (r->parent)		/* Already allocated */
++			if (r->parent)	/* Already allocated */
+ 				continue;
+-			if (!r->start)		/* Address not assigned at all */
++			if (!r->start)	/* Address not assigned at all */
+ 				continue;
+ 			if (r->flags & IORESOURCE_IO)
+ 				disabled = !(command & PCI_COMMAND_IO);
+@@ -272,23 +270,29 @@ static void __init pcibios_allocate_resources(int pass)
+ 				}
+ 			}
+ 		}
+-		if (!pass) {
+-			r = &dev->resource[PCI_ROM_RESOURCE];
+-			if (r->flags & IORESOURCE_ROM_ENABLE) {
+-				/* Turn the ROM off, leave the resource region,
+-				 * but keep it unregistered. */
+-				u32 reg;
+-				dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
+-				r->flags &= ~IORESOURCE_ROM_ENABLE;
+-				pci_read_config_dword(dev,
+-						dev->rom_base_reg, &reg);
+-				pci_write_config_dword(dev, dev->rom_base_reg,
++	if (!pass) {
++		r = &dev->resource[PCI_ROM_RESOURCE];
++		if (r->flags & IORESOURCE_ROM_ENABLE) {
++			/* Turn the ROM off, leave the resource region,
++			 * but keep it unregistered. */
++			u32 reg;
++			dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
++			r->flags &= ~IORESOURCE_ROM_ENABLE;
++			pci_read_config_dword(dev, dev->rom_base_reg, &reg);
++			pci_write_config_dword(dev, dev->rom_base_reg,
+ 						reg & ~PCI_ROM_ADDRESS_ENABLE);
+-			}
+ 		}
+ 	}
  }
  
--/**
-- * pci_is_reassigndev - check if specified PCI is target device to reassign
-- * @dev: the PCI device to check
-- *
-- * RETURNS: non-zero for PCI device is a target device to reassign,
-- *          or zero is not.
-- */
--int pci_is_reassigndev(struct pci_dev *dev)
--{
--	return (pci_specified_resource_alignment(dev) != 0);
--}
--
- /*
-  * This function disables memory decoding and releases memory resources
-  * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
-@@ -3711,7 +3699,9 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	resource_size_t align, size;
- 	u16 command;
- 
--	if (!pci_is_reassigndev(dev))
-+	/* check if specified PCI is target device to reassign */
-+	align = pci_specified_resource_alignment(dev);
-+	if (!align)
- 		return;
- 
- 	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
-@@ -3727,7 +3717,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	command &= ~PCI_COMMAND_MEMORY;
- 	pci_write_config_word(dev, PCI_COMMAND, command);
- 
--	align = pci_specified_resource_alignment(dev);
- 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
- 		r = &dev->resource[i];
- 		if (!(r->flags & IORESOURCE_MEM))
++static void __init pcibios_allocate_resources(int pass)
++{
++	struct pci_dev *dev = NULL;
++
++	for_each_pci_dev(dev)
++		pcibios_allocate_dev_resources(dev, pass);
++}
++
+ static int __init pcibios_assign_resources(void)
+ {
+ 	struct pci_dev *dev = NULL;
 -- 
 1.7.7
 
