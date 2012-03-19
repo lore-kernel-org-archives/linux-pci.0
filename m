@@ -1,44 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cassiel.sirena.org.uk ([80.68.93.111]:60748 "EHLO
-	cassiel.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754717Ab2CLMG3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 08:06:29 -0400
-Date: Mon, 12 Mar 2012 12:06:11 +0000
-From: Mark Brown <broonie@opensource.wolfsonmicro.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Liam Girdwood <lrg@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Olof Johansson <olof@lixom.net>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 11/11] ARM: tegra: pcie: Add device tree support
-Message-ID: <20120312120610.GA14020@sirena.org.uk>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-12-git-send-email-thierry.reding@avionic-design.de>
- <4F59253D.7070100@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F59253D.7070100@wwwdotorg.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30770 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161488Ab2CSFsE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:04 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 25/47] Fix an access-after-free issue in function pci_stop_and_remove_bus()
+Date: Sun, 18 Mar 2012 22:46:14 -0700
+Message-Id: <1332135996-13860-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 08, 2012 at 02:31:41PM -0700, Stephen Warren wrote:
-> On 03/08/2012 07:51 AM, Thierry Reding wrote:
+From: Jiang Liu <jiang.liu@huawei.com>
 
-> > +- vdd-supply: power supply for controller (1.05V)
+If pci_stop_and_remove_bus() is called to remove a pci root bus,
+the host_bridge structure may have already been freed after returning
+from pci_remove_bus(). To avoid that, hold an extra reference count
+to the root bus before calling pci_remove_bus(), so we can safely
+access the pci_host_bridge structure after returning from function
+pci_remove_bus().
 
-> Should those *-supply properties really be optional? I got the
-> impression talking to Mark in a different thread that all regulators
-> should exist, although their implementation may be via a fixed
-> regulator, with no GPIO, as determined by the board design.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Depends on the electronics, if the device can function without a supply
-then it is OK for it to be optional.  This is moderately unusual but not
-unknown.  It's obviously also OK to omit the supply if the system
-doesn't use software regulators at all, though a kernel with regulator
-support enabled would need to use dummy regulators to stub things out.
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 75b0092..18efb31 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -186,6 +186,7 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
+ 
+ 	if (pci_is_root_bus(bus)) {
+ 		host_bridge = to_pci_host_bridge(bus->bridge);
++		get_device(&host_bridge->dev);
+ 		pci_stop_host_bridge(host_bridge);
+ 	} else
+ 		pci_bridge = bus->self;
+@@ -194,8 +195,10 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
+ 
+ 	pci_remove_bus(bus);
+ 
+-	if (host_bridge)
++	if (host_bridge) {
+ 		host_bridge->bus = NULL;
++		put_device(&host_bridge->dev);
++	}
+ 
+ 	if (pci_bridge)
+ 		pci_bridge->subordinate = NULL;
+-- 
+1.7.7
+
