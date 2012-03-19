@@ -1,210 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:38043 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031742Ab2CGBFj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 20:05:39 -0500
-Received: by faaa19 with SMTP id a19so214733faa.1
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 17:05:38 -0800 (PST)
-Subject: [PATCH v1 4/9] sparc/PCI: convert devtree bus addresses to resource
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Date: Tue, 06 Mar 2012 18:00:27 -0700
-Message-ID: <20120307010027.27465.93846.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30717 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161298Ab2CSFr5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:57 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 24/47] PCI: Add pci_stop_and_remove_bus()
+Date: Sun, 18 Mar 2012 22:46:13 -0700
+Message-Id: <1332135996-13860-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Normal PCI enumeration via PCI config space uses __pci_read_base(), where
-the PCI core applies any bus-to-resource offset.  But sparc doesn't use
-that path when enumerating via the device tree.
+It supports both pci root bus and pci bus under pci bridge.
 
-This adds the corresponding bus-to-resource conversion in the paths that
-read BAR values from the OF device tree.
+-v2: clear pci_bridge's subordinate.
 
-CC: "David S. Miller" <davem@davemloft.net>
-CC: sparclinux@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/sparc/kernel/pci.c |   66 +++++++++++++++++++++--------------------------
- 1 files changed, 29 insertions(+), 37 deletions(-)
+ drivers/pci/remove.c |   32 ++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    1 +
+ 2 files changed, 33 insertions(+), 0 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 253e8ac..b4fbfe4 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -202,6 +202,7 @@ static void pci_parse_of_addrs(struct platform_device *op,
- 			       struct device_node *node,
- 			       struct pci_dev *dev)
- {
-+	struct pci_bus_region region;
- 	struct resource *op_res;
- 	const u32 *addrs;
- 	int proplen;
-@@ -236,10 +237,11 @@ static void pci_parse_of_addrs(struct platform_device *op,
- 			printk(KERN_ERR "PCI: bad cfg reg num 0x%x\n", i);
- 			continue;
- 		}
--		res->start = op_res->start;
--		res->end = op_res->end;
- 		res->flags = flags;
- 		res->name = pci_name(dev);
-+		region.start = op_res->start;
-+		region.end = op_res->end;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 64ba5b1..75b0092 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -169,6 +169,38 @@ void pci_stop_bus_device(struct pci_dev *dev)
+ 	pci_stop_dev(dev);
  }
  
-@@ -375,13 +377,6 @@ static void __devinit apb_calc_first_last(u8 map, u32 *first_p, u32 *last_p)
- 	*last_p = last;
- }
- 
--static void pci_resource_adjust(struct resource *res,
--				struct resource *root)
--{
--	res->start += root->start;
--	res->end += root->start;
--}
--
- /* For PCI bus devices which lack a 'ranges' property we interrogate
-  * the config space values to set the resources, just like the generic
-  * Linux PCI probing code does.
-@@ -390,7 +385,8 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 					  struct pci_bus *bus,
- 					  struct pci_pbm_info *pbm)
- {
--	struct resource *res;
-+	struct pci_bus_region region;
-+	struct resource *res, res2;
- 	u8 io_base_lo, io_limit_lo;
- 	u16 mem_base_lo, mem_limit_lo;
- 	unsigned long base, limit;
-@@ -412,11 +408,14 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	res = bus->resource[0];
- 	if (base <= limit) {
- 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
-+		res2.flags = res->flags;
-+		region.start = base;
-+		region.end = limit + 0xfff;
-+		pcibios_bus_to_resource(dev, &res2, &region);
- 		if (!res->start)
--			res->start = base;
-+			res->start = res2.start;
- 		if (!res->end)
--			res->end = limit + 0xfff;
--		pci_resource_adjust(res, &pbm->io_space);
-+			res->end = res2.end;
- 	}
- 
- 	pci_read_config_word(dev, PCI_MEMORY_BASE, &mem_base_lo);
-@@ -428,9 +427,9 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	if (base <= limit) {
- 		res->flags = ((mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) |
- 			      IORESOURCE_MEM);
--		res->start = base;
--		res->end = limit + 0xfffff;
--		pci_resource_adjust(res, &pbm->mem_space);
-+		region.start = base;
-+		region.end = limit + 0xfffff;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- 
- 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
-@@ -459,9 +458,9 @@ static void __devinit pci_cfg_fake_ranges(struct pci_dev *dev,
- 	if (base <= limit) {
- 		res->flags = ((mem_base_lo & PCI_MEMORY_RANGE_TYPE_MASK) |
- 			      IORESOURCE_MEM | IORESOURCE_PREFETCH);
--		res->start = base;
--		res->end = limit + 0xfffff;
--		pci_resource_adjust(res, &pbm->mem_space);
-+		region.start = base;
-+		region.end = limit + 0xfffff;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- }
- 
-@@ -472,6 +471,7 @@ static void __devinit apb_fake_ranges(struct pci_dev *dev,
- 				      struct pci_bus *bus,
- 				      struct pci_pbm_info *pbm)
- {
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	u32 first, last;
- 	u8 map;
-@@ -479,18 +479,18 @@ static void __devinit apb_fake_ranges(struct pci_dev *dev,
- 	pci_read_config_byte(dev, APB_IO_ADDRESS_MAP, &map);
- 	apb_calc_first_last(map, &first, &last);
- 	res = bus->resource[0];
--	res->start = (first << 21);
--	res->end = (last << 21) + ((1 << 21) - 1);
- 	res->flags = IORESOURCE_IO;
--	pci_resource_adjust(res, &pbm->io_space);
-+	region.start = (first << 21);
-+	region.end = (last << 21) + ((1 << 21) - 1);
-+	pcibios_bus_to_resource(dev, res, &region);
- 
- 	pci_read_config_byte(dev, APB_MEM_ADDRESS_MAP, &map);
- 	apb_calc_first_last(map, &first, &last);
- 	res = bus->resource[1];
--	res->start = (first << 21);
--	res->end = (last << 21) + ((1 << 21) - 1);
- 	res->flags = IORESOURCE_MEM;
--	pci_resource_adjust(res, &pbm->mem_space);
-+	region.start = (first << 21);
-+	region.end = (last << 21) + ((1 << 21) - 1);
-+	pcibios_bus_to_resource(dev, res, &region);
- }
- 
- static void __devinit pci_of_scan_bus(struct pci_pbm_info *pbm,
-@@ -506,6 +506,7 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 	struct pci_bus *bus;
- 	const u32 *busrange, *ranges;
- 	int len, i, simba;
-+	struct pci_bus_region region;
- 	struct resource *res;
- 	unsigned int flags;
- 	u64 size;
-@@ -556,8 +557,6 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 	}
- 	i = 1;
- 	for (; len >= 32; len -= 32, ranges += 8) {
--		struct resource *root;
--
- 		flags = pci_parse_of_flags(ranges[0]);
- 		size = GET_64BIT(ranges, 6);
- 		if (flags == 0 || size == 0)
-@@ -569,7 +568,6 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
--			root = &pbm->io_space;
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
-@@ -578,18 +576,12 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 			}
- 			res = bus->resource[i];
- 			++i;
--			root = &pbm->mem_space;
- 		}
- 
--		res->start = GET_64BIT(ranges, 1);
--		res->end = res->start + size - 1;
- 		res->flags = flags;
--
--		/* Another way to implement this would be to add an of_device
--		 * layer routine that can calculate a resource for a given
--		 * range property value in a PCI device.
--		 */
--		pci_resource_adjust(res, root);
-+		region.start = GET_64BIT(ranges, 1);
-+		region.end = region.start + size - 1;
-+		pcibios_bus_to_resource(dev, res, &region);
- 	}
- after_ranges:
- 	sprintf(bus->name, "PCI Bus %04x:%02x", pci_domain_nr(bus),
++static void pci_stop_host_bridge(struct pci_host_bridge *bridge)
++{
++	device_unregister(&bridge->dev);
++}
++/*
++ * it will support pci root bus too, in that case we need
++ *  stop and remove host bridge
++ */
++void pci_stop_and_remove_bus(struct pci_bus *bus)
++{
++	struct pci_host_bridge *host_bridge = NULL;
++	struct pci_dev *pci_bridge = NULL;
++
++	pci_stop_bus_devices(bus);
++
++	if (pci_is_root_bus(bus)) {
++		host_bridge = to_pci_host_bridge(bus->bridge);
++		pci_stop_host_bridge(host_bridge);
++	} else
++		pci_bridge = bus->self;
++
++	__pci_remove_bus_devices(bus);
++
++	pci_remove_bus(bus);
++
++	if (host_bridge)
++		host_bridge->bus = NULL;
++
++	if (pci_bridge)
++		pci_bridge->subordinate = NULL;
++}
++
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+ EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
+ EXPORT_SYMBOL_GPL(pci_stop_bus_device);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b434401..aec945d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -703,6 +703,7 @@ extern void pci_dev_put(struct pci_dev *dev);
+ extern void pci_remove_bus(struct pci_bus *b);
+ extern void __pci_remove_bus_device(struct pci_dev *dev);
+ extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++void pci_stop_and_remove_bus(struct pci_bus *bus);
+ extern void pci_stop_bus_device(struct pci_dev *dev);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
+-- 
+1.7.7
 
