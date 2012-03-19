@@ -1,75 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from opensource.wolfsonmicro.com ([80.75.67.52]:37966 "EHLO
-	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756680Ab2CHPR7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 10:17:59 -0500
-Date: Thu, 8 Mar 2012 15:17:56 +0000
-From: Mark Brown <broonie@opensource.wolfsonmicro.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 05/11] tps6586x: Add device-tree support
-Message-ID: <20120308151756.GQ3638@opensource.wolfsonmicro.com>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-6-git-send-email-thierry.reding@avionic-design.de>
- <20120308150607.GP3638@opensource.wolfsonmicro.com>
- <20120308151545.GA23934@avionic-0098.mockup.avionic-design.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="9uazBBczf8QSjDPd"
-In-Reply-To: <20120308151545.GA23934@avionic-0098.mockup.avionic-design.de>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30699 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161370Ab2CSFrz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:55 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 22/47] PCI: Add __pci_remove_bus_devices()
+Date: Sun, 18 Mar 2012 22:46:11 -0700
+Message-Id: <1332135996-13860-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Will use it with pci_stop_and_remove_bus later.
 
---9uazBBczf8QSjDPd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Also remove __pci_remove_behind_bridge and pci_stop_behind_bridge.
 
-On Thu, Mar 08, 2012 at 04:15:46PM +0100, Thierry Reding wrote:
-> * Mark Brown wrote:
+They are same except one take bridge and one take bus.
 
-> > ...they all seem to be explicitly named in the device tree so presumably
-> > there's enough information in there for the driver to pick any set of
-> > regulators in any order.  This would be much nicer to use.
+We already have pci_stop_bus_devices().
 
-> I don't like it much either. The only reason that requirement exists is
-> because it makes the assignment of the regulator ID (as defined in the
-> include/linux/mfd/tps6586x.h header) very trivial. Would it be better to
-> look up the ID based on the node name (sm0 --> TPS6586X_ID_SM_0, ...)?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c |   28 +++++++++++-----------------
+ 1 files changed, 11 insertions(+), 17 deletions(-)
 
-> Then the only requirement would be that the names match.
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 3f540ce..4bdda43 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -77,7 +77,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
+-static void __pci_remove_behind_bridge(struct pci_dev *dev);
++static void __pci_remove_bus_devices(struct pci_bus *bus);
+ /**
+  * pci_stop_and_remove_bus_device - remove a PCI device and any children
+  * @dev: the device to remove
+@@ -95,7 +95,7 @@ void __pci_remove_bus_device(struct pci_dev *dev)
+ 	if (dev->subordinate) {
+ 		struct pci_bus *b = dev->subordinate;
+ 
+-		__pci_remove_behind_bridge(dev);
++		__pci_remove_bus_devices(b);
+ 		pci_remove_bus(b);
+ 		dev->subordinate = NULL;
+ 	}
+@@ -110,22 +110,12 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ 	__pci_remove_bus_device(dev);
+ }
+ 
+-static void __pci_remove_behind_bridge(struct pci_dev *dev)
++static void __pci_remove_bus_devices(struct pci_bus *bus)
+ {
+ 	struct list_head *l, *n;
+ 
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			__pci_remove_bus_device(pci_dev_b(l));
+-}
+-
+-static void pci_stop_behind_bridge(struct pci_dev *dev)
+-{
+-	struct list_head *l, *n;
+-
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			pci_stop_bus_device(pci_dev_b(l));
++	list_for_each_safe(l, n, &bus->devices)
++		__pci_remove_bus_device(pci_dev_b(l));
+ }
+ 
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+@@ -157,8 +147,12 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+  */
+ void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+ {
+-	pci_stop_behind_bridge(dev);
+-	__pci_remove_behind_bridge(dev);
++	struct pci_bus *bus = dev->subordinate;
++
++	if (bus) {
++		pci_stop_bus_devices(bus);
++		__pci_remove_bus_devices(bus);
++	}
+ }
+ 
+ /**
+-- 
+1.7.7
 
-Yes, that's going to be more code but much nicer for users.
-
---9uazBBczf8QSjDPd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPWM1kAAoJEBus8iNuMP3dkAQP/j16XjeHv35gulMrsB3ONTWp
-VY3yZBNVVvtMKdVrAvuiqGinegWy+nec+dkwXFHQXF6U5jbL4eAjdqjrvP1RJtTK
-XldaiqlseOfM+LBUN8aVN/IMDJ1+/nhDwA1cJDkL4vys1/unpP2/whhOKehsoNcU
-GtuTdsxYz7uqf92rOeXmPECgni6t3rU2CEl/6inFC3pjdx26ZST0bGtamFOjILlS
-6hPgxFPfu3sMGg36++zZoP91fj8jn9gA0QejT0MC4/LmssQAubhQyXR+IOcwzL7Z
-853uEMmpohJ0xdDUTNTboG0sSWrTP33thShR6JU/CXM4Poep8GmZOtysmnRJbuje
-aJSq4SY9LeA3Mt23AvXqMY2qo4MeQHGGeAcIWR+02x+3mOCy8GkrSG2MIcB4b5K8
-XCgUBG3y+sVj6u+gtYggDgcdSn7L3lkMN7XqZU+FYMXdJi2SP5pjshi908HTjLb7
-KFKdVS9Rvg4+rU24ez+czIk5ylU1ek9NPXyne59QLe/aIyScNLZkyTCTSCQOSRyX
-exCtTmVYCaeoppHxLv8xg8SAM/ZBHitHD8lngOCM8FNDhYvIcupLwCaf033axI84
-+dpsP5XcfBeYKjL13jWXttBA6uTwafW1/2SEETaT28Laa2xp4c1gdMCvSJo1WoXk
-ux2H6p/6pKifyfwEgIfr
-=WOhL
------END PGP SIGNATURE-----
-
---9uazBBczf8QSjDPd--
