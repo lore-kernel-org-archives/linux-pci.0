@@ -1,102 +1,60 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1330570837-26638-29-git-send-email-yinghai@kernel.org>
-References: <1330570837-26638-1-git-send-email-yinghai@kernel.org> <1330570837-26638-29-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 16 Mar 2012 13:36:23 -0600
-Message-ID: <CAErSpo7JS6N3XzVm=_A-oFF_VpmuQaAG_KagxAOEzpEPnhRP_g@mail.gmail.com>
-Subject: Re: [PATCH 28/36] PCI: Add pci_bus_extend/shrink_top()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	sparclinux@vger.kernel.org
+Subject: [PATCH -v11 14/30] PCI, sparc: Register busn_res for root buses
+Date: Sun, 18 Mar 2012 22:42:45 -0700
+Message-Id: <1332135781-13695-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 29, 2012 at 8:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> extend or shrink bus and parent buses top (subordinate)
->
-> extended range is verified safe range, and stop at recorded parent_res.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/probe.c |   36 ++++++++++++++++++++++++++++++++++++
->  1 files changed, 36 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 1c07aba..96259f8 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -655,6 +655,42 @@ static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
->        }
->  }
->
-> +static void __devinit pci_bus_update_top(struct pci_bus *parent,
-> +                long size, struct resource *parent_res)
-> +{
-> +       struct resource *res;
-> +
-> +       if (!size)
-> +               return;
-> +
-> +       while (parent) {
-> +               res = &parent->busn_res;
-> +               if (res == parent_res)
-> +                       break;
-> +               res->end += size;
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+---
+ arch/sparc/kernel/pci.c      |    4 ++++
+ arch/sparc/kernel/pci_impl.h |    1 +
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-I've objected to this before on the grounds that it's not safe to
-update res->end because res is already linked into the resource tree,
-but I just noticed another problem.
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 253e8ac..1687fed 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -695,6 +695,10 @@ struct pci_bus * __devinit pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				pbm->io_space.start);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+ 				pbm->mem_space.start);
++	pbm->busn.start = pbm->pci_first_busno;
++	pbm->busn.end	= pbm->pci_last_busn;
++	pbm->busn.flags	= IORESOURCE_BUS;
++	pci_add_resource(&resources, &pbm->busn);
+ 	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
+ 				  pbm, &resources);
+ 	if (!bus) {
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 6beb60d..918a203 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -97,6 +97,7 @@ struct pci_pbm_info {
+ 	/* PBM I/O and Memory space resources. */
+ 	struct resource			io_space;
+ 	struct resource			mem_space;
++	struct resource			busn;
+ 
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
+ 	unsigned long			config_space;
+-- 
+1.7.7
 
-Tree updates are protected by resource_lock, but we don't hold that
-here.  I'm sure you "know" that this update can't race with any other
-conflicting resource operations, but its safety certainly is not
-obvious from the patch.
-
-I think a better implementation would be to add something like
-"resource_extend()" that could live in kernel/resource.c so it could
-do the appropriate locking and checking.  Such an interface could also
-be independent of the resource type, which may be useful when doing
-mem/io resource reassignment.
-
-This patch is already in Jesse's linux-next branch (commit
-c901d4c0407), so I'm leaving it up to you and Jesse to figure out
-what, if anything, to do about this.
-
-Bjorn
-
-> +               parent->subordinate += size;
-> +               pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS,
-> +                                        parent->subordinate);
-> +               dev_printk(KERN_DEBUG, &parent->dev,
-> +                               "busn_res: %s %02lx to %pR\n",
-> +                               (size > 0) ? "extended" : "shrunk",
-> +                               abs(size), res);
-> +               parent = parent->parent;
-> +       }
-> +}
-> +
-> +static void __devinit pci_bus_extend_top(struct pci_bus *parent,
-> +                long size, struct resource *parent_res)
-> +{
-> +       pci_bus_update_top(parent, size, parent_res);
-> +}
-> +
-> +static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
-> +                long size, struct resource *parent_res)
-> +{
-> +       pci_bus_update_top(parent, -size, parent_res);
-> +}
-> +
->  /*
->  * If it's a bridge, configure it and scan the bus behind it.
->  * For CardBus bridges, we don't scan behind as the devices will
-> --
-> 1.7.7
->
