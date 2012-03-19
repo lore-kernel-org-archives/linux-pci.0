@@ -1,58 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:51378 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758549Ab2CIS3k convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2012 13:29:40 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo55k_pJP2X_9jp+oBGAT_1y9hS8QNs0SgomwR-NpvimNA@mail.gmail.com>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-	<1331018040-30725-8-git-send-email-yinghai@kernel.org>
-	<CAErSpo6jqr44JS4Cyfc0cR_TNbo_ETjPJUO=x2gj-Q_x4TckVA@mail.gmail.com>
-	<CAE9FiQWPk-s5F5ofO=nU05tnRhmpav+f8Cs_mBG9A-MPuK9stw@mail.gmail.com>
-	<CAErSpo5QGqW8OL10H_PajnWi0JT=UsfX4c6pXJ_hsqXPcd+NPw@mail.gmail.com>
-	<CAE9FiQXMhEkMBTjnPJkB21ob9L9jNp_-8_h+xo6mOt3fFQ7xQQ@mail.gmail.com>
-	<CAErSpo55k_pJP2X_9jp+oBGAT_1y9hS8QNs0SgomwR-NpvimNA@mail.gmail.com>
-Date: Fri, 9 Mar 2012 10:29:40 -0800
-Message-ID: <CAE9FiQV=G0huaJYtTEacctzwHTKCS+xK54QWLn3P3e0kz_Dg2Q@mail.gmail.com>
-Subject: Re: [PATCH 07/23] pci, dmar: Update dmar units devices list during hotplug
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 42/47] PCI: Add __pci_scan_root_bus() that can skip bus_add
+Date: Sun, 18 Mar 2012 22:46:31 -0700
+Message-Id: <1332135996-13860-43-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 9, 2012 at 9:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Mar 9, 2012 at 10:32 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Mar 9, 2012 at 9:25 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>> Well, it looks like you can change both save_dev_dmaru() *and*
->>> get_dev_dmaru() to take a struct pci_dev *.  I assumed that would be
->>> obvious.
->>
->> no.
->>
->> get_dev_dmaru() have to use bus/devfn to retrieve the dev pointer.
->
-> I expected something like that, but all I see in the patch is this:
->
-> +static void restore_dev_to_drhd(struct pci_dev *dev)
-> +       drhd = get_dev_dmaru(pci_domain_nr(dev->bus), dev->bus->number,
-> +                                dev->devfn, &i, &saved_dev_drhd_list);
->
-> +static void restore_dev_to_atsr(struct pci_dev *dev)
-> +       atsr = get_dev_dmaru(pci_domain_nr(dev->bus), dev->bus->number,
-> +                                dev->devfn, &i, &saved_dev_atsr_list);
->
-> In both those cases, you have the struct pci_dev *.
+So could insert pus pci_assign_unassigned_bus_resources() before do bus_add.
 
-OK, i missed that. will update that accordingly.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   13 ++++++++++---
+ include/linux/pci.h |    3 +++
+ 2 files changed, 13 insertions(+), 3 deletions(-)
 
-Thanks
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 14f2e69..d626c4e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1938,8 +1938,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus * __devinit __pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources,
++		bool bus_add)
+ {
+ 	struct pci_bus *b;
+ 	struct pci_host_bridge_window *window, *n;
+@@ -1970,9 +1971,15 @@ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!found)
+ 		pci_bus_update_busn_res_end(b, b->subordinate);
+ 
+-	pci_bus_add_devices(b);
++	if (bus_add)
++		pci_bus_add_devices(b);
+ 	return b;
+ }
++struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	return __pci_scan_root_bus(parent, bus, ops, sysdata, resources, true);
++}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ /* Deprecated; use pci_scan_root_bus() instead */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aec945d..161f6c0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -676,6 +676,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ void pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
++struct pci_bus * __devinit __pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources,
++		bool bus_add);
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+-- 
+1.7.7
 
-Yinghai
