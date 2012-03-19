@@ -1,87 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60748 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758607Ab2CWPCz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 11:02:55 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ashok Raj <ashok.raj@intel.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC PATCH 10/11] PCI,ACPI: serialize hotplug operations triggered by ACPI subsystem
-Date: Fri, 23 Mar 2012 22:58:26 +0800
-Message-Id: <1332514707-9673-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
-References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30709 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161376Ab2CSFr4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:47:56 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 23/47] PCI: Use list_for_each_entry_safe instead of list_for_each_safe
+Date: Sun, 18 Mar 2012 22:46:12 -0700
+Message-Id: <1332135996-13860-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_lock_hotplug()/pci_unlock_hotplug() to serialize PCI
-hotplug operations related to ACPI root bridges.
+So could skip using pci_dev_b().
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/acpi/pci_root.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/pci/remove.c |   12 +++++-------
+ 1 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 24afd66..a8a3867 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -463,6 +463,8 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	if (!root)
- 		return -ENOMEM;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 4bdda43..64ba5b1 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -112,15 +112,15 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
  
-+	pci_lock_hotplug();
-+
- 	segment = 0;
- 	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
- 				       &segment);
-@@ -627,12 +629,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 			driver->add(device->handle);
- 
- 	mutex_unlock(&acpi_pci_root_lock);
-+	pci_unlock_hotplug();
- 
- 	return 0;
- 
- out_del_root:
- 	list_del_rcu(&root->node);
- 	mutex_unlock(&acpi_pci_root_lock);
-+	pci_unlock_hotplug();
- 	synchronize_rcu();
- out_free:
- 	kfree(root);
-@@ -643,7 +647,9 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ static void __pci_remove_bus_devices(struct pci_bus *bus)
  {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
+-	struct list_head *l, *n;
++	struct pci_dev *dev, *tmp;
  
-+	pci_lock_hotplug();
- 	pci_bus_add_devices(root->bus);
-+	pci_unlock_hotplug();
- 	return 0;
+-	list_for_each_safe(l, n, &bus->devices)
+-		__pci_remove_bus_device(pci_dev_b(l));
++	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
++		__pci_remove_bus_device(dev);
  }
  
-@@ -652,6 +658,7 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+ {
+-	struct list_head *l, *n;
++	struct pci_dev *dev, *tmp;
  
-+	pci_lock_hotplug();
- 	mutex_lock(&acpi_pci_root_lock);
+ 	/*
+ 	 * VFs could be removed by pci_stop_and_remove_bus_device() in the
+@@ -130,10 +130,8 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+ 	 * We can iterate the list backwards to get prev valid PF instead
+ 	 *  of removed VF.
+ 	 */
+-	list_for_each_prev_safe(l, n, &bus->devices) {
+-		struct pci_dev *dev = pci_dev_b(l);
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list)
+ 		pci_stop_bus_device(dev);
+-	}
+ }
  
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
-@@ -675,6 +682,7 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- out:
- 	list_del_rcu(&root->node);
- 	mutex_unlock(&acpi_pci_root_lock);
-+	pci_unlock_hotplug();
- 	synchronize_rcu();
- 	kfree(root);
- 
+ /**
 -- 
-1.7.5.4
+1.7.7
 
