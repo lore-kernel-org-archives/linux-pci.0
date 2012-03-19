@@ -1,41 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:46603 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752415Ab2CWVK6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 17:10:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV96Uz9fU=v4=eBbAogOeehuBM3eHgSr0QW_C68ceADcQ@mail.gmail.com>
-References: <20120322144817.796e3a8a@jbarnes-desktop> <CAE9FiQV96Uz9fU=v4=eBbAogOeehuBM3eHgSr0QW_C68ceADcQ@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 23 Mar 2012 14:10:36 -0700
-Message-ID: <CA+55aFx+dXoJ=MGmpyzepDjBDv8LpXqdxUBCbdrakMKBsKpmTw@mail.gmail.com>
-Subject: Re: [git pull] PCI changes (including maintainer change)
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	devicetree-discuss@lists.ozlabs.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 15/47] PCI, sysfs: Clean up rescan/remove with scheule_callback
+Date: Sun, 18 Mar 2012 22:46:04 -0700
+Message-Id: <1332135996-13860-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 23, 2012 at 12:58 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->
-> There are some merge conflicts. Hope attached patch could help Linus a
-> little bit.
+Change to use three return according to Bjorn.
 
-Hmm. My merge does not agree with yours at all in the MIPS
-pcibios_fixup_bus() area.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-sysfs.c |   37 ++++++++++++++++++++-----------------
+ 1 files changed, 20 insertions(+), 17 deletions(-)
 
-Your patch re-introduces the device resource fixup that Bjorn removed,
-for example.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 1794508..4697afe 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -338,17 +338,17 @@ static ssize_t
+ dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
+-	int ret = 0;
++	int err;
+ 	unsigned long val;
+ 
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
++	if (!val)
++		return count;
+ 
+-	if (val)
+-		ret = device_schedule_callback(dev, bridge_rescan_callback);
+-
+-	if (ret)
+-		count = ret;
++	err = device_schedule_callback(dev, bridge_rescan_callback);
++	if (err)
++		return err;
+ 
+ 	return count;
+ }
+@@ -369,7 +369,7 @@ static ssize_t
+ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	     const char *buf, size_t count)
+ {
+-	int ret = 0;
++	int err;
+ 	unsigned long val;
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+@@ -378,10 +378,13 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	/* An attribute cannot be unregistered by one of its own methods,
+ 	 * so we have to use this roundabout approach.
+ 	 */
+-	if (val)
+-		ret = device_schedule_callback(dev, remove_callback);
+-	if (ret)
+-		count = ret;
++	if (!val)
++		return count;
++
++	err = device_schedule_callback(dev, remove_callback);
++	if (err)
++		return err;
++
+ 	return count;
+ }
+ 
+@@ -397,17 +400,17 @@ static ssize_t
+ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
+-	int ret = 0;
++	int err;
+ 	unsigned long val;
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
++	if (!val)
++		return count;
+ 
+-	if (val)
+-		ret = device_schedule_callback(dev, bus_rescan_callback);
+-
+-	if (ret)
+-		count = ret;
++	err = device_schedule_callback(dev, bus_rescan_callback);
++	if (err)
++		return err;
+ 
+ 	return count;
+ }
+-- 
+1.7.7
 
-I think my merge is correct, but hey, people should double-check.
-
-                       Linus
