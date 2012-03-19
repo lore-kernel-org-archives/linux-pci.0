@@ -1,174 +1,60 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v3 16/34] PCI: add struct pci_host_bridge_window with CPU/bus
-	address offset
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 07 Mar 2012 15:33:25 -0700
-Message-ID: <20120307223325.25669.86376.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 00/11] PCI: pci_host_bridge related cleanup
+Date: Sun, 18 Mar 2012 22:40:13 -0700
+Message-Id: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some PCI host bridges apply an address offset, so bus addresses on PCI are
-different from CPU addresses.  This patch adds a way for architectures to
-tell the PCI core about this offset.  For example:
+will add struct device dev into host_bridge struct.
+also will add release support to make sure allocated resource get
+freed during root bus removal including hostbridge and pci_sysdata.
 
-    LIST_HEAD(resources);
-    pci_add_resource_offset(&resources, host->io_space, host->io_offset);
-    pci_add_resource_offset(&resources, host->mem_space, host->mem_offset);
-    pci_scan_root_bus(parent, bus, ops, sysdata, &resources);
+The patches need to apply to linus v3.3 plus pci/linux-next
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/bus.c   |   30 +++++++++++++++++++-----------
- drivers/pci/probe.c |   32 +++++++++++++++++++++++---------
- include/linux/pci.h |    9 +++++++++
- 3 files changed, 51 insertions(+), 20 deletions(-)
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-hostbridge-cleanup
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 398f5d8..4ce5ef2 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -18,28 +18,36 @@
- 
- #include "pci.h"
- 
--void pci_add_resource(struct list_head *resources, struct resource *res)
-+void pci_add_resource_offset(struct list_head *resources, struct resource *res,
-+			     resource_size_t offset)
- {
--	struct pci_bus_resource *bus_res;
-+	struct pci_host_bridge_window *window;
- 
--	bus_res = kzalloc(sizeof(struct pci_bus_resource), GFP_KERNEL);
--	if (!bus_res) {
--		printk(KERN_ERR "PCI: can't add bus resource %pR\n", res);
-+	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
-+	if (!window) {
-+		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
- 		return;
- 	}
- 
--	bus_res->res = res;
--	list_add_tail(&bus_res->list, resources);
-+	window->res = res;
-+	window->offset = offset;
-+	list_add_tail(&window->list, resources);
-+}
-+EXPORT_SYMBOL(pci_add_resource_offset);
-+
-+void pci_add_resource(struct list_head *resources, struct resource *res)
-+{
-+	pci_add_resource_offset(resources, res, 0);
- }
- EXPORT_SYMBOL(pci_add_resource);
- 
- void pci_free_resource_list(struct list_head *resources)
- {
--	struct pci_bus_resource *bus_res, *tmp;
-+	struct pci_host_bridge_window *window, *tmp;
- 
--	list_for_each_entry_safe(bus_res, tmp, resources, list) {
--		list_del(&bus_res->list);
--		kfree(bus_res);
-+	list_for_each_entry_safe(window, tmp, resources, list) {
-+		list_del(&window->list);
-+		kfree(window);
- 	}
- }
- EXPORT_SYMBOL(pci_free_resource_list);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3a30023..3f07cb6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1562,12 +1562,15 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
--	int error, i;
-+	int error;
- 	struct pci_host_bridge *bridge;
- 	struct pci_bus *b, *b2;
- 	struct device *dev;
--	struct pci_bus_resource *bus_res, *n;
-+	struct pci_host_bridge_window *window, *n;
- 	struct resource *res;
-+	resource_size_t offset;
-+	char bus_addr[64];
-+	char *fmt;
- 
- 	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
- 	if (!bridge)
-@@ -1617,19 +1620,30 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->number = b->secondary = bus;
- 
- 	bridge->bus = b;
--
--	/* Add initial resources to the bus */
--	list_for_each_entry_safe(bus_res, n, resources, list)
--		list_move_tail(&bus_res->list, &b->resources);
-+	INIT_LIST_HEAD(&bridge->windows);
- 
- 	if (parent)
- 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 	else
- 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 
--	pci_bus_for_each_resource(b, res, i) {
--		if (res)
--			dev_info(&b->dev, "root bus resource %pR\n", res);
-+	/* Add initial resources to the bus */
-+	list_for_each_entry_safe(window, n, resources, list) {
-+		list_move_tail(&window->list, &bridge->windows);
-+		res = window->res;
-+		offset = window->offset;
-+		pci_bus_add_resource(b, res, 0);
-+		if (offset) {
-+			if (resource_type(res) == IORESOURCE_IO)
-+				fmt = " (bus address [%#06llx-%#06llx])";
-+			else
-+				fmt = " (bus address [%#010llx-%#010llx])";
-+			snprintf(bus_addr, sizeof(bus_addr), fmt,
-+				 (unsigned long long) (res->start - offset),
-+				 (unsigned long long) (res->end - offset));
-+		} else
-+			bus_addr[0] = '\0';
-+		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 	}
- 
- 	down_write(&pci_bus_sem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2c946b3..419f78f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -368,9 +368,16 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 	return (pdev->error_state != pci_channel_io_normal);
- }
- 
-+struct pci_host_bridge_window {
-+	struct list_head list;
-+	struct resource *res;		/* host bridge aperture (CPU address) */
-+	resource_size_t offset;		/* bus address + offset = CPU address */
-+};
-+
- struct pci_host_bridge {
- 	struct list_head list;
- 	struct pci_bus *bus;		/* root bus */
-+	struct list_head windows;	/* pci_host_bridge_windows */
- };
- 
- /*
-@@ -901,6 +908,8 @@ void pci_release_selected_regions(struct pci_dev *, int);
- 
- /* drivers/pci/bus.c */
- void pci_add_resource(struct list_head *resources, struct resource *res);
-+void pci_add_resource_offset(struct list_head *resources, struct resource *res,
-+			     resource_size_t offset);
- void pci_free_resource_list(struct list_head *resources);
- void pci_bus_add_resource(struct pci_bus *bus, struct resource *res, unsigned int flags);
- struct resource *pci_bus_resource_n(const struct pci_bus *bus, int n);
+-v2: dropped the patch that is with x86 pcibios_bus_to_resource that Bjorn objected.
+     reorder the patchesset to mold one appended patch into previous patch.
+-v3: separate the patchset.
+
+Thanks
+
+Yinghai
+
+Yinghai Lu (11):
+  PCI: Separate host_bridge code out from probe.c
+  x86, PCI: Fix memleak with get_current_resources()
+  PCI: Rename pci_host_bridge() to find_pci_root_bridge()
+  PCI: Add generic device into pci_host_bridge struct
+  PCI: Add host bridge release support
+  x86, PCI: Break down get_current_resource()
+  x86, PCI: Add host bridge resource release for _CRS path
+  x86, PCI: Embed name into pci_root_info struct
+  x86, PCI: Embed pci_sysdata into pci_root_info on acpi path
+  x86, PCI: Allocate pci_root_info for not using _CRS path
+  x86, PCI: Merge root info printing for not using _CRS path
+
+ arch/x86/pci/acpi.c         |  116 +++++++++++++++++++++-------------
+ arch/x86/pci/amd_bus.c      |   78 +++++++----------------
+ arch/x86/pci/broadcom_bus.c |   17 +----
+ arch/x86/pci/bus_numa.c     |   86 +++++++++++++++++++-------
+ arch/x86/pci/bus_numa.h     |   19 +++---
+ drivers/pci/Makefile        |    2 +-
+ drivers/pci/host-bridge.c   |   96 ++++++++++++++++++++++++++++
+ drivers/pci/probe.c         |  146 +++++++++++--------------------------------
+ include/linux/pci.h         |    9 +++-
+ 9 files changed, 313 insertions(+), 256 deletions(-)
+ create mode 100644 drivers/pci/host-bridge.c
+
+-- 
+1.7.7
 
