@@ -1,67 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Stein <alexander.stein@systec-electronic.com>
-To: Chris Ball <cjb@laptop.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Alexander Stein <alexander.stein@systec-electronic.com>
-Subject: [PATCH 2/3] mmc: sdhci: check interrupt flags in ISR again
-Date: Tue, 13 Mar 2012 18:16:41 +0100
-Message-Id: <1331659002-13743-2-git-send-email-alexander.stein@systec-electronic.com>
-In-Reply-To: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com>
-References: <1331659002-13743-1-git-send-email-alexander.stein@systec-electronic.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31303 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161945Ab2CSFto (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:44 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 10/26] PCI: Use for_each_pci_dev_resource pci_enable_dev
+Date: Sun, 18 Mar 2012 22:48:33 -0700
+Message-Id: <1332136129-14010-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When using MSI it is possible that a new MSI is sent while an earlier
-MSI is currently handled. In this case SDHCI_INT_STATUS only contains
-SDHCI_INT_RESPONSE and the ISR would not be called again. But at the end
-of the ISR SDHCI_INT_DATA_END is now also pending which would be ignored.
-
-Fix this by rereading the interrupt flags in the ISR until no interrupt
-we care is pending.
-
-Signed-off-by: Alexander Stein <alexander.stein@systec-electronic.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/mmc/host/sdhci.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/pci/pci.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
-index 8d66706..654ab32 100644
---- a/drivers/mmc/host/sdhci.c
-+++ b/drivers/mmc/host/sdhci.c
-@@ -2268,6 +2268,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
- 	irqreturn_t result;
- 	struct sdhci_host *host = dev_id;
- 	u32 intmask;
-+	u32 intmask_unhandled;
- 	int cardint = 0;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 82ed56a..44b4835 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -486,8 +486,9 @@ static void
+ pci_restore_bars(struct pci_dev *dev)
+ {
+ 	int i;
++	struct resource *res;
  
- 	spin_lock(&host->lock);
-@@ -2286,6 +2287,7 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
- 		goto out;
- 	}
+-	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
++	for_each_pci_dev_nobridge_resource(dev, res, i)
+ 		pci_update_resource(dev, i);
+ }
  
-+again:
- 	DBG("*** %s got interrupt: 0x%08x\n",
- 		mmc_hostname(host->mmc), intmask);
+@@ -1141,6 +1142,7 @@ static int __pci_enable_device_flags(struct pci_dev *dev,
+ {
+ 	int err;
+ 	int i, bars = 0;
++	struct resource *res;
  
-@@ -2336,6 +2338,14 @@ static irqreturn_t sdhci_irq(int irq, void *dev_id)
- 		sdhci_writel(host, SDHCI_INT_BUS_POWER, SDHCI_INT_STATUS);
- 	}
+ 	/*
+ 	 * Power state could be unknown at this point, either due to a fresh
+@@ -1158,12 +1160,11 @@ static int __pci_enable_device_flags(struct pci_dev *dev,
+ 		return 0;		/* already enabled */
  
-+	intmask_unhandled = intmask;
-+
-+	intmask = sdhci_readl(host, SDHCI_INT_STATUS);
-+
-+	/* Do interrupt handling again if we got new flags */
-+	if (intmask & ~intmask_unhandled)
-+		goto again;
-+
- 	intmask &= ~SDHCI_INT_BUS_POWER;
+ 	/* only skip sriov related */
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+-		if (dev->resource[i].flags & flags)
+-			bars |= (1 << i);
+-	for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++)
+-		if (dev->resource[i].flags & flags)
++	for_each_pci_dev_noiov_resource(dev, res, i) {
++		/* TODO: check i with bits of bars */
++		if (res->flags & flags)
+ 			bars |= (1 << i);
++	}
  
- 	if (intmask & SDHCI_INT_CARD_INT)
+ 	err = do_pci_enable_device(dev, bars);
+ 	if (err < 0)
+@@ -2465,7 +2466,7 @@ static int __pci_request_region(struct pci_dev *pdev, int bar, const char *res_n
+ 
+ err_out:
+ 	dev_warn(&pdev->dev, "BAR %d: can't reserve %pR\n", bar,
+-		 &pdev->resource[bar]);
++		 pci_dev_resource_n(pdev, bar));
+ 	return -EBUSY;
+ }
+ 
 -- 
-1.7.3.4
+1.7.7
 
