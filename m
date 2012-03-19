@@ -1,53 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out5-smtp.messagingengine.com ([66.111.4.29]:46270 "EHLO
-	out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757041Ab2CHPoT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 10:44:19 -0500
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 16A1D20E67
-	for <linux-pci@vger.kernel.org>; Thu,  8 Mar 2012 10:44:19 -0500 (EST)
-Date: Thu, 8 Mar 2012 07:44:17 -0800
-From: Greg KH <greg@kroah.com>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] Ignore pre-1.1 ASPM quirking when ASPM is disabled
-Message-ID: <20120308154417.GA5907@kroah.com>
-References: <1331059309-4335-1-git-send-email-mjg@redhat.com>
- <20120307054859.GB7775@kroah.com>
- <20120307202553.50b6c91c@jbarnes-x220>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120307202553.50b6c91c@jbarnes-x220>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 43/47] x86, PCI: add __pci_scan_root_bus_on_node() that can skip bus_add
+Date: Sun, 18 Mar 2012 22:46:32 -0700
+Message-Id: <1332135996-13860-44-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 07, 2012 at 08:25:53PM -0800, Jesse Barnes wrote:
-> On Tue, 6 Mar 2012 21:48:59 -0800
-> Greg KH <greg@kroah.com> wrote:
-> 
-> > On Tue, Mar 06, 2012 at 01:41:49PM -0500, Matthew Garrett wrote:
-> > > Right now we won't touch ASPM state if ASPM is disabled, except in
-> > > the case where we find a device that appears to be too old to
-> > > reliably support ASPM. Right now we'll clear it in that case, which
-> > > is almost certainly the wrong thing to do. The easiest way around
-> > > this is just to disable the blacklisting when ASPM is disabled.
-> > > 
-> > > Signed-off-by: Matthew Garrett <mjg@redhat.com>
-> > > Cc: stable@kernel.org
-> > 
-> > That's <stable@vger.kernel.org> if we want to get it right :)
-> > 
-> > Anyway, Jesse, this needs to get into 3.3-final to prevent
-> > regressions...
-> 
-> Any bz links to add to the changelog?  I'll fix up the stable cc when I
-> commit...
+So could insert pus pci_assign_unassigned_bus_resources() before do bus_add.
 
-Not that I know of, there was an email thread about this when I released
-the 3.2.5 kernel that talked about the problems with it which caused
-this patch to be created.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/pci.h |    2 ++
+ arch/x86/pci/common.c      |   11 ++++++++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-thanks,
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index df75d07..bb015c7 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -24,6 +24,8 @@ extern int noioapicquirk;
+ extern int noioapicreroute;
+ 
+ /* scan a bus after allocating a pci_sysdata for it */
++struct pci_bus * __devinit __pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node, bool bus_add);
+ extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 					    int node);
+ extern struct pci_bus *pci_scan_bus_with_sysdata(int busno);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 35931f6..2ebdc231 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -625,7 +625,8 @@ static void release_pci_sysdata(struct pci_host_bridge *bridge)
+ 	kfree(sd);
+ }
+ 
+-struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
++struct pci_bus * __devinit __pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node, bool bus_add)
+ {
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+@@ -639,7 +640,7 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 	sd->node = node;
+ 	x86_pci_root_bus_resources(busno, &resources);
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+-	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
++	bus = __pci_scan_root_bus(NULL, busno, ops, sd, &resources, bus_add);
+ 	if (bus)
+ 		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
+ 					release_pci_sysdata, sd);
+@@ -650,7 +651,11 @@ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 
+ 	return bus;
+ }
+-
++struct pci_bus * __devinit pci_scan_bus_on_node(int busno,
++			 struct pci_ops *ops, int node)
++{
++	return __pci_scan_bus_on_node(busno, ops, node, true);
++}
+ struct pci_bus * __devinit pci_scan_bus_with_sysdata(int busno)
+ {
+ 	return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
+-- 
+1.7.7
 
-greg k-h
