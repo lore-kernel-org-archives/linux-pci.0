@@ -1,4 +1,4 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -6,259 +6,380 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 08/12] PCI: Make quirk_io_region to use addon_resource support
-Date: Tue, 13 Mar 2012 00:26:30 -0700
-Message-Id: <1331623594-30543-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
-References: <1331623594-30543-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v3 10/11] x86, PCI: Allocate pci_root_info for not using _CRS path
+Date: Sun, 18 Mar 2012 22:40:23 -0700
+Message-Id: <1332135624-13528-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+References: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-after they are put in add-on resources, they will be safely claimed later.
+So we could get ride of static allocation and hard limits.
+
+We could save some bytes, and can handle system with more than 4
+peer root buses.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/quirks.c |  155 ++++++++++++++++++++++---------------------------
- 1 files changed, 70 insertions(+), 85 deletions(-)
+ arch/x86/pci/amd_bus.c      |   76 +++++++++++++++---------------------------
+ arch/x86/pci/broadcom_bus.c |   12 ++----
+ arch/x86/pci/bus_numa.c     |   69 ++++++++++++++++++++++++++------------
+ arch/x86/pci/bus_numa.h     |   18 ++++++----
+ 4 files changed, 88 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index cbe7dd9..4561610 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -324,29 +324,61 @@ static void __devinit quirk_cs5536_vsa(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA, quirk_cs5536_vsa);
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 0567df3..459a731 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -32,6 +32,18 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
  
--static void __devinit quirk_io_region(struct pci_dev *dev, unsigned region,
--	unsigned size, int nr, const char *name)
-+static int quirk_read_io(struct pci_dev *dev, struct resource *res, int port)
- {
--	region &= ~(size-1);
--	if (region) {
--		struct pci_bus_region bus_region;
--		struct resource *res = dev->resource + nr;
-+	struct pci_bus_region bus_region;
-+	u16 region;
-+	unsigned size = to_pci_dev_addon_resource(res)->size;
+ #define RANGE_NUM 16
  
--		res->name = pci_name(dev);
--		res->start = region;
--		res->end = region + size - 1;
--		res->flags = IORESOURCE_IO;
-+	pci_read_config_word(dev, port, &region);
-+	region &= ~(size - 1);
++static struct pci_root_info __init *find_pci_root_info(int node, int link)
++{
++	struct pci_root_info *info;
++
++	/* find the position */
++	list_for_each_entry(info, &pci_root_infos, list)
++		if (info->node == node && info->link == link)
++			return info;
++
++	return NULL;
++}
++
+ /**
+  * early_fill_mp_bus_to_node()
+  * called before pcibios_scan_root and pci_scan_bus
+@@ -50,7 +62,6 @@ static int __init early_fill_mp_bus_info(void)
+ 	int def_link;
+ 	struct pci_root_info *info;
+ 	u32 reg;
+-	struct resource *res;
+ 	u64 start;
+ 	u64 end;
+ 	struct range range[RANGE_NUM];
+@@ -86,7 +97,6 @@ static int __init early_fill_mp_bus_info(void)
+ 	if (!found)
+ 		return 0;
  
--		/* Convert from PCI bus to resource space.  */
--		bus_region.start = res->start;
--		bus_region.end = res->end;
--		pcibios_bus_to_resource(dev, res, &bus_region);
-+	/* Convert from PCI bus to resource space.  */
-+	bus_region.start = region;
-+	bus_region.end = region + size - 1;
+-	pci_root_num = 0;
+ 	for (i = 0; i < 4; i++) {
+ 		int min_bus;
+ 		int max_bus;
+@@ -105,13 +115,8 @@ static int __init early_fill_mp_bus_info(void)
+ #endif
+ 		link = (reg >> 8) & 0x03;
  
--		if (pci_claim_resource(dev, nr) == 0)
--			dev_info(&dev->dev, "quirk: %pR claimed by %s\n",
--				 res, name);
+-		info = &pci_root_info[pci_root_num];
+-		info->bus_min = min_bus;
+-		info->bus_max = max_bus;
+-		info->node = node;
+-		info->link = link;
++		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+ 		sprintf(info->name, "PCI Bus #%02x", min_bus);
+-		pci_root_num++;
+ 	}
+ 
+ 	/* get the default node and link for left over res */
+@@ -134,16 +139,10 @@ static int __init early_fill_mp_bus_info(void)
+ 		link = (reg >> 4) & 0x03;
+ 		end = (reg & 0xfff000) | 0xfff;
+ 
+-		/* find the position */
+-		for (j = 0; j < pci_root_num; j++) {
+-			info = &pci_root_info[j];
+-			if (info->node == node && info->link == link)
+-				break;
+-		}
+-		if (j == pci_root_num)
++		info = find_pci_root_info(node, link);
++		if (!info)
+ 			continue; /* not found */
+ 
+-		info = &pci_root_info[j];
+ 		printk(KERN_DEBUG "node %d link %d: io port [%llx, %llx]\n",
+ 		       node, link, start, end);
+ 
+@@ -155,13 +154,8 @@ static int __init early_fill_mp_bus_info(void)
+ 	}
+ 	/* add left over io port range to def node/link, [0, 0xffff] */
+ 	/* find the position */
+-	for (j = 0; j < pci_root_num; j++) {
+-		info = &pci_root_info[j];
+-		if (info->node == def_node && info->link == def_link)
+-			break;
 -	}
--}	
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+
-+	res->flags |= IORESOURCE_IO;
-+	dev_info(&dev->dev, "PIO at %pR\n", res);
-+
-+	return 0;
-+}
-+static int quirk_write_io(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	struct pci_bus_region bus_region;
-+	u16 region;
-+	unsigned size = to_pci_dev_addon_resource(res)->size;
-+
-+	pci_read_config_word(dev, port, &region);
-+	region &= size - 1;
-+
-+	/* Convert to PCI bus space.  */
-+	pcibios_resource_to_bus(dev, &bus_region, res);
-+	region |= bus_region.start & (~(size - 1));
-+
-+	pci_write_config_word(dev, port, region);
-+
-+	return 0;
-+}
-+static struct resource_ops quirk_io_ops = {
-+	.read = quirk_read_io,
-+	.write = quirk_write_io,
-+};
-+
-+static void __devinit quirk_io_region(struct pci_dev *dev, int port,
-+					unsigned size, char *name)
-+{
-+	u16 region;
-+
-+	pci_read_config_word(dev, port, &region);
-+	region &= size - 1;
-+
-+	if (!region)
-+		return;
-+
-+	add_pci_dev_addon_resource(dev, port, size, &quirk_io_ops, name);
-+}
+-	if (j < pci_root_num) {
+-		info = &pci_root_info[j];
++	info = find_pci_root_info(def_node, def_link);
++	if (info) {
+ 		for (i = 0; i < RANGE_NUM; i++) {
+ 			if (!range[i].end)
+ 				continue;
+@@ -214,16 +208,10 @@ static int __init early_fill_mp_bus_info(void)
+ 		end <<= 8;
+ 		end |= 0xffff;
  
- /*
-  *	ATI Northbridge setups MCE the processor if you even
-@@ -374,12 +406,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
-  */
- static void __devinit quirk_ali7101_acpi(struct pci_dev *dev)
- {
--	u16 region;
+-		/* find the position */
+-		for (j = 0; j < pci_root_num; j++) {
+-			info = &pci_root_info[j];
+-			if (info->node == node && info->link == link)
+-				break;
+-		}
+-		if (j == pci_root_num)
+-			continue; /* not found */
++		info = find_pci_root_info(node, link);
+ 
+-		info = &pci_root_info[j];
++		if (!info)
++			continue;
+ 
+ 		printk(KERN_DEBUG "node %d link %d: mmio [%llx, %llx]",
+ 		       node, link, start, end);
+@@ -291,14 +279,8 @@ static int __init early_fill_mp_bus_info(void)
+ 	 * add left over mmio range to def node/link ?
+ 	 * that is tricky, just record range in from start_min to 4G
+ 	 */
+-	for (j = 0; j < pci_root_num; j++) {
+-		info = &pci_root_info[j];
+-		if (info->node == def_node && info->link == def_link)
+-			break;
+-	}
+-	if (j < pci_root_num) {
+-		info = &pci_root_info[j];
 -
--	pci_read_config_word(dev, 0xE0, &region);
--	quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
--	pci_read_config_word(dev, 0xE2, &region);
--	quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
-+	quirk_io_region(dev, 0xE0, 64, "ali7101 ACPI");
-+	quirk_io_region(dev, 0xE2, 32, "ali7101 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
++	info = find_pci_root_info(def_node, def_link);
++	if (info) {
+ 		for (i = 0; i < RANGE_NUM; i++) {
+ 			if (!range[i].end)
+ 				continue;
+@@ -309,20 +291,16 @@ static int __init early_fill_mp_bus_info(void)
+ 		}
+ 	}
  
-@@ -503,12 +531,10 @@ static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
-  */
- static void __devinit quirk_piix4_acpi(struct pci_dev *dev)
+-	for (i = 0; i < pci_root_num; i++) {
+-		int res_num;
++	list_for_each_entry(info, &pci_root_infos, list) {
+ 		int busnum;
++		struct pci_root_res *root_res;
+ 
+-		info = &pci_root_info[i];
+-		res_num = info->res_num;
+ 		busnum = info->bus_min;
+ 		printk(KERN_DEBUG "bus: [%02x, %02x] on node %x link %x\n",
+ 		       info->bus_min, info->bus_max, info->node, info->link);
+-		for (j = 0; j < res_num; j++) {
+-			res = &info->res[j];
+-			printk(KERN_DEBUG "bus: %02x index %x %pR\n",
+-				       busnum, j, res);
+-		}
++		list_for_each_entry(root_res, &info->resources, list)
++			printk(KERN_DEBUG "bus: %02x %pR\n",
++				       busnum, &root_res->res);
+ 	}
+ 
+ 	return 0;
+diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
+index f3a7c56..614392c 100644
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -22,19 +22,15 @@
+ static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
  {
--	u32 region, res_a;
-+	u32 res_a;
+ 	struct pci_root_info *info;
++	struct pci_root_res *root_res;
+ 	struct resource res;
+ 	u16 word1, word2;
+ 	u8 fbus, lbus;
+-	int i;
+-
+-	info = &pci_root_info[pci_root_num];
+-	pci_root_num++;
  
--	pci_read_config_dword(dev, 0x40, &region);
--	quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "PIIX4 ACPI");
--	pci_read_config_dword(dev, 0x90, &region);
--	quirk_io_region(dev, region, 16, PCI_BRIDGE_RESOURCES+1, "PIIX4 SMB");
-+	quirk_io_region(dev, 0x40, 64, "PIIX4 ACPI");
-+	quirk_io_region(dev, 0x90, 16, "PIIX4 SMB");
- 
- 	/* Device resource A has enables for some of the other ones */
- 	pci_read_config_dword(dev, 0x5c, &res_a);
-@@ -552,7 +578,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82443MX_3,	qui
-  */
- static void __devinit quirk_ich4_lpc_acpi(struct pci_dev *dev)
- {
--	u32 region;
- 	u8 enable;
+ 	/* read the PCI bus numbers */
+ 	fbus = read_pci_config_byte(bus, slot, func, 0x44);
+ 	lbus = read_pci_config_byte(bus, slot, func, 0x45);
+-	info->bus_min = fbus;
+-	info->bus_max = lbus;
++	info = alloc_pci_root_info(fbus, lbus, 0, 0);
  
  	/*
-@@ -564,22 +589,12 @@ static void __devinit quirk_ich4_lpc_acpi(struct pci_dev *dev)
- 	*/
+ 	 * Add the legacy IDE ports on bus 0
+@@ -86,8 +82,8 @@ static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
+ 	res.flags = IORESOURCE_BUS;
+ 	printk(KERN_INFO "CNB20LE PCI Host Bridge (domain 0000 %pR)\n", &res);
  
- 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
--	if (enable & ICH4_ACPI_EN) {
--		pci_read_config_dword(dev, ICH_PMBASE, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		if (region >= PCIBIOS_MIN_IO)
--			quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
--					"ICH4 ACPI/GPIO/TCO");
--	}
-+	if (enable & ICH4_ACPI_EN)
-+		quirk_io_region(dev, ICH_PMBASE, 128, "ICH4 ACPI/GPIO/TCO");
- 
- 	pci_read_config_byte(dev, ICH4_GPIO_CNTL, &enable);
--	if (enable & ICH4_GPIO_EN) {
--		pci_read_config_dword(dev, ICH4_GPIOBASE, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		if (region >= PCIBIOS_MIN_IO)
--			quirk_io_region(dev, region, 64,
--					PCI_BRIDGE_RESOURCES + 1, "ICH4 GPIO");
--	}
-+	if (enable & ICH4_GPIO_EN)
-+		quirk_io_region(dev, ICH4_GPIOBASE, 64, "ICH4 GPIO");
+-	for (i = 0; i < info->res_num; i++)
+-		printk(KERN_INFO "host bridge window %pR\n", &info->res[i]);
++	list_for_each_entry(root_res, &info->resources, list)
++		printk(KERN_INFO "host bridge window %pR\n", &root_res->res);
  }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AA_0,		quirk_ich4_lpc_acpi);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AB_0,		quirk_ich4_lpc_acpi);
-@@ -594,26 +609,15 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_ESB_1,		qui
  
- static void __devinit ich6_lpc_acpi_gpio(struct pci_dev *dev)
+ static int __init broadcom_postcore_init(void)
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index fd3f655..306579f 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -4,35 +4,38 @@
+ 
+ #include "bus_numa.h"
+ 
+-int pci_root_num;
+-struct pci_root_info pci_root_info[PCI_ROOT_NR];
++LIST_HEAD(pci_root_infos);
+ 
+-void x86_pci_root_bus_resources(int bus, struct list_head *resources)
++static struct pci_root_info *x86_find_pci_root_info(int bus)
  {
--	u32 region;
- 	u8 enable;
+-	int i;
+-	int j;
+ 	struct pci_root_info *info;
  
- 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
--	if (enable & ICH6_ACPI_EN) {
--		pci_read_config_dword(dev, ICH_PMBASE, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		if (region >= PCIBIOS_MIN_IO)
--			quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
--					"ICH6 ACPI/GPIO/TCO");
--	}
-+	if (enable & ICH6_ACPI_EN)
-+		quirk_io_region(dev, ICH_PMBASE, 128, "ICH6 ACPI/GPIO/TCO");
+-	if (!pci_root_num)
+-		goto default_resources;
++	if (list_empty(&pci_root_infos))
++		return NULL;
  
- 	pci_read_config_byte(dev, ICH6_GPIO_CNTL, &enable);
--	if (enable & ICH6_GPIO_EN) {
--		pci_read_config_dword(dev, ICH6_GPIOBASE, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		if (region >= PCIBIOS_MIN_IO)
--			quirk_io_region(dev, region, 64,
--					PCI_BRIDGE_RESOURCES + 1, "ICH6 GPIO");
+-	for (i = 0; i < pci_root_num; i++) {
+-		if (pci_root_info[i].bus_min == bus)
+-			break;
 -	}
-+	if (enable & ICH6_GPIO_EN)
-+		quirk_io_region(dev, ICH6_GPIOBASE, 64, "ICH6 GPIO");
++	list_for_each_entry(info, &pci_root_infos, list)
++		if (info->bus_min == bus)
++			return info;
++
++	return NULL;
++}
+ 
+-	if (i == pci_root_num)
++void x86_pci_root_bus_resources(int bus, struct list_head *resources)
++{
++	struct pci_root_info *info = x86_find_pci_root_info(bus);
++	struct pci_root_res *root_res;
++
++	if (!info)
+ 		goto default_resources;
+ 
+ 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
+ 	       bus);
+ 
+-	info = &pci_root_info[i];
+-	for (j = 0; j < info->res_num; j++) {
++	list_for_each_entry(root_res, &info->resources, list) {
+ 		struct resource *res;
+ 		struct resource *root;
+ 
+-		res = &info->res[j];
++		res = &root_res->res;
+ 		pci_add_resource(resources, res);
+ 		if (res->flags & IORESOURCE_IO)
+ 			root = &ioport_resource;
+@@ -53,11 +56,32 @@ default_resources:
+ 	pci_add_resource(resources, &iomem_resource);
  }
  
- static void __devinit ich6_lpc_generic_decode(struct pci_dev *dev, unsigned reg, const char *name, int dynsize)
-@@ -711,13 +715,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,   PCI_DEVICE_ID_INTEL_ICH10_1, qui
++struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
++						 int node, int link)
++{
++	struct pci_root_info *info;
++
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++
++	if (!info)
++		return info;
++
++	INIT_LIST_HEAD(&info->resources);
++	info->bus_min = bus_min;
++	info->bus_max = bus_max;
++	info->node = node;
++	info->link = link;
++
++	list_add_tail(&info->list, &pci_root_infos);
++
++	return info;
++}
++
+ void __devinit update_res(struct pci_root_info *info, resource_size_t start,
+ 			  resource_size_t end, unsigned long flags, int merge)
+ {
+-	int i;
+ 	struct resource *res;
++	struct pci_root_res *root_res;
+ 
+ 	if (start > end)
+ 		return;
+@@ -69,11 +93,11 @@ void __devinit update_res(struct pci_root_info *info, resource_size_t start,
+ 		goto addit;
+ 
+ 	/* try to merge it with old one */
+-	for (i = 0; i < info->res_num; i++) {
++	list_for_each_entry(root_res, &info->resources, list) {
+ 		resource_size_t final_start, final_end;
+ 		resource_size_t common_start, common_end;
+ 
+-		res = &info->res[i];
++		res = &root_res->res;
+ 		if (res->flags != flags)
+ 			continue;
+ 
+@@ -93,14 +117,15 @@ void __devinit update_res(struct pci_root_info *info, resource_size_t start,
+ addit:
+ 
+ 	/* need to add that */
+-	if (info->res_num >= RES_NUM)
++	root_res = kzalloc(sizeof(*root_res), GFP_KERNEL);
++	if (!root_res)
+ 		return;
+ 
+-	res = &info->res[info->res_num];
++	res = &root_res->res;
+ 	res->name = info->name;
+ 	res->flags = flags;
+ 	res->start = start;
+ 	res->end = end;
+-	res->child = NULL;
+-	info->res_num++;
++
++	list_add_tail(&root_res->list, &info->resources);
+ }
+diff --git a/arch/x86/pci/bus_numa.h b/arch/x86/pci/bus_numa.h
+index 804a4b4..226a466 100644
+--- a/arch/x86/pci/bus_numa.h
++++ b/arch/x86/pci/bus_numa.h
+@@ -4,22 +4,24 @@
+  * sub bus (transparent) will use entres from 3 to store extra from
+  * root, so need to make sure we have enough slot there.
   */
- static void __devinit quirk_vt82c586_acpi(struct pci_dev *dev)
- {
--	u32 region;
+-#define RES_NUM 16
++struct pci_root_res {
++	struct list_head list;
++	struct resource res;
++};
++
+ struct pci_root_info {
++	struct list_head list;
+ 	char name[12];
+-	unsigned int res_num;
+-	struct resource res[RES_NUM];
++	struct list_head resources;
+ 	int bus_min;
+ 	int bus_max;
+ 	int node;
+ 	int link;
+ };
+ 
+-/* 4 at this time, it may become to 32 */
+-#define PCI_ROOT_NR 4
+-extern int pci_root_num;
+-extern struct pci_root_info pci_root_info[PCI_ROOT_NR];
 -
--	if (dev->revision & 0x10) {
--		pci_read_config_dword(dev, 0x48, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		quirk_io_region(dev, region, 256, PCI_BRIDGE_RESOURCES, "vt82c586 ACPI");
--	}
-+	if (dev->revision & 0x10)
-+		quirk_io_region(dev, 0x48, 256, "vt82c586 ACPI");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C586_3,	quirk_vt82c586_acpi);
- 
-@@ -729,18 +728,11 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C586_3,	quirk_vt
-  */
- static void __devinit quirk_vt82c686_acpi(struct pci_dev *dev)
- {
--	u16 hm;
--	u32 smb;
--
- 	quirk_vt82c586_acpi(dev);
- 
--	pci_read_config_word(dev, 0x70, &hm);
--	hm &= PCI_BASE_ADDRESS_IO_MASK;
--	quirk_io_region(dev, hm, 128, PCI_BRIDGE_RESOURCES + 1, "vt82c686 HW-mon");
-+	quirk_io_region(dev, 0x70, 128, "vt82c686 HW-mon");
- 
--	pci_read_config_dword(dev, 0x90, &smb);
--	smb &= PCI_BASE_ADDRESS_IO_MASK;
--	quirk_io_region(dev, smb, 16, PCI_BRIDGE_RESOURCES + 2, "vt82c686 SMB");
-+	quirk_io_region(dev, 0x90, 16, "vt82c686 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt82c686_acpi);
- 
-@@ -751,15 +743,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt
-  */
- static void __devinit quirk_vt8235_acpi(struct pci_dev *dev)
- {
--	u16 pm, smb;
--
--	pci_read_config_word(dev, 0x88, &pm);
--	pm &= PCI_BASE_ADDRESS_IO_MASK;
--	quirk_io_region(dev, pm, 128, PCI_BRIDGE_RESOURCES, "vt8235 PM");
--
--	pci_read_config_word(dev, 0xd0, &smb);
--	smb &= PCI_BASE_ADDRESS_IO_MASK;
--	quirk_io_region(dev, smb, 16, PCI_BRIDGE_RESOURCES + 1, "vt8235 SMB");
-+	quirk_io_region(dev, 0x88, 128, "vt8235 PM");
-+	quirk_io_region(dev, 0xd0, 16, "vt8235 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8235,	quirk_vt8235_acpi);
- 
++extern struct list_head pci_root_infos;
++struct pci_root_info *alloc_pci_root_info(int bus_min, int bus_max,
++						int node, int link);
+ extern void update_res(struct pci_root_info *info, resource_size_t start,
+ 		      resource_size_t end, unsigned long flags, int merge);
+ #endif
 -- 
 1.7.7
 
