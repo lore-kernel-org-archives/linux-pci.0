@@ -1,188 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:42830 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045Ab2CMCsJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2012 22:48:09 -0400
-Received: by lbbgm6 with SMTP id gm6so28738lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 12 Mar 2012 19:48:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1331362837-10740-8-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org> <1331362837-10740-8-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Mar 2012 20:47:48 -0600
-Message-ID: <CAErSpo7+zqJs1hG9ht3gX7CCqAVvoy+QTJb6xZUU9=LzwfwpYg@mail.gmail.com>
-Subject: Re: [PATCH v2 07/37] PCI: pci_bus_size_bridges() should not size own bridge
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
+Subject: [PATCH -v3 47/47] PCI: Add /sys/bus/pci/rescan_root
+Date: Sun, 18 Mar 2012 22:46:36 -0700
+Message-Id: <1332135996-13860-48-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> During checking acpiphp code, found following sequence:
->        pci_bus_size_bridges(bus);
->        pci_bus_assign_resources(bus);
->        pci_enable_bridges(bus);
+It will be used to rediscover removed pci root buses.
 
-One of these lines is indented with tab, the others with spaces, which
-makes it not line up when using "git log".  Try it sometime.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-doc@vger.kernel.org
+---
+ Documentation/ABI/testing/sysfs-bus-pci |    9 +++++++++
+ drivers/pci/pci-sysfs.c                 |   19 +++++++++++++++++++
+ 2 files changed, 28 insertions(+), 0 deletions(-)
 
-> The problem is that when bus is not root bus, pci_bus_size_bridges would also size
-> own pci bridge bus->self if that bridge resource is not inserted before.
-> but later pci_bus_assign_resources will not allocate those size bridge res.
->
-> So try make it less confusing, let it does not include self sizing.
-> and add with_self parameter info __pci_bus_size_bridge()
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 22392de..eb826bd 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -66,6 +66,15 @@ Description:
+ 		re-discover previously removed devices.
+ 		Depends on CONFIG_HOTPLUG.
+ 
++What:		/sys/bus/pci/rescan_root
++Date:		March 2012
++Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
++Description:
++		Writing a non-zero value to this attribute will
++		cause a rescan of all PCI root buses in the system, and
++		re-discover previously removed PCI root buses.
++		Depends on CONFIG_HOTPLUG.
++
+ What:		/sys/bus/pci/devices/.../msi_irqs/
+ Date:		September, 2011
+ Contact:	Neil Horman <nhorman@tuxdriver.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index afba77b..c348048 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -302,8 +302,27 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 	return count;
+ }
+ 
++void __weak arch_pci_root_rescan(void) { }
++
++static ssize_t bus_rescan_root_store(struct bus_type *bus, const char *buf,
++				size_t count)
++{
++	unsigned long val;
++
++	if (kstrtoul(buf, 0, &val) < 0)
++		return -EINVAL;
++
++	if (val) {
++		mutex_lock(&pci_remove_rescan_mutex);
++		arch_pci_root_rescan();
++		mutex_unlock(&pci_remove_rescan_mutex);
++	}
++	return count;
++}
++
+ struct bus_attribute pci_bus_attrs[] = {
+ 	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, bus_rescan_store),
++	__ATTR(rescan_root, (S_IWUSR|S_IWGRP), NULL, bus_rescan_root_store),
+ 	__ATTR_NULL
+ };
+ 
+-- 
+1.7.7
 
-You failed to make this less confusing.  Adding words to function
-names, adding "__" prefixes, adding flags to say "include self" or not
--- they all make things hard to read.
-
-> Fixes caller in pci hotplug componets.
-
-"components"
-
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c     |    2 +-
->  drivers/pci/hotplug/cpci_hotplug_pci.c |    2 +-
->  drivers/pci/hotplug/shpchp_pci.c       |    2 +-
->  drivers/pci/setup-bus.c                |   24 +++++++++++++++---------
->  include/linux/pci.h                    |    1 +
->  5 files changed, 19 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 806c44f..10b2122 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -816,7 +816,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->                            dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
->                                max = pci_scan_bridge(bus, dev, max, pass);
->                                if (pass && dev->subordinate)
-> -                                       pci_bus_size_bridges(dev->subordinate);
-> +                                       pci_bus_size_bridges_with_self(dev->subordinate);
->                        }
->                }
->        }
-> diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
-> index ae853cc..4ef80ad 100644
-> --- a/drivers/pci/hotplug/cpci_hotplug_pci.c
-> +++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
-> @@ -313,7 +313,7 @@ int __ref cpci_configure_slot(struct slot *slot)
->                                continue;
->                        }
->                        child->subordinate = pci_do_scan_bus(child);
-> -                       pci_bus_size_bridges(child);
-> +                       pci_bus_size_bridges_with_self(child);
->                }
->                pci_dev_put(dev);
->        }
-> diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
-> index df7e4bf..d92807b 100644
-> --- a/drivers/pci/hotplug/shpchp_pci.c
-> +++ b/drivers/pci/hotplug/shpchp_pci.c
-> @@ -85,7 +85,7 @@ int __ref shpchp_configure_device(struct slot *p_slot)
->                                continue;
->                        }
->                        child->subordinate = pci_do_scan_bus(child);
-> -                       pci_bus_size_bridges(child);
-> +                       pci_bus_size_bridges_with_self(child);
->                }
->                pci_configure_slot(dev);
->                pci_dev_put(dev);
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index f35a679..ec2026c 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -982,8 +982,8 @@ handle_done:
->        ;
->  }
->
-> -void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-> -                       struct list_head *realloc_head)
-> +static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-> +                       struct list_head *realloc_head, bool with_self)
->  {
->        struct pci_dev *dev;
->        unsigned long mask, prefmask;
-> @@ -1001,13 +1001,13 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
->
->                case PCI_CLASS_BRIDGE_PCI:
->                default:
-> -                       __pci_bus_size_bridges(b, realloc_head);
-> +                       __pci_bus_size_bridges(b, realloc_head, true);
->                        break;
->                }
->        }
->
-> -       /* The root bus? */
-> -       if (!bus->self)
-> +       /* Is root bus or not wanted? */
-> +       if (!bus->self || !with_self)
->                return;
->
->        switch (bus->self->class >> 8) {
-> @@ -1047,9 +1047,15 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
->        }
->  }
->
-> +void __ref pci_bus_size_bridges_with_self(struct pci_bus *bus)
-> +{
-> +       __pci_bus_size_bridges(bus, NULL, true);
-> +}
-> +EXPORT_SYMBOL(pci_bus_size_bridges_with_self);
-> +
->  void __ref pci_bus_size_bridges(struct pci_bus *bus)
->  {
-> -       __pci_bus_size_bridges(bus, NULL);
-> +       __pci_bus_size_bridges(bus, NULL, false);
->  }
->  EXPORT_SYMBOL(pci_bus_size_bridges);
->
-> @@ -1362,7 +1368,7 @@ again:
->        /* Depth first, calculate sizes and alignments of all
->           subordinate buses. */
->        list_for_each_entry(bus, &pci_root_buses, node)
-> -               __pci_bus_size_bridges(bus, add_list);
-> +               __pci_bus_size_bridges(bus, add_list, false);
->
->        /* Depth last, allocate resources and update the hardware. */
->        list_for_each_entry(bus, &pci_root_buses, node)
-> @@ -1439,7 +1445,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->                                  IORESOURCE_PREFETCH;
->
->  again:
-> -       __pci_bus_size_bridges(parent, &add_list);
-> +       __pci_bus_size_bridges(parent, &add_list, true);
->        __pci_bridge_assign_resources(bridge, &add_list, &fail_head);
->        BUG_ON(!list_empty(&add_list));
->        tried_times++;
-> @@ -1500,7 +1506,7 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->                    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
->                        if (dev->subordinate)
->                                __pci_bus_size_bridges(dev->subordinate,
-> -                                                        &add_list);
-> +                                                &add_list, true);
->        up_read(&pci_bus_sem);
->        __pci_bus_assign_resources(bus, &add_list, NULL);
->        BUG_ON(!list_empty(&add_list));
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 634bbf5..87dceca 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -906,6 +906,7 @@ int pci_vpd_truncate(struct pci_dev *dev, size_t size);
->  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
->  void pci_bus_assign_resources(const struct pci_bus *bus);
->  void pci_bus_size_bridges(struct pci_bus *bus);
-> +void pci_bus_size_bridges_with_self(struct pci_bus *bus);
->  int pci_claim_resource(struct pci_dev *, int);
->  void pci_assign_unassigned_resources(void);
->  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
-> --
-> 1.7.7
->
