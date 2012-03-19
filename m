@@ -1,42 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:34485 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759744Ab2CMF6M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 01:58:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4=pL_y0q=1-4GMGenOmKmLFgtAbpYi3GNrErGVZqCcBg@mail.gmail.com>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-	<1331362837-10740-23-git-send-email-yinghai@kernel.org>
-	<CAErSpo4=pL_y0q=1-4GMGenOmKmLFgtAbpYi3GNrErGVZqCcBg@mail.gmail.com>
-Date: Mon, 12 Mar 2012 22:58:12 -0700
-Message-ID: <CAE9FiQXcsxVtDcqejEx_n79TosE_WUt77RMomh6jhQzuoLuv-Q@mail.gmail.com>
-Subject: Re: [PATCH v2 22/37] PCI, acpiphp: remove hot-add support of pci host bridge
+Received: from acsinet15.oracle.com ([141.146.126.227]:25573 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162070Ab2CSFuB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:50:01 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v2 21/26] PCI: Add helpers for add addon_resource
+Date: Sun, 18 Mar 2012 22:48:44 -0700
+Message-Id: <1332136129-14010-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2012 at 8:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> It causes confusing.
->
-> "causes confusion."
->
->> We may only need acpi hp for pci host bridge.
->>
->> Split host bridge hot-add support to another file, and keep acpiphp simple.
->
-> I think it's a good thing to remove host bridge hotplug from acpiphp;
-> thanks for doing that.
->
-> However, I think you removed it here, but didn't add it elsewhere
-> until a different patch.  That means we can't bisect across this.  It
-> would be better to do the entire move in a single patch.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    5 +++
+ 2 files changed, 73 insertions(+), 0 deletions(-)
 
-do you mean merge patch 22 and 23 together?
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6dbad5b..9d544c9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -103,6 +103,74 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
+ 	return -1;
+ }
+ 
++struct pci_dev_addon_resource *__add_pci_dev_addon_resource(
++		 struct pci_dev *dev, int addr, char *name)
++{
++	struct pci_dev_addon_resource *addon_res;
++
++	addon_res = kzalloc(sizeof(*addon_res), GFP_KERNEL);
++
++	if (!addon_res)
++		return NULL;
++
++	addon_res->reg_addr = addr;
++
++	if (name)
++		addon_res->res.name = name;
++	else
++		addon_res->res.name = pci_name(dev);
++
++	list_add_tail(&addon_res->list, &dev->addon_resources);
++
++	return addon_res;
++}
++
++struct pci_dev_addon_resource *add_pci_dev_addon_fixed_resource(
++		 struct pci_dev *dev, int start, int size, int flags,
++		 int addr, char *name)
++{
++	struct pci_dev_addon_resource *addon_res;
++	struct resource *res;
++
++	addon_res = __add_pci_dev_addon_resource(dev, addr, name);
++	if (addon_res)
++		return NULL;
++
++	res = &addon_res->res;
++	res->start = start;
++	res->end = start + size - 1;
++	res->flags = flags | IORESOURCE_PCI_FIXED;
++
++	dev_printk(KERN_DEBUG, &dev->dev,
++		   "addon fixed resource %s %pR added\n", res->name, res);
++
++	return addon_res;
++}
++
++struct pci_dev_addon_resource *add_pci_dev_addon_resource(struct pci_dev *dev,
++		 int addr, int size, struct resource_ops *ops, char *name)
++{
++	struct pci_dev_addon_resource *addon_res;
++	struct resource *res;
++
++	addon_res = __add_pci_dev_addon_resource(dev, addr, name);
++	if (!addon_res)
++		return NULL;
++
++	res = &addon_res->res;
++	if (ops) {
++		addon_res->ops = ops;
++		addon_res->size = size;
++		ops->read(dev, res, addr);
++	} else
++		__pci_read_base(dev, pci_bar_unknown, res, addr);
++
++	dev_printk(KERN_DEBUG, &dev->dev,
++		   "addon resource %s %pR added\n", res->name, res);
++
++	return addon_res;
++}
++
+ static void pci_release_dev_addon_res(struct pci_dev *dev)
+ {
+ 	struct pci_dev_addon_resource *addon_res, *tmp;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c8b1a4..faaffe7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -365,6 +365,11 @@ struct pci_dev_addon_resource {
+ 
+ struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
+ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
++struct pci_dev_addon_resource *add_pci_dev_addon_fixed_resource(
++		 struct pci_dev *dev, int start, int size, int flags,
++		 int addr, char *name);
++struct pci_dev_addon_resource *add_pci_dev_addon_resource(struct pci_dev *dev,
++		 int addr, int size, struct resource_ops *ops, char *name);
+ 
+ #define resno_is_for_bridge(n)						\
+ 	((n) >= PCI_BRIDGE_RESOURCES && (n) <= PCI_BRIDGE_RESOURCE_END)
+-- 
+1.7.7
+
