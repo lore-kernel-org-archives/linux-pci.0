@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:31367 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161952Ab2CSFt4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:56 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -11,45 +7,92 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 18/26] PCI: Use for_each_res with mrs
-Date: Sun, 18 Mar 2012 22:48:41 -0700
-Message-Id: <1332136129-14010-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH -v3 18/47] x86, PCI: Let pcibios_allocate_bus_resources() take bus instead
+Date: Sun, 18 Mar 2012 22:46:07 -0700
+Message-Id: <1332135996-13860-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
+
+Will need call the same code for one single root bus during hot add.
+So try to make it take bus instead of bus_list.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/mrst.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ arch/x86/pci/i386.c |   38 +++++++++++++++++++++++++-------------
+ 1 files changed, 25 insertions(+), 13 deletions(-)
 
-diff --git a/arch/x86/pci/mrst.c b/arch/x86/pci/mrst.c
-index 140942f..55e20d8 100644
---- a/arch/x86/pci/mrst.c
-+++ b/arch/x86/pci/mrst.c
-@@ -280,6 +280,7 @@ static void __devinit pci_fixed_bar_fixup(struct pci_dev *dev)
- 	unsigned long offset;
- 	u32 size;
- 	int i;
-+	struct resource *res;
- 
- 	if (!pci_soc_mode)
- 		return;
-@@ -294,10 +295,10 @@ static void __devinit pci_fixed_bar_fixup(struct pci_dev *dev)
- 	    PCI_DEVFN(2, 2) == dev->devfn)
- 		return;
- 
--	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
-+	for_each_pci_dev_std_resource(dev, res, i) {
- 		pci_read_config_dword(dev, offset + 8 + (i * 4), &size);
--		dev->resource[i].end = dev->resource[i].start + size - 1;
--		dev->resource[i].flags |= IORESOURCE_PCI_FIXED;
-+		res->end = res->start + size - 1;
-+		res->flags |= IORESOURCE_PCI_FIXED;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index bb84ff0..cecb842 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -215,16 +215,15 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
  	}
  }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_fixed_bar_fixup);
+ 
+-static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus;
++	struct pci_bus *child;
+ 
+ 	/* Depth-First Search on bus tree */
+-	list_for_each_entry(bus, bus_list, node) {
+-		if (bus->self)
+-			pcibios_allocate_bridge_resources(bus->self);
+-		pcibios_allocate_bus_resources(&bus->children);
+-	}
++	if (bus->self)
++		pcibios_allocate_bridge_resources(bus->self);
++	list_for_each_entry(child, &bus->children, node)
++		pcibios_allocate_bus_resources(child);
+ }
+ 
+ struct pci_check_idx_range {
+@@ -285,12 +284,18 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ 	}
+ }
+ 
+-static void __init pcibios_allocate_resources(int pass)
++static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
+ {
+-	struct pci_dev *dev = NULL;
++	struct pci_dev *dev;
++	struct pci_bus *child;
+ 
+-	for_each_pci_dev(dev)
++	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		pcibios_allocate_dev_resources(dev, pass);
++
++		child = dev->subordinate;
++		if (child)
++			pcibios_allocate_resources(child, pass);
++	}
+ }
+ 
+ static int __init pcibios_assign_resources(void)
+@@ -323,10 +328,17 @@ static int __init pcibios_assign_resources(void)
+ 
+ void __init pcibios_resource_survey(void)
+ {
++	struct pci_bus *bus;
++
+ 	DBG("PCI: Allocating resources\n");
+-	pcibios_allocate_bus_resources(&pci_root_buses);
+-	pcibios_allocate_resources(0);
+-	pcibios_allocate_resources(1);
++
++	list_for_each_entry(bus, &pci_root_buses, node)
++		pcibios_allocate_bus_resources(bus);
++
++	list_for_each_entry(bus, &pci_root_buses, node)
++		pcibios_allocate_resources(bus, 0);
++	list_for_each_entry(bus, &pci_root_buses, node)
++		pcibios_allocate_resources(bus, 1);
+ 
+ 	e820_reserve_resources_late();
+ 	/*
 -- 
 1.7.7
 
