@@ -1,52 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 08/47] PCI: Use __pci_bus_size_bridges() directly in pci_assign_unassigned_bus_resources()
-Date: Sun, 18 Mar 2012 22:45:57 -0700
-Message-Id: <1332135996-13860-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60405 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030383Ab2CTQX6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 12:23:58 -0400
+Received: by mail-iy0-f174.google.com with SMTP id z16so215351iag.19
+        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 09:23:58 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+	chenkeping@huawei.com
+Subject: [PATCH 3/6] x86,IRQ: Enhance irq allocation policy for hot-added IOAPICs
+Date: Wed, 21 Mar 2012 00:21:00 +0800
+Message-Id: <1332260463-13924-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
+References: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now __pci_bus_size_bridges() will not include self bridge.
-So we don't need to have our own version in
- pci_assign_unassigned_bus_resources anymore.
+For hot-added IOAPICs, try to allocate irqs starting from
+ioapic->gsi_base first, and fallback to starting from 0.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/setup-bus.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ec2026c..d9a5500 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1496,17 +1496,11 @@ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 622374f..e5b6ca4 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -294,13 +294,16 @@ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
+ 	return alloc_irq_and_cfg_at(at, node);
+ }
  
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+-static int reserve_ioapic_gsi_irq_base(int idx)
++static int reserve_ioapic_gsi_irq_base(int idx, bool hotadd)
  {
--	struct pci_dev *dev;
- 	LIST_HEAD(add_list); /* list of resources that
- 					want additional resources */
+ 	int irq;
+ 	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
+ 	int cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
  
- 	down_read(&pci_bus_sem);
--	list_for_each_entry(dev, &bus->devices, bus_list)
--		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
--		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
--			if (dev->subordinate)
--				__pci_bus_size_bridges(dev->subordinate,
--						 &add_list, true);
-+	__pci_bus_size_bridges(bus, &add_list, false);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	BUG_ON(!list_empty(&add_list));
+ 	irq = __irq_reserve_irqs(-1, gsi_cfg->gsi_base, cnt);
++	if (irq < 0 && hotadd)
++		irq = __irq_reserve_irqs(-1, 0, cnt);
++
+ 	if (irq >= 0) {
+ 		gsi_cfg->irq_base = irq;
+ 		printk(KERN_INFO
+@@ -378,7 +381,7 @@ int __init arch_early_irq_init(void)
+ 		alloc_ioapic_saved_registers(i);
+ 
+ 	for (i = 0; i < nr_ioapics; i++)
+-		reserve_ioapic_gsi_irq_base(i);
++		reserve_ioapic_gsi_irq_base(i, false);
+ 
+ 	reserve_ioapic_gsi_irq_extra();
+ 
+@@ -4181,7 +4184,7 @@ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
+ 		if (gsi_cfg->gsi_end >= gsi_top)
+ 			gsi_top = gsi_cfg->gsi_end + 1;
+ 	} else {
+-		int irq = reserve_ioapic_gsi_irq_base(idx);
++		int irq = reserve_ioapic_gsi_irq_base(idx, true);
+ 
+ 		if (irq < 0)
+ 			goto failed;
 -- 
-1.7.7
+1.7.5.4
 
