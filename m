@@ -1,75 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:47569 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754421Ab2CFD1m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Mar 2012 22:27:42 -0500
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: Santosh Jodh <Santosh.Jodh@citrix.com>,
-	"konrad.wilk\@oracle.com" <konrad.wilk@oracle.com>,
-	"jeremy\@goop.org" <jeremy@goop.org>,
-	Ian Campbell <Ian.Campbell@citrix.com>,
-	"jbarnes\@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"jbeulich\@novell.com" <jbeulich@novell.com>,
-	"joe.jin\@oracle.com" <joe.jin@oracle.com>,
-	"lersek\@redhat.com" <lersek@redhat.com>,
-	"weiyi.huang\@gmail.com" <weiyi.huang@gmail.com>,
-	"dgdegra\@tycho.nsa.gov" <dgdegra@tycho.nsa.gov>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"paul.gortmaker\@windriver.com" <paul.gortmaker@windriver.com>,
-	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
-	"waldi\@debian.org" <waldi@debian.org>,
-	"virtualization\@lists.linux-foundation.org"
-	<virtualization@lists.linux-foundation.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"xen-devel\@lists.xen.org" <xen-devel@lists.xen.org>
-Cc: Santosh Jodh <Santosh.Jodh@citrix.com>,
-	Paul Durrant <Paul.Durrant@citrix.com>
-Subject: Re: [PATCH 0001/001] xen: multi page ring support for block devices
-In-Reply-To: <7914B38A4445B34AA16EB9F1352942F1010A1FA12364@SJCPMAILBOX01.citrite.net>
-References: <1330701099-18281-1-git-send-email-santoshprasadnayak@gmail.com> <7914B38A4445B34AA16EB9F1352942F1010A1FA12364@SJCPMAILBOX01.citrite.net>
-Date: Tue, 06 Mar 2012 13:12:49 +1030
-Message-ID: <87ty22xxee.fsf@rustcorp.com.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:61980 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030630Ab2CTQYH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 12:24:07 -0400
+Received: by ghrr11 with SMTP id r11so228398ghr.19
+        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 09:24:07 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+	chenkeping@huawei.com
+Subject: [PATCH 4/6] x86,IRQ: split out function ioapic_setup_resource()
+Date: Wed, 21 Mar 2012 00:21:01 +0800
+Message-Id: <1332260463-13924-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
+References: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 5 Mar 2012 13:49:07 -0800, Santosh Jodh <Santosh.Jodh@citrix.com> wrote:
-> +/* Order of maximum shared ring size advertised to the front end. */
-> +int xen_blkif_max_ring_order = XENBUS_MAX_RING_ORDER;
-> +
-> +#define BLK_RING_SIZE(_order) __CONST_RING_SIZE(blkif, PAGE_SIZE << (_order))
-> +
-> +static int set_max_ring_order(const char *buf, struct kernel_param *kp)
-> +{
-> +       int err;
-> +       unsigned long order;
-> +
-> +       err = kstrtol(buf, 0, &order);
-> +       if (err ||
-> +           order < 0 ||
-> +           order > XENBUS_MAX_RING_ORDER)
-> +               return -EINVAL;
+Split out function ioapic_setup_resource(), which will be used by IOAPIC
+hotplug logic.
 
-Hmm, order can't be < 0, since it's unsigned.  So did you mean
-kstrtoull?
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   69 ++++++++++++++++++++++------------------
+ 1 files changed, 38 insertions(+), 31 deletions(-)
 
-And I think returning err is cleaner (it's -EINVAL for malformed
-strings, -ERANGE for ones too big).
-
-> +       if (xen_blkif_reqs < BLK_RING_SIZE(order))
-> +               printk(KERN_WARNING "WARNING: "
-> +                      "I/O request space (%d reqs) < ring order %ld, "
-> +                      "consider increasing %s.reqs to >= %ld.",
-> +                      xen_blkif_reqs, order, KBUILD_MODNAME,
-> +                      roundup_pow_of_two(BLK_RING_SIZE(order)));
-
-This message doesn't mention the module namr or parameter name
-anywhere.  Think of the poor sysadmins!
-
-Thanks,
-Rusty.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index e5b6ca4..dfb6f45 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -85,6 +85,7 @@ static struct ioapic {
+ 	 * Saved state during suspend/resume, or while enabling intr-remap.
+ 	 */
+ 	struct IO_APIC_route_entry *saved_registers;
++	struct resource *resource;
+ 	/* I/O APIC config */
+ 	struct mpc_ioapic mp_config;
+ 	/* IO APIC gsi routing info */
+@@ -3987,7 +3988,7 @@ void __init setup_ioapic_dest(void)
+ 
+ static struct resource *ioapic_resources;
+ 
+-static struct resource * __init ioapic_setup_resources(int nr_ioapics)
++static struct resource * __init ioapic_alloc_resources(int nr_ioapics)
+ {
+ 	unsigned long n;
+ 	struct resource *res;
+@@ -4010,6 +4011,7 @@ static struct resource * __init ioapic_setup_resources(int nr_ioapics)
+ 		res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+ 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
+ 		mem += IOAPIC_RESOURCE_NAME_SIZE;
++		ioapics[i].resource = &res[i];
+ 	}
+ 
+ 	ioapic_resources = res;
+@@ -4017,43 +4019,48 @@ static struct resource * __init ioapic_setup_resources(int nr_ioapics)
+ 	return res;
+ }
+ 
+-void __init ioapic_and_gsi_init(void)
++static void ioapic_setup_resource(int idx, struct resource *res, bool hotadd)
+ {
+-	unsigned long ioapic_phys, idx = FIX_IO_APIC_BASE_0;
+-	struct resource *ioapic_res;
+-	int i;
++	unsigned long ioapic_phys, vaddr;
+ 
+-	ioapic_res = ioapic_setup_resources(nr_ioapics);
+-	for (i = 0; i < nr_ioapics; i++) {
+-		if (smp_found_config) {
+-			ioapic_phys = mpc_ioapic_addr(i);
++	if (hotadd) {
++		ioapic_phys = mpc_ioapic_addr(idx);
++	} else if (smp_found_config) {
++		ioapic_phys = mpc_ioapic_addr(idx);
+ #ifdef CONFIG_X86_32
+-			if (!ioapic_phys) {
+-				printk(KERN_ERR
+-				       "WARNING: bogus zero IO-APIC "
+-				       "address found in MPTABLE, "
+-				       "disabling IO/APIC support!\n");
+-				smp_found_config = 0;
+-				skip_ioapic_setup = 1;
+-				goto fake_ioapic_page;
+-			}
++		if (!ioapic_phys) {
++			printk(KERN_ERR
++			       "WARNING: bogus zero IO-APIC address found "
++			       "in MPTABLE, disabling IO/APIC support!\n");
++			smp_found_config = 0;
++			skip_ioapic_setup = 1;
++			goto fake_ioapic_page;
++		}
+ #endif
+-		} else {
++	} else {
+ #ifdef CONFIG_X86_32
+ fake_ioapic_page:
+ #endif
+-			ioapic_phys = (unsigned long)alloc_bootmem_pages(PAGE_SIZE);
+-			ioapic_phys = __pa(ioapic_phys);
+-		}
+-		set_fixmap_nocache(idx, ioapic_phys);
+-		apic_printk(APIC_VERBOSE, "mapped IOAPIC to %08lx (%08lx)\n",
+-			__fix_to_virt(idx) + (ioapic_phys & ~PAGE_MASK),
+-			ioapic_phys);
+-		idx++;
+-
+-		ioapic_res->start = ioapic_phys;
+-		ioapic_res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
+-		ioapic_res++;
++		ioapic_phys = (unsigned long)alloc_bootmem_pages(PAGE_SIZE);
++		ioapic_phys = __pa(ioapic_phys);
++	}
++
++	vaddr = __fix_to_virt(FIX_IO_APIC_BASE_0 + idx);
++	vaddr += (ioapic_phys & ~PAGE_MASK);
++	apic_printk(APIC_VERBOSE, "mapped IOAPIC to %08lx (%08lx)\n",
++		vaddr, ioapic_phys);
++
++	res->start = ioapic_phys;
++	res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
++}
++
++void __init ioapic_and_gsi_init(void)
++{
++	int i;
++
++	ioapic_alloc_resources(nr_ioapics);
++	for (i = 0; i < nr_ioapics; i++) {
++		ioapic_setup_resource(i, ioapics[i].resource, false);
+ 	}
+ 
+ 	probe_nr_irqs_gsi();
 -- 
-  How could I marry someone with more hair than me?  http://baldalex.org
+1.7.5.4
+
