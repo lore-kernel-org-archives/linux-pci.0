@@ -1,68 +1,50 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v3 21/34] ia64/PCI: SN: convert to pci_scan_root_bus() for
-	correct root bus resources
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>, Jack Steiner <steiner@sgi.com>
-Date: Wed, 07 Mar 2012 15:33:51 -0700
-Message-ID: <20120307223351.25669.74415.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307222436.25669.52282.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:39078 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030383Ab2CTQXl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 12:23:41 -0400
+Received: by gghe5 with SMTP id e5so227759ggh.19
+        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 09:23:40 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+	chenkeping@huawei.com
+Subject: [PATCH 1/6] x86,IRQ: Fix possible invalid memory access after IOAPIC hot-plugging
+Date: Wed, 21 Mar 2012 00:20:58 +0800
+Message-Id: <1332260463-13924-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
+References: <1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Convert from pci_scan_bus() to pci_scan_root_bus().  Supply the root
-bus resources from bussoft.  When we move the resource adjustment from
-pcibios_fixup_resources() to the PCI core, it will be important to have
-the root bus resources correct from the beginning.
+Function free_ioapic_saved_registers() should mark ioapic->saved_regiters
+as NULL after the memory has been freed. Otherwise when hot-adding
+another IOAPIC, function alloc_ioapic_saved_registers() may reuse the
+stale pointer and cause memory corruption.
 
-CC: Tony Luck <tony.luck@intel.com>
-CC: Jack Steiner <steiner@sgi.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- arch/ia64/sn/kernel/io_init.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 0a36f08..c99c2ca 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -297,7 +297,8 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 	s64 status = 0;
- 	struct pci_controller *controller;
- 	struct pcibus_bussoft *prom_bussoft_ptr;
--
-+	LIST_HEAD(resources);
-+	int i;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index da02320..7412eb8 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -362,6 +362,7 @@ static void alloc_ioapic_saved_registers(int idx)
+ static void free_ioapic_saved_registers(int idx)
+ {
+ 	kfree(ioapics[idx].saved_registers);
++	ioapics[idx].saved_registers = NULL;
+ }
  
-  	status = sal_get_pcibus_info((u64) segment, (u64) busnum,
-  				     (u64) ia64_tpa(&prom_bussoft_ptr));
-@@ -315,7 +316,13 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 	 */
- 	controller->platform_data = prom_bussoft_ptr;
- 
--	bus = pci_scan_bus(busnum, &pci_root_ops, controller);
-+	sn_legacy_pci_window_fixup(controller,
-+				   prom_bussoft_ptr->bs_legacy_io,
-+				   prom_bussoft_ptr->bs_legacy_mem);
-+	for (i = 0; i < controller->windows; i++)
-+		pci_add_resource(&resources, &controller->window[i].resource);
-+	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
-+				&resources);
-  	if (bus == NULL)
-  		goto error_return; /* error, or bus already scanned */
- 
-@@ -348,9 +355,6 @@ sn_bus_fixup(struct pci_bus *bus)
- 			return;
- 		}
- 		sn_common_bus_fixup(bus, prom_bussoft_ptr);
--		sn_legacy_pci_window_fixup(PCI_CONTROLLER(bus),
--					   prom_bussoft_ptr->bs_legacy_io,
--					   prom_bussoft_ptr->bs_legacy_mem);
-         }
-         list_for_each_entry(pci_dev, &bus->devices, bus_list) {
-                 sn_io_slot_fixup(pci_dev);
+ int __init arch_early_irq_init(void)
+-- 
+1.7.5.4
 
