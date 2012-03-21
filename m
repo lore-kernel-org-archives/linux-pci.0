@@ -1,67 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f202.google.com ([209.85.212.202]:44885 "EHLO
-	mail-wi0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946153Ab2CPX4G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2012 19:56:06 -0400
-Received: by wibhj13 with SMTP id hj13so60267wib.1
-        for <linux-pci@vger.kernel.org>; Fri, 16 Mar 2012 16:56:05 -0700 (PDT)
-Subject: [PATCH v2 0/7] PCI core support for bus-to-resource offsets (fixes)
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 16 Mar 2012 17:47:53 -0600
-Message-ID: <20120316234653.6649.59492.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56869 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753553Ab2CUDZR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 23:25:17 -0400
+Received: by pbcun15 with SMTP id un15so483782pbc.19
+        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 20:25:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1332260463-13924-4-git-send-email-jiang.liu@huawei.com>
+References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+	<1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
+	<1332260463-13924-4-git-send-email-jiang.liu@huawei.com>
+Date: Tue, 20 Mar 2012 20:25:17 -0700
+Message-ID: <CAE9FiQX9NJ4n09_OWJVf7n579=JWDUi+XF79aMKUFunCXL3PJw@mail.gmail.com>
+Subject: Re: [PATCH 2/6] x86,IRQ: Mark unused entries in 'ioapics' array as
+ free at startup
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+	chenkeping@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a set of incremental fixes related to my recent "remove device
-resource fixups" series.
+On Tue, Mar 20, 2012 at 9:20 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Unused entries in ioapics array should be marked as free at startup,
+> so they could be used by hot-added IOAPICs.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> ---
+>  arch/x86/kernel/apic/io_apic.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index 7412eb8..622374f 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -392,6 +392,10 @@ int __init arch_early_irq_init(void)
+>                cpumask_set_cpu(0, cfg->domain);
+>        }
+>
+> +       /* Mark all left entries as free for IOAPIC hot-adding. */
+> +       for (i = nr_ioapics; i < MAX_IO_APICS; i++)
+> +               ioapics[i].mp_config.apicid = 0xff;
+> +
+>        return 0;
+>  }
 
-These apply to 63ab387ca0, the current head of Jesse's linux-next branch.
-The result is the same as the updated patches I posted here:
+this one looks like not needed, we did not search that after
+nr_ioapics, and just use nr_ioapics if open spot is found.
 
-  git://github.com/bjorn-helgaas/linux.git pci-probe_only-and-offset-v3-5eb2c1f
-
-except that I removed the EN1K bridge I/O window rework, since it's not
-necessary for the merge window.
-
-Having these as incremental fixes means there's a stretch where bisection is
-broken for powerpc and sparc platforms that use the device tree.  That's
-unfortunate, but it's too late to ask Jesse to rebase his linux-next branch
-and pull in the updated full patches.
-
-Changes since v1 of these incremental fixes:
-  - dropped the EN1K reimplementation; I'll repost this later
-  - added changelog notes about bisection being broken on powerpc & sparc
-  - powerpc: added patch to allow reallocation on PA Semi
-  - sparc: there was no pci_resource_adjust() in pci_parse_of_addrs(), so
-    I dropped the pcibios_bus_to_resource() I had added there
----
-
-Bjorn Helgaas (7):
-      PCI: fix bridge I/O window bus-to-resource conversion
-      arm/PCI: don't export pci_flags
-      powerpc/PCI: compute I/O space bus-to-resource offset consistently
-      powerpc/PCI: convert devtree bus addresses to resource
-      powerpc/PCI: allow reallocation on PA Semi
-      sparc/PCI: convert devtree and arch-probed bus addresses to resource
-      unicore32/PCI: move <asm-generic/pci-bridge.h> include to asm/pci.h
-
-
- arch/arm/kernel/bios32.c            |    1 -
- arch/powerpc/include/asm/pci.h      |    1 +
- arch/powerpc/kernel/pci-common.c    |    8 ++++-
- arch/powerpc/kernel/pci_32.c        |    6 ++--
- arch/powerpc/kernel/pci_64.c        |    2 +
- arch/powerpc/kernel/pci_of_scan.c   |   12 +++++--
- arch/powerpc/platforms/pasemi/pci.c |    3 --
- arch/sparc/kernel/pci.c             |   60 +++++++++++++++--------------------
- arch/unicore32/include/asm/pci.h    |    1 +
- arch/unicore32/kernel/pci.c         |    1 -
- drivers/pci/probe.c                 |    1 +
- 11 files changed, 46 insertions(+), 50 deletions(-)
-
--- 
-Bjorn
+Yinghai
