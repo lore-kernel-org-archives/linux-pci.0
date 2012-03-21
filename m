@@ -1,105 +1,151 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:51636 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755428Ab2CUDeW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2012 23:34:22 -0400
+Received: by dajr28 with SMTP id r28so934315daj.19
+        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2012 20:34:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1332260463-13924-6-git-send-email-jiang.liu@huawei.com>
+References: <CAE9FiQXC7T7JQRfiry8nHaRYN3ggy9vfzc2jDUzar80hv6pEvw@mail.gmail.com>
+	<1332260463-13924-1-git-send-email-jiang.liu@huawei.com>
+	<1332260463-13924-6-git-send-email-jiang.liu@huawei.com>
+Date: Tue, 20 Mar 2012 20:34:21 -0700
+Message-ID: <CAE9FiQVNG+_YuEEKFOxZZV7+hS-XKAacNcQg_+nasiRso1yY+g@mail.gmail.com>
+Subject: Re: [PATCH 4/6] x86,IRQ: split out function ioapic_setup_resource()
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v11 00/30] PCI: allocate pci bus num range for unassigned bridge busn
-Date: Sun, 18 Mar 2012 22:42:31 -0700
-Message-Id: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+	chenkeping@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set up iobusn_resource tree, and register bus number range to it.
-Later when need to find bus range, will try to allocate from the tree
+On Tue, Mar 20, 2012 at 9:21 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Split out function ioapic_setup_resource(), which will be used by IOAPIC
+> hotplug logic.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> ---
+>  arch/x86/kernel/apic/io_apic.c |   69 ++++++++++++++++++++++------------------
+>  1 files changed, 38 insertions(+), 31 deletions(-)
+>
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index e5b6ca4..dfb6f45 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -85,6 +85,7 @@ static struct ioapic {
+>         * Saved state during suspend/resume, or while enabling intr-remap.
+>         */
+>        struct IO_APIC_route_entry *saved_registers;
+> +       struct resource *resource;
+>        /* I/O APIC config */
+>        struct mpc_ioapic mp_config;
+>        /* IO APIC gsi routing info */
+> @@ -3987,7 +3988,7 @@ void __init setup_ioapic_dest(void)
+>
+>  static struct resource *ioapic_resources;
+>
+> -static struct resource * __init ioapic_setup_resources(int nr_ioapics)
+> +static struct resource * __init ioapic_alloc_resources(int nr_ioapics)
+>  {
+>        unsigned long n;
+>        struct resource *res;
+> @@ -4010,6 +4011,7 @@ static struct resource * __init ioapic_setup_resources(int nr_ioapics)
+>                res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+>                snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
+>                mem += IOAPIC_RESOURCE_NAME_SIZE;
+> +               ioapics[i].resource = &res[i];
+>        }
+>
+>        ioapic_resources = res;
+> @@ -4017,43 +4019,48 @@ static struct resource * __init ioapic_setup_resources(int nr_ioapics)
+>        return res;
+>  }
+>
+> -void __init ioapic_and_gsi_init(void)
+> +static void ioapic_setup_resource(int idx, struct resource *res, bool hotadd)
+>  {
+> -       unsigned long ioapic_phys, idx = FIX_IO_APIC_BASE_0;
+> -       struct resource *ioapic_res;
+> -       int i;
+> +       unsigned long ioapic_phys, vaddr;
+>
+> -       ioapic_res = ioapic_setup_resources(nr_ioapics);
+> -       for (i = 0; i < nr_ioapics; i++) {
+> -               if (smp_found_config) {
+> -                       ioapic_phys = mpc_ioapic_addr(i);
+> +       if (hotadd) {
+> +               ioapic_phys = mpc_ioapic_addr(idx);
+> +       } else if (smp_found_config) {
+> +               ioapic_phys = mpc_ioapic_addr(idx);
+>  #ifdef CONFIG_X86_32
+> -                       if (!ioapic_phys) {
+> -                               printk(KERN_ERR
+> -                                      "WARNING: bogus zero IO-APIC "
+> -                                      "address found in MPTABLE, "
+> -                                      "disabling IO/APIC support!\n");
+> -                               smp_found_config = 0;
+> -                               skip_ioapic_setup = 1;
+> -                               goto fake_ioapic_page;
+> -                       }
+> +               if (!ioapic_phys) {
+> +                       printk(KERN_ERR
+> +                              "WARNING: bogus zero IO-APIC address found "
+> +                              "in MPTABLE, disabling IO/APIC support!\n");
+> +                       smp_found_config = 0;
+> +                       skip_ioapic_setup = 1;
+> +                       goto fake_ioapic_page;
+> +               }
+>  #endif
+> -               } else {
+> +       } else {
+>  #ifdef CONFIG_X86_32
+>  fake_ioapic_page:
+>  #endif
+> -                       ioapic_phys = (unsigned long)alloc_bootmem_pages(PAGE_SIZE);
+> -                       ioapic_phys = __pa(ioapic_phys);
+> -               }
+> -               set_fixmap_nocache(idx, ioapic_phys);
+> -               apic_printk(APIC_VERBOSE, "mapped IOAPIC to %08lx (%08lx)\n",
+> -                       __fix_to_virt(idx) + (ioapic_phys & ~PAGE_MASK),
+> -                       ioapic_phys);
+> -               idx++;
+> -
+> -               ioapic_res->start = ioapic_phys;
+> -               ioapic_res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
+> -               ioapic_res++;
+> +               ioapic_phys = (unsigned long)alloc_bootmem_pages(PAGE_SIZE);
+> +               ioapic_phys = __pa(ioapic_phys);
 
-Need to test on arches other than x86. esp for ia64 and powerpc that support
-  more than on peer root buses.
+where is calling set_fixmap_nocache for fake ioapic one?
 
-The patches need to apply to linux v3.3 + pci-next and
-        [PATCH -v3] PCI: pci_host_bridge related cleanup
+> +       }
+> +
+> +       vaddr = __fix_to_virt(FIX_IO_APIC_BASE_0 + idx);
+> +       vaddr += (ioapic_phys & ~PAGE_MASK);
+> +       apic_printk(APIC_VERBOSE, "mapped IOAPIC to %08lx (%08lx)\n",
+> +               vaddr, ioapic_phys);
+> +
+> +       res->start = ioapic_phys;
+> +       res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
+> +}
+> +
+> +void __init ioapic_and_gsi_init(void)
+> +{
+> +       int i;
+> +
+> +       ioapic_alloc_resources(nr_ioapics);
+> +       for (i = 0; i < nr_ioapics; i++) {
+> +               ioapic_setup_resource(i, ioapics[i].resource, false);
+>        }
 
-could be found at:
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
+how about booting system with ioapic device and later hot remove it?
 
--v2: according to Jesse, split to more small patches.
--v3: address some request from Bjorn. like make use %pR for busn_res debug print
-        out, and move the comment change with code change.
--v4: fixes the problem about rescan that Bjorn found.
--v5: add /proc/iobusn that is requested by Bjorn.
-     remove old workaround from pciehp.
-     add rescan_bridge for pci bridge in /sys
--v6: remove global iobusn_resource, and every root bus's busn_res will be root
-     of children buses' busn_res.
-     pc cardbus change is tested by pcmcia maintainter.
--v7: remove pci_scan_root_bus_max requested by Bjorn and Jesse.
--v8: rebase on top other patches with arch/x86/pci/bus_numa.c changes
-     also only include busn_res related changes.
--v9: Add busn into pci_root_info, and add it to resources list and pass it
-     to pci_create_root_bus.
--v11: convert busn_res probe to generic probe_resource with resource lock holding
-     add more strict checking about not scaned peer bridges.
+maybe we can just alloc one by one.
 
-Yinghai Lu (30):
-  x86, PCI: Add print all root info for not using _CRS path
-  x86, PCI: Allocate temp range array in amd_bus pci_root_info probing
-  x86, PCI: Merge pcibios_scan_root and pci_scan_bus_on_node
-  PCI: Add busn_res into struct pci_bus.
-  PCI: Add busn_res operation functions
-  PCI: Release busn_res when removing bus
-  PCI: Insert busn_res in pci_create_root_bus()
-  PCI: Checking busn_res in pci_scan_root_bus()
-  PCI: Add default busn_resource
-  PCI: Add default busn_res for pci_scan_bus()
-  x86, PCI: Add busn_res into resources list for acpi path
-  x86, PCI: Put busn resource in pci_root_info for not using _CRS path
-  PCI, ia64: Register busn_res for root buses
-  PCI, sparc: Register busn_res for root buses
-  PCI, powerpc: Register busn_res for root buses
-  PCI, parisc: Register busn_res for root buses
-  resources: Add probe_resource()
-  resources: Replace registered resource in tree.
-  PCI: Add pci_bus_extend/shrink_top()
-  PCI: Probe safe range that we can use for unassigned bridge.
-  PCI: Add pci_bus_replace_busn_res()
-  PCI: Allocate bus range instead of use max blindly
-  PCI: Strict checking of valid range for bridge
-  PCI: Kill pci_fixup_parent_subordinate_busnr()
-  PCI: Seperate child bus scanning to two passes overall
-  pcmcia: Remove workaround for fixing pci parent bus subordinate
-  PCI: Double checking setting for bus register and bus struct.
-  PCI, pciehp: Remove not needed bus number range checking
-  PCI: More strict checking of valid range for bridge
-  PCI: Don't shrink too much for hotplug bridge
-
- arch/ia64/pci/pci.c                   |    2 +
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci-common.c      |   10 +-
- arch/sparc/kernel/pci.c               |    4 +
- arch/sparc/kernel/pci_impl.h          |    1 +
- arch/x86/pci/acpi.c                   |   11 +-
- arch/x86/pci/amd_bus.c                |   14 +-
- arch/x86/pci/bus_numa.c               |   30 ++-
- arch/x86/pci/bus_numa.h               |    4 +-
- arch/x86/pci/common.c                 |   27 +--
- drivers/parisc/dino.c                 |    5 +
- drivers/parisc/lba_pci.c              |    3 +
- drivers/pci/hotplug/pciehp_pci.c      |   12 +-
- drivers/pci/probe.c                   |  439 +++++++++++++++++++++++++++------
- drivers/pci/remove.c                  |    1 +
- drivers/pcmcia/yenta_socket.c         |   75 ------
- include/linux/ioport.h                |    8 +
- include/linux/pci.h                   |    6 +
- kernel/resource.c                     |  175 +++++++++++++-
- 19 files changed, 613 insertions(+), 215 deletions(-)
-
--- 
-1.7.7
-
+Yinghai
