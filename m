@@ -1,110 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:50651 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754919Ab2COReH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Mar 2012 13:34:07 -0400
-Received: by lahj13 with SMTP id j13so2588567lah.19
-        for <linux-pci@vger.kernel.org>; Thu, 15 Mar 2012 10:34:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWwzS2SFvzO2BL-aoVFVEMFpwJPKPODArkKtQSeAoTYGw@mail.gmail.com>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
- <1331362837-10740-21-git-send-email-yinghai@kernel.org> <CAErSpo5WKLf4C_f+roqDtbvs0vU_qTKp6OZ83AXXZggPrynt2A@mail.gmail.com>
- <CAE9FiQWwzS2SFvzO2BL-aoVFVEMFpwJPKPODArkKtQSeAoTYGw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 15 Mar 2012 11:33:45 -0600
-Message-ID: <CAErSpo6Prmn9aAwC=e_1nC7QKzovp81KyZkOudgg7r8Gv0YWHA@mail.gmail.com>
-Subject: Re: [PATCH v2 20/37] PCI: Add pci bus removal through /sys/.../pci_bus/.../remove
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from youngberry.canonical.com ([91.189.89.112]:55306 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751199Ab2CVQts (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Mar 2012 12:49:48 -0400
+From: Colin King <colin.king@canonical.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Garrett <mjg@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: Allow pcie_aspm=force to work even when FADT indicates it is unsupported
+Date: Thu, 22 Mar 2012 16:49:45 +0000
+Message-Id: <1332434985-11522-1-git-send-email-colin.king@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2012 at 11:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Mar 12, 2012 at 8:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sat, Mar 10, 2012 at 12:00 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> it supports both pci root bus and pci bus under pci bridge.
->>>
->>> -v2: Change to three returns way in dev_bus_remove_store.
->>>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> Cc: Randy Dunlap <rdunlap@xenotime.net>
->>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>> Cc: linux-doc@vger.kernel.org
->>> ---
->>>  Documentation/ABI/testing/sysfs-bus-pci |    8 ++++++++
->>>  drivers/pci/pci-sysfs.c                 |   30 ++++++++++++++++++++++++++++++
->>>  2 files changed, 38 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
->>> index 95f0f37..22392de 100644
->>> --- a/Documentation/ABI/testing/sysfs-bus-pci
->>> +++ b/Documentation/ABI/testing/sysfs-bus-pci
->>> @@ -92,6 +92,14 @@ Description:
->>>                hot-remove the PCI device and any of its children.
->>>                Depends on CONFIG_HOTPLUG.
->>>
->>> +What:          /sys/bus/pci/devices/.../pci_bus/.../remove
->>> +Date:          March 2012
->>> +Contact:       Linux PCI developers <linux-pci@vger.kernel.org>
->>> +Description:
->>> +               Writing a non-zero value to this attribute will
->>> +               hot-remove the PCI bus and any of its children.
->>> +               Depends on CONFIG_HOTPLUG.
->>
->> I don't think this interface makes sense.  This stops every device on
->> the bus, removes the bus, unregisters the host bridge device if we're
->> removing a root bus.
->
-> it is some kind of handy. otherwise if there is several devices on the
-> bus, will need to
-> remove the devices one by one.
+From: Colin Ian King <colin.king@canonical.com>
 
-It might be handy, but that's not enough.  You're doing a sysfs
-operation in the PCI namespace.  It should not have effects outside
-that namespace.  Host bridges are by definition outside the PCI
-namespace.
+Right now using pcie_aspm=force will not enable ASPM if the FADT indicates
+ASPM is unsupported.  However, the semantics of force should probably allow
+for this, especially as they did before the ASPM disable rework with commit
+3c076351c4027a56d5005a39a0b518a4ba393ce2
 
->> I think we should just have a "remove *bridge*" interface.  It makes
->> no sense to me to remove a bus but leave the bridge, and it makes the
->> code quite complicated.
->
-> I want to remove all devices under the bridge and then rescan the
-> bridge. then if the bridge get removed.
-> then we have to rescan bridge's parent bus.
->
->>
->> The point of hotplug is to add and remove devices.  We'll get
->> interrupts saying "please remove this device" or "please rescan the
->> bus behind this bridge because something might have changed."
->>
->> If we're removing a host bridge, the platform, e.g., ACPI, will tell
->> us about the bridge that is going away.  The notification is attached
->> to the *bridge*, not the bus it leads to.
->>
->> The expected mechanism on x86 is an SCI from the platform, but if we
->> need a sysfs way to start host bridge removal, I think it should be
->> something like this:
->>
->>    echo 1 > /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/remove
->
-> for that,  let just use
-> echo "\_SB.PCI0 3" > /proc/acpi/sci/notify
+This patch just skips the clearing of any ASPM setup that the firmware has
+carried out on this bus if pcie_aspm=force is being used.
 
-That's a totally broken user interface.  There's no way for the user
-to look at the sysfs tree and figure out how to do that.  The ACPI
-namespace names like "PCI0" are platform-dependent internal things and
-should not be part of any user interface.
+BugLink: https://bugs.launchpad.net/ubuntu/+bug/962038
 
-I don't object to /proc/acpi/sci/notify.  That looks like a useful way
-to inject notification events that would normally come from the
-hardware/BIOS.  But it's a development tool, not something that can be
-part of the normal user interface.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/pci/pcie/aspm.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 24f049e..e406429 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -783,6 +783,9 @@ void pcie_clear_aspm(struct pci_bus *bus)
+ {
+ 	struct pci_dev *child;
+ 
++	if (aspm_force)
++		return;
++
+ 	/*
+ 	 * Clear any ASPM setup that the firmware has carried out on this bus
+ 	 */
+-- 
+1.7.9.1
+
