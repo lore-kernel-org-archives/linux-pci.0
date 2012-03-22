@@ -1,86 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:46641 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715Ab2CVAIe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2012 20:08:34 -0400
+Received: by vcqp1 with SMTP id p1so1558039vcq.19
+        for <linux-pci@vger.kernel.org>; Wed, 21 Mar 2012 17:08:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4F6A5A53.305@fold.natur.cuni.cz>
+References: <4F6A483D.50702@fold.natur.cuni.cz>
+	<CAE9FiQVnErU-cska4gpinyj-LOup-U+3vsEG2z_-7h6kyREYtw@mail.gmail.com>
+	<4F6A5A53.305@fold.natur.cuni.cz>
+Date: Wed, 21 Mar 2012 17:08:34 -0700
+Message-ID: <CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH 18/23] PCI, ACPI: add acpi_pci_root_rescan()
-Date: Mon,  5 Mar 2012 23:13:55 -0800
-Message-Id: <1331018040-30725-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-References: <1331018040-30725-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-it will rescan all acpi pci root if related pci root bus get removed before.
+On Wed, Mar 21, 2012 at 3:46 PM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+> Hi Yinghai,
+>  please find attached current dmesg output (not showing the bootup of the
+> system anymore). at the end of the file you will see what happened when I
+> inserted the card. I removed the card after some 10secs so that you can all.
+> Sorry for the heavy USB debug messages. ;)
+>  In another file a record of the previous boot (new.dmesg2.txt).
+>
+>  So shall I try the patch you sent me? ;-)
 
-Signed-off-by: Yinghai <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/pci_root.c |   52 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 52 insertions(+), 0 deletions(-)
+that may only help on some case like just booting up.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index b38e347..e1814e0 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -679,3 +679,55 @@ static int __init acpi_pci_root_init(void)
- }
- 
- subsys_initcall(acpi_pci_root_init);
-+
-+static acpi_status
-+rescan_root_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
-+{
-+	struct acpi_device *device, *pdevice;
-+	struct acpi_pci_root *root;
-+	acpi_handle phandle;
-+	int ret_val;
-+
-+	if (!acpi_is_root_bridge(handle))
-+		return AE_OK;
-+
-+	acpi_get_parent(handle, &phandle);
-+	if (acpi_bus_get_device(phandle, &pdevice)) {
-+		printk(KERN_DEBUG "no parent device, assuming NULL\n");
-+		pdevice = NULL;
-+	}
-+
-+	if (!acpi_bus_get_device(handle, &device)) {
-+		/* check if  pci root_bus is removed */
-+		root = acpi_driver_data(device);
-+		if (pci_find_bus(root->segment, root->secondary.start))
-+			return AE_OK;
-+
-+		printk(KERN_DEBUG "bus exists... trim\n");
-+		/* this shouldn't be in here, so remove
-+		 * the bus then re-add it...
-+		 */
-+		ret_val = acpi_bus_trim(device, 1);
-+		printk(KERN_DEBUG "acpi_bus_trim return %x\n", ret_val);
-+	}
-+
-+	ret_val = acpi_bus_add(&device, pdevice, handle, ACPI_BUS_TYPE_DEVICE);
-+	if (ret_val) {
-+		printk(KERN_ERR "error adding bus, %x\n", -ret_val);
-+		goto out;
-+	}
-+
-+	root = acpi_driver_data(device);
-+	pci_assign_unassigned_bus_resources(root->bus);
-+
-+	ret_val = acpi_bus_start(device);
-+
-+out:
-+	return ret_val;
-+}
-+
-+void acpi_pci_root_rescan(void)
-+{
-+	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
-+		ACPI_UINT32_MAX, rescan_root_bridge, NULL, NULL, NULL);
-+}
--- 
-1.7.7
+You may need to check.
 
+git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci.git linux-next
+
+there is one patch there that is going to power down the link.
+http://git.kernel.org/?p=linux/kernel/git/jbarnes/pci.git;a=patch;h=2debd9289997fc5d1c0043b41201a8b40d5e11d0
+
+Thanks
+
+Yinghai
