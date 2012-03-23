@@ -1,53 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:27815 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030180Ab2CSFoc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:44:32 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v11 10/30] PCI: Add default busn_res for pci_scan_bus()
-Date: Sun, 18 Mar 2012 22:42:41 -0700
-Message-Id: <1332135781-13695-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60748 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758607Ab2CWPCz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 11:02:55 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC PATCH 10/11] PCI,ACPI: serialize hotplug operations triggered by ACPI subsystem
+Date: Fri, 23 Mar 2012 22:58:26 +0800
+Message-Id: <1332514707-9673-11-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Use pci_lock_hotplug()/pci_unlock_hotplug() to serialize PCI
+hotplug operations related to ACPI root bridges.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2378531..8a77b8b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1785,6 +1785,7 @@ struct pci_bus * __devinit pci_scan_bus_parented(struct device *parent,
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/pci_root.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 24afd66..a8a3867 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -463,6 +463,8 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	if (!root)
+ 		return -ENOMEM;
  
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &busn_resource);
- 	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
- 	if (b)
- 		b->subordinate = pci_scan_child_bus(b);
-@@ -1802,6 +1803,7 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
++	pci_lock_hotplug();
++
+ 	segment = 0;
+ 	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
+ 				       &segment);
+@@ -627,12 +629,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 			driver->add(device->handle);
  
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &busn_resource);
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
- 		b->subordinate = pci_scan_child_bus(b);
+ 	mutex_unlock(&acpi_pci_root_lock);
++	pci_unlock_hotplug();
+ 
+ 	return 0;
+ 
+ out_del_root:
+ 	list_del_rcu(&root->node);
+ 	mutex_unlock(&acpi_pci_root_lock);
++	pci_unlock_hotplug();
+ 	synchronize_rcu();
+ out_free:
+ 	kfree(root);
+@@ -643,7 +647,9 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 
++	pci_lock_hotplug();
+ 	pci_bus_add_devices(root->bus);
++	pci_unlock_hotplug();
+ 	return 0;
+ }
+ 
+@@ -652,6 +658,7 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 	struct acpi_pci_driver *driver;
+ 
++	pci_lock_hotplug();
+ 	mutex_lock(&acpi_pci_root_lock);
+ 
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+@@ -675,6 +682,7 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ out:
+ 	list_del_rcu(&root->node);
+ 	mutex_unlock(&acpi_pci_root_lock);
++	pci_unlock_hotplug();
+ 	synchronize_rcu();
+ 	kfree(root);
+ 
 -- 
-1.7.7
+1.7.5.4
 
