@@ -1,145 +1,197 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 08/39] x86, PCI: add host bridge resource release for using _CRS
-Date: Wed, 29 Feb 2012 15:07:07 -0800
-Message-Id: <1330556858-11768-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-References: <1330556858-11768-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60748 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758457Ab2CWPCf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 11:02:35 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC PATCH 08/11] PCI: Introduce recursive mutex to serialize PCI hotplug operations
+Date: Fri, 23 Mar 2012 22:58:24 +0800
+Message-Id: <1332514707-9673-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. allocate pci_root_info instead of use local stack. we need to pass around info
-   for release fn.
-2. add release_pci_root_info
-3. set x86 own host bridge release fn, so will make sure root bridge
-   related resources get freed during root bus removal.
+There are multiple entrances to trigger PCI hotplug operations:
+1. Sysfs interface exported by PCI subsystem
+2. PCI hotplug event triggered by PCI Hotplug Controller
+3. ACPI hotplug event for PCI host bridge
+4. Driver attach/detach event, such as pci_root driver
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Currently pci_remove_rescan_mutex only serializes hotplug operations
+triggered by method 1. This patch abstracts pci_remove_rescan_mutex
+as pci_lock_hotplug()/pci_unlock_hotplug(), so it could be used to
+serialize all PCI hotplug operations triggered by all methods above.
+pci_lock_hotplug()/pci_unlock_hotplug() supports recursive lock.
+
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- arch/x86/pci/acpi.c |   63 +++++++++++++++++++++++++++++++++++++++++---------
- 1 files changed, 51 insertions(+), 12 deletions(-)
+ drivers/pci/hotplug.c   |   26 ++++++++++++++++++++++++++
+ drivers/pci/pci-sysfs.c |   29 ++++++++++++++---------------
+ include/linux/pci.h     |    4 ++++
+ 3 files changed, 44 insertions(+), 15 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 763f7bb..c7a230f 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -305,11 +305,40 @@ static void add_resources(struct pci_root_info *info,
- 	}
+diff --git a/drivers/pci/hotplug.c b/drivers/pci/hotplug.c
+index df98119..dc4d561 100644
+--- a/drivers/pci/hotplug.c
++++ b/drivers/pci/hotplug.c
+@@ -4,8 +4,34 @@
+ #include <linux/notifier.h>
+ #include "pci.h"
+ 
++/* Recursive mutex for PCI hotplug operations. */
++static DEFINE_MUTEX(pci_hotplug_mutex);
++static struct task_struct *pci_hotplug_mutex_owner;
++static int pci_hotplug_mutex_recursive;
++
+ static BLOCKING_NOTIFIER_HEAD(pci_hotplug_notify_chain);
+ 
++void pci_lock_hotplug(void)
++{
++	if (current != pci_hotplug_mutex_owner) {
++		mutex_lock(&pci_hotplug_mutex);
++		pci_hotplug_mutex_owner = current;
++	}
++	pci_hotplug_mutex_recursive++;
++
++}
++EXPORT_SYMBOL(pci_lock_hotplug);
++
++void pci_unlock_hotplug(void)
++{
++	BUG_ON(pci_hotplug_mutex_owner != current);
++	if (--pci_hotplug_mutex_recursive == 0) {
++		pci_hotplug_mutex_owner = NULL;
++		mutex_unlock(&pci_hotplug_mutex);
++	}
++}
++EXPORT_SYMBOL(pci_unlock_hotplug);
++
+ int pci_register_hotplug_notifier(struct notifier_block *nb)
+ {
+ 	return blocking_notifier_chain_register(&pci_hotplug_notify_chain, nb);
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c348048..bb97e8b 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -283,7 +283,6 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
  }
  
--static void free_pci_root_info(struct pci_root_info *info)
-+static void free_pci_root_info_res(struct pci_root_info *info)
+ #ifdef CONFIG_HOTPLUG
+-static DEFINE_MUTEX(pci_remove_rescan_mutex);
+ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 				size_t count)
  {
- 	kfree(info->name);
- 	kfree(info->res);
--	memset(info, 0, sizeof(struct pci_root_info));
-+	info->res = NULL;
-+	info->res_num = 0;
-+}
-+
-+static void __release_pci_root_info(struct pci_root_info *info)
-+{
-+	int i;
-+	struct resource *res;
-+
-+	for (i = 0; i < info->res_num; i++) {
-+		res = &info->res[i];
-+
-+		if (!res->parent)
-+			continue;
-+
-+		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-+			continue;
-+
-+		release_resource(res);
-+	}
-+
-+	free_pci_root_info_res(info);
-+
-+	kfree(info);
-+}
-+static void release_pci_root_info(struct pci_host_bridge *bridge)
-+{
-+	struct pci_root_info *info = bridge->release_data;
-+
-+	__release_pci_root_info(info);
+@@ -294,10 +293,10 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 		return -EINVAL;
+ 
+ 	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
++		pci_lock_hotplug();
+ 		while ((b = pci_find_next_bus(b)) != NULL)
+ 			pci_rescan_bus(b);
+-		mutex_unlock(&pci_remove_rescan_mutex);
++		pci_unlock_hotplug();
+ 	}
+ 	return count;
+ }
+@@ -313,9 +312,9 @@ static ssize_t bus_rescan_root_store(struct bus_type *bus, const char *buf,
+ 		return -EINVAL;
+ 
+ 	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
++		pci_lock_hotplug();
+ 		arch_pci_root_rescan();
+-		mutex_unlock(&pci_remove_rescan_mutex);
++		pci_unlock_hotplug();
+ 	}
+ 	return count;
+ }
+@@ -340,9 +339,9 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		printk(KERN_WARNING "rescan with pci device will be removed "
+ 			 "shortly, please use bridge rescan_bridge\n"
+ 			 "or bus/rescan instead\n");
+-		mutex_lock(&pci_remove_rescan_mutex);
++		pci_lock_hotplug();
+ 		pci_rescan_bus(pdev->bus);
+-		mutex_unlock(&pci_remove_rescan_mutex);
++		pci_unlock_hotplug();
+ 	}
+ 	return count;
+ }
+@@ -351,9 +350,9 @@ static void bridge_rescan_callback(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	mutex_lock(&pci_remove_rescan_mutex);
++	pci_lock_hotplug();
+ 	pci_rescan_bus_bridge_resize(pdev);
+-	mutex_unlock(&pci_remove_rescan_mutex);
++	pci_unlock_hotplug();
  }
  
- static void
-@@ -342,7 +371,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ static ssize_t
+@@ -382,9 +381,9 @@ static void remove_callback(struct device *dev)
  {
- 	struct acpi_device *device = root->device;
--	struct pci_root_info info;
-+	struct pci_root_info *info = NULL;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
- 	LIST_HEAD(resources);
-@@ -387,7 +416,13 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
- 	sd->domain = domain;
- 	sd->node = node;
--	memset(&info, 0, sizeof(struct pci_root_info));
-+	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	if (!info) {
-+		kfree(sd);
-+		printk(KERN_WARNING "pci_bus %04x:%02x: "
-+		       "ignored (out of memory)\n", domain, busnum);
-+		return NULL;
-+	}
- 	/*
- 	 * Maybe the desired pci bus has been already scanned. In such case
- 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
-@@ -399,29 +434,33 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 * be replaced by sd.
- 		 */
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
-+		kfree(info);
- 		kfree(sd);
- 	} else {
--		probe_pci_root_info(&info, device, busnum, domain);
-+		probe_pci_root_info(info, device, busnum, domain);
+-	mutex_lock(&pci_remove_rescan_mutex);
++	pci_lock_hotplug();
+ 	pci_stop_and_remove_bus_device(pdev);
+-	mutex_unlock(&pci_remove_rescan_mutex);
++	pci_unlock_hotplug();
+ }
  
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
- 		 */
- 		if (pci_use_crs)
--			add_resources(&info, &resources);
-+			add_resources(info, &resources);
- 		else {
--			free_pci_root_info(&info);
-+			free_pci_root_info_res(info);
- 			x86_pci_root_bus_resources(busnum, &resources);
- 		}
-+
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
--		if (bus)
-+		if (bus) {
- 			bus->subordinate = pci_scan_child_bus(bus);
--		else
-+			pci_set_host_bridge_release(
-+				to_pci_host_bridge(bus->bridge),
-+				release_pci_root_info, info);
-+		} else {
- 			pci_free_resource_list(&resources);
--
--		if (!bus && pci_use_crs)
--			free_pci_root_info(&info);
-+			__release_pci_root_info(info);
-+		}
- 	}
+ static ssize_t
+@@ -414,9 +413,9 @@ static void bus_remove_callback(struct device *dev)
+ {
+ 	struct pci_bus *bus = to_pci_bus(dev);
  
- 	/* After the PCI-E bus has been walked and all devices discovered,
+-	mutex_lock(&pci_remove_rescan_mutex);
++	pci_lock_hotplug();
+ 	pci_stop_and_remove_bus(bus);
+-	mutex_unlock(&pci_remove_rescan_mutex);
++	pci_unlock_hotplug();
+ }
+ static ssize_t
+ dev_bus_remove_store(struct device *dev, struct device_attribute *attr,
+@@ -443,9 +442,9 @@ static void bus_rescan_callback(struct device *dev)
+ {
+ 	struct pci_bus *bus = to_pci_bus(dev);
+ 
+-	mutex_lock(&pci_remove_rescan_mutex);
++	pci_lock_hotplug();
+ 	pci_rescan_bus(bus);
+-	mutex_unlock(&pci_remove_rescan_mutex);
++	pci_unlock_hotplug();
+ }
+ static ssize_t
+ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 953e0ef..8fa3ed5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -941,9 +941,13 @@ enum {
+ };
+ 
+ #ifdef CONFIG_HOTPLUG
++extern void pci_lock_hotplug(void);
++extern void pci_unlock_hotplug(void);
+ extern int pci_register_hotplug_notifier(struct notifier_block *nb);
+ extern void pci_unregister_hotplug_notifier(struct notifier_block *nb);
+ #else
++static inline void pci_lock_hotplug(void) {}
++static inline  void pci_unlock_hotplug(void) {}
+ static inline int pci_register_hotplug_notifier(struct notifier_block *nb)
+ {
+ 	return 0;
 -- 
-1.7.7
+1.7.5.4
 
