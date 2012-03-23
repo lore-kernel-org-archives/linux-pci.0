@@ -1,67 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:50482 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802Ab2CHShh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2012 13:37:37 -0500
-Date: Thu, 8 Mar 2012 19:37:31 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-tegra@vger.kernel.org, Liam Girdwood <lrg@ti.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60748 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758562Ab2CWPCp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 11:02:45 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
 	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 06/11] PCI: Keep pci_fixup_irqs() around after init
-Message-ID: <20120308183731.GA25254@avionic-0098.mockup.avionic-design.de>
-References: <1331218291-16119-1-git-send-email-thierry.reding@avionic-design.de>
- <1331218291-16119-7-git-send-email-thierry.reding@avionic-design.de>
- <CAErSpo6hbWjteESST1+O2WzbtmZq6hC-pnUB4o3MAXWG-EgU+g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="CE+1k2dSO48ffgeK"
-In-Reply-To: <CAErSpo6hbWjteESST1+O2WzbtmZq6hC-pnUB4o3MAXWG-EgU+g@mail.gmail.com>
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC PATCH 09/11] PCI: serialize hotplug operations triggered by PCI hotplug sysfs interfaces
+Date: Fri, 23 Mar 2012 22:58:25 +0800
+Message-Id: <1332514707-9673-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Use pci_lock_hotplug()/pci_unlock_hotplug() to serialize hotplug operations
+triggered by PCI hotplug sysfs interfaces.
 
---CE+1k2dSO48ffgeK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/pci/hotplug/pci_hotplug_core.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-* Bjorn Helgaas wrote:
-> Hmm, your patch looks OK as far as it goes, but the implementation of
-> pci_fixup_irqs() as a call-once-at-boot-time thing with a loop through
-> all the PCI devices we've found so far looks completely broken with
-> regard to hotplug.
->=20
-> Who does the swizzle for devices hot-added after boot?
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 202f4a9..633fe3a 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -121,6 +121,7 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
+ 		retval = -ENODEV;
+ 		goto exit;
+ 	}
++	pci_lock_hotplug();
+ 	switch (power) {
+ 		case 0:
+ 			if (slot->ops->disable_slot)
+@@ -136,6 +137,7 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
+ 			err ("Illegal value specified for power\n");
+ 			retval = -EINVAL;
+ 	}
++	pci_unlock_hotplug();
+ 	module_put(slot->ops->owner);
+ 
+ exit:	
+-- 
+1.7.5.4
 
-Perhaps I should have mentioned this in the commit message, but the patch
-isn't actually used in a hotplug scenario. In fact, the code is still run
-once at boot time, only very late. Grant's deferred probing allows the
-PCIe controller driver to postpone initialization until all the devices
-that it depends on (regulators) have been probed. This has the side-effect
-that the probing actually takes place *after* code and data annotated with
-__init have already been freed.
-
-Thierry
-
---CE+1k2dSO48ffgeK
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAk9Y/GsACgkQZ+BJyKLjJp8qLACfYNrcwrYDwS7KUKwaRVj+cS6S
-pU8AmgM4GdvwiXkJqH4QTT/CljdHZjbS
-=DeUC
------END PGP SIGNATURE-----
-
---CE+1k2dSO48ffgeK--
