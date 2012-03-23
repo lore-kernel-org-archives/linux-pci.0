@@ -1,105 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 09/47] PCI, sysfs: Use device_type and attr_groups with pci dev
-Date: Sun, 18 Mar 2012 22:45:58 -0700
-Message-Id: <1332135996-13860-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60748 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754019Ab2CWPDG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2012 11:03:06 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>, Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC PATCH 11/11] PCI: Serialize hotplug operations triggered by acpiphp driver
+Date: Fri, 23 Mar 2012 22:58:27 +0800
+Message-Id: <1332514707-9673-12-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to create rescan in sys only for pci bridge instead of all pci dev.
+User pci_lock_hotplug()/pci_unlock_hotplug() to serialize PCI
+hotplug operations triggered by acpiphp driver.
 
-We could use attribute_groups/is_visible method to do that.
-
-Now pci dev does not use device type yet. So add pci_dev_type to take
-attr_groups with it.
-
-Add pci_dev_bridge_attrs_are_visible() to control attr_bridge_group only create
-attr for bridge.
-
-This is the framework related change, later could attr to bridge_attr_group,
-to make those attr only show up on pci bridge device.
-
-Also We could add more attr groups with is_visible to reduce messness in
-	pci_create_sysfs_dev_files. ( at least for boot_vga one )
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/pci-sysfs.c |   30 ++++++++++++++++++++++++++++++
- drivers/pci/pci.h       |    1 +
- drivers/pci/probe.c     |    1 +
- 3 files changed, 32 insertions(+), 0 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index a55e248..39d15e6 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1335,3 +1335,33 @@ static int __init pci_sysfs_init(void)
- }
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 764891e..ee820a9 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1095,6 +1095,8 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 	bridge = (struct acpiphp_bridge *)hp_work->context;
++
++	pci_lock_hotplug();
+ 	if (bridge->flags & BRIDGE_IS_DEAD)
+ 		goto out;
  
- late_initcall(pci_sysfs_init);
-+
-+static struct attribute *pci_dev_bridge_attrs[] = {
-+	NULL,
-+};
-+
-+static umode_t pci_dev_bridge_attrs_are_visible(struct kobject *kobj,
-+						struct attribute *a, int n)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (!pdev->subordinate)
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+static struct attribute_group pci_dev_bridge_attr_group = {
-+	.attrs = pci_dev_bridge_attrs,
-+	.is_visible = pci_dev_bridge_attrs_are_visible,
-+};
-+
-+static const struct attribute_group *pci_dev_attr_groups[] = {
-+	&pci_dev_bridge_attr_group,
-+	NULL,
-+};
-+
-+struct device_type pci_dev_type = {
-+	.groups = pci_dev_attr_groups,
-+};
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e494347..13b1159 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -162,6 +162,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+@@ -1156,6 +1158,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ 	}
+ 
+ out:
++	pci_unlock_hotplug();
+ 	kref_put(&bridge->kref, acpiphp_release_bridge);
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
  }
- extern struct device_attribute pci_dev_attrs[];
- extern struct device_attribute pcibus_dev_attrs[];
-+extern struct device_type pci_dev_type;
- #ifdef CONFIG_HOTPLUG
- extern struct bus_attribute pci_bus_attrs[];
- #else
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3dc92b9..e51e1a5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1119,6 +1119,7 @@ int pci_setup_device(struct pci_dev *dev)
- 	dev->sysdata = dev->bus->sysdata;
- 	dev->dev.parent = dev->bus->bridge;
- 	dev->dev.bus = &pci_bus_type;
-+	dev->dev.type = &pci_dev_type;
- 	dev->hdr_type = hdr_type & 0x7f;
- 	dev->multifunction = !!(hdr_type & 0x80);
- 	dev->error_state = pci_channel_io_normal;
+@@ -1201,6 +1204,8 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 	func = (struct acpiphp_func *)hp_work->context;
++
++	pci_lock_hotplug();
+ 	if (func->flags & FUNC_IS_DEAD)
+ 		goto out;
+ 
+@@ -1237,6 +1242,7 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 	}
+ 
+ out:
++	pci_unlock_hotplug();
+ 	kref_put(&func->kref, acpiphp_release_func);
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
+ }
 -- 
-1.7.7
+1.7.5.4
 
