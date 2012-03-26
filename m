@@ -1,86 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:29541 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161518Ab2CSFsO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:48:14 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 35/47] PCI, cphi_hotplug: Simplify configure_slot
-Date: Sun, 18 Mar 2012 22:46:24 -0700
-Message-Id: <1332135996-13860-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:38803 "HELO
+	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754034Ab2CZIIT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Mar 2012 04:08:19 -0400
+Message-ID: <4F7031A4.70601@mellanox.co.il>
+Date: Mon, 26 Mar 2012 11:06:44 +0200
+From: Yevgeny Petrilin <yevgenyp@mellanox.co.il>
+MIME-Version: 1.0
+To: <linux-pci@vger.kernel.org>
+Subject: IRQ affinity enforced only after first interrupt.
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For child p2p bridge hotplug support should use pci_scan_bridge instead.
+Hello,
 
-Make it more simillar to pciehp, just use pci_hp_add_bridge()
+I'm working on an issue where affinity changes to IRQ only have effect after the first interrupt which still happens on the original core.
+I understand that the decision regarding it takes place in this code:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/cpci_hotplug_pci.c |   35 +++++--------------------------
- 1 files changed, 6 insertions(+), 29 deletions(-)
+	if (irq_can_move_pcntxt(data)) {
+		ret = chip->irq_set_affinity(data, mask, false);
+		switch (ret) {
+		case IRQ_SET_MASK_OK:
+			cpumask_copy(data->affinity, mask);
+		case IRQ_SET_MASK_OK_NOCOPY:
+			irq_set_thread_affinity(desc);
+			ret = 0;
+		}
+	} else {
+		irqd_set_move_pending(data);
+		irq_copy_pending(desc, mask);
+	}
 
-diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
-index 4ef80ad..dcc75c7 100644
---- a/drivers/pci/hotplug/cpci_hotplug_pci.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
-@@ -285,42 +285,19 @@ int __ref cpci_configure_slot(struct slot *slot)
- 	for (fn = 0; fn < 8; fn++) {
- 		struct pci_dev *dev;
- 
--		dev = pci_get_slot(parent, PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
-+		dev = pci_get_slot(parent,
-+				   PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
- 		if (!dev)
- 			continue;
- 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
--		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
--			/* Find an unused bus number for the new bridge */
--			struct pci_bus *child;
--			unsigned char busnr, start = parent->secondary;
--			unsigned char end = parent->subordinate;
--
--			for (busnr = start; busnr <= end; busnr++) {
--				if (!pci_find_bus(pci_domain_nr(parent),
--						  busnr))
--					break;
--			}
--			if (busnr >= end) {
--				err("No free bus for hot-added bridge\n");
--				pci_dev_put(dev);
--				continue;
--			}
--			child = pci_add_new_bus(parent, dev, busnr);
--			if (!child) {
--				err("Cannot add new bus for %s\n",
--				    pci_name(dev));
--				pci_dev_put(dev);
--				continue;
--			}
--			child->subordinate = pci_do_scan_bus(child);
--			pci_bus_size_bridges_with_self(child);
--		}
-+		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
-+			pci_hp_add_bridge(dev);
- 		pci_dev_put(dev);
- 	}
- 
--	pci_bus_assign_resources(parent);
-+	pci_assign_unassigned_bridge_resources(parent->self);
-+
- 	pci_bus_add_devices(parent);
--	pci_enable_bridges(parent);
- 
- 	dbg("%s - exit", __func__);
- 	return 0;
--- 
-1.7.7
+Which means that the "IRQD_MOVE_PCNTXT" flag is not set in irq_data->state_use_accessors.
+I was able to add this flag using irq_modify_status(), which is probably not the way to go.
+This option also doesn't exist in older kernels (2.6.32)
 
+So the question is, when irq_desc is created, how is it determined that "IRQD_MOVE_PCNTXT" flag is set?
+
+Thanks,
+Yevgeny
