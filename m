@@ -1,105 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Randy Dunlap <rdunlap@xenotime.net>
-Subject: [PATCH -v3 10/47] PCI, sysfs: create rescan_bridge under /sys/.../pci/devices/... for pci bridges
-Date: Sun, 18 Mar 2012 22:45:59 -0700
-Message-Id: <1332135996-13860-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:46927 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753326Ab2C0Q6E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Mar 2012 12:58:04 -0400
+Message-ID: <4F71F198.4080405@canonical.com>
+Date: Tue, 27 Mar 2012 17:58:00 +0100
+From: Colin Ian King <colin.king@canonical.com>
+MIME-Version: 1.0
+To: Matthew Garrett <mjg@redhat.com>
+CC: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] ASPM: Fix pcie devices with non-pcie children
+References: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+In-Reply-To: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will create rescan for every pci device under parent bus.
-that is not right. The device is already there, there is no reason to rescan it.
+On 27/03/12 15:17, Matthew Garrett wrote:
+> Commit 4949be16822e92a18ea0cc1616319926628092ee changed the behaviour of
+> pcie_aspm_sanity_check() to always return 0 if aspm is disabled, in order
+> to avoid cases where we changed ASPM state on pre-PCIe 1.1 devices. This
+> skipped the secondary function of pcie_aspm_sanity_check which was to avoid
+> us enabling ASPM on devices that had non-PCIe children, causing us to hit
+> a BUG_ON later on. Move the aspm_disabled check so we continue to honour
+> that scenario.
+>
+> Signed-off-by: Matthew Garrett<mjg@redhat.com>
+> Cc: stable@vger.kernel.org
+> ---
+>   drivers/pci/pcie/aspm.c |   13 ++++++++++---
+>   1 files changed, 10 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 86111d9..41e367b 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -521,9 +521,6 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+>   	int pos;
+>   	u32 reg32;
+>
+> -	if (aspm_disabled)
+> -		return 0;
+> -
+>   	/*
+>   	 * Some functions in a slot might not all be PCIe functions,
+>   	 * very strange. Disable ASPM for the whole slot
+> @@ -532,6 +529,16 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+>   		pos = pci_pcie_cap(child);
+>   		if (!pos)
+>   			return -EINVAL;
+> +
+> +		/*
+> +		 * If ASPM is disabled then we're not going to change
+> +		 * the BIOS state. It's safe to continue even if it's a
+> +		 * pre-1.1 device
+> +		 */
+> +
+> +		if (aspm_disabled)
+> +			continue;
+> +
+>   		/*
+>   		 * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
+>   		 * RBER bit to determine if a function is 1.1 version device
 
-We could have rescan for pci bridges. less confusing.
+We got a user who's now verified this fixes the BUG_ON() during boot,
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/961482/comments/51
 
-Need to move rescan attr to pci dev bridge attribute group.
-And we should rescan bridge's secondary bus instead of primary bus.
-
--v3: Use device_type for pci dev.
--v4: Seperate pci device type change out
--v5: add rescan_bridge for bridge type, and still keep the old rescan.
-	may remove the old rescan later.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- Documentation/ABI/testing/sysfs-bus-pci |   10 ++++++++++
- drivers/pci/pci-sysfs.c                 |   24 ++++++++++++++++++++++++
- 2 files changed, 34 insertions(+), 0 deletions(-)
-
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 34f5110..95f0f37 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -111,6 +111,16 @@ Description:
- 		from this part of the device tree.
- 		Depends on CONFIG_HOTPLUG.
- 
-+What:		/sys/bus/pci/devices/.../rescan_bridge
-+Date:		February 2012
-+Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
-+Description:
-+		Writing a non-zero value to this attribute will
-+		force a rescan of the bridge and all child buses, and
-+		re-discover devices removed earlier from this part of
-+		the device tree.
-+		Depends on CONFIG_HOTPLUG.
-+
- What:		/sys/bus/pci/devices/.../reset
- Date:		July 2009
- Contact:	Michael S. Tsirkin <mst@redhat.com>
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 39d15e6..d5c8ffb 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -325,6 +325,27 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
- 	return count;
- }
- 
-+static ssize_t
-+dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
-+		 const char *buf, size_t count)
-+{
-+	unsigned long val;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if (val) {
-+		mutex_lock(&pci_remove_rescan_mutex);
-+		pci_rescan_bus(pdev->subordinate);
-+		mutex_unlock(&pci_remove_rescan_mutex);
-+	}
-+	return count;
-+}
-+
-+static struct device_attribute pci_dev_bridge_rescan_attr =
-+	__ATTR(rescan_bridge, (S_IWUSR|S_IWGRP), NULL, dev_bridge_rescan_store);
-+
- static void remove_callback(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -1337,6 +1358,9 @@ static int __init pci_sysfs_init(void)
- late_initcall(pci_sysfs_init);
- 
- static struct attribute *pci_dev_bridge_attrs[] = {
-+#ifdef CONFIG_HOTPLUG
-+	&pci_dev_bridge_rescan_attr.attr,
-+#endif
- 	NULL,
- };
- 
--- 
-1.7.7
-
+.. so this does the trick. Thanks Matthew.
