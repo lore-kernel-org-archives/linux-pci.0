@@ -1,105 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f74.google.com ([209.85.213.74]:49658 "EHLO
-	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031691Ab2CGBAS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2012 20:00:18 -0500
-Received: by yhgm50 with SMTP id m50so725754yhg.1
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2012 17:00:18 -0800 (PST)
-Subject: [PATCH v1 2/9] powerpc/PCI: compute I/O space bus-to-resource offset
-	consistently
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Date: Tue, 06 Mar 2012 18:00:17 -0700
-Message-ID: <20120307010017.27465.29519.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120307005905.27465.71131.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yevgeny Petrilin <yevgenyp@mellanox.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yael Shenhav <yaeli@mellanox.com>
+Subject: RE: IRQ affinity enforced only after first interrupt.
+Date: Tue, 27 Mar 2012 09:39:08 +0000
+Message-ID: <953B660C027164448AE903364AC447D2618E24BF@MTLDAG02.mtl.com>
+References: <4F7031A4.70601@mellanox.co.il>
+ <CAErSpo7ciBYG1-jCL3F6bFcktmJj4H-SXn_1NcRnhc-gPDsHUw@mail.gmail.com>
+ <4F707E39.50502@gmail.com>
+ <953B660C027164448AE903364AC447D2618E1A8B@MTLDAG02.mtl.com>
+ <alpine.LFD.2.02.1203262059070.2542@ionos>
+In-Reply-To: <alpine.LFD.2.02.1203262059070.2542@ionos>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make sure we compute CPU addresses (resource start/end) the same way both
-when we set up the I/O aperture (hose->io_resource) and when we use
-pcibios_bus_to_resource() to convert BAR values into resources.
+> > >
+> > > The architecture specific code will determine whether the IRQ could be migrated
+> > > in process context. For example, the IRQ_MOVE_PCNTXT flag will be set on x86
+> > > systems if interrupt remapping is enabled.
+> >
+> > Actually I am encountering this issue with x86, and see different
+> > behavior with different HW devices (NICs). On same machine I have
+> > one device that responds immediately to affinity changes while the
+> > other one changes the affinity only after first interrupt.
+> 
+> That simply depends on the underlying hardware. On certain hardware we
+> can change the affinity only in hard interrupt context, that means
+> right when a interrupt of that device is delivered.
+> 
+> On the other devices we can change it right away and the corresponding
+> interrupt chips set IRQ_MOVE_PCNTXT to indicate that.
+> 
+> There is nothing we can do about this. It's dictated by hardware.
+> 
 
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/powerpc/include/asm/pci.h   |    1 +
- arch/powerpc/kernel/pci-common.c |    8 ++++++--
- arch/powerpc/kernel/pci_32.c     |    6 +++---
- arch/powerpc/kernel/pci_64.c     |    2 +-
- 4 files changed, 11 insertions(+), 6 deletions(-)
+Thanks for the explanation,
+Which capabilities of the HW show whether IRQ_MOVE_PCNTXT can be set or not?
+Is it done by reading configuration from PCI?
 
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 201e352..6653f27 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -182,6 +182,7 @@ extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
- 				 const struct resource *rsrc,
- 				 resource_size_t *start, resource_size_t *end);
- 
-+extern resource_size_t pcibios_io_space_offset(struct pci_controller *hose);
- extern void pcibios_setup_bus_devices(struct pci_bus *bus);
- extern void pcibios_setup_bus_self(struct pci_bus *bus);
- extern void pcibios_setup_phb_io_space(struct pci_controller *hose);
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 910b9de..2efd52d 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1492,6 +1492,11 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return pci_enable_resources(dev, mask);
- }
- 
-+resource_size_t pcibios_io_space_offset(struct pci_controller *hose)
-+{
-+	return (unsigned long) hose->io_base_virt - _IO_BASE;
-+}
-+
- static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, struct list_head *resources)
- {
- 	struct resource *res;
-@@ -1516,8 +1521,7 @@ static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, s
- 		 (unsigned long long)res->start,
- 		 (unsigned long long)res->end,
- 		 (unsigned long)res->flags);
--	pci_add_resource_offset(resources, res,
--			(resource_size_t) hose->io_base_virt - _IO_BASE);
-+	pci_add_resource_offset(resources, res, pcibios_io_space_offset(hose));
- 
- 	/* Hookup PHB Memory resources */
- 	for (i = 0; i < 3; ++i) {
-diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
-index fdd1a3d..4b06ec5 100644
---- a/arch/powerpc/kernel/pci_32.c
-+++ b/arch/powerpc/kernel/pci_32.c
-@@ -219,9 +219,9 @@ void __devinit pcibios_setup_phb_io_space(struct pci_controller *hose)
- 	struct resource *res = &hose->io_resource;
- 
- 	/* Fixup IO space offset */
--	io_offset = (unsigned long)hose->io_base_virt - isa_io_base;
--	res->start = (res->start + io_offset) & 0xffffffffu;
--	res->end = (res->end + io_offset) & 0xffffffffu;
-+	io_offset = pcibios_io_space_offset(hose);
-+	res->start += io_offset;
-+	res->end += io_offset;
- }
- 
- static int __init pcibios_init(void)
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index 75417fd..94a54f6 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -168,7 +168,7 @@ static int __devinit pcibios_map_phb_io_space(struct pci_controller *hose)
- 		return -ENOMEM;
- 
- 	/* Fixup hose IO resource */
--	io_virt_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
-+	io_virt_offset = pcibios_io_space_offset(hose);
- 	hose->io_resource.start += io_virt_offset;
- 	hose->io_resource.end += io_virt_offset;
- 
-
+Thanks,
+Yevgeny
