@@ -1,33 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:59630 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757187Ab2CME4c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2012 00:56:32 -0400
-Date: Mon, 12 Mar 2012 23:56:14 -0500
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [git pull]
-Message-ID: <20120312235614.1f22c90b@jbarnes-x220>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:39798 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937Ab2C0Dek (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Mar 2012 23:34:40 -0400
+Message-ID: <4F7134ED.4040602@jp.fujitsu.com>
+Date: Tue, 27 Mar 2012 12:33:01 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+MIME-Version: 1.0
+To: Jiang Liu <liuj97@gmail.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Len Brown <lenb@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 00/11] Enhancements and bugfixes to PCI hotplug subsystem
+References: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1332514707-9673-1-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following changes since commit
-4f262acfde22b63498b5e4f165e53d3bb4e96400:
+> The second prososal is to introduce a recursive mutex lock to
+> serialize all hotplug operations triggered by sysfs interfaces,
+> PCI HPC hardware events, ACPI hotplug events and other sources.
 
-  Merge branch 'fixes' of git://git.linaro.org/people/rmk/linux-arm (2012-03-07 08:33:03 -0800)
+The pciehp (and other hotplug controllers) needs this too.
 
-are available in the git repository at:
+There is only one mutex in the current implementation. I think it
+would be better if we can have the mutex per host bridge or per bus
+or something so that we can run multiple hot-plug operation in
+parallel on the independent PCI sub trees.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci for-linus
+Regards,
+Kenji Kaneshige
 
-A single fix for a regression that affects some people who try to
-disable ASPM for whatever reason.
 
-Matthew Garrett (1):
-      PCI: ignore pre-1.1 ASPM quirking when ASPM is disabled
 
- drivers/pci/pcie/aspm.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+(2012/03/23 23:58), Jiang Liu wrote:
+> This is a series of RFC patches, to make sure we are doing the
+> right thing in the right way.  The patchset hasn't been tested yet.
+> There are several minor bugfixes and two proposals.
+> 
+> The first proposal is to add notification chain for PCI hotplug events,
+> so other components interested in PCI root/bus/device hotplug events
+> could subscribe to the chain.
+> 
+> The second prososal is to introduce a recursive mutex lock to
+> serialize all hotplug operations triggered by sysfs interfaces,
+> PCI HPC hardware events, ACPI hotplug events and other sources.
+> 
+> There are still works left in driver/pci/hotplug directory to apply
+> the above two proposals.
+> 
+> The patchset applies to Yinghai's work on PCI root bus hotplug at
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
+> And it depends on my previous patchset, please refer to
+> http://www.spinics.net/lists/linux-pci/msg14472.html
+> 
+> Thanks!
+> 
+> Jiang Liu (11):
+>    PCI: Fix device reference count leakage in pci_dev_present()
+>    PCI: introduce pci_bus_get()/pci_bus_put() to hide implementation
+>      details
+>    PCI: clean up root bridge related logic in acpiphp driver
+>    ACPI,PCI: fix race windows caused by alloc_acpi_hotplug_work()
+>    PCI: Add notification interfaces for PCI root/bus/device hotplug
+>      events
+>    ACPI,PCI: update ACPI<->PCI binding information when pci hotplug
+>      event happens
+>    ACPI,PCI: update ACPI slots when PCI hotplug event happens
+>    PCI: Introduce recursive mutex to serialize PCI hotplug operations
+>    PCI: serialize hotplug operations triggered by PCI hotplug sysfs
+>      interfaces
+>    PCI,ACPI: serialize hotplug operations triggered by ACPI subsystem
+>    PCI: Serialize hotplug operations triggered by acpiphp driver
+> 
+>   drivers/acpi/pci_bind.c                |  115 +++++++++++++++++++++++++
+>   drivers/acpi/pci_root.c                |    8 ++
+>   drivers/acpi/pci_slot.c                |   81 ++++++++++++++++++-
+>   drivers/pci/bus.c                      |   20 ++++-
+>   drivers/pci/hotplug.c                  |   47 +++++++++++
+>   drivers/pci/hotplug/acpiphp.h          |    7 ++-
+>   drivers/pci/hotplug/acpiphp_glue.c     |  143 ++++++++++++--------------------
+>   drivers/pci/hotplug/pci_hotplug_core.c |    2 +
+>   drivers/pci/pci-sysfs.c                |   29 +++----
+>   drivers/pci/pci.h                      |    8 ++
+>   drivers/pci/probe.c                    |   10 ++-
+>   drivers/pci/remove.c                   |   20 ++++-
+>   drivers/pci/search.c                   |   10 +-
+>   include/linux/pci.h                    |   57 +++++++++++++
+>   14 files changed, 437 insertions(+), 120 deletions(-)
+> 
+
