@@ -1,80 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:28519 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756936Ab2CSFp1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:45:27 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH -v11 15/30] PCI, powerpc: Register busn_res for root buses
-Date: Sun, 18 Mar 2012 22:42:46 -0700
-Message-Id: <1332135781-13695-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38570 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753959Ab2C1NUN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2012 09:20:13 -0400
+Received: by iagz16 with SMTP id z16so1481636iag.19
+        for <linux-pci@vger.kernel.org>; Wed, 28 Mar 2012 06:20:13 -0700 (PDT)
+Message-ID: <4F731005.6000506@gmail.com>
+Date: Wed, 28 Mar 2012 21:20:05 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+CC: linux-pci@vger.kernel.org
+Subject: Re: How acpi_walk_resources() find specific _CRS for one device
+References: <20120328093004.GA31647@richard>
+In-Reply-To: <20120328093004.GA31647@richard>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci-common.c      |   10 +++++++++-
- 2 files changed, 10 insertions(+), 1 deletions(-)
+On 03/28/2012 05:30 PM, Richard Yang wrote:
+> Experts
+> 
+> I am reading the PCI enumeration code on x86. One thing on ACPI
+> namespace puzzles me.
+> 
+> In the initialize process, the call flow is like this
+> acpi_pci_root_add()
+> 	try_get_root_bridge_busnr()
+> 		acpi_walk_resources(handle, METHOD_NAME__CRS,
+> 		         get_root_bridge_busnr_callback, res)
+This piece of code is to invoke ACPI method "_CRS" for "handle", and call
+get_root_bridge_busnr_callback for each resource descriptor returned by
+this method.
+Here "handle" is the object for the pci root bus or PCI host bridge.
+"_CRS" is the name of ACPI method, which exists under "handle".
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 5d48765..11cebf0 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -30,6 +30,7 @@ struct pci_controller {
- 	int first_busno;
- 	int last_busno;
- 	int self_busno;
-+	struct resource busn;
- 
- 	void __iomem *io_base_virt;
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 910b9de..ee8c0c9 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1648,6 +1648,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	/* Wire up PHB bus resources */
- 	pcibios_setup_phb_resources(hose, &resources);
- 
-+	hose->busn.start = hose->first_busno;
-+	hose->busn.end	 = hose->last_busno;
-+	hose->busn.flags = IORESOURCE_BUS;
-+	pci_add_resource(&resources, &hose->busn);
-+
- 	/* Create an empty bus for the toplevel */
- 	bus = pci_create_root_bus(hose->parent, hose->first_busno,
- 				  hose->ops, hose, &resources);
-@@ -1670,8 +1675,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		of_scan_bus(node, bus);
- 	}
- 
--	if (mode == PCI_PROBE_NORMAL)
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
- 		hose->last_busno = bus->subordinate = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, bus->subordinate);
-+	}
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
--- 
-1.7.7
+> 
+> By reading the ACPI spec, this is trying to go through the namespace and
+> find  the _CRS method/object.
+> 
+> 1. Hmm... I want to know this function is trying to go through the whole
+>    namespace or just the device related namespace? 
+> 2. If it is searching the whole namespace, how could this function find the
+>    device specific resource just by given the "_CRS" as a parameter?
+> 3. Also, if it just go through the device specific namespace, which
+>    parameter identify this.
+> 
+> Here is an example in the ACPI specification in 9.11.1:
+> Device (PCI0) { // PCI Root Bridge
+> 	Name (_HID, EISAID("PNP0A03"))
+> 	Name (_UID, 0)
+> 	Name (_BBN, 0x00)
+> 	Name (_SEG, 0x00) // assign segment 0 of module device to PCI0
+> 	Name (_CRS, ResourceTemplate () {
+> 		WordBusNumber (
+> 			ResourceProducer,
+> 			MinFixed, // _MIF
+> 			MaxFixed,, // _MAF
+> 			0x00, // _GRA
+> 			0x00, // _MIN
+> 			0xFF, // _MAX
+> 			0x0, // _TRA
+> 			0x80) // _LEN
+> 		WordIO (
+> 			ResourceProducer,
+> 			MinFixed, // _MIF
+> 			MaxFixed,,, // _MAF
+> 			0x0000, // _GRA
+> 			0x0000, // _MIN
+> 			0x0CF7, // _MAX
+> 			0x0, // _TRA
+> 			0x0CF8) // _LEN
+> 		DWordMemory (
+> 			ResourceProducer,,
+> 			MinNotFixed, // _MIF
+> 			MaxNotFixed, // _MAF
+> 			NonCacheable, // _MEM
+> 			ReadWrite, // _RW
+> 			0x0FFFFFFF, // _GRA
+> 			0x40000000, // _MIN
+> 			0x5FFFFFFF, // _MAX
+> 			0x0, // _TRA
+> 			0x00000000) // _LEN
+> 	})
+> 	}
+> }
+> 
+> Device (PCI1) { // PCI Root Bridge
+> 	Name (_HID, EISAID("PNP0A03"))
+> 	Name (_UID, 0)
+> 	Name (_BBN, 0x00)
+> 	Name (_SEG, 0x01) // assign segment 1 of module device to PCI1
+> 	Name (_CRS, ResourceTemplate () {
+> 		WordBusNumber (
+> 			ResourceProducer,
+> 			MinFixed, //
+> 			MaxFixed,, //
+> 			0x00, //
+> 			0x00, //
+> 			0x7F, //
+> 			0x0, //
+> 			0x80) //
+> 		WordIO (
+> 			ResourceProducer,
+> 			MinFixed, //
+> 			MaxFixed, //
+> 			0x0000, //
+> 			0x0D00, //
+> 			0x7FFF, //
+> 			0x0, //
+> 			0x7300) //
+> 		DWordMemory (
+> 			ResourceProducer,
+> 			MinNotFixed,
+> 			MaxNotFixed,
+> 			NonCacheable,
+> 			ReadWrite,
+> 			0x0FFFFFFF,
+> 			0x60000000,
+> 			0x7FFFFFFF,
+> 			0x0,
+> 			0x00000000)
+> 	})
+> 	}
+> }
+> 
+> We can see there are two PCI Root Bridge, and each has its own _CRS
+> field. And each field has its own busnumber/iores/memios.
+> 
+> So, in the acpi_walk_resources() function, how to find the proper _CRS
+> infomation for a root device?
+> 
 
