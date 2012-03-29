@@ -1,58 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 12/37] PCI: Make pci_rescan_bus_bridge_resize() use pci_scan_bridge instead
-Date: Fri,  9 Mar 2012 23:00:12 -0800
-Message-Id: <1331362837-10740-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-References: <1331362837-10740-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:51801 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758430Ab2C2QcR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2012 12:32:17 -0400
+Date: Thu, 29 Mar 2012 11:32:06 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Garrett <mjg@redhat.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org, Romain Francoise <romain@orebokech.com>,
+	Chris Holland <bandidoirlandes@gmail.com>,
+	Colin Ian King <colin.king@canonical.com>,
+	Hatem Masmoudi <hatem.masmoudi@gmail.com>,
+	janek <jan0x6c@gmail.com>
+Subject: [PATCH resend] ASPM: Fix pcie devices with non-pcie children
+Message-ID: <20120329163206.GA3480@burratino>
+References: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So after remove all children and then using setpci change bus register and rescan
-bridge could use new set bus number.
+From: Matthew Garrett <mjg@redhat.com>
+Date: Tue, 27 Mar 2012 10:17:41 -0400
 
-Otherwise need to rescan parent bus, it would have too much overhead.
+Since 3.2.12 and 3.3, some systems are failing to boot with a BUG_ON.
+Some other systems using the pata_jmicron driver fail to boot because
+no disks are detected.  Passing pcie_aspm=force on the kernel command
+line works around it.
 
-also need to use pci_bus_add_single_device to make sure new change bus have directory
- /sys/../.../pci_bus.
+The cause: commit 4949be16822e ("PCI: ignore pre-1.1 ASPM quirking
+when ASPM is disabled") changed the behaviour of
+pcie_aspm_sanity_check() to always return 0 if aspm is disabled, in
+order to avoid cases where we changed ASPM state on pre-PCIe 1.1
+devices.  This skipped the secondary function of
+pcie_aspm_sanity_check which was to avoid us enabling ASPM on devices
+that had non-PCIe children, causing trouble later on.  Move the
+aspm_disabled check so we continue to honour that scenario.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Addresses https://bugzilla.kernel.org/show_bug.cgi?id=42979 and
+          http://bugs.debian.org/665420
+
+[jn: with more symptoms in log message]
+
+Reported-by: Romain Francoise <romain@orebokech.com> # kernel panic
+Reported-by: Chris Holland <bandidoirlandes@gmail.com> # disk detection trouble
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+Cc: stable@vger.kernel.org
+Tested-by: Hatem Masmoudi <hatem.masmoudi@gmail.com> # Dell Latitude E5520
+Tested-by: janek <jan0x6c@gmail.com> # pata_jmicron with JMB362/JMB363
+Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
 ---
- drivers/pci/probe.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+Hi Andrew,
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2f5f728..8512e0d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2043,14 +2043,16 @@ EXPORT_SYMBOL(pci_scan_bus);
-  */
- unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
- {
--	unsigned int max;
--	struct pci_bus *bus = bridge->subordinate;
-+	unsigned int max = 0;
-+	int pass;
-+	struct pci_bus *bus = bridge->bus;
+This patch only appeared a couple of days ago[1], but it fixes a
+noticeable regression so I would like to make sure the patch becomes
+part of mainline and the 3.2.y- and 3.3.y-stable trees soon.  Could
+you pick it up for linux-next until it makes its way to the PCI tree?
+
+Regression was introduced between 3.3-rc7 and 3.3 and between 3.2.11
+and 3.2.12.  Prevents boot on affected machines, though there is a
+workaround.  Details about the symptoms and fix are above.
+
+Thanks,
+Jonathan
+
+[1] http://thread.gmane.org/gmane.linux.kernel.pci/14503
+
+ drivers/pci/pcie/aspm.c |   13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 4bdef24cd412..b500840a143b 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -508,9 +508,6 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+ 	int pos;
+ 	u32 reg32;
  
--	max = pci_scan_child_bus(bus);
-+	for (pass = 0; pass < 2; pass++)
-+		max = pci_scan_bridge(bus, bridge, max, pass);
- 
- 	pci_assign_unassigned_bridge_resources(bridge);
- 
--	pci_bus_add_devices(bus);
-+	pci_bus_add_single_device(bridge);
- 
- 	return max;
- }
+-	if (aspm_disabled)
+-		return 0;
+-
+ 	/*
+ 	 * Some functions in a slot might not all be PCIe functions,
+ 	 * very strange. Disable ASPM for the whole slot
+@@ -519,6 +516,16 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+ 		pos = pci_pcie_cap(child);
+ 		if (!pos)
+ 			return -EINVAL;
++
++		/*
++		 * If ASPM is disabled then we're not going to change
++		 * the BIOS state. It's safe to continue even if it's a
++		 * pre-1.1 device
++		 */
++
++		if (aspm_disabled)
++			continue;
++
+ 		/*
+ 		 * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
+ 		 * RBER bit to determine if a function is 1.1 version device
 -- 
-1.7.7
+1.7.10.rc1
 
