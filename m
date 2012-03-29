@@ -1,84 +1,68 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v3 03/11] PCI: Rename pci_host_bridge() to find_pci_root_bridge()
-Date: Sun, 18 Mar 2012 22:40:16 -0700
-Message-Id: <1332135624-13528-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
-References: <1332135624-13528-1-git-send-email-yinghai@kernel.org>
+Date: Thu, 29 Mar 2012 13:46:14 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: Matthew Garrett <mjg@redhat.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org, Romain Francoise <romain@orebokech.com>,
+	Chris Holland <bandidoirlandes@gmail.com>,
+	Colin Ian King <colin.king@canonical.com>,
+	Hatem Masmoudi <hatem.masmoudi@gmail.com>,
+	janek <jan0x6c@gmail.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH resend] ASPM: Fix pcie devices with non-pcie children
+Message-Id: <20120329134614.438e8aaf.akpm@linux-foundation.org>
+In-Reply-To: <20120329163206.GA3480@burratino>
+References: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+	<20120329163206.GA3480@burratino>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_host_bridge() looks like C++ constructor ?
-Also separate find_pci_root_bus() out.
+On Thu, 29 Mar 2012 11:32:06 -0500
+Jonathan Nieder <jrnieder@gmail.com> wrote:
 
--v2: According to Bjorn, remove extra null checking.
+> From: Matthew Garrett <mjg@redhat.com>
+> Date: Tue, 27 Mar 2012 10:17:41 -0400
+> 
+> Since 3.2.12 and 3.3, some systems are failing to boot with a BUG_ON.
+> Some other systems using the pata_jmicron driver fail to boot because
+> no disks are detected.  Passing pcie_aspm=force on the kernel command
+> line works around it.
+> 
+> The cause: commit 4949be16822e ("PCI: ignore pre-1.1 ASPM quirking
+> when ASPM is disabled") changed the behaviour of
+> pcie_aspm_sanity_check() to always return 0 if aspm is disabled, in
+> order to avoid cases where we changed ASPM state on pre-PCIe 1.1
+> devices.  This skipped the secondary function of
+> pcie_aspm_sanity_check which was to avoid us enabling ASPM on devices
+> that had non-PCIe children, causing trouble later on.  Move the
+> aspm_disabled check so we continue to honour that scenario.
+> 
+> Addresses https://bugzilla.kernel.org/show_bug.cgi?id=42979 and
+>           http://bugs.debian.org/665420
+> 
+> [jn: with more symptoms in log message]
+> 
+> Reported-by: Romain Francoise <romain@orebokech.com> # kernel panic
+> Reported-by: Chris Holland <bandidoirlandes@gmail.com> # disk detection trouble
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
+> Cc: stable@vger.kernel.org
+> Tested-by: Hatem Masmoudi <hatem.masmoudi@gmail.com> # Dell Latitude E5520
+> Tested-by: janek <jan0x6c@gmail.com> # pata_jmicron with JMB362/JMB363
+> Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
+> ---
+> Hi Andrew,
+> 
+> This patch only appeared a couple of days ago[1], but it fixes a
+> noticeable regression so I would like to make sure the patch becomes
+> part of mainline and the 3.2.y- and 3.3.y-stable trees soon.  Could
+> you pick it up for linux-next until it makes its way to the PCI tree?
+> 
+> Regression was introduced between 3.3-rc7 and 3.3 and between 3.2.11
+> and 3.2.12.  Prevents boot on affected machines, though there is a
+> workaround.  Details about the symptoms and fix are above.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host-bridge.c |   18 +++++++++++++-----
- 1 files changed, 13 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 5ca4220..78adcc0 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -16,15 +16,22 @@ void add_to_pci_host_bridges(struct pci_host_bridge *bridge)
- 	list_add_tail(&bridge->list, &pci_host_bridges);
- }
- 
--static struct pci_host_bridge *pci_host_bridge(struct pci_dev *dev)
-+static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
- {
- 	struct pci_bus *bus;
--	struct pci_host_bridge *bridge;
- 
- 	bus = dev->bus;
- 	while (bus->parent)
- 		bus = bus->parent;
- 
-+	return bus;
-+}
-+
-+static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = find_pci_root_bus(dev);
-+	struct pci_host_bridge *bridge;
-+
- 	list_for_each_entry(bridge, &pci_host_bridges, list) {
- 		if (bridge->bus == bus)
- 			return bridge;
-@@ -41,7 +48,7 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
- void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 			     struct resource *res)
- {
--	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -69,12 +76,13 @@ static bool region_contains(struct pci_bus_region *region1,
- void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 			     struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
--	struct pci_bus_region bus_region;
- 	resource_size_t offset = 0;
- 
- 	list_for_each_entry(window, &bridge->windows, list) {
-+		struct pci_bus_region bus_region;
-+
- 		if (resource_type(res) != resource_type(window->res))
- 			continue;
- 
--- 
-1.7.7
-
+Just about the only person who wasn't copied on this email is, umm, the
+PCI maintainer!
