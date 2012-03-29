@@ -1,76 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:29872 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758097Ab2CSFpc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:45:32 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>, Helge Deller <deller@gmx.de>,
-	linux-parisc@vger.kernel.org
-Subject: [PATCH -v11 16/30] PCI, parisc: Register busn_res for root buses
-Date: Sun, 18 Mar 2012 22:42:47 -0700
-Message-Id: <1332135781-13695-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:40767 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933912Ab2C2Vtd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 Mar 2012 17:49:33 -0400
+Received: by lahj13 with SMTP id j13so2947316lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 29 Mar 2012 14:49:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120329135956.7034cd9d.akpm@linux-foundation.org>
+References: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+ <20120329163206.GA3480@burratino> <20120329134614.438e8aaf.akpm@linux-foundation.org>
+ <20120329205635.GA2072@srcf.ucam.org> <20120329135956.7034cd9d.akpm@linux-foundation.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 29 Mar 2012 15:49:12 -0600
+Message-ID: <CAErSpo5yuOkPNjc+OXwjNtO1eJU3OVc9rStjoNZK+5vL_0VjOQ@mail.gmail.com>
+Subject: Re: [PATCH resend] ASPM: Fix pcie devices with non-pcie children
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org, Romain Francoise <romain@orebokech.com>,
+	Chris Holland <bandidoirlandes@gmail.com>,
+	Colin Ian King <colin.king@canonical.com>,
+	Hatem Masmoudi <hatem.masmoudi@gmail.com>,
+	janek <jan0x6c@gmail.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Kyle McMartin <kyle@mcmartin.ca>
-Cc: Helge Deller <deller@gmx.de>
-Cc: linux-parisc@vger.kernel.org
----
- drivers/parisc/dino.c    |    5 +++++
- drivers/parisc/lba_pci.c |    3 +++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+On Thu, Mar 29, 2012 at 2:59 PM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> On Thu, 29 Mar 2012 21:56:35 +0100
+> Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+>
+>> On Thu, Mar 29, 2012 at 01:46:14PM -0700, Andrew Morton wrote:
+>>
+>> > Just about the only person who wasn't copied on this email is, umm, the
+>> > PCI maintainer!
+>>
+>> Jesse just handed that off to Bjorn…
+>
+> Oh.  So he did.   My search of MAINTAINERS turned up the probably wrong
+>
+> T:      git git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci.git
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index 0610e91..def94af 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -984,6 +984,10 @@ static int __init dino_probe(struct parisc_device *dev)
- 	if (dino_dev->hba.gmmio_space.flags)
- 		pci_add_resource(&resources, &dino_dev->hba.gmmio_space);
- 
-+	dino_dev->hba.bus_num.start = dino_current_bus;
-+	dino_dev->hba.bus_num.end = 255;
-+	dino_dev->hba.bus_num.flags |= IORESOURCE_BUS;
-+	pci_add_resource(&resources, &dino_dev->hba.bus_num);
- 	/*
- 	** It's not used to avoid chicken/egg problems
- 	** with configuration accessor functions.
-@@ -999,6 +1003,7 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
-+	pci_bus_update_busn_res_end(bus, bus->subordinate);
- 	bus->subordinate = pci_scan_child_bus(bus);
- 
- 	/* This code *depends* on scanning being single threaded
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index e885764..df1e9f9 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1503,6 +1503,9 @@ lba_driver_probe(struct parisc_device *dev)
- 	if (lba_dev->hba.gmmio_space.flags)
- 		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
- 
-+	lba_dev->hba.bus_num.flags |= IORESOURCE_BUS;
-+	pci_add_resource(&resources, &lba_dev->hba.bus_num);
-+
- 	dev->dev.platform_data = lba_dev;
- 	lba_bus = lba_dev->hba.hba_bus =
- 		pci_create_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
--- 
-1.7.7
+Yep, I'll update MAINTAINERS as soon as I set up a kernel.org tree.
 
+The patch itself looks fine to me, so in case anybody wants to pick it
+up earlier:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I do think that ASPM path is disappointingly hard to follow, which
+likely contributed to the bug in the first place.
+pcie_aspm_sanity_check() is a terrible name for something that returns
+0/errno (which is treated as a bool meaning something like "do ASPM on
+this device").  And the idea that we save this blacklist information
+in the form of "link->aspm_enabled = ASPM_STATE_ALL" is weird.
+
+But obviously, I'm ignorant of ASPM in general.
+
+Bjorn
