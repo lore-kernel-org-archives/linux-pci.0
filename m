@@ -1,76 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:48225 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758575Ab2CBSJA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2012 13:09:00 -0500
-Date: Fri, 2 Mar 2012 13:08:58 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-cc: Francois Romieu <romieu@fr.zoreil.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI / PM: Disable wakeup during shutdown for devices
- not enabled to wake up
-In-Reply-To: <20120302093712.6cd513a3@jbarnes-desktop>
-Message-ID: <Pine.LNX.4.44L0.1203021302460.8942-100000@netrider.rowland.org>
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:52701 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254Ab2C2GMd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2012 02:12:33 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 29 Mar 2012 11:42:27 +0530
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q2T6CMMH4526232
+	for <linux-pci@vger.kernel.org>; Thu, 29 Mar 2012 11:42:24 +0530
+Received: from d28av04.in.ibm.com (loopback [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q2TBgAUe017854
+	for <linux-pci@vger.kernel.org>; Thu, 29 Mar 2012 22:42:10 +1100
+Date: Thu, 29 Mar 2012 14:12:20 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: How acpi_walk_resources() find specific _CRS for one device
+Message-ID: <20120329061219.GB9782@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120328093004.GA31647@richard>
+ <4F731005.6000506@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F731005.6000506@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2 Mar 2012, Jesse Barnes wrote:
+On Wed, Mar 28, 2012 at 09:20:05PM +0800, Jiang Liu wrote:
+>On 03/28/2012 05:30 PM, Richard Yang wrote:
+>> Experts
+>> 
+>> I am reading the PCI enumeration code on x86. One thing on ACPI
+>> namespace puzzles me.
+>> 
+>> In the initialize process, the call flow is like this
+>> acpi_pci_root_add()
+>> 	try_get_root_bridge_busnr()
+>> 		acpi_walk_resources(handle, METHOD_NAME__CRS,
+>> 		         get_root_bridge_busnr_callback, res)
+>This piece of code is to invoke ACPI method "_CRS" for "handle", and call
+>get_root_bridge_busnr_callback for each resource descriptor returned by
+>this method.
+>Here "handle" is the object for the pci root bus or PCI host bridge.
+>"_CRS" is the name of ACPI method, which exists under "handle".
+>
+>> 
+Thanks for your clarification.
 
-> On Fri, 2 Mar 2012 15:44:27 +0100
-> Francois Romieu <romieu@fr.zoreil.com> wrote:
-> 
-> > Rafael J. Wysocki <rjw@sisk.pl> :
-> > [...]
-> > > If a PCI device is enabled to generate wakeup signals (PME) when put
-> > > into a low-power state by runtime PM, it will be still enabled to
-> > > generate those signals after the system shutdown, unless its driver's
-> > > .shutdown() callback takes care of the wakeup signals generation
-> > > setting.  Moreover, there are devices that are not enabled to wake
-> > > up the system and that are configured by runtime PM to generate
-> > > wakeup signals so that (runtime) remote wakeup works with them.
-> > > Those devices should be reconfigured during system shutdown so that
-> > > they don't generate wakeup signals, but at least some drivers don't
-> > > do that.  However, that very well may be done by the PCI core so
-> > > that drivers don't have to worry about it.  For this reason, modify
-> > > pci_device_shutdown() to disable the generation of wakeup events for
-> > > devices not supposed to wake up the system.
-> > 
-> > On a tangent side, if register writes are ignored by the PCI device
-> > after its .runtime_suspend() handler has been called, whose
-> > responsibility is it to bring back the device in a state from where
-> > the .shutdown() callback can operate ?
-> > 
-> > The r8169 driver exhibits this problem. Its .runtime_xyz() callbacks
-> > are called on link activity. Thus, after a link loss - or no link at
-> > all - .runtime_suspend() and an ineffective .shutdown(), the device is
-> > brought back up as soon as the link recovers.
-> > 
-> > The device driver can monitor .runtime_{suspend / resume} activity
-> > and take appropriate action in .shutdown(). Sameer Nanda has sent
-> > such a patch (see below). I am not sure this is the adequate fix:
-> > 1. the driver ought essentially to perform the hardware part of a
-> >    .runtime_resume() on its own behalf. Mildly engaging.
-> > 2. by the same line as above, could it make more sense to call
-> >    pm_runtime_resume() in driver/base/core.c::device_shutdown ?
-> 
-> I thought there would be a more elegant way of increasing the device
-> use count on entering .shutdown, either from the wifi core or at the
-> driver level, so you don't have to track things with a separate flag.
+I read the acpi code again. And found the namespace tree is created in
+acpi_scan_init()
+{
+	...
+	result = acpi_bus_scan(ACPI_ROOT_OBJECT, &ops, &acpi_root);
+	...
+}
 
-That's right.  For example, instead of keeping its own flag to know
-whether or not the device is runtime-suspended, the shutdown routine
-could just always call pm_runtime_resume_sync().  Or it could ask the
-PCI core to put the device into D0, regardless of the device's current
-state.
+And then call the acpi_walk_namespace() to go through the whole
+namespace. Am I right? And form those handles
 
-The driver core doesn't do this because most devices don't need it, and
-it would slow down the whole shutdown procedure if every suspended
-device were always resumed.
+I look at the SPEC and code again and find the namespace is loaded
+by acpi_ns_load_namespace() right?
 
-Alan Stern
+It will read DSDT/SSDT/PSDT by calling acpi_ns_load_table_by_type. 
+
+While I grep the whole source code, but not find the definition of this
+function. 
+-- 
+Richard Yang
+Help you, Help me
 
