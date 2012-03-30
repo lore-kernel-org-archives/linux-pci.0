@@ -1,58 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:39321 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457Ab2C1VQH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2012 17:16:07 -0400
-Date: Wed, 28 Mar 2012 16:15:59 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, stable@vger.kernel.org,
-	Colin Ian King <colin.king@canonical.com>,
-	janek <jan0x6c@gmail.com>
-Subject: Re: [PATCH] ASPM: Fix pcie devices with non-pcie children
-Message-ID: <20120328211559.GA10511@burratino>
-References: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:60999 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759276Ab2C3Jzh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2012 05:55:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1332857861-11562-1-git-send-email-mjg@redhat.com>
+In-Reply-To: <1332434985-11522-1-git-send-email-colin.king@canonical.com>
+References: <1332434985-11522-1-git-send-email-colin.king@canonical.com>
+Date: Fri, 30 Mar 2012 10:55:36 +0100
+Message-ID: <CAAq6er0DUGcT_PuL3gOBNdcEVDxhW8EuP1dfFa_Sa9vNZmhfQA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Allow pcie_aspm=force to work even when FADT
+ indicates it is unsupported
+From: Andy Whitcroft <robobotbotbot@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Garrett <mjg@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Colin King <colin.king@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Matthew,
+On Thu, Mar 22, 2012 at 4:49 PM, Colin King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Right now using pcie_aspm=force will not enable ASPM if the FADT indicates
+> ASPM is unsupported.  However, the semantics of force should probably allow
+> for this, especially as they did before the ASPM disable rework with commit
+> 3c076351c4027a56d5005a39a0b518a4ba393ce2
+>
+> This patch just skips the clearing of any ASPM setup that the firmware has
+> carried out on this bus if pcie_aspm=force is being used.
+>
+> BugLink: https://bugs.launchpad.net/ubuntu/+bug/962038
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/pci/pcie/aspm.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 24f049e..e406429 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -783,6 +783,9 @@ void pcie_clear_aspm(struct pci_bus *bus)
+>  {
+>        struct pci_dev *child;
+>
+> +       if (aspm_force)
+> +               return;
+> +
+>        /*
+>         * Clear any ASPM setup that the firmware has carried out on this bus
+>         */
+> --
+> 1.7.9.1
 
-Matthew Garrett wrote:
+Andrew, I believe the above is also needed to fix some additional
+regressions with the new ASPM code.  If you are picking up the one
+below this probably should go with it:
 
-> Commit 4949be16822e92a18ea0cc1616319926628092ee changed the behaviour of
-> pcie_aspm_sanity_check() to always return 0 if aspm is disabled, in order
-> to avoid cases where we changed ASPM state on pre-PCIe 1.1 devices. This
-> skipped the secondary function of pcie_aspm_sanity_check which was to avoid
-> us enabling ASPM on devices that had non-PCIe children, causing us to hit
-> a BUG_ON later on. Move the aspm_disabled check so we continue to honour
-> that scenario.
+    + aspm-fix-pcie-devices-with-non-pcie-children.patch added to -mm tree
 
-janek (cc-ed) never experienced the BUG_ON.  Instead, starting with
-v3.3 and v3.2.12 his hard disk using the pata_jmicron driver was not
-detected during boot-up, resulting in the message "gave up waiting for
-root device" and a failed boot.
-
-Found in
-
-  Debian kernel 3.2.12-1
-  Debian kernel 3.3-1~experimental.1
-  Upstream 3.3
-  Linus's "master" as of 2012-03-28
-
-Based on the thread [1] we blamed 4949be16822.  janek tried the patch
-above on top of linus's "master".  The result:
-
-> Thanks. This patch fixes the problem.
-
-In other words, this gets the pata_jmicron driver to enumerate its
-drives again, a positive effect that wasn't even advertised in the
-commit message. ;-)  Thanks for writing it.
-
-Sincerely,
-Jonathan
-
-[1] http://thread.gmane.org/gmane.linux.kernel/1271264/focus=1271785
+-apw
