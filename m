@@ -1,78 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:31303 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161945Ab2CSFto (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2012 01:49:44 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2 10/26] PCI: Use for_each_pci_dev_resource pci_enable_dev
-Date: Sun, 18 Mar 2012 22:48:33 -0700
-Message-Id: <1332136129-14010-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
-References: <1332136129-14010-1-git-send-email-yinghai@kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:59884 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758850Ab2C3KFO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2012 06:05:14 -0400
+Message-ID: <4F758554.1060907@canonical.com>
+Date: Fri, 30 Mar 2012 11:05:08 +0100
+From: Colin Ian King <colin.king@canonical.com>
+MIME-Version: 1.0
+To: Andy Whitcroft <robobotbotbot@gmail.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Garrett <mjg@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Colin King <colin.king@canonical.com>
+Subject: Re: [PATCH] PCI: Allow pcie_aspm=force to work even when FADT indicates
+ it is unsupported
+References: <1332434985-11522-1-git-send-email-colin.king@canonical.com> <CAAq6er0DUGcT_PuL3gOBNdcEVDxhW8EuP1dfFa_Sa9vNZmhfQA@mail.gmail.com>
+In-Reply-To: <CAAq6er0DUGcT_PuL3gOBNdcEVDxhW8EuP1dfFa_Sa9vNZmhfQA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci.c |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
+On 30/03/12 10:55, Andy Whitcroft wrote:
+> On Thu, Mar 22, 2012 at 4:49 PM, Colin King<colin.king@canonical.com>  wrote:
+>> From: Colin Ian King<colin.king@canonical.com>
+>>
+>> Right now using pcie_aspm=force will not enable ASPM if the FADT indicates
+>> ASPM is unsupported.  However, the semantics of force should probably allow
+>> for this, especially as they did before the ASPM disable rework with commit
+>> 3c076351c4027a56d5005a39a0b518a4ba393ce2
+>>
+>> This patch just skips the clearing of any ASPM setup that the firmware has
+>> carried out on this bus if pcie_aspm=force is being used.
+>>
+>> BugLink: https://bugs.launchpad.net/ubuntu/+bug/962038
+>>
+>> Signed-off-by: Colin Ian King<colin.king@canonical.com>
+>> ---
+>>   drivers/pci/pcie/aspm.c |    3 +++
+>>   1 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+>> index 24f049e..e406429 100644
+>> --- a/drivers/pci/pcie/aspm.c
+>> +++ b/drivers/pci/pcie/aspm.c
+>> @@ -783,6 +783,9 @@ void pcie_clear_aspm(struct pci_bus *bus)
+>>   {
+>>         struct pci_dev *child;
+>>
+>> +       if (aspm_force)
+>> +               return;
+>> +
+>>         /*
+>>          * Clear any ASPM setup that the firmware has carried out on this bus
+>>          */
+>> --
+>> 1.7.9.1
+> Andrew, I believe the above is also needed to fix some additional
+> regressions with the new ASPM code.  If you are picking up the one
+> below this probably should go with it:
+>
+>      + aspm-fix-pcie-devices-with-non-pcie-children.patch added to -mm tree
+Just to add, I have tested this on a variety of modern SNB i3 based 
+laptops (Dell, Lenovo) and also user has tested this and has confirmed 
+it works.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 82ed56a..44b4835 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -486,8 +486,9 @@ static void
- pci_restore_bars(struct pci_dev *dev)
- {
- 	int i;
-+	struct resource *res;
- 
--	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
-+	for_each_pci_dev_nobridge_resource(dev, res, i)
- 		pci_update_resource(dev, i);
- }
- 
-@@ -1141,6 +1142,7 @@ static int __pci_enable_device_flags(struct pci_dev *dev,
- {
- 	int err;
- 	int i, bars = 0;
-+	struct resource *res;
- 
- 	/*
- 	 * Power state could be unknown at this point, either due to a fresh
-@@ -1158,12 +1160,11 @@ static int __pci_enable_device_flags(struct pci_dev *dev,
- 		return 0;		/* already enabled */
- 
- 	/* only skip sriov related */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
--		if (dev->resource[i].flags & flags)
--			bars |= (1 << i);
--	for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++)
--		if (dev->resource[i].flags & flags)
-+	for_each_pci_dev_noiov_resource(dev, res, i) {
-+		/* TODO: check i with bits of bars */
-+		if (res->flags & flags)
- 			bars |= (1 << i);
-+	}
- 
- 	err = do_pci_enable_device(dev, bars);
- 	if (err < 0)
-@@ -2465,7 +2466,7 @@ static int __pci_request_region(struct pci_dev *pdev, int bar, const char *res_n
- 
- err_out:
- 	dev_warn(&pdev->dev, "BAR %d: can't reserve %pR\n", bar,
--		 &pdev->resource[bar]);
-+		 pci_dev_resource_n(pdev, bar));
- 	return -EBUSY;
- }
- 
--- 
-1.7.7
-
+Colin
