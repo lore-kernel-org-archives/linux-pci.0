@@ -1,113 +1,204 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:51129 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754712Ab2DXH32 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2012 03:29:28 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 24 Apr 2012 12:59:24 +0530
-Date: Tue, 24 Apr 2012 15:29:18 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120424072918.GA9138@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120410090306.GA7056@richard>
- <20120422155202.GA13540@richard>
- <4F95B17B.3030401@redhat.com>
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:7447
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752875Ab2DBRUS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2012 13:20:18 -0400
+Date: Mon, 2 Apr 2012 19:20:08 +0200
+From: Andreas Herrmann <andreas.herrmann3@amd.com>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Ingo Molnar <mingo@kernel.org>,
+	"Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH 1/2] [resend] x86/amd: Restore early_fill_mp_bus_to_node
+Message-ID: <20120402172008.GA27777@alberich.amd.com>
+References: <20120227094406.GB10078@elte.hu>
+ <20120227122240.778bcc5b@jbarnes-desktop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F95B17B.3030401@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120227122240.778bcc5b@jbarnes-desktop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2012 at 03:46:03PM -0400, Don Dutile wrote:
->On 04/22/2012 11:52 AM, Richard Yang wrote:
->>All,
->>
->>I am reading the pci_scan_bridge() and not sure what will happen in
->>following situation.
->>
->>Suppose the kernel is not passed the pci=assign-busses.
->>
->>Below is a picture about the pci system.
->>
->>                    +-------+
->>                    |       | root bridge(0,255)
->>                    +---+---+
->>                        |          Bus 0
->>       -----+-----------+------------------------------+--
->>            |                                          |
->>            |                                          |
->>            |                                          |
->>       +----+----+                               +-----+-----+
->>       |         |  B1(1,15)                     |           |B2(16,28)
->>       +----+----+                               +-----+-----+
->>            |  Bus 1                                   |    Bus 16
->>       -----+-----------------------         ----------+----------------
->>                             |
->>                        +----+----+
->>                        |         | B3
->>                        +---------+
->>
->>Suppose B1 and B2 works fine with the BIOS, which get the right bus
->>number and range.
->>
->>B3 does not works fine with the BIOS, which doesn't get the bus number.
->>
->>So in pci_scan_bridge(), B3 will be met in the second pass and get bus
->>number 16?
->
->unfortunately, today, the answer is yes.
->I have run into a similar problem recently when trying to use pci=assign-busses
->with an SRIOV device behind a non-ARI-capable PCIe switch.
->In this scenario, the assign-busses code assigned the next bus number,
->which conflicted with an existing one on the system, and hangs the
->system -- two bridges responding to the same PCI bus num evidently
->confuses the hw! ;-)
-Hmm... seems we are not talking about the same case.
-My case is the kernel not passed with pci=assign-busses.
 
-I think, if pci=assign-busses is used, kernel will just ignore the bus
-number assigned by BIOS, and do the assignment itself.
->
->The PCI code is suppose to do two bus scans -- pass=0: to see what the BIOS
->has setup, and then pass=1 to assign non-BIOS setup devices.
->But, what I'm finding is that when pci=assign-busses is set, the
->pass=0 scan is not doing a full PCI tree scan and registering all
->the BIOS-setup busses first, and it tries to do extended bus assignment in pass=0,
->not pass=1; in the above configuration, it expands B1's bus num range from (1,15)
->to (1,16), then tries to scan behind it.  that creates an overlap btwn
->B1 & B2's sec/sub bus-num ranges, and they both respond to a Type1 config cycle
->with a bus-number of 16 (typically when trying to read the VID register of 16:0.0
->in this case).... boom! ... or more like silence due to system hang...
->
->*If* the system spaces bus ranges apart, e.g., in your config above,
->if the BIOS setup B1(1,15) and B2(24,32), then pci=assign-busses will
->work because bus num 16 is free, and two bridges won't think they both
->respond to type1 pci config cycle (with bus-number=16 lying in their sec/sub-bus num range),
->and all will (luckily) work.
->
->Unfortunately, I'm in & out of work due to at-home time requirements,
->so I haven't had a chance to work out a proper patch.
->What should happen in the above case, is the kernel prints a warning saying
->it couldn't do needed assign-busses operations due to configuration constraints...
->and continue to do pci (pass=1) bridge scanning.... and not wedge the system
->as it does now.
->The base problem is that
->(a)pass=0 is doing bus-assigning, and it shouldn't be done
->    until pass=1, after all known BIOS-setup busses are known
->(b) the code doesn't have a nice warning and continuation when this
->    conflict occurs.
->
->>Would this be a conflict?
->>
->summary: yes.
+Once upon a time this function was overloaded with quirky stuff to fix
+resource detection on systems w/ _CRS defects (seems that some Sun and
+HP systems were affected).
 
+See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
+(x86: multi pci root bus with different io resource range, on 64-bit)
+
+Restore the old function and thus decouple it from the quirk that is
+CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
+I assume that the _CRS stuff is working on current systems.
+
+This is required to properly initilize the numa_node information of
+PCI busses and associated devices.
+
+Signed-off-by: Andreas Herrmann <andreas.herrmann3@amd.com>
+---
+ arch/x86/pci/amd_bus.c |   84 +++++++++++++++++++++++++++++++----------------
+ 1 files changed, 55 insertions(+), 29 deletions(-)
+
+Patch didn't show up in any tree so far.
+Thus resending it to get this finally fixed.
+
+Please apply.
+
+
+Thanks,
+
+Andreas
+
+
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 0567df3..0384e69 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -30,36 +30,19 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
+ 	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
+ };
+ 
+-#define RANGE_NUM 16
+-
+ /**
+  * early_fill_mp_bus_to_node()
+  * called before pcibios_scan_root and pci_scan_bus
+  * fills the mp_bus_to_cpumask array based according to the LDT Bus Number
+  * Registers found in the K8 northbridge
+  */
+-static int __init early_fill_mp_bus_info(void)
++static int __init early_fill_mp_bus_to_node(void)
+ {
+-	int i;
+-	int j;
+-	unsigned bus;
+-	unsigned slot;
+-	int node;
+-	int link;
+-	int def_node;
+-	int def_link;
++	int i, j, node, link;
++	unsigned bus, slot;
+ 	struct pci_root_info *info;
+ 	u32 reg;
+-	struct resource *res;
+-	u64 start;
+-	u64 end;
+-	struct range range[RANGE_NUM];
+-	u64 val;
+-	u32 address;
+ 	bool found;
+-	struct resource fam10h_mmconf_res, *fam10h_mmconf;
+-	u64 fam10h_mmconf_start;
+-	u64 fam10h_mmconf_end;
+ 
+ 	if (!early_pci_allowed())
+ 		return -1;
+@@ -67,8 +50,7 @@ static int __init early_fill_mp_bus_info(void)
+ 	found = false;
+ 	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
+ 		u32 id;
+-		u16 device;
+-		u16 vendor;
++		u16 device, vendor;
+ 
+ 		bus = pci_probes[i].bus;
+ 		slot = pci_probes[i].slot;
+@@ -88,8 +70,7 @@ static int __init early_fill_mp_bus_info(void)
+ 
+ 	pci_root_num = 0;
+ 	for (i = 0; i < 4; i++) {
+-		int min_bus;
+-		int max_bus;
++		int min_bus, max_bus;
+ 		reg = read_pci_config(bus, slot, 1, 0xe0 + (i << 2));
+ 
+ 		/* Check if that register is enabled for bus range */
+@@ -111,9 +92,50 @@ static int __init early_fill_mp_bus_info(void)
+ 		info->node = node;
+ 		info->link = link;
+ 		sprintf(info->name, "PCI Bus #%02x", min_bus);
++		printk(KERN_DEBUG "bus: [%02x, %02x] on node %x link %x\n",
++		       info->bus_min, info->bus_max, info->node, info->link);
+ 		pci_root_num++;
+ 	}
+ 
++	return 0;
++}
++
++
++#define RANGE_NUM 16
++static int __init early_fill_mp_bus_info(void)
++{
++	int i, j, node, link, def_node, def_link;
++	unsigned bus, slot;
++	struct pci_root_info *info;
++	struct resource *res;
++	struct resource fam10h_mmconf_res, *fam10h_mmconf;
++	struct range range[RANGE_NUM];
++	u64 fam10h_mmconf_start, fam10h_mmconf_end;
++	u64 start, end, val;
++	u32 reg, address;
++	bool found;
++
++	found = false;
++	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
++		u32 id;
++		u16 device, vendor;
++
++		bus = pci_probes[i].bus;
++		slot = pci_probes[i].slot;
++		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
++
++		vendor = id & 0xffff;
++		device = (id>>16) & 0xffff;
++		if (pci_probes[i].vendor == vendor &&
++		    pci_probes[i].device == device) {
++			found = true;
++			break;
++		}
++	}
++
++	if (!found)
++		return 0;
++
+ 	/* get the default node and link for left over res */
+ 	reg = read_pci_config(bus, slot, 0, 0x60);
+ 	def_node = (reg >> 8) & 0x07;
+@@ -310,14 +332,11 @@ static int __init early_fill_mp_bus_info(void)
+ 	}
+ 
+ 	for (i = 0; i < pci_root_num; i++) {
+-		int res_num;
+-		int busnum;
++		int res_num, busnum;
+ 
+ 		info = &pci_root_info[i];
+ 		res_num = info->res_num;
+ 		busnum = info->bus_min;
+-		printk(KERN_DEBUG "bus: [%02x, %02x] on node %x link %x\n",
+-		       info->bus_min, info->bus_max, info->node, info->link);
+ 		for (j = 0; j < res_num; j++) {
+ 			res = &info->res[j];
+ 			printk(KERN_DEBUG "bus: %02x index %x %pR\n",
+@@ -412,7 +431,14 @@ static int __init amd_postcore_init(void)
+ 	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
+ 		return 0;
+ 
+-	early_fill_mp_bus_info();
++	if ((early_fill_mp_bus_to_node() == 0) &&
++	    (boot_cpu_data.x86 < 0x11)) {
++		/*
++		 * call this only on older systems w/o _CRS for "multi
++		 * pci root bus"
++		 */
++		early_fill_mp_bus_info();
++	}
+ 	pci_io_ecs_init();
+ 
+ 	return 0;
 -- 
-Richard Yang
-Help you, Help me
+1.7.8.5
+
+
 
