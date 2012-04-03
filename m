@@ -1,33 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:49971 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755251Ab2DWUTL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 16:19:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <4F95B17B.3030401@redhat.com>
-References: <20120410090306.GA7056@richard>
-	<20120422155202.GA13540@richard>
-	<4F95B17B.3030401@redhat.com>
-Date: Mon, 23 Apr 2012 13:19:11 -0700
-Message-ID: <CAE9FiQX52eL6ZFQ_X3uL5DukK03sPhByZpPh0++o6L=WF8BGXg@mail.gmail.com>
-Subject: Re: One problem in reassign pci bus number?
+Received: from acsinet15.oracle.com ([141.146.126.227]:21878 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754236Ab2DCCVY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2012 22:21:24 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <len.brown@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Subject: [RFC PATCH 06/14] IOMMU: Fix tboot force iommu logic
+Date: Mon,  2 Apr 2012 19:19:33 -0700
+Message-Id: <1333419581-7836-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1333419581-7836-1-git-send-email-yinghai@kernel.org>
+References: <1333419581-7836-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2012 at 12:46 PM, Don Dutile <ddutile@redhat.com> wrote:
-> I have run into a similar problem recently when trying to use
-> pci=assign-busses
-> with an SRIOV device behind a non-ARI-capable PCIe switch.
-> In this scenario, the assign-busses code assigned the next bus number,
-> which conflicted with an existing one on the system, and hangs the
-> system -- two bridges responding to the same PCI bus num evidently
-> confuses the hw! ;-)
+Should check dmar_disabled just after tboot_force_iommu.
 
-can you post boot log and lspci -vvxxx?
+Otherwise when tboot is not used, and intel_iommu=off, and nointrmap
+still get dmar_table_init() called. that will cause some get_device
+calling, and it will have some device refcount leaking.
 
-Yinghai
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: iommu@lists.linux-foundation.org
+---
+ drivers/iommu/intel-iommu.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index be867e6..b7e5a7e 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3630,6 +3630,9 @@ int __init intel_iommu_init(void)
+ 	/* VT-d is required for a TXT/tboot launch, so enforce that */
+ 	force_on = tboot_force_iommu();
+ 
++	if (no_iommu || dmar_disabled)
++		return -ENODEV;
++
+ 	if (dmar_table_init()) {
+ 		if (force_on)
+ 			panic("tboot: Failed to initialize DMAR table\n");
+@@ -3642,9 +3645,6 @@ int __init intel_iommu_init(void)
+ 		return 	-ENODEV;
+ 	}
+ 
+-	if (no_iommu || dmar_disabled)
+-		return -ENODEV;
+-
+ 	if (iommu_init_mempool()) {
+ 		if (force_on)
+ 			panic("tboot: Failed to initialize iommu memory\n");
+-- 
+1.7.7
+
