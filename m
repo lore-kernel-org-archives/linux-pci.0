@@ -1,115 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:56860 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756945Ab2DIQCY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 12:02:24 -0400
-Message-ID: <4F830804.6010007@gmail.com>
-Date: Tue, 10 Apr 2012 00:02:12 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-CC: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from acsinet15.oracle.com ([141.146.126.227]:21801 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754142Ab2DCCVG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2012 22:21:06 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <len.brown@intel.com>,
 	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when hot-plugging
- PCI host bridges
-References: <1333905129-8776-1-git-send-email-jiang.liu@huawei.com> <1333905129-8776-3-git-send-email-jiang.liu@huawei.com> <4F82CB64.8030808@jp.fujitsu.com>
-In-Reply-To: <4F82CB64.8030808@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+	Suresh Siddha <suresh.b.siddha@intel.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [RFC PATCH 12/14] IOMMU: Add intel_enable_irq_remapping_one()
+Date: Mon,  2 Apr 2012 19:19:39 -0700
+Message-Id: <1333419581-7836-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1333419581-7836-1-git-send-email-yinghai@kernel.org>
+References: <1333419581-7836-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kenji,
-	Thanks for your careful review and comments.
+Will need that for hot-added iommu interrupt remapping suppor.
 
-On 04/09/2012 07:43 PM, Kenji Kaneshige wrote:
-> Your patch looks good to me.
-> 
-> I have some comments.
-> 
-> (2012/04/09 2:12), Jiang Liu wrote:
->> This patch enhances pci_root driver to update MMCFG information when
->> hot-plugging PCI root bridges on x86 platforms.
->>
-> 
-> Do you have the patch that can be applied to Bjorn's pci tree?
-> 
-> <snip.>
-Will try to generate a version against Bjorn's version. Could you please tell
-me the exact git link for that? I haven't pull from Bjorn's tree yet.
-
-> 
->> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
->> +{
->> +	int result = 0;
->> +	acpi_status status;
->> +	unsigned long long base_addr;
->> +	struct pci_mmcfg_region *cfg;
->> +
->> +	/*
->> +	 * Try to insert MMCFG information for host bridges with _CBA method
->> +	 */
->> +	status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
->> +				       NULL,&base_addr);
->> +	if (ACPI_SUCCESS(status)) {
->> +		result = pci_mmconfig_insert(root->segment,
->> +					     root->secondary.start,
->> +					     root->secondary.end,
->> +					     base_addr);
->> +		/*
->> +		 * MMCFG information for hot-pluggable host bridges may have
->> +		 * already been added by __pci_mmcfg_init();
->> +		 */
->> +		if (result == -EEXIST)
->> +			result = 0;
-> 
-> Just for confirmation.
-> From my interpretation of PCI firmware spec, MCFG doesn't have any entry
-> for hot-pluggable hostbridge. So I assume this is for the machine that
-> is not compliant to the spec. Is my understanding same as yours?
-> 
-> <snip.>
-You are right, it's defined to that way in PCI FW Spec 3.1.
-Here I have some concerns about the PCI buses to host all Ubox components
-on Intel NHM/WSM/SNB/IVB processors. BIOS people are prone to declare
-MMCFG information for those host bridges by MCFG table instead of _CBA method,
-though those host bridge will disappear after hot-removing a physical processor.
-
-> 
->>   static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>   {
->>   	unsigned long long segment, bus;
->> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>   	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->>   	device->driver_data = root;
->>
->> +	if (arch_acpi_pci_root_add(root)) {
->> +		printk(KERN_ERR PREFIX
->> +			"can't add MMCFG information for Bus %04x:%02x\n",
->> +			root->segment, (unsigned int)root->secondary.start);
->> +		result = -ENODEV;
->> +		goto out_free;
->> +	}
-> 
-> Desn't this break the system that doesn't support MMCONFIG?
-> 
-> In my understanding, arch_acpi_pci_root_add() returns -ENODEV if
-> mmconfig information is found neither in MCFG table nor _CBA. And
-> pci root bridge initialization seems to fail arch_acpi_pci_root_add()
-> returns non-zero value.
-Good catch, will add following code into arch_acpi_pci_root_add() and 
-arch_acpi_pci_root_remove() to solve this issue.
+Signed-off-by: Yinghai <yinghai@kernel.org>
 ---
-        /* MMCONFIG disabled */
-        if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-                return 0;
----
+ drivers/iommu/intel_irq_remapping.c |  136 +++++++++++++++++++++++++++++++++--
+ 1 files changed, 129 insertions(+), 7 deletions(-)
 
-
-> 
-> Regards,
-> Kenji Kaneshige
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 05ffe20..e20503d 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -214,7 +214,7 @@ static struct intel_iommu *map_ioapic_to_ir(int apic)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < MAX_IO_APICS; i++)
++	for (i = 0; i < ir_ioapic_num; i++)
+ 		if (ir_ioapic[i].id == apic)
+ 			return ir_ioapic[i].iommu;
+ 	return NULL;
+@@ -320,7 +320,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
+ 	if (!irte)
+ 		return -1;
+ 
+-	for (i = 0; i < MAX_IO_APICS; i++) {
++	for (i = 0; i < ir_ioapic_num; i++) {
+ 		if (ir_ioapic[i].id == apic) {
+ 			sid = (ir_ioapic[i].bus << 8) | ir_ioapic[i].devfn;
+ 			break;
+@@ -662,6 +662,7 @@ static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+ 	struct acpi_dmar_pci_path *path;
+ 	u8 bus;
+ 	int count;
++	int i;
+ 
+ 	bus = scope->bus;
+ 	path = (struct acpi_dmar_pci_path *)(scope + 1);
+@@ -678,11 +679,16 @@ static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+ 		path++;
+ 	}
+ 
+-	ir_ioapic[ir_ioapic_num].bus   = bus;
+-	ir_ioapic[ir_ioapic_num].devfn = PCI_DEVFN(path->dev, path->fn);
+-	ir_ioapic[ir_ioapic_num].iommu = iommu;
+-	ir_ioapic[ir_ioapic_num].id    = scope->enumeration_id;
+-	ir_ioapic_num++;
++	for (i = 0; i < ir_ioapic_num; i++)
++		if (!ir_ioapic[i].iommu)
++			break;
++
++	ir_ioapic[i].bus   = bus;
++	ir_ioapic[i].devfn = PCI_DEVFN(path->dev, path->fn);
++	ir_ioapic[i].iommu = iommu;
++	ir_ioapic[i].id    = scope->enumeration_id;
++	if (i == ir_ioapic_num)
++		ir_ioapic_num++;
+ }
+ 
+ static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
+@@ -1082,6 +1088,122 @@ static int intel_setup_hpet_msi(unsigned int irq, unsigned int id)
+ 	return 0;
+ }
+ 
++void disable_irq_remapping_one(struct dmar_drhd_unit *drhd)
++{
++	struct intel_iommu *iommu = drhd->iommu;
++	int i;
++
++	/*
++	 * Disable Interrupt-remapping for the DRHD's now.
++	 */
++	if (!ecap_ir_support(iommu->ecap))
++		return;
++
++	iommu_disable_irq_remapping(iommu);
++
++	/* remove it from ir_ioapic */
++	for (i = 0; i < ir_ioapic_num; i++)
++		if (ir_ioapic[i].iommu == iommu) {
++			ir_ioapic[i].iommu = NULL;
++			ir_ioapic[i].id	= 0xff;
++		}
++}
++
++static int parse_ioapics_under_ir_one(struct dmar_drhd_unit *drhd)
++{
++	int ir_supported = 0;
++
++	struct intel_iommu *iommu = drhd->iommu;
++
++	if (ecap_ir_support(iommu->ecap)) {
++		if (ir_parse_ioapic_hpet_scope(drhd->hdr, iommu))
++			return -1;
++
++		ir_supported = 1;
++	}
++
++	return ir_supported;
++}
++
++int intel_enable_irq_remapping_one(struct dmar_drhd_unit *drhd)
++{
++	int setup = 0;
++	int eim = 1;
++	int ret;
++	struct intel_iommu *iommu = drhd->iommu;
++
++	if (parse_ioapics_under_ir_one(drhd) != 1) {
++		printk(KERN_INFO "Not enable interrupt remapping\n");
++		return -1;
++	}
++
++	/*
++	 * If the queued invalidation is already initialized,
++	 * shouldn't disable it.
++	 */
++	if (!iommu->qi) {
++		/*
++		 * Clear previous faults.
++		 */
++		dmar_fault(-1, iommu);
++
++		/*
++		 * Disable intr remapping and queued invalidation, if already
++		 * enabled prior to OS handover.
++		 */
++		iommu_disable_irq_remapping(iommu);
++
++		dmar_disable_qi(iommu);
++	}
++
++	/*
++	 * check for the Interrupt-remapping support
++	 */
++
++	if (ecap_ir_support(iommu->ecap))
++		if (eim && !ecap_eim_support(iommu->ecap)) {
++			printk(KERN_INFO
++			"DRHD %Lx: EIM not supported by DRHD, ecap %Lx\n",
++				drhd->reg_base_addr, iommu->ecap);
++			return -1;
++		}
++
++	/*
++	 * Enable queued invalidation for the DRHD's.
++	 */
++	ret = dmar_enable_qi(iommu);
++
++	if (ret) {
++		printk(KERN_ERR
++			"DRHD %Lx: failed to enable queued, invalidation, ecap %Lx, ret %d\n",
++		       drhd->reg_base_addr, iommu->ecap, ret);
++		return -1;
++	}
++
++	/*
++	 * Setup Interrupt-remapping for the DRHD's now.
++	 */
++	if (ecap_ir_support(iommu->ecap)) {
++		if (intel_setup_irq_remapping(iommu, eim))
++			goto error;
++
++		setup = 1;
++	}
++
++	if (!setup)
++		goto error;
++
++	pr_info("Enabled IRQ remapping in %s mode\n", eim ? "x2apic" : "xapic");
++
++	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
++
++error:
++	/*
++	 * handle error condition gracefully here!
++	 */
++	return -1;
++}
++
+ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.supported		= intel_irq_remapping_supported,
+ 	.prepare		= dmar_table_init,
+-- 
+1.7.7
 
