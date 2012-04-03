@@ -1,148 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:43337 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756388Ab2DNWHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 14 Apr 2012 18:07:21 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mikko Vinni <mmvinni@yahoo.com>
-Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
-Date: Sun, 15 Apr 2012 00:11:53 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204132219.23106.rjw@sisk.pl> <1334350068.79333.YahooMailNeo@web161804.mail.bf1.yahoo.com>
-In-Reply-To: <1334350068.79333.YahooMailNeo@web161804.mail.bf1.yahoo.com>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51329 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176Ab2DCGYu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2012 02:24:50 -0400
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id DC8CC3EE0B6
+	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id C5BD845DE9E
+	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 9775445DE7E
+	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 8AD631DB8038
+	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
+Received: from m004.s.css.fujitsu.com (m004.s.css.fujitsu.com [10.23.4.34])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 3AE571DB803C
+	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
+Message-ID: <4F7A9816.2080700@jp.fujitsu.com>
+Date: Tue, 03 Apr 2012 15:26:30 +0900
+From: =?UTF-8?B?5p2+5pys5Y2a6YOO?= <matsumoto.hiroo@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204150011.53556.rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [RFC] pciehp: Add archdata setting
+References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com>
+In-Reply-To: <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi
 
-On Friday, April 13, 2012, Mikko Vinni wrote:
-> From: Rafael J. Wysocki:
+
+Thanks for your comment.
+
+I have mistake.
+archdata.dma_ops is always NULL on x86 platform.
+On x86 platform, probe with pciehp is same as probe with initcall.
+I'm so sorry.
+
+But archdata on powerpc platform is set with initcall.
+Call stack is as below.
+   1. pcibios_init
+   2. pcibios_scan_phb
+   3. pci_scan_child_bus
+   4. pci_scan_bridge
+   5. pci_scan_child_bus
+   6. pci_scan_bridge
+   7. pci_scan_child_bus
+   8. pcibios_setup_bus_devices
+
+In pcibios_setup_bus_devices, archdata is set with set_dma_ops and 
+set_dma_offset.
+But set_dma_ops and set_dma_offset are defined only at powerpc and 
+microblaze (Why...).
+
+Can architecture code, like arch/powerpc/kernel/pci.c, be called from 
+pciehp ?
+
+
+Regards.
+
+Hiroo MATSUMOTO (FUJITSU COMPUTER TECHNOLOGIES LIMITED)
+matsumoto.hiroo@jp.fujitsu.com
+
+>> I'm trying to use pciehp on powerpc platform.
+>> I set e1000e card to PCI Express bridge that has PCI Express HotPlug
+>> Capability.
+>>
+>> There is problem when poweron PCI Express HotPlug slot with pciehp.
+>> e1000e driver needs dma_ops in struct dev_archdata, but archdata isn't
+>> set (dma_ops is NULL) when probe from pciehp.
+>> Then e1000e driver returns error as below.
+>>
+>> -sh-3.2# echo 1 > /sys/bus/pci/slots/1/power
+>> <snip>
+>> [   65.493662] pci 0000:03:00.0: BAR 2: set to [io
+>> 0xff7ee000-0xff7ee01f] (PCI address [0x1000-0x101f])
+>> [   65.502890] pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
+>> [   65.508555] pcieport 0000:02:01.0:   bridge window [io
+>> 0xff7ee000-0xff7eefff]
+>> [   65.515785] pcieport 0000:02:01.0:   bridge window [mem
+>> 0xa0100000-0xa01fffff]
+>> [   65.523015] pcieport 0000:02:01.0:   bridge window [mem
+>> 0xa0200000-0xa02fffff 64bit pref]
+>> [   65.531238] pci 0000:03:00.0: no hotplug settings from platform
+>> [   65.538361] e1000e 0000:03:00.0: Disabling ASPM  L1
+>> [   65.543616] e1000e 0000:03:00.0: enabling device (0000 -> 0002)
+>> [   65.549876] e1000e 0000:03:00.0: No usable DMA configuration, aborting
+>> [   65.557194] e1000e: probe of 0000:03:00.0 failed with error -5
+>> -sh-3.2# lspci
+>> <snip>
+>> 0000:03:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit
+>> Ethernet Controller (Copper) (rev 06)
+>> <snip>
+>> -sh-3.2# ifconfig -a
+>> <snip>  // There is no network interface for 82572EI
+>>
+>> If archdata.dma_ops is NULL on x86 platform, e1000e will get dma_ops
+>> without archdata.
+>> So e1000e driver doesn't return error.
+>>
+>> I think that archdata should be set before driver probe (e.g pciehp).
+>> I tried to fix it (pciehp-add-archdata.patch), but I'm not good at PCI
+>> driver..., so please give better way.
 > 
-> > On Friday, April 13, 2012, Mikko Vinni wrote:
-> >>  From: Rafael J. Wysocki:
-> >> 
-> >>  > On Friday, April 13, 2012, Mikko Vinni wrote:
-> >>  >>  Bug report:
-> >>  >>    https://bugzilla.kernel.org/show_bug.cgi?id=43099
-> >>  >> 
+> Interesting.  It would be nice if we could set archdata the same way
+> for both devices present at boot and those hot-added later.  Can you
+> figure out where archdata is set for devices present at boot?
 > 
-> ^^^ some of the home-work is already there, including dmesg with and without the patch
-> with PCI debug on, which hopefully does the same as dev_info
+> Bjorn
 > 
-> > 
-> > Please change that dev_dbg() in pci_restore_state() into dev_info()
-> > and see how many times it gets printed with the commit applied (not reverted).
+>> Signed-off-by: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
+>> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+>> index a4031df..a021fbc 100644
+>> --- a/drivers/pci/hotplug/pciehp_pci.c
+>> +++ b/drivers/pci/hotplug/pciehp_pci.c
+>> @@ -89,6 +89,7 @@ int pciehp_configure_device(struct slot *p_slot)
+>>                        pciehp_add_bridge(dev);
+>>                }
+>>                pci_dev_put(dev);
+>> +               dev->dev.archdata = bridge->dev.archdata;
+>>        }
+>>
+>>        pci_assign_unassigned_bridge_resources(bridge);
+>>
 > 
-> 
-> I ran the dmesg through "uniq -c" and it looks like this:
-> 
->       1 ACPI: Low-level resume complete
->       1 PM: Restoring platform NVS memory
->       1 Enabling non-boot CPUs ...
->       1 Booting Node 0 Processor 1 APIC 0x1
->       1 CPU1 is up
->       1 ACPI: Waking up from system sleep state S3
->      10 pcieport 0000:00:02.0: restoring config space at offset 0x7 (was 0x20005151, writing 0x5151)
 
-Well, yeah.  So the commit you bisected it to is total and utter crap.
-Most importantly, it retries the writes for all of the dwords in the device's
-config space _including_ the status register (which by definition need not be
-the same as the written value).
-
-I wonder if the appended patch helps?
-
-Rafael
-
-
----
- drivers/pci/pci.c |   50 ++++++++++++++++++++++++++++++++------------------
- 1 file changed, 32 insertions(+), 18 deletions(-)
-
-Index: linux/drivers/pci/pci.c
-===================================================================
---- linux.orig/drivers/pci/pci.c
-+++ linux/drivers/pci/pci.c
-@@ -967,16 +967,40 @@ pci_save_state(struct pci_dev *dev)
- 	return 0;
- }
- 
-+static void pci_restore_config_space(struct pci_dev *pdev, int start, int end,
-+				     int retry)
-+{
-+	int index;
-+
-+	for (index = end; index >= start; index--) {
-+		u32 val, saved;
-+		int offset = 4 * index;
-+		int count = retry;
-+
-+		saved = pdev->saved_config_space[index];
-+		pci_read_config_dword(pdev, offset, &val);
-+		while (saved != val) {
-+			dev_dbg(&pdev->dev, "restoring config space at offset "
-+				"%#x (was %#x, writing %#x)\n",
-+				offset, val, saved);
-+			pci_write_config_dword(pdev, offset, saved);
-+			if (count-- > 0) {
-+				pci_read_config_dword(pdev, offset, &val);
-+				if (saved != val)
-+					msleep(10);
-+			} else {
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- /** 
-  * pci_restore_state - Restore the saved state of a PCI device
-  * @dev: - PCI device that we're dealing with
-  */
- void pci_restore_state(struct pci_dev *dev)
- {
--	int i;
--	u32 val;
--	int tries;
--
- 	if (!dev->state_saved)
- 		return;
- 
-@@ -984,24 +1008,14 @@ void pci_restore_state(struct pci_dev *d
- 	pci_restore_pcie_state(dev);
- 	pci_restore_ats_state(dev);
- 
-+	pci_restore_config_space(dev, 10, 15, 0);
- 	/*
- 	 * The Base Address register should be programmed before the command
- 	 * register(s)
- 	 */
--	for (i = 15; i >= 0; i--) {
--		pci_read_config_dword(dev, i * 4, &val);
--		tries = 10;		
--		while (tries && val != dev->saved_config_space[i]) {
--			dev_dbg(&dev->dev, "restoring config "
--				"space at offset %#x (was %#x, writing %#x)\n",
--				i, val, (int)dev->saved_config_space[i]);
--			pci_write_config_dword(dev,i * 4,
--				dev->saved_config_space[i]);
--			pci_read_config_dword(dev, i * 4, &val);
--			mdelay(10);
--			tries--;
--		}
--	}
-+	pci_restore_config_space(dev, 4, 9, 10);
-+	pci_restore_config_space(dev, 0, 3, 0);
-+
- 	pci_restore_pcix_state(dev);
- 	pci_restore_msi_state(dev);
- 	pci_restore_iov_state(dev);
