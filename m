@@ -1,238 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:51968 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754683Ab2DGPKI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Apr 2012 11:10:08 -0400
-Received: by iagz16 with SMTP id z16so4204116iag.19
-        for <linux-pci@vger.kernel.org>; Sat, 07 Apr 2012 08:10:07 -0700 (PDT)
-Message-ID: <4F8058C6.8010400@gmail.com>
-Date: Sat, 07 Apr 2012 23:09:58 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:58365 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669Ab2DDIBg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Apr 2012 04:01:36 -0400
+Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 8A4253EE0BD
+	for <linux-pci@vger.kernel.org>; Wed,  4 Apr 2012 17:01:34 +0900 (JST)
+Received: from smail (m1 [127.0.0.1])
+	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 6DA3C45DE54
+	for <linux-pci@vger.kernel.org>; Wed,  4 Apr 2012 17:01:34 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
+	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 4EFBD45DE5A
+	for <linux-pci@vger.kernel.org>; Wed,  4 Apr 2012 17:01:34 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 355721DB8050
+	for <linux-pci@vger.kernel.org>; Wed,  4 Apr 2012 17:01:34 +0900 (JST)
+Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 7510E1DB8048
+	for <linux-pci@vger.kernel.org>; Wed,  4 Apr 2012 17:01:33 +0900 (JST)
+Message-ID: <4F7C003B.4040208@jp.fujitsu.com>
+Date: Wed, 04 Apr 2012 17:03:07 +0900
+From: =?UTF-8?B?5p2+5pys5Y2a6YOO?= <matsumoto.hiroo@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-CC: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] [RFC] PCI, ACPI, x86: MMCFG support for hotpluggable
- PCI hostbridges on x86, x86_64
-References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com> <4F7E8DDD.7020603@jp.fujitsu.com>
-In-Reply-To: <4F7E8DDD.7020603@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC] pciehp: Add archdata setting
+References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com> <4F7AA3A2.1080900@jp.fujitsu.com>
+In-Reply-To: <4F7AA3A2.1080900@jp.fujitsu.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/06/2012 02:31 PM, Kenji Kaneshige wrote:
-> (2012/04/06 11:59), Taku Izumi wrote:
->>
->> This patch introduces the configuration for the base address of
->> the memory mapped configuration space (MMCFG) for hot pluggable PCI
->> hostbridges on x86 and x86_64.
->>
->> The MMCFG for hotplugable host bridges must be described by using
->> ACPI _CBA method. This patch adds implementation for _CBA method
->> on ACPI pci_root driver and MMCFG manipulating functons for x86 and
->> x86_64.
->>
->> Signed-off-by: Taku Izumi<izumi.taku@jp.fujitsu.com>
->> ---
->>   arch/x86/pci/mmconfig-shared.c |   43 +++++++++++++++++++++++++++++++++++------
->>   drivers/acpi/pci_root.c        |   28 +++++++++++++++++++++++++-
->>   drivers/pci/pci.c              |   31 +++++++++++++++++++++++++++++
->>   include/acpi/acnames.h         |    1
->>   include/linux/pci.h            |    3 ++
->>   5 files changed, 99 insertions(+), 7 deletions(-)
->>
->> Index: linux-next-build/drivers/acpi/pci_root.c
->> ===================================================================
->> --- linux-next-build.orig/drivers/acpi/pci_root.c
->> +++ linux-next-build/drivers/acpi/pci_root.c
->> @@ -451,7 +451,7 @@ EXPORT_SYMBOL(acpi_pci_osc_control_set);
->>
->>   static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>   {
->> -    unsigned long long segment, bus;
->> +    unsigned long long segment, bus, base_addr;
->>       acpi_status status;
->>       int result;
->>       struct acpi_pci_root *root;
->> @@ -506,6 +506,28 @@ static int __devinit acpi_pci_root_add(s
->>       device->driver_data = root;
->>
->>       /*
->> +     * Check _CBA for hot pluggable host bridge
->> +     */
->> +    base_addr = 0;
->> +    status = acpi_evaluate_integer(device->handle, METHOD_NAME__CBA, NULL,
->> +                    &base_addr);
->> +    if (ACPI_FAILURE(status)&&  status != AE_NOT_FOUND) {
->> +        printk(KERN_ERR PREFIX "can't evaluate _CBA\n");
->> +        result = -ENODEV;
->> +        goto end;
->> +    }
->> +    if (base_addr) {
->> +        if (pci_add_mmcfg_region(root->segment,
->> +                     root->secondary.start,
->> +                     root->secondary.end,
->> +                     base_addr) != 0) {
->> +            printk(KERN_ERR PREFIX "can't add MMCFG entry\n");
->> +            result = -ENODEV;
->> +            goto end;
->> +        }
-> 
-> how about
->         result = pci_add_mmcfg_region()
->         if (result) {
->             printk();
->             goto end;
->         }
-> ?
-> 
->> +    }
->> +
->> +    /*
->>        * All supported architectures that use ACPI have support for
->>        * PCI domains, so we indicate this in _OSC support capabilities.
->>        */
->> @@ -625,6 +647,8 @@ static int __devinit acpi_pci_root_add(s
->>       return 0;
->>
->>   end:
->> +    if (base_addr)
->> +        pci_remove_mmcfg_region(root->segment, root->secondary.start);
->>       if (!list_empty(&root->node))
->>           list_del(&root->node);
->>       kfree(root);
->> @@ -646,6 +670,8 @@ static int acpi_pci_root_remove(struct a
->>       device_set_run_wake(root->bus->bridge, false);
->>       pci_acpi_remove_bus_pm_notifier(device);
->>
->> +    pci_remove_mmcfg_region(root->segment, root->secondary.start);
->> +
->>       kfree(root);
->>       return 0;
->>   }
->> Index: linux-next-build/include/acpi/acnames.h
->> ===================================================================
->> --- linux-next-build.orig/include/acpi/acnames.h
->> +++ linux-next-build/include/acpi/acnames.h
->> @@ -61,6 +61,7 @@
->>   #define METHOD_NAME__AEI        "_AEI"
->>   #define METHOD_NAME__PRW        "_PRW"
->>   #define METHOD_NAME__SRS        "_SRS"
->> +#define METHOD_NAME__CBA    "_CBA"
->>
->>   /* Method names - these methods must appear at the namespace root */
->>
->> Index: linux-next-build/include/linux/pci.h
->> ===================================================================
->> --- linux-next-build.orig/include/linux/pci.h
->> +++ linux-next-build/include/linux/pci.h
->> @@ -1460,6 +1460,9 @@ void pcibios_disable_device(struct pci_d
->>   void pcibios_set_master(struct pci_dev *dev);
->>   int pcibios_set_pcie_reset_state(struct pci_dev *dev,
->>                    enum pcie_reset_state state);
->> +int pci_add_mmcfg_region(int segment, int start,
->> +             int end, u64 addr);
->> +void pci_remove_mmcfg_region(int segment, int bus);
->>
->>   #ifdef CONFIG_PCI_MMCONFIG
->>   extern void __init pci_mmcfg_early_init(void);
->> Index: linux-next-build/arch/x86/pci/mmconfig-shared.c
->> ===================================================================
->> --- linux-next-build.orig/arch/x86/pci/mmconfig-shared.c
->> +++ linux-next-build/arch/x86/pci/mmconfig-shared.c
->> @@ -28,7 +28,7 @@ static int __initdata pci_mmcfg_resource
->>
->>   LIST_HEAD(pci_mmcfg_list);
->>
->> -static __init void pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
->> +static __devinit void pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
->>   {
->>       if (cfg->res.parent)
->>           release_resource(&cfg->res);
->> @@ -45,7 +45,7 @@ static __init void free_all_mmcfg(void)
->>           pci_mmconfig_remove(cfg);
->>   }
->>
->> -static __init void list_add_sorted(struct pci_mmcfg_region *new)
->> +static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
->>   {
->>       struct pci_mmcfg_region *cfg;
->>
->> @@ -61,8 +61,10 @@ static __init void list_add_sorted(struc
->>       list_add_tail(&new->list,&pci_mmcfg_list);
->>   }
->>
->> -static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
->> -                            int end, u64 addr)
->> +static __devinit struct pci_mmcfg_region *pci_mmconfig_add(int segment,
->> +                               int start,
->> +                               int end,
->> +                               u64 addr)
->>   {
->>       struct pci_mmcfg_region *new;
->>       struct resource *res;
->> @@ -108,6 +110,33 @@ struct pci_mmcfg_region *pci_mmconfig_lo
->>       return NULL;
->>   }
->>
->> +int pci_add_mmcfg_region(int segment, int start, int end, u64 addr)
->> +{
->> +    struct pci_mmcfg_region *cfg;
->> +
->> +    cfg = pci_mmconfig_add(segment, start, end, addr);
->> +    if (!cfg) {
->> +        printk(KERN_WARNING PREFIX
->> +            "no memory for MMCFG entry\n");
->> +        return -ENOMEM;
->> +    }
-> 
-> We need to check if the region is valid (if the region is
-> reserved in ACPI motherborad resource).
-> 
-> 
->> +
->> +    insert_resource(&iomem_resource,&cfg->res);
->> +
->> +    return 0;
->> +}
->> +
->> +void pci_remove_mmcfg_region(int segment, int bus)
->> +{
->> +    struct pci_mmcfg_region *cfg;
->> +
->> +    cfg = pci_mmconfig_lookup(segment, bus);
->> +    if (!cfg)
->> +        return;
->> +
->> +    pci_mmconfig_remove(cfg);
->> +}
->> +
->>   static const char __init *pci_mmcfg_e7520(void)
->>   {
->>       u32 win;
->> @@ -357,8 +386,10 @@ static void __init pci_mmcfg_insert_reso
->>   {
->>       struct pci_mmcfg_region *cfg;
->>
->> -    list_for_each_entry(cfg,&pci_mmcfg_list, list)
->> -        insert_resource(&iomem_resource,&cfg->res);
->> +    list_for_each_entry(cfg,&pci_mmcfg_list, list) {
-> 
-> We need to add lock for manipulating pci_mmcfg_list.
-I have worked out a similar patch several weeks ago to address this issue,
-use lock to protect the mmconfig list when pci host bridge hotplug happens.
-But I can't access my dev machine from home now, and will send it out for
-your reference tomorrow.
-Thanks!
+Hi, Bjorn and Kaneshige
 
+
+Thanks for your comments and proposal.
+I will rethink a way of setting archdata with pcibios_xxx() hook or bus 
+notifier.
+
+
+Regards.
+
+Hiroo MATSUMOTO
+
+>>> I'm trying to use pciehp on powerpc platform.
+>>> I set e1000e card to PCI Express bridge that has PCI Express HotPlug
+>>> Capability.
+>>>
+>>> There is problem when poweron PCI Express HotPlug slot with pciehp.
+>>> e1000e driver needs dma_ops in struct dev_archdata, but archdata isn't
+>>> set (dma_ops is NULL) when probe from pciehp.
+>>> Then e1000e driver returns error as below.
+>>>
+>>> -sh-3.2# echo 1>  /sys/bus/pci/slots/1/power
+>>> <snip>
+>>> [   65.493662] pci 0000:03:00.0: BAR 2: set to [io
+>>> 0xff7ee000-0xff7ee01f] (PCI address [0x1000-0x101f])
+>>> [   65.502890] pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
+>>> [   65.508555] pcieport 0000:02:01.0:   bridge window [io
+>>> 0xff7ee000-0xff7eefff]
+>>> [   65.515785] pcieport 0000:02:01.0:   bridge window [mem
+>>> 0xa0100000-0xa01fffff]
+>>> [   65.523015] pcieport 0000:02:01.0:   bridge window [mem
+>>> 0xa0200000-0xa02fffff 64bit pref]
+>>> [   65.531238] pci 0000:03:00.0: no hotplug settings from platform
+>>> [   65.538361] e1000e 0000:03:00.0: Disabling ASPM  L1
+>>> [   65.543616] e1000e 0000:03:00.0: enabling device (0000 ->  0002)
+>>> [   65.549876] e1000e 0000:03:00.0: No usable DMA configuration, 
+>>> aborting
+>>> [   65.557194] e1000e: probe of 0000:03:00.0 failed with error -5
+>>> -sh-3.2# lspci
+>>> <snip>
+>>> 0000:03:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit
+>>> Ethernet Controller (Copper) (rev 06)
+>>> <snip>
+>>> -sh-3.2# ifconfig -a
+>>> <snip>    // There is no network interface for 82572EI
+>>>
+>>> If archdata.dma_ops is NULL on x86 platform, e1000e will get dma_ops
+>>> without archdata.
+>>> So e1000e driver doesn't return error.
+>>>
+>>> I think that archdata should be set before driver probe (e.g pciehp).
+>>> I tried to fix it (pciehp-add-archdata.patch), but I'm not good at PCI
+>>> driver..., so please give better way.
+>>
+>> Interesting.  It would be nice if we could set archdata the same way
+>> for both devices present at boot and those hot-added later.
 > 
->> +        if (!cfg->res.parent)
+> Yes. But it might be not so easy...
 > 
-> Why do we need this line?
+>>                                                              Can you
+>> figure out where archdata is set for devices present at boot?
+> 
+> I read some x86 and powerpc code to setup archdata. x86 and powerpc
+> have different way to setup archdata. And it seems archdata is not
+> set in one location, each member in the archdata is setup in the
+> different locations.
+> 
+> On x86, archdata.dma_ops is set in the pci_iommu_init() code path, which
+> is called through rootfs_initcall(). On powerpc, archdata.dma_ops is set
+> in pcibios_fixup_bus() code path.
+> 
+> Here are my notes.
+> 
+> x86 (calgary iommu)
+> ===================
+> rootfs_initcall()
+>  => pci_iommu_init()
+>      => x86_init.iommu.iommu_init() (== calgary_iommu_init())
+>          => calgary_init()
+> 
+> calgary_init()
+> {
+>         for_each_pci_dev() {
+>                         dev->dev.archdata.dma_ops = &calgary_dma_ops;
+>         }
+> }
+> 
+> x86 (amd iommu)
+> ===============
+> rootfs_initcall()
+>  => pci_iommu_init()
+>      => x86_init.iommu.iommu_init() (== amd_iommu_init())
+>          => amd_iommu_init_dma_ops()
+>              => device_dma_ops_init()
+> 
+> device_dma_ops_init()
+> {
+>     for_each_pci_dev() {
+>         pdev->dev.archdata.dma_ops = &amd_iommu_dma_ops;
+> }
+> 
+> PowerPC
+> =======
+> pci_scan_child_bus()
+>  => pcibios_fixup_bus()
+>      => pcibios_setup_bus_devices()
+>          => set_dma_ops()              # for each device on the bus 
+> (default)
+>          => ppc_md.pci_dma_dev_setup() # for each device on the bus 
+> (machine depend)
+> 
+> static inline void set_dma_ops(struct device *dev, struct dma_map_ops *ops)
+> {
+>         dev->archdata.dma_ops = ops;
+> }
+> 
+> 
+> One possible idea is that to setup archdata in the pcibios_xxx() hook.
+> (for example, use existing pcibios_enable_device(), or provide new
+> hook like pcibios_setup_device() which is called by pci_setup_device).
+> 
+> Another idea is that to add support for hot-plug to each iommu (dma)
+> code. Maybe it can be implemented by using bus notifier.
 > 
 > Regards,
 > Kenji Kaneshige
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
