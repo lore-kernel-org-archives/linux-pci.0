@@ -1,107 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Subject: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-Date: Sun, 29 Apr 2012 22:44:16 +0200
-Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
-	LKML <linux-kernel@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail1.mtech-ag.com ([62.225.161.3]:39098 "EHLO gg.mtech-ag.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756106Ab2DDMnu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Apr 2012 08:43:50 -0400
+Received: from gg.mtech-ag.com (localhost.mtech-ag.com [127.0.0.1])
+	by gg.mtech-ag.com (8.14.3/8.14.3) with ESMTP id q34Chmtp010481
+	for <linux-pci@vger.kernel.org>; Wed, 4 Apr 2012 14:43:48 +0200 (CEST)
+From: "Ngii Henry (STS/ZES)" <Henry.Ngii@swarco.de>
+To: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Date: Wed, 4 Apr 2012 14:43:33 +0200
+Subject: How to Execute Patch File for supporting multiple MSI on x86
+Message-ID: <E64021631D677D4582E2EFB0A548EFFE04C3F70D67@sue06.swarco.loc>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201204292244.16467.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Oleksij Rempel <bug-track@fisher-privat.net>
+The following command doesn't work:
 
-This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
-more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+[root@localhost patch]# patch -p0 -i 0001-Add-support-for-multiple-MSI-on-x86.patch
+(Stripping trailing CRs from patch.)
+can't find file to patch at input line 12
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|---
+| arch/x86/kernel/apic/io_apic.c |  310 ++++++++++++++++++++++++++++++++++------
+| arch/x86/kernel/hpet.c         |    2 +-
+| drivers/pci/htirq.c            |    2 +-
+| include/linux/irq.h            |    3 +-
+| 4 files changed, 271 insertions(+), 46 deletions(-)
+|
+|diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+|index fadcd74..5e9decc 100644
+|--- a/arch/x86/kernel/apic/io_apic.c
+|+++ b/arch/x86/kernel/apic/io_apic.c
+--------------------------
+File to patch: arch/x86/kernel/apic/io_apic.c
+arch/x86/kernel/apic/io_apic.c: No such file or directory
+Skip this patch? [y] n
+File to patch: arch/x86/kernel/hpet.c
+arch/x86/kernel/hpet.c: No such file or directory
+Skip this patch? [y] n
+File to patch:
 
-Some OEM use _SxD fileds do blacklist brocken Dx states.
-If _SxD/_SxW return values are check before suspend as appropriate,
-some nasty suspend/resume issues may be avoided.
+So How can I proceed in order to make it done?
+I am using fedora 12 (Kernel 2.6.31.5). This kernel just include 1 of the 4 files that need to be changed(irq.h )
+I would appreciate any advice.
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
-Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
+Mit freundlichen Grüßen,Kind regards,
 
-Bjorn, Len,
+Henry Ngii
+Zentrale Entwicklung ZES1
 
-This is -stable material and therefore v3.4 as well, IMO.  Please let me
-know if one of you can take it or whether you want me to handle it all the
-way to Linus.
+SWARCO TRAFFIC SYSTEMS GMBH
+Kelterstraße 67
+D-72669 Unterensingen
 
-Thanks,
-Rafael
+T. +49 7022 6025-285
+F. +49 7022 6025-269
+Henry.Ngii@swarco.de
 
----
- drivers/acpi/sleep.c |   22 +++++++++++++++++++++-
- drivers/pci/pci.c    |   12 +++++++++++-
- 2 files changed, 32 insertions(+), 2 deletions(-)
+www.swarco.com/sts
 
-Index: linux/drivers/acpi/sleep.c
-===================================================================
---- linux.orig/drivers/acpi/sleep.c
-+++ linux/drivers/acpi/sleep.c
-@@ -714,10 +714,30 @@ int acpi_pm_device_sleep_state(struct de
- 	 *
- 	 * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
- 	 * provided -- that's our fault recovery, we ignore retval.
-+	 *
-+	 * According to ACPI 4.0a (April 5, 2010), page 294,
-+	 * Table 7-7 S3 Action / Result Table, we need to evaluate _SxW in
-+	 * addition to _SxD if the device is configured for wakeup:
-+	 * Desired Action    | _S3D | _PRW | _S3W | Resultant D-state
-+	 * Enter S3          |  N/A |  D/C |  N/A | OSPM decides
-+	 * Enter S3, No Wake |   2  |  D/C |  D/C | Enter D2 or D3
-+	 * Enter S3, Wake    |   2  |   3  |  N/A | Enter D2
-+	 * Enter S3, Wake    |   2  |   3  |   3  | Enter D2 or D3
-+	 * Enter S3, Wake    |  N/A |   3  |   2  | Enter D0, D1 or D2
- 	 */
--	if (acpi_target_sleep_state > ACPI_STATE_S0)
-+	if (acpi_target_sleep_state > ACPI_STATE_S0) {
-+		acpi_status status;
-+
- 		acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
- 
-+		if (device_may_wakeup(dev)) {
-+			acpi_method[3] = 'W';
-+			status = acpi_evaluate_integer(handle, acpi_method,
-+						       NULL, &d_max);
-+			if (ACPI_FAILURE(status))
-+				d_max = d_min;
-+		}
-+	}
- 	/*
- 	 * If _PRW says we can wake up the system from the target sleep state,
- 	 * the D-state returned by _SxD is sufficient for that (we assume a
-Index: linux/drivers/pci/pci.c
-===================================================================
---- linux.orig/drivers/pci/pci.c
-+++ linux/drivers/pci/pci.c
-@@ -1691,10 +1691,20 @@ pci_power_t pci_target_state(struct pci_
- {
- 	pci_power_t target_state = PCI_D3hot;
- 
--	if (platform_pci_power_manageable(dev)) {
-+	/*
-+	 * According to ACPI 4.0a,7.2 Device Power Management Objects, device
-+	 * with wake capability should have _PRW or _PSW object and can have
-+	 * _SxD or _SxW object.
-+	 * It looks like some OEMs use this fields to avoid buggy Dx states
-+	 * of devices, so we need to check for _PRW or _PSW and see if _SxD or
-+	 * _SxW indicate to overwrite Dx.
-+	 */
-+	if (platform_pci_power_manageable(dev)
-+	    || platform_pci_can_wakeup(dev)) {
- 		/*
- 		 * Call the platform to choose the target state of the device
- 		 * and enable wake-up from this state if supported.
-+		 * (Check _SxD and _SxW)
- 		 */
- 		pci_power_t state = platform_pci_choose_state(dev);
- 
+Firma: SWARCO TRAFFIC SYSTEMS GMBH
+Rechtsform: Gesellschaft mit beschränkter Haftung
+
+Geschäftsführer:
+Karl Grüner
+Paul Forstreiter
+
+Sitz der Gesellschaft: Unterensingen
+Registergericht:  Amtsgericht Stuttgart, HRB 723326
+
+WICHTIGER HINWEIS: Der Inhalt dieser eMail ist ausschliesslich für den bezeichneten Adressaten bestimmt. Wenn Sie nicht der vorgesehene Adressat dieser eMail oder dessen Vertreter sein sollten, so beachten Sie bitte, dass jede Form der Kenntnisnahme, Veröffentlichung, Vervielfältigung oder Weitergabe des Inhalts dieser eMail unzulässig ist. Wir bitten Sie, sich in diesem Fall mit dem Absender der eMail in Verbindung zu setzen. Danke.
+
+IMPORTANT NOTE: This e-mail communication (and any attachment/s) are confidential and are intended only for the individual(s) or entity named above and to others who have been specifically authorized to receive it. If you are not the intended recipient, please do not read, copy, use or disclose the contents of this communication to other. Please notify the sender that you have received this e-mail in error by calling the phone number indicated or by e-mail, and delete the e-mail (including any attachment/s) subsequently. This information may be subject to a professional secrecy (e.g. of auditor, tax or legal advisor), other privilege or otherwise be protected by work product immunity or other legal rules. Thank you.
