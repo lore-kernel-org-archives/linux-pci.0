@@ -1,194 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45686 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759841Ab2DKAOg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 20:14:36 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so552527pbc.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Apr 2012 17:14:35 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH V4 3/6] PCI, x86: use RCU list to protect mmconfig list
-Date: Wed, 11 Apr 2012 08:11:00 +0800
-Message-Id: <1334103063-2283-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
-References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Nix <nix@esperi.org.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Chris Boot <bootc@bootc.net>,
+	"Wyborny\, Carolyn" <carolyn.wyborny@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev <netdev@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Matthew Garrett <mjg@redhat.com>
+Subject: Re: [E1000-devel] e1000e interface hang on 82574L
+References: <4EFA4024.5000909@bootc.net>
+	<FCF3184D-CE4F-471C-B66C-0F671795FD3C@bootc.net>
+	<9BBC4E0CF881AA4299206E2E1412B626017762@ORSMSX102.amr.corp.intel.com>
+	<4F048861.8070501@bootc.net> <4F12B42C.9030803@bootc.net>
+	<9BBC4E0CF881AA4299206E2E1412B62621F0B1@ORSMSX102.amr.corp.intel.com>
+	<4F144A76.3050703@bootc.net> <4F64B4E2.20208@bootc.net>
+	<4F64CFCB.7060702@bootc.net>
+	<9BBC4E0CF881AA4299206E2E1412B6260E512E0C@ORSMSX102.amr.corp.intel.com>
+	<87r4wova0b.fsf@spindle.srvr.nix>
+	<9BBC4E0CF881AA4299206E2E1412B6260E512FB9@ORSMSX102.amr.corp.intel.com>
+	<87ehsov6ot.fsf@spindle.srvr.nix>
+	<1590F833-7D40-42FE-8FA2-6DCCADF9C6B0@bootc.net>
+	<CAErSpo4TJ-9NsD5QTpFi9fsnD9qHt7+Tr5jJHQPuS7vg6ghq_w@mail.gmail.com>
+Date: Fri, 06 Apr 2012 17:04:46 +0100
+In-Reply-To: <CAErSpo4TJ-9NsD5QTpFi9fsnD9qHt7+Tr5jJHQPuS7vg6ghq_w@mail.gmail.com>
+	(Bjorn Helgaas's message of "Fri, 6 Apr 2012 06:12:58 -0600")
+Message-ID: <87r4w0luch.fsf@spindle.srvr.nix>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use RCU list to protect mmconfig list from dynamic change
-when supporting PCI host bridge hotplug.
+On 6 Apr 2012, Bjorn Helgaas outgrape:
+> If I understand correctly, e1000e attempts to disable ASPM to work
+> around an 82574L hardware erratum, but the PCI core either doesn't
+> disable ASPM or it gets re-enabled somehow.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- arch/x86/pci/mmconfig-shared.c |   11 ++++++-----
- arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
- arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
- 3 files changed, 28 insertions(+), 9 deletions(-)
+It gets re-enabled. If you explicitly do a setpci in the boot process to
+turn ASPM off on the interface, after doing your 'ip link up' and routing
+initialization, by the end of the boot process ASPM is back on again.
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 5e2cd2a..3bcc361 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -17,6 +17,7 @@
- #include <linux/bitmap.h>
- #include <linux/dmi.h>
- #include <linux/slab.h>
-+#include <linux/rculist.h>
- #include <asm/e820.h>
- #include <asm/pci_x86.h>
- #include <asm/acpi.h>
-@@ -45,20 +46,20 @@ static __init void free_all_mmcfg(void)
- 		pci_mmconfig_remove(cfg);
- }
- 
--static __init void list_add_sorted(struct pci_mmcfg_region *new)
-+static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
- {
- 	struct pci_mmcfg_region *cfg;
- 
- 	/* keep list sorted by segment and starting bus number */
--	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-+	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
- 		if (cfg->segment > new->segment ||
- 		    (cfg->segment == new->segment &&
- 		     cfg->start_bus >= new->start_bus)) {
--			list_add_tail(&new->list, &cfg->list);
-+			list_add_tail_rcu(&new->list, &cfg->list);
- 			return;
- 		}
- 	}
--	list_add_tail(&new->list, &pci_mmcfg_list);
-+	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
- }
- 
- static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
-@@ -111,7 +112,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
- {
- 	struct pci_mmcfg_region *cfg;
- 
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
- 		if (cfg->segment == segment &&
- 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
- 			return cfg;
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index 5372e86..5dad04a 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -11,6 +11,7 @@
- 
- #include <linux/pci.h>
- #include <linux/init.h>
-+#include <linux/rcupdate.h>
- #include <asm/e820.h>
- #include <asm/pci_x86.h>
- #include <acpi/acpi.h>
-@@ -60,9 +61,12 @@ err:		*value = -1;
- 		return -EINVAL;
- 	}
- 
-+	rcu_read_lock();
- 	base = get_base_addr(seg, bus, devfn);
--	if (!base)
-+	if (!base) {
-+		rcu_read_unlock();
- 		goto err;
-+	}
- 
- 	raw_spin_lock_irqsave(&pci_config_lock, flags);
- 
-@@ -80,6 +84,7 @@ err:		*value = -1;
- 		break;
- 	}
- 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
-+	rcu_read_unlock();
- 
- 	return 0;
- }
-@@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	if ((bus > 255) || (devfn > 255) || (reg > 4095))
- 		return -EINVAL;
- 
-+	rcu_read_lock();
- 	base = get_base_addr(seg, bus, devfn);
--	if (!base)
-+	if (!base) {
-+		rcu_read_unlock();
- 		return -EINVAL;
-+	}
- 
- 	raw_spin_lock_irqsave(&pci_config_lock, flags);
- 
-@@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 		break;
- 	}
- 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
-+	rcu_read_unlock();
- 
- 	return 0;
- }
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index 915a493..acc48c5 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -9,6 +9,7 @@
- #include <linux/init.h>
- #include <linux/acpi.h>
- #include <linux/bitmap.h>
-+#include <linux/rcupdate.h>
- #include <asm/e820.h>
- #include <asm/pci_x86.h>
- 
-@@ -34,9 +35,12 @@ err:		*value = -1;
- 		return -EINVAL;
- 	}
- 
-+	rcu_read_lock();
- 	addr = pci_dev_base(seg, bus, devfn);
--	if (!addr)
-+	if (!addr) {
-+		rcu_read_unlock();
- 		goto err;
-+	}
- 
- 	switch (len) {
- 	case 1:
-@@ -49,6 +53,7 @@ err:		*value = -1;
- 		*value = mmio_config_readl(addr + reg);
- 		break;
- 	}
-+	rcu_read_unlock();
- 
- 	return 0;
- }
-@@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
- 		return -EINVAL;
- 
-+	rcu_read_lock();
- 	addr = pci_dev_base(seg, bus, devfn);
--	if (!addr)
-+	if (!addr) {
-+		rcu_read_unlock();
- 		return -EINVAL;
-+	}
- 
- 	switch (len) {
- 	case 1:
-@@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 		mmio_config_writel(addr + reg, value);
- 		break;
- 	}
-+	rcu_read_unlock();
- 
- 	return 0;
- }
+I speculate that the stabilization of the interface (as indicated by the
+link-enabled message) has somehow flipped ASPM on, but I have no actual
+evidence for when this re-enabling happens. I just know it does.
+
 -- 
-1.7.5.4
-
+NULL && (void)
