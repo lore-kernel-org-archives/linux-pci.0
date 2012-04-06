@@ -1,72 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:54431 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754579Ab2DWWHY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 18:07:24 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Nix <nix@esperi.org.uk>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Chris Boot <bootc@bootc.net>,
+	"Wyborny\, Carolyn" <carolyn.wyborny@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev <netdev@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Matthew Garrett <mjg@redhat.com>
+Subject: Re: [E1000-devel] e1000e interface hang on 82574L
+References: <9BBC4E0CF881AA4299206E2E1412B62621F0B1@ORSMSX102.amr.corp.intel.com>
+	<4F144A76.3050703@bootc.net> <4F64B4E2.20208@bootc.net>
+	<4F64CFCB.7060702@bootc.net>
+	<9BBC4E0CF881AA4299206E2E1412B6260E512E0C@ORSMSX102.amr.corp.intel.com>
+	<87r4wova0b.fsf@spindle.srvr.nix>
+	<9BBC4E0CF881AA4299206E2E1412B6260E512FB9@ORSMSX102.amr.corp.intel.com>
+	<87ehsov6ot.fsf@spindle.srvr.nix>
+	<1590F833-7D40-42FE-8FA2-6DCCADF9C6B0@bootc.net>
+	<CAErSpo4TJ-9NsD5QTpFi9fsnD9qHt7+Tr5jJHQPuS7vg6ghq_w@mail.gmail.com>
+	<20120406134144.GA22526@khazad-dum.debian.net>
+Date: Fri, 06 Apr 2012 17:05:53 +0100
+In-Reply-To: <20120406134144.GA22526@khazad-dum.debian.net> (Henrique de
+	Moraes Holschuh's message of "Fri, 6 Apr 2012 10:41:44 -0300")
+Message-ID: <87mx6oluam.fsf@spindle.srvr.nix>
 MIME-Version: 1.0
-In-Reply-To: <4F95C50C.4060203@redhat.com>
-References: <20120410090306.GA7056@richard>
-	<20120422155202.GA13540@richard>
-	<4F95B17B.3030401@redhat.com>
-	<CAE9FiQX52eL6ZFQ_X3uL5DukK03sPhByZpPh0++o6L=WF8BGXg@mail.gmail.com>
-	<4F95C50C.4060203@redhat.com>
-Date: Mon, 23 Apr 2012 15:07:23 -0700
-Message-ID: <CAE9FiQVNYC1e_cHpLqsUcTCHWhzV_w0W=hVF8vkxtadjN45CWg@mail.gmail.com>
-Subject: Re: One problem in reassign pci bus number?
-From: Yinghai Lu <yinghai@kernel.org>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2012 at 2:09 PM, Don Dutile <ddutile@redhat.com> wrote:
-> On 04/23/2012 04:19 PM, Yinghai Lu wrote:
->>
->> On Mon, Apr 23, 2012 at 12:46 PM, Don Dutile<ddutile@redhat.com>  wrote:
->>>
->>> I have run into a similar problem recently when trying to use
->>> pci=assign-busses
->>> with an SRIOV device behind a non-ARI-capable PCIe switch.
->>> In this scenario, the assign-busses code assigned the next bus number,
->>> which conflicted with an existing one on the system, and hangs the
->>> system -- two bridges responding to the same PCI bus num evidently
->>> confuses the hw! ;-)
->>
->>
->> can you post boot log and lspci -vvxxx?
->>
->> Yinghai
+On 6 Apr 2012, Henrique de Moraes Holschuh outgrape:
+> You probably need to disable it upstream of the 82574L as well.  Here
+> (SuperMicro C7X58) I managed to get it to be stable by telling the BIOS
+> to disable L0s and L1 system-wide.
 >
->
-> Attached requested logs of linux-3.4-rc2 booted on RHEL6.2 installation.
->
-> I don't have a boot log of failing condition (pci=assign-devices)
+> But not all BIOSes will have that option...
 
-what is pci=assign-devices ? you have own local patches to handle that?
+Indeed not :( the Tyan S7010 mobo in my headless server can't do it.
 
-or you mean pci=assign-busses?
-
-> b/c it wedges at boot, and the serial line doesn't output anything
-> even though I've tried every magic trick known with grub & kernel boot
-> params.
-> ... the PCI log btwn early boot and until the console is reconfigured is
-> 'lost'
-> on the serial line, and that's when the hang occurs.
-> It's been 'fun' to debug w/o that serial output...
->
-> Let me know if you need something else. (lspci -t ?)
-
-can you check busn_alloc patchset fix the overlapping problem for you?
-It already split scan bus to two pass, also it  will double check not
-scanned peer bridges.
-
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-busn-alloc
-
-you can merge them to your 3.4-rc2...
-
-Thanks
-
-Yinghai
+-- 
+NULL && (void)
