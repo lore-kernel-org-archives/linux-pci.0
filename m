@@ -1,46 +1,37 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:64880 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754157Ab2DFQBj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 12:01:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <201204172220.45970.rjw@sisk.pl>
-References: <4F8790F6.5080408@intel.com>
-	<201204161907.13806.rjw@sisk.pl>
-	<CAC=cRTNdLu=A64YAEp78ENc1h2OJKusXY3Wm9LuY4drz9pbomg@mail.gmail.com>
-	<201204172220.45970.rjw@sisk.pl>
-Date: Wed, 18 Apr 2012 09:19:55 +0800
-Message-ID: <CAC=cRTN2QHWu1aD4AGyTB=wuHW-0oyLreZ2QiWSMvf_Ne_Nz0g@mail.gmail.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-From: huang ying <huang.ying.caritas@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <4F7F10C5.1050901@gmail.com>
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org>
+	<1332135996-13860-41-git-send-email-yinghai@kernel.org>
+	<4F7F10C5.1050901@gmail.com>
+Date: Fri, 6 Apr 2012 09:01:39 -0700
+Message-ID: <CAE9FiQUEJ4Jvz0BHJ8LCBNpXWB3Cf6u3k9F1avAd4a-fkGOB=Q@mail.gmail.com>
+Subject: Re: [PATCH -v3 40/47] PCI: Add pci bus removal through /sys/.../pci_bus/.../remove
+From: Yinghai Lu <yhlu.kernel@gmail.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 18, 2012 at 4:20 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Tuesday, April 17, 2012, huang ying wrote:
->> On Tue, Apr 17, 2012 at 1:07 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > Moreover, I really don't think it's a good idea to put PCI Express ports into
->> > low-power states in general. Â It might work on your platform, whatever it is,
->> > but that doesn't mean it's going to work on every PCI Express system out
->> > there. Â I actually know of a number of such systems where it surely won't
->> > work at all.
->>
->> The runtime PM support for PCIe port is not turned on by default, we need
->>
->> # echo auto > /sys/devices/pcixxxx:xx/<pci id>/power/control
->>
->> to turn on it. Â And we will turn on it on system it works. Â Is this sufficient?
->
-> No, it is not. Â In some cases it shouldn't be enabled at all for PCI Express
-> ports, as far as I can say, so to be on the safe side we should only enable it
-> on platforms where PCI Express ports are known to work correctly with runtime PM.
+On Fri, Apr 6, 2012 at 8:50 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Hi Yinghai,
+>        I found many other drivers assume that a pci bus won't disappear if
+> the corresponding PCI bridge device still exists. The sysfs interface proposed
+> here breaks that assumption and may cause many access-after-free issues.
+> So what's the purpose of this interface? Should we remove this interface or
+> enhance other drivers to avoid invalid memory access issues?
 
-Sorry, I did not catch your idea exactly.  I think disable it by
-default and enable it by sysfs interface is what you suggested, isn't
-it?  Or you suggest something like "white list"?
+ok, will make it only show up on root bus.
 
-Best Regards,
-Huang Ying
+Yinghai
