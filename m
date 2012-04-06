@@ -1,141 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <201204302341.12528.rjw@sisk.pl>
-References: <201204292244.16467.rjw@sisk.pl> <CAErSpo7oGWNVeT6OCgaFdb_+uPAumggE-Z+OdnH=9aW+_N3B6g@mail.gmail.com>
- <201204302341.12528.rjw@sisk.pl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Apr 2012 15:38:55 -0600
-Message-ID: <CAErSpo57jEuoKLnqVp6V-fkb8TBj+cUv3kgEbfpvFErE315pCA@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:56404 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754233Ab2DFPbz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 11:31:55 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: Fix a device reference count leakage issue in pci_dev_present()
+Date: Fri,  6 Apr 2012 23:31:36 +0800
+Message-Id: <1333726296-3817-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 30, 2012 at 3:41 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Monday, April 30, 2012, Bjorn Helgaas wrote:
->> On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > From: Oleksij Rempel <bug-track@fisher-privat.net>
->> >
->> > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
->> > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
->> >
->> > Some OEM use _SxD fileds do blacklist brocken Dx states.
->> > If _SxD/_SxW return values are check before suspend as appropriate,
->> > some nasty suspend/resume issues may be avoided.
->> >
->> > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
->> > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
->> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
->> > ---
->> >
->> > Bjorn, Len,
->> >
->> > This is -stable material and therefore v3.4 as well, IMO.  Please let me
->> > know if one of you can take it or whether you want me to handle it all the
->> > way to Linus.
->>
->> I'm OK with this from a PCI perspective.  Most of the change is in
->> ACPI, so I propose that either you or Len take care of it.
->>
->> The second paragraph of the changelog has several typos
->> (fileds/fields, do/to, brocken/broken, etc).
->
-> Thanks for spotting that, the version below should be better.
->
-> I'll wait for Len to respond till Friday and will take care of the patch myself
-> if he doesn't say anything.
->
-> May I assume an ACK from you?
+Function pci_get_dev_by_id() will hold a reference count on the pci device
+returned, so pci_dev_present() should release the corresponding reference
+count to avoid memory leakage.
 
-Yep, sorry :)
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/pci/search.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 9d75dc8..b572730 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -338,13 +338,13 @@ int pci_dev_present(const struct pci_device_id *ids)
+ 	WARN_ON(in_interrupt());
+ 	while (ids->vendor || ids->subvendor || ids->class_mask) {
+ 		found = pci_get_dev_by_id(ids, NULL);
+-		if (found)
+-			goto exit;
++		if (found) {
++			pci_dev_put(found);
++			return 1;
++		}
+ 		ids++;
+ 	}
+-exit:
+-	if (found)
+-		return 1;
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(pci_dev_present);
+-- 
+1.7.5.4
 
-> ---
-> From: Oleksij Rempel <bug-track@fisher-privat.net>
-> Subject: ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
->
-> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
-> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
->
-> Some OEM use _SxD fields to blacklist broken device Dx states, so
-> if _SxD/_SxW return values are checked before suspend as appropriate,
-> some nasty suspend/resume issues may be avoided.
->
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
-> Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> ---
->  drivers/acpi/sleep.c |   22 +++++++++++++++++++++-
->  drivers/pci/pci.c    |   12 +++++++++++-
->  2 files changed, 32 insertions(+), 2 deletions(-)
->
-> Index: linux/drivers/acpi/sleep.c
-> ===================================================================
-> --- linux.orig/drivers/acpi/sleep.c
-> +++ linux/drivers/acpi/sleep.c
-> @@ -720,10 +720,30 @@ int acpi_pm_device_sleep_state(struct de
->         *
->         * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
->         * provided -- that's our fault recovery, we ignore retval.
-> +        *
-> +        * According to ACPI 4.0a (April 5, 2010), page 294,
-> +        * Table 7-7 S3 Action / Result Table, we need to evaluate _SxW in
-> +        * addition to _SxD if the device is configured for wakeup:
-> +        * Desired Action    | _S3D | _PRW | _S3W | Resultant D-state
-> +        * Enter S3          |  N/A |  D/C |  N/A | OSPM decides
-> +        * Enter S3, No Wake |   2  |  D/C |  D/C | Enter D2 or D3
-> +        * Enter S3, Wake    |   2  |   3  |  N/A | Enter D2
-> +        * Enter S3, Wake    |   2  |   3  |   3  | Enter D2 or D3
-> +        * Enter S3, Wake    |  N/A |   3  |   2  | Enter D0, D1 or D2
->         */
-> -       if (acpi_target_sleep_state > ACPI_STATE_S0)
-> +       if (acpi_target_sleep_state > ACPI_STATE_S0) {
-> +               acpi_status status;
-> +
->                acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
->
-> +               if (device_may_wakeup(dev)) {
-> +                       acpi_method[3] = 'W';
-> +                       status = acpi_evaluate_integer(handle, acpi_method,
-> +                                                      NULL, &d_max);
-> +                       if (ACPI_FAILURE(status))
-> +                               d_max = d_min;
-> +               }
-> +       }
->        /*
->         * If _PRW says we can wake up the system from the target sleep state,
->         * the D-state returned by _SxD is sufficient for that (we assume a
-> Index: linux/drivers/pci/pci.c
-> ===================================================================
-> --- linux.orig/drivers/pci/pci.c
-> +++ linux/drivers/pci/pci.c
-> @@ -1691,10 +1691,20 @@ pci_power_t pci_target_state(struct pci_
->  {
->        pci_power_t target_state = PCI_D3hot;
->
-> -       if (platform_pci_power_manageable(dev)) {
-> +       /*
-> +        * According to ACPI 4.0a,7.2 Device Power Management Objects, device
-> +        * with wake capability should have _PRW or _PSW object and can have
-> +        * _SxD or _SxW object.
-> +        * It looks like some OEMs use this fields to avoid buggy Dx states
-> +        * of devices, so we need to check for _PRW or _PSW and see if _SxD or
-> +        * _SxW indicate to overwrite Dx.
-> +        */
-> +       if (platform_pci_power_manageable(dev)
-> +           || platform_pci_can_wakeup(dev)) {
->                /*
->                 * Call the platform to choose the target state of the device
->                 * and enable wake-up from this state if supported.
-> +                * (Check _SxD and _SxW)
->                 */
->                pci_power_t state = platform_pci_choose_state(dev);
->
