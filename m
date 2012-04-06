@@ -1,43 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:52635 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755431Ab2DWOiV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 10:38:21 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Mike Galbraith <efault@gmx.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Ingo Molnar <mingo@elte.hu>
-Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v1 0/3] enhance DCA core to support DCA device hotplug
-Date: Mon, 23 Apr 2012 22:33:59 +0800
-Message-Id: <1335191642-6869-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:42410 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752023Ab2DFSQo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 14:16:44 -0400
+Received: by lbbgg6 with SMTP id gg6so816818lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 06 Apr 2012 11:16:42 -0700 (PDT)
+MIME-Version: 1.0
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 6 Apr 2012 12:16:22 -0600
+Message-ID: <CAErSpo5a3t9-HQN-8zvK+wYjW6eAM5nVuQcfKPsaU6Ur1BZCwQ@mail.gmail.com>
+Subject: linux-next: change PCI trees
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+Hi Stephen,
 
-When hot-removing PCI host bridges on Intel platforms, all endpoint devices
-built in the PCI host bridge (IOH) should be removed too. This patchset
-enhances the DCA core logic to support hotplug of Intel Crystall Beach PCI
-devices built in the IOH. It also enhances the core to support multiple
-PCI root complexes (domains).
+Would you please replace these PCI trees in linux-next:
 
-The patchset applies to the mainline kernel at
-cdd5983 Merge tag 'for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost
-and it has been tested on an IBM x3850 system.
+    pci-current     git
+git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci#for-linus
+    pci             git
+git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci#linux-next
 
-Jiang Liu (3):
-  DCA, x86: fix invalid memory access in DCA core
-  DCA, x86: restart DCA operations in unregister_dca_provider()
-  DCA, x86: support mutitple PCI root complexes in DCA core logic
+with these new ones:
 
- drivers/dca/dca-core.c |  152 ++++++++++++++++++++++++------------------------
- 1 files changed, 77 insertions(+), 75 deletions(-)
+    pci-current git
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#for-linus
+    pci git git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#next
 
--- 
-1.7.5.4
+since I'm taking over PCI maintenance.
 
+Thanks,
+  Bjorn
