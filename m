@@ -1,71 +1,35 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 01/19] PCI: introduce pci_bus_get()/pci_bus_put() to hide PCI implementation details
-Date: Fri, 27 Apr 2012 23:16:42 +0800
-Message-Id: <1335539820-11232-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:21296 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757140Ab2DFCoD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Apr 2012 22:44:03 -0400
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Expose ltr/obff interface by sysfs
+Date: Fri, 6 Apr 2012 02:43:59 +0000
+Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD0A434@SHSMSX102.ccr.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Hi, 
 
-Introduce pci_bus_get()/pci_bus_put() to hide PCI implementation details.
+I'm working on virtualization Xen/KVM. I saw there are ltr/obff enabling/disabling function in pci.c, but no called till now. I want to know if anybody(driver developer) are working for using it? Can driver change the LTR latency value dynamically?
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/bus.c   |   15 +++++++++++++++
- include/linux/pci.h |    2 ++
- 2 files changed, 17 insertions(+), 0 deletions(-)
+/*
+LTR(Latency tolerance reporting) allows devices to send messages to the root complex indicating their latency tolerance for snooped & unsnooped memory transactions.
+OBFF (optimized buffer flush/fill), where supported, can help improve energy efficiency by giving devices information about when interrupts and other activity will have a reduced power impact.
+*/
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4ce5ef2..50f9c5d 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -35,6 +35,21 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- }
- EXPORT_SYMBOL(pci_add_resource_offset);
- 
-+struct pci_bus *pci_bus_get(struct pci_bus *bus)
-+{
-+	if (bus)
-+		get_device(&bus->dev);
-+	return bus;
-+}
-+EXPORT_SYMBOL(pci_bus_get);
-+
-+void pci_bus_put(struct pci_bus *bus)
-+{
-+	if (bus)
-+		put_device(&bus->dev);
-+}
-+EXPORT_SYMBOL(pci_bus_put);
-+
- void pci_add_resource(struct list_head *resources, struct resource *res)
- {
- 	pci_add_resource_offset(resources, res, 0);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e444f5b..0603a60 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -912,6 +912,8 @@ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
- void pci_release_selected_regions(struct pci_dev *, int);
- 
- /* drivers/pci/bus.c */
-+struct pci_bus *pci_bus_get(struct pci_bus *bus);
-+void pci_bus_put(struct pci_bus *bus);
- void pci_add_resource(struct list_head *resources, struct resource *res);
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 			     resource_size_t offset);
--- 
-1.7.5.4
+One way to control ltr/obff is used by driver, however, I'm considering that in virtualization, how guest OS driver control them. I have an idea that expose an inode interface by sysfs, like "reset" inode implemented in pci-sysfs.c, so that system user/administrator can enable/disable ltr/obff or set latency value on userspace, but not limited on driver. Comments?
+
+< pls CC me when reply this mail, thanks >
+
+Best Regards,
+Xudong Hao
 
