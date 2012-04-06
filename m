@@ -1,90 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:22042 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:7420 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752487Ab2DPAxo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 20:53:44 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Matthew Wilcox <matthew@wil.cx>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>
-Subject: RE: [PATCH v5] Quirk for IVB graphics FLR errata
-Date: Mon, 16 Apr 2012 00:53:41 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD117D2@SHSMSX102.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD0FF14@SHSMSX102.ccr.corp.intel.com>
- <20120414204052.GB28678@parisc-linux.org>
-In-Reply-To: <20120414204052.GB28678@parisc-linux.org>
-Content-Type: text/plain; charset="us-ascii"
+	id S1754202Ab2DFVUc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Apr 2012 17:20:32 -0400
+Message-ID: <4F7F5E15.3040808@redhat.com>
+Date: Fri, 06 Apr 2012 17:20:21 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: "Hao, Xudong" <xudong.hao@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>
+Subject: Re: Expose ltr/obff interface by sysfs
+References: <403610A45A2B5242BD291EDAE8B37D300FD0A434@SHSMSX102.ccr.corp.intel.com> <20120406082649.68fe5842@jbarnes-desktop>
+In-Reply-To: <20120406082649.68fe5842@jbarnes-desktop>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Matthew Wilcox [mailto:matthew@wil.cx]
-> Sent: Sunday, April 15, 2012 4:41 AM
-> To: Hao, Xudong
-> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; Don Dutile
-> Subject: Re: [PATCH v5] Quirk for IVB graphics FLR errata
-> 
-> On Fri, Apr 13, 2012 at 08:22:18AM +0000, Hao, Xudong wrote:
-> > Changes from v4: (based on Matthew and Don's comments)
-> > - using jiffies to set timeout instead of tsc.
-> > - correct type mmio_base variable
-> > - using readl() and writel() to access io.
-> > - correct code style, use spaces around the multiply operator.
-> 
-> Much better!  Just a couple of minor nits ...
-> 
-> > +	val = readl(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
-> > +	writel(val, mmio_base + PCH_PP_CONTROL);
-> > +	do {
-> > +		timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
-> > +		while (1) {
-> 
-> Personally, I'd write this as:
-> 
-> 	while (time_before(jiffies, timeout)) {
-> 		...
-> 	}
-> 
-> > +			val = readl(mmio_base + PCH_PP_STATUS);
-> > +			if (((val & 0x80000000) == 0)
-> > +				&& ((val & 0x30000000) == 0))
-> 
-> Is there a reason why this shouldn't be:
-> 
-> 		if ((val & 0xB0000000) == 0)
-> 
-> > +				break;
-> > +			if (time_after(jiffies, timeout))
-> > +				break;
-> > +			cpu_relax();
-> > +		}
-> > +	} while (0);
-> 
-> Why do we need this to be in a do { } while (0) loop?
-> 
-> Putting those three suggestions together, I think it should look like this:
-> 
-> 	writel(val, mmio_base + PCH_PP_CONTROL);
-> 	timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
-> 	while (time_before(jiffies, timeout)) {
-> 		val = readl(mmio_base + PCH_PP_STATUS);
-> 		if ((val & 0xB0000000) == 0)
-> 			break;
-> 		cpu_relax();
-> 	}
-> 	writel(0x00000002, mmio_base + 0xd0100);
-> 
+On 04/06/2012 11:26 AM, Jesse Barnes wrote:
+> On Fri, 6 Apr 2012 02:43:59 +0000
+> "Hao, Xudong"<xudong.hao@intel.com>  wrote:
+>
+>> Hi,
+>>
+>> I'm working on virtualization Xen/KVM. I saw there are ltr/obff enabling/disabling function in pci.c, but no called till now. I want to know if anybody(driver developer) are working for using it? Can driver change the LTR latency value dynamically?
+>
+> I believe the value is writable, but I'd expect some devices to
+> misbehave if the value were programmed too high.  Performance would
+> also suffer if the value were set too high, at least for IOPS sensitive
+> devices.
+>
+>> /*
+>> LTR(Latency tolerance reporting) allows devices to send messages to the root complex indicating their latency tolerance for snooped&  unsnooped memory transactions.
+>> OBFF (optimized buffer flush/fill), where supported, can help improve energy efficiency by giving devices information about when interrupts and other activity will have a reduced power impact.
+>> */
+>>
+>> One way to control ltr/obff is used by driver, however, I'm considering that in virtualization, how guest OS driver control them. I have an idea that expose an inode interface by sysfs, like "reset" inode implemented in pci-sysfs.c, so that system user/administrator can enable/disable ltr/obff or set latency value on userspace, but not limited on driver. Comments?
+>
+> Given how device specific these extensions are, I'd expect you'd need
+> to know about each specific device anyway, which is why I think the
+> control belongs in the driver.  I don't see why you'd need to
+> enable/disable/change these functions when assigning a device from one
+> guest to another...
+>
 
-The code looks simple and reasonable, I'll modify with changes and add your name in Signed-off-by.
+and looking at this code last week, I noticed the ltr, obff & ido
+functions should be doing pcie_cap_has_*() checks before
+accessing registers that may not exist, as is done in
+pci_[save,restore]_pcie_state() ...
 
-> With that change, please add:
-> 
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> 
-> --
-> Matthew Wilcox				Intel Open Source Technology Centre
-> "Bill, look, we understand that you're interested in selling us this operating
-> system, but compare it to ours.  We can't possibly take such a retrograde
-> step."
+in drivers/pci/pci.c:
+#define pcie_cap_has_devctl2(type, flags)               \
+                 ((flags & PCI_EXP_FLAGS_VERS) > 1)
+#define pcie_cap_has_lnkctl2(type, flags)               \
+                 ((flags & PCI_EXP_FLAGS_VERS) > 1)
+#define pcie_cap_has_sltctl2(type, flags)               \
+                 ((flags & PCI_EXP_FLAGS_VERS) > 1)
