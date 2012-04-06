@@ -1,62 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <4F9F0473.9090408@fisher-privat.net>
-Date: Mon, 30 Apr 2012 23:30:27 +0200
-From: Oleksij Rempel <bug-track@fisher-privat.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:42356 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754168Ab2DFPuj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 11:50:39 -0400
+Message-ID: <4F7F10C5.1050901@gmail.com>
+Date: Fri, 06 Apr 2012 23:50:29 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Alan Stern <stern@rowland.harvard.edu>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrey Rahmatullin <wrar@wrar.name>,
-	Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-References: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>, x86 <x86@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>, linux-doc@vger.kernel.org
+Subject: Re: [PATCH -v3 40/47] PCI: Add pci bus removal through /sys/.../pci_bus/.../remove
+References: <1332135996-13860-1-git-send-email-yinghai@kernel.org> <1332135996-13860-41-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1332135996-13860-41-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30.04.2012 19:53, Alan Stern wrote:
-> On Mon, 30 Apr 2012, Bjorn Helgaas wrote:
+Hi Yinghai,
+	I found many other drivers assume that a pci bus won't disappear if
+the corresponding PCI bridge device still exists. The sysfs interface proposed
+here breaks that assumption and may cause many access-after-free issues.
+So what's the purpose of this interface? Should we remove this interface or
+enhance other drivers to avoid invalid memory access issues?
+	Thanks!
+	Gerry
+ 
+On 03/19/2012 01:46 PM, Yinghai Lu wrote:
+> it supports both pci root bus and pci bus under pci bridge.
 > 
->> On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>> From: Oleksij Rempel <bug-track@fisher-privat.net>
->>>
->>> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
->>> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
->>>
->>> Some OEM use _SxD fileds do blacklist brocken Dx states.
->>> If _SxD/_SxW return values are check before suspend as appropriate,
->>> some nasty suspend/resume issues may be avoided.
->>>
->>> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
->>> Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
->>> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
->>> ---
->>>
->>> Bjorn, Len,
->>>
->>> This is -stable material and therefore v3.4 as well, IMO. �Please let me
->>> know if one of you can take it or whether you want me to handle it all the
->>> way to Linus.
->>
->> I'm OK with this from a PCI perspective.  Most of the change is in
->> ACPI, so I propose that either you or Len take care of it.
->>
->> The second paragraph of the changelog has several typos
->> (fileds/fields, do/to, brocken/broken, etc).
+> -v2: Change to three returns way in dev_bus_remove_store.
 > 
-> It also turns out that the normal wakeup mechanism doesn't work for the
-> devices in question.  Can this be detected by ACPI?  We don't want to 
-> tell userspace that wakeup works when in fact it doesn't.
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Randy Dunlap <rdunlap@xenotime.net>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: linux-doc@vger.kernel.org
+> ---
+>  Documentation/ABI/testing/sysfs-bus-pci |    8 ++++++++
+>  drivers/pci/pci-sysfs.c                 |   30 ++++++++++++++++++++++++++++++
+>  2 files changed, 38 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 95f0f37..22392de 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -92,6 +92,14 @@ Description:
+>  		hot-remove the PCI device and any of its children.
+>  		Depends on CONFIG_HOTPLUG.
+>  
+> +What:		/sys/bus/pci/devices/.../pci_bus/.../remove
+> +Date:		March 2012
+> +Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
+> +Description:
+> +		Writing a non-zero value to this attribute will
+> +		hot-remove the PCI bus and any of its children.
+> +		Depends on CONFIG_HOTPLUG.
+> +
+>  What:		/sys/bus/pci/devices/.../pci_bus/.../rescan
+>  Date:		May 2011
+>  Contact:	Linux PCI developers <linux-pci@vger.kernel.org>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index d33a1bc..afba77b 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -391,6 +391,35 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+>  	return count;
+>  }
+>  
+> +static void bus_remove_callback(struct device *dev)
+> +{
+> +	struct pci_bus *bus = to_pci_bus(dev);
+> +
+> +	mutex_lock(&pci_remove_rescan_mutex);
+> +	pci_stop_and_remove_bus(bus);
+> +	mutex_unlock(&pci_remove_rescan_mutex);
+> +}
+> +static ssize_t
+> +dev_bus_remove_store(struct device *dev, struct device_attribute *attr,
+> +		 const char *buf, size_t count)
+> +{
+> +	int err;
+> +	unsigned long val;
+> +
+> +	if (kstrtoul(buf, 0, &val) < 0)
+> +		return -EINVAL;
+> +
+> +	if (!val)
+> +		return count;
+> +
+> +	err = device_schedule_callback(dev, bus_remove_callback);
+> +
+> +	if (err)
+> +		return err;
+> +
+> +	return count;
+> +}
+> +
+>  static void bus_rescan_callback(struct device *dev)
+>  {
+>  	struct pci_bus *bus = to_pci_bus(dev);
+> @@ -450,6 +479,7 @@ struct device_attribute pci_dev_attrs[] = {
+>  struct device_attribute pcibus_dev_attrs[] = {
+>  #ifdef CONFIG_HOTPLUG
+>  	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store),
+> +	__ATTR(remove, (S_IWUSR|S_IWGRP), NULL, dev_bus_remove_store),
+>  #endif
+>  	__ATTR(cpuaffinity, S_IRUGO, pci_bus_show_cpumaskaffinity, NULL),
+>  	__ATTR(cpulistaffinity, S_IRUGO, pci_bus_show_cpulistaffinity, NULL),
 
-hm... how about using pci config and acpi together. PCI config provides
-map of Dx states and wakeup support of them. If pci says wakeup works
-only on D0 and D3 and acpi say - we can use only D2 in S3, then there is
-no wakeup.
-
--- 
-Regards,
-Oleksij
