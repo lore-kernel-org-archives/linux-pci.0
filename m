@@ -1,65 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nm25.bullet.mail.bf1.yahoo.com ([98.139.212.184]:24589 "HELO
-	nm25.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753338Ab2DOKrJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 15 Apr 2012 06:47:09 -0400
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204132118.22074.rjw@sisk.pl> <1334346546.93033.YahooMailNeo@web161806.mail.bf1.yahoo.com> <201204132219.23106.rjw@sisk.pl> <1334350068.79333.YahooMailNeo@web161804.mail.bf1.yahoo.com> <CAAMvbhEFLHPsemALYVQwsuTaAiom1RviLECcPwqdtzA4ogmuLw@mail.gmail.com>
-Message-ID: <1334486827.79192.YahooMailNeo@web161806.mail.bf1.yahoo.com>
-Date: Sun, 15 Apr 2012 03:47:07 -0700 (PDT)
-From: Mikko Vinni <mmvinni@yahoo.com>
-Reply-To: Mikko Vinni <mmvinni@yahoo.com>
-Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
-To: James Courtier-Dutton <james.dutton@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-In-Reply-To: <CAAMvbhEFLHPsemALYVQwsuTaAiom1RviLECcPwqdtzA4ogmuLw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from haggis.pcug.org.au ([203.10.76.10]:40048 "EHLO
+	members.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752551Ab2DGBKM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 21:10:12 -0400
+Date: Sat, 7 Apr 2012 11:10:01 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: linux-next: change PCI trees
+Message-Id: <20120407111001.7ee50d80316d3684a91c19c3@canb.auug.org.au>
+In-Reply-To: <CAErSpo5a3t9-HQN-8zvK+wYjW6eAM5nVuQcfKPsaU6Ur1BZCwQ@mail.gmail.com>
+References: <CAErSpo5a3t9-HQN-8zvK+wYjW6eAM5nVuQcfKPsaU6Ur1BZCwQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Sat__7_Apr_2012_11_10_01_+1000_HjQlV0+PMb=.E+2Y"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: James Courtier-Dutton:
+--Signature=_Sat__7_Apr_2012_11_10_01_+1000_HjQlV0+PMb=.E+2Y
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> On 13 April 2012 21:47, Mikko Vinni <mmvinni@yahoo.com> wrote:
->>        1 firewire_ohci 0000:0a:00.0: Refused to change power state, 
-> currently in D3
->>       10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0xf 
-> (was 0xffffffff, writing 0x10a)
->>       10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0xe 
-> (was 0xffffffff, writing 0x0)
-> <snip>
->>        1 sdhci-pci 0000:0a:00.1: Refused to change power state, currently in 
-> D3
->>       10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0xf (was 
-> 0xffffffff, writing 0x10a)
->>       10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0xe (was 
-> 0xffffffff, writing 0x0)
-> <snip>
-> 
-> Could the problem be more due to "Refused to change power state,
-> currently in D3".
-> the "was 0xffffffff" would be returned if their was no power to the 
-> device.
-> Don't you need power, before you can write to the config space?
->
+Hi Bjorn,
 
-Those messages and the problem of the combo card reader and firewire
-not working after s2ram has been present for long
-(https://bugzilla.kernel.org/show_bug.cgi?id=35452
-dmesg here: https://lkml.org/lkml/2011/5/15/55).
+On Fri, 6 Apr 2012 12:16:22 -0600 Bjorn Helgaas <bhelgaas@google.com> wrote:
+>=20
+> Would you please replace these PCI trees in linux-next:
+>=20
+>     pci-current     git
+> git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci#for-linus
+>     pci             git
+> git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci#linux-next
+>=20
+> with these new ones:
+>=20
+>     pci-current git
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#for-linus
+>     pci git git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git=
+#next
+>=20
+> since I'm taking over PCI maintenance.
 
-Before 3.4-rc1 there was nothing wrong with the touchpad (and keyboard
-and reboot) after s2ram, and the problems are somehow separate.
-Rafael's patch fixes the new problem, any suggestions for the old
-one would be warmly appreciated.
+OK, I have changed to use these and put you as the contact (instead of
+Jesse).  Both branches appear empty currently (just as a check).
 
+Thanks for adding your subsystem tree as a participant of linux-next.  As
+you may know, this is not a judgment of your code.  The purpose of
+linux-next is for integration testing and to lower the impact of
+conflicts between subsystems in the next merge window.=20
 
-Mikko
+You will need to ensure that the patches/commits in your tree/series have
+been:
+     * submitted under GPL v2 (or later) and include the Contributor's
+	Signed-off-by,
+     * posted to the relevant mailing list,
+     * reviewed by you (or another maintainer of your subsystem tree),
+     * successfully unit tested, and=20
+     * destined for the current or next Linux merge window.
+
+Basically, this should be just what you would send to Linus (or ask him
+to fetch).  It is allowed to be rebased if you deem it necessary.
+
+--=20
+Cheers,
+Stephen Rothwell=20
+sfr@canb.auug.org.au
+
+Legal Stuff:
+By participating in linux-next, your subsystem tree contributions are
+public and will be included in the linux-next trees.  You may be sent
+e-mail messages indicating errors or other issues when the
+patches/commits from your subsystem tree are merged and tested in
+linux-next.  These messages may also be cross-posted to the linux-next
+mailing list, the linux-kernel mailing list, etc.  The linux-next tree
+project and IBM (my employer) make no warranties regarding the linux-next
+project, the testing procedures, the results, the e-mails, etc.  If you
+don't agree to these ground rules, let me know and I'll remove your tree
+from participation in linux-next.
+
+--Signature=_Sat__7_Apr_2012_11_10_01_+1000_HjQlV0+PMb=.E+2Y
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBCAAGBQJPf5PpAAoJEECxmPOUX5FES6kP/icCRHjAAsioh5Jgf+Iw3iRt
+z9F1OQ8iHCAcaEvAAVs8TCEsef6WRaFEaXu2RSlzz8lDzAXmTDw+Dcm+0ZCQlgjm
+5ebhCLrdnx8euJweuKzpfkTyA0sI2cUwkQOyzfnDGnqrlO6qBhVXIRSKr8HzJmeH
+0ytvxevx0nPNkoiikQcIURDhotT4TmouO6mp5fQpfC5IcTz30bBZBzWyqzckL3zn
+7viXlgvBx9qcufI53J10Ab1xWDnWyDONc9SZ3+V1gC7zMiWcKyUzo4A/wEL5eri+
+yR0tXl03/Tej8a/CrT4BqiWBtQtZVUI57q7ZNb3bySYTwZEJdDIKuSLjvZoE7VeS
+eaISVaYnOlWb/8Bp/u5Xco9f0MJ0cMitMTEwxGXmQ8Qyy5L7s/iLuRKZOwkm7EgW
+Xk+BcvMfh8fAVAIDSUuJVsmzcJzHZa/cFdSxvoehlUIBasmVz2OKeyBxs3M1qHBX
+LF0tFm5sULB+K6pDZLtun253URcY5KSKhTzDpjG/Ytj4mRAAJxM5Gy6O7fe5wV2M
+GPnTzAab2UDkx9qJxCLHUglchQxabVfwdNSmd5rV+ZGH0r2OVTjjv1aed59UNwdy
+wKUZc9bhx0JshcQ2F71PeatG0vRZ2+ixVWWQct928ADl0aPWfAch/+wzd6ATKAc+
+Z5BX5Y70WhGsPqaFx+22
+=QeVJ
+-----END PGP SIGNATURE-----
+
+--Signature=_Sat__7_Apr_2012_11_10_01_+1000_HjQlV0+PMb=.E+2Y--
