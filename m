@@ -1,76 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:45186 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754721Ab2DWVgE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 17:36:04 -0400
-Message-ID: <4F95CB3E.6070504@windriver.com>
-Date: Mon, 23 Apr 2012 17:35:58 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48329 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922Ab2DGOwI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Apr 2012 10:52:08 -0400
+Message-ID: <4F80548C.3060202@gmail.com>
+Date: Sat, 07 Apr 2012 22:51:56 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>
-Subject: Re: [PATCH] pci: frv architecture needs generic setup-bus infrastructure
-References: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com> <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com>
-In-Reply-To: <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+CC: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix a device reference count leakage issue in pci_dev_present()
+References: <1333726296-3817-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7KdaYt0tVpBW5vXmc7RXRgnbaOe7JTNmb5xp4vZMsK3w@mail.gmail.com>
+In-Reply-To: <CAErSpo7KdaYt0tVpBW5vXmc7RXRgnbaOe7JTNmb5xp4vZMsK3w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12-04-23 04:38 PM, Bjorn Helgaas wrote:
-> On Wed, Apr 18, 2012 at 3:24 PM, Paul Gortmaker
-> <paul.gortmaker@windriver.com> wrote:
->> Otherwise we get this link failure for frv's defconfig:
+On 04/07/2012 07:23 AM, Bjorn Helgaas wrote:
+> On Fri, Apr 6, 2012 at 9:31 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> Function pci_get_dev_by_id() will hold a reference count on the pci device
+>> returned, so pci_dev_present() should release the corresponding reference
+>> count to avoid memory leakage.
 >>
->>   LD      .tmp_vmlinux1
->>  drivers/built-in.o: In function `pci_assign_resource':
->>  (.text+0xbf0c): undefined reference to `pci_cardbus_resource_alignment'
->>  drivers/built-in.o: In function `pci_setup':
->>  pci.c:(.init.text+0x174): undefined reference to `pci_realloc_get_opt'
->>  pci.c:(.init.text+0x1a0): undefined reference to `pci_realloc_get_opt'
->>  make[1]: *** [.tmp_vmlinux1] Error 1
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> ---
+>>  drivers/pci/search.c |   10 +++++-----
+>>  1 files changed, 5 insertions(+), 5 deletions(-)
 >>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: David Howells <dhowells@redhat.com>
->> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
->>
->> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
->> index 083a49f..165274c 100644
->> --- a/drivers/pci/Makefile
->> +++ b/drivers/pci/Makefile
->> @@ -42,6 +42,7 @@ obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
->>  obj-$(CONFIG_PARISC) += setup-bus.o
->>  obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
->>  obj-$(CONFIG_PPC) += setup-bus.o
->> +obj-$(CONFIG_FRV) += setup-bus.o
->>  obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
->>  obj-$(CONFIG_X86_VISWS) += setup-irq.o
->>  obj-$(CONFIG_MN10300) += setup-bus.o
+>> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+>> index 9d75dc8..b572730 100644
+>> --- a/drivers/pci/search.c
+>> +++ b/drivers/pci/search.c
+>> @@ -338,13 +338,13 @@ int pci_dev_present(const struct pci_device_id *ids)
+>>        WARN_ON(in_interrupt());
+>>        while (ids->vendor || ids->subvendor || ids->class_mask) {
+>>                found = pci_get_dev_by_id(ids, NULL);
+>> -               if (found)
+>> -                       goto exit;
+>> +               if (found) {
+>> +                       pci_dev_put(found);
+>> +                       return 1;
+>> +               }
+>>                ids++;
+>>        }
+>> -exit:
+>> -       if (found)
+>> -               return 1;
+>> +
+>>        return 0;
+>>  }
+>>  EXPORT_SYMBOL(pci_dev_present);
 > 
-> Wow, I didn't even realize that we had this sort of arch-specific
-> selection of generic PCI parts.  drivers/pci/setup-irq.c is on my list
-> for reworking because it looks like it doesn't work correctly for
-> hotplug.  setup-bus.c is much more complicated, but (a) it looks like
-> most architectures include it anyway, and (b) it seems like it'd be
-> cleaner to have a CONFIG_PCI_REALLOC or something to avoid having
-> arch-specific stuff in the Makefile.
+> This might be the right thing to do, but I'd like to understand what's
+> going on, so let's talk about it a bit first.
 > 
-> Anyway, that's all for the future.  Does this fix need to go in 3.4,
-> or should it go in -next?  What commit introduced the problem?
+> I agree, there appears to be a leak here.  Or at least, the fact that
+> we keep a reference when a device is found doesn't match the comment.
+> What problem are you seeing from this leak?
+> 
+> There are not many callers, and most appear to be one-time things done
+> at boot, looking for built-in devices known to be defective.  These
+> devices won't be removable, so the leak shouldn't be causing
+> hot-remove issues.
+I noticed this issue when reading code, no real issue disclosed yet.
+As you have pointed out, this interface is used for built-in devices only,
+there should be no real issue currently and the patch is just for purity. 
 
-It does address a compile fail seen in 3.4 (sorry for not calling
-that out explicitly).  I've not dug back in time to see when it
-1st appeared.  With a lot of these less common arch, it seems they
-can get broken and remain broken for quite some time, so the original
-breakage may predate the 3.4 merge window.
-
-I've already got a queue with fixes for 3.4 in various other
-less common arch; it is no trouble for me to carry this there,
-if you are OK with it as a 3.4 fix.
-
-Thanks,
-Paul.
---
+> 
+> IMO, this is a bogus interface that leads to poor code, and I don't
+> want to encourage its use.  For device defect workarounds, I think
+> it'd be better to use PCI quirks to catch the defective device.  Some
+> chipset defects affect all downstream devices, and a quirk could make
+> the defect visible to all the drivers, not just the ones that use
+> pci_dev_present().  For example, look at tg3_write_reorder_chipsets
+> and tg3_dma_wait_state_chipsets.  Those aren't for tg3 bugs, they're
+> for chipset bugs that might affect other devices, too.  But right now,
+> that knowledge is buried in the tg3 driver.
+Thanks for pointing out the real issue behind this bogus interface.
+It would be better to solve this type of chip bugs in PCI core instead
+of in individual drivers.
 
 > 
 > Bjorn
+
