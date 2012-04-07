@@ -1,63 +1,48 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-Date: Mon, 30 Apr 2012 23:32:37 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org,
-	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrey Rahmatullin <wrar@wrar.name>,
-	Steven Rostedt <rostedt@goodmis.org>
-References: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201204302332.38009.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <201204072316.q37NGv8d019280@farm-0023.internal.tilera.com>
+From: Chris Metcalf <cmetcalf@tilera.com>
+Date: Sat, 7 Apr 2012 16:53:03 -0400
+Subject: [PATCH 0/3] arch/tile: provide PCIe support for tilegx
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Arnd Bergmann <arnd@arndb.de>, Jiri Kosina <jkosina@suse.cz>,
+	Joe Perches <joe@perches.com>,
+	David Howells <dhowells@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 30, 2012, Alan Stern wrote:
-> On Mon, 30 Apr 2012, Bjorn Helgaas wrote:
-> 
-> > On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > > From: Oleksij Rempel <bug-track@fisher-privat.net>
-> > >
-> > > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
-> > > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
-> > >
-> > > Some OEM use _SxD fileds do blacklist brocken Dx states.
-> > > If _SxD/_SxW return values are check before suspend as appropriate,
-> > > some nasty suspend/resume issues may be avoided.
-> > >
-> > > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
-> > > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
-> > > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > > ---
-> > >
-> > > Bjorn, Len,
-> > >
-> > > This is -stable material and therefore v3.4 as well, IMO. �Please let me
-> > > know if one of you can take it or whether you want me to handle it all the
-> > > way to Linus.
-> > 
-> > I'm OK with this from a PCI perspective.  Most of the change is in
-> > ACPI, so I propose that either you or Len take care of it.
-> > 
-> > The second paragraph of the changelog has several typos
-> > (fileds/fields, do/to, brocken/broken, etc).
-> 
-> It also turns out that the normal wakeup mechanism doesn't work for the
-> devices in question.  Can this be detected by ACPI?  We don't want to 
-> tell userspace that wakeup works when in fact it doesn't.
+This series of changes adds PCIe support to the tilegx architecture
+using the on-chip TRIO ("Transation I/O") hardware.  The last change is
+the one that adds PCI support per-se and it is cc'ed to a wider audience.
 
-No, we don't, but if there's _PRW and/or _DSW/_PSW for the device, we really
-have to assume that the device is able to wake up the system.  Moreover, if
-those methods don't return error codes, we have no way to say there's anything
-wrong.
+As usual, any code review would be appreciated.  This is layered on
+top of the GXIO IORPC mechanism presented in the previous patch series,
+which provided networking support for tilegx.
 
-Thanks,
-Rafael
+ arch/tile/Kconfig                            |   13 +-
+ arch/tile/gxio/Kconfig                       |    9 +
+ arch/tile/gxio/Makefile                      |    1 +
+ arch/tile/gxio/iorpc_trio.c                  |  352 ++++++
+ arch/tile/gxio/trio.c                        |   49 +
+ arch/tile/include/arch/trio.h                |   68 ++
+ arch/tile/include/arch/trio_constants.h      |   36 +
+ arch/tile/include/arch/trio_def.h            |   41 +
+ arch/tile/include/arch/trio_pcie_intfc.h     |  203 ++++
+ arch/tile/include/arch/trio_pcie_intfc_def.h |   32 +
+ arch/tile/include/arch/trio_pcie_rc.h        |  144 +++
+ arch/tile/include/arch/trio_pcie_rc_def.h    |   24 +
+ arch/tile/include/arch/trio_shm.h            |  111 ++
+ arch/tile/include/arch/trio_shm_def.h        |   19 +
+ arch/tile/include/asm/pci.h                  |   97 ++-
+ arch/tile/include/gxio/iorpc_trio.h          |  198 ++++
+ arch/tile/include/gxio/trio.h                |  303 +++++
+ arch/tile/include/hv/drv_trio_intf.h         |  196 ++++
+ arch/tile/kernel/Makefile                    |    4 +
+ arch/tile/kernel/pci_gx.c                    | 1597 ++++++++++++++++++++++++++
+ arch/tile/kernel/setup.c                     |    6 +
+ arch/tile/mm/pgtable.c                       |    7 -
+ drivers/pci/quirks.c                         |    6 +-
+ 23 files changed, 3490 insertions(+), 26 deletions(-)
