@@ -1,147 +1,492 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:56088 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496Ab2DCHQL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2012 03:16:11 -0400
-Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id A08B83EE081
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 16:16:09 +0900 (JST)
-Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 8808245DE50
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 16:16:09 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 73C9545DE4D
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 16:16:09 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 6866A1DB803B
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 16:16:09 +0900 (JST)
-Received: from ml14.s.css.fujitsu.com (ml14.s.css.fujitsu.com [10.240.81.134])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 0E8901DB8043
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 16:16:09 +0900 (JST)
-Message-ID: <4F7AA3A2.1080900@jp.fujitsu.com>
-Date: Tue, 03 Apr 2012 16:15:46 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?B?5p2+5pys5Y2a6YOO?= <matsumoto.hiroo@jp.fujitsu.com>
-CC: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
-Subject: Re: [RFC] pciehp: Add archdata setting
-References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com>
-In-Reply-To: <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 1/2] PCI,x86: introduce new MMCFG interfaces to support PCI host bridge hotplug
+Date: Mon,  9 Apr 2012 01:12:08 +0800
+Message-Id: <1333905129-8776-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1333905129-8776-1-git-send-email-jiang.liu@huawei.com>
+References: <1333905129-8776-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
+References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/04/02 23:13), Bjorn Helgaas wrote:
-> On Mon, Apr 2, 2012 at 1:42 AM, 松本博郎<matsumoto.hiroo@jp.fujitsu.com>  wrote:
->> I'm trying to use pciehp on powerpc platform.
->> I set e1000e card to PCI Express bridge that has PCI Express HotPlug
->> Capability.
->>
->> There is problem when poweron PCI Express HotPlug slot with pciehp.
->> e1000e driver needs dma_ops in struct dev_archdata, but archdata isn't
->> set (dma_ops is NULL) when probe from pciehp.
->> Then e1000e driver returns error as below.
->>
->> -sh-3.2# echo 1>  /sys/bus/pci/slots/1/power
->> <snip>
->> [   65.493662] pci 0000:03:00.0: BAR 2: set to [io
->> 0xff7ee000-0xff7ee01f] (PCI address [0x1000-0x101f])
->> [   65.502890] pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
->> [   65.508555] pcieport 0000:02:01.0:   bridge window [io
->> 0xff7ee000-0xff7eefff]
->> [   65.515785] pcieport 0000:02:01.0:   bridge window [mem
->> 0xa0100000-0xa01fffff]
->> [   65.523015] pcieport 0000:02:01.0:   bridge window [mem
->> 0xa0200000-0xa02fffff 64bit pref]
->> [   65.531238] pci 0000:03:00.0: no hotplug settings from platform
->> [   65.538361] e1000e 0000:03:00.0: Disabling ASPM  L1
->> [   65.543616] e1000e 0000:03:00.0: enabling device (0000 ->  0002)
->> [   65.549876] e1000e 0000:03:00.0: No usable DMA configuration, aborting
->> [   65.557194] e1000e: probe of 0000:03:00.0 failed with error -5
->> -sh-3.2# lspci
->> <snip>
->> 0000:03:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit
->> Ethernet Controller (Copper) (rev 06)
->> <snip>
->> -sh-3.2# ifconfig -a
->> <snip>    // There is no network interface for 82572EI
->>
->> If archdata.dma_ops is NULL on x86 platform, e1000e will get dma_ops
->> without archdata.
->> So e1000e driver doesn't return error.
->>
->> I think that archdata should be set before driver probe (e.g pciehp).
->> I tried to fix it (pciehp-add-archdata.patch), but I'm not good at PCI
->> driver..., so please give better way.
->
-> Interesting.  It would be nice if we could set archdata the same way
-> for both devices present at boot and those hot-added later.
+This patch introduces two new interfaces, pci_mmconfig_insert() and
+pci_mmconfig_delete(), to support PCI host bridge hotplug on x86 platforms.
 
-Yes. But it might be not so easy...
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/x86/include/asm/pci_x86.h |    4 +
+ arch/x86/pci/mmconfig-shared.c |  186 +++++++++++++++++++++++++++++++---------
+ arch/x86/pci/mmconfig_32.c     |   28 ++++++-
+ arch/x86/pci/mmconfig_64.c     |   35 +++++++-
+ 4 files changed, 206 insertions(+), 47 deletions(-)
 
->                                                              Can you
-> figure out where archdata is set for devices present at boot?
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index b3a5317..ba8570c 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -135,6 +135,10 @@ struct pci_mmcfg_region {
+ 
+ extern int __init pci_mmcfg_arch_init(void);
+ extern void __init pci_mmcfg_arch_free(void);
++extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
++extern void __devinit pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
++extern int __devinit pci_mmconfig_insert(int seg, int start, int end, u64 addr);
++extern int __devinit pci_mmconfig_delete(int seg, int start, int end, u64 addr);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+ 
+ extern struct list_head pci_mmcfg_list;
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 301e325..dda9470 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -17,6 +17,8 @@
+ #include <linux/bitmap.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/mutex.h>
++#include <linux/rculist.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <asm/acpi.h>
+@@ -45,24 +47,25 @@ static __init void free_all_mmcfg(void)
+ 		pci_mmconfig_remove(cfg);
+ }
+ 
+-static __init void list_add_sorted(struct pci_mmcfg_region *new)
++static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	/* keep list sorted by segment and starting bus number */
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
+ 		if (cfg->segment > new->segment ||
+ 		    (cfg->segment == new->segment &&
+ 		     cfg->start_bus >= new->start_bus)) {
+-			list_add_tail(&new->list, &cfg->list);
++			list_add_tail_rcu(&new->list, &cfg->list);
+ 			return;
+ 		}
+ 	}
+-	list_add_tail(&new->list, &pci_mmcfg_list);
++	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
+ }
+ 
+-static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+-							int end, u64 addr)
++static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
++							     int start,
++							     int end, u64 addr)
+ {
+ 	struct pci_mmcfg_region *new;
+ 	struct resource *res;
+@@ -79,8 +82,6 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	new->start_bus = start;
+ 	new->end_bus = end;
+ 
+-	list_add_sorted(new);
+-
+ 	res = &new->res;
+ 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
+ 	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
+@@ -96,11 +97,23 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	return new;
+ }
+ 
++static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
++							int end, u64 addr)
++{
++	struct pci_mmcfg_region *new;
++
++	new = pci_mmconfig_alloc(segment, start, end, addr);
++	if (new)
++		list_add_sorted(new);
++
++	return new;
++}
++
+ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+ 		if (cfg->segment == segment &&
+ 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
+ 			return cfg;
+@@ -364,8 +377,8 @@ static void __init pci_mmcfg_insert_resources(void)
+ 	pci_mmcfg_resources_inserted = 1;
+ }
+ 
+-static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
+-					      void *data)
++static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
++						 void *data)
+ {
+ 	struct resource *mcfg_res = data;
+ 	struct acpi_resource_address64 address;
+@@ -401,8 +414,8 @@ static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
+ 	return AE_OK;
+ }
+ 
+-static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
+-		void *context, void **rv)
++static acpi_status __devinit find_mboard_resource(acpi_handle handle, u32 lvl,
++						  void *context, void **rv)
+ {
+ 	struct resource *mcfg_res = context;
+ 
+@@ -415,7 +428,7 @@ static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
+ 	return AE_OK;
+ }
+ 
+-static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
++static int __devinit is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+ {
+ 	struct resource mcfg_res;
+ 
+@@ -434,8 +447,9 @@ static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+ 
+ typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
+ 
+-static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+-				    struct pci_mmcfg_region *cfg, int with_e820)
++static int __devinit is_mmconf_reserved(check_reserved_t is_reserved,
++					struct pci_mmcfg_region *cfg,
++					int with_e820)
+ {
+ 	u64 addr = cfg->res.start;
+ 	u64 size = resource_size(&cfg->res);
+@@ -474,39 +488,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+ 	return valid;
+ }
+ 
++static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
++					      int early)
++{
++	if (!early && !acpi_disabled) {
++		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
++			return 1;
++		else
++			printk(KERN_ERR FW_BUG PREFIX
++			       "MMCONFIG at %pR not reserved in "
++			       "ACPI motherboard resources\n",
++			       &cfg->res);
++	}
++
++	/* Don't try to do this check unless configuration
++	   type 1 is available. how about type 2 ?*/
++	if (raw_pci_ops)
++		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
++
++	return 0;
++}
++
+ static void __init pci_mmcfg_reject_broken(int early)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		int valid = 0;
+-
+-		if (!early && !acpi_disabled) {
+-			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
+-
+-			if (valid)
+-				continue;
+-			else
+-				printk(KERN_ERR FW_BUG PREFIX
+-				       "MMCONFIG at %pR not reserved in "
+-				       "ACPI motherboard resources\n",
+-				       &cfg->res);
++		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
++			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
++			free_all_mmcfg();
++			return;
+ 		}
+-
+-		/* Don't try to do this check unless configuration
+-		   type 1 is available. how about type 2 ?*/
+-		if (raw_pci_ops)
+-			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
+-
+-		if (!valid)
+-			goto reject;
+ 	}
+-
+-	return;
+-
+-reject:
+-	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
+-	free_all_mmcfg();
+ }
+ 
+ static int __initdata known_bridge;
+@@ -665,3 +678,92 @@ static int __init pci_mmcfg_late_insert_resources(void)
+  * with other system resources.
+  */
+ late_initcall(pci_mmcfg_late_insert_resources);
++
++static DEFINE_MUTEX(pci_mmcfg_lock);
++
++/* Add MMCFG information for hot-added host bridges at runtime */
++int __devinit pci_mmconfig_insert(int segment, int start, int end, u64 addr)
++{
++	int rc;
++	struct pci_mmcfg_region *cfg = NULL;
++
++	if (addr == 0 || segment < 0 || segment > USHRT_MAX ||
++	    start < 0 || start > 255 || end < start || end > 255)
++		return -EINVAL;
++
++	mutex_lock(&pci_mmcfg_lock);
++	cfg = pci_mmconfig_lookup(segment, start);
++	if (cfg) {
++		if (cfg->start_bus == start && cfg->end_bus == end &&
++		    cfg->address == addr) {
++			rc = -EEXIST;
++		} else {
++			rc = -EINVAL;
++			printk(KERN_WARNING PREFIX
++			       "MMCONFIG for domain %04x [bus %02x-%02x] "
++			       "conflicts with domain %04x [bus %02x-%02x]\n",
++			       segment, start, end,
++			       cfg->segment, cfg->start_bus, cfg->end_bus);
++		}
++		goto out;
++	}
++
++	cfg = pci_mmconfig_alloc(segment, start, end, addr);
++	if (cfg == NULL) {
++		rc = -ENOMEM;
++	} else if (!pci_mmcfg_check_reserved(cfg, 0)) {
++		rc = -EINVAL;
++		printk(KERN_WARNING PREFIX
++		       "MMCONFIG for domain %04x [bus %02x-%02x] "
++		       "isn't reserved\n", segment, start, end);
++	} else if (insert_resource(&iomem_resource, &cfg->res)) {
++		rc = -EBUSY;
++		printk(KERN_WARNING PREFIX
++		       "failed to insert resource for domain "
++		       "%04x [bus %02x-%02x]\n", segment, start, end);
++	} else if (pci_mmcfg_arch_map(cfg)) {
++		rc = -EBUSY;
++		printk(KERN_WARNING PREFIX
++		       "failed to map resource for domain "
++		       "%04x [bus %02x-%02x]\n", segment, start, end);
++	} else {
++		list_add_sorted(cfg);
++		cfg = NULL;
++		rc = 0;
++	}
++
++	if (cfg) {
++		if (cfg->res.parent)
++			release_resource(&cfg->res);
++		kfree(cfg);
++	}
++
++out:
++	mutex_unlock(&pci_mmcfg_lock);
++
++	return rc;
++}
++
++/* Delete MMCFG information at runtime */
++int __devinit pci_mmconfig_delete(int segment, int start, int end, u64 addr)
++{
++	struct pci_mmcfg_region *cfg;
++
++	mutex_lock(&pci_mmcfg_lock);
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
++		if (cfg->segment == segment && cfg->start_bus == start &&
++		    cfg->end_bus == end && cfg->address == addr) {
++			list_del_rcu(&cfg->list);
++			synchronize_rcu();
++			pci_mmcfg_arch_unmap(cfg);
++			if (cfg->res.parent)
++				release_resource(&cfg->res);
++			mutex_unlock(&pci_mmcfg_lock);
++			kfree(cfg);
++			return 0;
++		}
++	}
++	mutex_unlock(&pci_mmcfg_lock);
++
++	return -ENOENT;
++}
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5372e86..c2756de 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/init.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <acpi/acpi.h>
+@@ -60,9 +61,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -80,6 +84,7 @@ err:		*value = -1;
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if ((bus > 255) || (devfn > 255) || (reg > 4095))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -132,3 +141,18 @@ int __init pci_mmcfg_arch_init(void)
+ void __init pci_mmcfg_arch_free(void)
+ {
+ }
++
++int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	return 0;
++}
++
++void __devinit pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	unsigned long flags;
++
++	/* Invalidate the cached mmcfg map entry. */
++	raw_spin_lock_irqsave(&pci_config_lock, flags);
++	mmcfg_last_accessed_device = 0;
++	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++}
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index 915a493..6822dd6 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -9,6 +9,7 @@
+ #include <linux/init.h>
+ #include <linux/acpi.h>
+ #include <linux/bitmap.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -34,9 +35,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -49,6 +53,7 @@ err:		*value = -1;
+ 		*value = mmio_config_readl(addr + reg);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		mmio_config_writel(addr + reg, value);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -86,7 +95,7 @@ static const struct pci_raw_ops pci_mmcfg = {
+ 	.write =	pci_mmcfg_write,
+ };
+ 
+-static void __iomem * __init mcfg_ioremap(struct pci_mmcfg_region *cfg)
++static void __iomem * __devinit mcfg_ioremap(struct pci_mmcfg_region *cfg)
+ {
+ 	void __iomem *addr;
+ 	u64 start, size;
+@@ -129,3 +138,23 @@ void __init pci_mmcfg_arch_free(void)
+ 		}
+ 	}
+ }
++
++int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	cfg->virt = mcfg_ioremap(cfg);
++	if (!cfg->virt) {
++		printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
++		       &cfg->res);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++void __devinit pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	if (cfg && cfg->virt) {
++		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
++		cfg->virt = NULL;
++	}
++}
+-- 
+1.7.5.4
 
-I read some x86 and powerpc code to setup archdata. x86 and powerpc
-have different way to setup archdata. And it seems archdata is not
-set in one location, each member in the archdata is setup in the
-different locations.
-
-On x86, archdata.dma_ops is set in the pci_iommu_init() code path, which
-is called through rootfs_initcall(). On powerpc, archdata.dma_ops is set
-in pcibios_fixup_bus() code path.
-
-Here are my notes.
-
-x86 (calgary iommu)
-===================
-rootfs_initcall()
-  => pci_iommu_init()
-      => x86_init.iommu.iommu_init() (== calgary_iommu_init())
-          => calgary_init()
-
-calgary_init()
-{
-         for_each_pci_dev() {
-                         dev->dev.archdata.dma_ops = &calgary_dma_ops;
-         }
-}
-
-x86 (amd iommu)
-===============
-rootfs_initcall()
-  => pci_iommu_init()
-      => x86_init.iommu.iommu_init() (== amd_iommu_init())
-          => amd_iommu_init_dma_ops()
-              => device_dma_ops_init()
-
-device_dma_ops_init()
-{
-	for_each_pci_dev() {
-		pdev->dev.archdata.dma_ops = &amd_iommu_dma_ops;
-}
-
-PowerPC
-=======
-pci_scan_child_bus()
-  => pcibios_fixup_bus()
-      => pcibios_setup_bus_devices()
-          => set_dma_ops()              # for each device on the bus (default)
-          => ppc_md.pci_dma_dev_setup() # for each device on the bus (machine depend)
-
-static inline void set_dma_ops(struct device *dev, struct dma_map_ops *ops)
-{
-         dev->archdata.dma_ops = ops;
-}
-
-
-One possible idea is that to setup archdata in the pcibios_xxx() hook.
-(for example, use existing pcibios_enable_device(), or provide new
-hook like pcibios_setup_device() which is called by pci_setup_device).
-
-Another idea is that to add support for hot-plug to each iommu (dma)
-code. Maybe it can be implemented by using bus notifier.
-
-Regards,
-Kenji Kaneshige
