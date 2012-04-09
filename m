@@ -1,132 +1,216 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:37063 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544Ab2DIOhu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 10:37:50 -0400
+Message-ID: <4F82F42C.5040301@gmail.com>
+Date: Mon, 09 Apr 2012 22:37:32 +0800
 From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
 	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 10/19] PCI: serialize hotplug operaitons triggered by the shpchp driver
-Date: Fri, 27 Apr 2012 23:16:51 +0800
-Message-Id: <1335539820-11232-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com> <1333905129-8776-1-git-send-email-jiang.liu@huawei.com> <1333905129-8776-3-git-send-email-jiang.liu@huawei.com> <CAE9FiQXNOJA4oCDw-CF32UjaA=6tri73nXP3u6+hMEjpugjF9w@mail.gmail.com>
+In-Reply-To: <CAE9FiQXNOJA4oCDw-CF32UjaA=6tri73nXP3u6+hMEjpugjF9w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Hi Yinghai,
+	
+>> +int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
+>> +{
+>> +       acpi_status status;
+>> +       unsigned long long base_addr;
+>> +
+>> +       /* Remove MMCFG information for host bridges with _CBA method */
+>> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+>> +                                      NULL, &base_addr);
+> 
+> add one flag in acpi_pci_root about we added mmconf for it before?
+> like mmconf_added?
+> 
 
-Use PCI hotplug lock to serialize hotplug operations triggered by the
-shpchp driver.
+I feel adding a flag here doesn't help here. For any hot-pluggable PCI host bridge
+with _CBA method available, arch_acpi_pci_root_remove() should delete the MMCFG 
+information, no matter it's added by __pci_mmcfg_init() or arch_acpi_pci_root_add(). 
+So check existence of _CBA seems simpler here.
+Thanks!
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/shpchp.h      |    2 ++
- drivers/pci/hotplug/shpchp_core.c |    3 ++-
- drivers/pci/hotplug/shpchp_ctrl.c |   32 ++++++++++++++++++++++++++++++++
- 3 files changed, 36 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
-index 6691dc4..07f3b2d 100644
---- a/drivers/pci/hotplug/shpchp.h
-+++ b/drivers/pci/hotplug/shpchp.h
-@@ -157,6 +157,7 @@ struct controller {
- #define BLINKINGOFF_STATE		2
- #define POWERON_STATE			3
- #define POWEROFF_STATE			4
-+#define SHUTDOWN_STATE			5
- 
- /* Error messages */
- #define INTERLOCK_OPEN			0x00000002
-@@ -179,6 +180,7 @@ extern u8 shpchp_handle_presence_change(u8 hp_slot, struct controller *ctrl);
- extern u8 shpchp_handle_power_fault(u8 hp_slot, struct controller *ctrl);
- extern int shpchp_configure_device(struct slot *p_slot);
- extern int shpchp_unconfigure_device(struct slot *p_slot);
-+extern void shpchp_shutdown_slot(struct slot *slot);
- extern void cleanup_slots(struct controller *ctrl);
- extern void shpchp_queue_pushbutton_work(struct work_struct *work);
- extern int shpc_init( struct controller *ctrl, struct pci_dev *pdev);
-diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-index 19762b3..71cc5f2 100644
---- a/drivers/pci/hotplug/shpchp_core.c
-+++ b/drivers/pci/hotplug/shpchp_core.c
-@@ -172,10 +172,11 @@ void cleanup_slots(struct controller *ctrl)
- 
- 	list_for_each_safe(tmp, next, &ctrl->slot_list) {
- 		slot = list_entry(tmp, struct slot, slot_list);
--		list_del(&slot->slot_list);
- 		flush_workqueue(shpchp_wq);
- 		cancel_delayed_work_sync(&slot->work);
-+		shpchp_shutdown_slot(slot);
- 		flush_workqueue(shpchp_ordered_wq);
-+		list_del(&slot->slot_list);
- 		pci_hp_deregister(slot->hotplug_slot);
- 	}
- }
-diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
-index b00b09b..7b8e3a6 100644
---- a/drivers/pci/hotplug/shpchp_ctrl.c
-+++ b/drivers/pci/hotplug/shpchp_ctrl.c
-@@ -31,6 +31,7 @@
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/slab.h>
-+#include <linux/delay.h>
- #include <linux/pci.h>
- #include "../pci.h"
- #include "shpchp.h"
-@@ -406,6 +407,18 @@ static void shpchp_pushbutton_thread(struct work_struct *work)
- 	struct pushbutton_work_info *info =
- 		container_of(work, struct pushbutton_work_info, work);
- 	struct slot *p_slot = info->p_slot;
-+	bool shutdown;
-+
-+	/* Break possible deadlock by using pci_hotplug_try_enter() */
-+	while (!pci_hotplug_try_enter()) {
-+		mutex_lock(&p_slot->lock);
-+		shutdown = p_slot->state == SHUTDOWN_STATE;
-+		mutex_unlock(&p_slot->lock);
-+		if (shutdown)
-+			goto out;
-+		else
-+			mdelay(1);
-+	}
- 
- 	mutex_lock(&p_slot->lock);
- 	switch (p_slot->state) {
-@@ -427,6 +440,9 @@ static void shpchp_pushbutton_thread(struct work_struct *work)
- 	}
- 	mutex_unlock(&p_slot->lock);
- 
-+	pci_hotplug_exit();
-+
-+out:
- 	kfree(info);
- }
- 
-@@ -729,3 +745,19 @@ int shpchp_sysfs_disable_slot(struct slot *p_slot)
- 
- 	return retval;
- }
-+
-+void shpchp_shutdown_slot(struct slot *slot)
-+{
-+	u8 getstatus;
-+
-+	mutex_lock(&slot->lock);
-+	slot->state = SHUTDOWN_STATE;
-+	mutex_unlock(&slot->lock);
-+
-+	slot->hpc_ops->set_attention_status(slot, 0);
-+	slot->hpc_ops->get_power_status(slot, &getstatus);
-+	if (getstatus)
-+		slot->hpc_ops->green_led_on(slot);
-+	else
-+		slot->hpc_ops->green_led_off(slot);
-+}
--- 
-1.7.5.4
+On 04/09/2012 03:19 AM, Yinghai Lu wrote:
+> On Sun, Apr 8, 2012 at 10:12 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> This patch enhances pci_root driver to update MMCFG information when
+>> hot-plugging PCI root bridges on x86 platforms.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> ---
+>>  arch/x86/pci/acpi.c      |   58 ++++++++++++++++++++++++++++++++++++++++++++++
+>>  drivers/acpi/pci_root.c  |   20 ++++++++++++++++
+>>  include/acpi/acnames.h   |    1 +
+>>  include/linux/pci-acpi.h |    3 ++
+>>  4 files changed, 82 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index da0149d..9184970 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -488,6 +488,64 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>>        return bus;
+>>  }
+>>
+>> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
+>> +{
+>> +       int result = 0;
+>> +       acpi_status status;
+>> +       unsigned long long base_addr;
+>> +       struct pci_mmcfg_region *cfg;
+>> +
+>> +       /*
+>> +        * Try to insert MMCFG information for host bridges with _CBA method
+>> +        */
+>> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+>> +                                      NULL, &base_addr);
+>> +       if (ACPI_SUCCESS(status)) {
+>> +               result = pci_mmconfig_insert(root->segment,
+>> +                                            root->secondary.start,
+>> +                                            root->secondary.end,
+>> +                                            base_addr);
+>> +               /*
+>> +                * MMCFG information for hot-pluggable host bridges may have
+>> +                * already been added by __pci_mmcfg_init();
+>> +                */
+>> +               if (result == -EEXIST)
+>> +                       result = 0;
+>> +       } else if (status == AE_NOT_FOUND) {
+>> +               /*
+>> +                * Check whether MMCFG information has been added for
+>> +                * host bridges without _CBA method.
+>> +                */
+>> +               rcu_read_lock();
+>> +               cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
+>> +               if (!cfg || cfg->end_bus < root->secondary.end)
+>> +                       result = -ENODEV;
+>> +               rcu_read_unlock();
+>> +       } else
+>> +               result = -ENODEV;
+>> +
+>> +       return result;
+>> +}
+>> +
+>> +int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
+>> +{
+>> +       acpi_status status;
+>> +       unsigned long long base_addr;
+>> +
+>> +       /* Remove MMCFG information for host bridges with _CBA method */
+>> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+>> +                                      NULL, &base_addr);
+> 
+> add one flag in acpi_pci_root about we added mmconf for it before?
+> like mmconf_added?
+> 
+>> +       if (ACPI_SUCCESS(status))
+>> +               return pci_mmconfig_delete(root->segment,
+>> +                                          root->secondary.start,
+>> +                                          root->secondary.end,
+>> +                                          base_addr);
+>> +       else if (status != AE_NOT_FOUND)
+>> +               return -ENODEV;
+>> +
+>> +       return 0;
+>> +}
+>> +
+>>  int __init pci_acpi_init(void)
+>>  {
+>>        struct pci_dev *dev = NULL;
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index 4a7d575..a62bfa8 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -448,6 +448,16 @@ out:
+>>  }
+>>  EXPORT_SYMBOL(acpi_pci_osc_control_set);
+>>
+>> +int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root)
+>> +{
+>> +       return 0;
+>> +}
+>> +
+>> +int __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
+>> +{
+>> +       return 0;
+>> +}
+>> +
+>>  static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>>  {
+>>        unsigned long long segment, bus;
+>> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>>        strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>>        device->driver_data = root;
+>>
+>> +       if (arch_acpi_pci_root_add(root)) {
+>> +               printk(KERN_ERR PREFIX
+>> +                       "can't add MMCFG information for Bus %04x:%02x\n",
+>> +                       root->segment, (unsigned int)root->secondary.start);
+>> +               result = -ENODEV;
+>> +               goto out_free;
+>> +       }
+>> +
+>>        /*
+>>         * All supported architectures that use ACPI have support for
+>>         * PCI domains, so we indicate this in _OSC support capabilities.
+>> @@ -629,6 +647,7 @@ out_del_root:
+>>        list_del_rcu(&root->node);
+>>        mutex_unlock(&acpi_pci_root_lock);
+>>        synchronize_rcu();
+>> +       arch_acpi_pci_root_remove(root);
+>>  out_free:
+>>        kfree(root);
+>>        return result;
+>> @@ -679,6 +698,7 @@ out:
+>>        list_del_rcu(&root->node);
+>>        mutex_unlock(&acpi_pci_root_lock);
+>>        synchronize_rcu();
+>> +       arch_acpi_pci_root_remove(root);
+>>        kfree(root);
+>>
+>>        return 0;
+>> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
+>> index 38f5088..99bda75 100644
+>> --- a/include/acpi/acnames.h
+>> +++ b/include/acpi/acnames.h
+>> @@ -62,6 +62,7 @@
+>>  #define METHOD_NAME__AEI        "_AEI"
+>>  #define METHOD_NAME__PRW        "_PRW"
+>>  #define METHOD_NAME__SRS        "_SRS"
+>> +#define METHOD_NAME__CBA       "_CBA"
+>>
+>>  /* Method names - these methods must appear at the namespace root */
+>>
+>> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+>> index ac93634..816b971 100644
+>> --- a/include/linux/pci-acpi.h
+>> +++ b/include/linux/pci-acpi.h
+>> @@ -38,6 +38,9 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+>>
+>>  void acpi_pci_root_rescan(void);
+>>
+>> +extern int arch_acpi_pci_root_add(struct acpi_pci_root *root);
+>> +extern int arch_acpi_pci_root_remove(struct acpi_pci_root *root);
+>> +
+> 
+> don't need extern here.
+> 
+>>  #else
+>>
+>>  static inline void acpi_pci_root_rescan(void) { }
+>> --
+>> 1.7.5.4
+>>
 
