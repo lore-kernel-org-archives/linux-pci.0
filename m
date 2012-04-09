@@ -1,159 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:39391 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703Ab2DFC7z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Apr 2012 22:59:55 -0400
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 25BF43EE0BD
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 11:59:53 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 0BAF845DE58
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 11:59:53 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id E8CF645DE56
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 11:59:52 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id DD5241DB8050
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 11:59:52 +0900 (JST)
-Received: from m107.s.css.fujitsu.com (m107.s.css.fujitsu.com [10.240.81.147])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 904531DB804A
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 11:59:52 +0900 (JST)
-Received: from m107.css.fujitsu.com (m107 [127.0.0.1])
-	by m107.s.css.fujitsu.com (Postfix) with ESMTP id 585E06E000B
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 11:59:52 +0900 (JST)
-Received: from DEUCALION (unknown [10.124.101.32])
-	by m107.s.css.fujitsu.com (Postfix) with SMTP id ED77D6E000C
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 11:59:51 +0900 (JST)
-Date: Fri, 6 Apr 2012 11:59:48 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH] [RFC] PCI, ACPI, x86: MMCFG support for hotpluggable PCI
- hostbridges on x86, x86_64
-Message-Id: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:56317 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932108Ab2DIQZu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 12:25:50 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH V2 3/6] PCI, x86: use RCU list to protect mmconfig list
+Date: Tue, 10 Apr 2012 00:22:45 +0800
+Message-Id: <1333988568-11282-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
+References: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Use RCU list to protect mmconfig list from dynamic change
+when supporting PCI host bridge hotplug.
 
-This patch introduces the configuration for the base address of
-the memory mapped configuration space (MMCFG) for hot pluggable PCI
-hostbridges on x86 and x86_64.
-
-The MMCFG for hotplugable host bridges must be described by using
-ACPI _CBA method. This patch adds implementation for _CBA method
-on ACPI pci_root driver and MMCFG manipulating functons for x86 and 
-x86_64.
-
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- arch/x86/pci/mmconfig-shared.c |   43 +++++++++++++++++++++++++++++++++++------
- drivers/acpi/pci_root.c        |   28 +++++++++++++++++++++++++-
- drivers/pci/pci.c              |   31 +++++++++++++++++++++++++++++
- include/acpi/acnames.h         |    1 
- include/linux/pci.h            |    3 ++
- 5 files changed, 99 insertions(+), 7 deletions(-)
+ arch/x86/pci/mmconfig-shared.c |   11 ++++++-----
+ arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
+ arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
+ 3 files changed, 28 insertions(+), 9 deletions(-)
 
-Index: linux-next-build/drivers/acpi/pci_root.c
-===================================================================
---- linux-next-build.orig/drivers/acpi/pci_root.c
-+++ linux-next-build/drivers/acpi/pci_root.c
-@@ -451,7 +451,7 @@ EXPORT_SYMBOL(acpi_pci_osc_control_set);
- 
- static int __devinit acpi_pci_root_add(struct acpi_device *device)
- {
--	unsigned long long segment, bus;
-+	unsigned long long segment, bus, base_addr;
- 	acpi_status status;
- 	int result;
- 	struct acpi_pci_root *root;
-@@ -506,6 +506,28 @@ static int __devinit acpi_pci_root_add(s
- 	device->driver_data = root;
- 
- 	/*
-+	 * Check _CBA for hot pluggable host bridge
-+	 */
-+	base_addr = 0;
-+	status = acpi_evaluate_integer(device->handle, METHOD_NAME__CBA, NULL,
-+					 &base_addr);
-+	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-+		printk(KERN_ERR PREFIX "can't evaluate _CBA\n");
-+		result = -ENODEV;
-+		goto end;
-+	}
-+	if (base_addr) {
-+		if (pci_add_mmcfg_region(root->segment,
-+					 root->secondary.start,
-+					 root->secondary.end,
-+					 base_addr) != 0) {
-+			printk(KERN_ERR PREFIX "can't add MMCFG entry\n");
-+			result = -ENODEV;
-+			goto end;
-+		}
-+	}
-+
-+	/*
- 	 * All supported architectures that use ACPI have support for
- 	 * PCI domains, so we indicate this in _OSC support capabilities.
- 	 */
-@@ -625,6 +647,8 @@ static int __devinit acpi_pci_root_add(s
- 	return 0;
- 
- end:
-+	if (base_addr)
-+		pci_remove_mmcfg_region(root->segment, root->secondary.start);
- 	if (!list_empty(&root->node))
- 		list_del(&root->node);
- 	kfree(root);
-@@ -646,6 +670,8 @@ static int acpi_pci_root_remove(struct a
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
-+	pci_remove_mmcfg_region(root->segment, root->secondary.start);
-+
- 	kfree(root);
- 	return 0;
- }
-Index: linux-next-build/include/acpi/acnames.h
-===================================================================
---- linux-next-build.orig/include/acpi/acnames.h
-+++ linux-next-build/include/acpi/acnames.h
-@@ -61,6 +61,7 @@
- #define METHOD_NAME__AEI        "_AEI"
- #define METHOD_NAME__PRW        "_PRW"
- #define METHOD_NAME__SRS        "_SRS"
-+#define METHOD_NAME__CBA	"_CBA"
- 
- /* Method names - these methods must appear at the namespace root */
- 
-Index: linux-next-build/include/linux/pci.h
-===================================================================
---- linux-next-build.orig/include/linux/pci.h
-+++ linux-next-build/include/linux/pci.h
-@@ -1460,6 +1460,9 @@ void pcibios_disable_device(struct pci_d
- void pcibios_set_master(struct pci_dev *dev);
- int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- 				 enum pcie_reset_state state);
-+int pci_add_mmcfg_region(int segment, int start,
-+			 int end, u64 addr);
-+void pci_remove_mmcfg_region(int segment, int bus);
- 
- #ifdef CONFIG_PCI_MMCONFIG
- extern void __init pci_mmcfg_early_init(void);
-Index: linux-next-build/arch/x86/pci/mmconfig-shared.c
-===================================================================
---- linux-next-build.orig/arch/x86/pci/mmconfig-shared.c
-+++ linux-next-build/arch/x86/pci/mmconfig-shared.c
-@@ -28,7 +28,7 @@ static int __initdata pci_mmcfg_resource
- 
- LIST_HEAD(pci_mmcfg_list);
- 
--static __init void pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
-+static __devinit void pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
- {
- 	if (cfg->res.parent)
- 		release_resource(&cfg->res);
-@@ -45,7 +45,7 @@ static __init void free_all_mmcfg(void)
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 5e2cd2a..3bcc361 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -17,6 +17,7 @@
+ #include <linux/bitmap.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/rculist.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <asm/acpi.h>
+@@ -45,20 +46,20 @@ static __init void free_all_mmcfg(void)
  		pci_mmconfig_remove(cfg);
  }
  
@@ -162,106 +51,143 @@ Index: linux-next-build/arch/x86/pci/mmconfig-shared.c
  {
  	struct pci_mmcfg_region *cfg;
  
-@@ -61,8 +61,10 @@ static __init void list_add_sorted(struc
- 	list_add_tail(&new->list, &pci_mmcfg_list);
+ 	/* keep list sorted by segment and starting bus number */
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
+ 		if (cfg->segment > new->segment ||
+ 		    (cfg->segment == new->segment &&
+ 		     cfg->start_bus >= new->start_bus)) {
+-			list_add_tail(&new->list, &cfg->list);
++			list_add_tail_rcu(&new->list, &cfg->list);
+ 			return;
+ 		}
+ 	}
+-	list_add_tail(&new->list, &pci_mmcfg_list);
++	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
  }
  
--static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
--							int end, u64 addr)
-+static __devinit struct pci_mmcfg_region *pci_mmconfig_add(int segment,
-+							   int start,
-+							   int end,
-+							   u64 addr)
- {
- 	struct pci_mmcfg_region *new;
- 	struct resource *res;
-@@ -108,6 +110,33 @@ struct pci_mmcfg_region *pci_mmconfig_lo
- 	return NULL;
- }
- 
-+int pci_add_mmcfg_region(int segment, int start, int end, u64 addr)
-+{
-+	struct pci_mmcfg_region *cfg;
-+
-+	cfg = pci_mmconfig_add(segment, start, end, addr);
-+	if (!cfg) {
-+		printk(KERN_WARNING PREFIX
-+			"no memory for MMCFG entry\n");
-+		return -ENOMEM;
-+	}
-+
-+	insert_resource(&iomem_resource, &cfg->res);
-+
-+	return 0;
-+}
-+
-+void pci_remove_mmcfg_region(int segment, int bus)
-+{
-+	struct pci_mmcfg_region *cfg;
-+
-+	cfg = pci_mmconfig_lookup(segment, bus);
-+	if (!cfg)
-+		return;
-+
-+	pci_mmconfig_remove(cfg);
-+}
-+
- static const char __init *pci_mmcfg_e7520(void)
- {
- 	u32 win;
-@@ -357,8 +386,10 @@ static void __init pci_mmcfg_insert_reso
+ static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
+@@ -111,7 +112,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
  {
  	struct pci_mmcfg_region *cfg;
  
 -	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		insert_resource(&iomem_resource, &cfg->res);
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-+		if (!cfg->res.parent)
-+			insert_resource(&iomem_resource, &cfg->res);
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+ 		if (cfg->segment == segment &&
+ 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
+ 			return cfg;
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5372e86..5dad04a 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/init.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <acpi/acpi.h>
+@@ -60,9 +61,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		goto err;
 +	}
  
- 	/* Mark that the resources have been inserted. */
- 	pci_mmcfg_resources_inserted = 1;
-Index: linux-next-build/drivers/pci/pci.c
-===================================================================
---- linux-next-build.orig/drivers/pci/pci.c
-+++ linux-next-build/drivers/pci/pci.c
-@@ -79,6 +79,37 @@ unsigned long pci_hotplug_mem_size = DEF
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
  
- enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
+@@ -80,6 +84,7 @@ err:		*value = -1;
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
  
-+/**
-+ *
-+ * pci_add_mmcfg_region
-+ * @segment: segment number
-+ * @start: start bus number
-+ * @end: end bus number
-+ * @addr: base address
-+ *
-+ *  Add MMCONFIG entry for specified segment or bus range group
-+ *
-+ * This is the default implementation. Architecture implementations
-+ * can override this.
-+ */
-+int __attribute__ ((weak)) pci_add_mmcfg_region(int segment, int start,
-+						int end, u64 addr)
-+{
-+	return -EINVAL;
-+}
-+
-+/**
-+ * pci_remove_mmcfg_region
-+ * @segment: segment number
-+ * @bus: bus number
-+ *
-+ *  Remove MMCONFIG entry for specified segment or bus range group
-+ *
-+ * This is the default implementation. Architecture implementations
-+ * can override this.
-+ */
-+void __attribute__ ((weak)) pci_remove_mmcfg_region(int segment, int bus) {}
-+
- /*
-  * The default CLS is used if arch didn't set CLS explicitly and not
-  * all pci devices agree on the same value.  Arch can override either
+ 	return 0;
+ }
+@@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if ((bus > 255) || (devfn > 255) || (reg > 4095))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index 915a493..acc48c5 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -9,6 +9,7 @@
+ #include <linux/init.h>
+ #include <linux/acpi.h>
+ #include <linux/bitmap.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -34,9 +35,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -49,6 +53,7 @@ err:		*value = -1;
+ 		*value = mmio_config_readl(addr + reg);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		mmio_config_writel(addr + reg, value);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+-- 
+1.7.5.4
 
