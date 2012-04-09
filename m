@@ -1,53 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:47507 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102Ab2DSHH3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2012 03:07:29 -0400
-Received: from huawei.com (szxga05-in [172.24.2.49])
- by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M2P000MQT0J17@szxga05-in.huawei.com> for
- linux-pci@vger.kernel.org; Thu, 19 Apr 2012 15:05:07 +0800 (CST)
-Received: from szxrg02-dlp.huawei.com ([172.24.2.119])
- by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M2P00D08SYXKN@szxga05-in.huawei.com> for
- linux-pci@vger.kernel.org; Thu, 19 Apr 2012 15:05:07 +0800 (CST)
-Date: Thu, 19 Apr 2012 15:04:49 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH V4 6/6] PCI, ACPI,
- x86: update MMCFG information when hot-plugging PCI host bridges
-In-reply-to: <20120419154921.64583b35.izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <4F82CB64.8030808@jp.fujitsu.com>
+Date: Mon, 09 Apr 2012 20:43:32 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+MIME-Version: 1.0
+To: Jiang Liu <liuj97@gmail.com>
+CC: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Message-id: <4F8FB911.1090002@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
- <1334103063-2283-7-git-send-email-jiang.liu@huawei.com>
- <20120418154725.92833e4d.izumi.taku@jp.fujitsu.com>
- <4F8E7227.1050707@huawei.com>
- <20120419154921.64583b35.izumi.taku@jp.fujitsu.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <1333905129-8776-1-git-send-email-jiang.liu@huawei.com> <1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-2022-JP
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Taku,
-	You are right. acpi_pci_root.mmconf_added is used to track
-whether MMCFG info is added by pci_mmconfig_insert(), and
-arch_acpi_pci_root_remove() will only delete MMCFG info added by
-pci_mmconfig_insert().
-	gerry
+Your patch looks good to me.
 
-On 2012-4-19 14:49, Taku Izumi wrote:
->
-> Hi Jiang,
->     Thanks, and I have another question.
->
->      What does "acpi_pci_root.mmconf_added" indicate ?
->      In case of non-hotpluggable hostbridges, that is, when MMCONF
->      is described using MCFG table, acpi_pci_root.mmconf_added is always 0.
->      Is "acpi_pci_root.mmconf_added" only for hotpluggable hostbridges ?
+I have some comments.
+
+(2012/04/09 2:12), Jiang Liu wrote:
+> This patch enhances pci_root driver to update MMCFG information when
+> hot-plugging PCI root bridges on x86 platforms.
 >
 
+Do you have the patch that can be applied to Bjorn's pci tree?
 
+<snip.>
+
+> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
+> +{
+> +	int result = 0;
+> +	acpi_status status;
+> +	unsigned long long base_addr;
+> +	struct pci_mmcfg_region *cfg;
+> +
+> +	/*
+> +	 * Try to insert MMCFG information for host bridges with _CBA method
+> +	 */
+> +	status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+> +				       NULL,&base_addr);
+> +	if (ACPI_SUCCESS(status)) {
+> +		result = pci_mmconfig_insert(root->segment,
+> +					     root->secondary.start,
+> +					     root->secondary.end,
+> +					     base_addr);
+> +		/*
+> +		 * MMCFG information for hot-pluggable host bridges may have
+> +		 * already been added by __pci_mmcfg_init();
+> +		 */
+> +		if (result == -EEXIST)
+> +			result = 0;
+
+Just for confirmation.
+>From my interpretation of PCI firmware spec, MCFG doesn't have any entry
+for hot-pluggable hostbridge. So I assume this is for the machine that
+is not compliant to the spec. Is my understanding same as yours?
+
+<snip.>
+
+>   static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>   {
+>   	unsigned long long segment, bus;
+> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>   	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>   	device->driver_data = root;
+> 
+> +	if (arch_acpi_pci_root_add(root)) {
+> +		printk(KERN_ERR PREFIX
+> +			"can't add MMCFG information for Bus %04x:%02x\n",
+> +			root->segment, (unsigned int)root->secondary.start);
+> +		result = -ENODEV;
+> +		goto out_free;
+> +	}
+
+Desn't this break the system that doesn't support MMCONFIG?
+
+In my understanding, arch_acpi_pci_root_add() returns -ENODEV if
+mmconfig information is found neither in MCFG table nor _CBA. And
+pci root bridge initialization seems to fail arch_acpi_pci_root_add()
+returns non-zero value.
+
+Regards,
+Kenji Kaneshige
