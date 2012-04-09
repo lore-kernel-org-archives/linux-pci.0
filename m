@@ -1,167 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:44182 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750870Ab2DOTgH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 15 Apr 2012 15:36:07 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] PCI: Fix regression in pci_restore_state()
-Date: Sun, 15 Apr 2012 21:40:40 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mikko Vinni <mmvinni@yahoo.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204152047.51019.rjw@sisk.pl> <CA+55aFyShMvUjkyGv4DgSGByuoU18o8=MnGJqbz5aSwDVyOyOA@mail.gmail.com>
-In-Reply-To: <CA+55aFyShMvUjkyGv4DgSGByuoU18o8=MnGJqbz5aSwDVyOyOA@mail.gmail.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:56860 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756945Ab2DIQCY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 12:02:24 -0400
+Message-ID: <4F830804.6010007@gmail.com>
+Date: Tue, 10 Apr 2012 00:02:12 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204152140.40747.rjw@sisk.pl>
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+CC: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <1333905129-8776-1-git-send-email-jiang.liu@huawei.com> <1333905129-8776-3-git-send-email-jiang.liu@huawei.com> <4F82CB64.8030808@jp.fujitsu.com>
+In-Reply-To: <4F82CB64.8030808@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, April 15, 2012, Linus Torvalds wrote:
-> On Sun, Apr 15, 2012 at 11:47 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >
-> > mdelay(10) doesn't really look good either to me in this case, though.
-> 
-> Oh, I agree. What kind of ass-backwards device actually needs that
-> kind of crazy delays? It is almost certainly buggy.
-> 
-> With retries, 10ms delays are totally unacceptable. There's something wrong.
-> 
-> A single ms *may* be ok.
-> 
-> Anyway, can you also split the actual "write _one_ register with
-> retry" into a function of its own? The code looks like crap with those
-> multiple levels of looping, with conditionals inside them etc. With a
-> simple helper function, you could change the break into return, and it
-> would look much better, I bet.
+Hi Kenji,
+	Thanks for your careful review and comments.
 
-Sure.  It appears cleaner this way.
+On 04/09/2012 07:43 PM, Kenji Kaneshige wrote:
+> Your patch looks good to me.
+> 
+> I have some comments.
+> 
+> (2012/04/09 2:12), Jiang Liu wrote:
+>> This patch enhances pci_root driver to update MMCFG information when
+>> hot-plugging PCI root bridges on x86 platforms.
+>>
+> 
+> Do you have the patch that can be applied to Bjorn's pci tree?
+> 
+> <snip.>
+Will try to generate a version against Bjorn's version. Could you please tell
+me the exact git link for that? I haven't pull from Bjorn's tree yet.
 
+> 
+>> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
+>> +{
+>> +	int result = 0;
+>> +	acpi_status status;
+>> +	unsigned long long base_addr;
+>> +	struct pci_mmcfg_region *cfg;
+>> +
+>> +	/*
+>> +	 * Try to insert MMCFG information for host bridges with _CBA method
+>> +	 */
+>> +	status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+>> +				       NULL,&base_addr);
+>> +	if (ACPI_SUCCESS(status)) {
+>> +		result = pci_mmconfig_insert(root->segment,
+>> +					     root->secondary.start,
+>> +					     root->secondary.end,
+>> +					     base_addr);
+>> +		/*
+>> +		 * MMCFG information for hot-pluggable host bridges may have
+>> +		 * already been added by __pci_mmcfg_init();
+>> +		 */
+>> +		if (result == -EEXIST)
+>> +			result = 0;
+> 
+> Just for confirmation.
+> From my interpretation of PCI firmware spec, MCFG doesn't have any entry
+> for hot-pluggable hostbridge. So I assume this is for the machine that
+> is not compliant to the spec. Is my understanding same as yours?
+> 
+> <snip.>
+You are right, it's defined to that way in PCI FW Spec 3.1.
+Here I have some concerns about the PCI buses to host all Ubox components
+on Intel NHM/WSM/SNB/IVB processors. BIOS people are prone to declare
+MMCFG information for those host bridges by MCFG table instead of _CBA method,
+though those host bridge will disappear after hot-removing a physical processor.
+
+> 
+>>   static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>>   {
+>>   	unsigned long long segment, bus;
+>> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>>   	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>>   	device->driver_data = root;
+>>
+>> +	if (arch_acpi_pci_root_add(root)) {
+>> +		printk(KERN_ERR PREFIX
+>> +			"can't add MMCFG information for Bus %04x:%02x\n",
+>> +			root->segment, (unsigned int)root->secondary.start);
+>> +		result = -ENODEV;
+>> +		goto out_free;
+>> +	}
+> 
+> Desn't this break the system that doesn't support MMCONFIG?
+> 
+> In my understanding, arch_acpi_pci_root_add() returns -ENODEV if
+> mmconfig information is found neither in MCFG table nor _CBA. And
+> pci root bridge initialization seems to fail arch_acpi_pci_root_add()
+> returns non-zero value.
+Good catch, will add following code into arch_acpi_pci_root_add() and 
+arch_acpi_pci_root_remove() to solve this issue.
 ---
-From: Rafael J. Wysocki <rjw@sisk.pl>
-Subject: PCI: Fix regression in pci_restore_state(), v3
-
-Commit 26f41062f28de65e11d3cf353e52d0be73442be1
-
-    PCI: check for pci bar restore completion and retry
-
-attempted to address problems with PCI BAR restoration on systems
-where FLR had not been completed before pci_restore_state() was
-called, but it did that in an utterly wrong way.
-
-First off, instead of retrying the writes for the BAR registers
-only, it did that for all of the PCI config space of the device,
-including the status register (whose value after the write quite
-obviously need not be the same as the written one).  Second, it
-added arbitrary delay to pci_restore_state() even for systems
-where the PCI config space restoration was successful at first
-attempt.  Finally, the mdelay(10) it added to every iteration of the
-writing loop was way too much of a delay for any reasonable device.
-
-All of this actually caused resume failures for some devices on
-the Mikko's system.
-
-To fix the regression, make pci_restore_state() only retry the
-writes for BAR registers and only wait if the first read from
-the register doesn't return the written value.  Additionaly, make
-it wait for 1 ms, instead of 10 ms, after every failing attempt
-to write into config space.
-
-Reported-by: Mikko Vinni <mmvinni@yahoo.com>
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+        /* MMCONFIG disabled */
+        if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+                return 0;
 ---
- drivers/pci/pci.c |   57 ++++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 39 insertions(+), 18 deletions(-)
 
-Index: linux/drivers/pci/pci.c
-===================================================================
---- linux.orig/drivers/pci/pci.c
-+++ linux/drivers/pci/pci.c
-@@ -967,16 +967,47 @@ pci_save_state(struct pci_dev *dev)
- 	return 0;
- }
- 
-+static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
-+				     u32 saved_val, int retry)
-+{
-+	u32 val;
-+
-+	pci_read_config_dword(pdev, offset, &val);
-+	if (val == saved_val)
-+		return;
-+
-+	for (;;) {
-+		dev_dbg(&pdev->dev, "restoring config space at offset "
-+			"%#x (was %#x, writing %#x)\n", offset, val, saved_val);
-+		pci_write_config_dword(pdev, offset, saved_val);
-+		if (retry-- <= 0)
-+			return;
-+
-+		pci_read_config_dword(pdev, offset, &val);
-+		if (val == saved_val)
-+			return;
-+
-+		mdelay(1);
-+	}
-+}
-+
-+static void pci_restore_config_space(struct pci_dev *pdev, int start, int end,
-+				     int retry)
-+{
-+	int index;
-+
-+	for (index = end; index >= start; index--)
-+		pci_restore_config_dword(pdev, 4 * index,
-+					 pdev->saved_config_space[index],
-+					 retry);
-+}
-+
- /** 
-  * pci_restore_state - Restore the saved state of a PCI device
-  * @dev: - PCI device that we're dealing with
-  */
- void pci_restore_state(struct pci_dev *dev)
- {
--	int i;
--	u32 val;
--	int tries;
--
- 	if (!dev->state_saved)
- 		return;
- 
-@@ -984,24 +1015,14 @@ void pci_restore_state(struct pci_dev *d
- 	pci_restore_pcie_state(dev);
- 	pci_restore_ats_state(dev);
- 
-+	pci_restore_config_space(dev, 10, 15, 0);
- 	/*
- 	 * The Base Address register should be programmed before the command
- 	 * register(s)
- 	 */
--	for (i = 15; i >= 0; i--) {
--		pci_read_config_dword(dev, i * 4, &val);
--		tries = 10;		
--		while (tries && val != dev->saved_config_space[i]) {
--			dev_dbg(&dev->dev, "restoring config "
--				"space at offset %#x (was %#x, writing %#x)\n",
--				i, val, (int)dev->saved_config_space[i]);
--			pci_write_config_dword(dev,i * 4,
--				dev->saved_config_space[i]);
--			pci_read_config_dword(dev, i * 4, &val);
--			mdelay(10);
--			tries--;
--		}
--	}
-+	pci_restore_config_space(dev, 4, 9, 10);
-+	pci_restore_config_space(dev, 0, 3, 0);
-+
- 	pci_restore_pcix_state(dev);
- 	pci_restore_msi_state(dev);
- 	pci_restore_iov_state(dev);
+
+> 
+> Regards,
+> Kenji Kaneshige
+
