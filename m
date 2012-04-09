@@ -1,68 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kamaji.grokhost.net ([87.117.218.43]:33841 "EHLO
-	kamaji.grokhost.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407Ab2DFKR1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 06:17:27 -0400
-Subject: Re: [E1000-devel] e1000e interface hang on 82574L
-Mime-Version: 1.0 (Apple Message framework v1276)
-Content-Type: text/plain; charset=us-ascii
-From: Chris Boot <bootc@bootc.net>
-In-Reply-To: <87ehsov6ot.fsf@spindle.srvr.nix>
-Date: Fri, 6 Apr 2012 11:17:23 +0100
-Cc: "Wyborny, Carolyn" <carolyn.wyborny@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev <netdev@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Message-Id: <1590F833-7D40-42FE-8FA2-6DCCADF9C6B0@bootc.net>
-References: <4EFA4024.5000909@bootc.net> <FCF3184D-CE4F-471C-B66C-0F671795FD3C@bootc.net> <9BBC4E0CF881AA4299206E2E1412B626017762@ORSMSX102.amr.corp.intel.com> <4F048861.8070501@bootc.net> <4F12B42C.9030803@bootc.net> <9BBC4E0CF881AA4299206E2E1412B62621F0B1@ORSMSX102.amr.corp.intel.com> <4F144A76.3050703@bootc.net> <4F64B4E2.20208@bootc.net> <4F64CFCB.7060702@bootc.net> <9BBC4E0CF881AA4299206E2E1412B6260E512E0C@ORSMSX102.amr.corp.intel.com> <87r4wova0b.fsf@spindle.srvr.nix> <9BBC4E0CF881AA4299206E2E1412B6260E512FB9@ORSMSX102.amr.corp.intel.com> <87ehsov6ot.fsf@spindle.srvr.nix>
-To: Nix <nix@esperi.org.uk>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40501 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757437Ab2DIQZd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 12:25:33 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH V2 1/6] PCI, x86: split out pci_mmcfg_check_reserved() for code reuse
+Date: Tue, 10 Apr 2012 00:22:43 +0800
+Message-Id: <1333988568-11282-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
+References: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19 Mar 2012, at 17:31, Nix wrote:
+Split out pci_mmcfg_check_reserved() for code reuse, which will be used
+when supporting PCI host bridge hotplug.
 
-> On 19 Mar 2012, Carolyn Wyborny said:
-> 
->>> you'll see that I tested that, and it doesn't work :( even if it did
->>> work, it shouldn't be needed: the driver attempts to turn off PCIe ASPM
->>> on affected NICs, and fails, apparently because *something* turns it
->>> back on again.
->>> 
->> The driver attempts to disable L0s state, not the entire feature. It
-> 
-> It tries to disable L1 state as well (or it did when I tested this last,
-> although I suspect you're right and it may leave L1 turned on these
-> days: judging by the contents of e1000_82574_info, anyway.)
-> 
->> is also required that the device upstream on the bus from the 82574L
->> have this disabled. Yes, I agree there appears to be something in the
->> os that either ren-enables or fails to disable the feature on the
->> upstream device, as desired. Platforms/systems also appear to vary in
->> this regard, so the solutions may vary a bit as well.
->> 
->> Its worth trying your solution as well if what I suggested doesn't
->> work, but there is not one solution that fits all, unfortunately.
-> 
-> I don't *have* a solution. :( 'setpci by hand some unknown amount of
-> time after booting once the interface has stabilized' hardly counts as a
-> solution of any sort. It's, at best, a workaround that lets me use my
-> systems without hourly lockups until a real solution is found.
-> 
-> (To clarify: manual setpci to force off the ASPM bits is the only thing
-> that works for me. The driver's automatic disabling of L0s and L1
-> doesn't work: nor does booting with pcie_aspm=off. In both cases, I end
-> up with both L0s and L1 turned on, and a lockup some time later, unless
-> I setpci the bits off by hand.)
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   51 +++++++++++++++++++--------------------
+ 1 files changed, 25 insertions(+), 26 deletions(-)
 
-
-Well, with that setpci incantation run against the NIC and its upstream device to disable ASPM L1s (setpci -s <dev> CAP_EXP+10.b=40), everything has been working very well indeed. Is there something the e1000e driver could do to disable L1s as well as L0s if we know there's a problem with them for these devices?
-
-Adding Bjorn Helgaas and linux-pci to CCs to try to get the ball rolling some more, as this is crippling without the fixes.
-
-Cheers,
-Chris
-
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 301e325..f799949 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+ 	return valid;
+ }
+ 
++static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
++					      int early)
++{
++	if (!early && !acpi_disabled) {
++		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
++			return 1;
++		else
++			printk(KERN_ERR FW_BUG PREFIX
++			       "MMCONFIG at %pR not reserved in "
++			       "ACPI motherboard resources\n",
++			       &cfg->res);
++	}
++
++	/* Don't try to do this check unless configuration
++	   type 1 is available. how about type 2 ?*/
++	if (raw_pci_ops)
++		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
++
++	return 0;
++}
++
+ static void __init pci_mmcfg_reject_broken(int early)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		int valid = 0;
+-
+-		if (!early && !acpi_disabled) {
+-			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
+-
+-			if (valid)
+-				continue;
+-			else
+-				printk(KERN_ERR FW_BUG PREFIX
+-				       "MMCONFIG at %pR not reserved in "
+-				       "ACPI motherboard resources\n",
+-				       &cfg->res);
++		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
++			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
++			free_all_mmcfg();
++			return;
+ 		}
+-
+-		/* Don't try to do this check unless configuration
+-		   type 1 is available. how about type 2 ?*/
+-		if (raw_pci_ops)
+-			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
+-
+-		if (!valid)
+-			goto reject;
+ 	}
+-
+-	return;
+-
+-reject:
+-	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
+-	free_all_mmcfg();
+ }
+ 
+ static int __initdata known_bridge;
 -- 
-Chris Boot
-bootc@bootc.net
+1.7.5.4
 
