@@ -1,42 +1,73 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <4F8BCF00.3020004@intel.com>
-Date: Mon, 16 Apr 2012 15:49:20 +0800
-From: "Yan, Zheng" <zheng.z.yan@intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-References: <4F8790F6.5080408@intel.com> <201204132141.58063.rjw@sisk.pl>
-In-Reply-To: <201204132141.58063.rjw@sisk.pl>
-Content-Type: text/plain; charset=windows-1252
+From: Jiang Liu <liuj97@gmail.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH V2 2/6] PCI, x86: split out pci_mmconfig_alloc() for code reuse
+Date: Tue, 10 Apr 2012 00:22:44 +0800
+Message-Id: <1333988568-11282-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
+References: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/14/2012 03:41 AM, Rafael J. Wysocki wrote:
->> > @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
->> >  
->> >  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
->> >  {
->> > -	if (dev->pme_interrupt)
->> > +	/* PME interrupt isn't available in the D3cold case */
->> > +	if (dev->pme_interrupt && !dev->runtime_d3cold)
->
-> This whole thing is wrong.  First off, I don't think that the runtime_d3cold
-> flag makes any sense.  We already cover that in dev->pme_support.
-> 
-> Second, pme_interrupt means that the _root_ _port_, not the device itself will
-> trigger an interrupt whenever the device sends the PME message to it (which
-> very well may happen for a device in D3_cold woken up by an external signal).
-> 
+Split out pci_mmconfig_alloc() for code reuse, which will be used
+when supporting PCI root bridge hotplug.
 
-I rechecked this. The port does trigger PME interrupt, but after the WAKE# signal
-restores device power. So my comments "PME interrupt isn't available in the D3cold
-case" is wrong, but setup ACPI wakeup is still required.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   19 +++++++++++++++----
+ 1 files changed, 15 insertions(+), 4 deletions(-)
 
-Regards
-Yan, Zheng
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index f799949..5e2cd2a 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -61,8 +61,9 @@ static __init void list_add_sorted(struct pci_mmcfg_region *new)
+ 	list_add_tail(&new->list, &pci_mmcfg_list);
+ }
+ 
+-static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+-							int end, u64 addr)
++static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
++							     int start,
++							     int end, u64 addr)
+ {
+ 	struct pci_mmcfg_region *new;
+ 	struct resource *res;
+@@ -79,8 +80,6 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	new->start_bus = start;
+ 	new->end_bus = end;
+ 
+-	list_add_sorted(new);
+-
+ 	res = &new->res;
+ 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
+ 	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
+@@ -96,6 +95,18 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	return new;
+ }
+ 
++static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
++							int end, u64 addr)
++{
++	struct pci_mmcfg_region *new;
++
++	new = pci_mmconfig_alloc(segment, start, end, addr);
++	if (new)
++		list_add_sorted(new);
++
++	return new;
++}
++
+ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+ {
+ 	struct pci_mmcfg_region *cfg;
+-- 
+1.7.5.4
+
