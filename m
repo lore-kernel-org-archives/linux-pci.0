@@ -1,55 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:42739 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108Ab2DUAJs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Apr 2012 20:09:48 -0400
+Received: from usmamail.tilera.com ([206.83.70.75]:10287 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755551Ab2DIViR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 17:38:17 -0400
+Message-ID: <4F8356C7.60706@tilera.com>
+Date: Mon, 9 Apr 2012 17:38:15 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
-In-Reply-To: <20120420231748.GB7069@xanatos>
-References: <4F8F243B.70906@fold.natur.cuni.cz>
-	<CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com>
-	<4F909CEB.3060407@fold.natur.cuni.cz>
-	<CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
-	<CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
-	<4F91473A.1080007@fold.natur.cuni.cz>
-	<CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
-	<4F919C22.1070608@fold.natur.cuni.cz>
-	<4F919CD5.7070004@fold.natur.cuni.cz>
-	<CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
-	<20120420231748.GB7069@xanatos>
-Date: Fri, 20 Apr 2012 17:09:48 -0700
-Message-ID: <CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
-Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
-From: Yinghai Lu <yinghai@kernel.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>, Joe Perches <joe@perches.com>,
+	David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH 3/3] arch/tile: tilegx PCI root complex support
+References: <201204072316.q37NGv8d019280@farm-0023.internal.tilera.com> <201204072319.q37NJlNp019384@farm-0023.internal.tilera.com> <201204091359.13059.arnd@arndb.de>
+In-Reply-To: <201204091359.13059.arnd@arndb.de>
+Content-Type: text/plain; charset="ISO-8859-15"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 20, 2012 at 4:17 PM, Sarah Sharp
-<sarah.a.sharp@linux.intel.com> wrote:
-> On Fri, Apr 20, 2012 at 11:47:14AM -0700, Yinghai Lu wrote:
->> On Fri, Apr 20, 2012 at 10:28 AM, Martin Mokrejs
->> <mmokrejs@fold.natur.cuni.cz> wrote:
->> > [30720.175637] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
->> > [30720.175639] pciehp 0000:00:1c.7:pcie04: LinkState change
->> > [30720.175643] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
->> > [30720.175644] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> > [30720.175648] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
->> > [30720.175687] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> > [30720.175718] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
->> > [30720.175721] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
->> >
+On 4/9/2012 9:59 AM, Arnd Bergmann wrote:
+> On Saturday 07 April 2012, Chris Metcalf wrote:
+>> This change implements PCIe root complex support for tilegx using
+>> the kernel support layer for accessing the TRIO hardware shim.
 >>
->> So the USB host control driver xhci put that 11:00.0 in strange power state.
+>> Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+> Hi Chris,
 >
-> What do you mean "strange power state"?  The only PCI power states the
-> xHCI driver will use is D0 or D3hot.  D3hot is entered automatically by
-> the USB core runtime PM system when all USB devices are disconnected or
-> suspended.  So what strange power state are we talking about?
+> I don't know if we discussed it during the initial merge, but I notice that the PIO
+> accessors (inb/outb and friends) are still not implemented in this patch. Normally
+> PIO can just be mapped into the MMIO address space, so that inb() becomes
+> a call to readb() with an offset on the address.
 
-that's helpful. Can that feature to be disabled?
+I asked our PCI expert here, who said, "My understanding is that if someone
+wants to use inb/outb to access MMIO space, he'll get the MMIO, as opposed
+to methods implemented with I/O instructions which are not supported by
+TILE.  If the driver is dependent on the I/O instructions, it won't work on
+TILE. These drivers are legacy PC drivers, e.g. ATA devices, which are not
+supported by TILE."
 
-Yinghai
+Should we just arrange to #include <asm-generic/io.h> to pick up inb/outb
+et al?  Any reason to think a non-zero offset should be part of the
+solution?  (I don't really understand how inb/outb are used by modern drivers.)
+
+> Using mdelay is generally considered very rude. Since you are not in
+> atomic context here, just use msleep() instead.
+
+Done.
+
+Thanks for all your reviews!
+
+-- 
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
+
