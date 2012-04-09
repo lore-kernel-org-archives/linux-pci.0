@@ -1,38 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:43370 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890Ab2DLEGd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2012 00:06:33 -0400
-Date: Wed, 11 Apr 2012 22:06:31 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-To: Don Dutile <ddutile@redhat.com>
-Cc: "Hao, Xudong" <xudong.hao@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
-Message-ID: <20120412040630.GC6557@parisc-linux.org>
-References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com> <4F8594FD.8020109@redhat.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:53415 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756576Ab2DIPLG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 11:11:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F8594FD.8020109@redhat.com>
+In-Reply-To: <4F82F42C.5040301@gmail.com>
+References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
+	<1333905129-8776-1-git-send-email-jiang.liu@huawei.com>
+	<1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQXNOJA4oCDw-CF32UjaA=6tri73nXP3u6+hMEjpugjF9w@mail.gmail.com>
+	<4F82F42C.5040301@gmail.com>
+Date: Mon, 9 Apr 2012 08:11:05 -0700
+Message-ID: <CAE9FiQXsbSikFYuTECH7QbHLxFOA1uZ-=oC_v6-7fzdC4V0PSA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when
+ hot-plugging PCI host bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 11, 2012 at 10:28:13AM -0400, Don Dutile wrote:
->> +	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
-> Don't we know how to do a 10sec timeout w/o tying it to tsc_khz?
+On Mon, Apr 9, 2012 at 7:37 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Hi Yinghai,
+>
+>>> +int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
+>>> +{
+>>> +       acpi_status status;
+>>> +       unsigned long long base_addr;
+>>> +
+>>> +       /* Remove MMCFG information for host bridges with _CBA method */
+>>> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+>>> +                                      NULL, &base_addr);
+>>
+>> add one flag in acpi_pci_root about we added mmconf for it before?
+>> like mmconf_added?
+>>
+>
+> I feel adding a flag here doesn't help here. For any hot-pluggable PCI host bridge
+> with _CBA method available, arch_acpi_pci_root_remove() should delete the MMCFG
+> information, no matter it's added by __pci_mmcfg_init() or arch_acpi_pci_root_add().
+> So check existence of _CBA seems simpler here.
 
-Right, this code should of course be using jiffies and msleep.
+_remove should not care about _CBA, it should only care about if it
+gets added on _add path.
 
-> --> other arch compile problem source???
+Also like Kenji said, We should let it go through even no MMCONF is
+added at that time.
+like somehow _CBA does not exis for some root bus or evaluating failing etc.
 
-Well, this device is part of the x86 CPU.  It's never going to be found
-as part of any other architecture.  Why force other architectures to
-carry this quirk around?
-
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Yinghai
