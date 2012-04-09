@@ -1,51 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:64657 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756383Ab2D3ViW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2012 17:38:22 -0400
-Received: by lbbgm6 with SMTP id gm6so537310lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 30 Apr 2012 14:38:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120428192559.GB28349@parisc-linux.org>
-References: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com> <20120428192559.GB28349@parisc-linux.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Apr 2012 15:38:00 -0600
-Message-ID: <CAErSpo6mpUJTuUe8nE3k+zhDfsu2g2CEMNy0bc3=9+o8WwBqAA@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI: work around Stratus ftServer broken PCIe hierarchy
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Myron Stowe <mstowe@redhat.com>,
-	James Paradis <james.paradis@stratus.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:40491 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757215Ab2DIPQs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 11:16:48 -0400
+Date: Mon, 9 Apr 2012 08:16:43 -0700
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Chunhe Lan <b25806@freescale.com>
+Cc: <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: PCIe: Fix uninitialized variable 'cap_mask'
+Message-ID: <20120409081643.18ecfbc2@jbarnes-desktop>
+In-Reply-To: <4F8252C0.9060002@freescale.com>
+References: <1331104586-5720-1-git-send-email-Chunhe.Lan@freescale.com>
+	<4F8252C0.9060002@freescale.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/c6U+_cykfW_bPlIfUTaaZc4"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 28, 2012 at 1:26 PM, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Wed, Apr 25, 2012 at 05:36:32PM -0600, Bjorn Helgaas wrote:
->> @@ -2161,6 +2161,9 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>                               on: Turn realloc on
->>               realloc         same as realloc=on
->>               noari           do not use PCIe ARI.
->> +             pcie_scan_all   Scan all possible PCIE devices.  Otherwise we
->> +                             only look for one device below a PCIE downstream
->> +                             port.
->
-> We should probably s/device/slot/ throughout.  I've recently become
-> aware of a hype-rvisor that doesn't include PCI device number remapping,
-> so if you assign, say, function 03.6 to a guest, the PCI scanning code
-> doesn't find it.
+--Sig_/c6U+_cykfW_bPlIfUTaaZc4
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-"Device" has a clear meaning in the context of PCIe addressing, i.e.,
-bus/device/function numbers.  But the spec uses "slot" to refer to a
-physical place where an add-in card can be inserted and things related
-to that place, e.g.,  power, hot-plug buttons, latches, chassis
-labels, etc.
+On Mon, 9 Apr 2012 11:08:48 +0800
+Chunhe Lan <b25806@freescale.com> wrote:
 
-So I don't understand what you're proposing here.  I don't know what
-"scan all possible PCIe slots" would mean because I don't know what
-that change would look like in the code.
+>=20
+>=20
+> Chunhe Lan wrote:
+> > Get rid of these:
+> >
+> > drivers/pci/pcie/portdrv_core.c: In function 'pcie_port_device_register=
+':
+> > drivers/pci/pcie/portdrv_core.c:275:16: warning: 'cap_mask' may be used
+> > uninitialized in this function [-Wuninitialized]
+> > drivers/pci/pcie/portdrv_core.c:240:6: note: 'cap_mask' was declared he=
+re
+> >
+> > In some cases, 'cap_mask' may be not set in pcie_port_platform_notify,
+> > holding a garbage value.
+> >
+> > Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+> > ---
+> >  drivers/pci/pcie/portdrv_core.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv=
+_core.c
+> > index 595654a..751b464 100644
+> > --- a/drivers/pci/pcie/portdrv_core.c
+> > +++ b/drivers/pci/pcie/portdrv_core.c
+> > @@ -237,7 +237,7 @@ static int get_port_device_capability(struct pci_de=
+v *dev)
+> >  	int services =3D 0, pos;
+> >  	u16 reg16;
+> >  	u32 reg32;
+> > -	int cap_mask;
+> > +	int cap_mask =3D 0;
+> >  	int err;
+> > =20
+> >  	if (pcie_ports_disabled)
+> >  =20
+> Hello Jesse Barnes,
+>=20
+>   Have you any comment about this patch?
+>   It locates at http://article.gmane.org/gmane.linux.kernel.pci/14062
+>=20
+>   If it has not question, can you merge it to your git tree?
 
-Bjorn
+Yeah patch looks fine, bounce it over to Bjorn if you want it applied.
+
+I didn't check where it gets used though, and whether 0xffffffff would
+be a better default mask value or not.
+
+--=20
+Jesse Barnes, Intel Open Source Technology Center
+
+--Sig_/c6U+_cykfW_bPlIfUTaaZc4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPgv1bAAoJEIEoDkX4Qk9hF/EQAIJjTgN3lhU9wrm/dqW6uXnI
+hJsFCI1pZvvZNdn4eq/eYurl8t/uxxATrD1xmHo5MvZu1uRm0Cogi+K6eP2NSHTY
+PLa7yLM2Eg5EKwTOUSSOa+X5xgQ+RhA0LglEdIP5ZrmlVbnoFv6o7XAoa0KF4wcA
+85WvCyVSu/eNRi9woyGG39OCmiMH3bVldcKaJkCTC2GKjH8j3WjVbCNPGBPuSnPT
+PpAf9ucq0HRakgMgtTOUOkZcMUb35mtsiIc7qPYUkGf4EYMANIE/x8zsRIqGTk4d
+CE94xG4pUy0nSJ+JeGfTXp4buauvdaCCnbhWx5erOvP13hb7sU5rkAfTOAGwytWG
+l8tafUX+E9uL8PWALZMtFwiXAFgBmVF+GsgC0b4v3cbNxzT98dTuKsYlk3uRa6fL
+DhbRq2BScAPNi5fFXJXayXdqd9VbzB9uJiRQEU9V2ow8pXDgiIqJJRw5B8P6xZS9
+MdlfSU+cAGwIQyp0AuMIHzKsJ45nK5yvufT/w2GdWwx6vstHsK8nvfcHLJlJcRFr
+jGZQogTqZknU8zhRwfFl4BlCUtv4PPoSacjlm+LfUln/goeJJRHd8rnRFf3+ePGv
+oywtkwSvcvX4xFv4fXifZfrgDwQN2d5mzLw3b7DeOBSYJEMzE8Zg/vmqQKuw05DE
++saFbXnUTdAwmpd7f44l
+=juOK
+-----END PGP SIGNATURE-----
+
+--Sig_/c6U+_cykfW_bPlIfUTaaZc4--
