@@ -1,90 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mikko Vinni <mmvinni@yahoo.com>
-Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
-Date: Mon, 16 Apr 2012 18:17:21 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204152256.03198.rjw@sisk.pl> <1334560992.32851.YahooMailNeo@web161806.mail.bf1.yahoo.com>
-In-Reply-To: <1334560992.32851.YahooMailNeo@web161806.mail.bf1.yahoo.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:47249 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858Ab2DIXuI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 19:50:08 -0400
+Date: Mon, 9 Apr 2012 18:50:04 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: stable@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Svante Signell <svante.signell@telia.com>,
+	Carlos Luna <caralu74@gmail.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Paul Menzel <paulepanter@users.sourceforge.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [3.0.y, 3.2.y, 3.3.y] Re: [PATCH] x86/PCI: do not tie MSI
+ MS-7253 use_crs quirk to BIOS version
+Message-ID: <20120409235003.GB7551@burratino>
+References: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
+ <20120228213135.GA30986@burratino>
+ <20120301105701.62ad4144@jbarnes-desktop>
+ <20120302042523.GH5248@burratino>
+ <20120409234755.GA7551@burratino>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204161817.21800.rjw@sisk.pl>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120409234755.GA7551@burratino>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 16, 2012, Mikko Vinni wrote:
-> From: Rafael J. Wysocki
-> 
-> >>  OK, I know.  There simply are fewer BARs for bridges (and PCIe ports)
-> >>  and here we're attempting to overwrite the secondary status register.  
-> > Sigh.
-> >> 
-> >>  Well, I guess we should only retry the writes to BARs for Type 0 headers.
-> > 
-> > Which is done by the appended updated patch.  Can you please give it a try?
-> 
-> 
-> Ok, I tested v4 and also v3, which is in 3.4-rc3. On this laptop both versions
-> work equally: touchpad works after resume (no help for the card reader
-> problem, though).
+Jonathan Nieder wrote:
 
-[...]
+> [Subject: [3.0.y, 3.2.y, 3.3.y] Re: [PATCH] x86/PCI: do not tie MSI
+> MS-7253 use_crs quirk to BIOS version]
 
-> Difference from v3:
-> --- /tmp/v3-uniq        2012-04-16 09:57:42.880521878 +0300
-> +++ /tmp/v4-uniq        2012-04-16 09:58:03.880545386 +0300
-> @@ -1019,11 +1018,11 @@
->        1 Booting Node 0 Processor 1 APIC 0x1
->        1 CPU1 is up
->        1 ACPI: Waking up from system sleep state S3
-> -     11 pcieport 0000:00:02.0: restoring config space at offset 0x1c (was 0x20005151, writing 0x5151)
-> +      1 pcieport 0000:00:02.0: restoring config space at offset 0x1c (was 0x20005151, writing 0x5151)
-
-OK, so clearly we need to prevent the writes into the secondary status register
-of the PCIe port from being repreated pointlessly.
-
-Can you please test the appended patch from completness on top of 3.4-rc3?
-
-Rafael
-
-
----
- drivers/pci/pci.c |   18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
-
-Index: linux/drivers/pci/pci.c
-===================================================================
---- linux.orig/drivers/pci/pci.c
-+++ linux/drivers/pci/pci.c
-@@ -1015,13 +1015,17 @@ void pci_restore_state(struct pci_dev *d
- 	pci_restore_pcie_state(dev);
- 	pci_restore_ats_state(dev);
- 
--	pci_restore_config_space(dev, 10, 15, 0);
--	/*
--	 * The Base Address register should be programmed before the command
--	 * register(s)
--	 */
--	pci_restore_config_space(dev, 4, 9, 10);
--	pci_restore_config_space(dev, 0, 3, 0);
-+	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
-+		pci_restore_config_space(dev, 10, 15, 0);
-+		/*
-+		 * The Base Address register should be programmed before the
-+		 * command register(s)
-+		 */
-+		pci_restore_config_space(dev, 4, 9, 10);
-+		pci_restore_config_space(dev, 0, 3, 0);
-+	} else {
-+		pci_restore_config_space(dev, 0, 15, 0);
-+	}
- 
- 	pci_restore_pcix_state(dev);
- 	pci_restore_msi_state(dev);
+Since v3.3 already contains the patches, 3.3.y does not need this.
+3.0.y and 3.2.y do, though.  Sorry for the nonsense.
