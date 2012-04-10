@@ -1,122 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:35831 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747Ab2DYPrc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 11:47:32 -0400
-Message-ID: <4F981C87.60403@gmail.com>
-Date: Wed, 25 Apr 2012 23:47:19 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:61379 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753366Ab2DJTA6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 15:00:58 -0400
+Message-ID: <4F848357.3060007@snewbury.org.uk>
+Date: Tue, 10 Apr 2012 20:00:39 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
 MIME-Version: 1.0
-To: Dan Williams <dan.j.williams@intel.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-	James Morris <jmorris@namei.org>,
-	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 6/8] dmaengine: enhance network subsystem to support
- DMA device hotplug
-References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com> <1335189109-4871-7-git-send-email-jiang.liu@huawei.com> <CABE8wwvi_Yz8AyALr1-uDW9xSgrSqfrYWhB_22NQ2ydTa81+mg@mail.gmail.com> <4F961041.7010106@huawei.com> <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
-In-Reply-To: <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity> <CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com> <4F84110E.3000400@snewbury.org.uk> <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com> <4F8467AA.90305@snewbury.org.uk> <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>
+In-Reply-To: <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dan,
-	Thanks for your great comments about the performance penalty issue. And I'm trying
-to refine the implementation to reduce penalty caused by hotplug logic. If the algorithm works
-correctly, the optimized hot path code will be:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-------------------------------------------------------------------------------
-struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type)
-{
-        struct dma_chan *chan = this_cpu_read(channel_table[tx_type]->chan);
+On 10/04/12 19:40, Yinghai Lu wrote:
+> On Tue, Apr 10, 2012 at 10:02 AM, Steven Newbury
+> <steve@snewbury.org.uk> wrote:
+>> 
+>>> 
+>>> Can you please try attached patches with pci=nocrs?
+>>> 
+>>> for pci=use_crs, we need find safe place beyond _CRS, because
+>>> your _CRS limit under 4g.
+>>> 
+> ..
+>> So far it has changed behaviour:
+>> 
+>> Many devices now assigned above 4g.
+>> 
+>> When booted while docked i915 fails to initialise, along with
+>> radeon as before.
+>> 
+>> When undocked i915 initialises, but radeon still fails when
+>> hot-docked.
+>> 
+>> I've attached output of 'lspci -vvv', 'cat /proc/iomem', and
+>> "dmesg.log" for the docked case.
+>> 
+>> Also, "dmesg-hotplug.out" for hot docking after boot.
+> 
+> looks good,  please only apply
+> 
+> allocate_high_at_first.patch
+> 
+> Yinghai
 
-        this_cpu_inc(dmaengine_chan_ref_count);
-        if (static_key_false(&dmaengine_quiesce)) {
-                chan = NULL;
-        }
+Seems to be exactly the same.  When started docked (so I think both
+'cards' try to claim the same preferred addresses) the integrated i965
+GFX gets reassigned high:
+120000000-12fffffff : 0000:00:02.0
 
-        return chan;
-}
-EXPORT_SYMBOL(dma_find_channel);
+But it's quite possible the i915 module doesn't currently handle this
+case and so fails to initialise.
 
-struct dma_chan *dma_get_channel(struct dma_chan *chan)
-{
-        if (static_key_false(&dmaengine_quiesce))
-                atomic_inc(&dmaengine_dirty);
-        this_cpu_inc(dmaengine_chan_ref_count);
+I'm not sure why the Radeon doesn't get assigned a high address when
+hot-plugged..?
 
-        return chan;
-}
-EXPORT_SYMBOL(dma_get_channel);
-
-void dma_put_channel(struct dma_chan *chan)
-{
-        this_cpu_dec(dmaengine_chan_ref_count);
-}
-EXPORT_SYMBOL(dma_put_channel);
------------------------------------------------------------------------------
-
-The disassembled code is:
-(gdb) disassemble dma_find_channel 
-Dump of assembler code for function dma_find_channel:
-   0x0000000000000000 <+0>:	push   %rbp
-   0x0000000000000001 <+1>:	mov    %rsp,%rbp
-   0x0000000000000004 <+4>:	callq  0x9 <dma_find_channel+9>
-   0x0000000000000009 <+9>:	mov    %edi,%edi
-   0x000000000000000b <+11>:	mov    0x0(,%rdi,8),%rax
-   0x0000000000000013 <+19>:	mov    %gs:(%rax),%rax
-   0x0000000000000017 <+23>:	incq   %gs:0x0				//overhead: this_cpu_inc(dmaengine_chan_ref_count)
-   0x0000000000000020 <+32>:	jmpq   0x25 <dma_find_channel+37>	//overhead: if (static_key_false(&dmaengine_quiesce)), will be replaced as NOP by jump label
-   0x0000000000000025 <+37>:	pop    %rbp
-   0x0000000000000026 <+38>:	retq   
-   0x0000000000000027 <+39>:	nopw   0x0(%rax,%rax,1)
-   0x0000000000000030 <+48>:	xor    %eax,%eax
-   0x0000000000000032 <+50>:	pop    %rbp
-   0x0000000000000033 <+51>:	retq   
-End of assembler dump.
-(gdb) disassemble dma_put_channel 	// overhead: to decrease channel reference count, 6 instructions
-Dump of assembler code for function dma_put_channel:
-   0x0000000000000070 <+0>:	push   %rbp
-   0x0000000000000071 <+1>:	mov    %rsp,%rbp
-   0x0000000000000074 <+4>:	callq  0x79 <dma_put_channel+9>
-   0x0000000000000079 <+9>:	decq   %gs:0x0
-   0x0000000000000082 <+18>:	pop    %rbp
-   0x0000000000000083 <+19>:	retq   
-End of assembler dump.
-(gdb) disassemble dma_get_channel 
-Dump of assembler code for function dma_get_channel:
-   0x0000000000000040 <+0>:	push   %rbp
-   0x0000000000000041 <+1>:	mov    %rsp,%rbp
-   0x0000000000000044 <+4>:	callq  0x49 <dma_get_channel+9>
-   0x0000000000000049 <+9>:	mov    %rdi,%rax
-   0x000000000000004c <+12>:	jmpq   0x51 <dma_get_channel+17>
-   0x0000000000000051 <+17>:	incq   %gs:0x0
-   0x000000000000005a <+26>:	pop    %rbp
-   0x000000000000005b <+27>:	retq   
-   0x000000000000005c <+28>:	nopl   0x0(%rax)
-   0x0000000000000060 <+32>:	lock incl 0x0(%rip)        # 0x67 <dma_get_channel+39>
-   0x0000000000000067 <+39>:	jmp    0x51 <dma_get_channel+17>
-End of assembler dump.
-
-So for a typical dma_find_channel()/dma_put_channel(), the total overhead
-is about 10 instructions and two percpu(local) memory updates. And there's
-no shared cache pollution any more. Is this acceptable ff the algorithm 
-works as expected? I will test the code tomorrow.
-
-For typical systems which don't support DMA device hotplug, the overhead
-could be completely removed by condition compilation.
-
-Any comments are welcomed!
-
-Thanks!
---gerry
+These are the only entries in /proc/iomem above 4GB:
 
 
-On 04/24/2012 11:09 AM, Dan Williams wrote:
->>> If you are going to hotplug the entire IOH, then you are probably ok
+Booted UNDOCKED, then hot-docked
 
+100000000-11fffffff : System RAM
+120000000-1201fffff : PCI Bus 0000:0b
+120200000-1203fffff : PCI Bus 0000:0c
+120400000-1205fffff : PCI Bus 0000:09
+
+
+Booted DOCKED
+
+100000000-11fffffff : System RAM
+120000000-12fffffff : 0000:00:02.0
+130000000-1301fffff : PCI Bus 0000:0b
+130200000-1303fffff : PCI Bus 0000:0c
+130400000-1305fffff : PCI Bus 0000:0d
+130600000-1307fffff : PCI Bus 0000:09
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk+Eg1cACgkQGcb56gMuC61hTgCeLIPkAEr1btlgzwmmGAqbnPZq
+/CEAn16oEFbgvWH0ifOL0FFiQTodBf1U
+=JBs3
+-----END PGP SIGNATURE-----
