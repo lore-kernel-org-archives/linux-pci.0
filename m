@@ -1,35 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:21296 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757140Ab2DFCoD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Apr 2012 22:44:03 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Expose ltr/obff interface by sysfs
-Date: Fri, 6 Apr 2012 02:43:59 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD0A434@SHSMSX102.ccr.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:55367 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752673Ab2DJAob (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 20:44:31 -0400
+Received: by lbbgg6 with SMTP id gg6so2344282lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 09 Apr 2012 17:44:29 -0700 (PDT)
 MIME-Version: 1.0
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Apr 2012 18:44:09 -0600
+Message-ID: <CAErSpo7PanjK2oemhGhoFJEkd47tJDgkK0LxK8k2Zc0Kz_ee8Q@mail.gmail.com>
+Subject: PCI maintenance details
+To: linux-pci@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, 
+Hi everyone,
 
-I'm working on virtualization Xen/KVM. I saw there are ltr/obff enabling/disabling function in pci.c, but no called till now. I want to know if anybody(driver developer) are working for using it? Can driver change the LTR latency value dynamically?
+As you've probably noticed, I'm taking over maintenance of the PCI subsystem
+from Jesse.  I don't plan any radical changes, so hopefully this is just
+"business as usual" for most of you.
 
-/*
-LTR(Latency tolerance reporting) allows devices to send messages to the root complex indicating their latency tolerance for snooped & unsnooped memory transactions.
-OBFF (optimized buffer flush/fill), where supported, can help improve energy efficiency by giving devices information about when interrupts and other activity will have a reduced power impact.
-*/
+GIT TREE
 
-One way to control ltr/obff is used by driver, however, I'm considering that in virtualization, how guest OS driver control them. I have an idea that expose an inode interface by sysfs, like "reset" inode implemented in pci-sysfs.c, so that system user/administrator can enable/disable ltr/obff or set latency value on userspace, but not limited on driver. Comments?
+    I have a git tree (currently empty) here:
 
-< pls CC me when reply this mail, thanks >
+        git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+        http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=summary
 
-Best Regards,
-Xudong Hao
+    and I plan to operate it the usual way, with a "next" branch for
+    integration via the linux-next tree and a "for-linus" branch for urgent
+    fixes outside the merge window.
 
+PATCHWORK
+
+    Since the kernel.org patchwork instance is still defunct, Jeremy Kerr has
+    kindly set up a new one at ozlabs:
+
+        http://patchwork.ozlabs.org/project/linux-pci/list/
+
+    If your patches are not in my "next" branch and not in the patchwork, I
+    probably missed them, so please resend them.
+
+BUG REPORTING
+
+    Please post bug reports, patches, and questions on the
+    linux-pci@vger.kernel.org mailing list as usual.
+
+    I might be the only person left who uses bugzilla, but I do like it for
+    keeping track of things.  My ideal bug report would be a report opened
+    in bugzilla ("PCI" component in the "Drivers" product):
+
+        https://bugzilla.kernel.org/enter_bug.cgi?product=Drivers&component=PCI
+
+    and then also reported on the mailing list with the bugzilla URL.  If you
+    post a patch to fix an issue, please include a URL to the bugzilla or
+    another report of the issue in the changelog.
+
+Bjorn
