@@ -1,202 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61293 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760514Ab2D0PUZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 11:20:25 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 03/19] PCI: replace pci_remove_rescan_mutex with the PCI hotplug lock
-Date: Fri, 27 Apr 2012 23:16:44 +0800
-Message-Id: <1335539820-11232-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:40323 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753157Ab2DJSpB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 14:45:01 -0400
+Message-ID: <4F847F9B.4010500@snewbury.org.uk>
+Date: Tue, 10 Apr 2012 19:44:43 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity> <CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com> <4F84110E.3000400@snewbury.org.uk> <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com> <4F8467AA.90305@snewbury.org.uk> <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>
+In-Reply-To: <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Replace pci_remove_rescan_mutex with the PCI hotplug lock, which is used to
-globally serialize all PCI hotplug operations.
+On 10/04/12 19:40, Yinghai Lu wrote:
+> On Tue, Apr 10, 2012 at 10:02 AM, Steven Newbury
+> <steve@snewbury.org.uk> wrote:
+>> 
+>>> 
+>>> Can you please try attached patches with pci=nocrs?
+>>> 
+>>> for pci=use_crs, we need find safe place beyond _CRS, because
+>>> your _CRS limit under 4g.
+>>> 
+> ..
+>> So far it has changed behaviour:
+>> 
+>> Many devices now assigned above 4g.
+>> 
+>> When booted while docked i915 fails to initialise, along with
+>> radeon as before.
+>> 
+>> When undocked i915 initialises, but radeon still fails when
+>> hot-docked.
+>> 
+>> I've attached output of 'lspci -vvv', 'cat /proc/iomem', and
+>> "dmesg.log" for the docked case.
+>> 
+>> Also, "dmesg-hotplug.out" for hot docking after boot.
+> 
+> looks good,  please only apply
+> 
+> allocate_high_at_first.patch
+> 
+> Yinghai
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/pci-sysfs.c |  100 +++++++++++++++++++++++++++--------------------
- drivers/pci/remove.c    |    1 +
- 2 files changed, 58 insertions(+), 43 deletions(-)
+Rebuilding... I will let you know in a few minutes.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index a55e248..ecf197d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -283,7 +283,31 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
- }
- 
- #ifdef CONFIG_HOTPLUG
--static DEFINE_MUTEX(pci_remove_rescan_mutex);
-+/*
-+ * Schedule a device callback to avoid deadlock in case of
-+ * 1) An attribute method tries to deregister the sysfs file itself
-+ * 2) Another thread is trying to remove the sysfs file, which have
-+ *    already held the PCI hotplug lock by invoking pci_hotplug_enter().
-+ */
-+static int schedule_hp_callback(struct device *dev,
-+				const char *buf, size_t count,
-+				void (*func)(struct device *))
-+{
-+	int ret = 0;
-+	unsigned long val;
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if (val) {
-+		ret = device_schedule_callback(dev, func);
-+		if (ret)
-+			count = ret;
-+	}
-+
-+	return count;
-+}
-+
- static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 				size_t count)
- {
-@@ -294,10 +318,10 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 		return -EINVAL;
- 
- 	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
-+		pci_hotplug_enter();
- 		while ((b = pci_find_next_bus(b)) != NULL)
- 			pci_rescan_bus(b);
--		mutex_unlock(&pci_remove_rescan_mutex);
-+		pci_hotplug_exit();
- 	}
- 	return count;
- }
-@@ -307,72 +331,62 @@ struct bus_attribute pci_bus_attrs[] = {
- 	__ATTR_NULL
- };
- 
--static ssize_t
--dev_rescan_store(struct device *dev, struct device_attribute *attr,
--		 const char *buf, size_t count)
-+static void dev_rescan_callback(struct device *dev)
- {
--	unsigned long val;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
--		return -EINVAL;
--
--	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
-+	pci_hotplug_enter();
-+	/* Skip if the device has been stopped. */
-+	if (pdev->is_added && pdev->bus)
- 		pci_rescan_bus(pdev->bus);
--		mutex_unlock(&pci_remove_rescan_mutex);
--	}
--	return count;
-+	pci_hotplug_exit();
-+}
-+
-+static ssize_t
-+dev_rescan_store(struct device *dev, struct device_attribute *attr,
-+		 const char *buf, size_t count)
-+{
-+	return schedule_hp_callback(dev, buf, count, dev_rescan_callback);
- }
- 
- static void remove_callback(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	mutex_lock(&pci_remove_rescan_mutex);
--	pci_stop_and_remove_bus_device(pdev);
--	mutex_unlock(&pci_remove_rescan_mutex);
-+	pci_hotplug_enter();
-+	/* Skip if the bus has been removed. */
-+	if (pdev->bus_list.next)
-+		pci_stop_and_remove_bus_device(pdev);
-+	pci_hotplug_exit();
- }
- 
- static ssize_t
- remove_store(struct device *dev, struct device_attribute *dummy,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
--	unsigned long val;
--
--	if (strict_strtoul(buf, 0, &val) < 0)
--		return -EINVAL;
--
--	/* An attribute cannot be unregistered by one of its own methods,
--	 * so we have to use this roundabout approach.
--	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
--	return count;
-+	return schedule_hp_callback(dev, buf, count, remove_callback);
- }
- 
--static ssize_t
--dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
--		 const char *buf, size_t count)
-+static void dev_bus_rescan_callback(struct device *dev)
- {
--	unsigned long val;
- 	struct pci_bus *bus = to_pci_bus(dev);
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
--		return -EINVAL;
--
--	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
-+	pci_hotplug_enter();
-+	/* Skip if the bus has been stopped. */
-+	if (bus->is_added) {
- 		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
- 			pci_rescan_bus_bridge_resize(bus->self);
- 		else
- 			pci_rescan_bus(bus);
--		mutex_unlock(&pci_remove_rescan_mutex);
- 	}
--	return count;
-+	pci_hotplug_exit();
-+}
-+
-+static ssize_t
-+dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
-+		 const char *buf, size_t count)
-+{
-+	return schedule_hp_callback(dev, buf, count, dev_bus_rescan_callback);
- }
- 
- #endif
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index fd77e2b..0b4342b 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -72,6 +72,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- 	if (!pci_bus->is_added)
- 		return;
- 
-+	pci_bus->is_added = 0;
- 	pci_remove_legacy_files(pci_bus);
- 	device_unregister(&pci_bus->dev);
- }
--- 
-1.7.5.4
-
+iEYEARECAAYFAk+Ef5sACgkQGcb56gMuC62zLgCdFzqBa5sU88XIEG2BkSlJnIby
+qM8Ani2q1vYAWbx+SP5bYwt6/jQn72lc
+=cNKw
+-----END PGP SIGNATURE-----
