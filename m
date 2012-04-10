@@ -1,53 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:48446 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751508Ab2DKLmK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 07:42:10 -0400
-From: Steven Newbury <steve@snewbury.org.uk>
-Reply-To: Steven Newbury <steve@snewbury.org.uk>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: PCI resources above 4GB
-References: <1333968563.5678.19.camel@infinity>
-	 <CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com>
-	 <4F84110E.3000400@snewbury.org.uk>
-	 <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>
-	 <4F8467AA.90305@snewbury.org.uk>
-	 <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>
-	 <4F848357.3060007@snewbury.org.uk>
-	 <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>
-	 <4F848E10.1090703@snewbury.org.uk>
-	 <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>
-	 <1334089568.4083.2.camel@Nokia-N900>
-	  <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
-In-Reply-To: <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 11 Apr 2012 12:43:51 +0100
-Message-Id: <1334144631.30606.3.camel@Nokia-N900>
-Mime-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:39864 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755905Ab2DJPr2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 11:47:28 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F840C3C.2060302@jp.fujitsu.com>
+References: <1333905129-8776-1-git-send-email-jiang.liu@huawei.com>
+	<1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
+	<4F82CB64.8030808@jp.fujitsu.com>
+	<4F830804.6010007@gmail.com>
+	<4F840C3C.2060302@jp.fujitsu.com>
+Date: Tue, 10 Apr 2012 08:47:27 -0700
+Message-ID: <CAE9FiQWZwkyp8F7HDTpGVZ=Q=09_68NR3tT_vCzwFH3ZhXDzCA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when
+ hot-plugging PCI host bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 10 Apr 2012, 21:45:54 BST, Yinghai Lu <yinghai@kernel.org> wrote:
+On Tue, Apr 10, 2012 at 3:32 AM, Kenji Kaneshige
+<kaneshige.kenji@jp.fujitsu.com> wrote:
+> Additionally, I think there is a remaining issue even if we change
+> this check like below.
+>
+>
+>        if (!!(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
+>                return 0;
+>
+> I think this check has an assumption that system has at least one
+> MCFG table entry and it has been initialized before
+> acpi_pci_root_add() is called. I think this doesn't work on the
+> system that doesn't have MCFG and all the pci root bridge have
+> _CBA (that is, all host bridges are hot-pluggable and BIOS is
+> implemented in the way PCI FW spec defines). As a result, MMCONFIG
+> would never be enabled on such systems. Could you double check this?
 
-> On Tue, Apr 10, 2012 at 1:26 PM, Steven Newbury <steve@snewbury.org.uk>
-> wrote:
-> > > 
-> > So far I'm concluding the BIOS isn't sane. Â Is it possible to define a
-> > custom memory map from the linux boot cmdline to set TOP_OF_LOW_MEM?
-> 
-> The BIOS have MMIO and memory overlapping...
-> 
-> > 
-> > Obviously, I'd prefer getting everything allocated into the address
-> > space available, and working, but if it comes down to it I'd accept a
-> > hack like the above if there's no other way.
-> 
-> Could try to reduce carbus preallocated size.... boot with
-> pci=cbmemsize=16M
+You are right.
 
-I've managed to get the radeon to work by turning off the cardbus controller in the BIOS setup.  I'll try the patch and the above parameter next.
-> 
-> Please apply attached patch in addtition to allocate_high_at_first
+We can just remove that checking.
 
-Btw, I've verified why the intel gfx isn't working, intel-agp.c only reads the lower 32bits of the aperture location.  It is definitely supported over 4G by the hardware, see my other email.
+But wonder if current x86_64 system support that.
+All peer root buses can be physically removed ?
+
+Thanks
+
+Yinghai
