@@ -1,205 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([58.251.152.67]:53225 "EHLO
-	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751747Ab2DIDp3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2012 23:45:29 -0400
-Date: Mon, 09 Apr 2012 11:43:06 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 2/2] PCI, ACPI,
- x86: update MMCFG information when hot-plugging PCI host bridges
-In-reply-to: <CAE9FiQXNOJA4oCDw-CF32UjaA=6tri73nXP3u6+hMEjpugjF9w@mail.gmail.com>
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:45432 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754732Ab2DJVUF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 17:20:05 -0400
+Message-ID: <4F84A3EC.6030903@snewbury.org.uk>
+Date: Tue, 10 Apr 2012 22:19:40 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
+MIME-Version: 1.0
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Message-id: <4F825ACA.1040800@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
- <1333905129-8776-1-git-send-email-jiang.liu@huawei.com>
- <1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
- <CAE9FiQXNOJA4oCDw-CF32UjaA=6tri73nXP3u6+hMEjpugjF9w@mail.gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity> <CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com> <4F84110E.3000400@snewbury.org.uk> <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com> <4F8467AA.90305@snewbury.org.uk> <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com> <4F848357.3060007@snewbury.org.uk> <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com> <4F848E10.1090703@snewbury.org.uk> <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com> <1334089568.4083.2.camel@Nokia-N900> <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
+In-Reply-To: <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
-	Thanks for your comments and will send out another version
-according to your suggestions.
-On 2012-4-9 3:19, Yinghai Lu wrote:
-> On Sun, Apr 8, 2012 at 10:12 AM, Jiang Liu<liuj97@gmail.com>  wrote:
->> This patch enhances pci_root driver to update MMCFG information when
->> hot-plugging PCI root bridges on x86 platforms.
->>
->> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->> ---
->>   arch/x86/pci/acpi.c      |   58 ++++++++++++++++++++++++++++++++++++++++++++++
->>   drivers/acpi/pci_root.c  |   20 ++++++++++++++++
->>   include/acpi/acnames.h   |    1 +
->>   include/linux/pci-acpi.h |    3 ++
->>   4 files changed, 82 insertions(+), 0 deletions(-)
->>
->> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->> index da0149d..9184970 100644
->> --- a/arch/x86/pci/acpi.c
->> +++ b/arch/x86/pci/acpi.c
->> @@ -488,6 +488,64 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->>         return bus;
->>   }
->>
->> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
->> +{
->> +       int result = 0;
->> +       acpi_status status;
->> +       unsigned long long base_addr;
->> +       struct pci_mmcfg_region *cfg;
->> +
->> +       /*
->> +        * Try to insert MMCFG information for host bridges with _CBA method
->> +        */
->> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
->> +                                      NULL,&base_addr);
->> +       if (ACPI_SUCCESS(status)) {
->> +               result = pci_mmconfig_insert(root->segment,
->> +                                            root->secondary.start,
->> +                                            root->secondary.end,
->> +                                            base_addr);
->> +               /*
->> +                * MMCFG information for hot-pluggable host bridges may have
->> +                * already been added by __pci_mmcfg_init();
->> +                */
->> +               if (result == -EEXIST)
->> +                       result = 0;
->> +       } else if (status == AE_NOT_FOUND) {
->> +               /*
->> +                * Check whether MMCFG information has been added for
->> +                * host bridges without _CBA method.
->> +                */
->> +               rcu_read_lock();
->> +               cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
->> +               if (!cfg || cfg->end_bus<  root->secondary.end)
->> +                       result = -ENODEV;
->> +               rcu_read_unlock();
->> +       } else
->> +               result = -ENODEV;
->> +
->> +       return result;
->> +}
->> +
->> +int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
->> +{
->> +       acpi_status status;
->> +       unsigned long long base_addr;
->> +
->> +       /* Remove MMCFG information for host bridges with _CBA method */
->> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
->> +                                      NULL,&base_addr);
->
-> add one flag in acpi_pci_root about we added mmconf for it before?
-> like mmconf_added?
->
->> +       if (ACPI_SUCCESS(status))
->> +               return pci_mmconfig_delete(root->segment,
->> +                                          root->secondary.start,
->> +                                          root->secondary.end,
->> +                                          base_addr);
->> +       else if (status != AE_NOT_FOUND)
->> +               return -ENODEV;
->> +
->> +       return 0;
->> +}
->> +
->>   int __init pci_acpi_init(void)
->>   {
->>         struct pci_dev *dev = NULL;
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 4a7d575..a62bfa8 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -448,6 +448,16 @@ out:
->>   }
->>   EXPORT_SYMBOL(acpi_pci_osc_control_set);
->>
->> +int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root)
->> +{
->> +       return 0;
->> +}
->> +
->> +int __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
->> +{
->> +       return 0;
->> +}
->> +
->>   static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>   {
->>         unsigned long long segment, bus;
->> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>         strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->>         device->driver_data = root;
->>
->> +       if (arch_acpi_pci_root_add(root)) {
->> +               printk(KERN_ERR PREFIX
->> +                       "can't add MMCFG information for Bus %04x:%02x\n",
->> +                       root->segment, (unsigned int)root->secondary.start);
->> +               result = -ENODEV;
->> +               goto out_free;
->> +       }
->> +
->>         /*
->>          * All supported architectures that use ACPI have support for
->>          * PCI domains, so we indicate this in _OSC support capabilities.
->> @@ -629,6 +647,7 @@ out_del_root:
->>         list_del_rcu(&root->node);
->>         mutex_unlock(&acpi_pci_root_lock);
->>         synchronize_rcu();
->> +       arch_acpi_pci_root_remove(root);
->>   out_free:
->>         kfree(root);
->>         return result;
->> @@ -679,6 +698,7 @@ out:
->>         list_del_rcu(&root->node);
->>         mutex_unlock(&acpi_pci_root_lock);
->>         synchronize_rcu();
->> +       arch_acpi_pci_root_remove(root);
->>         kfree(root);
->>
->>         return 0;
->> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
->> index 38f5088..99bda75 100644
->> --- a/include/acpi/acnames.h
->> +++ b/include/acpi/acnames.h
->> @@ -62,6 +62,7 @@
->>   #define METHOD_NAME__AEI        "_AEI"
->>   #define METHOD_NAME__PRW        "_PRW"
->>   #define METHOD_NAME__SRS        "_SRS"
->> +#define METHOD_NAME__CBA       "_CBA"
->>
->>   /* Method names - these methods must appear at the namespace root */
->>
->> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
->> index ac93634..816b971 100644
->> --- a/include/linux/pci-acpi.h
->> +++ b/include/linux/pci-acpi.h
->> @@ -38,6 +38,9 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
->>
->>   void acpi_pci_root_rescan(void);
->>
->> +extern int arch_acpi_pci_root_add(struct acpi_pci_root *root);
->> +extern int arch_acpi_pci_root_remove(struct acpi_pci_root *root);
->> +
->
-> don't need extern here.
->
->>   #else
->>
->>   static inline void acpi_pci_root_rescan(void) { }
->> --
->> 1.7.5.4
->>
->
-> .
->
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
+On 10/04/12 21:45, Yinghai Lu wrote:
+> On Tue, Apr 10, 2012 at 1:26 PM, Steven Newbury
+> <steve@snewbury.org.uk> wrote:
+>>> 
+>> So far I'm concluding the BIOS isn't sane.  Is it possible to
+>> define a custom memory map from the linux boot cmdline to set
+>> TOP_OF_LOW_MEM?
+> 
+> The BIOS have MMIO and memory overlapping...
+> 
+>> 
+Another thought, normally the integrated graphics has an "AGP"
+aperture of 256M @0xe0000000, which is detected by agpgart-intel, this
+will need to be moved up above 4G to free up 0xe0000000 for the
+radeon, assuming the "agp_bridge" has a 64bit base register...  I
+noticed in my docked dmesg, "AGP aperture is 256M @ 0x20000000", but
+the PCI base: "120000000-12fffffff : 0000:00:02.0" so only 32bits have
+been set in agpgart-intel.  Explains why i915 wasn't initialised.
 
+>> Obviously, I'd prefer getting everything allocated into the
+>> address space available, and working, but if it comes down to it
+>> I'd accept a hack like the above if there's no other way.
+> 
+> Could try to reduce carbus preallocated size.... boot with
+> pci=cbmemsize=16M
+> 
+> Please apply attached patch in addtition to allocate_high_at_first
+> 
+I'll try first thing tomorrow.  I'm away from the docking station now.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk+Eo+wACgkQGcb56gMuC60FOgCgoB9QFZPFKCXs8gG0qJIX9NK3
+CacAn1q9D958ql7K+nZrKLNHB86fsnHQ
+=vRtc
+-----END PGP SIGNATURE-----
