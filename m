@@ -1,38 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([206.83.70.75]:28450 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752091Ab2DOXMc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 19:12:32 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>, Jiri Kosina <jkosina@suse.cz>,
-	Joe Perches <joe@perches.com>,
-	David Howells <dhowells@redhat.com>
-Subject: RE: [PATCH 3/3] arch/tile: tilegx PCI root complex support
-Date: Sun, 15 Apr 2012 23:09:32 +0000
-Message-ID: <9D6CA7A63751804FADD8B075304A6858109A6E1A@USMAExch1.tad.internal.tilera.com>
-References: <201204072316.q37NGv8d019280@farm-0023.internal.tilera.com>
- <201204072319.q37NJlNp019384@farm-0023.internal.tilera.com>,<CAErSpo6_gV1XKJ1jsDSvHo+BEORL_5wLC2YRyVG+OjVNDYbHgw@mail.gmail.com>
-In-Reply-To: <CAErSpo6_gV1XKJ1jsDSvHo+BEORL_5wLC2YRyVG+OjVNDYbHgw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:63903 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754130Ab2DJAwO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Apr 2012 20:52:14 -0400
+Received: by lahj13 with SMTP id j13so3817581lah.19
+        for <linux-pci@vger.kernel.org>; Mon, 09 Apr 2012 17:52:13 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1333968563.5678.19.camel@infinity>
+References: <1333968563.5678.19.camel@infinity>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Apr 2012 18:51:52 -0600
+Message-ID: <CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com>
+Subject: Re: PCI resources above 4GB
+To: Steven Newbury <steve@snewbury.org.uk>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> Can this be done with the generic pcie_bus_configure_settings() or is
-> there something tilegx-specific about this?
-> If at all possible, you should use pci_scan_root_bus() here instead,
-> so you can tell PCI what the host bridge apertures are.
+On Mon, Apr 9, 2012 at 4:49 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
+> Hi Bjorn,
+>
+> like many users here:
+>
+> https://bugs.launchpad.net/ubuntu/+source/nvidia-graphics-drivers-180/+bug/342926
+>
+> I've hit this bug:
+> https://bugzilla.kernel.org/show_bug.cgi?id=10461
+>
+> I was wondering whether an option to enable an algorithm which
+> allocated all 64bit capable devices above 4GB would at least allow
+> systems where the BIOS has not provided a sufficient PCI hole to
+> initialise all PCI devices?  I've been digging into the code, but I'm
+> not yet comfortable to seriously attempt this myself, certainly not
+> without guidance.
+>
+> It's a shame TJ seems to have disappeared, it would have been great to
+> have had a look at his code, I'm sure many of these problems would have
+> been resolved.
+>
+> Any help, workarounds, guidance or patches welcome! :)
 
-I've been exchanging email with the author of this driver during the week (he's based out of the California office, and I'm in Massachusetts) and the two suggestions quoted above still need further investigation before we can get back to you.  I'm out next week for spring school break so it won't be until the following week that I'll put out a v2 of this patch.  The other comments (not quoted) we've already incorporated into the driver.
+Please attach complete dmesg logs with and without "pci=use_crs" to
+the bugzilla.
 
-So thanks a lot for your feedback!
-
-Chris Metcalf
-Tilera Corp.
+Bjorn
