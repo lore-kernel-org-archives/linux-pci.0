@@ -1,52 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:37323 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755720Ab2DJXAx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 19:00:53 -0400
-Received: by pbcun15 with SMTP id un15so498783pbc.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Apr 2012 16:00:53 -0700 (PDT)
-Date: Tue, 10 Apr 2012 16:00:49 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: stable@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Svante Signell <svante.signell@telia.com>,
-	Carlos Luna <caralu74@gmail.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Paul Menzel <paulepanter@users.sourceforge.net>
-Subject: Re: [3.0.y, 3.2.y, 3.3.y] Re: [PATCH] x86/PCI: do not tie MSI
- MS-7253 use_crs quirk to BIOS version
-Message-ID: <20120410230049.GA6140@kroah.com>
-References: <20120228185110.16227.58753.stgit@bhelgaas.mtv.corp.google.com>
- <20120228213135.GA30986@burratino>
- <20120301105701.62ad4144@jbarnes-desktop>
- <20120302042523.GH5248@burratino>
- <20120409234755.GA7551@burratino>
+Received: from mx1.redhat.com ([209.132.183.28]:29093 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760352Ab2DKO2R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Apr 2012 10:28:17 -0400
+Message-ID: <4F8594FD.8020109@redhat.com>
+Date: Wed, 11 Apr 2012 10:28:13 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120409234755.GA7551@burratino>
+To: "Hao, Xudong" <xudong.hao@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
+References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
+In-Reply-To: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 09, 2012 at 06:47:55PM -0500, Jonathan Nieder wrote:
-> Hi Greg,
-> 
-> Jonathan Nieder wrote:
-> > Jesse Barnes wrote:
-> 
-> >> Applied to my for-linus branch, thanks.
-> >
-> > Thanks for taking care of it.  I'll look into submitting these to
-> > -stable once they hit mainline if I notice.
-> 
-> Please queue
-> 
->  84113717 (x86/PCI: use host bridge _CRS info on MSI MS-7253)
->  a97f4f5e (x86/PCI: do not tie MSI MS-7253 use_crs quirk to BIOS
->            version)
-> 
-> for maintained stable trees 2.6.34.y and newer.
+On 04/11/2012 02:03 AM, Hao, Xudong wrote:
+> (Re-rend.)
+>
+> For IvyBridge Mobile platform, a system hang may occur if a FLR(Function Level Reset) is asserted to internal graphics.
+>
+> This quirk patch is workaround for the IVB FLR errata issue.
+> We are disabling the FLR reset handshake between the PCH and CPU display, then manually powering down the panel power sequencing and resetting the PCH display.
+>
+> Changes from v3:
+> - add X86 configuration to avoid compile problem in other architecture.
+>
+> Signed-off-by: Xudong Hao<xudong.hao@intel.com>
+> Signed-off-by: Kay, Allen M<allen.m.kay@intel.com>
+> Reviewed-by: Xiantao Zhang<xiantao.zhang@intel.com>
+> ---
+>   drivers/pci/quirks.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>   1 files changed, 59 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index 6476547..63e8b70 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3069,11 +3069,70 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+>   	return 0;
+>   }
+>
+> +#ifdef CONFIG_X86
+> +
+> +#include "../gpu/drm/i915/i915_reg.h"
+> +#define MSG_CTL	0x45010
+> +
+> +static const int op_timeout = 10;	/* set timeout 10 seconds */
+> +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
+> +	u8 *mmio_base;
+> +	u32 val;
+> +	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
+> +
+Don't we know how to do a 10sec timeout w/o tying it to tsc_khz?
+--> other arch compile problem source???
 
-Applied to 3.0-stable and newer.
+> +	if (probe)
+> +		return 0;
+> +
+> +	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
+> +				 pci_resource_len(dev, 0));
+> +	if (!mmio_base)
+> +		return -ENOMEM;
+> +
+> +	/* Work Around */
+> +	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
+> +	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
+> +	 * driver loaded sets the right bits. However, this's a reset and
+> +	 * the bits have been set by i915 previously, so we clobber
+> +	 * SOUTH_CHICKEN2 register directly here.
+> +	 */
+> +	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
+> +	val = *((u32 *)(mmio_base + PCH_PP_CONTROL))&  0xfffffffe;
+> +	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
+above should use readl() & writel()
+.... and once this & above fixed, then it'll work on other arches???
 
-greg k-h
+> +	do {
+> +		cycles_t start_time = get_cycles();
+> +		while (1) {
+> +			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
+> +			if (((val&  0x80000000) == 0)
+> +				&&  ((val&  0x30000000) == 0))
+> +				break;
+> +			if (cyc_op_timeout<  (get_cycles() - start_time))
+> +				break;
+> +			cpu_relax();
+> +		}
+> +	} while (0);
+> +	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
+> +
+> +	iounmap(pci_resource_start(dev, 0));
+> +	return 0;
+> +}
+> +#else
+> +static int reset_ivb_igd(struct pci_dev *dev, int probe) { }
+> +#endif	/* CONFIG_X86 */
+> +
+>   #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+> +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+> +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+>
+>   static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>   	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>   		 reset_intel_82599_sfp_virtfn },
+> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
+> +		reset_ivb_igd },
+> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
+> +		reset_ivb_igd },
+>   	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+>   		reset_intel_generic_dev },
+>   	{ 0 }
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
