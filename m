@@ -1,146 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:18263 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753947Ab2DLCMs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 22:12:48 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH V4] Quirk for IVB graphics FLR errata
-Date: Thu, 12 Apr 2012 02:12:44 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD0EB9C@SHSMSX102.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
- <4F8594FD.8020109@redhat.com>
-In-Reply-To: <4F8594FD.8020109@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from iolanthe.rowland.org ([192.131.102.54]:34617 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933008Ab2DKTiq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 15:38:46 -0400
+Date: Wed, 11 Apr 2012 15:38:44 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Calin Demian <c.demian20@gmail.com>
+cc: USB list <linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: PROBLEM: OHCI HCD - computer freezes during boot
+In-Reply-To: <CAD52pS-CJBSz3EhFf4Mt3=o8=-3soa-b=XjDjdra=BP=M-4RLw@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1204111531170.1351-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, 11 Apr 2012, Calin Demian wrote:
 
-> -----Original Message-----
-> From: Don Dutile [mailto:ddutile@redhat.com]
-> Sent: Wednesday, April 11, 2012 10:28 PM
-> To: Hao, Xudong
-> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org
-> Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
+> Hi!
+> Yes, in fact I did allready follow the execution, and it looks like this:
+> function                                file
+> pci_apply_final_quirks           /drivers/pci/quirks.c
+> pci_fixup_device                    ~
+> pci_do_fixups                        ~
+> here, for the ohci busses 2 functions are called:
+>   nv_msi_ht_cap_quirk_all       /drivers/usb/host/pci-quirks.c
+
+What is that?  It's not present in my copy of the kernel source.
+
+>   quirk_usb_early_handoff        ~
+> quirk_usb_early_handoff calls the following 3 functions:
+>   pci_enable_device(pdev)         /drivers/pci/pci.c
+>   quirk_usb_handoff_ohci(pdev)    /drivers/usb/host/pci-quirks.c
+>   pci_disable_device(pdev)
 > 
-> On 04/11/2012 02:03 AM, Hao, Xudong wrote:
-> > (Re-rend.)
-> >
-> > For IvyBridge Mobile platform, a system hang may occur if a FLR(Function
-> Level Reset) is asserted to internal graphics.
-> >
-> > This quirk patch is workaround for the IVB FLR errata issue.
-> > We are disabling the FLR reset handshake between the PCH and CPU display,
-> then manually powering down the panel power sequencing and resetting the
-> PCH display.
-> >
-> > Changes from v3:
-> > - add X86 configuration to avoid compile problem in other architecture.
-> >
-> > Signed-off-by: Xudong Hao<xudong.hao@intel.com>
-> > Signed-off-by: Kay, Allen M<allen.m.kay@intel.com>
-> > Reviewed-by: Xiantao Zhang<xiantao.zhang@intel.com>
-> > ---
-> >   drivers/pci/quirks.c |   59
-> ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >   1 files changed, 59 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
-> > 6476547..63e8b70 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3069,11 +3069,70 @@ static int reset_intel_82599_sfp_virtfn(struct
-> pci_dev *dev, int probe)
-> >   	return 0;
-> >   }
-> >
-> > +#ifdef CONFIG_X86
-> > +
-> > +#include "../gpu/drm/i915/i915_reg.h"
-> > +#define MSG_CTL	0x45010
-> > +
-> > +static const int op_timeout = 10;	/* set timeout 10 seconds */
-> > +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
-> > +	u8 *mmio_base;
-> > +	u32 val;
-> > +	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
-> > +
-> Don't we know how to do a 10sec timeout w/o tying it to tsc_khz?
-> --> other arch compile problem source???
+> The execution stops inside pci_disable_device, but because
+> quirk_usb_handoff_ohci is the only function that has changed between
+> versions 3.0.13 and 3.0.20 from the list of files mentioned above, it
+> seems that this function changed behaviour in a way that my computer
+> doesn't like.
+
+That cannot be right.  The call to pci_disable_device was added after 
+the change to quirk_usb_handoff_ohci.
+
+>   Further trace:
+>   pci_disable_device
+>     do_pci_disable_device
+>       pci_read_config_word
+
+I have no idea why your computer would crash inside or after
+pci_read_config_word.
+
+Anyway, this is a PCI problem, not a USB problem.  Maybe the PCI 
+experts can help.  I have CC'ed the linux-pci mailing list.
+
+Alan Stern
+
+> with respect,
+> Calin Demian
 > 
-
-Of course we have other timeout, this quirk function is only used by IvyBridge mobile which is x86 arch, so I choose tsc_khz.
-I have add "#ifdef CONFIG_X86" for avoid other arch compile problem.
-
-> > +	if (probe)
-> > +		return 0;
-> > +
-> > +	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-> > +				 pci_resource_len(dev, 0));
-> > +	if (!mmio_base)
-> > +		return -ENOMEM;
-> > +
-> > +	/* Work Around */
-> > +	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
-> > +	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
-> > +	 * driver loaded sets the right bits. However, this's a reset and
-> > +	 * the bits have been set by i915 previously, so we clobber
-> > +	 * SOUTH_CHICKEN2 register directly here.
-> > +	 */
-> > +	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
-> > +	val = *((u32 *)(mmio_base + PCH_PP_CONTROL))&  0xfffffffe;
-> > +	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
-> above should use readl() & writel()
-
-Thanks, I will use readl() and writel() in next version patch.
-
-> .... and once this & above fixed, then it'll work on other arches???
 > 
-
-Other arches do not call this function at all, so it will not impact other arches.
-
-> > +	do {
-> > +		cycles_t start_time = get_cycles();
-> > +		while (1) {
-> > +			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
-> > +			if (((val&  0x80000000) == 0)
-> > +				&&  ((val&  0x30000000) == 0))
-> > +				break;
-> > +			if (cyc_op_timeout<  (get_cycles() - start_time))
-> > +				break;
-> > +			cpu_relax();
-> > +		}
-> > +	} while (0);
-> > +	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
-> > +
-> > +	iounmap(pci_resource_start(dev, 0));
-> > +	return 0;
-> > +}
-> > +#else
-> > +static int reset_ivb_igd(struct pci_dev *dev, int probe) { }
-> > +#endif	/* CONFIG_X86 */
-> > +
-> >   #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> > +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-> > +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+> 2012/4/11 Alan Stern <stern@rowland.harvard.edu>:
+> > On Wed, 11 Apr 2012, Calin Demian wrote:
 > >
-> >   static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
-> >   	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
-> >   		 reset_intel_82599_sfp_virtfn },
-> > +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-> > +		reset_ivb_igd },
-> > +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-> > +		reset_ivb_igd },
-> >   	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-> >   		reset_intel_generic_dev },
-> >   	{ 0 }
+> >> 1.Boot problem: computer stops responding during boot.
+> >>
+> >> 2.The symptom doesn't occur allways, but when it does, it is at the
+> >> same point during the boot process. The last messages displayed differ
+> >> between different kernel versions, but are the same each time.
+> >>   I would appreciate if you could take a look at function
+> >> "quirk_usb_handoff_ohci" in file /drivers/usb/host/pci-quirks.c -
+> >> which was modified in version 3.0.17 of the mainline kernel. The
+> >> problem appeared when upgrading Ubuntu from mainline kernel version
+> >> 3.0.13 to version 3.0.20. Searching the changelogs I found that this
+> >> function was modified between the two releases. The  computer freezes
+> >> durin applying the quirks (pci_apply_final_quirks) for bus
+> >> 0000:00:13.1 (the 2nd OHCI bus). Controller is ALI  (EHCI 8 ports +
+> >> OHCI 3x3 ports), dev_id 5237(OHCI).
 > >
+> > Can you figure out exactly where the computer stops, by adding printk
+> > lines to the quirk_usb_handoff_ohci function?
 > >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> > in the body of a message to majordomo@vger.kernel.org More majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
+> > Alan Stern
 
