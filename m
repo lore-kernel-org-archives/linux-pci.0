@@ -1,102 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40501 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757437Ab2DIQZd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 12:25:33 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH V2 1/6] PCI, x86: split out pci_mmcfg_check_reserved() for code reuse
-Date: Tue, 10 Apr 2012 00:22:43 +0800
-Message-Id: <1333988568-11282-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
-References: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:49858 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755808Ab2DKX7r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 19:59:47 -0400
+Received: by lbbgm6 with SMTP id gm6so1167202lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 11 Apr 2012 16:59:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4F859646.7030109@snewbury.org.uk>
+References: <1333968563.5678.19.camel@infinity> <CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com>
+ <4F84110E.3000400@snewbury.org.uk> <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>
+ <4F8467AA.90305@snewbury.org.uk> <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>
+ <4F848357.3060007@snewbury.org.uk> <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>
+ <4F848E10.1090703@snewbury.org.uk> <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>
+ <1334089568.4083.2.camel@Nokia-N900> <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
+ <4F84A3EC.6030903@snewbury.org.uk> <CAErSpo6GTarMUySce+n6x=TtqgfryzA5-88aKwL7L4snDp4MTA@mail.gmail.com>
+ <4F859646.7030109@snewbury.org.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 11 Apr 2012 17:59:24 -0600
+Message-ID: <CAErSpo4CQowZic0HR-_hnUqMZUrLKk34QfDikH9LykfRAYKt4Q@mail.gmail.com>
+Subject: Re: PCI resources above 4GB
+To: Steven Newbury <steve@snewbury.org.uk>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split out pci_mmcfg_check_reserved() for code reuse, which will be used
-when supporting PCI host bridge hotplug.
+On Wed, Apr 11, 2012 at 8:33 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
+> On 11/04/12 04:37, Bjorn Helgaas wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- arch/x86/pci/mmconfig-shared.c |   51 +++++++++++++++++++--------------------
- 1 files changed, 25 insertions(+), 26 deletions(-)
+>> If the host bridge has a _PRS with settings above 4G that we could
+>> enable, that might be worthwhile.  I haven't seen _PRS on a host
+>> bridge yet, and Linux would ignore it if it existed, but that would
+>> be a plausible approach.  (Turn on CONFIG_PNP_DEBUG_MESSAGES and
+>> boot with pnp.debug=1 to see if you have any _PRS.)
+>
+> Attached dmesg with pnp.debug=1, also includes working radeon with
+> cardbus disabled in BIOS.
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 301e325..f799949 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
- 	return valid;
- }
- 
-+static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
-+					      int early)
-+{
-+	if (!early && !acpi_disabled) {
-+		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
-+			return 1;
-+		else
-+			printk(KERN_ERR FW_BUG PREFIX
-+			       "MMCONFIG at %pR not reserved in "
-+			       "ACPI motherboard resources\n",
-+			       &cfg->res);
-+	}
-+
-+	/* Don't try to do this check unless configuration
-+	   type 1 is available. how about type 2 ?*/
-+	if (raw_pci_ops)
-+		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
-+
-+	return 0;
-+}
-+
- static void __init pci_mmcfg_reject_broken(int early)
- {
- 	struct pci_mmcfg_region *cfg;
- 
- 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
--		int valid = 0;
--
--		if (!early && !acpi_disabled) {
--			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
--
--			if (valid)
--				continue;
--			else
--				printk(KERN_ERR FW_BUG PREFIX
--				       "MMCONFIG at %pR not reserved in "
--				       "ACPI motherboard resources\n",
--				       &cfg->res);
-+		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
-+			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
-+			free_all_mmcfg();
-+			return;
- 		}
--
--		/* Don't try to do this check unless configuration
--		   type 1 is available. how about type 2 ?*/
--		if (raw_pci_ops)
--			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
--
--		if (!valid)
--			goto reject;
- 	}
--
--	return;
--
--reject:
--	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
--	free_all_mmcfg();
- }
- 
- static int __initdata known_bridge;
--- 
-1.7.5.4
+As expected, your host bridge doesn't have a _PRS method, so there's
+no good way to change its apertures.
 
+>> Do you happen to know what Windows does in that
+
+> That's why I'm hoping to be able to reallocate the i915 aperture
+> above 4GB, but this depends on what the chipset is capable of
+> rather than what the BIOS exposes.
+
+We don't have native drivers in Linux for every chipset.  For example,
+to my knowledge, Linux doesn't know anything about the Intel 965 spec
+ifics you mentioned.  Therefore, we do rely on the abstract
+information the BIOS exposes.  Sometimes that we can't exploit every
+hardware feature.  That's part of the tradeoff between having a
+generic kernel vs. having to write new code for every new machine.
+
+>> situation?   Does the radeon work and the i915 not, or does it somehow
+>> make both work?   Is there any way you could collect the device info
+>> under Windows, using AIDA64 (http://www.aida64.com/) or similar?
+
+> From reading Microsoft documents, they always try putting PCI
+> resources above 4GB on 64bit Windows since Vista, even
+> using bounce buffers where necessary, and supported by the
+> hardware, only falling back below 4GB when all else fails.
+
+I don't doubt that Windows tries to put PCI resources above 4GB, but I
+suspect it does so only when it can place them inside a host bridge
+aperture reported via _CRS.  I'd be very surprised if 64-bit Windows
+assigned >4GB PCI resources on this machine.
+
+Here's the basic problem: when we hot-add a PCI device, we have to
+know what resources can possibly be assigned to it.  When we have more
+than one host bridge,  we have to know the apertures of each host
+bridge so we can allocate from the correct ones.  That's what _CRS
+tells us.
+
+So the short answer is that by default Linux uses _CRS, and it won't
+work any better than Windows in this case.
+
+If you want to make some tweaks and just live with the fact of always
+having to use "pci=nocrs", that's fine.  I don't personally have time
+to mess with that, and I don't know whether it would make sense to
+push those tweaks upstream, but you can likely make it work somehow.
+
+Bjorn
