@@ -1,53 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40501 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757437Ab2DIQZZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 12:25:25 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH V2 0/6] PCI, x86: update MMCFG information when hot-plugging PCI host bridges
-Date: Tue, 10 Apr 2012 00:22:42 +0800
-Message-Id: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:50578 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757389Ab2DKMGN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 08:06:13 -0400
+Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 3B7343EE081
+	for <linux-pci@vger.kernel.org>; Wed, 11 Apr 2012 21:06:11 +0900 (JST)
+Received: from smail (m1 [127.0.0.1])
+	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 1F4AF45DE56
+	for <linux-pci@vger.kernel.org>; Wed, 11 Apr 2012 21:06:11 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
+	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 0789945DE55
+	for <linux-pci@vger.kernel.org>; Wed, 11 Apr 2012 21:06:11 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id EF1E31DB8049
+	for <linux-pci@vger.kernel.org>; Wed, 11 Apr 2012 21:06:10 +0900 (JST)
+Received: from ml13.s.css.fujitsu.com (ml13.s.css.fujitsu.com [10.240.81.133])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id AB2C71DB8042
+	for <linux-pci@vger.kernel.org>; Wed, 11 Apr 2012 21:06:10 +0900 (JST)
+Message-ID: <4F8573A4.8070307@jp.fujitsu.com>
+Date: Wed, 11 Apr 2012 21:05:56 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V4 0/6] PCI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7zWEXBhC7+gaq+BCussyKOYORaBG-PBe4ERruCAA-cfQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7zWEXBhC7+gaq+BCussyKOYORaBG-PBe4ERruCAA-cfQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset enhance pci_root driver to update MMCFG information when
-hot-plugging PCI root bridges. It applies to Yinghai's tree at
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+(2012/04/11 13:02), Bjorn Helgaas wrote:
+> On Tue, Apr 10, 2012 at 6:10 PM, Jiang Liu<liuj97@gmail.com>  wrote:
+>> This patchset enhance pci_root driver to update MMCFG information when
+>> hot-plugging PCI root bridges. It applies to Yinghai's tree at
+>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+>>
+>> The second patch is based on Taku Izumi work with some enhancements to
+>> correctly handle PCI host bridges without _CBA method.
+>
+> I'm sorry I won't have time to really review these for a couple weeks.
+>
+> It always seemed wrong to me that we parse MCFG and set things up
+> before we even look at PNP0A03/PNP0A08 devices.  It would make more
+> sense to me to have something in acpi_pci_root_add() to set up
+> MMCONFIG using _CBA if available, and falling back to parsing MCFG if
+> it's not.
 
-The second patch is based on Taku Izumi work with some enhancements to
-correctly handle PCI host bridges without _CBA method.
+I think your idea could make the code (design) much cleaner.
+Do you have any other reason why you think "It always seemed
+wrong..."?
 
-v2: split into smaller patches and skip updating MMCFG information when
-    MMCFG is disabled
-
-Jiang Liu (6):
-  PCI, x86: split out pci_mmcfg_check_reserved() for code reuse
-  PCI, x86: split out pci_mmconfig_alloc() for code reuse
-  PCI, x86: use RCU list to protect mmconfig list
-  PCI, x86: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
-  PCI, x86: introduce pci_mmconfig_insert()/delete() for PCI root
-    bridge hotplug
-  PCI, ACPI, x86: update MMCFG information when hot-plugging PCI host
-    bridges
-
- arch/x86/include/asm/pci_x86.h |    4 +
- arch/x86/pci/acpi.c            |   66 ++++++++++++++
- arch/x86/pci/mmconfig-shared.c |  186 +++++++++++++++++++++++++++++++---------
- arch/x86/pci/mmconfig_32.c     |   28 ++++++-
- arch/x86/pci/mmconfig_64.c     |   35 +++++++-
- drivers/acpi/pci_root.c        |   20 +++++
- include/acpi/acnames.h         |    1 +
- include/linux/pci-acpi.h       |    2 +
- 8 files changed, 295 insertions(+), 47 deletions(-)
-
--- 
-1.7.5.4
-
+Regards,
+Kenji Kaneshige
