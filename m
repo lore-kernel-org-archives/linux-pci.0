@@ -1,46 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nix <nix@esperi.org.uk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chris Boot <bootc@bootc.net>,
-	"Wyborny\, Carolyn" <carolyn.wyborny@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev <netdev@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Matthew Garrett <mjg@redhat.com>
-Subject: Re: [E1000-devel] e1000e interface hang on 82574L
-References: <4EFA4024.5000909@bootc.net>
-	<FCF3184D-CE4F-471C-B66C-0F671795FD3C@bootc.net>
-	<9BBC4E0CF881AA4299206E2E1412B626017762@ORSMSX102.amr.corp.intel.com>
-	<4F048861.8070501@bootc.net> <4F12B42C.9030803@bootc.net>
-	<9BBC4E0CF881AA4299206E2E1412B62621F0B1@ORSMSX102.amr.corp.intel.com>
-	<4F144A76.3050703@bootc.net> <4F64B4E2.20208@bootc.net>
-	<4F64CFCB.7060702@bootc.net>
-	<9BBC4E0CF881AA4299206E2E1412B6260E512E0C@ORSMSX102.amr.corp.intel.com>
-	<87r4wova0b.fsf@spindle.srvr.nix>
-	<9BBC4E0CF881AA4299206E2E1412B6260E512FB9@ORSMSX102.amr.corp.intel.com>
-	<87ehsov6ot.fsf@spindle.srvr.nix>
-	<1590F833-7D40-42FE-8FA2-6DCCADF9C6B0@bootc.net>
-	<CAErSpo4TJ-9NsD5QTpFi9fsnD9qHt7+Tr5jJHQPuS7vg6ghq_w@mail.gmail.com>
-Date: Fri, 06 Apr 2012 17:04:46 +0100
-In-Reply-To: <CAErSpo4TJ-9NsD5QTpFi9fsnD9qHt7+Tr5jJHQPuS7vg6ghq_w@mail.gmail.com>
-	(Bjorn Helgaas's message of "Fri, 6 Apr 2012 06:12:58 -0600")
-Message-ID: <87r4w0luch.fsf@spindle.srvr.nix>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:45686 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759550Ab2DKAOV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 20:14:21 -0400
+Received: by mail-pb0-f46.google.com with SMTP id un15so552527pbc.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Apr 2012 17:14:21 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: [PATCH V4 1/6] PCI, x86: split out pci_mmcfg_check_reserved() for code reuse
+Date: Wed, 11 Apr 2012 08:10:58 +0800
+Message-Id: <1334103063-2283-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
+References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6 Apr 2012, Bjorn Helgaas outgrape:
-> If I understand correctly, e1000e attempts to disable ASPM to work
-> around an 82574L hardware erratum, but the PCI core either doesn't
-> disable ASPM or it gets re-enabled somehow.
+Split out pci_mmcfg_check_reserved() for code reuse, which will be used
+when supporting PCI host bridge hotplug.
 
-It gets re-enabled. If you explicitly do a setpci in the boot process to
-turn ASPM off on the interface, after doing your 'ip link up' and routing
-initialization, by the end of the boot process ASPM is back on again.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   51 +++++++++++++++++++--------------------
+ 1 files changed, 25 insertions(+), 26 deletions(-)
 
-I speculate that the stabilization of the interface (as indicated by the
-link-enabled message) has somehow flipped ASPM on, but I have no actual
-evidence for when this re-enabling happens. I just know it does.
-
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 301e325..f799949 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+ 	return valid;
+ }
+ 
++static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
++					      int early)
++{
++	if (!early && !acpi_disabled) {
++		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
++			return 1;
++		else
++			printk(KERN_ERR FW_BUG PREFIX
++			       "MMCONFIG at %pR not reserved in "
++			       "ACPI motherboard resources\n",
++			       &cfg->res);
++	}
++
++	/* Don't try to do this check unless configuration
++	   type 1 is available. how about type 2 ?*/
++	if (raw_pci_ops)
++		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
++
++	return 0;
++}
++
+ static void __init pci_mmcfg_reject_broken(int early)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		int valid = 0;
+-
+-		if (!early && !acpi_disabled) {
+-			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
+-
+-			if (valid)
+-				continue;
+-			else
+-				printk(KERN_ERR FW_BUG PREFIX
+-				       "MMCONFIG at %pR not reserved in "
+-				       "ACPI motherboard resources\n",
+-				       &cfg->res);
++		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
++			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
++			free_all_mmcfg();
++			return;
+ 		}
+-
+-		/* Don't try to do this check unless configuration
+-		   type 1 is available. how about type 2 ?*/
+-		if (raw_pci_ops)
+-			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
+-
+-		if (!valid)
+-			goto reject;
+ 	}
+-
+-	return;
+-
+-reject:
+-	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
+-	free_all_mmcfg();
+ }
+ 
+ static int __initdata known_bridge;
 -- 
-NULL && (void)
+1.7.5.4
+
