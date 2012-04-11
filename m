@@ -1,87 +1,194 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:45686 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759841Ab2DKAOg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 20:14:36 -0400
+Received: by mail-pb0-f46.google.com with SMTP id un15so552527pbc.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Apr 2012 17:14:35 -0700 (PDT)
 From: Jiang Liu <liuj97@gmail.com>
 To: Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
 Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 11/19] PCI: release IO resource in error handling path in cpcihp_generic_init()
-Date: Fri, 27 Apr 2012 23:16:52 +0800
-Message-Id: <1335539820-11232-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: [PATCH V4 3/6] PCI, x86: use RCU list to protect mmconfig list
+Date: Wed, 11 Apr 2012 08:11:00 +0800
+Message-Id: <1334103063-2283-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
+References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Use RCU list to protect mmconfig list from dynamic change
+when supporting PCI host bridge hotplug.
 
-Release IO resource in error handling path in function cpcihp_generic_init().
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/hotplug/cpcihp_generic.c |   25 ++++++++++++++++---------
- 1 files changed, 16 insertions(+), 9 deletions(-)
+ arch/x86/pci/mmconfig-shared.c |   11 ++++++-----
+ arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
+ arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
+ 3 files changed, 28 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-index 81af764..518f387 100644
---- a/drivers/pci/hotplug/cpcihp_generic.c
-+++ b/drivers/pci/hotplug/cpcihp_generic.c
-@@ -157,16 +157,19 @@ static int __init cpcihp_generic_init(void)
- 	bus = pci_find_bus(0, bridge_busnr);
- 	if (!bus) {
- 		err("Invalid bus number %d", bridge_busnr);
--		return -EINVAL;
--	}
--	dev = pci_get_slot(bus, PCI_DEVFN(bridge_slot, 0));
--	if(!dev || dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
--		err("Invalid bridge device %s", bridge);
-+	} else {
-+		dev = pci_get_slot(bus, PCI_DEVFN(bridge_slot, 0));
-+		if (!dev || dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
-+			err("Invalid bridge device %s", bridge);
-+			bus = NULL;
-+		} else
-+			bus = dev->subordinate;
- 		pci_dev_put(dev);
--		return -EINVAL;
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 5e2cd2a..3bcc361 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -17,6 +17,7 @@
+ #include <linux/bitmap.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/rculist.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <asm/acpi.h>
+@@ -45,20 +46,20 @@ static __init void free_all_mmcfg(void)
+ 		pci_mmconfig_remove(cfg);
+ }
+ 
+-static __init void list_add_sorted(struct pci_mmcfg_region *new)
++static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	/* keep list sorted by segment and starting bus number */
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
+ 		if (cfg->segment > new->segment ||
+ 		    (cfg->segment == new->segment &&
+ 		     cfg->start_bus >= new->start_bus)) {
+-			list_add_tail(&new->list, &cfg->list);
++			list_add_tail_rcu(&new->list, &cfg->list);
+ 			return;
+ 		}
  	}
--	bus = dev->subordinate;
--	pci_dev_put(dev);
-+	if (!bus) {
-+		status = -EINVAL;
-+		goto init_find_bus_error;
+-	list_add_tail(&new->list, &pci_mmcfg_list);
++	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
+ }
+ 
+ static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
+@@ -111,7 +112,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+ 		if (cfg->segment == segment &&
+ 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
+ 			return cfg;
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5372e86..5dad04a 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/init.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <acpi/acpi.h>
+@@ -60,9 +61,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		goto err;
 +	}
  
- 	memset(&generic_hpc, 0, sizeof (struct cpci_hp_controller));
- 	generic_hpc_ops.query_enum = query_enum;
-@@ -175,7 +178,8 @@ static int __init cpcihp_generic_init(void)
- 	status = cpci_hp_register_controller(&generic_hpc);
- 	if(status != 0) {
- 		err("Could not register cPCI hotplug controller");
--		return -ENODEV;
-+		status = -ENODEV;
-+		goto init_find_bus_error;
- 	}
- 	dbg("registered controller");
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
  
-@@ -193,10 +197,13 @@ static int __init cpcihp_generic_init(void)
+@@ -80,6 +84,7 @@ err:		*value = -1;
+ 		break;
  	}
- 	dbg("started cpci hp system");
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
  	return 0;
-+
- init_start_error:
- 	cpci_hp_unregister_bus(bus);
- init_bus_register_error:
- 	cpci_hp_unregister_controller(&generic_hpc);
-+init_find_bus_error:
-+	release_region(port, 1);
- 	err("status = %d", status);
- 	return status;
+ }
+@@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if ((bus > 255) || (devfn > 255) || (reg > 4095))
+ 		return -EINVAL;
  
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index 915a493..acc48c5 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -9,6 +9,7 @@
+ #include <linux/init.h>
+ #include <linux/acpi.h>
+ #include <linux/bitmap.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -34,9 +35,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -49,6 +53,7 @@ err:		*value = -1;
+ 		*value = mmio_config_readl(addr + reg);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		mmio_config_writel(addr + reg, value);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
 -- 
 1.7.5.4
 
