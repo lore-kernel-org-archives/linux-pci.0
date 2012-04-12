@@ -1,43 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48956 "EHLO ogre.sisk.pl"
+Received: from mga03.intel.com ([143.182.124.21]:11659 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751542Ab2DQUQK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Apr 2012 16:16:10 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: huang ying <huang.ying.caritas@gmail.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-Date: Tue, 17 Apr 2012 22:20:45 +0200
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-References: <4F8790F6.5080408@intel.com> <201204161907.13806.rjw@sisk.pl> <CAC=cRTNdLu=A64YAEp78ENc1h2OJKusXY3Wm9LuY4drz9pbomg@mail.gmail.com>
-In-Reply-To: <CAC=cRTNdLu=A64YAEp78ENc1h2OJKusXY3Wm9LuY4drz9pbomg@mail.gmail.com>
+	id S964877Ab2DLC04 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 22:26:56 -0400
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: Matthew Wilcox <matthew@wil.cx>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH V4] Quirk for IVB graphics FLR errata
+Date: Thu, 12 Apr 2012 02:26:34 +0000
+Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD0EBA2@SHSMSX102.ccr.corp.intel.com>
+References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
+ <20120411122233.GB6557@parisc-linux.org>
+In-Reply-To: <20120411122233.GB6557@parisc-linux.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201204172220.45970.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 17, 2012, huang ying wrote:
-> On Tue, Apr 17, 2012 at 1:07 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > Moreover, I really don't think it's a good idea to put PCI Express ports into
-> > low-power states in general.  It might work on your platform, whatever it is,
-> > but that doesn't mean it's going to work on every PCI Express system out
-> > there.  I actually know of a number of such systems where it surely won't
-> > work at all.
+> -----Original Message-----
+> From: Matthew Wilcox [mailto:matthew@wil.cx]
+> Sent: Wednesday, April 11, 2012 8:23 PM
+> To: Hao, Xudong
+> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
 > 
-> The runtime PM support for PCIe port is not turned on by default, we need
+> On Wed, Apr 11, 2012 at 06:03:43AM +0000, Hao, Xudong wrote:
+> > +#ifdef CONFIG_X86
+> > +
+> > +#include "../gpu/drm/i915/i915_reg.h"
+> > +#define MSG_CTL	0x45010
 > 
-> # echo auto > /sys/devices/pcixxxx:xx/<pci id>/power/control
+> There's a strange mixture of constants from i915_reg.h, defined constants
+> here and bare constants below.  I don't mind which get used, but the mixture
+> is bizarre.
 > 
-> to turn on it.  And we will turn on it on system it works.  Is this sufficient?
+> > +static const int op_timeout = 10;	/* set timeout 10 seconds */
+> > +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
+> > +	u8 *mmio_base;
+> > +	u32 val;
+> > +	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
+> 
+> Style: use spaces around the multiply operator:
+> 	cycles_t cyc_op_timeout = tsc_khz * op_timeout * 1000;
+> 
 
-No, it is not.  In some cases it shouldn't be enabled at all for PCI Express
-ports, as far as I can say, so to be on the safe side we should only enable it
-on platforms where PCI Express ports are known to work correctly with runtime PM.
+I'll modify it to follow code style.
 
-Thanks,
-Rafael
+> > +	if (probe)
+> > +		return 0;
+> > +
+> > +	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
+> > +				 pci_resource_len(dev, 0));
+> 
+> mmio_base should have type void __iomem *.
+> 
+Yes, it should use void __iomem *, I'll change it.
+
+> > +	if (!mmio_base)
+> > +		return -ENOMEM;
+> > +
+> > +	/* Work Around */
+> > +	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
+> 
+> Why are you not using writel() here? (and readl() in other places)
+> 
+
+I'll use writel() and readl() in next version patch, thanks for your code review and comments.
+
+> > +	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
+> > +	 * driver loaded sets the right bits. However, this's a reset and
+> > +	 * the bits have been set by i915 previously, so we clobber
+> > +	 * SOUTH_CHICKEN2 register directly here.
+> > +	 */
+> > +	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
+> > +	val = *((u32 *)(mmio_base + PCH_PP_CONTROL)) & 0xfffffffe;
+> > +	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
+> > +	do {
+> > +		cycles_t start_time = get_cycles();
+> > +		while (1) {
+> > +			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
+> > +			if (((val & 0x80000000) == 0)
+> > +				&& ((val & 0x30000000) == 0))
+> > +				break;
+> > +			if (cyc_op_timeout < (get_cycles() - start_time))
+> > +				break;
+> > +			cpu_relax();
+> > +		}
+> > +	} while (0);
+> > +	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
+> > +
+> > +	iounmap(pci_resource_start(dev, 0));
+> > +	return 0;
+> > +}
+> > +#else
+> > +static int reset_ivb_igd(struct pci_dev *dev, int probe) { }
+> > +#endif	/* CONFIG_X86 */
+> > +
+> >  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+> > +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+> > +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+> >
+> >  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+> >  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+> >  		 reset_intel_82599_sfp_virtfn },
+> > +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
+> > +		reset_ivb_igd },
+> > +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
+> > +		reset_ivb_igd },
+> >  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+> >  		reset_intel_generic_dev },
+> >  	{ 0 }
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > in the body of a message to majordomo@vger.kernel.org More majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> Matthew Wilcox				Intel Open Source Technology Centre
+> "Bill, look, we understand that you're interested in selling us this operating
+> system, but compare it to ours.  We can't possibly take such a retrograde
+> step."
