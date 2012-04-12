@@ -1,60 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46989 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756224Ab2DKPem (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 11:34:42 -0400
-Received: by pbcun15 with SMTP id un15so1362119pbc.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Apr 2012 08:34:41 -0700 (PDT)
-Message-ID: <4F85A481.1020807@gmail.com>
-Date: Wed, 11 Apr 2012 23:34:25 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:45318 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757740Ab2DLX7J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2012 19:59:09 -0400
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 9E0E03EE081
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 8614545DE4D
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 6E92C45DD78
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 629FD1DB803A
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
+Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 1F5631DB8038
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
+Message-ID: <4F876C54.5040408@jp.fujitsu.com>
+Date: Fri, 13 Apr 2012 08:59:16 +0900
+From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V4 0/6] PCI, x86: update MMCFG information when hot-plugging
- PCI host bridges
-References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7zWEXBhC7+gaq+BCussyKOYORaBG-PBe4ERruCAA-cfQ@mail.gmail.com> <4F8573A4.8070307@jp.fujitsu.com>
-In-Reply-To: <4F8573A4.8070307@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC] pciehp: Add archdata setting
+References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com> <4F7AA3A2.1080900@jp.fujitsu.com> <4F7C003B.4040208@jp.fujitsu.com> <4F866184.4000403@jp.fujitsu.com> <CAErSpo6Xb6rbZ757VHuQnWWsXbnygTM9JQFzvOnOiM895D+R-g@mail.gmail.com>
+In-Reply-To: <CAErSpo6Xb6rbZ757VHuQnWWsXbnygTM9JQFzvOnOiM895D+R-g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/11/2012 08:05 PM, Kenji Kaneshige wrote:
-> (2012/04/11 13:02), Bjorn Helgaas wrote:
->> On Tue, Apr 10, 2012 at 6:10 PM, Jiang Liu<liuj97@gmail.com>  wrote:
->>> This patchset enhance pci_root driver to update MMCFG information when
->>> hot-plugging PCI root bridges. It applies to Yinghai's tree at
->>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
->>>
->>> The second patch is based on Taku Izumi work with some enhancements to
->>> correctly handle PCI host bridges without _CBA method.
->>
->> I'm sorry I won't have time to really review these for a couple weeks.
->>
->> It always seemed wrong to me that we parse MCFG and set things up
->> before we even look at PNP0A03/PNP0A08 devices.  It would make more
->> sense to me to have something in acpi_pci_root_add() to set up
->> MMCONFIG using _CBA if available, and falling back to parsing MCFG if
->> it's not.
-> 
-> I think your idea could make the code (design) much cleaner.
-> Do you have any other reason why you think "It always seemed
-> wrong..."?
-Yeah, that may lead to a cleaner design. 
-But there are still some special cases, such as:
-1) ACPI subsystem is disabled by kernel boot options, so we can't rely
-on the ACPI pci_root driver to initialize the MMCFG.
-2) Some PCI host bridges are not reported by the ACPI namespace. My partner
-has observed a system which doesn't report the host bridges embedded in the
-NHM-EX processors.
+Hi, Bjorn
 
-Thanks!
 
+Thanks for your research and comment.
+
+As you said, a way of registering code with bus_register_notifier(), 
+which will be called in device_add(), is better one than 
+pcibios_enable_device().
+I will try to write code with bus_register_notifier().
+
+
+Regards.
+
+Hiroo MATSUMOTO
+
+> On Wed, Apr 11, 2012 at 11:00 PM, Hiroo Matsumoto
+> <matsumoto.hiroo@jp.fujitsu.com> wrote:
+>> Hi, Kaneshige
+>>
+>>
+>> You are right!
+>> Setting dma_ops in pcibios_enable_device is a nice way.
+>> In PCI driver, pci_enable_device_xxx that calls pcibios_enable_device is
+>> called before checking archdata.dma_ops.
+>>
+>> I added code of checking and setting dma_ops to pcibios_enable_device in
+>> arch/powerpc/kernel/pci-common.c.
+>> It works good.
 > 
-> Regards,
-> Kenji Kaneshige
+> When I researched this, I thought the best route was to use the
+> bus_register_notifier() path, as amd_iommu_init_notifier() does.
+> 
+> We're filling in a struct device field, not a PCI field, and
+> bus_register_notifier() seems like a more generic path than relying on
+> pcibios_enable_device().
+> 
+> Bjorn
+> 
+> 
 
