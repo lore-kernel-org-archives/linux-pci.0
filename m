@@ -1,198 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:37352 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442Ab2DPQc2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:32:28 -0400
-Received: by mail-pz0-f52.google.com with SMTP id e40so7132053dak.11
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:32:28 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH RFC 03/17] PCI: replace pci_remove_rescan_mutex with the PCI hotplug lock
-Date: Tue, 17 Apr 2012 00:28:57 +0800
-Message-Id: <1334593751-5916-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
-References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:11223 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753016Ab2DMIfI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 04:35:08 -0400
+From: Steven Newbury <steve@snewbury.org.uk>
+Reply-To: Steven Newbury <steve@snewbury.org.uk>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity>
+	 <CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com>
+	 <4F84110E.3000400@snewbury.org.uk>
+	 <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>
+	 <4F8467AA.90305@snewbury.org.uk>
+	 <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>
+	 <4F848357.3060007@snewbury.org.uk>
+	 <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>
+	 <4F848E10.1090703@snewbury.org.uk>
+	 <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>
+	 <1334089568.4083.2.camel@Nokia-N900>
+	 <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
+	 <4F84A3EC.6030903@snewbury.org.uk>
+	 <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>
+	 <1334229754.30606.7.camel@Nokia-N900>
+	 <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>
+	 <1334248841.2910.6.camel@Nokia-N900>
+	  <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 13 Apr 2012 09:34:36 +0100
+Message-Id: <1334306076.2910.10.camel@Nokia-N900>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace pci_remove_rescan_mutex with the PCI hotplug lock, which is used to
-globally serialize all PCI hotplug operations.
+On Fri, 13 Apr 2012, 09:26:55 BST, Yinghai Lu <yinghai@kernel.org> wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/pci-sysfs.c |  100 +++++++++++++++++++++++++++--------------------
- drivers/pci/remove.c    |    1 +
- 2 files changed, 58 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index a55e248..ecf197d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -283,7 +283,31 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
- }
- 
- #ifdef CONFIG_HOTPLUG
--static DEFINE_MUTEX(pci_remove_rescan_mutex);
-+/*
-+ * Schedule a device callback to avoid deadlock in case of
-+ * 1) An attribute method tries to deregister the sysfs file itself
-+ * 2) Another thread is trying to remove the sysfs file, which have
-+ *    already held the PCI hotplug lock by invoking pci_hotplug_enter().
-+ */
-+static int schedule_hp_callback(struct device *dev,
-+				const char *buf, size_t count,
-+				void (*func)(struct device *))
-+{
-+	int ret = 0;
-+	unsigned long val;
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if (val) {
-+		ret = device_schedule_callback(dev, func);
-+		if (ret)
-+			count = ret;
-+	}
-+
-+	return count;
-+}
-+
- static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 				size_t count)
- {
-@@ -294,10 +318,10 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 		return -EINVAL;
- 
- 	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
-+		pci_hotplug_enter();
- 		while ((b = pci_find_next_bus(b)) != NULL)
- 			pci_rescan_bus(b);
--		mutex_unlock(&pci_remove_rescan_mutex);
-+		pci_hotplug_exit();
- 	}
- 	return count;
- }
-@@ -307,72 +331,62 @@ struct bus_attribute pci_bus_attrs[] = {
- 	__ATTR_NULL
- };
- 
--static ssize_t
--dev_rescan_store(struct device *dev, struct device_attribute *attr,
--		 const char *buf, size_t count)
-+static void dev_rescan_callback(struct device *dev)
- {
--	unsigned long val;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
--		return -EINVAL;
--
--	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
-+	pci_hotplug_enter();
-+	/* Skip if the device has been stopped. */
-+	if (pdev->is_added && pdev->bus)
- 		pci_rescan_bus(pdev->bus);
--		mutex_unlock(&pci_remove_rescan_mutex);
--	}
--	return count;
-+	pci_hotplug_exit();
-+}
-+
-+static ssize_t
-+dev_rescan_store(struct device *dev, struct device_attribute *attr,
-+		 const char *buf, size_t count)
-+{
-+	return schedule_hp_callback(dev, buf, count, dev_rescan_callback);
- }
- 
- static void remove_callback(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	mutex_lock(&pci_remove_rescan_mutex);
--	pci_stop_and_remove_bus_device(pdev);
--	mutex_unlock(&pci_remove_rescan_mutex);
-+	pci_hotplug_enter();
-+	/* Skip if the bus has been removed. */
-+	if (pdev->bus_list.next)
-+		pci_stop_and_remove_bus_device(pdev);
-+	pci_hotplug_exit();
- }
- 
- static ssize_t
- remove_store(struct device *dev, struct device_attribute *dummy,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
--	unsigned long val;
--
--	if (strict_strtoul(buf, 0, &val) < 0)
--		return -EINVAL;
--
--	/* An attribute cannot be unregistered by one of its own methods,
--	 * so we have to use this roundabout approach.
--	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
--	return count;
-+	return schedule_hp_callback(dev, buf, count, remove_callback);
- }
- 
--static ssize_t
--dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
--		 const char *buf, size_t count)
-+static void dev_bus_rescan_callback(struct device *dev)
- {
--	unsigned long val;
- 	struct pci_bus *bus = to_pci_bus(dev);
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
--		return -EINVAL;
--
--	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
-+	pci_hotplug_enter();
-+	/* Skip if the bus has been stopped. */
-+	if (bus->is_added) {
- 		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
- 			pci_rescan_bus_bridge_resize(bus->self);
- 		else
- 			pci_rescan_bus(bus);
--		mutex_unlock(&pci_remove_rescan_mutex);
- 	}
--	return count;
-+	pci_hotplug_exit();
-+}
-+
-+static ssize_t
-+dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
-+		 const char *buf, size_t count)
-+{
-+	return schedule_hp_callback(dev, buf, count, dev_bus_rescan_callback);
- }
- 
- #endif
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index fd77e2b..0b4342b 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -72,6 +72,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- 	if (!pci_bus->is_added)
- 		return;
- 
-+	pci_bus->is_added = 0;
- 	pci_remove_legacy_files(pci_bus);
- 	device_unregister(&pci_bus->dev);
- }
--- 
-1.7.5.4
+> On Thu, Apr 12, 2012 at 9:40 AM, Steven Newbury <steve@snewbury.org.uk>
+> wrote:
+> > > > 
+> > > > It would be useful to preserve as much low PCI memory address
+> > > > space as possible for hotplug devices (like my Radeon), but the
+> > > > other problem is small regions get allocated at the bottom,
+> > > > resulting in the inability to find large aligned regions later on.
+> > > >  I see code to default to top-down allocation was reverted, I
+> > > > guess I'm going to have to dig into the archive to find out why...
+> 
+> Please check attached patches that will find_resource with fit. It may
+> leave space for your hotplug devices.
+> 
+>     PCI: Should add children device res to fail list
+>     PCI: Try to allocate mem64 above 4G at first
+>     intel-gtt: Read 64bit for gmar_bus_addr
+>     PCI: Make sure assign same align with large size resource at first
+>     resource: make find_resource could return just fit resource
+>     PCI: Don't allocate small resource in big empty space.
+>     resource: only return range with needed align
+> 
+> You can get them from
+> 
+>             
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-res-alloc
+> 
+Thanks Yinghai, I'll give it a spin.
 
