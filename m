@@ -1,193 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:62277 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755030Ab2DTSrP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Apr 2012 14:47:15 -0400
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:53573 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754648Ab2DMOUS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 10:20:18 -0400
+Message-ID: <4F88360E.704@snewbury.org.uk>
+Date: Fri, 13 Apr 2012 15:19:58 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <4F919CD5.7070004@fold.natur.cuni.cz>
-References: <4F6A483D.50702@fold.natur.cuni.cz>
-	<4F8D1B72.2000105@fold.natur.cuni.cz>
-	<CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com>
-	<CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com>
-	<4F8D390F.9050408@fold.natur.cuni.cz>
-	<CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
-	<CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
-	<4F8EFFA3.3050705@fold.natur.cuni.cz>
-	<CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com>
-	<4F8F243B.70906@fold.natur.cuni.cz>
-	<CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com>
-	<4F909CEB.3060407@fold.natur.cuni.cz>
-	<CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
-	<CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
-	<4F91473A.1080007@fold.natur.cuni.cz>
-	<CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
-	<4F919C22.1070608@fold.natur.cuni.cz>
-	<4F919CD5.7070004@fold.natur.cuni.cz>
-Date: Fri, 20 Apr 2012 11:47:14 -0700
-Message-ID: <CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
-Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
-From: Yinghai Lu <yinghai@kernel.org>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Daniel Vetter <daniel@ffwll.ch>
+CC: linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	"Barnes, Jesse" <jesse.barnes@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: drm-next i915 regression? ( was: Re: PCI resources above 4GB)
+References: <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com> <1334317529.2910.21.camel@Nokia-N900> <4F8814F7.20808@snewbury.org.uk> <4F8820F0.5010607@snewbury.org.uk> <4F88297B.3020200@snewbury.org.uk> <1334325128.2910.24.camel@Nokia-N900> <4F883364.3080601@snewbury.org.uk> <20120413141305.GI4525@phenom.ffwll.local>
+In-Reply-To: <20120413141305.GI4525@phenom.ffwll.local>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 20, 2012 at 10:28 AM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
->
->
-> [30595.338466] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
-> [30595.338468] pciehp 0000:00:1c.7:pcie04: LinkState change
-> [30595.338471] pciehp 0000:00:1c.7:pcie04: lnk_status = 7011
-> [30595.338483] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
-> [30595.338486] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
-> [30595.338491] pciehp 0000:00:1c.7:pcie04: Surprise Removal
-> [30595.338525] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
-> [30595.439441] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
-> [30595.439543] pci 0000:11:00.0: [1033:0194] type 00 class 0x0c0330
-> [30595.439597] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
-> [30595.439840] pci 0000:11:00.0: PME# supported from D0 D3hot
-> [30595.459499] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
-> [30595.459542] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
-> [30595.459545] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
-> [30595.459550] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
-> [30595.459554] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
-> [30595.459688] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
-> [30595.459894] xhci_hcd 0000:11:00.0: xHCI Host Controller
-> [30595.459900] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
-> [30595.460199] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
-> [30595.460306] xhci_hcd 0000:11:00.0: irq 54 for MSI/MSI-X
-> [30595.460310] xhci_hcd 0000:11:00.0: irq 55 for MSI/MSI-X
-> [30595.460314] xhci_hcd 0000:11:00.0: irq 56 for MSI/MSI-X
-> [30595.460318] xhci_hcd 0000:11:00.0: irq 57 for MSI/MSI-X
-> [30595.460321] xhci_hcd 0000:11:00.0: irq 58 for MSI/MSI-X
-> [30595.460472] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
-> [30595.460474] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-> [30595.460475] usb usb5: Product: xHCI Host Controller
-> [30595.460476] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
-> [30595.460477] usb usb5: SerialNumber: 0000:11:00.0
-> [30595.460569] xHCI xhci_add_endpoint called for root hub
-> [30595.460579] xHCI xhci_check_bandwidth called for root hub
-> [30595.460600] hub 5-0:1.0: USB hub found
-> [30595.460611] hub 5-0:1.0: 2 ports detected
-> [30595.460706] xhci_hcd 0000:11:00.0: xHCI Host Controller
-> [30595.460711] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
-> [30595.463431] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
-> [30595.463433] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-> [30595.463434] usb usb6: Product: xHCI Host Controller
-> [30595.463435] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
-> [30595.463437] usb usb6: SerialNumber: 0000:11:00.0
-> [30595.463506] xHCI xhci_add_endpoint called for root hub
-> [30595.463507] xHCI xhci_check_bandwidth called for root hub
-> [30595.463534] hub 6-0:1.0: USB hub found
-> [30595.463547] hub 6-0:1.0: 2 ports detected
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-echo 1 > /sys/..../remove
+On 13/04/12 15:13, Daniel Vetter wrote:
+> On Fri, Apr 13, 2012 at 03:08:36PM +0100, Steven Newbury wrote:
+>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+>> 
+>> On 13/04/12 14:52, Steven Newbury wrote:
+>>> On Fri, 13 Apr 2012, 14:26:19 BST, Steven Newbury 
+>>> <steve@snewbury.org.uk> wrote:
+>>> 
+>>>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+>>>> 
+>>>> On 13/04/12 13:49, Steven Newbury wrote:
+>>>>> On 13/04/12 12:58, Steven Newbury wrote:
+>>>>> 
+>>>>>>> It's not stable, crashes soon after GMA comes up.
+>>>>>>> (Could be unrelated breakage in linus/master? Probably
+>>>>>>> not but I will verify.)   I noticed the high
+>>>>>>> allocations are occuring from the top of 64-bit
+>>>>>>> address-space, whilst /proc/cpuinfo shows only 48 bits
+>>>>>>> of virtual addressing.   Could that be why..?
+>>>>>> To reply to myself again, I should have said crashes
+>>>>>> shortly after Xorg initialises using the intel driver, in
+>>>>>> both cases! I'm building a kernel now without the patch
+>>>>>> set to see if it's unrelated.   If it still dies I'll try
+>>>>>> applying your patch set to a branch without the changes
+>>>>>> from linus/master... (should have done that anyway...)
+>>>>> 
+>>>>> Okay, I instead created a branch from an older 3.4-rc1+
+>>>>> kernel tree, running it now, and it seems to be stable.
+>>>>> Something perhaps in the newer tree not playing nicely.
+>>>>> I'll see if I can bisect it, or at least base of rc2 if
+>>>>> that works... (I'm a little wary of crashing the system too
+>>>>> much and losing my btrfs filesystem...)
+>>>> rc2 is fine as well.   Not sure what happened there, I need
+>>>> to be more careful about keeping a clean tree to work from.
+>>> I'm pretty sure the crash was a from a drm-next regression.
+>>> I'll try bisecting it....
+>> Sorry, posted too soon!  Almost as I clicked on send it froze
+>> again (using rc2 + for-pci-res-alloc ).  I had problems with the
+>> earlier patches re. X/i915 stability.  Strange.  I'll see if I
+>> can track it down.
+> 
+> Please upgrade to the latest version of Linus' upstream git. A few
+> fixes for regressions in drm/i915 just landed there for -rc3. 
+> -Daniel
 
-> [30607.046714] xhci_hcd 0000:11:00.0: remove, state 4
-> [30607.046719] usb usb6: USB disconnect, device number 1
-> [30607.046764] xHCI xhci_drop_endpoint called for root hub
-> [30607.046766] xHCI xhci_check_bandwidth called for root hub
-> [30607.065341] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
-> [30607.065350] xhci_hcd 0000:11:00.0: remove, state 4
-> [30607.065353] usb usb5: USB disconnect, device number 1
-> [30607.065393] xHCI xhci_drop_endpoint called for root hub
-> [30607.065394] xHCI xhci_check_bandwidth called for root hub
-> [30607.065692] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
-> [30607.065764] pci 0000:11:00.0: freeing pci_dev info
+Okay.  I'll try clean latest linus + for-pci-res-alloc.  Will report back.
 
-physically remove that express card
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-> [30616.630810] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
-> [30616.630813] pciehp 0000:00:1c.7:pcie04: LinkState change
-> [30616.630816] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
-> [30616.630817] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
-> [30616.630820] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
-> [30616.630858] pciehp 0000:00:1c.7:pcie04: Surprise Removal
-> [30616.630888] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
-> [30616.630891] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
-
-physical add...
-
-> [30708.233725] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
-> [30708.233727] pciehp 0000:00:1c.7:pcie04: LinkState change
-> [30708.233738] pciehp 0000:00:1c.7:pcie04: lnk_status = 7011
-> [30708.233739] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
-> [30708.233742] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
-> [30708.233781] pciehp 0000:00:1c.7:pcie04: Surprise Removal
-> [30708.233796] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
-> [30708.338477] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
-> [30708.338581] pci 0000:11:00.0: [1033:0194] type 00 class 0x0c0330
-> [30708.338632] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
-> [30708.338876] pci 0000:11:00.0: PME# supported from D0 D3hot
-> [30708.358538] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
-> [30708.358575] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
-> [30708.358588] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
-> [30708.358593] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
-> [30708.358597] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
-> [30708.358737] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
-> [30708.358791] xhci_hcd 0000:11:00.0: xHCI Host Controller
-> [30708.358799] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
-> [30708.359090] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
-> [30708.359192] xhci_hcd 0000:11:00.0: irq 54 for MSI/MSI-X
-> [30708.359196] xhci_hcd 0000:11:00.0: irq 55 for MSI/MSI-X
-> [30708.359199] xhci_hcd 0000:11:00.0: irq 56 for MSI/MSI-X
-> [30708.359203] xhci_hcd 0000:11:00.0: irq 57 for MSI/MSI-X
-> [30708.359207] xhci_hcd 0000:11:00.0: irq 58 for MSI/MSI-X
-> [30708.359357] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
-> [30708.359359] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-> [30708.359360] usb usb5: Product: xHCI Host Controller
-> [30708.359361] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
-> [30708.359363] usb usb5: SerialNumber: 0000:11:00.0
-> [30708.359453] xHCI xhci_add_endpoint called for root hub
-> [30708.359456] xHCI xhci_check_bandwidth called for root hub
-> [30708.359496] hub 5-0:1.0: USB hub found
-> [30708.359509] hub 5-0:1.0: 2 ports detected
-> [30708.359571] xhci_hcd 0000:11:00.0: xHCI Host Controller
-> [30708.359574] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
-> [30708.362332] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
-> [30708.362335] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-> [30708.362337] usb usb6: Product: xHCI Host Controller
-> [30708.362338] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
-> [30708.362340] usb usb6: SerialNumber: 0000:11:00.0
-> [30708.362443] xHCI xhci_add_endpoint called for root hub
-> [30708.362445] xHCI xhci_check_bandwidth called for root hub
-> [30708.362472] hub 6-0:1.0: USB hub found
-> [30708.362490] hub 6-0:1.0: 2 ports detected
-
-echo 1 /sys/.../remove
-
-> [30716.380693] xhci_hcd 0000:11:00.0: remove, state 4
-> [30716.380699] usb usb6: USB disconnect, device number 1
-> [30716.380752] xHCI xhci_drop_endpoint called for root hub
-> [30716.380754] xHCI xhci_check_bandwidth called for root hub
-> [30716.400795] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
-> [30716.400803] xhci_hcd 0000:11:00.0: remove, state 4
-> [30716.400807] usb usb5: USB disconnect, device number 1
-> [30716.400846] xHCI xhci_drop_endpoint called for root hub
-> [30716.400848] xHCI xhci_check_bandwidth called for root hub
-> [30716.401134] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
-> [30716.401207] pci 0000:11:00.0: freeing pci_dev info
-
-physically remove
-
-> [30720.175637] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
-> [30720.175639] pciehp 0000:00:1c.7:pcie04: LinkState change
-> [30720.175643] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
-> [30720.175644] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
-> [30720.175648] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
-> [30720.175687] pciehp 0000:00:1c.7:pcie04: Surprise Removal
-> [30720.175718] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
-> [30720.175721] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
->
-
-So the USB host control driver xhci put that 11:00.0 in strange power state.
-
-please try to boot the system with pcie_aspm=off
-
-and don't use echo 1 before physically removing the expresscard.
-
-Yinghai
+iEYEARECAAYFAk+INg4ACgkQGcb56gMuC60pJgCfS/g2k3mzIqU34de/Y4wTvfCP
++hwAmQEEdgQ/y0QvDbPffNZ6izqs2Dce
+=EGwB
+-----END PGP SIGNATURE-----
