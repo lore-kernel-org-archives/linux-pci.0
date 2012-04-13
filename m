@@ -1,59 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([206.83.70.75]:10287 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755551Ab2DIViR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 17:38:17 -0400
-Message-ID: <4F8356C7.60706@tilera.com>
-Date: Mon, 9 Apr 2012 17:38:15 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:10334 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751072Ab2DMPuQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 11:50:16 -0400
+Message-ID: <4F884B21.604@snewbury.org.uk>
+Date: Fri, 13 Apr 2012 16:49:53 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+To: Daniel Vetter <daniel@ffwll.ch>
+CC: linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	"Barnes, Jesse" <jesse.barnes@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>, Joe Perches <joe@perches.com>,
-	David Howells <dhowells@redhat.com>
-Subject: Re: [PATCH 3/3] arch/tile: tilegx PCI root complex support
-References: <201204072316.q37NGv8d019280@farm-0023.internal.tilera.com> <201204072319.q37NJlNp019384@farm-0023.internal.tilera.com> <201204091359.13059.arnd@arndb.de>
-In-Reply-To: <201204091359.13059.arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-15"
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: drm-next i915 regression? ( was: Re: PCI resources above 4GB)
+References: <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com> <1334317529.2910.21.camel@Nokia-N900> <4F8814F7.20808@snewbury.org.uk> <4F8820F0.5010607@snewbury.org.uk> <4F88297B.3020200@snewbury.org.uk> <1334325128.2910.24.camel@Nokia-N900> <4F883364.3080601@snewbury.org.uk> <20120413141305.GI4525@phenom.ffwll.local> <4F88360E.704@snewbury.org.uk> <4F8844E1.5080806@snewbury.org.uk>
+In-Reply-To: <4F8844E1.5080806@snewbury.org.uk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/9/2012 9:59 AM, Arnd Bergmann wrote:
-> On Saturday 07 April 2012, Chris Metcalf wrote:
->> This change implements PCIe root complex support for tilegx using
->> the kernel support layer for accessing the TRIO hardware shim.
->>
->> Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
-> Hi Chris,
->
-> I don't know if we discussed it during the initial merge, but I notice that the PIO
-> accessors (inb/outb and friends) are still not implemented in this patch. Normally
-> PIO can just be mapped into the MMIO address space, so that inb() becomes
-> a call to readb() with an offset on the address.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I asked our PCI expert here, who said, "My understanding is that if someone
-wants to use inb/outb to access MMIO space, he'll get the MMIO, as opposed
-to methods implemented with I/O instructions which are not supported by
-TILE.  If the driver is dependent on the I/O instructions, it won't work on
-TILE. These drivers are legacy PC drivers, e.g. ATA devices, which are not
-supported by TILE."
+On 13/04/12 16:23, Steven Newbury wrote:
+> On 13/04/12 15:19, Steven Newbury wrote:
+>> On 13/04/12 15:13, Daniel Vetter wrote:
+>>> On Fri, Apr 13, 2012 at 03:08:36PM +0100, Steven Newbury
+>>> wrote:
+>>>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+>>>> 
+>>>> On 13/04/12 14:52, Steven Newbury wrote:
+>>>>> On Fri, 13 Apr 2012, 14:26:19 BST, Steven Newbury 
+>>>>> <steve@snewbury.org.uk> wrote:
+>>>>> 
+>>>>>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+>>>>>> 
+>>>>>> On 13/04/12 13:49, Steven Newbury wrote:
+>>>>>>> On 13/04/12 12:58, Steven Newbury wrote:
+>>>>>>> 
+>>>>>>>>> It's not stable, crashes soon after GMA comes up. 
+>>>>>>>>> (Could be unrelated breakage in linus/master? 
+>>>>>>>>> Probably not but I will verify.)   I noticed the 
+>>>>>>>>> high allocations are occuring from the top of
+>>>>>>>>> 64-bit address-space, whilst /proc/cpuinfo shows
+>>>>>>>>> only 48 bits of virtual addressing.   Could that be
+>>>>>>>>> why..?
+>>>>>>>> To reply to myself again, I should have said crashes
+>>>>>>>>  shortly after Xorg initialises using the intel
+>>>>>>>> driver, in both cases! I'm building a kernel now
+>>>>>>>> without the patch set to see if it's unrelated.   If
+>>>>>>>> it still dies I'll try applying your patch set to a
+>>>>>>>> branch without the changes from linus/master...
+>>>>>>>> (should have done that anyway...)
+>>>>>>> 
+>>>>>>> Okay, I instead created a branch from an older 3.4-rc1+
+>>>>>>>  kernel tree, running it now, and it seems to be
+>>>>>>> stable. Something perhaps in the newer tree not playing
+>>>>>>> nicely. I'll see if I can bisect it, or at least base
+>>>>>>> of rc2 if that works... (I'm a little wary of crashing
+>>>>>>> the system too much and losing my btrfs filesystem...)
+>>>>>> rc2 is fine as well.   Not sure what happened there, I 
+>>>>>> need to be more careful about keeping a clean tree to
+>>>>>> work from.
+>>>>> I'm pretty sure the crash was a from a drm-next regression.
+>>>>>  I'll try bisecting it....
+>>>> Sorry, posted too soon!  Almost as I clicked on send it froze
+>>>>  again (using rc2 + for-pci-res-alloc ).  I had problems with
+>>>>  the earlier patches re. X/i915 stability.  Strange.  I'll
+>>>> see if I can track it down.
+> 
+>>> Please upgrade to the latest version of Linus' upstream git. A
+>>>  few fixes for regressions in drm/i915 just landed there for
+>>> -rc3. -Daniel
+> 
+>> Okay.  I'll try clean latest linus + for-pci-res-alloc.  Will 
+>> report back.
+> 
+> Looks like either a btrfs regression or bad interaction with 
+> for-pci-res-alloc.  Oops attached.
+Just hit the same oops on the rc1+for-pci-res-alloc kernel I tried
+earlier so it's not definitely something new in the btrfs code.  Seems
+like it's a 64/32bit pointer issue??
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-Should we just arrange to #include <asm-generic/io.h> to pick up inb/outb
-et al?  Any reason to think a non-zero offset should be part of the
-solution?  (I don't really understand how inb/outb are used by modern drivers.)
-
-> Using mdelay is generally considered very rude. Since you are not in
-> atomic context here, just use msleep() instead.
-
-Done.
-
-Thanks for all your reviews!
-
--- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
-
+iEYEARECAAYFAk+ISyEACgkQGcb56gMuC63uRwCcCLm8yx1YVnTBSvT/9jx/IqEb
+WcYAoJh5iceqZvDDGdJHV88YwEyEnM32
+=jfup
+-----END PGP SIGNATURE-----
