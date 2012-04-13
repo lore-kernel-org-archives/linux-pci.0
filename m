@@ -1,98 +1,241 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Yan, Zheng" <zheng.z.yan@intel.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Fri, 13 Apr 2012 21:41:57 +0200
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com>
+In-Reply-To: <4F8790F6.5080408@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo57pH81KtUbYZ3j6y4kC+ka33Lzr4rfcywVWf8OTmH_5Q@mail.gmail.com>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
-	<1332135781-13695-5-git-send-email-yinghai@kernel.org>
-	<CAErSpo6Wbjh_pzDOkGRoog2WeJQET9UT0fiaanV0r15pq7hT6Q@mail.gmail.com>
-	<CAE9FiQV0XTd_1Ujz=tb6BSuwJvJ9nbT_GbE2PREtgMGv=yG0+g@mail.gmail.com>
-	<CAErSpo57pH81KtUbYZ3j6y4kC+ka33Lzr4rfcywVWf8OTmH_5Q@mail.gmail.com>
-Date: Mon, 30 Apr 2012 23:27:58 -0700
-Message-ID: <CAE9FiQUOsMOQgZXCuPHpc6ZSEGnY3nv+uy1o0xvrW8-LKwNZrg@mail.gmail.com>
-Subject: Re: [PATCH -v11 04/30] PCI: Add busn_res into struct pci_bus.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="windows-1252"
+Message-Id: <201204132141.58063.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 30, 2012 at 9:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Apr 30, 2012 at 6:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Mon, Apr 30, 2012 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -419,6 +419,7 @@ struct pci_bus {
->>>>        struct list_head slots;         /* list of slots on this bus */
->>>>        struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
->>>>        struct list_head resources;     /* address space routed to this bus */
->>>> +       struct resource busn_res;       /* track registered bus num range */
->>>>
->>>>        struct pci_ops  *ops;           /* configuration access functions */
->>>>        void            *sysdata;       /* hook for sys-specific extension */
->>>
->>> struct pci_bus already includes "secondary" and "subordinate".    This
->>> new "busn_res" looks like it will contain the same information.  Why
->>> do we need both?
->>
->> In some case the could be different.
->> for root bus from _CRS, busn_res could bigger than subordinate,
->> because scan_childbus will update subordinate.
->
-> For a bus below a P2P bridge, I think it's always the case that the
-> bridge's Subordinate Bus Number in config space == bus->subordinate ==
-> bus->busn_res.end (correct me if I'm wrong).  I don't like the
-> redundancy in this case.
+Hi,
 
-there are about 70 bus->subordinate reference and 40 bus->secondary reference.
+On Friday, April 13, 2012, Yan, Zheng wrote:
+> Hi all,
+> 
+> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+> generate wake event through the WAKE# pin. Because we can not access to a device's
+> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
+> 
+> Any comment will be appreciated.
+> 
+> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+> ---
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 0f150f2..e210e8cb 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  		[PCI_D1] = ACPI_STATE_D1,
+>  		[PCI_D2] = ACPI_STATE_D2,
+>  		[PCI_D3hot] = ACPI_STATE_D3,
+> -		[PCI_D3cold] = ACPI_STATE_D3
+> +		[PCI_D3cold] = ACPI_STATE_D3_COLD
+>  	};
+>  	int error = -EINVAL;
+>  
 
-could try to update them in following patch set.
+Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
 
->
-> For a root bus where you set bus->busn_res from _CRS and
-> bus->subordinate = pci_scan_child_bus(), bus->busn_res.end will
-> generally be different from bus->subordinate, but there's no point in
-> keeping track of bus->subordinate.
->
-> The reason we care about secondary and subordinate is so we can
-> allocate bus numbers when enumerating devices behind a bridge.  The
-> only thing we need for that is the aperture of the upstream bridge and
-> the apertures of any peer bridges on the same bus.  Let's say we have
-> this:
->
->        pci 00:00.0 bridge to [bus a-b]
->        pci a:01.0 bridge to [bus c-d]  (already enumerated)
->        pci a:02.0 bridge to [bus e-f]  (already enumerated)
->        pci a:03.0 bridge to [bus x-y]  (enumerating now)
->
-> We know [c-d] is contained in [a-b]; [e-f] is contained in [a-b]; a <
-> c; and a < e.  To enumerate behind a:03.0, we need to assign x & y
-> such that a < x; [x-y] is contained in [a-b]; and [x-y] does not
-> overlap [c-d] or [e-f].  The value from pci_scan_child_bus() is
-> probably useful for setting y, but we don't have to save it in the
-> struct pci_bus for that.
+We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
+instead.  I'll prepare a patch for that over the weekend if no one has done
+that already.
 
-busn alloc will try to solve x-y may need big range than [a,b], it
-will extend top of b and parents of bus a.
-instead of just b+1 blindly.
+> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+>  
+>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+>  {
+> -	if (dev->pme_interrupt)
+> +	/* PME interrupt isn't available in the D3cold case */
+> +	if (dev->pme_interrupt && !dev->runtime_d3cold)
 
-and will have more strict checking to avoid overlapping.
+This whole thing is wrong.  First off, I don't think that the runtime_d3cold
+flag makes any sense.  We already cover that in dev->pme_support.
 
->
->> and also we have one resource to insert it into the resource tree, so
->> later could probe/allocate bus num range.
->
-> Sorry, I didn't understand this.
+Second, pme_interrupt means that the _root_ _port_, not the device itself will
+trigger an interrupt whenever the device sends the PME message to it (which
+very well may happen for a device in D3_cold woken up by an external signal).
 
-Using busn_res to track and allocate busn range, by put them in the
-resource tree could reuse resource allocating code.
+>  		return 0;
+>  
+>  	if (!acpi_pm_device_run_wake(&dev->dev, enable))
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8156744..bc16869 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  	int error;
+>  
 
-Yinghai
+Guys, please.  Never, _ever_, touch pci_set_power_state() without discussing
+your ideas with someone who knows how it works and _why_ it works this way.
+
+The problem here is that you can't program a PCI device into D3_cold, so it
+doesn't even make sense to have a helper for that.
+
+>  	/* bound the state we're entering */
+> -	if (state > PCI_D3hot)
+> -		state = PCI_D3hot;
+> +	if (state > PCI_D3cold)
+> +		state = PCI_D3cold;
+>  	else if (state < PCI_D0)
+>  		state = PCI_D0;
+>  	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
+> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+>  		return 0;
+>  
+> -	error = pci_raw_set_power_state(dev, state);
+> +	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
+> +					PCI_D3hot : state);
+>  
+>  	if (!__pci_complete_power_transition(dev, state))
+>  		error = 0;
+> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
+>  	return !!(dev->pme_support & (1 << state));
+>  }
+>  
+> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *bridge = dev->bus->self;
+> +
+> +	/* don't poll the pme bit if parent is in low power state */
+> +	if (bridge && bridge->current_state != PCI_D0)
+> +		return;
+> +
+> +	pci_pme_wakeup(dev, NULL);
+> +}
+
+This one actually makes some sense, although it might be better to put the
+test into pci_pme_wakeup() itself.
+
+> +
+>  static void pci_pme_list_scan(struct work_struct *work)
+>  {
+>  	struct pci_pme_device *pme_dev, *n;
+> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+>  	if (!list_empty(&pci_pme_list)) {
+>  		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+>  			if (pme_dev->dev->pme_poll) {
+> -				pci_pme_wakeup(pme_dev->dev, NULL);
+> +				pci_pme_poll_wakeup(pme_dev->dev);
+>  			} else {
+>  				list_del(&pme_dev->list);
+>  				kfree(pme_dev);
+> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>  	if (enable) {
+>  		int error;
+>  
+> +		if (runtime && state >= PCI_D3cold)
+> +			dev->runtime_d3cold = true;
+> +		else
+> +			dev->runtime_d3cold = false;
+>  		if (pci_pme_capable(dev, state))
+>  			pci_pme_active(dev, true);
+>  		else
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index e0610bd..d66b7e9 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -11,11 +11,13 @@
+>  #include <linux/kernel.h>
+>  #include <linux/errno.h>
+>  #include <linux/pm.h>
+> +#include <linux/pm_runtime.h>
+>  #include <linux/init.h>
+>  #include <linux/pcieport_if.h>
+>  #include <linux/aer.h>
+>  #include <linux/dmi.h>
+>  #include <linux/pci-aspm.h>
+> +#include <linux/delay.h>
+>  
+>  #include "portdrv.h"
+>  #include "aer/aerdrv.h"
+> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
+>  	return 0;
+>  }
+>  
+> +static int pcie_port_runtime_suspend(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	pci_save_state(pdev);
+
+Are you sure this is sufficient?
+
+> +	return 0;
+> +}
+> +
+> +static int pcie_port_runtime_resume(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	pci_restore_state(pdev);
+> +	if (pdev->runtime_d3cold)
+> +		msleep(100);
+
+What's _that_ supposed to do?
+
+> +
+> +	return 0;
+> +}
+> +
+>  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.suspend	= pcie_port_device_suspend,
+>  	.resume		= pcie_port_device_resume,
+> @@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.poweroff	= pcie_port_device_suspend,
+>  	.restore	= pcie_port_device_resume,
+>  	.resume_noirq	= pcie_port_resume_noirq,
+> +	.runtime_suspend = pcie_port_runtime_suspend,
+> +	.runtime_resume = pcie_port_runtime_resume,
+>  };
+>  
+>  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+> @@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
+>  		return status;
+>  
+>  	pci_save_state(dev);
+> +	pm_runtime_put_noidle(&dev->dev);
+
+What's the purpose of this?
+
+>  	return 0;
+>  }
+>  
+>  static void pcie_portdrv_remove(struct pci_dev *dev)
+>  {
+> +	pm_runtime_get_noresume(&dev->dev);
+>  	pcie_port_device_remove(dev);
+>  	pci_disable_device(dev);
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e444f5b..b41d9a1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -281,6 +281,7 @@ struct pci_dev {
+>  	unsigned int	no_d1d2:1;	/* Only allow D0 and D3 */
+>  	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+>  						   decoding during bar sizing */
+> +	unsigned int	runtime_d3cold:1;
+>  	unsigned int	wakeup_prepared:1;
+>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+
+OK
+
+So now please tell me what exactly you want to achieve and why you want to do
+that in the first place.
+
+Thanks,
+Rafael
