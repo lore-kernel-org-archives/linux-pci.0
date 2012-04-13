@@ -1,118 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61866 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086Ab2DPSHF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 14:07:05 -0400
-Received: by pbcun15 with SMTP id un15so6636501pbc.19
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 11:07:04 -0700 (PDT)
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:13118 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753447Ab2DMN0m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 09:26:42 -0400
+Message-ID: <4F88297B.3020200@snewbury.org.uk>
+Date: Fri, 13 Apr 2012 14:26:19 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <4F8BEB1D.9080903@fold.natur.cuni.cz>
-References: <4F6A483D.50702@fold.natur.cuni.cz>
-	<CAE9FiQVnErU-cska4gpinyj-LOup-U+3vsEG2z_-7h6kyREYtw@mail.gmail.com>
-	<4F6A5A53.305@fold.natur.cuni.cz>
-	<CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
-	<4F8BEB1D.9080903@fold.natur.cuni.cz>
-Date: Mon, 16 Apr 2012 11:07:04 -0700
-Message-ID: <CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
-Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
-From: Yinghai Lu <yinghai@kernel.org>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Steven Newbury <steve@snewbury.org.uk>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	"Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity>  <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>  <4F8467AA.90305@snewbury.org.uk>  <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>  <4F848357.3060007@snewbury.org.uk>  <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>  <4F848E10.1090703@snewbury.org.uk>  <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>  <1334089568.4083.2.camel@Nokia-N900>  <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>  <4F84A3EC.6030903@snewbury.org.uk>  <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>  <1334229754.30606.7.camel@Nokia-N900>  <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>  <1334248841.2910.6.camel@Nokia-N900>   <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com> <1334317529.2910.21.camel@Nokia-N900> <4F8814F7.20808@snewbury.org.uk> <4F8820F0.5010607@snewbury.org.uk>
+In-Reply-To: <4F8820F0.5010607@snewbury.org.uk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 16, 2012 at 2:49 AM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> Hi Yinghai,
->
-> Yinghai Lu wrote:
->> On Wed, Mar 21, 2012 at 3:46 PM, Martin Mokrejs
->   I had some Ooopses with 3.4-rc2 but now I have tested 3.4-rc3. Still, linux
-> does NOT realize that I have removed an ExpressCard from the slot. It realizes
-> that only when I pluging the card back again. Actually, this is a case of a
-> NEC chipset base USB3.0 card.
->
->  In contrast, kernel DOES recognize that I unplugged a FireWire card from the
-> same slot.
->
->  This is a Dell Vostro 3550 laptop. Below is what syslog logged with my comment.
-> Empty lines between the log entries are inserted whe I either inserted or removed
-> a card. Probably a bit more will be in the attached dmesg file.
->
->
-> INSERTING CARD
->
-> Apr 16 11:26:08 vostro kernel: [  126.849689] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
-> Apr 16 11:26:08 vostro kernel: [  126.970840] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
-..
-> Apr 16 11:26:08 vostro kernel: [  126.971030] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
-> Apr 16 11:26:08 vostro kernel: [  126.971084] xhci_hcd 0000:11:00.0: xHCI Host Controller
-> Apr 16 11:26:08 vostro kernel: [  126.971092] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
-> Apr 16 11:26:08 vostro kernel: [  126.971400] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
-...
->
-> REMOVED CARD
->
-> note (nothing happend)
->
-> RE-INSERTED CARD
->
-> Apr 16 11:28:42 vostro kernel: [  280.514490] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
-> Apr 16 11:28:42 vostro kernel: [  280.514766] xhci_hcd 0000:11:00.0: remove, state 4
-> Apr 16 11:28:42 vostro kernel: [  280.514771] usb usb6: USB disconnect, device number 1
-> Apr 16 11:28:42 vostro kernel: [  280.514900] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
-> Apr 16 11:28:42 vostro kernel: [  280.514903] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
-> Apr 16 11:28:42 vostro kernel: [  280.514908] xhci_hcd 0000:11:00.0: remove, state 4
-> Apr 16 11:28:42 vostro kernel: [  280.514911] usb usb5: USB disconnect, device number 1
-> Apr 16 11:28:42 vostro kernel: [  280.515071] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
-> Apr 16 11:28:42 vostro kernel: [  280.515170] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-So get the interrupt for surprise removal only just after put the card back?
+On 13/04/12 13:49, Steven Newbury wrote:
+> On 13/04/12 12:58, Steven Newbury wrote:
+> 
+>>> It's not stable, crashes soon after GMA comes up. (Could be 
+>>> unrelated breakage in linus/master? Probably not but I will 
+>>> verify.)  I noticed the high allocations are occuring from the 
+>>> top of 64-bit address-space, whilst /proc/cpuinfo shows only
+>>> 48 bits of virtual addressing.  Could that be why..?
+>> To reply to myself again, I should have said crashes shortly
+>> after Xorg initialises using the intel driver, in both cases!
+>> I'm building a kernel now without the patch set to see if it's 
+>> unrelated.  If it still dies I'll try applying your patch set to
+>> a branch without the changes from linus/master... (should have
+>> done that anyway...)
+> 
+> Okay, I instead created a branch from an older 3.4-rc1+ kernel
+> tree, running it now, and it seems to be stable.  Something perhaps
+> in the newer tree not playing nicely.  I'll see if I can bisect it,
+> or at least base of rc2 if that works... (I'm a little wary of
+> crashing the system too much and losing my btrfs filesystem...)
+rc2 is fine as well.  Not sure what happened there, I need to be more
+careful about keeping a clean tree to work from.
 
-> Apr 16 11:28:42 vostro kernel: [  280.530950] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
-> Apr 16 11:28:42 vostro kernel: [  280.655913] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
-> Apr 16 11:28:42 vostro kernel: [  280.655957] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
-> Apr 16 11:28:42 vostro kernel: [  280.655960] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
-> Apr 16 11:28:42 vostro kernel: [  280.655965] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
-> Apr 16 11:28:42 vostro kernel: [  280.655969] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
-> Apr 16 11:28:42 vostro kernel: [  280.656108] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
-...
+Any idea about how to force the GMA >4G when the BIOS hasn't put it
+into the middle of SystemRAM? (as it does when docked)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
->
-> Now I took a DIFFERENT card: Axago ECF-X1 providing 2x 1394a
->
-> INSERTED CARD
->
-> Apr 16 11:29:51 vostro kernel: [  350.147852] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
-> Apr 16 11:29:51 vostro kernel: [  350.148133] xhci_hcd 0000:11:00.0: remove, state 4
-> Apr 16 11:29:51 vostro kernel: [  350.148138] usb usb6: USB disconnect, device number 1
-> Apr 16 11:29:51 vostro kernel: [  350.148311] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
-> Apr 16 11:29:51 vostro kernel: [  350.148316] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
-> Apr 16 11:29:51 vostro kernel: [  350.148322] xhci_hcd 0000:11:00.0: remove, state 4
-> Apr 16 11:29:51 vostro kernel: [  350.148326] usb usb5: USB disconnect, device number 1
-> Apr 16 11:29:51 vostro kernel: [  350.148519] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
-> Apr 16 11:29:51 vostro kernel: [  350.148612] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
-
-after you insert firewire card, it got surprise remove interrupt...
-
-> Apr 16 11:29:51 vostro kernel: [  350.156812] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
-
-> Apr 16 11:29:52 vostro kernel: [  350.277415] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c007ff 64bit]
-> Apr 16 11:29:52 vostro kernel: [  350.277442] pci 0000:11:00.0: BAR 2: assigned [io  0xc000-0xc0ff]
-> Apr 16 11:29:52 vostro kernel: [  350.277458] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
-> Apr 16 11:29:52 vostro kernel: [  350.277473] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
-> Apr 16 11:29:52 vostro kernel: [  350.277478] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
-> Apr 16 11:29:52 vostro kernel: [  350.277482] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
-> Apr 16 11:29:52 vostro kernel: [  350.363314] firewire_ohci 0000:11:00.0: enabling device (0100 -> 0103)
-> Apr 16 11:29:52 vostro kernel: [  350.437174] firewire_ohci 0000:11:00.0: added OHCI v1.10 device as card 0, 4 IR + 8 IT contexts, quirks 0x11
-> Apr 16 11:29:52 vostro kernel: [  350.936323] firewire_core 0000:11:00.0: created device fw0: GUID 0011066600000003, S400
->
-
-please check boot with pciehp.pciehp_debug=1
-
-also you could use tail -f /var/log/messages to get more timely outputs.
-
-Thanks
-
-Yinghai
+iEYEARECAAYFAk+IKXsACgkQGcb56gMuC62+gACeLDg30iJiukq1pSfu2M1GJzZj
+xGQAn0DekMqnLcrKXXn7rMwGFgRzJrsC
+=k+WB
+-----END PGP SIGNATURE-----
