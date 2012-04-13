@@ -1,118 +1,223 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:46609 "EHLO ogre.sisk.pl"
+Received: from mga02.intel.com ([134.134.136.20]:25147 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750890Ab2DPVDQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:03:16 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] PCI: Retry BARs restoration for Type 0 headers only
-Date: Mon, 16 Apr 2012 23:07:50 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mikko Vinni <mmvinni@yahoo.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204162235.49901.rjw@sisk.pl> <CA+55aFyccAfEpECmD5yKYE4AquV1ZsfjRAL4coP39LmkAqrO=w@mail.gmail.com>
-In-Reply-To: <CA+55aFyccAfEpECmD5yKYE4AquV1ZsfjRAL4coP39LmkAqrO=w@mail.gmail.com>
+	id S1754476Ab2DMG3B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Apr 2012 02:29:01 -0400
+Message-ID: <4F87C7AB.3060002@intel.com>
+Date: Fri, 13 Apr 2012 14:28:59 +0800
+From: "Yan, Zheng" <zheng.z.yan@intel.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204162307.51168.rjw@sisk.pl>
+To: Alex He <alex.he@amd.com>
+CC: bhelgaas@google.com, rjw@sisk.pl, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+References: <4F8790F6.5080408@intel.com> <20120413060626.GA7856@alex-p.amd.com>
+In-Reply-To: <20120413060626.GA7856@alex-p.amd.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 16, 2012, Linus Torvalds wrote:
-> On Mon, Apr 16, 2012 at 1:35 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> >
-> > Some shortcomings introduced into pci_restore_state() by commit
-> > 26f41062f28d ("PCI: check for pci bar restore completion and
-> > retry") have been fixed by recent commit ebfc5b802fa76 ("PCI: Fix
-> > regression in pci_restore_state(), v3"), but that commit treats
-> > all PCI devices as those with Type 0 configuration headers.
+On 04/13/2012 02:06 PM, Alex He wrote:
+> On Fri, Apr 13, 2012 at 10:35:34AM +0800, Yan, Zheng wrote:
+>> Hi all,
+>>
+>> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+>> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+>> generate wake event through the WAKE# pin. Because we can not access to a device's
+>> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
+>>
+>> Any comment will be appreciated.
+>>
+>> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+>> ---
+>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>> index 0f150f2..e210e8cb 100644
+>> --- a/drivers/pci/pci-acpi.c
+>> +++ b/drivers/pci/pci-acpi.c
+>> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>>  		[PCI_D1] = ACPI_STATE_D1,
+>>  		[PCI_D2] = ACPI_STATE_D2,
+>>  		[PCI_D3hot] = ACPI_STATE_D3,
+>> -		[PCI_D3cold] = ACPI_STATE_D3
+>> +		[PCI_D3cold] = ACPI_STATE_D3_COLD
+>>  	};
+>>  	int error = -EINVAL;
+>>  
+>> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+>>  
+>>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+>>  {
+>> -	if (dev->pme_interrupt)
+>> +	/* PME interrupt isn't available in the D3cold case */
+>> +	if (dev->pme_interrupt && !dev->runtime_d3cold)
+>>  		return 0;
+> PCI BUS PM Interface spec says that PMEs can be support for D3COLD.
+> Please check section 3.2.4 , 5.4.2 and 5.4.3.
 > 
-> Make me happier and just make all of this a helper function again.
-> Call that helper function pci_restore_config_space(), and make the
-> existing "pci_restore_config_space()" be called
-> "pci_restore_config_space_range()" or something. Ok?
+I can't make PME interrupt work in mint spring platform. Our internal RTD3 document say:
+"A device in RTD3 is prohibited from generating any activity other than wake event, through the WAKE# pin"
 
-Something like this, you mean?
+>>  
+>>  	if (!acpi_pm_device_run_wake(&dev->dev, enable))
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 8156744..bc16869 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>>  	int error;
+>>  
+>>  	/* bound the state we're entering */
+>> -	if (state > PCI_D3hot)
+>> -		state = PCI_D3hot;
+>> +	if (state > PCI_D3cold)
+>> +		state = PCI_D3cold;
+>>  	else if (state < PCI_D0)
+>>  		state = PCI_D0;
+>>  	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
+>> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>>  	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+>>  		return 0;
+>>  
+>> -	error = pci_raw_set_power_state(dev, state);
+>> +	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
+>> +					PCI_D3hot : state);
+> Do you want to set the pci device to D3hot if the state = D3Code through
+> PMCSR register? I am agree if you realy want that but what is the meaninig
+> to distingulish D3cold with D3hot in this patch. We can't put the PCI device
+> through PMCSR register.
 
----
-From: Rafael J. Wysocki <rjw@sisk.pl>
-Subject: PCI: Retry BARs restoration for Type 0 headers only
+To set a device to D3cold. We first set device to D3hot through PMCSR register,
+then cut the power supply through ACPI.
 
-Some shortcomings introduced into pci_restore_state() by commit
-26f41062f28d ("PCI: check for pci bar restore completion and
-retry") have been fixed by recent commit ebfc5b802fa76 ("PCI: Fix
-regression in pci_restore_state(), v3"), but that commit treats
-all PCI devices as those with Type 0 configuration headers.  That
-is not entirely correct, because Type 1 and Type 2 headers have
-different layouts.  In particular, the area occupied by BARs in
-Type 0 config headers contains the secondary status register in
-Type 1 ones and it doesn't make sense to retry the restoration of
-that register even if the value read back from it after a write is
-not the same as the written one (it very well may be different).
+Regards
+Yan, Zheng
 
-For this reason, make pci_restore_state() only retry the restoration
-of BARs for Type 0 config headers.  This effectively makes it behave
-as before commit 26f41062f28d for all header types except for Type 0.
+> 
+>>  
+>>  	if (!__pci_complete_power_transition(dev, state))
+>>  		error = 0;
+>> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
+>>  	return !!(dev->pme_support & (1 << state));
+>>  }
+>>  
+>> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
+>> +{
+>> +	struct pci_dev *bridge = dev->bus->self;
+>> +
+>> +	/* don't poll the pme bit if parent is in low power state */
+>> +	if (bridge && bridge->current_state != PCI_D0)
+>> +		return;
+>> +
+>> +	pci_pme_wakeup(dev, NULL);
+>> +}
+>> +
+>>  static void pci_pme_list_scan(struct work_struct *work)
+>>  {
+>>  	struct pci_pme_device *pme_dev, *n;
+>> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+>>  	if (!list_empty(&pci_pme_list)) {
+>>  		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+>>  			if (pme_dev->dev->pme_poll) {
+>> -				pci_pme_wakeup(pme_dev->dev, NULL);
+>> +				pci_pme_poll_wakeup(pme_dev->dev);
+>>  			} else {
+>>  				list_del(&pme_dev->list);
+>>  				kfree(pme_dev);
+>> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>>  	if (enable) {
+>>  		int error;
+>>  
+>> +		if (runtime && state >= PCI_D3cold)
+>> +			dev->runtime_d3cold = true;
+>> +		else
+>> +			dev->runtime_d3cold = false;
+>>  		if (pci_pme_capable(dev, state))
+>>  			pci_pme_active(dev, true);
+>>  		else
+>> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+>> index e0610bd..d66b7e9 100644
+>> --- a/drivers/pci/pcie/portdrv_pci.c
+>> +++ b/drivers/pci/pcie/portdrv_pci.c
+>> @@ -11,11 +11,13 @@
+>>  #include <linux/kernel.h>
+>>  #include <linux/errno.h>
+>>  #include <linux/pm.h>
+>> +#include <linux/pm_runtime.h>
+>>  #include <linux/init.h>
+>>  #include <linux/pcieport_if.h>
+>>  #include <linux/aer.h>
+>>  #include <linux/dmi.h>
+>>  #include <linux/pci-aspm.h>
+>> +#include <linux/delay.h>
+>>  
+>>  #include "portdrv.h"
+>>  #include "aer/aerdrv.h"
+>> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
+>>  	return 0;
+>>  }
+>>  
+>> +static int pcie_port_runtime_suspend(struct device *dev)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(dev);
+>> +
+>> +	pci_save_state(pdev);
+>> +	return 0;
+>> +}
+>> +
+>> +static int pcie_port_runtime_resume(struct device *dev)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(dev);
+>> +
+>> +	pci_restore_state(pdev);
+>> +	if (pdev->runtime_d3cold)
+>> +		msleep(100);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>>  	.suspend	= pcie_port_device_suspend,
+>>  	.resume		= pcie_port_device_resume,
+>> @@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>>  	.poweroff	= pcie_port_device_suspend,
+>>  	.restore	= pcie_port_device_resume,
+>>  	.resume_noirq	= pcie_port_resume_noirq,
+>> +	.runtime_suspend = pcie_port_runtime_suspend,
+>> +	.runtime_resume = pcie_port_runtime_resume,
+>>  };
+>>  
+>>  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+>> @@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
+>>  		return status;
+>>  
+>>  	pci_save_state(dev);
+>> +	pm_runtime_put_noidle(&dev->dev);
+>>  
+>>  	return 0;
+>>  }
+>>  
+>>  static void pcie_portdrv_remove(struct pci_dev *dev)
+>>  {
+>> +	pm_runtime_get_noresume(&dev->dev);
+>>  	pcie_port_device_remove(dev);
+>>  	pci_disable_device(dev);
+>>  }
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index e444f5b..b41d9a1 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -281,6 +281,7 @@ struct pci_dev {
+>>  	unsigned int	no_d1d2:1;	/* Only allow D0 and D3 */
+>>  	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+>>  						   decoding during bar sizing */
+>> +	unsigned int	runtime_d3cold:1;
+>>  	unsigned int	wakeup_prepared:1;
+>>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+>>  
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
 
-Tested-by: Mikko Vinni <mmvinni@yahoo.com>
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/pci/pci.c |   24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
-
-Index: linux/drivers/pci/pci.c
-===================================================================
---- linux.orig/drivers/pci/pci.c
-+++ linux/drivers/pci/pci.c
-@@ -991,8 +991,8 @@ static void pci_restore_config_dword(str
- 	}
- }
- 
--static void pci_restore_config_space(struct pci_dev *pdev, int start, int end,
--				     int retry)
-+static void pci_restore_config_space_range(struct pci_dev *pdev,
-+					   int start, int end, int retry)
- {
- 	int index;
- 
-@@ -1002,6 +1002,18 @@ static void pci_restore_config_space(str
- 					 retry);
- }
- 
-+static void pci_restore_config_space(struct pci_dev *pdev)
-+{
-+	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
-+		pci_restore_config_space_range(pdev, 10, 15, 0);
-+		/* Restore BARs before the command register. */
-+		pci_restore_config_space_range(pdev, 4, 9, 10);
-+		pci_restore_config_space_range(pdev, 0, 3, 0);
-+	} else {
-+		pci_restore_config_space_range(pdev, 0, 15, 0);
-+	}
-+}
-+
- /** 
-  * pci_restore_state - Restore the saved state of a PCI device
-  * @dev: - PCI device that we're dealing with
-@@ -1015,13 +1027,7 @@ void pci_restore_state(struct pci_dev *d
- 	pci_restore_pcie_state(dev);
- 	pci_restore_ats_state(dev);
- 
--	pci_restore_config_space(dev, 10, 15, 0);
--	/*
--	 * The Base Address register should be programmed before the command
--	 * register(s)
--	 */
--	pci_restore_config_space(dev, 4, 9, 10);
--	pci_restore_config_space(dev, 0, 3, 0);
-+	pci_restore_config_space(dev);
- 
- 	pci_restore_pcix_state(dev);
- 	pci_restore_msi_state(dev);
