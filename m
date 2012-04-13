@@ -1,56 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:41946 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755065Ab2DMTNu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Apr 2012 15:13:50 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mikko Vinni <mmvinni@yahoo.com>
-Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
-Date: Fri, 13 Apr 2012 21:18:21 +0200
-Cc: linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jean Guyader <jean.guyader@eu.citrix.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com>
-In-Reply-To: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204132118.22074.rjw@sisk.pl>
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:13635 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932074Ab2DMNwb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 09:52:31 -0400
+From: Steven Newbury <steve@snewbury.org.uk>
+Reply-To: Steven Newbury <steve@snewbury.org.uk>
+To: Steven Newbury <steve@snewbury.org.uk>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: drm-next i915 regression? ( was: Re: PCI resources above 4GB)
+References: <1333968563.5678.19.camel@infinity>
+	 <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>
+	 <4F8467AA.90305@snewbury.org.uk>
+	 <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>
+	 <4F848357.3060007@snewbury.org.uk>
+	 <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>
+	 <4F848E10.1090703@snewbury.org.uk>
+	 <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>
+	 <1334089568.4083.2.camel@Nokia-N900>
+	 <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
+	 <4F84A3EC.6030903@snewbury.org.uk>
+	 <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>
+	 <1334229754.30606.7.camel@Nokia-N900>
+	 <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>
+	 <1334248841.2910.6.camel@Nokia-N900>
+	 <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com>
+	 <1334317529.2910.21.camel@Nokia-N900> <4F8814F7.20808@snewbury.org.uk>
+	 <4F8820F0.5010607@snewbury.org.uk>  <4F88297B.3020200@snewbury.org.uk>
+In-Reply-To: <4F88297B.3020200@snewbury.org.uk>
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 13 Apr 2012 14:52:08 +0100
+Message-Id: <1334325128.2910.24.camel@Nokia-N900>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, April 13, 2012, Mikko Vinni wrote:
-> Bug report:
->     https://bugzilla.kernel.org/show_bug.cgi?id=43099
-> 
-> Briefly:
-> 
-> After s2ram the touchpad on a HP dv5 laptop doesn't work anymore.
-> 
-> dmesg contains this about the touchpad
-> Apr 11 18:00:05 koni kernel: i8042: Can't write CTR while closing AUX port
-> Apr 11 18:00:08 koni kernel: i8042: Can't reactivate AUX port
-> 
-> 
-> Full log in bugzilla with PCI and i8042 debug turned on.
-> 
-> Bisected to:
-> 
-> commit 26f41062f28de65e11d3cf353e52d0be73442be1
-> Author: Kay, Allen M <allen.m.kay@intel.com>
-> Date:   Thu Jan 26 10:25:53 2012 -0800
-> 
->     PCI: check for pci bar restore completion and retry
->     
->     On some OEM systems, pci_restore_state() is called while FLR has not yet
->     completed.  As a result, PCI BAR register restore is not successful.  This fix
->     reads back the restored value and compares it with saved value and re-tries 10
->     times before giving up.
+On Fri, 13 Apr 2012, 14:26:19 BST, Steven Newbury <steve@snewbury.org.uk> wrote:
 
-Does reverting the above commit on top of the current Linus' tree fix the
-problem for you?
-
-Rafael
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> On 13/04/12 13:49, Steven Newbury wrote:
+> > On 13/04/12 12:58, Steven Newbury wrote:
+> > 
+> > > > It's not stable, crashes soon after GMA comes up. (Could be 
+> > > > unrelated breakage in linus/master? Probably not but I will 
+> > > > verify.)   I noticed the high allocations are occuring from the 
+> > > > top of 64-bit address-space, whilst /proc/cpuinfo shows only
+> > > > 48 bits of virtual addressing.   Could that be why..?
+> > > To reply to myself again, I should have said crashes shortly
+> > > after Xorg initialises using the intel driver, in both cases!
+> > > I'm building a kernel now without the patch set to see if it's 
+> > > unrelated.   If it still dies I'll try applying your patch set to
+> > > a branch without the changes from linus/master... (should have
+> > > done that anyway...)
+> > 
+> > Okay, I instead created a branch from an older 3.4-rc1+ kernel
+> > tree, running it now, and it seems to be stable.   Something perhaps
+> > in the newer tree not playing nicely.   I'll see if I can bisect it,
+> > or at least base of rc2 if that works... (I'm a little wary of
+> > crashing the system too much and losing my btrfs filesystem...)
+> rc2 is fine as well.   Not sure what happened there, I need to be more
+> careful about keeping a clean tree to work from.
+I'm pretty sure the crash was a from a drm-next regression. I'll try bisecting it....
