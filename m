@@ -1,118 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:35376 "EHLO
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:49869 "EHLO
 	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754850Ab2DZKkB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 06:40:01 -0400
+	with ESMTP id S1751046Ab2DMKsu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 06:48:50 -0400
 Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 908F43EE0BB
-	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 19:40:00 +0900 (JST)
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id DD7993EE0B6
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 19:48:48 +0900 (JST)
 Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 766CE45DE51
-	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 19:40:00 +0900 (JST)
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id C73B745DE4F
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 19:48:48 +0900 (JST)
 Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 5B44A45DE4E
-	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 19:40:00 +0900 (JST)
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 99F4C45DE50
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 19:48:48 +0900 (JST)
 Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 47F52E18002
-	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 19:40:00 +0900 (JST)
-Received: from ml14.s.css.fujitsu.com (ml14.s.css.fujitsu.com [10.240.81.134])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 001181DB803B
-	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 19:39:59 +0900 (JST)
-Date: Thu, 26 Apr 2012 19:39:53 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: liuj97@gmail.com, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Keping Chen <chenkeping@huawei.com>, ddutile@redhat.com,
-	greg.pearson@hp.com
-Subject: [PATCH 1/6] PCI, x86: split out pci_mmcfg_check_reserved() for code
- reuse
-Message-Id: <20120426193953.b789bdb6.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120426193712.11256973.izumi.taku@jp.fujitsu.com>
-References: <20120426193712.11256973.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 8D9581DB802F
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 19:48:48 +0900 (JST)
+Received: from m105.s.css.fujitsu.com (m105.s.css.fujitsu.com [10.240.81.145])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 301AD1DB8037
+	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 19:48:48 +0900 (JST)
+Message-ID: <4F880482.1090903@jp.fujitsu.com>
+Date: Fri, 13 Apr 2012 19:48:34 +0900
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V4 0/6] PCI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7zWEXBhC7+gaq+BCussyKOYORaBG-PBe4ERruCAA-cfQ@mail.gmail.com> <4F8573A4.8070307@jp.fujitsu.com> <4F85A481.1020807@gmail.com> <CAErSpo4gqLBQjYf-pKsHWgZOTUTJEi0uqKxSJ5pB_F0uu+CKMA@mail.gmail.com>
+In-Reply-To: <CAErSpo4gqLBQjYf-pKsHWgZOTUTJEi0uqKxSJ5pB_F0uu+CKMA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+(2012/04/12 9:06), Bjorn Helgaas wrote:
+> On Wed, Apr 11, 2012 at 9:34 AM, Jiang Liu<liuj97@gmail.com>  wrote:
+>> On 04/11/2012 08:05 PM, Kenji Kaneshige wrote:
+>>> (2012/04/11 13:02), Bjorn Helgaas wrote:
+>>>> On Tue, Apr 10, 2012 at 6:10 PM, Jiang Liu<liuj97@gmail.com>    wrote:
+>>>>> This patchset enhance pci_root driver to update MMCFG information when
+>>>>> hot-plugging PCI root bridges. It applies to Yinghai's tree at
+>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+>>>>>
+>>>>> The second patch is based on Taku Izumi work with some enhancements to
+>>>>> correctly handle PCI host bridges without _CBA method.
+>>>>
+>>>> I'm sorry I won't have time to really review these for a couple weeks.
+>>>>
+>>>> It always seemed wrong to me that we parse MCFG and set things up
+>>>> before we even look at PNP0A03/PNP0A08 devices.  It would make more
+>>>> sense to me to have something in acpi_pci_root_add() to set up
+>>>> MMCONFIG using _CBA if available, and falling back to parsing MCFG if
+>>>> it's not.
+>>>
+>>> I think your idea could make the code (design) much cleaner.
+>>> Do you have any other reason why you think "It always seemed
+>>> wrong..."?
+>
+> The current scheme is just an ugly design.  Does I need more reasons?  :)
 
-Split out pci_mmcfg_check_reserved() for code reuse, which will be used
-when supporting PCI host bridge hotplug.
+Ok, I just wanted to know if I'm missing anything we need to
+take into account when re-factoring the code.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- arch/x86/pci/mmconfig-shared.c |   51 ++++++++++++++++++++---------------------
- 1 file changed, 25 insertions(+), 26 deletions(-)
+By the way, the following code makes me think there could be
+some hardwares that need a fixup using mmconfig access before
+scanning the PCI tree. If this is the case, we would need
+something to enable early mmconfig initialization for those
+hardwares.
 
-Index: bjorn-next/arch/x86/pci/mmconfig-shared.c
-===================================================================
---- bjorn-next.orig/arch/x86/pci/mmconfig-shared.c
-+++ bjorn-next/arch/x86/pci/mmconfig-shared.c
-@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(che
- 	return valid;
- }
- 
-+static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
-+					      int early)
-+{
-+	if (!early && !acpi_disabled) {
-+		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
-+			return true;
-+		else
-+			printk(KERN_ERR FW_BUG PREFIX
-+			       "MMCONFIG at %pR not reserved in "
-+			       "ACPI motherboard resources\n",
-+			       &cfg->res);
-+	}
-+
-+	/* Don't try to do this check unless configuration
-+	   type 1 is available. how about type 2 ?*/
-+	if (raw_pci_ops)
-+		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
-+
-+	return false;
-+}
-+
- static void __init pci_mmcfg_reject_broken(int early)
- {
- 	struct pci_mmcfg_region *cfg;
- 
- 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
--		int valid = 0;
--
--		if (!early && !acpi_disabled) {
--			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
--
--			if (valid)
--				continue;
--			else
--				printk(KERN_ERR FW_BUG PREFIX
--				       "MMCONFIG at %pR not reserved in "
--				       "ACPI motherboard resources\n",
--				       &cfg->res);
-+		if (pci_mmcfg_check_reserved(cfg, early) == false) {
-+			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
-+			free_all_mmcfg();
-+			return;
- 		}
--
--		/* Don't try to do this check unless configuration
--		   type 1 is available. how about type 2 ?*/
--		if (raw_pci_ops)
--			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
--
--		if (!valid)
--			goto reject;
- 	}
--
--	return;
--
--reject:
--	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
--	free_all_mmcfg();
- }
- 
- static int __initdata known_bridge;
+static __init int pci_arch_init(void)
+{
+	...
+         if (!(pci_probe & PCI_PROBE_NOEARLY))
+                 pci_mmcfg_early_init();
+
+
+Regards,
+Kenji Kaneshige
+
+
+
+>
+>> Yeah, that may lead to a cleaner design.
+>> But there are still some special cases, such as:
+>> 1) ACPI subsystem is disabled by kernel boot options, so we can't rely
+>> on the ACPI pci_root driver to initialize the MMCFG.
+>
+> I don't think it's a requirement to make everything work with
+> "acpi=off".  On a system with ACPI, running with "acpi=off" is just a
+> kludge and if things work at all, it's only because we're very lucky.
+>
+>> 2) Some PCI host bridges are not reported by the ACPI namespace. My partner
+>> has observed a system which doesn't report the host bridges embedded in the
+>> NHM-EX processors.
+>
+> I don't think it's a requirement for Linux to use PCI devices behind
+> unreported host bridges.  I'd like to pick a date and say "after BIOS
+> date X, we will no longer blindly probe for these unreported host
+> bridges."
+>
+> Bjorn
+>
 
