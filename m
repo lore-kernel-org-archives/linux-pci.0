@@ -1,75 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:52165 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442Ab2DPQcn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:32:43 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so6539626pbc.19
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:32:43 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+Received: from mail-we0-f174.google.com ([74.125.82.174]:38466 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777Ab2DMOMM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 10:12:12 -0400
+Received: by wejx9 with SMTP id x9so1953550wej.19
+        for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 07:12:11 -0700 (PDT)
+Date: Fri, 13 Apr 2012 16:13:05 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Steven Newbury <steve@snewbury.org.uk>
+Cc: linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	"Barnes, Jesse" <jesse.barnes@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Zink <dan.zink@compaq.com>,
-	Greg Kroah-Hartman <greg@kroah.com>,
-	Dely Sy <dely.l.sy@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH RFC 05/17] PCI: correctly flush workqueue when destroy pcie hotplug controller
-Date: Tue, 17 Apr 2012 00:28:59 +0800
-Message-Id: <1334593751-5916-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
-References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: drm-next i915 regression? ( was: Re: PCI resources above 4GB)
+Message-ID: <20120413141305.GI4525@phenom.ffwll.local>
+References: <1334229754.30606.7.camel@Nokia-N900>
+ <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>
+ <1334248841.2910.6.camel@Nokia-N900>
+ <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com>
+ <1334317529.2910.21.camel@Nokia-N900>
+ <4F8814F7.20808@snewbury.org.uk>
+ <4F8820F0.5010607@snewbury.org.uk>
+ <4F88297B.3020200@snewbury.org.uk>
+ <1334325128.2910.24.camel@Nokia-N900>
+ <4F883364.3080601@snewbury.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F883364.3080601@snewbury.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When destroying a PCIe hotplug controller, all work items associated with
-that controller should be flushed.  Function pcie_cleanup_slot() calls
-cancel_delayed_work() and flush_workqueue() to achieve that.
-Function flush_workqueue() will flush all work items already submitted,
-but new work items submitted by those already submitted work items may
-still be in live state when returning from flush_workqueue().
+On Fri, Apr 13, 2012 at 03:08:36PM +0100, Steven Newbury wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> On 13/04/12 14:52, Steven Newbury wrote:
+> > On Fri, 13 Apr 2012, 14:26:19 BST, Steven Newbury
+> > <steve@snewbury.org.uk> wrote:
+> > 
+> >> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+> >> 
+> >> On 13/04/12 13:49, Steven Newbury wrote:
+> >>> On 13/04/12 12:58, Steven Newbury wrote:
+> >>> 
+> >>>>> It's not stable, crashes soon after GMA comes up. (Could be
+> >>>>>  unrelated breakage in linus/master? Probably not but I
+> >>>>> will verify.)   I noticed the high allocations are occuring
+> >>>>> from the top of 64-bit address-space, whilst /proc/cpuinfo
+> >>>>> shows only 48 bits of virtual addressing.   Could that be
+> >>>>> why..?
+> >>>> To reply to myself again, I should have said crashes shortly 
+> >>>> after Xorg initialises using the intel driver, in both
+> >>>> cases! I'm building a kernel now without the patch set to see
+> >>>> if it's unrelated.   If it still dies I'll try applying your
+> >>>> patch set to a branch without the changes from
+> >>>> linus/master... (should have done that anyway...)
+> >>> 
+> >>> Okay, I instead created a branch from an older 3.4-rc1+ kernel 
+> >>> tree, running it now, and it seems to be stable.   Something
+> >>> perhaps in the newer tree not playing nicely.   I'll see if I
+> >>> can bisect it, or at least base of rc2 if that works... (I'm a
+> >>> little wary of crashing the system too much and losing my btrfs
+> >>> filesystem...)
+> >> rc2 is fine as well.   Not sure what happened there, I need to be
+> >> more careful about keeping a clean tree to work from.
+> > I'm pretty sure the crash was a from a drm-next regression. I'll
+> > try bisecting it....
+> Sorry, posted too soon!  Almost as I clicked on send it froze again
+> (using rc2 + for-pci-res-alloc ).  I had problems with the earlier
+> patches re. X/i915 stability.  Strange.  I'll see if I can track it down.
 
-For the extreme case, pciehp driver may expierence following calling path:
-1) pcie_isr() -> pciehp_handle_xxx() -> queue_interrupt_event()->queue_work()
-2) interrupt_event_handler() -> handle_button_press_event() ->
-   queue_delayed_work()
-3) pciehp_queue_pushbutton_work() -> queue_work()
-
-So enhance pcie_cleanup_slot() to correctly flush workqueue when destroying
-PCIe hotplug controller.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
----
- drivers/pci/hotplug/pciehp_hpc.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index a960fae..98b775f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -889,8 +889,20 @@ static int pcie_init_slot(struct controller *ctrl)
- static void pcie_cleanup_slot(struct controller *ctrl)
- {
- 	struct slot *slot = ctrl->slot;
--	cancel_delayed_work(&slot->work);
-+
-+	/*
-+	 * Following workqueue flushing logic is to deal with the special
-+	 * call path:
-+	 * 1) pcie_isr() -> pciehp_handle_xxx() ->
-+	 *    queue_interrupt_event(pciehp_wq_event)->queue_work(pciehp_wq)
-+	 * 2) interrupt_event_handler() -> handle_button_press_event() ->
-+	 *    queue_delayed_work(pciehp_wq)
-+	 * 3) pciehp_queue_pushbutton_work() -> queue_work(pciehp_wq)
-+	 */
- 	flush_workqueue(pciehp_wq);
-+	cancel_delayed_work_sync(&slot->work);
-+	flush_workqueue(pciehp_wq);
-+
- 	kfree(slot);
- }
- 
+Please upgrade to the latest version of Linus' upstream git. A few fixes
+for regressions in drm/i915 just landed there for -rc3.
+-Daniel
 -- 
-1.7.5.4
-
+Daniel Vetter
+Mail: daniel@ffwll.ch
+Mobile: +41 (0)79 365 57 48
