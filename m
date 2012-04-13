@@ -1,62 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:36501 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753473Ab2DZPZu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 11:25:50 -0400
-Date: Thu, 26 Apr 2012 08:25:48 -0700
-From: Greg KH <greg@kroah.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Calin Demian <c.demian20@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: PROBLEM: OHCI HCD - computer freezes during boot
-Message-ID: <20120426152548.GA15674@kroah.com>
-References: <20120426144356.GB4365@kroah.com>
- <Pine.LNX.4.44L0.1204261113430.1530-100000@iolanthe.rowland.org>
+Received: from db3ehsobe006.messaging.microsoft.com ([213.199.154.144]:35526
+	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752355Ab2DMGB6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 02:01:58 -0400
+Date: Fri, 13 Apr 2012 14:06:26 +0800
+From: Alex He <alex.he@amd.com>
+To: "Yan, Zheng" <zheng.z.yan@intel.com>
+CC: <bhelgaas@google.com>, <rjw@sisk.pl>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-pm@vger.kernel.org>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Message-ID: <20120413060626.GA7856@alex-p.amd.com>
+References: <4F8790F6.5080408@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.44L0.1204261113430.1530-100000@iolanthe.rowland.org>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4F8790F6.5080408@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 26, 2012 at 11:16:17AM -0400, Alan Stern wrote:
-> On Thu, 26 Apr 2012, Greg KH wrote:
+On Fri, Apr 13, 2012 at 10:35:34AM +0800, Yan, Zheng wrote:
+> Hi all,
 > 
-> > On Thu, Apr 26, 2012 at 10:25:41AM -0400, Alan Stern wrote:
-> > > On Thu, 26 Apr 2012, Calin Demian wrote:
-> > > 
-> > > > I don't know how, but adding the following line in function
-> > > > quirk_usb_handoff_ohci makes the system work fine:
-> > > > 
-> > > > 	/* reset requires max 10 us delay */
-> > > > +	udelay(1);
-> > > > 	for (cnt = 30; cnt > 0; --cnt) {	/* ... allow extra time */
-> > > > 		if ((readl(base + OHCI_CMDSTATUS) & OHCI_HCR) == 0)
-> > > > 
-> > > > I observed thad the condition in the for loop is allways true, so the
-> > > > delay inside the loop is never executed.
-> > 
-> > That implies that something is wrong with the complier here, and it
-> > optimized out the loop?  Are you sure that really happened?
+> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+> generate wake event through the WAKE# pin. Because we can not access to a device's
+> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
 > 
-> Here's the complete context:
+> Any comment will be appreciated.
 > 
-> 	/* reset requires max 10 us delay */
-> 	for (cnt = 30; cnt > 0; --cnt) {	/* ... allow extra time */
-> 		if ((readl(base + OHCI_CMDSTATUS) & OHCI_HCR) == 0)
-> 			break;
-> 		udelay(1);
-> 	}
+> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+> ---
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 0f150f2..e210e8cb 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  		[PCI_D1] = ACPI_STATE_D1,
+>  		[PCI_D2] = ACPI_STATE_D2,
+>  		[PCI_D3hot] = ACPI_STATE_D3,
+> -		[PCI_D3cold] = ACPI_STATE_D3
+> +		[PCI_D3cold] = ACPI_STATE_D3_COLD
+>  	};
+>  	int error = -EINVAL;
+>  
+> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+>  
+>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+>  {
+> -	if (dev->pme_interrupt)
+> +	/* PME interrupt isn't available in the D3cold case */
+> +	if (dev->pme_interrupt && !dev->runtime_d3cold)
+>  		return 0;
+PCI BUS PM Interface spec says that PMEs can be support for D3COLD.
+Please check section 3.2.4 , 5.4.2 and 5.4.3.
+
+
+>  
+>  	if (!acpi_pm_device_run_wake(&dev->dev, enable))
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8156744..bc16869 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  	int error;
+>  
+>  	/* bound the state we're entering */
+> -	if (state > PCI_D3hot)
+> -		state = PCI_D3hot;
+> +	if (state > PCI_D3cold)
+> +		state = PCI_D3cold;
+>  	else if (state < PCI_D0)
+>  		state = PCI_D0;
+>  	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
+> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+>  		return 0;
+>  
+> -	error = pci_raw_set_power_state(dev, state);
+> +	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
+> +					PCI_D3hot : state);
+Do you want to set the pci device to D3hot if the state = D3Code through
+PMCSR register? I am agree if you realy want that but what is the meaninig
+to distingulish D3cold with D3hot in this patch. We can't put the PCI device
+through PMCSR register.
+
+>  
+>  	if (!__pci_complete_power_transition(dev, state))
+>  		error = 0;
+> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
+>  	return !!(dev->pme_support & (1 << state));
+>  }
+>  
+> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *bridge = dev->bus->self;
+> +
+> +	/* don't poll the pme bit if parent is in low power state */
+> +	if (bridge && bridge->current_state != PCI_D0)
+> +		return;
+> +
+> +	pci_pme_wakeup(dev, NULL);
+> +}
+> +
+>  static void pci_pme_list_scan(struct work_struct *work)
+>  {
+>  	struct pci_pme_device *pme_dev, *n;
+> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+>  	if (!list_empty(&pci_pme_list)) {
+>  		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+>  			if (pme_dev->dev->pme_poll) {
+> -				pci_pme_wakeup(pme_dev->dev, NULL);
+> +				pci_pme_poll_wakeup(pme_dev->dev);
+>  			} else {
+>  				list_del(&pme_dev->list);
+>  				kfree(pme_dev);
+> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>  	if (enable) {
+>  		int error;
+>  
+> +		if (runtime && state >= PCI_D3cold)
+> +			dev->runtime_d3cold = true;
+> +		else
+> +			dev->runtime_d3cold = false;
+>  		if (pci_pme_capable(dev, state))
+>  			pci_pme_active(dev, true);
+>  		else
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index e0610bd..d66b7e9 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -11,11 +11,13 @@
+>  #include <linux/kernel.h>
+>  #include <linux/errno.h>
+>  #include <linux/pm.h>
+> +#include <linux/pm_runtime.h>
+>  #include <linux/init.h>
+>  #include <linux/pcieport_if.h>
+>  #include <linux/aer.h>
+>  #include <linux/dmi.h>
+>  #include <linux/pci-aspm.h>
+> +#include <linux/delay.h>
+>  
+>  #include "portdrv.h"
+>  #include "aer/aerdrv.h"
+> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
+>  	return 0;
+>  }
+>  
+> +static int pcie_port_runtime_suspend(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	pci_save_state(pdev);
+> +	return 0;
+> +}
+> +
+> +static int pcie_port_runtime_resume(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	pci_restore_state(pdev);
+> +	if (pdev->runtime_d3cold)
+> +		msleep(100);
+> +
+> +	return 0;
+> +}
+> +
+>  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.suspend	= pcie_port_device_suspend,
+>  	.resume		= pcie_port_device_resume,
+> @@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.poweroff	= pcie_port_device_suspend,
+>  	.restore	= pcie_port_device_resume,
+>  	.resume_noirq	= pcie_port_resume_noirq,
+> +	.runtime_suspend = pcie_port_runtime_suspend,
+> +	.runtime_resume = pcie_port_runtime_resume,
+>  };
+>  
+>  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+> @@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
+>  		return status;
+>  
+>  	pci_save_state(dev);
+> +	pm_runtime_put_noidle(&dev->dev);
+>  
+>  	return 0;
+>  }
+>  
+>  static void pcie_portdrv_remove(struct pci_dev *dev)
+>  {
+> +	pm_runtime_get_noresume(&dev->dev);
+>  	pcie_port_device_remove(dev);
+>  	pci_disable_device(dev);
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e444f5b..b41d9a1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -281,6 +281,7 @@ struct pci_dev {
+>  	unsigned int	no_d1d2:1;	/* Only allow D0 and D3 */
+>  	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+>  						   decoding during bar sizing */
+> +	unsigned int	runtime_d3cold:1;
+>  	unsigned int	wakeup_prepared:1;
+>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> I think Calim means that the "(readl(base + OHCI_CMDSTATUS) & OHCI_HCR)  
-> == 0" test succeeds on the first pass through the loop, so we break out
-> early and the udelay(1) statement never gets executed.
 
-Ok, but if the readl() succeeds, then all should be fine?
-
-Ah, unless the hardware is really lying, but no, that would never
-happen, right?
-
-Nevermind,
-
-greg k-h
