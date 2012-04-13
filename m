@@ -1,187 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:46337 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753776Ab2DLE6q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2012 00:58:46 -0400
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 4193A3EE0BC
-	for <linux-pci@vger.kernel.org>; Thu, 12 Apr 2012 13:58:45 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 2C0C845DE55
-	for <linux-pci@vger.kernel.org>; Thu, 12 Apr 2012 13:58:45 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 1585745DE54
-	for <linux-pci@vger.kernel.org>; Thu, 12 Apr 2012 13:58:45 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 08B0C1DB8047
-	for <linux-pci@vger.kernel.org>; Thu, 12 Apr 2012 13:58:45 +0900 (JST)
-Received: from m005.s.css.fujitsu.com (m005.s.css.fujitsu.com [10.23.4.35])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id BA6331DB803A
-	for <linux-pci@vger.kernel.org>; Thu, 12 Apr 2012 13:58:44 +0900 (JST)
-Message-ID: <4F866184.4000403@jp.fujitsu.com>
-Date: Thu, 12 Apr 2012 14:00:52 +0900
-From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+Received: from mga03.intel.com ([143.182.124.21]:51224 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756958Ab2DMCfh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Apr 2012 22:35:37 -0400
+Message-ID: <4F8790F6.5080408@intel.com>
+Date: Fri, 13 Apr 2012 10:35:34 +0800
+From: "Yan, Zheng" <zheng.z.yan@intel.com>
 MIME-Version: 1.0
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, jbarnes@virtuousgeek.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [RFC] pciehp: Add archdata setting
-References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com> <4F7AA3A2.1080900@jp.fujitsu.com> <4F7C003B.4040208@jp.fujitsu.com>
-In-Reply-To: <4F7C003B.4040208@jp.fujitsu.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: bhelgaas@google.com, rjw@sisk.pl, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Kaneshige
+Hi all,
 
+This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+beneath a PCIe port when they all have entered D3. A device in D3cold can only
+generate wake event through the WAKE# pin. Because we can not access to a device's
+configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
 
-You are right!
-Setting dma_ops in pcibios_enable_device is a nice way.
-In PCI driver, pci_enable_device_xxx that calls pcibios_enable_device is 
-called before checking archdata.dma_ops.
+Any comment will be appreciated.
 
-I added code of checking and setting dma_ops to pcibios_enable_device in
-arch/powerpc/kernel/pci-common.c.
-It works good.
-
-I will send this code to arch/powerpc guys.
-Thanks for your great proposal.
-
-
-Regards.
-
-Hiroo Matsumoto
-
-
-
-
-> Hi, Bjorn and Kaneshige
-> 
-> 
-> Thanks for your comments and proposal.
-> I will rethink a way of setting archdata with pcibios_xxx() hook or bus 
-> notifier.
-> 
-> 
-> Regards.
-> 
-> Hiroo MATSUMOTO
-> 
->>>> I'm trying to use pciehp on powerpc platform.
->>>> I set e1000e card to PCI Express bridge that has PCI Express HotPlug
->>>> Capability.
->>>>
->>>> There is problem when poweron PCI Express HotPlug slot with pciehp.
->>>> e1000e driver needs dma_ops in struct dev_archdata, but archdata isn't
->>>> set (dma_ops is NULL) when probe from pciehp.
->>>> Then e1000e driver returns error as below.
->>>>
->>>> -sh-3.2# echo 1>  /sys/bus/pci/slots/1/power
->>>> <snip>
->>>> [   65.493662] pci 0000:03:00.0: BAR 2: set to [io
->>>> 0xff7ee000-0xff7ee01f] (PCI address [0x1000-0x101f])
->>>> [   65.502890] pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
->>>> [   65.508555] pcieport 0000:02:01.0:   bridge window [io
->>>> 0xff7ee000-0xff7eefff]
->>>> [   65.515785] pcieport 0000:02:01.0:   bridge window [mem
->>>> 0xa0100000-0xa01fffff]
->>>> [   65.523015] pcieport 0000:02:01.0:   bridge window [mem
->>>> 0xa0200000-0xa02fffff 64bit pref]
->>>> [   65.531238] pci 0000:03:00.0: no hotplug settings from platform
->>>> [   65.538361] e1000e 0000:03:00.0: Disabling ASPM  L1
->>>> [   65.543616] e1000e 0000:03:00.0: enabling device (0000 ->  0002)
->>>> [   65.549876] e1000e 0000:03:00.0: No usable DMA configuration, 
->>>> aborting
->>>> [   65.557194] e1000e: probe of 0000:03:00.0 failed with error -5
->>>> -sh-3.2# lspci
->>>> <snip>
->>>> 0000:03:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit
->>>> Ethernet Controller (Copper) (rev 06)
->>>> <snip>
->>>> -sh-3.2# ifconfig -a
->>>> <snip>    // There is no network interface for 82572EI
->>>>
->>>> If archdata.dma_ops is NULL on x86 platform, e1000e will get dma_ops
->>>> without archdata.
->>>> So e1000e driver doesn't return error.
->>>>
->>>> I think that archdata should be set before driver probe (e.g pciehp).
->>>> I tried to fix it (pciehp-add-archdata.patch), but I'm not good at PCI
->>>> driver..., so please give better way.
->>>
->>> Interesting.  It would be nice if we could set archdata the same way
->>> for both devices present at boot and those hot-added later.
->>
->> Yes. But it might be not so easy...
->>
->>>                                                              Can you
->>> figure out where archdata is set for devices present at boot?
->>
->> I read some x86 and powerpc code to setup archdata. x86 and powerpc
->> have different way to setup archdata. And it seems archdata is not
->> set in one location, each member in the archdata is setup in the
->> different locations.
->>
->> On x86, archdata.dma_ops is set in the pci_iommu_init() code path, which
->> is called through rootfs_initcall(). On powerpc, archdata.dma_ops is set
->> in pcibios_fixup_bus() code path.
->>
->> Here are my notes.
->>
->> x86 (calgary iommu)
->> ===================
->> rootfs_initcall()
->>  => pci_iommu_init()
->>      => x86_init.iommu.iommu_init() (== calgary_iommu_init())
->>          => calgary_init()
->>
->> calgary_init()
->> {
->>         for_each_pci_dev() {
->>                         dev->dev.archdata.dma_ops = &calgary_dma_ops;
->>         }
->> }
->>
->> x86 (amd iommu)
->> ===============
->> rootfs_initcall()
->>  => pci_iommu_init()
->>      => x86_init.iommu.iommu_init() (== amd_iommu_init())
->>          => amd_iommu_init_dma_ops()
->>              => device_dma_ops_init()
->>
->> device_dma_ops_init()
->> {
->>     for_each_pci_dev() {
->>         pdev->dev.archdata.dma_ops = &amd_iommu_dma_ops;
->> }
->>
->> PowerPC
->> =======
->> pci_scan_child_bus()
->>  => pcibios_fixup_bus()
->>      => pcibios_setup_bus_devices()
->>          => set_dma_ops()              # for each device on the bus 
->> (default)
->>          => ppc_md.pci_dma_dev_setup() # for each device on the bus 
->> (machine depend)
->>
->> static inline void set_dma_ops(struct device *dev, struct dma_map_ops 
->> *ops)
->> {
->>         dev->archdata.dma_ops = ops;
->> }
->>
->>
->> One possible idea is that to setup archdata in the pcibios_xxx() hook.
->> (for example, use existing pcibios_enable_device(), or provide new
->> hook like pcibios_setup_device() which is called by pci_setup_device).
->>
->> Another idea is that to add support for hot-plug to each iommu (dma)
->> code. Maybe it can be implemented by using bus notifier.
->>
->> Regards,
->> Kenji Kaneshige
->>
-> 
-
+Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+---
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 0f150f2..e210e8cb 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 		[PCI_D1] = ACPI_STATE_D1,
+ 		[PCI_D2] = ACPI_STATE_D2,
+ 		[PCI_D3hot] = ACPI_STATE_D3,
+-		[PCI_D3cold] = ACPI_STATE_D3
++		[PCI_D3cold] = ACPI_STATE_D3_COLD
+ 	};
+ 	int error = -EINVAL;
+ 
+@@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+ 
+ static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+ {
+-	if (dev->pme_interrupt)
++	/* PME interrupt isn't available in the D3cold case */
++	if (dev->pme_interrupt && !dev->runtime_d3cold)
+ 		return 0;
+ 
+ 	if (!acpi_pm_device_run_wake(&dev->dev, enable))
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8156744..bc16869 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 	int error;
+ 
+ 	/* bound the state we're entering */
+-	if (state > PCI_D3hot)
+-		state = PCI_D3hot;
++	if (state > PCI_D3cold)
++		state = PCI_D3cold;
+ 	else if (state < PCI_D0)
+ 		state = PCI_D0;
+ 	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
+@@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+ 		return 0;
+ 
+-	error = pci_raw_set_power_state(dev, state);
++	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
++					PCI_D3hot : state);
+ 
+ 	if (!__pci_complete_power_transition(dev, state))
+ 		error = 0;
+@@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
+ 	return !!(dev->pme_support & (1 << state));
+ }
+ 
++static void pci_pme_poll_wakeup(struct pci_dev *dev)
++{
++	struct pci_dev *bridge = dev->bus->self;
++
++	/* don't poll the pme bit if parent is in low power state */
++	if (bridge && bridge->current_state != PCI_D0)
++		return;
++
++	pci_pme_wakeup(dev, NULL);
++}
++
+ static void pci_pme_list_scan(struct work_struct *work)
+ {
+ 	struct pci_pme_device *pme_dev, *n;
+@@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+ 	if (!list_empty(&pci_pme_list)) {
+ 		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+ 			if (pme_dev->dev->pme_poll) {
+-				pci_pme_wakeup(pme_dev->dev, NULL);
++				pci_pme_poll_wakeup(pme_dev->dev);
+ 			} else {
+ 				list_del(&pme_dev->list);
+ 				kfree(pme_dev);
+@@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 	if (enable) {
+ 		int error;
+ 
++		if (runtime && state >= PCI_D3cold)
++			dev->runtime_d3cold = true;
++		else
++			dev->runtime_d3cold = false;
+ 		if (pci_pme_capable(dev, state))
+ 			pci_pme_active(dev, true);
+ 		else
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index e0610bd..d66b7e9 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -11,11 +11,13 @@
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/pm.h>
++#include <linux/pm_runtime.h>
+ #include <linux/init.h>
+ #include <linux/pcieport_if.h>
+ #include <linux/aer.h>
+ #include <linux/dmi.h>
+ #include <linux/pci-aspm.h>
++#include <linux/delay.h>
+ 
+ #include "portdrv.h"
+ #include "aer/aerdrv.h"
+@@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
+ 	return 0;
+ }
+ 
++static int pcie_port_runtime_suspend(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	pci_save_state(pdev);
++	return 0;
++}
++
++static int pcie_port_runtime_resume(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	pci_restore_state(pdev);
++	if (pdev->runtime_d3cold)
++		msleep(100);
++
++	return 0;
++}
++
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume		= pcie_port_device_resume,
+@@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
+ 	.resume_noirq	= pcie_port_resume_noirq,
++	.runtime_suspend = pcie_port_runtime_suspend,
++	.runtime_resume = pcie_port_runtime_resume,
+ };
+ 
+ #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+@@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
+ 		return status;
+ 
+ 	pci_save_state(dev);
++	pm_runtime_put_noidle(&dev->dev);
+ 
+ 	return 0;
+ }
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
++	pm_runtime_get_noresume(&dev->dev);
+ 	pcie_port_device_remove(dev);
+ 	pci_disable_device(dev);
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e444f5b..b41d9a1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -281,6 +281,7 @@ struct pci_dev {
+ 	unsigned int	no_d1d2:1;	/* Only allow D0 and D3 */
+ 	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+ 						   decoding during bar sizing */
++	unsigned int	runtime_d3cold:1;
+ 	unsigned int	wakeup_prepared:1;
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 
