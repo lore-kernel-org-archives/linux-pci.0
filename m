@@ -1,85 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:57171 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755890Ab2DYRXn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Apr 2012 13:23:43 -0400
-Received: by lahj13 with SMTP id j13so283457lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 10:23:41 -0700 (PDT)
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:41075 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752524Ab2DNSGO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Apr 2012 14:06:14 -0400
+Message-ID: <4F89BC84.50308@snewbury.org.uk>
+Date: Sat, 14 Apr 2012 19:05:56 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <4F840ED6.3050408@jp.fujitsu.com>
-References: <1333822735-10902-1-git-send-email-jiang.liu@huawei.com> <4F840ED6.3050408@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Apr 2012 11:23:20 -0600
-Message-ID: <CAErSpo7qqDJ+pM-OZN6wDRGCU3duLd1-hjA5_LA+em=PBVuY0Q@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] PCI: correctly flush workqueue when destroy pcie
- hotplug controller
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	matsumoto.hiroo@jp.fujitsu.com,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Steven Newbury <steve@snewbury.org.uk>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	"Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity>  <CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com>  <4F84110E.3000400@snewbury.org.uk>  <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>  <4F8467AA.90305@snewbury.org.uk>  <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>  <4F848357.3060007@snewbury.org.uk>  <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>  <4F848E10.1090703@snewbury.org.uk>  <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>  <1334089568.4083.2.camel@Nokia-N900>  <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>  <4F84A3EC.6030903@snewbury.org.uk>  <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>  <1334229754.30606.7.camel@Nokia-N900>   <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <4F89B5E8.3040906@snewbury.org.uk>
+In-Reply-To: <4F89B5E8.3040906@snewbury.org.uk>
+Content-Type: multipart/mixed;
+ boundary="------------050500040706060609040608"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 10, 2012 at 4:43 AM, Kenji Kaneshige
-<kaneshige.kenji@jp.fujitsu.com> wrote:
-> I think you're rignt.
->
-> Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
->
-> (2012/04/08 3:18), Jiang Liu wrote:
->> When destroying a PCIe hotplug controller, all work items associated with
->> that controller should be flushed.  Function pcie_cleanup_slot() calls
->> cancel_delayed_work() and flush_workqueue() to achieve that.
->> Function flush_workqueue() will flush all work items already submitted,
->> but new work items submitted by those already submitted work items may
->> still be in live state when returning from flush_workqueue().
->>
->> For the extreme case, pciehp driver may expierence following calling path:
->> 1) pcie_isr() ->  pciehp_handle_xxx() ->  queue_interrupt_event()->queue_work()
->> 2) interrupt_event_handler() ->  handle_button_press_event() ->
->>     queue_delayed_work()
->> 3) pciehp_queue_pushbutton_work() ->  queue_work()
->>
->> So enhance pcie_cleanup_slot() to correctly flush workqueue when destroying
->> PCIe hotplug controller.
->>
->> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->> ---
->>   drivers/pci/hotplug/pciehp_hpc.c |   13 ++++++++++++-
->>   1 files changed, 12 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
->> index d4fa705..9a48a51 100644
->> --- a/drivers/pci/hotplug/pciehp_hpc.c
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->> @@ -890,8 +890,19 @@ static int pcie_init_slot(struct controller *ctrl)
->>   static void pcie_cleanup_slot(struct controller *ctrl)
->>   {
->>       struct slot *slot = ctrl->slot;
->> -     cancel_delayed_work(&slot->work);
->> +
->> +     /*
->> +      * Following workqueue flushing logic is to deal with the special call path:
->> +      * 1) pcie_isr() ->  pciehp_handle_xxx() ->
->> +      *    queue_interrupt_event(pciehp_wq_event)->queue_work(pciehp_wq)
->> +      * 2) interrupt_event_handler() ->  handle_button_press_event() ->
->> +      *    queue_delayed_work(pciehp_wq)
->> +      * 3) pciehp_queue_pushbutton_work() ->  queue_work(pciehp_wq)
->> +      */
->>       flush_workqueue(pciehp_wq);
->> +     cancel_delayed_work_sync(&slot->work);
->> +     flush_workqueue(pciehp_wq);
->> +
->>       kfree(slot);
->>   }
+This is a multi-part message in MIME format.
+--------------050500040706060609040608
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Jiang, I'm ignoring this (and the next [2/2] patch) because I assume
-they're superceded by the "[PATCH RFC 00/17] Introduce a global lock
-to serialize all PCI hotplug" series of April 16.  Let me know if
-otherwise.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Bjorn
+On 14/04/12 18:37, Steven Newbury wrote:
+> On 12/04/12 17:40, Steven Newbury wrote:
+>> On Thu, 12 Apr 2012, 17:07:33 BST, Yinghai Lu
+>> <yinghai@kernel.org> wrote:
+> 
+>>> On Thu, Apr 12, 2012 at 4:22 AM, Steven Newbury 
+>>> <steve@snewbury.org.uk> wrote:
+>>>> Thanks, that fixed it! :) I had a similar patch I've been 
+>>>> working on but I had my fix in the wrong place!
+>>>> 
+>>>> In the working case, initially the BIOS has set GMA to
+>>>> within the low system DRAM 0xC0000000 obviously invalid.
+>>>> This conflict is detected and it's relallocated to
+>>>> 0x12000000.
+>>>> 
+>>>> I've attempted to modify probe.c to disable 64-bit BARs not 
+>>>> allocated above 4G so they get reallocated above when
+>>>> possible later.  It seemed to work, but again broke GMA
+>>>> despite the BAR originally containing an invalid address as
+>>>> mentioned above, it seems for some reason something is
+>>>> different when the conflict is detected and rellocated,
+>>>> compared to disabling it early then allocating a valid
+>>>> value..?
+>>>> 
+> I've created a new quirk utilising an extra PCI resource flag to
+> force reallocation of the resource.  It's the first approach I've
+> had any success at.  It does work.  Only "Intel Page Flush" now
+> gets allocated @0xe0000000!
+> 
+> 
+Hopefully this should fix "Intel Flush Page"
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk+JvIQACgkQGcb56gMuC63G3ACgma4pUxuwjAAJ0ACS5A32xFwa
+k1MAn21y2w6m+Ar+3DwH4Swy1IlicHmN
+=nBpy
+-----END PGP SIGNATURE-----
+
+--------------050500040706060609040608
+Content-Type: text/x-patch;
+ name="intel-flush-page-fit.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="intel-flush-page-fit.diff"
+
+commit ccc1099a1474815f4094e8689ca0b518de464230
+Author: Steven Newbury <steve@snewbury.org.uk>
+Date:   Sat Apr 14 19:02:47 2012 +0100
+
+    intel-gtt: Use pci_bus_alloc_resource_fit() to allocate "Intel Flush Page".
+
+diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+index 77e150e..30b1ea2 100644
+--- a/drivers/char/agp/intel-gtt.c
++++ b/drivers/char/agp/intel-gtt.c
+@@ -1036,9 +1036,9 @@ static struct agp_memory *intel_fake_agp_alloc_by_type(size_t pg_count,
+ static int intel_alloc_chipset_flush_resource(void)
+ {
+ 	int ret;
+-	ret = pci_bus_alloc_resource(intel_private.bridge_dev->bus, &intel_private.ifp_resource, PAGE_SIZE,
++	ret = pci_bus_alloc_resource_fit(intel_private.bridge_dev->bus, &intel_private.ifp_resource, PAGE_SIZE,
+ 				     PAGE_SIZE, PCIBIOS_MIN_MEM, 0,
+-				     pcibios_align_resource, intel_private.bridge_dev);
++				     pcibios_align_resource, intel_private.bridge_dev, 1);
+ 
+ 	return ret;
+ }
+
+--------------050500040706060609040608--
