@@ -1,65 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:21878 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754236Ab2DCCVY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2012 22:21:24 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <len.brown@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Subject: [RFC PATCH 06/14] IOMMU: Fix tboot force iommu logic
-Date: Mon,  2 Apr 2012 19:19:33 -0700
-Message-Id: <1333419581-7836-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1333419581-7836-1-git-send-email-yinghai@kernel.org>
-References: <1333419581-7836-1-git-send-email-yinghai@kernel.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:1135 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011Ab2DNKjw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Apr 2012 06:39:52 -0400
+From: "Huang, Xiong" <xiong@qca.qualcomm.com>
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: "davem@davemloft.net" <davem@davemloft.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qca-linux-team <qca-linux-team@qualcomm.com>,
+	nic-devel <nic-devel@qualcomm.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH 12/37] atl1c: restore max-read-request-size in Device
+ Conrol Register
+Date: Sat, 14 Apr 2012 10:39:51 +0000
+Message-ID: <157393863283F442885425D2C454285623D4888F@nasanexd02a.na.qualcomm.com>
+References: <1334276102-15866-1-git-send-email-xiong@qca.qualcomm.com>
+	 <1334276102-15866-13-git-send-email-xiong@qca.qualcomm.com>
+ <1334336563.2606.3.camel@bwh-desktop.uk.solarflarecom.com>
+In-Reply-To: <1334336563.2606.3.camel@bwh-desktop.uk.solarflarecom.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Should check dmar_disabled just after tboot_force_iommu.
-
-Otherwise when tboot is not used, and intel_iommu=off, and nointrmap
-still get dmar_table_init() called. that will cause some get_device
-calling, and it will have some device refcount leaking.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: iommu@lists.linux-foundation.org
----
- drivers/iommu/intel-iommu.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index be867e6..b7e5a7e 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3630,6 +3630,9 @@ int __init intel_iommu_init(void)
- 	/* VT-d is required for a TXT/tboot launch, so enforce that */
- 	force_on = tboot_force_iommu();
- 
-+	if (no_iommu || dmar_disabled)
-+		return -ENODEV;
-+
- 	if (dmar_table_init()) {
- 		if (force_on)
- 			panic("tboot: Failed to initialize DMAR table\n");
-@@ -3642,9 +3645,6 @@ int __init intel_iommu_init(void)
- 		return 	-ENODEV;
- 	}
- 
--	if (no_iommu || dmar_disabled)
--		return -ENODEV;
--
- 	if (iommu_init_mempool()) {
- 		if (force_on)
- 			panic("tboot: Failed to initialize iommu memory\n");
--- 
-1.7.7
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbmV0ZGV2LW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOm5ldGRldi1vd25lckB2Z2VyLmtlcm5lbC5vcmddDQo+IE9u
+IEJlaGFsZiBPZiBCZW4gSHV0Y2hpbmdzDQo+IFNlbnQ6IFNhdHVyZGF5LCBBcHJpbCAxNCwgMjAx
+MiAxOjAzDQo+IFRvOiBIdWFuZywgWGlvbmcNCj4gQ2M6IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IG5l
+dGRldkB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnOyBx
+Y2EtbGludXgtdGVhbTsgbmljLWRldmVsOyBsaW51eC1wY2kNCj4gU3ViamVjdDogUmU6IFtQQVRD
+SCAxMi8zN10gYXRsMWM6IHJlc3RvcmUgbWF4LXJlYWQtcmVxdWVzdC1zaXplIGluIERldmljZQ0K
+PiBDb25yb2wgUmVnaXN0ZXINCj4gDQo+IE9uIEZyaSwgMjAxMi0wNC0xMyBhdCAwODoxNCArMDgw
+MCwgeGlvbmcgd3JvdGU6DQo+ID4gaW4gc29tZSBwbGF0Zm9ybXMsIHdlIGZvdW5kIHRoZSBtYXgt
+cmVhZC1yZXF1ZXN0LXNpemUgaW4gRGV2aWNlDQo+ID4gQ29udHJvbCBSZWdpc3RlciBpcyBzZXQg
+dG8gMCBieSAoQklPUz8pIGR1cmluZyBib290dXAsIHRoaXMgd2lsbCBjYXVzZQ0KPiA+IHRoZQ0K
+PiA+IHBlcmZvcm1hbmNlKHRocm91Z2hwdXQpIHZlcnkgYmFkLg0KPiA+IFJlc3RvcmUgaXQgdG8g
+YSBtaW4tdmFsdWUuDQo+ID4gcmVnaXN0ZXIgZGVmaW5pdGlvbiBvZiBSRUdfREVWSUNFX0NUUkwg
+aXMgcmVmaW5lZCBhcyB3ZWxsLg0KPiBbLi4uXQ0KPiANCj4gSSdtIGd1ZXNzaW5nIHRoaXMgbWVt
+b3J5LW1hcHBlZCByZWdpc3RlciBpcyBhbiBhbGlhcyBmb3IgdGhlIFBDSWUgZGV2aWNlIGNvbnRy
+b2wNCj4gcmVnaXN0ZXIuICBJIHRoaW5rIHlvdSBzaG91bGQgYmUgdXNpbmcgcGNpZV9zZXRfcmVh
+ZHJxKCkgdG8gZW5zdXJlIHRoYXQgdGhlIGZpbmFsDQo+IHNldHRpbmcgY29uZm9ybXMgdG8gdGhl
+IGRldmljZSdzIE1heCBQYXlsb2FkIFNpemUgYW5kIHN5c3RlbSBwb2xpY3kuDQo+IA0KWW91IGFy
+ZSByaWdodCwgSSBkb24ndCBrbm93IHRoZXJlIGlzIGEgc3lzdGVtIGZ1bmN0aW9uIHRvIGRvIHRo
+ZSByaWdodCB0aGluZy4gSSB3aWxsIHJldmlzZSBpdC4gDQoNClRoYW5rcw0KWGlvbmcNCg0K
