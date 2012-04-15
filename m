@@ -1,39 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nix <nix@esperi.org.uk>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Chris Boot <bootc@bootc.net>,
-	"Wyborny\, Carolyn" <carolyn.wyborny@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev <netdev@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Matthew Garrett <mjg@redhat.com>
-Subject: Re: [E1000-devel] e1000e interface hang on 82574L
-References: <9BBC4E0CF881AA4299206E2E1412B62621F0B1@ORSMSX102.amr.corp.intel.com>
-	<4F144A76.3050703@bootc.net> <4F64B4E2.20208@bootc.net>
-	<4F64CFCB.7060702@bootc.net>
-	<9BBC4E0CF881AA4299206E2E1412B6260E512E0C@ORSMSX102.amr.corp.intel.com>
-	<87r4wova0b.fsf@spindle.srvr.nix>
-	<9BBC4E0CF881AA4299206E2E1412B6260E512FB9@ORSMSX102.amr.corp.intel.com>
-	<87ehsov6ot.fsf@spindle.srvr.nix>
-	<1590F833-7D40-42FE-8FA2-6DCCADF9C6B0@bootc.net>
-	<CAErSpo4TJ-9NsD5QTpFi9fsnD9qHt7+Tr5jJHQPuS7vg6ghq_w@mail.gmail.com>
-	<20120406134144.GA22526@khazad-dum.debian.net>
-Date: Fri, 06 Apr 2012 17:05:53 +0100
-In-Reply-To: <20120406134144.GA22526@khazad-dum.debian.net> (Henrique de
-	Moraes Holschuh's message of "Fri, 6 Apr 2012 10:41:44 -0300")
-Message-ID: <87mx6oluam.fsf@spindle.srvr.nix>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:44086 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753153Ab2DOSZu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 15 Apr 2012 14:25:50 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mikko Vinni <mmvinni@yahoo.com>
+Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
+Date: Sun, 15 Apr 2012 20:30:22 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Allen Kay <allen.m.kay@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204150011.53556.rjw@sisk.pl> <1334486385.82898.YahooMailNeo@web161803.mail.bf1.yahoo.com>
+In-Reply-To: <1334486385.82898.YahooMailNeo@web161803.mail.bf1.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201204152030.23148.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6 Apr 2012, Henrique de Moraes Holschuh outgrape:
-> You probably need to disable it upstream of the 82574L as well.  Here
-> (SuperMicro C7X58) I managed to get it to be stable by telling the BIOS
-> to disable L0s and L1 system-wide.
->
-> But not all BIOSes will have that option...
+On Sunday, April 15, 2012, Mikko Vinni wrote:
+> From: Rafael J. Wysocki:
+> 
+> >>  > Please change that dev_dbg() in pci_restore_state() into dev_info()
+> >>  > and see how many times it gets printed with the commit applied (not 
+> > reverted).
+> >> 
+> >> 
+> >>  I ran the dmesg through "uniq -c" and it looks like this:
+> >> 
+> >>        1 ACPI: Low-level resume complete
+> >>        1 PM: Restoring platform NVS memory
+> >>        1 Enabling non-boot CPUs ...
+> >>        1 Booting Node 0 Processor 1 APIC 0x1
+> >>        1 CPU1 is up
+> >>        1 ACPI: Waking up from system sleep state S3
+> >>       10 pcieport 0000:00:02.0: restoring config space at offset 0x7 (was 
+> > 0x20005151, writing 0x5151)
+> > 
+> > Well, yeah.  So the commit you bisected it to is total and utter crap.
+> > Most importantly, it retries the writes for all of the dwords in the 
+> > device's
+> > config space _including_ the status register (which by definition need not be
+> > the same as the written value).
+> > 
+> > I wonder if the appended patch helps?
+> 
+> It does. It seems there is a change only in the devices that refuse to wake up;
+> somehow writing too many times to them affects the rest of the machine.
+> So, for this machine your patch fixes the problem of the touchpad not working.
 
-Indeed not :( the Tyan S7010 mobo in my headless server can't do it.
+Good, thanks for the confirmation. :-)
 
--- 
-NULL && (void)
+> The write is now attempted (at most) 11 times, as shown below. Probably not
+> a huge deal.
+> 
+>       1 ACPI: Waking up from system sleep state S3
+>      11 pcieport 0000:00:02.0: restoring config space at offset 0x1c (was 0x20005151, writing 0x5151)
+
+Well, here you see that the PCI Express port is refusing to accept a new BAR value.
+It seems not to be operational and this probably is the reason why the device below
+the port don't respond later.
+
+I'm not sure why that happens, though.
+
+>       1 pcieport 0000:00:02.0: restoring config space at offset 0x4 (was 0x100007, writing 0x100407)
+>       1 pcieport 0000:00:04.0: restoring config space at offset 0x4 (was 0x100007, writing 0x100407)
+>       1 pcieport 0000:00:05.0: restoring config space at offset 0x4 (was 0x100007, writing 0x100407)
+>      11 pcieport 0000:00:06.0: restoring config space at offset 0x1c (was 0x20002121, writing 0x2121)
+
+The same happens here, apparently.
+
+Do you still have the kernel where all PCI devices worked correctly after system
+resume?
+
+Rafael
