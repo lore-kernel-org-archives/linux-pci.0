@@ -1,68 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v1 2/8] dmaengine: rebalance DMA channels when CPU hotplug happens
-Date: Mon, 23 Apr 2012 21:51:43 +0800
-Message-Id: <1335189109-4871-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
-References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:23306 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755694Ab2DORcG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 13:32:06 -0400
+Message-ID: <4F8B0609.8010603@snewbury.org.uk>
+Date: Sun, 15 Apr 2012 18:31:53 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity> <4F848357.3060007@snewbury.org.uk> <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com> <4F848E10.1090703@snewbury.org.uk> <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com> <1334089568.4083.2.camel@Nokia-N900> <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com> <4F84A3EC.6030903@snewbury.org.uk> <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com> <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <4F89B5E8.3040906@snewbury.org.uk> <4F89BC84.50308@snewbury.org.uk> <4F89C513.3000006@snewbury.org.uk> <4F89CB16.2000908@snewbury.org.uk> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com> <4F8AA0DC.6010902@snewbury.org.uk> <4F8AB312.7060606@snewbury.org.uk> <4F8B04A4.4070507@snewbury.org.uk>
+In-Reply-To: <4F8B04A4.4070507@snewbury.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rebalance DMA channels when CPU hotplug happens to correctly update
-DMA channel reference count.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/dma/dmaengine.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+On 15/04/12 18:25, Steven Newbury wrote:
+> On 15/04/12 12:37, Steven Newbury wrote:
+>> On 15/04/12 11:20, Steven Newbury wrote:
+>>> On 14/04/12 21:48, Yinghai Lu wrote:
+> 
+> [snip]
+> 
+>>>> On Sat, Apr 14, 2012 at 12:21 PM, Steven Newbury
+> 
+>>>>>> 
+>>>>>> pci 0000:03:08.0: BAR 15: can't assign mem pref (size 
+>>>>>> 0x18000000)
+>>>>> Ah! Not enough space for the bridge window!:(
+>>>>> 
+> 
+>>>> please append pci=norom ...
+> 
+>>> That worked.  Except of course the radeon driver can't POST the
+>>>  card without the ROM! :-P
+>> Can the ROM resource be mapped above 4G?
+> I didn't really think that through, obviously it can't because
+> it's not on a 64-bit capable bridge.  I wonder though, could it be
+> shadowed then disabled early before the IOMEM?
+I see there's "#if 0"'d helper functions for exactly that in rom.c.
+They've been disabled since 2007!
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-index 5b6ad58..198d891 100644
---- a/drivers/dma/dmaengine.c
-+++ b/drivers/dma/dmaengine.c
-@@ -49,6 +49,7 @@
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/mm.h>
-+#include <linux/cpu.h>
- #include <linux/device.h>
- #include <linux/dmaengine.h>
- #include <linux/hardirq.h>
-@@ -1008,8 +1009,29 @@ void dma_run_dependencies(struct dma_async_tx_descriptor *tx)
- }
- EXPORT_SYMBOL_GPL(dma_run_dependencies);
- 
-+static int __cpuinit
-+hotcpu_rebalance(struct notifier_block *nfb, unsigned long action, void *hcpu)
-+{
-+	switch (action) {
-+	case CPU_ONLINE:
-+	case CPU_POST_DEAD:
-+		mutex_lock(&dma_list_mutex);
-+		dma_channel_rebalance();
-+		mutex_unlock(&dma_list_mutex);
-+		break;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block __refdata dma_cpu_notifier = {
-+	.notifier_call = hotcpu_rebalance,
-+};
-+
-+
- static int __init dma_bus_init(void)
- {
-+	register_hotcpu_notifier(&dma_cpu_notifier);
- 	return class_register(&dma_devclass);
- }
- arch_initcall(dma_bus_init);
--- 
-1.7.5.4
-
+iEYEARECAAYFAk+LBgkACgkQGcb56gMuC61NGgCeJoZY9iUXeM6GuhDAntEjVrAu
+rsUAoIROJFA5xBrZ9qzYQTGSf7lTJUTA
+=lofL
+-----END PGP SIGNATURE-----
