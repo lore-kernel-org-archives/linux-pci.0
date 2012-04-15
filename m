@@ -1,45 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:59348 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932961Ab2DMJpD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Apr 2012 05:45:03 -0400
-Received: from /spool/local
-	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Fri, 13 Apr 2012 05:45:02 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 55D2338C8054
-	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 05:44:59 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q3D9ix5l289044
-	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 05:44:59 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q3D9iwkQ023264
-	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 06:44:59 -0300
-Date: Fri, 13 Apr 2012 17:44:50 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linuxram@us.ibm.com, shangw@linux.vnet.ibm.com
-Subject: Re: [PATCH] Optimize the resource overlap check
-Message-ID: <20120413094450.GE20495@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1334284128-24925-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:56889 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752105Ab2DOKUG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 06:20:06 -0400
+Message-ID: <4F8AA0C8.7020001@snewbury.org.uk>
+Date: Sun, 15 Apr 2012 11:19:52 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1334284128-24925-1-git-send-email-weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity> <4F8467AA.90305@snewbury.org.uk> <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com> <4F848357.3060007@snewbury.org.uk> <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com> <4F848E10.1090703@snewbury.org.uk> <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com> <1334089568.4083.2.camel@Nokia-N900> <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com> <4F84A3EC.6030903@snewbury.org.uk> <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com> <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <4F89B5E8.3040906@snewbury.org.uk> <4F89BC84.50308@snewbury.org.uk> <4F89C513.3000006@snewbury.org.uk> <4F89CB16.2000908@snewbury.org.uk> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
+In-Reply-To: <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 13, 2012 at 10:28:48AM +0800, Wei Yang wrote:
-> In coalesce_windows() it tries to check whether the res1 and res2 overlap.
-> This function do four comparisons, which could be done with one
-> comparisons.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 14/04/12 21:48, Yinghai Lu wrote:
+> On Sat, Apr 14, 2012 at 12:21 PM, Steven Newbury
+> <steve@snewbury.org.uk> wrote:
+>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+>> 
+>> On 14/04/12 20:08, Steven Newbury wrote:
+>>> On 14/04/12 19:42, Steven Newbury wrote:
+>>>> On 14/04/12 19:05, Steven Newbury wrote:
+>>>>> On 14/04/12 18:37, Steven Newbury wrote:
+>>>>>> On 12/04/12 17:40, Steven Newbury wrote:
+>>>>>>> On Thu, 12 Apr 2012, 17:07:33 BST, Yinghai Lu 
+>>>>>>> <yinghai@kernel.org> wrote:
+>>> 
+>>>>>>>> On Thu, Apr 12, 2012 at 4:22 AM, Steven Newbury 
+>>>>>>>> <steve@snewbury.org.uk> wrote:
+>>>>>>>>> Thanks, that fixed it! :) I had a similar patch
+>>>>>>>>> I've been working on but I had my fix in the wrong
+>>>>>>>>> place!
+>>>>>>>>> 
+>>>>>>>>> In the working case, initially the BIOS has set GMA
+>>>>>>>>> to within the low system DRAM 0xC0000000 obviously 
+>>>>>>>>> invalid. This conflict is detected and it's 
+>>>>>>>>> relallocated to 0x12000000.
+>>>>>>>>> 
+>>>>>>>>> I've attempted to modify probe.c to disable 64-bit 
+>>>>>>>>> BARs not allocated above 4G so they get
+>>>>>>>>> reallocated above when possible later.  It seemed
+>>>>>>>>> to work, but again broke GMA despite the BAR
+>>>>>>>>> originally containing an invalid address as
+>>>>>>>>> mentioned above, it seems for some reason something
+>>>>>>>>> is different when the conflict is detected and
+>>>>>>>>> rellocated, compared to disabling it early then
+>>>>>>>>> allocating a valid value..?
+>>>>>>>>> 
+>>>>>> I've created a new quirk utilising an extra PCI resource 
+>>>>>> flag to force reallocation of the resource.  It's the
+>>>>>> first approach I've had any success at.  It does work.
+>>>>>> Only "Intel Page Flush" now gets allocated @0xe0000000!
+>>> 
+>>> 
+>>>>> Hopefully this should fix "Intel Flush Page"
+>>>> Need to export pci_bus_alloc_resource_fit for intel-gtt.
+>>> Nearly worked... Or at least it should have worked, but for
+>>> some reason the allocator failed to utilise
+>>> 0xe0000000-0xefffffff for 04:00.0 BAR0..?
+>>> 
+>>> 
+>>> pci 0000:03:08.0: BAR 15: can't assign mem pref (size
+>>> 0x18000000)
+>> Ah! Not enough space for the bridge window!:(
+>> 
 > 
-> Also make the resource_check_overlap() a common function for others.
+> please append pci=norom ...
 > 
-> Signed-Off-By: Wei Yang <weiyang@linux.vnet.ibm.com>
+That worked.  Except of course the radeon driver can't POST the card
+without the ROM! ;)
 
-Signed-Off-By: Ram Pai <linuxram@us.ibm.com>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-
+iEYEARECAAYFAk+KoMgACgkQGcb56gMuC62ZrACfcMJDlIVy8EfpwQyyAL91OH/d
+uEIAoMK2L1LEmy8OZIvaGRqt7UjxlYRM
+=v+/Q
+-----END PGP SIGNATURE-----
