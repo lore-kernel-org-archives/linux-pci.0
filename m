@@ -1,213 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:51557 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751064Ab2DRU4P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Apr 2012 16:56:15 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: huang ying <huang.ying.caritas@gmail.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-Date: Wed, 18 Apr 2012 23:00:48 +0200
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-References: <4F8790F6.5080408@intel.com> <201204172303.07419.rjw@sisk.pl> <CAC=cRTMR=axVV4x9Qa9vO+UXs_s73fOWkeW5mocUEkvKe9J+Dw@mail.gmail.com>
-In-Reply-To: <CAC=cRTMR=axVV4x9Qa9vO+UXs_s73fOWkeW5mocUEkvKe9J+Dw@mail.gmail.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:40814 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310Ab2DOUGT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 16:06:19 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201204182300.48882.rjw@sisk.pl>
+In-Reply-To: <CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com>
+References: <1333968563.5678.19.camel@infinity>
+	<4F848357.3060007@snewbury.org.uk>
+	<CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>
+	<4F848E10.1090703@snewbury.org.uk>
+	<CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>
+	<1334089568.4083.2.camel@Nokia-N900>
+	<CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
+	<4F84A3EC.6030903@snewbury.org.uk>
+	<CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>
+	<1334229754.30606.7.camel@Nokia-N900>
+	<CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>
+	<1334248841.2910.6.camel@Nokia-N900>
+	<4F89B5E8.3040906@snewbury.org.uk>
+	<4F89BC84.50308@snewbury.org.uk>
+	<4F89C513.3000006@snewbury.org.uk>
+	<4F89CB16.2000908@snewbury.org.uk>
+	<4F89CE43.7040200@snewbury.org.uk>
+	<CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
+	<4F8AA0DC.6010902@snewbury.org.uk>
+	<4F8AB312.7060606@snewbury.org.uk>
+	<4F8B04A4.4070507@snewbury.org.uk>
+	<4F8B0609.8010603@snewbury.org.uk>
+	<CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com>
+Date: Sun, 15 Apr 2012 13:06:18 -0700
+Message-ID: <CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com>
+Subject: Re: PCI resources above 4GB
+From: Yinghai Lu <yinghai@kernel.org>
+To: Steven Newbury <steve@snewbury.org.uk>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=e89a8ff1cc401c5e3404bdbd3d42
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 18, 2012, huang ying wrote:
-> On Wed, Apr 18, 2012 at 5:03 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Tuesday, April 17, 2012, huang ying wrote:
-> >> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> > On Monday, April 16, 2012, huang ying wrote:
-> >> >> Hi,
-> >> >>
-> >> >> On Sat, Apr 14, 2012 at 3:41 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> >> > Hi,
-> >> >> >
-> >> >> > On Friday, April 13, 2012, Yan, Zheng wrote:
-> >> >> >> Hi all,
-> >> >> >>
-> >> >> >> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
-> >> >> >> beneath a PCIe port when they all have entered D3. A device in D3cold can only
-> >> >> >> generate wake event through the WAKE# pin. Because we can not access to a device's
-> >> >> >> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
-> >> >> >>
-> >> >> >> Any comment will be appreciated.
-> >> >> >>
-> >> >> >> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
-> >> >> >> ---
-> >> >> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> >> >> >> index 0f150f2..e210e8cb 100644
-> >> >> >> --- a/drivers/pci/pci-acpi.c
-> >> >> >> +++ b/drivers/pci/pci-acpi.c
-> >> >> >> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >> >> >>               [PCI_D1] = ACPI_STATE_D1,
-> >> >> >>               [PCI_D2] = ACPI_STATE_D2,
-> >> >> >>               [PCI_D3hot] = ACPI_STATE_D3,
-> >> >> >> -             [PCI_D3cold] = ACPI_STATE_D3
-> >> >> >> +             [PCI_D3cold] = ACPI_STATE_D3_COLD
-> >> >> >>       };
-> >> >> >>       int error = -EINVAL;
-> >> >> >>
-> >> >> >
-> >> >> > Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
-> >> >> >
-> >> >> > We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
-> >> >> > instead.  I'll prepare a patch for that over the weekend if no one has done
-> >> >> > that already.
-> >> >> >
-> >> >> >> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
-> >> >> >>
-> >> >> >>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
-> >> >> >>  {
-> >> >> >> -     if (dev->pme_interrupt)
-> >> >> >> +     /* PME interrupt isn't available in the D3cold case */
-> >> >> >> +     if (dev->pme_interrupt && !dev->runtime_d3cold)
-> >> >> >
-> >> >> > This whole thing is wrong.  First off, I don't think that the runtime_d3cold
-> >> >> > flag makes any sense.  We already cover that in dev->pme_support.
-> >> >>
-> >> >> PCIe devices and PCIe root port may have proper PME interrupt support
-> >> >> (that is, dev->pme_interrupt = true), but the process of remote wakeup
-> >> >> from D3cold is as follow:
-> >> >>
-> >> >> 1) In D3cold, the power of the main link is turned off, aux power is
-> >> >> provided (PCIe L2 link state)
-> >> >> 2) Device detect condition to resume, then assert #WAKE pin
-> >> >> 2) ACPI circuit linked with #WAKE pin, and will generate a GPE for that
-> >> >> 3) GPE handler will resume device with ACPI (via _PS3 and _PR0), the
-> >> >> power of the main link is turned on, after a while, link goes into L0
-> >> >> state
-> >> >> 4) The PME message is sent to root port, pme interrupt generated
-> >> >
-> >> > This isn't how it's supposed to work in theory.  If the device can signal PME
-> >> > from D3cold, it should be able to reestablish the link and send a PME
-> >> > message from there.  dev->pme_interrupt set means exactly that.
-> >> >
-> >> > ACPI is only supposed to be needed for things that don't send PME
-> >> > messages (in your case the PME interrupt generated by the port is essentially
-> >> > useless, because the wakeup event has already been signaled through ACPI).
-> >> >
-> >> >> So, for deivce, dev->pme_interrupt = true and dev->pme_support
-> >> >> advocate it support PME in D3cold.  But we still need ACPI to setup
-> >> >> run wake for the device.
-> >> >
-> >> > OK, so this is nonstandard.
-> >>
-> >> This is the standard behavior.  Please refer to PCI Express Base
-> >> Sepcification Revision 2.0, section 5.3.3.2 Link Wakeup.  In D1, D2
-> >> and D3hot state, PCIe device can transit the link from L1 to L0 state,
-> >> and send the PME message.  In D3cold, the main link is powered off,
-> >> PCIe device will use a STANDARD sideband signal WAKE# to signal wakeup
-> >> firstly, then platform (power controller in spec) will power on the
-> >> main link for the device, after main link is back to L0, the PME
-> >> message is send to root port, pme interrupt is generated.  So in
-> >> theory, the wake up process can be divided into platform part (which
-> >> power on the main link) and PCIe part (which send PME).
-> >
-> > That's fine.  However, the platform part should be completely transparent
-> > to the PCI bus type, then.  It just should power up the link to allow a
-> > PME message to be transmitted through it.
-> 
-> Yes.
-> 
-> >[...]
-> >
-> >> > So don't use pci_set_power_state() for that, because it's essentially
-> >> > a different operation.  You need a pci_platform_remove_power() helper or
-> >> > similar for that.
-> >> >
-> >> > What ACPI method exactly is used to remove power from the device?
-> >>
-> >> The ACPI method executed is as follow:
-> >>
-> >> - _PS3 (if exist)
-> >> - Power resources in _PR3 is turned on
-> >> - Power resources in _PR0 is turned off
-> >> - Power resources in _PR3 is turned off
-> >
-> > I'd rather think
-> >
-> > - make sure that _PR3 resources are referenced
-> > - drop references (from this device) for all other power resources
-> > - execute _PS3 (if any)
-> > - drop references for _PR3 resources
-> >
-> > if Section 7.2.11 of ACPI 5.0 is to be followed.
-> 
-> Yes.  You are right.
-> 
-> >> I think the process can fit pci_set_power_state() quite well, so why
-> >> invent another helper for that?
-> >
-> > OK, we can special case it, perhaps.
-> >
-> > Suppose we have a "this device may be put into D3_cold" flag.
-> >
-> > Who's going to decide whether to put it into D3_hot or D3_cold?
-> 
-> In most cases, I think it is OK to put device into D3_cold if that is
-> supported.
+--e89a8ff1cc401c5e3404bdbd3d42
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Well, there may be PM QoS latency requirements preventing us from doing so.
+On Sun, Apr 15, 2012 at 1:05 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sun, Apr 15, 2012 at 10:31 AM, Steven Newbury <steve@snewbury.org.uk> =
+wrote:
+>>>>>>>>
+>>>>>>>> pci 0000:03:08.0: BAR 15: can't assign mem pref (size
+>>>>>>>> 0x18000000)
+>>>>>>> Ah! Not enough space for the bridge window!:(
+>>>>>>>
+>>>
+>>>>>> please append pci=3Dnorom ...
+>>>
+>>>>> That worked. =A0Except of course the radeon driver can't POST the
+>>>>> =A0card without the ROM! :-P
+>>>> Can the ROM resource be mapped above 4G?
+>>> I didn't really think that through, obviously it can't because
+>>> it's not on a 64-bit capable bridge. =A0I wonder though, could it be
+>>> shadowed then disabled early before the IOMEM?
+>> I see there's "#if 0"'d helper functions for exactly that in rom.c.
+>> They've been disabled since 2007!
+>
+> solution could be one of three:
+> 1. when bridge support 64bit pref, will not allocate rom bar in bridge
+> pref resource.
+> =3D=3D=3D=3D> patch: rom_pref.patch
+>
+> 2. unconditionally to make rom bar allocation in bridge non-pref range.
+> =3D=3D=3D=3D> patch: rom_no_pref.patch
 
-> But there should be some special case where D3_cold is not
-> desirable, for example, we can put SSD into D3_cold safely, but it is
-> not quite safe to put HDD into D3_cold.  So we want to introduce a
-> flag: "may_power_off" like in the following patch
-> 
-> https://lkml.org/lkml/2012/3/29/41
-> 
-> It gives device driver a chance to prevent the device to be put into D3_cold.
+missed attach rom_no_pref.patch
 
-I see.  So your proposal is that the flag might be used to indicate to
-whoever carries out power transitions of devices that power must not be
-removed from this particular device, right?
+> Looks like BIOS and at least one of other OSes is doing that.
+>
+> I can not find the the history why ROM res is with PREFETCH bit set.
+> Maybe Linus has some idea about that.
+>
+> 3. use pci_bus_allocate_resource in drm/radeon driver ... =3D=3D=3D> but
+> that could fail.
+> =A0 so could hack it like a. disable bar 0x10 and steal BAR address,
+> then set 0x30 to that address then copy ROM to ram.
+> =A0 after that, disable rom again and set back address to 0x10.
+> =A0 You try to update radeon_get_bios() to achieve that.
+>
+> =A0 =A0 =A0Yinghai
 
-In that case we can put that flag into struct dev_pm_info after all, but
-perhaps the name should indicate more precisely what it is about.  Something
-like "power_must_be_on" maybe?
+--e89a8ff1cc401c5e3404bdbd3d42
+Content-Type: application/octet-stream; name="rom_no_pref.patch"
+Content-Disposition: attachment; filename="rom_no_pref.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h12iyy9k1
 
-> > [...]
-> >
-> >> >> > So now please tell me what exactly you want to achieve and why you want to do
-> >> >> > that in the first place.
-> >> >
-> >> > Well, is there any chance to get that information?
-> >>
-> >> You mean the runtime_d3cold flag? That flag is used to tell
-> >> acpi_pci_run_wake() that we need ACPI wakeup setup for the device
-> >> because that is needed by D3cold.  The ACPI wakeup setup here means
-> >> turn on power resources needed by wake up (_PRW) and execute _DSW.
-> >>
-> >> If you mean the whole patch, we want to implement runtime D3cold
-> >> support, which can save more power than D3hot.
-> >
-> > So, do I think correctly that you'd like to put devices into D3_cold
-> > if that's possible via ACPI and to be able to wake it up from that state
-> > using remote wakeup?
-> 
-> Yes.  Support both remote wakeup and host wakeup.
-
-OK, so we need to clean up the ACPI D3_HOT/D3_COLD mess first.  Then, we need
-to change PCI so that devices are not put into D3cold (by ACPI) if only D3hot
-is requested by the caller of pci_set_power_state().
-
-Having done that, we can modify pci_set_power_state() to handle D3cold as
-a special case (essentially, it should check that case before doing anything
-else).  Finally, we need to teach the ACPI notify handler about the WAKE#
-event and we need to add the 100 ms wait to the device resume code path
-somewhere (I guess in pci_set_power_state() for the D3cold->D0 transition).
-
-Now, there's one more thing to consider.  Namely, if a PCIe endpoint is put
-into D3hot (via native PM) and then the port it is connected to is put into
-D3_hot (via native PM), does that transfer the endpoint into D3cold?
-
-Rafael
+U3ViamVjdDogW1BBVENIXSBQQ0k6IERvbid0IGFsbG9jYXRlIHJvbSBiYXIgaW4gYnJpZGdlIHBy
+ZWYgcmVzb3VyY2UKClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9y
+Zz4KCi0tLQogZHJpdmVycy9wY2kvcHJvYmUuYyB8ICAgIDUgKystLS0KIDEgZmlsZSBjaGFuZ2Vk
+LCAyIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZl
+cnMvcGNpL3Byb2JlLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kv
+cHJvYmUuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3Byb2JlLmMKQEAgLTMzNiw5ICszMzYs
+OCBAQCBzdGF0aWMgdm9pZCBwY2lfcmVhZF9iYXNlcyhzdHJ1Y3QgcGNpX2RlCiAJaWYgKHJvbSkg
+ewogCQlzdHJ1Y3QgcmVzb3VyY2UgKnJlcyA9ICZkZXYtPnJlc291cmNlW1BDSV9ST01fUkVTT1VS
+Q0VdOwogCQlkZXYtPnJvbV9iYXNlX3JlZyA9IHJvbTsKLQkJcmVzLT5mbGFncyA9IElPUkVTT1VS
+Q0VfTUVNIHwgSU9SRVNPVVJDRV9QUkVGRVRDSCB8Ci0JCQkJSU9SRVNPVVJDRV9SRUFET05MWSB8
+IElPUkVTT1VSQ0VfQ0FDSEVBQkxFIHwKLQkJCQlJT1JFU09VUkNFX1NJWkVBTElHTjsKKwkJcmVz
+LT5mbGFncyA9IElPUkVTT1VSQ0VfTUVNIHwgSU9SRVNPVVJDRV9SRUFET05MWSB8CisJCQkJSU9S
+RVNPVVJDRV9DQUNIRUFCTEUgfCBJT1JFU09VUkNFX1NJWkVBTElHTjsKIAkJX19wY2lfcmVhZF9i
+YXNlKGRldiwgcGNpX2Jhcl9tZW0zMiwgcmVzLCByb20pOwogCX0KIH0K
+--e89a8ff1cc401c5e3404bdbd3d42--
