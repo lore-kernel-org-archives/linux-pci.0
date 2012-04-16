@@ -1,187 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45845 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758931Ab2DJPQp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 11:16:45 -0400
-Received: by pbcun15 with SMTP id un15so80519pbc.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Apr 2012 08:16:44 -0700 (PDT)
+Received: from ogre.sisk.pl ([217.79.144.158]:46623 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752086Ab2DPVHD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:07:03 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Yan, Zheng" <zheng.z.yan@intel.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Mon, 16 Apr 2012 23:11:37 +0200
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com> <201204132141.58063.rjw@sisk.pl> <4F8BCF00.3020004@intel.com>
+In-Reply-To: <4F8BCF00.3020004@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <4F84110E.3000400@snewbury.org.uk>
-References: <1333968563.5678.19.camel@infinity>
-	<CAErSpo7hGvJSmq4U37XN9T7ZaYn55fyy9t3ER5BBCDdQ3XZxqw@mail.gmail.com>
-	<4F84110E.3000400@snewbury.org.uk>
-Date: Tue, 10 Apr 2012 08:16:44 -0700
-Message-ID: <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>
-Subject: Re: PCI resources above 4GB
-From: Yinghai Lu <yinghai@kernel.org>
-To: Steven Newbury <steve@snewbury.org.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Content-Type: multipart/mixed; boundary=e89a8ff1cc4059830304bd549c10
+Content-Type: Text/Plain;
+  charset="windows-1252"
+Message-Id: <201204162311.37499.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---e89a8ff1cc4059830304bd549c10
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Monday, April 16, 2012, Yan, Zheng wrote:
+> On 04/14/2012 03:41 AM, Rafael J. Wysocki wrote:
+> >> > @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+> >> >  
+> >> >  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+> >> >  {
+> >> > -	if (dev->pme_interrupt)
+> >> > +	/* PME interrupt isn't available in the D3cold case */
+> >> > +	if (dev->pme_interrupt && !dev->runtime_d3cold)
+> >
+> > This whole thing is wrong.  First off, I don't think that the runtime_d3cold
+> > flag makes any sense.  We already cover that in dev->pme_support.
+> > 
+> > Second, pme_interrupt means that the _root_ _port_, not the device itself will
+> > trigger an interrupt whenever the device sends the PME message to it (which
+> > very well may happen for a device in D3_cold woken up by an external signal).
+> > 
+> 
+> I rechecked this. The port does trigger PME interrupt, but after the WAKE# signal
+> restores device power. So my comments "PME interrupt isn't available in the D3cold
+> case" is wrong, but setup ACPI wakeup is still required.
 
-On Tue, Apr 10, 2012 at 3:53 AM, Steven Newbury <steve@snewbury.org.uk> wro=
-te:
-> On 10/04/12 01:51, Bjorn Helgaas wrote:
->> On Mon, Apr 9, 2012 at 4:49 AM, Steven Newbury <steve@snewbury.org.uk> w=
-rote:
->>> Hi Bjorn,
->>>
->>> like many users here:
->>>
->>> https://bugs.launchpad.net/ubuntu/+source/nvidia-graphics-drivers-180/+=
-bug/342926
->>>
->>> I've hit this bug:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=3D10461
->>>
->>> I was wondering whether an option to enable an algorithm which
->>> allocated all 64bit capable devices above 4GB would at least allow
->>> systems where the BIOS has not provided a sufficient PCI hole to
->>> initialise all PCI devices? =A0I've been digging into the code, but I'm
->>> not yet comfortable to seriously attempt this myself, certainly not
->>> without guidance.
->>>
->>> It's a shame TJ seems to have disappeared, it would have been great to
->>> have had a look at his code, I'm sure many of these problems would have
->>> been resolved.
->>>
->>> Any help, workarounds, guidance or patches welcome! :)
->> Please attach complete dmesg logs with and without "pci=3Duse_crs" to
->> the bugzilla.
->>
->>
-> dmesg logs attached to bug, for both pci=3Duse_crs and pci=3Dnocrs. =A0In=
- both
-> cases assignment fails.
+What exactly do you mean by "setup ACPI wakeup"?
 
-Can you please try attached patches with pci=3Dnocrs?
-
-for pci=3Duse_crs, we need find safe place beyond _CRS, because your
-_CRS limit under 4g.
-
-Thanks
-
-Yinghai
-
---e89a8ff1cc4059830304bd549c10
-Content-Type: application/octet-stream; name="pref_mem_64_only.patch"
-Content-Disposition: attachment; filename="pref_mem_64_only.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h0v3aziw0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IFRyeSBiZXN0IHRvIGFsbG9jYXRlIHByZWYgbWVtIDY0IGFi
-b3ZlIDRnLgoKSWYgdGhlIGJyaWRnZSBzdXBwb3J0IHByZWYgbWVtIDY0LCB3aWxsIG9ubHkgYWxs
-b2NhdGUgdGhhdCB3aXRoIHByZWYgbWVtNjQuCmZvciBjaGlsZHJlbiByZXNvdXJjZXMgaWYgdGhl
-eSBvbmx5IHN1cHBvcnQgcHJlZiBtZW0gMzIsIHdpbGwgYWxsb2NhdGUgdGhlbQpmcm9tIG5vbiBw
-cmVmIG1lbSBpbnN0ZWFkLgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJu
-ZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgNDEgKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0KIGRyaXZlcnMvcGNpL3NldHVwLXJlcy5jIHwg
-ICAxNCArKysrKysrKysrKysrLQogMiBmaWxlcyBjaGFuZ2VkLCA0MiBpbnNlcnRpb25zKCspLCAx
-MyBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMK
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKKysr
-IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtNjQwLDcgKzY0MCw3IEBAIHN0
-YXRpYyBzdHJ1Y3QgcmVzb3VyY2UgKmZpbmRfZnJlZV9idXNfcmUKIAlpbnQgaTsKIAlzdHJ1Y3Qg
-cmVzb3VyY2UgKnI7CiAJdW5zaWduZWQgbG9uZyB0eXBlX21hc2sgPSBJT1JFU09VUkNFX0lPIHwg
-SU9SRVNPVVJDRV9NRU0gfAotCQkJCSAgSU9SRVNPVVJDRV9QUkVGRVRDSDsKKwkJCQkgIElPUkVT
-T1VSQ0VfUFJFRkVUQ0ggfCBJT1JFU09VUkNFX01FTV82NDsKIAogCXBjaV9idXNfZm9yX2VhY2hf
-cmVzb3VyY2UoYnVzLCByLCBpKSB7CiAJCWlmIChyID09ICZpb3BvcnRfcmVzb3VyY2UgfHwgciA9
-PSAmaW9tZW1fcmVzb3VyY2UpCkBAIC03NzIsOSArNzcyLDkgQEAgc3RhdGljIHZvaWQgcGJ1c19z
-aXplX2lvKHN0cnVjdCBwY2lfYnVzCiAgKiBndWFyYW50ZWVzIHRoYXQgYWxsIGNoaWxkIHJlc291
-cmNlcyBmaXQgaW4gdGhpcyBzaXplLgogICovCiBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3Ry
-dWN0IHBjaV9idXMgKmJ1cywgdW5zaWduZWQgbG9uZyBtYXNrLAotCQkJIHVuc2lnbmVkIGxvbmcg
-dHlwZSwgcmVzb3VyY2Vfc2l6ZV90IG1pbl9zaXplLAotCQkJcmVzb3VyY2Vfc2l6ZV90IGFkZF9z
-aXplLAotCQkJc3RydWN0IGxpc3RfaGVhZCAqcmVhbGxvY19oZWFkKQorCQkJIHVuc2lnbmVkIGxv
-bmcgdHlwZSwgdW5zaWduZWQgbG9uZyB0eXBlMiwKKwkJCSByZXNvdXJjZV9zaXplX3QgbWluX3Np
-emUsIHJlc291cmNlX3NpemVfdCBhZGRfc2l6ZSwKKwkJCSBzdHJ1Y3QgbGlzdF9oZWFkICpyZWFs
-bG9jX2hlYWQpCiB7CiAJc3RydWN0IHBjaV9kZXYgKmRldjsKIAlyZXNvdXJjZV9zaXplX3QgbWlu
-X2FsaWduLCBhbGlnbiwgc2l6ZSwgc2l6ZTAsIHNpemUxOwpAQCAtODAxLDcgKzgwMSw4IEBAIHN0
-YXRpYyBpbnQgcGJ1c19zaXplX21lbShzdHJ1Y3QgcGNpX2J1cwogCQlmb3JfZWFjaF9wY2lfZGV2
-X2FsbF9yZXNvdXJjZShkZXYsIHIsIGkpIHsKIAkJCXJlc291cmNlX3NpemVfdCByX3NpemU7CiAK
-LQkJCWlmIChyLT5wYXJlbnQgfHwgKHItPmZsYWdzICYgbWFzaykgIT0gdHlwZSkKKwkJCWlmIChy
-LT5wYXJlbnQgfHwgKChyLT5mbGFncyAmIG1hc2spICE9IHR5cGUgJiYKKwkJCQkJICAoci0+Zmxh
-Z3MgJiBtYXNrKSAhPSB0eXBlMikpCiAJCQkJY29udGludWU7CiAJCQlyX3NpemUgPSByZXNvdXJj
-ZV9zaXplKHIpOwogI2lmZGVmIENPTkZJR19QQ0lfSU9WCkBAIC05ODQsOCArOTg1LDkgQEAgc3Rh
-dGljIHZvaWQgX19yZWYgX19wY2lfYnVzX3NpemVfYnJpZGdlcwogCQkJc3RydWN0IGxpc3RfaGVh
-ZCAqcmVhbGxvY19oZWFkLCBib29sIHdpdGhfc2VsZikKIHsKIAlzdHJ1Y3QgcGNpX2RldiAqZGV2
-OwotCXVuc2lnbmVkIGxvbmcgbWFzaywgcHJlZm1hc2s7CisJdW5zaWduZWQgbG9uZyBtYXNrLCBw
-cmVmbWFzaywgdHlwZTIgPSAwOwogCXJlc291cmNlX3NpemVfdCBhZGRpdGlvbmFsX21lbV9zaXpl
-ID0gMCwgYWRkaXRpb25hbF9pb19zaXplID0gMDsKKwlzdHJ1Y3QgcmVzb3VyY2UgKmJfcmVzOwog
-CiAJbGlzdF9mb3JfZWFjaF9lbnRyeShkZXYsICZidXMtPmRldmljZXMsIGJ1c19saXN0KSB7CiAJ
-CXN0cnVjdCBwY2lfYnVzICpiID0gZGV2LT5zdWJvcmRpbmF0ZTsKQEAgLTEwMzAsMTUgKzEwMzIs
-MzAgQEAgc3RhdGljIHZvaWQgX19yZWYgX19wY2lfYnVzX3NpemVfYnJpZGdlcwogCQkgICBoYXMg
-YWxyZWFkeSBiZWVuIGFsbG9jYXRlZCBieSBhcmNoIGNvZGUsIHRyeQogCQkgICBub24tcHJlZmV0
-Y2hhYmxlIHJhbmdlIGZvciBib3RoIHR5cGVzIG9mIFBDSSBtZW1vcnkKIAkJICAgcmVzb3VyY2Vz
-LiAqLworCQliX3JlcyA9ICZidXMtPnNlbGYtPnJlc291cmNlW1BDSV9CUklER0VfUkVTT1VSQ0VT
-XTsKIAkJbWFzayA9IElPUkVTT1VSQ0VfTUVNOwogCQlwcmVmbWFzayA9IElPUkVTT1VSQ0VfTUVN
-IHwgSU9SRVNPVVJDRV9QUkVGRVRDSDsKLQkJaWYgKHBidXNfc2l6ZV9tZW0oYnVzLCBwcmVmbWFz
-aywgcHJlZm1hc2ssCisJCWlmIChiX3Jlc1syXS5mbGFncyAmIElPUkVTT1VSQ0VfTUVNXzY0KSB7
-CisJCQlwcmVmbWFzayB8PSBJT1JFU09VUkNFX01FTV82NDsKKwkJCWlmIChwYnVzX3NpemVfbWVt
-KGJ1cywgcHJlZm1hc2ssIHByZWZtYXNrLCBwcmVmbWFzaywKIAkJCQkgIHJlYWxsb2NfaGVhZCA/
-IDAgOiBhZGRpdGlvbmFsX21lbV9zaXplLAotCQkJCSAgYWRkaXRpb25hbF9tZW1fc2l6ZSwgcmVh
-bGxvY19oZWFkKSkKLQkJCW1hc2sgPSBwcmVmbWFzazsgLyogU3VjY2Vzcywgc2l6ZSBub24tcHJl
-ZmV0Y2ggb25seS4gKi8KLQkJZWxzZQotCQkJYWRkaXRpb25hbF9tZW1fc2l6ZSArPSBhZGRpdGlv
-bmFsX21lbV9zaXplOwotCQlwYnVzX3NpemVfbWVtKGJ1cywgbWFzaywgSU9SRVNPVVJDRV9NRU0s
-CisJCQkJICBhZGRpdGlvbmFsX21lbV9zaXplLCByZWFsbG9jX2hlYWQpKSB7CisJCQkJCS8qIFN1
-Y2Nlc3MsIHNpemUgbm9uLXByZWZldGNoIG9ubHkuICovCisJCQkJCW1hc2sgPSBwcmVmbWFzazsK
-KwkJCQkJdHlwZTIgPSBwcmVmbWFzayAmIH5JT1JFU09VUkNFX01FTV82NDsKKwkJCX0KKwkJfQor
-CQlpZiAoIXR5cGUyKSB7CisJCQlwcmVmbWFzayAmPSB+SU9SRVNPVVJDRV9NRU1fNjQ7CisJCQlp
-ZiAocGJ1c19zaXplX21lbShidXMsIHByZWZtYXNrLCBwcmVmbWFzaywgcHJlZm1hc2ssCisJCQkJ
-CSAgcmVhbGxvY19oZWFkID8gMCA6IGFkZGl0aW9uYWxfbWVtX3NpemUsCisJCQkJCSAgYWRkaXRp
-b25hbF9tZW1fc2l6ZSwgcmVhbGxvY19oZWFkKSkKKwkJCQltYXNrID0gcHJlZm1hc2s7IC8qIFN1
-Y2Nlc3MsIHNpemUgbm9uLXByZWZldGNoIG9ubHkuICovCisJCQllbHNlCisJCQkJYWRkaXRpb25h
-bF9tZW1fc2l6ZSArPSBhZGRpdGlvbmFsX21lbV9zaXplOworCQkJdHlwZTIgPSBJT1JFU09VUkNF
-X01FTTsKKwkJfQorCQlwYnVzX3NpemVfbWVtKGJ1cywgbWFzaywgSU9SRVNPVVJDRV9NRU0sIHR5
-cGUyLAogCQkJCXJlYWxsb2NfaGVhZCA/IDAgOiBhZGRpdGlvbmFsX21lbV9zaXplLAogCQkJCWFk
-ZGl0aW9uYWxfbWVtX3NpemUsIHJlYWxsb2NfaGVhZCk7CiAJCWJyZWFrOwpJbmRleDogbGludXgt
-Mi42L2RyaXZlcnMvcGNpL3NldHVwLXJlcy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmln
-L2RyaXZlcnMvcGNpL3NldHVwLXJlcy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAt
-cmVzLmMKQEAgLTE1NCw5ICsxNTQsMjEgQEAgc3RhdGljIGludCBfX3BjaV9hc3NpZ25fcmVzb3Vy
-Y2Uoc3RydWN0CiAKIAkvKiBGaXJzdCwgdHJ5IGV4YWN0IHByZWZldGNoaW5nIG1hdGNoLi4gKi8K
-IAlyZXQgPSBwY2lfYnVzX2FsbG9jX3Jlc291cmNlKGJ1cywgcmVzLCBzaXplLCBhbGlnbiwgbWlu
-LAotCQkJCSAgICAgSU9SRVNPVVJDRV9QUkVGRVRDSCwKKwkJCQkgICAgIElPUkVTT1VSQ0VfUFJF
-RkVUQ0ggfCBJT1JFU09VUkNFX01FTV82NCwKIAkJCQkgICAgIHBjaWJpb3NfYWxpZ25fcmVzb3Vy
-Y2UsIGRldik7CiAKKwlpZiAocmV0IDwgMCAmJgorCSAgICAocmVzLT5mbGFncyAmIChJT1JFU09V
-UkNFX1BSRUZFVENIIHwgSU9SRVNPVVJDRV9NRU1fNjQpKSkgeworCQkvKgorCQkgKiBUaGF0IGZh
-aWxlZC4KKwkJICoKKwkJICogVHJ5IGJlbG93IDRnIHByZWYKKwkJICovCisJCXJldCA9IHBjaV9i
-dXNfYWxsb2NfcmVzb3VyY2UoYnVzLCByZXMsIHNpemUsIGFsaWduLCBtaW4sCisJCQkJCSAgICAg
-SU9SRVNPVVJDRV9QUkVGRVRDSCwKKwkJCQkJICAgICBwY2liaW9zX2FsaWduX3Jlc291cmNlLCBk
-ZXYpOworCX0KKwogCWlmIChyZXQgPCAwICYmIChyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9QUkVG
-RVRDSCkpIHsKIAkJLyoKIAkJICogVGhhdCBmYWlsZWQuCg==
---e89a8ff1cc4059830304bd549c10
-Content-Type: application/octet-stream; name="allocate_high_at_first.patch"
-Content-Disposition: attachment; filename="allocate_high_at_first.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h0v3bi9o1
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IFRyeSB0byBhbGxvY2F0ZSBtZW02NCBhYm92ZSA0RyBhdCBm
-aXJzdAoKYW5kIHdpbGwgZmFsbCBiYWNrIHRvIGJlbG93IDRnIGlmIGl0IGNhbiBub3QgZmluZCBh
-bnkgYWJvdmUgNGcuCgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5v
-cmc+CgotLS0KIGRyaXZlcnMvcGNpL2J1cy5jIHwgICAxNiArKysrKysrKysrKysrLS0tCiAxIGZp
-bGUgY2hhbmdlZCwgMTMgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51
-eC0yLjYvZHJpdmVycy9wY2kvYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJp
-dmVycy9wY2kvYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwpAQCAtMTI0LDEz
-ICsxMjQsMTcgQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1cyAqYgogCWlu
-dCBpLCByZXQgPSAtRU5PTUVNOwogCXN0cnVjdCByZXNvdXJjZSAqcjsKIAlyZXNvdXJjZV9zaXpl
-X3QgbWF4ID0gLTE7CisJcmVzb3VyY2Vfc2l6ZV90IGJvdHRvbSA9IFBDSUJJT1NfTUFYX01FTV8z
-MiArIDFVTEw7CiAKIAl0eXBlX21hc2sgfD0gSU9SRVNPVVJDRV9JTyB8IElPUkVTT1VSQ0VfTUVN
-OwogCiAJLyogZG9uJ3QgYWxsb2NhdGUgdG9vIGhpZ2ggaWYgdGhlIHByZWYgbWVtIGRvZXNuJ3Qg
-c3VwcG9ydCA2NGJpdCovCi0JaWYgKCEocmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfTUVNXzY0KSkK
-KwlpZiAoIShyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU1fNjQpKSB7CiAJCW1heCA9IFBDSUJJ
-T1NfTUFYX01FTV8zMjsKKwkJYm90dG9tID0gMDsKKwl9CiAKK2FnYWluOgogCXBjaV9idXNfZm9y
-X2VhY2hfcmVzb3VyY2UoYnVzLCByLCBpKSB7CiAJCWlmICghcikKIAkJCWNvbnRpbnVlOwpAQCAt
-MTQ3LDEyICsxNTEsMTggQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1cyAq
-YgogCiAJCS8qIE9rLCB0cnkgaXQgb3V0Li4gKi8KIAkJcmV0ID0gYWxsb2NhdGVfcmVzb3VyY2Uo
-ciwgcmVzLCBzaXplLAotCQkJCQlyLT5zdGFydCA/IDogbWluLAorCQkJCQltYXgoYm90dG9tLCBy
-LT5zdGFydCA/IDogbWluKSwKIAkJCQkJbWF4LCBhbGlnbiwKIAkJCQkJYWxpZ25mLCBhbGlnbmZf
-ZGF0YSk7CiAJCWlmIChyZXQgPT0gMCkKLQkJCWJyZWFrOworCQkJcmV0dXJuIDA7CisJfQorCisJ
-aWYgKGJvdHRvbSAhPSAwKSB7CisJCWJvdHRvbSA9IDA7CisJCWdvdG8gYWdhaW47CiAJfQorCiAJ
-cmV0dXJuIHJldDsKIH0KIAo=
---e89a8ff1cc4059830304bd549c10--
+Rafael
