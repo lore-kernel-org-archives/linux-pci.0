@@ -1,190 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40501 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932108Ab2DIQ0Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 12:26:16 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH V2 6/6] PCI, ACPI, x86: update MMCFG information when hot-plugging PCI host bridges
-Date: Tue, 10 Apr 2012 00:22:48 +0800
-Message-Id: <1333988568-11282-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
-References: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:51564 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751751Ab2DPUxi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 16:53:38 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F8C6E4E.1000205@fold.natur.cuni.cz>
+References: <4F6A483D.50702@fold.natur.cuni.cz>
+	<CAE9FiQVnErU-cska4gpinyj-LOup-U+3vsEG2z_-7h6kyREYtw@mail.gmail.com>
+	<4F6A5A53.305@fold.natur.cuni.cz>
+	<CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
+	<4F8BEB1D.9080903@fold.natur.cuni.cz>
+	<CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
+	<4F8C6E4E.1000205@fold.natur.cuni.cz>
+Date: Mon, 16 Apr 2012 13:53:37 -0700
+Message-ID: <CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enhances pci_root driver to update MMCFG information when
-hot-plugging PCI root bridges on x86 platforms.
+On Mon, Apr 16, 2012 at 12:09 PM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+> Yinghai Lu wrote:
+>> On Mon, Apr 16, 2012 at 2:49 AM, Martin Mokrejs
+>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>> Hi Yinghai,
+>>>
+>>> Yinghai Lu wrote:
+>>>> On Wed, Mar 21, 2012 at 3:46 PM, Martin Mokrejs
+>>>   I had some Ooopses with 3.4-rc2 but now I have tested 3.4-rc3. Still, linux
+>>> does NOT realize that I have removed an ExpressCard from the slot. It realizes
+>>> that only when I pluging the card back again. Actually, this is a case of a
+>>> NEC chipset base USB3.0 card.
+>>>
+>>>  In contrast, kernel DOES recognize that I unplugged a FireWire card from the
+>>> same slot.
+>>>
+>>>  This is a Dell Vostro 3550 laptop. Below is what syslog logged with my comment.
+>>> Empty lines between the log entries are inserted whe I either inserted or removed
+>>> a card. Probably a bit more will be in the attached dmesg file.
+>>>
+>
+> [cut]
+>
+>>
+>> please check boot with pciehp.pciehp_debug=1
+>>
+>> also you could use tail -f /var/log/messages to get more timely outputs.
+>
+>
+> I do not see anything extra logged during those INSERT/REMOVE attempts. Yes, there is somethiung
+> in dmesg logged in addition when the machine booted up.
+>
+>
+> INSERTING THE USB3.0 CARD FOR THE FIRST TIME AFTER BOOTUP
+>
+> Apr 16 20:40:32 vostro kernel: [  419.776551] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+> Apr 16 20:40:33 vostro kernel: [  420.798623] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+> Apr 16 20:40:33 vostro kernel: [  420.798657] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+> Apr 16 20:40:33 vostro kernel: [  420.798666] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+> Apr 16 20:40:33 vostro kernel: [  420.798678] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+> Apr 16 20:40:33 vostro kernel: [  420.798689] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+> Apr 16 20:40:33 vostro kernel: [  420.798827] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+> Apr 16 20:40:33 vostro kernel: [  420.798882] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> Apr 16 20:40:33 vostro kernel: [  420.798930] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+> Apr 16 20:40:33 vostro kernel: [  420.799256] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+> Apr 16 20:40:33 vostro kernel: [  420.799547] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+> Apr 16 20:40:33 vostro kernel: [  420.799548] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> Apr 16 20:40:33 vostro kernel: [  420.799549] usb usb5: Product: xHCI Host Controller
+> Apr 16 20:40:33 vostro kernel: [  420.799551] usb usb5: Manufacturer: Linux 3.3.2-default xhci_hcd
+> Apr 16 20:40:33 vostro kernel: [  420.799552] usb usb5: SerialNumber: 0000:11:00.0
+> Apr 16 20:40:33 vostro kernel: [  420.799654] hub 5-0:1.0: USB hub found
+> Apr 16 20:40:33 vostro kernel: [  420.799666] hub 5-0:1.0: 2 ports detected
+> Apr 16 20:40:33 vostro kernel: [  420.799726] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> Apr 16 20:40:33 vostro kernel: [  420.799757] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+> Apr 16 20:40:33 vostro kernel: [  420.802464] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+> Apr 16 20:40:33 vostro kernel: [  420.802466] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> Apr 16 20:40:33 vostro kernel: [  420.802468] usb usb6: Product: xHCI Host Controller
+> Apr 16 20:40:33 vostro kernel: [  420.802470] usb usb6: Manufacturer: Linux 3.3.2-default xhci_hcd
+> Apr 16 20:40:33 vostro kernel: [  420.802471] usb usb6: SerialNumber: 0000:11:00.0
+> Apr 16 20:40:33 vostro kernel: [  420.802632] hub 6-0:1.0: USB hub found
+> Apr 16 20:40:33 vostro kernel: [  420.802651] hub 6-0:1.0: 2 ports detected
+>
+> REMOVED THE USB3.0 CARD
+>
+> RE-INSERTING THE USB3.0 CARD
+>
+> Apr 16 20:40:44 vostro kernel: [  431.946895] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+> Apr 16 20:40:44 vostro kernel: [  431.947148] xhci_hcd 0000:11:00.0: remove, state 4
+> Apr 16 20:40:44 vostro kernel: [  431.947152] usb usb6: USB disconnect, device number 1
+> Apr 16 20:40:44 vostro kernel: [  431.947331] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+> Apr 16 20:40:44 vostro kernel: [  431.947398] xhci_hcd 0000:11:00.0: remove, state 4
+> Apr 16 20:40:44 vostro kernel: [  431.947402] usb usb5: USB disconnect, device number 1
+> Apr 16 20:40:44 vostro kernel: [  431.947642] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+> Apr 16 20:40:44 vostro kernel: [  431.968146] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+> Apr 16 20:40:45 vostro kernel: [  432.990453] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+> Apr 16 20:40:45 vostro kernel: [  432.990487] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+> Apr 16 20:40:45 vostro kernel: [  432.990496] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+> Apr 16 20:40:45 vostro kernel: [  432.990509] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+> Apr 16 20:40:45 vostro kernel: [  432.990520] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+> Apr 16 20:40:45 vostro kernel: [  432.990649] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+> Apr 16 20:40:45 vostro kernel: [  432.990685] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> Apr 16 20:40:45 vostro kernel: [  432.990723] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+> Apr 16 20:40:45 vostro kernel: [  432.991014] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+> Apr 16 20:40:45 vostro kernel: [  432.991354] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+> Apr 16 20:40:45 vostro kernel: [  432.991357] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> Apr 16 20:40:45 vostro kernel: [  432.991359] usb usb5: Product: xHCI Host Controller
+> Apr 16 20:40:45 vostro kernel: [  432.991360] usb usb5: Manufacturer: Linux 3.3.2-default xhci_hcd
+> Apr 16 20:40:45 vostro kernel: [  432.991362] usb usb5: SerialNumber: 0000:11:00.0
+> Apr 16 20:40:45 vostro kernel: [  432.991511] hub 5-0:1.0: USB hub found
+> Apr 16 20:40:45 vostro kernel: [  432.991523] hub 5-0:1.0: 2 ports detected
+> Apr 16 20:40:45 vostro kernel: [  432.991604] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> Apr 16 20:40:45 vostro kernel: [  432.991678] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+> Apr 16 20:40:45 vostro kernel: [  432.994264] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+> Apr 16 20:40:45 vostro kernel: [  432.994266] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> Apr 16 20:40:45 vostro kernel: [  432.994268] usb usb6: Product: xHCI Host Controller
+> Apr 16 20:40:45 vostro kernel: [  432.994269] usb usb6: Manufacturer: Linux 3.3.2-default xhci_hcd
+> Apr 16 20:40:45 vostro kernel: [  432.994270] usb usb6: SerialNumber: 0000:11:00.0
+> Apr 16 20:40:45 vostro kernel: [  432.994431] hub 6-0:1.0: USB hub found
+> Apr 16 20:40:45 vostro kernel: [  432.994449] hub 6-0:1.0: 2 ports detected
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- arch/x86/pci/acpi.c      |   66 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_root.c  |   20 ++++++++++++++
- include/acpi/acnames.h   |    1 +
- include/linux/pci-acpi.h |    2 +
- 4 files changed, 89 insertions(+), 0 deletions(-)
+so the interrupt for removal get generated, but pcie_isr() is delayed
+when another surprise is generated...
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index da0149d..e38d9b7 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -488,6 +488,72 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	return bus;
- }
- 
-+int arch_acpi_pci_root_add(struct acpi_pci_root *root)
-+{
-+	int result = 0;
-+	acpi_status status;
-+	unsigned long long base_addr;
-+	struct pci_mmcfg_region *cfg;
-+
-+	/* MMCONFIG disabled */
-+	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-+		return 0;
-+
-+	/*
-+	 * Try to insert MMCFG information for host bridges with _CBA method
-+	 */
-+	status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
-+				       NULL, &base_addr);
-+	if (ACPI_SUCCESS(status)) {
-+		result = pci_mmconfig_insert(root->segment,
-+					     root->secondary.start,
-+					     root->secondary.end,
-+					     base_addr);
-+		/*
-+		 * MMCFG information for hot-pluggable host bridges may have
-+		 * already been added by __pci_mmcfg_init();
-+		 */
-+		if (result == -EEXIST)
-+			result = 0;
-+	} else if (status == AE_NOT_FOUND) {
-+		/*
-+		 * Check whether MMCFG information has been added for
-+		 * host bridges without _CBA method.
-+		 */
-+		rcu_read_lock();
-+		cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+		if (!cfg || cfg->end_bus < root->secondary.end)
-+			result = -ENODEV;
-+		rcu_read_unlock();
-+	} else
-+		result = -ENODEV;
-+
-+	return result;
-+}
-+
-+int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
-+{
-+	acpi_status status;
-+	unsigned long long base_addr;
-+
-+	/* MMCONFIG disabled */
-+	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-+		return 0;
-+
-+	/* Remove MMCFG information for host bridges with _CBA method */
-+	status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
-+				       NULL, &base_addr);
-+	if (ACPI_SUCCESS(status))
-+		return pci_mmconfig_delete(root->segment,
-+					   root->secondary.start,
-+					   root->secondary.end,
-+					   base_addr);
-+	else if (status != AE_NOT_FOUND)
-+		return -ENODEV;
-+
-+	return 0;
-+}
-+
- int __init pci_acpi_init(void)
- {
- 	struct pci_dev *dev = NULL;
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 4a7d575..a62bfa8 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -448,6 +448,16 @@ out:
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
- 
-+int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root)
-+{
-+	return 0;
-+}
-+
-+int __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
-+{
-+	return 0;
-+}
-+
- static int __devinit acpi_pci_root_add(struct acpi_device *device)
- {
- 	unsigned long long segment, bus;
-@@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
- 	device->driver_data = root;
- 
-+	if (arch_acpi_pci_root_add(root)) {
-+		printk(KERN_ERR PREFIX
-+			"can't add MMCFG information for Bus %04x:%02x\n",
-+			root->segment, (unsigned int)root->secondary.start);
-+		result = -ENODEV;
-+		goto out_free;
-+	}
-+
- 	/*
- 	 * All supported architectures that use ACPI have support for
- 	 * PCI domains, so we indicate this in _OSC support capabilities.
-@@ -629,6 +647,7 @@ out_del_root:
- 	list_del_rcu(&root->node);
- 	mutex_unlock(&acpi_pci_root_lock);
- 	synchronize_rcu();
-+	arch_acpi_pci_root_remove(root);
- out_free:
- 	kfree(root);
- 	return result;
-@@ -679,6 +698,7 @@ out:
- 	list_del_rcu(&root->node);
- 	mutex_unlock(&acpi_pci_root_lock);
- 	synchronize_rcu();
-+	arch_acpi_pci_root_remove(root);
- 	kfree(root);
- 
- 	return 0;
-diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
-index 38f5088..99bda75 100644
---- a/include/acpi/acnames.h
-+++ b/include/acpi/acnames.h
-@@ -62,6 +62,7 @@
- #define METHOD_NAME__AEI        "_AEI"
- #define METHOD_NAME__PRW        "_PRW"
- #define METHOD_NAME__SRS        "_SRS"
-+#define METHOD_NAME__CBA	"_CBA"
- 
- /* Method names - these methods must appear at the namespace root */
- 
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index ac93634..6e8dd10 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -37,6 +37,8 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
- }
- 
- void acpi_pci_root_rescan(void);
-+int arch_acpi_pci_root_add(struct acpi_pci_root *root);
-+int arch_acpi_pci_root_remove(struct acpi_pci_root *root);
- 
- #else
- 
--- 
-1.7.5.4
+could be threaded_irq changes related.  Thomas ?
 
+>
+> INSERTING THE FireWire CARD
+>
+> Apr 16 20:41:27 vostro kernel: [  474.869403] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+> Apr 16 20:41:27 vostro kernel: [  474.869657] xhci_hcd 0000:11:00.0: remove, state 4
+> Apr 16 20:41:27 vostro kernel: [  474.869661] usb usb6: USB disconnect, device number 1
+> Apr 16 20:41:27 vostro kernel: [  474.869809] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+> Apr 16 20:41:27 vostro kernel: [  474.869852] xhci_hcd 0000:11:00.0: remove, state 4
+> Apr 16 20:41:27 vostro kernel: [  474.869857] usb usb5: USB disconnect, device number 1
+> Apr 16 20:41:27 vostro kernel: [  474.870049] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+> Apr 16 20:41:27 vostro kernel: [  474.878567] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+> Apr 16 20:41:28 vostro kernel: [  475.906546] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c007ff 64bit]
+> Apr 16 20:41:28 vostro kernel: [  475.906570] pci 0000:11:00.0: BAR 2: assigned [io  0xc000-0xc0ff]
+> Apr 16 20:41:28 vostro kernel: [  475.906584] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+> Apr 16 20:41:28 vostro kernel: [  475.906592] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+> Apr 16 20:41:28 vostro kernel: [  475.906605] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+> Apr 16 20:41:28 vostro kernel: [  475.906627] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+> Apr 16 20:41:28 vostro kernel: [  475.986838] firewire_ohci 0000:11:00.0: enabling device (0100 -> 0103)
+> Apr 16 20:41:29 vostro kernel: [  476.066286] firewire_ohci: Added fw-ohci device 0000:11:00.0, OHCI v1.10, 4 IR + 8 IT contexts, quirks 0x11
+> Apr 16 20:41:29 vostro kernel: [  476.565663] firewire_core: created device fw0: GUID 0011066600000003, S400
+>
+>
+> REMOVING FireWire CARD
+>
+>
+> Apr 16 20:41:39 vostro kernel: [  486.621576] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+> Apr 16 20:41:39 vostro kernel: [  486.621984] firewire_ohci: Removed fw-ohci device.
+>
+
+this card is not delayed.
+
+Yinghai
