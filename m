@@ -1,257 +1,178 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Yan, Zheng" <zheng.z.yan@intel.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-Date: Tue, 17 Apr 2012 22:35:17 +0200
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-References: <4F8790F6.5080408@intel.com> <201204161907.13806.rjw@sisk.pl> <4F8CD18A.5080903@intel.com>
-In-Reply-To: <4F8CD18A.5080903@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:35809 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052Ab2DPGaU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 02:30:20 -0400
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 207D33EE0B5
+	for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 15:30:04 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id E3DD445DE4D
+	for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 15:30:03 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id C9C8445DD74
+	for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 15:30:03 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id B6383E08003
+	for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 15:30:03 +0900 (JST)
+Received: from m002.s.css.fujitsu.com (m002.s.css.fujitsu.com [10.23.4.32])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 69D841DB8038
+	for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 15:30:03 +0900 (JST)
+Message-ID: <4F8BBCE5.6010108@jp.fujitsu.com>
+Date: Mon, 16 Apr 2012 15:32:05 +0900
+From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="windows-1252"
-Message-Id: <201204172235.17910.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC] pciehp: Add archdata setting
+References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com> <4F7AA3A2.1080900@jp.fujitsu.com> <4F7C003B.4040208@jp.fujitsu.com> <4F866184.4000403@jp.fujitsu.com> <CAErSpo6Xb6rbZ757VHuQnWWsXbnygTM9JQFzvOnOiM895D+R-g@mail.gmail.com> <4F876C54.5040408@jp.fujitsu.com>
+In-Reply-To: <4F876C54.5040408@jp.fujitsu.com>
+Content-Type: multipart/mixed;
+ boundary="------------010803060205090600020606"
+To: unlisted-recipients:; (no To-header on input)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 17, 2012, Yan, Zheng wrote:
-> On 04/17/2012 01:07 AM, Rafael J. Wysocki wrote:
-> > Hi,
-> > 
-> > On Monday, April 16, 2012, Yan, Zheng wrote:
-> >> On 04/14/2012 03:41 AM, Rafael J. Wysocki wrote:
-> >>> Hi,
-> >>>
-> >>> On Friday, April 13, 2012, Yan, Zheng wrote:
-> >>>> Hi all,
-> >>>>
-> >>>> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
-> >>>> beneath a PCIe port when they all have entered D3. A device in D3cold can only
-> >>>> generate wake event through the WAKE# pin. Because we can not access to a device's
-> >>>> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
-> >>>>
-> >>>> Any comment will be appreciated.
-> >>>>
-> >>>> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
-> >>>> ---
-> >>>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> >>>> index 0f150f2..e210e8cb 100644
-> >>>> --- a/drivers/pci/pci-acpi.c
-> >>>> +++ b/drivers/pci/pci-acpi.c
-> >>>> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >>>>  		[PCI_D1] = ACPI_STATE_D1,
-> >>>>  		[PCI_D2] = ACPI_STATE_D2,
-> >>>>  		[PCI_D3hot] = ACPI_STATE_D3,
-> >>>> -		[PCI_D3cold] = ACPI_STATE_D3
-> >>>> +		[PCI_D3cold] = ACPI_STATE_D3_COLD
-> >>>>  	};
-> >>>>  	int error = -EINVAL;
-> >>>>  
-> >>>
-> >>> Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
-> >>>
-> >>> We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
-> >>> instead.  I'll prepare a patch for that over the weekend if no one has done
-> >>> that already.
-> >>>
-> >>>> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
-> >>>>  
-> >>>>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
-> >>>>  {
-> >>>> -	if (dev->pme_interrupt)
-> >>>> +	/* PME interrupt isn't available in the D3cold case */
-> >>>> +	if (dev->pme_interrupt && !dev->runtime_d3cold)
-> >>>
-> >>> This whole thing is wrong.  First off, I don't think that the runtime_d3cold
-> >>> flag makes any sense.  We already cover that in dev->pme_support.
-> >>>
-> >>> Second, pme_interrupt means that the _root_ _port_, not the device itself will
-> >>> trigger an interrupt whenever the device sends the PME message to it (which
-> >>> very well may happen for a device in D3_cold woken up by an external signal).
-> >>>
-> >> The reason I introduced the runtime_d3cold flag is I can't make the PME interrupt
-> >> work in the D3cold case in our test platform. Document for our test platform says
-> >> A device in D3cold can only generate wake event through the WAKE# pin.
-> > 
-> > OK, so that clearly is not a standard PCI device, so please don't try to
-> > make our PCI bus type handle non-standard devices.
-> > 
-> >>>>  		return 0;
-> >>>>  
-> >>>>  	if (!acpi_pm_device_run_wake(&dev->dev, enable))
-> >>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >>>> index 8156744..bc16869 100644
-> >>>> --- a/drivers/pci/pci.c
-> >>>> +++ b/drivers/pci/pci.c
-> >>>> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >>>>  	int error;
-> >>>>  
-> >>>
-> >>> Guys, please.  Never, _ever_, touch pci_set_power_state() without discussing
-> >>> your ideas with someone who knows how it works and _why_ it works this way.
-> >>>
-> >>> The problem here is that you can't program a PCI device into D3_cold, so it
-> >>> doesn't even make sense to have a helper for that.
-> >>>
-> >>>>  	/* bound the state we're entering */
-> >>>> -	if (state > PCI_D3hot)
-> >>>> -		state = PCI_D3hot;
-> >>>> +	if (state > PCI_D3cold)
-> >>>> +		state = PCI_D3cold;
-> >>>>  	else if (state < PCI_D0)
-> >>>>  		state = PCI_D0;
-> >>>>  	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
-> >>>> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >>>>  	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
-> >>>>  		return 0;
-> >>>>  
-> >>>> -	error = pci_raw_set_power_state(dev, state);
-> >>>> +	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
-> >>>> +					PCI_D3hot : state);
-> >>>>  
-> >>>>  	if (!__pci_complete_power_transition(dev, state))
-> >>>>  		error = 0;
-> >>>> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
-> >>>>  	return !!(dev->pme_support & (1 << state));
-> >>>>  }
-> >>>>  
-> >>>> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
-> >>>> +{
-> >>>> +	struct pci_dev *bridge = dev->bus->self;
-> >>>> +
-> >>>> +	/* don't poll the pme bit if parent is in low power state */
-> >>>> +	if (bridge && bridge->current_state != PCI_D0)
-> >>>> +		return;
-> >>>> +
-> >>>> +	pci_pme_wakeup(dev, NULL);
-> >>>> +}
-> >>>
-> >>> This one actually makes some sense, although it might be better to put the
-> >>> test into pci_pme_wakeup() itself.
-> >>
-> >> put it into pci_pme_wakeup will break ACPI wakeup, because ACPI wakeup also
-> >> uses pci_pme_wakeup. When a device exits from D3cold by asserting the WAKE#
-> >> signal, device power is restored automatically by ACPI, then pci_pme_wakeup
-> >> is called to check device's PME bit. pci_dev->current_state is PCI_D3hot
-> >> during the checking. 
-> > 
-> > You seem to be talking about two different device here.  One device is
-> > dev, which is the one being checked for the PME bit and the second one
-> > is the bridge that should be in D0 so that dev is accessible, right?
+This is a multi-part message in MIME format.
+--------------010803060205090600020606
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Hi, Bjorn
+
+
+I wrote a code with bus_register_notifier().
+A function that calls bus_register_notifer() is called from 
+rootfs_initcall as well as amd_iommu is.
+
+Please review this.
+
+
+Regards.
+
+Hiroo MATSUMOTO
+
+> Hi, Bjorn
 > 
-> Yes
-> > 
-> > So if you put this code into pci_pme_wakeup():
-> > 
-> > 	struct pci_dev *bridge = pci_dev->bus->self;
-> > 
-> > 	...
-> > 
-> > 	if (bridge && bridge->current_state != PCI_D0)
-> > 		return 0;
-> > 
-> > then it should work just like your code above.
-> No. In the wakeup case, bridge's power is restored automatically by ACPI,
-> but bridge->current_state does not reflect the power state, it's still PCI_D3hot.
-
-So there's a bug somewhere, because the port (bridge) is the parent of the
-device being resumed, so it should be resumed automatically by runtime PM
-before that device.  Do you have any idea why that doesn't happen?
-
-> > BTW, can you please explain to me what the #WAKE signal is and how it is
-> > different from PME#?
 > 
-> #WAKE signal is triggered by a pin connected to the root complex or other
-> motherboard logic. PME# is triggered by PME message sent to the port.
-
-And #WAKE triggers a GPE in turn?
-
-> >>>> +
-> >>>>  static void pci_pme_list_scan(struct work_struct *work)
-> >>>>  {
-> >>>>  	struct pci_pme_device *pme_dev, *n;
-> >>>> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
-> >>>>  	if (!list_empty(&pci_pme_list)) {
-> >>>>  		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
-> >>>>  			if (pme_dev->dev->pme_poll) {
-> >>>> -				pci_pme_wakeup(pme_dev->dev, NULL);
-> >>>> +				pci_pme_poll_wakeup(pme_dev->dev);
-> >>>>  			} else {
-> >>>>  				list_del(&pme_dev->list);
-> >>>>  				kfree(pme_dev);
-> >>>> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
-> >>>>  	if (enable) {
-> >>>>  		int error;
-> >>>>  
-> >>>> +		if (runtime && state >= PCI_D3cold)
-> >>>> +			dev->runtime_d3cold = true;
-> >>>> +		else
-> >>>> +			dev->runtime_d3cold = false;
-> >>>>  		if (pci_pme_capable(dev, state))
-> >>>>  			pci_pme_active(dev, true);
-> >>>>  		else
-> >>>> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> >>>> index e0610bd..d66b7e9 100644
-> >>>> --- a/drivers/pci/pcie/portdrv_pci.c
-> >>>> +++ b/drivers/pci/pcie/portdrv_pci.c
-> >>>> @@ -11,11 +11,13 @@
-> >>>>  #include <linux/kernel.h>
-> >>>>  #include <linux/errno.h>
-> >>>>  #include <linux/pm.h>
-> >>>> +#include <linux/pm_runtime.h>
-> >>>>  #include <linux/init.h>
-> >>>>  #include <linux/pcieport_if.h>
-> >>>>  #include <linux/aer.h>
-> >>>>  #include <linux/dmi.h>
-> >>>>  #include <linux/pci-aspm.h>
-> >>>> +#include <linux/delay.h>
-> >>>>  
-> >>>>  #include "portdrv.h"
-> >>>>  #include "aer/aerdrv.h"
-> >>>> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
-> >>>>  	return 0;
-> >>>>  }
-> >>>>  
-> >>>> +static int pcie_port_runtime_suspend(struct device *dev)
-> >>>> +{
-> >>>> +	struct pci_dev *pdev = to_pci_dev(dev);
-> >>>> +
-> >>>> +	pci_save_state(pdev);
-> >>>
-> >>> Are you sure this is sufficient?
-> >>
-> >> What else should I do?
-> > 
-> > First off, you need not do pci_save_state() here, most likely, because
-> > pci_pm_runtime_suspend() will do it for you later.
+> Thanks for your research and comment.
 > 
-> Our test platform behaves strangely if this pci_save_state is removed.
-> I guess it's because pci_fixup_device is called before pci_save_state
-> in pci_pm_runtime_suspend
+> As you said, a way of registering code with bus_register_notifier(), 
+> which will be called in device_add(), is better one than 
+> pcibios_enable_device().
+> I will try to write code with bus_register_notifier().
+> 
+> 
+> Regards.
+> 
+> Hiroo MATSUMOTO
+> 
+>> On Wed, Apr 11, 2012 at 11:00 PM, Hiroo Matsumoto
+>> <matsumoto.hiroo@jp.fujitsu.com> wrote:
+>>> Hi, Kaneshige
+>>>
+>>>
+>>> You are right!
+>>> Setting dma_ops in pcibios_enable_device is a nice way.
+>>> In PCI driver, pci_enable_device_xxx that calls pcibios_enable_device is
+>>> called before checking archdata.dma_ops.
+>>>
+>>> I added code of checking and setting dma_ops to pcibios_enable_device in
+>>> arch/powerpc/kernel/pci-common.c.
+>>> It works good.
+>>
+>> When I researched this, I thought the best route was to use the
+>> bus_register_notifier() path, as amd_iommu_init_notifier() does.
+>>
+>> We're filling in a struct device field, not a PCI field, and
+>> bus_register_notifier() seems like a more generic path than relying on
+>> pcibios_enable_device().
+>>
+>> Bjorn
+>>
+>>
+> 
 
-It would be good to verify that theory, so that we have a clear picture.
+--------------010803060205090600020606
+Content-Type: text/plain;
+ name="ppc-pcibios-bus_notifier-for-hp.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ppc-pcibios-bus_notifier-for-hp.patch"
 
-> > Second, you're suspending a device that has children here.  Namely,
-> > the PCIe service devices are children of the port they are associated with.
-> > I wonder if they are suspended and how exactly, if so?
-> > 
-> Only the PME service has the PM callbacks.
+Signed-off-by: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 32656f1..1fe1e25 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1083,6 +1083,17 @@ void __devinit pcibios_setup_bus_self(struct pci_bus *bus)
+ 		ppc_md.pci_dma_bus_setup(bus);
+ }
+ 
++static inline void pcibios_set_dma_ops(struct pci_dev *dev)
++{
++	/* Hook up default DMA ops */
++	set_dma_ops(&dev->dev, pci_dma_ops);
++	set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
++
++	/* Additional platform DMA/iommu setup */
++	if (ppc_md.pci_dma_dev_setup)
++		ppc_md.pci_dma_dev_setup(dev);
++}
++
+ void __devinit pcibios_setup_bus_devices(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+@@ -1102,13 +1113,7 @@ void __devinit pcibios_setup_bus_devices(struct pci_bus *bus)
+ 		 */
+ 		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+ 
+-		/* Hook up default DMA ops */
+-		set_dma_ops(&dev->dev, pci_dma_ops);
+-		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
+-
+-		/* Additional platform DMA/iommu setup */
+-		if (ppc_md.pci_dma_dev_setup)
+-			ppc_md.pci_dma_dev_setup(dev);
++		pcibios_set_dma_ops(dev);
+ 
+ 		/* Read default IRQs and fixup if necessary */
+ 		pci_read_irq_line(dev);
+@@ -1749,3 +1754,33 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
++
++static int pcibios_device_change_notifier(struct notifier_block *nb,
++					  unsigned long action, void *data)
++{
++	struct pci_dev *dev = to_pci_dev(data);
++
++	if (!dev)
++		return 0;
++
++	switch (action) {
++	case BUS_NOTIFY_ADD_DEVICE:
++		if (!get_dma_ops(&dev->dev))
++			pcibios_set_dma_ops(dev);
++		break;
++	default:
++		break;
++	}
++
++	return 0;
++}
++
++static struct notifier_block device_nb = {
++	.notifier_call = pcibios_device_change_notifier,
++};
++
++static int pcibios_bus_notifier_init(void)
++{
++	return bus_register_notifier(&pci_bus_type, &device_nb);
++}
++rootfs_initcall(pcibios_bus_notifier_init);
 
-For now.  That may change in the future, though.
+--------------010803060205090600020606--
 
-> I don't think we should stop the PME service in the runtime suspend case.
-
-You're right.
-
-> For example, when both device and port are
-> in D3hot, No PME interrupt can be received if we stop the PME service.
-
-Well, I don't think that PME interrupts are necessary at all on this platform,
-because it uses ACPI for wakeup signaling anyway.
-
-Thanks,
-Rafael
