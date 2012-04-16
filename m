@@ -1,213 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from db3ehsobe006.messaging.microsoft.com ([213.199.154.144]:35526
-	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752355Ab2DMGB6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 02:01:58 -0400
-Date: Fri, 13 Apr 2012 14:06:26 +0800
-From: Alex He <alex.he@amd.com>
-To: "Yan, Zheng" <zheng.z.yan@intel.com>
-CC: <bhelgaas@google.com>, <rjw@sisk.pl>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-pm@vger.kernel.org>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-Message-ID: <20120413060626.GA7856@alex-p.amd.com>
-References: <4F8790F6.5080408@intel.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43206 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734Ab2DPQJe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:09:34 -0400
+Received: by pbcun15 with SMTP id un15so6516194pbc.19
+        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:09:33 -0700 (PDT)
+Message-ID: <4F8C4430.90501@gmail.com>
+Date: Tue, 17 Apr 2012 00:09:20 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F8790F6.5080408@intel.com>
+To: Don Dutile <ddutile@redhat.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V4 0/6] PCI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7zWEXBhC7+gaq+BCussyKOYORaBG-PBe4ERruCAA-cfQ@mail.gmail.com> <4F8573A4.8070307@jp.fujitsu.com> <4F85A481.1020807@gmail.com> <CAErSpo4gqLBQjYf-pKsHWgZOTUTJEi0uqKxSJ5pB_F0uu+CKMA@mail.gmail.com> <4F880482.1090903@jp.fujitsu.com> <4F883956.2040200@gmail.com> <4F8C3B0C.4080606@redhat.com>
+In-Reply-To: <4F8C3B0C.4080606@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 13, 2012 at 10:35:34AM +0800, Yan, Zheng wrote:
-> Hi all,
-> 
-> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
-> beneath a PCIe port when they all have entered D3. A device in D3cold can only
-> generate wake event through the WAKE# pin. Because we can not access to a device's
-> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
-> 
-> Any comment will be appreciated.
-> 
-> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
-> ---
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 0f150f2..e210e8cb 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->  		[PCI_D1] = ACPI_STATE_D1,
->  		[PCI_D2] = ACPI_STATE_D2,
->  		[PCI_D3hot] = ACPI_STATE_D3,
-> -		[PCI_D3cold] = ACPI_STATE_D3
-> +		[PCI_D3cold] = ACPI_STATE_D3_COLD
->  	};
->  	int error = -EINVAL;
->  
-> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
->  
->  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
->  {
-> -	if (dev->pme_interrupt)
-> +	/* PME interrupt isn't available in the D3cold case */
-> +	if (dev->pme_interrupt && !dev->runtime_d3cold)
->  		return 0;
-PCI BUS PM Interface spec says that PMEs can be support for D3COLD.
-Please check section 3.2.4 , 5.4.2 and 5.4.3.
+Hi Don,
+	Thanks for your comments and please refer to inline comments below.
+On 04/16/2012 11:30 PM, Don Dutile wrote:
+> On 04/13/2012 10:33 AM, Jiang Liu wrote:
+>> On 04/13/2012 06:48 PM, Kenji Kaneshige wrote:
+>>> (2012/04/12 9:06), Bjorn Helgaas wrote:
+>>>> On Wed, Apr 11, 2012 at 9:34 AM, Jiang Liu<liuj97@gmail.com>   wrote:
+>>>>> On 04/11/2012 08:05 PM, Kenji Kaneshige wrote:
+>>>>>> (2012/04/11 13:02), Bjorn Helgaas wrote:
+>>>>>>> On Tue, Apr 10, 2012 at 6:10 PM, Jiang Liu<liuj97@gmail.com>     wrote:
+>>>>>>>> This patchset enhance pci_root driver to update MMCFG information when
+>>>>>>>> hot-plugging PCI root bridges. It applies to Yinghai's tree at
+>>>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+>>>>>>>>
+>>>>>>>> The second patch is based on Taku Izumi work with some enhancements to
+>>>>>>>> correctly handle PCI host bridges without _CBA method.
+>>>>>>>
+>>>>>>> I'm sorry I won't have time to really review these for a couple weeks.
+>>>>>>>
+>>>>>>> It always seemed wrong to me that we parse MCFG and set things up
+>>>>>>> before we even look at PNP0A03/PNP0A08 devices.  It would make more
+>>>>>>> sense to me to have something in acpi_pci_root_add() to set up
+>>>>>>> MMCONFIG using _CBA if available, and falling back to parsing MCFG if
+>>>>>>> it's not.
+>>>>>>
+>>>>>> I think your idea could make the code (design) much cleaner.
+>>>>>> Do you have any other reason why you think "It always seemed
+>>>>>> wrong..."?
+>>>>
+>>>> The current scheme is just an ugly design.  Does I need more reasons?  :)
+>>>
+>>> Ok, I just wanted to know if I'm missing anything we need to
+>>> take into account when re-factoring the code.
+>>>
+>>> By the way, the following code makes me think there could be
+>>> some hardwares that need a fixup using mmconfig access before
+>>> scanning the PCI tree. If this is the case, we would need
+>>> something to enable early mmconfig initialization for those
+>>> hardwares.
+>>>
+>>> static __init int pci_arch_init(void)
+>>> {
+>>>      ...
+>>>          if (!(pci_probe&  PCI_PROBE_NOEARLY))
+>>>                  pci_mmcfg_early_init();
+>>>
+>>>
+>>> Regards,
+>>> Kenji Kaneshige
+>>
+>> If MMCFG could be treated as an optional configuration space access method,
+>> we can refine the MMCFG code according to Bjorn's suggestion. And as Kenji
+>> has mentioned, there may be some risks ahead. So need more confirmation
+>> from other PCI experts here.
+>>
+> I looked at the thread, but didn't know which suggestion of Bjorn's you were referring to.
+> But, mmcfg access to PCI config space is need for any cap structure
+> greater than 256 byte offset.  A number of devices have cap structures
+> in this upper PCI config space, esp. SRIOV devices.
+> So, if 'optional MMCFG' only means at the beginning of kernel scanning of
+> PCI (pass-0 scanning), that should be ok, but in-depth, pass-1 scanning
+> of PCIe devices may require MMCFG for full functional support.
+For mainstream systems with support of ACPI and MMCFG, the booting sequences are about:
+1) Probe for legacy PCI configuration access mechanism, such as CONF1, CONF2, BIOS
+2) Start ACPICA/ACPI subsystem with the legacy PCI configuration access mechanism
+3) Enumerate PCI root bridges (PNP0A03/PNP0A08) in ACPI namespace and bind pci_root
+   driver to them
+4) pci_root driver calls into arch code to add MMCFG information for the host bridge
+5) pci_root driver calls PCI core to enumerate all PCI devices under the host bridge
+
+The above flow should work for SRIOV case. But still need to check following cases:
+1) ACPICA/ACPI subsystem has no dependency on MMCFG
+2) Systems implementing SFI instead of ACPI work as expected
+3) ACPI has been disabled by user (Bjorn points out we could ignore this case)
+4) Some host bridges are not reported by ACPI (Bjorn points out we should eventually
+   get rid of the blind probing logic)
+
+So we may have a try according to Bjorn's suggestions.
+Thanks!
 
 
->  
->  	if (!acpi_pm_device_run_wake(&dev->dev, enable))
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8156744..bc16869 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->  	int error;
->  
->  	/* bound the state we're entering */
-> -	if (state > PCI_D3hot)
-> -		state = PCI_D3hot;
-> +	if (state > PCI_D3cold)
-> +		state = PCI_D3cold;
->  	else if (state < PCI_D0)
->  		state = PCI_D0;
->  	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
-> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->  	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
->  		return 0;
->  
-> -	error = pci_raw_set_power_state(dev, state);
-> +	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
-> +					PCI_D3hot : state);
-Do you want to set the pci device to D3hot if the state = D3Code through
-PMCSR register? I am agree if you realy want that but what is the meaninig
-to distingulish D3cold with D3hot in this patch. We can't put the PCI device
-through PMCSR register.
-
->  
->  	if (!__pci_complete_power_transition(dev, state))
->  		error = 0;
-> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
->  	return !!(dev->pme_support & (1 << state));
->  }
->  
-> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
-> +{
-> +	struct pci_dev *bridge = dev->bus->self;
-> +
-> +	/* don't poll the pme bit if parent is in low power state */
-> +	if (bridge && bridge->current_state != PCI_D0)
-> +		return;
-> +
-> +	pci_pme_wakeup(dev, NULL);
-> +}
-> +
->  static void pci_pme_list_scan(struct work_struct *work)
->  {
->  	struct pci_pme_device *pme_dev, *n;
-> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
->  	if (!list_empty(&pci_pme_list)) {
->  		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
->  			if (pme_dev->dev->pme_poll) {
-> -				pci_pme_wakeup(pme_dev->dev, NULL);
-> +				pci_pme_poll_wakeup(pme_dev->dev);
->  			} else {
->  				list_del(&pme_dev->list);
->  				kfree(pme_dev);
-> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->  	if (enable) {
->  		int error;
->  
-> +		if (runtime && state >= PCI_D3cold)
-> +			dev->runtime_d3cold = true;
-> +		else
-> +			dev->runtime_d3cold = false;
->  		if (pci_pme_capable(dev, state))
->  			pci_pme_active(dev, true);
->  		else
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index e0610bd..d66b7e9 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -11,11 +11,13 @@
->  #include <linux/kernel.h>
->  #include <linux/errno.h>
->  #include <linux/pm.h>
-> +#include <linux/pm_runtime.h>
->  #include <linux/init.h>
->  #include <linux/pcieport_if.h>
->  #include <linux/aer.h>
->  #include <linux/dmi.h>
->  #include <linux/pci-aspm.h>
-> +#include <linux/delay.h>
->  
->  #include "portdrv.h"
->  #include "aer/aerdrv.h"
-> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
->  	return 0;
->  }
->  
-> +static int pcie_port_runtime_suspend(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	pci_save_state(pdev);
-> +	return 0;
-> +}
-> +
-> +static int pcie_port_runtime_resume(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	pci_restore_state(pdev);
-> +	if (pdev->runtime_d3cold)
-> +		msleep(100);
-> +
-> +	return 0;
-> +}
-> +
->  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->  	.suspend	= pcie_port_device_suspend,
->  	.resume		= pcie_port_device_resume,
-> @@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->  	.poweroff	= pcie_port_device_suspend,
->  	.restore	= pcie_port_device_resume,
->  	.resume_noirq	= pcie_port_resume_noirq,
-> +	.runtime_suspend = pcie_port_runtime_suspend,
-> +	.runtime_resume = pcie_port_runtime_resume,
->  };
->  
->  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
-> @@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
->  		return status;
->  
->  	pci_save_state(dev);
-> +	pm_runtime_put_noidle(&dev->dev);
->  
->  	return 0;
->  }
->  
->  static void pcie_portdrv_remove(struct pci_dev *dev)
->  {
-> +	pm_runtime_get_noresume(&dev->dev);
->  	pcie_port_device_remove(dev);
->  	pci_disable_device(dev);
->  }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e444f5b..b41d9a1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -281,6 +281,7 @@ struct pci_dev {
->  	unsigned int	no_d1d2:1;	/* Only allow D0 and D3 */
->  	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
->  						   decoding during bar sizing */
-> +	unsigned int	runtime_d3cold:1;
->  	unsigned int	wakeup_prepared:1;
->  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+>> It may be a good idea to ping the ACPI community to check whether ACPICA
+>> has any dependency on the MMCFG mechanism too.
+>>
+>> Thanks
+>> Gerry
+>>
+>>>
+>>>
+>>>
+>>>>
+>>>>> Yeah, that may lead to a cleaner design.
+>>>>> But there are still some special cases, such as:
+>>>>> 1) ACPI subsystem is disabled by kernel boot options, so we can't rely
+>>>>> on the ACPI pci_root driver to initialize the MMCFG.
+>>>>
+>>>> I don't think it's a requirement to make everything work with
+>>>> "acpi=off".  On a system with ACPI, running with "acpi=off" is just a
+>>>> kludge and if things work at all, it's only because we're very lucky.
+>>>>
+>>>>> 2) Some PCI host bridges are not reported by the ACPI namespace. My partner
+>>>>> has observed a system which doesn't report the host bridges embedded in the
+>>>>> NHM-EX processors.
+>>>>
+>>>> I don't think it's a requirement for Linux to use PCI devices behind
+>>>> unreported host bridges.  I'd like to pick a date and say "after BIOS
+>>>> date X, we will no longer blindly probe for these unreported host
+>>>> bridges."
+>>>>
+>>>> Bjorn
+>>>>
+>>>
+>>
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
