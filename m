@@ -1,61 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7420 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754202Ab2DFVUc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Apr 2012 17:20:32 -0400
-Message-ID: <4F7F5E15.3040808@redhat.com>
-Date: Fri, 06 Apr 2012 17:20:21 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:37869 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811Ab2DPJ0R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 05:26:17 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 16 Apr 2012 14:56:11 +0530
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q3G9QCtk2314242
+	for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 14:56:12 +0530
+Received: from d28av01.in.ibm.com (loopback [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q3GEtsoC020408
+	for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 20:25:54 +0530
+Date: Mon, 16 Apr 2012 17:26:10 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH] Optimize the resource overlap check
+Message-ID: <20120416092610.GA28908@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <1334223550-9514-1-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: "Hao, Xudong" <xudong.hao@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>
-Subject: Re: Expose ltr/obff interface by sysfs
-References: <403610A45A2B5242BD291EDAE8B37D300FD0A434@SHSMSX102.ccr.corp.intel.com> <20120406082649.68fe5842@jbarnes-desktop>
-In-Reply-To: <20120406082649.68fe5842@jbarnes-desktop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1334223550-9514-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/06/2012 11:26 AM, Jesse Barnes wrote:
-> On Fri, 6 Apr 2012 02:43:59 +0000
-> "Hao, Xudong"<xudong.hao@intel.com>  wrote:
->
->> Hi,
->>
->> I'm working on virtualization Xen/KVM. I saw there are ltr/obff enabling/disabling function in pci.c, but no called till now. I want to know if anybody(driver developer) are working for using it? Can driver change the LTR latency value dynamically?
->
-> I believe the value is writable, but I'd expect some devices to
-> misbehave if the value were programmed too high.  Performance would
-> also suffer if the value were set too high, at least for IOPS sensitive
-> devices.
->
->> /*
->> LTR(Latency tolerance reporting) allows devices to send messages to the root complex indicating their latency tolerance for snooped&  unsnooped memory transactions.
->> OBFF (optimized buffer flush/fill), where supported, can help improve energy efficiency by giving devices information about when interrupts and other activity will have a reduced power impact.
->> */
->>
->> One way to control ltr/obff is used by driver, however, I'm considering that in virtualization, how guest OS driver control them. I have an idea that expose an inode interface by sysfs, like "reset" inode implemented in pci-sysfs.c, so that system user/administrator can enable/disable ltr/obff or set latency value on userspace, but not limited on driver. Comments?
->
-> Given how device specific these extensions are, I'd expect you'd need
-> to know about each specific device anyway, which is why I think the
-> control belongs in the driver.  I don't see why you'd need to
-> enable/disable/change these functions when assigning a device from one
-> guest to another...
->
 
-and looking at this code last week, I noticed the ltr, obff & ido
-functions should be doing pcie_cap_has_*() checks before
-accessing registers that may not exist, as is done in
-pci_[save,restore]_pcie_state() ...
+In coalesce_windows() it tries to check whether the res1 and res2 overlap.
+This function do four comparisons, which could be done with one
+comparisons.
 
-in drivers/pci/pci.c:
-#define pcie_cap_has_devctl2(type, flags)               \
-                 ((flags & PCI_EXP_FLAGS_VERS) > 1)
-#define pcie_cap_has_lnkctl2(type, flags)               \
-                 ((flags & PCI_EXP_FLAGS_VERS) > 1)
-#define pcie_cap_has_sltctl2(type, flags)               \
-                 ((flags & PCI_EXP_FLAGS_VERS) > 1)
+Also make the resource_check_overlap() a common function for others.
+
+Signed-Off-By: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/x86/pci/acpi.c    |   12 +-----------
+ include/linux/ioport.h |    7 +++++++
+ 2 files changed, 8 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 68c3c13..f2bb99e 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -181,13 +181,6 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	return AE_OK;
+ }
+
+-static bool resource_contains(struct resource *res, resource_size_t point)
+-{
+-	if (res->start <= point && point <= res->end)
+-		return true;
+-	return false;
+-}
+-
+ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+ {
+ 	int i, j;
+@@ -208,10 +201,7 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+ 			 * our resources no longer match the ACPI _CRS, but
+ 			 * the kernel resource tree doesn't allow overlaps.
+ 			 */
+-			if (resource_contains(res1, res2->start) ||
+-			    resource_contains(res1, res2->end) ||
+-			    resource_contains(res2, res1->start) ||
+-			    resource_contains(res2, res1->end)) {
++			if (resource_check_overlap(res1, res2)) {
+ 				res1->start = min(res1->start, res2->start);
+ 				res1->end = max(res1->end, res2->end);
+ 				dev_info(&info->bridge->dev,
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index e9bb22c..374259b 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -198,5 +198,12 @@ extern int
+ walk_system_ram_range(unsigned long start_pfn, unsigned long nr_pages,
+ 		void *arg, int (*func)(unsigned long, unsigned long, void *));
+
++static inline int resource_check_overlap(struct resource *r1,
++                                         struct resource *r2)
++{
++       return (r1->start <= r2->end && r1->end >= r2->start);
++}
++
++
+ #endif /* __ASSEMBLY__ */
+ #endif	/* _LINUX_IOPORT_H */
+-- 
+1.7.4.1
+
+-- 
+Richard Yang
+Help you, Help me
+
