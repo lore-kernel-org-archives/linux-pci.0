@@ -1,142 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61293 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760189Ab2D0PT4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 11:19:56 -0400
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:35016 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474Ab2DPQdr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:33:47 -0400
+Received: by mail-pz0-f52.google.com with SMTP id e40so7133149dak.11
+        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:33:47 -0700 (PDT)
 From: Jiang Liu <liuj97@gmail.com>
 To: Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 00/19] Introduce a global lock to serialize all PCI hotplug
-Date: Fri, 27 Apr 2012 23:16:41 +0800
-Message-Id: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+	Scott Murray <scott@spiteful.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: [PATCH RFC 14/17] PCI: fix race windows when shutting down cpcihp controller
+Date: Tue, 17 Apr 2012 00:29:08 +0800
+Message-Id: <1334593751-5916-15-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
+References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+When cpci_hp_stop() is called to disabled cpcihp controller, it will disable
+interrupt for that controller. But there's small window for event_thread()
+to reenable the interrupt again. So stop the worker thread before disabling
+the interrupt.
 
-There are multiple methods to trigger PCI hotplug requests/operations
-concurrently, such as:
-1. Sysfs interfaces exported by the PCI core subsystem
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../remove
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../rescan
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../pci_bus/ssss:bb/rescan
-	/sys/bus/pci/rescan
-2. Sysfs interfaces exported by the PCI hotplug subsystem
-	/sys/bus/pci/slots/xx/power
-3. PCI hotplug events triggered by PCI Hotplug Controllers
-4. ACPI hotplug events for PCI host bridges
-5. Driver binding/unbinding events
-	binding/unbinding pci drivers with SR-IOV support
+If check_slots() returns error, ther working thread (cpci_thread) will exit.
+Later when cpci_stop_thread() or cpci_hp_intr() tries to access cpci_thread,
+it may have already been destroyed. So hold a reference count to cpci_thread
+to avoid invalid memory access.
 
-With current implementation, the PCI core subsystem doesn't support
-concurrent hotplug operations yet. The existing pci_bus_sem lock only
-protects several lists in struct pci_bus, such as children list,
-devices list, but it doesn't protect the pci_bus or pci_dev structure
-themselves.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/pci/hotplug/cpci_hotplug_core.c |   27 +++++++++++++++++----------
+ 1 files changed, 17 insertions(+), 10 deletions(-)
 
-Let's take pci_remove_bus_device() as an example, which are used by
-PCI hotplug drivers to hot-remove PCI devices.  Currently all these
-are free running without any protection, so it can't support reentrance.
-pci_remove_bus_device()
-    ->pci_stop_bus_device()
-        ->pci_stop_bus_device()
-            ->pci_stop_bus_devices()
-        ->pci_stop_dev()
-                ->pci_proc_detach_device()
-                ->pci_remove_sysfs_dev_files()
-            ->device_unregister()
-                ->pcie_aspm_exit_link_state()
-    ->__pci_remove_bus_device()
-        ->__pci_remove_behind_bridge()
-        ->pci_remove_bus()
-            ->device_unregister()
-        ->pci_destroy_dev()
-            ->pci_free_resources()
-            ->pci_dev_put()
-
-There are similar issues on hot-adding side.  It may also cause trouble
-if pci_remove_bus_device() and pci_rescan_bus() are called concurrently.
-
-So this patchset introduces a recursive rwsem to globally serialize all
-PCI hotplug operations. It also fixes some minor bugs in current code.
-Following PCI hotplug drivers/interfaces have been enhanced with this
-new lock.
-1. Sysfs interfaces exported by the PCI core subsystem
-2. Sysfs interfaces exported by the PCI hotplug subsystem
-3. pciehp
-4. shpchp
-5. cpcihp_generic and cpcihp_zt5550
-6. fakephp
-
-We have tested pciehp and fakephp, but lack of hardware platforms to test
-other affected hotplug drivers.
-
-There are still several tasks on the TODO list:
-1) all other PCI hotplug driver in drivers/pci/hotplug directory
-2) SR-IOV
-3) acpiphp (plan to do this based on Yinghai's PCI root bus hotplug gate)
-4) pci_root (plan to do this based on Yinghai's PCI root bus hotplug gate)
-
-V2: refine commit messages and hide sys interface 'remove' and 'rescan' of
-    SR-IOV virtural devices
-
-Jiang Liu (18):
-  PCI: introduce pci_bus_get()/pci_bus_put() to hide PCI implementation
-    details
-  PCI: introduce recursive rwsem to serialize PCI hotplug operations
-  PCI: replace pci_remove_rescan_mutex with the PCI hotplug lock
-  PCI: serialize hotplug operations triggered by PCI hotplug sysfs
-    interfaces
-  PCI: correctly flush workqueue when destroy pcie hotplug controller
-  PCI: prepare for serializing hotplug operations triggered by pciehp
-    driver
-  PCI: serialize hotplug operaitons triggered by the pciehp driver
-  PCI: fix two race windows when probing/removing SHPC controller
-  PCI: correctly flush workqueues and timer when destroy SHPC
-    controller
-  PCI: serialize hotplug operaitons triggered by the shpchp driver
-  PCI: release IO resource in error handling path in
-    cpcihp_generic_init()
-  PCI: clean up all resources in error handling path in
-    zt5550_hc_init_one()
-  PCI: trivial code clean up in cpci_hotplug_core.c
-  PCI: fix race windows when shutting down cpcihp controller
-  PCI: hold a reference count to the PCI bus used by cpcihp drivers
-  PCI: serialize PCI hotplug operations triggered by cpcihp drivers
-  PCI: serialize PCI hotplug operations triggered by fakephp drivers
-  PCI: hide sys interface 'remove' and 'rescan' for SR-IOV virtual
-    devices
-
-Yinghai Lu (1):
-  PCI, sysfs: Use device_type and attr_groups with pci dev
-
- drivers/pci/bus.c                       |   15 +++
- drivers/pci/hotplug.c                   |   55 ++++++++++
- drivers/pci/hotplug/cpci_hotplug_core.c |   53 ++++++-----
- drivers/pci/hotplug/cpcihp_generic.c    |   30 ++++--
- drivers/pci/hotplug/cpcihp_zt5550.c     |   21 +++-
- drivers/pci/hotplug/fakephp.c           |   38 ++++++-
- drivers/pci/hotplug/pci_hotplug_core.c  |   26 ++++-
- drivers/pci/hotplug/pciehp.h            |    5 +-
- drivers/pci/hotplug/pciehp_core.c       |   25 ++++-
- drivers/pci/hotplug/pciehp_ctrl.c       |   56 ++++++++++-
- drivers/pci/hotplug/pciehp_hpc.c        |   18 +++-
- drivers/pci/hotplug/shpchp.h            |    3 +
- drivers/pci/hotplug/shpchp_core.c       |   11 +-
- drivers/pci/hotplug/shpchp_ctrl.c       |   32 ++++++
- drivers/pci/hotplug/shpchp_hpc.c        |   36 ++++---
- drivers/pci/pci-sysfs.c                 |  164 ++++++++++++++++++++++---------
- drivers/pci/pci.h                       |    1 +
- drivers/pci/probe.c                     |    1 +
- drivers/pci/remove.c                    |    1 +
- include/linux/pci.h                     |   20 ++++-
- 20 files changed, 480 insertions(+), 131 deletions(-)
-
+diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
+index 7898023..68e43c7 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_core.c
++++ b/drivers/pci/hotplug/cpci_hotplug_core.c
+@@ -60,7 +60,6 @@ static atomic_t extracting;
+ int cpci_debug;
+ static struct cpci_hp_controller *controller;
+ static struct task_struct *cpci_thread;
+-static int thread_finished;
+ 
+ static int enable_slot(struct hotplug_slot *slot);
+ static int disable_slot(struct hotplug_slot *slot);
+@@ -341,7 +340,8 @@ cpci_hp_intr(int irq, void *data)
+ 	controller->ops->disable_irq();
+ 
+ 	/* Trigger processing by the event thread */
+-	wake_up_process(cpci_thread);
++	if (cpci_thread)
++		wake_up_process(cpci_thread);
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -508,7 +508,6 @@ event_thread(void *data)
+ 				msleep(500);
+ 			} else if (rc < 0) {
+ 				dbg("%s - error checking slots", __func__);
+-				thread_finished = 1;
+ 				goto out;
+ 			}
+ 		} while (atomic_read(&extracting) && !kthread_should_stop());
+@@ -540,7 +539,6 @@ poll_thread(void *data)
+ 					msleep(500);
+ 				} else if (rc < 0) {
+ 					dbg("%s - error checking slots", __func__);
+-					thread_finished = 1;
+ 					goto out;
+ 				}
+ 			} while (atomic_read(&extracting) && !kthread_should_stop());
+@@ -562,15 +560,24 @@ cpci_start_thread(void)
+ 		err("Can't start up our thread");
+ 		return PTR_ERR(cpci_thread);
+ 	}
+-	thread_finished = 0;
++	get_task_struct(cpci_thread);
++
+ 	return 0;
+ }
+ 
+ static void
+ cpci_stop_thread(void)
+ {
+-	kthread_stop(cpci_thread);
+-	thread_finished = 1;
++	struct task_struct *tp;
++
++	if (cpci_thread) {
++		local_irq_disable();
++		tp = cpci_thread;
++		cpci_thread = NULL;
++		local_irq_enable();
++		kthread_stop(tp);
++		put_task_struct(tp);
++	}
+ }
+ 
+ int
+@@ -627,8 +634,7 @@ cpci_hp_unregister_controller(struct cpci_hp_controller *old_controller)
+ 	int status = 0;
+ 
+ 	if (controller) {
+-		if (!thread_finished)
+-			cpci_stop_thread();
++		cpci_stop_thread();
+ 		if (controller->irq)
+ 			free_irq(controller->irq, controller->dev_id);
+ 		controller = NULL;
+@@ -680,12 +686,13 @@ cpci_hp_stop(void)
+ {
+ 	if (!controller)
+ 		return -ENODEV;
++	cpci_stop_thread();
+ 	if (controller->irq) {
+ 		/* Stop enum interrupt processing */
+ 		dbg("%s - disabling irq", __func__);
+ 		controller->ops->disable_irq();
++		synchronize_irq(controller->irq);
+ 	}
+-	cpci_stop_thread();
+ 	return 0;
+ }
+ 
 -- 
 1.7.5.4
 
