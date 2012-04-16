@@ -1,85 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:52165 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265Ab2DPQcg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:32:36 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so6539626pbc.19
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:32:36 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <greg@kroah.com>,
-	Scott Murray <scottm@somanetworks.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH RFC 04/17] PCI: serialize hotplug operations triggered by PCI hotplug sysfs interfaces
-Date: Tue, 17 Apr 2012 00:28:58 +0800
-Message-Id: <1334593751-5916-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
-References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58617 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755748Ab2DPUfm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 16:35:42 -0400
+MIME-Version: 1.0
+In-Reply-To: <201204162235.49901.rjw@sisk.pl>
+References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com>
+ <201204161817.21800.rjw@sisk.pl> <1334602665.33371.YahooMailNeo@web161806.mail.bf1.yahoo.com>
+ <201204162235.49901.rjw@sisk.pl>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 16 Apr 2012 13:35:13 -0700
+Message-ID: <CA+55aFyccAfEpECmD5yKYE4AquV1ZsfjRAL4coP39LmkAqrO=w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Retry BARs restoration for Type 0 headers only
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Mikko Vinni <mmvinni@yahoo.com>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Allen Kay <allen.m.kay@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use PCI hotplug lock to globally serialize hotplug operations triggered by
-PCI hotplug sysfs interfaces.
+On Mon, Apr 16, 2012 at 1:35 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rjw@sisk.pl>
+>
+> Some shortcomings introduced into pci_restore_state() by commit
+> 26f41062f28d ("PCI: check for pci bar restore completion and
+> retry") have been fixed by recent commit ebfc5b802fa76 ("PCI: Fix
+> regression in pci_restore_state(), v3"), but that commit treats
+> all PCI devices as those with Type 0 configuration headers.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/hotplug/pci_hotplug_core.c |   18 ++++++++++++++++--
- 1 files changed, 16 insertions(+), 2 deletions(-)
+Make me happier and just make all of this a helper function again.
+Call that helper function pci_restore_config_space(), and make the
+existing "pci_restore_config_space()" be called
+"pci_restore_config_space_range()" or something. Ok?
 
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index 1572665..9bbbe3e 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -39,6 +39,7 @@
- #include <linux/mutex.h>
- #include <linux/pci.h>
- #include <linux/pci_hotplug.h>
-+#include <linux/delay.h>
- #include <asm/uaccess.h>
- #include "../pci.h"
- 
-@@ -121,6 +122,17 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
- 		retval = -ENODEV;
- 		goto exit;
- 	}
-+
-+	/* Avoid deadlock with pci_hp_deregister() */
-+	while (!pci_hotplug_try_enter()) {
-+		/* Check whether the slot has been deregistered. */
-+		if (list_empty(&slot->slot_list)) {
-+			retval = -ENODEV;
-+			goto exit_put;
-+		}
-+		msleep(1);
-+	}
-+
- 	switch (power) {
- 		case 0:
- 			if (slot->ops->disable_slot)
-@@ -136,8 +148,10 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
- 			err ("Illegal value specified for power\n");
- 			retval = -EINVAL;
- 	}
--	module_put(slot->ops->owner);
- 
-+	pci_hotplug_exit();
-+exit_put:
-+	module_put(slot->ops->owner);
- exit:	
- 	if (retval)
- 		return retval;
-@@ -500,7 +514,7 @@ int pci_hp_deregister(struct hotplug_slot *hotplug)
- 		return -ENODEV;
- 	}
- 
--	list_del(&hotplug->slot_list);
-+	list_del_init(&hotplug->slot_list);
- 
- 	slot = hotplug->pci_slot;
- 	fs_remove_slot(slot);
--- 
-1.7.5.4
-
+                   Linus
