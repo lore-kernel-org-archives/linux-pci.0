@@ -1,89 +1,260 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:37435 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752220Ab2DOKUZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 06:20:25 -0400
-Message-ID: <4F8AA0DC.6010902@snewbury.org.uk>
-Date: Sun, 15 Apr 2012 11:20:12 +0100
-From: Steven Newbury <steve@snewbury.org.uk>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <4F8B828E.9060606@intel.com>
+Date: Mon, 16 Apr 2012 10:23:10 +0800
+From: "Yan, Zheng" <zheng.z.yan@intel.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "Barnes, Jesse" <jesse.barnes@intel.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Subject: Re: PCI resources above 4GB
-References: <1333968563.5678.19.camel@infinity> <4F8467AA.90305@snewbury.org.uk> <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com> <4F848357.3060007@snewbury.org.uk> <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com> <4F848E10.1090703@snewbury.org.uk> <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com> <1334089568.4083.2.camel@Nokia-N900> <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com> <4F84A3EC.6030903@snewbury.org.uk> <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com> <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <4F89B5E8.3040906@snewbury.org.uk> <4F89BC84.50308@snewbury.org.uk> <4F89C513.3000006@snewbury.org.uk> <4F89CB16.2000908@snewbury.org.uk> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
-In-Reply-To: <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+References: <4F8790F6.5080408@intel.com> <201204132141.58063.rjw@sisk.pl>
+In-Reply-To: <201204132141.58063.rjw@sisk.pl>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 14/04/12 21:48, Yinghai Lu wrote:
-> On Sat, Apr 14, 2012 at 12:21 PM, Steven Newbury 
-> <steve@snewbury.org.uk> wrote:
->> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
->> 
->> On 14/04/12 20:08, Steven Newbury wrote:
->>> On 14/04/12 19:42, Steven Newbury wrote:
->>>> On 14/04/12 19:05, Steven Newbury wrote:
->>>>> On 14/04/12 18:37, Steven Newbury wrote:
->>>>>> On 12/04/12 17:40, Steven Newbury wrote:
->>>>>>> On Thu, 12 Apr 2012, 17:07:33 BST, Yinghai Lu 
->>>>>>> <yinghai@kernel.org> wrote:
->>> 
->>>>>>>> On Thu, Apr 12, 2012 at 4:22 AM, Steven Newbury 
->>>>>>>> <steve@snewbury.org.uk> wrote:
->>>>>>>>> Thanks, that fixed it! :) I had a similar patch 
->>>>>>>>> I've been working on but I had my fix in the wrong 
->>>>>>>>> place!
->>>>>>>>> 
->>>>>>>>> In the working case, initially the BIOS has set
->>>>>>>>> GMA to within the low system DRAM 0xC0000000
->>>>>>>>> obviously invalid. This conflict is detected and
->>>>>>>>> it's relallocated to 0x12000000.
->>>>>>>>> 
->>>>>>>>> I've attempted to modify probe.c to disable 64-bit
->>>>>>>>>  BARs not allocated above 4G so they get 
->>>>>>>>> reallocated above when possible later.  It seemed 
->>>>>>>>> to work, but again broke GMA despite the BAR 
->>>>>>>>> originally containing an invalid address as 
->>>>>>>>> mentioned above, it seems for some reason
->>>>>>>>> something is different when the conflict is
->>>>>>>>> detected and rellocated, compared to disabling it
->>>>>>>>> early then allocating a valid value..?
->>>>>>>>> 
->>>>>> I've created a new quirk utilising an extra PCI resource
->>>>>>  flag to force reallocation of the resource.  It's the 
->>>>>> first approach I've had any success at.  It does work. 
->>>>>> Only "Intel Page Flush" now gets allocated @0xe0000000!
->>> 
->>> 
->>>>> Hopefully this should fix "Intel Flush Page"
->>>> Need to export pci_bus_alloc_resource_fit for intel-gtt.
->>> Nearly worked... Or at least it should have worked, but for 
->>> some reason the allocator failed to utilise 
->>> 0xe0000000-0xefffffff for 04:00.0 BAR0..?
->>> 
->>> 
->>> pci 0000:03:08.0: BAR 15: can't assign mem pref (size 
->>> 0x18000000)
->> Ah! Not enough space for the bridge window!:(
->> 
+On 04/14/2012 03:41 AM, Rafael J. Wysocki wrote:
+> Hi,
 > 
-> please append pci=norom ...
+> On Friday, April 13, 2012, Yan, Zheng wrote:
+>> Hi all,
+>>
+>> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+>> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+>> generate wake event through the WAKE# pin. Because we can not access to a device's
+>> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
+>>
+>> Any comment will be appreciated.
+>>
+>> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+>> ---
+>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>> index 0f150f2..e210e8cb 100644
+>> --- a/drivers/pci/pci-acpi.c
+>> +++ b/drivers/pci/pci-acpi.c
+>> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>>  		[PCI_D1] = ACPI_STATE_D1,
+>>  		[PCI_D2] = ACPI_STATE_D2,
+>>  		[PCI_D3hot] = ACPI_STATE_D3,
+>> -		[PCI_D3cold] = ACPI_STATE_D3
+>> +		[PCI_D3cold] = ACPI_STATE_D3_COLD
+>>  	};
+>>  	int error = -EINVAL;
+>>  
 > 
-That worked.  Except of course the radeon driver can't POST the card
-without the ROM! :-P
+> Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
+> 
+> We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
+> instead.  I'll prepare a patch for that over the weekend if no one has done
+> that already.
+> 
+>> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+>>  
+>>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+>>  {
+>> -	if (dev->pme_interrupt)
+>> +	/* PME interrupt isn't available in the D3cold case */
+>> +	if (dev->pme_interrupt && !dev->runtime_d3cold)
+> 
+> This whole thing is wrong.  First off, I don't think that the runtime_d3cold
+> flag makes any sense.  We already cover that in dev->pme_support.
+> 
+> Second, pme_interrupt means that the _root_ _port_, not the device itself will
+> trigger an interrupt whenever the device sends the PME message to it (which
+> very well may happen for a device in D3_cold woken up by an external signal).
+> 
+The reason I introduced the runtime_d3cold flag is I can't make the PME interrupt
+work in the D3cold case in our test platform. Document for our test platform says
+A device in D3cold can only generate wake event through the WAKE# pin.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+>>  		return 0;
+>>  
+>>  	if (!acpi_pm_device_run_wake(&dev->dev, enable))
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 8156744..bc16869 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>>  	int error;
+>>  
+> 
+> Guys, please.  Never, _ever_, touch pci_set_power_state() without discussing
+> your ideas with someone who knows how it works and _why_ it works this way.
+> 
+> The problem here is that you can't program a PCI device into D3_cold, so it
+> doesn't even make sense to have a helper for that.
+> 
+>>  	/* bound the state we're entering */
+>> -	if (state > PCI_D3hot)
+>> -		state = PCI_D3hot;
+>> +	if (state > PCI_D3cold)
+>> +		state = PCI_D3cold;
+>>  	else if (state < PCI_D0)
+>>  		state = PCI_D0;
+>>  	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
+>> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>>  	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+>>  		return 0;
+>>  
+>> -	error = pci_raw_set_power_state(dev, state);
+>> +	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
+>> +					PCI_D3hot : state);
+>>  
+>>  	if (!__pci_complete_power_transition(dev, state))
+>>  		error = 0;
+>> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
+>>  	return !!(dev->pme_support & (1 << state));
+>>  }
+>>  
+>> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
+>> +{
+>> +	struct pci_dev *bridge = dev->bus->self;
+>> +
+>> +	/* don't poll the pme bit if parent is in low power state */
+>> +	if (bridge && bridge->current_state != PCI_D0)
+>> +		return;
+>> +
+>> +	pci_pme_wakeup(dev, NULL);
+>> +}
+> 
+> This one actually makes some sense, although it might be better to put the
+> test into pci_pme_wakeup() itself.
 
-iEYEARECAAYFAk+KoNwACgkQGcb56gMuC62uAACfdaoIb/NT7+7xGIa4G+Wtw0K0
-/IsAoL8NIg6g4q3qoTJuQpp6WyqDYUfu
-=OzC5
------END PGP SIGNATURE-----
+put it into pci_pme_wakeup will break ACPI wakeup, because ACPI wakeup also
+uses pci_pme_wakeup. When a device exits from D3cold by asserting the WAKE#
+signal, device power is restored automatically by ACPI, then pci_pme_wakeup
+is called to check device's PME bit. pci_dev->current_state is PCI_D3hot
+during the checking. 
+
+> 
+>> +
+>>  static void pci_pme_list_scan(struct work_struct *work)
+>>  {
+>>  	struct pci_pme_device *pme_dev, *n;
+>> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+>>  	if (!list_empty(&pci_pme_list)) {
+>>  		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+>>  			if (pme_dev->dev->pme_poll) {
+>> -				pci_pme_wakeup(pme_dev->dev, NULL);
+>> +				pci_pme_poll_wakeup(pme_dev->dev);
+>>  			} else {
+>>  				list_del(&pme_dev->list);
+>>  				kfree(pme_dev);
+>> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>>  	if (enable) {
+>>  		int error;
+>>  
+>> +		if (runtime && state >= PCI_D3cold)
+>> +			dev->runtime_d3cold = true;
+>> +		else
+>> +			dev->runtime_d3cold = false;
+>>  		if (pci_pme_capable(dev, state))
+>>  			pci_pme_active(dev, true);
+>>  		else
+>> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+>> index e0610bd..d66b7e9 100644
+>> --- a/drivers/pci/pcie/portdrv_pci.c
+>> +++ b/drivers/pci/pcie/portdrv_pci.c
+>> @@ -11,11 +11,13 @@
+>>  #include <linux/kernel.h>
+>>  #include <linux/errno.h>
+>>  #include <linux/pm.h>
+>> +#include <linux/pm_runtime.h>
+>>  #include <linux/init.h>
+>>  #include <linux/pcieport_if.h>
+>>  #include <linux/aer.h>
+>>  #include <linux/dmi.h>
+>>  #include <linux/pci-aspm.h>
+>> +#include <linux/delay.h>
+>>  
+>>  #include "portdrv.h"
+>>  #include "aer/aerdrv.h"
+>> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
+>>  	return 0;
+>>  }
+>>  
+>> +static int pcie_port_runtime_suspend(struct device *dev)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(dev);
+>> +
+>> +	pci_save_state(pdev);
+> 
+> Are you sure this is sufficient?
+
+What else should I do?
+
+> 
+>> +	return 0;
+>> +}
+>> +
+>> +static int pcie_port_runtime_resume(struct device *dev)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(dev);
+>> +
+>> +	pci_restore_state(pdev);
+>> +	if (pdev->runtime_d3cold)
+>> +		msleep(100);
+> 
+> What's _that_ supposed to do?
+
+Bad thing happens if device is accessed immediately after restoring power.
+Document for our test platform states 100ms PERST delay is required.
+
+> 
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>>  	.suspend	= pcie_port_device_suspend,
+>>  	.resume		= pcie_port_device_resume,
+>> @@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>>  	.poweroff	= pcie_port_device_suspend,
+>>  	.restore	= pcie_port_device_resume,
+>>  	.resume_noirq	= pcie_port_resume_noirq,
+>> +	.runtime_suspend = pcie_port_runtime_suspend,
+>> +	.runtime_resume = pcie_port_runtime_resume,
+>>  };
+>>  
+>>  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+>> @@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
+>>  		return status;
+>>  
+>>  	pci_save_state(dev);
+>> +	pm_runtime_put_noidle(&dev->dev);
+> 
+> What's the purpose of this?
+> 
+>>  	return 0;
+>>  }
+>>  
+>>  static void pcie_portdrv_remove(struct pci_dev *dev)
+>>  {
+>> +	pm_runtime_get_noresume(&dev->dev);
+>>  	pcie_port_device_remove(dev);
+>>  	pci_disable_device(dev);
+>>  }
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index e444f5b..b41d9a1 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -281,6 +281,7 @@ struct pci_dev {
+>>  	unsigned int	no_d1d2:1;	/* Only allow D0 and D3 */
+>>  	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+>>  						   decoding during bar sizing */
+>> +	unsigned int	runtime_d3cold:1;
+>>  	unsigned int	wakeup_prepared:1;
+>>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+> 
+> OK
+> 
+> So now please tell me what exactly you want to achieve and why you want to do
+> that in the first place.
+> 
+> Thanks,
+> Rafael
+
