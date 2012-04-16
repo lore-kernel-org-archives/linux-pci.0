@@ -1,151 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f74.google.com ([209.85.216.74]:43013 "EHLO
-	mail-qa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760425Ab2D0Rlm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 13:41:42 -0400
-Received: by qabg24 with SMTP id g24so83592qab.1
-        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 10:41:41 -0700 (PDT)
-Date: Fri, 27 Apr 2012 11:41:41 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Hao, Xudong" <xudong.hao@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: Re: [PATCH v6] Quirk for IVB graphics FLR errata
-Message-ID: <20120427174141.GA11634@google.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD24698@SHSMSX102.ccr.corp.intel.com>
- <CAErSpo4Dm45uRsvdzSAfrvGNPPA_7QqvC_Se-JxpJErsasoTKw@mail.gmail.com>
- <403610A45A2B5242BD291EDAE8B37D300FD3ABC3@SHSMSX101.ccr.corp.intel.com>
- <CAErSpo4Qm1DP-i2YWc1ZibiUAnPC-tLG9X0xceAvGFxs8e+mPQ@mail.gmail.com>
- <403610A45A2B5242BD291EDAE8B37D300FD8BEA9@SHSMSX102.ccr.corp.intel.com>
- <CAErSpo4tUnA6oFr1uXyfVPHQh7F-LMN913pu=MfaEsRi5isLLQ@mail.gmail.com>
- <403610A45A2B5242BD291EDAE8B37D300FD906DD@SHSMSX102.ccr.corp.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34000 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753794Ab2DPPbA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Apr 2012 11:31:00 -0400
+Message-ID: <4F8C3B0C.4080606@redhat.com>
+Date: Mon, 16 Apr 2012 11:30:20 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <403610A45A2B5242BD291EDAE8B37D300FD906DD@SHSMSX102.ccr.corp.intel.com>
+To: Jiang Liu <liuj97@gmail.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V4 0/6] PCI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7zWEXBhC7+gaq+BCussyKOYORaBG-PBe4ERruCAA-cfQ@mail.gmail.com> <4F8573A4.8070307@jp.fujitsu.com> <4F85A481.1020807@gmail.com> <CAErSpo4gqLBQjYf-pKsHWgZOTUTJEi0uqKxSJ5pB_F0uu+CKMA@mail.gmail.com> <4F880482.1090903@jp.fujitsu.com> <4F883956.2040200@gmail.com>
+In-Reply-To: <4F883956.2040200@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 01:26:18AM +0000, Hao, Xudong wrote:
-> Maybe something configuration wrong on my mail client, I attach the patch as an attachment, can you open it in your side?
+On 04/13/2012 10:33 AM, Jiang Liu wrote:
+> On 04/13/2012 06:48 PM, Kenji Kaneshige wrote:
+>> (2012/04/12 9:06), Bjorn Helgaas wrote:
+>>> On Wed, Apr 11, 2012 at 9:34 AM, Jiang Liu<liuj97@gmail.com>   wrote:
+>>>> On 04/11/2012 08:05 PM, Kenji Kaneshige wrote:
+>>>>> (2012/04/11 13:02), Bjorn Helgaas wrote:
+>>>>>> On Tue, Apr 10, 2012 at 6:10 PM, Jiang Liu<liuj97@gmail.com>     wrote:
+>>>>>>> This patchset enhance pci_root driver to update MMCFG information when
+>>>>>>> hot-plugging PCI root bridges. It applies to Yinghai's tree at
+>>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+>>>>>>>
+>>>>>>> The second patch is based on Taku Izumi work with some enhancements to
+>>>>>>> correctly handle PCI host bridges without _CBA method.
+>>>>>>
+>>>>>> I'm sorry I won't have time to really review these for a couple weeks.
+>>>>>>
+>>>>>> It always seemed wrong to me that we parse MCFG and set things up
+>>>>>> before we even look at PNP0A03/PNP0A08 devices.  It would make more
+>>>>>> sense to me to have something in acpi_pci_root_add() to set up
+>>>>>> MMCONFIG using _CBA if available, and falling back to parsing MCFG if
+>>>>>> it's not.
+>>>>>
+>>>>> I think your idea could make the code (design) much cleaner.
+>>>>> Do you have any other reason why you think "It always seemed
+>>>>> wrong..."?
+>>>
+>>> The current scheme is just an ugly design.  Does I need more reasons?  :)
+>>
+>> Ok, I just wanted to know if I'm missing anything we need to
+>> take into account when re-factoring the code.
+>>
+>> By the way, the following code makes me think there could be
+>> some hardwares that need a fixup using mmconfig access before
+>> scanning the PCI tree. If this is the case, we would need
+>> something to enable early mmconfig initialization for those
+>> hardwares.
+>>
+>> static __init int pci_arch_init(void)
+>> {
+>>      ...
+>>          if (!(pci_probe&  PCI_PROBE_NOEARLY))
+>>                  pci_mmcfg_early_init();
+>>
+>>
+>> Regards,
+>> Kenji Kaneshige
+>
+> If MMCFG could be treated as an optional configuration space access method,
+> we can refine the MMCFG code according to Bjorn's suggestion. And as Kenji
+> has mentioned, there may be some risks ahead. So need more confirmation
+> from other PCI experts here.
+>
+I looked at the thread, but didn't know which suggestion of Bjorn's you were referring to.
+But, mmcfg access to PCI config space is need for any cap structure
+greater than 256 byte offset.  A number of devices have cap structures
+in this upper PCI config space, esp. SRIOV devices.
+So, if 'optional MMCFG' only means at the beginning of kernel scanning of
+PCI (pass-0 scanning), that should be ok, but in-depth, pass-1 scanning
+of PCIe devices may require MMCFG for full functional support.
 
-Yes, I could open the attachment.  But it makes it easier for everybody to
-read & review your patches if you can figure out how to post patches
-directly in the message rather than as an attachment.
+> It may be a good idea to ping the ACPI community to check whether ACPICA
+> has any dependency on the MMCFG mechanism too.
+>
+> Thanks
+> Gerry
+>
+>>
+>>
+>>
+>>>
+>>>> Yeah, that may lead to a cleaner design.
+>>>> But there are still some special cases, such as:
+>>>> 1) ACPI subsystem is disabled by kernel boot options, so we can't rely
+>>>> on the ACPI pci_root driver to initialize the MMCFG.
+>>>
+>>> I don't think it's a requirement to make everything work with
+>>> "acpi=off".  On a system with ACPI, running with "acpi=off" is just a
+>>> kludge and if things work at all, it's only because we're very lucky.
+>>>
+>>>> 2) Some PCI host bridges are not reported by the ACPI namespace. My partner
+>>>> has observed a system which doesn't report the host bridges embedded in the
+>>>> NHM-EX processors.
+>>>
+>>> I don't think it's a requirement for Linux to use PCI devices behind
+>>> unreported host bridges.  I'd like to pick a date and say "after BIOS
+>>> date X, we will no longer blindly probe for these unreported host
+>>> bridges."
+>>>
+>>> Bjorn
+>>>
+>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Here's an updated version of your patch.  I changed the following:
-
-    - Wrapped changelog text so it fits nicely for "git log".
-    - Added #define for 0xd0100 offset (please supply a more useful name).
-    - Used pci_iomap() and ioread32()/iowrite32().
-    - Used msleep() rather than spinning (Matthew suggested this earlier,
-      but you apparently missed it).  Note that I went back to your
-      original "do {} while ()" structure to make sure we read PCH_PP_STATUS
-      at least once.
-    - Added message if reset times out.
-
-This is still x86-specific code that clutters all other architectures.  We
-might fix this someday by adding a DECLARE_PCI_FIXUP_RESET(), so the IVB
-code could live in arch/x86, and the linker could still collect all the
-device-specific reset methods.  But I haven't done that yet.
-
-Please test and comment on this (and supply a name for 0xd0100):
-
-commit 8566df6d83bf89c8cad3810d5d333a31a95b133e
-Author: Xudong Hao <xudong.hao@intel.com>
-Date:   Fri Apr 27 09:16:46 2012 -0600
-
-    PCI: work around IvyBridge internal graphics FLR erratum
-    
-    For IvyBridge Mobile platform, a system hang may occur if a FLR (Function
-    Level Reset) is asserted to internal graphics.
-    
-    This quirk is a workaround for the IVB FLR errata issue.  We are
-    disabling the FLR reset handshake between the PCH and CPU display, then
-    manually powering down the panel power sequencing and resetting the PCH
-    display.
-    
-    Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-    Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
-    Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4bf7102..d5646de 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3085,16 +3085,74 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
-+#include "../gpu/drm/i915/i915_reg.h"
-+#define MSG_CTL			0x45010
-+#define XXXX			0xd0100
-+#define IGD_OPERATION_TIMEOUT	10000     /* set timeout 10 seconds */
-+
-+static int reset_ivb_igd(struct pci_dev *dev, int probe)
-+{
-+	void __iomem *mmio_base;
-+	unsigned long timeout;
-+	u32 val;
-+
-+	if (probe)
-+		return 0;
-+
-+	mmio_base = pci_iomap(dev, 0, 0);
-+	if (!mmio_base)
-+		return -ENOMEM;
-+
-+	iowrite32(0x00000002, mmio_base + MSG_CTL);
-+
-+	/*
-+	 * Clobbering SOUTH_CHICKEN2 register is fine only if the next
-+	 * driver loaded sets the right bits. However, this's a reset and
-+	 * the bits have been set by i915 previously, so we clobber
-+	 * SOUTH_CHICKEN2 register directly here.
-+	 */
-+	iowrite32(0x00000005, mmio_base + SOUTH_CHICKEN2);
-+
-+	val = ioread32(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
-+	iowrite32(val, mmio_base + PCH_PP_CONTROL);
-+
-+	timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
-+	do {
-+		val = ioread32(mmio_base + PCH_PP_STATUS);
-+		if ((val & 0xB0000000) == 0)
-+			goto reset_complete;
-+		msleep(10);
-+	} while (time_before(jiffies, timeout));
-+	dev_warn(&dev->dev, "timeout during reset\n");
-+
-+reset_complete:
-+	iowrite32(0x00000002, mmio_base + XXXX);
-+
-+	pci_iounmap(dev, mmio_base);
-+	return 0;
-+}
-+
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-+#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-+#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
- 
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-+		reset_ivb_igd },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-+		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 		reset_intel_generic_dev },
- 	{ 0 }
- };
- 
-+/*
-+ * These device-specific reset methods are here rather than in a driver
-+ * because when a host assigns a device to a guest VM, the host may need
-+ * to reset the device but probably doesn't have a driver for it.
-+ */
- int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- {
- 	const struct pci_dev_reset_methods *i;
