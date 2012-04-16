@@ -1,68 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:56543 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757708Ab2DZPxs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 11:53:48 -0400
+Received: from nm11.bullet.mail.bf1.yahoo.com ([98.139.212.170]:30092 "HELO
+	nm11.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754323Ab2DPS5q convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Apr 2012 14:57:46 -0400
+References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204152256.03198.rjw@sisk.pl> <1334560992.32851.YahooMailNeo@web161806.mail.bf1.yahoo.com> <201204161817.21800.rjw@sisk.pl>
+Message-ID: <1334602665.33371.YahooMailNeo@web161806.mail.bf1.yahoo.com>
+Date: Mon, 16 Apr 2012 11:57:45 -0700 (PDT)
+From: Mikko Vinni <mmvinni@yahoo.com>
+Reply-To: Mikko Vinni <mmvinni@yahoo.com>
+Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Allen Kay <allen.m.kay@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <201204161817.21800.rjw@sisk.pl>
 MIME-Version: 1.0
-In-Reply-To: <20120426152548.GA15674@kroah.com>
-References: <20120426144356.GB4365@kroah.com>
-	<Pine.LNX.4.44L0.1204261113430.1530-100000@iolanthe.rowland.org>
-	<20120426152548.GA15674@kroah.com>
-Date: Thu, 26 Apr 2012 18:53:46 +0300
-Message-ID: <CAD52pS_EV39vhgMgoPpFgELyfATCZ4wT43tsgmVwNOuw07WvWw@mail.gmail.com>
-Subject: Re: PROBLEM: OHCI HCD - computer freezes during boot
-From: Calin Demian <c.demian20@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I admit it might be a hardware problem. As I said in another mail, I
-couldn't duplicate the problem on other computers...
-If that's true than I'm sorry for bothering you.
+From: Rafael J. Wysocki:
 
-2012/4/26 Greg KH <greg@kroah.com>:
-> On Thu, Apr 26, 2012 at 11:16:17AM -0400, Alan Stern wrote:
->> On Thu, 26 Apr 2012, Greg KH wrote:
->>
->> > On Thu, Apr 26, 2012 at 10:25:41AM -0400, Alan Stern wrote:
->> > > On Thu, 26 Apr 2012, Calin Demian wrote:
->> > >
->> > > > I don't know how, but adding the following line in function
->> > > > quirk_usb_handoff_ohci makes the system work fine:
->> > > >
->> > > >         /* reset requires max 10 us delay */
->> > > > +       udelay(1);
->> > > >         for (cnt = 30; cnt > 0; --cnt) {        /* ... allow extra time */
->> > > >                 if ((readl(base + OHCI_CMDSTATUS) & OHCI_HCR) == 0)
->> > > >
->> > > > I observed thad the condition in the for loop is allways true, so the
->> > > > delay inside the loop is never executed.
->> >
->> > That implies that something is wrong with the complier here, and it
->> > optimized out the loop?  Are you sure that really happened?
->>
->> Here's the complete context:
->>
->>       /* reset requires max 10 us delay */
->>       for (cnt = 30; cnt > 0; --cnt) {        /* ... allow extra time */
->>               if ((readl(base + OHCI_CMDSTATUS) & OHCI_HCR) == 0)
->>                       break;
->>               udelay(1);
->>       }
->>
->> I think Calim means that the "(readl(base + OHCI_CMDSTATUS) & OHCI_HCR)
->> == 0" test succeeds on the first pass through the loop, so we break out
->> early and the udelay(1) statement never gets executed.
->
-> Ok, but if the readl() succeeds, then all should be fine?
->
-> Ah, unless the hardware is really lying, but no, that would never
-> happen, right?
->
-> Nevermind,
->
-> greg k-h
+>>  Ok, I tested v4 and also v3, which is in 3.4-rc3. On this laptop both 
+> versions
+>>  work equally: touchpad works after resume (no help for the card reader
+>>  problem, though).
+> 
+> [...]
+> 
+>>  Difference from v3:
+>>  --- /tmp/v3-uniq        2012-04-16 09:57:42.880521878 +0300
+>>  +++ /tmp/v4-uniq        2012-04-16 09:58:03.880545386 +0300
+>>  @@ -1019,11 +1018,11 @@
+>>         1 Booting Node 0 Processor 1 APIC 0x1
+>>         1 CPU1 is up
+>>         1 ACPI: Waking up from system sleep state S3
+>>  -     11 pcieport 0000:00:02.0: restoring config space at offset 0x1c (was 
+> 0x20005151, writing 0x5151)
+>>  +      1 pcieport 0000:00:02.0: restoring config space at offset 0x1c (was 
+> 0x20005151, writing 0x5151)
+> 
+> OK, so clearly we need to prevent the writes into the secondary status register
+> of the PCIe port from being repreated pointlessly.
+> 
+> Can you please test the appended patch from completness on top of 3.4-rc3?
+
+I think that's what I did already :)
+
+git pull to 3.4-rc3
+(test, result as v3 output/diff in the previous email)
+Revert "PCI: Fix regression in pci_restore_state(), v3"
+apply v4 of the patch
+(test, result as v4 output in the previous email)
+git diff v3.4-rc3 -- drivers/pci/pci.c --> matches the patch below
+
+
+Mikko
+
+
+> 
+> Rafael
+> 
+> 
+> ---
+> drivers/pci/pci.c |   18 +++++++++++-------
+> 1 file changed, 11 insertions(+), 7 deletions(-)
+> 
+> Index: linux/drivers/pci/pci.c
+> ===================================================================
+> --- linux.orig/drivers/pci/pci.c
+> +++ linux/drivers/pci/pci.c
+> @@ -1015,13 +1015,17 @@ void pci_restore_state(struct pci_dev *d
+>     pci_restore_pcie_state(dev);
+>     pci_restore_ats_state(dev);
+> 
+> -    pci_restore_config_space(dev, 10, 15, 0);
+> -    /*
+> -     * The Base Address register should be programmed before the command
+> -     * register(s)
+> -     */
+> -    pci_restore_config_space(dev, 4, 9, 10);
+> -    pci_restore_config_space(dev, 0, 3, 0);
+> +    if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
+> +        pci_restore_config_space(dev, 10, 15, 0);
+> +        /*
+> +         * The Base Address register should be programmed before the
+> +         * command register(s)
+> +         */
+> +        pci_restore_config_space(dev, 4, 9, 10);
+> +        pci_restore_config_space(dev, 0, 3, 0);
+> +    } else {
+> +        pci_restore_config_space(dev, 0, 15, 0);
+> +    }
+> 
+>     pci_restore_pcix_state(dev);
+>     pci_restore_msi_state(dev);
+> 
