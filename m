@@ -1,48 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Drew Weaver <drew.weaver@thenap.com>
-To: 'Thomas Jarosch' <thomas.jarosch@intra2net.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Charlie Suffin <charlie.suffin@stratus.com>
-Date: Wed, 25 Apr 2012 11:23:27 -0400
-Subject: RE: [PATCH] pci: Add quirk for still enabled interrupts on Intel
- Sandy Bridge GPUs
-Message-ID: <F3318834F1F89D46857972DD4B411D7005324C00C5@exchange>
-References: <4EDFD5BB.1050906@intra2net.com>
- <201204251722.14877.thomas.jarosch@intra2net.com>
-In-Reply-To: <201204251722.14877.thomas.jarosch@intra2net.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:35955 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890Ab2DPQCo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:02:44 -0400
+Received: by dake40 with SMTP id e40so7099736dak.11
+        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:02:44 -0700 (PDT)
+Subject: pci_check_type2() help.
+From: Onkar N Mahajan <kernzap@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Date: Mon, 16 Apr 2012 21:32:40 +0530
+Message-ID: <1334592160.26350.13.camel@oc4748611672.ibm.com>
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yeah it is very unfortunate that this hasn't been fixed in the BIOS.
+Hello list, 
 
------Original Message-----
-From: Thomas Jarosch [mailto:thomas.jarosch@intra2net.com] 
-Sent: Wednesday, April 25, 2012 11:22 AM
-To: linux-pci@vger.kernel.org
-Cc: Jesse Barnes; linux-kernel@vger.kernel.org; Drew Weaver; Charlie Suffin
-Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel Sandy Bridge GPUs
+I am trying to understand the PCI functionality in Linux kernel. 
+What is the best way to start to understanding this - where to start 
+in the kernel code ? Books ? Manuals ? 
 
-On Wednesday, 7. December 2011 22:08:11 Thomas Jarosch wrote:
-> Some BIOS implementations leave the Intel GPU interrupts enabled, even 
-> though no one is handling them (f.e. i915 driver is never loaded).
-> Additionally the interrupt destination is not set up properly and the 
-> interrupt ends up -somewhere-.
->
-> These spurious interrupts are "sticky" and the kernel disables the 
-> (shared) interrupt line after 100.000+ generated interrupts.
+I started reading the code - where I am stuck in this function -
+pci_check_type2() ; Wherein I am not able to get from where these values
+0xCFB,0xCF8,0xCFA are arrived at ? I guess these are port numbers , but 
+in which manuals can I find this all information. 
 
-Just a small heads up: Boards with the new Intel Ivy bridge chipset are affected, too. Currently known to be affected is
+linux/arch/x86/pci/init.c: 
+static int __init pci_check_type2(void)
+{
+    unsigned long flags;
+    int works = 0;
 
-    Intel Desktop Board DH77EB
+    local_irq_save(flags);
+
+    outb(0x00, 0xCFB);
+    outb(0x00, 0xCF8);
+    outb(0x00, 0xCFA);
+    if (inb(0xCF8) == 0x00 && inb(0xCFA) == 0x00 &&
+        pci_sanity_check(&pci_direct_conf2)) {
+        works = 1;
+    }
+
+    local_irq_restore(flags);
+
+    return works;
+}
 
 
-Would be nice if Intel fixes the shared BIOS code...
+Please help me figuring out right manuals for this. 
 
-Thanks to Drew Weaver for reporting the issue. I currently don't have time to prepare another quirk.
 
-Best regards
-Thomas Jarosch
+-- Onkar
+
+
+
+
