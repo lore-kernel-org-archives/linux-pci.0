@@ -1,42 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:58617 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755748Ab2DPUfm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 16:35:42 -0400
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:44883 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754438Ab2DPR3u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 13:29:50 -0400
+Received: by dake40 with SMTP id e40so7194423dak.11
+        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 10:29:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201204162235.49901.rjw@sisk.pl>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com>
- <201204161817.21800.rjw@sisk.pl> <1334602665.33371.YahooMailNeo@web161806.mail.bf1.yahoo.com>
- <201204162235.49901.rjw@sisk.pl>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 16 Apr 2012 13:35:13 -0700
-Message-ID: <CA+55aFyccAfEpECmD5yKYE4AquV1ZsfjRAL4coP39LmkAqrO=w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Retry BARs restoration for Type 0 headers only
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mikko Vinni <mmvinni@yahoo.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com>
+References: <1333968563.5678.19.camel@infinity>
+	<4F848357.3060007@snewbury.org.uk>
+	<CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>
+	<4F848E10.1090703@snewbury.org.uk>
+	<CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>
+	<1334089568.4083.2.camel@Nokia-N900>
+	<CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
+	<4F84A3EC.6030903@snewbury.org.uk>
+	<CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>
+	<1334229754.30606.7.camel@Nokia-N900>
+	<CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>
+	<1334248841.2910.6.camel@Nokia-N900>
+	<4F89B5E8.3040906@snewbury.org.uk>
+	<4F89BC84.50308@snewbury.org.uk>
+	<4F89C513.3000006@snewbury.org.uk>
+	<4F89CB16.2000908@snewbury.org.uk>
+	<4F89CE43.7040200@snewbury.org.uk>
+	<CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
+	<4F8AA0DC.6010902@snewbury.org.uk>
+	<4F8AB312.7060606@snewbury.org.uk>
+	<4F8B04A4.4070507@snewbury.org.uk>
+	<4F8B0609.8010603@snewbury.org.uk>
+	<CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com>
+	<CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com>
+	<CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com>
+Date: Mon, 16 Apr 2012 10:29:48 -0700
+Message-ID: <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com>
+Subject: Re: PCI resources above 4GB
+From: Yinghai Lu <yinghai@kernel.org>
+To: Steven Newbury <steve@snewbury.org.uk>
+Cc: "Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Content-Type: multipart/mixed; boundary=e89a8ff2434352710d04bdcf2bc3
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 16, 2012 at 1:35 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
+--e89a8ff2434352710d04bdcf2bc3
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, Apr 15, 2012 at 11:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sun, Apr 15, 2012 at 1:06 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> 3. use pci_bus_allocate_resource in drm/radeon driver ... =3D=3D=3D> bu=
+t
+>>> that could fail.
+>>> =A0 so could hack it like a. disable bar 0x10 and steal BAR address,
+>>> then set 0x30 to that address then copy ROM to ram.
+>>> =A0 after that, disable rom again and set back address to 0x10.
+>>> =A0 You try to update radeon_get_bios() to achieve that.
 >
-> Some shortcomings introduced into pci_restore_state() by commit
-> 26f41062f28d ("PCI: check for pci bar restore completion and
-> retry") have been fixed by recent commit ebfc5b802fa76 ("PCI: Fix
-> regression in pci_restore_state(), v3"), but that commit treats
-> all PCI devices as those with Type 0 configuration headers.
+> patches for solution 3:
+> map_rom.patch will try to borrow mem or mem pref bar for ROM copying
+>
+> and You still need to use pci=3Dnorom
 
-Make me happier and just make all of this a helper function again.
-Call that helper function pci_restore_config_space(), and make the
-existing "pci_restore_config_space()" be called
-"pci_restore_config_space_range()" or something. Ok?
+map_rom.patch missed one !
 
-                   Linus
+Please check map_rom_v2.patch
+
+Thanks
+
+Yinghai
+
+--e89a8ff2434352710d04bdcf2bc3
+Content-Type: application/octet-stream; name="map_rom_v2.patch"
+Content-Disposition: attachment; filename="map_rom_v2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h13stcuo3
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IEJvcnJvdyBkZXYgbWVtIHdpbmRvd3MgdG8gY29weSBST00K
+CklmIHRoZSBtZW0gYmFyIGlzIG5vdCB1c2VkIHlldCBhbmQgc2l6ZSBpcyBiaWdnZXIgZW5vdWdo
+LgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBh
+cmNoL3g4Ni9wY2kvY29tbW9uLmMgICB8ICAgIDMgKwogZHJpdmVycy9wY2kvcm9tLmMgICAgICAg
+fCAgIDczICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLQog
+ZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAgICA4ICsrKystCiAzIGZpbGVzIGNoYW5nZWQsIDc5
+IGluc2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMv
+cGNpL3JvbS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3JvbS5j
+CisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcm9tLmMKQEAgLTExNiw2ICsxMTYsMTAgQEAgdm9p
+ZCBfX2lvbWVtICpwY2lfbWFwX3JvbShzdHJ1Y3QgcGNpX2RldgogCXN0cnVjdCByZXNvdXJjZSAq
+cmVzID0gJnBkZXYtPnJlc291cmNlW1BDSV9ST01fUkVTT1VSQ0VdOwogCWxvZmZfdCBzdGFydDsK
+IAl2b2lkIF9faW9tZW0gKnJvbTsKKwlpbnQgaSA9IC0xOworCXN0cnVjdCByZXNvdXJjZSAqbWVt
+X3IgPSBOVUxMOworCXJlc291cmNlX3NpemVfdCBtZW1fcl9zdGFydCA9IDA7CisJcmVzb3VyY2Vf
+c2l6ZV90IG1lbV9yX3NpemUgPSAwOwogCiAJLyoKIAkgKiBJT1JFU09VUkNFX1JPTV9TSEFET1cg
+c2V0IG9uIHg4NiwgeDg2XzY0IGFuZCBJQTY0IHN1cHBvcnRzIGxlZ2FjeQpAQCAtMTM1LDggKzEz
+OSw0NSBAQCB2b2lkIF9faW9tZW0gKnBjaV9tYXBfcm9tKHN0cnVjdCBwY2lfZGV2CiAJCX0gZWxz
+ZSB7CiAJCQkvKiBhc3NpZ24gdGhlIFJPTSBhbiBhZGRyZXNzIGlmIGl0IGRvZXNuJ3QgaGF2ZSBv
+bmUgKi8KIAkJCWlmIChyZXMtPnBhcmVudCA9PSBOVUxMICYmCi0JCQkgICAgcGNpX2Fzc2lnbl9y
+ZXNvdXJjZShwZGV2LFBDSV9ST01fUkVTT1VSQ0UpKQotCQkJCXJldHVybiBOVUxMOworCQkJICAg
+IHBjaV9hc3NpZ25fcmVzb3VyY2UocGRldixQQ0lfUk9NX1JFU09VUkNFKSkgeworCQkJCXN0cnVj
+dCByZXNvdXJjZSAqcjsKKworCQkJCWlmIChyZXMtPmZsYWdzIHx8ICFyZXMtPmVuZCB8fAorCQkJ
+CSAgICAhcmVzb3VyY2Vfc2l6ZShyZXMpKQorCQkJCQlyZXR1cm4gTlVMTDsKKworCQkJCS8qIGJv
+cnJvdyBNRU0gcmVzb3VyY2Ugd2luZG93cyAqLworCQkJCWZvciAoaSA9IDA7IGkgPCBQQ0lfUk9N
+X1JFU09VUkNFOyBpKyspIHsKKwkJCQkJciA9ICZwZGV2LT5yZXNvdXJjZVtpXTsKKwkJCQkJaWYg
+KCFyLT5wYXJlbnQgfHwKKwkJCQkJICAgICEoci0+ZmxhZ3MgJiBJT1JFU09VUkNFX01FTSkgfHwK
+KwkJCQkJICAgIHItPmNoaWxkIHx8CisJCQkJCSAgICByZXNvdXJjZV9zaXplKHIpIDwgcmVzb3Vy
+Y2Vfc2l6ZShyZXMpIHx8CisJCQkJCSAgICByLT5zdGFydCA+PSAoMVVMTDw8MzIpKQorCQkJCQkJ
+Y29udGludWU7CisJCQkJCS8qIGZvdW5kIG9uZSAqLworCQkJCQltZW1fciA9IHI7CisJCQkJCWJy
+ZWFrOworCQkJCX0KKwkJCQlpZiAoIW1lbV9yKSB7CisJCQkJCWkgPSAtMTsKKwkJCQkJcmV0dXJu
+IE5VTEw7CisJCQkJfQorCQkJCS8qIGRpc2FibGUgbWVtX3IgdGVtcGVyaWx5ICovCisJCQkJbWVt
+X3Jfc3RhcnQgPSBtZW1fci0+c3RhcnQ7CisJCQkJbWVtX3Jfc2l6ZSA9IHJlc291cmNlX3NpemUo
+bWVtX3IpOworCQkJCW1lbV9yLT5zdGFydCA9IDB4ZmZmZjAwMDA7CisJCQkJbWVtX3ItPmVuZCA9
+IDA7CisJCQkJcGNpX3VwZGF0ZV9yZXNvdXJjZShwZGV2LCBpKTsKKwkJCQkvKiByZXN0b3JlIGZs
+YWdzICovCisJCQkJcmVzLT5mbGFncyA9IElPUkVTT1VSQ0VfTUVNIHwKKwkJCQkJICAgICBJT1JF
+U09VUkNFX1BSRUZFVENIIHwKKwkJCQkJICAgICBJT1JFU09VUkNFX1JFQURPTkxZIHwKKwkJCQkJ
+ICAgICBJT1JFU09VUkNFX0NBQ0hFQUJMRSB8CisJCQkJCSAgICAgSU9SRVNPVVJDRV9TSVpFQUxJ
+R047CisJCQkJcmVzLT5lbmQgPSByZXNvdXJjZV9zaXplKHJlcykgKyBtZW1fcl9zdGFydCAtIDE7
+CisJCQkJcmVzLT5zdGFydCA9IG1lbV9yX3N0YXJ0OworCQkJfQogCQkJc3RhcnQgPSBwY2lfcmVz
+b3VyY2Vfc3RhcnQocGRldiwgUENJX1JPTV9SRVNPVVJDRSk7CiAJCQkqc2l6ZSA9IHBjaV9yZXNv
+dXJjZV9sZW4ocGRldiwgUENJX1JPTV9SRVNPVVJDRSk7CiAJCQlpZiAoKnNpemUgPT0gMCkKQEAg
+LTE1NSw3ICsxOTYsNyBAQCB2b2lkIF9faW9tZW0gKnBjaV9tYXBfcm9tKHN0cnVjdCBwY2lfZGV2
+CiAJCQkJICAgIElPUkVTT1VSQ0VfUk9NX1NIQURPVyB8CiAJCQkJICAgIElPUkVTT1VSQ0VfUk9N
+X0NPUFkpKSkKIAkJCXBjaV9kaXNhYmxlX3JvbShwZGV2KTsKLQkJcmV0dXJuIE5VTEw7CisJCWdv
+dG8gcmVzdG9yZV9tZW1fcjsKIAl9CiAKIAkvKgpAQCAtMTY0LDYgKzIwNSwzMiBAQCB2b2lkIF9f
+aW9tZW0gKnBjaV9tYXBfcm9tKHN0cnVjdCBwY2lfZGV2CiAJICogVHJ1ZSBzaXplIGlzIGltcG9y
+dGFudCBpZiB0aGUgUk9NIGlzIGdvaW5nIHRvIGJlIGNvcGllZC4KIAkgKi8KIAkqc2l6ZSA9IHBj
+aV9nZXRfcm9tX3NpemUocGRldiwgcm9tLCAqc2l6ZSk7CisKKwkvKiBjb3B5IHJvbSBhbmQgcmVz
+dG9yZSBib3Jyb3cgbWVtIGlvICovCisJaWYgKGkgPj0gMCkgeworCQl2b2lkIF9faW9tZW0gKm5l
+d19yb207CisKKwkJbmV3X3JvbSA9IGttYWxsb2MoKnNpemUsIEdGUF9LRVJORUwpOworCQlpZiAo
+bmV3X3JvbSkKKwkJCW1lbWNweV9mcm9taW8obmV3X3JvbSwgcm9tLCAqc2l6ZSk7CisJCXBjaV91
+bm1hcF9yb20ocGRldiwgcm9tKTsKKwkJaWYgKG5ld19yb20pIHsKKwkJCXJlcy0+c3RhcnQgPSAo
+dW5zaWduZWQgbG9uZyBsb25nKW5ld19yb207CisJCQlyZXMtPmVuZCA9IHJlcy0+c3RhcnQgKyAq
+c2l6ZTsKKwkJCXJlcy0+ZmxhZ3MgfD0gSU9SRVNPVVJDRV9ST01fQ09QWTsKKwkJfSBlbHNlIHsK
+KwkJCXJlcy0+c3RhcnQgPSByZXMtPmVuZCA9IHJlcy0+ZmxhZ3MgPSAwOworCQl9CisJCXJvbSA9
+IG5ld19yb207CisJfQorCityZXN0b3JlX21lbV9yOgorCWlmIChpID49IDApIHsKKwkJbWVtX3It
+PnN0YXJ0ID0gbWVtX3Jfc3RhcnQ7CisJCW1lbV9yLT5lbmQgPSBtZW1fcl9zaXplICsgbWVtX3It
+PnN0YXJ0IC0gMTsKKwkJcGNpX3VwZGF0ZV9yZXNvdXJjZShwZGV2LCBpKTsKKwl9CisKIAlyZXR1
+cm4gcm9tOwogfQogCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKPT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKKysrIGxp
+bnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMjkwLDcgKzI5MCwxMyBAQCBzdGF0
+aWMgdm9pZCBhc3NpZ25fcmVxdWVzdGVkX3Jlc291cmNlc19zCiAJCQkJYWRkX3RvX2xpc3QoZmFp
+bF9oZWFkLCBkZXZfcmVzLT5kZXYsIHJlcywKIAkJCQkJICAgIDAgLyogZG9udCBjYXJlICovLAog
+CQkJCQkgICAgMCAvKiBkb250IGNhcmUgKi8pOwotCQkJcmVzZXRfcmVzb3VyY2UocmVzKTsKKwkJ
+CS8qIG5lZWQgdG8gc2F2ZSB0aGUgc2l6ZSAqLworCQkJaWYgKGlkeCA9PSBQQ0lfUk9NX1JFU09V
+UkNFKSB7CisJCQkJcmVzLT5mbGFncyA9IDA7CisJCQkJcmVzLT5lbmQgLT0gcmVzLT5zdGFydDsK
+KwkJCQlyZXMtPnN0YXJ0ID0gMDsKKwkJCX0gZWxzZQorCQkJCXJlc2V0X3Jlc291cmNlKHJlcyk7
+CiAJCX0KIAl9CiB9CkluZGV4OiBsaW51eC0yLjYvYXJjaC94ODYvcGNpL2NvbW1vbi5jCj09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L3BjaS9jb21tb24uYworKysgbGludXgt
+Mi42L2FyY2gveDg2L3BjaS9jb21tb24uYwpAQCAtMTUxLDcgKzE1MSw4IEBAIHN0YXRpYyB2b2lk
+IF9fZGV2aW5pdCBwY2liaW9zX2ZpeHVwX2RldmkKIAkJCS8qIHdlIGRlYWwgd2l0aCBCSU9TIGFz
+c2lnbmVkIFJPTSBsYXRlciAqLwogCQkJcmV0dXJuOwogCQl9Ci0JCXJvbV9yLT5zdGFydCA9IHJv
+bV9yLT5lbmQgPSByb21fci0+ZmxhZ3MgPSAwOworCQkvKiBuZWVkIHRvIHNhdmUgdGhlIHNpemUg
+Ki8KKwkJcm9tX3ItPmZsYWdzID0gMDsKIAl9CiB9CiAK
+--e89a8ff2434352710d04bdcf2bc3--
