@@ -1,120 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:61218 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753403Ab2D3QDg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Apr 2012 12:03:36 -0400
-Received: by lahj13 with SMTP id j13so1941560lah.19
-        for <linux-pci@vger.kernel.org>; Mon, 30 Apr 2012 09:03:34 -0700 (PDT)
+Received: from mga14.intel.com ([143.182.124.37]:22042 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752487Ab2DPAxo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 20:53:44 -0400
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: Matthew Wilcox <matthew@wil.cx>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>
+Subject: RE: [PATCH v5] Quirk for IVB graphics FLR errata
+Date: Mon, 16 Apr 2012 00:53:41 +0000
+Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD117D2@SHSMSX102.ccr.corp.intel.com>
+References: <403610A45A2B5242BD291EDAE8B37D300FD0FF14@SHSMSX102.ccr.corp.intel.com>
+ <20120414204052.GB28678@parisc-linux.org>
+In-Reply-To: <20120414204052.GB28678@parisc-linux.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <201204292244.16467.rjw@sisk.pl>
-References: <201204292244.16467.rjw@sisk.pl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Apr 2012 10:03:14 -0600
-Message-ID: <CAErSpo7oGWNVeT6OCgaFdb_+uPAumggE-Z+OdnH=9aW+_N3B6g@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Oleksij Rempel <bug-track@fisher-privat.net>
->
-> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
-> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
->
-> Some OEM use _SxD fileds do blacklist brocken Dx states.
-> If _SxD/_SxW return values are check before suspend as appropriate,
-> some nasty suspend/resume issues may be avoided.
->
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
-> Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> ---
->
-> Bjorn, Len,
->
-> This is -stable material and therefore v3.4 as well, IMO.  Please let me
-> know if one of you can take it or whether you want me to handle it all the
-> way to Linus.
+> -----Original Message-----
+> From: Matthew Wilcox [mailto:matthew@wil.cx]
+> Sent: Sunday, April 15, 2012 4:41 AM
+> To: Hao, Xudong
+> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; Don Dutile
+> Subject: Re: [PATCH v5] Quirk for IVB graphics FLR errata
+> 
+> On Fri, Apr 13, 2012 at 08:22:18AM +0000, Hao, Xudong wrote:
+> > Changes from v4: (based on Matthew and Don's comments)
+> > - using jiffies to set timeout instead of tsc.
+> > - correct type mmio_base variable
+> > - using readl() and writel() to access io.
+> > - correct code style, use spaces around the multiply operator.
+> 
+> Much better!  Just a couple of minor nits ...
+> 
+> > +	val = readl(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
+> > +	writel(val, mmio_base + PCH_PP_CONTROL);
+> > +	do {
+> > +		timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
+> > +		while (1) {
+> 
+> Personally, I'd write this as:
+> 
+> 	while (time_before(jiffies, timeout)) {
+> 		...
+> 	}
+> 
+> > +			val = readl(mmio_base + PCH_PP_STATUS);
+> > +			if (((val & 0x80000000) == 0)
+> > +				&& ((val & 0x30000000) == 0))
+> 
+> Is there a reason why this shouldn't be:
+> 
+> 		if ((val & 0xB0000000) == 0)
+> 
+> > +				break;
+> > +			if (time_after(jiffies, timeout))
+> > +				break;
+> > +			cpu_relax();
+> > +		}
+> > +	} while (0);
+> 
+> Why do we need this to be in a do { } while (0) loop?
+> 
+> Putting those three suggestions together, I think it should look like this:
+> 
+> 	writel(val, mmio_base + PCH_PP_CONTROL);
+> 	timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
+> 	while (time_before(jiffies, timeout)) {
+> 		val = readl(mmio_base + PCH_PP_STATUS);
+> 		if ((val & 0xB0000000) == 0)
+> 			break;
+> 		cpu_relax();
+> 	}
+> 	writel(0x00000002, mmio_base + 0xd0100);
+> 
 
-I'm OK with this from a PCI perspective.  Most of the change is in
-ACPI, so I propose that either you or Len take care of it.
+The code looks simple and reasonable, I'll modify with changes and add your name in Signed-off-by.
 
-The second paragraph of the changelog has several typos
-(fileds/fields, do/to, brocken/broken, etc).
-
-> ---
->  drivers/acpi/sleep.c |   22 +++++++++++++++++++++-
->  drivers/pci/pci.c    |   12 +++++++++++-
->  2 files changed, 32 insertions(+), 2 deletions(-)
->
-> Index: linux/drivers/acpi/sleep.c
-> ===================================================================
-> --- linux.orig/drivers/acpi/sleep.c
-> +++ linux/drivers/acpi/sleep.c
-> @@ -714,10 +714,30 @@ int acpi_pm_device_sleep_state(struct de
->         *
->         * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
->         * provided -- that's our fault recovery, we ignore retval.
-> +        *
-> +        * According to ACPI 4.0a (April 5, 2010), page 294,
-> +        * Table 7-7 S3 Action / Result Table, we need to evaluate _SxW in
-> +        * addition to _SxD if the device is configured for wakeup:
-> +        * Desired Action    | _S3D | _PRW | _S3W | Resultant D-state
-> +        * Enter S3          |  N/A |  D/C |  N/A | OSPM decides
-> +        * Enter S3, No Wake |   2  |  D/C |  D/C | Enter D2 or D3
-> +        * Enter S3, Wake    |   2  |   3  |  N/A | Enter D2
-> +        * Enter S3, Wake    |   2  |   3  |   3  | Enter D2 or D3
-> +        * Enter S3, Wake    |  N/A |   3  |   2  | Enter D0, D1 or D2
->         */
-> -       if (acpi_target_sleep_state > ACPI_STATE_S0)
-> +       if (acpi_target_sleep_state > ACPI_STATE_S0) {
-> +               acpi_status status;
-> +
->                acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
->
-> +               if (device_may_wakeup(dev)) {
-> +                       acpi_method[3] = 'W';
-> +                       status = acpi_evaluate_integer(handle, acpi_method,
-> +                                                      NULL, &d_max);
-> +                       if (ACPI_FAILURE(status))
-> +                               d_max = d_min;
-> +               }
-> +       }
->        /*
->         * If _PRW says we can wake up the system from the target sleep state,
->         * the D-state returned by _SxD is sufficient for that (we assume a
-> Index: linux/drivers/pci/pci.c
-> ===================================================================
-> --- linux.orig/drivers/pci/pci.c
-> +++ linux/drivers/pci/pci.c
-> @@ -1691,10 +1691,20 @@ pci_power_t pci_target_state(struct pci_
->  {
->        pci_power_t target_state = PCI_D3hot;
->
-> -       if (platform_pci_power_manageable(dev)) {
-> +       /*
-> +        * According to ACPI 4.0a,7.2 Device Power Management Objects, device
-> +        * with wake capability should have _PRW or _PSW object and can have
-> +        * _SxD or _SxW object.
-> +        * It looks like some OEMs use this fields to avoid buggy Dx states
-> +        * of devices, so we need to check for _PRW or _PSW and see if _SxD or
-> +        * _SxW indicate to overwrite Dx.
-> +        */
-> +       if (platform_pci_power_manageable(dev)
-> +           || platform_pci_can_wakeup(dev)) {
->                /*
->                 * Call the platform to choose the target state of the device
->                 * and enable wake-up from this state if supported.
-> +                * (Check _SxD and _SxW)
->                 */
->                pci_power_t state = platform_pci_choose_state(dev);
->
+> With that change, please add:
+> 
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> 
+> --
+> Matthew Wilcox				Intel Open Source Technology Centre
+> "Bill, look, we understand that you're interested in selling us this operating
+> system, but compare it to ours.  We can't possibly take such a retrograde
+> step."
