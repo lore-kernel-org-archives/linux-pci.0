@@ -1,329 +1,247 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:59716 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751833Ab2DZOAR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 10:00:17 -0400
-Received: by dadz8 with SMTP id z8so1616353dad.10
-        for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 07:00:17 -0700 (PDT)
-Message-ID: <4F9954DE.6070805@gmail.com>
-Date: Thu, 26 Apr 2012 21:59:58 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Yan, Zheng" <zheng.z.yan@intel.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Mon, 16 Apr 2012 19:07:13 +0200
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com> <201204132141.58063.rjw@sisk.pl> <4F8B828E.9060606@intel.com>
+In-Reply-To: <4F8B828E.9060606@intel.com>
 MIME-Version: 1.0
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Keping Chen <chenkeping@huawei.com>, ddutile@redhat.com,
-	greg.pearson@hp.com
-Subject: Re: [PATCH 5/6] PCI, x86: introduce pci_mmcongi_add() / pci_mmconfig_delete()
-References: <20120426193712.11256973.izumi.taku@jp.fujitsu.com> <20120426194237.93088dcb.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120426194237.93088dcb.izumi.taku@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="windows-1252"
+Message-Id: <201204161907.13806.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/26/2012 06:42 PM, Taku Izumi wrote:
+Hi,
+
+On Monday, April 16, 2012, Yan, Zheng wrote:
+> On 04/14/2012 03:41 AM, Rafael J. Wysocki wrote:
+> > Hi,
+> > 
+> > On Friday, April 13, 2012, Yan, Zheng wrote:
+> >> Hi all,
+> >>
+> >> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+> >> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+> >> generate wake event through the WAKE# pin. Because we can not access to a device's
+> >> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
+> >>
+> >> Any comment will be appreciated.
+> >>
+> >> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+> >> ---
+> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> >> index 0f150f2..e210e8cb 100644
+> >> --- a/drivers/pci/pci-acpi.c
+> >> +++ b/drivers/pci/pci-acpi.c
+> >> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >>  		[PCI_D1] = ACPI_STATE_D1,
+> >>  		[PCI_D2] = ACPI_STATE_D2,
+> >>  		[PCI_D3hot] = ACPI_STATE_D3,
+> >> -		[PCI_D3cold] = ACPI_STATE_D3
+> >> +		[PCI_D3cold] = ACPI_STATE_D3_COLD
+> >>  	};
+> >>  	int error = -EINVAL;
+> >>  
+> > 
+> > Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
+> > 
+> > We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
+> > instead.  I'll prepare a patch for that over the weekend if no one has done
+> > that already.
+> > 
+> >> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+> >>  
+> >>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+> >>  {
+> >> -	if (dev->pme_interrupt)
+> >> +	/* PME interrupt isn't available in the D3cold case */
+> >> +	if (dev->pme_interrupt && !dev->runtime_d3cold)
+> > 
+> > This whole thing is wrong.  First off, I don't think that the runtime_d3cold
+> > flag makes any sense.  We already cover that in dev->pme_support.
+> > 
+> > Second, pme_interrupt means that the _root_ _port_, not the device itself will
+> > trigger an interrupt whenever the device sends the PME message to it (which
+> > very well may happen for a device in D3_cold woken up by an external signal).
+> > 
+> The reason I introduced the runtime_d3cold flag is I can't make the PME interrupt
+> work in the D3cold case in our test platform. Document for our test platform says
+> A device in D3cold can only generate wake event through the WAKE# pin.
+
+OK, so that clearly is not a standard PCI device, so please don't try to
+make our PCI bus type handle non-standard devices.
+
+> >>  		return 0;
+> >>  
+> >>  	if (!acpi_pm_device_run_wake(&dev->dev, enable))
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index 8156744..bc16869 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >>  	int error;
+> >>  
+> > 
+> > Guys, please.  Never, _ever_, touch pci_set_power_state() without discussing
+> > your ideas with someone who knows how it works and _why_ it works this way.
+> > 
+> > The problem here is that you can't program a PCI device into D3_cold, so it
+> > doesn't even make sense to have a helper for that.
+> > 
+> >>  	/* bound the state we're entering */
+> >> -	if (state > PCI_D3hot)
+> >> -		state = PCI_D3hot;
+> >> +	if (state > PCI_D3cold)
+> >> +		state = PCI_D3cold;
+> >>  	else if (state < PCI_D0)
+> >>  		state = PCI_D0;
+> >>  	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
+> >> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >>  	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+> >>  		return 0;
+> >>  
+> >> -	error = pci_raw_set_power_state(dev, state);
+> >> +	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
+> >> +					PCI_D3hot : state);
+> >>  
+> >>  	if (!__pci_complete_power_transition(dev, state))
+> >>  		error = 0;
+> >> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
+> >>  	return !!(dev->pme_support & (1 << state));
+> >>  }
+> >>  
+> >> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
+> >> +{
+> >> +	struct pci_dev *bridge = dev->bus->self;
+> >> +
+> >> +	/* don't poll the pme bit if parent is in low power state */
+> >> +	if (bridge && bridge->current_state != PCI_D0)
+> >> +		return;
+> >> +
+> >> +	pci_pme_wakeup(dev, NULL);
+> >> +}
+> > 
+> > This one actually makes some sense, although it might be better to put the
+> > test into pci_pme_wakeup() itself.
 > 
-> This patch replaces pci_mmconfig_add() and introduces pci_mmconfig_delte()
-> for adding or deleting MCFG region.
+> put it into pci_pme_wakeup will break ACPI wakeup, because ACPI wakeup also
+> uses pci_pme_wakeup. When a device exits from D3cold by asserting the WAKE#
+> signal, device power is restored automatically by ACPI, then pci_pme_wakeup
+> is called to check device's PME bit. pci_dev->current_state is PCI_D3hot
+> during the checking. 
+
+You seem to be talking about two different device here.  One device is
+dev, which is the one being checked for the PME bit and the second one
+is the bridge that should be in D0 so that dev is accessible, right?
+
+So if you put this code into pci_pme_wakeup():
+
+	struct pci_dev *bridge = pci_dev->bus->self;
+
+	...
+
+	if (bridge && bridge->current_state != PCI_D0)
+		return 0;
+
+then it should work just like your code above.
+
+BTW, can you please explain to me what the #WAKE signal is and how it is
+different from PME#?
+
+> >> +
+> >>  static void pci_pme_list_scan(struct work_struct *work)
+> >>  {
+> >>  	struct pci_pme_device *pme_dev, *n;
+> >> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+> >>  	if (!list_empty(&pci_pme_list)) {
+> >>  		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+> >>  			if (pme_dev->dev->pme_poll) {
+> >> -				pci_pme_wakeup(pme_dev->dev, NULL);
+> >> +				pci_pme_poll_wakeup(pme_dev->dev);
+> >>  			} else {
+> >>  				list_del(&pme_dev->list);
+> >>  				kfree(pme_dev);
+> >> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+> >>  	if (enable) {
+> >>  		int error;
+> >>  
+> >> +		if (runtime && state >= PCI_D3cold)
+> >> +			dev->runtime_d3cold = true;
+> >> +		else
+> >> +			dev->runtime_d3cold = false;
+> >>  		if (pci_pme_capable(dev, state))
+> >>  			pci_pme_active(dev, true);
+> >>  		else
+> >> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> >> index e0610bd..d66b7e9 100644
+> >> --- a/drivers/pci/pcie/portdrv_pci.c
+> >> +++ b/drivers/pci/pcie/portdrv_pci.c
+> >> @@ -11,11 +11,13 @@
+> >>  #include <linux/kernel.h>
+> >>  #include <linux/errno.h>
+> >>  #include <linux/pm.h>
+> >> +#include <linux/pm_runtime.h>
+> >>  #include <linux/init.h>
+> >>  #include <linux/pcieport_if.h>
+> >>  #include <linux/aer.h>
+> >>  #include <linux/dmi.h>
+> >>  #include <linux/pci-aspm.h>
+> >> +#include <linux/delay.h>
+> >>  
+> >>  #include "portdrv.h"
+> >>  #include "aer/aerdrv.h"
+> >> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
+> >>  	return 0;
+> >>  }
+> >>  
+> >> +static int pcie_port_runtime_suspend(struct device *dev)
+> >> +{
+> >> +	struct pci_dev *pdev = to_pci_dev(dev);
+> >> +
+> >> +	pci_save_state(pdev);
+> > 
+> > Are you sure this is sufficient?
 > 
-> The newly pci_mmconfig_add() does the following:
->   - region check
->   - insert_resource
->   - ioremap
->   - add new pci_mmcfg_region entry to pci_mmcfg_list
+> What else should I do?
+
+First off, you need not do pci_save_state() here, most likely, because
+pci_pm_runtime_suspend() will do it for you later.
+
+Second, you're suspending a device that has children here.  Namely,
+the PCIe service devices are children of the port they are associated with.
+I wonder if they are suspended and how exactly, if so?
+
+> >> +	return 0;
+> >> +}
+> >> +
+> >> +static int pcie_port_runtime_resume(struct device *dev)
+> >> +{
+> >> +	struct pci_dev *pdev = to_pci_dev(dev);
+> >> +
+> >> +	pci_restore_state(pdev);
+> >> +	if (pdev->runtime_d3cold)
+> >> +		msleep(100);
+> > 
+> > What's _that_ supposed to do?
 > 
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> ---
->  arch/x86/include/asm/pci_x86.h |    3 
->  arch/x86/pci/mmconfig-shared.c |  142 ++++++++++++++++++++++++++++++-----------
->  arch/x86/pci/mmconfig_64.c     |   11 ---
->  3 files changed, 109 insertions(+), 47 deletions(-)
-> 
-> Index: bjorn-next/arch/x86/include/asm/pci_x86.h
-> ===================================================================
-> --- bjorn-next.orig/arch/x86/include/asm/pci_x86.h
-> +++ bjorn-next/arch/x86/include/asm/pci_x86.h
-> @@ -138,7 +138,8 @@ extern void __init pci_mmcfg_arch_free(v
->  extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
->  extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
->  extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
-> -
-> +extern int __devinit pci_mmconfig_add(int seg, int start, int end, u64 addr);
-> +extern int pci_mmconfig_delete(int seg, int start, int end);
->  extern struct list_head pci_mmcfg_list;
->  
->  #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
-> Index: bjorn-next/arch/x86/pci/mmconfig-shared.c
-> ===================================================================
-> --- bjorn-next.orig/arch/x86/pci/mmconfig-shared.c
-> +++ bjorn-next/arch/x86/pci/mmconfig-shared.c
-> @@ -17,6 +17,7 @@
->  #include <linux/bitmap.h>
->  #include <linux/dmi.h>
->  #include <linux/slab.h>
-> +#include <linux/mutex.h>
->  #include <linux/rculist.h>
->  #include <asm/e820.h>
->  #include <asm/pci_x86.h>
-> @@ -96,18 +97,6 @@ static __devinit struct pci_mmcfg_region
->  	return new;
->  }
->  
-> -static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-> -							int end, u64 addr)
-> -{
-> -	struct pci_mmcfg_region *new;
-> -
-> -	new = pci_mmconfig_alloc(segment, start, end, addr);
-> -	if (new)
-> -		list_add_sorted(new);
-> -
-> -	return new;
-> -}
-> -
->  struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
->  {
->  	struct pci_mmcfg_region *cfg;
-> @@ -129,7 +118,7 @@ static const char __init *pci_mmcfg_e752
->  	if (win == 0x0000 || win == 0xf000)
->  		return NULL;
->  
-> -	if (pci_mmconfig_add(0, 0, 255, win << 16) == NULL)
-> +	if (pci_mmconfig_add(0, 0, 255, win << 16))
->  		return NULL;
->  
->  	return "Intel Corporation E7520 Memory Controller Hub";
-> @@ -173,7 +162,7 @@ static const char __init *pci_mmcfg_inte
->  	if ((pciexbar & mask) >= 0xf0000000U)
->  		return NULL;
->  
-> -	if (pci_mmconfig_add(0, 0, (len >> 20) - 1, pciexbar & mask) == NULL)
-> +	if (pci_mmconfig_add(0, 0, (len >> 20) - 1, pciexbar & mask))
->  		return NULL;
->  
->  	return "Intel Corporation 945G/GZ/P/PL Express Memory Controller Hub";
-> @@ -221,7 +210,7 @@ static const char __init *pci_mmcfg_amd_
->  	end_bus = (1 << busnbits) - 1;
->  	for (i = 0; i < (1 << segnbits); i++)
->  		if (pci_mmconfig_add(i, 0, end_bus,
-> -				     base + (1<<28) * i) == NULL) {
-> +				     base + (1<<28) * i)) {
->  			free_all_mmcfg();
->  			return NULL;
->  		}
-> @@ -278,7 +267,7 @@ static const char __init *pci_mmcfg_nvid
->  		base <<= extcfg_base_lshift;
->  		start = (extcfg & extcfg_start_mask) >> extcfg_start_shift;
->  		end = start + extcfg_sizebus[size_index] - 1;
-> -		if (pci_mmconfig_add(0, start, end, base) == NULL)
-> +		if (pci_mmconfig_add(0, start, end, base))
->  			continue;
->  		mcp55_mmconf_found++;
->  	}
-> @@ -376,7 +365,7 @@ static void __init pci_mmcfg_insert_reso
->  	pci_mmcfg_resources_inserted = 1;
->  }
->  
-> -static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
-> +static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
->  					      void *data)
-Please pay attention to indent for above line.
+> Bad thing happens if device is accessed immediately after restoring power.
+> Document for our test platform states 100ms PERST delay is required.
 
->  {
->  	struct resource *mcfg_res = data;
-> @@ -413,7 +402,7 @@ static acpi_status __init check_mcfg_res
->  	return AE_OK;
->  }
->  
-> -static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
-> +static acpi_status __devinit find_mboard_resource(acpi_handle handle, u32 lvl,
->  		void *context, void **rv)
->  {
->  	struct resource *mcfg_res = context;
-> @@ -427,7 +416,7 @@ static acpi_status __init find_mboard_re
->  	return AE_OK;
->  }
->  
-> -static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
-> +static int __devinit is_acpi_reserved(u64 start, u64 end, unsigned not_used)
->  {
->  	struct resource mcfg_res;
->  
-> @@ -446,7 +435,7 @@ static int __init is_acpi_reserved(u64 s
->  
->  typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
->  
-> -static int __init is_mmconf_reserved(check_reserved_t is_reserved,
-> +static int __devinit is_mmconf_reserved(check_reserved_t is_reserved,
->  				    struct pci_mmcfg_region *cfg, int with_e820)
-Please pay attention to indent for above line.
+This is a non-standard thing again, so please don't slap it on the code
+supposed to handle _standard_ PCI Express.
 
->  {
->  	u64 addr = cfg->res.start;
-> @@ -507,19 +496,6 @@ static int __devinit pci_mmcfg_check_res
->  	return false;
->  }
->  
-> -static void __init pci_mmcfg_reject_broken(int early)
-> -{
-> -	struct pci_mmcfg_region *cfg;
-> -
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> -		if (pci_mmcfg_check_reserved(cfg, early) == false) {
-> -			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
-> -			free_all_mmcfg();
-> -			return;
-> -		}
-> -	}
-> -}
-> -
-pci_mmcfg_check_reserved() performs different checks according to the parameter 'early'.
-The patch has changed the behavior of original code. 
+Moreover, I really don't think it's a good idea to put PCI Express ports into
+low-power states in general.  It might work on your platform, whatever it is,
+but that doesn't mean it's going to work on every PCI Express system out
+there.  I actually know of a number of such systems where it surely won't
+work at all.
 
-At early time when mmcfg_early_init() is called, the ACPICA subsystem is still
-uninitialized yet and is_acpi_reserved() shouldn't be called yet. So at early
-stage, pci_mmcfg_check_reserved() should be called with parameter early as 1(true).
-But this patch always call pci_mmcfg_check_reserved() with parameter as 0.
-
-So suggest to keep pci_mmconfig_add() and pci_mmcfg_reject_broken(), but change return
-value of pci_mmconfig_add() from "struct pci_mmcfg_region *" to "int".
-
->  static int __initdata known_bridge;
->  
->  static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
-> @@ -613,8 +589,6 @@ static void __init __pci_mmcfg_init(int 
->  	if (!known_bridge)
->  		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
->  
-> -	pci_mmcfg_reject_broken(early);
-> -
->  	if (list_empty(&pci_mmcfg_list))
->  		return;
->  
-> @@ -676,3 +650,101 @@ static int __init pci_mmcfg_late_insert_
->   * with other system resources.
->   */
->  late_initcall(pci_mmcfg_late_insert_resources);
-> +
-> +static DEFINE_MUTEX(pci_mmcfg_lock);
-> +
-> +int __devinit pci_mmconfig_add(int segment, int start, int end, u64 addr)
-> +{
-> +	int rc = 0;
-> +	struct pci_mmcfg_region *cfg, *new = NULL;
-> +
-> +	if (segment < 0 || segment > USHRT_MAX ||
-> +	    start < 0 || start > 255 || end < start || end > 255)
-> +		return -EINVAL;
-> +
-> +	mutex_lock(&pci_mmcfg_lock);
-> +	cfg = pci_mmconfig_lookup(segment, start);
-> +	if (cfg) {
-> +		if (cfg->start_bus <= start && cfg->end_bus >= end) {
-> +			rc = -EEXIST;
-> +		} else {
-> +			rc = -EINVAL;
-> +			printk(KERN_WARNING PREFIX
-> +			       "MMCONFIG for domain %04x [bus %02x-%02x] "
-> +			       "conflicts with domain %04x [bus %02x-%02x]\n",
-> +			       segment, start, end,
-> +			       cfg->segment, cfg->start_bus, cfg->end_bus);
-> +		}
-> +		goto out;
-> +	}
-> +
-> +	new = pci_mmconfig_alloc(segment, start, end, addr);
-> +	if (new == NULL) {
-> +		rc = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	if (!pci_mmcfg_check_reserved(new, 0)) {
-> +		rc = -EINVAL;
-> +		printk(KERN_WARNING PREFIX
-> +		       "MMCONFIG for domain %04x [bus %02x-%02x] "
-> +		       "isn't reserved\n", segment, start, end);
-> +		goto out;
-> +	}
-> +
-> +	if (pci_mmcfg_resources_inserted &&
-> +	    insert_resource(&iomem_resource, &new->res)) {
-> +		rc = -EBUSY;
-> +		printk(KERN_WARNING PREFIX
-> +		       "failed to insert resource for domain "
-> +		       "%04x [bus %02x-%02x]\n", segment, start, end);
-> +		goto out;
-> +	}
-> +
-> +	if (pci_mmcfg_arch_map(new)) {
-> +		rc = -EBUSY;
-> +		printk(KERN_WARNING PREFIX
-> +		       "failed to map resource for domain "
-> +		       "%04x [bus %02x-%02x]\n", segment, start, end);
-> +		goto out;
-> +	}
-> +
-> +	list_add_sorted(new);
-> +	new = NULL;
-> +
-> +out:
-> +	if (new) {
-> +		if (new->res.parent)
-> +			release_resource(&new->res);
-> +		kfree(new);
-> +	}
-> +
-> +	mutex_unlock(&pci_mmcfg_lock);
-> +
-> +	return rc;
-> +}
-> +
-> +/* Delete MMCFG information at runtime */
-> +int pci_mmconfig_delete(int segment, int start, int end)
-> +{
-> +	struct pci_mmcfg_region *cfg;
-> +
-> +	mutex_lock(&pci_mmcfg_lock);
-> +	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
-> +		if (cfg->segment == segment && cfg->start_bus == start &&
-> +		    cfg->end_bus == end) {
-> +			list_del_rcu(&cfg->list);
-> +			synchronize_rcu();
-> +			pci_mmcfg_arch_unmap(cfg);
-> +			if (cfg->res.parent)
-> +				release_resource(&cfg->res);
-> +			mutex_unlock(&pci_mmcfg_lock);
-> +			kfree(cfg);
-> +			return 0;
-> +		}
-> +	}
-> +	mutex_unlock(&pci_mmcfg_lock);
-> +
-> +	return -ENOENT;
-> +}
-> +
-> Index: bjorn-next/arch/x86/pci/mmconfig_64.c
-> ===================================================================
-> --- bjorn-next.orig/arch/x86/pci/mmconfig_64.c
-> +++ bjorn-next/arch/x86/pci/mmconfig_64.c
-> @@ -112,17 +112,6 @@ static void __iomem * __devinit mcfg_ior
->  
->  int __init pci_mmcfg_arch_init(void)
->  {
-> -	struct pci_mmcfg_region *cfg;
-> -
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> -		cfg->virt = mcfg_ioremap(cfg);
-> -		if (!cfg->virt) {
-> -			printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
-> -			       &cfg->res);
-> -			pci_mmcfg_arch_free();
-> -			return 0;
-> -		}
-> -	}
->  	raw_pci_ext_ops = &pci_mmcfg;
->  	return 1;
->  }
-> 
-
+Thanks,
+Rafael
