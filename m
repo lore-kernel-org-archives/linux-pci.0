@@ -1,422 +1,319 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([58.251.152.67]:39867 "EHLO
-	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755962Ab2DQL6d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2012 07:58:33 -0400
-Received: from huawei.com (szxga04-in [172.24.2.12])
- by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M2M00157H8A8L@szxga04-in.huawei.com> for
- linux-pci@vger.kernel.org; Tue, 17 Apr 2012 19:57:46 +0800 (CST)
-Received: from szxrg02-dlp.huawei.com ([172.24.2.119])
- by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M2M00I6XH7SAV@szxga04-in.huawei.com> for
- linux-pci@vger.kernel.org; Tue, 17 Apr 2012 19:57:46 +0800 (CST)
-Date: Tue, 17 Apr 2012 19:57:32 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH RFC 00/17] Introduce a global lock to serialize all PCI
- hotplug
-In-reply-to: <20120416213351.GA22887@kroah.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Dely Sy <dely.l.sy@intel.com>,
-	Scott Murray <scott@spiteful.org>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Message-id: <4F8D5AAC.2000800@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
- <20120416213351.GA22887@kroah.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: huang ying <huang.ying.caritas@gmail.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Mon, 16 Apr 2012 23:30:11 +0200
+Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com> <201204132141.58063.rjw@sisk.pl> <CAC=cRTNYGGq2ncJr7mvEOm2udqXsAD3T9T=5Tafue_jrjAWCug@mail.gmail.com>
+In-Reply-To: <CAC=cRTNYGGq2ncJr7mvEOm2udqXsAD3T9T=5Tafue_jrjAWCug@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204162330.12178.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg,
-     Thanks for your comments! There's some information missed
-in the introduction letter, so I will give some background here.
-     This patchset was developed based on Yinghai's tree, which
-enables PCI root bus hotplug on x86/IA64 platforms. Yinghai's gate
-has made following changes:
-1)  Move code for PCI host bridge hotplug from acpiphp driver to
-     pci_root driver, now acpiphp driver only handles PCI device
-     hotplug and pci_root driver handles pci host bridge hotplug.
-2)  When attaching pci_root driver to an ACPI host bridge device,
-     it will enumerate all PCI devices under that host bridge.
-3)  When detaching pci_root driver from an ACPI host bridge device,
-     it will destroy all PCI devices under that host bridge.
-     With Yinghai's gate, binding/unbinding pci_root driver has
-the same effect as PCI root bridge hotplug. So originally this
-patchset is to support Yinghai's work.
+On Monday, April 16, 2012, huang ying wrote:
+> Hi,
+> 
+> On Sat, Apr 14, 2012 at 3:41 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Hi,
+> >
+> > On Friday, April 13, 2012, Yan, Zheng wrote:
+> >> Hi all,
+> >>
+> >> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+> >> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+> >> generate wake event through the WAKE# pin. Because we can not access to a device's
+> >> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
+> >>
+> >> Any comment will be appreciated.
+> >>
+> >> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+> >> ---
+> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> >> index 0f150f2..e210e8cb 100644
+> >> --- a/drivers/pci/pci-acpi.c
+> >> +++ b/drivers/pci/pci-acpi.c
+> >> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >>               [PCI_D1] = ACPI_STATE_D1,
+> >>               [PCI_D2] = ACPI_STATE_D2,
+> >>               [PCI_D3hot] = ACPI_STATE_D3,
+> >> -             [PCI_D3cold] = ACPI_STATE_D3
+> >> +             [PCI_D3cold] = ACPI_STATE_D3_COLD
+> >>       };
+> >>       int error = -EINVAL;
+> >>
+> >
+> > Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
+> >
+> > We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
+> > instead.  I'll prepare a patch for that over the weekend if no one has done
+> > that already.
+> >
+> >> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+> >>
+> >>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+> >>  {
+> >> -     if (dev->pme_interrupt)
+> >> +     /* PME interrupt isn't available in the D3cold case */
+> >> +     if (dev->pme_interrupt && !dev->runtime_d3cold)
+> >
+> > This whole thing is wrong.  First off, I don't think that the runtime_d3cold
+> > flag makes any sense.  We already cover that in dev->pme_support.
+> 
+> PCIe devices and PCIe root port may have proper PME interrupt support
+> (that is, dev->pme_interrupt = true), but the process of remote wakeup
+> from D3cold is as follow:
+> 
+> 1) In D3cold, the power of the main link is turned off, aux power is
+> provided (PCIe L2 link state)
+> 2) Device detect condition to resume, then assert #WAKE pin
+> 2) ACPI circuit linked with #WAKE pin, and will generate a GPE for that
+> 3) GPE handler will resume device with ACPI (via _PS3 and _PR0), the
+> power of the main link is turned on, after a while, link goes into L0
+> state
+> 4) The PME message is sent to root port, pme interrupt generated
 
-     Recently I have rebased the patchset to the mainline tree
-according to Kenji's suggestion, because the mainline kernel has
-the same issues. But I forget to change the comments after rebase,
-which leads to misunderstanding here. Sorry!
+This isn't how it's supposed to work in theory.  If the device can signal PME
+from D3cold, it should be able to reestablish the link and send a PME
+message from there.  dev->pme_interrupt set means exactly that.
 
-On 2012-4-17 5:33, Greg KH wrote:
-> On Tue, Apr 17, 2012 at 12:28:54AM +0800, Jiang Liu wrote:
->> There are multiple ways to trigger PCI hotplug requests concurrently,
->> such as:
->> 1. Sysfs interfaces exported by the PCI core subsystem
->
-> Which ones?
-With 3.3 kernel, PCI core logic provides following interfaces for
-device hotplug,
-/sys/devices/pcissss:bb/ssss:bb:dd.f/.../remove
-/sys/devices/pcissss:bb/ssss:bb:dd.f/.../rescan
-/sys/devices/pcissss:bb/ssss:bb:dd.f/.../pci_bus/ssss:bb/rescan
-/sys/bus/pci/rescan
+ACPI is only supposed to be needed for things that don't send PME
+messages (in your case the PME interrupt generated by the port is essentially
+useless, because the wakeup event has already been signaled through ACPI).
 
->
->> 2. Sysfs interfaces exported by the PCI hotplug subsystem
->
-> Which ones?
-/sys/bus/pci/slots/5/power
+> So, for deivce, dev->pme_interrupt = true and dev->pme_support
+> advocate it support PME in D3cold.  But we still need ACPI to setup
+> run wake for the device.
 
->> 3. PCI hotplug events triggered by PCI Hotplug Controllers
->> 4. ACPI hotplug events for PCI host bridges
->
-> Those are both the same.
-As mentioned above, it will be split into two parts:
-acpiphp for PCI device hotplug
-pci_root for PCI host bridge hotplug
+OK, so this is nonstandard.  
 
->
->> 5. Driver binding/unbinding events
->
-> Not really a "hotplug" event, that's something that all drivers in the
-> kernel support.
->
-> And in the end, they all propagate down to the driver core to be the
-> same thing that the PCI driver sees.
-Here I mean binding/unbinding pci_root driver, which will enumerate or
-destroy all PCI devices under the corresponding PCI root bridge.
+> So we need a way to inform acpi_pci_run_wake(), one way is using a
+> flag, there is other ways such as adding another parameter to
+> acpi_pci_run_wake() to tell it which power state to go.
 
->
->> The PCI core subsystem doesn't support concurrent hotplug operations yet,
->> so all PCI hotplug requests should be globally serialized.
->
-> Why do you think they are not?  These should all be serialized today,
-> with the bus lock down in the driver core.  How is this failing?
-According to my understanding, pci_bus_sem only protects several lists
-in struct pci_bus, such as children, devices, but it doesn't protect
-the pci_bus or pci_dev structure themselves.
+I'm not sure what to do with that.  It looks like we should use ACPI for
+signaling remote wakeup on this platform and additionally provide a dummy
+interrupt handler for root ports that will only clear PME Status.
 
-Let's take pci_remove_bus_device() as an example, which are used by
-PCI hotplug drivers to hot-remove PCI devices.
-pci_remove_bus_device()
-     ->pci_stop_bus_device()
-         ->pci_stop_bus_device()
-             ->pci_stop_bus_devices()
-	    ->pci_stop_dev()
-                 ->pci_proc_detach_device()
-                 ->pci_remove_sysfs_dev_files()
-	        ->device_unregister()
-                 ->pcie_aspm_exit_link_state()
-     ->__pci_remove_bus_device()
-         ->__pci_remove_behind_bridge()
-         ->pci_remove_bus()
-             ->device_unregister()
-         ->pci_destroy_dev()
-             ->pci_free_resources()
-             ->pci_dev_put()
+> > Second, pme_interrupt means that the _root_ _port_, not the device itself will
+> > trigger an interrupt whenever the device sends the PME message to it (which
+> > very well may happen for a device in D3_cold woken up by an external signal).
+> 
+> As above, that may happend after ACPI GPE.
 
-Currently all these are free running without any protection, so can't
-support re-entrance. There are similar issues on hot-adding side.
-For example, all these are free running too.
-pci_rescan_bus()
-     ->pci_scan_child_bus()
-         ->pci_scan_slot()
-             ->pci_scan_single_device()
-                 ->pci_scan_device()
+Because it's not a standard PCIe system.
 
-It also may cause trouble if  pci_remove_bus_device() and
-pci_rescan_bus() are called concurrently.
+> >>               return 0;
+> >>
+> >>       if (!acpi_pm_device_run_wake(&dev->dev, enable))
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index 8156744..bc16869 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >>       int error;
+> >>
+> >
+> > Guys, please.  Never, _ever_, touch pci_set_power_state() without discussing
+> > your ideas with someone who knows how it works and _why_ it works this way.
+> 
+> This patch is sent as RFC, I think this is to call for discussing
+> instead of merging, isn't it?
+> 
+> > The problem here is that you can't program a PCI device into D3_cold, so it
+> > doesn't even make sense to have a helper for that.
+> 
+> We need to program ACPI to make the PCI device go into D3_cold.  That
+> is called in this function.
+> 
+> pci_set_power_sate
+>   -> __pci_complete_power_transition
+>     -> pci_platform_power_transition
 
-So the pci_bus_sem isn't strong enough to protect the PCI core
-from concurrently hotplug operations.
+So don't use pci_set_power_state() for that, because it's essentially
+a different operation.  You need a pci_platform_remove_power() helper or
+similar for that.
 
->
->> This patchset
->> introduces a global recursive rwsem to serialize all PCI hotplug operations.
->
-> Ick, why?  What's wrong with the lock we are already taking?  And why
-> would you need a rwsem anyway?
-The writer side is for PCI device/root bridge hotplug operations.
+What ACPI method exactly is used to remove power from the device?
 
-The reader side is to disable PCI device/root bridge hotplug
-temporarily. For example, pci_find_bus()/pci_find_next_bus() returns
-a pci_bus without holding a reference count on that pci_bus structure.
-That may cause invalid memory access if the pci_bus is hot-removed.
-I have proposed a patchset to fix the issue by holding a reference count
-on the returned pci_bus, but Bjorn thought that patchset is too heavy.
-So I plan to use the reader lock to protect those critical sections
-from PCI hotplug operations.
+> >>       /* bound the state we're entering */
+> >> -     if (state > PCI_D3hot)
+> >> -             state = PCI_D3hot;
+> >> +     if (state > PCI_D3cold)
+> >> +             state = PCI_D3cold;
+> >>       else if (state < PCI_D0)
+> >>               state = PCI_D0;
+> >>       else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
+> >> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >>       if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+> >>               return 0;
+> >>
+> >> -     error = pci_raw_set_power_state(dev, state);
+> >> +     error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
+> >> +                                     PCI_D3hot : state);
+> >>
+> >>       if (!__pci_complete_power_transition(dev, state))
+> >>               error = 0;
+> >> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
+> >>       return !!(dev->pme_support & (1 << state));
+> >>  }
+> >>
+> >> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
+> >> +{
+> >> +     struct pci_dev *bridge = dev->bus->self;
+> >> +
+> >> +     /* don't poll the pme bit if parent is in low power state */
+> >> +     if (bridge && bridge->current_state != PCI_D0)
+> >> +             return;
+> >> +
+> >> +     pci_pme_wakeup(dev, NULL);
+> >> +}
+> >
+> > This one actually makes some sense, although it might be better to put the
+> > test into pci_pme_wakeup() itself.
+> >
+> >> +
+> >>  static void pci_pme_list_scan(struct work_struct *work)
+> >>  {
+> >>       struct pci_pme_device *pme_dev, *n;
+> >> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
+> >>       if (!list_empty(&pci_pme_list)) {
+> >>               list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+> >>                       if (pme_dev->dev->pme_poll) {
+> >> -                             pci_pme_wakeup(pme_dev->dev, NULL);
+> >> +                             pci_pme_poll_wakeup(pme_dev->dev);
+> >>                       } else {
+> >>                               list_del(&pme_dev->list);
+> >>                               kfree(pme_dev);
+> >> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+> >>       if (enable) {
+> >>               int error;
+> >>
+> >> +             if (runtime && state >= PCI_D3cold)
+> >> +                     dev->runtime_d3cold = true;
+> >> +             else
+> >> +                     dev->runtime_d3cold = false;
+> >>               if (pci_pme_capable(dev, state))
+> >>                       pci_pme_active(dev, true);
+> >>               else
+> >> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> >> index e0610bd..d66b7e9 100644
+> >> --- a/drivers/pci/pcie/portdrv_pci.c
+> >> +++ b/drivers/pci/pcie/portdrv_pci.c
+> >> @@ -11,11 +11,13 @@
+> >>  #include <linux/kernel.h>
+> >>  #include <linux/errno.h>
+> >>  #include <linux/pm.h>
+> >> +#include <linux/pm_runtime.h>
+> >>  #include <linux/init.h>
+> >>  #include <linux/pcieport_if.h>
+> >>  #include <linux/aer.h>
+> >>  #include <linux/dmi.h>
+> >>  #include <linux/pci-aspm.h>
+> >> +#include <linux/delay.h>
+> >>
+> >>  #include "portdrv.h"
+> >>  #include "aer/aerdrv.h"
+> >> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
+> >>       return 0;
+> >>  }
+> >>
+> >> +static int pcie_port_runtime_suspend(struct device *dev)
+> >> +{
+> >> +     struct pci_dev *pdev = to_pci_dev(dev);
+> >> +
+> >> +     pci_save_state(pdev);
+> >
+> > Are you sure this is sufficient?
+> 
+> Maybe we need to pay attention to the pcie port drivers?  Run ->runtime_
 
-The recursive lock algorithm is to avoid deadlocks.
+Yes.
 
->
->> Following PCI hotplug drivers/interfaces have been enhanced with this
->> 1. Sysfs interfaces exported by the PCI core subsystem
->> 2. Sysfs interfaces exported by the PCI hotplug subsystem
->> 3. pciehp
->> 4. shpchp
->> 5. cpcihp_generic and cpcihp_zt5550
->> 6. fakephp
->
-> You are doing something wrong if you require this to be fixed up in each
-> individual pci hotplug driver.  Fix this in the PCI core, if needed.
-> But again, I don't see why it is needed.
-This is really a good question. I have thought to solve this issue by
-changing the PCI core logic, but it found it's hard by that way.
-Essentially we needs some interfaces like pci_branch_lock()/unlock() to
-lock/unlock a PCI sub-hierarchy, I feel it's a big task to make branch
-lock interface deadlock free. So I did some tradeoff here to use a
-global lock to serialize all PCI hotplug operations.
+> >> +     return 0;
+> >> +}
+> >> +
+> >> +static int pcie_port_runtime_resume(struct device *dev)
+> >> +{
+> >> +     struct pci_dev *pdev = to_pci_dev(dev);
+> >> +
+> >> +     pci_restore_state(pdev);
+> >> +     if (pdev->runtime_d3cold)
+> >> +             msleep(100);
+> >
+> > What's _that_ supposed to do?
+> 
+> When resume from d3cold, PCIe main link will be powered on again, it
+> will take quite some time before the main link go into L0 state.
+> Otherwise, accessing devices under the port may return wrong result.
 
-The changes to each PCI hotplug driver are mainly for two reasons:
-1) Fix minor bugs/race conditions in existing PCI hotplug drivers.
-2) Break a deadlock scenario as below.
+OK, but this is generic code and as per the standard the link should have been
+reestablished at this point already.
 
-Thread A				Thread B/ISR
-1) Acquire the global lock
-2) Remove a PCI subtree
-3)					Hotplug interrupt happens
-4)					ISR/worker tries to acquire
-                                         the global lock
-5) Try to unbind the PCI hotplug driver
-6) Wait for the ISR/worker to finish
-    tasks
-7) Deadlock then
+Please don't put some nonstandard-platform-specific quirks like this into
+code that's supposed to handle _every_ PCIe system.
 
->
->> But there are still several TODOs:
->> 1) all other PCI hotplug driver in drivers/pci/hotplug directory
->> 2) SR-IOV
->> 3) acpiphp (plan to do this based on Yinghai's PCI root bus hotplug gate)
->> 4) pci_root (plan to do this based on Yinghai's PCI root bus hotplug gate)
->>
->> Basic test has been done as below, will find more hardwares to do more tests.
->> Start three scripts on an Intel Atom system to currently execute:
->> 1) remove/rescan PCI devices by sysfs interfaces exported by PCI core subsystem
->> 2) remove/rescan PCI devices by sysfs interfaces exported by fakephp driver
->> 3) load/unload fakephp driver
->> The test has run about four hours without failure.
->
-> And it fails without this?  How does it?
-Without the patchset, running following scripts concurrently will make
-system reboot automatically. It's tested on an IBM x3850 system with
-v3.3 kernel.
+> >> +
+> >> +     return 0;
+> >> +}
+> >> +
+> >>  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+> >>       .suspend        = pcie_port_device_suspend,
+> >>       .resume         = pcie_port_device_resume,
+> >> @@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+> >>       .poweroff       = pcie_port_device_suspend,
+> >>       .restore        = pcie_port_device_resume,
+> >>       .resume_noirq   = pcie_port_resume_noirq,
+> >> +     .runtime_suspend = pcie_port_runtime_suspend,
+> >> +     .runtime_resume = pcie_port_runtime_resume,
+> >>  };
+> >>
+> >>  #define PCIE_PORTDRV_PM_OPS  (&pcie_portdrv_pm_ops)
+> >> @@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
+> >>               return status;
+> >>
+> >>       pci_save_state(dev);
+> >> +     pm_runtime_put_noidle(&dev->dev);
+> >
+> > What's the purpose of this?
+> 
+> I think this is needed by PCI runtime PM support.  Before ->probe,
+> pm_runtime_get_xxx() is executed on device.
 
-[root@IBM3850 tests]# cat hotplug.sh
-#!/bin/bash
-while true; do
-         echo 0 > /sys/bus/pci/slots/0000:8b:00.0/power
-         echo 1 > /sys/bus/pci/slots/0000:8b:00.1/power
-         sleep 0.01
-done
-[root@IBM3850 tests]# cat sysfs.sh
-#!/bin/bash
-while true; do
-         echo 1 > /sys/devices/pci0000:80/0000:80:03.0/remove
-         echo 1 > /sys/bus/pci/rescan
-         sleep 0.01
-done
+ok
 
->
-> And really, fakephp?  Come on, what happens in the "real world" with
-> real pci hotplug systems/devices that this patch set is trying to solve?
-I'm verifying this patchset at home last night, and have no platform
-supporting PCI hotplug at hand, so just use fakephp to prove the
-recursive lock algorithm.
+> >>       return 0;
+> >>  }
+> >>
+> >>  static void pcie_portdrv_remove(struct pci_dev *dev)
+> >>  {
+> >> +     pm_runtime_get_noresume(&dev->dev);
+> >>       pcie_port_device_remove(dev);
+> >>       pci_disable_device(dev);
+> >>  }
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index e444f5b..b41d9a1 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -281,6 +281,7 @@ struct pci_dev {
+> >>       unsigned int    no_d1d2:1;      /* Only allow D0 and D3 */
+> >>       unsigned int    mmio_always_on:1;       /* disallow turning off io/mem
+> >>                                                  decoding during bar sizing */
+> >> +     unsigned int    runtime_d3cold:1;
+> >>       unsigned int    wakeup_prepared:1;
+> >>       unsigned int    d3_delay;       /* D3->D0 transition time in ms */
+> >
+> > OK
+> >
+> > So now please tell me what exactly you want to achieve and why you want to do
+> > that in the first place.
 
-Today we have reproduced the issue on a real platform by using
-acpiphp driver. It's an IA64 platform running Suse 11SP1 (official
-2.6.32.12 kernel). The test script is:
+Well, is there any chance to get that information?
 
-#!/bin/bash
-
-for ((i=0;i<100;i++))
-do
-	echo 1 > /sys/bus/pci/devices/0000\:43\:00.0/remove
-	echo 0 > /sys/bus/pci/slots/3/power
-	sleep 1
-	echo 1 > /sys/bus/pci/slots/3/power
-done
-
-And the bug report is:
-
-------------[ cut here ]------------
-WARNING: at fs/sysfs/group.c:138 sysfs_remove_group+0x210/0x240()
-Hardware name: H8900
-sysfs group a0000001012014f0 not found for kobject '0000:45:00.1'
-Modules linked in: acpiphp(N) ipv6(N) cpufreq_conservative(N) 
-cpufreq_userspace( 
-                                            N) cpufreq_powersave(N) 
-acpi_cpufreq(N) binfmt_misc(N) fuse(N) nls_iso8859_1(N) 
- 
-           loop(N) dm_mod(N) tpm_tis(N) tpm(N) ppdev(N) shpchp(N) 
-tpm_bios(N) serio_raw(N) 
-                                                   qla2xxx(N) 
-i2c_i801(N) scsi_transport_fc(N) pci_hotplug(N) scsi_tgt(N) iTCO_wdt( 
- 
-                        N) sg(N) iTCO_vendor_support(N) i2c_core(N) 
-mptctl(N) igb(N) parport_pc(N) parpo 
-                                                              rt(N) 
-button(N) container(N) usbhid(N) hid(N) uhci_hcd(N) ehci_hcd(N) 
-usbcore(N) 
-                                     sd_mod(N) crc_t10dif(N) ext3(N) 
-mbcache(N) jbd(N) fan(N) processor(N) ide_pci_g 
- 
-  eneric(N) ide_core(N) ata_piix(N) libata(N) mptsas(N) mptscsih(N) 
-mptbase(N) scs 
-                                        i_transport_sas(N) scsi_mod(N) 
-thermal(N) thermal_sys(N) hwmon(N)
-Supported: Yes
-
-Call Trace:
-  [<a000000100017640>] show_stack+0x80/0xa0
-                                 sp=e000002f4421fc00 bsp=e000002f44211678
-  [<a0000001008cfd10>] dump_stack+0x30/0x50
-                                 sp=e000002f4421fdd0 bsp=e000002f44211660
-  [<a0000001000b9bc0>] warn_slowpath_common+0xc0/0x120
-                                 sp=e000002f4421fdd0 bsp=e000002f44211628
-  [<a0000001000b9d10>] warn_slowpath_fmt+0x90/0xc0
-                                 sp=e000002f4421fdd0 bsp=e000002f442115c0
-  [<a000000100331690>] sysfs_remove_group+0x210/0x240
-                                 sp=e000002f4421fe10 bsp=e000002f44211590
-  [<a000000100636190>] dpm_sysfs_remove+0x30/0x60
-                                 sp=e000002f4421fe10 bsp=e000002f44211570
-  [<a0000001006236c0>] device_del+0x80/0x460
-                                 sp=e000002f4421fe10 bsp=e000002f44211528
-  [<a000000100623ae0>] device_unregister+0x40/0x140
-                                 sp=e000002f4421fe10 bsp=e000002f44211508
-  [<a0000001004d2320>] pci_stop_bus_device+0x160/0x200
-                                 sp=e000002f4421fe10 bsp=e000002f442114d8
-  [<a000000223104e70>] acpiphp_disable_slot+0x170/0x580 [acpiphp]
-                                 sp=e000002f4421fe10 bsp=e000002f44211470
-  [<a000000223100b70>] disable_slot+0x50/0x160 [acpiphp]
-                                 sp=e000002f4421fe20 bsp=e000002f44211448
-  [<a00000021e960e60>] power_write_file+0x240/0x340 [pci_hotplug]
-                                 sp=e000002f4421fe20 bsp=e000002f44211418
-  [<a0000001004e5e00>] pci_slot_attr_store+0x60/0xa0
-                                 sp=e000002f4421fe20 bsp=e000002f442113d8
-  [<a00000010032a260>] sysfs_write_file+0x240/0x340
-                                 sp=e000002f4421fe20 bsp=e000002f44211380
-  [<a000000100232910>] vfs_write+0x1b0/0x3c0
-                                 sp=e000002f4421fe20 bsp=e000002f44211330
-  [<a000000100232ce0>] sys_write+0x80/0x100
-                                 sp=e000002f4421fe20 bsp=e000002f442112b8
-  [<a00000010000c9c0>] ia64_ret_from_syscall+0x0/0x20
-                                 sp=e000002f4421fe30 bsp=e000002f442112b8
-  [<a000000000010720>] __kernel_syscall_via_break+0x0/0x20
-                                 sp=e000002f44220000 bsp=e000002f442112b8
----[ end trace bd659e9a3f4f6279 ]---
-offline_pci.sh[6450]: NaT consumption 17179869216 [1]
-Modules linked in: acpiphp(N) ipv6(N) cpufreq_conservative(N) 
-cpufreq_userspace( 
-                                            N) cpufreq_powersave(N) 
-acpi_cpufreq(N) binfmt_misc(N) fuse(N) nls_iso8859_1(N) 
- 
-           loop(N) dm_mod(N) tpm_tis(N) tpm(N) ppdev(N) shpchp(N) 
-tpm_bios(N) serio_raw(N) 
-                                                   qla2xxx(N) 
-i2c_i801(N) scsi_transport_fc(N) pci_hotplug(N) scsi_tgt(N) iTCO_wdt( 
- 
-                        N) sg(N) iTCO_vendor_support(N) i2c_core(N) 
-mptctl(N) igb(N) parport_pc(N) parpo 
-                                                              rt(N) 
-button(N) container(N) usbhid(N) hid(N) uhci_hcd(N) ehci_hcd(N) 
-usbcore(N) 
-                                     sd_mod(N) crc_t10dif(N) ext3(N) 
-mbcache(N) jbd(N) fan(N) processor(N) ide_pci_g 
- 
-  eneric(N) ide_core(N) ata_piix(N) libata(N) mptsas(N) mptscsih(N) 
-mptbase(N) scs 
-                                        i_transport_sas(N) scsi_mod(N) 
-thermal(N) thermal_sys(N) hwmon(N)
-Supported: Yes
-
-Pid: 6450, CPU 11, comm:       offline_pci.sh
-psr : 0000101009526030 ifs : 8000000000000389 ip  : [<a0000001008a9870>] 
-    Tain 
-                                  ted: G        W N  (2.6.32.12-yyz)
-ip is at klist_put+0x30/0x160
-unat: 0000000000000000 pfs : 0000000000000206 rsc : 0000000000000003
-rnat: 8000000000000711 bsps: 0000000000000000 pr  : 65519aa656999969
-ldrs: 0000000000000000 ccv : 0000000040000000 fpsr: 0009804c0270033f
-csd : 0000000000000000 ssd : 0000000000000000
-b0  : a0000001008a9a50 b6  : a0000001004b1320 b7  : a00000010000d170
-qla2xxx 0000:45:00.1: PCI INT B disabled
-f6  : 000000000000000000000 f7  : 1003e9e3779b97f4a7c16
-f8  : 1003e0a00000000001072 f9  : 1003effffffffffffffee
-f10 : 1003e0000000000000023 f11 : 1003e8208208208208209
-r1  : a0000001015c8460 r2  : 0000000000000000 r3  : a0000001013e75b0
-r8  : 0000000000000001 r9  : a0000001013e75b0 r10 : a0000001013e8ed8
-r11 : 0000000000000000 r12 : e000002f4421fe10 r13 : e000002f44210000
-r14 : 0000000000000020 r15 : 0000000000004000 r16 : 0000000000000009
-r17 : 0000000000000200 r18 : 0000000040000000 r19 : 0000000040000000
-r20 : 0000000040000200 r21 : 0000000040000000 r22 : 000000000001ae13
-r23 : 0000000000100000 r24 : a0000001029780f0 r25 : 000000000001ae10
-r26 : 000000000001ae10 r27 : 0000000000100000 r28 : 0000000000000034
-r29 : 0000000000000034 r30 : a0000001029780f1 r31 : 000000000001ae11
-
-Call Trace:
-  [<a000000100017640>] show_stack+0x80/0xa0
-                                 sp=e000002f4421f850 bsp=e000002f442116f8
-  [<a000000100017ca0>] show_regs+0x640/0x920
-                                 sp=e000002f4421fa20 bsp=e000002f442116a0
-  [<a000000100028c70>] die+0x190/0x2e0
-                                 sp=e000002f4421fa30 bsp=e000002f44211660
-  [<a000000100028e10>] die_if_kernel+0x50/0x80
-                                 sp=e000002f4421fa30 bsp=e000002f44211630
-  [<a0000001008d8d70>] ia64_fault+0xf0/0x1640
-                                 sp=e000002f4421fa30 bsp=e000002f442115d8
-  [<a00000010000cb60>] ia64_native_leave_kernel+0x0/0x270
-                                 sp=e000002f4421fc40 bsp=e000002f442115d8
-  [<a0000001008a9870>] klist_put+0x30/0x160
-                                 sp=e000002f4421fe10 bsp=e000002f44211590
-  [<a0000001008a9a50>] klist_del+0x30/0x60
-                                 sp=e000002f4421fe10 bsp=e000002f44211570
-  [<a0000001006236e0>] device_del+0xa0/0x460
-                                 sp=e000002f4421fe10 bsp=e000002f44211528
-  [<a000000100623ae0>] device_unregister+0x40/0x140
-                                 sp=e000002f4421fe10 bsp=e000002f44211508
-  [<a0000001004d2320>] pci_stop_bus_device+0x160/0x200
-                                 sp=e000002f4421fe10 bsp=e000002f442114d8
-  [<a000000223104e70>] acpiphp_disable_slot+0x170/0x580 [acpiphp]
-                                 sp=e000002f4421fe10 bsp=e000002f44211470
-  [<a000000223100b70>] disable_slot+0x50/0x160 [acpiphp]
-                                 sp=e000002f4421fe20 bsp=e000002f44211448
-  [<a00000021e960e60>] power_write_file+0x240/0x340 [pci_hotplug]
-                                 sp=e000002f4421fe20 bsp=e000002f44211418
-  [<a0000001004e5e00>] pci_slot_attr_store+0x60/0xa0
-                                 sp=e000002f4421fe20 bsp=e000002f442113d8
-  [<a00000010032a260>] sysfs_write_file+0x240/0x340
-                                 sp=e000002f4421fe20 bsp=e000002f44211380
-  [<a000000100232910>] vfs_write+0x1b0/0x3c0
-                                 sp=e000002f4421fe20 bsp=e000002f44211330
-  [<a000000100232ce0>] sys_write+0x80/0x100
-                                 sp=e000002f4421fe20 bsp=e000002f442112b8
-  [<a00000010000c9c0>] ia64_ret_from_syscall+0x0/0x20
-                                 sp=e000002f4421fe30 bsp=e000002f442112b8
-  [<a000000000010720>] __kernel_syscall_via_break+0x0/0x20
-                                 sp=e000002f44220000 bsp=e000002f442112b8
-Disabling lock debugging due to kernel taint
-
-The second case is to test fakephp with following scripts
-#!/bin/bash
-while true; do
-     echo 0 > /sys/bus/pci/slots/0000:8b:00.0/power
-     echo 1 > /sys/bus/pci/slots/0000:8b:00.1/power
-     sleep 0.01
-done
-
->
-> thanks,
->
-> greg k-h
->
-> .
->
-
-
+Rafael
