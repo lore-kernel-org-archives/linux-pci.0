@@ -1,138 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:44098 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754374Ab2DOS2D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 15 Apr 2012 14:28:03 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] PCI: Fix regression in pci_restore_state()
-Date: Sun, 15 Apr 2012 20:32:36 +0200
-Cc: Mikko Vinni <mmvinni@yahoo.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204150011.53556.rjw@sisk.pl> <1334486385.82898.YahooMailNeo@web161803.mail.bf1.yahoo.com>
-In-Reply-To: <1334486385.82898.YahooMailNeo@web161803.mail.bf1.yahoo.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204152032.36770.rjw@sisk.pl>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:35016 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016Ab2DPQc7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:32:59 -0400
+Received: by dake40 with SMTP id e40so7133149dak.11
+        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:32:59 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Zink <dan.zink@compaq.com>,
+	Greg Kroah-Hartman <greg@kroah.com>,
+	Dely Sy <dely.l.sy@intel.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: [PATCH RFC 07/17] PCI: serialize hotplug operaitons triggered by the pciehp driver
+Date: Tue, 17 Apr 2012 00:29:01 +0800
+Message-Id: <1334593751-5916-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
+References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rjw@sisk.pl>
+Use PCI hotplug lock to serialize hotplug operations triggered by the
+pciehp driver.
 
-Commit 26f41062f28de65e11d3cf353e52d0be73442be1
-
-    PCI: check for pci bar restore completion and retry
-
-attempted to address problems with PCI BAR restoration on systems
-where FLR had not been completed before pci_restore_state() was
-called, but it did that in an utterly wrong way.
-
-First off, instead of retrying the writes for the BAR registers
-only, it did that for all of the PCI config space of the device,
-including the status register (whose value after the write quite
-obviously need not be the same as the written one).  Second, it
-added arbitrary delay to pci_restore_state() even for systems
-where the PCI config space restoration was successful at first
-attempt.  Finally, it used mdelay() for that, although there's
-no rule stating that pci_restore_state() could not sleep (at least
-I'm not aware of such a rule).
-
-All of this actually caused resume failures for some devices on
-the Mikko's system.
-
-To fix the regression, make pci_restore_state() only retry the
-writes for BAR registers and only wait if the first read from
-the register doesn't return the written value.  Additionally, make
-it use msleep() instead of mdelay() for waiting.
-
-Reported-and-tested-by: Mikko Vinni <mmvinni@yahoo.com>
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/pci.c |   50 ++++++++++++++++++++++++++++++++------------------
- 1 file changed, 32 insertions(+), 18 deletions(-)
+ drivers/pci/hotplug/pciehp.h      |    2 +
+ drivers/pci/hotplug/pciehp_core.c |    7 ++++-
+ drivers/pci/hotplug/pciehp_ctrl.c |   48 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/hotplug/pciehp_hpc.c  |    1 +
+ 4 files changed, 57 insertions(+), 1 deletions(-)
 
-Index: linux/drivers/pci/pci.c
-===================================================================
---- linux.orig/drivers/pci/pci.c
-+++ linux/drivers/pci/pci.c
-@@ -967,16 +967,40 @@ pci_save_state(struct pci_dev *dev)
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index c8a1a27..6078eea 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -117,6 +117,7 @@ struct controller {
+ #define BLINKINGOFF_STATE		2
+ #define POWERON_STATE			3
+ #define POWEROFF_STATE			4
++#define SHUTDOWN_STATE			5
+ 
+ #define ATTN_BUTTN(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_ABP)
+ #define POWER_CTRL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_PCP)
+@@ -160,6 +161,7 @@ void pciehp_green_led_off(struct slot *slot);
+ void pciehp_green_led_blink(struct slot *slot);
+ int pciehp_check_link_status(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
++void pciehp_shutdown_slot(struct slot *slot);
+ 
+ static inline const char *slot_name(struct slot *slot)
+ {
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 4ceefe3..2195f67 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -268,8 +268,11 @@ static int pciehp_probe(struct pcie_device *dev)
+ 	slot = ctrl->slot;
+ 	pciehp_get_adapter_status(slot, &occupied);
+ 	pciehp_get_power_status(slot, &poweron);
+-	if (occupied && pciehp_force)
++	if (occupied && pciehp_force) {
++		pci_hotplug_enter();
+ 		pciehp_enable_slot(slot);
++		pci_hotplug_exit();
++	}
+ 	/* If empty slot's power status is on, turn power off */
+ 	if (!occupied && poweron && POWER_CTRL(ctrl))
+ 		pciehp_power_off_slot(slot);
+@@ -313,11 +316,13 @@ static int pciehp_resume (struct pcie_device *dev)
+ 		slot = ctrl->slot;
+ 
+ 		/* Check if slot is occupied */
++		pci_hotplug_enter();
+ 		pciehp_get_adapter_status(slot, &status);
+ 		if (status)
+ 			pciehp_enable_slot(slot);
+ 		else
+ 			pciehp_disable_slot(slot);
++		pci_hotplug_exit();
+ 	}
  	return 0;
  }
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 8f4d261..e859100 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -31,6 +31,7 @@
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/slab.h>
++#include <linux/delay.h>
+ #include <linux/pci.h>
+ #include "../pci.h"
+ #include "pciehp.h"
+@@ -290,6 +291,30 @@ static void pciehp_power_thread(struct work_struct *work)
+ 	struct power_work_info *info =
+ 		container_of(work, struct power_work_info, work);
+ 	struct slot *p_slot = info->p_slot;
++	bool shutdown;
++
++	/*
++	 * Break out deadlock issues caused by following scenario:
++	 * Thread A:
++	 *	1) acquire the PCI hotplug lock
++	 *	2) remove the PCI device associated with this PCIe HPC
++	 *	3) call pciehp_remove() for this PCIe HPC
++	 *	4) call flush_workqueue(pciehp_wq_power) to flush queued works
++	 *      5) wait until all queued works have done
++	 * Thread B is a workqueue worker thread:
++	 *	1) call pciehp_power_thread() to handle hotplug requests
++	 *	2) try to acquire the PCI hotplug lock
++	 * Please refer to pciehp_shutdown_slot() for the counterpart.
++	 */
++	while (!pci_hotplug_try_enter()) {
++		mutex_lock(&p_slot->lock);
++		shutdown = p_slot->state == SHUTDOWN_STATE;
++		mutex_unlock(&p_slot->lock);
++		if (shutdown)
++			goto out;
++		else
++			mdelay(1);
++	}
  
-+static void pci_restore_config_space(struct pci_dev *pdev, int start, int end,
-+				     int retry)
+ 	mutex_lock(&p_slot->lock);
+ 	switch (p_slot->state) {
+@@ -315,6 +340,9 @@ static void pciehp_power_thread(struct work_struct *work)
+ 	}
+ 	mutex_unlock(&p_slot->lock);
+ 
++	pci_hotplug_exit();
++
++out:
+ 	kfree(info);
+ }
+ 
+@@ -623,3 +651,23 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
+ 
+ 	return retval;
+ }
++
++void pciehp_shutdown_slot(struct slot *slot)
 +{
-+	int index;
++	u8 getstatus;
++	struct controller *ctrl = slot->ctrl;
 +
-+	for (index = end; index >= start; index--) {
-+		u32 val, saved;
-+		int offset = 4 * index;
-+		int count = retry;
++	mutex_lock(&slot->lock);
++	slot->state = SHUTDOWN_STATE;
++	mutex_unlock(&slot->lock);
 +
-+		saved = pdev->saved_config_space[index];
-+		pci_read_config_dword(pdev, offset, &val);
-+		while (saved != val) {
-+			dev_dbg(&pdev->dev, "restoring config space at offset "
-+				"%#x (was %#x, writing %#x)\n",
-+				offset, val, saved);
-+			pci_write_config_dword(pdev, offset, saved);
-+			if (count-- > 0) {
-+				pci_read_config_dword(pdev, offset, &val);
-+				if (saved != val)
-+					msleep(10);
-+			} else {
-+				break;
-+			}
-+		}
++	if (ATTN_LED(ctrl))
++		pciehp_set_attention_status(slot, 0);
++	if (PWR_LED(ctrl)) {
++		pciehp_get_power_status(slot, &getstatus);
++		if (getstatus)
++			pciehp_green_led_on(slot);
++		else
++			pciehp_green_led_off(slot);
 +	}
 +}
-+
- /** 
-  * pci_restore_state - Restore the saved state of a PCI device
-  * @dev: - PCI device that we're dealing with
-  */
- void pci_restore_state(struct pci_dev *dev)
- {
--	int i;
--	u32 val;
--	int tries;
--
- 	if (!dev->state_saved)
- 		return;
- 
-@@ -984,24 +1008,14 @@ void pci_restore_state(struct pci_dev *d
- 	pci_restore_pcie_state(dev);
- 	pci_restore_ats_state(dev);
- 
-+	pci_restore_config_space(dev, 10, 15, 0);
- 	/*
- 	 * The Base Address register should be programmed before the command
- 	 * register(s)
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index d5c826d..c492b2c 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -902,6 +902,7 @@ static void pcie_cleanup_slot(struct controller *ctrl)
  	 */
--	for (i = 15; i >= 0; i--) {
--		pci_read_config_dword(dev, i * 4, &val);
--		tries = 10;		
--		while (tries && val != dev->saved_config_space[i]) {
--			dev_dbg(&dev->dev, "restoring config "
--				"space at offset %#x (was %#x, writing %#x)\n",
--				i, val, (int)dev->saved_config_space[i]);
--			pci_write_config_dword(dev,i * 4,
--				dev->saved_config_space[i]);
--			pci_read_config_dword(dev, i * 4, &val);
--			mdelay(10);
--			tries--;
--		}
--	}
-+	pci_restore_config_space(dev, 4, 9, 10);
-+	pci_restore_config_space(dev, 0, 3, 0);
-+
- 	pci_restore_pcix_state(dev);
- 	pci_restore_msi_state(dev);
- 	pci_restore_iov_state(dev);
+ 	flush_workqueue(pciehp_wq_event);
+ 	cancel_delayed_work_sync(&slot->work);
++	pciehp_shutdown_slot(slot);
+ 	flush_workqueue(pciehp_wq_power);
+ 
+ 	kfree(slot);
+-- 
+1.7.5.4
+
