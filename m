@@ -1,62 +1,320 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:38158 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754310Ab2DWUiW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 16:38:22 -0400
-Received: by lbbgf7 with SMTP id gf7so71682lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 23 Apr 2012 13:38:21 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:40795 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221Ab2DQOxp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2012 10:53:45 -0400
+Received: by pbcun15 with SMTP id un15so7743556pbc.19
+        for <linux-pci@vger.kernel.org>; Tue, 17 Apr 2012 07:53:45 -0700 (PDT)
+Message-ID: <4F8D83DB.4@gmail.com>
+Date: Tue, 17 Apr 2012 22:53:15 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 23 Apr 2012 14:38:00 -0600
-Message-ID: <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: frv architecture needs generic setup-bus infrastructure
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Howells <dhowells@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Dely Sy <dely.l.sy@intel.com>,
+	Scott Murray <scott@spiteful.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC 00/17] Introduce a global lock to serialize all PCI
+ hotplug
+References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com> <20120416213351.GA22887@kroah.com>
+In-Reply-To: <20120416213351.GA22887@kroah.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 18, 2012 at 3:24 PM, Paul Gortmaker
-<paul.gortmaker@windriver.com> wrote:
-> Otherwise we get this link failure for frv's defconfig:
->
->   LD      .tmp_vmlinux1
->  drivers/built-in.o: In function `pci_assign_resource':
->  (.text+0xbf0c): undefined reference to `pci_cardbus_resource_alignment'
->  drivers/built-in.o: In function `pci_setup':
->  pci.c:(.init.text+0x174): undefined reference to `pci_realloc_get_opt'
->  pci.c:(.init.text+0x1a0): undefined reference to `pci_realloc_get_opt'
->  make[1]: *** [.tmp_vmlinux1] Error 1
->
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: David Howells <dhowells@redhat.com>
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
->
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index 083a49f..165274c 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -42,6 +42,7 @@ obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
->  obj-$(CONFIG_PARISC) += setup-bus.o
->  obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
->  obj-$(CONFIG_PPC) += setup-bus.o
-> +obj-$(CONFIG_FRV) += setup-bus.o
->  obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
->  obj-$(CONFIG_X86_VISWS) += setup-irq.o
->  obj-$(CONFIG_MN10300) += setup-bus.o
+Hi Greg,
+	More logs for your reference below.
+	Thanks!
+	gerry
 
-Wow, I didn't even realize that we had this sort of arch-specific
-selection of generic PCI parts.  drivers/pci/setup-irq.c is on my list
-for reworking because it looks like it doesn't work correctly for
-hotplug.  setup-bus.c is much more complicated, but (a) it looks like
-most architectures include it anyway, and (b) it seems like it'd be
-cleaner to have a CONFIG_PCI_REALLOC or something to avoid having
-arch-specific stuff in the Makefile.
+On 04/17/2012 05:33 AM, Greg KH wrote:
+> On Tue, Apr 17, 2012 at 12:28:54AM +0800, Jiang Liu wrote:
+>> There are multiple ways to trigger PCI hotplug requests concurrently,
+>> such as:
+>> 1. Sysfs interfaces exported by the PCI core subsystem
+> 
+> Which ones?
+> 
+>> 2. Sysfs interfaces exported by the PCI hotplug subsystem
+> 
+> Which ones?
+> 
+>> 3. PCI hotplug events triggered by PCI Hotplug Controllers
+>> 4. ACPI hotplug events for PCI host bridges
+> 
+> Those are both the same.
+> 
+>> 5. Driver binding/unbinding events
+> 
+> Not really a "hotplug" event, that's something that all drivers in the
+> kernel support.
+> 
+> And in the end, they all propagate down to the driver core to be the
+> same thing that the PCI driver sees.
+> 
+>> The PCI core subsystem doesn't support concurrent hotplug operations yet,
+>> so all PCI hotplug requests should be globally serialized.
+> 
+> Why do you think they are not?  These should all be serialized today,
+> with the bus lock down in the driver core.  How is this failing?
+> 
+>> This patchset
+>> introduces a global recursive rwsem to serialize all PCI hotplug operations.
+> 
+> Ick, why?  What's wrong with the lock we are already taking?  And why
+> would you need a rwsem anyway?
+> 
+>> Following PCI hotplug drivers/interfaces have been enhanced with this
+>> 1. Sysfs interfaces exported by the PCI core subsystem
+>> 2. Sysfs interfaces exported by the PCI hotplug subsystem
+>> 3. pciehp
+>> 4. shpchp
+>> 5. cpcihp_generic and cpcihp_zt5550
+>> 6. fakephp
+> 
+> You are doing something wrong if you require this to be fixed up in each
+> individual pci hotplug driver.  Fix this in the PCI core, if needed.
+> But again, I don't see why it is needed.
+> 
+>> But there are still several TODOs:
+>> 1) all other PCI hotplug driver in drivers/pci/hotplug directory
+>> 2) SR-IOV
+>> 3) acpiphp (plan to do this based on Yinghai's PCI root bus hotplug gate)
+>> 4) pci_root (plan to do this based on Yinghai's PCI root bus hotplug gate)
+>>
+>> Basic test has been done as below, will find more hardwares to do more tests.
+>> Start three scripts on an Intel Atom system to currently execute:
+>> 1) remove/rescan PCI devices by sysfs interfaces exported by PCI core subsystem
+>> 2) remove/rescan PCI devices by sysfs interfaces exported by fakephp driver
+>> 3) load/unload fakephp driver
+>> The test has run about four hours without failure.
+> 
+> And it fails without this?  How does it?
+It's generated by executing following two scripts concurrently.
+gerry@cat:~/tests$ cat hotplug 
+#!/bin/bash
 
-Anyway, that's all for the future.  Does this fix need to go in 3.4,
-or should it go in -next?  What commit introduced the problem?
+while true; do
+        echo 0 > /sys/bus/pci/slots/0000\:00\:1c.0/power
+        echo 0 > /sys/bus/pci/slots/0000\:00\:1c.1/power
+        echo 0 > /sys/bus/pci/slots/0000\:00\:1c.2/power
+        echo 1 > /sys/bus/pci/slots/0000\:00\:1c.3/power
+        sleep 0.01
+done;
+gerry@cat:~/tests$ cat sysfs 
+#!/bin/bash
 
-Bjorn
+while true; do
+        echo 1 > /sys/devices/pci0000:00/0000:00:1c.0/remove
+        echo 1 > /sys/devices/pci0000:00/0000:00:1c.1/remove
+        echo 1 > /sys/devices/pci0000:00/0000:00:1c.2/remove
+        echo 1 > /sys/devices/pci0000:00/pci_bus/0000:00/rescan
+        sleep 0.01
+done;
+
+
+[  431.767731] ------------[ cut here ]------------
+[  431.767744] WARNING: at fs/sysfs/dir.c:508 sysfs_add_one+0xb8/0xe0()
+[  431.767749] Hardware name: To Be Filled By O.E.M.
+[  431.767754] sysfs: cannot create duplicate filename '/devices/pci0000:00/0000:00:1c.2'
+[  431.767759] Modules linked in: shpchp fakephp r8169
+[  431.767774] Pid: 3276, comm: hotplug Tainted: G      D W    3.4.0-rc2+ #20
+[  431.767779] Call Trace:
+[  431.767791]  [<ffffffff81036eea>] warn_slowpath_common+0x7a/0xb0
+[  431.767800]  [<ffffffff81036fc1>] warn_slowpath_fmt+0x41/0x50
+[  431.767808]  [<ffffffff811a6c68>] sysfs_add_one+0xb8/0xe0
+[  431.767817]  [<ffffffff811a6df6>] create_dir+0x76/0xd0
+[  431.767825]  [<ffffffff811a719e>] sysfs_create_dir+0x7e/0xc0
+[  431.767836]  [<ffffffff812da298>] kobject_add_internal+0xb8/0x210
+[  431.767846]  [<ffffffff812da767>] kobject_add+0x67/0xc0
+[  431.767856]  [<ffffffff817541bc>] ? klist_init+0x3c/0x60
+[  431.767866]  [<ffffffff813f590d>] device_add+0xed/0x680
+[  431.767875]  [<ffffffff812f632f>] pci_bus_add_device+0x1f/0x50
+[  431.767884]  [<ffffffff812f6541>] pci_bus_add_devices+0x41/0x130
+[  431.767893]  [<ffffffff81757bf7>] pci_rescan_bus+0xa7/0xc0
+[  431.767903]  [<ffffffffa000e066>] legacy_store+0x66/0x80 [fakephp]
+[  431.767913]  [<ffffffff811a517e>] ? sysfs_write_file+0xde/0x180
+[  431.767922]  [<ffffffff811a5197>] sysfs_write_file+0xf7/0x180
+[  431.767932]  [<ffffffff811347e1>] vfs_write+0xb1/0x180
+[  431.767941]  [<ffffffff81134b08>] sys_write+0x48/0x90
+[  431.767950]  [<ffffffff8178a0e2>] system_call_fastpath+0x16/0x1b
+[  431.767957] ---[ end trace f99f468d766f03f8 ]---
+[  431.767996] kobject_add_internal failed for 0000:00:1c.2 with -EEXIST, don't try to register things with the same n.
+[  431.768060] Pid: 3276, comm: hotplug Tainted: G      D W    3.4.0-rc2+ #20
+[  431.768066] Call Trace:
+[  431.768077]  [<ffffffff812da33c>] kobject_add_internal+0x15c/0x210
+[  431.768085]  [<ffffffff812da767>] kobject_add+0x67/0xc0
+[  431.768093]  [<ffffffff817541bc>] ? klist_init+0x3c/0x60
+[  431.768102]  [<ffffffff813f590d>] device_add+0xed/0x680
+[  431.768111]  [<ffffffff812f632f>] pci_bus_add_device+0x1f/0x50
+[  431.768120]  [<ffffffff812f6541>] pci_bus_add_devices+0x41/0x130
+[  431.768129]  [<ffffffff81757bf7>] pci_rescan_bus+0xa7/0xc0
+[  431.768140]  [<ffffffffa000e066>] legacy_store+0x66/0x80 [fakephp]
+[  431.768150]  [<ffffffff811a517e>] ? sysfs_write_file+0xde/0x180
+[  431.768160]  [<ffffffff811a5197>] sysfs_write_file+0xf7/0x180
+[  431.768169]  [<ffffffff811347e1>] vfs_write+0xb1/0x180
+[  431.768178]  [<ffffffff81134b08>] sys_write+0x48/0x90
+[  431.768187]  [<ffffffff8178a0e2>] system_call_fastpath+0x16/0x1b
+[  431.768205] pci 0000:00:1c.2: Error adding device, continuing
+
+
+[  431.768229] ------------[ cut here ]------------
+[  431.768234] kernel BUG at drivers/pci/bus.c:230!
+[  431.768240] invalid opcode: 0000 [#2] SMP 
+[  431.768249] CPU 1 
+[  431.768252] Modules linked in: shpchp fakephp r8169
+[  431.768266] 
+[  431.768272] Pid: 3276, comm: hotplug Tainted: G      D W    3.4.0-rc2+ #20 To Be Filled By O.E.M. To Be Filled By O.
+[  431.768288] RIP: 0010:[<ffffffff812f6628>]  [<ffffffff812f6628>] pci_bus_add_devices+0x128/0x130
+[  431.768300] RSP: 0018:ffff880037aabe08  EFLAGS: 00010246
+[  431.768306] RAX: 0000000000000047 RBX: ffff88003cac4800 RCX: 0000000000000001
+[  431.768312] RDX: ffffffff81037f09 RSI: 0000000000000001 RDI: ffff88003cbf4c00
+[  431.768319] RBP: ffff880037aabe28 R08: 0000000000000001 R09: 0000000000000000
+[  431.768325] R10: 0000000000000000 R11: 0000000000000001 R12: ffff88003cbf4428
+[  431.768332] R13: ffff88003cbf4c00 R14: ffff88003cbf4428 R15: ffff88003cbf4428
+[  431.768339] FS:  00007f4c8d018720(0000) GS:ffff88003d800000(0000) knlGS:0000000000000000
+[  431.768345] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  431.768351] CR2: 000000000046f0e0 CR3: 000000003052b000 CR4: 00000000000007e0
+[  431.768357] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  431.768364] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  431.768370] Process hotplug (pid: 3276, threadinfo ffff880037aaa000, task ffff88003aae0000)
+[  431.768376] Stack:
+[  431.768380]  ffff880037aabe28 ffff88003cbf4400 ffff880037aabe38 0000000000000005
+[  431.768394]  ffff880037aabe78 ffffffff81757bf7 ffff880037aabe38 ffff880037aabe38
+[  431.768407]  0000000000000000 0000000000000002 ffff88003064b2a0 ffff88002fabac80
+[  431.768421] Call Trace:
+[  431.768431]  [<ffffffff81757bf7>] pci_rescan_bus+0xa7/0xc0
+[  431.768442]  [<ffffffffa000e066>] legacy_store+0x66/0x80 [fakephp]
+[  431.768452]  [<ffffffff811a517e>] ? sysfs_write_file+0xde/0x180
+[  431.768462]  [<ffffffff811a5197>] sysfs_write_file+0xf7/0x180
+[  431.768472]  [<ffffffff811347e1>] vfs_write+0xb1/0x180
+[  431.768481]  [<ffffffff81134b08>] sys_write+0x48/0x90
+[  431.768491]  [<ffffffff8178a0e2>] system_call_fastpath+0x16/0x1b
+[  431.768496] Code: 8b 43 10 48 c7 c7 c0 fe c4 81 48 8b 50 
+[  431.768537] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+[  431.768544] 20 4c 89 68 20 48 83 c0 18 49 89 45 00 49 89 55 08 4c 89 2a e8 2d 91 d6 ff e9 74 ff ff ff <0f> 0b 90 90 
+[  431.768623] RIP  [<ffffffff812f6628>] pci_bus_add_devices+0x128/0x130
+[  431.768633]  RSP <ffff880037aabe08>
+[  431.768640] ---[ end trace f99f468d766f03f9 ]---
+
+
+[  266.858024] Pid: 864, comm: kworker/u:3 Tainted: G        W    3.4.0-rc2+ #20 To Be Filled By O.E.M. To Be Filled B.
+[  266.858024] RIP: 0010:[<ffffffff81753e78>]  [<ffffffff81753e78>] klist_put+0x28/0xa0
+[  266.858024] RSP: 0018:ffff88003b301c70  EFLAGS: 00010246
+[  266.858024] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000001
+[  266.858024] RDX: ffffffff81037b65 RSI: 0000000000000001 RDI: 0000000000000000
+[  266.858024] RBP: ffff88003b301c90 R08: 0000000000000001 R09: 0000000000000000
+[  266.858024] R10: 0000000000000000 R11: 0000000000000001 R12: ffff88003ca60668
+[  266.858024] R13: ffff88003c40c828 R14: 0000000000000001 R15: ffffffff811a5220
+[  266.858024] FS:  0000000000000000(0000) GS:ffff88003da00000(0000) knlGS:0000000000000000
+[  266.858024] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  266.858024] CR2: 0000000000000060 CR3: 0000000001c0b000 CR4: 00000000000007e0
+[  266.858024] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  266.858024] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  266.858024] Process kworker/u:3 (pid: 864, threadinfo ffff88003b300000, task ffff88003ca5df00)
+[  266.858024] Stack:
+[  266.858024]  ffff88003c429890 ffff88003c40c400 ffff88003c40c828 ffffffff81fa8840
+[  266.858024]  ffff88003b301ca0 ffffffff81753f2e ffff88003b301cd0 ffffffff813f4fc9
+[  266.858024]  ffff88003b301cd0 ffff88003c429890 ffff88003c40c828 ffff88003c40c828
+[  266.858024] Call Trace:
+[  266.858024]  [<ffffffff81753f2e>] klist_del+0xe/0x10
+[  266.858024]  [<ffffffff813f4fc9>] device_del+0x59/0x1c0
+[  266.858024]  [<ffffffff813f5141>] device_unregister+0x11/0x20
+[  266.858024]  [<ffffffff812f7f9c>] pci_stop_bus_device+0x8c/0xa0
+[  266.858024]  [<ffffffff812f8141>] pci_stop_and_remove_bus_device+0x11/0x20
+[  266.858024]  [<ffffffff812fe946>] remove_callback+0x26/0x40
+[  266.858024]  [<ffffffff811a5233>] sysfs_schedule_callback_work+0x13/0x80
+[  266.858024]  [<ffffffff81053462>] process_one_work+0x192/0x570
+[  266.858024]  [<ffffffff810533f6>] ? process_one_work+0x126/0x570
+[  266.858024]  [<ffffffff81054e7f>] worker_thread+0x15f/0x350
+[  266.858024]  [<ffffffff81054d20>] ? manage_workers.isra.27+0x220/0x220
+[  266.858024]  [<ffffffff81059f4d>] kthread+0x9d/0xb0
+[  266.858024]  [<ffffffff8178b3d4>] kernel_thread_helper+0x4/0x10
+[  266.858024]  [<ffffffff81059eb0>] ? __init_kthread_worker+0x70/0x70
+[  266.858024]  [<ffffffff8178b3d0>] ? gs_change+0xb/0xb
+[  266.858024] Code: 5d c3 90 55 48 89 e5 48 83 ec 20 4c 89 65 e8 4c 89 75 f8 49 89 fc 48 89 5d e0 4c 89 6d f0 41 89 f 
+[  266.858024] RIP  [<ffffffff81753e78>] klist_put+0x28/0xa0
+[  266.858024]  RSP <ffff88003b301c70>
+[  266.858024] CR2: 0000000000000060
+[  266.858458] ---[ end trace 7358104716347b8e ]---
+
+
+[  266.860122] BUG: unable to handle kernel paging request at fffffffffffffff8
+[  266.860137] IP: [<ffffffff8105a41b>] kthread_data+0xb/0x20
+[  266.860155] PGD 1c0d067 PUD 1c0e067 PMD 0 
+[  266.860170] Oops: 0000 [#2] SMP 
+[  266.860183] CPU 2 
+[  266.860188] Modules linked in: fakephp r8169
+[  266.860201] 
+[  266.860210] Pid: 864, comm: kworker/u:3 Tainted: G      D W    3.4.0-rc2+ #20 To Be Filled By O.E.M. To Be Filled B.
+[  266.860228] RIP: 0010:[<ffffffff8105a41b>]  [<ffffffff8105a41b>] kthread_data+0xb/0x20
+[  266.860244] RSP: 0018:ffff88003b301868  EFLAGS: 00010096
+[  266.860251] RAX: 0000000000000000 RBX: 0000000000000002 RCX: 0000000000000002
+[  266.860259] RDX: ffffffff81fa9440 RSI: 0000000000000002 RDI: ffff88003ca5df00
+[  266.860267] RBP: ffff88003b301868 R08: 0000000000989680 R09: 0000000000000000
+[  266.860274] R10: 0000000000000400 R11: 0000000000000003 R12: 0000000000000002
+[  266.860283] R13: ffff88003ca5e278 R14: ffff88003c9b8000 R15: ffff88003ca5e180
+[  266.860291] FS:  0000000000000000(0000) GS:ffff88003da00000(0000) knlGS:0000000000000000
+[  266.860300] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  266.860307] CR2: fffffffffffffff8 CR3: 00000000304dc000 CR4: 00000000000007e0
+[  266.860315] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  266.860322] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  266.860331] Process kworker/u:3 (pid: 864, threadinfo ffff88003b300000, task ffff88003ca5df00)
+[  266.860338] Stack:
+[  266.860344]  ffff88003b301888 ffffffff81055810 ffff88003b301888 ffff88003dbd2900
+[  266.860364]  ffff88003b301908 ffffffff81780878 ffff880000000000 ffffffff810bda82
+[  266.860380]  ffff88003b301fd8 ffff88003ca5df00 ffff88003b301fd8 ffff88003b301fd8
+[  266.860397] Call Trace:
+[  266.860413]  [<ffffffff81055810>] wq_worker_sleeping+0x10/0xa0
+[  266.860428]  [<ffffffff81780878>] __schedule+0x538/0x7c0
+[  266.860443]  [<ffffffff810bda82>] ? call_rcu_sched+0x12/0x20
+[  266.860456]  [<ffffffff81780de4>] schedule+0x24/0x70
+[  266.860470]  [<ffffffff8103b8b0>] do_exit+0x600/0x9d0
+[  266.860483]  [<ffffffff81039065>] ? kmsg_dump+0x105/0x160
+[  266.860496]  [<ffffffff817834ae>] oops_end+0x9e/0xe0
+[  266.860507]  [<ffffffff81037f09>] ? vprintk+0x329/0x510
+[  266.860520]  [<ffffffff81774c5e>] no_context+0x271/0x280
+[  266.860532]  [<ffffffff81774e33>] __bad_area_nosemaphore+0x1c6/0x1e5
+[  266.860545]  [<ffffffff81037b65>] ? console_unlock+0x1e5/0x260
+[  266.860558]  [<ffffffff81774e60>] bad_area_nosemaphore+0xe/0x10
+[  266.860571]  [<ffffffff81785dfe>] do_page_fault+0x30e/0x500
+[  266.860586]  [<ffffffff811a8e9f>] ? sysfs_remove_group+0xdf/0xf0
+[  266.860598]  [<ffffffff81775339>] ? printk+0x3c/0x3e
+[  266.860613]  [<ffffffff811a5220>] ? sysfs_write_file+0x180/0x180
+[  266.860626]  [<ffffffff817829bf>] page_fault+0x1f/0x30
+[  266.860638]  [<ffffffff811a5220>] ? sysfs_write_file+0x180/0x180
+[  266.860652]  [<ffffffff81037b65>] ? console_unlock+0x1e5/0x260
+[  266.860664]  [<ffffffff81753e78>] ? klist_put+0x28/0xa0
+[  266.860676]  [<ffffffff81753f2e>] klist_del+0xe/0x10
+[  266.860690]  [<ffffffff813f4fc9>] device_del+0x59/0x1c0
+[  266.860703]  [<ffffffff813f5141>] device_unregister+0x11/0x20
+[  266.860716]  [<ffffffff812f7f9c>] pci_stop_bus_device+0x8c/0xa0
+[  266.860729]  [<ffffffff812f8141>] pci_stop_and_remove_bus_device+0x11/0x20
+[  266.860741]  [<ffffffff812fe946>] remove_callback+0x26/0x40
+[  266.860754]  [<ffffffff811a5233>] sysfs_schedule_callback_work+0x13/0x80
+[  266.860769]  [<ffffffff81053462>] process_one_work+0x192/0x570
+[  266.860781]  [<ffffffff810533f6>] ? process_one_work+0x126/0x570
+[  266.860795]  [<ffffffff81054e7f>] worker_thread+0x15f/0x350
+[  266.860808]  [<ffffffff81054d20>] ? manage_workers.isra.27+0x220/0x220
+[  266.860821]  [<ffffffff81059f4d>] kthread+0x9d/0xb0
+[  266.860834]  [<ffffffff8178b3d4>] kernel_thread_helper+0x4/0x10
+[  266.860846]  [<ffffffff81059eb0>] ? __init_kthread_worker+0x70/0x70
+[  266.860857]  [<ffffffff8178b3d0>] ? gs_change+0xb/0xb
+[  266.860863] Code: eb 90 be 57 01 00 00 48 c7 c7 96 17 a1 81 e8 1d cb fd ff e9 77 fe ff ff 0f 1f 84 00 00 00 00 00 4 
+[  266.861014] RIP  [<ffffffff8105a41b>] kthread_data+0xb/0x20
+[  266.861014]  RSP <ffff88003b301868>
+[  266.861014] CR2: fffffffffffffff8
+[  266.861014] ---[ end trace 7358104716347b8f ]---
+[  266.861014] Fixing recursive fault but reboot is needed!
+
+
+> 
+> And really, fakephp?  Come on, what happens in the "real world" with
+> real pci hotplug systems/devices that this patch set is trying to solve?
+> 
+> thanks,
+> 
+> greg k-h
+
