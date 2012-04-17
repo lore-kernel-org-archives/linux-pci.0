@@ -1,144 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:35016 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752807Ab2DPQdG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:33:06 -0400
-Received: by mail-pz0-f52.google.com with SMTP id e40so7133149dak.11
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:33:05 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Zink <dan.zink@compaq.com>,
-	Greg Kroah-Hartman <greg@kroah.com>,
-	Dely Sy <dely.l.sy@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH RFC 08/17] PCI: fix two race windows when probing/removing SHPC controller
-Date: Tue, 17 Apr 2012 00:29:02 +0800
-Message-Id: <1334593751-5916-9-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
-References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:49067 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751602Ab2DQU6e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Apr 2012 16:58:34 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: huang ying <huang.ying.caritas@gmail.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Tue, 17 Apr 2012 23:03:07 +0200
+Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com> <201204162330.12178.rjw@sisk.pl> <CAC=cRTNL0R--5njYdWzvREx7fhebAhFW_sBJ4jt9n_c8rp_ZTQ@mail.gmail.com>
+In-Reply-To: <CAC=cRTNL0R--5njYdWzvREx7fhebAhFW_sBJ4jt9n_c8rp_ZTQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204172303.07419.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With current shpchp implementation, interrupt is enabled before corresponding
-slot data structures are created. If interrupt happens immediately after
-enabling the hotplug interrupt, shpchp_find_slot() may return NULL, thus
-causes NULL pointer dereference. So create slot data structures before
-enabling interrupt.
+On Tuesday, April 17, 2012, huang ying wrote:
+> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Monday, April 16, 2012, huang ying wrote:
+> >> Hi,
+> >>
+> >> On Sat, Apr 14, 2012 at 3:41 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> > Hi,
+> >> >
+> >> > On Friday, April 13, 2012, Yan, Zheng wrote:
+> >> >> Hi all,
+> >> >>
+> >> >> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+> >> >> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+> >> >> generate wake event through the WAKE# pin. Because we can not access to a device's
+> >> >> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
+> >> >>
+> >> >> Any comment will be appreciated.
+> >> >>
+> >> >> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+> >> >> ---
+> >> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> >> >> index 0f150f2..e210e8cb 100644
+> >> >> --- a/drivers/pci/pci-acpi.c
+> >> >> +++ b/drivers/pci/pci-acpi.c
+> >> >> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >> >>               [PCI_D1] = ACPI_STATE_D1,
+> >> >>               [PCI_D2] = ACPI_STATE_D2,
+> >> >>               [PCI_D3hot] = ACPI_STATE_D3,
+> >> >> -             [PCI_D3cold] = ACPI_STATE_D3
+> >> >> +             [PCI_D3cold] = ACPI_STATE_D3_COLD
+> >> >>       };
+> >> >>       int error = -EINVAL;
+> >> >>
+> >> >
+> >> > Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
+> >> >
+> >> > We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
+> >> > instead.  I'll prepare a patch for that over the weekend if no one has done
+> >> > that already.
+> >> >
+> >> >> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+> >> >>
+> >> >>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+> >> >>  {
+> >> >> -     if (dev->pme_interrupt)
+> >> >> +     /* PME interrupt isn't available in the D3cold case */
+> >> >> +     if (dev->pme_interrupt && !dev->runtime_d3cold)
+> >> >
+> >> > This whole thing is wrong.  First off, I don't think that the runtime_d3cold
+> >> > flag makes any sense.  We already cover that in dev->pme_support.
+> >>
+> >> PCIe devices and PCIe root port may have proper PME interrupt support
+> >> (that is, dev->pme_interrupt = true), but the process of remote wakeup
+> >> from D3cold is as follow:
+> >>
+> >> 1) In D3cold, the power of the main link is turned off, aux power is
+> >> provided (PCIe L2 link state)
+> >> 2) Device detect condition to resume, then assert #WAKE pin
+> >> 2) ACPI circuit linked with #WAKE pin, and will generate a GPE for that
+> >> 3) GPE handler will resume device with ACPI (via _PS3 and _PR0), the
+> >> power of the main link is turned on, after a while, link goes into L0
+> >> state
+> >> 4) The PME message is sent to root port, pme interrupt generated
+> >
+> > This isn't how it's supposed to work in theory.  If the device can signal PME
+> > from D3cold, it should be able to reestablish the link and send a PME
+> > message from there.  dev->pme_interrupt set means exactly that.
+> >
+> > ACPI is only supposed to be needed for things that don't send PME
+> > messages (in your case the PME interrupt generated by the port is essentially
+> > useless, because the wakeup event has already been signaled through ACPI).
+> >
+> >> So, for deivce, dev->pme_interrupt = true and dev->pme_support
+> >> advocate it support PME in D3cold.  But we still need ACPI to setup
+> >> run wake for the device.
+> >
+> > OK, so this is nonstandard.
+> 
+> This is the standard behavior.  Please refer to PCI Express Base
+> Sepcification Revision 2.0, section 5.3.3.2 Link Wakeup.  In D1, D2
+> and D3hot state, PCIe device can transit the link from L1 to L0 state,
+> and send the PME message.  In D3cold, the main link is powered off,
+> PCIe device will use a STANDARD sideband signal WAKE# to signal wakeup
+> firstly, then platform (power controller in spec) will power on the
+> main link for the device, after main link is back to L0, the PME
+> message is send to root port, pme interrupt is generated.  So in
+> theory, the wake up process can be divided into platform part (which
+> power on the main link) and PCIe part (which send PME).
 
-And cleanup_slots() is called to destroy slot data structures before disabling
-interrupt, which may cause invalid memory access in shpc_isr().  So call
-cleanup_slots() after disabling interrupt/removing the poll timer.
+That's fine.  However, the platform part should be completely transparent
+to the PCI bus type, then.  It just should power up the link to allow a
+PME message to be transmitted through it.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/hotplug/shpchp.h      |    1 +
- drivers/pci/hotplug/shpchp_core.c |    6 +++---
- drivers/pci/hotplug/shpchp_hpc.c  |   36 +++++++++++++++++++++---------------
- 3 files changed, 25 insertions(+), 18 deletions(-)
+[...]
 
-diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
-index ca64932..6691dc4 100644
---- a/drivers/pci/hotplug/shpchp.h
-+++ b/drivers/pci/hotplug/shpchp.h
-@@ -182,6 +182,7 @@ extern int shpchp_unconfigure_device(struct slot *p_slot);
- extern void cleanup_slots(struct controller *ctrl);
- extern void shpchp_queue_pushbutton_work(struct work_struct *work);
- extern int shpc_init( struct controller *ctrl, struct pci_dev *pdev);
-+extern void shpc_enable_intr(struct controller *ctrl);
- 
- static inline const char *slot_name(struct slot *slot)
- {
-diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-index 7414fd9..aaa66be 100644
---- a/drivers/pci/hotplug/shpchp_core.c
-+++ b/drivers/pci/hotplug/shpchp_core.c
-@@ -318,14 +318,14 @@ static int shpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto err_out_release_ctlr;
- 	}
- 
-+	shpc_enable_intr(ctrl);
-+
- 	rc = shpchp_create_ctrl_files(ctrl);
- 	if (rc)
--		goto err_cleanup_slots;
-+		goto err_out_release_ctlr;
- 
- 	return 0;
- 
--err_cleanup_slots:
--	cleanup_slots(ctrl);
- err_out_release_ctlr:
- 	ctrl->hpc_ops->release_ctlr(ctrl);
- err_out_free_ctrl:
-diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
-index 75ba231..2bc6182 100644
---- a/drivers/pci/hotplug/shpchp_hpc.c
-+++ b/drivers/pci/hotplug/shpchp_hpc.c
-@@ -592,6 +592,13 @@ static void hpc_release_ctlr(struct controller *ctrl)
- 		shpc_writel(ctrl, SLOT_REG(i), slot_reg);
- 	}
- 
-+	if (shpchp_poll_mode)
-+		del_timer(&ctrl->poll_timer);
-+	else {
-+		free_irq(ctrl->pci_dev->irq, ctrl);
-+		pci_disable_msi(ctrl->pci_dev);
-+	}
-+
- 	cleanup_slots(ctrl);
- 
- 	/*
-@@ -603,13 +610,6 @@ static void hpc_release_ctlr(struct controller *ctrl)
- 	serr_int &= ~SERR_INTR_RSVDZ_MASK;
- 	shpc_writel(ctrl, SERR_INTR_ENABLE, serr_int);
- 
--	if (shpchp_poll_mode)
--		del_timer(&ctrl->poll_timer);
--	else {
--		free_irq(ctrl->pci_dev->irq, ctrl);
--		pci_disable_msi(ctrl->pci_dev);
--	}
--
- 	iounmap(ctrl->creg);
- 	release_mem_region(ctrl->mmio_base, ctrl->mmio_size);
- }
-@@ -1081,6 +1081,20 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
- 	shpc_get_max_bus_speed(ctrl);
- 	shpc_get_cur_bus_speed(ctrl);
- 
-+	return 0;
-+
-+	/* We end up here for the many possible ways to fail this API.  */
-+abort_iounmap:
-+	iounmap(ctrl->creg);
-+abort:
-+	return rc;
-+}
-+
-+void shpc_enable_intr(struct controller *ctrl)
-+{
-+	u8 hp_slot;
-+	u32 tempdword, slot_reg;
-+
- 	/*
- 	 * Unmask all event interrupts of all slots
- 	 */
-@@ -1102,12 +1116,4 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
- 		tempdword = shpc_readl(ctrl, SERR_INTR_ENABLE);
- 		ctrl_dbg(ctrl, "SERR_INTR_ENABLE = %x\n", tempdword);
- 	}
--
--	return 0;
--
--	/* We end up here for the many possible ways to fail this API.  */
--abort_iounmap:
--	iounmap(ctrl->creg);
--abort:
--	return rc;
- }
--- 
-1.7.5.4
+> > So don't use pci_set_power_state() for that, because it's essentially
+> > a different operation.  You need a pci_platform_remove_power() helper or
+> > similar for that.
+> >
+> > What ACPI method exactly is used to remove power from the device?
+> 
+> The ACPI method executed is as follow:
+> 
+> - _PS3 (if exist)
+> - Power resources in _PR3 is turned on
+> - Power resources in _PR0 is turned off
+> - Power resources in _PR3 is turned off
 
+I'd rather think
+
+- make sure that _PR3 resources are referenced
+- drop references (from this device) for all other power resources
+- execute _PS3 (if any)
+- drop references for _PR3 resources
+
+if Section 7.2.11 of ACPI 5.0 is to be followed.
+
+> I think the process can fit pci_set_power_state() quite well, so why
+> invent another helper for that?
+
+OK, we can special case it, perhaps.
+
+Suppose we have a "this device may be put into D3_cold" flag.
+
+Who's going to decide whether to put it into D3_hot or D3_cold?
+
+
+[...]
+
+> >> > So now please tell me what exactly you want to achieve and why you want to do
+> >> > that in the first place.
+> >
+> > Well, is there any chance to get that information?
+> 
+> You mean the runtime_d3cold flag? That flag is used to tell
+> acpi_pci_run_wake() that we need ACPI wakeup setup for the device
+> because that is needed by D3cold.  The ACPI wakeup setup here means
+> turn on power resources needed by wake up (_PRW) and execute _DSW.
+> 
+> If you mean the whole patch, we want to implement runtime D3cold
+> support, which can save more power than D3hot.
+
+So, do I think correctly that you'd like to put devices into D3_cold
+if that's possible via ACPI and to be able to wake it up from that state
+using remote wakeup?
+
+Rafael
