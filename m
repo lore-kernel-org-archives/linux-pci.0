@@ -1,58 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:13118 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753447Ab2DMN0m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 09:26:42 -0400
-Message-ID: <4F88297B.3020200@snewbury.org.uk>
-Date: Fri, 13 Apr 2012 14:26:19 +0100
-From: Steven Newbury <steve@snewbury.org.uk>
+Received: from ogre.sisk.pl ([217.79.144.158]:48956 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751542Ab2DQUQK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Apr 2012 16:16:10 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: huang ying <huang.ying.caritas@gmail.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Tue, 17 Apr 2012 22:20:45 +0200
+Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com> <201204161907.13806.rjw@sisk.pl> <CAC=cRTNdLu=A64YAEp78ENc1h2OJKusXY3Wm9LuY4drz9pbomg@mail.gmail.com>
+In-Reply-To: <CAC=cRTNdLu=A64YAEp78ENc1h2OJKusXY3Wm9LuY4drz9pbomg@mail.gmail.com>
 MIME-Version: 1.0
-To: Steven Newbury <steve@snewbury.org.uk>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	"Barnes, Jesse" <jesse.barnes@intel.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Subject: Re: PCI resources above 4GB
-References: <1333968563.5678.19.camel@infinity>  <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>  <4F8467AA.90305@snewbury.org.uk>  <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>  <4F848357.3060007@snewbury.org.uk>  <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>  <4F848E10.1090703@snewbury.org.uk>  <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>  <1334089568.4083.2.camel@Nokia-N900>  <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>  <4F84A3EC.6030903@snewbury.org.uk>  <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>  <1334229754.30606.7.camel@Nokia-N900>  <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>  <1334248841.2910.6.camel@Nokia-N900>   <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com> <1334317529.2910.21.camel@Nokia-N900> <4F8814F7.20808@snewbury.org.uk> <4F8820F0.5010607@snewbury.org.uk>
-In-Reply-To: <4F8820F0.5010607@snewbury.org.uk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204172220.45970.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 13/04/12 13:49, Steven Newbury wrote:
-> On 13/04/12 12:58, Steven Newbury wrote:
+On Tuesday, April 17, 2012, huang ying wrote:
+> On Tue, Apr 17, 2012 at 1:07 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Moreover, I really don't think it's a good idea to put PCI Express ports into
+> > low-power states in general.  It might work on your platform, whatever it is,
+> > but that doesn't mean it's going to work on every PCI Express system out
+> > there.  I actually know of a number of such systems where it surely won't
+> > work at all.
 > 
->>> It's not stable, crashes soon after GMA comes up. (Could be 
->>> unrelated breakage in linus/master? Probably not but I will 
->>> verify.)  I noticed the high allocations are occuring from the 
->>> top of 64-bit address-space, whilst /proc/cpuinfo shows only
->>> 48 bits of virtual addressing.  Could that be why..?
->> To reply to myself again, I should have said crashes shortly
->> after Xorg initialises using the intel driver, in both cases!
->> I'm building a kernel now without the patch set to see if it's 
->> unrelated.  If it still dies I'll try applying your patch set to
->> a branch without the changes from linus/master... (should have
->> done that anyway...)
+> The runtime PM support for PCIe port is not turned on by default, we need
 > 
-> Okay, I instead created a branch from an older 3.4-rc1+ kernel
-> tree, running it now, and it seems to be stable.  Something perhaps
-> in the newer tree not playing nicely.  I'll see if I can bisect it,
-> or at least base of rc2 if that works... (I'm a little wary of
-> crashing the system too much and losing my btrfs filesystem...)
-rc2 is fine as well.  Not sure what happened there, I need to be more
-careful about keeping a clean tree to work from.
+> # echo auto > /sys/devices/pcixxxx:xx/<pci id>/power/control
+> 
+> to turn on it.  And we will turn on it on system it works.  Is this sufficient?
 
-Any idea about how to force the GMA >4G when the BIOS hasn't put it
-into the middle of SystemRAM? (as it does when docked)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+No, it is not.  In some cases it shouldn't be enabled at all for PCI Express
+ports, as far as I can say, so to be on the safe side we should only enable it
+on platforms where PCI Express ports are known to work correctly with runtime PM.
 
-iEYEARECAAYFAk+IKXsACgkQGcb56gMuC62+gACeLDg30iJiukq1pSfu2M1GJzZj
-xGQAn0DekMqnLcrKXXn7rMwGFgRzJrsC
-=k+WB
------END PGP SIGNATURE-----
+Thanks,
+Rafael
