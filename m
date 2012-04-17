@@ -1,38 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3445 "EHLO mga02.intel.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:49014 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752059Ab2DQSyZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Apr 2012 14:54:25 -0400
-From: Seth Heasley <seth.heasley@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	James Ralston <james.d.ralston@intel.com>,
-	Seth Heasley <seth.heasley@intel.com>
-Subject: [PATCH 1/3] pci_ids: Add Intel Centerton Legacy Block DeviceID
-Date: Tue, 17 Apr 2012 11:51:23 -0700
-Message-Id: <1334688683-3280-1-git-send-email-seth.heasley@intel.com>
+	id S1751965Ab2DQUjF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Apr 2012 16:39:05 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: huang ying <huang.ying.caritas@gmail.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Tue, 17 Apr 2012 22:43:39 +0200
+Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com> <4F8CD18A.5080903@intel.com> <CAC=cRTMk-NTvo+DJ2mAq6_ZeVLbeqiGx+ttZG6Hr_hQyyYkfLw@mail.gmail.com>
+In-Reply-To: <CAC=cRTMk-NTvo+DJ2mAq6_ZeVLbeqiGx+ttZG6Hr_hQyyYkfLw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204172243.39525.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the Integrated Legacy Block DeviceID for the Centerton CPU.  It will be used in the GPIO and Multifunction Devices driver.
+On Tuesday, April 17, 2012, huang ying wrote:
+> On Tue, Apr 17, 2012 at 10:12 AM, Yan, Zheng <zheng.z.yan@intel.com> wrote:
+> > On 04/17/2012 01:07 AM, Rafael J. Wysocki wrote:
+> >
+> >> BTW, can you please explain to me what the #WAKE signal is and how it is
+> >> different from PME#?
+> >
+> > #WAKE signal is triggered by a pin connected to the root complex or other
+> > motherboard logic. PME# is triggered by PME message sent to the port.
+> 
+> PME# is a PCI pin, while WAKE# is a PCI Express pin.  In PCI Express,
+> there is no PME#, PME is delivered between end point device and root
+> port or root complex event collector via PME message, and the PME
+> message will trigger IRQ on root port or root complex event collector.
+>  WAKE# is not used for PCI Express D1, D2 and D3hot, it is just used
+> by D3cold.  When remote wakeup detected by end point device, it will
+> assert WAKE# to notify power controller (implemented via ACPI on some
+> platform), then power controller will turn on power for main link,
+> after link goes back to L0, PME message will be sent to root port or
+> root complex event collector by end point device.
 
-Signed-off-by: Seth Heasley <seth.heasley@intel.com>
----
- include/linux/pci_ids.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+OK
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 3329965..ab741b0 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2506,6 +2506,7 @@
- #define PCI_DEVICE_ID_INTEL_MRST_SD2	0x084F
- #define PCI_DEVICE_ID_INTEL_I960	0x0960
- #define PCI_DEVICE_ID_INTEL_I960RM	0x0962
-+#define PCI_DEVICE_ID_INTEL_CENTERTON_ILB	0x0c60
- #define PCI_DEVICE_ID_INTEL_8257X_SOL	0x1062
- #define PCI_DEVICE_ID_INTEL_82573E_SOL	0x1085
- #define PCI_DEVICE_ID_INTEL_82573L_SOL	0x108F
--- 
-1.7.4.4
+So do I understand correctly that the WAKE# signal here is the one described
+in Section 5.3.3.2 Link Wakeup of PCI Express Base spec. 2.0?
 
+So what happens is that it triggers a GPE and that GPE has a _Lxx method
+associated with it, I suppose.  Is that correct?
+
+Rafael
