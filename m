@@ -1,52 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:56404 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754233Ab2DFPbz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 11:31:55 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Fix a device reference count leakage issue in pci_dev_present()
-Date: Fri,  6 Apr 2012 23:31:36 +0800
-Message-Id: <1333726296-3817-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:39660 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028Ab2DQCsn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 22:48:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com>
+References: <4F6A483D.50702@fold.natur.cuni.cz>
+	<CAE9FiQVnErU-cska4gpinyj-LOup-U+3vsEG2z_-7h6kyREYtw@mail.gmail.com>
+	<4F6A5A53.305@fold.natur.cuni.cz>
+	<CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
+	<4F8BEB1D.9080903@fold.natur.cuni.cz>
+	<CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
+	<4F8C6E4E.1000205@fold.natur.cuni.cz>
+	<CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com>
+	<CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com>
+Date: Mon, 16 Apr 2012 19:48:43 -0700
+Message-ID: <CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pci_get_dev_by_id() will hold a reference count on the pci device
-returned, so pci_dev_present() should release the corresponding reference
-count to avoid memory leakage.
+On Mon, Apr 16, 2012 at 6:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Apr 16, 2012 at 1:53 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Mon, Apr 16, 2012 at 12:09 PM, Martin Mokrejs
+>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>>>>> On Wed, Mar 21, 2012 at 3:46 PM, Martin Mokrejs
+>>>>>   I had some Ooopses with 3.4-rc2 but now I have tested 3.4-rc3. Still, linux
+>>>>> does NOT realize that I have removed an ExpressCard from the slot. It realizes
+>>>>> that only when I pluging the card back again. Actually, this is a case of a
+>>>>> NEC chipset base USB3.0 card.
+>>>>>
+>>>>>  In contrast, kernel DOES recognize that I unplugged a FireWire card from the
+>>>>> same slot.
+>>>>>
+>>>>>  This is a Dell Vostro 3550 laptop. Below is what syslog logged with my comment.
+>>>>> Empty lines between the log entries are inserted whe I either inserted or removed
+>>>>> a card. Probably a bit more will be in the attached dmesg file.
+>>
+>> so the interrupt for removal get generated, but pcie_isr() is delayed
+>> when another surprise is generated...
+>>
+>
+> please try to revert
+> commit 486b10b9f43500741cd63a878d0ef23cd87fc66d
+> Author: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+> Date:   Mon Nov 7 20:56:50 2011 +0900
+>
+>    PCI: pciehp: Handle push button event asynchronously
+>
+>    Use non-ordered workqueue for attention button events.
+>
+>    Attention button events on each slot can be handled asynchronously. So
+>    we should use non-ordered workqueue. This patch also removes ordered
+>    workqueue in pciehp as a result.
+>
+> to see if there is any difference.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/search.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+can you send out lspci -vvxxxx -s 00:1c.7 after removing USB 3.0 express card?
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 9d75dc8..b572730 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -338,13 +338,13 @@ int pci_dev_present(const struct pci_device_id *ids)
- 	WARN_ON(in_interrupt());
- 	while (ids->vendor || ids->subvendor || ids->class_mask) {
- 		found = pci_get_dev_by_id(ids, NULL);
--		if (found)
--			goto exit;
-+		if (found) {
-+			pci_dev_put(found);
-+			return 1;
-+		}
- 		ids++;
- 	}
--exit:
--	if (found)
--		return 1;
-+
- 	return 0;
- }
- EXPORT_SYMBOL(pci_dev_present);
--- 
-1.7.5.4
-
+Yinghai
