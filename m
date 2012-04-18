@@ -1,106 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <201204182251.46335.rjw@sisk.pl>
-References: <4F8790F6.5080408@intel.com>
-	<201204172310.38816.rjw@sisk.pl>
-	<CAC=cRTNc3XeniOzttRVUTFEzZY1RY7Ds7m+hE8_86A-Ep-5Czw@mail.gmail.com>
-	<201204182251.46335.rjw@sisk.pl>
-Date: Thu, 19 Apr 2012 10:08:08 +0800
-Message-ID: <CAC=cRTMPrSsK5Y8uVxVrtGNqJAGFyRMLU7WsYm185siZd-V_8w@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: huang ying <huang.ying.caritas@gmail.com>
 Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-From: huang ying <huang.ying.caritas@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Date: Wed, 18 Apr 2012 21:52:51 +0200
 Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
 	Zhang Rui <rui.zhang@intel.com>,
 	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+References: <4F8790F6.5080408@intel.com> <201204172243.39525.rjw@sisk.pl> <CAC=cRTOTZ5Y-urtKLAbuyu8y1ttpG74u3AE0J0_eLg8_8C0PHA@mail.gmail.com>
+In-Reply-To: <CAC=cRTOTZ5Y-urtKLAbuyu8y1ttpG74u3AE0J0_eLg8_8C0PHA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204182152.51421.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 19, 2012 at 4:51 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, April 18, 2012, huang ying wrote:
->> On Wed, Apr 18, 2012 at 5:10 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > On Tuesday, April 17, 2012, huang ying wrote:
->> >> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> >> >> >> +     return 0;
->> >> >> >> +}
->> >> >> >> +
->> >> >> >> +static int pcie_port_runtime_resume(struct device *dev)
->> >> >> >> +{
->> >> >> >> +     struct pci_dev *pdev = to_pci_dev(dev);
->> >> >> >> +
->> >> >> >> +     pci_restore_state(pdev);
->> >> >> >> +     if (pdev->runtime_d3cold)
->> >> >> >> +             msleep(100);
->> >> >> >
->> >> >> > What's _that_ supposed to do?
->> >> >>
->> >> >> When resume from d3cold, PCIe main link will be powered on again, it
->> >> >> will take quite some time before the main link go into L0 state.
->> >> >> Otherwise, accessing devices under the port may return wrong result.
->> >> >
->> >> > OK, but this is generic code and as per the standard the link should have been
->> >> > reestablished at this point already.
->> >> >
->> >> > Please don't put some nonstandard-platform-specific quirks like this into
->> >> > code that's supposed to handle _every_ PCIe system.
->> >>
->> >> After checking PCIe spec, I found that the 100ms here has its standard origin :)
->> >>
->> >> In PCI Express Base Specification Revision 2.0:
->> >>
->> >> Section 6.6.1 Conventional Reset
->> >>
->> >> "
->> >> To allow components to perform internal initialization, system
->> >> software must wait for at least
->> >> 100 ms from the end of a Conventional Reset of one or more devices
->> >> before it is permitted to
->> >> issue Configuration Requests to those devices
->> >> "
->> >>
->> >> But I think we should move the 100ms delay here to PCIe bus code or
->> >> PCIe/ACPI code, because that is needed by all PCIe devices for D3cold
->> >> support.
->> >
->> > I think it should be sufficient to wait for the PME message to arrive at
->> > the root port (which will cause the PME interrupt to appear), at which
->> > point the device that sent it should be able to receive configuration
->> > requests.
->>
->> For remote wake up, it is sufficient.  But for host wake up, we still
->> need to wait 100ms.
->
-> Yes, we do.
->
->> > At this point, I need to konw what exactly happens when the GPE is triggered
->> > by WAKE#.
->>
->> - Lxx handler will be executed
->> - in Lxx handler, Notify the ACPI handle PCIe port
->> - Linux has registered a handler for the ACPI handle of PCIe port, in
->> the handler, turn on _PR0 and execute _PS0, which will power on the
->> link.
->
-> But the handler we have is not the handler we want here.
->
-> In fact, there are two handlers, pci_acpi_wake_bus() and pci_acpi_wake_dev()
-> and they only do useful things for ACPI_NOTIFY_DEVICE_WAKE.  Is that the
-> event type we receive from that _Lxx?
+On Wednesday, April 18, 2012, huang ying wrote:
+> On Wed, Apr 18, 2012 at 4:43 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, April 17, 2012, huang ying wrote:
+> >> On Tue, Apr 17, 2012 at 10:12 AM, Yan, Zheng <zheng.z.yan@intel.com> wrote:
+> >> > On 04/17/2012 01:07 AM, Rafael J. Wysocki wrote:
+> >> >
+> >> >> BTW, can you please explain to me what the #WAKE signal is and how it is
+> >> >> different from PME#?
+> >> >
+> >> > #WAKE signal is triggered by a pin connected to the root complex or other
+> >> > motherboard logic. PME# is triggered by PME message sent to the port.
+> >>
+> >> PME# is a PCI pin, while WAKE# is a PCI Express pin.  In PCI Express,
+> >> there is no PME#, PME is delivered between end point device and root
+> >> port or root complex event collector via PME message, and the PME
+> >> message will trigger IRQ on root port or root complex event collector.
+> >>  WAKE# is not used for PCI Express D1, D2 and D3hot, it is just used
+> >> by D3cold.  When remote wakeup detected by end point device, it will
+> >> assert WAKE# to notify power controller (implemented via ACPI on some
+> >> platform), then power controller will turn on power for main link,
+> >> after link goes back to L0, PME message will be sent to root port or
+> >> root complex event collector by end point device.
+> >
+> > OK
+> >
+> > So do I understand correctly that the WAKE# signal here is the one described
+> > in Section 5.3.3.2 Link Wakeup of PCI Express Base spec. 2.0?
+> >
+> > So what happens is that it triggers a GPE and that GPE has a _Lxx method
+> > associated with it, I suppose.  Is that correct?
+> 
+> Yes.
 
-I check the DSDT, in _Lxx, there is
+So I wonder what that _Lxx method looks like.
 
-Notify (\_SB.PCI0.RP03, 0x02)
-
-That is, the event type is ACPI_NOTIFY_DEVICE_WAKE.
-
-> Even if so, these routines don't seem to be suitable to handle the case at hand.
-
-Yes.  Maybe add a flag named like "come_from_d3cold", and if
-come_from_d3cold == true, resume the dev itself without checking pme
-bits, because the PCIe main link is not available now.
-
-Best Regards,
-Huang Ying
+Thanks,
+Rafael
