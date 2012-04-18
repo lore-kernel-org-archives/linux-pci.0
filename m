@@ -1,92 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([58.251.152.67]:58330 "EHLO
-	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751064Ab2DXD6O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 23:58:14 -0400
-Date: Tue, 24 Apr 2012 11:56:10 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH v1 6/8] dmaengine: enhance network subsystem to support DMA
- device hotplug
-In-reply-to: <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Vinod Koul <vinod.koul@intel.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-	James Morris <jmorris@namei.org>,
-	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-id: <4F96245A.4080000@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
- <1335189109-4871-7-git-send-email-jiang.liu@huawei.com>
- <CABE8wwvi_Yz8AyALr1-uDW9xSgrSqfrYWhB_22NQ2ydTa81+mg@mail.gmail.com>
- <4F961041.7010106@huawei.com>
- <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
+Received: from mail.windriver.com ([147.11.1.11]:41466 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055Ab2DRVYh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Apr 2012 17:24:37 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Howells <dhowells@redhat.com>
+Subject: [PATCH] pci: frv architecture needs generic setup-bus infrastructure
+Date: Wed, 18 Apr 2012 17:24:14 -0400
+Message-Id: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-4-24 11:09, Dan Williams wrote:
-> On Mon, Apr 23, 2012 at 7:30 PM, Jiang Liu<jiang.liu@huawei.com>  wrote:
->>> If you are going to hotplug the entire IOH, then you are probably ok
->>> with network links going down, so could you just down the links and
->>> remove the driver with the existing code?
->>
->> I feel it's a little risky to shut down/restart all network interfaces
->> for hot-removal of IOH, that may disturb the applications.
->
-> I guess I'm confused... wouldn't the removal of an entire domain of
-> pci devices disturb userspace applications?
-Here I mean removing an IOH shouldn't affect devices under other IOHs
-if possible.
-With current dmaengine implementation, a DMA device/channel may be used
-by clients in other PCI domains. So to safely remove a DMA device, we
-need to return dmaengine_ref_count to zero by stopping all DMA clients.
-For network, that means we need to stop all network interfaces, seems
-a little heavy:)
+Otherwise we get this link failure for frv's defconfig:
 
->
->> And there
->> are also other kinds of clients, such as ASYNC_TX, seems we can't
->> adopt this method to reclaim DMA channels from ASYNC_TX subsystem.
->
-> I say handle this like block device hotplug.  I.e. the driver stays
-> loaded but the channel is put into an 'offline' state.  So the driver
-> hides the fact that the hardware went away.  Similar to how you can
-> remove a disk but /dev/sda sticks around until the last reference is
-> gone (and the driver 'sd' sticks around until all block devices are
-> gone).
-Per my understanding, this mechanism could be used to stop driver from
-accessing surprisingly removed devices, but it still needs a reference
-count mechanism to finish the driver unbinding operation eventually.
+   LD      .tmp_vmlinux1
+ drivers/built-in.o: In function `pci_assign_resource':
+ (.text+0xbf0c): undefined reference to `pci_cardbus_resource_alignment'
+ drivers/built-in.o: In function `pci_setup':
+ pci.c:(.init.text+0x174): undefined reference to `pci_realloc_get_opt'
+ pci.c:(.init.text+0x1a0): undefined reference to `pci_realloc_get_opt'
+ make[1]: *** [.tmp_vmlinux1] Error 1
 
-For IOH hotplug, we need to wait for the completion of driver unbinding
-operations before destroying the PCI device nodes of IOAT, so still need
-reference count to track channel usage.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Howells <dhowells@redhat.com>
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 
-Another way is to notify all clients to release all channels when IOAT
-device hotplug happens, but that may need heavy modification to the
-DMA clients.
-
->
-> I expect the work will be in making sure existing clients are prepared
-> to handle NULL returns from ->device_prep_dma_*.  In some cases the
-> channel is treated more like a cpu, so a NULL return from
-> ->device_prep_dma_memcpy() has been interpreted as "device is
-> temporarily busy, it is safe to try again".  We would need to change
-> that to a permanent indication that the device is gone and not attempt
-> retry.
-Yes, some ASYNC_TX clients interpret NULL return as EBUSY and keep on
-retry when doing context aware computations. Will try to investigate
-on this direction.
-
->
-> --
-> Dan
->
-> .
->
-
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 083a49f..165274c 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -42,6 +42,7 @@ obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
+ obj-$(CONFIG_PARISC) += setup-bus.o
+ obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
+ obj-$(CONFIG_PPC) += setup-bus.o
++obj-$(CONFIG_FRV) += setup-bus.o
+ obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
+ obj-$(CONFIG_X86_VISWS) += setup-irq.o
+ obj-$(CONFIG_MN10300) += setup-bus.o
+-- 
+1.7.9.1
 
