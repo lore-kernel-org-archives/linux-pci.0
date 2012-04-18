@@ -1,344 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:53695 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755207Ab2D0WUp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 18:20:45 -0400
-Received: by lbbgf7 with SMTP id gf7so849247lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 15:20:43 -0700 (PDT)
+Received: from fold.natur.cuni.cz ([195.113.57.32]:50804 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751670Ab2DRRxn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Apr 2012 13:53:43 -0400
+Message-ID: <4F8EFFA3.3050705@fold.natur.cuni.cz>
+Date: Wed, 18 Apr 2012 19:53:39 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-In-Reply-To: <4F96E44F.9060808@redhat.com>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com>
- <201204152140.40747.rjw@sisk.pl> <CAErSpo4St6zBBz7131Ne3BEHNO8Xcq8sCy3T5HV1F0B1B1u1cg@mail.gmail.com>
- <201204232153.57351.rjw@sisk.pl> <4F95B67D.7020706@redhat.com>
- <CAErSpo4MRASkhaeTKozFuBRH13koV6=evC5GVAyJ0K222B6=aw@mail.gmail.com>
- <4F96CEDB.3060300@redhat.com> <CAErSpo76egMNuVdE7er_DEXG5+Zpo-vAff8+TEQAzpuDhOmSaQ@mail.gmail.com>
- <4F96E44F.9060808@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 27 Apr 2012 16:20:23 -0600
-Message-ID: <CAErSpo6PQLS0_KO1YxmZZSkLrBpZKd0Jzfj3n9UAK_XHbJEsTA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix regression in pci_restore_state()
-To: Don Dutile <ddutile@redhat.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Mikko Vinni <mmvinni@yahoo.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Yinghai Lu <yinghai@kernel.org>
+CC: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec
+ timeframe
+References: <4F6A483D.50702@fold.natur.cuni.cz> <CAE9FiQVnErU-cska4gpinyj-LOup-U+3vsEG2z_-7h6kyREYtw@mail.gmail.com> <4F6A5A53.305@fold.natur.cuni.cz> <CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com> <4F8BEB1D.9080903@fold.natur.cuni.cz> <CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com> <4F8C6E4E.1000205@fold.natur.cuni.cz> <CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com> <CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com> <CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com> <4F8D1B72.2000105@fold.natur.cuni.cz> <CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com> <CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com> <4F8D390F.9050408@fold.natur.cuni.cz> <CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com> <CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
+In-Reply-To: <CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 24, 2012 at 11:35 AM, Don Dutile <ddutile@redhat.com> wrote:
-> On 04/24/2012 01:01 PM, Bjorn Helgaas wrote:
+
+
+Yinghai Lu wrote:
+> On Tue, Apr 17, 2012 at 10:07 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, Apr 17, 2012 at 2:34 AM, Martin Mokrejs
+>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>> Yinghai Lu wrote:
+>>>> On Tue, Apr 17, 2012 at 1:46 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>>> On Tue, Apr 17, 2012 at 12:27 AM, Martin Mokrejs
+>>>>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>>>>>>
+>>>>>>> can you send out lspci -vvxxxx -s 00:1c.7 after removing USB 3.0 express card?
+>>>>>>
+>>>>>> No, that did not help (tried on 3.4-rc3). First I plugged in the NEC uPD720200 USB3.0 card
+>>>>>> and unplugged it (card removal not reported :(), saved the lspci output.
+>>>>>> Then I inserted the FireWire card, unplugged, again saved the lspci output.
+>>>>>> Finally, saved the dmesg. All three files are attached.
+>>>>>
+>>>>> for USB 3.0:
+>>>>>                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+>>>>>                        Changed: MRL- PresDet- LinkState+
+>>>>
+>>>> LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+
+>>>> BWMgmt+ ABWMgmt-
+>>>>
+>>>> link still active even that card get removed, that looks like chipset
+>>>> have problem.
+>>>
+>>> Yinghai,
+>>>  so what should I ask Dell for? To fix BIOS of the laptop? What exactly? Or do you think
+>>> this is a hardware issue with the chipset?
 >>
->> On Tue, Apr 24, 2012 at 10:03 AM, Don Dutile<ddutile@redhat.com>  wrote:
->>>
->>> On 04/23/2012 06:33 PM, Bjorn Helgaas wrote:
->>>>
->>>>
->>>> On Mon, Apr 23, 2012 at 2:07 PM, Don Dutile<ddutile@redhat.com>
->>>>  wrote:
->>>>>
->>>>>
->>>>> On 04/23/2012 03:53 PM, Rafael J. Wysocki wrote:
->>>>>>
->>>>>>
->>>>>>
->>>>>> On Monday, April 23, 2012, Bjorn Helgaas wrote:
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> On Sun, Apr 15, 2012 at 1:40 PM, Rafael J. Wysocki<rjw@sisk.pl>
->>>>>>>  wrote:
->>>>>>>>
->>>>>>>>
->>>>>>>>
->>>>>>>> On Sunday, April 15, 2012, Linus Torvalds wrote:
->>>>>>>>>
->>>>>>>>>
->>>>>>>>>
->>>>>>>>> On Sun, Apr 15, 2012 at 11:47 AM, Rafael J. Wysocki<rjw@sisk.pl>
->>>>>>>>>  wrote:
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> mdelay(10) doesn't really look good either to me in this case,
->>>>>>>>>> though.
->>>>>>>>>
->>>>>>>>>
->>>>>>>>>
->>>>>>>>>
->>>>>>>>> Oh, I agree. What kind of ass-backwards device actually needs that
->>>>>>>>> kind of crazy delays? It is almost certainly buggy.
->>>>>>>>>
->>>>>>>>> With retries, 10ms delays are totally unacceptable. There's
->>>>>>>>> something
->>>>>>>>> wrong.
->>>>>>>>>
->>>>>>>>> A single ms *may* be ok.
->>>>>>>>>
->>>>>>>>> Anyway, can you also split the actual "write _one_ register with
->>>>>>>>> retry" into a function of its own? The code looks like crap with
->>>>>>>>> those
->>>>>>>>> multiple levels of looping, with conditionals inside them etc. With
->>>>>>>>> a
->>>>>>>>> simple helper function, you could change the break into return, and
->>>>>>>>> it
->>>>>>>>> would look much better, I bet.
->>>>>>>>
->>>>>>>>
->>>>>>>>
->>>>>>>>
->>>>>>>> Sure.  It appears cleaner this way.
->>>>>>>>
->>>>>>>> ---
->>>>>>>> From: Rafael J. Wysocki<rjw@sisk.pl>
->>>>>>>> Subject: PCI: Fix regression in pci_restore_state(), v3
->>>>>>>>
->>>>>>>> Commit 26f41062f28de65e11d3cf353e52d0be73442be1
->>>>>>>>
->>>>>>>>    PCI: check for pci bar restore completion and retry
->>>>>>>>
->>>>>>>> attempted to address problems with PCI BAR restoration on systems
->>>>>>>> where FLR had not been completed before pci_restore_state() was
->>>>>>>> called, but it did that in an utterly wrong way.
->>>>>>>>
->>>>>>>> First off, instead of retrying the writes for the BAR registers
->>>>>>>> only, it did that for all of the PCI config space of the device,
->>>>>>>> including the status register (whose value after the write quite
->>>>>>>> obviously need not be the same as the written one).  Second, it
->>>>>>>> added arbitrary delay to pci_restore_state() even for systems
->>>>>>>> where the PCI config space restoration was successful at first
->>>>>>>> attempt.  Finally, the mdelay(10) it added to every iteration of the
->>>>>>>> writing loop was way too much of a delay for any reasonable device.
->>>>>>>>
->>>>>>>> All of this actually caused resume failures for some devices on
->>>>>>>> the Mikko's system.
->>>>>>>>
->>>>>>>> To fix the regression, make pci_restore_state() only retry the
->>>>>>>> writes for BAR registers and only wait if the first read from
->>>>>>>> the register doesn't return the written value.  Additionaly, make
->>>>>>>> it wait for 1 ms, instead of 10 ms, after every failing attempt
->>>>>>>> to write into config space.
->>>>>>>>
->>>>>>>> Reported-by: Mikko Vinni<mmvinni@yahoo.com>
->>>>>>>> Signed-off-by: Rafael J. Wysocki<rjw@sisk.pl>
->>>>>>>> ---
->>>>>>>>  drivers/pci/pci.c |   57
->>>>>>>> ++++++++++++++++++++++++++++++++++++------------------
->>>>>>>>  1 file changed, 39 insertions(+), 18 deletions(-)
->>>>>>>>
->>>>>>>> Index: linux/drivers/pci/pci.c
->>>>>>>> ===================================================================
->>>>>>>> --- linux.orig/drivers/pci/pci.c
->>>>>>>> +++ linux/drivers/pci/pci.c
->>>>>>>> @@ -967,16 +967,47 @@ pci_save_state(struct pci_dev *dev)
->>>>>>>>        return 0;
->>>>>>>>  }
->>>>>>>>
->>>>>>>> +static void pci_restore_config_dword(struct pci_dev *pdev, int
->>>>>>>> offset,
->>>>>>>> +                                    u32 saved_val, int retry)
->>>>>>>> +{
->>>>>>>> +       u32 val;
->>>>>>>> +
->>>>>>>> +       pci_read_config_dword(pdev, offset,&val);
->>>>>>>> +       if (val == saved_val)
->>>>>>>> +               return;
->>>>>>>> +
->>>>>>>> +       for (;;) {
->>>>>>>> +               dev_dbg(&pdev->dev, "restoring config space at
->>>>>>>> offset
->>>>>>>> "
->>>>>>>> +                       "%#x (was %#x, writing %#x)\n", offset, val,
->>>>>>>> saved_val);
->>>>>>>> +               pci_write_config_dword(pdev, offset, saved_val);
->>>>>>>> +               if (retry--<= 0)
->>>>>>>> +                       return;
->>>>>>>> +
->>>>>>>> +               pci_read_config_dword(pdev, offset,&val);
->>>>>>>> +               if (val == saved_val)
->>>>>>>> +                       return;
->>>>>>>> +
->>>>>>>> +               mdelay(1);
->>>>>>>> +       }
->>>>>>>> +}
->>>>>>>> +
->>>>>>>> +static void pci_restore_config_space(struct pci_dev *pdev, int
->>>>>>>> start,
->>>>>>>> int end,
->>>>>>>> +                                    int retry)
->>>>>>>> +{
->>>>>>>> +       int index;
->>>>>>>> +
->>>>>>>> +       for (index = end; index>= start; index--)
->>>>>>>> +               pci_restore_config_dword(pdev, 4 * index,
->>>>>>>> +
->>>>>>>>  pdev->saved_config_space[index],
->>>>>>>> +                                        retry);
->>>>>>>> +}
->>>>>>>> +
->>>>>>>>  /**
->>>>>>>>  * pci_restore_state - Restore the saved state of a PCI device
->>>>>>>>  * @dev: - PCI device that we're dealing with
->>>>>>>>  */
->>>>>>>>  void pci_restore_state(struct pci_dev *dev)
->>>>>>>>  {
->>>>>>>> -       int i;
->>>>>>>> -       u32 val;
->>>>>>>> -       int tries;
->>>>>>>> -
->>>>>>>>        if (!dev->state_saved)
->>>>>>>>                return;
->>>>>>>>
->>>>>>>> @@ -984,24 +1015,14 @@ void pci_restore_state(struct pci_dev *d
->>>>>>>>        pci_restore_pcie_state(dev);
->>>>>>>>        pci_restore_ats_state(dev);
->>>>>>>>
->>>>>>>> +       pci_restore_config_space(dev, 10, 15, 0);
->>>>>>>>        /*
->>>>>>>>         * The Base Address register should be programmed before the
->>>>>>>> command
->>>>>>>>         * register(s)
->>>>>>>>         */
->>>>>>>> -       for (i = 15; i>= 0; i--) {
->>>>>>>> -               pci_read_config_dword(dev, i * 4,&val);
->>>>>>>> -               tries = 10;
->>>>>>>> -               while (tries&&      val !=
->>>>>>>> dev->saved_config_space[i]) {
->>>>>>>>
->>>>>>>> -                       dev_dbg(&dev->dev, "restoring config "
->>>>>>>> -                               "space at offset %#x (was %#x,
->>>>>>>> writing
->>>>>>>> %#x)\n",
->>>>>>>> -                               i, val,
->>>>>>>> (int)dev->saved_config_space[i]);
->>>>>>>> -                       pci_write_config_dword(dev,i * 4,
->>>>>>>> -                               dev->saved_config_space[i]);
->>>>>>>> -                       pci_read_config_dword(dev, i * 4,&val);
->>>>>>>> -                       mdelay(10);
->>>>>>>> -                       tries--;
->>>>>>>> -               }
->>>>>>>> -       }
->>>>>>>> +       pci_restore_config_space(dev, 4, 9, 10);
->>>>>>>> +       pci_restore_config_space(dev, 0, 3, 0);
->>>>>>>> +
->>>>>>>>        pci_restore_pcix_state(dev);
->>>>>>>>        pci_restore_msi_state(dev);
->>>>>>>>        pci_restore_iov_state(dev);
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> I'd feel better about this if there were a way to delay in the FLR
->>>>>>> path instead.  If we delay in the restore path, we're only fixing one
->>>>>>> of the many ways config space can be written.  Other paths that write
->>>>>>> config space will just silently fail.
->>>>>>>
->>>>>>> The PCIe spec (r3.0, sec 6.6.2) mentions waiting for the "pre-FLR
->>>>>>> value for Completion Timeout," but I don't see anything that looks
->>>>>>> like that in pcie_flr() or pci_af_flr().  Are there any other direct
->>>>>>> ways we can detect when the FLR is complete?
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> I'm not aware of any.
->>>>>>
->>>>>> Thanks,
->>>>>> Rafael
->>>>>
->>>>>
->>>>>
->>>>> I don't think so, either.
->>>>> I believe an ECN is being worked in the PCI-SIG
->>>>> to add such a notification, though.
->>>>> Even if adopted, need to wait for another crank of the hw before
->>>>> the notification can be used.
->>>>
->>>>
->>>>
->>>> I agree, we can't do something that works only on new hardware -- we
->>>> have to make the existing hardware in the field work.
->>>>
->>>> What about the "waiting for as much time as the pre-FLR value for
->>>> Completion Timeout" part?
->>>>
->>>> Or can we do something like asserting FLR, sleeping 100ms, then
->>>> attempting a write to something in config space and retrying until it
->>>> sticks?  It's kludgy, but I'm not sure it's any worse than putting the
->>>> retries in the restore path, and it would have the advantage that
->>>> other writers of config space wouldn't have to worry.
->>>
->>>
->>> Depending on system config, reading a port that is being FLR'd
->>> can cause AERs, which if a driver is registered for the endpoint,
->>> it will get AERs reported to the driver and potentially complicate the
->>> FLRhandling.
->>>
->>> This implies a hook to temp-disable AER during FLR, then turning it
->>> back on (hw&/or sw).
+>> after the expresscard get removed, that root port socket status bits
+>> still report Data Link Active, and
+>> the card still present.
 >>
->> Don't we have the same possibility of causing AERs if we add this
->> retry stuff in pci_restore_state()?  It sounds like the same
->> possibility exists regardless of whether the config access happens in
->> the FLR path or the restore path.
->
-> Dont know; have to re-read thread on where/when pci_restore_state() is
-> recalled
-> wrt link synch/enable state(s).
+>> Better check with Dell at first, and ask them to talk with intel if
+>> there is silicon bug with that chipset that report wrong status.
+>>
+>> Let me check if i could rebase one my local patch do reset pcie link
+>> to prove that problem it silicon related.
+> 
+> Rebase patches about pcie link disable/enable in /sys. please check them at
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-test
+> 
+>   PCI, sysfs: merge dev and bus cpuaffinity show handling
+>   PCI, sys: Use is_visable() with boot_vga attribute for pci_dev
+>   PCI, sysfs: Put resource_alignment info pci_bus_attrs array
+>   PCI: Move pcie_link_disable to pcie-link.c
+>   PCI, sysfs: Add pcie attrs for pcie device under pci dev dir.
+>   PCI: Add link_disable in /sysfs for pcie device
+> 
+> it is based on for-pci-root-bus-hotplug branch
+> 
+> Or you can just master branch like
+> git clone git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> 
+> After you remove USB3 expresscard, you need to
+> 
+> echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+> then
+> echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
 
-I don't know what to do with this patch yet.  Here's what I think
-happens with this patch applied, in a case where we have to do some
-retries:
+So without these two echo commands the is no improvement/fix.
 
-    pcie_flr
-      pci_write_config_word(dev, PCI_EXP_DEVCTL)  /* start FLR */
-      msleep(100)
-    ...
-    pci_restore_state
-      pci_read_config_dword(dev, 0x28)  /* CardBus CIS pointer */
-      pci_write_config_dword(dev, 0x28)
-      pci_read_config_dword(dev, 0x30)  /* Subsystem ID/vendor ID */
-      pci_write_config_dword(dev, 0x30)
-      ...
-      pci_read_config_dword(dev, 0x10)  /* BAR 0 */
-      for (;;) {
-        pci_write_config_dword(dev, 0x10, saved_val)
-        pci_read_config_dword(dev, 0x10, &val)
-        if (val == saved_val)
-          break;
-      }
+[  686.701306] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
+[  686.701316] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+[  686.701319] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+[  686.701357] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+[  686.701390] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
+[  686.809763] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
+[  686.809864] pci 0000:11:00.0: [1033:0194] type 00 class 0x0c0330
+[  686.809914] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
+[  686.810166] pci 0000:11:00.0: PME# supported from D0 D3hot
+[  686.829795] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+[  686.829840] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+[  686.829843] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+[  686.829848] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+[  686.829852] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+[  686.829991] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+[  686.830048] xhci_hcd 0000:11:00.0: xHCI Host Controller
+[  686.830054] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+[  686.830348] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+[  686.830466] xhci_hcd 0000:11:00.0: irq 54 for MSI/MSI-X
+[  686.830473] xhci_hcd 0000:11:00.0: irq 55 for MSI/MSI-X
+[  686.830479] xhci_hcd 0000:11:00.0: irq 56 for MSI/MSI-X
+[  686.830485] xhci_hcd 0000:11:00.0: irq 57 for MSI/MSI-X
+[  686.830492] xhci_hcd 0000:11:00.0: irq 58 for MSI/MSI-X
+[  686.830654] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+[  686.830656] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[  686.830657] usb usb5: Product: xHCI Host Controller
+[  686.830658] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+[  686.830660] usb usb5: SerialNumber: 0000:11:00.0
+[  686.830782] xHCI xhci_add_endpoint called for root hub
+[  686.830784] xHCI xhci_check_bandwidth called for root hub
+[  686.830807] hub 5-0:1.0: USB hub found
+[  686.830819] hub 5-0:1.0: 2 ports detected
+[  686.830921] xhci_hcd 0000:11:00.0: xHCI Host Controller
+[  686.830925] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+[  686.833581] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+[  686.833583] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[  686.833585] usb usb6: Product: xHCI Host Controller
+[  686.833586] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+[  686.833587] usb usb6: SerialNumber: 0000:11:00.0
+[  686.833639] xHCI xhci_add_endpoint called for root hub
+[  686.833641] xHCI xhci_check_bandwidth called for root hub
+[  686.833666] hub 6-0:1.0: USB hub found
+[  686.833678] hub 6-0:1.0: 2 ports detected
 
-1) What happens if another code path reads or writes config space
-before pci_restore_path()?  As far as I can tell, it fails silently.
+echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
 
-2) Apparently (per Don), config access to a device in the middle of
-FLR can cause AER.  If that's true, it seems like even this patch
-could cause an AER, and the only possible thing is to rely on a delay
-in pcie_flr() or temporarily disable AER.
+[  716.999938] pcieport 0000:00:1c.7: pcie_link_disable_set: lnk_ctrl = 53
+[  717.024647] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
+[  717.024657] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+[  717.024665] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+[  717.024723] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+[  717.024753] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+[  717.024756] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+[  717.044828] xhci_hcd 0000:11:00.0: remove, state 4
+[  717.044834] usb usb6: USB disconnect, device number 1
+[  717.044877] xHCI xhci_drop_endpoint called for root hub
+[  717.044885] xHCI xhci_check_bandwidth called for root hub
+[  717.044964] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
+[  717.044967] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+[  717.044971] xhci_hcd 0000:11:00.0: remove, state 4
+[  717.044974] usb usb5: USB disconnect, device number 1
+[  717.045000] xHCI xhci_drop_endpoint called for root hub
+[  717.045001] xHCI xhci_check_bandwidth called for root hub
+[  717.045053] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
+[  717.045138] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+[  717.045197] pci 0000:11:00.0: freeing pci_dev info
 
-3) If a config space write being accepted is a signal that the FLR is
-complete, why don't we first restore a register where we *check*
-whether the write is accepted?  The patch restores dwords 10-15 first,
-and we don't retry those, so it seems like those updates could be
-lost.  In fact, we do lots of other config writes in
-pci_restore_pcie_state(), etc., and presumably all those could be
-being dropped.
+echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
 
-4) Why doesn't pcie_flr() do anything with the Completion Timeout
-(PCIe spec r3.0, sec 6.6.2)?  It seems like using this could cause us
-to wait longer than the current 100ms in pcie_flr().
+[  748.456914] pcieport 0000:00:1c.7: pcie_link_disable_set: lnk_ctrl = 40
 
-5) If we're not retrying, it seems pointless to even read the register
-first.  A nit, I know.
 
-I don't feel comfortable that we understand the real problem here, so
-I'm reluctant to apply the patch.  Obviously I know little about FLR
-and the restore path, so possibly I just need to be educated :)
-
-Bjorn
+Martin
