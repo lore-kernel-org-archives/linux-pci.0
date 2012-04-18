@@ -1,123 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:3781 "EHLO mga03.intel.com"
+Received: from ogre.sisk.pl ([193.178.161.156]:51557 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751876Ab2DZDTw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 23:19:52 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Matthew Wilcox <matthew@wil.cx>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: RE: [PATCH v6] Quirk for IVB graphics FLR errata
-Date: Thu, 26 Apr 2012 03:19:48 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD8BEA9@SHSMSX102.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD24698@SHSMSX102.ccr.corp.intel.com>
- <CAErSpo4Dm45uRsvdzSAfrvGNPPA_7QqvC_Se-JxpJErsasoTKw@mail.gmail.com>
- <403610A45A2B5242BD291EDAE8B37D300FD3ABC3@SHSMSX101.ccr.corp.intel.com>
- <CAErSpo4Qm1DP-i2YWc1ZibiUAnPC-tLG9X0xceAvGFxs8e+mPQ@mail.gmail.com>
-In-Reply-To: <CAErSpo4Qm1DP-i2YWc1ZibiUAnPC-tLG9X0xceAvGFxs8e+mPQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1751064Ab2DRU4P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Apr 2012 16:56:15 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: huang ying <huang.ying.caritas@gmail.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Wed, 18 Apr 2012 23:00:48 +0200
+Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com> <201204172303.07419.rjw@sisk.pl> <CAC=cRTMR=axVV4x9Qa9vO+UXs_s73fOWkeW5mocUEkvKe9J+Dw@mail.gmail.com>
+In-Reply-To: <CAC=cRTMR=axVV4x9Qa9vO+UXs_s73fOWkeW5mocUEkvKe9J+Dw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204182300.48882.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For IvyBridge Mobile platform, a system hang may occur if a FLR(Function Level Reset) is asserted to internal graphics.
-
-This quirk patch is workaround for the IVB FLR errata issue.
-We are disabling the FLR reset handshake between the PCH and CPU display, then
-manually powering down the panel power sequencing and resetting the PCH display.
-
-Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
----
- drivers/pci/quirks.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 48 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4bf7102..213cad9 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -29,6 +29,7 @@
- #include <linux/sched.h>
- #include <linux/ktime.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-+#include <asm/io.h>
- #include "pci.h"
- 
- /*
-@@ -3085,11 +3086,58 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
-+#include "../gpu/drm/i915/i915_reg.h"
-+#define MSG_CTL	0x45010
-+#define IGD_OPERATION_TIMEOUT 10000     /* set timeout 10 seconds */
-+
-+static int reset_ivb_igd(struct pci_dev *dev, int probe)
-+{
-+	void __iomem *mmio_base;
-+	unsigned long timeout;
-+	u32 val;
-+
-+	if (probe)
-+		return 0;
-+
-+	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-+				pci_resource_len(dev, 0));
-+	if (!mmio_base)
-+		return -ENOMEM;
-+
-+	/* Work Around */
-+	writel(0x00000002, mmio_base + MSG_CTL);
-+	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
-+	 * driver loaded sets the right bits. However, this's a reset and
-+	 * the bits have been set by i915 previously, so we clobber
-+	 * SOUTH_CHICKEN2 register directly here.
-+	 */
-+	writel(0x00000005, mmio_base + SOUTH_CHICKEN2);
-+	val = readl(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
-+	writel(val, mmio_base + PCH_PP_CONTROL);
-+	timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
-+	while (time_before(jiffies, timeout)) {
-+		val = readl(mmio_base + PCH_PP_STATUS);
-+		if ((val & 0xB0000000) == 0)
-+			break;
-+		cpu_relax();
-+	}
-+	writel(0x00000002, mmio_base + 0xd0100);
-+
-+	iounmap(pci_resource_start(dev, 0));
-+	return 0;
-+}
-+
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-+#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-+#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
- 
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-+		reset_ivb_igd },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-+		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 		reset_intel_generic_dev },
- 	{ 0 }
--- 
-1.6.0.rc1
-
-
-> If we're doing FLR in a pass-through situation, where the host does
-> the FLR but has no driver for the device, doing this in a quirk makes
-> sense to me.
+On Wednesday, April 18, 2012, huang ying wrote:
+> On Wed, Apr 18, 2012 at 5:03 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, April 17, 2012, huang ying wrote:
+> >> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> > On Monday, April 16, 2012, huang ying wrote:
+> >> >> Hi,
+> >> >>
+> >> >> On Sat, Apr 14, 2012 at 3:41 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> >> > Hi,
+> >> >> >
+> >> >> > On Friday, April 13, 2012, Yan, Zheng wrote:
+> >> >> >> Hi all,
+> >> >> >>
+> >> >> >> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+> >> >> >> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+> >> >> >> generate wake event through the WAKE# pin. Because we can not access to a device's
+> >> >> >> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
+> >> >> >>
+> >> >> >> Any comment will be appreciated.
+> >> >> >>
+> >> >> >> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+> >> >> >> ---
+> >> >> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> >> >> >> index 0f150f2..e210e8cb 100644
+> >> >> >> --- a/drivers/pci/pci-acpi.c
+> >> >> >> +++ b/drivers/pci/pci-acpi.c
+> >> >> >> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >> >> >>               [PCI_D1] = ACPI_STATE_D1,
+> >> >> >>               [PCI_D2] = ACPI_STATE_D2,
+> >> >> >>               [PCI_D3hot] = ACPI_STATE_D3,
+> >> >> >> -             [PCI_D3cold] = ACPI_STATE_D3
+> >> >> >> +             [PCI_D3cold] = ACPI_STATE_D3_COLD
+> >> >> >>       };
+> >> >> >>       int error = -EINVAL;
+> >> >> >>
+> >> >> >
+> >> >> > Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
+> >> >> >
+> >> >> > We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
+> >> >> > instead.  I'll prepare a patch for that over the weekend if no one has done
+> >> >> > that already.
+> >> >> >
+> >> >> >> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+> >> >> >>
+> >> >> >>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+> >> >> >>  {
+> >> >> >> -     if (dev->pme_interrupt)
+> >> >> >> +     /* PME interrupt isn't available in the D3cold case */
+> >> >> >> +     if (dev->pme_interrupt && !dev->runtime_d3cold)
+> >> >> >
+> >> >> > This whole thing is wrong.  First off, I don't think that the runtime_d3cold
+> >> >> > flag makes any sense.  We already cover that in dev->pme_support.
+> >> >>
+> >> >> PCIe devices and PCIe root port may have proper PME interrupt support
+> >> >> (that is, dev->pme_interrupt = true), but the process of remote wakeup
+> >> >> from D3cold is as follow:
+> >> >>
+> >> >> 1) In D3cold, the power of the main link is turned off, aux power is
+> >> >> provided (PCIe L2 link state)
+> >> >> 2) Device detect condition to resume, then assert #WAKE pin
+> >> >> 2) ACPI circuit linked with #WAKE pin, and will generate a GPE for that
+> >> >> 3) GPE handler will resume device with ACPI (via _PS3 and _PR0), the
+> >> >> power of the main link is turned on, after a while, link goes into L0
+> >> >> state
+> >> >> 4) The PME message is sent to root port, pme interrupt generated
+> >> >
+> >> > This isn't how it's supposed to work in theory.  If the device can signal PME
+> >> > from D3cold, it should be able to reestablish the link and send a PME
+> >> > message from there.  dev->pme_interrupt set means exactly that.
+> >> >
+> >> > ACPI is only supposed to be needed for things that don't send PME
+> >> > messages (in your case the PME interrupt generated by the port is essentially
+> >> > useless, because the wakeup event has already been signaled through ACPI).
+> >> >
+> >> >> So, for deivce, dev->pme_interrupt = true and dev->pme_support
+> >> >> advocate it support PME in D3cold.  But we still need ACPI to setup
+> >> >> run wake for the device.
+> >> >
+> >> > OK, so this is nonstandard.
+> >>
+> >> This is the standard behavior.  Please refer to PCI Express Base
+> >> Sepcification Revision 2.0, section 5.3.3.2 Link Wakeup.  In D1, D2
+> >> and D3hot state, PCIe device can transit the link from L1 to L0 state,
+> >> and send the PME message.  In D3cold, the main link is powered off,
+> >> PCIe device will use a STANDARD sideband signal WAKE# to signal wakeup
+> >> firstly, then platform (power controller in spec) will power on the
+> >> main link for the device, after main link is back to L0, the PME
+> >> message is send to root port, pme interrupt is generated.  So in
+> >> theory, the wake up process can be divided into platform part (which
+> >> power on the main link) and PCIe part (which send PME).
+> >
+> > That's fine.  However, the platform part should be completely transparent
+> > to the PCI bus type, then.  It just should power up the link to allow a
+> > PME message to be transmitted through it.
 > 
-> I tried to apply this patch, but it's whitespace-damaged.  Can you repost it?
+> Yes.
 > 
+> >[...]
+> >
+> >> > So don't use pci_set_power_state() for that, because it's essentially
+> >> > a different operation.  You need a pci_platform_remove_power() helper or
+> >> > similar for that.
+> >> >
+> >> > What ACPI method exactly is used to remove power from the device?
+> >>
+> >> The ACPI method executed is as follow:
+> >>
+> >> - _PS3 (if exist)
+> >> - Power resources in _PR3 is turned on
+> >> - Power resources in _PR0 is turned off
+> >> - Power resources in _PR3 is turned off
+> >
+> > I'd rather think
+> >
+> > - make sure that _PR3 resources are referenced
+> > - drop references (from this device) for all other power resources
+> > - execute _PS3 (if any)
+> > - drop references for _PR3 resources
+> >
+> > if Section 7.2.11 of ACPI 5.0 is to be followed.
+> 
+> Yes.  You are right.
+> 
+> >> I think the process can fit pci_set_power_state() quite well, so why
+> >> invent another helper for that?
+> >
+> > OK, we can special case it, perhaps.
+> >
+> > Suppose we have a "this device may be put into D3_cold" flag.
+> >
+> > Who's going to decide whether to put it into D3_hot or D3_cold?
+> 
+> In most cases, I think it is OK to put device into D3_cold if that is
+> supported.
 
+Well, there may be PM QoS latency requirements preventing us from doing so.
 
-Thanks Bjorn, I repost it and can you try again?
+> But there should be some special case where D3_cold is not
+> desirable, for example, we can put SSD into D3_cold safely, but it is
+> not quite safe to put HDD into D3_cold.  So we want to introduce a
+> flag: "may_power_off" like in the following patch
+> 
+> https://lkml.org/lkml/2012/3/29/41
+> 
+> It gives device driver a chance to prevent the device to be put into D3_cold.
 
-> Bjorn
+I see.  So your proposal is that the flag might be used to indicate to
+whoever carries out power transitions of devices that power must not be
+removed from this particular device, right?
+
+In that case we can put that flag into struct dev_pm_info after all, but
+perhaps the name should indicate more precisely what it is about.  Something
+like "power_must_be_on" maybe?
+
+> > [...]
+> >
+> >> >> > So now please tell me what exactly you want to achieve and why you want to do
+> >> >> > that in the first place.
+> >> >
+> >> > Well, is there any chance to get that information?
+> >>
+> >> You mean the runtime_d3cold flag? That flag is used to tell
+> >> acpi_pci_run_wake() that we need ACPI wakeup setup for the device
+> >> because that is needed by D3cold.  The ACPI wakeup setup here means
+> >> turn on power resources needed by wake up (_PRW) and execute _DSW.
+> >>
+> >> If you mean the whole patch, we want to implement runtime D3cold
+> >> support, which can save more power than D3hot.
+> >
+> > So, do I think correctly that you'd like to put devices into D3_cold
+> > if that's possible via ACPI and to be able to wake it up from that state
+> > using remote wakeup?
+> 
+> Yes.  Support both remote wakeup and host wakeup.
+
+OK, so we need to clean up the ACPI D3_HOT/D3_COLD mess first.  Then, we need
+to change PCI so that devices are not put into D3cold (by ACPI) if only D3hot
+is requested by the caller of pci_set_power_state().
+
+Having done that, we can modify pci_set_power_state() to handle D3cold as
+a special case (essentially, it should check that case before doing anything
+else).  Finally, we need to teach the ACPI notify handler about the WAKE#
+event and we need to add the 100 ms wait to the device resume code path
+somewhere (I guess in pci_set_power_state() for the D3cold->D0 transition).
+
+Now, there's one more thing to consider.  Namely, if a PCIe endpoint is put
+into D3hot (via native PM) and then the port it is connected to is put into
+D3_hot (via native PM), does that transfer the endpoint into D3cold?
+
+Rafael
