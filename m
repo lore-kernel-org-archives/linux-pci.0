@@ -1,92 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:56885 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051Ab2DIN7U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2012 09:59:20 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Chris Metcalf <cmetcalf@tilera.com>
-Subject: Re: [PATCH 3/3] arch/tile: tilegx PCI root complex support
-Date: Mon, 9 Apr 2012 13:59:12 +0000
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>, Joe Perches <joe@perches.com>,
-	David Howells <dhowells@redhat.com>
-References: <201204072316.q37NGv8d019280@farm-0023.internal.tilera.com> <201204072319.q37NJlNp019384@farm-0023.internal.tilera.com>
-In-Reply-To: <201204072319.q37NJlNp019384@farm-0023.internal.tilera.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201204091359.13059.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4F8F243B.70906@fold.natur.cuni.cz>
+References: <4F6A483D.50702@fold.natur.cuni.cz>
+	<4F6A5A53.305@fold.natur.cuni.cz>
+	<CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
+	<4F8BEB1D.9080903@fold.natur.cuni.cz>
+	<CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
+	<4F8C6E4E.1000205@fold.natur.cuni.cz>
+	<CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com>
+	<CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com>
+	<CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com>
+	<4F8D1B72.2000105@fold.natur.cuni.cz>
+	<CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com>
+	<CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com>
+	<4F8D390F.9050408@fold.natur.cuni.cz>
+	<CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
+	<CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
+	<4F8EFFA3.3050705@fold.natur.cuni.cz>
+	<CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com>
+	<4F8F243B.70906@fold.natur.cuni.cz>
+Date: Wed, 18 Apr 2012 13:58:24 -0700
+Message-ID: <CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday 07 April 2012, Chris Metcalf wrote:
-> This change implements PCIe root complex support for tilegx using
-> the kernel support layer for accessing the TRIO hardware shim.
-> 
-> Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+On Wed, Apr 18, 2012 at 1:29 PM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+> Yinghai Lu wrote:
+>> On Wed, Apr 18, 2012 at 10:53 AM, Martin Mokrejs
+>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>>> After you remove USB3 expresscard, you need to
+>>>>
+>>>> echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+>>>> then
+>>>> echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+>>>
+>>> So without these two echo commands the is no improvement/fix.
+>>>
+>>> [  686.701306] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
+>>> [  686.701316] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+>>> [  686.701319] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+>>> [  686.701357] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+>>> [  686.701390] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
+>>> [  686.809763] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
+>> ...
+>>> [  686.833678] hub 6-0:1.0: 2 ports detected
+>>>
+>>> echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+>>>
+>>> [  716.999938] pcieport 0000:00:1c.7: pcie_link_disable_set: lnk_ctrl = 53
+>>> [  717.024647] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
+>>> [  717.024657] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+>>> [  717.024665] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+>>> [  717.024723] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+>>> [  717.024753] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+>>> [  717.024756] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+>> ..
+>>> [  717.045197] pci 0000:11:00.0: freeing pci_dev info
+>>>
+>>> echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+>>>
+>>> [  748.456914] pcieport 0000:00:1c.7: pcie_link_disable_set: lnk_ctrl = 40
+>>>
+>>
+>> so it is chipset problem, it does not detect and report the presence
+>> of the card after that link is removed.
+>
+> Why doesn't this happen with the FireWire express card?
 
-Hi Chris,
+sometimes it report correctly. sometime it does not.
 
-I don't know if we discussed it during the initial merge, but I notice that the PIO
-accessors (inb/outb and friends) are still not implemented in this patch. Normally
-PIO can just be mapped into the MMIO address space, so that inb() becomes
-a call to readb() with an offset on the address.
+>
+>>
+>> Can you try to use acpiphp instead of pciehp?
+>
+> Umm. I do have acpiphp in my kernel already. I am rather attaching my .config,
+> please me know what you want me to do. My kernel command line could be seen
+> in my previous posts in the dmesg file.
 
-> +/*
-> + * Second PCI initialization entry point, called by subsys_initcall.
-> + *
-> + * The controllers have been set up by the time we get here, by a call to
-> + * tile_pci_init.
-> + */
-> +int __devinit pcibios_init(void)
-> +{
-> +	resource_size_t offset;
-> +	int i;
-> +
-> +        if (num_rc_controllers == 0 && num_ep_controllers == 0)
-> +		return 0;
-> +
-> +	pr_info("PCI: Probing PCI hardware\n");
-> +
-> +	/*
-> +	 * We loop over all the TRIO shims and set up the MMIO mappings.
-> +	 * This step can't be done in tile_pci_init because the MM subsystem
-> +	 * hasn't been initialized then.
-> +	 */
-> +	for (i = 0; i < TILEGX_NUM_TRIO; i++) {
-> +		gxio_trio_context_t *context = &trio_contexts[i];
-> +
-> +		if (context->fd < 0)
-> +			continue;
-> +
-> +		/*
-> +		 * Map in the MMIO space for the MAC.
-> +                 */
-> +		offset = 0;
-> +		context->mmio_base_mac =
-> +			iorpc_ioremap(context->fd, offset,
-> +				      HV_TRIO_CONFIG_IOREMAP_SIZE);
-> +		if (context->mmio_base_mac == NULL) {
-> +			pr_err("PCI: MAC map failure on TRIO %d\n", i);
-> +
-> +			hv_dev_close(context->fd);
-> +			context->fd = -1;
-> +			continue;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Delay a bit in case devices aren't ready.  Some devices are
-> +	 * known to require at least 20ms here, but we use a more
-> +	 * conservative value.
-> +	 */
-> +	mdelay(250);
+remove
 
-Using mdelay is generally considered very rude. Since you are not in atomic
-context here, just use msleep() instead.
-
-	Arnd
+CONFIG_HOTPLUG_PCI_PCIE=y
