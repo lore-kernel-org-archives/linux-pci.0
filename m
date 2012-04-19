@@ -1,68 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:10706 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762353Ab2DMB4M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2012 21:56:12 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Don Dutile <ddutile@redhat.com>, Matthew Wilcox <matthew@wil.cx>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH V4] Quirk for IVB graphics FLR errata
-Date: Fri, 13 Apr 2012 01:56:10 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD0FBAE@SHSMSX102.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
- <4F8594FD.8020109@redhat.com> <20120412040630.GC6557@parisc-linux.org>
- <4F86F28E.8020807@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from fold.natur.cuni.cz ([195.113.57.32]:37504 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755562Ab2DSRcK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2012 13:32:10 -0400
+Message-ID: <4F904C17.6010705@fold.natur.cuni.cz>
+Date: Thu, 19 Apr 2012 19:32:07 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec
+ timeframe
+References: <4F6A483D.50702@fold.natur.cuni.cz> <4F6A5A53.305@fold.natur.cuni.cz> <CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com> <4F8BEB1D.9080903@fold.natur.cuni.cz> <CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com> <4F8C6E4E.1000205@fold.natur.cuni.cz> <CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com> <CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com> <CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com> <4F8D1B72.2000105@fold.natur.cuni.cz> <CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com> <CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com> <4F8D390F.9050408@fold.natur.cuni.cz> <CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com> <CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com> <4F8EFFA3.3050705@fold.natur.cuni.cz> <CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com>
+In-Reply-To: <CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Hao, Xudong
-> Sent: Friday, April 13, 2012 9:41 AM
-> To: 'Don Dutile'; Matthew Wilcox
-> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org
-> Subject: RE: [PATCH V4] Quirk for IVB graphics FLR errata
-> 
-> > -----Original Message-----
-> > From: Don Dutile [mailto:ddutile@redhat.com]
-> > Sent: Thursday, April 12, 2012 11:20 PM
-> > To: Matthew Wilcox
-> > Cc: Hao, Xudong; Bjorn Helgaas; linux-pci@vger.kernel.org
-> > Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
-> >
-> > On 04/12/2012 12:06 AM, Matthew Wilcox wrote:
-> > > On Wed, Apr 11, 2012 at 10:28:13AM -0400, Don Dutile wrote:
-> > >>> +	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
-> > >> Don't we know how to do a 10sec timeout w/o tying it to tsc_khz?
-> > >
-> > > Right, this code should of course be using jiffies and msleep.
-> > >
-> > >> -->  other arch compile problem source???
-> > >
-> > > Well, this device is part of the x86 CPU.  It's never going to be
-> > > found as part of any other architecture.  Why force other
-> > > architectures to carry this quirk around?
-> > >
-> > >
-> >
-> > Well, the trend to include more IO into chipsets tied to an arch will
-> > probably increase over time, so such conditional quirks will increase as well.
-> > Sounds like the quirk tables need an arch-hook (linked list) to check &
-> traverse.
-> > Then such code can go into arch/<arch>/pci/quirks.c .
-> >
-> 
-> If using jiffies instead of tsc, the ifdef <x86> can be removed here, we already
-> have device ID to limit the quirk workaround.
-> So I do want to change this patch file directory, I will change tsc to jiffies.
 
-A mistake here, I means I do NOT want to change the patch directory, according to device ID, other arch/device will not execute this quirk.
+
+Yinghai Lu wrote:
+> On Wed, Apr 18, 2012 at 10:53 AM, Martin Mokrejs
+> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>> After you remove USB3 expresscard, you need to
+>>>
+>>> echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+>>> then
+>>> echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+>>
+>> So without these two echo commands the is no improvement/fix.
+>>
+>> [  686.701306] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
+>> [  686.701316] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+>> [  686.701319] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+>> [  686.701357] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+>> [  686.701390] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
+>> [  686.809763] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
+> ...
+>> [  686.833678] hub 6-0:1.0: 2 ports detected
+>>
+>> echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+>>
+>> [  716.999938] pcieport 0000:00:1c.7: pcie_link_disable_set: lnk_ctrl = 53
+>> [  717.024647] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
+>> [  717.024657] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+>> [  717.024665] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+>> [  717.024723] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+>> [  717.024753] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+>> [  717.024756] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+> ..
+>> [  717.045197] pci 0000:11:00.0: freeing pci_dev info
+>>
+>> echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+>>
+>> [  748.456914] pcieport 0000:00:1c.7: pcie_link_disable_set: lnk_ctrl = 40
+>>
+> 
+> so it is chipset problem, it does not detect and report the presence
+> of the card after that link is removed.
+
+
+
+Hi Yinghai,
+  this brought me to and issue with "Intel® 6 Series Express Chipset B2 stepping" chips
+having enabled SATA ports 2-5. This is my case:
+
+[    3.037832] ahci 0000:00:1f.2: version 3.0
+[    3.037880] ahci 0000:00:1f.2: irq 44 for MSI/MSI-X
+[    3.037906] ahci: SSS flag set, parallel bus scan disabled
+[    3.048233] ahci 0000:00:1f.2: AHCI 0001.0300 32 slots 6 ports 6 Gbps 0x31 impl SATA mode
+[    3.048335] ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pio slum part ems sxs apst 
+[    3.048371] ahci 0000:00:1f.2: setting latency timer to 64
+[    3.088902] scsi0 : ahci
+[    3.089010] scsi1 : ahci
+[    3.089098] scsi2 : ahci
+[    3.089185] scsi3 : ahci
+[    3.089272] scsi4 : ahci
+[    3.089361] scsi5 : ahci
+[    3.090528] ata1: SATA max UDMA/133 abar m2048@0xf7f06000 port 0xf7f06100 irq 44
+[    3.091400] ata2: DUMMY
+[    3.092262] ata3: DUMMY
+[    3.093112] ata4: DUMMY
+[    3.093952] ata5: SATA max UDMA/133 abar m2048@0xf7f06000 port 0xf7f06300 irq 44
+[    3.094803] ata6: SATA max UDMA/133 abar m2048@0xf7f06000 port 0xf7f06380 irq 44
+
+
+Is this bug anyhow related to this already known chipset issue?
+
+http://support.dell.com/support/topics/global.aspx/support/kcs/document?c=us&cs=04&docid=389728&l=en&s=bsd
+http://www.intel.com/support/chipsets/6/sb/CS-032521.htm
+http://www.intel.com/support/chipsets/6/sb/CS-032521.htm
 
 > 
-> > I was under the impression Linux prefers not to have ifdef <arch> in
-> > common code modules, and to split it out under arch/<> .
-> >
+
+
+So you found two issues, right?
+
+Issue 1:
+
+Yinghai Lu wrote:
+> for USB 3.0:
+> 		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+> 			Changed: MRL- PresDet- LinkState+
 > 
-> Agreed and learned.
+> PresDet+: mean that card is still there. so no interrupt is generated
+> by chipset.
+> 
+> that present bit is decide by by inband link or out of band.
+> 
+> sometimes when out of band pres is no, present bit could be keep flip
+> around because in root port try to retrain to detect ...
+> but it is not the case.
+> 
+> the pin "CPPE#  PCI Express interface presence detect" should get into
+> hotplug FPGA in motherboard.
+> 
+> You may need to check with vendor about if there is any problem with
+> that hotplug FPGA.
+
+
+Issue 2:
+>>> Can you try to use acpiphp instead of pciehp?
+> 
+> looks your BIOS does not support acpiphp.
+> 
+> Maybe you have to stay with
+> 
+> echo 1  > .../pcie_link_disable
+> echo 0  > .../pcie_link_disable
+> 
+> after removal every time.
+>  
+> Yinghai
+
+Does it make sense to report this to Dell (that it does not support ACPI hotplug)?
+Can they fix it with BIOS or whatever? Thay will anyways replace my motherboard
+in the laptop if my system is really affected.
+
+Can I just return the thing after 2.5 months completely?
+
+Thanks,
+Martin
