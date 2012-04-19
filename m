@@ -1,141 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:52849 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751639Ab2DSMcT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Apr 2012 08:32:19 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: huang ying <huang.ying.caritas@gmail.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+Date: Thu, 19 Apr 2012 14:36:57 +0200
+Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 08/19] PCI: fix two race windows when probing/removing SHPC controller
-Date: Fri, 27 Apr 2012 23:16:49 +0800
-Message-Id: <1335539820-11232-9-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+References: <4F8790F6.5080408@intel.com> <201204182251.46335.rjw@sisk.pl> <CAC=cRTMPrSsK5Y8uVxVrtGNqJAGFyRMLU7WsYm185siZd-V_8w@mail.gmail.com>
+In-Reply-To: <CAC=cRTMPrSsK5Y8uVxVrtGNqJAGFyRMLU7WsYm185siZd-V_8w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204191436.57495.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Thursday, April 19, 2012, huang ying wrote:
+> On Thu, Apr 19, 2012 at 4:51 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Wednesday, April 18, 2012, huang ying wrote:
+> >> On Wed, Apr 18, 2012 at 5:10 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> > On Tuesday, April 17, 2012, huang ying wrote:
+> >> >> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> >> >> >> +     return 0;
+> >> >> >> >> +}
+> >> >> >> >> +
+> >> >> >> >> +static int pcie_port_runtime_resume(struct device *dev)
+> >> >> >> >> +{
+> >> >> >> >> +     struct pci_dev *pdev = to_pci_dev(dev);
+> >> >> >> >> +
+> >> >> >> >> +     pci_restore_state(pdev);
+> >> >> >> >> +     if (pdev->runtime_d3cold)
+> >> >> >> >> +             msleep(100);
+> >> >> >> >
+> >> >> >> > What's _that_ supposed to do?
+> >> >> >>
+> >> >> >> When resume from d3cold, PCIe main link will be powered on again, it
+> >> >> >> will take quite some time before the main link go into L0 state.
+> >> >> >> Otherwise, accessing devices under the port may return wrong result.
+> >> >> >
+> >> >> > OK, but this is generic code and as per the standard the link should have been
+> >> >> > reestablished at this point already.
+> >> >> >
+> >> >> > Please don't put some nonstandard-platform-specific quirks like this into
+> >> >> > code that's supposed to handle _every_ PCIe system.
+> >> >>
+> >> >> After checking PCIe spec, I found that the 100ms here has its standard origin :)
+> >> >>
+> >> >> In PCI Express Base Specification Revision 2.0:
+> >> >>
+> >> >> Section 6.6.1 Conventional Reset
+> >> >>
+> >> >> "
+> >> >> To allow components to perform internal initialization, system
+> >> >> software must wait for at least
+> >> >> 100 ms from the end of a Conventional Reset of one or more devices
+> >> >> before it is permitted to
+> >> >> issue Configuration Requests to those devices
+> >> >> "
+> >> >>
+> >> >> But I think we should move the 100ms delay here to PCIe bus code or
+> >> >> PCIe/ACPI code, because that is needed by all PCIe devices for D3cold
+> >> >> support.
+> >> >
+> >> > I think it should be sufficient to wait for the PME message to arrive at
+> >> > the root port (which will cause the PME interrupt to appear), at which
+> >> > point the device that sent it should be able to receive configuration
+> >> > requests.
+> >>
+> >> For remote wake up, it is sufficient.  But for host wake up, we still
+> >> need to wait 100ms.
+> >
+> > Yes, we do.
+> >
+> >> > At this point, I need to konw what exactly happens when the GPE is triggered
+> >> > by WAKE#.
+> >>
+> >> - Lxx handler will be executed
+> >> - in Lxx handler, Notify the ACPI handle PCIe port
+> >> - Linux has registered a handler for the ACPI handle of PCIe port, in
+> >> the handler, turn on _PR0 and execute _PS0, which will power on the
+> >> link.
+> >
+> > But the handler we have is not the handler we want here.
+> >
+> > In fact, there are two handlers, pci_acpi_wake_bus() and pci_acpi_wake_dev()
+> > and they only do useful things for ACPI_NOTIFY_DEVICE_WAKE.  Is that the
+> > event type we receive from that _Lxx?
+> 
+> I check the DSDT, in _Lxx, there is
+> 
+> Notify (\_SB.PCI0.RP03, 0x02)
+> 
+> That is, the event type is ACPI_NOTIFY_DEVICE_WAKE.
+> 
+> > Even if so, these routines don't seem to be suitable to handle the case at hand.
+> 
+> Yes.  Maybe add a flag named like "come_from_d3cold", and if
+> come_from_d3cold == true, resume the dev itself without checking pme
+> bits, because the PCIe main link is not available now.
 
-With current shpchp implementation, interrupt is enabled before corresponding
-slot data structures are created. If interrupt happens immediately after
-enabling the hotplug interrupt, shpchp_find_slot() may return NULL, thus
-causes NULL pointer dereference. So create slot data structures before
-enabling interrupt.
+Actually, I think we can do the full resume (however with the 100 ms wait)
+in that case, because we're going to resume the device shortly anyway.
 
-And cleanup_slots() is called to destroy slot data structures before disabling
-interrupt, which may cause invalid memory access in shpc_isr().  So call
-cleanup_slots() after disabling interrupt/removing the poll timer.
+The PME would only be useful as a kind of handshake with the device, so we
+know we can access its registers, but as you pointed that out, we need the
+100 ms delay in the host wakeup case anyway, so perhaps it's better to make
+remote wakeup and host wakeup behave identically in that respect.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/shpchp.h      |    1 +
- drivers/pci/hotplug/shpchp_core.c |    6 +++---
- drivers/pci/hotplug/shpchp_hpc.c  |   36 +++++++++++++++++++++---------------
- 3 files changed, 25 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
-index ca64932..6691dc4 100644
---- a/drivers/pci/hotplug/shpchp.h
-+++ b/drivers/pci/hotplug/shpchp.h
-@@ -182,6 +182,7 @@ extern int shpchp_unconfigure_device(struct slot *p_slot);
- extern void cleanup_slots(struct controller *ctrl);
- extern void shpchp_queue_pushbutton_work(struct work_struct *work);
- extern int shpc_init( struct controller *ctrl, struct pci_dev *pdev);
-+extern void shpc_enable_intr(struct controller *ctrl);
- 
- static inline const char *slot_name(struct slot *slot)
- {
-diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-index 7414fd9..aaa66be 100644
---- a/drivers/pci/hotplug/shpchp_core.c
-+++ b/drivers/pci/hotplug/shpchp_core.c
-@@ -318,14 +318,14 @@ static int shpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto err_out_release_ctlr;
- 	}
- 
-+	shpc_enable_intr(ctrl);
-+
- 	rc = shpchp_create_ctrl_files(ctrl);
- 	if (rc)
--		goto err_cleanup_slots;
-+		goto err_out_release_ctlr;
- 
- 	return 0;
- 
--err_cleanup_slots:
--	cleanup_slots(ctrl);
- err_out_release_ctlr:
- 	ctrl->hpc_ops->release_ctlr(ctrl);
- err_out_free_ctrl:
-diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
-index 75ba231..2bc6182 100644
---- a/drivers/pci/hotplug/shpchp_hpc.c
-+++ b/drivers/pci/hotplug/shpchp_hpc.c
-@@ -592,6 +592,13 @@ static void hpc_release_ctlr(struct controller *ctrl)
- 		shpc_writel(ctrl, SLOT_REG(i), slot_reg);
- 	}
- 
-+	if (shpchp_poll_mode)
-+		del_timer(&ctrl->poll_timer);
-+	else {
-+		free_irq(ctrl->pci_dev->irq, ctrl);
-+		pci_disable_msi(ctrl->pci_dev);
-+	}
-+
- 	cleanup_slots(ctrl);
- 
- 	/*
-@@ -603,13 +610,6 @@ static void hpc_release_ctlr(struct controller *ctrl)
- 	serr_int &= ~SERR_INTR_RSVDZ_MASK;
- 	shpc_writel(ctrl, SERR_INTR_ENABLE, serr_int);
- 
--	if (shpchp_poll_mode)
--		del_timer(&ctrl->poll_timer);
--	else {
--		free_irq(ctrl->pci_dev->irq, ctrl);
--		pci_disable_msi(ctrl->pci_dev);
--	}
--
- 	iounmap(ctrl->creg);
- 	release_mem_region(ctrl->mmio_base, ctrl->mmio_size);
- }
-@@ -1081,6 +1081,20 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
- 	shpc_get_max_bus_speed(ctrl);
- 	shpc_get_cur_bus_speed(ctrl);
- 
-+	return 0;
-+
-+	/* We end up here for the many possible ways to fail this API.  */
-+abort_iounmap:
-+	iounmap(ctrl->creg);
-+abort:
-+	return rc;
-+}
-+
-+void shpc_enable_intr(struct controller *ctrl)
-+{
-+	u8 hp_slot;
-+	u32 tempdword, slot_reg;
-+
- 	/*
- 	 * Unmask all event interrupts of all slots
- 	 */
-@@ -1102,12 +1116,4 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
- 		tempdword = shpc_readl(ctrl, SERR_INTR_ENABLE);
- 		ctrl_dbg(ctrl, "SERR_INTR_ENABLE = %x\n", tempdword);
- 	}
--
--	return 0;
--
--	/* We end up here for the many possible ways to fail this API.  */
--abort_iounmap:
--	iounmap(ctrl->creg);
--abort:
--	return rc;
- }
--- 
-1.7.5.4
-
+Thanks,
+Rafael
