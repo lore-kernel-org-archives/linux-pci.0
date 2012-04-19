@@ -1,249 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Mike Galbraith <efault@gmx.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Ingo Molnar <mingo@elte.hu>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v1 3/3] DCA, x86: support mutitple PCI root complexes in DCA core logic
-Date: Mon, 23 Apr 2012 22:34:02 +0800
-Message-Id: <1335191642-6869-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335191642-6869-1-git-send-email-jiang.liu@huawei.com>
-References: <1335191642-6869-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:48919 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754475Ab2DSSNq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2012 14:13:46 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F904C17.6010705@fold.natur.cuni.cz>
+References: <4F6A483D.50702@fold.natur.cuni.cz>
+	<4F6A5A53.305@fold.natur.cuni.cz>
+	<CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
+	<4F8BEB1D.9080903@fold.natur.cuni.cz>
+	<CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
+	<4F8C6E4E.1000205@fold.natur.cuni.cz>
+	<CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com>
+	<CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com>
+	<CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com>
+	<4F8D1B72.2000105@fold.natur.cuni.cz>
+	<CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com>
+	<CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com>
+	<4F8D390F.9050408@fold.natur.cuni.cz>
+	<CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
+	<CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
+	<4F8EFFA3.3050705@fold.natur.cuni.cz>
+	<CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com>
+	<4F904C17.6010705@fold.natur.cuni.cz>
+Date: Thu, 19 Apr 2012 11:13:45 -0700
+Message-ID: <CAE9FiQUCBRZ1UmML7brL6U6W9GbMNUtkzG0tF7vOPwt4HorXXA@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To maintain backward compatibility with old interface dca_get_tag(), currently
-the DCA core logic is limited to support only one domain (PCI root complex).
-This effectively disables DCA on systems with multiple PCI root complexes,
-such as IBM x3850, Quantan S4R etc.
+On Thu, Apr 19, 2012 at 10:32 AM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+>  this brought me to and issue with "Intel® 6 Series Express Chipset B2 stepping" chips
+> having enabled SATA ports 2-5. This is my case:
+>
+> [    3.037832] ahci 0000:00:1f.2: version 3.0
+> [    3.037880] ahci 0000:00:1f.2: irq 44 for MSI/MSI-X
+> [    3.037906] ahci: SSS flag set, parallel bus scan disabled
+> [    3.048233] ahci 0000:00:1f.2: AHCI 0001.0300 32 slots 6 ports 6 Gbps 0x31 impl SATA mode
+> [    3.048335] ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pio slum part ems sxs apst
+> [    3.048371] ahci 0000:00:1f.2: setting latency timer to 64
+> [    3.088902] scsi0 : ahci
+> [    3.089010] scsi1 : ahci
+> [    3.089098] scsi2 : ahci
+> [    3.089185] scsi3 : ahci
+> [    3.089272] scsi4 : ahci
+> [    3.089361] scsi5 : ahci
+> [    3.090528] ata1: SATA max UDMA/133 abar m2048@0xf7f06000 port 0xf7f06100 irq 44
+> [    3.091400] ata2: DUMMY
+> [    3.092262] ata3: DUMMY
+> [    3.093112] ata4: DUMMY
+> [    3.093952] ata5: SATA max UDMA/133 abar m2048@0xf7f06000 port 0xf7f06300 irq 44
+> [    3.094803] ata6: SATA max UDMA/133 abar m2048@0xf7f06000 port 0xf7f06380 irq 44
+>
+>
+> Is this bug anyhow related to this already known chipset issue?
+>
+> http://support.dell.com/support/topics/global.aspx/support/kcs/document?c=us&cs=04&docid=389728&l=en&s=bsd
+> http://www.intel.com/support/chipsets/6/sb/CS-032521.htm
+> http://www.intel.com/support/chipsets/6/sb/CS-032521.htm
+>
+>>
+>
+>
+> So you found two issues, right?
+>
+> Issue 1:
+>
+> Yinghai Lu wrote:
+>> for USB 3.0:
+>>               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+>>                       Changed: MRL- PresDet- LinkState+
+>>
+>> PresDet+: mean that card is still there. so no interrupt is generated
+>> by chipset.
+>>
+>> that present bit is decide by by inband link or out of band.
+>>
+>> sometimes when out of band pres is no, present bit could be keep flip
+>> around because in root port try to retrain to detect ...
+>> but it is not the case.
+>>
+>> the pin "CPPE#  PCI Express interface presence detect" should get into
+>> hotplug FPGA in motherboard.
+>>
+>> You may need to check with vendor about if there is any problem with
+>> that hotplug FPGA.
 
-This patch enhances the DCA core logic only to disable DCA operations when
-both dca_get_tag() has been used and there are multiple PCI root complexes
-in the system.
+Not sure about this one. could be that outofband signal is not used.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/dca/dca-core.c |  138 ++++++++++++++++++++++--------------------------
- 1 files changed, 64 insertions(+), 74 deletions(-)
 
-diff --git a/drivers/dca/dca-core.c b/drivers/dca/dca-core.c
-index f8cfa58..ff9017d 100644
---- a/drivers/dca/dca-core.c
-+++ b/drivers/dca/dca-core.c
-@@ -42,7 +42,14 @@ static LIST_HEAD(dca_domains);
- 
- static BLOCKING_NOTIFIER_HEAD(dca_provider_chain);
- 
--static int dca_providers_blocked;
-+static enum {
-+	DCA_COMPAT_INITIAL = 0,		/* Initial state */
-+	DCA_COMPAT_MULTI_DOMAINS = 1,	/* Multiple Root Complexes detected */
-+	DCA_COMPAT_LEGACY_INTERFACE = 2,/* Legacy interface has been used */
-+	DCA_COMPAT_DISABLED = 3		/* DCA disabled due to legacy interface
-+					 * has been used and there are multiple
-+					 * RCs in the system */
-+} dca_compat_state;
- 
- static struct pci_bus *dca_pci_rc_from_dev(struct device *dev)
- {
-@@ -75,26 +82,11 @@ static void dca_free_domain(struct dca_domain *domain)
- 	kfree(domain);
- }
- 
--static int dca_provider_ioat_ver_3_0(struct device *dev)
--{
--	struct pci_dev *pdev = to_pci_dev(dev);
--
--	return ((pdev->vendor == PCI_VENDOR_ID_INTEL) &&
--		((pdev->device == PCI_DEVICE_ID_INTEL_IOAT_TBG0) ||
--		(pdev->device == PCI_DEVICE_ID_INTEL_IOAT_TBG1) ||
--		(pdev->device == PCI_DEVICE_ID_INTEL_IOAT_TBG2) ||
--		(pdev->device == PCI_DEVICE_ID_INTEL_IOAT_TBG3) ||
--		(pdev->device == PCI_DEVICE_ID_INTEL_IOAT_TBG4) ||
--		(pdev->device == PCI_DEVICE_ID_INTEL_IOAT_TBG5) ||
--		(pdev->device == PCI_DEVICE_ID_INTEL_IOAT_TBG6) ||
--		(pdev->device == PCI_DEVICE_ID_INTEL_IOAT_TBG7)));
--}
--
- static void unregister_dca_providers(void)
- {
- 	struct dca_provider *dca, *_dca;
- 	struct list_head unregistered_providers;
--	struct dca_domain *domain;
-+	struct dca_domain *domain, *_domain;
- 	unsigned long flags;
- 
- 	blocking_notifier_call_chain(&dca_provider_chain,
-@@ -103,20 +95,11 @@ static void unregister_dca_providers(void)
- 	INIT_LIST_HEAD(&unregistered_providers);
- 
- 	raw_spin_lock_irqsave(&dca_lock, flags);
--
--	if (list_empty(&dca_domains)) {
--		raw_spin_unlock_irqrestore(&dca_lock, flags);
--		return;
-+	list_for_each_entry_safe(domain, _domain, &dca_domains, node) {
-+		list_splice_init(&domain->dca_providers,
-+				 &unregistered_providers);
-+		dca_free_domain(domain);
- 	}
--
--	/* at this point only one domain in the list is expected */
--	domain = list_first_entry(&dca_domains, struct dca_domain, node);
--
--	list_for_each_entry_safe(dca, _dca, &domain->dca_providers, node)
--		list_move(&dca->node, &unregistered_providers);
--
--	dca_free_domain(domain);
--
- 	raw_spin_unlock_irqrestore(&dca_lock, flags);
- 
- 	list_for_each_entry_safe(dca, _dca, &unregistered_providers, node) {
-@@ -136,22 +119,6 @@ static struct dca_domain *dca_find_domain(struct pci_bus *rc)
- 	return NULL;
- }
- 
--static struct dca_domain *dca_get_domain(struct device *dev)
--{
--	struct pci_bus *rc;
--	struct dca_domain *domain;
--
--	rc = dca_pci_rc_from_dev(dev);
--	domain = dca_find_domain(rc);
--
--	if (!domain) {
--		if (dca_provider_ioat_ver_3_0(dev) && !list_empty(&dca_domains))
--			dca_providers_blocked = 1;
--	}
--
--	return domain;
--}
--
- static struct dca_provider *dca_find_provider_by_dev(struct device *dev)
- {
- 	struct dca_provider *dca;
-@@ -278,6 +245,11 @@ u8 dca_common_get_tag(struct device *dev, int cpu)
- 
- 	raw_spin_lock_irqsave(&dca_lock, flags);
- 
-+	if (dca_compat_state == DCA_COMPAT_DISABLED) {
-+		raw_spin_unlock_irqrestore(&dca_lock, flags);
-+		return -ENODEV;
-+	}
-+
- 	dca = dca_find_provider_by_dev(dev);
- 	if (!dca) {
- 		raw_spin_unlock_irqrestore(&dca_lock, flags);
-@@ -311,6 +283,21 @@ EXPORT_SYMBOL_GPL(dca3_get_tag);
- u8 dca_get_tag(int cpu)
- {
- 	struct device *dev = NULL;
-+	unsigned long flags;
-+
-+	if (unlikely(dca_compat_state == DCA_COMPAT_INITIAL)) {
-+		raw_spin_lock_irqsave(&dca_lock, flags);
-+		if (dca_compat_state == DCA_COMPAT_INITIAL)
-+			dca_compat_state = DCA_COMPAT_LEGACY_INTERFACE;
-+		raw_spin_unlock_irqrestore(&dca_lock, flags);
-+	}
-+	if (unlikely(dca_compat_state == DCA_COMPAT_MULTI_DOMAINS)) {
-+		unregister_dca_providers();
-+		raw_spin_lock_irqsave(&dca_lock, flags);
-+		if (dca_compat_state == DCA_COMPAT_MULTI_DOMAINS)
-+			dca_compat_state = DCA_COMPAT_DISABLED;
-+		raw_spin_unlock_irqrestore(&dca_lock, flags);
-+	}
- 
- 	return dca_common_get_tag(dev, cpu);
- }
-@@ -357,43 +344,38 @@ int register_dca_provider(struct dca_provider *dca, struct device *dev)
- 	int err;
- 	unsigned long flags;
- 	struct dca_domain *domain, *newdomain = NULL;
-+	struct pci_bus *rc;
- 
--	raw_spin_lock_irqsave(&dca_lock, flags);
--	if (dca_providers_blocked) {
--		raw_spin_unlock_irqrestore(&dca_lock, flags);
--		return -ENODEV;
--	}
--	raw_spin_unlock_irqrestore(&dca_lock, flags);
-+	rc = dca_pci_rc_from_dev(dev);
-+	newdomain = dca_allocate_domain(rc);
-+	if (!newdomain)
-+		return -ENOMEM;
- 
- 	err = dca_sysfs_add_provider(dca, dev);
- 	if (err)
--		return err;
-+		goto out_free;
- 
- 	raw_spin_lock_irqsave(&dca_lock, flags);
--	domain = dca_get_domain(dev);
--	if (!domain) {
--		struct pci_bus *rc;
-+	if (dca_compat_state == DCA_COMPAT_DISABLED) {
-+		raw_spin_unlock_irqrestore(&dca_lock, flags);
-+		goto out_remove_sysfs;
-+	}
- 
--		if (dca_providers_blocked) {
--			raw_spin_unlock_irqrestore(&dca_lock, flags);
--			dca_sysfs_remove_provider(dca);
--			unregister_dca_providers();
--			return -ENODEV;
-+	domain = dca_find_domain(rc);
-+	if (!domain) {
-+		if (!list_empty(&dca_domains)) {
-+			if (dca_compat_state == DCA_COMPAT_LEGACY_INTERFACE) {
-+				dca_compat_state = DCA_COMPAT_DISABLED;
-+				raw_spin_unlock_irqrestore(&dca_lock, flags);
-+				err = -ENODEV;
-+				goto out_unregister_dca;
-+			} else if (dca_compat_state == DCA_COMPAT_INITIAL)
-+				dca_compat_state = DCA_COMPAT_MULTI_DOMAINS;
- 		}
- 
--		raw_spin_unlock_irqrestore(&dca_lock, flags);
--		rc = dca_pci_rc_from_dev(dev);
--		newdomain = dca_allocate_domain(rc);
--		if (!newdomain)
--			return -ENODEV;
--		raw_spin_lock_irqsave(&dca_lock, flags);
--		/* Recheck, we might have raced after dropping the lock */
--		domain = dca_get_domain(dev);
--		if (!domain) {
--			domain = newdomain;
--			newdomain = NULL;
--			list_add(&domain->node, &dca_domains);
--		}
-+		domain = newdomain;
-+		newdomain = NULL;
-+		list_add(&domain->node, &dca_domains);
- 	}
- 	list_add(&dca->node, &domain->dca_providers);
- 	raw_spin_unlock_irqrestore(&dca_lock, flags);
-@@ -402,6 +384,14 @@ int register_dca_provider(struct dca_provider *dca, struct device *dev)
- 				     DCA_PROVIDER_ADD, NULL);
- 	kfree(newdomain);
- 	return 0;
-+
-+out_unregister_dca:
-+	unregister_dca_providers();
-+out_remove_sysfs:
-+	dca_sysfs_remove_provider(dca);
-+out_free:
-+	kfree(newdomain);
-+	return err;
- }
- EXPORT_SYMBOL_GPL(register_dca_provider);
- 
--- 
-1.7.5.4
 
+>
+>
+> Issue 2:
+>>>> Can you try to use acpiphp instead of pciehp?
+>>
+>> looks your BIOS does not support acpiphp.
+>>
+>> Maybe you have to stay with
+>>
+>> echo 1  > .../pcie_link_disable
+>> echo 0  > .../pcie_link_disable
+>>
+>> after removal every time.
+>>
+>
+> Does it make sense to report this to Dell (that it does not support ACPI hotplug)?
+> Can they fix it with BIOS or whatever? Thay will anyways replace my motherboard
+> in the laptop if my system is really affected.
+
+even there is intel silicon problem <user can not disable inband
+present detecting, and that could report wrong status>
+Dell should have good design to workaround it like add logic to check
+CPPE and reset the link if needed.
+
+>
+> Can I just return the thing after 2.5 months completely?
+
+You need to talk to dell about that.
+
+How about those test on other shipped OS?
+
+Yinghai
