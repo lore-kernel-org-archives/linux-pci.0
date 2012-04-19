@@ -1,74 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:45318 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757740Ab2DLX7J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2012 19:59:09 -0400
-Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 9E0E03EE081
-	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
-Received: from smail (m2 [127.0.0.1])
-	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 8614545DE4D
-	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
-	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 6E92C45DD78
-	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 629FD1DB803A
-	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
-Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 1F5631DB8038
-	for <linux-pci@vger.kernel.org>; Fri, 13 Apr 2012 08:59:07 +0900 (JST)
-Message-ID: <4F876C54.5040408@jp.fujitsu.com>
-Date: Fri, 13 Apr 2012 08:59:16 +0900
-From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
-Subject: Re: [RFC] pciehp: Add archdata setting
-References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com> <4F7AA3A2.1080900@jp.fujitsu.com> <4F7C003B.4040208@jp.fujitsu.com> <4F866184.4000403@jp.fujitsu.com> <CAErSpo6Xb6rbZ757VHuQnWWsXbnygTM9JQFzvOnOiM895D+R-g@mail.gmail.com>
-In-Reply-To: <CAErSpo6Xb6rbZ757VHuQnWWsXbnygTM9JQFzvOnOiM895D+R-g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from szxga01-in.huawei.com ([58.251.152.64]:47507 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102Ab2DSHH3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2012 03:07:29 -0400
+Received: from huawei.com (szxga05-in [172.24.2.49])
+ by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M2P000MQT0J17@szxga05-in.huawei.com> for
+ linux-pci@vger.kernel.org; Thu, 19 Apr 2012 15:05:07 +0800 (CST)
+Received: from szxrg02-dlp.huawei.com ([172.24.2.119])
+ by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M2P00D08SYXKN@szxga05-in.huawei.com> for
+ linux-pci@vger.kernel.org; Thu, 19 Apr 2012 15:05:07 +0800 (CST)
+Date: Thu, 19 Apr 2012 15:04:49 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH V4 6/6] PCI, ACPI,
+ x86: update MMCFG information when hot-plugging PCI host bridges
+In-reply-to: <20120419154921.64583b35.izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Message-id: <4F8FB911.1090002@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
+ <1334103063-2283-7-git-send-email-jiang.liu@huawei.com>
+ <20120418154725.92833e4d.izumi.taku@jp.fujitsu.com>
+ <4F8E7227.1050707@huawei.com>
+ <20120419154921.64583b35.izumi.taku@jp.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Bjorn
+Hi Taku,
+	You are right. acpi_pci_root.mmconf_added is used to track
+whether MMCFG info is added by pci_mmconfig_insert(), and
+arch_acpi_pci_root_remove() will only delete MMCFG info added by
+pci_mmconfig_insert().
+	gerry
 
+On 2012-4-19 14:49, Taku Izumi wrote:
+>
+> Hi Jiang,
+>     Thanks, and I have another question.
+>
+>      What does "acpi_pci_root.mmconf_added" indicate ?
+>      In case of non-hotpluggable hostbridges, that is, when MMCONF
+>      is described using MCFG table, acpi_pci_root.mmconf_added is always 0.
+>      Is "acpi_pci_root.mmconf_added" only for hotpluggable hostbridges ?
+>
 
-Thanks for your research and comment.
-
-As you said, a way of registering code with bus_register_notifier(), 
-which will be called in device_add(), is better one than 
-pcibios_enable_device().
-I will try to write code with bus_register_notifier().
-
-
-Regards.
-
-Hiroo MATSUMOTO
-
-> On Wed, Apr 11, 2012 at 11:00 PM, Hiroo Matsumoto
-> <matsumoto.hiroo@jp.fujitsu.com> wrote:
->> Hi, Kaneshige
->>
->>
->> You are right!
->> Setting dma_ops in pcibios_enable_device is a nice way.
->> In PCI driver, pci_enable_device_xxx that calls pcibios_enable_device is
->> called before checking archdata.dma_ops.
->>
->> I added code of checking and setting dma_ops to pcibios_enable_device in
->> arch/powerpc/kernel/pci-common.c.
->> It works good.
-> 
-> When I researched this, I thought the best route was to use the
-> bus_register_notifier() path, as amd_iommu_init_notifier() does.
-> 
-> We're filling in a struct device field, not a PCI field, and
-> bus_register_notifier() seems like a more generic path than relying on
-> pcibios_enable_device().
-> 
-> Bjorn
-> 
-> 
 
