@@ -1,293 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([58.251.152.66]:52403 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956Ab2DRIDZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Apr 2012 04:03:25 -0400
-Received: from huawei.com (szxga03-in [172.24.2.9])
- by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M2O00DJT0GQA6@szxga03-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 18 Apr 2012 15:50:50 +0800 (CST)
-Received: from szxrg02-dlp.huawei.com ([172.24.2.119])
- by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M2O00FR50GO3Y@szxga03-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 18 Apr 2012 15:50:50 +0800 (CST)
-Date: Wed, 18 Apr 2012 15:49:59 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH V4 6/6] PCI, ACPI,
- x86: update MMCFG information when hot-plugging PCI host bridges
-In-reply-to: <20120418154725.92833e4d.izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Message-id: <4F8E7227.1050707@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
- <1334103063-2283-7-git-send-email-jiang.liu@huawei.com>
- <20120418154725.92833e4d.izumi.taku@jp.fujitsu.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44402 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261Ab2DTCGz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2012 22:06:55 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
+References: <4F6A483D.50702@fold.natur.cuni.cz>
+	<4F8BEB1D.9080903@fold.natur.cuni.cz>
+	<CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
+	<4F8C6E4E.1000205@fold.natur.cuni.cz>
+	<CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com>
+	<CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com>
+	<CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com>
+	<4F8D1B72.2000105@fold.natur.cuni.cz>
+	<CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com>
+	<CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com>
+	<4F8D390F.9050408@fold.natur.cuni.cz>
+	<CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
+	<CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
+	<4F8EFFA3.3050705@fold.natur.cuni.cz>
+	<CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com>
+	<4F8F243B.70906@fold.natur.cuni.cz>
+	<CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com>
+	<4F909CEB.3060407@fold.natur.cuni.cz>
+	<CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
+Date: Thu, 19 Apr 2012 19:06:55 -0700
+Message-ID: <CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=047d7b10d1852269a904be12be45
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Taku,
-	Thanks for your comments and please refer to inline comments
-below.
-	gerry
-On 2012-4-18 14:47, Taku Izumi wrote:
->
-> Hi Jiang,
->
-> On Wed, 11 Apr 2012 08:11:03 +0800
-> Jiang Liu<liuj97@gmail.com>  wrote:
->
->> This patch enhances pci_root driver to update MMCFG information when
->> hot-plugging PCI root bridges on x86 platforms.
->>
->> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->> ---
->>   arch/x86/include/asm/pci_x86.h |    1 +
->>   arch/x86/pci/acpi.c            |   58 ++++++++++++++++++++++++++++++++++++++++
->>   arch/x86/pci/mmconfig_32.c     |    2 +-
->>   arch/x86/pci/mmconfig_64.c     |    2 +-
->>   drivers/acpi/pci_root.c        |   16 +++++++++++
->>   include/acpi/acnames.h         |    1 +
->>   include/acpi/acpi_bus.h        |    1 +
->>   include/linux/pci-acpi.h       |    3 ++
->>   8 files changed, 82 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
->> index 3252c97..5e1d9a6 100644
->> --- a/arch/x86/include/asm/pci_x86.h
->> +++ b/arch/x86/include/asm/pci_x86.h
->> @@ -100,6 +100,7 @@ struct pci_raw_ops {
->>   extern const struct pci_raw_ops *raw_pci_ops;
->>   extern const struct pci_raw_ops *raw_pci_ext_ops;
->>
->> +extern const struct pci_raw_ops pci_mmcfg;
->>   extern const struct pci_raw_ops pci_direct_conf1;
->>   extern bool port_cf9_safe;
->>
->> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->> index da0149d..729d694 100644
->> --- a/arch/x86/pci/acpi.c
->> +++ b/arch/x86/pci/acpi.c
->> @@ -4,6 +4,7 @@
->>   #include<linux/irq.h>
->>   #include<linux/dmi.h>
->>   #include<linux/slab.h>
->> +#include<linux/pci-acpi.h>
->>   #include<asm/numa.h>
->>   #include<asm/pci_x86.h>
->>
->> @@ -488,6 +489,63 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->>   	return bus;
->>   }
->>
->> +int __devinit arch_acpi_pci_root_add(struct acpi_pci_root *root)
->> +{
->> +	int result = 0;
->> +	acpi_status status;
->> +	unsigned long long base_addr;
->> +
->> +	/* MMCFG not in use */
->> +	if (raw_pci_ext_ops&&  raw_pci_ext_ops !=&pci_mmcfg)
->> +		return result;
->> +
->> +	status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
->> +				       NULL,&base_addr);
->> +	if (ACPI_FAILURE(status))
->> +		base_addr = 0;
->> +	/*
->> +	 * Try to insert MMCFG information for host bridge
->> +	 */
->> +	result = pci_mmconfig_insert(root->segment, root->secondary.start,
->> +				     root->secondary.end, base_addr);
->
-> 	This logic looks strange.
-> 	If the evaluation of "_CBA" failed (for example, "_CBA" didn't exist),
-> 	pci_mmconfig_insert() should not be invoked.
->
-Yes, the code looks a little strange here, maybe need more clear
-comments here.
+--047d7b10d1852269a904be12be45
+Content-Type: text/plain; charset=ISO-8859-1
 
-For hotplug capable (physical hotplug) host bridges, BIOS should provide
-_CBA method for them and we should insert the new MMCFG info here.
-For non-hotplug-capable host bridges, we check that MMCFG information
-for the host bridge already exists.
-
-So the magic part is in function pci_mmconfig_insert(). The algorithm
-for function pci_mmconfig_insert() is
-{
-	if (base_addr is not zero)
-		return try_to_insert_MMCFG_info();
-	else if (MMCFG info for (seg, start, bus) already exists)
-		return -EEXIST;
-	else
-		return -EINVAL;
-}
-
-We will check for -EEXIST on return from pci_mmconfig_insert() for the
-special case.
-
+On Thu, Apr 19, 2012 at 2:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Apr 19, 2012 at 4:16 PM, Martin Mokrejs
+>> I just tried something similar under linux, with all the patches I accumulated for 3.4-rc3
+>> and posted in my previous emails. It seems linux flips some value so on every second card
+>> removal it really does realize it was just unplugged.
+> ...
 >
->> +	if (result == -EEXIST)
->> +		result = 0;
->> +	else if (!result) {
->> +		root->mmconf_added = true;
->> +
->> +		/* Try to enable MMCFG if it hasn't been enabled yet */
->> +		if (raw_pci_ext_ops == NULL) {
->> +			if (pci_probe&  PCI_PROBE_MMCONF)
->> +				raw_pci_ext_ops =&pci_mmcfg;
->> +			else {
->> +				arch_acpi_pci_root_remove(root);
->> +				result = -ENODEV;
->> +			}
->> +		}
->> +	}
->> +	if (result)
->> +		printk(KERN_ERR
->> +			"can't add MMCFG information for Bus %04x:%02x\n",
->> +			root->segment, (unsigned int)root->secondary.start);
->> +
->> +	/* still could use conf1 with it */
->> +	if (!root->segment)
->> +		result = 0;
->> +
->> +	return result;
->> +}
->> +
->> +void arch_acpi_pci_root_remove(struct acpi_pci_root *root)
->> +{
->> +	if (root->mmconf_added) {
->> +		pci_mmconfig_delete(root->segment,
->> +				    root->secondary.start,
->> +				    root->secondary.end);
->> +		root->mmconf_added = false;
->> +	}
->> +}
->> +
->>   int __init pci_acpi_init(void)
->>   {
->>   	struct pci_dev *dev = NULL;
->> diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
->> index a22785d..db63ac2 100644
->> --- a/arch/x86/pci/mmconfig_32.c
->> +++ b/arch/x86/pci/mmconfig_32.c
->> @@ -126,7 +126,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
->>   	return 0;
->>   }
->>
->> -static const struct pci_raw_ops pci_mmcfg = {
->> +const struct pci_raw_ops pci_mmcfg = {
->>   	.read =		pci_mmcfg_read,
->>   	.write =	pci_mmcfg_write,
->>   };
->> diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
->> index 4e05779..34c08dd 100644
->> --- a/arch/x86/pci/mmconfig_64.c
->> +++ b/arch/x86/pci/mmconfig_64.c
->> @@ -90,7 +90,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
->>   	return 0;
->>   }
->>
->> -static const struct pci_raw_ops pci_mmcfg = {
->> +const struct pci_raw_ops pci_mmcfg = {
->>   	.read =		pci_mmcfg_read,
->>   	.write =	pci_mmcfg_write,
->>   };
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 4a7d575..b7c0b53 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -448,6 +448,15 @@ out:
->>   }
->>   EXPORT_SYMBOL(acpi_pci_osc_control_set);
->>
->> +int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root)
->> +{
->> +	return 0;
->> +}
->> +
->> +void __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
->> +{
->> +}
->> +
->>   static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>   {
->>   	unsigned long long segment, bus;
->> @@ -504,6 +513,11 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>   	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->>   	device->driver_data = root;
->>
->> +	if (arch_acpi_pci_root_add(root)) {
->> +		result = -ENODEV;
->> +		goto out_free;
->> +	}
->> +
->>   	/*
->>   	 * All supported architectures that use ACPI have support for
->>   	 * PCI domains, so we indicate this in _OSC support capabilities.
->> @@ -629,6 +643,7 @@ out_del_root:
->>   	list_del_rcu(&root->node);
->>   	mutex_unlock(&acpi_pci_root_lock);
->>   	synchronize_rcu();
->> +	arch_acpi_pci_root_remove(root);
->>   out_free:
->>   	kfree(root);
->>   	return result;
->> @@ -679,6 +694,7 @@ out:
->>   	list_del_rcu(&root->node);
->>   	mutex_unlock(&acpi_pci_root_lock);
->>   	synchronize_rcu();
->> +	arch_acpi_pci_root_remove(root);
->>   	kfree(root);
->>
->>   	return 0;
->> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
->> index 38f5088..99bda75 100644
->> --- a/include/acpi/acnames.h
->> +++ b/include/acpi/acnames.h
->> @@ -62,6 +62,7 @@
->>   #define METHOD_NAME__AEI        "_AEI"
->>   #define METHOD_NAME__PRW        "_PRW"
->>   #define METHOD_NAME__SRS        "_SRS"
->> +#define METHOD_NAME__CBA	"_CBA"
->>
->>   /* Method names - these methods must appear at the namespace root */
->>
->> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
->> index f1c8ca6..cb4f402 100644
->> --- a/include/acpi/acpi_bus.h
->> +++ b/include/acpi/acpi_bus.h
->> @@ -370,6 +370,7 @@ struct acpi_pci_root {
->>
->>   	u32 osc_support_set;	/* _OSC state of support bits */
->>   	u32 osc_control_set;	/* _OSC state of control bits */
->> +	bool mmconf_added;
->>   };
->>
->>   /* helper */
->> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
->> index ac93634..7745b8a 100644
->> --- a/include/linux/pci-acpi.h
->> +++ b/include/linux/pci-acpi.h
->> @@ -18,6 +18,9 @@ extern acpi_status pci_acpi_add_pm_notifier(struct acpi_device *dev,
->>   					     struct pci_dev *pci_dev);
->>   extern acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev);
->>
->> +int arch_acpi_pci_root_add(struct acpi_pci_root *root);
->> +void arch_acpi_pci_root_remove(struct acpi_pci_root *root);
->> +
->>   static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
->>   {
->>   	struct pci_bus *pbus = pdev->bus;
->> --
->> 1.7.5.4
->>
->>
->
+> that is really looks like silicon problem.
 >
 
+please check attached patch. Hope link change bit is flip around...
+if there is change, we could add some logic:
+   check if the device is there, or will reset link to normal state.
 
+Yinghai
+
+--047d7b10d1852269a904be12be45
+Content-Type: application/octet-stream; name="link_change_report.patch"
+Content-Disposition: attachment; filename="link_change_report.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h18ljzxf0
+
+U3ViamVjdDogW1BBVENIXSBQQ0ksIHBjaWVocDogUmVwb3J0IHBjaWUgbGluayBzdGF0ZSBjaGFu
+Z2UKClRvIHNlZSBpZiB0aGVyZSBpcyBzb21lIGxpbmsgc3RhdGUgY2hhbmdlLgoKU2lnbmVkLW9m
+Zi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9o
+b3RwbHVnL3BjaWVocF9ocGMuYyB8ICAgMjkgKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0K
+IDEgZmlsZSBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKSW5kZXg6
+IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYwo9PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
+LSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYworKysgbGlu
+dXgtMi42L2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jCkBAIC02MjIsNiArNjIyLDI1
+IEBAIGludCBwY2llaHBfcG93ZXJfb2ZmX3Nsb3Qoc3RydWN0IHNsb3QgKgogCXJldHVybiAwOwog
+fQogCitzdGF0aWMgdTggcGNpZWhwX2hhbmRsZV9saW5rc3RhdGVfY2hhbmdlKHN0cnVjdCBzbG90
+ICpzbG90KQoreworCXN0cnVjdCBjb250cm9sbGVyICpjdHJsID0gc2xvdC0+Y3RybDsKKwl1MTYg
+bG5rX3N0YXR1czsKKwlpbnQgcmV0dmFsOworCisgICAgICAgIC8qIExpbmtTdGF0ZSBDaGFuZ2Ug
+Ki8KKwljdHJsX2RiZyhjdHJsLCAiTGlua1N0YXRlIGNoYW5nZVxuIik7CisKKwlyZXR2YWwgPSBw
+Y2llaHBfcmVhZHcoY3RybCwgUENJX0VYUF9MTktTVEEsICZsbmtfc3RhdHVzKTsKKwlpZiAocmV0
+dmFsKSB7CisJCWN0cmxfZXJyKGN0cmwsICJDYW5ub3QgcmVhZCBMTktTVEFUVVMgcmVnaXN0ZXJc
+biIpOworCQlyZXR1cm4gMTsKKwl9CisJY3RybF9pbmZvKGN0cmwsICJsbmtfc3RhdHVzID0gJXhc
+biIsIGxua19zdGF0dXMpOworCisJcmV0dXJuIDE7Cit9CisKIHN0YXRpYyBpcnFyZXR1cm5fdCBw
+Y2llX2lzcihpbnQgaXJxLCB2b2lkICpkZXZfaWQpCiB7CiAJc3RydWN0IGNvbnRyb2xsZXIgKmN0
+cmwgPSAoc3RydWN0IGNvbnRyb2xsZXIgKilkZXZfaWQ7CkBAIC02NDMsNyArNjYyLDcgQEAgc3Rh
+dGljIGlycXJldHVybl90IHBjaWVfaXNyKGludCBpcnEsIHZvaQogCiAJCWRldGVjdGVkICY9IChQ
+Q0lfRVhQX1NMVFNUQV9BQlAgfCBQQ0lfRVhQX1NMVFNUQV9QRkQgfAogCQkJICAgICBQQ0lfRVhQ
+X1NMVFNUQV9NUkxTQyB8IFBDSV9FWFBfU0xUU1RBX1BEQyB8Ci0JCQkgICAgIFBDSV9FWFBfU0xU
+U1RBX0NDKTsKKwkJCSAgICAgUENJX0VYUF9TTFRTVEFfQ0MgfCBQQ0lfRVhQX1NMVFNUQV9ETExT
+Qyk7CiAJCWRldGVjdGVkICY9IH5pbnRyX2xvYzsKIAkJaW50cl9sb2MgfD0gZGV0ZWN0ZWQ7CiAJ
+CWlmICghaW50cl9sb2MpCkBAIC02NjcsNiArNjg2LDEwIEBAIHN0YXRpYyBpcnFyZXR1cm5fdCBw
+Y2llX2lzcihpbnQgaXJxLCB2b2kKIAlpZiAoIShpbnRyX2xvYyAmIH5QQ0lfRVhQX1NMVFNUQV9D
+QykpCiAJCXJldHVybiBJUlFfSEFORExFRDsKIAorCS8qIENoZWNrIExpbmsgU3RhdGUgQ2hhbmdl
+ZCAqLworCWlmIChpbnRyX2xvYyAmIFBDSV9FWFBfU0xUU1RBX0RMTFNDKQorCQlwY2llaHBfaGFu
+ZGxlX2xpbmtzdGF0ZV9jaGFuZ2Uoc2xvdCk7CisKIAkvKiBDaGVjayBNUkwgU2Vuc29yIENoYW5n
+ZWQgKi8KIAlpZiAoaW50cl9sb2MgJiBQQ0lfRVhQX1NMVFNUQV9NUkxTQykKIAkJcGNpZWhwX2hh
+bmRsZV9zd2l0Y2hfY2hhbmdlKHNsb3QpOwpAQCAtODEwLDEwICs4MzMsMTIgQEAgaW50IHBjaWVf
+ZW5hYmxlX25vdGlmaWNhdGlvbihzdHJ1Y3QgY29udAogCQljbWQgfD0gUENJX0VYUF9TTFRDVExf
+TVJMU0NFOwogCWlmICghcGNpZWhwX3BvbGxfbW9kZSkKIAkJY21kIHw9IFBDSV9FWFBfU0xUQ1RM
+X0hQSUUgfCBQQ0lfRVhQX1NMVENUTF9DQ0lFOworCWNtZCB8PSBQQ0lfRVhQX1NMVENUTF9ETExT
+Q0U7CiAKIAltYXNrID0gKFBDSV9FWFBfU0xUQ1RMX1BEQ0UgfCBQQ0lfRVhQX1NMVENUTF9BQlBF
+IHwKIAkJUENJX0VYUF9TTFRDVExfTVJMU0NFIHwgUENJX0VYUF9TTFRDVExfUEZERSB8Ci0JCVBD
+SV9FWFBfU0xUQ1RMX0hQSUUgfCBQQ0lfRVhQX1NMVENUTF9DQ0lFKTsKKwkJUENJX0VYUF9TTFRD
+VExfSFBJRSB8IFBDSV9FWFBfU0xUQ1RMX0NDSUUgfAorCQlQQ0lfRVhQX1NMVENUTF9ETExTQ0Up
+OwogCiAJaWYgKHBjaWVfd3JpdGVfY21kKGN0cmwsIGNtZCwgbWFzaykpIHsKIAkJY3RybF9lcnIo
+Y3RybCwgIkNhbm5vdCBlbmFibGUgc29mdHdhcmUgbm90aWZpY2F0aW9uXG4iKTsK
+--047d7b10d1852269a904be12be45--
