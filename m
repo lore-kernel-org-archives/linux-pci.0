@@ -1,94 +1,266 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.0 \(1444\))
-Subject: Re: [E1000-devel] e1000e interface hang on 82574L
-From: Chris Boot <bootc@bootc.net>
-In-Reply-To: <20120406134144.GA22526@khazad-dum.debian.net>
-Date: Fri, 6 Apr 2012 14:48:39 +0100
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Nix <nix@esperi.org.uk>,
-	"Wyborny, Carolyn" <carolyn.wyborny@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev <netdev@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Matthew Garrett <mjg@redhat.com>
-Message-Id: <C0519712-0BDA-4C3F-9892-E8BE950370C8@bootc.net>
-References: <9BBC4E0CF881AA4299206E2E1412B62621F0B1@ORSMSX102.amr.corp.intel.com> <4F144A76.3050703@bootc.net> <4F64B4E2.20208@bootc.net> <4F64CFCB.7060702@bootc.net> <9BBC4E0CF881AA4299206E2E1412B6260E512E0C@ORSMSX102.amr.corp.intel.com> <87r4wova0b.fsf@spindle.srvr.nix> <9BBC4E0CF881AA4299206E2E1412B6260E512FB9@ORSMSX102.amr.corp.intel.com> <87ehsov6ot.fsf@spindle.srvr.nix> <1590F833-7D40-42FE-8FA2-6DCCADF9C6B0@bootc.net> <CAErSpo4TJ-9NsD5QTpFi9fsnD9qHt7+Tr5jJHQPuS7vg6ghq_w@mail.gmail.com> <20120406134144.GA22526@khazad-dum.debian.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:33611 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932263Ab2DTAsX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2012 20:48:23 -0400
+MIME-Version: 1.0
+In-Reply-To: <201204191431.14986.rjw@sisk.pl>
+References: <4F8790F6.5080408@intel.com>
+	<201204182300.48882.rjw@sisk.pl>
+	<CAC=cRTOJEyfou68Lt3x0Ro8YLsKkQTri1Hd1g4usL+3eXbUGCQ@mail.gmail.com>
+	<201204191431.14986.rjw@sisk.pl>
+Date: Fri, 20 Apr 2012 08:48:21 +0800
+Message-ID: <CAC=cRTMmSxTh1btaXw5uBe6h8QsH6OYah7eyALjtUbM2Dt4vQA@mail.gmail.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+From: huang ying <huang.ying.caritas@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6 Apr 2012, at 14:41, Henrique de Moraes Holschuh <hmh@hmh.eng.br> wrote:
+On Thu, Apr 19, 2012 at 8:31 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, April 19, 2012, huang ying wrote:
+>> On Thu, Apr 19, 2012 at 5:00 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > On Wednesday, April 18, 2012, huang ying wrote:
+>> >> On Wed, Apr 18, 2012 at 5:03 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >> > On Tuesday, April 17, 2012, huang ying wrote:
+>> >> >> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >> >> > On Monday, April 16, 2012, huang ying wrote:
+>> >> >> >> Hi,
+>> >> >> >>
+>> >> >> >> On Sat, Apr 14, 2012 at 3:41 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >> >> >> > Hi,
+>> >> >> >> >
+>> >> >> >> > On Friday, April 13, 2012, Yan, Zheng wrote:
+>> >> >> >> >> Hi all,
+>> >> >> >> >>
+>> >> >> >> >> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
+>> >> >> >> >> beneath a PCIe port when they all have entered D3. A device in D3cold can only
+>> >> >> >> >> generate wake event through the WAKE# pin. Because we can not access to a device's
+>> >> >> >> >> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
+>> >> >> >> >>
+>> >> >> >> >> Any comment will be appreciated.
+>> >> >> >> >>
+>> >> >> >> >> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+>> >> >> >> >> ---
+>> >> >> >> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>> >> >> >> >> index 0f150f2..e210e8cb 100644
+>> >> >> >> >> --- a/drivers/pci/pci-acpi.c
+>> >> >> >> >> +++ b/drivers/pci/pci-acpi.c
+>> >> >> >> >> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>> >> >> >> >>               [PCI_D1] = ACPI_STATE_D1,
+>> >> >> >> >>               [PCI_D2] = ACPI_STATE_D2,
+>> >> >> >> >>               [PCI_D3hot] = ACPI_STATE_D3,
+>> >> >> >> >> -             [PCI_D3cold] = ACPI_STATE_D3
+>> >> >> >> >> +             [PCI_D3cold] = ACPI_STATE_D3_COLD
+>> >> >> >> >>       };
+>> >> >> >> >>       int error = -EINVAL;
+>> >> >> >> >>
+>> >> >> >> >
+>> >> >> >> > Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
+>> >> >> >> >
+>> >> >> >> > We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
+>> >> >> >> > instead.  I'll prepare a patch for that over the weekend if no one has done
+>> >> >> >> > that already.
+>> >> >> >> >
+>> >> >> >> >> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+>> >> >> >> >>
+>> >> >> >> >>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
+>> >> >> >> >>  {
+>> >> >> >> >> -     if (dev->pme_interrupt)
+>> >> >> >> >> +     /* PME interrupt isn't available in the D3cold case */
+>> >> >> >> >> +     if (dev->pme_interrupt && !dev->runtime_d3cold)
+>> >> >> >> >
+>> >> >> >> > This whole thing is wrong.  First off, I don't think that the runtime_d3cold
+>> >> >> >> > flag makes any sense.  We already cover that in dev->pme_support.
+>> >> >> >>
+>> >> >> >> PCIe devices and PCIe root port may have proper PME interrupt support
+>> >> >> >> (that is, dev->pme_interrupt = true), but the process of remote wakeup
+>> >> >> >> from D3cold is as follow:
+>> >> >> >>
+>> >> >> >> 1) In D3cold, the power of the main link is turned off, aux power is
+>> >> >> >> provided (PCIe L2 link state)
+>> >> >> >> 2) Device detect condition to resume, then assert #WAKE pin
+>> >> >> >> 2) ACPI circuit linked with #WAKE pin, and will generate a GPE for that
+>> >> >> >> 3) GPE handler will resume device with ACPI (via _PS3 and _PR0), the
+>> >> >> >> power of the main link is turned on, after a while, link goes into L0
+>> >> >> >> state
+>> >> >> >> 4) The PME message is sent to root port, pme interrupt generated
+>> >> >> >
+>> >> >> > This isn't how it's supposed to work in theory.  If the device can signal PME
+>> >> >> > from D3cold, it should be able to reestablish the link and send a PME
+>> >> >> > message from there.  dev->pme_interrupt set means exactly that.
+>> >> >> >
+>> >> >> > ACPI is only supposed to be needed for things that don't send PME
+>> >> >> > messages (in your case the PME interrupt generated by the port is essentially
+>> >> >> > useless, because the wakeup event has already been signaled through ACPI).
+>> >> >> >
+>> >> >> >> So, for deivce, dev->pme_interrupt = true and dev->pme_support
+>> >> >> >> advocate it support PME in D3cold.  But we still need ACPI to setup
+>> >> >> >> run wake for the device.
+>> >> >> >
+>> >> >> > OK, so this is nonstandard.
+>> >> >>
+>> >> >> This is the standard behavior.  Please refer to PCI Express Base
+>> >> >> Sepcification Revision 2.0, section 5.3.3.2 Link Wakeup.  In D1, D2
+>> >> >> and D3hot state, PCIe device can transit the link from L1 to L0 state,
+>> >> >> and send the PME message.  In D3cold, the main link is powered off,
+>> >> >> PCIe device will use a STANDARD sideband signal WAKE# to signal wakeup
+>> >> >> firstly, then platform (power controller in spec) will power on the
+>> >> >> main link for the device, after main link is back to L0, the PME
+>> >> >> message is send to root port, pme interrupt is generated.  So in
+>> >> >> theory, the wake up process can be divided into platform part (which
+>> >> >> power on the main link) and PCIe part (which send PME).
+>> >> >
+>> >> > That's fine.  However, the platform part should be completely transparent
+>> >> > to the PCI bus type, then.  It just should power up the link to allow a
+>> >> > PME message to be transmitted through it.
+>> >>
+>> >> Yes.
+>> >>
+>> >> >[...]
+>> >> >
+>> >> >> > So don't use pci_set_power_state() for that, because it's essentially
+>> >> >> > a different operation.  You need a pci_platform_remove_power() helper or
+>> >> >> > similar for that.
+>> >> >> >
+>> >> >> > What ACPI method exactly is used to remove power from the device?
+>> >> >>
+>> >> >> The ACPI method executed is as follow:
+>> >> >>
+>> >> >> - _PS3 (if exist)
+>> >> >> - Power resources in _PR3 is turned on
+>> >> >> - Power resources in _PR0 is turned off
+>> >> >> - Power resources in _PR3 is turned off
+>> >> >
+>> >> > I'd rather think
+>> >> >
+>> >> > - make sure that _PR3 resources are referenced
+>> >> > - drop references (from this device) for all other power resources
+>> >> > - execute _PS3 (if any)
+>> >> > - drop references for _PR3 resources
+>> >> >
+>> >> > if Section 7.2.11 of ACPI 5.0 is to be followed.
+>> >>
+>> >> Yes.  You are right.
+>> >>
+>> >> >> I think the process can fit pci_set_power_state() quite well, so why
+>> >> >> invent another helper for that?
+>> >> >
+>> >> > OK, we can special case it, perhaps.
+>> >> >
+>> >> > Suppose we have a "this device may be put into D3_cold" flag.
+>> >> >
+>> >> > Who's going to decide whether to put it into D3_hot or D3_cold?
+>> >>
+>> >> In most cases, I think it is OK to put device into D3_cold if that is
+>> >> supported.
+>> >
+>> > Well, there may be PM QoS latency requirements preventing us from doing so.
+>>
+>> Yes.
+>>
+>> >> But there should be some special case where D3_cold is not
+>> >> desirable, for example, we can put SSD into D3_cold safely, but it is
+>> >> not quite safe to put HDD into D3_cold.  So we want to introduce a
+>> >> flag: "may_power_off" like in the following patch
+>> >>
+>> >> https://lkml.org/lkml/2012/3/29/41
+>> >>
+>> >> It gives device driver a chance to prevent the device to be put into D3_cold.
+>> >
+>> > I see.  So your proposal is that the flag might be used to indicate to
+>> > whoever carries out power transitions of devices that power must not be
+>> > removed from this particular device, right?
+>>
+>> Yes.
+>>
+>> > In that case we can put that flag into struct dev_pm_info after all, but
+>> > perhaps the name should indicate more precisely what it is about.  Something
+>> > like "power_must_be_on" maybe?
+>>
+>> I am not good at naming in English :)
+>> I will accept your proposal.
+>>
+>> >> > [...]
+>> >> >
+>> >> >> >> > So now please tell me what exactly you want to achieve and why you want to do
+>> >> >> >> > that in the first place.
+>> >> >> >
+>> >> >> > Well, is there any chance to get that information?
+>> >> >>
+>> >> >> You mean the runtime_d3cold flag? That flag is used to tell
+>> >> >> acpi_pci_run_wake() that we need ACPI wakeup setup for the device
+>> >> >> because that is needed by D3cold.  The ACPI wakeup setup here means
+>> >> >> turn on power resources needed by wake up (_PRW) and execute _DSW.
+>> >> >>
+>> >> >> If you mean the whole patch, we want to implement runtime D3cold
+>> >> >> support, which can save more power than D3hot.
+>> >> >
+>> >> > So, do I think correctly that you'd like to put devices into D3_cold
+>> >> > if that's possible via ACPI and to be able to wake it up from that state
+>> >> > using remote wakeup?
+>> >>
+>> >> Yes.  Support both remote wakeup and host wakeup.
+>> >
+>> > OK, so we need to clean up the ACPI D3_HOT/D3_COLD mess first.  Then, we need
+>> > to change PCI so that devices are not put into D3cold (by ACPI) if only D3hot
+>> > is requested by the caller of pci_set_power_state().
+>> >
+>> > Having done that, we can modify pci_set_power_state() to handle D3cold as
+>> > a special case (essentially, it should check that case before doing anything
+>> > else).  Finally, we need to teach the ACPI notify handler about the WAKE#
+>> > event and we need to add the 100 ms wait to the device resume code path
+>> > somewhere (I guess in pci_set_power_state() for the D3cold->D0 transition).
+>>
+>> Yes.  Sound good to me.
+>>
+>> > Now, there's one more thing to consider.  Namely, if a PCIe endpoint is put
+>> > into D3hot (via native PM) and then the port it is connected to is put into
+>> > D3_hot (via native PM), does that transfer the endpoint into D3cold?
+>>
+>> No.
+>>
+>> But if a PCIe endpoint is put into D3hot and then the port it is
+>> connected is put into D3_cold (via ACPI), this will transfer the
+>> endpoint into D3_cold, and if the port is put into D0 afterwards, all
+>> subordinate endpoint devices will be put into D0 (because of power on
+>> reset).  I think what we need to do here is:
+>>
+>> - when choose power state, if any subordinate device has
+>> power_must_be_on set, will not choose D3_cold
+>
+> Well, that's quite obvious. :-)
+>
+>> - when put PCIe port from D3_cold to D0, resume all subordinate
+>> devices too.
+>
+> Alternatively, we can just call pci_restore_state() on them and put
+> them into PCI_D3hot again without actually resuming.
 
-> On Fri, 06 Apr 2012, Bjorn Helgaas wrote:
->> On Fri, Apr 6, 2012 at 4:17 AM, Chris Boot <bootc@bootc.net> wrote:
->>> On 19 Mar 2012, at 17:31, Nix wrote:
->>> 
->>>> On 19 Mar 2012, Carolyn Wyborny said:
->>>> 
->>>>>> you'll see that I tested that, and it doesn't work :( even if it
->>>>>> did work, it shouldn't be needed: the driver attempts to turn off
->>>>>> PCIe ASPM on affected NICs, and fails, apparently because
->>>>>> *something* turns it back on again.
->>>>>> 
->>>>> The driver attempts to disable L0s state, not the entire feature.
->>>>> It
->>>> 
->>>> It tries to disable L1 state as well (or it did when I tested this
->>>> last, although I suspect you're right and it may leave L1 turned on
->>>> these days: judging by the contents of e1000_82574_info, anyway.)
->>>> 
->>>>> is also required that the device upstream on the bus from the
->>>>> 82574L have this disabled. Yes, I agree there appears to be
->>>>> something in the os that either ren-enables or fails to disable
->>>>> the feature on the upstream device, as desired. Platforms/systems
->>>>> also appear to vary in this regard, so the solutions may vary a
->>>>> bit as well.
->>>>> 
->>>>> Its worth trying your solution as well if what I suggested doesn't
->>>>> work, but there is not one solution that fits all, unfortunately.
->>>> 
->>>> I don't *have* a solution. :( 'setpci by hand some unknown amount
->>>> of time after booting once the interface has stabilized' hardly
->>>> counts as a solution of any sort. It's, at best, a workaround that
->>>> lets me use my systems without hourly lockups until a real solution
->>>> is found.
->>>> 
->>>> (To clarify: manual setpci to force off the ASPM bits is the only
->>>> thing that works for me. The driver's automatic disabling of L0s
->>>> and L1 doesn't work: nor does booting with pcie_aspm=off. In both
->>>> cases, I end up with both L0s and L1 turned on, and a lockup some
->>>> time later, unless I setpci the bits off by hand.)
->>> 
->>> 
->>> Well, with that setpci incantation run against the NIC and its
->>> upstream device to disable ASPM L1s (setpci -s <dev>
->>> CAP_EXP+10.b=40), everything has been working very well indeed. Is
->>> there something the e1000e driver could do to disable L1s as well as
->>> L0s if we know there's a problem with them for these devices?
->>> 
->>> Adding Bjorn Helgaas and linux-pci to CCs to try to get the ball
->>> rolling some more, as this is crippling without the fixes.
->> 
->> [+cc Matthew Garrett for ASPM stuff]
->> 
->> If I understand correctly, e1000e attempts to disable ASPM to work
->> around an 82574L hardware erratum, but the PCI core either doesn't
->> disable ASPM or it gets re-enabled somehow.
-> 
-> You probably need to disable it upstream of the 82574L as well.  Here
-> (SuperMicro C7X58) I managed to get it to be stable by telling the BIOS
-> to disable L0s and L1 system-wide.
-> 
-> But not all BIOSes will have that option...
+That is better.  But as the first step, I prefer the simpler way to
+just resume the device.  In this way, the synchronization between
+remote resume, host resume and system suspend can be easier.
 
+>> We design a method to do that in following patch:
+>>
+>> https://lkml.org/lkml/2012/3/29/38
+>>
+>> Where we will register all subordinate devices via
+>> acpi_power_resource_register_device(endpoint_device,
+>> bridget_acpi_handle).
+>
+> I think that's overkill in the case of PCI devices under a PCIe port.
+> We only need to walk the bus below the port and do something for each device
+> in there then.
 
-This is not something I can really do as ASPM makes a real difference to power consumption across the system, and I have a strict power budget to adhere to (else I will be charged more to host my servers). Disabling it for the NIC and upstream device is enough to make it stable, and doesn't increase power consumption by enough to matter.
+Yes.  That is something like power domain, if the power resources are
+shared by multiple devices.
 
-The driver seems to disable ASPM L0s just fine, but L1s are not disabled on the NIC nor are they on the upstream device. If e1000e can't do it maybe we can do so using a PCI quirk or something?
-
-Cheers,
-Chris
-
--- 
-Chris Boot
-bootc@bootc.net
-
+Best Regards,
+Huang Ying
