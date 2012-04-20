@@ -1,209 +1,271 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:41439 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755690Ab2DQI4I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2012 04:56:08 -0400
-Message-ID: <4F8D3024.8030203@fold.natur.cuni.cz>
-Date: Tue, 17 Apr 2012 10:56:04 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <4F919CD5.7070004@fold.natur.cuni.cz>
+Date: Fri, 20 Apr 2012 19:28:53 +0200
 From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: linux-pci@vger.kernel.org
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec
  timeframe
-References: <4F6A483D.50702@fold.natur.cuni.cz> <CAE9FiQVnErU-cska4gpinyj-LOup-U+3vsEG2z_-7h6kyREYtw@mail.gmail.com> <4F6A5A53.305@fold.natur.cuni.cz> <CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com> <4F8BEB1D.9080903@fold.natur.cuni.cz> <CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com> <4F8C756B.3090009@fold.natur.cuni.cz> <CAE9FiQXF=6Nu38eP++tCr9MVF7RrXqDDraZZ5wBLu6RzBYVPkw@mail.gmail.com>
-In-Reply-To: <CAE9FiQXF=6Nu38eP++tCr9MVF7RrXqDDraZZ5wBLu6RzBYVPkw@mail.gmail.com>
+References: <4F6A483D.50702@fold.natur.cuni.cz> <4F8D1B72.2000105@fold.natur.cuni.cz> <CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com> <CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com> <4F8D390F.9050408@fold.natur.cuni.cz> <CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com> <CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com> <4F8EFFA3.3050705@fold.natur.cuni.cz> <CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com> <4F8F243B.70906@fold.natur.cuni.cz> <CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com> <4F909CEB.3060407@fold.natur.cuni.cz> <CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com> <CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com> <4F91473A.1080007@fold.natur.cuni.cz> <CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com> <4F919C22.1070608@fold.natur.cuni.cz>
+In-Reply-To: <4F919C22.1070608@fold.natur.cuni.cz>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
 
-  I forgot to answer one of you questions ... below.
 
-Yinghai Lu wrote:
-> On Mon, Apr 16, 2012 at 12:39 PM, Martin Mokrejs
-> <mmokrejs@fold.natur.cuni.cz> wrote:
->> Yinghai Lu wrote:
->>> On Mon, Apr 16, 2012 at 2:49 AM, Martin Mokrejs
->>> <mmokrejs@fold.natur.cuni.cz> wrote:
->>>> Hi Yinghai,
->>>>
->>>> Yinghai Lu wrote:
->>>>> On Wed, Mar 21, 2012 at 3:46 PM, Martin Mokrejs
->>>>   I had some Ooopses with 3.4-rc2 but now I have tested 3.4-rc3. Still, linux
->>>> does NOT realize that I have removed an ExpressCard from the slot. It realizes
->>>> that only when I pluging the card back again. Actually, this is a case of a
->>>> NEC chipset base USB3.0 card.
->>>>
->>>>  In contrast, kernel DOES recognize that I unplugged a FireWire card from the
->>>> same slot.
->>>>
->>>>  This is a Dell Vostro 3550 laptop. Below is what syslog logged with my comment.
->>>> Empty lines between the log entries are inserted whe I either inserted or removed
->>>> a card. Probably a bit more will be in the attached dmesg file.
->>
->> [cut]
->>
->>> please check boot with pciehp.pciehp_debug=1
+Martin Mokrejs wrote:
+> 
+> 
+> Yinghai Lu wrote:
+>> On Fri, Apr 20, 2012 at 4:23 AM, Martin Mokrejs
+>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>> Yinghai Lu wrote:
+>>>> On Thu, Apr 19, 2012 at 2:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>>> On Thu, Apr 19, 2012 at 4:16 PM, Martin Mokrejs
+>>>>>> I just tried something similar under linux, with all the patches I accumulated for 3.4-rc3
+>>>>>> and posted in my previous emails. It seems linux flips some value so on every second card
+>>>>>> removal it really does realize it was just unplugged.
+>>>>>
+>>>>> that is really looks like silicon problem.
+>>>>>
+>>>> please check attached patch. Hope link change bit is flip around...
+>>>> if there is change, we could add some logic:
+>>>>    check if the device is there, or will reset link to normal state.
 >>>
->>> also you could use tail -f /var/log/messages to get more timely outputs.
+>>> I don't think it helped but maybe you will see some difference:
 >>
->> I tried the third Express Card I do have here. It is probably the most interesting
->> to play with. ;) It plugs somehow weirdly into the slot. I somehow have to push it in
->> and a little bit pull out so that some mechanical lock catches the card. But, it allocated
->> resources only once, and in other cases the driver is somehow locked up. It could be
->> a driver issue but I think it is interesting information in this moment. Below I leave
->> always 3 empty lines to emphasize I was pulling out the card and after a while back in
->> (like in previous attempts). The output is just the one from dmesg, it is more detailed
->> then what is logged through syslogd.
+>> No, the interrupt still get delayed.
 >>
+>>>
+>>> Complete dmesg is attached. OK, the "60sec" delay is when xhci_hcd gives away its attempts.
+>>> I am not knowlegeable of the kernel at all but it is my impression that because of the
+>>> card presence detection there is no way to prevent that. But, if I get it right, now when I
+>>> pluging the card+USB disk in it into the computer before those "60sec" it gets detected,
+>>> so my problem is gone (xhci cancels the timeout because a "new card" was popped in with a "new"
+>>> device.
+>>>
+>>> So, although I am now not sure whether I need your last patch, for the practical purpose that
+>>> I want to plugin a new card with a device into my computer, it works now. (added Sarah Sharp
+>>> into CC: just to make her aware of this scenario, no problem with xhci_hcd in my eyes)
+>>> ;)
 >>
+>> please try to "safely remove the card" before removing the card physically like:
 >>
+>> echo 1 > /sys/bus/pci/devices/0000:11:00.0/remove
 >>
->> [ 2784.573629] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2784.573631] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2784.573644] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
->> [ 2784.573669] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2785.580455] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7811
->> [ 2785.580464] pciehp 0000:00:1c.7:pcie04: Link Training Error occurs
->> [ 2785.580470] pciehp 0000:00:1c.7:pcie04: Failed to check link status
+>> that will stop the drivers and remove pci device in the kernel.
 > 
-> good, link can not be trained in 1s.
+> Aha.
 > 
->> [ 2788.317351] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2788.317360] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2788.317369] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
->> [ 2788.317412] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2788.317570] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
->> [ 2788.317572] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+> Apr 20 19:23:15 vostro kernel: [30595.322210] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+> Apr 20 19:23:15 vostro kernel: [30595.322215] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+> Apr 20 19:23:15 vostro kernel: [30595.329696] xhci_hcd 0000:11:00.0: remove, state 4
+> Apr 20 19:23:15 vostro kernel: [30595.329705] usb usb6: USB disconnect, device number 1
+> Apr 20 19:23:15 vostro kernel: [30595.329865] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
+> Apr 20 19:23:15 vostro kernel: [30595.329869] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+> Apr 20 19:23:15 vostro kernel: [30595.329875] xhci_hcd 0000:11:00.0: remove, state 4
+> Apr 20 19:23:15 vostro kernel: [30595.329879] usb usb5: USB disconnect, device number 1
+> Apr 20 19:23:15 vostro kernel: [30595.330071] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
+> Apr 20 19:23:15 vostro kernel: [30595.330170] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+> Apr 20 19:23:15 vostro kernel: [30595.338471] pciehp 0000:00:1c.7:pcie04: lnk_status = 7011
+> Apr 20 19:23:15 vostro kernel: [30595.338486] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+> Apr 20 19:23:15 vostro kernel: [30595.459499] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+> Apr 20 19:23:15 vostro kernel: [30595.459542] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+> Apr 20 19:23:15 vostro kernel: [30595.459545] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+> Apr 20 19:23:15 vostro kernel: [30595.459550] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+> Apr 20 19:23:15 vostro kernel: [30595.459554] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+> Apr 20 19:23:15 vostro kernel: [30595.459688] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+> Apr 20 19:23:15 vostro kernel: [30595.459894] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> Apr 20 19:23:15 vostro kernel: [30595.459900] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+> Apr 20 19:23:15 vostro kernel: [30595.460199] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+> Apr 20 19:23:15 vostro kernel: [30595.460472] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+> Apr 20 19:23:15 vostro kernel: [30595.460474] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> Apr 20 19:23:15 vostro kernel: [30595.460475] usb usb5: Product: xHCI Host Controller
+> Apr 20 19:23:15 vostro kernel: [30595.460476] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+> Apr 20 19:23:15 vostro kernel: [30595.460477] usb usb5: SerialNumber: 0000:11:00.0
+> Apr 20 19:23:15 vostro kernel: [30595.460600] hub 5-0:1.0: USB hub found
+> Apr 20 19:23:15 vostro kernel: [30595.460611] hub 5-0:1.0: 2 ports detected
+> Apr 20 19:23:15 vostro kernel: [30595.460706] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> Apr 20 19:23:15 vostro kernel: [30595.460711] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+> Apr 20 19:23:15 vostro kernel: [30595.463431] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+> Apr 20 19:23:15 vostro kernel: [30595.463433] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> Apr 20 19:23:15 vostro kernel: [30595.463434] usb usb6: Product: xHCI Host Controller
+> Apr 20 19:23:15 vostro kernel: [30595.463435] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+> Apr 20 19:23:15 vostro kernel: [30595.463437] usb usb6: SerialNumber: 0000:11:00.0
+> Apr 20 19:23:15 vostro kernel: [30595.463534] hub 6-0:1.0: USB hub found
+> Apr 20 19:23:15 vostro kernel: [30595.463547] hub 6-0:1.0: 2 ports detected
 > 
-> looks removal isr get delay too.
+> echo 1 > /sys/bus/pci/devices/0000:11:00.0/remove
 > 
->> [ 2788.799777] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2788.799779] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2788.799782] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
->> [ 2788.799802] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2789.804129] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
->> [ 2789.804399] pci 0000:11:00.0: [9710:9912] type 0 class 0x000700
->> [ 2789.804610] pci 0000:11:00.0: reg 10: [io  0x0000-0x0007]
->> [ 2789.804743] pci 0000:11:00.0: reg 14: [mem 0x00000000-0x00000fff]
->> [ 2789.805193] pci 0000:11:00.0: reg 24: [mem 0x00000000-0x00000fff]
->> [ 2789.805976] pci 0000:11:00.0: PME# supported from D3hot D3cold
->> [ 2789.806397] pci 0000:11:00.1: [9710:9912] type 0 class 0x000700
->> [ 2789.806618] pci 0000:11:00.1: reg 10: [io  0x0000-0x0007]
->> [ 2789.806802] pci 0000:11:00.1: reg 14: [mem 0x00000000-0x00000fff]
->> [ 2789.808796] pci 0000:11:00.1: reg 24: [mem 0x00000000-0x00000fff]
->> [ 2789.809452] pci 0000:11:00.1: PME# supported from D3hot D3cold
->> [ 2789.809800] pci 0000:11:00.2: [9710:9912] type 0 class 0x000701
->> [ 2789.809955] pci 0000:11:00.2: reg 10: [io  0x0000-0x0007]
->> [ 2789.810086] pci 0000:11:00.2: reg 14: [io  0x0000-0x0007]
->> [ 2789.810165] pci 0000:11:00.2: reg 18: [mem 0x00000000-0x00000fff]
->> [ 2789.810523] pci 0000:11:00.2: reg 24: [mem 0x00000000-0x00000fff]
->> [ 2789.811273] pci 0000:11:00.2: PME# supported from D3hot D3cold
->> [ 2789.864174] pci 0000:11:00.0: BAR 1: assigned [mem 0xf6c00000-0xf6c00fff]
->> [ 2789.864199] pci 0000:11:00.0: BAR 5: assigned [mem 0xf6c01000-0xf6c01fff]
->> [ 2789.864224] pci 0000:11:00.1: BAR 1: assigned [mem 0xf6c02000-0xf6c02fff]
->> [ 2789.864250] pci 0000:11:00.1: BAR 5: assigned [mem 0xf6c03000-0xf6c03fff]
->> [ 2789.864294] pci 0000:11:00.2: BAR 2: assigned [mem 0xf6c04000-0xf6c04fff]
->> [ 2789.864339] pci 0000:11:00.2: BAR 5: assigned [mem 0xf6c05000-0xf6c05fff]
->> [ 2789.864396] pci 0000:11:00.0: BAR 0: assigned [io  0xc000-0xc007]
->> [ 2789.864461] pci 0000:11:00.1: BAR 0: assigned [io  0xc008-0xc00f]
->> [ 2789.864535] pci 0000:11:00.2: BAR 0: assigned [io  0xc010-0xc017]
->> [ 2789.864614] pci 0000:11:00.2: BAR 1: assigned [io  0xc018-0xc01f]
->> [ 2789.864640] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
->> [ 2789.864643] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
->> [ 2789.864648] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
->> [ 2789.864652] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
->> [ 2789.864953] serial 0000:11:00.0: enabling device (0100 -> 0103)
->> [ 2789.910711] 0000:11:00.0: ttyS0 at I/O 0xc000 (irq = 19) is a ST16650V2
->> [ 2789.911900] serial 0000:11:00.1: enabling device (0100 -> 0103)
->> [ 2789.953869] 0000:11:00.1: ttyS1 at I/O 0xc008 (irq = 16) is a ST16650V2
->> [ 2790.018840] ppdev: user-space parallel port driver
->> [ 2790.020038] parport_serial 0000:11:00.2: enabling device (0100 -> 0103)
->> [ 2790.020647] parport0: PC-style at 0xc010 (0xc018), irq 17, using FIFO [PCSPP,TRISTATE,COMPAT,ECP]
->>
->>
->> [ 2839.728485] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2839.728494] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2839.728503] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
->> [ 2839.728546] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2839.728710] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
->> [ 2839.728712] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+> Apr 20 19:23:27 vostro kernel: [30607.046714] xhci_hcd 0000:11:00.0: remove, state 4
+> Apr 20 19:23:27 vostro kernel: [30607.046719] usb usb6: USB disconnect, device number 1
+> Apr 20 19:23:27 vostro kernel: [30607.065341] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+> Apr 20 19:23:27 vostro kernel: [30607.065350] xhci_hcd 0000:11:00.0: remove, state 4
+> Apr 20 19:23:27 vostro kernel: [30607.065353] usb usb5: USB disconnect, device number 1
+> Apr 20 19:23:27 vostro kernel: [30607.065692] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
 > 
-> not delayed.
+> removing the card
 > 
->>
->>
->> [ 2859.890589] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2859.890602] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2859.890605] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
->> [ 2859.890631] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2860.897910] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7811
->> [ 2860.897919] pciehp 0000:00:1c.7:pcie04: Link Training Error occurs
->> [ 2860.897925] pciehp 0000:00:1c.7:pcie04: Failed to check link status
+> Apr 20 19:23:36 vostro kernel: [30616.630816] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+> Apr 20 19:23:36 vostro kernel: [30616.630820] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
 > 
-> link training failed again.
 > 
->> [ 2860.907011] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2860.907019] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2860.907028] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
->> [ 2860.907073] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2860.907209] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
->> [ 2860.907211] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
-> 
-> removal isr get delayed.
-> 
->> [ 2861.242654] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2861.242656] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2861.242669] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
->> [ 2861.242684] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2862.245893] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7811
->> [ 2862.245902] pciehp 0000:00:1c.7:pcie04: Link Training Error occurs
->> [ 2862.245908] pciehp 0000:00:1c.7:pcie04: Failed to check link status
->>
->>
->> [ 2900.516939] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2900.516948] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2900.516957] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
->> [ 2900.516999] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2900.517170] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
->> [ 2900.517172] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
->>
->>
->> [ 2917.473608] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2917.473610] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2917.473624] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
->> [ 2917.473649] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2918.481860] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7811
->> [ 2918.481869] pciehp 0000:00:1c.7:pcie04: Link Training Error occurs
->> [ 2918.481875] pciehp 0000:00:1c.7:pcie04: Failed to check link status
->>
->>
->> [ 2962.382234] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2962.382244] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2962.382253] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
->> [ 2962.382283] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2962.382446] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
->> [ 2962.382448] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
->> [ 2991.261907] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 2991.261920] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 2991.261923] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
->> [ 2991.261943] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 2992.261621] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7811
->> [ 2992.261630] pciehp 0000:00:1c.7:pcie04: Link Training Error occurs
->> [ 2992.261636] pciehp 0000:00:1c.7:pcie04: Failed to check link status
->>
->>
->> [ 3010.910120] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->> [ 3010.910129] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->> [ 3010.910138] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
->> [ 3010.910180] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->> [ 3010.910346] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
->> [ 3010.910348] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
->>
-> 
-> You can try to set express card speed from Auto to Gen1 in your BIOS setup.
 
-I can only Enable/Disable express card slot in BIOS. :(
+
+Sorry, I forgot to add parts of the dmesg for the above:
+
+[30595.322205] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+[30595.322207] pciehp 0000:00:1c.7:pcie04: LinkState change
+[30595.322210] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+[30595.322212] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+[30595.322215] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+[30595.322253] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+[30595.322283] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+[30595.322286] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+[30595.329696] xhci_hcd 0000:11:00.0: remove, state 4
+[30595.329705] usb usb6: USB disconnect, device number 1
+[30595.329782] xHCI xhci_drop_endpoint called for root hub
+[30595.329784] xHCI xhci_check_bandwidth called for root hub
+[30595.329865] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
+[30595.329869] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+[30595.329875] xhci_hcd 0000:11:00.0: remove, state 4
+[30595.329879] usb usb5: USB disconnect, device number 1
+[30595.329921] xHCI xhci_drop_endpoint called for root hub
+[30595.329922] xHCI xhci_check_bandwidth called for root hub
+[30595.330071] xhci_hcd 0000:11:00.0: Host not halted after 16000 microseconds.
+[30595.330170] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+[30595.330227] pci 0000:11:00.0: freeing pci_dev info
+[30595.338466] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+[30595.338468] pciehp 0000:00:1c.7:pcie04: LinkState change
+[30595.338471] pciehp 0000:00:1c.7:pcie04: lnk_status = 7011
+[30595.338483] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+[30595.338486] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+[30595.338491] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+[30595.338525] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
+[30595.439441] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
+[30595.439543] pci 0000:11:00.0: [1033:0194] type 00 class 0x0c0330
+[30595.439597] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
+[30595.439840] pci 0000:11:00.0: PME# supported from D0 D3hot
+[30595.459499] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+[30595.459542] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+[30595.459545] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+[30595.459550] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+[30595.459554] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+[30595.459688] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+[30595.459894] xhci_hcd 0000:11:00.0: xHCI Host Controller
+[30595.459900] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+[30595.460199] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+[30595.460306] xhci_hcd 0000:11:00.0: irq 54 for MSI/MSI-X
+[30595.460310] xhci_hcd 0000:11:00.0: irq 55 for MSI/MSI-X
+[30595.460314] xhci_hcd 0000:11:00.0: irq 56 for MSI/MSI-X
+[30595.460318] xhci_hcd 0000:11:00.0: irq 57 for MSI/MSI-X
+[30595.460321] xhci_hcd 0000:11:00.0: irq 58 for MSI/MSI-X
+[30595.460472] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+[30595.460474] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[30595.460475] usb usb5: Product: xHCI Host Controller
+[30595.460476] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+[30595.460477] usb usb5: SerialNumber: 0000:11:00.0
+[30595.460569] xHCI xhci_add_endpoint called for root hub
+[30595.460579] xHCI xhci_check_bandwidth called for root hub
+[30595.460600] hub 5-0:1.0: USB hub found
+[30595.460611] hub 5-0:1.0: 2 ports detected
+[30595.460706] xhci_hcd 0000:11:00.0: xHCI Host Controller
+[30595.460711] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+[30595.463431] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+[30595.463433] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[30595.463434] usb usb6: Product: xHCI Host Controller
+[30595.463435] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+[30595.463437] usb usb6: SerialNumber: 0000:11:00.0
+[30595.463506] xHCI xhci_add_endpoint called for root hub
+[30595.463507] xHCI xhci_check_bandwidth called for root hub
+[30595.463534] hub 6-0:1.0: USB hub found
+[30595.463547] hub 6-0:1.0: 2 ports detected
+[30607.046714] xhci_hcd 0000:11:00.0: remove, state 4
+[30607.046719] usb usb6: USB disconnect, device number 1
+[30607.046764] xHCI xhci_drop_endpoint called for root hub
+[30607.046766] xHCI xhci_check_bandwidth called for root hub
+[30607.065341] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+[30607.065350] xhci_hcd 0000:11:00.0: remove, state 4
+[30607.065353] usb usb5: USB disconnect, device number 1
+[30607.065393] xHCI xhci_drop_endpoint called for root hub
+[30607.065394] xHCI xhci_check_bandwidth called for root hub
+[30607.065692] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+[30607.065764] pci 0000:11:00.0: freeing pci_dev info
+[30616.630810] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+[30616.630813] pciehp 0000:00:1c.7:pcie04: LinkState change
+[30616.630816] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+[30616.630817] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+[30616.630820] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+[30616.630858] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+[30616.630888] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+[30616.630891] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+[30708.233725] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+[30708.233727] pciehp 0000:00:1c.7:pcie04: LinkState change
+[30708.233738] pciehp 0000:00:1c.7:pcie04: lnk_status = 7011
+[30708.233739] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+[30708.233742] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+[30708.233781] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+[30708.233796] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
+[30708.338477] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
+[30708.338581] pci 0000:11:00.0: [1033:0194] type 00 class 0x0c0330
+[30708.338632] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
+[30708.338876] pci 0000:11:00.0: PME# supported from D0 D3hot
+[30708.358538] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+[30708.358575] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+[30708.358588] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+[30708.358593] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+[30708.358597] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+[30708.358737] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+[30708.358791] xhci_hcd 0000:11:00.0: xHCI Host Controller
+[30708.358799] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+[30708.359090] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+[30708.359192] xhci_hcd 0000:11:00.0: irq 54 for MSI/MSI-X
+[30708.359196] xhci_hcd 0000:11:00.0: irq 55 for MSI/MSI-X
+[30708.359199] xhci_hcd 0000:11:00.0: irq 56 for MSI/MSI-X
+[30708.359203] xhci_hcd 0000:11:00.0: irq 57 for MSI/MSI-X
+[30708.359207] xhci_hcd 0000:11:00.0: irq 58 for MSI/MSI-X
+[30708.359357] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+[30708.359359] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[30708.359360] usb usb5: Product: xHCI Host Controller
+[30708.359361] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+[30708.359363] usb usb5: SerialNumber: 0000:11:00.0
+[30708.359453] xHCI xhci_add_endpoint called for root hub
+[30708.359456] xHCI xhci_check_bandwidth called for root hub
+[30708.359496] hub 5-0:1.0: USB hub found
+[30708.359509] hub 5-0:1.0: 2 ports detected
+[30708.359571] xhci_hcd 0000:11:00.0: xHCI Host Controller
+[30708.359574] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+[30708.362332] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+[30708.362335] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[30708.362337] usb usb6: Product: xHCI Host Controller
+[30708.362338] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+[30708.362340] usb usb6: SerialNumber: 0000:11:00.0
+[30708.362443] xHCI xhci_add_endpoint called for root hub
+[30708.362445] xHCI xhci_check_bandwidth called for root hub
+[30708.362472] hub 6-0:1.0: USB hub found
+[30708.362490] hub 6-0:1.0: 2 ports detected
+[30716.380693] xhci_hcd 0000:11:00.0: remove, state 4
+[30716.380699] usb usb6: USB disconnect, device number 1
+[30716.380752] xHCI xhci_drop_endpoint called for root hub
+[30716.380754] xHCI xhci_check_bandwidth called for root hub
+[30716.400795] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+[30716.400803] xhci_hcd 0000:11:00.0: remove, state 4
+[30716.400807] usb usb5: USB disconnect, device number 1
+[30716.400846] xHCI xhci_drop_endpoint called for root hub
+[30716.400848] xHCI xhci_check_bandwidth called for root hub
+[30716.401134] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+[30716.401207] pci 0000:11:00.0: freeing pci_dev info
+[30720.175637] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+[30720.175639] pciehp 0000:00:1c.7:pcie04: LinkState change
+[30720.175643] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+[30720.175644] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+[30720.175648] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+[30720.175687] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+[30720.175718] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+[30720.175721] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
 
