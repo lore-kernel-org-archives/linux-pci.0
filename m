@@ -1,319 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:48098 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753184Ab2DZOHn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 10:07:43 -0400
-Received: by dadz8 with SMTP id z8so1626114dad.10
-        for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 07:07:42 -0700 (PDT)
-Message-ID: <4F99568E.2040409@gmail.com>
-Date: Thu, 26 Apr 2012 22:07:10 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:52315 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750816Ab2DTAxI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2012 20:53:08 -0400
 MIME-Version: 1.0
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Keping Chen <chenkeping@huawei.com>, ddutile@redhat.com,
-	greg.pearson@hp.com
-Subject: Re: [PATCH 5/6] PCI, x86: introduce pci_mmcongi_add() / pci_mmconfig_delete()
-References: <20120426193712.11256973.izumi.taku@jp.fujitsu.com> <20120426194237.93088dcb.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120426194237.93088dcb.izumi.taku@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <201204191436.57495.rjw@sisk.pl>
+References: <4F8790F6.5080408@intel.com>
+	<201204182251.46335.rjw@sisk.pl>
+	<CAC=cRTMPrSsK5Y8uVxVrtGNqJAGFyRMLU7WsYm185siZd-V_8w@mail.gmail.com>
+	<201204191436.57495.rjw@sisk.pl>
+Date: Fri, 20 Apr 2012 08:53:07 +0800
+Message-ID: <CAC=cRTO=+=eqD6pYo=v5wxXXo4751Y1i7Rk3xkT8y7-vUaTE9A@mail.gmail.com>
+Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
+From: huang ying <huang.ying.caritas@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/26/2012 06:42 PM, Taku Izumi wrote:
-> 
-> This patch replaces pci_mmconfig_add() and introduces pci_mmconfig_delte()
-> for adding or deleting MCFG region.
-> 
-> The newly pci_mmconfig_add() does the following:
->   - region check
->   - insert_resource
->   - ioremap
->   - add new pci_mmcfg_region entry to pci_mmcfg_list
-> 
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> ---
->  arch/x86/include/asm/pci_x86.h |    3 
->  arch/x86/pci/mmconfig-shared.c |  142 ++++++++++++++++++++++++++++++-----------
->  arch/x86/pci/mmconfig_64.c     |   11 ---
->  3 files changed, 109 insertions(+), 47 deletions(-)
-> 
-> Index: bjorn-next/arch/x86/include/asm/pci_x86.h
-> ===================================================================
-> --- bjorn-next.orig/arch/x86/include/asm/pci_x86.h
-> +++ bjorn-next/arch/x86/include/asm/pci_x86.h
-> @@ -138,7 +138,8 @@ extern void __init pci_mmcfg_arch_free(v
->  extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
->  extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
->  extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
-> -
-> +extern int __devinit pci_mmconfig_add(int seg, int start, int end, u64 addr);
-> +extern int pci_mmconfig_delete(int seg, int start, int end);
->  extern struct list_head pci_mmcfg_list;
->  
->  #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
-> Index: bjorn-next/arch/x86/pci/mmconfig-shared.c
-> ===================================================================
-> --- bjorn-next.orig/arch/x86/pci/mmconfig-shared.c
-> +++ bjorn-next/arch/x86/pci/mmconfig-shared.c
-> @@ -17,6 +17,7 @@
->  #include <linux/bitmap.h>
->  #include <linux/dmi.h>
->  #include <linux/slab.h>
-> +#include <linux/mutex.h>
->  #include <linux/rculist.h>
->  #include <asm/e820.h>
->  #include <asm/pci_x86.h>
-> @@ -96,18 +97,6 @@ static __devinit struct pci_mmcfg_region
->  	return new;
->  }
->  
-> -static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-> -							int end, u64 addr)
-> -{
-> -	struct pci_mmcfg_region *new;
-> -
-> -	new = pci_mmconfig_alloc(segment, start, end, addr);
-> -	if (new)
-> -		list_add_sorted(new);
-> -
-> -	return new;
-> -}
-> -
->  struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
->  {
->  	struct pci_mmcfg_region *cfg;
-> @@ -129,7 +118,7 @@ static const char __init *pci_mmcfg_e752
->  	if (win == 0x0000 || win == 0xf000)
->  		return NULL;
->  
-> -	if (pci_mmconfig_add(0, 0, 255, win << 16) == NULL)
-> +	if (pci_mmconfig_add(0, 0, 255, win << 16))
->  		return NULL;
->  
->  	return "Intel Corporation E7520 Memory Controller Hub";
-> @@ -173,7 +162,7 @@ static const char __init *pci_mmcfg_inte
->  	if ((pciexbar & mask) >= 0xf0000000U)
->  		return NULL;
->  
-> -	if (pci_mmconfig_add(0, 0, (len >> 20) - 1, pciexbar & mask) == NULL)
-> +	if (pci_mmconfig_add(0, 0, (len >> 20) - 1, pciexbar & mask))
->  		return NULL;
->  
->  	return "Intel Corporation 945G/GZ/P/PL Express Memory Controller Hub";
-> @@ -221,7 +210,7 @@ static const char __init *pci_mmcfg_amd_
->  	end_bus = (1 << busnbits) - 1;
->  	for (i = 0; i < (1 << segnbits); i++)
->  		if (pci_mmconfig_add(i, 0, end_bus,
-> -				     base + (1<<28) * i) == NULL) {
-> +				     base + (1<<28) * i)) {
->  			free_all_mmcfg();
->  			return NULL;
->  		}
-> @@ -278,7 +267,7 @@ static const char __init *pci_mmcfg_nvid
->  		base <<= extcfg_base_lshift;
->  		start = (extcfg & extcfg_start_mask) >> extcfg_start_shift;
->  		end = start + extcfg_sizebus[size_index] - 1;
-> -		if (pci_mmconfig_add(0, start, end, base) == NULL)
-> +		if (pci_mmconfig_add(0, start, end, base))
->  			continue;
->  		mcp55_mmconf_found++;
->  	}
-> @@ -376,7 +365,7 @@ static void __init pci_mmcfg_insert_reso
->  	pci_mmcfg_resources_inserted = 1;
->  }
->  
-> -static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
-> +static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
->  					      void *data)
->  {
->  	struct resource *mcfg_res = data;
-> @@ -413,7 +402,7 @@ static acpi_status __init check_mcfg_res
->  	return AE_OK;
->  }
->  
-> -static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
-> +static acpi_status __devinit find_mboard_resource(acpi_handle handle, u32 lvl,
->  		void *context, void **rv)
->  {
->  	struct resource *mcfg_res = context;
-> @@ -427,7 +416,7 @@ static acpi_status __init find_mboard_re
->  	return AE_OK;
->  }
->  
-> -static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
-> +static int __devinit is_acpi_reserved(u64 start, u64 end, unsigned not_used)
->  {
->  	struct resource mcfg_res;
->  
-> @@ -446,7 +435,7 @@ static int __init is_acpi_reserved(u64 s
->  
->  typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
->  
-> -static int __init is_mmconf_reserved(check_reserved_t is_reserved,
-> +static int __devinit is_mmconf_reserved(check_reserved_t is_reserved,
->  				    struct pci_mmcfg_region *cfg, int with_e820)
->  {
->  	u64 addr = cfg->res.start;
-> @@ -507,19 +496,6 @@ static int __devinit pci_mmcfg_check_res
->  	return false;
->  }
->  
-> -static void __init pci_mmcfg_reject_broken(int early)
-> -{
-> -	struct pci_mmcfg_region *cfg;
-> -
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> -		if (pci_mmcfg_check_reserved(cfg, early) == false) {
-> -			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
-> -			free_all_mmcfg();
-> -			return;
-> -		}
-> -	}
-> -}
-> -
->  static int __initdata known_bridge;
->  
->  static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
-> @@ -613,8 +589,6 @@ static void __init __pci_mmcfg_init(int 
->  	if (!known_bridge)
->  		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
->  
-> -	pci_mmcfg_reject_broken(early);
-> -
-This also change the original behavior too. With original implementation, mmcfg
-mechanism won't be enabled if any MMCFG item is invalid. With the change, mmcfg
-mechanism will be enabled if any MMCFG is valid.
+On Thu, Apr 19, 2012 at 8:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, April 19, 2012, huang ying wrote:
+>> On Thu, Apr 19, 2012 at 4:51 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > On Wednesday, April 18, 2012, huang ying wrote:
+>> >> On Wed, Apr 18, 2012 at 5:10 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >> > On Tuesday, April 17, 2012, huang ying wrote:
+>> >> >> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >> >> >> >> +     return 0;
+>> >> >> >> >> +}
+>> >> >> >> >> +
+>> >> >> >> >> +static int pcie_port_runtime_resume(struct device *dev)
+>> >> >> >> >> +{
+>> >> >> >> >> +     struct pci_dev *pdev = to_pci_dev(dev);
+>> >> >> >> >> +
+>> >> >> >> >> +     pci_restore_state(pdev);
+>> >> >> >> >> +     if (pdev->runtime_d3cold)
+>> >> >> >> >> +             msleep(100);
+>> >> >> >> >
+>> >> >> >> > What's _that_ supposed to do?
+>> >> >> >>
+>> >> >> >> When resume from d3cold, PCIe main link will be powered on again, it
+>> >> >> >> will take quite some time before the main link go into L0 state.
+>> >> >> >> Otherwise, accessing devices under the port may return wrong result.
+>> >> >> >
+>> >> >> > OK, but this is generic code and as per the standard the link should have been
+>> >> >> > reestablished at this point already.
+>> >> >> >
+>> >> >> > Please don't put some nonstandard-platform-specific quirks like this into
+>> >> >> > code that's supposed to handle _every_ PCIe system.
+>> >> >>
+>> >> >> After checking PCIe spec, I found that the 100ms here has its standard origin :)
+>> >> >>
+>> >> >> In PCI Express Base Specification Revision 2.0:
+>> >> >>
+>> >> >> Section 6.6.1 Conventional Reset
+>> >> >>
+>> >> >> "
+>> >> >> To allow components to perform internal initialization, system
+>> >> >> software must wait for at least
+>> >> >> 100 ms from the end of a Conventional Reset of one or more devices
+>> >> >> before it is permitted to
+>> >> >> issue Configuration Requests to those devices
+>> >> >> "
+>> >> >>
+>> >> >> But I think we should move the 100ms delay here to PCIe bus code or
+>> >> >> PCIe/ACPI code, because that is needed by all PCIe devices for D3cold
+>> >> >> support.
+>> >> >
+>> >> > I think it should be sufficient to wait for the PME message to arrive at
+>> >> > the root port (which will cause the PME interrupt to appear), at which
+>> >> > point the device that sent it should be able to receive configuration
+>> >> > requests.
+>> >>
+>> >> For remote wake up, it is sufficient.  But for host wake up, we still
+>> >> need to wait 100ms.
+>> >
+>> > Yes, we do.
+>> >
+>> >> > At this point, I need to konw what exactly happens when the GPE is triggered
+>> >> > by WAKE#.
+>> >>
+>> >> - Lxx handler will be executed
+>> >> - in Lxx handler, Notify the ACPI handle PCIe port
+>> >> - Linux has registered a handler for the ACPI handle of PCIe port, in
+>> >> the handler, turn on _PR0 and execute _PS0, which will power on the
+>> >> link.
+>> >
+>> > But the handler we have is not the handler we want here.
+>> >
+>> > In fact, there are two handlers, pci_acpi_wake_bus() and pci_acpi_wake_dev()
+>> > and they only do useful things for ACPI_NOTIFY_DEVICE_WAKE.  Is that the
+>> > event type we receive from that _Lxx?
+>>
+>> I check the DSDT, in _Lxx, there is
+>>
+>> Notify (\_SB.PCI0.RP03, 0x02)
+>>
+>> That is, the event type is ACPI_NOTIFY_DEVICE_WAKE.
+>>
+>> > Even if so, these routines don't seem to be suitable to handle the case at hand.
+>>
+>> Yes.  Maybe add a flag named like "come_from_d3cold", and if
+>> come_from_d3cold == true, resume the dev itself without checking pme
+>> bits, because the PCIe main link is not available now.
+>
+> Actually, I think we can do the full resume (however with the 100 ms wait)
+> in that case, because we're going to resume the device shortly anyway.
+>
+> The PME would only be useful as a kind of handshake with the device, so we
+> know we can access its registers, but as you pointed that out, we need the
+> 100 ms delay in the host wakeup case anyway, so perhaps it's better to make
+> remote wakeup and host wakeup behave identically in that respect.
 
+Yes.
 
->  	if (list_empty(&pci_mmcfg_list))
->  		return;
->  
-> @@ -676,3 +650,101 @@ static int __init pci_mmcfg_late_insert_
->   * with other system resources.
->   */
->  late_initcall(pci_mmcfg_late_insert_resources);
-> +
-> +static DEFINE_MUTEX(pci_mmcfg_lock);
-> +
-> +int __devinit pci_mmconfig_add(int segment, int start, int end, u64 addr)
-> +{
-> +	int rc = 0;
-> +	struct pci_mmcfg_region *cfg, *new = NULL;
-> +
-> +	if (segment < 0 || segment > USHRT_MAX ||
-> +	    start < 0 || start > 255 || end < start || end > 255)
-> +		return -EINVAL;
-> +
-> +	mutex_lock(&pci_mmcfg_lock);
-> +	cfg = pci_mmconfig_lookup(segment, start);
-> +	if (cfg) {
-> +		if (cfg->start_bus <= start && cfg->end_bus >= end) {
-> +			rc = -EEXIST;
-> +		} else {
-> +			rc = -EINVAL;
-> +			printk(KERN_WARNING PREFIX
-> +			       "MMCONFIG for domain %04x [bus %02x-%02x] "
-> +			       "conflicts with domain %04x [bus %02x-%02x]\n",
-> +			       segment, start, end,
-> +			       cfg->segment, cfg->start_bus, cfg->end_bus);
-> +		}
-> +		goto out;
-> +	}
-> +
-> +	new = pci_mmconfig_alloc(segment, start, end, addr);
-> +	if (new == NULL) {
-> +		rc = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	if (!pci_mmcfg_check_reserved(new, 0)) {
-> +		rc = -EINVAL;
-> +		printk(KERN_WARNING PREFIX
-> +		       "MMCONFIG for domain %04x [bus %02x-%02x] "
-> +		       "isn't reserved\n", segment, start, end);
-> +		goto out;
-> +	}
-> +
-> +	if (pci_mmcfg_resources_inserted &&
-> +	    insert_resource(&iomem_resource, &new->res)) {
-> +		rc = -EBUSY;
-> +		printk(KERN_WARNING PREFIX
-> +		       "failed to insert resource for domain "
-> +		       "%04x [bus %02x-%02x]\n", segment, start, end);
-> +		goto out;
-> +	}
-> +
-> +	if (pci_mmcfg_arch_map(new)) {
-> +		rc = -EBUSY;
-> +		printk(KERN_WARNING PREFIX
-> +		       "failed to map resource for domain "
-> +		       "%04x [bus %02x-%02x]\n", segment, start, end);
-> +		goto out;
-> +	}
-> +
-> +	list_add_sorted(new);
-> +	new = NULL;
-> +
-> +out:
-> +	if (new) {
-> +		if (new->res.parent)
-> +			release_resource(&new->res);
-> +		kfree(new);
-> +	}
-> +
-> +	mutex_unlock(&pci_mmcfg_lock);
-> +
-> +	return rc;
-> +}
-> +
-> +/* Delete MMCFG information at runtime */
-> +int pci_mmconfig_delete(int segment, int start, int end)
-> +{
-> +	struct pci_mmcfg_region *cfg;
-> +
-> +	mutex_lock(&pci_mmcfg_lock);
-> +	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
-> +		if (cfg->segment == segment && cfg->start_bus == start &&
-> +		    cfg->end_bus == end) {
-> +			list_del_rcu(&cfg->list);
-> +			synchronize_rcu();
-> +			pci_mmcfg_arch_unmap(cfg);
-> +			if (cfg->res.parent)
-> +				release_resource(&cfg->res);
-> +			mutex_unlock(&pci_mmcfg_lock);
-> +			kfree(cfg);
-> +			return 0;
-> +		}
-> +	}
-> +	mutex_unlock(&pci_mmcfg_lock);
-> +
-> +	return -ENOENT;
-> +}
-> +
-> Index: bjorn-next/arch/x86/pci/mmconfig_64.c
-> ===================================================================
-> --- bjorn-next.orig/arch/x86/pci/mmconfig_64.c
-> +++ bjorn-next/arch/x86/pci/mmconfig_64.c
-> @@ -112,17 +112,6 @@ static void __iomem * __devinit mcfg_ior
->  
->  int __init pci_mmcfg_arch_init(void)
->  {
-> -	struct pci_mmcfg_region *cfg;
-> -
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> -		cfg->virt = mcfg_ioremap(cfg);
-> -		if (!cfg->virt) {
-> -			printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
-> -			       &cfg->res);
-> -			pci_mmcfg_arch_free();
-> -			return 0;
-> -		}
-> -	}
->  	raw_pci_ext_ops = &pci_mmcfg;
->  	return 1;
->  }
-> 
-
+Best Regards,
+Huang Ying
