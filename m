@@ -1,108 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:45199 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752454Ab2DWN4D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 09:56:03 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 0/8] enhance dmaengine core to support DMA device hotplug
-Date: Mon, 23 Apr 2012 21:51:41 +0800
-Message-Id: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:62277 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755030Ab2DTSrP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Apr 2012 14:47:15 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F919CD5.7070004@fold.natur.cuni.cz>
+References: <4F6A483D.50702@fold.natur.cuni.cz>
+	<4F8D1B72.2000105@fold.natur.cuni.cz>
+	<CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com>
+	<CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com>
+	<4F8D390F.9050408@fold.natur.cuni.cz>
+	<CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
+	<CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
+	<4F8EFFA3.3050705@fold.natur.cuni.cz>
+	<CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com>
+	<4F8F243B.70906@fold.natur.cuni.cz>
+	<CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com>
+	<4F909CEB.3060407@fold.natur.cuni.cz>
+	<CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
+	<CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
+	<4F91473A.1080007@fold.natur.cuni.cz>
+	<CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
+	<4F919C22.1070608@fold.natur.cuni.cz>
+	<4F919CD5.7070004@fold.natur.cuni.cz>
+Date: Fri, 20 Apr 2012 11:47:14 -0700
+Message-ID: <CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On Fri, Apr 20, 2012 at 10:28 AM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+>
+>
+> [30595.338466] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+> [30595.338468] pciehp 0000:00:1c.7:pcie04: LinkState change
+> [30595.338471] pciehp 0000:00:1c.7:pcie04: lnk_status = 7011
+> [30595.338483] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+> [30595.338486] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+> [30595.338491] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+> [30595.338525] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
+> [30595.439441] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
+> [30595.439543] pci 0000:11:00.0: [1033:0194] type 00 class 0x0c0330
+> [30595.439597] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
+> [30595.439840] pci 0000:11:00.0: PME# supported from D0 D3hot
+> [30595.459499] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+> [30595.459542] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+> [30595.459545] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+> [30595.459550] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+> [30595.459554] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+> [30595.459688] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+> [30595.459894] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> [30595.459900] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+> [30595.460199] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+> [30595.460306] xhci_hcd 0000:11:00.0: irq 54 for MSI/MSI-X
+> [30595.460310] xhci_hcd 0000:11:00.0: irq 55 for MSI/MSI-X
+> [30595.460314] xhci_hcd 0000:11:00.0: irq 56 for MSI/MSI-X
+> [30595.460318] xhci_hcd 0000:11:00.0: irq 57 for MSI/MSI-X
+> [30595.460321] xhci_hcd 0000:11:00.0: irq 58 for MSI/MSI-X
+> [30595.460472] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+> [30595.460474] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> [30595.460475] usb usb5: Product: xHCI Host Controller
+> [30595.460476] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+> [30595.460477] usb usb5: SerialNumber: 0000:11:00.0
+> [30595.460569] xHCI xhci_add_endpoint called for root hub
+> [30595.460579] xHCI xhci_check_bandwidth called for root hub
+> [30595.460600] hub 5-0:1.0: USB hub found
+> [30595.460611] hub 5-0:1.0: 2 ports detected
+> [30595.460706] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> [30595.460711] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+> [30595.463431] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+> [30595.463433] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> [30595.463434] usb usb6: Product: xHCI Host Controller
+> [30595.463435] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+> [30595.463437] usb usb6: SerialNumber: 0000:11:00.0
+> [30595.463506] xHCI xhci_add_endpoint called for root hub
+> [30595.463507] xHCI xhci_check_bandwidth called for root hub
+> [30595.463534] hub 6-0:1.0: USB hub found
+> [30595.463547] hub 6-0:1.0: 2 ports detected
 
-This patchset tries to enhance the dmaengine and its clients to support
-hot-removal of DMA devices at runtime, especially for IOAT devices.
+echo 1 > /sys/..../remove
 
-When hot-removing IOH (PCI host bridge) on Intel Nehalem/Westmere platform,
-we need to remove all IOAT devices embedded in the IOH. For future Intel
-processor with IIO (Embedded IOH), we need to remove IOAT devices even
-when hot-removing a physical processor. But current dmaengine implementation
-doesn't support hot-removal of IOAT devices at runtime.
+> [30607.046714] xhci_hcd 0000:11:00.0: remove, state 4
+> [30607.046719] usb usb6: USB disconnect, device number 1
+> [30607.046764] xHCI xhci_drop_endpoint called for root hub
+> [30607.046766] xHCI xhci_check_bandwidth called for root hub
+> [30607.065341] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+> [30607.065350] xhci_hcd 0000:11:00.0: remove, state 4
+> [30607.065353] usb usb5: USB disconnect, device number 1
+> [30607.065393] xHCI xhci_drop_endpoint called for root hub
+> [30607.065394] xHCI xhci_check_bandwidth called for root hub
+> [30607.065692] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+> [30607.065764] pci 0000:11:00.0: freeing pci_dev info
 
-Currently dmaengine has an assumption that a DMA device could only be
-deregistered when there's no any clients making use of the dmaengine.
-So dma_async_device_unregister() is designed to be called by DMA driver's
-exit routines only. But the ioatdma driver doesn't conform to that design,
-it calls dma_async_device_unregister() from dma_async_device_unregister(),
-which is called in the driver detaching path. Following simple test could
-unveil the issue.
+physically remove that express card
 
-The proposed solution is to get rid of the assumption and enhance
-dma_async_device_unregister(), so it could be called from DMA driver's
-detach routines. It will also introduce several interfaces and enhance
-dmaengine clients to support hot-removal of DMA devices at runtime.
+> [30616.630810] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+> [30616.630813] pciehp 0000:00:1c.7:pcie04: LinkState change
+> [30616.630816] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+> [30616.630817] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+> [30616.630820] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+> [30616.630858] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+> [30616.630888] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+> [30616.630891] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
 
-This patchset applies to the mainline kernel at
-cdd5983 Merge tag 'for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost
+physical add...
 
----------------------------------------------------------------------
-echo 0000:80:16.7 > /sys/bus/pci/drivers/ioatdma/unbind
-ioatdma 0000:80:16.7: Removing dma and dca services
-------------[ cut here ]------------
-WARNING: at drivers/dma/dmaengine.c:831 dma_async_device_unregister+0xd5/0xf0() (Tainted: G           ---------------- T)
-Hardware name: System x3850 X5 -[7143O3G]-
-dma_async_device_unregister called while 17 clients hold a reference
-Modules linked in: ebtable_nat ebtables ipt_MASQUERADE iptable_nat nf_nat xt_CHECKSUM iptable_mangle bridge stp llc autofs4 sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 vfat fat vhost_net macvtap macvlan tun kvm_intel kvm uinput microcode sg serio_raw cdc_ether usbnet mii be2net i2c_i801 i2c_core iTCO_wdt iTCO_vendor_support shpchp i7core_edac edac_core ioatdma igb dca e1000e bnx2 ext4 mbcache jbd2 sr_mod cdrom sd_mod crc_t10dif qla2xxx pmcraid pata_acpi ata_generic ata_piix bfa(T) scsi_transport_fc scsi_tgt megaraid_sas dm_mirror dm_region_hash dm_log dm_mod [last unloaded: scsi_wait_scan]
-Pid: 5143, comm: bash Tainted: G           ---------------- T 2.6.32-220.el6.x86_64 #1
-Call Trace:
- [<ffffffff81069b77>] ? warn_slowpath_common+0x87/0xc0
- [<ffffffff81069c66>] ? warn_slowpath_fmt+0x46/0x50
- [<ffffffff813fe465>] ? dma_async_device_unregister+0xd5/0xf0
- [<ffffffffa00ec5e9>] ? ioat_dma_remove+0x28/0x4a [ioatdma]
- [<ffffffffa00ec5b9>] ? ioat_remove+0x82/0x8a [ioatdma]
- [<ffffffff8128ab37>] ? pci_device_remove+0x37/0x70
- [<ffffffff8134623f>] ? __device_release_driver+0x6f/0xe0
- [<ffffffff813463ad>] ? device_release_driver+0x2d/0x40
- [<ffffffff81345711>] ? driver_unbind+0xa1/0xc0
- [<ffffffff81344b7c>] ? drv_attr_store+0x2c/0x30
- [<ffffffff811eb445>] ? sysfs_write_file+0xe5/0x170
- [<ffffffff811765d8>] ? vfs_write+0xb8/0x1a0
- [<ffffffff810d46e2>] ? audit_syscall_entry+0x272/0x2a0
- [<ffffffff81176fe1>] ? sys_write+0x51/0x90
- [<ffffffff8100b0f2>] ? system_call_fastpath+0x16/0x1b
----[ end trace 436e184dbc830d94 ]---
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073536000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073533000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff88107352f000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff88107352c000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073529000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy completion_pool, ffff881073527000 busy
----------------------------------------------------------------------
+> [30708.233725] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+> [30708.233727] pciehp 0000:00:1c.7:pcie04: LinkState change
+> [30708.233738] pciehp 0000:00:1c.7:pcie04: lnk_status = 7011
+> [30708.233739] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+> [30708.233742] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
+> [30708.233781] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+> [30708.233796] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
+> [30708.338477] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
+> [30708.338581] pci 0000:11:00.0: [1033:0194] type 00 class 0x0c0330
+> [30708.338632] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
+> [30708.338876] pci 0000:11:00.0: PME# supported from D0 D3hot
+> [30708.358538] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+> [30708.358575] pcieport 0000:00:1c.7: PCI bridge to [bus 11-16]
+> [30708.358588] pcieport 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+> [30708.358593] pcieport 0000:00:1c.7:   bridge window [mem 0xf6c00000-0xf7cfffff]
+> [30708.358597] pcieport 0000:00:1c.7:   bridge window [mem 0xf0000000-0xf10fffff 64bit pref]
+> [30708.358737] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+> [30708.358791] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> [30708.358799] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+> [30708.359090] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+> [30708.359192] xhci_hcd 0000:11:00.0: irq 54 for MSI/MSI-X
+> [30708.359196] xhci_hcd 0000:11:00.0: irq 55 for MSI/MSI-X
+> [30708.359199] xhci_hcd 0000:11:00.0: irq 56 for MSI/MSI-X
+> [30708.359203] xhci_hcd 0000:11:00.0: irq 57 for MSI/MSI-X
+> [30708.359207] xhci_hcd 0000:11:00.0: irq 58 for MSI/MSI-X
+> [30708.359357] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+> [30708.359359] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> [30708.359360] usb usb5: Product: xHCI Host Controller
+> [30708.359361] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+> [30708.359363] usb usb5: SerialNumber: 0000:11:00.0
+> [30708.359453] xHCI xhci_add_endpoint called for root hub
+> [30708.359456] xHCI xhci_check_bandwidth called for root hub
+> [30708.359496] hub 5-0:1.0: USB hub found
+> [30708.359509] hub 5-0:1.0: 2 ports detected
+> [30708.359571] xhci_hcd 0000:11:00.0: xHCI Host Controller
+> [30708.359574] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+> [30708.362332] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+> [30708.362335] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+> [30708.362337] usb usb6: Product: xHCI Host Controller
+> [30708.362338] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+> [30708.362340] usb usb6: SerialNumber: 0000:11:00.0
+> [30708.362443] xHCI xhci_add_endpoint called for root hub
+> [30708.362445] xHCI xhci_check_bandwidth called for root hub
+> [30708.362472] hub 6-0:1.0: USB hub found
+> [30708.362490] hub 6-0:1.0: 2 ports detected
 
-Jiang Liu (8):
-  dmaengine: enhance DMA channel reference count management
-  dmaengine: rebalance DMA channels when CPU hotplug happens
-  dmaengine: introduce CONFIG_DMA_ENGINE_HOTPLUG for DMA device hotplug
-  dmaengine: use atomic_t for struct dma_chan->client_count field
-  dmaengine: enhance dma_async_device_unregister() to be called by
-    drv->remove()
-  dmaengine: enhance network subsystem to support DMA device hotplug
-  dmaengine: enhance ASYNC_TX subsystem to support DMA device hotplug
-  dmaengine: assign DMA channel to CPU according to NUMA affinity
+echo 1 /sys/.../remove
 
- crypto/async_tx/async_memcpy.c      |    2 +
- crypto/async_tx/async_memset.c      |    2 +
- crypto/async_tx/async_pq.c          |   10 +-
- crypto/async_tx/async_raid6_recov.c |    8 +-
- crypto/async_tx/async_tx.c          |    6 +-
- crypto/async_tx/async_xor.c         |   13 +-
- drivers/dma/Kconfig                 |    6 +
- drivers/dma/dmaengine.c             |  384 ++++++++++++++++++++++-------------
- include/linux/async_tx.h            |   13 ++
- include/linux/dmaengine.h           |   30 +++
- include/net/netdma.h                |   26 +++
- net/ipv4/tcp.c                      |   10 +-
- net/ipv4/tcp_input.c                |    5 +-
- net/ipv4/tcp_ipv4.c                 |    4 +-
- net/ipv6/tcp_ipv6.c                 |    4 +-
- 15 files changed, 357 insertions(+), 166 deletions(-)
+> [30716.380693] xhci_hcd 0000:11:00.0: remove, state 4
+> [30716.380699] usb usb6: USB disconnect, device number 1
+> [30716.380752] xHCI xhci_drop_endpoint called for root hub
+> [30716.380754] xHCI xhci_check_bandwidth called for root hub
+> [30716.400795] xhci_hcd 0000:11:00.0: USB bus 6 deregistered
+> [30716.400803] xhci_hcd 0000:11:00.0: remove, state 4
+> [30716.400807] usb usb5: USB disconnect, device number 1
+> [30716.400846] xHCI xhci_drop_endpoint called for root hub
+> [30716.400848] xHCI xhci_check_bandwidth called for root hub
+> [30716.401134] xhci_hcd 0000:11:00.0: USB bus 5 deregistered
+> [30716.401207] pci 0000:11:00.0: freeing pci_dev info
 
--- 
-1.7.5.4
+physically remove
 
+> [30720.175637] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+> [30720.175639] pciehp 0000:00:1c.7:pcie04: LinkState change
+> [30720.175643] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+> [30720.175644] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+> [30720.175648] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+> [30720.175687] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+> [30720.175718] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+> [30720.175721] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+>
+
+So the USB host control driver xhci put that 11:00.0 in strange power state.
+
+please try to boot the system with pcie_aspm=off
+
+and don't use echo 1 before physically removing the expresscard.
+
+Yinghai
