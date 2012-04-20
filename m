@@ -1,67 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <4F8D390F.9050408@fold.natur.cuni.cz>
-References: <4F6A483D.50702@fold.natur.cuni.cz>
-	<CAE9FiQVnErU-cska4gpinyj-LOup-U+3vsEG2z_-7h6kyREYtw@mail.gmail.com>
-	<4F6A5A53.305@fold.natur.cuni.cz>
-	<CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
-	<4F8BEB1D.9080903@fold.natur.cuni.cz>
-	<CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
-	<4F8C6E4E.1000205@fold.natur.cuni.cz>
-	<CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com>
-	<CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com>
-	<CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com>
-	<4F8D1B72.2000105@fold.natur.cuni.cz>
-	<CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com>
-	<CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com>
-	<4F8D390F.9050408@fold.natur.cuni.cz>
-Date: Tue, 17 Apr 2012 10:07:53 -0700
-Message-ID: <CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
-Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
-From: Yinghai Lu <yinghai@kernel.org>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Thomas Gleixner <tglx@linutronix.de>, linux-pci@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:11805 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751798Ab2DTXRu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Apr 2012 19:17:50 -0400
+Date: Fri, 20 Apr 2012 16:17:48 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	linux-pci@vger.kernel.org,
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec
+ timeframe
+Message-ID: <20120420231748.GB7069@xanatos>
+References: <4F8F243B.70906@fold.natur.cuni.cz>
+ <CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com>
+ <4F909CEB.3060407@fold.natur.cuni.cz>
+ <CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
+ <CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
+ <4F91473A.1080007@fold.natur.cuni.cz>
+ <CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
+ <4F919C22.1070608@fold.natur.cuni.cz>
+ <4F919CD5.7070004@fold.natur.cuni.cz>
+ <CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 17, 2012 at 2:34 AM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> Yinghai Lu wrote:
->> On Tue, Apr 17, 2012 at 1:46 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Tue, Apr 17, 2012 at 12:27 AM, Martin Mokrejs
->>> <mmokrejs@fold.natur.cuni.cz> wrote:
->>>>>
->>>>> can you send out lspci -vvxxxx -s 00:1c.7 after removing USB 3.0 express card?
->>>>
->>>> No, that did not help (tried on 3.4-rc3). First I plugged in the NEC uPD720200 USB3.0 card
->>>> and unplugged it (card removal not reported :(), saved the lspci output.
->>>> Then I inserted the FireWire card, unplugged, again saved the lspci output.
->>>> Finally, saved the dmesg. All three files are attached.
->>>
->>> for USB 3.0:
->>>                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
->>>                        Changed: MRL- PresDet- LinkState+
->>
->> LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+
->> BWMgmt+ ABWMgmt-
->>
->> link still active even that card get removed, that looks like chipset
->> have problem.
->
-> Yinghai,
->  so what should I ask Dell for? To fix BIOS of the laptop? What exactly? Or do you think
-> this is a hardware issue with the chipset?
+On Fri, Apr 20, 2012 at 11:47:14AM -0700, Yinghai Lu wrote:
+> On Fri, Apr 20, 2012 at 10:28 AM, Martin Mokrejs
+> <mmokrejs@fold.natur.cuni.cz> wrote:
+> > [30720.175637] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+> > [30720.175639] pciehp 0000:00:1c.7:pcie04: LinkState change
+> > [30720.175643] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+> > [30720.175644] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+> > [30720.175648] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+> > [30720.175687] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+> > [30720.175718] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+> > [30720.175721] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+> >
+> 
+> So the USB host control driver xhci put that 11:00.0 in strange power state.
 
-after the expresscard get removed, that root port socket status bits
-still report Data Link Active, and
-the card still present.
+What do you mean "strange power state"?  The only PCI power states the
+xHCI driver will use is D0 or D3hot.  D3hot is entered automatically by
+the USB core runtime PM system when all USB devices are disconnected or
+suspended.  So what strange power state are we talking about?
 
-Better check with Dell at first, and ask them to talk with intel if
-there is silicon bug with that chipset that report wrong status.
-
-Let me check if i could rebase one my local patch do reset pcie link
-to prove that problem it silicon related.
-
-Yinghai
+> please try to boot the system with pcie_aspm=off
+> 
+> and don't use echo 1 before physically removing the expresscard.
+> 
+> Yinghai
