@@ -1,60 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60155 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752111Ab2DZMYP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Apr 2012 08:24:15 -0400
-Message-ID: <4F993E69.1010309@redhat.com>
-Date: Thu, 26 Apr 2012 08:24:09 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38742 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751720Ab2DUEqm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Apr 2012 00:46:42 -0400
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Matthew Wilcox <matthew.wilcox@linux.intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Myron Stowe <mstowe@redhat.com>,
-	James Paradis <james.paradis@stratus.com>
-Subject: Re: [PATCH v1] PCI: work around Stratus ftServer broken PCIe hierarchy
-References: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
+References: <4F8F243B.70906@fold.natur.cuni.cz>
+	<CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com>
+	<4F909CEB.3060407@fold.natur.cuni.cz>
+	<CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
+	<CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
+	<4F91473A.1080007@fold.natur.cuni.cz>
+	<CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
+	<4F919C22.1070608@fold.natur.cuni.cz>
+	<4F919CD5.7070004@fold.natur.cuni.cz>
+	<CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
+	<20120420231748.GB7069@xanatos>
+	<CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
+Date: Fri, 20 Apr 2012 21:46:41 -0700
+Message-ID: <CAE9FiQWLmiqg_8PQXYsccxqrvwEp5zhGLcEpsN-nAJq=1zTZ7Q@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Apr 20, 2012 at 5:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> What do you mean "strange power state"?  The only PCI power states the
+>> xHCI driver will use is D0 or D3hot.  D3hot is entered automatically by
+>> the USB core runtime PM system when all USB devices are disconnected or
+>> suspended.  So what strange power state are we talking about?
+>
+> that's helpful. Can that feature to be disabled?
 
+please check and set
+/sys/bus/pci/devices/0000:11:00.0/power/control
+/sys/bus/pci/devices/0000:11:00.0/usb?/power/control
+from auto to on
 
-On 04/25/2012 07:36 PM, Bjorn Helgaas wrote:
-> A PCIe downstream port is a P2P bridge.  Its secondary interface is
-> a link that should lead only to device 0 (unless ARI is enabled)[1], so
-> we don't probe for non-zero device numbers.
-> 
-> Some Stratus ftServer systems have a PCIe downstream port (02:00.0) that
-> leads to both an upstream port (03:00.0) and a downstream port (03:01.0),
-> and 03:01.0 has important devices below it:
-> 
->   [0000:02]-+-00.0-[0000:03]--+-00.0
->                               \-01.0-[0000:xx]--+-[USB]
->                                                 \-[NIC]
-> 
-> Previously, we didn't enumerate device 03:01.0, so USB and the network
-> didn't work.  This patch adds a DMI quirk to scan all device numbers,
-> not just 0, below a downstream port.
-> 
-> Based on a patch by Prarit Bhargava.
-> 
-> [1] PCIe spec r3.0, sec 7.3.1
-> 
-> CC: Myron Stowe <mstowe@redhat.com>
-> CC: Don Dutile <ddutile@redhat.com>
-> CC: James Paradis <jim.paradis@stratus.com>
-
-Nuts.  This is my fault.  I'm so used to calling him "Jim" that I screwed up his
-email address.  It should be james.paradis@stratus.com .
-
-Jim, can you retest with this updated version of the patch so we can confirm it
-works?
-
-http://marc.info/?l=linux-pci&m=133539711207345&w=2
-
-Thanks,
-
-P.
+Yinghai
