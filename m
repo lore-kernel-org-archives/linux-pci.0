@@ -1,91 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:11850 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752626Ab2DOLiS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 07:38:18 -0400
-Message-ID: <4F8AB312.7060606@snewbury.org.uk>
-Date: Sun, 15 Apr 2012 12:37:54 +0100
-From: Steven Newbury <steve@snewbury.org.uk>
-MIME-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:50674 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751791Ab2DUNZV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 21 Apr 2012 09:25:21 -0400
+Date: Sat, 21 Apr 2012 06:25:16 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
 To: Yinghai Lu <yinghai@kernel.org>
-CC: "Barnes, Jesse" <jesse.barnes@intel.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Subject: Re: PCI resources above 4GB
-References: <1333968563.5678.19.camel@infinity> <4F8467AA.90305@snewbury.org.uk> <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com> <4F848357.3060007@snewbury.org.uk> <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com> <4F848E10.1090703@snewbury.org.uk> <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com> <1334089568.4083.2.camel@Nokia-N900> <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com> <4F84A3EC.6030903@snewbury.org.uk> <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com> <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <4F89B5E8.3040906@snewbury.org.uk> <4F89BC84.50308@snewbury.org.uk> <4F89C513.3000006@snewbury.org.uk> <4F89CB16.2000908@snewbury.org.uk> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com> <4F8AA0DC.6010902@snewbury.org.uk>
-In-Reply-To: <4F8AA0DC.6010902@snewbury.org.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec
+ timeframe
+Message-ID: <20120421132516.GC7069@xanatos>
+References: <4F909CEB.3060407@fold.natur.cuni.cz>
+ <CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
+ <CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
+ <4F91473A.1080007@fold.natur.cuni.cz>
+ <CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
+ <4F919C22.1070608@fold.natur.cuni.cz>
+ <4F919CD5.7070004@fold.natur.cuni.cz>
+ <CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
+ <20120420231748.GB7069@xanatos>
+ <CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 15/04/12 11:20, Steven Newbury wrote:
-> On 14/04/12 21:48, Yinghai Lu wrote:
->> On Sat, Apr 14, 2012 at 12:21 PM, Steven Newbury 
->> <steve@snewbury.org.uk> wrote:
->>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
->>> 
->>> On 14/04/12 20:08, Steven Newbury wrote:
->>>> On 14/04/12 19:42, Steven Newbury wrote:
->>>>> On 14/04/12 19:05, Steven Newbury wrote:
->>>>>> On 14/04/12 18:37, Steven Newbury wrote:
->>>>>>> On 12/04/12 17:40, Steven Newbury wrote:
->>>>>>>> On Thu, 12 Apr 2012, 17:07:33 BST, Yinghai Lu 
->>>>>>>> <yinghai@kernel.org> wrote:
->>>> 
->>>>>>>>> On Thu, Apr 12, 2012 at 4:22 AM, Steven Newbury 
->>>>>>>>> <steve@snewbury.org.uk> wrote:
->>>>>>>>>> Thanks, that fixed it! :) I had a similar patch 
->>>>>>>>>> I've been working on but I had my fix in the
->>>>>>>>>> wrong place!
->>>>>>>>>> 
->>>>>>>>>> In the working case, initially the BIOS has set 
->>>>>>>>>> GMA to within the low system DRAM 0xC0000000 
->>>>>>>>>> obviously invalid. This conflict is detected and 
->>>>>>>>>> it's relallocated to 0x12000000.
->>>>>>>>>> 
->>>>>>>>>> I've attempted to modify probe.c to disable
->>>>>>>>>> 64-bit BARs not allocated above 4G so they get 
->>>>>>>>>> reallocated above when possible later.  It seemed
->>>>>>>>>>  to work, but again broke GMA despite the BAR 
->>>>>>>>>> originally containing an invalid address as 
->>>>>>>>>> mentioned above, it seems for some reason 
->>>>>>>>>> something is different when the conflict is 
->>>>>>>>>> detected and rellocated, compared to disabling
->>>>>>>>>> it early then allocating a valid value..?
->>>>>>>>>> 
->>>>>>> I've created a new quirk utilising an extra PCI
->>>>>>> resource flag to force reallocation of the resource.
->>>>>>> It's the first approach I've had any success at.  It
->>>>>>> does work. Only "Intel Page Flush" now gets allocated
->>>>>>> @0xe0000000!
->>>> 
->>>> 
->>>>>> Hopefully this should fix "Intel Flush Page"
->>>>> Need to export pci_bus_alloc_resource_fit for intel-gtt.
->>>> Nearly worked... Or at least it should have worked, but for 
->>>> some reason the allocator failed to utilise 
->>>> 0xe0000000-0xefffffff for 04:00.0 BAR0..?
->>>> 
->>>> 
->>>> pci 0000:03:08.0: BAR 15: can't assign mem pref (size 
->>>> 0x18000000)
->>> Ah! Not enough space for the bridge window!:(
->>> 
+On Fri, Apr 20, 2012 at 05:09:48PM -0700, Yinghai Lu wrote:
+> On Fri, Apr 20, 2012 at 4:17 PM, Sarah Sharp
+> <sarah.a.sharp@linux.intel.com> wrote:
+> > On Fri, Apr 20, 2012 at 11:47:14AM -0700, Yinghai Lu wrote:
+> >> On Fri, Apr 20, 2012 at 10:28 AM, Martin Mokrejs
+> >> <mmokrejs@fold.natur.cuni.cz> wrote:
+> >> > [30720.175637] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
+> >> > [30720.175639] pciehp 0000:00:1c.7:pcie04: LinkState change
+> >> > [30720.175643] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
+> >> > [30720.175644] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
+> >> > [30720.175648] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
+> >> > [30720.175687] pciehp 0000:00:1c.7:pcie04: Surprise Removal
+> >> > [30720.175718] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
+> >> > [30720.175721] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
+> >> >
+> >>
+> >> So the USB host control driver xhci put that 11:00.0 in strange power state.
+> >
+> > What do you mean "strange power state"?  The only PCI power states the
+> > xHCI driver will use is D0 or D3hot.  D3hot is entered automatically by
+> > the USB core runtime PM system when all USB devices are disconnected or
+> > suspended.  So what strange power state are we talking about?
 > 
->> please append pci=norom ...
-> 
-> That worked.  Except of course the radeon driver can't POST the
-> card without the ROM! :-P
-Can the ROM resource be mapped above 4G?
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+> that's helpful. Can that feature to be disabled?
 
-iEYEARECAAYFAk+KsxIACgkQGcb56gMuC63JTQCeOK9EGuyoWPe8lsSS5Y6QcfPi
-9HQAniZQP84biGVRM4bP8R6/ulGjuRWV
-=i8py
------END PGP SIGNATURE-----
+Yes.  There are several ways to disable automatic entry into D3hot.
+The easiest way is to turn off CONFIG_USB_SUSPEND, which will disable
+USB autosuspend (and subsequent runtime PM entry into D3hot) for all USB
+hosts and devices.
+
+If you want a dynamic test, you can go into the USB host sysfs files in
+/sys/bus/usb/devices/usbN/power/ (where N is the bus number) and echo
+"on" to the control file.  Echo "auto" to turn runtime PM back on.  The
+xHCI driver will register two USB buses, so it's better to turn all the
+usbN hosts on for this test.
+
+Alternately, you can also use powertop, go to the Tunables tab, and
+change line like this:
+
+>> Good          Autosuspend for USB device EHCI Host Controller [usb7]
+
+>From "Good" to "Bad" for the xHCI host.
+
+Sarah Sharp
