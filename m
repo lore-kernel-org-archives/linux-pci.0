@@ -1,98 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:52668 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759603Ab2D0Dv4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 23:51:56 -0400
+Received: from fold.natur.cuni.cz ([195.113.57.32]:37603 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752671Ab2DUI7W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Apr 2012 04:59:22 -0400
+Message-ID: <4F927787.409@fold.natur.cuni.cz>
+Date: Sat, 21 Apr 2012 11:01:59 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-In-Reply-To: <4F99D994.5000404@fold.natur.cuni.cz>
-References: <4F909CEB.3060407@fold.natur.cuni.cz>
-	<CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
-	<CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
-	<4F91473A.1080007@fold.natur.cuni.cz>
-	<CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
-	<4F919C22.1070608@fold.natur.cuni.cz>
-	<4F919CD5.7070004@fold.natur.cuni.cz>
-	<CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
-	<20120420231748.GB7069@xanatos>
-	<CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
-	<20120421132516.GC7069@xanatos>
-	<CAE9FiQUuHrsNPhPWAc9koOrW6Xc+ryOhf_nv2ZyWvG9XMAdNoA@mail.gmail.com>
-	<4F9711AA.1090803@fold.natur.cuni.cz>
-	<CAE9FiQWFAYHTKtv1_MF-SYTrBxUg3zYbfuuxu2uGXHGmEYSf5A@mail.gmail.com>
-	<4F99C74D.9050807@fold.natur.cuni.cz>
-	<CAE9FiQVmnah5y1-+jAcB-0X424spO8vCNj-EjFTKpi+S=e_Low@mail.gmail.com>
-	<4F99D994.5000404@fold.natur.cuni.cz>
-Date: Thu, 26 Apr 2012 20:51:55 -0700
-Message-ID: <CAE9FiQXdPdk31gP0rVBFJnyroCX0NaVtFws6J34janZMrErqNA@mail.gmail.com>
-Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
-From: Yinghai Lu <yinghai@kernel.org>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Yinghai Lu <yinghai@kernel.org>
+CC: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec
+ timeframe
+References: <4F8F243B.70906@fold.natur.cuni.cz> <CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com> <4F909CEB.3060407@fold.natur.cuni.cz> <CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com> <CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com> <4F91473A.1080007@fold.natur.cuni.cz> <CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com> <4F919C22.1070608@fold.natur.cuni.cz> <4F919CD5.7070004@fold.natur.cuni.cz> <CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com> <20120420231748.GB7069@xanatos> <CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com> <CAE9FiQWLmiqg_8PQXYsccxqrvwEp5zhGLcEpsN-nAJq=1zTZ7Q@mail.gmail.com>
+In-Reply-To: <CAE9FiQWLmiqg_8PQXYsccxqrvwEp5zhGLcEpsN-nAJq=1zTZ7Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 26, 2012 at 4:26 PM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> Yinghai Lu wrote:
->> On Thu, Apr 26, 2012 at 3:08 PM, Martin Mokrejs
->> <mmokrejs@fold.natur.cuni.cz> wrote:
->>>
->>>
->>> Yinghai Lu wrote:
->>>>
->>>> Can you try boot the system without loading xhci driver ?
->>>
->>> Bingo! Physical express card removal started to be notified correctly.
+
+
+Yinghai Lu wrote:
+> On Fri, Apr 20, 2012 at 5:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> What do you mean "strange power state"?  The only PCI power states the
+>>> xHCI driver will use is D0 or D3hot.  D3hot is entered automatically by
+>>> the USB core runtime PM system when all USB devices are disconnected or
+>>> suspended.  So what strange power state are we talking about?
 >>
->> good, please get lspci -vvxxx -s 00:1c.7
->> before removing that express card
->> on both case.
->>
->> We can compare those two to find out why.
->
-> Attached. Well, I told you in the very beginning of this looong thread it
-> happens only with the USB3.0 card but not Firewire nor COM+LPT card. ;)
+>> that's helpful. Can that feature to be disabled?
+> 
+> please check and set
+> /sys/bus/pci/devices/0000:11:00.0/power/control
+> /sys/bus/pci/devices/0000:11:00.0/usb?/power/control
+> from auto to on
 
-only have difference on DevStatus...
+I inserted the card, it was detected:
 
-not sure how that card could make difference on surprise removal.
+[33335.295737] pci 0000:11:00.0: [1033:0194] type 00 class 0x0c0330
+[33335.295789] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x00001fff 64bit]
+[33335.296043] pci 0000:11:00.0: PME# supported from D0 D3hot
+[33335.315688] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c00000-0xf6c01fff 64bit]
+[33335.315796] xhci_hcd 0000:11:00.0: enabling device (0100 -> 0102)
+[33335.315893] xhci_hcd 0000:11:00.0: xHCI Host Controller
+[33335.315897] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 5
+[33335.316178] xhci_hcd 0000:11:00.0: irq 19, io mem 0xf6c00000
+[33335.316281] xhci_hcd 0000:11:00.0: irq 53 for MSI/MSI-X
+[33335.316285] xhci_hcd 0000:11:00.0: irq 54 for MSI/MSI-X
+[33335.316288] xhci_hcd 0000:11:00.0: irq 55 for MSI/MSI-X
+[33335.316292] xhci_hcd 0000:11:00.0: irq 56 for MSI/MSI-X
+[33335.316296] xhci_hcd 0000:11:00.0: irq 57 for MSI/MSI-X
+[33335.316447] usb usb5: New USB device found, idVendor=1d6b, idProduct=0002
+[33335.316448] usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[33335.316450] usb usb5: Product: xHCI Host Controller
+[33335.316451] usb usb5: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+[33335.316452] usb usb5: SerialNumber: 0000:11:00.0
+[33335.316574] xHCI xhci_add_endpoint called for root hub
+[33335.316575] xHCI xhci_check_bandwidth called for root hub
+[33335.316597] hub 5-0:1.0: USB hub found
+[33335.316609] hub 5-0:1.0: 2 ports detected
+[33335.316680] xhci_hcd 0000:11:00.0: xHCI Host Controller
+[33335.316683] xhci_hcd 0000:11:00.0: new USB bus registered, assigned bus number 6
+[33335.319424] usb usb6: New USB device found, idVendor=1d6b, idProduct=0003
+[33335.319426] usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[33335.319428] usb usb6: Product: xHCI Host Controller
+[33335.319429] usb usb6: Manufacturer: Linux 3.4.0-rc3-default xhci_hcd
+[33335.319430] usb usb6: SerialNumber: 0000:11:00.0
+[33335.319560] xHCI xhci_add_endpoint called for root hub
+[33335.319562] xHCI xhci_check_bandwidth called for root hub
+[33335.319584] hub 6-0:1.0: USB hub found
+[33335.319602] hub 6-0:1.0: 2 ports detected
 
---- lspci_00.1c.7__card_inserted_no_xhci.txt    2012-04-26
-20:41:43.000000000 -0700
-+++ lspci_00.1c.7__card_inserted_with_xhci.txt  2012-04-26
-20:41:48.000000000 -0700
-@@ -15,7 +15,7 @@
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
--               DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq-
-AuxPwr+ TransPend-
-+               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
-AuxPwr+ TransPend-
-                LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1,
-Latency L0 <512ns, L1 <16us
-                        ClockPM- Surprise- LLActRep+ BwNot-
-                LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled-
-Retrain- CommClk+
-@@ -49,7 +49,7 @@
- 10: 00 00 00 00 00 00 00 00 00 11 16 00 c0 d0 00 00
- 20: c0 f6 c0 f7 01 f0 01 f1 00 00 00 00 00 00 00 00
- 30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 04 10 00
--40: 10 80 42 01 00 80 00 00 00 00 11 00 12 3c 12 08
-+40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 08
- 50: 43 00 11 70 60 b2 3c 00 28 10 40 00 00 00 00 00
- 60: 00 00 00 00 16 00 00 00 00 00 00 00 00 00 00 00
- 70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
-@@ -62,7 +62,7 @@
- e0: 00 03 00 00 00 00 00 00 03 00 00 00 00 00 00 00
- f0: 00 00 00 00 00 00 00 00 87 0f 06 08 00 00 00 00
- 100: 00 00 00 00 00 00 00 00 00 40 00 00 11 00 06 00
--110: 01 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00
-+110: 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00
- 120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
- 130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
- 140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# cat /sys/bus/pci/devices/0000:11:00.0/power/control
+on
+# cat /sys/bus/pci/devices/0000:11:00.0/usb?/power/control
+auto
+auto
+# echo on > /sys/bus/pci/devices/0000:11:00.0/usb5/power/control
+# echo on > /sys/bus/pci/devices/0000:11:00.0/usb6/power/control
+#
+
+I removed the card and it was NOT detected.
+
+Note: I did the test with the running instance of kernel booted WITH pcie_aspm=off.
+Will reboot without tha option and re-try.
+
+Martin
