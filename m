@@ -1,89 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga12.intel.com ([143.182.124.36]:15562 "EHLO
+	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753753Ab2DWSag (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 14:30:36 -0400
+Received: by bkcji2 with SMTP id ji2so1146261bkc.25
+        for <linux-pci@vger.kernel.org>; Mon, 23 Apr 2012 11:30:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4F8F243B.70906@fold.natur.cuni.cz>
-References: <4F6A483D.50702@fold.natur.cuni.cz>
-	<4F6A5A53.305@fold.natur.cuni.cz>
-	<CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
-	<4F8BEB1D.9080903@fold.natur.cuni.cz>
-	<CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
-	<4F8C6E4E.1000205@fold.natur.cuni.cz>
-	<CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com>
-	<CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com>
-	<CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com>
-	<4F8D1B72.2000105@fold.natur.cuni.cz>
-	<CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com>
-	<CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com>
-	<4F8D390F.9050408@fold.natur.cuni.cz>
-	<CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
-	<CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
-	<4F8EFFA3.3050705@fold.natur.cuni.cz>
-	<CAE9FiQVcJbPub1O6nwyNsiijHFpHN0jMsGO4MmKugybPL7Wnug@mail.gmail.com>
-	<4F8F243B.70906@fold.natur.cuni.cz>
-Date: Wed, 18 Apr 2012 13:58:24 -0700
-Message-ID: <CAE9FiQXx1NcGY9cHDiM5isx7NyxWN--Exb-4Gfj0arr6vf5ghQ@mail.gmail.com>
-Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
-From: Yinghai Lu <yinghai@kernel.org>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <1335189109-4871-7-git-send-email-jiang.liu@huawei.com>
+References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
+	<1335189109-4871-7-git-send-email-jiang.liu@huawei.com>
+Date: Mon, 23 Apr 2012 11:30:33 -0700
+Message-ID: <CABE8wwvi_Yz8AyALr1-uDW9xSgrSqfrYWhB_22NQ2ydTa81+mg@mail.gmail.com>
+Subject: Re: [PATCH v1 6/8] dmaengine: enhance network subsystem to support
+ DMA device hotplug
+From: Dan Williams <dan.j.williams@intel.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Vinod Koul <vinod.koul@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 18, 2012 at 1:29 PM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> Yinghai Lu wrote:
->> On Wed, Apr 18, 2012 at 10:53 AM, Martin Mokrejs
->> <mmokrejs@fold.natur.cuni.cz> wrote:
->>>> After you remove USB3 expresscard, you need to
->>>>
->>>> echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
->>>> then
->>>> echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
->>>
->>> So without these two echo commands the is no improvement/fix.
->>>
->>> [  686.701306] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->>> [  686.701316] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->>> [  686.701319] pciehp 0000:00:1c.7:pcie04: Card present on Slot(7)
->>> [  686.701357] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->>> [  686.701390] pciehp 0000:00:1c.7:pcie04: check_link_active: lnk_status = 7011
->>> [  686.809763] pciehp 0000:00:1c.7:pcie04: pciehp_check_link_status: lnk_status = 7011
->> ...
->>> [  686.833678] hub 6-0:1.0: 2 ports detected
->>>
->>> echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
->>>
->>> [  716.999938] pcieport 0000:00:1c.7: pcie_link_disable_set: lnk_ctrl = 53
->>> [  717.024647] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 8
->>> [  717.024657] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
->>> [  717.024665] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
->>> [  717.024723] pciehp 0000:00:1c.7:pcie04: Surprise Removal
->>> [  717.024753] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
->>> [  717.024756] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
->> ..
->>> [  717.045197] pci 0000:11:00.0: freeing pci_dev info
->>>
->>> echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
->>>
->>> [  748.456914] pcieport 0000:00:1c.7: pcie_link_disable_set: lnk_ctrl = 40
->>>
->>
->> so it is chipset problem, it does not detect and report the presence
->> of the card after that link is removed.
+On Mon, Apr 23, 2012 at 6:51 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Enhance network subsystem to correctly update DMA channel reference counts,
+> so it won't break DMA device hotplug logic.
 >
-> Why doesn't this happen with the FireWire express card?
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
 
-sometimes it report correctly. sometime it does not.
+This introduces an atomic action on every channel touch, which is more
+expensive than what we had previously.  There has always been a
+concern about the overhead of offload that sometimes makes ineffective
+or a loss compared to cpu copies.  In the cases where net_dma shows
+improvement this will eat into / maybe eliminate that advantage.
 
->
->>
->> Can you try to use acpiphp instead of pciehp?
->
-> Umm. I do have acpiphp in my kernel already. I am rather attaching my .config,
-> please me know what you want me to do. My kernel command line could be seen
-> in my previous posts in the dmesg file.
+Take a look at where dmaengine started [1].  It was from the beginning
+going through contortions to avoid something like this.  We made it
+simpler here [2], but still kept the principle of not dirtying a
+shared cacheline on every channel touch, and certainly not locking it.
 
-remove
+If you are going to hotplug the entire IOH, then you are probably ok
+with network links going down, so could you just down the links and
+remove the driver with the existing code?
 
-CONFIG_HOTPLUG_PCI_PCIE=y
+--
+Dan
+
+[1]: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=c13c826
+[2]: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=6f49a57a
