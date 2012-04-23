@@ -1,106 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 15/19] PCI: hold a reference count to the PCI bus used by cpcihp drivers
-Date: Fri, 27 Apr 2012 23:16:56 +0800
-Message-Id: <1335539820-11232-16-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.windriver.com ([147.11.1.11]:45186 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754721Ab2DWVgE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 17:36:04 -0400
+Message-ID: <4F95CB3E.6070504@windriver.com>
+Date: Mon, 23 Apr 2012 17:35:58 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH] pci: frv architecture needs generic setup-bus infrastructure
+References: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com> <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com>
+In-Reply-To: <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On 12-04-23 04:38 PM, Bjorn Helgaas wrote:
+> On Wed, Apr 18, 2012 at 3:24 PM, Paul Gortmaker
+> <paul.gortmaker@windriver.com> wrote:
+>> Otherwise we get this link failure for frv's defconfig:
+>>
+>>   LD      .tmp_vmlinux1
+>>  drivers/built-in.o: In function `pci_assign_resource':
+>>  (.text+0xbf0c): undefined reference to `pci_cardbus_resource_alignment'
+>>  drivers/built-in.o: In function `pci_setup':
+>>  pci.c:(.init.text+0x174): undefined reference to `pci_realloc_get_opt'
+>>  pci.c:(.init.text+0x1a0): undefined reference to `pci_realloc_get_opt'
+>>  make[1]: *** [.tmp_vmlinux1] Error 1
+>>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: David Howells <dhowells@redhat.com>
+>> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+>>
+>> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+>> index 083a49f..165274c 100644
+>> --- a/drivers/pci/Makefile
+>> +++ b/drivers/pci/Makefile
+>> @@ -42,6 +42,7 @@ obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
+>>  obj-$(CONFIG_PARISC) += setup-bus.o
+>>  obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
+>>  obj-$(CONFIG_PPC) += setup-bus.o
+>> +obj-$(CONFIG_FRV) += setup-bus.o
+>>  obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
+>>  obj-$(CONFIG_X86_VISWS) += setup-irq.o
+>>  obj-$(CONFIG_MN10300) += setup-bus.o
+> 
+> Wow, I didn't even realize that we had this sort of arch-specific
+> selection of generic PCI parts.  drivers/pci/setup-irq.c is on my list
+> for reworking because it looks like it doesn't work correctly for
+> hotplug.  setup-bus.c is much more complicated, but (a) it looks like
+> most architectures include it anyway, and (b) it seems like it'd be
+> cleaner to have a CONFIG_PCI_REALLOC or something to avoid having
+> arch-specific stuff in the Makefile.
+> 
+> Anyway, that's all for the future.  Does this fix need to go in 3.4,
+> or should it go in -next?  What commit introduced the problem?
 
-The PCI bus used by cpcihp drivers may be removed at runtime through
-/sys/devices/pcissss:bb/ssss\:bb\:dd.f/.../remove interface, so hold
-a reference count to the PCI bus to avoid invalid memory access.
+It does address a compile fail seen in 3.4 (sorry for not calling
+that out explicitly).  I've not dug back in time to see when it
+1st appeared.  With a lot of these less common arch, it seems they
+can get broken and remain broken for quite some time, so the original
+breakage may predate the 3.4 merge window.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/cpcihp_generic.c |    7 +++++--
- drivers/pci/hotplug/cpcihp_zt5550.c  |    7 +++++--
- 2 files changed, 10 insertions(+), 4 deletions(-)
+I've already got a queue with fixes for 3.4 in various other
+less common arch; it is no trouble for me to carry this there,
+if you are OK with it as a 3.4 fix.
 
-diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-index 518f387..f002be5 100644
---- a/drivers/pci/hotplug/cpcihp_generic.c
-+++ b/drivers/pci/hotplug/cpcihp_generic.c
-@@ -163,7 +163,7 @@ static int __init cpcihp_generic_init(void)
- 			err("Invalid bridge device %s", bridge);
- 			bus = NULL;
- 		} else
--			bus = dev->subordinate;
-+			bus = pci_bus_get(dev->subordinate);
- 		pci_dev_put(dev);
- 	}
- 	if (!bus) {
-@@ -179,7 +179,7 @@ static int __init cpcihp_generic_init(void)
- 	if(status != 0) {
- 		err("Could not register cPCI hotplug controller");
- 		status = -ENODEV;
--		goto init_find_bus_error;
-+		goto init_register_controller_error;
- 	}
- 	dbg("registered controller");
- 
-@@ -202,6 +202,8 @@ init_start_error:
- 	cpci_hp_unregister_bus(bus);
- init_bus_register_error:
- 	cpci_hp_unregister_controller(&generic_hpc);
-+init_register_controller_error:
-+	pci_bus_put(bus);
- init_find_bus_error:
- 	release_region(port, 1);
- 	err("status = %d", status);
-@@ -214,6 +216,7 @@ static void __exit cpcihp_generic_exit(void)
- 	cpci_hp_stop();
- 	cpci_hp_unregister_bus(bus);
- 	cpci_hp_unregister_controller(&generic_hpc);
-+	pci_bus_put(bus);
- 	release_region(port, 1);
- }
- 
-diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
-index 8a6f968..6606520 100644
---- a/drivers/pci/hotplug/cpcihp_zt5550.c
-+++ b/drivers/pci/hotplug/cpcihp_zt5550.c
-@@ -241,9 +241,9 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	if(!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
- 					 PCI_DEVICE_ID_DEC_21154, NULL))) {
- 		status = -ENODEV;
--		goto init_register_error;
-+		goto init_find_bus_error;
- 	}
--	bus0 = bus0_dev->subordinate;
-+	bus0 = pci_bus_get(bus0_dev->subordinate);
- 	pci_dev_put(bus0_dev);
- 
- 	status = cpci_hp_register_bus(bus0, 0x0a, 0x0f);
-@@ -265,6 +265,8 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- init_start_error:
- 	cpci_hp_unregister_bus(bus0);
- init_register_error:
-+	pci_bus_put(bus0);
-+init_find_bus_error:
- 	cpci_hp_unregister_controller(&zt5550_hpc);
- init_hc_error:
- 	err("status = %d", status);
-@@ -278,6 +280,7 @@ static void __devexit zt5550_hc_remove_one(struct pci_dev *pdev)
- 	cpci_hp_stop();
- 	cpci_hp_unregister_bus(bus0);
- 	cpci_hp_unregister_controller(&zt5550_hpc);
-+	pci_bus_put(bus0);
- 	zt5550_hc_cleanup();
- }
- 
--- 
-1.7.5.4
+Thanks,
+Paul.
+--
 
+> 
+> Bjorn
