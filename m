@@ -1,68 +1,49 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 4 Apr 2012 12:01:45 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Yevgeny Petrilin <yevgenyp@mellanox.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yael Shenhav <yaeli@mellanox.com>
-Subject: Re: IRQ affinity enforced only after first interrupt.
-Message-ID: <20120404100143.GH28177@dhcp-26-207.brq.redhat.com>
-References: <4F7031A4.70601@mellanox.co.il>
- <CAErSpo7ciBYG1-jCL3F6bFcktmJj4H-SXn_1NcRnhc-gPDsHUw@mail.gmail.com>
- <4F707E39.50502@gmail.com>
- <953B660C027164448AE903364AC447D2618E1A8B@MTLDAG02.mtl.com>
- <alpine.LFD.2.02.1203262059070.2542@ionos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.2.02.1203262059070.2542@ionos>
+From: Jiang Liu <liuj97@gmail.com>
+To: Vinod Koul <vinod.koul@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v1 3/8] dmaengine: introduce CONFIG_DMA_ENGINE_HOTPLUG for DMA device hotplug
+Date: Mon, 23 Apr 2012 21:51:44 +0800
+Message-Id: <1335189109-4871-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
+References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 26, 2012 at 09:04:20PM +0200, Thomas Gleixner wrote:
-> On Mon, 26 Mar 2012, Yevgeny Petrilin wrote:
-> 
-> > > 
-> > > The architecture specific code will determine whether the IRQ could be migrated
-> > > in process context. For example, the IRQ_MOVE_PCNTXT flag will be set on x86
-> > > systems if interrupt remapping is enabled.
-> >
-> > Actually I am encountering this issue with x86, and see different
-> > behavior with different HW devices (NICs). On same machine I have
-> > one device that responds immediately to affinity changes while the
-> > other one changes the affinity only after first interrupt.
-> 
-> That simply depends on the underlying hardware. On certain hardware we
-> can change the affinity only in hard interrupt context, that means
-> right when a interrupt of that device is delivered.
-> 
-> On the other devices we can change it right away and the corresponding
-> interrupt chips set IRQ_MOVE_PCNTXT to indicate that.
+Introduce CONFIG_DMA_ENGINE_HOTPLUG to enable/disable DMA device hotplug logic.
 
-Actually, even with IRQ_MOVE_PCNTXT capable chips, a hardware handler still
-might be called on a core that belongs to old affinity, after the successful
-write of new affinity. Threaded handlers are also racy with irq affinity
-updates.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/dma/Kconfig |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-If that is inconsistency, bug or design?
-
-> There is nothing we can do about this. It's dictated by hardware.
-
-May be we could wait for desc->pending_mask to be cleared before returning from
-irq_set_affinity()?
-
-> Thanks,
-> 
-> 	tglx
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
+diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+index cf9da36..aba92f0 100644
+--- a/drivers/dma/Kconfig
++++ b/drivers/dma/Kconfig
+@@ -62,6 +62,7 @@ config INTEL_IOATDMA
+ 	depends on PCI && X86
+ 	select DMA_ENGINE
+ 	select DCA
++	select DMA_ENGINE_HOTPLUG
+ 	select ASYNC_TX_DISABLE_PQ_VAL_DMA
+ 	select ASYNC_TX_DISABLE_XOR_VAL_DMA
+ 	help
+@@ -263,6 +264,11 @@ config DMA_SA11X0
+ config DMA_ENGINE
+ 	bool
+ 
++config DMA_ENGINE_HOTPLUG
++	bool
++	default n
++	depends on DMA_ENGINE
++
+ comment "DMA Clients"
+ 	depends on DMA_ENGINE
+ 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.5.4
+
