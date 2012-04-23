@@ -1,109 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39591 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071Ab2DKMax (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 08:30:53 -0400
-Date: Wed, 11 Apr 2012 06:22:34 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-To: "Hao, Xudong" <xudong.hao@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
-Message-ID: <20120411122233.GB6557@parisc-linux.org>
-References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Mike Galbraith <efault@gmx.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Ingo Molnar <mingo@elte.hu>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v1 2/3] DCA, x86: restart DCA operations in unregister_dca_provider()
+Date: Mon, 23 Apr 2012 22:34:01 +0800
+Message-Id: <1335191642-6869-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335191642-6869-1-git-send-email-jiang.liu@huawei.com>
+References: <1335191642-6869-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 11, 2012 at 06:03:43AM +0000, Hao, Xudong wrote:
-> +#ifdef CONFIG_X86
-> +
-> +#include "../gpu/drm/i915/i915_reg.h"
-> +#define MSG_CTL	0x45010
+When deregistering a DCA device, function unregister_dca_provider() will
+notify clients by DCA_PROVIDER_REMOVE to stop DCA operations at beginning.
+Currently DCA operations won't be restarted by unregister_dca_provider()
+even if there are still DCA devices left. This may cause trouble to systems
+with multiple DCA devices/IOHs. So restart DCA operations if there are
+still DCA devices left after removing a DCA device.
 
-There's a strange mixture of constants from i915_reg.h, defined constants
-here and bare constants below.  I don't mind which get used, but the
-mixture is bizarre.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/dca/dca-core.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-> +static const int op_timeout = 10;	/* set timeout 10 seconds */
-> +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
-> +	u8 *mmio_base;
-> +	u32 val;
-> +	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
-
-Style: use spaces around the multiply operator:
-	cycles_t cyc_op_timeout = tsc_khz * op_timeout * 1000;
-
-> +	if (probe)
-> +		return 0;
-> +
-> +	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-> +				 pci_resource_len(dev, 0));
-
-mmio_base should have type void __iomem *.
-
-> +	if (!mmio_base)
-> +		return -ENOMEM;
-> +
-> +	/* Work Around */
-> +	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
-
-Why are you not using writel() here? (and readl() in other places)
-
-> +	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
-> +	 * driver loaded sets the right bits. However, this's a reset and
-> +	 * the bits have been set by i915 previously, so we clobber
-> +	 * SOUTH_CHICKEN2 register directly here.
-> +	 */
-> +	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
-> +	val = *((u32 *)(mmio_base + PCH_PP_CONTROL)) & 0xfffffffe;
-> +	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
-> +	do {
-> +		cycles_t start_time = get_cycles();
-> +		while (1) {
-> +			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
-> +			if (((val & 0x80000000) == 0)
-> +				&& ((val & 0x30000000) == 0))
-> +				break;
-> +			if (cyc_op_timeout < (get_cycles() - start_time))
-> +				break;
-> +			cpu_relax();
-> +		}
-> +	} while (0);
-> +	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
-> +
-> +	iounmap(pci_resource_start(dev, 0));
-> +	return 0;
-> +}
-> +#else
-> +static int reset_ivb_igd(struct pci_dev *dev, int probe) { }
-> +#endif	/* CONFIG_X86 */
-> +
->  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-> +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
->  
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-> +		reset_ivb_igd },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-> +		reset_ivb_igd },
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
->  		reset_intel_generic_dev },
->  	{ 0 }
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/dca/dca-core.c b/drivers/dca/dca-core.c
+index 075c4bd..f8cfa58 100644
+--- a/drivers/dca/dca-core.c
++++ b/drivers/dca/dca-core.c
+@@ -414,6 +414,7 @@ void unregister_dca_provider(struct dca_provider *dca, struct device *dev)
+ 	unsigned long flags;
+ 	struct pci_bus *pci_rc;
+ 	struct dca_domain *domain;
++	bool restart = false;
+ 
+ 	blocking_notifier_call_chain(&dca_provider_chain,
+ 				     DCA_PROVIDER_REMOVE, NULL);
+@@ -427,9 +428,20 @@ void unregister_dca_provider(struct dca_provider *dca, struct device *dev)
+ 	if (list_empty(&domain->dca_providers))
+ 		dca_free_domain(domain);
+ 
++	if (!list_empty(&dca_domains))
++		restart = true;
++
+ 	raw_spin_unlock_irqrestore(&dca_lock, flags);
+ 
+ 	dca_sysfs_remove_provider(dca);
++
++	/*
++	 * Notify DCA clients to restart DCA operations if there are still
++	 * DCA devices left.
++	 */
++	if (restart)
++		blocking_notifier_call_chain(&dca_provider_chain,
++					     DCA_PROVIDER_ADD, NULL);
+ }
+ EXPORT_SYMBOL_GPL(unregister_dca_provider);
+ 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.7.5.4
+
