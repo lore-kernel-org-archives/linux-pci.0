@@ -1,69 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:36726 "EHLO
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:38158 "EHLO
 	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760250Ab2D0Pzu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 11:55:50 -0400
-Received: by lbbgf7 with SMTP id gf7so616653lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 08:55:48 -0700 (PDT)
+	with ESMTP id S1754310Ab2DWUiW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 16:38:22 -0400
+Received: by lbbgf7 with SMTP id gf7so71682lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 23 Apr 2012 13:38:21 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4F9AA8DA.3050907@gmail.com>
-References: <20120427092704.GA22529@richard> <4F9AA8DA.3050907@gmail.com>
+In-Reply-To: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 27 Apr 2012 09:55:28 -0600
-Message-ID: <CAErSpo7JFExYGK5_+aEyZZray3-rzHNk0082=2Umv=Sg9=5sHw@mail.gmail.com>
-Subject: Re: Does my understanding correct?
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
+Date: Mon, 23 Apr 2012 14:38:00 -0600
+Message-ID: <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com>
+Subject: Re: [PATCH] pci: frv architecture needs generic setup-bus infrastructure
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Howells <dhowells@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCBBcHIgMjcsIDIwMTIgYXQgODoxMCBBTSwgSmlhbmcgTGl1IDxsaXVqOTdAZ21haWwu
-Y29tPiB3cm90ZToKPiBGb3IgUENJLCB0aGVyZSdzIG5vIGludGVybmFsIGJ1cyBCdXMjNCBpbiB0
-aGUgbGVmdCBib3R0b20gZGV2aWNlLgoKWWVzLCB0aGVyZSBpcy4gIFRoZSBsZWZ0IGJvdHRvbSBi
-b3ggaXMgYSBQQ0llIHN3aXRjaCB3aXRoIHVwc3RyZWFtCnBvcnQgMDM6MDAuMC4gIFRoZSB1cHN0
-cmVhbSBwb3J0J3Mgc2Vjb25kYXJ5IGJ1cyBpcyAwNCwgd2hpY2ggaXMgdGhlCnN3aXRjaCdzIGlu
-dGVybmFsIGJ1cy4gIFRoZSBzd2l0Y2gncyBkb3duc3RyZWFtIHBvcnRzIHdvdWxkIGJlLCBmb3IK
-ZXhhbXBsZSwgMDQ6MDAuMCwgMDQ6MDEuMCwgMDQ6MDIuMCwgZXRjIChvdGhlciBudW1iZXJpbmdz
-IGFyZQpwb3NzaWJsZSkuICBJZiB0aGUgYm94IGxhYmVsbGVkICJEb3duc3RyZWFtIiBpcyAwNDow
-MC4wLCBpdHMgc2Vjb25kYXJ5CmJ1cyB3b3VsZCBiZSAwNS4KCkFzIEkgbWVudGlvbmVkIGJlZm9y
-ZSwgSSB0aGluayB0aGUgYnVzIDA1IGxpbmUgaXMgbWlzbGVhZGluZywgYmVjYXVzZQppdCdzIGRy
-YXduIGFzIGEgYnVzIHdoZXJlIG11bHRpcGxlIGRldmljZXMgY291bGQgYmUgYXR0YWNoZWQuICBJ
-dApzaG91bGQgaW5zdGVhZCBiZSBhIHBvaW50LXRvLXBvaW50IGxpbmsgdG8gYSBzaW5nbGUgZGV2
-aWNlLiAgKEV4Y2VwdAppbiB0aGlzIFN0cmF0dXMgc3lzdGVtLCB3aGljaCBzZWVtcyBicm9rZW4g
-YmVjYXVzZSBpdCAqZG9lcyogaGF2ZSB0d28KZGV2aWNlcyBhdHRhY2hlZCB0byB0aGUgc2FtZSBk
-b3duc3RyZWFtIHBvcnQuKQoKPiBPbiAwNC8yNy8yMDEyIDA1OjI3IFBNLCBSaWNoYXJkIFlhbmcg
-d3JvdGU6Cj4+IEFsbCwKPj4KPj4gSSBkcmF3IGEgcGljdHVyZSBhYm91dCB0aGUgcGh5c2ljYWwg
-bGF5b3V0IG9uIGEgcGFydCBvZiB0aGUgcGNpIHN5c3RlbS4KPj4KPj4gRWFjaCBibG9jayByZXBy
-ZXNlbnQgYSBicmlkZ2Ugb3IgYSBkZXZpY2UuCj4+IEFtIEkgY29ycmVjdD8KPj4KPj4goCCgICst
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSsKPj4goCCgIHwgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIHwKPj4goCCgIHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIHwKPj4goCCg
-IHwgoCCgIKBCdXMjMiCgIKAgoCCgIKAgoCCgIKAgoHwKPj4goCCgIHwgoCAtLS0tLS0tLS0tLS0t
-LS0tLS0goCCgIKAgoHwKPj4goCCgIHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIHwKPj4g
-oCCgIHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIHwKPj4goCCgIHwgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgoCCgIHwKPj4goCCgIHwgoCCgIKAgoCCgIKAgoCArLS0tLS0tLS0tLS0tLSsK
-Pj4goCCgIHwgoCCgIKAgoCCgIKAgoCB8RG93blN0cmVhbSCgIHwwMjowMC4wIHBjaV9kZXYKPj4g
-oCCgICstLS0tLS0tLS0tLS0tLS0rLS0tLS0tLSstLS0tLSsKPj4goCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIHwgoCBCdXMjMwo+PiCgIKAgoCCgIKAgoCCgLS0tLS0tLS0tLS0tLS0tKy0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSstLS0KPj4goCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgoCCgIHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKB8Cj4+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8IKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCCgfAo+PiCgIKAgKy0tLS0tLS0tLS0tLS0tLSstLS0tLS0tKy0t
-LS0tKyCgIKAgoCCgIKAgoCCgICstLS0tLS0tLS0tLS0tLS0rLS0tLSstLSstLS0tLSsKPj4goCCg
-IHwgoCCgIKAgoCCgIKAgoCB8VXBTdHJlYW0goCCgIHwwMzowMC4wIKAgoCCgIKB8IKAgoCCgIKAg
-oCCgIKAgfFVwU3RyZWFtIKAgoCB8MDM6MDEuMAo+PiCgIKAgfCCgIKAgoCCgIKAgoCCgICstLS0t
-LS0tLS0tLS0tKyCgIKAgoCCgIKAgoCCgIHwgoCCgIKAgoCCgIKAgoCArLS0tLS0tLS0tLS0tLSsg
-YSBub3JtYWwgZGV2aWNlCj4+IKAgoCB8IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8IKAg
-oCCgIKAgoCCgIKAgfCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfAo+PiCgIKAgfCCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfCCgIKAgoCCgIKAgoCCgIHwgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIHwKPj4goCCgIHwgoCCgIKAgoCCgIKAgQnVzIzQgoCCgIKAgoCCgIHwgoCCg
-IKAgoCCgIKAgoCB8IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8Cj4+IKAgoCB8IKAgoCAt
-LS0tLS0tLS0tLS0tLS0tLS0tIKAgoCB8IKAgoCCgIKAgoCCgIKAgfCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgfAo+PiCgIKAgfCCgIKAgoCCgIKAgoCCgIKAgoCstLS0tLS0tLS0tKyCgIKAg
-oCCgIKAgoCCgIHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIHwKPj4goCCgIHwgoCCgIKAg
-oCCgIKAgoCCgIKB8RG93blN0cmVhbXwgoCCgIKAgoCCgIKAgoCB8IKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCB8Cj4+IKAgoCArLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0rLS0tLS0rIKAgoCCg
-IKAgoCCgIKAgKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwo+PiCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgfAo+PiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfCBCdXMjNQo+
-PiCgIKAgoCCgIKAgoCCgIKAgLS0tLS0tLS0tLS0tKy0tLS0tLS0tLS0tLQo+Pgo+Pgo+Cg==
+On Wed, Apr 18, 2012 at 3:24 PM, Paul Gortmaker
+<paul.gortmaker@windriver.com> wrote:
+> Otherwise we get this link failure for frv's defconfig:
+>
+>   LD      .tmp_vmlinux1
+>  drivers/built-in.o: In function `pci_assign_resource':
+>  (.text+0xbf0c): undefined reference to `pci_cardbus_resource_alignment'
+>  drivers/built-in.o: In function `pci_setup':
+>  pci.c:(.init.text+0x174): undefined reference to `pci_realloc_get_opt'
+>  pci.c:(.init.text+0x1a0): undefined reference to `pci_realloc_get_opt'
+>  make[1]: *** [.tmp_vmlinux1] Error 1
+>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: David Howells <dhowells@redhat.com>
+> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+>
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 083a49f..165274c 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -42,6 +42,7 @@ obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
+>  obj-$(CONFIG_PARISC) += setup-bus.o
+>  obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
+>  obj-$(CONFIG_PPC) += setup-bus.o
+> +obj-$(CONFIG_FRV) += setup-bus.o
+>  obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
+>  obj-$(CONFIG_X86_VISWS) += setup-irq.o
+>  obj-$(CONFIG_MN10300) += setup-bus.o
+
+Wow, I didn't even realize that we had this sort of arch-specific
+selection of generic PCI parts.  drivers/pci/setup-irq.c is on my list
+for reworking because it looks like it doesn't work correctly for
+hotplug.  setup-bus.c is much more complicated, but (a) it looks like
+most architectures include it anyway, and (b) it seems like it'd be
+cleaner to have a CONFIG_PCI_REALLOC or something to avoid having
+arch-specific stuff in the Makefile.
+
+Anyway, that's all for the future.  Does this fix need to go in 3.4,
+or should it go in -next?  What commit introduced the problem?
+
+Bjorn
