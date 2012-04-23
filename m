@@ -1,43 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from re04.intra2net.com ([82.165.46.26]:34908 "EHLO
-	re04.intra2net.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755633Ab2DYPr0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 11:47:26 -0400
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-To: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel Sandy Bridge GPUs
-Date: Wed, 25 Apr 2012 17:22:14 +0200
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-kernel@vger.kernel.org, Drew Weaver <drew.weaver@thenap.com>,
-	Charlie Suffin <charlie.suffin@stratus.com>
-References: <4EDFD5BB.1050906@intra2net.com>
-In-Reply-To: <4EDFD5BB.1050906@intra2net.com>
+Received: from mail-pz0-f51.google.com ([209.85.210.51]:49701 "EHLO
+	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754591Ab2DWUNm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 16:13:42 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201204251722.14877.thomas.jarosch@intra2net.com>
+In-Reply-To: <20120422155202.GA13540@richard>
+References: <20120410090306.GA7056@richard>
+	<20120422155202.GA13540@richard>
+Date: Mon, 23 Apr 2012 13:13:41 -0700
+Message-ID: <CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+Subject: Re: One problem in reassign pci bus number?
+From: Yinghai Lu <yinghai@kernel.org>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, 7. December 2011 22:08:11 Thomas Jarosch wrote:
-> Some BIOS implementations leave the Intel GPU interrupts enabled,
-> even though no one is handling them (f.e. i915 driver is never loaded).
-> Additionally the interrupt destination is not set up properly
-> and the interrupt ends up -somewhere-.
+On Sun, Apr 22, 2012 at 8:52 AM, Richard Yang
+<weiyang@linux.vnet.ibm.com> wrote:
+> All,
 >
-> These spurious interrupts are "sticky" and the kernel disables
-> the (shared) interrupt line after 100.000+ generated interrupts.
+> I am reading the pci_scan_bridge() and not sure what will happen in
+> following situation.
+>
+> Suppose the kernel is not passed the pci=assign-busses.
+>
+> Below is a picture about the pci system.
+>
+>                   +-------+
+>                   |       | root bridge(0,255)
+>                   +---+---+
+>                       |          Bus 0
+>      -----+-----------+------------------------------+--
+>           |                                          |
+>           |                                          |
+>           |                                          |
+>      +----+----+                               +-----+-----+
+>      |         |  B1(1,15)                     |           |B2(16,28)
+>      +----+----+                               +-----+-----+
+>           |  Bus 1                                   |    Bus 16
+>      -----+-----------------------         ----------+----------------
+>                            |
+>                       +----+----+
+>                       |         | B3
+>                       +---------+
+>
+> Suppose B1 and B2 works fine with the BIOS, which get the right bus
+> number and range.
+>
+> B3 does not works fine with the BIOS, which doesn't get the bus number.
+>
+> So in pci_scan_bridge(), B3 will be met in the second pass and get bus
+> number 16?
+> Would this be a conflict?
 
-Just a small heads up: Boards with the new Intel Ivy bridge chipset
-are affected, too. Currently known to be affected is
+busn_alloc patchset should address your concern.
 
-    Intel Desktop Board DH77EB
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-busn-alloc
 
-
-Would be nice if Intel fixes the shared BIOS code...
-
-Thanks to Drew Weaver for reporting the issue. I currently
-don't have time to prepare another quirk.
-
-Best regards
-Thomas Jarosch
+Yinghai
