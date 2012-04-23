@@ -1,157 +1,295 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:44883 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754438Ab2DPR3u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 13:29:50 -0400
-Received: by dake40 with SMTP id e40so7194423dak.11
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 10:29:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com>
-References: <1333968563.5678.19.camel@infinity>
-	<4F848357.3060007@snewbury.org.uk>
-	<CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>
-	<4F848E10.1090703@snewbury.org.uk>
-	<CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>
-	<1334089568.4083.2.camel@Nokia-N900>
-	<CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>
-	<4F84A3EC.6030903@snewbury.org.uk>
-	<CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>
-	<1334229754.30606.7.camel@Nokia-N900>
-	<CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>
-	<1334248841.2910.6.camel@Nokia-N900>
-	<4F89B5E8.3040906@snewbury.org.uk>
-	<4F89BC84.50308@snewbury.org.uk>
-	<4F89C513.3000006@snewbury.org.uk>
-	<4F89CB16.2000908@snewbury.org.uk>
-	<4F89CE43.7040200@snewbury.org.uk>
-	<CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
-	<4F8AA0DC.6010902@snewbury.org.uk>
-	<4F8AB312.7060606@snewbury.org.uk>
-	<4F8B04A4.4070507@snewbury.org.uk>
-	<4F8B0609.8010603@snewbury.org.uk>
-	<CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com>
-	<CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com>
-	<CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com>
-Date: Mon, 16 Apr 2012 10:29:48 -0700
-Message-ID: <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com>
-Subject: Re: PCI resources above 4GB
-From: Yinghai Lu <yinghai@kernel.org>
-To: Steven Newbury <steve@snewbury.org.uk>
-Cc: "Barnes, Jesse" <jesse.barnes@intel.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Content-Type: multipart/mixed; boundary=e89a8ff2434352710d04bdcf2bc3
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Vinod Koul <vinod.koul@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v1 7/8] dmaengine: enhance ASYNC_TX subsystem to support DMA device hotplug
+Date: Mon, 23 Apr 2012 21:51:48 +0800
+Message-Id: <1335189109-4871-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
+References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---e89a8ff2434352710d04bdcf2bc3
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Enhance ASYNC_TX subsystem to correctly update DMA channel reference counts,
+so it won't break DMA device hotplug logic.
 
-On Sun, Apr 15, 2012 at 11:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sun, Apr 15, 2012 at 1:06 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> 3. use pci_bus_allocate_resource in drm/radeon driver ... =3D=3D=3D> bu=
-t
->>> that could fail.
->>> =A0 so could hack it like a. disable bar 0x10 and steal BAR address,
->>> then set 0x30 to that address then copy ROM to ram.
->>> =A0 after that, disable rom again and set back address to 0x10.
->>> =A0 You try to update radeon_get_bios() to achieve that.
->
-> patches for solution 3:
-> map_rom.patch will try to borrow mem or mem pref bar for ROM copying
->
-> and You still need to use pci=3Dnorom
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ crypto/async_tx/async_memcpy.c      |    2 ++
+ crypto/async_tx/async_memset.c      |    2 ++
+ crypto/async_tx/async_pq.c          |   10 ++++++++--
+ crypto/async_tx/async_raid6_recov.c |    8 ++++++--
+ crypto/async_tx/async_tx.c          |    6 +++---
+ crypto/async_tx/async_xor.c         |   13 +++++++++----
+ include/linux/async_tx.h            |   13 +++++++++++++
+ include/linux/dmaengine.h           |   14 ++++++++++++++
+ 8 files changed, 57 insertions(+), 11 deletions(-)
 
-map_rom.patch missed one !
+diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_memcpy.c
+index 361b5e8..0cbd90e 100644
+--- a/crypto/async_tx/async_memcpy.c
++++ b/crypto/async_tx/async_memcpy.c
+@@ -90,6 +90,8 @@ async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
+ 		async_tx_sync_epilog(submit);
+ 	}
+ 
++	async_tx_put_channel(chan);
++
+ 	return tx;
+ }
+ EXPORT_SYMBOL_GPL(async_memcpy);
+diff --git a/crypto/async_tx/async_memset.c b/crypto/async_tx/async_memset.c
+index 58e4a87..ec568bb 100644
+--- a/crypto/async_tx/async_memset.c
++++ b/crypto/async_tx/async_memset.c
+@@ -79,6 +79,8 @@ async_memset(struct page *dest, int val, unsigned int offset, size_t len,
+ 		async_tx_sync_epilog(submit);
+ 	}
+ 
++	async_tx_put_channel(chan);
++
+ 	return tx;
+ }
+ EXPORT_SYMBOL_GPL(async_memset);
+diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
+index 91d5d38..ae2070c 100644
+--- a/crypto/async_tx/async_pq.c
++++ b/crypto/async_tx/async_pq.c
+@@ -203,6 +203,7 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
+ 						      blocks, src_cnt, len);
+ 	struct dma_device *device = chan ? chan->device : NULL;
+ 	dma_addr_t *dma_src = NULL;
++	struct dma_async_tx_descriptor *tx;
+ 
+ 	BUG_ON(disks > 255 || !(P(blocks, disks) || Q(blocks, disks)));
+ 
+@@ -218,12 +219,15 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
+ 		/* run the p+q asynchronously */
+ 		pr_debug("%s: (async) disks: %d len: %zu\n",
+ 			 __func__, disks, len);
+-		return do_async_gen_syndrome(chan, blocks, raid6_gfexp, offset,
+-					     disks, len, dma_src, submit);
++		tx = do_async_gen_syndrome(chan, blocks, raid6_gfexp, offset,
++					   disks, len, dma_src, submit);
++		async_tx_put_channel(chan);
++		return tx;
+ 	}
+ 
+ 	/* run the pq synchronously */
+ 	pr_debug("%s: (sync) disks: %d len: %zu\n", __func__, disks, len);
++	async_tx_put_channel(chan);
+ 
+ 	/* wait for any prerequisite operations */
+ 	async_tx_quiesce(&submit->depend_tx);
+@@ -331,6 +335,7 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
+ 			dma_async_issue_pending(chan);
+ 		}
+ 		async_tx_submit(chan, tx, submit);
++		async_tx_put_channel(chan);
+ 
+ 		return tx;
+ 	} else {
+@@ -344,6 +349,7 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
+ 
+ 		pr_debug("%s: (sync) disks: %d len: %zu\n",
+ 			 __func__, disks, len);
++		async_tx_put_channel(chan);
+ 
+ 		/* caller must provide a temporary result buffer and
+ 		 * allow the input parameters to be preserved
+diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
+index a9f08a6..0f54d7c 100644
+--- a/crypto/async_tx/async_raid6_recov.c
++++ b/crypto/async_tx/async_raid6_recov.c
+@@ -54,6 +54,7 @@ async_sum_product(struct page *dest, struct page **srcs, unsigned char *coef,
+ 					     len, dma_flags);
+ 		if (tx) {
+ 			async_tx_submit(chan, tx, submit);
++			async_tx_put_channel(chan);
+ 			return tx;
+ 		}
+ 
+@@ -66,6 +67,7 @@ async_sum_product(struct page *dest, struct page **srcs, unsigned char *coef,
+ 	}
+ 
+ 	/* run the operation synchronously */
++	async_tx_put_channel(chan);
+ 	async_tx_quiesce(&submit->depend_tx);
+ 	amul = raid6_gfmul[coef[0]];
+ 	bmul = raid6_gfmul[coef[1]];
+@@ -107,6 +109,7 @@ async_mult(struct page *dest, struct page *src, u8 coef, size_t len,
+ 					     len, dma_flags);
+ 		if (tx) {
+ 			async_tx_submit(chan, tx, submit);
++			async_tx_put_channel(chan);
+ 			return tx;
+ 		}
+ 
+@@ -120,6 +123,7 @@ async_mult(struct page *dest, struct page *src, u8 coef, size_t len,
+ 	/* no channel available, or failed to allocate a descriptor, so
+ 	 * perform the operation synchronously
+ 	 */
++	async_tx_put_channel(chan);
+ 	async_tx_quiesce(&submit->depend_tx);
+ 	qmul  = raid6_gfmul[coef];
+ 	d = page_address(dest);
+@@ -339,7 +343,7 @@ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
+ 	 * available' case be sure to use the scribble buffer to
+ 	 * preserve the content of 'blocks' as the caller intended.
+ 	 */
+-	if (!async_dma_find_channel(DMA_PQ) || !scribble) {
++	if (!async_tx_has_capability(DMA_PQ) || !scribble) {
+ 		void **ptrs = scribble ? scribble : (void **) blocks;
+ 
+ 		async_tx_quiesce(&submit->depend_tx);
+@@ -415,7 +419,7 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
+ 	 * available' case be sure to use the scribble buffer to
+ 	 * preserve the content of 'blocks' as the caller intended.
+ 	 */
+-	if (!async_dma_find_channel(DMA_PQ) || !scribble) {
++	if (!async_tx_has_capability(DMA_PQ) || !scribble) {
+ 		void **ptrs = scribble ? scribble : (void **) blocks;
+ 
+ 		async_tx_quiesce(&submit->depend_tx);
+diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
+index 8421209..6fe6561 100644
+--- a/crypto/async_tx/async_tx.c
++++ b/crypto/async_tx/async_tx.c
+@@ -47,8 +47,8 @@ module_init(async_tx_init);
+ module_exit(async_tx_exit);
+ 
+ /**
+- * __async_tx_find_channel - find a channel to carry out the operation or let
+- *	the transaction execute synchronously
++ * __async_tx_find_channel - find and hold a channel to carry out the
++ * operation or let the transaction execute synchronously
+  * @submit: transaction dependency and submission modifiers
+  * @tx_type: transaction type
+  */
+@@ -61,7 +61,7 @@ __async_tx_find_channel(struct async_submit_ctl *submit,
+ 	/* see if we can keep the chain on one channel */
+ 	if (depend_tx &&
+ 	    dma_has_cap(tx_type, depend_tx->chan->device->cap_mask))
+-		return depend_tx->chan;
++		return async_dma_get_channel(depend_tx->chan);
+ 	return async_dma_find_channel(tx_type);
+ }
+ EXPORT_SYMBOL_GPL(__async_tx_find_channel);
+diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
+index 154cc84..056e248 100644
+--- a/crypto/async_tx/async_xor.c
++++ b/crypto/async_tx/async_xor.c
+@@ -190,6 +190,7 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 						      &dest, 1, src_list,
+ 						      src_cnt, len);
+ 	dma_addr_t *dma_src = NULL;
++	struct dma_async_tx_descriptor *tx = NULL;
+ 
+ 	BUG_ON(src_cnt <= 1);
+ 
+@@ -202,8 +203,8 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 		/* run the xor asynchronously */
+ 		pr_debug("%s (async): len: %zu\n", __func__, len);
+ 
+-		return do_async_xor(chan, dest, src_list, offset, src_cnt, len,
+-				    dma_src, submit);
++		tx = do_async_xor(chan, dest, src_list, offset, src_cnt, len,
++				  dma_src, submit);
+ 	} else {
+ 		/* run the xor synchronously */
+ 		pr_debug("%s (sync): len: %zu\n", __func__, len);
+@@ -222,9 +223,11 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 		async_tx_quiesce(&submit->depend_tx);
+ 
+ 		do_sync_xor(dest, src_list, offset, src_cnt, len, submit);
+-
+-		return NULL;
+ 	}
++
++	async_tx_put_channel(chan);
++
++	return tx;
+ }
+ EXPORT_SYMBOL_GPL(async_xor);
+ 
+@@ -330,6 +333,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 		submit->flags = flags_orig;
+ 	}
+ 
++	async_tx_put_channel(chan);
++
+ 	return tx;
+ }
+ EXPORT_SYMBOL_GPL(async_xor_val);
+diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
+index a1c486a..35dea72 100644
+--- a/include/linux/async_tx.h
++++ b/include/linux/async_tx.h
+@@ -104,6 +104,10 @@ static inline void async_tx_issue_pending(struct dma_async_tx_descriptor *tx)
+ 		dma->device_issue_pending(chan);
+ 	}
+ }
++
++#define async_tx_put_channel(c)		async_dma_put_channel(c)
++#define async_tx_has_capability(c)	async_dma_has_capability(c)
++
+ #ifdef CONFIG_ARCH_HAS_ASYNC_TX_FIND_CHANNEL
+ #include <asm/async_tx.h>
+ #else
+@@ -132,6 +136,15 @@ async_tx_find_channel(struct async_submit_ctl *submit,
+ {
+ 	return NULL;
+ }
++
++static inline void async_tx_put_channel(struct dma_chan *chan)
++{
++}
++
++static inline bool async_tx_has_capability(enum dma_transaction_type type)
++{
++	return false;
++}
+ #endif
+ 
+ /**
+diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+index 874f8de..99762a2 100644
+--- a/include/linux/dmaengine.h
++++ b/include/linux/dmaengine.h
+@@ -789,6 +789,9 @@ static inline void net_dmaengine_put(void)
+ #else
+ #define async_dma_find_channel(type) dma_find_channel(type)
+ #endif /* CONFIG_ASYNC_TX_ENABLE_CHANNEL_SWITCH */
++#define async_dma_get_channel(chan) dma_get_channel(chan)
++#define async_dma_put_channel(chan) dma_put_channel(chan)
++#define async_dma_has_capability(c) dma_has_capability(c)
+ #else
+ static inline void async_dmaengine_get(void)
+ {
+@@ -801,6 +804,17 @@ async_dma_find_channel(enum dma_transaction_type type)
+ {
+ 	return NULL;
+ }
++static inline struct dma_chan *async_dma_get_channel(struct dma_chan *chan)
++{
++	return chan;
++}
++static inline void async_dma_put_channel(struct dma_chan *chan)
++{
++}
++static inline bool async_dma_has_capability(enum dma_transaction_type type)
++{
++	return false;
++}
+ #endif /* CONFIG_ASYNC_TX_DMA */
+ 
+ dma_cookie_t dma_async_memcpy_buf_to_buf(struct dma_chan *chan,
+-- 
+1.7.5.4
 
-Please check map_rom_v2.patch
-
-Thanks
-
-Yinghai
-
---e89a8ff2434352710d04bdcf2bc3
-Content-Type: application/octet-stream; name="map_rom_v2.patch"
-Content-Disposition: attachment; filename="map_rom_v2.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h13stcuo3
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IEJvcnJvdyBkZXYgbWVtIHdpbmRvd3MgdG8gY29weSBST00K
-CklmIHRoZSBtZW0gYmFyIGlzIG5vdCB1c2VkIHlldCBhbmQgc2l6ZSBpcyBiaWdnZXIgZW5vdWdo
-LgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBh
-cmNoL3g4Ni9wY2kvY29tbW9uLmMgICB8ICAgIDMgKwogZHJpdmVycy9wY2kvcm9tLmMgICAgICAg
-fCAgIDczICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLQog
-ZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAgICA4ICsrKystCiAzIGZpbGVzIGNoYW5nZWQsIDc5
-IGluc2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMv
-cGNpL3JvbS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3JvbS5j
-CisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcm9tLmMKQEAgLTExNiw2ICsxMTYsMTAgQEAgdm9p
-ZCBfX2lvbWVtICpwY2lfbWFwX3JvbShzdHJ1Y3QgcGNpX2RldgogCXN0cnVjdCByZXNvdXJjZSAq
-cmVzID0gJnBkZXYtPnJlc291cmNlW1BDSV9ST01fUkVTT1VSQ0VdOwogCWxvZmZfdCBzdGFydDsK
-IAl2b2lkIF9faW9tZW0gKnJvbTsKKwlpbnQgaSA9IC0xOworCXN0cnVjdCByZXNvdXJjZSAqbWVt
-X3IgPSBOVUxMOworCXJlc291cmNlX3NpemVfdCBtZW1fcl9zdGFydCA9IDA7CisJcmVzb3VyY2Vf
-c2l6ZV90IG1lbV9yX3NpemUgPSAwOwogCiAJLyoKIAkgKiBJT1JFU09VUkNFX1JPTV9TSEFET1cg
-c2V0IG9uIHg4NiwgeDg2XzY0IGFuZCBJQTY0IHN1cHBvcnRzIGxlZ2FjeQpAQCAtMTM1LDggKzEz
-OSw0NSBAQCB2b2lkIF9faW9tZW0gKnBjaV9tYXBfcm9tKHN0cnVjdCBwY2lfZGV2CiAJCX0gZWxz
-ZSB7CiAJCQkvKiBhc3NpZ24gdGhlIFJPTSBhbiBhZGRyZXNzIGlmIGl0IGRvZXNuJ3QgaGF2ZSBv
-bmUgKi8KIAkJCWlmIChyZXMtPnBhcmVudCA9PSBOVUxMICYmCi0JCQkgICAgcGNpX2Fzc2lnbl9y
-ZXNvdXJjZShwZGV2LFBDSV9ST01fUkVTT1VSQ0UpKQotCQkJCXJldHVybiBOVUxMOworCQkJICAg
-IHBjaV9hc3NpZ25fcmVzb3VyY2UocGRldixQQ0lfUk9NX1JFU09VUkNFKSkgeworCQkJCXN0cnVj
-dCByZXNvdXJjZSAqcjsKKworCQkJCWlmIChyZXMtPmZsYWdzIHx8ICFyZXMtPmVuZCB8fAorCQkJ
-CSAgICAhcmVzb3VyY2Vfc2l6ZShyZXMpKQorCQkJCQlyZXR1cm4gTlVMTDsKKworCQkJCS8qIGJv
-cnJvdyBNRU0gcmVzb3VyY2Ugd2luZG93cyAqLworCQkJCWZvciAoaSA9IDA7IGkgPCBQQ0lfUk9N
-X1JFU09VUkNFOyBpKyspIHsKKwkJCQkJciA9ICZwZGV2LT5yZXNvdXJjZVtpXTsKKwkJCQkJaWYg
-KCFyLT5wYXJlbnQgfHwKKwkJCQkJICAgICEoci0+ZmxhZ3MgJiBJT1JFU09VUkNFX01FTSkgfHwK
-KwkJCQkJICAgIHItPmNoaWxkIHx8CisJCQkJCSAgICByZXNvdXJjZV9zaXplKHIpIDwgcmVzb3Vy
-Y2Vfc2l6ZShyZXMpIHx8CisJCQkJCSAgICByLT5zdGFydCA+PSAoMVVMTDw8MzIpKQorCQkJCQkJ
-Y29udGludWU7CisJCQkJCS8qIGZvdW5kIG9uZSAqLworCQkJCQltZW1fciA9IHI7CisJCQkJCWJy
-ZWFrOworCQkJCX0KKwkJCQlpZiAoIW1lbV9yKSB7CisJCQkJCWkgPSAtMTsKKwkJCQkJcmV0dXJu
-IE5VTEw7CisJCQkJfQorCQkJCS8qIGRpc2FibGUgbWVtX3IgdGVtcGVyaWx5ICovCisJCQkJbWVt
-X3Jfc3RhcnQgPSBtZW1fci0+c3RhcnQ7CisJCQkJbWVtX3Jfc2l6ZSA9IHJlc291cmNlX3NpemUo
-bWVtX3IpOworCQkJCW1lbV9yLT5zdGFydCA9IDB4ZmZmZjAwMDA7CisJCQkJbWVtX3ItPmVuZCA9
-IDA7CisJCQkJcGNpX3VwZGF0ZV9yZXNvdXJjZShwZGV2LCBpKTsKKwkJCQkvKiByZXN0b3JlIGZs
-YWdzICovCisJCQkJcmVzLT5mbGFncyA9IElPUkVTT1VSQ0VfTUVNIHwKKwkJCQkJICAgICBJT1JF
-U09VUkNFX1BSRUZFVENIIHwKKwkJCQkJICAgICBJT1JFU09VUkNFX1JFQURPTkxZIHwKKwkJCQkJ
-ICAgICBJT1JFU09VUkNFX0NBQ0hFQUJMRSB8CisJCQkJCSAgICAgSU9SRVNPVVJDRV9TSVpFQUxJ
-R047CisJCQkJcmVzLT5lbmQgPSByZXNvdXJjZV9zaXplKHJlcykgKyBtZW1fcl9zdGFydCAtIDE7
-CisJCQkJcmVzLT5zdGFydCA9IG1lbV9yX3N0YXJ0OworCQkJfQogCQkJc3RhcnQgPSBwY2lfcmVz
-b3VyY2Vfc3RhcnQocGRldiwgUENJX1JPTV9SRVNPVVJDRSk7CiAJCQkqc2l6ZSA9IHBjaV9yZXNv
-dXJjZV9sZW4ocGRldiwgUENJX1JPTV9SRVNPVVJDRSk7CiAJCQlpZiAoKnNpemUgPT0gMCkKQEAg
-LTE1NSw3ICsxOTYsNyBAQCB2b2lkIF9faW9tZW0gKnBjaV9tYXBfcm9tKHN0cnVjdCBwY2lfZGV2
-CiAJCQkJICAgIElPUkVTT1VSQ0VfUk9NX1NIQURPVyB8CiAJCQkJICAgIElPUkVTT1VSQ0VfUk9N
-X0NPUFkpKSkKIAkJCXBjaV9kaXNhYmxlX3JvbShwZGV2KTsKLQkJcmV0dXJuIE5VTEw7CisJCWdv
-dG8gcmVzdG9yZV9tZW1fcjsKIAl9CiAKIAkvKgpAQCAtMTY0LDYgKzIwNSwzMiBAQCB2b2lkIF9f
-aW9tZW0gKnBjaV9tYXBfcm9tKHN0cnVjdCBwY2lfZGV2CiAJICogVHJ1ZSBzaXplIGlzIGltcG9y
-dGFudCBpZiB0aGUgUk9NIGlzIGdvaW5nIHRvIGJlIGNvcGllZC4KIAkgKi8KIAkqc2l6ZSA9IHBj
-aV9nZXRfcm9tX3NpemUocGRldiwgcm9tLCAqc2l6ZSk7CisKKwkvKiBjb3B5IHJvbSBhbmQgcmVz
-dG9yZSBib3Jyb3cgbWVtIGlvICovCisJaWYgKGkgPj0gMCkgeworCQl2b2lkIF9faW9tZW0gKm5l
-d19yb207CisKKwkJbmV3X3JvbSA9IGttYWxsb2MoKnNpemUsIEdGUF9LRVJORUwpOworCQlpZiAo
-bmV3X3JvbSkKKwkJCW1lbWNweV9mcm9taW8obmV3X3JvbSwgcm9tLCAqc2l6ZSk7CisJCXBjaV91
-bm1hcF9yb20ocGRldiwgcm9tKTsKKwkJaWYgKG5ld19yb20pIHsKKwkJCXJlcy0+c3RhcnQgPSAo
-dW5zaWduZWQgbG9uZyBsb25nKW5ld19yb207CisJCQlyZXMtPmVuZCA9IHJlcy0+c3RhcnQgKyAq
-c2l6ZTsKKwkJCXJlcy0+ZmxhZ3MgfD0gSU9SRVNPVVJDRV9ST01fQ09QWTsKKwkJfSBlbHNlIHsK
-KwkJCXJlcy0+c3RhcnQgPSByZXMtPmVuZCA9IHJlcy0+ZmxhZ3MgPSAwOworCQl9CisJCXJvbSA9
-IG5ld19yb207CisJfQorCityZXN0b3JlX21lbV9yOgorCWlmIChpID49IDApIHsKKwkJbWVtX3It
-PnN0YXJ0ID0gbWVtX3Jfc3RhcnQ7CisJCW1lbV9yLT5lbmQgPSBtZW1fcl9zaXplICsgbWVtX3It
-PnN0YXJ0IC0gMTsKKwkJcGNpX3VwZGF0ZV9yZXNvdXJjZShwZGV2LCBpKTsKKwl9CisKIAlyZXR1
-cm4gcm9tOwogfQogCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKPT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKKysrIGxp
-bnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMjkwLDcgKzI5MCwxMyBAQCBzdGF0
-aWMgdm9pZCBhc3NpZ25fcmVxdWVzdGVkX3Jlc291cmNlc19zCiAJCQkJYWRkX3RvX2xpc3QoZmFp
-bF9oZWFkLCBkZXZfcmVzLT5kZXYsIHJlcywKIAkJCQkJICAgIDAgLyogZG9udCBjYXJlICovLAog
-CQkJCQkgICAgMCAvKiBkb250IGNhcmUgKi8pOwotCQkJcmVzZXRfcmVzb3VyY2UocmVzKTsKKwkJ
-CS8qIG5lZWQgdG8gc2F2ZSB0aGUgc2l6ZSAqLworCQkJaWYgKGlkeCA9PSBQQ0lfUk9NX1JFU09V
-UkNFKSB7CisJCQkJcmVzLT5mbGFncyA9IDA7CisJCQkJcmVzLT5lbmQgLT0gcmVzLT5zdGFydDsK
-KwkJCQlyZXMtPnN0YXJ0ID0gMDsKKwkJCX0gZWxzZQorCQkJCXJlc2V0X3Jlc291cmNlKHJlcyk7
-CiAJCX0KIAl9CiB9CkluZGV4OiBsaW51eC0yLjYvYXJjaC94ODYvcGNpL2NvbW1vbi5jCj09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L3BjaS9jb21tb24uYworKysgbGludXgt
-Mi42L2FyY2gveDg2L3BjaS9jb21tb24uYwpAQCAtMTUxLDcgKzE1MSw4IEBAIHN0YXRpYyB2b2lk
-IF9fZGV2aW5pdCBwY2liaW9zX2ZpeHVwX2RldmkKIAkJCS8qIHdlIGRlYWwgd2l0aCBCSU9TIGFz
-c2lnbmVkIFJPTSBsYXRlciAqLwogCQkJcmV0dXJuOwogCQl9Ci0JCXJvbV9yLT5zdGFydCA9IHJv
-bV9yLT5lbmQgPSByb21fci0+ZmxhZ3MgPSAwOworCQkvKiBuZWVkIHRvIHNhdmUgdGhlIHNpemUg
-Ki8KKwkJcm9tX3ItPmZsYWdzID0gMDsKIAl9CiB9CiAK
---e89a8ff2434352710d04bdcf2bc3--
