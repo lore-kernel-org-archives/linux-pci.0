@@ -1,50 +1,37 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 12/19] PCI: clean up all resources in error handling path in zt5550_hc_init_one()
-Date: Fri, 27 Apr 2012 23:16:53 +0800
-Message-Id: <1335539820-11232-13-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+From: Seth Heasley <seth.heasley@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	James Ralston <james.d.ralston@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Seth Heasley <seth.heasley@intel.com>
+Subject: [PATCH 1/3] pci_ids: Add Intel Centerton Legacy Block DeviceID
+Date: Mon, 23 Apr 2012 09:23:56 -0700
+Message-Id: <1335198236-3183-1-git-send-email-seth.heasley@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+This patch adds the Integrated Legacy Block DeviceID for the Centerton CPU.  It will be used in the GPIO and Multifunction Devices driver.
 
-Clean up all resources in error handling path in function zt5550_hc_init_one().
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Seth Heasley <seth.heasley@intel.com>
 ---
- drivers/pci/hotplug/cpcihp_zt5550.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Adding Samuel Ortiz, because a subsequent multifunction device patch references this one.
 
-diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
-index 6bf8d2a..8a6f968 100644
---- a/drivers/pci/hotplug/cpcihp_zt5550.c
-+++ b/drivers/pci/hotplug/cpcihp_zt5550.c
-@@ -257,11 +257,13 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	if(status != 0) {
- 		err("could not started cPCI hotplug system");
- 		cpci_hp_unregister_bus(bus0);
--		goto init_register_error;
-+		goto init_start_error;
- 	}
- 	dbg("started cpci hp system");
- 
- 	return 0;
-+init_start_error:
-+	cpci_hp_unregister_bus(bus0);
- init_register_error:
- 	cpci_hp_unregister_controller(&zt5550_hpc);
- init_hc_error:
+ include/linux/pci_ids.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 3329965..ab741b0 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2506,6 +2506,7 @@
+ #define PCI_DEVICE_ID_INTEL_MRST_SD2	0x084F
+ #define PCI_DEVICE_ID_INTEL_I960	0x0960
+ #define PCI_DEVICE_ID_INTEL_I960RM	0x0962
++#define PCI_DEVICE_ID_INTEL_CENTERTON_ILB	0x0c60
+ #define PCI_DEVICE_ID_INTEL_8257X_SOL	0x1062
+ #define PCI_DEVICE_ID_INTEL_82573E_SOL	0x1085
+ #define PCI_DEVICE_ID_INTEL_82573L_SOL	0x108F
 -- 
-1.7.5.4
+1.7.4.4
 
