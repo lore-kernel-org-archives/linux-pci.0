@@ -1,66 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-Date: Mon, 16 Apr 2012 18:26:51 +0200
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-References: <4F8790F6.5080408@intel.com> <201204132141.58063.rjw@sisk.pl> <1334537311.11188.118.camel@minggr>
-In-Reply-To: <1334537311.11188.118.camel@minggr>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48009 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752397Ab2DWTqH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Apr 2012 15:46:07 -0400
+Message-ID: <4F95B17B.3030401@redhat.com>
+Date: Mon, 23 Apr 2012 15:46:03 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201204161826.51743.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+References: <20120410090306.GA7056@richard> <20120422155202.GA13540@richard>
+In-Reply-To: <20120422155202.GA13540@richard>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 16, 2012, Lin Ming wrote:
-> On Fri, 2012-04-13 at 21:41 +0200, Rafael J. Wysocki wrote:
-> > Hi,
-> > 
-> > On Friday, April 13, 2012, Yan, Zheng wrote:
-> > > Hi all,
-> > > 
-> > > This patch adds PCIe runtime D3cold support, namely cut power supply for functions
-> > > beneath a PCIe port when they all have entered D3. A device in D3cold can only
-> > > generate wake event through the WAKE# pin. Because we can not access to a device's
-> > > configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
-> > > 
-> > > Any comment will be appreciated.
-> > > 
-> > > Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
-> > > ---
-> > > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> > > index 0f150f2..e210e8cb 100644
-> > > --- a/drivers/pci/pci-acpi.c
-> > > +++ b/drivers/pci/pci-acpi.c
-> > > @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> > >  		[PCI_D1] = ACPI_STATE_D1,
-> > >  		[PCI_D2] = ACPI_STATE_D2,
-> > >  		[PCI_D3hot] = ACPI_STATE_D3,
-> > > -		[PCI_D3cold] = ACPI_STATE_D3
-> > > +		[PCI_D3cold] = ACPI_STATE_D3_COLD
-> > >  	};
-> > >  	int error = -EINVAL;
-> > >  
-> > 
-> > Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
-> > 
-> > We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
-> > instead.  I'll prepare a patch for that over the weekend if no one has done
-> > that already.
-> 
-> Hi Rafael,
-> 
-> Have you started to write the patch?
-> 
-> If not, I can do it.
+On 04/22/2012 11:52 AM, Richard Yang wrote:
+> All,
+>
+> I am reading the pci_scan_bridge() and not sure what will happen in
+> following situation.
+>
+> Suppose the kernel is not passed the pci=assign-busses.
+>
+> Below is a picture about the pci system.
+>
+>                     +-------+
+>                     |       | root bridge(0,255)
+>                     +---+---+
+>                         |          Bus 0
+>        -----+-----------+------------------------------+--
+>             |                                          |
+>             |                                          |
+>             |                                          |
+>        +----+----+                               +-----+-----+
+>        |         |  B1(1,15)                     |           |B2(16,28)
+>        +----+----+                               +-----+-----+
+>             |  Bus 1                                   |    Bus 16
+>        -----+-----------------------         ----------+----------------
+>                              |
+>                         +----+----+
+>                         |         | B3
+>                         +---------+
+>
+> Suppose B1 and B2 works fine with the BIOS, which get the right bus
+> number and range.
+>
+> B3 does not works fine with the BIOS, which doesn't get the bus number.
+>
+> So in pci_scan_bridge(), B3 will be met in the second pass and get bus
+> number 16?
 
-Please do if you have the time.  I'd like this one to be cleaned up ASAP,
-to reduce the amount of confusion taking place.
+unfortunately, today, the answer is yes.
+I have run into a similar problem recently when trying to use pci=assign-busses
+with an SRIOV device behind a non-ARI-capable PCIe switch.
+In this scenario, the assign-busses code assigned the next bus number,
+which conflicted with an existing one on the system, and hangs the
+system -- two bridges responding to the same PCI bus num evidently
+confuses the hw! ;-)
 
-Thanks,
-Rafael
+The PCI code is suppose to do two bus scans -- pass=0: to see what the BIOS
+has setup, and then pass=1 to assign non-BIOS setup devices.
+But, what I'm finding is that when pci=assign-busses is set, the
+pass=0 scan is not doing a full PCI tree scan and registering all
+the BIOS-setup busses first, and it tries to do extended bus assignment in pass=0,
+not pass=1; in the above configuration, it expands B1's bus num range from (1,15)
+to (1,16), then tries to scan behind it.  that creates an overlap btwn
+B1 & B2's sec/sub bus-num ranges, and they both respond to a Type1 config cycle
+with a bus-number of 16 (typically when trying to read the VID register of 16:0.0
+in this case).... boom! ... or more like silence due to system hang...
+
+*If* the system spaces bus ranges apart, e.g., in your config above,
+if the BIOS setup B1(1,15) and B2(24,32), then pci=assign-busses will
+work because bus num 16 is free, and two bridges won't think they both
+respond to type1 pci config cycle (with bus-number=16 lying in their sec/sub-bus num range),
+and all will (luckily) work.
+
+Unfortunately, I'm in & out of work due to at-home time requirements,
+so I haven't had a chance to work out a proper patch.
+What should happen in the above case, is the kernel prints a warning saying
+it couldn't do needed assign-busses operations due to configuration constraints...
+and continue to do pci (pass=1) bridge scanning.... and not wedge the system
+as it does now.
+The base problem is that
+(a)pass=0 is doing bus-assigning, and it shouldn't be done
+     until pass=1, after all known BIOS-setup busses are known
+(b) the code doesn't have a nice warning and continuation when this
+     conflict occurs.
+
+> Would this be a conflict?
+>
+summary: yes.
+
