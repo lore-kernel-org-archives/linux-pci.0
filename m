@@ -1,83 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:57089 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756165Ab2DXCcR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 22:32:17 -0400
+Date: Tue, 24 Apr 2012 10:30:25 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH v1 6/8] dmaengine: enhance network subsystem to support DMA
+ device hotplug
+In-reply-to: <CABE8wwvi_Yz8AyALr1-uDW9xSgrSqfrYWhB_22NQ2ydTa81+mg@mail.gmail.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Vinod Koul <vinod.koul@intel.com>,
 	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 04/19] PCI: serialize hotplug operations triggered by PCI hotplug sysfs interfaces
-Date: Fri, 27 Apr 2012 23:16:45 +0800
-Message-Id: <1335539820-11232-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"David S. Miller" <davem@davemloft.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-id: <4F961041.7010106@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
+ <1335189109-4871-7-git-send-email-jiang.liu@huawei.com>
+ <CABE8wwvi_Yz8AyALr1-uDW9xSgrSqfrYWhB_22NQ2ydTa81+mg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Hi Dan,
+	Thanks for your great comments!
+	gerry
+On 2012-4-24 2:30, Dan Williams wrote:
+> On Mon, Apr 23, 2012 at 6:51 AM, Jiang Liu<liuj97@gmail.com>  wrote:
+>> Enhance network subsystem to correctly update DMA channel reference counts,
+>> so it won't break DMA device hotplug logic.
+>>
+>> Signed-off-by: Jiang Liu<liuj97@gmail.com>
+>
+> This introduces an atomic action on every channel touch, which is more
+> expensive than what we had previously.  There has always been a
+> concern about the overhead of offload that sometimes makes ineffective
+> or a loss compared to cpu copies.  In the cases where net_dma shows
+> improvement this will eat into / maybe eliminate that advantage.
+Good point, we should avoid pollute a shared cacheline here, otherwise
+it may eat the benefits of IOAT acceleration.
 
-Use PCI hotplug lock to globally serialize hotplug operations triggered by
-PCI hotplug sysfs interfaces.
+>
+> Take a look at where dmaengine started [1].  It was from the beginning
+> going through contortions to avoid something like this.  We made it
+> simpler here [2], but still kept the principle of not dirtying a
+> shared cacheline on every channel touch, and certainly not locking it.
+Thanks for the great background information, especially the second one.
+The check-in log message as below.
+ >Why?, beyond reducing complication:
+ >1/ Tracking reference counts per-transaction in an efficient manner, as
+ >   is currently done, requires a complicated scheme to avoid cache-line
+ >   bouncing effects.
+The really issue here is polluting shared cachelines here, right?
+Will it help to use percpu counter instead of atomic operations here?
+I will have a try to use percpu counter for reference count.
+BTW, do you have any DMAEngine benchmarks so we could use them to
+compare the performance difference?
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/pci_hotplug_core.c |   18 ++++++++++++++++--
- 1 files changed, 16 insertions(+), 2 deletions(-)
+ >2/ Per-transaction ref-counting gives the false impression that a
+ >   dma-driver can be gracefully removed ahead of its user (net, md, or
+ >   dma-slave)
+ >3/ None of the in-tree dma-drivers talk to hot pluggable hardware, but
+Seems the situation has changed now:)
+Intel 7500 (Boxboro) chipset supports hotplug. And we are working on
+a system, which adopts Boxboro chipset and supports node hotplug.
+So we try to enhance the DMAEngine to support IOAT hotplug.
 
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index 1572665..9bbbe3e 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -39,6 +39,7 @@
- #include <linux/mutex.h>
- #include <linux/pci.h>
- #include <linux/pci_hotplug.h>
-+#include <linux/delay.h>
- #include <asm/uaccess.h>
- #include "../pci.h"
- 
-@@ -121,6 +122,17 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
- 		retval = -ENODEV;
- 		goto exit;
- 	}
-+
-+	/* Avoid deadlock with pci_hp_deregister() */
-+	while (!pci_hotplug_try_enter()) {
-+		/* Check whether the slot has been deregistered. */
-+		if (list_empty(&slot->slot_list)) {
-+			retval = -ENODEV;
-+			goto exit_put;
-+		}
-+		msleep(1);
-+	}
-+
- 	switch (power) {
- 		case 0:
- 			if (slot->ops->disable_slot)
-@@ -136,8 +148,10 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
- 			err ("Illegal value specified for power\n");
- 			retval = -EINVAL;
- 	}
--	module_put(slot->ops->owner);
- 
-+	pci_hotplug_exit();
-+exit_put:
-+	module_put(slot->ops->owner);
- exit:	
- 	if (retval)
- 		return retval;
-@@ -500,7 +514,7 @@ int pci_hp_deregister(struct hotplug_slot *hotplug)
- 		return -ENODEV;
- 	}
- 
--	list_del(&hotplug->slot_list);
-+	list_del_init(&hotplug->slot_list);
- 
- 	slot = hotplug->pci_slot;
- 	fs_remove_slot(slot);
--- 
-1.7.5.4
+On the other hand, Intel next generation processor Ivybridge has
+embedded IOH, so we need to support IOH/IOAT hotplug when supporting
+processor hotplug.
+
+ >   if such an engine were built one day we still would not need to >notify
+ >   clients of remove events.  The driver can simply return NULL to a
+ >   ->prep() request, something that is much easier for a client to 
+ >handle.
+Could you please help to give more explanations about "The driver can
+simply return NULL to a ->prep() request", I have gotten the idea yet.
+
+>
+> If you are going to hotplug the entire IOH, then you are probably ok
+> with network links going down, so could you just down the links and
+> remove the driver with the existing code?
+I feel it's a little risky to shut down/restart all network interfaces
+for hot-removal of IOH, that may disturb the applications. And there
+are also other kinds of clients, such as ASYNC_TX, seems we can't
+adopt this method to reclaim DMA channels from ASYNC_TX subsystem.
+
+>
+> --
+> Dan
+>
+> [1]: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=c13c826
+> [2]: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=6f49a57a
+>
+> .
+>
+
 
