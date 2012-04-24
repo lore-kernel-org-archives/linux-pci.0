@@ -1,89 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:58158 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751825Ab2DYQNU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Apr 2012 12:13:20 -0400
-Received: by lahj13 with SMTP id j13so225165lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 09:13:18 -0700 (PDT)
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:51369 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754641Ab2DXO4U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2012 10:56:20 -0400
 MIME-Version: 1.0
-In-Reply-To: <4F95CB3E.6070504@windriver.com>
-References: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com>
- <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com> <4F95CB3E.6070504@windriver.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Apr 2012 10:12:58 -0600
-Message-ID: <CAErSpo7rsqtPEBsS4VzFYX+AGYXDYv2+MzR023=VqEqrzTtanA@mail.gmail.com>
-Subject: Re: [PATCH] pci: frv architecture needs generic setup-bus infrastructure
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Howells <dhowells@redhat.com>
+In-Reply-To: <CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+References: <20120410090306.GA7056@richard>
+	<20120422155202.GA13540@richard>
+	<CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+Date: Tue, 24 Apr 2012 22:56:19 +0800
+Message-ID: <CADLM8XNdfByjCXuEX3pmuUun_qTSZqeARO_vPGy7gc+DoOGxog@mail.gmail.com>
+Subject: Re: One problem in reassign pci bus number?
+From: Wei Yang <weiyang.kernel@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2012 at 3:35 PM, Paul Gortmaker
-<paul.gortmaker@windriver.com> wrote:
-> On 12-04-23 04:38 PM, Bjorn Helgaas wrote:
->> On Wed, Apr 18, 2012 at 3:24 PM, Paul Gortmaker
->> <paul.gortmaker@windriver.com> wrote:
->>> Otherwise we get this link failure for frv's defconfig:
->>>
->>>   LD      .tmp_vmlinux1
->>>  drivers/built-in.o: In function `pci_assign_resource':
->>>  (.text+0xbf0c): undefined reference to `pci_cardbus_resource_alignment'
->>>  drivers/built-in.o: In function `pci_setup':
->>>  pci.c:(.init.text+0x174): undefined reference to `pci_realloc_get_opt'
->>>  pci.c:(.init.text+0x1a0): undefined reference to `pci_realloc_get_opt'
->>>  make[1]: *** [.tmp_vmlinux1] Error 1
->>>
->>> Cc: Bjorn Helgaas <bhelgaas@google.com>
-
-This looks good to me, and if you'd put it in your queue, that'd be
-great.  It won't break any other arches, so I'm fine with it going in
-either for 3.4 or in the 3.5 merge window.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
->>> Cc: David Howells <dhowells@redhat.com>
->>> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
->>>
->>> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
->>> index 083a49f..165274c 100644
->>> --- a/drivers/pci/Makefile
->>> +++ b/drivers/pci/Makefile
->>> @@ -42,6 +42,7 @@ obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
->>>  obj-$(CONFIG_PARISC) += setup-bus.o
->>>  obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
->>>  obj-$(CONFIG_PPC) += setup-bus.o
->>> +obj-$(CONFIG_FRV) += setup-bus.o
->>>  obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
->>>  obj-$(CONFIG_X86_VISWS) += setup-irq.o
->>>  obj-$(CONFIG_MN10300) += setup-bus.o
+2012/4/24 Yinghai Lu <yinghai@kernel.org>:
+> On Sun, Apr 22, 2012 at 8:52 AM, Richard Yang
+> <weiyang@linux.vnet.ibm.com> wrote:
+>> All,
 >>
->> Wow, I didn't even realize that we had this sort of arch-specific
->> selection of generic PCI parts.  drivers/pci/setup-irq.c is on my list
->> for reworking because it looks like it doesn't work correctly for
->> hotplug.  setup-bus.c is much more complicated, but (a) it looks like
->> most architectures include it anyway, and (b) it seems like it'd be
->> cleaner to have a CONFIG_PCI_REALLOC or something to avoid having
->> arch-specific stuff in the Makefile.
+>> I am reading the pci_scan_bridge() and not sure what will happen in
+>> following situation.
 >>
->> Anyway, that's all for the future.  Does this fix need to go in 3.4,
->> or should it go in -next?  What commit introduced the problem?
+>> Suppose the kernel is not passed the pci=assign-busses.
+>>
+>> Below is a picture about the pci system.
+>>
+>>                   +-------+
+>>                   |       | root bridge(0,255)
+>>                   +---+---+
+>>                       |          Bus 0
+>>      -----+-----------+------------------------------+--
+>>           |                                          |
+>>           |                                          |
+>>           |                                          |
+>>      +----+----+                               +-----+-----+
+>>      |         |  B1(1,15)                     |           |B2(16,28)
+>>      +----+----+                               +-----+-----+
+>>           |  Bus 1                                   |    Bus 16
+>>      -----+-----------------------         ----------+----------------
+>>                            |
+>>                       +----+----+
+>>                       |         | B3
+>>                       +---------+
+>>
+>> Suppose B1 and B2 works fine with the BIOS, which get the right bus
+>> number and range.
+>>
+>> B3 does not works fine with the BIOS, which doesn't get the bus number.
+>>
+>> So in pci_scan_bridge(), B3 will be met in the second pass and get bus
+>> number 16?
+>> Would this be a conflict?
 >
-> It does address a compile fail seen in 3.4 (sorry for not calling
-> that out explicitly).  I've not dug back in time to see when it
-> 1st appeared.  With a lot of these less common arch, it seems they
-> can get broken and remain broken for quite some time, so the original
-> breakage may predate the 3.4 merge window.
+> busn_alloc patchset should address your concern.
 >
-> I've already got a queue with fixes for 3.4 in various other
-> less common arch; it is no trouble for me to carry this there,
-> if you are OK with it as a 3.4 fix.
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-busn-alloc
 >
-> Thanks,
-> Paul.
+hmm... the code changes too much...
+I need more time to understanding it.
+
+while the case i found is different from that reported by Don.
+
+> Yinghai
 > --
->
->>
->> Bjorn
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Richard Yang
+Help You, Help Me
