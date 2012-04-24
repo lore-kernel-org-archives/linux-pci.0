@@ -1,54 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53103 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753789Ab2DYROt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Apr 2012 13:14:49 -0400
-Received: by lahj13 with SMTP id j13so276216lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 10:14:48 -0700 (PDT)
+Received: from queueout02-winn.ispmail.ntl.com ([81.103.221.56]:12998 "EHLO
+	queueout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755412Ab2DYKhn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 06:37:43 -0400
+Message-ID: <4F96770D.2050606@snewbury.org.uk>
+Date: Tue, 24 Apr 2012 10:49:01 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <4F805B32.1080401@gmail.com>
-References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
- <4F7E8DDD.7020603@jp.fujitsu.com> <20120406201628.1621752c.izumi.taku@jp.fujitsu.com>
- <4F805B32.1080401@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Apr 2012 11:14:27 -0600
-Message-ID: <CAErSpo4tibFpTSr+KaUJtFt=S5zGm=s5-p42_wW0yUcGu9JzWg@mail.gmail.com>
-Subject: Re: [PATCH] [RFC] PCI, ACPI, x86: MMCFG support for hotpluggable PCI
- hostbridges on x86, x86_64
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "Barnes, Jesse" <jesse.barnes@intel.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity> <4F84A3EC.6030903@snewbury.org.uk> <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com> <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <4F89B5E8.3040906@snewbury.org.uk> <4F89BC84.50308@snewbury.org.uk> <4F89C513.3000006@snewbury.org.uk> <4F89CB16.2000908@snewbury.org.uk> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com> <4F8AA0DC.6010902@snewbury.org.uk> <4F8AB312.7060606@snewbury.org.uk> <4F8B04A4.4070507@snewbury.org.uk> <4F8B0609.8010603@snewbury.org.uk> <CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com> <CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com> <CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com> <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com>
+In-Reply-To: <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 7, 2012 at 9:20 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On 04/06/2012 07:16 PM, Taku Izumi wrote:
->>
->> This patch introduces the configuration for the base address of
->> the memory mapped configuration space (MMCFG) for hotpluggable PCI
->> hostbridges on x86 and x86_64.
->>
->> The MMCFG for hotpluggable host bridges must be described by using
->> ACPI _CBA method. This patch adds implementation for _CBA method
->> on ACPI pci_root driver and MMCFG manipulating functons for x86 and
->> x86_64.
->>
->> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
->> ---
->>  arch/x86/pci/mmconfig-shared.c |   61 ++++++++++++++++++++++++++++++++++-------
->>  drivers/acpi/pci_root.c        |   28 ++++++++++++++++++
->>  drivers/pci/pci.c              |   31 ++++++++++++++++++++
->>  include/acpi/acnames.h         |    1
->>  include/linux/pci.h            |    3 ++
->>  5 files changed, 113 insertions(+), 11 deletions(-)
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Taku, I'm ignoring this patch for now because I assume that Jiang
-Liu's series "[PATCH V4 0/6] PCI, x86: update MMCFG information when
-hot-plugging PCI host bridges" includes the same functionality.
+On 16/04/12 18:29, Yinghai Lu wrote:
+> On Sun, Apr 15, 2012 at 11:54 PM, Yinghai Lu <yinghai@kernel.org>
+> wrote:
+>> On Sun, Apr 15, 2012 at 1:06 PM, Yinghai Lu <yinghai@kernel.org>
+>> wrote:
+>>>> 3. use pci_bus_allocate_resource in drm/radeon driver ...
+>>>> ===> but that could fail. so could hack it like a. disable
+>>>> bar 0x10 and steal BAR address, then set 0x30 to that address
+>>>> then copy ROM to ram. after that, disable rom again and set
+>>>> back address to 0x10. You try to update radeon_get_bios() to
+>>>> achieve that.
+>> 
+>> patches for solution 3: map_rom.patch will try to borrow mem or
+>> mem pref bar for ROM copying
+>> 
+>> and You still need to use pci=norom
+> 
+> map_rom.patch missed one !
+> 
+> Please check map_rom_v2.patch
+> 
+Hopefully, I'm going to have time to look into this again later today,
+depending how well other tasks go...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-If my assumption is wrong, please let me know.
-
-Bjorn
+iEYEARECAAYFAk+WdwwACgkQGcb56gMuC62DgQCglk+MxOIxWxbLChNWNlAOdbSp
+tysAnA83Mfa6tZ6TC97xHIqpFqtPJ5Wc
+=Vd8+
+-----END PGP SIGNATURE-----
