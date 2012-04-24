@@ -1,93 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11176 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756415Ab2DDPcm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Apr 2012 11:32:42 -0400
-Message-ID: <4F7C6900.3080804@intel.com>
-Date: Wed, 04 Apr 2012 16:30:08 +0100
-From: Tadeusz Struk <tadeusz.struk@intel.com>
+Received: from mga10.intel.com ([192.55.52.92]:12746 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756361Ab2DXDJn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 23:09:43 -0400
+Received: by bkcji2 with SMTP id ji2so139820bkc.25
+        for <linux-pci@vger.kernel.org>; Mon, 23 Apr 2012 20:09:41 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: jbarnes@virtuousgeek.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Fix warning
-References: <4f4faf68.hZnY8LUXJWXvhCtG%tadeusz.struk@intel.com>
-In-Reply-To: <4f4faf68.hZnY8LUXJWXvhCtG%tadeusz.struk@intel.com>
+In-Reply-To: <4F961041.7010106@huawei.com>
+References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
+	<1335189109-4871-7-git-send-email-jiang.liu@huawei.com>
+	<CABE8wwvi_Yz8AyALr1-uDW9xSgrSqfrYWhB_22NQ2ydTa81+mg@mail.gmail.com>
+	<4F961041.7010106@huawei.com>
+Date: Mon, 23 Apr 2012 20:09:40 -0700
+Message-ID: <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
+Subject: Re: [PATCH v1 6/8] dmaengine: enhance network subsystem to support
+ DMA device hotplug
+From: Dan Williams <dan.j.williams@intel.com>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Vinod Koul <vinod.koul@intel.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-Did you have chance to look at this one?
-Regards,
-Tadeusz
+On Mon, Apr 23, 2012 at 7:30 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
+>> If you are going to hotplug the entire IOH, then you are probably ok
+>> with network links going down, so could you just down the links and
+>> remove the driver with the existing code?
+>
+> I feel it's a little risky to shut down/restart all network interfaces
+> for hot-removal of IOH, that may disturb the applications.
 
-On 01/03/12 17:18, tadeusz.struk@intel.com wrote:
-> From: Tadeusz Struk <tadeusz.struk@intel.com>
-> Date: Mon, 14 Feb 2011 14:38:18 +0000
-> Subject: [PATCH] Fixed warning
-> 
-> This patch fixes the following warning.
-> # virsh start fedora16-64
-> kernel: [  133.324565] pci-stub 0000:02:01.1: claimed by stub
-> kernel: [  134.163769] pci-stub 0000:02:01.1: enabling device (0000 -> 0002)
-> kernel: [  164.282679] ------------[ cut here ]------------
-> kernel: [  164.282685] WARNING: at drivers/pci/search.c:46 pci_find_upstream_pcie_bridge+0x87/0x9f()
-> kernel: [  164.282687] Hardware name: SandyBridge Platform
-> kernel: [  164.282689] Modules linked in: sha512_generic sha256_generic icp_qa_al(O) nfs fscache auth_rpcgss nfs_acl mga drm ip6table_filter ip6_tables ebtable_nat ebtables lockd ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack xt_CHECKSUM iptable_mangle tun bridge stp llc sunrpc btrfs zlib_deflate libcrc32c virtio_net kvm_intel kvm uinput matroxfb_base matroxfb_DAC1064 matroxfb_accel matroxfb_Ti3026 matroxfb_g450 g450_pll matroxfb_misc e1000e iTCO_wdt iTCO_vendor_support igb microcode i2c_i801 shpchp serio_raw i2c_core pcspkr dca [last unloaded: scsi_wait_scan]
-> kernel: [  164.282724] Pid: 1233, comm: qemu-kvm Tainted: G           O 3.2.5 #10
-> kernel: [  164.282726] Call Trace:
-> kernel: [  164.282732]  [<ffffffff8104eac6>] warn_slowpath_common+0x83/0x9b
-> kernel: [  164.282735]  [<ffffffff8104eaf8>] warn_slowpath_null+0x1a/0x1c
-> kernel: [  164.282737]  [<ffffffff8123e028>] pci_find_upstream_pcie_bridge+0x87/0x9f
-> kernel: [  164.282741]  [<ffffffff813bf5eb>] domain_context_mapping+0x50/0xe6
-> kernel: [  164.282744]  [<ffffffff813bf6c5>] domain_add_dev_info+0x44/0xe3
-> kernel: [  164.282747]  [<ffffffff813bfcda>] intel_iommu_attach_device+0x14f/0x15c
-> kernel: [  164.282750]  [<ffffffff813bb48b>] iommu_attach_device+0x1c/0x1e
-> kernel: [  164.282764]  [<ffffffffa00f43aa>] kvm_assign_device+0x4a/0x114 [kvm]
-> kernel: [  164.282773]  [<ffffffffa00f3963>] kvm_vm_ioctl_assigned_device+0x434/0xb25 [kvm]
-> kernel: [  164.282777]  [<ffffffff810f0fee>] ? __do_fault+0x351/0x38b
-> kernel: [  164.282781]  [<ffffffff8107c05b>] ? arch_local_irq_save+0x15/0x1b
-> kernel: [  164.282784]  [<ffffffff814b26e4>] ? _raw_spin_unlock_irqrestore+0x17/0x19
-> kernel: [  164.282787]  [<ffffffff813c0f35>] ? pci_conf1_read+0xe1/0xee
-> kernel: [  164.282794]  [<ffffffffa00f07df>] kvm_vm_ioctl+0x377/0x3ac [kvm]
-> kernel: [  164.282797]  [<ffffffff8123eb7c>] ? pci_read_config+0xa2/0x1bd
-> kernel: [  164.282801]  [<ffffffff8110edc2>] ? virt_to_head_page+0xe/0x31
-> kernel: [  164.282804]  [<ffffffff8112f210>] do_vfs_ioctl+0x45d/0x49e
-> kernel: [  164.282808]  [<ffffffff811208da>] ? fsnotify_access+0x5f/0x67
-> kernel: [  164.282811]  [<ffffffff8112f2a7>] sys_ioctl+0x56/0x7b
-> kernel: [  164.282814]  [<ffffffff814b8e42>] system_call_fastpath+0x16/0x1b
-> kernel: [  164.282816] ---[ end trace 6a834ec5ac21cba8 ]---
-> 
-> Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
-> 
-> ---
->  drivers/pci/search.c |    7 +++++--
->  1 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index 9d75dc8..7847c6b 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -26,6 +26,7 @@ struct pci_dev *
->  pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
->  {
->  	struct pci_dev *tmp = NULL;
-> +	struct pci_dev *vf = pdev;
->  
->  	if (pci_is_pcie(pdev))
->  		return NULL;
-> @@ -40,8 +41,10 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
->  		}
->  		/* PCI device should connect to a PCIe bridge */
->  		if (pdev->pcie_type != PCI_EXP_TYPE_PCI_BRIDGE) {
-> -			/* Busted hardware? */
-> -			WARN_ON_ONCE(1);
-> +			if (!vf->is_virtfn) {
-> +				/* Busted hardware? */
-> +				WARN_ON_ONCE(1);
-> +			}
->  			return NULL;
->  		}
->  		return pdev;
+I guess I'm confused... wouldn't the removal of an entire domain of
+pci devices disturb userspace applications?
 
+> And there
+> are also other kinds of clients, such as ASYNC_TX, seems we can't
+> adopt this method to reclaim DMA channels from ASYNC_TX subsystem.
+
+I say handle this like block device hotplug.  I.e. the driver stays
+loaded but the channel is put into an 'offline' state.  So the driver
+hides the fact that the hardware went away.  Similar to how you can
+remove a disk but /dev/sda sticks around until the last reference is
+gone (and the driver 'sd' sticks around until all block devices are
+gone).
+
+I expect the work will be in making sure existing clients are prepared
+to handle NULL returns from ->device_prep_dma_*.  In some cases the
+channel is treated more like a cpu, so a NULL return from
+->device_prep_dma_memcpy() has been interpreted as "device is
+temporarily busy, it is safe to try again".  We would need to change
+that to a permanent indication that the device is gone and not attempt
+retry.
+
+--
+Dan
