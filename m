@@ -1,88 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:46064 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990Ab2DRCBF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2012 22:01:05 -0400
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:51129 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754712Ab2DXH32 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2012 03:29:28 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 24 Apr 2012 12:59:24 +0530
+Date: Tue, 24 Apr 2012 15:29:18 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120424072918.GA9138@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120410090306.GA7056@richard>
+ <20120422155202.GA13540@richard>
+ <4F95B17B.3030401@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <201204172310.38816.rjw@sisk.pl>
-References: <4F8790F6.5080408@intel.com>
-	<201204162330.12178.rjw@sisk.pl>
-	<CAC=cRTMXNnZQ_bDes9JFp9yreGC63b_i9fUX6apQzWrUHw2a0Q@mail.gmail.com>
-	<201204172310.38816.rjw@sisk.pl>
-Date: Wed, 18 Apr 2012 10:01:04 +0800
-Message-ID: <CAC=cRTNc3XeniOzttRVUTFEzZY1RY7Ds7m+hE8_86A-Ep-5Czw@mail.gmail.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-From: huang ying <huang.ying.caritas@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F95B17B.3030401@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 18, 2012 at 5:10 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Tuesday, April 17, 2012, huang ying wrote:
->> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> >> >> +     return 0;
->> >> >> +}
->> >> >> +
->> >> >> +static int pcie_port_runtime_resume(struct device *dev)
->> >> >> +{
->> >> >> +     struct pci_dev *pdev = to_pci_dev(dev);
->> >> >> +
->> >> >> +     pci_restore_state(pdev);
->> >> >> +     if (pdev->runtime_d3cold)
->> >> >> +             msleep(100);
->> >> >
->> >> > What's _that_ supposed to do?
->> >>
->> >> When resume from d3cold, PCIe main link will be powered on again, it
->> >> will take quite some time before the main link go into L0 state.
->> >> Otherwise, accessing devices under the port may return wrong result.
->> >
->> > OK, but this is generic code and as per the standard the link should have been
->> > reestablished at this point already.
->> >
->> > Please don't put some nonstandard-platform-specific quirks like this into
->> > code that's supposed to handle _every_ PCIe system.
+On Mon, Apr 23, 2012 at 03:46:03PM -0400, Don Dutile wrote:
+>On 04/22/2012 11:52 AM, Richard Yang wrote:
+>>All,
 >>
->> After checking PCIe spec, I found that the 100ms here has its standard origin :)
+>>I am reading the pci_scan_bridge() and not sure what will happen in
+>>following situation.
 >>
->> In PCI Express Base Specification Revision 2.0:
+>>Suppose the kernel is not passed the pci=assign-busses.
 >>
->> Section 6.6.1 Conventional Reset
+>>Below is a picture about the pci system.
 >>
->> "
->> To allow components to perform internal initialization, system
->> software must wait for at least
->> 100 ms from the end of a Conventional Reset of one or more devices
->> before it is permitted to
->> issue Configuration Requests to those devices
->> "
+>>                    +-------+
+>>                    |       | root bridge(0,255)
+>>                    +---+---+
+>>                        |          Bus 0
+>>       -----+-----------+------------------------------+--
+>>            |                                          |
+>>            |                                          |
+>>            |                                          |
+>>       +----+----+                               +-----+-----+
+>>       |         |  B1(1,15)                     |           |B2(16,28)
+>>       +----+----+                               +-----+-----+
+>>            |  Bus 1                                   |    Bus 16
+>>       -----+-----------------------         ----------+----------------
+>>                             |
+>>                        +----+----+
+>>                        |         | B3
+>>                        +---------+
 >>
->> But I think we should move the 100ms delay here to PCIe bus code or
->> PCIe/ACPI code, because that is needed by all PCIe devices for D3cold
->> support.
+>>Suppose B1 and B2 works fine with the BIOS, which get the right bus
+>>number and range.
+>>
+>>B3 does not works fine with the BIOS, which doesn't get the bus number.
+>>
+>>So in pci_scan_bridge(), B3 will be met in the second pass and get bus
+>>number 16?
 >
-> I think it should be sufficient to wait for the PME message to arrive at
-> the root port (which will cause the PME interrupt to appear), at which
-> point the device that sent it should be able to receive configuration
-> requests.
+>unfortunately, today, the answer is yes.
+>I have run into a similar problem recently when trying to use pci=assign-busses
+>with an SRIOV device behind a non-ARI-capable PCIe switch.
+>In this scenario, the assign-busses code assigned the next bus number,
+>which conflicted with an existing one on the system, and hangs the
+>system -- two bridges responding to the same PCI bus num evidently
+>confuses the hw! ;-)
+Hmm... seems we are not talking about the same case.
+My case is the kernel not passed with pci=assign-busses.
 
-For remote wake up, it is sufficient.  But for host wake up, we still
-need to wait 100ms.
+I think, if pci=assign-busses is used, kernel will just ignore the bus
+number assigned by BIOS, and do the assignment itself.
+>
+>The PCI code is suppose to do two bus scans -- pass=0: to see what the BIOS
+>has setup, and then pass=1 to assign non-BIOS setup devices.
+>But, what I'm finding is that when pci=assign-busses is set, the
+>pass=0 scan is not doing a full PCI tree scan and registering all
+>the BIOS-setup busses first, and it tries to do extended bus assignment in pass=0,
+>not pass=1; in the above configuration, it expands B1's bus num range from (1,15)
+>to (1,16), then tries to scan behind it.  that creates an overlap btwn
+>B1 & B2's sec/sub bus-num ranges, and they both respond to a Type1 config cycle
+>with a bus-number of 16 (typically when trying to read the VID register of 16:0.0
+>in this case).... boom! ... or more like silence due to system hang...
+>
+>*If* the system spaces bus ranges apart, e.g., in your config above,
+>if the BIOS setup B1(1,15) and B2(24,32), then pci=assign-busses will
+>work because bus num 16 is free, and two bridges won't think they both
+>respond to type1 pci config cycle (with bus-number=16 lying in their sec/sub-bus num range),
+>and all will (luckily) work.
+>
+>Unfortunately, I'm in & out of work due to at-home time requirements,
+>so I haven't had a chance to work out a proper patch.
+>What should happen in the above case, is the kernel prints a warning saying
+>it couldn't do needed assign-busses operations due to configuration constraints...
+>and continue to do pci (pass=1) bridge scanning.... and not wedge the system
+>as it does now.
+>The base problem is that
+>(a)pass=0 is doing bus-assigning, and it shouldn't be done
+>    until pass=1, after all known BIOS-setup busses are known
+>(b) the code doesn't have a nice warning and continuation when this
+>    conflict occurs.
+>
+>>Would this be a conflict?
+>>
+>summary: yes.
 
-> At this point, I need to konw what exactly happens when the GPE is triggered
-> by WAKE#.
+-- 
+Richard Yang
+Help you, Help me
 
-- Lxx handler will be executed
-- in Lxx handler, Notify the ACPI handle PCIe port
-- Linux has registered a handler for the ACPI handle of PCIe port, in
-the handler, turn on _PR0 and execute _PS0, which will power on the
-link.
-
-Best Regards,
-Huang Ying
