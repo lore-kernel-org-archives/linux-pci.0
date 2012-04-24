@@ -1,71 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([58.251.152.67]:58330 "EHLO
+	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751064Ab2DXD6O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 23:58:14 -0400
+Date: Tue, 24 Apr 2012 11:56:10 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH v1 6/8] dmaengine: enhance network subsystem to support DMA
+ device hotplug
+In-reply-to: <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Vinod Koul <vinod.koul@intel.com>,
 	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 05/19] PCI: correctly flush workqueue when destroy pcie hotplug controller
-Date: Fri, 27 Apr 2012 23:16:46 +0800
-Message-Id: <1335539820-11232-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"David S. Miller" <davem@davemloft.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-id: <4F96245A.4080000@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
+ <1335189109-4871-7-git-send-email-jiang.liu@huawei.com>
+ <CABE8wwvi_Yz8AyALr1-uDW9xSgrSqfrYWhB_22NQ2ydTa81+mg@mail.gmail.com>
+ <4F961041.7010106@huawei.com>
+ <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On 2012-4-24 11:09, Dan Williams wrote:
+> On Mon, Apr 23, 2012 at 7:30 PM, Jiang Liu<jiang.liu@huawei.com>  wrote:
+>>> If you are going to hotplug the entire IOH, then you are probably ok
+>>> with network links going down, so could you just down the links and
+>>> remove the driver with the existing code?
+>>
+>> I feel it's a little risky to shut down/restart all network interfaces
+>> for hot-removal of IOH, that may disturb the applications.
+>
+> I guess I'm confused... wouldn't the removal of an entire domain of
+> pci devices disturb userspace applications?
+Here I mean removing an IOH shouldn't affect devices under other IOHs
+if possible.
+With current dmaengine implementation, a DMA device/channel may be used
+by clients in other PCI domains. So to safely remove a DMA device, we
+need to return dmaengine_ref_count to zero by stopping all DMA clients.
+For network, that means we need to stop all network interfaces, seems
+a little heavy:)
 
-When destroying a PCIe hotplug controller, all work items associated with
-that controller should be flushed.  Function pcie_cleanup_slot() calls
-cancel_delayed_work() and flush_workqueue() to achieve that.
-Function flush_workqueue() will flush all work items already submitted,
-but new work items submitted by those already submitted work items may
-still be in live state when returning from flush_workqueue().
+>
+>> And there
+>> are also other kinds of clients, such as ASYNC_TX, seems we can't
+>> adopt this method to reclaim DMA channels from ASYNC_TX subsystem.
+>
+> I say handle this like block device hotplug.  I.e. the driver stays
+> loaded but the channel is put into an 'offline' state.  So the driver
+> hides the fact that the hardware went away.  Similar to how you can
+> remove a disk but /dev/sda sticks around until the last reference is
+> gone (and the driver 'sd' sticks around until all block devices are
+> gone).
+Per my understanding, this mechanism could be used to stop driver from
+accessing surprisingly removed devices, but it still needs a reference
+count mechanism to finish the driver unbinding operation eventually.
 
-For the extreme case, pciehp driver may expierence following calling path:
-1) pcie_isr() -> pciehp_handle_xxx() -> queue_interrupt_event()->queue_work()
-2) interrupt_event_handler() -> handle_button_press_event() ->
-   queue_delayed_work()
-3) pciehp_queue_pushbutton_work() -> queue_work()
+For IOH hotplug, we need to wait for the completion of driver unbinding
+operations before destroying the PCI device nodes of IOAT, so still need
+reference count to track channel usage.
 
-So enhance pcie_cleanup_slot() to correctly flush workqueue when destroying
-PCIe hotplug controller.
+Another way is to notify all clients to release all channels when IOAT
+device hotplug happens, but that may need heavy modification to the
+DMA clients.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/pciehp_hpc.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+>
+> I expect the work will be in making sure existing clients are prepared
+> to handle NULL returns from ->device_prep_dma_*.  In some cases the
+> channel is treated more like a cpu, so a NULL return from
+> ->device_prep_dma_memcpy() has been interpreted as "device is
+> temporarily busy, it is safe to try again".  We would need to change
+> that to a permanent indication that the device is gone and not attempt
+> retry.
+Yes, some ASYNC_TX clients interpret NULL return as EBUSY and keep on
+retry when doing context aware computations. Will try to investigate
+on this direction.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index a960fae..98b775f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -889,8 +889,20 @@ static int pcie_init_slot(struct controller *ctrl)
- static void pcie_cleanup_slot(struct controller *ctrl)
- {
- 	struct slot *slot = ctrl->slot;
--	cancel_delayed_work(&slot->work);
-+
-+	/*
-+	 * Following workqueue flushing logic is to deal with the special
-+	 * call path:
-+	 * 1) pcie_isr() -> pciehp_handle_xxx() ->
-+	 *    queue_interrupt_event(pciehp_wq_event)->queue_work(pciehp_wq)
-+	 * 2) interrupt_event_handler() -> handle_button_press_event() ->
-+	 *    queue_delayed_work(pciehp_wq)
-+	 * 3) pciehp_queue_pushbutton_work() -> queue_work(pciehp_wq)
-+	 */
- 	flush_workqueue(pciehp_wq);
-+	cancel_delayed_work_sync(&slot->work);
-+	flush_workqueue(pciehp_wq);
-+
- 	kfree(slot);
- }
- 
--- 
-1.7.5.4
+>
+> --
+> Dan
+>
+> .
+>
+
 
