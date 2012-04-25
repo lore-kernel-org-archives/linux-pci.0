@@ -1,113 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:59841 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932287Ab2DMIWW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 04:22:22 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH v5] Quirk for IVB graphics FLR errata
-Date: Fri, 13 Apr 2012 08:22:18 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD0FF14@SHSMSX102.ccr.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail1.windriver.com ([147.11.146.13]:38407 "EHLO
+	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752536Ab2DYSRT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 14:17:19 -0400
+Message-ID: <4F983FA9.5040301@windriver.com>
+Date: Wed, 25 Apr 2012 14:17:13 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
 MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH] pci: frv architecture needs generic setup-bus infrastructure
+References: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com> <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com> <4F95CB3E.6070504@windriver.com> <CAErSpo7rsqtPEBsS4VzFYX+AGYXDYv2+MzR023=VqEqrzTtanA@mail.gmail.com>
+In-Reply-To: <CAErSpo7rsqtPEBsS4VzFYX+AGYXDYv2+MzR023=VqEqrzTtanA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For IvyBridge Mobile platform, a system hang may occur if a FLR(Function Level Reset) is asserted to internal graphics.
+On 12-04-25 12:12 PM, Bjorn Helgaas wrote:
+> On Mon, Apr 23, 2012 at 3:35 PM, Paul Gortmaker
+> <paul.gortmaker@windriver.com> wrote:
+>> On 12-04-23 04:38 PM, Bjorn Helgaas wrote:
+>>> On Wed, Apr 18, 2012 at 3:24 PM, Paul Gortmaker
+>>> <paul.gortmaker@windriver.com> wrote:
+>>>> Otherwise we get this link failure for frv's defconfig:
+>>>>
+>>>>   LD      .tmp_vmlinux1
+>>>>  drivers/built-in.o: In function `pci_assign_resource':
+>>>>  (.text+0xbf0c): undefined reference to `pci_cardbus_resource_alignment'
+>>>>  drivers/built-in.o: In function `pci_setup':
+>>>>  pci.c:(.init.text+0x174): undefined reference to `pci_realloc_get_opt'
+>>>>  pci.c:(.init.text+0x1a0): undefined reference to `pci_realloc_get_opt'
+>>>>  make[1]: *** [.tmp_vmlinux1] Error 1
+>>>>
+>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> This looks good to me, and if you'd put it in your queue, that'd be
+> great.  It won't break any other arches, so I'm fine with it going in
+> either for 3.4 or in the 3.5 merge window.
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-This quirk patch is workaround for the IVB FLR errata issue.
-We are disabling the FLR reset handshake between the PCH and CPU display, then manually powering down the panel power sequencing and resetting the PCH display.
+Thanks, I'll queue it up for the 3.4 pull
 
-Changes from v4: (based on Matthew and Don's comments)
-- using jiffies to set timeout instead of tsc.
-- correct type mmio_base variable
-- using readl() and writel() to access io.
-- correct code style, use spaces around the multiply operator.
-
-Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
-Reviewed-by: Xiantao Zhang <xiantao.zhang@intel.com>
----
- drivers/pci/quirks.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 53 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index 4bf7102..136d3c4 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -29,6 +29,7 @@
- #include <linux/sched.h>
- #include <linux/ktime.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-+#include <asm/io.h>
- #include "pci.h"
- 
- /*
-@@ -3085,11 +3086,63 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
-+#include "../gpu/drm/i915/i915_reg.h"
-+#define MSG_CTL	0x45010
-+#define IGD_OPERATION_TIMEOUT 10000     /* set timeout 10 seconds */
-+
-+static int reset_ivb_igd(struct pci_dev *dev, int probe) {
-+	void __iomem *mmio_base;
-+	unsigned long timeout;
-+	u32 val;
-+
-+	if (probe)
-+		return 0;
-+
-+	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-+				 pci_resource_len(dev, 0));
-+	if (!mmio_base)
-+		return -ENOMEM;
-+
-+	/* Work Around */
-+	writel(0x00000002, mmio_base + MSG_CTL);
-+	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
-+	 * driver loaded sets the right bits. However, this's a reset and
-+	 * the bits have been set by i915 previously, so we clobber
-+	 * SOUTH_CHICKEN2 register directly here.
-+	 */
-+	writel(0x00000005, mmio_base + SOUTH_CHICKEN2);
-+	val = readl(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
-+	writel(val, mmio_base + PCH_PP_CONTROL);
-+	do {
-+		timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
-+		while (1) {
-+			val = readl(mmio_base + PCH_PP_STATUS);
-+			if (((val & 0x80000000) == 0)
-+				&& ((val & 0x30000000) == 0))
-+				break;
-+			if (time_after(jiffies, timeout))
-+				break;
-+			cpu_relax();
-+		}
-+	} while (0);
-+	writel(0x00000002, mmio_base + 0xd0100);
-+
-+	iounmap(pci_resource_start(dev, 0));
-+	return 0;
-+}
-+
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-+#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-+#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
- 
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-+		reset_ivb_igd },
-+	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-+		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 		reset_intel_generic_dev },
- 	{ 0 }
+Paul.
 --
-1.6.0.rc1
 
+> 
+>>>> Cc: David Howells <dhowells@redhat.com>
+>>>> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+>>>>
+>>>> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+>>>> index 083a49f..165274c 100644
+>>>> --- a/drivers/pci/Makefile
+>>>> +++ b/drivers/pci/Makefile
+>>>> @@ -42,6 +42,7 @@ obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
+>>>>  obj-$(CONFIG_PARISC) += setup-bus.o
+>>>>  obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
+>>>>  obj-$(CONFIG_PPC) += setup-bus.o
+>>>> +obj-$(CONFIG_FRV) += setup-bus.o
+>>>>  obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
+>>>>  obj-$(CONFIG_X86_VISWS) += setup-irq.o
+>>>>  obj-$(CONFIG_MN10300) += setup-bus.o
+>>>
+>>> Wow, I didn't even realize that we had this sort of arch-specific
+>>> selection of generic PCI parts.  drivers/pci/setup-irq.c is on my list
+>>> for reworking because it looks like it doesn't work correctly for
+>>> hotplug.  setup-bus.c is much more complicated, but (a) it looks like
+>>> most architectures include it anyway, and (b) it seems like it'd be
+>>> cleaner to have a CONFIG_PCI_REALLOC or something to avoid having
+>>> arch-specific stuff in the Makefile.
+>>>
+>>> Anyway, that's all for the future.  Does this fix need to go in 3.4,
+>>> or should it go in -next?  What commit introduced the problem?
+>>
+>> It does address a compile fail seen in 3.4 (sorry for not calling
+>> that out explicitly).  I've not dug back in time to see when it
+>> 1st appeared.  With a lot of these less common arch, it seems they
+>> can get broken and remain broken for quite some time, so the original
+>> breakage may predate the 3.4 merge window.
+>>
+>> I've already got a queue with fixes for 3.4 in various other
+>> less common arch; it is no trouble for me to carry this there,
+>> if you are OK with it as a 3.4 fix.
+>>
+>> Thanks,
+>> Paul.
+>> --
+>>
+>>>
+>>> Bjorn
