@@ -1,132 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51329 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176Ab2DCGYu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2012 02:24:50 -0400
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id DC8CC3EE0B6
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id C5BD845DE9E
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 9775445DE7E
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 8AD631DB8038
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
-Received: from m004.s.css.fujitsu.com (m004.s.css.fujitsu.com [10.23.4.34])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 3AE571DB803C
-	for <linux-pci@vger.kernel.org>; Tue,  3 Apr 2012 15:24:48 +0900 (JST)
-Message-ID: <4F7A9816.2080700@jp.fujitsu.com>
-Date: Tue, 03 Apr 2012 15:26:30 +0900
-From: =?UTF-8?B?5p2+5pys5Y2a6YOO?= <matsumoto.hiroo@jp.fujitsu.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:55962 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754299Ab2DYRBb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Apr 2012 13:01:31 -0400
+Received: by lahj13 with SMTP id j13so265359lah.19
+        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 10:01:27 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Subject: Re: [RFC] pciehp: Add archdata setting
-References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com>
-In-Reply-To: <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4F80548C.3060202@gmail.com>
+References: <1333726296-3817-1-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo7KdaYt0tVpBW5vXmc7RXRgnbaOe7JTNmb5xp4vZMsK3w@mail.gmail.com> <4F80548C.3060202@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Apr 2012 11:01:07 -0600
+Message-ID: <CAErSpo7kZAeAzr4UxDGvviQtwou5t8RduWe-SmzOPvO2UJpgeg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix a device reference count leakage issue in pci_dev_present()
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
-
-
-Thanks for your comment.
-
-I have mistake.
-archdata.dma_ops is always NULL on x86 platform.
-On x86 platform, probe with pciehp is same as probe with initcall.
-I'm so sorry.
-
-But archdata on powerpc platform is set with initcall.
-Call stack is as below.
-   1. pcibios_init
-   2. pcibios_scan_phb
-   3. pci_scan_child_bus
-   4. pci_scan_bridge
-   5. pci_scan_child_bus
-   6. pci_scan_bridge
-   7. pci_scan_child_bus
-   8. pcibios_setup_bus_devices
-
-In pcibios_setup_bus_devices, archdata is set with set_dma_ops and 
-set_dma_offset.
-But set_dma_ops and set_dma_offset are defined only at powerpc and 
-microblaze (Why...).
-
-Can architecture code, like arch/powerpc/kernel/pci.c, be called from 
-pciehp ?
-
-
-Regards.
-
-Hiroo MATSUMOTO (FUJITSU COMPUTER TECHNOLOGIES LIMITED)
-matsumoto.hiroo@jp.fujitsu.com
-
->> I'm trying to use pciehp on powerpc platform.
->> I set e1000e card to PCI Express bridge that has PCI Express HotPlug
->> Capability.
+On Sat, Apr 7, 2012 at 8:51 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> On 04/07/2012 07:23 AM, Bjorn Helgaas wrote:
+>> On Fri, Apr 6, 2012 at 9:31 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>> Function pci_get_dev_by_id() will hold a reference count on the pci device
+>>> returned, so pci_dev_present() should release the corresponding reference
+>>> count to avoid memory leakage.
+>>>
+>>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>>> ---
+>>>  drivers/pci/search.c |   10 +++++-----
+>>>  1 files changed, 5 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+>>> index 9d75dc8..b572730 100644
+>>> --- a/drivers/pci/search.c
+>>> +++ b/drivers/pci/search.c
+>>> @@ -338,13 +338,13 @@ int pci_dev_present(const struct pci_device_id *ids)
+>>>        WARN_ON(in_interrupt());
+>>>        while (ids->vendor || ids->subvendor || ids->class_mask) {
+>>>                found = pci_get_dev_by_id(ids, NULL);
+>>> -               if (found)
+>>> -                       goto exit;
+>>> +               if (found) {
+>>> +                       pci_dev_put(found);
+>>> +                       return 1;
+>>> +               }
+>>>                ids++;
+>>>        }
+>>> -exit:
+>>> -       if (found)
+>>> -               return 1;
+>>> +
+>>>        return 0;
+>>>  }
+>>>  EXPORT_SYMBOL(pci_dev_present);
 >>
->> There is problem when poweron PCI Express HotPlug slot with pciehp.
->> e1000e driver needs dma_ops in struct dev_archdata, but archdata isn't
->> set (dma_ops is NULL) when probe from pciehp.
->> Then e1000e driver returns error as below.
+>> This might be the right thing to do, but I'd like to understand what's
+>> going on, so let's talk about it a bit first.
 >>
->> -sh-3.2# echo 1 > /sys/bus/pci/slots/1/power
->> <snip>
->> [   65.493662] pci 0000:03:00.0: BAR 2: set to [io
->> 0xff7ee000-0xff7ee01f] (PCI address [0x1000-0x101f])
->> [   65.502890] pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
->> [   65.508555] pcieport 0000:02:01.0:   bridge window [io
->> 0xff7ee000-0xff7eefff]
->> [   65.515785] pcieport 0000:02:01.0:   bridge window [mem
->> 0xa0100000-0xa01fffff]
->> [   65.523015] pcieport 0000:02:01.0:   bridge window [mem
->> 0xa0200000-0xa02fffff 64bit pref]
->> [   65.531238] pci 0000:03:00.0: no hotplug settings from platform
->> [   65.538361] e1000e 0000:03:00.0: Disabling ASPM  L1
->> [   65.543616] e1000e 0000:03:00.0: enabling device (0000 -> 0002)
->> [   65.549876] e1000e 0000:03:00.0: No usable DMA configuration, aborting
->> [   65.557194] e1000e: probe of 0000:03:00.0 failed with error -5
->> -sh-3.2# lspci
->> <snip>
->> 0000:03:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit
->> Ethernet Controller (Copper) (rev 06)
->> <snip>
->> -sh-3.2# ifconfig -a
->> <snip>  // There is no network interface for 82572EI
+>> I agree, there appears to be a leak here.  Or at least, the fact that
+>> we keep a reference when a device is found doesn't match the comment.
+>> What problem are you seeing from this leak?
 >>
->> If archdata.dma_ops is NULL on x86 platform, e1000e will get dma_ops
->> without archdata.
->> So e1000e driver doesn't return error.
+>> There are not many callers, and most appear to be one-time things done
+>> at boot, looking for built-in devices known to be defective.  These
+>> devices won't be removable, so the leak shouldn't be causing
+>> hot-remove issues.
+> I noticed this issue when reading code, no real issue disclosed yet.
+> As you have pointed out, this interface is used for built-in devices only,
+> there should be no real issue currently and the patch is just for purity.
+>
 >>
->> I think that archdata should be set before driver probe (e.g pciehp).
->> I tried to fix it (pciehp-add-archdata.patch), but I'm not good at PCI
->> driver..., so please give better way.
-> 
-> Interesting.  It would be nice if we could set archdata the same way
-> for both devices present at boot and those hot-added later.  Can you
-> figure out where archdata is set for devices present at boot?
-> 
-> Bjorn
-> 
->> Signed-off-by: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
->> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
->> index a4031df..a021fbc 100644
->> --- a/drivers/pci/hotplug/pciehp_pci.c
->> +++ b/drivers/pci/hotplug/pciehp_pci.c
->> @@ -89,6 +89,7 @@ int pciehp_configure_device(struct slot *p_slot)
->>                        pciehp_add_bridge(dev);
->>                }
->>                pci_dev_put(dev);
->> +               dev->dev.archdata = bridge->dev.archdata;
->>        }
->>
->>        pci_assign_unassigned_bridge_resources(bridge);
->>
-> 
+>> IMO, this is a bogus interface that leads to poor code, and I don't
+>> want to encourage its use.  For device defect workarounds, I think
+>> it'd be better to use PCI quirks to catch the defective device.  Some
+>> chipset defects affect all downstream devices, and a quirk could make
+>> the defect visible to all the drivers, not just the ones that use
+>> pci_dev_present().  For example, look at tg3_write_reorder_chipsets
+>> and tg3_dma_wait_state_chipsets.  Those aren't for tg3 bugs, they're
+>> for chipset bugs that might affect other devices, too.  But right now,
+>> that knowledge is buried in the tg3 driver.
+> Thanks for pointing out the real issue behind this bogus interface.
+> It would be better to solve this type of chip bugs in PCI core instead
+> of in individual drivers.
 
+I applied this to the -next branch, thanks.
+
+Bjorn
