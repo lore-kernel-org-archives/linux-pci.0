@@ -1,74 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mikko Vinni <mmvinni@yahoo.com>
-Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
-Date: Sun, 15 Apr 2012 21:52:55 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <1334486385.82898.YahooMailNeo@web161803.mail.bf1.yahoo.com> <201204152030.23148.rjw@sisk.pl>
-In-Reply-To: <201204152030.23148.rjw@sisk.pl>
+Message-ID: <4F9767EE.4010709@redhat.com>
+Date: Tue, 24 Apr 2012 22:56:46 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204152152.56048.rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+References: <20120410090306.GA7056@richard>	<20120422155202.GA13540@richard>	<4F95B17B.3030401@redhat.com>	<CAE9FiQX52eL6ZFQ_X3uL5DukK03sPhByZpPh0++o6L=WF8BGXg@mail.gmail.com>	<4F95C50C.4060203@redhat.com> <CAE9FiQVNYC1e_cHpLqsUcTCHWhzV_w0W=hVF8vkxtadjN45CWg@mail.gmail.com>
+In-Reply-To: <CAE9FiQVNYC1e_cHpLqsUcTCHWhzV_w0W=hVF8vkxtadjN45CWg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, April 15, 2012, Rafael J. Wysocki wrote:
-> On Sunday, April 15, 2012, Mikko Vinni wrote:
-> > From: Rafael J. Wysocki:
-> > 
-> > >>  > Please change that dev_dbg() in pci_restore_state() into dev_info()
-> > >>  > and see how many times it gets printed with the commit applied (not 
-> > > reverted).
-> > >> 
-> > >> 
-> > >>  I ran the dmesg through "uniq -c" and it looks like this:
-> > >> 
-> > >>        1 ACPI: Low-level resume complete
-> > >>        1 PM: Restoring platform NVS memory
-> > >>        1 Enabling non-boot CPUs ...
-> > >>        1 Booting Node 0 Processor 1 APIC 0x1
-> > >>        1 CPU1 is up
-> > >>        1 ACPI: Waking up from system sleep state S3
-> > >>       10 pcieport 0000:00:02.0: restoring config space at offset 0x7 (was 
-> > > 0x20005151, writing 0x5151)
-> > > 
-> > > Well, yeah.  So the commit you bisected it to is total and utter crap.
-> > > Most importantly, it retries the writes for all of the dwords in the 
-> > > device's
-> > > config space _including_ the status register (which by definition need not be
-> > > the same as the written value).
-> > > 
-> > > I wonder if the appended patch helps?
-> > 
-> > It does. It seems there is a change only in the devices that refuse to wake up;
-> > somehow writing too many times to them affects the rest of the machine.
-> > So, for this machine your patch fixes the problem of the touchpad not working.
-> 
-> Good, thanks for the confirmation. :-)
-> 
-> > The write is now attempted (at most) 11 times, as shown below. Probably not
-> > a huge deal.
-> > 
-> >       1 ACPI: Waking up from system sleep state S3
-> >      11 pcieport 0000:00:02.0: restoring config space at offset 0x1c (was 0x20005151, writing 0x5151)
-> 
-> Well, here you see that the PCI Express port is refusing to accept a new BAR value.
-> It seems not to be operational and this probably is the reason why the device below
-> the port don't respond later.
-> 
-> I'm not sure why that happens, though.
+On 04/23/2012 06:07 PM, Yinghai Lu wrote:
+> On Mon, Apr 23, 2012 at 2:09 PM, Don Dutile<ddutile@redhat.com>  wrote:
+>> On 04/23/2012 04:19 PM, Yinghai Lu wrote:
+>>>
+>>> On Mon, Apr 23, 2012 at 12:46 PM, Don Dutile<ddutile@redhat.com>    wrote:
+>>>>
+>>>> I have run into a similar problem recently when trying to use
+>>>> pci=assign-busses
+>>>> with an SRIOV device behind a non-ARI-capable PCIe switch.
+>>>> In this scenario, the assign-busses code assigned the next bus number,
+>>>> which conflicted with an existing one on the system, and hangs the
+>>>> system -- two bridges responding to the same PCI bus num evidently
+>>>> confuses the hw! ;-)
+>>>
+>>>
+>>> can you post boot log and lspci -vvxxx?
+>>>
+>>> Yinghai
+>>
+>>
+>> Attached requested logs of linux-3.4-rc2 booted on RHEL6.2 installation.
+>>
+>> I don't have a boot log of failing condition (pci=assign-devices)
+>
+> what is pci=assign-devices ? you have own local patches to handle that?
+>
+> or you mean pci=assign-busses?
+>
+yes, that's what I meant. sorry, my bad... :(
 
-OK, I know.  There simply are fewer BARs for bridges (and PCIe ports)
-and here we're attempting to overwrite the secondary status register.  Sigh.
+>> b/c it wedges at boot, and the serial line doesn't output anything
+>> even though I've tried every magic trick known with grub&  kernel boot
+>> params.
+>> ... the PCI log btwn early boot and until the console is reconfigured is
+>> 'lost'
+>> on the serial line, and that's when the hang occurs.
+>> It's been 'fun' to debug w/o that serial output...
+>>
+>> Let me know if you need something else. (lspci -t ?)
+>
+> can you check busn_alloc patchset fix the overlapping problem for you?
+> It already split scan bus to two pass, also it  will double check not
+> scanned peer bridges.
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-busn-alloc
+>
+> you can merge them to your 3.4-rc2...
+>
+> Thanks
+>
+> Yinghai
+I'll try as soon as I get back to the office;
+I'm out the next few days, and don't have external access to my test system.
 
-Well, I guess we should only retry the writes to BARs for Type 0 headers.
-
-Thanks,
-Rafael
