@@ -1,66 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34619 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752487Ab2DPAt2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 15 Apr 2012 20:49:28 -0400
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-From: Lin Ming <ming.m.lin@intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-In-Reply-To: <201204132141.58063.rjw@sisk.pl>
-References: <4F8790F6.5080408@intel.com>  <201204132141.58063.rjw@sisk.pl>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Apr 2012 08:48:31 +0800
-Message-ID: <1334537311.11188.118.camel@minggr>
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Drew Weaver <drew.weaver@thenap.com>
+To: 'Thomas Jarosch' <thomas.jarosch@intra2net.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Charlie Suffin <charlie.suffin@stratus.com>
+Date: Wed, 25 Apr 2012 11:23:27 -0400
+Subject: RE: [PATCH] pci: Add quirk for still enabled interrupts on Intel
+ Sandy Bridge GPUs
+Message-ID: <F3318834F1F89D46857972DD4B411D7005324C00C5@exchange>
+References: <4EDFD5BB.1050906@intra2net.com>
+ <201204251722.14877.thomas.jarosch@intra2net.com>
+In-Reply-To: <201204251722.14877.thomas.jarosch@intra2net.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-04-13 at 21:41 +0200, Rafael J. Wysocki wrote:
-> Hi,
-> 
-> On Friday, April 13, 2012, Yan, Zheng wrote:
-> > Hi all,
-> > 
-> > This patch adds PCIe runtime D3cold support, namely cut power supply for functions
-> > beneath a PCIe port when they all have entered D3. A device in D3cold can only
-> > generate wake event through the WAKE# pin. Because we can not access to a device's
-> > configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
-> > 
-> > Any comment will be appreciated.
-> > 
-> > Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
-> > ---
-> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> > index 0f150f2..e210e8cb 100644
-> > --- a/drivers/pci/pci-acpi.c
-> > +++ b/drivers/pci/pci-acpi.c
-> > @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> >  		[PCI_D1] = ACPI_STATE_D1,
-> >  		[PCI_D2] = ACPI_STATE_D2,
-> >  		[PCI_D3hot] = ACPI_STATE_D3,
-> > -		[PCI_D3cold] = ACPI_STATE_D3
-> > +		[PCI_D3cold] = ACPI_STATE_D3_COLD
-> >  	};
-> >  	int error = -EINVAL;
-> >  
-> 
-> Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
-> 
-> We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
-> instead.  I'll prepare a patch for that over the weekend if no one has done
-> that already.
+Yeah it is very unfortunate that this hasn't been fixed in the BIOS.
 
-Hi Rafael,
+-----Original Message-----
+From: Thomas Jarosch [mailto:thomas.jarosch@intra2net.com] 
+Sent: Wednesday, April 25, 2012 11:22 AM
+To: linux-pci@vger.kernel.org
+Cc: Jesse Barnes; linux-kernel@vger.kernel.org; Drew Weaver; Charlie Suffin
+Subject: Re: [PATCH] pci: Add quirk for still enabled interrupts on Intel Sandy Bridge GPUs
 
-Have you started to write the patch?
+On Wednesday, 7. December 2011 22:08:11 Thomas Jarosch wrote:
+> Some BIOS implementations leave the Intel GPU interrupts enabled, even 
+> though no one is handling them (f.e. i915 driver is never loaded).
+> Additionally the interrupt destination is not set up properly and the 
+> interrupt ends up -somewhere-.
+>
+> These spurious interrupts are "sticky" and the kernel disables the 
+> (shared) interrupt line after 100.000+ generated interrupts.
 
-If not, I can do it.
+Just a small heads up: Boards with the new Intel Ivy bridge chipset are affected, too. Currently known to be affected is
 
-Thanks,
-Lin Ming
+    Intel Desktop Board DH77EB
 
+
+Would be nice if Intel fixes the shared BIOS code...
+
+Thanks to Drew Weaver for reporting the issue. I currently don't have time to prepare another quirk.
+
+Best regards
+Thomas Jarosch
