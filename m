@@ -1,121 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29093 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760352Ab2DKO2R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Apr 2012 10:28:17 -0400
-Message-ID: <4F8594FD.8020109@redhat.com>
-Date: Wed, 11 Apr 2012 10:28:13 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:58158 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751825Ab2DYQNU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Apr 2012 12:13:20 -0400
+Received: by lahj13 with SMTP id j13so225165lah.19
+        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 09:13:18 -0700 (PDT)
 MIME-Version: 1.0
-To: "Hao, Xudong" <xudong.hao@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
-References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
-In-Reply-To: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4F95CB3E.6070504@windriver.com>
+References: <1334784254-17603-1-git-send-email-paul.gortmaker@windriver.com>
+ <CAErSpo4t2USorOiSMs99UQ_JPyhnz=FKfF=R5twhepDMPVH5oQ@mail.gmail.com> <4F95CB3E.6070504@windriver.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Apr 2012 10:12:58 -0600
+Message-ID: <CAErSpo7rsqtPEBsS4VzFYX+AGYXDYv2+MzR023=VqEqrzTtanA@mail.gmail.com>
+Subject: Re: [PATCH] pci: frv architecture needs generic setup-bus infrastructure
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Howells <dhowells@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/11/2012 02:03 AM, Hao, Xudong wrote:
-> (Re-rend.)
->
-> For IvyBridge Mobile platform, a system hang may occur if a FLR(Function Level Reset) is asserted to internal graphics.
->
-> This quirk patch is workaround for the IVB FLR errata issue.
-> We are disabling the FLR reset handshake between the PCH and CPU display, then manually powering down the panel power sequencing and resetting the PCH display.
->
-> Changes from v3:
-> - add X86 configuration to avoid compile problem in other architecture.
->
-> Signed-off-by: Xudong Hao<xudong.hao@intel.com>
-> Signed-off-by: Kay, Allen M<allen.m.kay@intel.com>
-> Reviewed-by: Xiantao Zhang<xiantao.zhang@intel.com>
-> ---
->   drivers/pci/quirks.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++++++
->   1 files changed, 59 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index 6476547..63e8b70 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3069,11 +3069,70 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
->   	return 0;
->   }
->
-> +#ifdef CONFIG_X86
-> +
-> +#include "../gpu/drm/i915/i915_reg.h"
-> +#define MSG_CTL	0x45010
-> +
-> +static const int op_timeout = 10;	/* set timeout 10 seconds */
-> +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
-> +	u8 *mmio_base;
-> +	u32 val;
-> +	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
-> +
-Don't we know how to do a 10sec timeout w/o tying it to tsc_khz?
---> other arch compile problem source???
+On Mon, Apr 23, 2012 at 3:35 PM, Paul Gortmaker
+<paul.gortmaker@windriver.com> wrote:
+> On 12-04-23 04:38 PM, Bjorn Helgaas wrote:
+>> On Wed, Apr 18, 2012 at 3:24 PM, Paul Gortmaker
+>> <paul.gortmaker@windriver.com> wrote:
+>>> Otherwise we get this link failure for frv's defconfig:
+>>>
+>>>   LD      .tmp_vmlinux1
+>>>  drivers/built-in.o: In function `pci_assign_resource':
+>>>  (.text+0xbf0c): undefined reference to `pci_cardbus_resource_alignment'
+>>>  drivers/built-in.o: In function `pci_setup':
+>>>  pci.c:(.init.text+0x174): undefined reference to `pci_realloc_get_opt'
+>>>  pci.c:(.init.text+0x1a0): undefined reference to `pci_realloc_get_opt'
+>>>  make[1]: *** [.tmp_vmlinux1] Error 1
+>>>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
 
-> +	if (probe)
-> +		return 0;
-> +
-> +	mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-> +				 pci_resource_len(dev, 0));
-> +	if (!mmio_base)
-> +		return -ENOMEM;
-> +
-> +	/* Work Around */
-> +	*((u32 *)(mmio_base + MSG_CTL)) = 0x00000002;
-> +	/* Clobbering SOUTH_CHICKEN2 register is fine only if the next
-> +	 * driver loaded sets the right bits. However, this's a reset and
-> +	 * the bits have been set by i915 previously, so we clobber
-> +	 * SOUTH_CHICKEN2 register directly here.
-> +	 */
-> +	*((u32 *)(mmio_base + SOUTH_CHICKEN2)) = 0x00000005;
-> +	val = *((u32 *)(mmio_base + PCH_PP_CONTROL))&  0xfffffffe;
-> +	*((u32 *)(mmio_base + PCH_PP_CONTROL)) = val;
-above should use readl() & writel()
-.... and once this & above fixed, then it'll work on other arches???
+This looks good to me, and if you'd put it in your queue, that'd be
+great.  It won't break any other arches, so I'm fine with it going in
+either for 3.4 or in the 3.5 merge window.
 
-> +	do {
-> +		cycles_t start_time = get_cycles();
-> +		while (1) {
-> +			val = *((u32 *)(mmio_base + PCH_PP_STATUS));
-> +			if (((val&  0x80000000) == 0)
-> +				&&  ((val&  0x30000000) == 0))
-> +				break;
-> +			if (cyc_op_timeout<  (get_cycles() - start_time))
-> +				break;
-> +			cpu_relax();
-> +		}
-> +	} while (0);
-> +	*((u32 *)(mmio_base + 0xd0100)) = 0x00000002;
-> +
-> +	iounmap(pci_resource_start(dev, 0));
-> +	return 0;
-> +}
-> +#else
-> +static int reset_ivb_igd(struct pci_dev *dev, int probe) { }
-> +#endif	/* CONFIG_X86 */
-> +
->   #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-> +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+>>> Cc: David Howells <dhowells@redhat.com>
+>>> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+>>>
+>>> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+>>> index 083a49f..165274c 100644
+>>> --- a/drivers/pci/Makefile
+>>> +++ b/drivers/pci/Makefile
+>>> @@ -42,6 +42,7 @@ obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
+>>>  obj-$(CONFIG_PARISC) += setup-bus.o
+>>>  obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
+>>>  obj-$(CONFIG_PPC) += setup-bus.o
+>>> +obj-$(CONFIG_FRV) += setup-bus.o
+>>>  obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
+>>>  obj-$(CONFIG_X86_VISWS) += setup-irq.o
+>>>  obj-$(CONFIG_MN10300) += setup-bus.o
+>>
+>> Wow, I didn't even realize that we had this sort of arch-specific
+>> selection of generic PCI parts.  drivers/pci/setup-irq.c is on my list
+>> for reworking because it looks like it doesn't work correctly for
+>> hotplug.  setup-bus.c is much more complicated, but (a) it looks like
+>> most architectures include it anyway, and (b) it seems like it'd be
+>> cleaner to have a CONFIG_PCI_REALLOC or something to avoid having
+>> arch-specific stuff in the Makefile.
+>>
+>> Anyway, that's all for the future.  Does this fix need to go in 3.4,
+>> or should it go in -next?  What commit introduced the problem?
 >
->   static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->   	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->   		 reset_intel_82599_sfp_virtfn },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-> +		reset_ivb_igd },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-> +		reset_ivb_igd },
->   	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
->   		reset_intel_generic_dev },
->   	{ 0 }
+> It does address a compile fail seen in 3.4 (sorry for not calling
+> that out explicitly).  I've not dug back in time to see when it
+> 1st appeared.  With a lot of these less common arch, it seems they
+> can get broken and remain broken for quite some time, so the original
+> breakage may predate the 3.4 merge window.
 >
+> I've already got a queue with fixes for 3.4 in various other
+> less common arch; it is no trouble for me to carry this there,
+> if you are OK with it as a 3.4 fix.
 >
+> Thanks,
+> Paul.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+>
+>>
+>> Bjorn
