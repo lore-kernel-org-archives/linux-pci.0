@@ -1,56 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:37151 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837Ab2DJQFn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 12:05:43 -0400
-Message-ID: <4F845A4E.90003@gmail.com>
-Date: Wed, 11 Apr 2012 00:05:34 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33579 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751183Ab2DYPnB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 11:43:01 -0400
+Received: by lbbgf7 with SMTP id gf7so201988lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 08:43:00 -0700 (PDT)
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when hot-plugging
- PCI host bridges
-References: <1333905129-8776-1-git-send-email-jiang.liu@huawei.com> <1333905129-8776-3-git-send-email-jiang.liu@huawei.com> <4F82CB64.8030808@jp.fujitsu.com> <4F830804.6010007@gmail.com> <4F840C3C.2060302@jp.fujitsu.com> <CAE9FiQWZwkyp8F7HDTpGVZ=Q=09_68NR3tT_vCzwFH3ZhXDzCA@mail.gmail.com>
-In-Reply-To: <CAE9FiQWZwkyp8F7HDTpGVZ=Q=09_68NR3tT_vCzwFH3ZhXDzCA@mail.gmail.com>
+In-Reply-To: <CADLM8XMY6ndFoEWJuHkH5gUKQYVgf9pRTZGT_r-AGxYJK06C0Q@mail.gmail.com>
+References: <CADLM8XMY6ndFoEWJuHkH5gUKQYVgf9pRTZGT_r-AGxYJK06C0Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Apr 2012 09:42:39 -0600
+Message-ID: <CAErSpo5gufQSp0NaeCFp_vw4FU076o-VD6jxGrcUUH2JKx4Gbg@mail.gmail.com>
+Subject: Re: What is the value of pci_bus.primary of Bus#0
+To: Wei Yang <weiyang.kernel@gmail.com>
+Cc: linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/10/2012 11:47 PM, Yinghai Lu wrote:
-> On Tue, Apr 10, 2012 at 3:32 AM, Kenji Kaneshige
-> <kaneshige.kenji@jp.fujitsu.com> wrote:
->> Additionally, I think there is a remaining issue even if we change
->> this check like below.
->>
->>
->>        if (!!(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
->>                return 0;
->>
->> I think this check has an assumption that system has at least one
->> MCFG table entry and it has been initialized before
->> acpi_pci_root_add() is called. I think this doesn't work on the
->> system that doesn't have MCFG and all the pci root bridge have
->> _CBA (that is, all host bridges are hot-pluggable and BIOS is
->> implemented in the way PCI FW spec defines). As a result, MMCONFIG
->> would never be enabled on such systems. Could you double check this?
-> 
-> You are right.
-> 
-> We can just remove that checking.
-> 
-> But wonder if current x86_64 system support that.
-> All peer root buses can be physically removed ?
-It's theoretically possible that BIOS doesn't provide MMCFG or _CBA
-for the legacy (non-removable bus 0) host bridge. 
+On Wed, Apr 25, 2012 at 9:21 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
+> I go through the code and curious about the value of pci_bus.primary
+> of Bus#0, the root bus.
 
-> 
-> Thanks
-> 
-> Yinghai
+There is no such thing as "the root bus."  There may be many root buses.
 
+> On x86, the root bus is get by,
+>     root->bus = pci_acpi_scan_root(root);
+>
+> While I scan the code not find some place set the *primary* field.
+>
+> I think this value indicate the upstream bus number, while for root
+> bus, this value should be?
+> So this value of the root bus is any value? Or some restriction?
+
+The primary/secondary/subordinate fields in struct pci_bus are really
+properties of the upstream P2P bridge.  Primary is the bus number of
+the P2P bridge primary (upstream) interface.  In the case of a "root
+bus," i.e., the bus immediately below a PCI host bridge, there is no
+upstream P2P bridge, so primary is meaningless.
+
+Bjorn
