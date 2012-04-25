@@ -1,51 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:49562 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932684Ab2DZAa7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 20:30:59 -0400
-Received: by dadz8 with SMTP id z8so762885dad.10
-        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 17:30:58 -0700 (PDT)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:57171 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755890Ab2DYRXn convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Apr 2012 13:23:43 -0400
+Received: by lahj13 with SMTP id j13so283457lah.19
+        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 10:23:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com>
-Date: Wed, 25 Apr 2012 17:30:58 -0700
-Message-ID: <CAE9FiQWUvZZ+z6-g3B1xCjjPcY_VwcY8FX5oMgRDAvLut=vXNw@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI: work around Stratus ftServer broken PCIe hierarchy
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Matthew Wilcox <matthew.wilcox@linux.intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Myron Stowe <mstowe@redhat.com>,
-	James Paradis <jim.paradis@stratus.com>
+In-Reply-To: <4F840ED6.3050408@jp.fujitsu.com>
+References: <1333822735-10902-1-git-send-email-jiang.liu@huawei.com> <4F840ED6.3050408@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Apr 2012 11:23:20 -0600
+Message-ID: <CAErSpo7qqDJ+pM-OZN6wDRGCU3duLd1-hjA5_LA+em=PBVuY0Q@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/2] PCI: correctly flush workqueue when destroy pcie
+ hotplug controller
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	matsumoto.hiroo@jp.fujitsu.com,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 25, 2012 at 4:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> A PCIe downstream port is a P2P bridge.  Its secondary interface is
-> a link that should lead only to device 0 (unless ARI is enabled)[1], so
-> we don't probe for non-zero device numbers.
+On Tue, Apr 10, 2012 at 4:43 AM, Kenji Kaneshige
+<kaneshige.kenji@jp.fujitsu.com> wrote:
+> I think you're rignt.
 >
-> Some Stratus ftServer systems have a PCIe downstream port (02:00.0) that
-> leads to both an upstream port (03:00.0) and a downstream port (03:01.0),
-> and 03:01.0 has important devices below it:
+> Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 >
->  [0000:02]-+-00.0-[0000:03]--+-00.0
->                              \-01.0-[0000:xx]--+-[USB]
->                                                \-[NIC]
->
-> Previously, we didn't enumerate device 03:01.0, so USB and the network
-> didn't work.  This patch adds a DMI quirk to scan all device numbers,
-> not just 0, below a downstream port.
+> (2012/04/08 3:18), Jiang Liu wrote:
+>> When destroying a PCIe hotplug controller, all work items associated with
+>> that controller should be flushed.  Function pcie_cleanup_slot() calls
+>> cancel_delayed_work() and flush_workqueue() to achieve that.
+>> Function flush_workqueue() will flush all work items already submitted,
+>> but new work items submitted by those already submitted work items may
+>> still be in live state when returning from flush_workqueue().
+>>
+>> For the extreme case, pciehp driver may expierence following calling path:
+>> 1) pcie_isr() ->  pciehp_handle_xxx() ->  queue_interrupt_event()->queue_work()
+>> 2) interrupt_event_handler() ->  handle_button_press_event() ->
+>>     queue_delayed_work()
+>> 3) pciehp_queue_pushbutton_work() ->  queue_work()
+>>
+>> So enhance pcie_cleanup_slot() to correctly flush workqueue when destroying
+>> PCIe hotplug controller.
+>>
+>> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
+>> ---
+>>   drivers/pci/hotplug/pciehp_hpc.c |   13 ++++++++++++-
+>>   1 files changed, 12 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>> index d4fa705..9a48a51 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -890,8 +890,19 @@ static int pcie_init_slot(struct controller *ctrl)
+>>   static void pcie_cleanup_slot(struct controller *ctrl)
+>>   {
+>>       struct slot *slot = ctrl->slot;
+>> -     cancel_delayed_work(&slot->work);
+>> +
+>> +     /*
+>> +      * Following workqueue flushing logic is to deal with the special call path:
+>> +      * 1) pcie_isr() ->  pciehp_handle_xxx() ->
+>> +      *    queue_interrupt_event(pciehp_wq_event)->queue_work(pciehp_wq)
+>> +      * 2) interrupt_event_handler() ->  handle_button_press_event() ->
+>> +      *    queue_delayed_work(pciehp_wq)
+>> +      * 3) pciehp_queue_pushbutton_work() ->  queue_work(pciehp_wq)
+>> +      */
+>>       flush_workqueue(pciehp_wq);
+>> +     cancel_delayed_work_sync(&slot->work);
+>> +     flush_workqueue(pciehp_wq);
+>> +
+>>       kfree(slot);
+>>   }
 
-is there output for
-lspci -vvxxx -s 03:00.0
-lspci -vvxxx -s 03:00.1
+Jiang, I'm ignoring this (and the next [2/2] patch) because I assume
+they're superceded by the "[PATCH RFC 00/17] Introduce a global lock
+to serialize all PCI hotplug" series of April 16.  Let me know if
+otherwise.
 
-like to know what is the 03:00.0.
-
-Thanks
-
-Yinghai
+Bjorn
