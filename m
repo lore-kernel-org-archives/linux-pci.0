@@ -1,89 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:56945 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750966Ab2EAGiv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2012 02:38:51 -0400
-Message-ID: <4F9F84F6.7000509@fisher-privat.net>
-Date: Tue, 01 May 2012 08:38:46 +0200
-From: "Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>
+Received: from mail-pz0-f51.google.com ([209.85.210.51]:61037 "EHLO
+	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753838Ab2DYQ2U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 12:28:20 -0400
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrey Rahmatullin <wrar@wrar.name>,
-	Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-References: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org> <4F9F0473.9090408@fisher-privat.net> <201204302343.35215.rjw@sisk.pl>
-In-Reply-To: <201204302343.35215.rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
+References: <20120410090306.GA7056@richard>
+	<20120422155202.GA13540@richard>
+	<CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+	<CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
+Date: Wed, 25 Apr 2012 09:28:19 -0700
+Message-ID: <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
+Subject: Re: One problem in reassign pci bus number?
+From: Yinghai Lu <yinghai@kernel.org>
+To: Wei Yang <weiyang.kernel@gmail.com>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30.04.2012 23:43, Rafael J. Wysocki wrote:
-> On Monday, April 30, 2012, Oleksij Rempel wrote:
->> On 30.04.2012 19:53, Alan Stern wrote:
->>> On Mon, 30 Apr 2012, Bjorn Helgaas wrote:
->>>
->>>> On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki<rjw@sisk.pl>  wrote:
->>>>> From: Oleksij Rempel<bug-track@fisher-privat.net>
->>>>>
->>>>> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
->>>>> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
->>>>>
->>>>> Some OEM use _SxD fileds do blacklist brocken Dx states.
->>>>> If _SxD/_SxW return values are check before suspend as appropriate,
->>>>> some nasty suspend/resume issues may be avoided.
->>>>>
->>>>> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
->>>>> Signed-off-by: Oleksij Rempel<bug-track@fisher-privat.net>
->>>>> Signed-off-by: Rafael J. Wysocki<rjw@sisk.pl>
->>>>> ---
->>>>>
->>>>> Bjorn, Len,
->>>>>
->>>>> This is -stable material and therefore v3.4 as well, IMO. �Please let me
->>>>> know if one of you can take it or whether you want me to handle it all the
->>>>> way to Linus.
->>>>
->>>> I'm OK with this from a PCI perspective.  Most of the change is in
->>>> ACPI, so I propose that either you or Len take care of it.
->>>>
->>>> The second paragraph of the changelog has several typos
->>>> (fileds/fields, do/to, brocken/broken, etc).
->>>
->>> It also turns out that the normal wakeup mechanism doesn't work for the
->>> devices in question.  Can this be detected by ACPI?  We don't want to
->>> tell userspace that wakeup works when in fact it doesn't.
+On Wed, Apr 25, 2012 at 2:47 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
+>> busn_alloc patchset should address your concern.
 >>
->> hm... how about using pci config and acpi together. PCI config provides
->> map of Dx states and wakeup support of them. If pci says wakeup works
->> only on D0 and D3 and acpi say - we can use only D2 in S3, then there is
->> no wakeup.
+>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>> for-pci-busn-alloc
+>>
+> Yinghai
 >
-> Not really.  ACPI trumps PCI here, so if ACPI says we can use D2 in S3,
-> then we can.
+> You mean this patch 44b2347b fix the problem?
 >
-> ACPI device states are not the same as PCI device states.  They usually map
-> to each other directly, but they don't have to.
+> In the comment, "do pass0 for all good bridge".
+> Then there are totally two pass for a whole pci domain?
 
-I mean not just the mapping.
-I mean PCI:PME_SUP field.  If it PME(D0+,D1-,D2-,D3hot+,D3cold+), and 
-acpi trying to avoid D3 states for this device. then is is same like 
-PME(D0+,D1-,D2-)? Or not?
+also other commits about strict checking to see if it is good.
 
-According to spec.:
-7.2 Device Power Management Objects (page 287)
-_S3D - Highest D-state supported by the device in the S3 state
-_S3W - Lowest D-state supported by the device in the S3 state which can 
-wake the system.
-by definition if _S3W is specified then we can assume, the device can 
-wake? But _SxW is not defined.
+>
+> I tried "git grep busn_alloc", but not find anything.
 
-Are there any other method to forbid the system use broken state, after 
-device was actually produced? Usual BIOS flash utility will probably no 
-rewrite the PCIs EEPROM. Only hope is ACPI, what is correct method to do 
-define it by ACPI?
+the commit in the patchset.
+
+  PCI: Add busn_res into struct pci_bus.
+  PCI: Add busn_res operation functions
+  PCI: Release busn_res when removing bus
+  PCI: Insert busn_res in pci_create_root_bus()
+  PCI: Checking busn_res in pci_scan_root_bus()
+  PCI: Add default busn_resource
+  PCI: Add default busn_res for pci_scan_bus()
+  x86, PCI: Add busn_res into resources list for acpi path
+  x86, PCI: Put busn resource in pci_root_info for not using _CRS path
+  PCI, ia64: Register busn_res for root buses
+  PCI, sparc: Register busn_res for root buses
+  PCI, powerpc: Register busn_res for root buses
+  PCI, parisc: Register busn_res for root buses
+  resources: Add probe_resource()
+  resources: Replace registered resource in tree.
+  PCI: Add pci_bus_extend/shrink_top()
+  PCI: Probe safe range that we can use for unassigned bridge.
+  PCI: Add pci_bus_replace_busn_res()
+  PCI: Allocate bus range instead of use max blindly
+  PCI: Strict checking of valid range for bridge
+  PCI: Kill pci_fixup_parent_subordinate_busnr()
+  PCI: Seperate child bus scanning to two passes overall
+  pcmcia: Remove workaround for fixing pci parent bus subordinate
+  PCI: Double checking setting for bus register and bus struct.
+  PCI, pciehp: Remove not needed bus number range checking
+  PCI: More strict checking of valid range for bridge
+  PCI: Don't shrink too much for hotplug bridge
