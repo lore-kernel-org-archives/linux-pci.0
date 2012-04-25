@@ -1,154 +1,180 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-	James Morris <jmorris@namei.org>,
-	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v1 6/8] dmaengine: enhance network subsystem to support DMA device hotplug
-Date: Mon, 23 Apr 2012 21:51:47 +0800
-Message-Id: <1335189109-4871-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
-References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f74.google.com ([209.85.213.74]:43283 "EHLO
+	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932415Ab2DYXge (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 19:36:34 -0400
+Received: by yhgm50 with SMTP id m50so89427yhg.1
+        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 16:36:33 -0700 (PDT)
+Subject: [PATCH v1] PCI: work around Stratus ftServer broken PCIe hierarchy
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Wilcox <matthew.wilcox@linux.intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	James Paradis <jim.paradis@stratus.com>
+Date: Wed, 25 Apr 2012 17:36:32 -0600
+Message-ID: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance network subsystem to correctly update DMA channel reference counts,
-so it won't break DMA device hotplug logic.
+A PCIe downstream port is a P2P bridge.  Its secondary interface is
+a link that should lead only to device 0 (unless ARI is enabled)[1], so
+we don't probe for non-zero device numbers.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Some Stratus ftServer systems have a PCIe downstream port (02:00.0) that
+leads to both an upstream port (03:00.0) and a downstream port (03:01.0),
+and 03:01.0 has important devices below it:
+
+  [0000:02]-+-00.0-[0000:03]--+-00.0
+                              \-01.0-[0000:xx]--+-[USB]
+                                                \-[NIC]
+
+Previously, we didn't enumerate device 03:01.0, so USB and the network
+didn't work.  This patch adds a DMI quirk to scan all device numbers,
+not just 0, below a downstream port.
+
+Based on a patch by Prarit Bhargava.
+
+[1] PCIe spec r3.0, sec 7.3.1
+
+CC: Myron Stowe <mstowe@redhat.com>
+CC: Don Dutile <ddutile@redhat.com>
+CC: James Paradis <jim.paradis@stratus.com>
+CC: Matthew Wilcox <matthew.wilcox@linux.intel.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Prarit Bhargava <prarit@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- include/net/netdma.h |   26 ++++++++++++++++++++++++++
- net/ipv4/tcp.c       |   10 +++-------
- net/ipv4/tcp_input.c |    5 +----
- net/ipv4/tcp_ipv4.c  |    4 +---
- net/ipv6/tcp_ipv6.c  |    4 +---
- 5 files changed, 32 insertions(+), 17 deletions(-)
+ Documentation/kernel-parameters.txt |    3 +++
+ arch/x86/pci/common.c               |   16 ++++++++++++++++
+ drivers/pci/pci.c                   |    3 +++
+ drivers/pci/probe.c                 |    8 ++++++--
+ include/asm-generic/pci-bridge.h    |    6 ++++++
+ 5 files changed, 34 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/netdma.h b/include/net/netdma.h
-index 8ba8ce2..6d71724 100644
---- a/include/net/netdma.h
-+++ b/include/net/netdma.h
-@@ -24,6 +24,32 @@
- #include <linux/dmaengine.h>
- #include <linux/skbuff.h>
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index c1601e5..57c3870 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2161,6 +2161,9 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				on: Turn realloc on
+ 		realloc		same as realloc=on
+ 		noari		do not use PCIe ARI.
++		pcie_scan_all	Scan all possible PCIE devices.  Otherwise we
++				only look for one device below a PCIE downstream
++				port.
  
-+static inline bool
-+net_dma_capable(void)
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 323481e..16c5d78 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -11,6 +11,7 @@
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
+ 
++#include <asm-generic/pci-bridge.h>
+ #include <asm/acpi.h>
+ #include <asm/segment.h>
+ #include <asm/io.h>
+@@ -229,6 +230,14 @@ static int __devinit assign_all_busses(const struct dmi_system_id *d)
+ }
+ #endif
+ 
++static int __devinit set_scan_all(const struct dmi_system_id *d)
 +{
-+	struct dma_chan *chan = net_dma_find_channel();
-+	dma_put_channel(chan);
-+
-+	return !!chan;
++	printk(KERN_INFO "PCI: %s detected, enabling pci=pcie_scan_all\n",
++	       d->ident);
++	pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
++	return 0;
 +}
 +
-+static inline struct dma_chan *
-+net_dma_get_channel(struct tcp_sock *tp)
-+{
-+	if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
-+		tp->ucopy.dma_chan = net_dma_find_channel();
-+	return tp->ucopy.dma_chan;
-+}
+ static const struct dmi_system_id __devinitconst pciprobe_dmi_table[] = {
+ #ifdef __i386__
+ /*
+@@ -420,6 +429,13 @@ static const struct dmi_system_id __devinitconst pciprobe_dmi_table[] = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "ProLiant DL585 G2"),
+ 		},
+ 	},
++	{
++		.callback = set_scan_all,
++		.ident = "Stratus/NEC ftServer",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "ftServer"),
++		},
++	},
+ 	{}
+ };
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9e31c0a..8f16900 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -22,6 +22,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
++#include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+ 
+@@ -3900,6 +3901,8 @@ static int __init pci_setup(char *str)
+ 				pcie_bus_config = PCIE_BUS_PERFORMANCE;
+ 			} else if (!strncmp(str, "pcie_bus_peer2peer", 18)) {
+ 				pcie_bus_config = PCIE_BUS_PEER2PEER;
++			} else if (!strncmp(str, "pcie_scan_all", 13)) {
++				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5e1ca3c..2dc8675 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -10,6 +10,7 @@
+ #include <linux/module.h>
+ #include <linux/cpumask.h>
+ #include <linux/pci-aspm.h>
++#include <asm-generic/pci-bridge.h>
+ #include "pci.h"
+ 
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+@@ -1395,10 +1396,13 @@ static unsigned no_next_fn(struct pci_dev *dev, unsigned fn)
+ static int only_one_child(struct pci_bus *bus)
+ {
+ 	struct pci_dev *parent = bus->self;
 +
-+static inline void
-+net_dma_put_channel(struct tcp_sock *tp)
-+{
-+	if (tp->ucopy.dma_chan) {
-+		dma_put_channel(tp->ucopy.dma_chan);
-+		tp->ucopy.dma_chan = NULL;
-+	}
-+}
-+
- int dma_skb_copy_datagram_iovec(struct dma_chan* chan,
- 		struct sk_buff *skb, int offset, struct iovec *to,
- 		size_t len, struct dma_pinned_list *pinned_list);
-diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
-index 8bb6ade..aea4032 100644
---- a/net/ipv4/tcp.c
-+++ b/net/ipv4/tcp.c
-@@ -1451,8 +1451,7 @@ int tcp_recvmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
- 			available = TCP_SKB_CB(skb)->seq + skb->len - (*seq);
- 		if ((available < target) &&
- 		    (len > sysctl_tcp_dma_copybreak) && !(flags & MSG_PEEK) &&
--		    !sysctl_tcp_low_latency &&
--		    net_dma_find_channel()) {
-+		    !sysctl_tcp_low_latency && net_dma_capable()) {
- 			preempt_enable_no_resched();
- 			tp->ucopy.pinned_list =
- 					dma_pin_iovec_pages(msg->msg_iov, len);
-@@ -1666,10 +1665,7 @@ do_prequeue:
- 
- 		if (!(flags & MSG_TRUNC)) {
- #ifdef CONFIG_NET_DMA
--			if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
--				tp->ucopy.dma_chan = net_dma_find_channel();
--
--			if (tp->ucopy.dma_chan) {
-+			if (net_dma_get_channel(tp)) {
- 				tp->ucopy.dma_cookie = dma_skb_copy_datagram_iovec(
- 					tp->ucopy.dma_chan, skb, offset,
- 					msg->msg_iov, used,
-@@ -1758,7 +1754,7 @@ skip_copy:
- 
- #ifdef CONFIG_NET_DMA
- 	tcp_service_net_dma(sk, true);  /* Wait for queue to drain */
--	tp->ucopy.dma_chan = NULL;
-+	net_dma_put_channel(tp);
- 
- 	if (tp->ucopy.pinned_list) {
- 		dma_unpin_iovec_pages(tp->ucopy.pinned_list);
-diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
-index 9944c1d..3878916 100644
---- a/net/ipv4/tcp_input.c
-+++ b/net/ipv4/tcp_input.c
-@@ -5227,10 +5227,7 @@ static int tcp_dma_try_early_copy(struct sock *sk, struct sk_buff *skb,
- 	if (tp->ucopy.wakeup)
+ 	if (!parent || !pci_is_pcie(parent))
  		return 0;
+-	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+-	    parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
++	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
++		return 1;
++	if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM &&
++	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+ 		return 1;
+ 	return 0;
+ }
+diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
+index a5b5d5a..20db2e5 100644
+--- a/include/asm-generic/pci-bridge.h
++++ b/include/asm-generic/pci-bridge.h
+@@ -30,6 +30,12 @@ enum {
+ 	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,
+ 	/* ... except for domain 0 */
+ 	PCI_COMPAT_DOMAIN_0	= 0x00000020,
++
++	/* PCIe downstream ports are bridges that normally lead to only a
++	 * device 0, but if this is set, we scan all possible devices, not
++	 * just device 0.
++	 */
++	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,
+ };
  
--	if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
--		tp->ucopy.dma_chan = net_dma_find_channel();
--
--	if (tp->ucopy.dma_chan && skb_csum_unnecessary(skb)) {
-+	if (net_dma_get_channel(tp) && skb_csum_unnecessary(skb)) {
- 
- 		dma_cookie = dma_skb_copy_datagram_iovec(tp->ucopy.dma_chan,
- 							 skb, hlen,
-diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
-index 0cb86ce..90ea1c0 100644
---- a/net/ipv4/tcp_ipv4.c
-+++ b/net/ipv4/tcp_ipv4.c
-@@ -1729,9 +1729,7 @@ process:
- 	if (!sock_owned_by_user(sk)) {
- #ifdef CONFIG_NET_DMA
- 		struct tcp_sock *tp = tcp_sk(sk);
--		if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
--			tp->ucopy.dma_chan = net_dma_find_channel();
--		if (tp->ucopy.dma_chan)
-+		if (net_dma_get_channel(tp))
- 			ret = tcp_v4_do_rcv(sk, skb);
- 		else
- #endif
-diff --git a/net/ipv6/tcp_ipv6.c b/net/ipv6/tcp_ipv6.c
-index 86cfe60..fb81bbd 100644
---- a/net/ipv6/tcp_ipv6.c
-+++ b/net/ipv6/tcp_ipv6.c
-@@ -1644,9 +1644,7 @@ process:
- 	if (!sock_owned_by_user(sk)) {
- #ifdef CONFIG_NET_DMA
- 		struct tcp_sock *tp = tcp_sk(sk);
--		if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
--			tp->ucopy.dma_chan = net_dma_find_channel();
--		if (tp->ucopy.dma_chan)
-+		if (net_dma_get_channel(tp))
- 			ret = tcp_v6_do_rcv(sk, skb);
- 		else
- #endif
--- 
-1.7.5.4
+ #ifdef CONFIG_PCI
 
