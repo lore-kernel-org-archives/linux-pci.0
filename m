@@ -1,58 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45686 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759550Ab2DKAOL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 20:14:11 -0400
-Received: by pbcun15 with SMTP id un15so552527pbc.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Apr 2012 17:14:11 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH V4 0/6] PCI, x86: update MMCFG information when hot-plugging PCI host bridges
-Date: Wed, 11 Apr 2012 08:10:57 +0800
-Message-Id: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:39315 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752811Ab2DYPWo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 11:22:44 -0400
+Date: Wed, 25 Apr 2012 11:22:42 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Calin Demian <c.demian20@gmail.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: PROBLEM: OHCI HCD - computer freezes during boot
+In-Reply-To: <CAD52pS8YbbgBGt_C8kTWfZWn0-CEiHUVBP+gC=wPid9kgAMQCw@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1204251121000.1471-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset enhance pci_root driver to update MMCFG information when
-hot-plugging PCI root bridges. It applies to Yinghai's tree at
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+On Wed, 25 Apr 2012, Calin Demian wrote:
 
-The second patch is based on Taku Izumi work with some enhancements to
-correctly handle PCI host bridges without _CBA method.
+> I have reported the issue in bugzilla, before (bug 43073). Because the
+> problem does not appear every time, I am able to boot with new kernels
+> (sometimes).
+> I also found that the problem is triggered by a specific sequence of
+> io read/write operations (including the software reset) related to the
+> host controller (during init) and by changing the operations or
+> inserting delays between them it can be solved.
 
--v2: split into smaller patches and skip updating MMCFG information when
-     MMCFG is disabled
--v3: add mmconf_added to simply free path, also make pci_mmconfig_insert()
-     to process extra exist case --- By Yinghai
--v4: tune arch_acpi_pci_root_add() to handle a corner case raised by Kenji
+What delays do you need, and where should they be inserted?
 
-Jiang Liu (6):
-  PCI, x86: split out pci_mmcfg_check_reserved() for code reuse
-  PCI, x86: split out pci_mmconfig_alloc() for code reuse
-  PCI, x86: use RCU list to protect mmconfig list
-  PCI, x86: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
-  PCI, x86: introduce pci_mmconfig_insert()/delete() for PCI root
-    bridge hotplug
-  PCI, ACPI, x86: update MMCFG information when hot-plugging PCI host
-    bridges
-
- arch/x86/include/asm/pci_x86.h |    5 +
- arch/x86/pci/acpi.c            |   58 +++++++++++++
- arch/x86/pci/mmconfig-shared.c |  185 +++++++++++++++++++++++++++++++---------
- arch/x86/pci/mmconfig_32.c     |   30 ++++++-
- arch/x86/pci/mmconfig_64.c     |   37 +++++++-
- drivers/acpi/pci_root.c        |   16 ++++
- include/acpi/acnames.h         |    1 +
- include/acpi/acpi_bus.h        |    1 +
- include/linux/pci-acpi.h       |    3 +
- 9 files changed, 287 insertions(+), 49 deletions(-)
-
--- 
-1.7.5.4
+Alan Stern
 
