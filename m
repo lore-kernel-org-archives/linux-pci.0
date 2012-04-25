@@ -1,193 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nm3-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.154]:44159 "HELO
-	nm3-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756243Ab2DMUru convert rfc822-to-8bit
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:50871 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755468Ab2DYRvq convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Apr 2012 16:47:50 -0400
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204132118.22074.rjw@sisk.pl> <1334346546.93033.YahooMailNeo@web161806.mail.bf1.yahoo.com> <201204132219.23106.rjw@sisk.pl>
-Message-ID: <1334350068.79333.YahooMailNeo@web161804.mail.bf1.yahoo.com>
-Date: Fri, 13 Apr 2012 13:47:48 -0700 (PDT)
-From: Mikko Vinni <mmvinni@yahoo.com>
-Reply-To: Mikko Vinni <mmvinni@yahoo.com>
-Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-In-Reply-To: <201204132219.23106.rjw@sisk.pl>
+	Wed, 25 Apr 2012 13:51:46 -0400
+Received: by lahj13 with SMTP id j13so305857lah.19
+        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2012 10:51:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <403610A45A2B5242BD291EDAE8B37D300FD3ABC3@SHSMSX101.ccr.corp.intel.com>
+References: <403610A45A2B5242BD291EDAE8B37D300FD24698@SHSMSX102.ccr.corp.intel.com>
+ <CAErSpo4Dm45uRsvdzSAfrvGNPPA_7QqvC_Se-JxpJErsasoTKw@mail.gmail.com> <403610A45A2B5242BD291EDAE8B37D300FD3ABC3@SHSMSX101.ccr.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Apr 2012 11:51:23 -0600
+Message-ID: <CAErSpo4Qm1DP-i2YWc1ZibiUAnPC-tLG9X0xceAvGFxs8e+mPQ@mail.gmail.com>
+Subject: Re: [PATCH v6] Quirk for IVB graphics FLR errata
+To: "Hao, Xudong" <xudong.hao@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>,
+	Matthew Wilcox <matthew@wil.cx>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki:
-
-> On Friday, April 13, 2012, Mikko Vinni wrote:
->>  From: Rafael J. Wysocki:
->> 
->>  > On Friday, April 13, 2012, Mikko Vinni wrote:
->>  >>  Bug report:
->>  >>    https://bugzilla.kernel.org/show_bug.cgi?id=43099
->>  >> 
-
-^^^ some of the home-work is already there, including dmesg with and without the patch
-with PCI debug on, which hopefully does the same as dev_info
-
-> 
-> Please change that dev_dbg() in pci_restore_state() into dev_info()
-> and see how many times it gets printed with the commit applied (not reverted).
-
-
-I ran the dmesg through "uniq -c" and it looks like this:
-
-      1 ACPI: Low-level resume complete
-      1 PM: Restoring platform NVS memory
-      1 Enabling non-boot CPUs ...
-      1 Booting Node 0 Processor 1 APIC 0x1
-      1 CPU1 is up
-      1 ACPI: Waking up from system sleep state S3
-     10 pcieport 0000:00:02.0: restoring config space at offset 0x7 (was 0x20005151, writing 0x5151)
-      1 pcieport 0000:00:02.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 pcieport 0000:00:04.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 pcieport 0000:00:05.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-     10 pcieport 0000:00:06.0: restoring config space at offset 0x7 (was 0x20002121, writing 0x2121)
-      1 pcieport 0000:00:06.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 pcieport 0000:00:0a.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 ahci 0000:00:11.0: restoring config space at offset 0x1 (was 0x2300003, writing 0x2300007)
-      1 ohci_hcd 0000:00:12.0: restoring config space at offset 0x1 (was 0x2a00002, writing 0x2a00013)
-      1 ehci_hcd 0000:00:12.2: BAR 0: set to [mem 0xd2408500-0xd24085ff] (PCI address [0xd2408500-0xd24085ff])
-      1 ehci_hcd 0000:00:12.2: restoring config space at offset 0x1 (was 0x2b00000, writing 0x2b00013)
-      1 ehci_hcd 0000:00:12.2: PME# disabled
-      1 ohci_hcd 0000:00:13.0: restoring config space at offset 0x1 (was 0x2a00002, writing 0x2a00013)
-      1 ehci_hcd 0000:00:13.2: BAR 0: set to [mem 0xd2408400-0xd24084ff] (PCI address [0xd2408400-0xd24084ff])
-      1 ehci_hcd 0000:00:13.2: restoring config space at offset 0x1 (was 0x2b00000, writing 0x2b00013)
-      1 ehci_hcd 0000:00:13.2: PME# disabled
-      1 pata_atiixp 0000:00:14.1: restoring config space at offset 0x1 (was 0x2300011, writing 0x2300015)
-      1 radeon 0000:01:00.0: restoring config space at offset 0x1 (was 0x100003, writing 0x100407)
-      1 r8169 0000:09:00.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 firewire_ohci 0000:0a:00.0: Refused to change power state, currently in D3
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0xf (was 0xffffffff, writing 0x10a)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0xe (was 0xffffffff, writing 0x0)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0xd (was 0xffffffff, writing 0x44)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0xc (was 0xffffffff, writing 0x0)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0xb (was 0xffffffff, writing 0x3600103c)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0xa (was 0xffffffff, writing 0x0)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x9 (was 0xffffffff, writing 0xd1100c00)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x8 (was 0xffffffff, writing 0xd1100c80)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x7 (was 0xffffffff, writing 0x0)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x6 (was 0xffffffff, writing 0x0)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x5 (was 0xffffffff, writing 0xd1100d00)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x4 (was 0xffffffff, writing 0xd1100000)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x3 (was 0xffffffff, writing 0x800000)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x2 (was 0xffffffff, writing 0xc001000)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x1 (was 0xffffffff, writing 0x100007)
-     10 firewire_ohci 0000:0a:00.0: restoring config space at offset 0x0 (was 0xffffffff, writing 0x2380197b)
-      1 sdhci-pci 0000:0a:00.1: Refused to change power state, currently in D3
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0xf (was 0xffffffff, writing 0x10a)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0xe (was 0xffffffff, writing 0x0)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0xd (was 0xffffffff, writing 0xa4)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0xc (was 0xffffffff, writing 0x0)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0xb (was 0xffffffff, writing 0x3600103c)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0xa (was 0xffffffff, writing 0x0)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x9 (was 0xffffffff, writing 0x0)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x8 (was 0xffffffff, writing 0x0)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x7 (was 0xffffffff, writing 0x0)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x6 (was 0xffffffff, writing 0x0)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x5 (was 0xffffffff, writing 0x0)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x4 (was 0xffffffff, writing 0xd1100b00)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x3 (was 0xffffffff, writing 0x800000)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x2 (was 0xffffffff, writing 0x8800000)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x1 (was 0xffffffff, writing 0x100007)
-     10 sdhci-pci 0000:0a:00.1: restoring config space at offset 0x0 (was 0xffffffff, writing 0x2382197b)
-      1 pci 0000:0a:00.2: Refused to change power state, currently in D3
-     10 pci 0000:0a:00.2: restoring config space at offset 0xf (was 0xffffffff, writing 0x10a)
-     10 pci 0000:0a:00.2: restoring config space at offset 0xe (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.2: restoring config space at offset 0xd (was 0xffffffff, writing 0xa4)
-     10 pci 0000:0a:00.2: restoring config space at offset 0xc (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.2: restoring config space at offset 0xb (was 0xffffffff, writing 0x3600103c)
-     10 pci 0000:0a:00.2: restoring config space at offset 0xa (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x9 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x8 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x7 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x6 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x5 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x4 (was 0xffffffff, writing 0xd1100a00)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x3 (was 0xffffffff, writing 0x800000)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x2 (was 0xffffffff, writing 0x8050100)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x1 (was 0xffffffff, writing 0x100003)
-     10 pci 0000:0a:00.2: restoring config space at offset 0x0 (was 0xffffffff, writing 0x2381197b)
-      1 jmb38x_ms 0000:0a:00.3: Refused to change power state, currently in D3
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0xf (was 0xffffffff, writing 0x10a)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0xe (was 0xffffffff, writing 0x0)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0xd (was 0xffffffff, writing 0xa4)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0xc (was 0xffffffff, writing 0x0)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0xb (was 0xffffffff, writing 0x3600103c)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0xa (was 0xffffffff, writing 0x0)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x9 (was 0xffffffff, writing 0x0)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x8 (was 0xffffffff, writing 0x0)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x7 (was 0xffffffff, writing 0x0)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x6 (was 0xffffffff, writing 0x0)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x5 (was 0xffffffff, writing 0x0)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x4 (was 0xffffffff, writing 0xd1100900)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x3 (was 0xffffffff, writing 0x800000)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x2 (was 0xffffffff, writing 0x8800000)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x1 (was 0xffffffff, writing 0x100007)
-     10 jmb38x_ms 0000:0a:00.3: restoring config space at offset 0x0 (was 0xffffffff, writing 0x2383197b)
-      1 pci 0000:0a:00.4: Refused to change power state, currently in D3
-     10 pci 0000:0a:00.4: restoring config space at offset 0xf (was 0xffffffff, writing 0x10a)
-     10 pci 0000:0a:00.4: restoring config space at offset 0xe (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.4: restoring config space at offset 0xd (was 0xffffffff, writing 0xa4)
-     10 pci 0000:0a:00.4: restoring config space at offset 0xc (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.4: restoring config space at offset 0xb (was 0xffffffff, writing 0x3600103c)
-     10 pci 0000:0a:00.4: restoring config space at offset 0xa (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x9 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x8 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x7 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x6 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x5 (was 0xffffffff, writing 0x0)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x4 (was 0xffffffff, writing 0xd1100800)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x3 (was 0xffffffff, writing 0x800000)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x2 (was 0xffffffff, writing 0x8800000)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x1 (was 0xffffffff, writing 0x100007)
-     10 pci 0000:0a:00.4: restoring config space at offset 0x0 (was 0xffffffff, writing 0x2384197b)
-      1 PM: noirq resume of devices complete after 8474.806 msecs
-      1 PM: early resume of devices complete after 0.194 msecs
-      1 ohci_hcd 0000:00:12.0: enabling bus mastering
-
-
-Interestingly, this only seems to happen after the first s2ram.
-https://bugzilla.kernel.org/attachment.cgi?id=72904 contains the dmesg from
-three s2ram's, and after the second and third one write seems to be enough.
-Even the failing firewire/card reader (another bug) is more quiet.
-
-... (after the second s2ram, touchpad works after this)
-      1 CPU1 is up
-      1 ACPI: Waking up from system sleep state S3
-      1 pcieport 0000:00:02.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 pcieport 0000:00:04.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 pcieport 0000:00:05.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 pcieport 0000:00:06.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 pcieport 0000:00:0a.0: restoring config space at offset 0x1 (was 0x100007, writing 0x100407)
-      1 ahci 0000:00:11.0: restoring config space at offset 0x1 (was 0x2300003, writing 0x2300007)
-      1 ohci_hcd 0000:00:12.0: restoring config space at offset 0x1 (was 0x2a00002, writing 0x2a00013)
-      1 ehci_hcd 0000:00:12.2: BAR 0: set to [mem 0xd2408500-0xd24085ff] (PCI address [0xd2408500-0xd24085ff])
-      1 ehci_hcd 0000:00:12.2: restoring config space at offset 0x1 (was 0x2b00000, writing 0x2b00013)
-      1 ehci_hcd 0000:00:12.2: PME# disabled
-... 
-
-
-Mikko
-
-
-> 
-> [Margin note: I think it would make more sense to read the value from
-> the register _after_ and not before the waiting and I'm not exactly sure why
-> msleep() is not used.]
-> 
+On Mon, Apr 23, 2012 at 9:06 PM, Hao, Xudong <xudong.hao@intel.com> wrote:
+>
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Tuesday, April 24, 2012 5:07 AM
+>> To: Hao, Xudong
+>> Cc: linux-pci@vger.kernel.org; Don Dutile; Matthew Wilcox; Zhang, Xiantao
+>> Subject: Re: [PATCH v6] Quirk for IVB graphics FLR errata
+>>
+>> On Fri, Apr 20, 2012 at 1:08 AM, Hao, Xudong <xudong.hao@intel.com> wrote:
+>> > Hi, Bjorn
+>> >
+>> > Do you have any other comments for this patch?
+>>
+>> What happened with the idea of adding a .reset hook in struct pci_driver?  It
+>> would be better if all the device-related code could live in the device-specific
+>> driver, rather than having to put it in a quirk.  Everybody pays the cost of a
+>> quirk, even on systems that don't include this device.
+>>
+>
+> The FLR happened on bus but not for device driver, considering one case that we just want to assign device to guest, but host do not have the device driver, how will a quirk be executed?
+>
 > Thanks,
-> Rafael
-> 
+> -Xudong
+>
+>> Bjorn
+>>
+>> >> -----Original Message-----
+>> >> From: Hao, Xudong
+>> >> Sent: Monday, April 16, 2012 9:40 AM
+>> >> To: 'Bjorn Helgaas'
+>> >> Cc: 'linux-pci@vger.kernel.org'; 'Don Dutile'; 'Matthew Wilcox'
+>> >> Subject: [PATCH v6] Quirk for IVB graphics FLR errata
+>> >>
+>> >> For IvyBridge Mobile platform, a system hang may occur if a
+>> >> FLR(Function Level
+>> >> Reset) is asserted to internal graphics.
+>> >>
+>> >> This quirk patch is workaround for the IVB FLR errata issue.
+>> >> We are disabling the FLR reset handshake between the PCH and CPU
+>> >> display, then manually powering down the panel power sequencing and
+>> >> resetting the PCH display.
+>> >>
+>> >> Changes from v5:
+>> >> - clean up patch with Matthew's comments.
+>> >>
+>> >> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+>> >> Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
+>> >> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+>> >> ---
+>> >>  drivers/pci/quirks.c |   48
+>> >> ++++++++++++++++++++++++++++++++++++++++++++++++
+>> >>  1 files changed, 48 insertions(+), 0 deletions(-)
+>> >>
+>> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
+>> >> 4bf7102..213cad9
+>> >> 100644
+>> >> --- a/drivers/pci/quirks.c
+>> >> +++ b/drivers/pci/quirks.c
+>> >> @@ -29,6 +29,7 @@
+>> >>  #include <linux/sched.h>
+>> >>  #include <linux/ktime.h>
+>> >>  #include <asm/dma.h> /* isa_dma_bridge_buggy */
+>> >> +#include <asm/io.h>
+>> >>  #include "pci.h"
+>> >>
+>> >>  /*
+>> >> @@ -3085,11 +3086,58 @@ static int
+>> >> reset_intel_82599_sfp_virtfn(struct
+>> >> pci_dev *dev, int probe)
+>> >>       return 0;
+>> >>  }
+>> >>
+>> >> +#include "../gpu/drm/i915/i915_reg.h"
+>> >> +#define MSG_CTL      0x45010
+>> >> +#define IGD_OPERATION_TIMEOUT 10000     /* set timeout 10 seconds
+>> */
+>> >> +
+>> >> +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
+>> >> +     void __iomem *mmio_base;
+>> >> +     unsigned long timeout;
+>> >> +     u32 val;
+>> >> +
+>> >> +     if (probe)
+>> >> +             return 0;
+>> >> +
+>> >> +     mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
+>> >> +                              pci_resource_len(dev, 0));
+>> >> +     if (!mmio_base)
+>> >> +             return -ENOMEM;
+>> >> +
+>> >> +     /* Work Around */
+>> >> +     writel(0x00000002, mmio_base + MSG_CTL);
+>> >> +     /* Clobbering SOUTH_CHICKEN2 register is fine only if the next
+>> >> +      * driver loaded sets the right bits. However, this's a reset
+>> >> + and
+>> >> +      * the bits have been set by i915 previously, so we clobber
+>> >> +      * SOUTH_CHICKEN2 register directly here.
+>> >> +      */
+>> >> +     writel(0x00000005, mmio_base + SOUTH_CHICKEN2);
+>> >> +     val = readl(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
+>> >> +     writel(val, mmio_base + PCH_PP_CONTROL);
+>> >> +     timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
+>> >> +     while (time_before(jiffies, timeout)) {
+>> >> +             val = readl(mmio_base + PCH_PP_STATUS);
+>> >> +             if ((val & 0xB0000000) == 0)
+>> >> +                     break;
+>> >> +             cpu_relax();
+>> >> +     }
+>> >> +     writel(0x00000002, mmio_base + 0xd0100);
+>> >> +
+>> >> +     iounmap(pci_resource_start(dev, 0));
+>> >> +     return 0;
+>> >> +}
+>> >> +
+>> >>  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+>> >> +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156 #define
+>> >> +PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+>> >>
+>> >>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] =
+>> >> {
+>> >>       { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>> >>                reset_intel_82599_sfp_virtfn },
+>> >> +     { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
+>> >> +             reset_ivb_igd },
+>> >> +     { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
+>> >> +             reset_ivb_igd },
+>> >>       { PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+>> >>               reset_intel_generic_dev },
+>> >>       { 0 }
+
+If we're doing FLR in a pass-through situation, where the host does
+the FLR but has no driver for the device, doing this in a quirk makes
+sense to me.
+
+I tried to apply this patch, but it's whitespace-damaged.  Can you repost it?
+
+Bjorn
