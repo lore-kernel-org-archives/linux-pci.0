@@ -1,119 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:43393 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756395Ab2D3Ryj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2012 13:54:39 -0400
-Received: by pbbrp8 with SMTP id rp8so3516088pbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 30 Apr 2012 10:54:39 -0700 (PDT)
-Message-ID: <4F9ED1DC.3050007@gmail.com>
-Date: Mon, 30 Apr 2012 10:54:36 -0700
-From: David Daney <ddaney.cavm@gmail.com>
+Received: from mail-pz0-f51.google.com ([209.85.210.51]:35831 "EHLO
+	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755747Ab2DYPrc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 11:47:32 -0400
+Message-ID: <4F981C87.60403@gmail.com>
+Date: Wed, 25 Apr 2012 23:47:19 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: John Crispin <blogic@openwrt.org>,
-	Ralf Baechle <ralf@linux-mips.org>
-CC: Grant Likely <grant.likely@secretlab.ca>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	linux-mips@linux-mips.org
-Subject: Re: [PATCH] OF: PCI: const usage needed by MIPS
-References: <1335808019-24502-1-git-send-email-blogic@openwrt.org>
-In-Reply-To: <1335808019-24502-1-git-send-email-blogic@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Dan Williams <dan.j.williams@intel.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 6/8] dmaengine: enhance network subsystem to support
+ DMA device hotplug
+References: <1335189109-4871-1-git-send-email-jiang.liu@huawei.com> <1335189109-4871-7-git-send-email-jiang.liu@huawei.com> <CABE8wwvi_Yz8AyALr1-uDW9xSgrSqfrYWhB_22NQ2ydTa81+mg@mail.gmail.com> <4F961041.7010106@huawei.com> <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
+In-Reply-To: <CABE8wwvW9MUWaqSUCPMr7_yj7XGtSj+X9VE1-xWrEusZ3TMaqQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/30/2012 10:46 AM, John Crispin wrote:
-> On MIPS we want to call of_irq_map_pci from inside
->
-> arch/mips/include/asm/pci.h:extern int pcibios_map_irq(
-> 				const struct pci_dev *dev, u8 slot, u8 pin);
->
-> For this to work we need to change several functions to const usage.
+Hi Dan,
+	Thanks for your great comments about the performance penalty issue. And I'm trying
+to refine the implementation to reduce penalty caused by hotplug logic. If the algorithm works
+correctly, the optimized hot path code will be:
 
-I think there is a mismatch on this throughout the kernel.
+------------------------------------------------------------------------------
+struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type)
+{
+        struct dma_chan *chan = this_cpu_read(channel_table[tx_type]->chan);
 
-Properly fixing it requires touching many more places than these. 
-Although I haven't tried it, I wouldn't be surprised if doing this 
-caused warnings to appear in non-MIPS code.
+        this_cpu_inc(dmaengine_chan_ref_count);
+        if (static_key_false(&dmaengine_quiesce)) {
+                chan = NULL;
+        }
 
-Ralf had a patch at one point that tried to make this consistent 
-tree-wide, but it is not yet applied.
+        return chan;
+}
+EXPORT_SYMBOL(dma_find_channel);
 
-David Daney
+struct dma_chan *dma_get_channel(struct dma_chan *chan)
+{
+        if (static_key_false(&dmaengine_quiesce))
+                atomic_inc(&dmaengine_dirty);
+        this_cpu_inc(dmaengine_chan_ref_count);
 
->
-> Signed-off-by: John Crispin<blogic@openwrt.org>
-> Cc: linux-pci@vger.kernel.org
-> Cc: devicetree-discuss@lists.ozlabs.org
-> Cc: linux-mips@linux-mips.org
-> ---
-> I am not sure which tree this should go via. Grant, can you take it ?
->
->   drivers/of/of_pci_irq.c |    2 +-
->   drivers/pci/pci.c       |    2 +-
->   include/linux/of_pci.h  |    2 +-
->   include/linux/pci.h     |    5 +++--
->   4 files changed, 6 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
-> index 9312516..6770538 100644
-> --- a/drivers/of/of_pci_irq.c
-> +++ b/drivers/of/of_pci_irq.c
-> @@ -15,7 +15,7 @@
->    * PCI tree until an device-node is found, at which point it will finish
->    * resolving using the OF tree walking.
->    */
-> -int of_irq_map_pci(struct pci_dev *pdev, struct of_irq *out_irq)
-> +int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq)
->   {
->   	struct device_node *dn, *ppnode;
->   	struct pci_dev *ppdev;
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d20f133..4c79586 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2363,7 +2363,7 @@ void pci_enable_acs(struct pci_dev *dev)
->    * number is always 0 (see the Implementation Note in section 2.2.8.1 of
->    * the PCI Express Base Specification, Revision 2.1)
->    */
-> -u8 pci_swizzle_interrupt_pin(struct pci_dev *dev, u8 pin)
-> +u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin)
->   {
->   	int slot;
->
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index f93e217..bb115de 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -5,7 +5,7 @@
->
->   struct pci_dev;
->   struct of_irq;
-> -int of_irq_map_pci(struct pci_dev *pdev, struct of_irq *out_irq);
-> +int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
->
->   struct device_node;
->   struct device_node *of_pci_find_child_device(struct device_node *parent,
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e444f5b..3bbc77e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -680,7 +680,7 @@ int __must_check pci_bus_add_device(struct pci_dev *dev);
->   void pci_read_bridge_bases(struct pci_bus *child);
->   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
->   					  struct resource *res);
-> -u8 pci_swizzle_interrupt_pin(struct pci_dev *dev, u8 pin);
-> +u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
->   int pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge);
->   u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp);
->   extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
-> @@ -1685,7 +1685,8 @@ extern void pci_release_bus_of_node(struct pci_bus *bus);
->   /* Arch may override this (weak) */
->   extern struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus);
->
-> -static inline struct device_node *pci_device_to_OF_node(struct pci_dev *pdev)
-> +static inline struct device_node *
-> +pci_device_to_OF_node(const struct pci_dev *pdev)
->   {
->   	return pdev ? pdev->dev.of_node : NULL;
->   }
+        return chan;
+}
+EXPORT_SYMBOL(dma_get_channel);
+
+void dma_put_channel(struct dma_chan *chan)
+{
+        this_cpu_dec(dmaengine_chan_ref_count);
+}
+EXPORT_SYMBOL(dma_put_channel);
+-----------------------------------------------------------------------------
+
+The disassembled code is:
+(gdb) disassemble dma_find_channel 
+Dump of assembler code for function dma_find_channel:
+   0x0000000000000000 <+0>:	push   %rbp
+   0x0000000000000001 <+1>:	mov    %rsp,%rbp
+   0x0000000000000004 <+4>:	callq  0x9 <dma_find_channel+9>
+   0x0000000000000009 <+9>:	mov    %edi,%edi
+   0x000000000000000b <+11>:	mov    0x0(,%rdi,8),%rax
+   0x0000000000000013 <+19>:	mov    %gs:(%rax),%rax
+   0x0000000000000017 <+23>:	incq   %gs:0x0				//overhead: this_cpu_inc(dmaengine_chan_ref_count)
+   0x0000000000000020 <+32>:	jmpq   0x25 <dma_find_channel+37>	//overhead: if (static_key_false(&dmaengine_quiesce)), will be replaced as NOP by jump label
+   0x0000000000000025 <+37>:	pop    %rbp
+   0x0000000000000026 <+38>:	retq   
+   0x0000000000000027 <+39>:	nopw   0x0(%rax,%rax,1)
+   0x0000000000000030 <+48>:	xor    %eax,%eax
+   0x0000000000000032 <+50>:	pop    %rbp
+   0x0000000000000033 <+51>:	retq   
+End of assembler dump.
+(gdb) disassemble dma_put_channel 	// overhead: to decrease channel reference count, 6 instructions
+Dump of assembler code for function dma_put_channel:
+   0x0000000000000070 <+0>:	push   %rbp
+   0x0000000000000071 <+1>:	mov    %rsp,%rbp
+   0x0000000000000074 <+4>:	callq  0x79 <dma_put_channel+9>
+   0x0000000000000079 <+9>:	decq   %gs:0x0
+   0x0000000000000082 <+18>:	pop    %rbp
+   0x0000000000000083 <+19>:	retq   
+End of assembler dump.
+(gdb) disassemble dma_get_channel 
+Dump of assembler code for function dma_get_channel:
+   0x0000000000000040 <+0>:	push   %rbp
+   0x0000000000000041 <+1>:	mov    %rsp,%rbp
+   0x0000000000000044 <+4>:	callq  0x49 <dma_get_channel+9>
+   0x0000000000000049 <+9>:	mov    %rdi,%rax
+   0x000000000000004c <+12>:	jmpq   0x51 <dma_get_channel+17>
+   0x0000000000000051 <+17>:	incq   %gs:0x0
+   0x000000000000005a <+26>:	pop    %rbp
+   0x000000000000005b <+27>:	retq   
+   0x000000000000005c <+28>:	nopl   0x0(%rax)
+   0x0000000000000060 <+32>:	lock incl 0x0(%rip)        # 0x67 <dma_get_channel+39>
+   0x0000000000000067 <+39>:	jmp    0x51 <dma_get_channel+17>
+End of assembler dump.
+
+So for a typical dma_find_channel()/dma_put_channel(), the total overhead
+is about 10 instructions and two percpu(local) memory updates. And there's
+no shared cache pollution any more. Is this acceptable ff the algorithm 
+works as expected? I will test the code tomorrow.
+
+For typical systems which don't support DMA device hotplug, the overhead
+could be completely removed by condition compilation.
+
+Any comments are welcomed!
+
+Thanks!
+--gerry
+
+
+On 04/24/2012 11:09 AM, Dan Williams wrote:
+>>> If you are going to hotplug the entire IOH, then you are probably ok
 
