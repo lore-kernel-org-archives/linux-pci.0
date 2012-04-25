@@ -1,195 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:44638 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753654Ab2DHTTK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2012 15:19:10 -0400
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:60480 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090Ab2DYNAT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 09:00:19 -0400
 MIME-Version: 1.0
-In-Reply-To: <1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
-References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
-	<1333905129-8776-1-git-send-email-jiang.liu@huawei.com>
-	<1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
-Date: Sun, 8 Apr 2012 12:19:09 -0700
-Message-ID: <CAE9FiQXNOJA4oCDw-CF32UjaA=6tri73nXP3u6+hMEjpugjF9w@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when
- hot-plugging PCI host bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <CAErSpo46AzF9aifaMyDbCe2dXwfdvE68mgWwiUrxnzoTyKJktg@mail.gmail.com>
+References: <CAD52pS-CJBSz3EhFf4Mt3=o8=-3soa-b=XjDjdra=BP=M-4RLw@mail.gmail.com>
+	<Pine.LNX.4.44L0.1204111531170.1351-100000@iolanthe.rowland.org>
+	<CAErSpo46AzF9aifaMyDbCe2dXwfdvE68mgWwiUrxnzoTyKJktg@mail.gmail.com>
+Date: Wed, 25 Apr 2012 16:00:17 +0300
+Message-ID: <CAD52pS8YbbgBGt_C8kTWfZWn0-CEiHUVBP+gC=wPid9kgAMQCw@mail.gmail.com>
+Subject: Re: PROBLEM: OHCI HCD - computer freezes during boot
+From: Calin Demian <c.demian20@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 8, 2012 at 10:12 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> This patch enhances pci_root driver to update MMCFG information when
-> hot-plugging PCI root bridges on x86 platforms.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  arch/x86/pci/acpi.c      |   58 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/pci_root.c  |   20 ++++++++++++++++
->  include/acpi/acnames.h   |    1 +
->  include/linux/pci-acpi.h |    3 ++
->  4 files changed, 82 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index da0149d..9184970 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -488,6 +488,64 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->        return bus;
->  }
->
-> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
-> +{
-> +       int result = 0;
-> +       acpi_status status;
-> +       unsigned long long base_addr;
-> +       struct pci_mmcfg_region *cfg;
-> +
-> +       /*
-> +        * Try to insert MMCFG information for host bridges with _CBA method
-> +        */
-> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
-> +                                      NULL, &base_addr);
-> +       if (ACPI_SUCCESS(status)) {
-> +               result = pci_mmconfig_insert(root->segment,
-> +                                            root->secondary.start,
-> +                                            root->secondary.end,
-> +                                            base_addr);
-> +               /*
-> +                * MMCFG information for hot-pluggable host bridges may have
-> +                * already been added by __pci_mmcfg_init();
-> +                */
-> +               if (result == -EEXIST)
-> +                       result = 0;
-> +       } else if (status == AE_NOT_FOUND) {
-> +               /*
-> +                * Check whether MMCFG information has been added for
-> +                * host bridges without _CBA method.
-> +                */
-> +               rcu_read_lock();
-> +               cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-> +               if (!cfg || cfg->end_bus < root->secondary.end)
-> +                       result = -ENODEV;
-> +               rcu_read_unlock();
-> +       } else
-> +               result = -ENODEV;
-> +
-> +       return result;
-> +}
-> +
-> +int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
-> +{
-> +       acpi_status status;
-> +       unsigned long long base_addr;
-> +
-> +       /* Remove MMCFG information for host bridges with _CBA method */
-> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
-> +                                      NULL, &base_addr);
+I have reported the issue in bugzilla, before (bug 43073). Because the
+problem does not appear every time, I am able to boot with new kernels
+(sometimes).
+I also found that the problem is triggered by a specific sequence of
+io read/write operations (including the software reset) related to the
+host controller (during init) and by changing the operations or
+inserting delays between them it can be solved.
+However, since I wasn't able to duplicate the issue on other computers
+(which I know I should have done first) it could be a hardware failure
+(a weird one) brought to surface by that software change (I know for
+sure it's the function I mentioned below). If that is true, than I
+appologize for not having it tested in more detail first.
+ On the other hand, (I don't know the exact specs) if it is not the
+hardware, I can provide further details if needed.
 
-add one flag in acpi_pci_root about we added mmconf for it before?
-like mmconf_added?
+Calin Demian
 
-> +       if (ACPI_SUCCESS(status))
-> +               return pci_mmconfig_delete(root->segment,
-> +                                          root->secondary.start,
-> +                                          root->secondary.end,
-> +                                          base_addr);
-> +       else if (status != AE_NOT_FOUND)
-> +               return -ENODEV;
-> +
-> +       return 0;
-> +}
-> +
->  int __init pci_acpi_init(void)
->  {
->        struct pci_dev *dev = NULL;
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 4a7d575..a62bfa8 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -448,6 +448,16 @@ out:
->  }
->  EXPORT_SYMBOL(acpi_pci_osc_control_set);
+2012/4/23 Bjorn Helgaas <bhelgaas@google.com>:
+> On Wed, Apr 11, 2012 at 1:38 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>> On Wed, 11 Apr 2012, Calin Demian wrote:
+>>
+>>> Hi!
+>>> Yes, in fact I did allready follow the execution, and it looks like this:
+>>> function                                file
+>>> pci_apply_final_quirks           /drivers/pci/quirks.c
+>>> pci_fixup_device                    ~
+>>> pci_do_fixups                        ~
+>>> here, for the ohci busses 2 functions are called:
+>>>   nv_msi_ht_cap_quirk_all       /drivers/usb/host/pci-quirks.c
+>>
+>> What is that?  It's not present in my copy of the kernel source.
+>>
+>>>   quirk_usb_early_handoff        ~
+>>> quirk_usb_early_handoff calls the following 3 functions:
+>>>   pci_enable_device(pdev)         /drivers/pci/pci.c
+>>>   quirk_usb_handoff_ohci(pdev)    /drivers/usb/host/pci-quirks.c
+>>>   pci_disable_device(pdev)
+>>>
+>>> The execution stops inside pci_disable_device, but because
+>>> quirk_usb_handoff_ohci is the only function that has changed between
+>>> versions 3.0.13 and 3.0.20 from the list of files mentioned above, it
+>>> seems that this function changed behaviour in a way that my computer
+>>> doesn't like.
+>>
+>> That cannot be right.  The call to pci_disable_device was added after
+>> the change to quirk_usb_handoff_ohci.
+>>
+>>>   Further trace:
+>>>   pci_disable_device
+>>>     do_pci_disable_device
+>>>       pci_read_config_word
+>>
+>> I have no idea why your computer would crash inside or after
+>> pci_read_config_word.
+>>
+>> Anyway, this is a PCI problem, not a USB problem.  Maybe the PCI
+>> experts can help.  I have CC'ed the linux-pci mailing list.
+>>
+>> Alan Stern
+>>
+>>> with respect,
+>>> Calin Demian
+>>>
+>>>
+>>> 2012/4/11 Alan Stern <stern@rowland.harvard.edu>:
+>>> > On Wed, 11 Apr 2012, Calin Demian wrote:
+>>> >
+>>> >> 1.Boot problem: computer stops responding during boot.
+>>> >>
+>>> >> 2.The symptom doesn't occur allways, but when it does, it is at the
+>>> >> same point during the boot process. The last messages displayed differ
+>>> >> between different kernel versions, but are the same each time.
+>>> >>   I would appreciate if you could take a look at function
+>>> >> "quirk_usb_handoff_ohci" in file /drivers/usb/host/pci-quirks.c -
+>>> >> which was modified in version 3.0.17 of the mainline kernel. The
+>>> >> problem appeared when upgrading Ubuntu from mainline kernel version
+>>> >> 3.0.13 to version 3.0.20. Searching the changelogs I found that this
+>>> >> function was modified between the two releases. The  computer freezes
+>>> >> durin applying the quirks (pci_apply_final_quirks) for bus
+>>> >> 0000:00:13.1 (the 2nd OHCI bus). Controller is ALI  (EHCI 8 ports +
+>>> >> OHCI 3x3 ports), dev_id 5237(OHCI).
 >
-> +int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root)
-> +{
-> +       return 0;
-> +}
-> +
-> +int __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
-> +{
-> +       return 0;
-> +}
-> +
->  static int __devinit acpi_pci_root_add(struct acpi_device *device)
->  {
->        unsigned long long segment, bus;
-> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->        strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->        device->driver_data = root;
+> It sounds like this is a regression between 3.0.13 and 3.0.20.  Can
+> you please open a bug report here:
 >
-> +       if (arch_acpi_pci_root_add(root)) {
-> +               printk(KERN_ERR PREFIX
-> +                       "can't add MMCFG information for Bus %04x:%02x\n",
-> +                       root->segment, (unsigned int)root->secondary.start);
-> +               result = -ENODEV;
-> +               goto out_free;
-> +       }
-> +
->        /*
->         * All supported architectures that use ACPI have support for
->         * PCI domains, so we indicate this in _OSC support capabilities.
-> @@ -629,6 +647,7 @@ out_del_root:
->        list_del_rcu(&root->node);
->        mutex_unlock(&acpi_pci_root_lock);
->        synchronize_rcu();
-> +       arch_acpi_pci_root_remove(root);
->  out_free:
->        kfree(root);
->        return result;
-> @@ -679,6 +698,7 @@ out:
->        list_del_rcu(&root->node);
->        mutex_unlock(&acpi_pci_root_lock);
->        synchronize_rcu();
-> +       arch_acpi_pci_root_remove(root);
->        kfree(root);
+> https://bugzilla.kernel.org/enter_bug.cgi?product=Drivers&component=PCI
 >
->        return 0;
-> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
-> index 38f5088..99bda75 100644
-> --- a/include/acpi/acnames.h
-> +++ b/include/acpi/acnames.h
-> @@ -62,6 +62,7 @@
->  #define METHOD_NAME__AEI        "_AEI"
->  #define METHOD_NAME__PRW        "_PRW"
->  #define METHOD_NAME__SRS        "_SRS"
-> +#define METHOD_NAME__CBA       "_CBA"
+> and attach dmesg or serial console logs with "debug ignore_loglevel
+> initcall_debug" for both kernels?  For 3.0.20 you probably can't get a
+> dmesg log because of the hang, so a digital photo would be fine, too.
 >
->  /* Method names - these methods must appear at the namespace root */
->
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index ac93634..816b971 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -38,6 +38,9 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
->
->  void acpi_pci_root_rescan(void);
->
-> +extern int arch_acpi_pci_root_add(struct acpi_pci_root *root);
-> +extern int arch_acpi_pci_root_remove(struct acpi_pci_root *root);
-> +
-
-don't need extern here.
-
->  #else
->
->  static inline void acpi_pci_root_rescan(void) { }
-> --
-> 1.7.5.4
->
+> Thanks,
+>  Bjorn
