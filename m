@@ -1,81 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:44086 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753153Ab2DOSZu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 15 Apr 2012 14:25:50 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mikko Vinni <mmvinni@yahoo.com>
-Subject: Re: [linux-pm] "i8042: Can't reactivate AUX port" after s2ram on 3.4-rc2
-Date: Sun, 15 Apr 2012 20:30:22 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com> <201204150011.53556.rjw@sisk.pl> <1334486385.82898.YahooMailNeo@web161803.mail.bf1.yahoo.com>
-In-Reply-To: <1334486385.82898.YahooMailNeo@web161803.mail.bf1.yahoo.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:42690 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752113Ab2DZCzg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 22:55:36 -0400
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 71E0C3EE0BC
+	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 11:55:34 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 5980245DEAD
+	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 11:55:34 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 4357A45DE9E
+	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 11:55:34 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 350611DB8040
+	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 11:55:34 +0900 (JST)
+Received: from m106.s.css.fujitsu.com (m106.s.css.fujitsu.com [10.240.81.146])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id E2FED1DB803B
+	for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 11:55:33 +0900 (JST)
+From: "Taku Izumi" <izumi.taku@jp.fujitsu.com>
+To: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Jiang Liu'" <liuj97@gmail.com>
+Cc: "'Kenji Kaneshige'" <kaneshige.kenji@jp.fujitsu.com>,
+	<linux-pci@vger.kernel.org>
+References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com> <4F7E8DDD.7020603@jp.fujitsu.com> <20120406201628.1621752c.izumi.taku@jp.fujitsu.com> <4F805B32.1080401@gmail.com> <CAErSpo4tibFpTSr+KaUJtFt=S5zGm=s5-p42_wW0yUcGu9JzWg@mail.gmail.com>
+In-Reply-To: <CAErSpo4tibFpTSr+KaUJtFt=S5zGm=s5-p42_wW0yUcGu9JzWg@mail.gmail.com>
+Subject: RE: [PATCH] [RFC] PCI, ACPI, x86: MMCFG support for hotpluggable PCI hostbridges on x86, x86_64
+Date: Thu, 26 Apr 2012 11:55:24 +0900
+Message-ID: <09a201cd2358$06ce4cd0$146ae670$@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204152030.23148.rjw@sisk.pl>
+Content-Type: text/plain;
+	charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, April 15, 2012, Mikko Vinni wrote:
-> From: Rafael J. Wysocki:
+
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Thursday, April 26, 2012 2:14 AM
+> To: Jiang Liu
+> Cc: Taku Izumi; Kenji Kaneshige; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH] [RFC] PCI, ACPI, x86: MMCFG support for hotpluggable PCI hostbridges on x86, x86_64
 > 
-> >>  > Please change that dev_dbg() in pci_restore_state() into dev_info()
-> >>  > and see how many times it gets printed with the commit applied (not 
-> > reverted).
-> >> 
-> >> 
-> >>  I ran the dmesg through "uniq -c" and it looks like this:
-> >> 
-> >>        1 ACPI: Low-level resume complete
-> >>        1 PM: Restoring platform NVS memory
-> >>        1 Enabling non-boot CPUs ...
-> >>        1 Booting Node 0 Processor 1 APIC 0x1
-> >>        1 CPU1 is up
-> >>        1 ACPI: Waking up from system sleep state S3
-> >>       10 pcieport 0000:00:02.0: restoring config space at offset 0x7 (was 
-> > 0x20005151, writing 0x5151)
-> > 
-> > Well, yeah.  So the commit you bisected it to is total and utter crap.
-> > Most importantly, it retries the writes for all of the dwords in the 
-> > device's
-> > config space _including_ the status register (which by definition need not be
-> > the same as the written value).
-> > 
-> > I wonder if the appended patch helps?
+> On Sat, Apr 7, 2012 at 9:20 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> > On 04/06/2012 07:16 PM, Taku Izumi wrote:
+> >>
+> >> This patch introduces the configuration for the base address of
+> >> the memory mapped configuration space (MMCFG) for hotpluggable PCI
+> >> hostbridges on x86 and x86_64.
+> >>
+> >> The MMCFG for hotpluggable host bridges must be described by using
+> >> ACPI _CBA method. This patch adds implementation for _CBA method
+> >> on ACPI pci_root driver and MMCFG manipulating functons for x86 and
+> >> x86_64.
+> >>
+> >> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> >> ---
+> >>  arch/x86/pci/mmconfig-shared.c |   61 ++++++++++++++++++++++++++++++++++-------
+> >>  drivers/acpi/pci_root.c        |   28 ++++++++++++++++++
+> >>  drivers/pci/pci.c              |   31 ++++++++++++++++++++
+> >>  include/acpi/acnames.h         |    1
+> >>  include/linux/pci.h            |    3 ++
+> >>  5 files changed, 113 insertions(+), 11 deletions(-)
 > 
-> It does. It seems there is a change only in the devices that refuse to wake up;
-> somehow writing too many times to them affects the rest of the machine.
-> So, for this machine your patch fixes the problem of the touchpad not working.
-
-Good, thanks for the confirmation. :-)
-
-> The write is now attempted (at most) 11 times, as shown below. Probably not
-> a huge deal.
+> Taku, I'm ignoring this patch for now because I assume that Jiang
+> Liu's series "[PATCH V4 0/6] PCI, x86: update MMCFG information when
+> hot-plugging PCI host bridges" includes the same functionality.
 > 
->       1 ACPI: Waking up from system sleep state S3
->      11 pcieport 0000:00:02.0: restoring config space at offset 0x1c (was 0x20005151, writing 0x5151)
+> If my assumption is wrong, please let me know.
 
-Well, here you see that the PCI Express port is refusing to accept a new BAR value.
-It seems not to be operational and this probably is the reason why the device below
-the port don't respond later.
+ Hi Bjorn,
+ Yes, you are right. Please ignore my former patch.
+ I'm re-creating new patchset based on Liu's series.
 
-I'm not sure why that happens, though.
+ Best regarads,
+ Taku Izumi
 
->       1 pcieport 0000:00:02.0: restoring config space at offset 0x4 (was 0x100007, writing 0x100407)
->       1 pcieport 0000:00:04.0: restoring config space at offset 0x4 (was 0x100007, writing 0x100407)
->       1 pcieport 0000:00:05.0: restoring config space at offset 0x4 (was 0x100007, writing 0x100407)
->      11 pcieport 0000:00:06.0: restoring config space at offset 0x1c (was 0x20002121, writing 0x2121)
 
-The same happens here, apparently.
 
-Do you still have the kernel where all PCI devices worked correctly after system
-resume?
-
-Rafael
