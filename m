@@ -1,184 +1,329 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:61619 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752471Ab2DWRD5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Apr 2012 13:03:57 -0400
-Received: by lahj13 with SMTP id j13so9316282lah.19
-        for <linux-pci@vger.kernel.org>; Mon, 23 Apr 2012 10:03:56 -0700 (PDT)
+Received: from mail-pz0-f51.google.com ([209.85.210.51]:59716 "EHLO
+	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751833Ab2DZOAR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 10:00:17 -0400
+Received: by dadz8 with SMTP id z8so1616353dad.10
+        for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 07:00:17 -0700 (PDT)
+Message-ID: <4F9954DE.6070805@gmail.com>
+Date: Thu, 26 Apr 2012 21:59:58 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201204152140.40747.rjw@sisk.pl>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com>
- <201204152047.51019.rjw@sisk.pl> <CA+55aFyShMvUjkyGv4DgSGByuoU18o8=MnGJqbz5aSwDVyOyOA@mail.gmail.com>
- <201204152140.40747.rjw@sisk.pl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 23 Apr 2012 11:03:35 -0600
-Message-ID: <CAErSpo4St6zBBz7131Ne3BEHNO8Xcq8sCy3T5HV1F0B1B1u1cg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix regression in pci_restore_state()
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Mikko Vinni <mmvinni@yahoo.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Keping Chen <chenkeping@huawei.com>, ddutile@redhat.com,
+	greg.pearson@hp.com
+Subject: Re: [PATCH 5/6] PCI, x86: introduce pci_mmcongi_add() / pci_mmconfig_delete()
+References: <20120426193712.11256973.izumi.taku@jp.fujitsu.com> <20120426194237.93088dcb.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120426194237.93088dcb.izumi.taku@jp.fujitsu.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 15, 2012 at 1:40 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Sunday, April 15, 2012, Linus Torvalds wrote:
->> On Sun, Apr 15, 2012 at 11:47 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> >
->> > mdelay(10) doesn't really look good either to me in this case, though.
->>
->> Oh, I agree. What kind of ass-backwards device actually needs that
->> kind of crazy delays? It is almost certainly buggy.
->>
->> With retries, 10ms delays are totally unacceptable. There's something wrong.
->>
->> A single ms *may* be ok.
->>
->> Anyway, can you also split the actual "write _one_ register with
->> retry" into a function of its own? The code looks like crap with those
->> multiple levels of looping, with conditionals inside them etc. With a
->> simple helper function, you could change the break into return, and it
->> would look much better, I bet.
->
-> Sure.  It appears cleaner this way.
->
+On 04/26/2012 06:42 PM, Taku Izumi wrote:
+> 
+> This patch replaces pci_mmconfig_add() and introduces pci_mmconfig_delte()
+> for adding or deleting MCFG region.
+> 
+> The newly pci_mmconfig_add() does the following:
+>   - region check
+>   - insert_resource
+>   - ioremap
+>   - add new pci_mmcfg_region entry to pci_mmcfg_list
+> 
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
 > ---
-> From: Rafael J. Wysocki <rjw@sisk.pl>
-> Subject: PCI: Fix regression in pci_restore_state(), v3
->
-> Commit 26f41062f28de65e11d3cf353e52d0be73442be1
->
->    PCI: check for pci bar restore completion and retry
->
-> attempted to address problems with PCI BAR restoration on systems
-> where FLR had not been completed before pci_restore_state() was
-> called, but it did that in an utterly wrong way.
->
-> First off, instead of retrying the writes for the BAR registers
-> only, it did that for all of the PCI config space of the device,
-> including the status register (whose value after the write quite
-> obviously need not be the same as the written one).  Second, it
-> added arbitrary delay to pci_restore_state() even for systems
-> where the PCI config space restoration was successful at first
-> attempt.  Finally, the mdelay(10) it added to every iteration of the
-> writing loop was way too much of a delay for any reasonable device.
->
-> All of this actually caused resume failures for some devices on
-> the Mikko's system.
->
-> To fix the regression, make pci_restore_state() only retry the
-> writes for BAR registers and only wait if the first read from
-> the register doesn't return the written value.  Additionaly, make
-> it wait for 1 ms, instead of 10 ms, after every failing attempt
-> to write into config space.
->
-> Reported-by: Mikko Vinni <mmvinni@yahoo.com>
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> ---
->  drivers/pci/pci.c |   57 ++++++++++++++++++++++++++++++++++++------------------
->  1 file changed, 39 insertions(+), 18 deletions(-)
->
-> Index: linux/drivers/pci/pci.c
+>  arch/x86/include/asm/pci_x86.h |    3 
+>  arch/x86/pci/mmconfig-shared.c |  142 ++++++++++++++++++++++++++++++-----------
+>  arch/x86/pci/mmconfig_64.c     |   11 ---
+>  3 files changed, 109 insertions(+), 47 deletions(-)
+> 
+> Index: bjorn-next/arch/x86/include/asm/pci_x86.h
 > ===================================================================
-> --- linux.orig/drivers/pci/pci.c
-> +++ linux/drivers/pci/pci.c
-> @@ -967,16 +967,47 @@ pci_save_state(struct pci_dev *dev)
->        return 0;
->  }
->
-> +static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
-> +                                    u32 saved_val, int retry)
-> +{
-> +       u32 val;
-> +
-> +       pci_read_config_dword(pdev, offset, &val);
-> +       if (val == saved_val)
-> +               return;
-> +
-> +       for (;;) {
-> +               dev_dbg(&pdev->dev, "restoring config space at offset "
-> +                       "%#x (was %#x, writing %#x)\n", offset, val, saved_val);
-> +               pci_write_config_dword(pdev, offset, saved_val);
-> +               if (retry-- <= 0)
-> +                       return;
-> +
-> +               pci_read_config_dword(pdev, offset, &val);
-> +               if (val == saved_val)
-> +                       return;
-> +
-> +               mdelay(1);
-> +       }
-> +}
-> +
-> +static void pci_restore_config_space(struct pci_dev *pdev, int start, int end,
-> +                                    int retry)
-> +{
-> +       int index;
-> +
-> +       for (index = end; index >= start; index--)
-> +               pci_restore_config_dword(pdev, 4 * index,
-> +                                        pdev->saved_config_space[index],
-> +                                        retry);
-> +}
-> +
->  /**
->  * pci_restore_state - Restore the saved state of a PCI device
->  * @dev: - PCI device that we're dealing with
->  */
->  void pci_restore_state(struct pci_dev *dev)
->  {
-> -       int i;
-> -       u32 val;
-> -       int tries;
+> --- bjorn-next.orig/arch/x86/include/asm/pci_x86.h
+> +++ bjorn-next/arch/x86/include/asm/pci_x86.h
+> @@ -138,7 +138,8 @@ extern void __init pci_mmcfg_arch_free(v
+>  extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
+>  extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
+>  extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
 > -
->        if (!dev->state_saved)
->                return;
->
-> @@ -984,24 +1015,14 @@ void pci_restore_state(struct pci_dev *d
->        pci_restore_pcie_state(dev);
->        pci_restore_ats_state(dev);
->
-> +       pci_restore_config_space(dev, 10, 15, 0);
->        /*
->         * The Base Address register should be programmed before the command
->         * register(s)
->         */
-> -       for (i = 15; i >= 0; i--) {
-> -               pci_read_config_dword(dev, i * 4, &val);
-> -               tries = 10;
-> -               while (tries && val != dev->saved_config_space[i]) {
-> -                       dev_dbg(&dev->dev, "restoring config "
-> -                               "space at offset %#x (was %#x, writing %#x)\n",
-> -                               i, val, (int)dev->saved_config_space[i]);
-> -                       pci_write_config_dword(dev,i * 4,
-> -                               dev->saved_config_space[i]);
-> -                       pci_read_config_dword(dev, i * 4, &val);
-> -                       mdelay(10);
-> -                       tries--;
-> -               }
-> -       }
-> +       pci_restore_config_space(dev, 4, 9, 10);
-> +       pci_restore_config_space(dev, 0, 3, 0);
+> +extern int __devinit pci_mmconfig_add(int seg, int start, int end, u64 addr);
+> +extern int pci_mmconfig_delete(int seg, int start, int end);
+>  extern struct list_head pci_mmcfg_list;
+>  
+>  #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
+> Index: bjorn-next/arch/x86/pci/mmconfig-shared.c
+> ===================================================================
+> --- bjorn-next.orig/arch/x86/pci/mmconfig-shared.c
+> +++ bjorn-next/arch/x86/pci/mmconfig-shared.c
+> @@ -17,6 +17,7 @@
+>  #include <linux/bitmap.h>
+>  #include <linux/dmi.h>
+>  #include <linux/slab.h>
+> +#include <linux/mutex.h>
+>  #include <linux/rculist.h>
+>  #include <asm/e820.h>
+>  #include <asm/pci_x86.h>
+> @@ -96,18 +97,6 @@ static __devinit struct pci_mmcfg_region
+>  	return new;
+>  }
+>  
+> -static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+> -							int end, u64 addr)
+> -{
+> -	struct pci_mmcfg_region *new;
+> -
+> -	new = pci_mmconfig_alloc(segment, start, end, addr);
+> -	if (new)
+> -		list_add_sorted(new);
+> -
+> -	return new;
+> -}
+> -
+>  struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+>  {
+>  	struct pci_mmcfg_region *cfg;
+> @@ -129,7 +118,7 @@ static const char __init *pci_mmcfg_e752
+>  	if (win == 0x0000 || win == 0xf000)
+>  		return NULL;
+>  
+> -	if (pci_mmconfig_add(0, 0, 255, win << 16) == NULL)
+> +	if (pci_mmconfig_add(0, 0, 255, win << 16))
+>  		return NULL;
+>  
+>  	return "Intel Corporation E7520 Memory Controller Hub";
+> @@ -173,7 +162,7 @@ static const char __init *pci_mmcfg_inte
+>  	if ((pciexbar & mask) >= 0xf0000000U)
+>  		return NULL;
+>  
+> -	if (pci_mmconfig_add(0, 0, (len >> 20) - 1, pciexbar & mask) == NULL)
+> +	if (pci_mmconfig_add(0, 0, (len >> 20) - 1, pciexbar & mask))
+>  		return NULL;
+>  
+>  	return "Intel Corporation 945G/GZ/P/PL Express Memory Controller Hub";
+> @@ -221,7 +210,7 @@ static const char __init *pci_mmcfg_amd_
+>  	end_bus = (1 << busnbits) - 1;
+>  	for (i = 0; i < (1 << segnbits); i++)
+>  		if (pci_mmconfig_add(i, 0, end_bus,
+> -				     base + (1<<28) * i) == NULL) {
+> +				     base + (1<<28) * i)) {
+>  			free_all_mmcfg();
+>  			return NULL;
+>  		}
+> @@ -278,7 +267,7 @@ static const char __init *pci_mmcfg_nvid
+>  		base <<= extcfg_base_lshift;
+>  		start = (extcfg & extcfg_start_mask) >> extcfg_start_shift;
+>  		end = start + extcfg_sizebus[size_index] - 1;
+> -		if (pci_mmconfig_add(0, start, end, base) == NULL)
+> +		if (pci_mmconfig_add(0, start, end, base))
+>  			continue;
+>  		mcp55_mmconf_found++;
+>  	}
+> @@ -376,7 +365,7 @@ static void __init pci_mmcfg_insert_reso
+>  	pci_mmcfg_resources_inserted = 1;
+>  }
+>  
+> -static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
+> +static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
+>  					      void *data)
+Please pay attention to indent for above line.
+
+>  {
+>  	struct resource *mcfg_res = data;
+> @@ -413,7 +402,7 @@ static acpi_status __init check_mcfg_res
+>  	return AE_OK;
+>  }
+>  
+> -static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
+> +static acpi_status __devinit find_mboard_resource(acpi_handle handle, u32 lvl,
+>  		void *context, void **rv)
+>  {
+>  	struct resource *mcfg_res = context;
+> @@ -427,7 +416,7 @@ static acpi_status __init find_mboard_re
+>  	return AE_OK;
+>  }
+>  
+> -static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+> +static int __devinit is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+>  {
+>  	struct resource mcfg_res;
+>  
+> @@ -446,7 +435,7 @@ static int __init is_acpi_reserved(u64 s
+>  
+>  typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
+>  
+> -static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+> +static int __devinit is_mmconf_reserved(check_reserved_t is_reserved,
+>  				    struct pci_mmcfg_region *cfg, int with_e820)
+Please pay attention to indent for above line.
+
+>  {
+>  	u64 addr = cfg->res.start;
+> @@ -507,19 +496,6 @@ static int __devinit pci_mmcfg_check_res
+>  	return false;
+>  }
+>  
+> -static void __init pci_mmcfg_reject_broken(int early)
+> -{
+> -	struct pci_mmcfg_region *cfg;
+> -
+> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+> -		if (pci_mmcfg_check_reserved(cfg, early) == false) {
+> -			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
+> -			free_all_mmcfg();
+> -			return;
+> -		}
+> -	}
+> -}
+> -
+pci_mmcfg_check_reserved() performs different checks according to the parameter 'early'.
+The patch has changed the behavior of original code. 
+
+At early time when mmcfg_early_init() is called, the ACPICA subsystem is still
+uninitialized yet and is_acpi_reserved() shouldn't be called yet. So at early
+stage, pci_mmcfg_check_reserved() should be called with parameter early as 1(true).
+But this patch always call pci_mmcfg_check_reserved() with parameter as 0.
+
+So suggest to keep pci_mmconfig_add() and pci_mmcfg_reject_broken(), but change return
+value of pci_mmconfig_add() from "struct pci_mmcfg_region *" to "int".
+
+>  static int __initdata known_bridge;
+>  
+>  static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+> @@ -613,8 +589,6 @@ static void __init __pci_mmcfg_init(int 
+>  	if (!known_bridge)
+>  		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
+>  
+> -	pci_mmcfg_reject_broken(early);
+> -
+>  	if (list_empty(&pci_mmcfg_list))
+>  		return;
+>  
+> @@ -676,3 +650,101 @@ static int __init pci_mmcfg_late_insert_
+>   * with other system resources.
+>   */
+>  late_initcall(pci_mmcfg_late_insert_resources);
 > +
->        pci_restore_pcix_state(dev);
->        pci_restore_msi_state(dev);
->        pci_restore_iov_state(dev);
+> +static DEFINE_MUTEX(pci_mmcfg_lock);
+> +
+> +int __devinit pci_mmconfig_add(int segment, int start, int end, u64 addr)
+> +{
+> +	int rc = 0;
+> +	struct pci_mmcfg_region *cfg, *new = NULL;
+> +
+> +	if (segment < 0 || segment > USHRT_MAX ||
+> +	    start < 0 || start > 255 || end < start || end > 255)
+> +		return -EINVAL;
+> +
+> +	mutex_lock(&pci_mmcfg_lock);
+> +	cfg = pci_mmconfig_lookup(segment, start);
+> +	if (cfg) {
+> +		if (cfg->start_bus <= start && cfg->end_bus >= end) {
+> +			rc = -EEXIST;
+> +		} else {
+> +			rc = -EINVAL;
+> +			printk(KERN_WARNING PREFIX
+> +			       "MMCONFIG for domain %04x [bus %02x-%02x] "
+> +			       "conflicts with domain %04x [bus %02x-%02x]\n",
+> +			       segment, start, end,
+> +			       cfg->segment, cfg->start_bus, cfg->end_bus);
+> +		}
+> +		goto out;
+> +	}
+> +
+> +	new = pci_mmconfig_alloc(segment, start, end, addr);
+> +	if (new == NULL) {
+> +		rc = -ENOMEM;
+> +		goto out;
+> +	}
+> +
+> +	if (!pci_mmcfg_check_reserved(new, 0)) {
+> +		rc = -EINVAL;
+> +		printk(KERN_WARNING PREFIX
+> +		       "MMCONFIG for domain %04x [bus %02x-%02x] "
+> +		       "isn't reserved\n", segment, start, end);
+> +		goto out;
+> +	}
+> +
+> +	if (pci_mmcfg_resources_inserted &&
+> +	    insert_resource(&iomem_resource, &new->res)) {
+> +		rc = -EBUSY;
+> +		printk(KERN_WARNING PREFIX
+> +		       "failed to insert resource for domain "
+> +		       "%04x [bus %02x-%02x]\n", segment, start, end);
+> +		goto out;
+> +	}
+> +
+> +	if (pci_mmcfg_arch_map(new)) {
+> +		rc = -EBUSY;
+> +		printk(KERN_WARNING PREFIX
+> +		       "failed to map resource for domain "
+> +		       "%04x [bus %02x-%02x]\n", segment, start, end);
+> +		goto out;
+> +	}
+> +
+> +	list_add_sorted(new);
+> +	new = NULL;
+> +
+> +out:
+> +	if (new) {
+> +		if (new->res.parent)
+> +			release_resource(&new->res);
+> +		kfree(new);
+> +	}
+> +
+> +	mutex_unlock(&pci_mmcfg_lock);
+> +
+> +	return rc;
+> +}
+> +
+> +/* Delete MMCFG information at runtime */
+> +int pci_mmconfig_delete(int segment, int start, int end)
+> +{
+> +	struct pci_mmcfg_region *cfg;
+> +
+> +	mutex_lock(&pci_mmcfg_lock);
+> +	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
+> +		if (cfg->segment == segment && cfg->start_bus == start &&
+> +		    cfg->end_bus == end) {
+> +			list_del_rcu(&cfg->list);
+> +			synchronize_rcu();
+> +			pci_mmcfg_arch_unmap(cfg);
+> +			if (cfg->res.parent)
+> +				release_resource(&cfg->res);
+> +			mutex_unlock(&pci_mmcfg_lock);
+> +			kfree(cfg);
+> +			return 0;
+> +		}
+> +	}
+> +	mutex_unlock(&pci_mmcfg_lock);
+> +
+> +	return -ENOENT;
+> +}
+> +
+> Index: bjorn-next/arch/x86/pci/mmconfig_64.c
+> ===================================================================
+> --- bjorn-next.orig/arch/x86/pci/mmconfig_64.c
+> +++ bjorn-next/arch/x86/pci/mmconfig_64.c
+> @@ -112,17 +112,6 @@ static void __iomem * __devinit mcfg_ior
+>  
+>  int __init pci_mmcfg_arch_init(void)
+>  {
+> -	struct pci_mmcfg_region *cfg;
+> -
+> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+> -		cfg->virt = mcfg_ioremap(cfg);
+> -		if (!cfg->virt) {
+> -			printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
+> -			       &cfg->res);
+> -			pci_mmcfg_arch_free();
+> -			return 0;
+> -		}
+> -	}
+>  	raw_pci_ext_ops = &pci_mmcfg;
+>  	return 1;
+>  }
+> 
 
-I'd feel better about this if there were a way to delay in the FLR
-path instead.  If we delay in the restore path, we're only fixing one
-of the many ways config space can be written.  Other paths that write
-config space will just silently fail.
-
-The PCIe spec (r3.0, sec 6.6.2) mentions waiting for the "pre-FLR
-value for Completion Timeout," but I don't see anything that looks
-like that in pcie_flr() or pci_af_flr().  Are there any other direct
-ways we can detect when the FLR is complete?
-
-Bjorn
