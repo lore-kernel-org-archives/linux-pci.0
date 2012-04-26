@@ -1,85 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:34617 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933008Ab2DKTiq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 15:38:46 -0400
-Date: Wed, 11 Apr 2012 15:38:44 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Calin Demian <c.demian20@gmail.com>
-cc: USB list <linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: PROBLEM: OHCI HCD - computer freezes during boot
-In-Reply-To: <CAD52pS-CJBSz3EhFf4Mt3=o8=-3soa-b=XjDjdra=BP=M-4RLw@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1204111531170.1351-100000@iolanthe.rowland.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:51138 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756609Ab2DZOmB convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Apr 2012 10:42:01 -0400
+Received: by lahj13 with SMTP id j13so1040935lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 26 Apr 2012 07:41:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+In-Reply-To: <4F993F8F.7060704@redhat.com>
+References: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com>
+ <CAE9FiQWUvZZ+z6-g3B1xCjjPcY_VwcY8FX5oMgRDAvLut=vXNw@mail.gmail.com> <4F993F8F.7060704@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 26 Apr 2012 08:41:39 -0600
+Message-ID: <CAErSpo4ZMAZ4=QqncHn-5SVSy5SXPN9F8EC+_vkiLP-FTyGG8w@mail.gmail.com>
+Subject: Re: [PATCH v1] PCI: work around Stratus ftServer broken PCIe hierarchy
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Wilcox <matthew.wilcox@linux.intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	James Paradis <james.paradis@stratus.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 11 Apr 2012, Calin Demian wrote:
+On Thu, Apr 26, 2012 at 6:29 AM, Prarit Bhargava <prarit@redhat.com> wrote:
+>
+>
+> On 04/25/2012 08:30 PM, Yinghai Lu wrote:
+>> On Wed, Apr 25, 2012 at 4:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> A PCIe downstream port is a P2P bridge.  Its secondary interface is
+>>> a link that should lead only to device 0 (unless ARI is enabled)[1], so
+>>> we don't probe for non-zero device numbers.
+>>>
+>>> Some Stratus ftServer systems have a PCIe downstream port (02:00.0) that
+>>> leads to both an upstream port (03:00.0) and a downstream port (03:01.0),
+>>> and 03:01.0 has important devices below it:
+>>>
+>>>  [0000:02]-+-00.0-[0000:03]--+-00.0
+>>>                              \-01.0-[0000:xx]--+-[USB]
+>>>                                                \-[NIC]
+>>>
+>>> Previously, we didn't enumerate device 03:01.0, so USB and the network
+>>> didn't work.  This patch adds a DMI quirk to scan all device numbers,
+>>> not just 0, below a downstream port.
+>>
+>> is there output for
+>> lspci -vvxxx -s 03:00.0
+>> lspci -vvxxx -s 03:00.1
+>>
+>> like to know what is the 03:00.0.
+>
+> [Adding correct email addy for Jim@stratus]
+>
+> Jim, can you provide this output?
 
-> Hi!
-> Yes, in fact I did allready follow the execution, and it looks like this:
-> function                                file
-> pci_apply_final_quirks           /drivers/pci/quirks.c
-> pci_fixup_device                    ~
-> pci_do_fixups                        ~
-> here, for the ohci busses 2 functions are called:
->   nv_msi_ht_cap_quirk_all       /drivers/usb/host/pci-quirks.c
+Also note that I only looked for "ftServer" in the DMI SYS_VENDOR
+field.  Prarit's original patch looked at both SYS_VENDOR and
+BOARD_VENDOR.  I don't know whether BOARD_VENDOR is necessary.  My
+guess was dmi_name_in_vendors() was just a convenient interface, and
+we only need to check one place.
 
-What is that?  It's not present in my copy of the kernel source.
-
->   quirk_usb_early_handoff        ~
-> quirk_usb_early_handoff calls the following 3 functions:
->   pci_enable_device(pdev)         /drivers/pci/pci.c
->   quirk_usb_handoff_ohci(pdev)    /drivers/usb/host/pci-quirks.c
->   pci_disable_device(pdev)
-> 
-> The execution stops inside pci_disable_device, but because
-> quirk_usb_handoff_ohci is the only function that has changed between
-> versions 3.0.13 and 3.0.20 from the list of files mentioned above, it
-> seems that this function changed behaviour in a way that my computer
-> doesn't like.
-
-That cannot be right.  The call to pci_disable_device was added after 
-the change to quirk_usb_handoff_ohci.
-
->   Further trace:
->   pci_disable_device
->     do_pci_disable_device
->       pci_read_config_word
-
-I have no idea why your computer would crash inside or after
-pci_read_config_word.
-
-Anyway, this is a PCI problem, not a USB problem.  Maybe the PCI 
-experts can help.  I have CC'ed the linux-pci mailing list.
-
-Alan Stern
-
-> with respect,
-> Calin Demian
-> 
-> 
-> 2012/4/11 Alan Stern <stern@rowland.harvard.edu>:
-> > On Wed, 11 Apr 2012, Calin Demian wrote:
-> >
-> >> 1.Boot problem: computer stops responding during boot.
-> >>
-> >> 2.The symptom doesn't occur allways, but when it does, it is at the
-> >> same point during the boot process. The last messages displayed differ
-> >> between different kernel versions, but are the same each time.
-> >>   I would appreciate if you could take a look at function
-> >> "quirk_usb_handoff_ohci" in file /drivers/usb/host/pci-quirks.c -
-> >> which was modified in version 3.0.17 of the mainline kernel. The
-> >> problem appeared when upgrading Ubuntu from mainline kernel version
-> >> 3.0.13 to version 3.0.20. Searching the changelogs I found that this
-> >> function was modified between the two releases. The  computer freezes
-> >> durin applying the quirks (pci_apply_final_quirks) for bus
-> >> 0000:00:13.1 (the 2nd OHCI bus). Controller is ALI  (EHCI 8 ports +
-> >> OHCI 3x3 ports), dev_id 5237(OHCI).
-> >
-> > Can you figure out exactly where the computer stops, by adding printk
-> > lines to the quirk_usb_handoff_ohci function?
-> >
-> > Alan Stern
-
+Bjorn
