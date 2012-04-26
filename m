@@ -1,45 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:56703 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739Ab2DOS7k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 14:59:40 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:52789 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756102Ab2DZPQS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 11:16:18 -0400
+Date: Thu, 26 Apr 2012 11:16:17 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Greg KH <greg@kroah.com>
+cc: Calin Demian <c.demian20@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: PROBLEM: OHCI HCD - computer freezes during boot
+In-Reply-To: <20120426144356.GB4365@kroah.com>
+Message-ID: <Pine.LNX.4.44L0.1204261113430.1530-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <201204152047.51019.rjw@sisk.pl>
-References: <1334310754.17013.YahooMailNeo@web161804.mail.bf1.yahoo.com>
- <201204152032.36770.rjw@sisk.pl> <CA+55aFww66BY+WuTQHycGqShEtuqix9gzrjmQTsHhyuvmv9mPQ@mail.gmail.com>
- <201204152047.51019.rjw@sisk.pl>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sun, 15 Apr 2012 11:59:19 -0700
-Message-ID: <CA+55aFyShMvUjkyGv4DgSGByuoU18o8=MnGJqbz5aSwDVyOyOA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix regression in pci_restore_state()
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mikko Vinni <mmvinni@yahoo.com>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Allen Kay <allen.m.kay@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 15, 2012 at 11:47 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
-> mdelay(10) doesn't really look good either to me in this case, though.
+On Thu, 26 Apr 2012, Greg KH wrote:
 
-Oh, I agree. What kind of ass-backwards device actually needs that
-kind of crazy delays? It is almost certainly buggy.
+> On Thu, Apr 26, 2012 at 10:25:41AM -0400, Alan Stern wrote:
+> > On Thu, 26 Apr 2012, Calin Demian wrote:
+> > 
+> > > I don't know how, but adding the following line in function
+> > > quirk_usb_handoff_ohci makes the system work fine:
+> > > 
+> > > 	/* reset requires max 10 us delay */
+> > > +	udelay(1);
+> > > 	for (cnt = 30; cnt > 0; --cnt) {	/* ... allow extra time */
+> > > 		if ((readl(base + OHCI_CMDSTATUS) & OHCI_HCR) == 0)
+> > > 
+> > > I observed thad the condition in the for loop is allways true, so the
+> > > delay inside the loop is never executed.
+> 
+> That implies that something is wrong with the complier here, and it
+> optimized out the loop?  Are you sure that really happened?
 
-With retries, 10ms delays are totally unacceptable. There's something wrong.
+Here's the complete context:
 
-A single ms *may* be ok.
+	/* reset requires max 10 us delay */
+	for (cnt = 30; cnt > 0; --cnt) {	/* ... allow extra time */
+		if ((readl(base + OHCI_CMDSTATUS) & OHCI_HCR) == 0)
+			break;
+		udelay(1);
+	}
 
-Anyway, can you also split the actual "write _one_ register with
-retry" into a function of its own? The code looks like crap with those
-multiple levels of looping, with conditionals inside them etc. With a
-simple helper function, you could change the break into return, and it
-would look much better, I bet.
+I think Calim means that the "(readl(base + OHCI_CMDSTATUS) & OHCI_HCR)  
+== 0" test succeeds on the first pass through the loop, so we break out
+early and the udelay(1) statement never gets executed.
 
-                    Linus
+Alan Stern
+
