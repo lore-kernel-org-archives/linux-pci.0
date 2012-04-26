@@ -1,46 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:21900 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab2DCCUV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2012 22:20:21 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <len.brown@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [RFC PATCH 04/14] PCI: set dev_node early for pci_dev
-Date: Mon,  2 Apr 2012 19:19:31 -0700
-Message-Id: <1333419581-7836-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1333419581-7836-1-git-send-email-yinghai@kernel.org>
-References: <1333419581-7836-1-git-send-email-yinghai@kernel.org>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:41395 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753184Ab2DZOn7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 10:43:59 -0400
+Date: Thu, 26 Apr 2012 07:43:56 -0700
+From: Greg KH <greg@kroah.com>
+To: Calin Demian <c.demian20@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: PROBLEM: OHCI HCD - computer freezes during boot
+Message-ID: <20120426144356.GB4365@kroah.com>
+References: <CAD52pS_uLqhwQfr6Pqm=apqq94wY0ULNHp+tT8ohkeGn7M58HQ@mail.gmail.com>
+ <Pine.LNX.4.44L0.1204261020040.1530-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.44L0.1204261020040.1530-100000@iolanthe.rowland.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-otherwise irq_desc for pci bridge with hot-added ioapic can not be
-on local node.
+On Thu, Apr 26, 2012 at 10:25:41AM -0400, Alan Stern wrote:
+> On Thu, 26 Apr 2012, Calin Demian wrote:
+> 
+> > I don't know how, but adding the following line in function
+> > quirk_usb_handoff_ohci makes the system work fine:
+> > 
+> > 	/* reset requires max 10 us delay */
+> > +	udelay(1);
+> > 	for (cnt = 30; cnt > 0; --cnt) {	/* ... allow extra time */
+> > 		if ((readl(base + OHCI_CMDSTATUS) & OHCI_HCR) == 0)
+> > 
+> > I observed thad the condition in the for loop is allways true, so the
+> > delay inside the loop is never executed.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+That implies that something is wrong with the complier here, and it
+optimized out the loop?  Are you sure that really happened?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 320f38e..1eed2fd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1447,6 +1447,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->dev.release = pci_release_dev;
- 	pci_dev_get(dev);
- 
-+	set_dev_node(&dev->dev, pcibus_to_node(bus));
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.dma_parms = &dev->dma_parms;
- 	dev->dev.coherent_dma_mask = 0xffffffffull;
--- 
-1.7.7
-
+greg k-h
