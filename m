@@ -1,74 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:50674 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751791Ab2DUNZV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 21 Apr 2012 09:25:21 -0400
-Date: Sat, 21 Apr 2012 06:25:16 -0700
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec
- timeframe
-Message-ID: <20120421132516.GC7069@xanatos>
-References: <4F909CEB.3060407@fold.natur.cuni.cz>
- <CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
- <CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
- <4F91473A.1080007@fold.natur.cuni.cz>
- <CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
- <4F919C22.1070608@fold.natur.cuni.cz>
- <4F919CD5.7070004@fold.natur.cuni.cz>
- <CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
- <20120420231748.GB7069@xanatos>
- <CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v2 14/19] PCI: fix race windows when shutting down cpcihp controller
+Date: Fri, 27 Apr 2012 23:16:55 +0800
+Message-Id: <1335539820-11232-15-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 20, 2012 at 05:09:48PM -0700, Yinghai Lu wrote:
-> On Fri, Apr 20, 2012 at 4:17 PM, Sarah Sharp
-> <sarah.a.sharp@linux.intel.com> wrote:
-> > On Fri, Apr 20, 2012 at 11:47:14AM -0700, Yinghai Lu wrote:
-> >> On Fri, Apr 20, 2012 at 10:28 AM, Martin Mokrejs
-> >> <mmokrejs@fold.natur.cuni.cz> wrote:
-> >> > [30720.175637] pciehp 0000:00:1c.7:pcie04: pcie_isr: intr_loc 108
-> >> > [30720.175639] pciehp 0000:00:1c.7:pcie04: LinkState change
-> >> > [30720.175643] pciehp 0000:00:1c.7:pcie04: lnk_status = 5011
-> >> > [30720.175644] pciehp 0000:00:1c.7:pcie04: Presence/Notify input change
-> >> > [30720.175648] pciehp 0000:00:1c.7:pcie04: Card not present on Slot(7)
-> >> > [30720.175687] pciehp 0000:00:1c.7:pcie04: Surprise Removal
-> >> > [30720.175718] pciehp 0000:00:1c.7:pcie04: Disabling domain:bus:device=0000:11:00
-> >> > [30720.175721] pciehp 0000:00:1c.7:pcie04: pciehp_unconfigure_device: domain:bus:dev = 0000:11:00
-> >> >
-> >>
-> >> So the USB host control driver xhci put that 11:00.0 in strange power state.
-> >
-> > What do you mean "strange power state"?  The only PCI power states the
-> > xHCI driver will use is D0 or D3hot.  D3hot is entered automatically by
-> > the USB core runtime PM system when all USB devices are disconnected or
-> > suspended.  So what strange power state are we talking about?
-> 
-> that's helpful. Can that feature to be disabled?
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Yes.  There are several ways to disable automatic entry into D3hot.
-The easiest way is to turn off CONFIG_USB_SUSPEND, which will disable
-USB autosuspend (and subsequent runtime PM entry into D3hot) for all USB
-hosts and devices.
+When cpci_hp_stop() is called to disabled cpcihp controller, it will disable
+interrupt for that controller. But there's small window for event_thread()
+to reenable the interrupt again. So stop the worker thread before disabling
+the interrupt.
 
-If you want a dynamic test, you can go into the USB host sysfs files in
-/sys/bus/usb/devices/usbN/power/ (where N is the bus number) and echo
-"on" to the control file.  Echo "auto" to turn runtime PM back on.  The
-xHCI driver will register two USB buses, so it's better to turn all the
-usbN hosts on for this test.
+If check_slots() returns error, ther working thread (cpci_thread) will exit.
+Later when cpci_stop_thread() or cpci_hp_intr() tries to access cpci_thread,
+it may have already been destroyed. So hold a reference count to cpci_thread
+to avoid invalid memory access.
 
-Alternately, you can also use powertop, go to the Tunables tab, and
-change line like this:
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/hotplug/cpci_hotplug_core.c |   27 +++++++++++++++++----------
+ 1 files changed, 17 insertions(+), 10 deletions(-)
 
->> Good          Autosuspend for USB device EHCI Host Controller [usb7]
+diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
+index 7898023..68e43c7 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_core.c
++++ b/drivers/pci/hotplug/cpci_hotplug_core.c
+@@ -60,7 +60,6 @@ static atomic_t extracting;
+ int cpci_debug;
+ static struct cpci_hp_controller *controller;
+ static struct task_struct *cpci_thread;
+-static int thread_finished;
+ 
+ static int enable_slot(struct hotplug_slot *slot);
+ static int disable_slot(struct hotplug_slot *slot);
+@@ -341,7 +340,8 @@ cpci_hp_intr(int irq, void *data)
+ 	controller->ops->disable_irq();
+ 
+ 	/* Trigger processing by the event thread */
+-	wake_up_process(cpci_thread);
++	if (cpci_thread)
++		wake_up_process(cpci_thread);
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -508,7 +508,6 @@ event_thread(void *data)
+ 				msleep(500);
+ 			} else if (rc < 0) {
+ 				dbg("%s - error checking slots", __func__);
+-				thread_finished = 1;
+ 				goto out;
+ 			}
+ 		} while (atomic_read(&extracting) && !kthread_should_stop());
+@@ -540,7 +539,6 @@ poll_thread(void *data)
+ 					msleep(500);
+ 				} else if (rc < 0) {
+ 					dbg("%s - error checking slots", __func__);
+-					thread_finished = 1;
+ 					goto out;
+ 				}
+ 			} while (atomic_read(&extracting) && !kthread_should_stop());
+@@ -562,15 +560,24 @@ cpci_start_thread(void)
+ 		err("Can't start up our thread");
+ 		return PTR_ERR(cpci_thread);
+ 	}
+-	thread_finished = 0;
++	get_task_struct(cpci_thread);
++
+ 	return 0;
+ }
+ 
+ static void
+ cpci_stop_thread(void)
+ {
+-	kthread_stop(cpci_thread);
+-	thread_finished = 1;
++	struct task_struct *tp;
++
++	if (cpci_thread) {
++		local_irq_disable();
++		tp = cpci_thread;
++		cpci_thread = NULL;
++		local_irq_enable();
++		kthread_stop(tp);
++		put_task_struct(tp);
++	}
+ }
+ 
+ int
+@@ -627,8 +634,7 @@ cpci_hp_unregister_controller(struct cpci_hp_controller *old_controller)
+ 	int status = 0;
+ 
+ 	if (controller) {
+-		if (!thread_finished)
+-			cpci_stop_thread();
++		cpci_stop_thread();
+ 		if (controller->irq)
+ 			free_irq(controller->irq, controller->dev_id);
+ 		controller = NULL;
+@@ -680,12 +686,13 @@ cpci_hp_stop(void)
+ {
+ 	if (!controller)
+ 		return -ENODEV;
++	cpci_stop_thread();
+ 	if (controller->irq) {
+ 		/* Stop enum interrupt processing */
+ 		dbg("%s - disabling irq", __func__);
+ 		controller->ops->disable_irq();
++		synchronize_irq(controller->irq);
+ 	}
+-	cpci_stop_thread();
+ 	return 0;
+ }
+ 
+-- 
+1.7.5.4
 
->From "Good" to "Bad" for the xHCI host.
-
-Sarah Sharp
