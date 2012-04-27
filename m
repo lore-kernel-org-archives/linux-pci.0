@@ -1,72 +1,110 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: huang ying <huang.ying.caritas@gmail.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-Date: Tue, 17 Apr 2012 23:10:38 +0200
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-References: <4F8790F6.5080408@intel.com> <201204162330.12178.rjw@sisk.pl> <CAC=cRTMXNnZQ_bDes9JFp9yreGC63b_i9fUX6apQzWrUHw2a0Q@mail.gmail.com>
-In-Reply-To: <CAC=cRTMXNnZQ_bDes9JFp9yreGC63b_i9fUX6apQzWrUHw2a0Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201204172310.38816.rjw@sisk.pl>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: Keping Chen <chenkeping@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v2 18/19] PCI, sysfs: Use device_type and attr_groups with pci dev
+Date: Fri, 27 Apr 2012 23:16:59 +0800
+Message-Id: <1335539820-11232-19-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 17, 2012, huang ying wrote:
-> On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> >> +     return 0;
-> >> >> +}
-> >> >> +
-> >> >> +static int pcie_port_runtime_resume(struct device *dev)
-> >> >> +{
-> >> >> +     struct pci_dev *pdev = to_pci_dev(dev);
-> >> >> +
-> >> >> +     pci_restore_state(pdev);
-> >> >> +     if (pdev->runtime_d3cold)
-> >> >> +             msleep(100);
-> >> >
-> >> > What's _that_ supposed to do?
-> >>
-> >> When resume from d3cold, PCIe main link will be powered on again, it
-> >> will take quite some time before the main link go into L0 state.
-> >> Otherwise, accessing devices under the port may return wrong result.
-> >
-> > OK, but this is generic code and as per the standard the link should have been
-> > reestablished at this point already.
-> >
-> > Please don't put some nonstandard-platform-specific quirks like this into
-> > code that's supposed to handle _every_ PCIe system.
-> 
-> After checking PCIe spec, I found that the 100ms here has its standard origin :)
-> 
-> In PCI Express Base Specification Revision 2.0:
-> 
-> Section 6.6.1 Conventional Reset
-> 
-> "
-> To allow components to perform internal initialization, system
-> software must wait for at least
-> 100 ms from the end of a Conventional Reset of one or more devices
-> before it is permitted to
-> issue Configuration Requests to those devices
-> "
-> 
-> But I think we should move the 100ms delay here to PCIe bus code or
-> PCIe/ACPI code, because that is needed by all PCIe devices for D3cold
-> support.
+From: Yinghai Lu <yinghai@kernel.org>
 
-I think it should be sufficient to wait for the PME message to arrive at
-the root port (which will cause the PME interrupt to appear), at which
-point the device that sent it should be able to receive configuration
-requests.
+From: Yinghai Lu <yinghai@kernel.org>
 
-At this point, I need to konw what exactly happens when the GPE is triggered
-by WAKE#.
+We want to create rescan in sys only for pci bridge instead of all pci dev.
 
-Thanks,
-Rafael
+We could use attribute_groups/is_visible method to do that.
+
+Now pci dev does not use device type yet. So add pci_dev_type to take
+attr_groups with it.
+
+Add pci_dev_bridge_attrs_are_visible() to control attr_bridge_group only create
+attr for bridge.
+
+This is the framework related change, later could attr to bridge_attr_group,
+to make those attr only show up on pci bridge device.
+
+Also We could add more attr groups with is_visible to reduce messness in
+	pci_create_sysfs_dev_files. ( at least for boot_vga one )
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/pci-sysfs.c |   30 ++++++++++++++++++++++++++++++
+ drivers/pci/pci.h       |    1 +
+ drivers/pci/probe.c     |    1 +
+ 3 files changed, 32 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index ecf197d..bc3c422 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1349,3 +1349,33 @@ static int __init pci_sysfs_init(void)
+ }
+ 
+ late_initcall(pci_sysfs_init);
++
++static struct attribute *pci_dev_bridge_attrs[] = {
++	NULL,
++};
++
++static umode_t pci_dev_bridge_attrs_are_visible(struct kobject *kobj,
++						struct attribute *a, int n)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pdev->subordinate)
++		return 0;
++
++	return a->mode;
++}
++
++static struct attribute_group pci_dev_bridge_attr_group = {
++	.attrs = pci_dev_bridge_attrs,
++	.is_visible = pci_dev_bridge_attrs_are_visible,
++};
++
++static const struct attribute_group *pci_dev_attr_groups[] = {
++	&pci_dev_bridge_attr_group,
++	NULL,
++};
++
++struct device_type pci_dev_type = {
++	.groups = pci_dev_attr_groups,
++};
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e494347..13b1159 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -162,6 +162,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+ }
+ extern struct device_attribute pci_dev_attrs[];
+ extern struct device_attribute pcibus_dev_attrs[];
++extern struct device_type pci_dev_type;
+ #ifdef CONFIG_HOTPLUG
+ extern struct bus_attribute pci_bus_attrs[];
+ #else
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5e1ca3c..b1473d3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1000,6 +1000,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->sysdata = dev->bus->sysdata;
+ 	dev->dev.parent = dev->bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
++	dev->dev.type = &pci_dev_type;
+ 	dev->hdr_type = hdr_type & 0x7f;
+ 	dev->multifunction = !!(hdr_type & 0x80);
+ 	dev->error_state = pci_channel_io_normal;
+-- 
+1.7.5.4
+
