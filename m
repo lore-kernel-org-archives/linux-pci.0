@@ -1,33 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:50484 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752090Ab2DVS4u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Apr 2012 14:56:50 -0400
-Received: by pbcun15 with SMTP id un15so3033679pbc.19
-        for <linux-pci@vger.kernel.org>; Sun, 22 Apr 2012 11:56:49 -0700 (PDT)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:35765 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760216Ab2D0OSL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 10:18:11 -0400
+Received: by lahj13 with SMTP id j13so524414lah.19
+        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 07:18:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1335108346.25945.1.camel@oc4748611672.ibm.com>
-References: <1335108346.25945.1.camel@oc4748611672.ibm.com>
-Date: Sun, 22 Apr 2012 11:56:49 -0700
-Message-ID: <CAE9FiQVKAGAvUtSz-mSNHXmP+d3LQ2YaiH0ygyAtad4TMoc_BA@mail.gmail.com>
-Subject: Re: What possible values can pci_root_num take ??
-From: Yinghai Lu <yinghai@kernel.org>
-To: Onkar N Mahajan <kernzap@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>
+In-Reply-To: <20120427092704.GA22529@richard>
+References: <20120427092704.GA22529@richard>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 27 Apr 2012 08:17:48 -0600
+Message-ID: <CAErSpo6xy6AEQwROSOU6yrfdWpBgRpd+-hOGOyg0mv9UzKwOUA@mail.gmail.com>
+Subject: Re: Does my understanding correct?
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 22, 2012 at 8:25 AM, Onkar N Mahajan <kernzap@gmail.com> wrote:
-> What are the possible values that can be taken
-> by pci_root_num ?? Where can I find this information ( any specs docs ?)
->
-
-from amd Hypertransport  (HT) chain number: 4 at most at that time.
-
-arch/x86/pci/bus_numa.h::
-
-/* 4 at this time, it may become to 32 */
-#define PCI_ROOT_NR 4
-extern int pci_root_num;
-extern struct pci_root_info pci_root_info[PCI_ROOT_NR];
+T24gRnJpLCBBcHIgMjcsIDIwMTIgYXQgMzoyNyBBTSwgUmljaGFyZCBZYW5nCjx3ZWl5YW5nQGxp
+bnV4LnZuZXQuaWJtLmNvbT4gd3JvdGU6Cj4gQWxsLAo+Cj4gSSBkcmF3IGEgcGljdHVyZSBhYm91
+dCB0aGUgcGh5c2ljYWwgbGF5b3V0IG9uIGEgcGFydCBvZiB0aGUgcGNpIHN5c3RlbS4KPgo+IEVh
+Y2ggYmxvY2sgcmVwcmVzZW50IGEgYnJpZGdlIG9yIGEgZGV2aWNlLgo+IEFtIEkgY29ycmVjdD8K
+Pgo+IKAgoCstLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSsKPiCgIKB8IKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoCB8Cj4goCCgfCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfAo+
+IKAgoHwgoCCgIKBCdXMjMiCgIKAgoCCgIKAgoCCgIKAgoHwKPiCgIKB8IKAgLS0tLS0tLS0tLS0t
+LS0tLS0tIKAgoCCgIKB8Cj4goCCgfCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfAo+IKAg
+oHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIHwKPiCgIKB8IKAgoCCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCB8Cj4goCCgfCCgIKAgoCCgIKAgoCCgICstLS0tLS0tLS0tLS0tKwo+IKAgoHwg
+oCCgIKAgoCCgIKAgoCB8RG93blN0cmVhbSCgIHwwMjowMC4wIHBjaV9kZXYKPiCgIKArLS0tLS0t
+LS0tLS0tLS0tKy0tLS0tLS0rLS0tLS0rCj4goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgfCCg
+IEJ1cyMzCj4goCCgIKAgoCCgIKAgLS0tLS0tLS0tLS0tLS0tKy0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLSstLS0KPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKB8
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgfAo+IKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKB8Cj4goCCgKy0tLS0tLS0tLS0tLS0tLSstLS0tLS0tKy0tLS0tKyCgIKAgoCCgIKAgoCCgICst
+LS0tLS0tLS0tLS0tLS0rLS0tLSstLSstLS0tLSsKPiCgIKB8IKAgoCCgIKAgoCCgIKAgfFVwU3Ry
+ZWFtIKAgoCB8MDM6MDAuMCCgIKAgoCCgfCCgIKAgoCCgIKAgoCCgIHxVcFN0cmVhbSCgIKAgfDAz
+OjAxLjAKPiCgIKB8IKAgoCCgIKAgoCCgIKAgKy0tLS0tLS0tLS0tLS0rIKAgoCCgIKAgoCCgIKAg
+fCCgIKAgoCCgIKAgoCCgICstLS0tLS0tLS0tLS0tKyBhIG5vcm1hbCBkZXZpY2UKPiCgIKB8IKAg
+oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8IKAgoCCgIKAgoCCgIKAgfCCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgfAo+IKAgoHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIHwgoCCg
+IKAgoCCgIKAgoCB8IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8Cj4goCCgfCCgIKAgoCCg
+IKAgoCBCdXMjNCCgIKAgoCCgIKAgfCCgIKAgoCCgIKAgoCCgIHwgoCCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKAgoCCgIHwKPiCgIKB8IKAgoCAtLS0tLS0tLS0tLS0tLS0tLS0tIKAgoCB8IKAgoCCgIKAg
+oCCgIKAgfCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfAo+IKAgoHwgoCCgIKAgoCCgIKAg
+oCCgIKArLS0tLS0tLS0tLSsgoCCgIKAgoCCgIKAgoCB8IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKAgoCB8Cj4goCCgfCCgIKAgoCCgIKAgoCCgIKAgoHxEb3duU3RyZWFtfCCgIKAgoCCgIKAgoCCg
+IHwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIHwKPiCgIKArLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0rLS0tLS0rIKAgoCCgIKAgoCCgIKAgKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+Kwo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoHwKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKB8IEJ1cyM1Cj4goCCgIKAgoCCgIKAgoCCgLS0tLS0tLS0tLS0tKy0tLS0tLS0tLS0tLQoK
+SSBhc3N1bWUgeW91ciBxdWVzdGlvbiByZWxhdGVzIHRvIHRoZSBTdHJhdHVzIGZ0U2VydmVyIHRv
+cG9sb2d5LiAgSWYKc28sIHRoZSBsc3BjaSBkZXRhaWxzIG1pZ2h0IGNsYXJpZnkgdGhpbmdzLgoK
+SW4gdGhhdCBzeXN0ZW0sIG15IHVuZGVyc3RhbmRpbmcgaXMgdGhhdCAwMzowMS4wIGlzIGEgZG93
+bnN0cmVhbSBwb3J0LApub3QgYW4gdXBzdHJlYW0gcG9ydC4KCkkgdGhpbmsgeW91ciBwaWN0dXJl
+IGlzIHNsaWdodGx5IG1pc2xlYWRpbmcgYmVjYXVzZSBQQ0llIGxpbmtzIGFyZSBub3QKYnVzZXM7
+IHRoZXkncmUgcG9pbnQtdG8tcG9pbnQgbGlua3MgYmV0d2VlbiB0d28gZGV2aWNlcy4gIFlvdSd2
+ZSBkcmF3bgojMyBhbmQgIzUgYXMgYnVzZXMgdGhhdCBjYW4gaGF2ZSBzZXZlcmFsIGRldmljZXMg
+b24gdGhlbSwgd2hpY2ggaXMgbm90CnJlYWxseSB0aGUgY2FzZS4gIFRoZSBsaW5rIGZyb20gYSBk
+b3duc3RyZWFtIHBvcnQgc2hvdWxkIGxlYWQgdG8KZXhhY3RseSBvbmUgZGV2aWNlLgoKVGhhdCdz
+IG9uZSB0aGluZyB0aGF0J3Mgc3RyYW5nZSBpbiB0aGUgZnRTZXJ2ZXIgdG9wb2xvZ3k6IGFwcGFy
+ZW50bHkKdGhlcmUgYXJlICp0d28qIGRldmljZXMgb24gYnVzIDAzOiB0aGUgMDM6MDAuMCB1cHN0
+cmVhbSBwb3J0IGFuZCB0aGUKMDM6MDEuMCBkb3duc3RyZWFtIHBvcnQuICBJIHRoaW5rIDAzOjAw
+LjAgaXMgdGhlIHVwc3RyZWFtIHBvcnQgb2YgYQpQQ0llIHN3aXRjaCwgd2hpY2ggaXMgcGVyZmVj
+dGx5IG5vcm1hbC4gIE15IHVuZGVyc3RhbmRpbmcgaXMgdGhhdAowMzowMS4wIGlzIGFub3RoZXIg
+KmRvd25zdHJlYW0qIHBvcnQgdGhhdCBsZWFkcyB0byBzZXZlcmFsIG1vcmUKZGV2aWNlcyAoVVNC
+LCBOSUMsIGV0YykuCgpCam9ybgo=
