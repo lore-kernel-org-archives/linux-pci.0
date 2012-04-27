@@ -1,178 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:35016 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016Ab2DPQc7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:32:59 -0400
-Received: by dake40 with SMTP id e40so7133149dak.11
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:32:59 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61293 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760189Ab2D0PT4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 11:19:56 -0400
 From: Jiang Liu <liuj97@gmail.com>
 To: Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Zink <dan.zink@compaq.com>,
-	Greg Kroah-Hartman <greg@kroah.com>,
-	Dely Sy <dely.l.sy@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH RFC 07/17] PCI: serialize hotplug operaitons triggered by the pciehp driver
-Date: Tue, 17 Apr 2012 00:29:01 +0800
-Message-Id: <1334593751-5916-8-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
-References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 00/19] Introduce a global lock to serialize all PCI hotplug
+Date: Fri, 27 Apr 2012 23:16:41 +0800
+Message-Id: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use PCI hotplug lock to serialize hotplug operations triggered by the
-pciehp driver.
+From: Jiang Liu <liuj97@gmail.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/hotplug/pciehp.h      |    2 +
- drivers/pci/hotplug/pciehp_core.c |    7 ++++-
- drivers/pci/hotplug/pciehp_ctrl.c |   48 +++++++++++++++++++++++++++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  |    1 +
- 4 files changed, 57 insertions(+), 1 deletions(-)
+There are multiple methods to trigger PCI hotplug requests/operations
+concurrently, such as:
+1. Sysfs interfaces exported by the PCI core subsystem
+	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../remove
+	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../rescan
+	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../pci_bus/ssss:bb/rescan
+	/sys/bus/pci/rescan
+2. Sysfs interfaces exported by the PCI hotplug subsystem
+	/sys/bus/pci/slots/xx/power
+3. PCI hotplug events triggered by PCI Hotplug Controllers
+4. ACPI hotplug events for PCI host bridges
+5. Driver binding/unbinding events
+	binding/unbinding pci drivers with SR-IOV support
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index c8a1a27..6078eea 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -117,6 +117,7 @@ struct controller {
- #define BLINKINGOFF_STATE		2
- #define POWERON_STATE			3
- #define POWEROFF_STATE			4
-+#define SHUTDOWN_STATE			5
- 
- #define ATTN_BUTTN(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_ABP)
- #define POWER_CTRL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_PCP)
-@@ -160,6 +161,7 @@ void pciehp_green_led_off(struct slot *slot);
- void pciehp_green_led_blink(struct slot *slot);
- int pciehp_check_link_status(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
-+void pciehp_shutdown_slot(struct slot *slot);
- 
- static inline const char *slot_name(struct slot *slot)
- {
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 4ceefe3..2195f67 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -268,8 +268,11 @@ static int pciehp_probe(struct pcie_device *dev)
- 	slot = ctrl->slot;
- 	pciehp_get_adapter_status(slot, &occupied);
- 	pciehp_get_power_status(slot, &poweron);
--	if (occupied && pciehp_force)
-+	if (occupied && pciehp_force) {
-+		pci_hotplug_enter();
- 		pciehp_enable_slot(slot);
-+		pci_hotplug_exit();
-+	}
- 	/* If empty slot's power status is on, turn power off */
- 	if (!occupied && poweron && POWER_CTRL(ctrl))
- 		pciehp_power_off_slot(slot);
-@@ -313,11 +316,13 @@ static int pciehp_resume (struct pcie_device *dev)
- 		slot = ctrl->slot;
- 
- 		/* Check if slot is occupied */
-+		pci_hotplug_enter();
- 		pciehp_get_adapter_status(slot, &status);
- 		if (status)
- 			pciehp_enable_slot(slot);
- 		else
- 			pciehp_disable_slot(slot);
-+		pci_hotplug_exit();
- 	}
- 	return 0;
- }
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 8f4d261..e859100 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -31,6 +31,7 @@
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/slab.h>
-+#include <linux/delay.h>
- #include <linux/pci.h>
- #include "../pci.h"
- #include "pciehp.h"
-@@ -290,6 +291,30 @@ static void pciehp_power_thread(struct work_struct *work)
- 	struct power_work_info *info =
- 		container_of(work, struct power_work_info, work);
- 	struct slot *p_slot = info->p_slot;
-+	bool shutdown;
-+
-+	/*
-+	 * Break out deadlock issues caused by following scenario:
-+	 * Thread A:
-+	 *	1) acquire the PCI hotplug lock
-+	 *	2) remove the PCI device associated with this PCIe HPC
-+	 *	3) call pciehp_remove() for this PCIe HPC
-+	 *	4) call flush_workqueue(pciehp_wq_power) to flush queued works
-+	 *      5) wait until all queued works have done
-+	 * Thread B is a workqueue worker thread:
-+	 *	1) call pciehp_power_thread() to handle hotplug requests
-+	 *	2) try to acquire the PCI hotplug lock
-+	 * Please refer to pciehp_shutdown_slot() for the counterpart.
-+	 */
-+	while (!pci_hotplug_try_enter()) {
-+		mutex_lock(&p_slot->lock);
-+		shutdown = p_slot->state == SHUTDOWN_STATE;
-+		mutex_unlock(&p_slot->lock);
-+		if (shutdown)
-+			goto out;
-+		else
-+			mdelay(1);
-+	}
- 
- 	mutex_lock(&p_slot->lock);
- 	switch (p_slot->state) {
-@@ -315,6 +340,9 @@ static void pciehp_power_thread(struct work_struct *work)
- 	}
- 	mutex_unlock(&p_slot->lock);
- 
-+	pci_hotplug_exit();
-+
-+out:
- 	kfree(info);
- }
- 
-@@ -623,3 +651,23 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
- 
- 	return retval;
- }
-+
-+void pciehp_shutdown_slot(struct slot *slot)
-+{
-+	u8 getstatus;
-+	struct controller *ctrl = slot->ctrl;
-+
-+	mutex_lock(&slot->lock);
-+	slot->state = SHUTDOWN_STATE;
-+	mutex_unlock(&slot->lock);
-+
-+	if (ATTN_LED(ctrl))
-+		pciehp_set_attention_status(slot, 0);
-+	if (PWR_LED(ctrl)) {
-+		pciehp_get_power_status(slot, &getstatus);
-+		if (getstatus)
-+			pciehp_green_led_on(slot);
-+		else
-+			pciehp_green_led_off(slot);
-+	}
-+}
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index d5c826d..c492b2c 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -902,6 +902,7 @@ static void pcie_cleanup_slot(struct controller *ctrl)
- 	 */
- 	flush_workqueue(pciehp_wq_event);
- 	cancel_delayed_work_sync(&slot->work);
-+	pciehp_shutdown_slot(slot);
- 	flush_workqueue(pciehp_wq_power);
- 
- 	kfree(slot);
+With current implementation, the PCI core subsystem doesn't support
+concurrent hotplug operations yet. The existing pci_bus_sem lock only
+protects several lists in struct pci_bus, such as children list,
+devices list, but it doesn't protect the pci_bus or pci_dev structure
+themselves.
+
+Let's take pci_remove_bus_device() as an example, which are used by
+PCI hotplug drivers to hot-remove PCI devices.  Currently all these
+are free running without any protection, so it can't support reentrance.
+pci_remove_bus_device()
+    ->pci_stop_bus_device()
+        ->pci_stop_bus_device()
+            ->pci_stop_bus_devices()
+        ->pci_stop_dev()
+                ->pci_proc_detach_device()
+                ->pci_remove_sysfs_dev_files()
+            ->device_unregister()
+                ->pcie_aspm_exit_link_state()
+    ->__pci_remove_bus_device()
+        ->__pci_remove_behind_bridge()
+        ->pci_remove_bus()
+            ->device_unregister()
+        ->pci_destroy_dev()
+            ->pci_free_resources()
+            ->pci_dev_put()
+
+There are similar issues on hot-adding side.  It may also cause trouble
+if pci_remove_bus_device() and pci_rescan_bus() are called concurrently.
+
+So this patchset introduces a recursive rwsem to globally serialize all
+PCI hotplug operations. It also fixes some minor bugs in current code.
+Following PCI hotplug drivers/interfaces have been enhanced with this
+new lock.
+1. Sysfs interfaces exported by the PCI core subsystem
+2. Sysfs interfaces exported by the PCI hotplug subsystem
+3. pciehp
+4. shpchp
+5. cpcihp_generic and cpcihp_zt5550
+6. fakephp
+
+We have tested pciehp and fakephp, but lack of hardware platforms to test
+other affected hotplug drivers.
+
+There are still several tasks on the TODO list:
+1) all other PCI hotplug driver in drivers/pci/hotplug directory
+2) SR-IOV
+3) acpiphp (plan to do this based on Yinghai's PCI root bus hotplug gate)
+4) pci_root (plan to do this based on Yinghai's PCI root bus hotplug gate)
+
+V2: refine commit messages and hide sys interface 'remove' and 'rescan' of
+    SR-IOV virtural devices
+
+Jiang Liu (18):
+  PCI: introduce pci_bus_get()/pci_bus_put() to hide PCI implementation
+    details
+  PCI: introduce recursive rwsem to serialize PCI hotplug operations
+  PCI: replace pci_remove_rescan_mutex with the PCI hotplug lock
+  PCI: serialize hotplug operations triggered by PCI hotplug sysfs
+    interfaces
+  PCI: correctly flush workqueue when destroy pcie hotplug controller
+  PCI: prepare for serializing hotplug operations triggered by pciehp
+    driver
+  PCI: serialize hotplug operaitons triggered by the pciehp driver
+  PCI: fix two race windows when probing/removing SHPC controller
+  PCI: correctly flush workqueues and timer when destroy SHPC
+    controller
+  PCI: serialize hotplug operaitons triggered by the shpchp driver
+  PCI: release IO resource in error handling path in
+    cpcihp_generic_init()
+  PCI: clean up all resources in error handling path in
+    zt5550_hc_init_one()
+  PCI: trivial code clean up in cpci_hotplug_core.c
+  PCI: fix race windows when shutting down cpcihp controller
+  PCI: hold a reference count to the PCI bus used by cpcihp drivers
+  PCI: serialize PCI hotplug operations triggered by cpcihp drivers
+  PCI: serialize PCI hotplug operations triggered by fakephp drivers
+  PCI: hide sys interface 'remove' and 'rescan' for SR-IOV virtual
+    devices
+
+Yinghai Lu (1):
+  PCI, sysfs: Use device_type and attr_groups with pci dev
+
+ drivers/pci/bus.c                       |   15 +++
+ drivers/pci/hotplug.c                   |   55 ++++++++++
+ drivers/pci/hotplug/cpci_hotplug_core.c |   53 ++++++-----
+ drivers/pci/hotplug/cpcihp_generic.c    |   30 ++++--
+ drivers/pci/hotplug/cpcihp_zt5550.c     |   21 +++-
+ drivers/pci/hotplug/fakephp.c           |   38 ++++++-
+ drivers/pci/hotplug/pci_hotplug_core.c  |   26 ++++-
+ drivers/pci/hotplug/pciehp.h            |    5 +-
+ drivers/pci/hotplug/pciehp_core.c       |   25 ++++-
+ drivers/pci/hotplug/pciehp_ctrl.c       |   56 ++++++++++-
+ drivers/pci/hotplug/pciehp_hpc.c        |   18 +++-
+ drivers/pci/hotplug/shpchp.h            |    3 +
+ drivers/pci/hotplug/shpchp_core.c       |   11 +-
+ drivers/pci/hotplug/shpchp_ctrl.c       |   32 ++++++
+ drivers/pci/hotplug/shpchp_hpc.c        |   36 ++++---
+ drivers/pci/pci-sysfs.c                 |  164 ++++++++++++++++++++++---------
+ drivers/pci/pci.h                       |    1 +
+ drivers/pci/probe.c                     |    1 +
+ drivers/pci/remove.c                    |    1 +
+ include/linux/pci.h                     |   20 ++++-
+ 20 files changed, 480 insertions(+), 131 deletions(-)
+
 -- 
 1.7.5.4
 
