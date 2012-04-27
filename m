@@ -1,54 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:47924 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755749Ab2DOR0R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2012 13:26:17 -0400
-Message-ID: <4F8B04A4.4070507@snewbury.org.uk>
-Date: Sun, 15 Apr 2012 18:25:56 +0100
-From: Steven Newbury <steve@snewbury.org.uk>
+Received: from mail-pz0-f51.google.com ([209.85.210.51]:54323 "EHLO
+	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757350Ab2D0OKo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 10:10:44 -0400
+Received: by dadz8 with SMTP id z8so1069994dad.10
+        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 07:10:43 -0700 (PDT)
+Message-ID: <4F9AA8DA.3050907@gmail.com>
+Date: Fri, 27 Apr 2012 22:10:34 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "Barnes, Jesse" <jesse.barnes@intel.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Subject: Re: PCI resources above 4GB
-References: <1333968563.5678.19.camel@infinity> <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com> <4F848357.3060007@snewbury.org.uk> <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com> <4F848E10.1090703@snewbury.org.uk> <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com> <1334089568.4083.2.camel@Nokia-N900> <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com> <4F84A3EC.6030903@snewbury.org.uk> <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com> <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <4F89B5E8.3040906@snewbury.org.uk> <4F89BC84.50308@snewbury.org.uk> <4F89C513.3000006@snewbury.org.uk> <4F89CB16.2000908@snewbury.org.uk> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com> <4F8AA0DC.6010902@snewbury.org.uk> <4F8AB312.7060606@snewbury.org.uk>
-In-Reply-To: <4F8AB312.7060606@snewbury.org.uk>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+CC: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: Does my understanding correct?
+References: <20120427092704.GA22529@richard>
+In-Reply-To: <20120427092704.GA22529@richard>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+For PCI, there's no internal bus Bus#4 in the left bottom device.
 
-On 15/04/12 12:37, Steven Newbury wrote:
-> On 15/04/12 11:20, Steven Newbury wrote:
->> On 14/04/12 21:48, Yinghai Lu wrote:
-
-[snip]
-
->>> On Sat, Apr 14, 2012 at 12:21 PM, Steven Newbury
-
->>>>> 
->>>>> pci 0000:03:08.0: BAR 15: can't assign mem pref (size 
->>>>> 0x18000000)
->>>> Ah! Not enough space for the bridge window!:(
->>>> 
+On 04/27/2012 05:27 PM, Richard Yang wrote:
+> All, 
 > 
->>> please append pci=norom ...
+> I draw a picture about the physical layout on a part of the pci system.
 > 
->> That worked.  Except of course the radeon driver can't POST the 
->> card without the ROM! :-P
-> Can the ROM resource be mapped above 4G?
-I didn't really think that through, obviously it can't because it's
-not on a 64-bit capable bridge.  I wonder though, could it be shadowed
-then disabled early before the IOMEM?
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+> Each block represent a bridge or a device.
+> Am I correct?
+>    
+>     +-----------------------------+
+>     |                             |
+>     |                             |
+>     |      Bus#2                  |
+>     |   ------------------        |
+>     |                             |
+>     |                             |
+>     |                             |
+>     |               +-------------+
+>     |               |DownStream   |02:00.0 pci_dev
+>     +---------------+-------+-----+
+>                             |   Bus#3
+>              ---------------+------------------------------------------+---
+>                             |                                          |
+>                             |                                          |
+>     +---------------+-------+-----+               +---------------+----+--+-----+
+>     |               |UpStream     |03:00.0        |               |UpStream     |03:01.0
+>     |               +-------------+               |               +-------------+ a normal device
+>     |                             |               |                             |
+>     |                             |               |                             |
+>     |             Bus#4           |               |                             |
+>     |     -------------------     |               |                             |
+>     |                  +----------+               |                             |
+>     |                  |DownStream|               |                             | 
+>     +-----------------------+-----+               +-----------------------------+                       
+>                             |                                                 
+>                             | Bus#5                               
+>                 ------------+------------                                                               
+> 
+> 
 
-iEYEARECAAYFAk+LBKQACgkQGcb56gMuC61OjQCeNPLWh+k03+gvjvWtpG6B4gW0
-US0AoJpCmnNrxWtScyOdvX3sP62KPGUX
-=Sl0p
------END PGP SIGNATURE-----
