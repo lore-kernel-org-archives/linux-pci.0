@@ -1,196 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9268 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754687Ab2DWSu5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Apr 2012 14:50:57 -0400
-Message-ID: <4F95A485.2030700@redhat.com>
-Date: Mon, 23 Apr 2012 14:50:45 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <liuj97@gmail.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V4 0/6] PCI, x86: update MMCFG information when hot-plugging
- PCI host bridges
-References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7zWEXBhC7+gaq+BCussyKOYORaBG-PBe4ERruCAA-cfQ@mail.gmail.com> <4F8573A4.8070307@jp.fujitsu.com> <4F85A481.1020807@gmail.com> <CAErSpo4gqLBQjYf-pKsHWgZOTUTJEi0uqKxSJ5pB_F0uu+CKMA@mail.gmail.com> <4F880482.1090903@jp.fujitsu.com> <4F883956.2040200@gmail.com> <4F8C3B0C.4080606@redhat.com> <4F8C4430.90501@gmail.com> <4F8C5CD9.2020100@redhat.com> <CAErSpo4weTAGVLs748FJbcacyKL=wWfuuDOKEoG8=Skmc+-V8Q@mail.gmail.com>
-In-Reply-To: <CAErSpo4weTAGVLs748FJbcacyKL=wWfuuDOKEoG8=Skmc+-V8Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v2 10/19] PCI: serialize hotplug operaitons triggered by the shpchp driver
+Date: Fri, 27 Apr 2012 23:16:51 +0800
+Message-Id: <1335539820-11232-11-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/23/2012 01:41 PM, Bjorn Helgaas wrote:
-> On Mon, Apr 16, 2012 at 11:54 AM, Don Dutile<ddutile@redhat.com>  wrote:
->> On 04/16/2012 12:09 PM, Jiang Liu wrote:
->>>
->>> Hi Don,
->>>         Thanks for your comments and please refer to inline comments below.
->>
->>
->> Thanks for the info below; couple quick replies below.. - Don
->>
->>
->>> On 04/16/2012 11:30 PM, Don Dutile wrote:
->>>>
->>>> On 04/13/2012 10:33 AM, Jiang Liu wrote:
->>>>>
->>>>> On 04/13/2012 06:48 PM, Kenji Kaneshige wrote:
->>>>>>
->>>>>> (2012/04/12 9:06), Bjorn Helgaas wrote:
->>>>>>>
->>>>>>> On Wed, Apr 11, 2012 at 9:34 AM, Jiang Liu<liuj97@gmail.com>      wrote:
->>>>>>>>
->>>>>>>> On 04/11/2012 08:05 PM, Kenji Kaneshige wrote:
->>>>>>>>>
->>>>>>>>> (2012/04/11 13:02), Bjorn Helgaas wrote:
->>>>>>>>>>
->>>>>>>>>> On Tue, Apr 10, 2012 at 6:10 PM, Jiang Liu<liuj97@gmail.com>
->>>>>>>>>>   wrote:
->>>>>>>>>>>
->>>>>>>>>>> This patchset enhance pci_root driver to update MMCFG information
->>>>>>>>>>> when
->>>>>>>>>>> hot-plugging PCI root bridges. It applies to Yinghai's tree at
->>>>>>>>>>>
->>>>>>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>>>>>>>>>> for-pci-root-bus-hotplug
->>>>>>>>>>>
->>>>>>>>>>> The second patch is based on Taku Izumi work with some
->>>>>>>>>>> enhancements to
->>>>>>>>>>> correctly handle PCI host bridges without _CBA method.
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> I'm sorry I won't have time to really review these for a couple
->>>>>>>>>> weeks.
->>>>>>>>>>
->>>>>>>>>> It always seemed wrong to me that we parse MCFG and set things up
->>>>>>>>>> before we even look at PNP0A03/PNP0A08 devices.  It would make more
->>>>>>>>>> sense to me to have something in acpi_pci_root_add() to set up
->>>>>>>>>> MMCONFIG using _CBA if available, and falling back to parsing MCFG
->>>>>>>>>> if
->>>>>>>>>> it's not.
->>>>>>>>>
->>>>>>>>>
->>>>>>>>> I think your idea could make the code (design) much cleaner.
->>>>>>>>> Do you have any other reason why you think "It always seemed
->>>>>>>>> wrong..."?
->>>>>>>
->>>>>>>
->>>>>>> The current scheme is just an ugly design.  Does I need more reasons?
->>>>>>>   :)
->>>>>>
->>>>>>
->>>>>> Ok, I just wanted to know if I'm missing anything we need to
->>>>>> take into account when re-factoring the code.
->>>>>>
->>>>>> By the way, the following code makes me think there could be
->>>>>> some hardwares that need a fixup using mmconfig access before
->>>>>> scanning the PCI tree. If this is the case, we would need
->>>>>> something to enable early mmconfig initialization for those
->>>>>> hardwares.
->>>>>>
->>>>>> static __init int pci_arch_init(void)
->>>>>> {
->>>>>>       ...
->>>>>>           if (!(pci_probe&     PCI_PROBE_NOEARLY))
->>>>>>                   pci_mmcfg_early_init();
->>>>>>
->>>>>>
->>>>>> Regards,
->>>>>> Kenji Kaneshige
->>>>>
->>>>>
->>>>> If MMCFG could be treated as an optional configuration space access
->>>>> method,
->>>>> we can refine the MMCFG code according to Bjorn's suggestion. And as
->>>>> Kenji
->>>>> has mentioned, there may be some risks ahead. So need more confirmation
->>>>> from other PCI experts here.
->>>>>
->>>> I looked at the thread, but didn't know which suggestion of Bjorn's you
->>>> were referring to.
->>>> But, mmcfg access to PCI config space is need for any cap structure
->>>> greater than 256 byte offset.  A number of devices have cap structures
->>>> in this upper PCI config space, esp. SRIOV devices.
->>>> So, if 'optional MMCFG' only means at the beginning of kernel scanning of
->>>> PCI (pass-0 scanning), that should be ok, but in-depth, pass-1 scanning
->>>> of PCIe devices may require MMCFG for full functional support.
->>>
->>> For mainstream systems with support of ACPI and MMCFG, the booting
->>> sequences are about:
->>> 1) Probe for legacy PCI configuration access mechanism, such as CONF1,
->>> CONF2, BIOS
->>> 2) Start ACPICA/ACPI subsystem with the legacy PCI configuration access
->>> mechanism
->>> 3) Enumerate PCI root bridges (PNP0A03/PNP0A08) in ACPI namespace and bind
->>> pci_root
->>>     driver to them
->>> 4) pci_root driver calls into arch code to add MMCFG information for the
->>> host bridge
->>> 5) pci_root driver calls PCI core to enumerate all PCI devices under the
->>> host bridge
->>>
->>> The above flow should work for SRIOV case. But still need to check
->>> following cases:
->>> 1) ACPICA/ACPI subsystem has no dependency on MMCFG
->>> 2) Systems implementing SFI instead of ACPI work as expected
->>> 3) ACPI has been disabled by user (Bjorn points out we could ignore this
->>> case)
->>
->> Agreed. My least favorite bz: "I set boot param to noacpi and can't scan
->> entire PCI space.... duh!
->>
->>
->>> 4) Some host bridges are not reported by ACPI (Bjorn points out we should
->>> eventually
->>>     get rid of the blind probing logic)
->>
->> And depend on BIOS-ACPI to be correct all the time? ....hahahahahaha  ...
->> sorry.... you hit my funny bone! ;-)
->> Is blind probing problematic ?
->> Seems like a pci-fixup/quirk can be implemented under arch/<>/pci to handle
->> these cases, and thus, depend on ACPI for host-bridge info... wait! did I
->> just
->> say depend on ACPI?!?!   :)
->
-> Hope your funny bone has stopped tingling by now :)
->
-Not when ACPI's always there to bang it again! ;-)
+From: Jiang Liu <jiang.liu@huawei.com>
 
-> When we probe blindly, we don't know what resources are available on
-> the bus (except for AMD systems).  Therefore, we can't do reliable
-> assignment, and we have to rely on whatever the BIOS did.
->
-> Blind probing finds devices not exposed by the BIOS.  This might be a
-> BIOS bug, or it might be a conscious decision to hide the devices from
-> the OS.  Some OEMs hide devices to reduce the likelihood of users
-> messing things up with setpci.
->
-> It would be interesting and relatively easy to figure out whether
-> Windows ever discovers a device behind an unreported host bridge.  My
-> guess is "no," but I haven't had time to verify this.
->
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Use PCI hotplug lock to serialize hotplug operations triggered by the
+shpchp driver.
 
-Well, call me crazy(again!), but why put a host-bridge device on a system
-and then (try to) hide it with software(BIOS/ACPI) ?
-Sounds like a recipe for disaster if the OS tries to
-reconfigure address space or bus-number space.....
-then again, mmconfig is tied to acpi (for x86) and maybe more ACPI
-magic can restrict cfg space regions to alleviate this problem/issue/condition/practice.
-Hiding a PCI device is as simple as not loading its driver... :)
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/hotplug/shpchp.h      |    2 ++
+ drivers/pci/hotplug/shpchp_core.c |    3 ++-
+ drivers/pci/hotplug/shpchp_ctrl.c |   32 ++++++++++++++++++++++++++++++++
+ 3 files changed, 36 insertions(+), 1 deletions(-)
 
-Have to run.... /me has to tell associate to get a new BIOS update
-b/c when they enable the BIOS option for IOMMU, the
-ACPI DMAR tables are borked.... glad paranoid checks
-were added to the Linux IOMMU setup code for the ACPI-DMAR tables!
-... of course, assuming such an update exists ....
-another borked ACPI table strikes again! :) :) :) ... that's my funny
-bone being hit again!
+diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
+index 6691dc4..07f3b2d 100644
+--- a/drivers/pci/hotplug/shpchp.h
++++ b/drivers/pci/hotplug/shpchp.h
+@@ -157,6 +157,7 @@ struct controller {
+ #define BLINKINGOFF_STATE		2
+ #define POWERON_STATE			3
+ #define POWEROFF_STATE			4
++#define SHUTDOWN_STATE			5
+ 
+ /* Error messages */
+ #define INTERLOCK_OPEN			0x00000002
+@@ -179,6 +180,7 @@ extern u8 shpchp_handle_presence_change(u8 hp_slot, struct controller *ctrl);
+ extern u8 shpchp_handle_power_fault(u8 hp_slot, struct controller *ctrl);
+ extern int shpchp_configure_device(struct slot *p_slot);
+ extern int shpchp_unconfigure_device(struct slot *p_slot);
++extern void shpchp_shutdown_slot(struct slot *slot);
+ extern void cleanup_slots(struct controller *ctrl);
+ extern void shpchp_queue_pushbutton_work(struct work_struct *work);
+ extern int shpc_init( struct controller *ctrl, struct pci_dev *pdev);
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index 19762b3..71cc5f2 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -172,10 +172,11 @@ void cleanup_slots(struct controller *ctrl)
+ 
+ 	list_for_each_safe(tmp, next, &ctrl->slot_list) {
+ 		slot = list_entry(tmp, struct slot, slot_list);
+-		list_del(&slot->slot_list);
+ 		flush_workqueue(shpchp_wq);
+ 		cancel_delayed_work_sync(&slot->work);
++		shpchp_shutdown_slot(slot);
+ 		flush_workqueue(shpchp_ordered_wq);
++		list_del(&slot->slot_list);
+ 		pci_hp_deregister(slot->hotplug_slot);
+ 	}
+ }
+diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
+index b00b09b..7b8e3a6 100644
+--- a/drivers/pci/hotplug/shpchp_ctrl.c
++++ b/drivers/pci/hotplug/shpchp_ctrl.c
+@@ -31,6 +31,7 @@
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/slab.h>
++#include <linux/delay.h>
+ #include <linux/pci.h>
+ #include "../pci.h"
+ #include "shpchp.h"
+@@ -406,6 +407,18 @@ static void shpchp_pushbutton_thread(struct work_struct *work)
+ 	struct pushbutton_work_info *info =
+ 		container_of(work, struct pushbutton_work_info, work);
+ 	struct slot *p_slot = info->p_slot;
++	bool shutdown;
++
++	/* Break possible deadlock by using pci_hotplug_try_enter() */
++	while (!pci_hotplug_try_enter()) {
++		mutex_lock(&p_slot->lock);
++		shutdown = p_slot->state == SHUTDOWN_STATE;
++		mutex_unlock(&p_slot->lock);
++		if (shutdown)
++			goto out;
++		else
++			mdelay(1);
++	}
+ 
+ 	mutex_lock(&p_slot->lock);
+ 	switch (p_slot->state) {
+@@ -427,6 +440,9 @@ static void shpchp_pushbutton_thread(struct work_struct *work)
+ 	}
+ 	mutex_unlock(&p_slot->lock);
+ 
++	pci_hotplug_exit();
++
++out:
+ 	kfree(info);
+ }
+ 
+@@ -729,3 +745,19 @@ int shpchp_sysfs_disable_slot(struct slot *p_slot)
+ 
+ 	return retval;
+ }
++
++void shpchp_shutdown_slot(struct slot *slot)
++{
++	u8 getstatus;
++
++	mutex_lock(&slot->lock);
++	slot->state = SHUTDOWN_STATE;
++	mutex_unlock(&slot->lock);
++
++	slot->hpc_ops->set_attention_status(slot, 0);
++	slot->hpc_ops->get_power_status(slot, &getstatus);
++	if (getstatus)
++		slot->hpc_ops->green_led_on(slot);
++	else
++		slot->hpc_ops->green_led_off(slot);
++}
+-- 
+1.7.5.4
 
