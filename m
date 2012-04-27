@@ -1,56 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63020 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757064Ab2DMNsH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Apr 2012 09:48:07 -0400
-Message-ID: <4F882E94.1070504@redhat.com>
-Date: Fri, 13 Apr 2012 09:48:04 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Matthew Wilcox <matthew@wil.cx>,
-	"Hao, Xudong" <xudong.hao@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
-References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com> <4F8594FD.8020109@redhat.com> <20120412040630.GC6557@parisc-linux.org> <4F86F28E.8020807@redhat.com> <CAErSpo4pAGnQm=5=1kEeLmUBZi2wLWXCpw7s-+JFJbz4LVp3fQ@mail.gmail.com>
-In-Reply-To: <CAErSpo4pAGnQm=5=1kEeLmUBZi2wLWXCpw7s-+JFJbz4LVp3fQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v2 15/19] PCI: hold a reference count to the PCI bus used by cpcihp drivers
+Date: Fri, 27 Apr 2012 23:16:56 +0800
+Message-Id: <1335539820-11232-16-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/2012 09:48 PM, Bjorn Helgaas wrote:
-> On Thu, Apr 12, 2012 at 9:19 AM, Don Dutile<ddutile@redhat.com>  wrote:
->> On 04/12/2012 12:06 AM, Matthew Wilcox wrote:
->
->>>> -->    other arch compile problem source???
->>>
->>>
->>> Well, this device is part of the x86 CPU.  It's never going to be found
->>> as part of any other architecture.  Why force other architectures to
->>> carry this quirk around?
->>
->> Well, the trend to include more IO into chipsets tied to an arch
->> will probably increase over time, so such conditional quirks will
->> increase as well.
->> Sounds like the quirk tables need an arch-hook (linked list) to check
->> &  traverse.  Then such code can go into arch/<arch>/pci/quirks.c .
->
-> We do have arch/x86/pci/fixup.c already.  I agree it'd be nice if it
-> had the same name as the generic quirks.c.  Other than that, do you
-> think there's an advantage to adding some sort of explicit arch hook,
-> or is it sufficient that DECLARE_PCI_FIXUP...() uses the linker to
-> collect all the quirks (both generic and arch-specific)?
->
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: Jiang Liu <jiang.liu@huawei.com>
 
-I didn't understand that DECLARE_PCI_FIXUP...() uses the linker to
-collect all the quirks.  if so, that WFM.
-I do think the arch/<>/pci/fixup.c module should be renamed to quirks.c
-so it's association with drivers/pci/quirks.c is (more) obvious.
-fixup.c gives the impression it may be more like bios-related fixup,
-and not quirk-related fixups.
+The PCI bus used by cpcihp drivers may be removed at runtime through
+/sys/devices/pcissss:bb/ssss\:bb\:dd.f/.../remove interface, so hold
+a reference count to the PCI bus to avoid invalid memory access.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/hotplug/cpcihp_generic.c |    7 +++++--
+ drivers/pci/hotplug/cpcihp_zt5550.c  |    7 +++++--
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
+index 518f387..f002be5 100644
+--- a/drivers/pci/hotplug/cpcihp_generic.c
++++ b/drivers/pci/hotplug/cpcihp_generic.c
+@@ -163,7 +163,7 @@ static int __init cpcihp_generic_init(void)
+ 			err("Invalid bridge device %s", bridge);
+ 			bus = NULL;
+ 		} else
+-			bus = dev->subordinate;
++			bus = pci_bus_get(dev->subordinate);
+ 		pci_dev_put(dev);
+ 	}
+ 	if (!bus) {
+@@ -179,7 +179,7 @@ static int __init cpcihp_generic_init(void)
+ 	if(status != 0) {
+ 		err("Could not register cPCI hotplug controller");
+ 		status = -ENODEV;
+-		goto init_find_bus_error;
++		goto init_register_controller_error;
+ 	}
+ 	dbg("registered controller");
+ 
+@@ -202,6 +202,8 @@ init_start_error:
+ 	cpci_hp_unregister_bus(bus);
+ init_bus_register_error:
+ 	cpci_hp_unregister_controller(&generic_hpc);
++init_register_controller_error:
++	pci_bus_put(bus);
+ init_find_bus_error:
+ 	release_region(port, 1);
+ 	err("status = %d", status);
+@@ -214,6 +216,7 @@ static void __exit cpcihp_generic_exit(void)
+ 	cpci_hp_stop();
+ 	cpci_hp_unregister_bus(bus);
+ 	cpci_hp_unregister_controller(&generic_hpc);
++	pci_bus_put(bus);
+ 	release_region(port, 1);
+ }
+ 
+diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
+index 8a6f968..6606520 100644
+--- a/drivers/pci/hotplug/cpcihp_zt5550.c
++++ b/drivers/pci/hotplug/cpcihp_zt5550.c
+@@ -241,9 +241,9 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
+ 	if(!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
+ 					 PCI_DEVICE_ID_DEC_21154, NULL))) {
+ 		status = -ENODEV;
+-		goto init_register_error;
++		goto init_find_bus_error;
+ 	}
+-	bus0 = bus0_dev->subordinate;
++	bus0 = pci_bus_get(bus0_dev->subordinate);
+ 	pci_dev_put(bus0_dev);
+ 
+ 	status = cpci_hp_register_bus(bus0, 0x0a, 0x0f);
+@@ -265,6 +265,8 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
+ init_start_error:
+ 	cpci_hp_unregister_bus(bus0);
+ init_register_error:
++	pci_bus_put(bus0);
++init_find_bus_error:
+ 	cpci_hp_unregister_controller(&zt5550_hpc);
+ init_hc_error:
+ 	err("status = %d", status);
+@@ -278,6 +280,7 @@ static void __devexit zt5550_hc_remove_one(struct pci_dev *pdev)
+ 	cpci_hp_stop();
+ 	cpci_hp_unregister_bus(bus0);
+ 	cpci_hp_unregister_controller(&zt5550_hpc);
++	pci_bus_put(bus0);
+ 	zt5550_hc_cleanup();
+ }
+ 
+-- 
+1.7.5.4
 
