@@ -1,103 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45686 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759550Ab2DKAOV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2012 20:14:21 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so552527pbc.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Apr 2012 17:14:21 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <liuj97@gmail.com>
 To: Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH V4 1/6] PCI, x86: split out pci_mmcfg_check_reserved() for code reuse
-Date: Wed, 11 Apr 2012 08:10:58 +0800
-Message-Id: <1334103063-2283-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
-References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v2 16/19] PCI: serialize PCI hotplug operations triggered by cpcihp drivers
+Date: Fri, 27 Apr 2012 23:16:57 +0800
+Message-Id: <1335539820-11232-17-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split out pci_mmcfg_check_reserved() for code reuse, which will be used
-when supporting PCI host bridge hotplug.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Use PCI hotplug lock to globally serialize hotplug operations triggered
+by cpcihp_xxx drivers.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- arch/x86/pci/mmconfig-shared.c |   51 +++++++++++++++++++--------------------
- 1 files changed, 25 insertions(+), 26 deletions(-)
+ drivers/pci/hotplug/cpci_hotplug_core.c |   10 ++++++++++
+ drivers/pci/hotplug/cpcihp_generic.c    |    2 ++
+ drivers/pci/hotplug/cpcihp_zt5550.c     |   12 ++++++++----
+ 3 files changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 301e325..f799949 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
- 	return valid;
- }
- 
-+static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
-+					      int early)
-+{
-+	if (!early && !acpi_disabled) {
-+		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
-+			return 1;
-+		else
-+			printk(KERN_ERR FW_BUG PREFIX
-+			       "MMCONFIG at %pR not reserved in "
-+			       "ACPI motherboard resources\n",
-+			       &cfg->res);
-+	}
-+
-+	/* Don't try to do this check unless configuration
-+	   type 1 is available. how about type 2 ?*/
-+	if (raw_pci_ops)
-+		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
-+
-+	return 0;
-+}
-+
- static void __init pci_mmcfg_reject_broken(int early)
- {
- 	struct pci_mmcfg_region *cfg;
- 
- 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
--		int valid = 0;
--
--		if (!early && !acpi_disabled) {
--			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
--
--			if (valid)
--				continue;
--			else
--				printk(KERN_ERR FW_BUG PREFIX
--				       "MMCONFIG at %pR not reserved in "
--				       "ACPI motherboard resources\n",
--				       &cfg->res);
-+		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
-+			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
-+			free_all_mmcfg();
-+			return;
+diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
+index 68e43c7..bbac305 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_core.c
++++ b/drivers/pci/hotplug/cpci_hotplug_core.c
+@@ -502,6 +502,10 @@ event_thread(void *data)
+ 		if (kthread_should_stop())
+ 			break;
+ 		do {
++			if (!pci_hotplug_try_enter()) {
++				msleep(1);
++				continue;
++			}
+ 			rc = check_slots();
+ 			if (rc > 0) {
+ 				/* Give userspace a chance to handle extraction */
+@@ -510,6 +514,7 @@ event_thread(void *data)
+ 				dbg("%s - error checking slots", __func__);
+ 				goto out;
+ 			}
++			pci_hotplug_exit();
+ 		} while (atomic_read(&extracting) && !kthread_should_stop());
+ 		if (kthread_should_stop())
+ 			break;
+@@ -533,6 +538,10 @@ poll_thread(void *data)
+ 			break;
+ 		if (controller->ops->query_enum()) {
+ 			do {
++				if (!pci_hotplug_try_enter()) {
++					msleep(1);
++					continue;
++				}
+ 				rc = check_slots();
+ 				if (rc > 0) {
+ 					/* Give userspace a chance to handle extraction */
+@@ -541,6 +550,7 @@ poll_thread(void *data)
+ 					dbg("%s - error checking slots", __func__);
+ 					goto out;
+ 				}
++				pci_hotplug_exit();
+ 			} while (atomic_read(&extracting) && !kthread_should_stop());
  		}
--
--		/* Don't try to do this check unless configuration
--		   type 1 is available. how about type 2 ?*/
--		if (raw_pci_ops)
--			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
--
--		if (!valid)
--			goto reject;
- 	}
--
--	return;
--
--reject:
--	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
--	free_all_mmcfg();
- }
+ 		msleep(100);
+diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
+index f002be5..91d27d5 100644
+--- a/drivers/pci/hotplug/cpcihp_generic.c
++++ b/drivers/pci/hotplug/cpcihp_generic.c
+@@ -154,6 +154,7 @@ static int __init cpcihp_generic_init(void)
+ 	if(!r)
+ 		return -EBUSY;
  
- static int __initdata known_bridge;
++	pci_hotplug_disable();
+ 	bus = pci_find_bus(0, bridge_busnr);
+ 	if (!bus) {
+ 		err("Invalid bus number %d", bridge_busnr);
+@@ -166,6 +167,7 @@ static int __init cpcihp_generic_init(void)
+ 			bus = pci_bus_get(dev->subordinate);
+ 		pci_dev_put(dev);
+ 	}
++	pci_hotplug_enable();
+ 	if (!bus) {
+ 		status = -EINVAL;
+ 		goto init_find_bus_error;
+diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
+index 6606520..1f81d85 100644
+--- a/drivers/pci/hotplug/cpcihp_zt5550.c
++++ b/drivers/pci/hotplug/cpcihp_zt5550.c
+@@ -238,13 +238,17 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
+ 	dbg("registered controller");
+ 
+ 	/* Look for first device matching cPCI bus's bridge vendor and device IDs */
+-	if(!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
+-					 PCI_DEVICE_ID_DEC_21154, NULL))) {
++	pci_hotplug_enter();
++	bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
++				  PCI_DEVICE_ID_DEC_21154, NULL);
++	if (bus0_dev)
++		bus0 = pci_bus_get(bus0_dev->subordinate);
++	pci_dev_put(bus0_dev);
++	pci_hotplug_exit();
++	if (!bus0) {
+ 		status = -ENODEV;
+ 		goto init_find_bus_error;
+ 	}
+-	bus0 = pci_bus_get(bus0_dev->subordinate);
+-	pci_dev_put(bus0_dev);
+ 
+ 	status = cpci_hp_register_bus(bus0, 0x0a, 0x0f);
+ 	if(status != 0) {
 -- 
 1.7.5.4
 
