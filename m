@@ -1,44 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:50138 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755223Ab2DQPkI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2012 11:40:08 -0400
-Message-ID: <4F8DB90A.8050504@xenotime.net>
-Date: Tue, 17 Apr 2012 11:40:10 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:47128 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755064Ab2D0J1a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 05:27:30 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 27 Apr 2012 14:57:27 +0530
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q3R9R6vC26607794
+	for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 14:57:07 +0530
+Received: from d28av02.in.ibm.com (loopback [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q3REviFf012989
+	for <linux-pci@vger.kernel.org>; Sat, 28 Apr 2012 00:57:44 +1000
+Date: Fri, 27 Apr 2012 17:27:04 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com
+Subject: Does my understanding correct?
+Message-ID: <20120427092704.GA22529@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-CC: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-Subject: Re: linux-next: Tree for Apr 17 (pci-sysfs.c and vga_switcheroo.c)
-References: <20120417144241.0d7dc5fde56b2a37ff0dcaba@canb.auug.org.au>
-In-Reply-To: <20120417144241.0d7dc5fde56b2a37ff0dcaba@canb.auug.org.au>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/16/2012 09:42 PM, Stephen Rothwell wrote:
+All, 
 
-> Hi all,
-> 
-> Changes since 20120416:
+I draw a picture about the physical layout on a part of the pci system.
 
-
-When CONFIG_VGA_ARB is not enabled:
-
-drivers/built-in.o: In function `boot_vga_show':
-pci-sysfs.c:(.text+0x1060f): undefined reference to `vga_default_device'
-
-
-and
-
-drivers/built-in.o: In function `boot_vga_show':
-pci-sysfs.c:(.text+0x8cc2): undefined reference to `vga_default_device'
-drivers/built-in.o: In function `vga_switcheroo_register_client':
-(.text+0x76671): undefined reference to `vga_default_device'
-drivers/built-in.o: In function `vga_switchto_stage1':
-vga_switcheroo.c:(.text+0x767f4): undefined reference to `vga_set_default_device'
+Each block represent a bridge or a device.
+Am I correct?
+   
+    +-----------------------------+
+    |                             |
+    |                             |
+    |      Bus#2                  |
+    |   ------------------        |
+    |                             |
+    |                             |
+    |                             |
+    |               +-------------+
+    |               |DownStream   |02:00.0 pci_dev
+    +---------------+-------+-----+
+                            |   Bus#3
+             ---------------+------------------------------------------+---
+                            |                                          |
+                            |                                          |
+    +---------------+-------+-----+               +---------------+----+--+-----+
+    |               |UpStream     |03:00.0        |               |UpStream     |03:01.0
+    |               +-------------+               |               +-------------+ a normal device
+    |                             |               |                             |
+    |                             |               |                             |
+    |             Bus#4           |               |                             |
+    |     -------------------     |               |                             |
+    |                  +----------+               |                             |
+    |                  |DownStream|               |                             | 
+    +-----------------------+-----+               +-----------------------------+                       
+                            |                                                 
+                            | Bus#5                               
+                ------------+------------                                                               
 
 
 -- 
-~Randy
+Richard Yang
+Help you, Help me
+
