@@ -1,108 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:57882 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040Ab2DBHj4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2012 03:39:56 -0400
-Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 821B63EE0BB
-	for <linux-pci@vger.kernel.org>; Mon,  2 Apr 2012 16:39:55 +0900 (JST)
-Received: from smail (m2 [127.0.0.1])
-	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 689C545DE4E
-	for <linux-pci@vger.kernel.org>; Mon,  2 Apr 2012 16:39:55 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
-	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 430F545DD78
-	for <linux-pci@vger.kernel.org>; Mon,  2 Apr 2012 16:39:55 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 355FB1DB803E
-	for <linux-pci@vger.kernel.org>; Mon,  2 Apr 2012 16:39:55 +0900 (JST)
-Received: from m005.s.css.fujitsu.com (m005.s.css.fujitsu.com [10.23.4.35])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id E8ACE1DB802C
-	for <linux-pci@vger.kernel.org>; Mon,  2 Apr 2012 16:39:54 +0900 (JST)
-Message-ID: <4F79584B.2010301@jp.fujitsu.com>
-Date: Mon, 02 Apr 2012 16:42:03 +0900
-From: =?ISO-2022-JP?B?GyRCPj5LXEduTzobKEI=?=
-	<matsumoto.hiroo@jp.fujitsu.com>
-MIME-Version: 1.0
-To: jbarnes@virtuousgeek.org
-CC: linux-pci@vger.kernel.org
-Subject: [RFC] pciehp: Add archdata setting
-Content-Type: multipart/mixed;
- boundary="------------060302070404040202010503"
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61293 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760363Ab2D0PUy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 11:20:54 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v2 06/19] PCI: prepare for serializing hotplug operations triggered by pciehp driver
+Date: Fri, 27 Apr 2012 23:16:47 +0800
+Message-Id: <1335539820-11232-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060302070404040202010503
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Hi
+Split pciehp_wq into two workqueues to avoid possible deadlock issues
+when using PCI hotplug lock to serialize hotplug operations triggered
+by pciehp driver.
 
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/hotplug/pciehp.h      |    3 ++-
+ drivers/pci/hotplug/pciehp_core.c |   18 +++++++++++++-----
+ drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
+ drivers/pci/hotplug/pciehp_hpc.c  |   11 ++++++-----
+ 4 files changed, 25 insertions(+), 15 deletions(-)
 
-I'm trying to use pciehp on powerpc platform.
-I set e1000e card to PCI Express bridge that has PCI Express HotPlug
-Capability.
-
-There is problem when poweron PCI Express HotPlug slot with pciehp.
-e1000e driver needs dma_ops in struct dev_archdata, but archdata isn't
-set (dma_ops is NULL) when probe from pciehp.
-Then e1000e driver returns error as below.
-
--sh-3.2# echo 1 > /sys/bus/pci/slots/1/power
-<snip>
-[   65.493662] pci 0000:03:00.0: BAR 2: set to [io
-0xff7ee000-0xff7ee01f] (PCI address [0x1000-0x101f])
-[   65.502890] pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
-[   65.508555] pcieport 0000:02:01.0:   bridge window [io
-0xff7ee000-0xff7eefff]
-[   65.515785] pcieport 0000:02:01.0:   bridge window [mem
-0xa0100000-0xa01fffff]
-[   65.523015] pcieport 0000:02:01.0:   bridge window [mem
-0xa0200000-0xa02fffff 64bit pref]
-[   65.531238] pci 0000:03:00.0: no hotplug settings from platform
-[   65.538361] e1000e 0000:03:00.0: Disabling ASPM  L1
-[   65.543616] e1000e 0000:03:00.0: enabling device (0000 -> 0002)
-[   65.549876] e1000e 0000:03:00.0: No usable DMA configuration, aborting
-[   65.557194] e1000e: probe of 0000:03:00.0 failed with error -5
--sh-3.2# lspci
-<snip>
-0000:03:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit
-Ethernet Controller (Copper) (rev 06)
-<snip>
--sh-3.2# ifconfig -a
-<snip>  // There is no network interface for 82572EI
-
-If archdata.dma_ops is NULL on x86 platform, e1000e will get dma_ops
-without archdata.
-So e1000e driver doesn't return error.
-
-I think that archdata should be set before driver probe (e.g pciehp).
-I tried to fix it (pciehp-add-archdata.patch), but I'm not good at PCI
-driver..., so please give better way.
-
-
-Regards.
-
-Hiroo MATSUMOTO (FUJITSU COMPUTER TECHNOLOGIES LIMITED)
-matsumoto.hiroo@jp.fujitsu.com
-
-
-
---------------060302070404040202010503
-Content-Type: text/plain;
- name="pciehp-add-archdata.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="pciehp-add-archdata.patch"
-
-U2lnbmVkLW9mZi1ieTogSGlyb28gTUFUU1VNT1RPIDxtYXRzdW1vdG8uaGlyb29AanAuZnVq
-aXRzdS5jb20+CmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9wY2ku
-YyBiL2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX3BjaS5jCmluZGV4IGE0MDMxZGYuLmEw
-MjFmYmMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX3BjaS5jCisr
-KyBiL2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX3BjaS5jCkBAIC04OSw2ICs4OSw3IEBA
-IGludCBwY2llaHBfY29uZmlndXJlX2RldmljZShzdHJ1Y3Qgc2xvdCAqcF9zbG90KQogCQkJ
-cGNpZWhwX2FkZF9icmlkZ2UoZGV2KTsKIAkJfQogCQlwY2lfZGV2X3B1dChkZXYpOworCQlk
-ZXYtPmRldi5hcmNoZGF0YSA9IGJyaWRnZS0+ZGV2LmFyY2hkYXRhOwogCX0KIAogCXBjaV9h
-c3NpZ25fdW5hc3NpZ25lZF9icmlkZ2VfcmVzb3VyY2VzKGJyaWRnZSk7Cg==
---------------060302070404040202010503--
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 4b7cce1..c8a1a27 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -44,7 +44,8 @@ extern bool pciehp_poll_mode;
+ extern int pciehp_poll_time;
+ extern bool pciehp_debug;
+ extern bool pciehp_force;
+-extern struct workqueue_struct *pciehp_wq;
++extern struct workqueue_struct *pciehp_wq_event;
++extern struct workqueue_struct *pciehp_wq_power;
+ 
+ #define dbg(format, arg...)						\
+ do {									\
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 365c6b9..4ceefe3 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -42,7 +42,8 @@ bool pciehp_debug;
+ bool pciehp_poll_mode;
+ int pciehp_poll_time;
+ bool pciehp_force;
+-struct workqueue_struct *pciehp_wq;
++struct workqueue_struct *pciehp_wq_event;
++struct workqueue_struct *pciehp_wq_power;
+ 
+ #define DRIVER_VERSION	"0.4"
+ #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+@@ -340,16 +341,22 @@ static int __init pcied_init(void)
+ {
+ 	int retval = 0;
+ 
+-	pciehp_wq = alloc_workqueue("pciehp", 0, 0);
+-	if (!pciehp_wq)
++	pciehp_wq_event = alloc_workqueue("pciehp_event", 0, 0);
++	if (!pciehp_wq_event)
+ 		return -ENOMEM;
++	pciehp_wq_power = alloc_workqueue("pciehp_power", 0, 0);
++	if (!pciehp_wq_power) {
++		destroy_workqueue(pciehp_wq_event);
++		return -ENOMEM;
++	}
+ 
+ 	pciehp_firmware_init();
+ 	retval = pcie_port_service_register(&hpdriver_portdrv);
+  	dbg("pcie_port_service_register = %d\n", retval);
+   	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+  	if (retval) {
+-		destroy_workqueue(pciehp_wq);
++		destroy_workqueue(pciehp_wq_event);
++		destroy_workqueue(pciehp_wq_power);
+ 		dbg("Failure to register service\n");
+ 	}
+ 	return retval;
+@@ -359,7 +366,8 @@ static void __exit pcied_cleanup(void)
+ {
+ 	dbg("unload_pciehpd()\n");
+ 	pcie_port_service_unregister(&hpdriver_portdrv);
+-	destroy_workqueue(pciehp_wq);
++	destroy_workqueue(pciehp_wq_event);
++	destroy_workqueue(pciehp_wq_power);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+ }
+ 
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 27f4429..8f4d261 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -49,7 +49,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ 	info->p_slot = p_slot;
+ 	INIT_WORK(&info->work, interrupt_event_handler);
+ 
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(pciehp_wq_event, &info->work);
+ 
+ 	return 0;
+ }
+@@ -344,7 +344,7 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
+ 		kfree(info);
+ 		goto out;
+ 	}
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(pciehp_wq_power, &info->work);
+  out:
+ 	mutex_unlock(&p_slot->lock);
+ }
+@@ -377,7 +377,7 @@ static void handle_button_press_event(struct slot *p_slot)
+ 		if (ATTN_LED(ctrl))
+ 			pciehp_set_attention_status(p_slot, 0);
+ 
+-		queue_delayed_work(pciehp_wq, &p_slot->work, 5*HZ);
++		queue_delayed_work(pciehp_wq_event, &p_slot->work, 5*HZ);
+ 		break;
+ 	case BLINKINGOFF_STATE:
+ 	case BLINKINGON_STATE:
+@@ -439,7 +439,7 @@ static void handle_surprise_event(struct slot *p_slot)
+ 	else
+ 		p_slot->state = POWERON_STATE;
+ 
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(pciehp_wq_power, &info->work);
+ }
+ 
+ static void interrupt_event_handler(struct work_struct *work)
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 98b775f..d5c826d 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -894,14 +894,15 @@ static void pcie_cleanup_slot(struct controller *ctrl)
+ 	 * Following workqueue flushing logic is to deal with the special
+ 	 * call path:
+ 	 * 1) pcie_isr() -> pciehp_handle_xxx() ->
+-	 *    queue_interrupt_event(pciehp_wq_event)->queue_work(pciehp_wq)
++	 *    queue_interrupt_event(pciehp_wq_event)->
++	 *    queue_work(pciehp_wq_event)
+ 	 * 2) interrupt_event_handler() -> handle_button_press_event() ->
+-	 *    queue_delayed_work(pciehp_wq)
+-	 * 3) pciehp_queue_pushbutton_work() -> queue_work(pciehp_wq)
++	 *    queue_delayed_work(pciehp_wq_event)
++	 * 3) pciehp_queue_pushbutton_work() -> queue_work(pciehp_wq_power)
+ 	 */
+-	flush_workqueue(pciehp_wq);
++	flush_workqueue(pciehp_wq_event);
+ 	cancel_delayed_work_sync(&slot->work);
+-	flush_workqueue(pciehp_wq);
++	flush_workqueue(pciehp_wq_power);
+ 
+ 	kfree(slot);
+ }
+-- 
+1.7.5.4
 
