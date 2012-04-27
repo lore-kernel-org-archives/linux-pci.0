@@ -1,123 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:35016 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474Ab2DPQeB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2012 12:34:01 -0400
-Received: by mail-pz0-f52.google.com with SMTP id e40so7133149dak.11
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2012 09:34:01 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Murray <scott@spiteful.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Jiang Liu <liuj97@gmail.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH RFC 16/17] PCI: serialize PCI hotplug operations triggered by cpcihp drivers
-Date: Tue, 17 Apr 2012 00:29:10 +0800
-Message-Id: <1334593751-5916-17-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
-References: <1334593751-5916-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52668 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759603Ab2D0Dv4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2012 23:51:56 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F99D994.5000404@fold.natur.cuni.cz>
+References: <4F909CEB.3060407@fold.natur.cuni.cz>
+	<CAE9FiQU7gnKiwazN_2ykbXSkcuDqWMZNt0CHiGvae2L+rTVGug@mail.gmail.com>
+	<CAE9FiQUk8D20mEFPE0ahwfigbEOHpbRp-X0wt4DC+293msw=4Q@mail.gmail.com>
+	<4F91473A.1080007@fold.natur.cuni.cz>
+	<CAE9FiQUQRAfdG1J6XUVcOVkeR00vyqnCrBg1O3S_ByC3dKOUog@mail.gmail.com>
+	<4F919C22.1070608@fold.natur.cuni.cz>
+	<4F919CD5.7070004@fold.natur.cuni.cz>
+	<CAE9FiQV_cRTDTBmQwNLJtT-N=HTAxBiphBLDmKxM-N0JKyoR-w@mail.gmail.com>
+	<20120420231748.GB7069@xanatos>
+	<CAE9FiQX7JCZvL9S8ZOQQaHQ4nfU0XDj=8FmOfCtcz7WFjP8=Bg@mail.gmail.com>
+	<20120421132516.GC7069@xanatos>
+	<CAE9FiQUuHrsNPhPWAc9koOrW6Xc+ryOhf_nv2ZyWvG9XMAdNoA@mail.gmail.com>
+	<4F9711AA.1090803@fold.natur.cuni.cz>
+	<CAE9FiQWFAYHTKtv1_MF-SYTrBxUg3zYbfuuxu2uGXHGmEYSf5A@mail.gmail.com>
+	<4F99C74D.9050807@fold.natur.cuni.cz>
+	<CAE9FiQVmnah5y1-+jAcB-0X424spO8vCNj-EjFTKpi+S=e_Low@mail.gmail.com>
+	<4F99D994.5000404@fold.natur.cuni.cz>
+Date: Thu, 26 Apr 2012 20:51:55 -0700
+Message-ID: <CAE9FiQXdPdk31gP0rVBFJnyroCX0NaVtFws6J34janZMrErqNA@mail.gmail.com>
+Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use PCI hotplug lock to globally serialize hotplug operations triggered
-by cpcihp_xxx drivers.
+On Thu, Apr 26, 2012 at 4:26 PM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+> Yinghai Lu wrote:
+>> On Thu, Apr 26, 2012 at 3:08 PM, Martin Mokrejs
+>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>>
+>>>
+>>> Yinghai Lu wrote:
+>>>>
+>>>> Can you try boot the system without loading xhci driver ?
+>>>
+>>> Bingo! Physical express card removal started to be notified correctly.
+>>
+>> good, please get lspci -vvxxx -s 00:1c.7
+>> before removing that express card
+>> on both case.
+>>
+>> We can compare those two to find out why.
+>
+> Attached. Well, I told you in the very beginning of this looong thread it
+> happens only with the USB3.0 card but not Firewire nor COM+LPT card. ;)
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/hotplug/cpci_hotplug_core.c |   10 ++++++++++
- drivers/pci/hotplug/cpcihp_generic.c    |    2 ++
- drivers/pci/hotplug/cpcihp_zt5550.c     |   12 ++++++++----
- 3 files changed, 20 insertions(+), 4 deletions(-)
+only have difference on DevStatus...
 
-diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
-index 68e43c7..bbac305 100644
---- a/drivers/pci/hotplug/cpci_hotplug_core.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_core.c
-@@ -502,6 +502,10 @@ event_thread(void *data)
- 		if (kthread_should_stop())
- 			break;
- 		do {
-+			if (!pci_hotplug_try_enter()) {
-+				msleep(1);
-+				continue;
-+			}
- 			rc = check_slots();
- 			if (rc > 0) {
- 				/* Give userspace a chance to handle extraction */
-@@ -510,6 +514,7 @@ event_thread(void *data)
- 				dbg("%s - error checking slots", __func__);
- 				goto out;
- 			}
-+			pci_hotplug_exit();
- 		} while (atomic_read(&extracting) && !kthread_should_stop());
- 		if (kthread_should_stop())
- 			break;
-@@ -533,6 +538,10 @@ poll_thread(void *data)
- 			break;
- 		if (controller->ops->query_enum()) {
- 			do {
-+				if (!pci_hotplug_try_enter()) {
-+					msleep(1);
-+					continue;
-+				}
- 				rc = check_slots();
- 				if (rc > 0) {
- 					/* Give userspace a chance to handle extraction */
-@@ -541,6 +550,7 @@ poll_thread(void *data)
- 					dbg("%s - error checking slots", __func__);
- 					goto out;
- 				}
-+				pci_hotplug_exit();
- 			} while (atomic_read(&extracting) && !kthread_should_stop());
- 		}
- 		msleep(100);
-diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-index f002be5..91d27d5 100644
---- a/drivers/pci/hotplug/cpcihp_generic.c
-+++ b/drivers/pci/hotplug/cpcihp_generic.c
-@@ -154,6 +154,7 @@ static int __init cpcihp_generic_init(void)
- 	if(!r)
- 		return -EBUSY;
- 
-+	pci_hotplug_disable();
- 	bus = pci_find_bus(0, bridge_busnr);
- 	if (!bus) {
- 		err("Invalid bus number %d", bridge_busnr);
-@@ -166,6 +167,7 @@ static int __init cpcihp_generic_init(void)
- 			bus = pci_bus_get(dev->subordinate);
- 		pci_dev_put(dev);
- 	}
-+	pci_hotplug_enable();
- 	if (!bus) {
- 		status = -EINVAL;
- 		goto init_find_bus_error;
-diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
-index 6606520..1f81d85 100644
---- a/drivers/pci/hotplug/cpcihp_zt5550.c
-+++ b/drivers/pci/hotplug/cpcihp_zt5550.c
-@@ -238,13 +238,17 @@ static int zt5550_hc_init_one (struct pci_dev *pdev, const struct pci_device_id
- 	dbg("registered controller");
- 
- 	/* Look for first device matching cPCI bus's bridge vendor and device IDs */
--	if(!(bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
--					 PCI_DEVICE_ID_DEC_21154, NULL))) {
-+	pci_hotplug_enter();
-+	bus0_dev = pci_get_device(PCI_VENDOR_ID_DEC,
-+				  PCI_DEVICE_ID_DEC_21154, NULL);
-+	if (bus0_dev)
-+		bus0 = pci_bus_get(bus0_dev->subordinate);
-+	pci_dev_put(bus0_dev);
-+	pci_hotplug_exit();
-+	if (!bus0) {
- 		status = -ENODEV;
- 		goto init_find_bus_error;
- 	}
--	bus0 = pci_bus_get(bus0_dev->subordinate);
--	pci_dev_put(bus0_dev);
- 
- 	status = cpci_hp_register_bus(bus0, 0x0a, 0x0f);
- 	if(status != 0) {
--- 
-1.7.5.4
+not sure how that card could make difference on surprise removal.
 
+--- lspci_00.1c.7__card_inserted_no_xhci.txt    2012-04-26
+20:41:43.000000000 -0700
++++ lspci_00.1c.7__card_inserted_with_xhci.txt  2012-04-26
+20:41:48.000000000 -0700
+@@ -15,7 +15,7 @@
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+-               DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq-
+AuxPwr+ TransPend-
++               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
+AuxPwr+ TransPend-
+                LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1,
+Latency L0 <512ns, L1 <16us
+                        ClockPM- Surprise- LLActRep+ BwNot-
+                LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled-
+Retrain- CommClk+
+@@ -49,7 +49,7 @@
+ 10: 00 00 00 00 00 00 00 00 00 11 16 00 c0 d0 00 00
+ 20: c0 f6 c0 f7 01 f0 01 f1 00 00 00 00 00 00 00 00
+ 30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 04 10 00
+-40: 10 80 42 01 00 80 00 00 00 00 11 00 12 3c 12 08
++40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 08
+ 50: 43 00 11 70 60 b2 3c 00 28 10 40 00 00 00 00 00
+ 60: 00 00 00 00 16 00 00 00 00 00 00 00 00 00 00 00
+ 70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+@@ -62,7 +62,7 @@
+ e0: 00 03 00 00 00 00 00 00 03 00 00 00 00 00 00 00
+ f0: 00 00 00 00 00 00 00 00 87 0f 06 08 00 00 00 00
+ 100: 00 00 00 00 00 00 00 00 00 40 00 00 11 00 06 00
+-110: 01 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00
++110: 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00
+ 120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ 130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ 140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
