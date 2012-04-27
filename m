@@ -1,76 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:52796 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989Ab2DFMNV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 08:13:21 -0400
-Received: by lbbgg6 with SMTP id gg6so640550lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 06 Apr 2012 05:13:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1590F833-7D40-42FE-8FA2-6DCCADF9C6B0@bootc.net>
-References: <4EFA4024.5000909@bootc.net> <FCF3184D-CE4F-471C-B66C-0F671795FD3C@bootc.net>
- <9BBC4E0CF881AA4299206E2E1412B626017762@ORSMSX102.amr.corp.intel.com>
- <4F048861.8070501@bootc.net> <4F12B42C.9030803@bootc.net> <9BBC4E0CF881AA4299206E2E1412B62621F0B1@ORSMSX102.amr.corp.intel.com>
- <4F144A76.3050703@bootc.net> <4F64B4E2.20208@bootc.net> <4F64CFCB.7060702@bootc.net>
- <9BBC4E0CF881AA4299206E2E1412B6260E512E0C@ORSMSX102.amr.corp.intel.com>
- <87r4wova0b.fsf@spindle.srvr.nix> <9BBC4E0CF881AA4299206E2E1412B6260E512FB9@ORSMSX102.amr.corp.intel.com>
- <87ehsov6ot.fsf@spindle.srvr.nix> <1590F833-7D40-42FE-8FA2-6DCCADF9C6B0@bootc.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 6 Apr 2012 06:12:58 -0600
-Message-ID: <CAErSpo4TJ-9NsD5QTpFi9fsnD9qHt7+Tr5jJHQPuS7vg6ghq_w@mail.gmail.com>
-Subject: Re: [E1000-devel] e1000e interface hang on 82574L
-To: Chris Boot <bootc@bootc.net>
-Cc: Nix <nix@esperi.org.uk>,
-	"Wyborny, Carolyn" <carolyn.wyborny@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev <netdev@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Matthew Garrett <mjg@redhat.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:59903 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614Ab2D0GRh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 02:17:37 -0400
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 277473EE0C3
+	for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 15:17:36 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 0364145DEBA
+	for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 15:17:36 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id C88A645DEB8
+	for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 15:17:35 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id A9278E08002
+	for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 15:17:35 +0900 (JST)
+Received: from m1000.s.css.fujitsu.com (m1000.s.css.fujitsu.com [10.240.81.136])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 2C1CC1DB803E
+	for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 15:17:35 +0900 (JST)
+Date: Fri, 27 Apr 2012 15:17:26 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Keping Chen <chenkeping@huawei.com>, ddutile@redhat.com,
+	greg.pearson@hp.com
+Subject: Re: [PATCH 6/6] PCI, x86: change the way to add MMCFG region on x86
+Message-Id: <20120427151726.870d6966.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <4F996401.5010609@gmail.com>
+References: <20120426193712.11256973.izumi.taku@jp.fujitsu.com>
+	<20120426194254.3679abe0.izumi.taku@jp.fujitsu.com>
+	<4F996401.5010609@gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 6, 2012 at 4:17 AM, Chris Boot <bootc@bootc.net> wrote:
-> On 19 Mar 2012, at 17:31, Nix wrote:
->
->> On 19 Mar 2012, Carolyn Wyborny said:
->>
->>>> you'll see that I tested that, and it doesn't work :( even if it did
->>>> work, it shouldn't be needed: the driver attempts to turn off PCIe ASPM
->>>> on affected NICs, and fails, apparently because *something* turns it
->>>> back on again.
->>>>
->>> The driver attempts to disable L0s state, not the entire feature. It
->>
->> It tries to disable L1 state as well (or it did when I tested this last,
->> although I suspect you're right and it may leave L1 turned on these
->> days: judging by the contents of e1000_82574_info, anyway.)
->>
->>> is also required that the device upstream on the bus from the 82574L
->>> have this disabled. Yes, I agree there appears to be something in the
->>> os that either ren-enables or fails to disable the feature on the
->>> upstream device, as desired. Platforms/systems also appear to vary in
->>> this regard, so the solutions may vary a bit as well.
->>>
->>> Its worth trying your solution as well if what I suggested doesn't
->>> work, but there is not one solution that fits all, unfortunately.
->>
->> I don't *have* a solution. :( 'setpci by hand some unknown amount of
->> time after booting once the interface has stabilized' hardly counts as a
->> solution of any sort. It's, at best, a workaround that lets me use my
->> systems without hourly lockups until a real solution is found.
->>
->> (To clarify: manual setpci to force off the ASPM bits is the only thing
->> that works for me. The driver's automatic disabling of L0s and L1
->> doesn't work: nor does booting with pcie_aspm=off. In both cases, I end
->> up with both L0s and L1 turned on, and a lockup some time later, unless
->> I setpci the bits off by hand.)
->
->
-> Well, with that setpci incantation run against the NIC and its upstream device to disable ASPM L1s (setpci -s <dev> CAP_EXP+10.b=40), everything has been working very well indeed. Is there something the e1000e driver could do to disable L1s as well as L0s if we know there's a problem with them for these devices?
->
-> Adding Bjorn Helgaas and linux-pci to CCs to try to get the ball rolling some more, as this is crippling without the fixes.
 
-[+cc Matthew Garrett for ASPM stuff]
+Hi Jian, Yinghai,
 
-If I understand correctly, e1000e attempts to disable ASPM to work
-around an 82574L hardware erratum, but the PCI core either doesn't
-disable ASPM or it gets re-enabled somehow.
+ Thank you your comment and review.
+
+On Thu, 26 Apr 2012 23:04:33 +0800
+Jiang Liu <liuj97@gmail.com> wrote:
+
+> Hi Taku,
+> 	Thanks for following this up. Please refer to inline comments below.
+> I feel there are still some concerns from Don about the change proposed by
+> Bjorn. And I haven't found a solution to address Don's concerns yet. So it
+> would be better for us to hold on this for a while.
+> 
+> 	BTW, is it OK to split the task into two steps? 
+
+   Sure.
+
+> 1) enhance mmcfg to support host bridge hotplug.
+> 2) refine the mmcfg setup logic.
+> Seems it's more realistic for us to reach an agreement for task 1 in a short time,
+> but there is still much work ahead for task 2.
+
+  I agree with you.
+  To achive task 1, your V4 should is good enough, but
+  I found a problem in your patchset.
+
+  When a hotpluggable hostbridge is found at boot time, its MCFG information should be 
+  provided via _CBA method, and will added at the following timing:
+
+         arch_acpi_pci_root_add()
+            + pci_mmconfig_insert()
+              + insert_resource()
+
+  But at boot time, all entries in pci_mmcfg_list collection will added at the following timing:
+
+        late_initcall
+           + pci_mmcfg_late_insert_resources()
+             + pci_mmcfg_insert_resources()
+               + insert_resource()
+
+  So, MCFG information of hotpluggable hostbridges which exist at boot time will fail to 
+  add at this timing.
+
++int __devinit pci_mmconfig_insert(int segment, int start, int end, u64 addr)
++{
++	int rc = -EINVAL;
++	struct pci_mmcfg_region *cfg = NULL;
++
++	if (segment < 0 || segment > USHRT_MAX ||
++	    start < 0 || start > 255 || end < start || end > 255)
++		return rc;
++
++	mutex_lock(&pci_mmcfg_lock);
++	cfg = pci_mmconfig_lookup(segment, start);
++	if (cfg) {
++		if (cfg->start_bus <= start && cfg->end_bus >= end) {
++			rc = -EEXIST;
++		} else {
++			printk(KERN_WARNING PREFIX
++			       "MMCONFIG for domain %04x [bus %02x-%02x] "
++			       "conflicts with domain %04x [bus %02x-%02x]\n",
++			       segment, start, end,
++			       cfg->segment, cfg->start_bus, cfg->end_bus);
++		}
++		goto out;
++	}
++	if (!addr)
++		goto out;
++
++	cfg = pci_mmconfig_alloc(segment, start, end, addr);
++	if (cfg == NULL) {
++		rc = -ENOMEM;
++	} else if (!pci_mmcfg_check_reserved(cfg, 0)) {
++		printk(KERN_WARNING PREFIX
++		       "MMCONFIG for domain %04x [bus %02x-%02x] "
++		       "isn't reserved\n", segment, start, end);
++	} else if (insert_resource(&iomem_resource, &cfg->res)) {
+
+          I think the following is better.
+
+          else if (pci_mmcfg_resources_inserted &&
+                   insert_resource(&iomem_resource, &cfg->res)) {
+
+
++		rc = -EBUSY;
++		printk(KERN_WARNING PREFIX
++		       "failed to insert resource for domain "
++		       "%04x [bus %02x-%02x]\n", segment, start, end);
++	} else if (pci_mmcfg_arch_map(cfg)) {
++		rc = -EBUSY;
+
+
+  Could you please fix this?
+
+
+Best regards,
+Taku Izumi
+
