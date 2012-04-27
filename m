@@ -1,306 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52529 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035Ab2DGPU1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Apr 2012 11:20:27 -0400
-Received: by iagz16 with SMTP id z16so4212035iag.19
-        for <linux-pci@vger.kernel.org>; Sat, 07 Apr 2012 08:20:27 -0700 (PDT)
-Message-ID: <4F805B32.1080401@gmail.com>
-Date: Sat, 07 Apr 2012 23:20:18 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:38286 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756683Ab2D0OVZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2012 10:21:25 -0400
+Received: by lbbgf7 with SMTP id gf7so541647lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2012 07:21:23 -0700 (PDT)
 MIME-Version: 1.0
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] [RFC] PCI, ACPI, x86: MMCFG support for hotpluggable
- PCI hostbridges on x86, x86_64
-References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com> <4F7E8DDD.7020603@jp.fujitsu.com> <20120406201628.1621752c.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120406201628.1621752c.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <CADLM8XNoeOmJCP6+v-5TOoPaaSgo5b_xN9PrCBbDcL-fdDB37Q@mail.gmail.com>
+References: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com> <CADLM8XNoeOmJCP6+v-5TOoPaaSgo5b_xN9PrCBbDcL-fdDB37Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 27 Apr 2012 08:21:03 -0600
+Message-ID: <CAErSpo7fW1XmjH6JGBDrYP3duBGYwakBuUtgfMPh6QdZwajUog@mail.gmail.com>
+Subject: Re: [PATCH v1] PCI: work around Stratus ftServer broken PCIe hierarchy
+To: Wei Yang <weiyang.kernel@gmail.com>
+Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Wilcox <matthew.wilcox@linux.intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	James Paradis <jim.paradis@stratus.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/06/2012 07:16 PM, Taku Izumi wrote:
-> 
-> This patch introduces the configuration for the base address of
-> the memory mapped configuration space (MMCFG) for hotpluggable PCI
-> hostbridges on x86 and x86_64.
-> 
-> The MMCFG for hotpluggable host bridges must be described by using
-> ACPI _CBA method. This patch adds implementation for _CBA method
-> on ACPI pci_root driver and MMCFG manipulating functons for x86 and 
-> x86_64.
-> 
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> ---
->  arch/x86/pci/mmconfig-shared.c |   61 ++++++++++++++++++++++++++++++++++-------
->  drivers/acpi/pci_root.c        |   28 ++++++++++++++++++
->  drivers/pci/pci.c              |   31 ++++++++++++++++++++
->  include/acpi/acnames.h         |    1 
->  include/linux/pci.h            |    3 ++
->  5 files changed, 113 insertions(+), 11 deletions(-)
-> 
-> Index: linux-next-build/drivers/acpi/pci_root.c
-> ===================================================================
-> --- linux-next-build.orig/drivers/acpi/pci_root.c
-> +++ linux-next-build/drivers/acpi/pci_root.c
-> @@ -451,7 +451,7 @@ EXPORT_SYMBOL(acpi_pci_osc_control_set);
->  
->  static int __devinit acpi_pci_root_add(struct acpi_device *device)
->  {
-> -	unsigned long long segment, bus;
-> +	unsigned long long segment, bus, base_addr;
->  	acpi_status status;
->  	int result;
->  	struct acpi_pci_root *root;
-> @@ -506,6 +506,28 @@ static int __devinit acpi_pci_root_add(s
->  	device->driver_data = root;
->  
->  	/*
-> +	 * Check _CBA for hot pluggable host bridge
-> +	 */
-> +	base_addr = 0;
-> +	status = acpi_evaluate_integer(device->handle, METHOD_NAME__CBA, NULL,
-> +					 &base_addr);
-> +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> +		printk(KERN_ERR PREFIX "can't evaluate _CBA\n");
-> +		result = -ENODEV;
-> +		goto end;
-> +	}
-> +	if (base_addr) {
-> +		result = pci_add_mmcfg_region(root->segment,
-> +					      root->secondary.start,
-> +					      root->secondary.end,
-> +					      base_addr);
-> +		if (result) {
-> +			printk(KERN_ERR PREFIX "can't add MMCFG entry\n");
-> +			goto end;
-> +		}
-The MMCFG information for host bridges present at boot time should have already
-been added by __pci_mmcfg_init() when acpi_pci_root_add() is called.
-So it would be better for pci_add_mmcfg_region() to return -EEXIST for host
-bridges present at boot time.
+On Thu, Apr 26, 2012 at 9:35 PM, Wei Yang <weiyang.kernel@gmail.com> wrote:
+> Bjorn
+>
+> One question, both Upstream and DownStream port is represented by
+> pci_dev in kernel?
 
-> +	}
-> +
-> +	/*
->  	 * All supported architectures that use ACPI have support for
->  	 * PCI domains, so we indicate this in _OSC support capabilities.
->  	 */
-> @@ -625,6 +647,8 @@ static int __devinit acpi_pci_root_add(s
->  	return 0;
->  
->  end:
-> +	if (base_addr)
-> +		pci_remove_mmcfg_region(root->segment, root->secondary.start);
->  	if (!list_empty(&root->node))
->  		list_del(&root->node);
->  	kfree(root);
-> @@ -646,6 +670,8 @@ static int acpi_pci_root_remove(struct a
->  	device_set_run_wake(root->bus->bridge, false);
->  	pci_acpi_remove_bus_pm_notifier(device);
->  
-> +	pci_remove_mmcfg_region(root->segment, root->secondary.start);
-> +
-It would be better to only call pci_remove_mmcfg_region() if the host bridge has _CBA
-method available, otherwise we have no way to recover this MMCFG information and 
-can't rebind the pci_root driver to a pci host bridge after an unbinding operation.
+Yes.
 
->  	kfree(root);
->  	return 0;
->  }
-> Index: linux-next-build/include/acpi/acnames.h
-> ===================================================================
-> --- linux-next-build.orig/include/acpi/acnames.h
-> +++ linux-next-build/include/acpi/acnames.h
-> @@ -61,6 +61,7 @@
->  #define METHOD_NAME__AEI        "_AEI"
->  #define METHOD_NAME__PRW        "_PRW"
->  #define METHOD_NAME__SRS        "_SRS"
-> +#define METHOD_NAME__CBA	"_CBA"
->  
->  /* Method names - these methods must appear at the namespace root */
->  
-> Index: linux-next-build/include/linux/pci.h
-> ===================================================================
-> --- linux-next-build.orig/include/linux/pci.h
-> +++ linux-next-build/include/linux/pci.h
-> @@ -1460,6 +1460,9 @@ void pcibios_disable_device(struct pci_d
->  void pcibios_set_master(struct pci_dev *dev);
->  int pcibios_set_pcie_reset_state(struct pci_dev *dev,
->  				 enum pcie_reset_state state);
-> +int pci_add_mmcfg_region(int segment, int start,
-> +			 int end, u64 addr);
-> +void pci_remove_mmcfg_region(int segment, int bus);
->  
->  #ifdef CONFIG_PCI_MMCONFIG
->  extern void __init pci_mmcfg_early_init(void);
-> Index: linux-next-build/arch/x86/pci/mmconfig-shared.c
-> ===================================================================
-> --- linux-next-build.orig/arch/x86/pci/mmconfig-shared.c
-> +++ linux-next-build/arch/x86/pci/mmconfig-shared.c
-> @@ -28,7 +28,7 @@ static int __initdata pci_mmcfg_resource
->  
->  LIST_HEAD(pci_mmcfg_list);
->  
-> -static __init void pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
-> +static __devinit void pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
->  {
->  	if (cfg->res.parent)
->  		release_resource(&cfg->res);
-> @@ -45,7 +45,7 @@ static __init void free_all_mmcfg(void)
->  		pci_mmconfig_remove(cfg);
->  }
->  
-> -static __init void list_add_sorted(struct pci_mmcfg_region *new)
-> +static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
->  {
->  	struct pci_mmcfg_region *cfg;
->  
-> @@ -61,8 +61,8 @@ static __init void list_add_sorted(struc
->  	list_add_tail(&new->list, &pci_mmcfg_list);
->  }
->  
-> -static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-> -							int end, u64 addr)
-> +static __devinit struct pci_mmcfg_region *pci_mmconfig_add(int segment,
-> +						int start, int end, u64 addr)
->  {
->  	struct pci_mmcfg_region *new;
->  	struct resource *res;
-> @@ -357,8 +357,10 @@ static void __init pci_mmcfg_insert_reso
->  {
->  	struct pci_mmcfg_region *cfg;
->  
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-> -		insert_resource(&iomem_resource, &cfg->res);
-> +	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> +		if (!cfg->res.parent)
-> +			insert_resource(&iomem_resource, &cfg->res);
-> +	}
->  
->  	/* Mark that the resources have been inserted. */
->  	pci_mmcfg_resources_inserted = 1;
-> @@ -401,7 +403,7 @@ static acpi_status __init check_mcfg_res
->  	return AE_OK;
->  }
->  
-> -static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
-> +static acpi_status __devinit find_mboard_resource(acpi_handle handle, u32 lvl,
->  		void *context, void **rv)
->  {
->  	struct resource *mcfg_res = context;
-> @@ -415,7 +417,7 @@ static acpi_status __init find_mboard_re
->  	return AE_OK;
->  }
->  
-> -static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
-> +static int __devinit is_acpi_reserved(u64 start, u64 end, unsigned not_used)
->  {
->  	struct resource mcfg_res;
->  
-> @@ -434,8 +436,9 @@ static int __init is_acpi_reserved(u64 s
->  
->  typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
->  
-> -static int __init is_mmconf_reserved(check_reserved_t is_reserved,
-> -				    struct pci_mmcfg_region *cfg, int with_e820)
-> +static int __devinit is_mmconf_reserved(check_reserved_t is_reserved,
-> +					struct pci_mmcfg_region *cfg,
-> +					int with_e820)
->  {
->  	u64 addr = cfg->res.start;
->  	u64 size = resource_size(&cfg->res);
-> @@ -580,6 +583,44 @@ static int __init pci_parse_mcfg(struct 
->  	return 0;
->  }
->  
-> +int pci_add_mmcfg_region(int segment, int start, int end, u64 addr)
-> +{
-> +	struct pci_mmcfg_region *cfg;
-> +	int valid;
-> +
-> +	cfg = pci_mmconfig_add(segment, start, end, addr);
-> +	if (!cfg) {
-> +		printk(KERN_WARNING PREFIX
-> +			"no memory for MMCFG entry\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
-> +	if (!valid) {
-> +		printk(KERN_ERR FW_BUG PREFIX
-> +			"MMCONFIG at %pR not reserved in "
-> +			"ACPI motherboard resources\n",
-> +			&cfg->res);
-> +		pci_mmconfig_remove(cfg);
-> +		return -EINVAL;
-> +	}
-> +
-> +	insert_resource(&iomem_resource, &cfg->res);
-> +
-> +	return 0;
-> +}
-> +
-> +void pci_remove_mmcfg_region(int segment, int bus)
-> +{
-> +	struct pci_mmcfg_region *cfg;
-> +
-> +	cfg = pci_mmconfig_lookup(segment, bus);
-> +	if (!cfg)
-> +		return;
-> +
-> +	pci_mmconfig_remove(cfg);
-> +}
-> +
->  static void __init __pci_mmcfg_init(int early)
->  {
->  	/* MMCONFIG disabled */
-> Index: linux-next-build/drivers/pci/pci.c
-> ===================================================================
-> --- linux-next-build.orig/drivers/pci/pci.c
-> +++ linux-next-build/drivers/pci/pci.c
-> @@ -79,6 +79,37 @@ unsigned long pci_hotplug_mem_size = DEF
->  
->  enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
->  
-> +/**
-> + *
-> + * pci_add_mmcfg_region
-> + * @segment: segment number
-> + * @start: start bus number
-> + * @end: end bus number
-> + * @addr: base address
-> + *
-> + *  Add MMCONFIG entry for specified segment or bus range group
-> + *
-> + * This is the default implementation. Architecture implementations
-> + * can override this.
-> + */
-> +int __attribute__ ((weak)) pci_add_mmcfg_region(int segment, int start,
-> +						int end, u64 addr)
-> +{
-> +	return -EINVAL;
-> +}
-> +
-> +/**
-> + * pci_remove_mmcfg_region
-> + * @segment: segment number
-> + * @bus: bus number
-> + *
-> + *  Remove MMCONFIG entry for specified segment or bus range group
-> + *
-> + * This is the default implementation. Architecture implementations
-> + * can override this.
-> + */
-> +void __attribute__ ((weak)) pci_remove_mmcfg_region(int segment, int bus) {}
-> +
->  /*
->   * The default CLS is used if arch didn't set CLS explicitly and not
->   * all pci devices agree on the same value.  Arch can override either
-> 
+> 2012/4/26 Bjorn Helgaas <bhelgaas@google.com>:
+>> A PCIe downstream port is a P2P bridge.  Its secondary interface is
+>> a link that should lead only to device 0 (unless ARI is enabled)[1], so
+>> we don't probe for non-zero device numbers.
+>>
+>> Some Stratus ftServer systems have a PCIe downstream port (02:00.0) that
+>> leads to both an upstream port (03:00.0) and a downstream port (03:01.0),
+>> and 03:01.0 has important devices below it:
+>>
+>>  [0000:02]-+-00.0-[0000:03]--+-00.0
+>>                              \-01.0-[0000:xx]--+-[USB]
+>>                                                \-[NIC]
+>>
+>> Previously, we didn't enumerate device 03:01.0, so USB and the network
+>> didn't work.  This patch adds a DMI quirk to scan all device numbers,
+>> not just 0, below a downstream port.
+>>
+>> Based on a patch by Prarit Bhargava.
+>>
+>> [1] PCIe spec r3.0, sec 7.3.1
+>>
+>> CC: Myron Stowe <mstowe@redhat.com>
+>> CC: Don Dutile <ddutile@redhat.com>
+>> CC: James Paradis <jim.paradis@stratus.com>
+>> CC: Matthew Wilcox <matthew.wilcox@linux.intel.com>
+>> CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+>> CC: Prarit Bhargava <prarit@redhat.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  Documentation/kernel-parameters.txt |    3 +++
+>>  arch/x86/pci/common.c               |   16 ++++++++++++++++
+>>  drivers/pci/pci.c                   |    3 +++
+>>  drivers/pci/probe.c                 |    8 ++++++--
+>>  include/asm-generic/pci-bridge.h    |    6 ++++++
+>>  5 files changed, 34 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+>> index c1601e5..57c3870 100644
+>> --- a/Documentation/kernel-parameters.txt
+>> +++ b/Documentation/kernel-parameters.txt
+>> @@ -2161,6 +2161,9 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>>                                on: Turn realloc on
+>>                realloc         same as realloc=on
+>>                noari           do not use PCIe ARI.
+>> +               pcie_scan_all   Scan all possible PCIE devices.  Otherwise we
+>> +                               only look for one device below a PCIE downstream
+>> +                               port.
+>>
+>>        pcie_aspm=      [PCIE] Forcibly enable or disable PCIe Active State Power
+>>                        Management.
+>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>> index 323481e..16c5d78 100644
+>> --- a/arch/x86/pci/common.c
+>> +++ b/arch/x86/pci/common.c
+>> @@ -11,6 +11,7 @@
+>>  #include <linux/dmi.h>
+>>  #include <linux/slab.h>
+>>
+>> +#include <asm-generic/pci-bridge.h>
+>>  #include <asm/acpi.h>
+>>  #include <asm/segment.h>
+>>  #include <asm/io.h>
+>> @@ -229,6 +230,14 @@ static int __devinit assign_all_busses(const struct dmi_system_id *d)
+>>  }
+>>  #endif
+>>
+>> +static int __devinit set_scan_all(const struct dmi_system_id *d)
+>> +{
+>> +       printk(KERN_INFO "PCI: %s detected, enabling pci=pcie_scan_all\n",
+>> +              d->ident);
+>> +       pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+>> +       return 0;
+>> +}
+>> +
+>>  static const struct dmi_system_id __devinitconst pciprobe_dmi_table[] = {
+>>  #ifdef __i386__
+>>  /*
+>> @@ -420,6 +429,13 @@ static const struct dmi_system_id __devinitconst pciprobe_dmi_table[] = {
+>>                        DMI_MATCH(DMI_PRODUCT_NAME, "ProLiant DL585 G2"),
+>>                },
+>>        },
+>> +       {
+>> +               .callback = set_scan_all,
+>> +               .ident = "Stratus/NEC ftServer",
+>> +               .matches = {
+>> +                       DMI_MATCH(DMI_SYS_VENDOR, "ftServer"),
+>> +               },
+>> +       },
+>>        {}
+>>  };
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 9e31c0a..8f16900 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -22,6 +22,7 @@
+>>  #include <linux/interrupt.h>
+>>  #include <linux/device.h>
+>>  #include <linux/pm_runtime.h>
+>> +#include <asm-generic/pci-bridge.h>
+>>  #include <asm/setup.h>
+>>  #include "pci.h"
+>>
+>> @@ -3900,6 +3901,8 @@ static int __init pci_setup(char *str)
+>>                                pcie_bus_config = PCIE_BUS_PERFORMANCE;
+>>                        } else if (!strncmp(str, "pcie_bus_peer2peer", 18)) {
+>>                                pcie_bus_config = PCIE_BUS_PEER2PEER;
+>> +                       } else if (!strncmp(str, "pcie_scan_all", 13)) {
+>> +                               pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+>>                        } else {
+>>                                printk(KERN_ERR "PCI: Unknown option `%s'\n",
+>>                                                str);
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 5e1ca3c..2dc8675 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -10,6 +10,7 @@
+>>  #include <linux/module.h>
+>>  #include <linux/cpumask.h>
+>>  #include <linux/pci-aspm.h>
+>> +#include <asm-generic/pci-bridge.h>
+>>  #include "pci.h"
+>>
+>>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
+>> @@ -1395,10 +1396,13 @@ static unsigned no_next_fn(struct pci_dev *dev, unsigned fn)
+>>  static int only_one_child(struct pci_bus *bus)
+>>  {
+>>        struct pci_dev *parent = bus->self;
+>> +
+>>        if (!parent || !pci_is_pcie(parent))
+>>                return 0;
+>> -       if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+>> -           parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
+>> +       if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
+>> +               return 1;
+>> +       if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM &&
+>> +           !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+>>                return 1;
+>>        return 0;
+>>  }
+>> diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
+>> index a5b5d5a..20db2e5 100644
+>> --- a/include/asm-generic/pci-bridge.h
+>> +++ b/include/asm-generic/pci-bridge.h
+>> @@ -30,6 +30,12 @@ enum {
+>>        PCI_ENABLE_PROC_DOMAINS = 0x00000010,
+>>        /* ... except for domain 0 */
+>>        PCI_COMPAT_DOMAIN_0     = 0x00000020,
+>> +
+>> +       /* PCIe downstream ports are bridges that normally lead to only a
+>> +        * device 0, but if this is set, we scan all possible devices, not
+>> +        * just device 0.
+>> +        */
+>> +       PCI_SCAN_ALL_PCIE_DEVS  = 0x00000040,
+>>  };
+>>
+>>  #ifdef CONFIG_PCI
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> Richard Yang
+> Help You, Help Me
