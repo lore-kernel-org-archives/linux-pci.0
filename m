@@ -1,57 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:6003 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935044Ab2DMBkd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2012 21:40:33 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Don Dutile <ddutile@redhat.com>, Matthew Wilcox <matthew@wil.cx>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH V4] Quirk for IVB graphics FLR errata
-Date: Fri, 13 Apr 2012 01:40:30 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD0FB68@SHSMSX102.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD0DA33@SHSMSX102.ccr.corp.intel.com>
- <4F8594FD.8020109@redhat.com> <20120412040630.GC6557@parisc-linux.org>
- <4F86F28E.8020807@redhat.com>
-In-Reply-To: <4F86F28E.8020807@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from palinux.external.hp.com ([192.25.206.14]:57226 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab2D1T0C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Apr 2012 15:26:02 -0400
+Date: Sat, 28 Apr 2012 13:26:00 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Wilcox <matthew.wilcox@linux.intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	James Paradis <jim.paradis@stratus.com>
+Subject: Re: [PATCH v1] PCI: work around Stratus ftServer broken PCIe
+	hierarchy
+Message-ID: <20120428192559.GB28349@parisc-linux.org>
+References: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Don Dutile [mailto:ddutile@redhat.com]
-> Sent: Thursday, April 12, 2012 11:20 PM
-> To: Matthew Wilcox
-> Cc: Hao, Xudong; Bjorn Helgaas; linux-pci@vger.kernel.org
-> Subject: Re: [PATCH V4] Quirk for IVB graphics FLR errata
-> 
-> On 04/12/2012 12:06 AM, Matthew Wilcox wrote:
-> > On Wed, Apr 11, 2012 at 10:28:13AM -0400, Don Dutile wrote:
-> >>> +	cycles_t cyc_op_timeout = tsc_khz*op_timeout*1000;
-> >> Don't we know how to do a 10sec timeout w/o tying it to tsc_khz?
-> >
-> > Right, this code should of course be using jiffies and msleep.
-> >
-> >> -->  other arch compile problem source???
-> >
-> > Well, this device is part of the x86 CPU.  It's never going to be
-> > found as part of any other architecture.  Why force other
-> > architectures to carry this quirk around?
-> >
-> >
-> 
-> Well, the trend to include more IO into chipsets tied to an arch will probably
-> increase over time, so such conditional quirks will increase as well.
-> Sounds like the quirk tables need an arch-hook (linked list) to check & traverse.
-> Then such code can go into arch/<arch>/pci/quirks.c .
-> 
+On Wed, Apr 25, 2012 at 05:36:32PM -0600, Bjorn Helgaas wrote:
+> @@ -2161,6 +2161,9 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>  				on: Turn realloc on
+>  		realloc		same as realloc=on
+>  		noari		do not use PCIe ARI.
+> +		pcie_scan_all	Scan all possible PCIE devices.  Otherwise we
+> +				only look for one device below a PCIE downstream
+> +				port.
 
-If using jiffies instead of tsc, the ifdef <x86> can be removed here, we already have device ID to limit the quirk workaround.
-So I do want to change this patch file directory, I will change tsc to jiffies.
+We should probably s/device/slot/ throughout.  I've recently become
+aware of a hype-rvisor that doesn't include PCI device number remapping,
+so if you assign, say, function 03.6 to a guest, the PCI scanning code
+doesn't find it.
 
-> I was under the impression Linux prefers not to have ifdef <arch> in common
-> code modules, and to split it out under arch/<> .
-> 
-
-Agreed and learned.
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
