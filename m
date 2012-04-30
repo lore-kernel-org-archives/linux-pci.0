@@ -1,71 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:62085 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933639Ab2DLAG0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2012 20:06:26 -0400
-Received: by lbbgm6 with SMTP id gm6so1170426lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Apr 2012 17:06:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4F85A481.1020807@gmail.com>
-References: <1334103063-2283-1-git-send-email-jiang.liu@huawei.com>
- <CAErSpo7zWEXBhC7+gaq+BCussyKOYORaBG-PBe4ERruCAA-cfQ@mail.gmail.com>
- <4F8573A4.8070307@jp.fujitsu.com> <4F85A481.1020807@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 11 Apr 2012 18:06:05 -0600
-Message-ID: <CAErSpo4gqLBQjYf-pKsHWgZOTUTJEi0uqKxSJ5pB_F0uu+CKMA@mail.gmail.com>
-Subject: Re: [PATCH V4 0/6] PCI, x86: update MMCFG information when
- hot-plugging PCI host bridges
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:57609 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754920Ab2D3Rs1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Apr 2012 13:48:27 -0400
+From: John Crispin <blogic@openwrt.org>
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: John Crispin <blogic@openwrt.org>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org, linux-mips@linux-mips.org
+Subject: [PATCH] OF: PCI: const usage needed by MIPS
+Date: Mon, 30 Apr 2012 19:46:59 +0200
+Message-Id: <1335808019-24502-1-git-send-email-blogic@openwrt.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 11, 2012 at 9:34 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On 04/11/2012 08:05 PM, Kenji Kaneshige wrote:
->> (2012/04/11 13:02), Bjorn Helgaas wrote:
->>> On Tue, Apr 10, 2012 at 6:10 PM, Jiang Liu<liuj97@gmail.com>  wrote:
->>>> This patchset enhance pci_root driver to update MMCFG information when
->>>> hot-plugging PCI root bridges. It applies to Yinghai's tree at
->>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
->>>>
->>>> The second patch is based on Taku Izumi work with some enhancements to
->>>> correctly handle PCI host bridges without _CBA method.
->>>
->>> I'm sorry I won't have time to really review these for a couple weeks.
->>>
->>> It always seemed wrong to me that we parse MCFG and set things up
->>> before we even look at PNP0A03/PNP0A08 devices.  It would make more
->>> sense to me to have something in acpi_pci_root_add() to set up
->>> MMCONFIG using _CBA if available, and falling back to parsing MCFG if
->>> it's not.
->>
->> I think your idea could make the code (design) much cleaner.
->> Do you have any other reason why you think "It always seemed
->> wrong..."?
+On MIPS we want to call of_irq_map_pci from inside
 
-The current scheme is just an ugly design.  Does I need more reasons?  :)
+arch/mips/include/asm/pci.h:extern int pcibios_map_irq(
+				const struct pci_dev *dev, u8 slot, u8 pin);
 
-> Yeah, that may lead to a cleaner design.
-> But there are still some special cases, such as:
-> 1) ACPI subsystem is disabled by kernel boot options, so we can't rely
-> on the ACPI pci_root driver to initialize the MMCFG.
+For this to work we need to change several functions to const usage.
 
-I don't think it's a requirement to make everything work with
-"acpi=off".  On a system with ACPI, running with "acpi=off" is just a
-kludge and if things work at all, it's only because we're very lucky.
+Signed-off-by: John Crispin <blogic@openwrt.org>
+Cc: linux-pci@vger.kernel.org
+Cc: devicetree-discuss@lists.ozlabs.org
+Cc: linux-mips@linux-mips.org
+---
+I am not sure which tree this should go via. Grant, can you take it ?
 
-> 2) Some PCI host bridges are not reported by the ACPI namespace. My partner
-> has observed a system which doesn't report the host bridges embedded in the
-> NHM-EX processors.
+ drivers/of/of_pci_irq.c |    2 +-
+ drivers/pci/pci.c       |    2 +-
+ include/linux/of_pci.h  |    2 +-
+ include/linux/pci.h     |    5 +++--
+ 4 files changed, 6 insertions(+), 5 deletions(-)
 
-I don't think it's a requirement for Linux to use PCI devices behind
-unreported host bridges.  I'd like to pick a date and say "after BIOS
-date X, we will no longer blindly probe for these unreported host
-bridges."
+diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+index 9312516..6770538 100644
+--- a/drivers/of/of_pci_irq.c
++++ b/drivers/of/of_pci_irq.c
+@@ -15,7 +15,7 @@
+  * PCI tree until an device-node is found, at which point it will finish
+  * resolving using the OF tree walking.
+  */
+-int of_irq_map_pci(struct pci_dev *pdev, struct of_irq *out_irq)
++int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq)
+ {
+ 	struct device_node *dn, *ppnode;
+ 	struct pci_dev *ppdev;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d20f133..4c79586 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2363,7 +2363,7 @@ void pci_enable_acs(struct pci_dev *dev)
+  * number is always 0 (see the Implementation Note in section 2.2.8.1 of
+  * the PCI Express Base Specification, Revision 2.1)
+  */
+-u8 pci_swizzle_interrupt_pin(struct pci_dev *dev, u8 pin)
++u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin)
+ {
+ 	int slot;
+ 
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index f93e217..bb115de 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -5,7 +5,7 @@
+ 
+ struct pci_dev;
+ struct of_irq;
+-int of_irq_map_pci(struct pci_dev *pdev, struct of_irq *out_irq);
++int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
+ 
+ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e444f5b..3bbc77e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -680,7 +680,7 @@ int __must_check pci_bus_add_device(struct pci_dev *dev);
+ void pci_read_bridge_bases(struct pci_bus *child);
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res);
+-u8 pci_swizzle_interrupt_pin(struct pci_dev *dev, u8 pin);
++u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
+ int pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge);
+ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp);
+ extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
+@@ -1685,7 +1685,8 @@ extern void pci_release_bus_of_node(struct pci_bus *bus);
+ /* Arch may override this (weak) */
+ extern struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus);
+ 
+-static inline struct device_node *pci_device_to_OF_node(struct pci_dev *pdev)
++static inline struct device_node *
++pci_device_to_OF_node(const struct pci_dev *pdev)
+ {
+ 	return pdev ? pdev->dev.of_node : NULL;
+ }
+-- 
+1.7.9.1
 
-Bjorn
