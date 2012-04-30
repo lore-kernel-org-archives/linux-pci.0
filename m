@@ -1,46 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:1135 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011Ab2DNKjw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Apr 2012 06:39:52 -0400
-From: "Huang, Xiong" <xiong@qca.qualcomm.com>
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: "davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qca-linux-team <qca-linux-team@qualcomm.com>,
-	nic-devel <nic-devel@qualcomm.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH 12/37] atl1c: restore max-read-request-size in Device
- Conrol Register
-Date: Sat, 14 Apr 2012 10:39:51 +0000
-Message-ID: <157393863283F442885425D2C454285623D4888F@nasanexd02a.na.qualcomm.com>
-References: <1334276102-15866-1-git-send-email-xiong@qca.qualcomm.com>
-	 <1334276102-15866-13-git-send-email-xiong@qca.qualcomm.com>
- <1334336563.2606.3.camel@bwh-desktop.uk.solarflarecom.com>
-In-Reply-To: <1334336563.2606.3.camel@bwh-desktop.uk.solarflarecom.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64657 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756383Ab2D3ViW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2012 17:38:22 -0400
+Received: by lbbgm6 with SMTP id gm6so537310lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 30 Apr 2012 14:38:21 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20120428192559.GB28349@parisc-linux.org>
+References: <20120425233632.12292.32916.stgit@bhelgaas.mtv.corp.google.com> <20120428192559.GB28349@parisc-linux.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Apr 2012 15:38:00 -0600
+Message-ID: <CAErSpo6mpUJTuUe8nE3k+zhDfsu2g2CEMNy0bc3=9+o8WwBqAA@mail.gmail.com>
+Subject: Re: [PATCH v1] PCI: work around Stratus ftServer broken PCIe hierarchy
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	James Paradis <james.paradis@stratus.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbmV0ZGV2LW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOm5ldGRldi1vd25lckB2Z2VyLmtlcm5lbC5vcmddDQo+IE9u
-IEJlaGFsZiBPZiBCZW4gSHV0Y2hpbmdzDQo+IFNlbnQ6IFNhdHVyZGF5LCBBcHJpbCAxNCwgMjAx
-MiAxOjAzDQo+IFRvOiBIdWFuZywgWGlvbmcNCj4gQ2M6IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IG5l
-dGRldkB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnOyBx
-Y2EtbGludXgtdGVhbTsgbmljLWRldmVsOyBsaW51eC1wY2kNCj4gU3ViamVjdDogUmU6IFtQQVRD
-SCAxMi8zN10gYXRsMWM6IHJlc3RvcmUgbWF4LXJlYWQtcmVxdWVzdC1zaXplIGluIERldmljZQ0K
-PiBDb25yb2wgUmVnaXN0ZXINCj4gDQo+IE9uIEZyaSwgMjAxMi0wNC0xMyBhdCAwODoxNCArMDgw
-MCwgeGlvbmcgd3JvdGU6DQo+ID4gaW4gc29tZSBwbGF0Zm9ybXMsIHdlIGZvdW5kIHRoZSBtYXgt
-cmVhZC1yZXF1ZXN0LXNpemUgaW4gRGV2aWNlDQo+ID4gQ29udHJvbCBSZWdpc3RlciBpcyBzZXQg
-dG8gMCBieSAoQklPUz8pIGR1cmluZyBib290dXAsIHRoaXMgd2lsbCBjYXVzZQ0KPiA+IHRoZQ0K
-PiA+IHBlcmZvcm1hbmNlKHRocm91Z2hwdXQpIHZlcnkgYmFkLg0KPiA+IFJlc3RvcmUgaXQgdG8g
-YSBtaW4tdmFsdWUuDQo+ID4gcmVnaXN0ZXIgZGVmaW5pdGlvbiBvZiBSRUdfREVWSUNFX0NUUkwg
-aXMgcmVmaW5lZCBhcyB3ZWxsLg0KPiBbLi4uXQ0KPiANCj4gSSdtIGd1ZXNzaW5nIHRoaXMgbWVt
-b3J5LW1hcHBlZCByZWdpc3RlciBpcyBhbiBhbGlhcyBmb3IgdGhlIFBDSWUgZGV2aWNlIGNvbnRy
-b2wNCj4gcmVnaXN0ZXIuICBJIHRoaW5rIHlvdSBzaG91bGQgYmUgdXNpbmcgcGNpZV9zZXRfcmVh
-ZHJxKCkgdG8gZW5zdXJlIHRoYXQgdGhlIGZpbmFsDQo+IHNldHRpbmcgY29uZm9ybXMgdG8gdGhl
-IGRldmljZSdzIE1heCBQYXlsb2FkIFNpemUgYW5kIHN5c3RlbSBwb2xpY3kuDQo+IA0KWW91IGFy
-ZSByaWdodCwgSSBkb24ndCBrbm93IHRoZXJlIGlzIGEgc3lzdGVtIGZ1bmN0aW9uIHRvIGRvIHRo
-ZSByaWdodCB0aGluZy4gSSB3aWxsIHJldmlzZSBpdC4gDQoNClRoYW5rcw0KWGlvbmcNCg0K
+On Sat, Apr 28, 2012 at 1:26 PM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Wed, Apr 25, 2012 at 05:36:32PM -0600, Bjorn Helgaas wrote:
+>> @@ -2161,6 +2161,9 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>>                               on: Turn realloc on
+>>               realloc         same as realloc=on
+>>               noari           do not use PCIe ARI.
+>> +             pcie_scan_all   Scan all possible PCIE devices.  Otherwise we
+>> +                             only look for one device below a PCIE downstream
+>> +                             port.
+>
+> We should probably s/device/slot/ throughout.  I've recently become
+> aware of a hype-rvisor that doesn't include PCI device number remapping,
+> so if you assign, say, function 03.6 to a guest, the PCI scanning code
+> doesn't find it.
+
+"Device" has a clear meaning in the context of PCIe addressing, i.e.,
+bus/device/function numbers.  But the spec uses "slot" to refer to a
+physical place where an add-in card can be inserted and things related
+to that place, e.g.,  power, hot-plug buttons, latches, chassis
+labels, etc.
+
+So I don't understand what you're proposing here.  I don't know what
+"scan all possible PCIe slots" would mean because I don't know what
+that change would look like in the code.
+
+Bjorn
