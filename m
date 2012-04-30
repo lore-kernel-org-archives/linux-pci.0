@@ -1,86 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:39207 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753960Ab2DML7S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 07:59:18 -0400
-Message-ID: <4F8814F7.20808@snewbury.org.uk>
-Date: Fri, 13 Apr 2012 12:58:47 +0100
-From: Steven Newbury <steve@snewbury.org.uk>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+Date: Mon, 30 Apr 2012 23:32:37 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Andrey Rahmatullin <wrar@wrar.name>,
+	Steven Rostedt <rostedt@goodmis.org>
+References: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-To: Steven Newbury <steve@snewbury.org.uk>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	"Barnes, Jesse" <jesse.barnes@intel.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Subject: Re: PCI resources above 4GB
-References: <1333968563.5678.19.camel@infinity>  <4F84110E.3000400@snewbury.org.uk>  <CAE9FiQVHf_pcXUspOtLXx4XminmzdWja3Ra2Wh5jQRbfNOQ1eQ@mail.gmail.com>  <4F8467AA.90305@snewbury.org.uk>  <CAE9FiQWaop0NE7ZJu6jVW3SnxLkOJ9hRKh4xMNk64XjCAMRMMw@mail.gmail.com>  <4F848357.3060007@snewbury.org.uk>  <CAE9FiQXTgh3X4x+xD1T0ipsEbhbPtctYucfGeuWK=cq7kHeZ1Q@mail.gmail.com>  <4F848E10.1090703@snewbury.org.uk>  <CAE9FiQXvwYrJhLi91VDVtD4+OOfbGQ1U20-Cap+8tBZUt7QCkA@mail.gmail.com>  <1334089568.4083.2.camel@Nokia-N900>  <CAE9FiQWnvB2VbBQQaEnDE0nf+Zwy6nyoGrEuVrUesQEzgYfbvA@mail.gmail.com>  <4F84A3EC.6030903@snewbury.org.uk>  <CAE9FiQU+EEtBWrc66Sw4GFQjSy9Vh9fyFvhgQUheev_aVpAzrw@mail.gmail.com>  <1334229754.30606.7.camel@Nokia-N900>  <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>  <1334248841.2910.6.camel@Nokia-N900>   <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com> <1334317529.2910.21.camel@Nokia-N900>
-In-Reply-To: <1334317529.2910.21.camel@Nokia-N900>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204302332.38009.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Monday, April 30, 2012, Alan Stern wrote:
+> On Mon, 30 Apr 2012, Bjorn Helgaas wrote:
+> 
+> > On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > From: Oleksij Rempel <bug-track@fisher-privat.net>
+> > >
+> > > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+> > > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+> > >
+> > > Some OEM use _SxD fileds do blacklist brocken Dx states.
+> > > If _SxD/_SxW return values are check before suspend as appropriate,
+> > > some nasty suspend/resume issues may be avoided.
+> > >
+> > > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+> > > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> > > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > > ---
+> > >
+> > > Bjorn, Len,
+> > >
+> > > This is -stable material and therefore v3.4 as well, IMO. �Please let me
+> > > know if one of you can take it or whether you want me to handle it all the
+> > > way to Linus.
+> > 
+> > I'm OK with this from a PCI perspective.  Most of the change is in
+> > ACPI, so I propose that either you or Len take care of it.
+> > 
+> > The second paragraph of the changelog has several typos
+> > (fileds/fields, do/to, brocken/broken, etc).
+> 
+> It also turns out that the normal wakeup mechanism doesn't work for the
+> devices in question.  Can this be detected by ACPI?  We don't want to 
+> tell userspace that wakeup works when in fact it doesn't.
 
-On 13/04/12 12:45, Steven Newbury wrote:
-> On Fri, 13 Apr 2012, 09:26:55 BST, Yinghai Lu <yinghai@kernel.org>
-> wrote:
-> 
->> On Thu, Apr 12, 2012 at 9:40 AM, Steven Newbury
->> <steve@snewbury.org.uk> wrote:
->>>>> 
->>>>> It would be useful to preserve as much low PCI memory
->>>>> address space as possible for hotplug devices (like my
->>>>> Radeon), but the other problem is small regions get
->>>>> allocated at the bottom, resulting in the inability to find
->>>>> large aligned regions later on. I see code to default to
->>>>> top-down allocation was reverted, I guess I'm going to have
->>>>> to dig into the archive to find out why...
->> 
->> Please check attached patches that will find_resource with fit.
->> It may leave space for your hotplug devices.
->> 
->> PCI: Should add children device res to fail list PCI: Try to
->> allocate mem64 above 4G at first intel-gtt: Read 64bit for
->> gmar_bus_addr PCI: Make sure assign same align with large size
->> resource at first resource: make find_resource could return just
->> fit resource PCI: Don't allocate small resource in big empty
->> space. resource: only return range with needed align
->> 
->> You can get them from
->> 
->> 
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>
->> 
-for-pci-res-alloc
-> 
-> I pulled this in on top of a branch with any of the prior PCI
-> patches since they conflict anyway.
-> 
-> It's not stable, crashes soon after GMA comes up. (Could be
-> unrelated breakage in linus/master? Probably not but I will
-> verify.)  I noticed the high allocations are occuring from the top
-> of 64-bit address-space, whilst /proc/cpuinfo shows only 48 bits of
-> virtual addressing.  Could that be why..?
-To reply to myself again, I should have said crashes shortly after
-Xorg initialises using the intel driver, in both cases!  I'm building
-a kernel now without the patch set to see if it's unrelated.  If it
-still dies I'll try applying your patch set to a branch without the
-changes from linus/master... (should have done that anyway...)
+No, we don't, but if there's _PRW and/or _DSW/_PSW for the device, we really
+have to assume that the device is able to wake up the system.  Moreover, if
+those methods don't return error codes, we have no way to say there's anything
+wrong.
 
-> 
-> Also, when not docked GMA still isn't mapped high so there's no
-> room for the 256M radeon pref mem.
-> 
-> Attached /proc/iomem output for docked and undocked.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk+IFPcACgkQGcb56gMuC61f9ACfQc9AqY5YVMEDAvdufMkSpg9b
-cbsAnRm6sA7VGfmzTyOldSJfV6Qt6ea8
-=RGn5
------END PGP SIGNATURE-----
+Thanks,
+Rafael
