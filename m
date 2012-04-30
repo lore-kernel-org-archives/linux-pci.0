@@ -1,260 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:36332 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289Ab2DFLPZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 07:15:25 -0400
-Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id CE03C3EE0BC
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 20:15:23 +0900 (JST)
-Received: from smail (m2 [127.0.0.1])
-	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id B627345DE4D
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 20:15:23 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
-	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 9F00145DD78
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 20:15:23 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 935EF1DB803C
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 20:15:23 +0900 (JST)
-Received: from m107.s.css.fujitsu.com (m107.s.css.fujitsu.com [10.240.81.147])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 43FDC1DB802C
-	for <linux-pci@vger.kernel.org>; Fri,  6 Apr 2012 20:15:23 +0900 (JST)
-Date: Fri, 6 Apr 2012 20:15:15 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] [RFC] PCI, ACPI, x86: MMCFG support for hotpluggable
- PCI hostbridges on x86, x86_64
-Message-Id: <20120406201515.7adc3e5e.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <4F7E8DDD.7020603@jp.fujitsu.com>
-References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
-	<4F7E8DDD.7020603@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:61218 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753403Ab2D3QDg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Apr 2012 12:03:36 -0400
+Received: by lahj13 with SMTP id j13so1941560lah.19
+        for <linux-pci@vger.kernel.org>; Mon, 30 Apr 2012 09:03:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201204292244.16467.rjw@sisk.pl>
+References: <201204292244.16467.rjw@sisk.pl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Apr 2012 10:03:14 -0600
+Message-ID: <CAErSpo7oGWNVeT6OCgaFdb_+uPAumggE-Z+OdnH=9aW+_N3B6g@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Oleksij Rempel <bug-track@fisher-privat.net>
+>
+> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+>
+> Some OEM use _SxD fileds do blacklist brocken Dx states.
+> If _SxD/_SxW return values are check before suspend as appropriate,
+> some nasty suspend/resume issues may be avoided.
+>
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+> Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> ---
+>
+> Bjorn, Len,
+>
+> This is -stable material and therefore v3.4 as well, IMO.  Please let me
+> know if one of you can take it or whether you want me to handle it all the
+> way to Linus.
 
-Thank you for your comment.
+I'm OK with this from a PCI perspective.  Most of the change is in
+ACPI, so I propose that either you or Len take care of it.
 
-On Fri, 06 Apr 2012 15:31:57 +0900
-Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com> wrote:
+The second paragraph of the changelog has several typos
+(fileds/fields, do/to, brocken/broken, etc).
 
-> (2012/04/06 11:59), Taku Izumi wrote:
-> >
-> > This patch introduces the configuration for the base address of
-> > the memory mapped configuration space (MMCFG) for hot pluggable PCI
-> > hostbridges on x86 and x86_64.
-> >
-> > The MMCFG for hotplugable host bridges must be described by using
-> > ACPI _CBA method. This patch adds implementation for _CBA method
-> > on ACPI pci_root driver and MMCFG manipulating functons for x86 and
-> > x86_64.
-> >
-> > Signed-off-by: Taku Izumi<izumi.taku@jp.fujitsu.com>
-> > ---
-> >   arch/x86/pci/mmconfig-shared.c |   43 +++++++++++++++++++++++++++++++++++------
-> >   drivers/acpi/pci_root.c        |   28 +++++++++++++++++++++++++-
-> >   drivers/pci/pci.c              |   31 +++++++++++++++++++++++++++++
-> >   include/acpi/acnames.h         |    1
-> >   include/linux/pci.h            |    3 ++
-> >   5 files changed, 99 insertions(+), 7 deletions(-)
-> >
-> > Index: linux-next-build/drivers/acpi/pci_root.c
-> > ===================================================================
-> > --- linux-next-build.orig/drivers/acpi/pci_root.c
-> > +++ linux-next-build/drivers/acpi/pci_root.c
-> > @@ -451,7 +451,7 @@ EXPORT_SYMBOL(acpi_pci_osc_control_set);
-> >
-> >   static int __devinit acpi_pci_root_add(struct acpi_device *device)
-> >   {
-> > -	unsigned long long segment, bus;
-> > +	unsigned long long segment, bus, base_addr;
-> >   	acpi_status status;
-> >   	int result;
-> >   	struct acpi_pci_root *root;
-> > @@ -506,6 +506,28 @@ static int __devinit acpi_pci_root_add(s
-> >   	device->driver_data = root;
-> >
-> >   	/*
-> > +	 * Check _CBA for hot pluggable host bridge
-> > +	 */
-> > +	base_addr = 0;
-> > +	status = acpi_evaluate_integer(device->handle, METHOD_NAME__CBA, NULL,
-> > +					&base_addr);
-> > +	if (ACPI_FAILURE(status)&&  status != AE_NOT_FOUND) {
-> > +		printk(KERN_ERR PREFIX "can't evaluate _CBA\n");
-> > +		result = -ENODEV;
-> > +		goto end;
-> > +	}
-> > +	if (base_addr) {
-> > +		if (pci_add_mmcfg_region(root->segment,
-> > +					 root->secondary.start,
-> > +					 root->secondary.end,
-> > +					 base_addr) != 0) {
-> > +			printk(KERN_ERR PREFIX "can't add MMCFG entry\n");
-> > +			result = -ENODEV;
-> > +			goto end;
-> > +		}
-> 
-> how about
-> 		result = pci_add_mmcfg_region()
-> 		if (result) {
-> 			printk();
-> 			goto end;
-> 		}
-> ?
-
-   I'll take in your good idea.
-
-> > +	}
-> > +
-> > +	/*
-> >   	 * All supported architectures that use ACPI have support for
-> >   	 * PCI domains, so we indicate this in _OSC support capabilities.
-> >   	 */
-> > @@ -625,6 +647,8 @@ static int __devinit acpi_pci_root_add(s
-> >   	return 0;
-> >
-> >   end:
-> > +	if (base_addr)
-> > +		pci_remove_mmcfg_region(root->segment, root->secondary.start);
-> >   	if (!list_empty(&root->node))
-> >   		list_del(&root->node);
-> >   	kfree(root);
-> > @@ -646,6 +670,8 @@ static int acpi_pci_root_remove(struct a
-> >   	device_set_run_wake(root->bus->bridge, false);
-> >   	pci_acpi_remove_bus_pm_notifier(device);
-> >
-> > +	pci_remove_mmcfg_region(root->segment, root->secondary.start);
-> > +
-> >   	kfree(root);
-> >   	return 0;
-> >   }
-> > Index: linux-next-build/include/acpi/acnames.h
-> > ===================================================================
-> > --- linux-next-build.orig/include/acpi/acnames.h
-> > +++ linux-next-build/include/acpi/acnames.h
-> > @@ -61,6 +61,7 @@
-> >   #define METHOD_NAME__AEI        "_AEI"
-> >   #define METHOD_NAME__PRW        "_PRW"
-> >   #define METHOD_NAME__SRS        "_SRS"
-> > +#define METHOD_NAME__CBA	"_CBA"
-> >
-> >   /* Method names - these methods must appear at the namespace root */
-> >
-> > Index: linux-next-build/include/linux/pci.h
-> > ===================================================================
-> > --- linux-next-build.orig/include/linux/pci.h
-> > +++ linux-next-build/include/linux/pci.h
-> > @@ -1460,6 +1460,9 @@ void pcibios_disable_device(struct pci_d
-> >   void pcibios_set_master(struct pci_dev *dev);
-> >   int pcibios_set_pcie_reset_state(struct pci_dev *dev,
-> >   				 enum pcie_reset_state state);
-> > +int pci_add_mmcfg_region(int segment, int start,
-> > +			 int end, u64 addr);
-> > +void pci_remove_mmcfg_region(int segment, int bus);
-> >
-> >   #ifdef CONFIG_PCI_MMCONFIG
-> >   extern void __init pci_mmcfg_early_init(void);
-> > Index: linux-next-build/arch/x86/pci/mmconfig-shared.c
-> > ===================================================================
-> > --- linux-next-build.orig/arch/x86/pci/mmconfig-shared.c
-> > +++ linux-next-build/arch/x86/pci/mmconfig-shared.c
-> > @@ -28,7 +28,7 @@ static int __initdata pci_mmcfg_resource
-> >
-> >   LIST_HEAD(pci_mmcfg_list);
-> >
-> > -static __init void pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
-> > +static __devinit void pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
-> >   {
-> >   	if (cfg->res.parent)
-> >   		release_resource(&cfg->res);
-> > @@ -45,7 +45,7 @@ static __init void free_all_mmcfg(void)
-> >   		pci_mmconfig_remove(cfg);
-> >   }
-> >
-> > -static __init void list_add_sorted(struct pci_mmcfg_region *new)
-> > +static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
-> >   {
-> >   	struct pci_mmcfg_region *cfg;
-> >
-> > @@ -61,8 +61,10 @@ static __init void list_add_sorted(struc
-> >   	list_add_tail(&new->list,&pci_mmcfg_list);
-> >   }
-> >
-> > -static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-> > -							int end, u64 addr)
-> > +static __devinit struct pci_mmcfg_region *pci_mmconfig_add(int segment,
-> > +							   int start,
-> > +							   int end,
-> > +							   u64 addr)
-> >   {
-> >   	struct pci_mmcfg_region *new;
-> >   	struct resource *res;
-> > @@ -108,6 +110,33 @@ struct pci_mmcfg_region *pci_mmconfig_lo
-> >   	return NULL;
-> >   }
-> >
-> > +int pci_add_mmcfg_region(int segment, int start, int end, u64 addr)
-> > +{
-> > +	struct pci_mmcfg_region *cfg;
-> > +
-> > +	cfg = pci_mmconfig_add(segment, start, end, addr);
-> > +	if (!cfg) {
-> > +		printk(KERN_WARNING PREFIX
-> > +			"no memory for MMCFG entry\n");
-> > +		return -ENOMEM;
-> > +	}
-> 
-> We need to check if the region is valid (if the region is
-> reserved in ACPI motherborad resource).
-
-
-	I'll add the code to sanity check.
-> 
-> > +
-> > +	insert_resource(&iomem_resource,&cfg->res);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +void pci_remove_mmcfg_region(int segment, int bus)
-> > +{
-> > +	struct pci_mmcfg_region *cfg;
-> > +
-> > +	cfg = pci_mmconfig_lookup(segment, bus);
-> > +	if (!cfg)
-> > +		return;
-> > +
-> > +	pci_mmconfig_remove(cfg);
-> > +}
-> > +
-> >   static const char __init *pci_mmcfg_e7520(void)
-> >   {
-> >   	u32 win;
-> > @@ -357,8 +386,10 @@ static void __init pci_mmcfg_insert_reso
-> >   {
-> >   	struct pci_mmcfg_region *cfg;
-> >
-> > -	list_for_each_entry(cfg,&pci_mmcfg_list, list)
-> > -		insert_resource(&iomem_resource,&cfg->res);
-> > +	list_for_each_entry(cfg,&pci_mmcfg_list, list) {
-> 
-> We need to add lock for manipulating pci_mmcfg_list.
-> 
-> > +		if (!cfg->res.parent)
-> 
-> Why do we need this line?
-> 
-> Regards,
-> Kenji Kaneshige
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Taku Izumi <izumi.taku@jp.fujitsu.com>
-
+> ---
+>  drivers/acpi/sleep.c |   22 +++++++++++++++++++++-
+>  drivers/pci/pci.c    |   12 +++++++++++-
+>  2 files changed, 32 insertions(+), 2 deletions(-)
+>
+> Index: linux/drivers/acpi/sleep.c
+> ===================================================================
+> --- linux.orig/drivers/acpi/sleep.c
+> +++ linux/drivers/acpi/sleep.c
+> @@ -714,10 +714,30 @@ int acpi_pm_device_sleep_state(struct de
+>         *
+>         * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
+>         * provided -- that's our fault recovery, we ignore retval.
+> +        *
+> +        * According to ACPI 4.0a (April 5, 2010), page 294,
+> +        * Table 7-7 S3 Action / Result Table, we need to evaluate _SxW in
+> +        * addition to _SxD if the device is configured for wakeup:
+> +        * Desired Action    | _S3D | _PRW | _S3W | Resultant D-state
+> +        * Enter S3          |  N/A |  D/C |  N/A | OSPM decides
+> +        * Enter S3, No Wake |   2  |  D/C |  D/C | Enter D2 or D3
+> +        * Enter S3, Wake    |   2  |   3  |  N/A | Enter D2
+> +        * Enter S3, Wake    |   2  |   3  |   3  | Enter D2 or D3
+> +        * Enter S3, Wake    |  N/A |   3  |   2  | Enter D0, D1 or D2
+>         */
+> -       if (acpi_target_sleep_state > ACPI_STATE_S0)
+> +       if (acpi_target_sleep_state > ACPI_STATE_S0) {
+> +               acpi_status status;
+> +
+>                acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
+>
+> +               if (device_may_wakeup(dev)) {
+> +                       acpi_method[3] = 'W';
+> +                       status = acpi_evaluate_integer(handle, acpi_method,
+> +                                                      NULL, &d_max);
+> +                       if (ACPI_FAILURE(status))
+> +                               d_max = d_min;
+> +               }
+> +       }
+>        /*
+>         * If _PRW says we can wake up the system from the target sleep state,
+>         * the D-state returned by _SxD is sufficient for that (we assume a
+> Index: linux/drivers/pci/pci.c
+> ===================================================================
+> --- linux.orig/drivers/pci/pci.c
+> +++ linux/drivers/pci/pci.c
+> @@ -1691,10 +1691,20 @@ pci_power_t pci_target_state(struct pci_
+>  {
+>        pci_power_t target_state = PCI_D3hot;
+>
+> -       if (platform_pci_power_manageable(dev)) {
+> +       /*
+> +        * According to ACPI 4.0a,7.2 Device Power Management Objects, device
+> +        * with wake capability should have _PRW or _PSW object and can have
+> +        * _SxD or _SxW object.
+> +        * It looks like some OEMs use this fields to avoid buggy Dx states
+> +        * of devices, so we need to check for _PRW or _PSW and see if _SxD or
+> +        * _SxW indicate to overwrite Dx.
+> +        */
+> +       if (platform_pci_power_manageable(dev)
+> +           || platform_pci_can_wakeup(dev)) {
+>                /*
+>                 * Call the platform to choose the target state of the device
+>                 * and enable wake-up from this state if supported.
+> +                * (Check _SxD and _SxW)
+>                 */
+>                pci_power_t state = platform_pci_choose_state(dev);
+>
