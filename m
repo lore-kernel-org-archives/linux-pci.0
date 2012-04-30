@@ -1,94 +1,138 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+Date: Mon, 30 Apr 2012 23:41:12 +0200
+Cc: Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
+	LKML <linux-kernel@vger.kernel.org>
+References: <201204292244.16467.rjw@sisk.pl> <CAErSpo7oGWNVeT6OCgaFdb_+uPAumggE-Z+OdnH=9aW+_N3B6g@mail.gmail.com>
+In-Reply-To: <CAErSpo7oGWNVeT6OCgaFdb_+uPAumggE-Z+OdnH=9aW+_N3B6g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
-References: <4F6A483D.50702@fold.natur.cuni.cz>
-	<CAE9FiQVnErU-cska4gpinyj-LOup-U+3vsEG2z_-7h6kyREYtw@mail.gmail.com>
-	<4F6A5A53.305@fold.natur.cuni.cz>
-	<CAE9FiQXP7fO9OGN557jdofFFiFj96wL--ZA8X3UPEJ6o9JLvBw@mail.gmail.com>
-	<4F8BEB1D.9080903@fold.natur.cuni.cz>
-	<CAE9FiQXoX3J6P_9Tun_XbkK3egvSeBZxAtC13HacFDO0fwmZaA@mail.gmail.com>
-	<4F8C6E4E.1000205@fold.natur.cuni.cz>
-	<CAE9FiQXikqikMw_LYGqAUsWqFqL-tLiresPhpkpDhb+AxwundQ@mail.gmail.com>
-	<CAE9FiQUFB=9zbP1yuBDH1RJrCCP=83kV_fH+TEtk80981-uP=w@mail.gmail.com>
-	<CAE9FiQUbzM_TVu+bbXa6LWiUt01QsFiGoyYd0qV=41dXx4J31g@mail.gmail.com>
-	<4F8D1B72.2000105@fold.natur.cuni.cz>
-	<CAE9FiQW2MAW_WT+sq8XVtMOx=uR8FAN8O2wL2AOxkFBfEM285g@mail.gmail.com>
-	<CAE9FiQWSw1h772ijZ6YL4EujwjgvZ84bbDx9VbF_cdE63D-41w@mail.gmail.com>
-	<4F8D390F.9050408@fold.natur.cuni.cz>
-	<CAE9FiQU-_BCCS1OKagVuj8YNrut8-6GH2_i86FsfS8UDWQ1pRA@mail.gmail.com>
-Date: Tue, 17 Apr 2012 12:02:04 -0700
-Message-ID: <CAE9FiQUxoHvUWFXv5LLcBT9vVGnQKp1-Tg7M3XPPULWwtX1iUw@mail.gmail.com>
-Subject: Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
-From: Yinghai Lu <yinghai@kernel.org>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201204302341.12528.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 17, 2012 at 10:07 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Apr 17, 2012 at 2:34 AM, Martin Mokrejs
-> <mmokrejs@fold.natur.cuni.cz> wrote:
->> Yinghai Lu wrote:
->>> On Tue, Apr 17, 2012 at 1:46 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> On Tue, Apr 17, 2012 at 12:27 AM, Martin Mokrejs
->>>> <mmokrejs@fold.natur.cuni.cz> wrote:
->>>>>>
->>>>>> can you send out lspci -vvxxxx -s 00:1c.7 after removing USB 3.0 express card?
->>>>>
->>>>> No, that did not help (tried on 3.4-rc3). First I plugged in the NEC uPD720200 USB3.0 card
->>>>> and unplugged it (card removal not reported :(), saved the lspci output.
->>>>> Then I inserted the FireWire card, unplugged, again saved the lspci output.
->>>>> Finally, saved the dmesg. All three files are attached.
->>>>
->>>> for USB 3.0:
->>>>                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
->>>>                        Changed: MRL- PresDet- LinkState+
->>>
->>> LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+
->>> BWMgmt+ ABWMgmt-
->>>
->>> link still active even that card get removed, that looks like chipset
->>> have problem.
->>
->> Yinghai,
->>  so what should I ask Dell for? To fix BIOS of the laptop? What exactly? Or do you think
->> this is a hardware issue with the chipset?
->
-> after the expresscard get removed, that root port socket status bits
-> still report Data Link Active, and
-> the card still present.
->
-> Better check with Dell at first, and ask them to talk with intel if
-> there is silicon bug with that chipset that report wrong status.
->
-> Let me check if i could rebase one my local patch do reset pcie link
-> to prove that problem it silicon related.
+On Monday, April 30, 2012, Bjorn Helgaas wrote:
+> On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Oleksij Rempel <bug-track@fisher-privat.net>
+> >
+> > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+> > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+> >
+> > Some OEM use _SxD fileds do blacklist brocken Dx states.
+> > If _SxD/_SxW return values are check before suspend as appropriate,
+> > some nasty suspend/resume issues may be avoided.
+> >
+> > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+> > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > ---
+> >
+> > Bjorn, Len,
+> >
+> > This is -stable material and therefore v3.4 as well, IMO.  Please let me
+> > know if one of you can take it or whether you want me to handle it all the
+> > way to Linus.
+> 
+> I'm OK with this from a PCI perspective.  Most of the change is in
+> ACPI, so I propose that either you or Len take care of it.
+> 
+> The second paragraph of the changelog has several typos
+> (fileds/fields, do/to, brocken/broken, etc).
 
-Rebase patches about pcie link disable/enable in /sys. please check them at
+Thanks for spotting that, the version below should be better.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-test
+I'll wait for Len to respond till Friday and will take care of the patch myself
+if he doesn't say anything.
 
-  PCI, sysfs: merge dev and bus cpuaffinity show handling
-  PCI, sys: Use is_visable() with boot_vga attribute for pci_dev
-  PCI, sysfs: Put resource_alignment info pci_bus_attrs array
-  PCI: Move pcie_link_disable to pcie-link.c
-  PCI, sysfs: Add pcie attrs for pcie device under pci dev dir.
-  PCI: Add link_disable in /sysfs for pcie device
+May I assume an ACK from you?
 
-it is based on for-pci-root-bus-hotplug branch
+Rafael
 
-Or you can just master branch like
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+---
+From: Oleksij Rempel <bug-track@fisher-privat.net>
+Subject: ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
 
-After you remove USB3 expresscard, you need to
+This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+more closely and fixes suspend bug found on ASUS Zenbook UX31E.
 
-echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
-then
-echo 0 > /sys/devices/pci0000\:00/0000\:00\:1c.7/pcie_link_disable
+Some OEM use _SxD fields to blacklist broken device Dx states, so
+if _SxD/_SxW return values are checked before suspend as appropriate,
+some nasty suspend/resume issues may be avoided.
 
-Thanks
+References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/acpi/sleep.c |   22 +++++++++++++++++++++-
+ drivers/pci/pci.c    |   12 +++++++++++-
+ 2 files changed, 32 insertions(+), 2 deletions(-)
 
-Yinghai
+Index: linux/drivers/acpi/sleep.c
+===================================================================
+--- linux.orig/drivers/acpi/sleep.c
++++ linux/drivers/acpi/sleep.c
+@@ -720,10 +720,30 @@ int acpi_pm_device_sleep_state(struct de
+ 	 *
+ 	 * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
+ 	 * provided -- that's our fault recovery, we ignore retval.
++	 *
++	 * According to ACPI 4.0a (April 5, 2010), page 294,
++	 * Table 7-7 S3 Action / Result Table, we need to evaluate _SxW in
++	 * addition to _SxD if the device is configured for wakeup:
++	 * Desired Action    | _S3D | _PRW | _S3W | Resultant D-state
++	 * Enter S3          |  N/A |  D/C |  N/A | OSPM decides
++	 * Enter S3, No Wake |   2  |  D/C |  D/C | Enter D2 or D3
++	 * Enter S3, Wake    |   2  |   3  |  N/A | Enter D2
++	 * Enter S3, Wake    |   2  |   3  |   3  | Enter D2 or D3
++	 * Enter S3, Wake    |  N/A |   3  |   2  | Enter D0, D1 or D2
+ 	 */
+-	if (acpi_target_sleep_state > ACPI_STATE_S0)
++	if (acpi_target_sleep_state > ACPI_STATE_S0) {
++		acpi_status status;
++
+ 		acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
+ 
++		if (device_may_wakeup(dev)) {
++			acpi_method[3] = 'W';
++			status = acpi_evaluate_integer(handle, acpi_method,
++						       NULL, &d_max);
++			if (ACPI_FAILURE(status))
++				d_max = d_min;
++		}
++	}
+ 	/*
+ 	 * If _PRW says we can wake up the system from the target sleep state,
+ 	 * the D-state returned by _SxD is sufficient for that (we assume a
+Index: linux/drivers/pci/pci.c
+===================================================================
+--- linux.orig/drivers/pci/pci.c
++++ linux/drivers/pci/pci.c
+@@ -1691,10 +1691,20 @@ pci_power_t pci_target_state(struct pci_
+ {
+ 	pci_power_t target_state = PCI_D3hot;
+ 
+-	if (platform_pci_power_manageable(dev)) {
++	/*
++	 * According to ACPI 4.0a,7.2 Device Power Management Objects, device
++	 * with wake capability should have _PRW or _PSW object and can have
++	 * _SxD or _SxW object.
++	 * It looks like some OEMs use this fields to avoid buggy Dx states
++	 * of devices, so we need to check for _PRW or _PSW and see if _SxD or
++	 * _SxW indicate to overwrite Dx.
++	 */
++	if (platform_pci_power_manageable(dev)
++	    || platform_pci_can_wakeup(dev)) {
+ 		/*
+ 		 * Call the platform to choose the target state of the device
+ 		 * and enable wake-up from this state if supported.
++		 * (Check _SxD and _SxW)
+ 		 */
+ 		pci_power_t state = platform_pci_choose_state(dev);
+ 
