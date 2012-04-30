@@ -1,355 +1,144 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64593 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752968Ab2D3P4h convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2012 11:56:37 -0400
+Received: by lbbgm6 with SMTP id gm6so326369lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 30 Apr 2012 08:56:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201204162330.12178.rjw@sisk.pl>
-References: <4F8790F6.5080408@intel.com>
-	<201204132141.58063.rjw@sisk.pl>
-	<CAC=cRTNYGGq2ncJr7mvEOm2udqXsAD3T9T=5Tafue_jrjAWCug@mail.gmail.com>
-	<201204162330.12178.rjw@sisk.pl>
-Date: Tue, 17 Apr 2012 10:02:27 +0800
-Message-ID: <CAC=cRTNL0R--5njYdWzvREx7fhebAhFW_sBJ4jt9n_c8rp_ZTQ@mail.gmail.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-From: huang ying <huang.ying.caritas@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20120428050127.GA25916@richard>
+References: <20120427092704.GA22529@richard> <CAErSpo6xy6AEQwROSOU6yrfdWpBgRpd+-hOGOyg0mv9UzKwOUA@mail.gmail.com>
+ <20120428050127.GA25916@richard>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Apr 2012 09:56:13 -0600
+Message-ID: <CAErSpo7mjeo8f=_3Uhj0V-Q1-q5dYqi8T7pMqBY6zdahpCWTRA@mail.gmail.com>
+Subject: Re: Does my understanding correct?
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 17, 2012 at 5:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Monday, April 16, 2012, huang ying wrote:
->> Hi,
+On Fri, Apr 27, 2012 at 11:01 PM, Richard Yang
+<weiyang@linux.vnet.ibm.com> wrote:
+> On Fri, Apr 27, 2012 at 08:17:48AM -0600, Bjorn Helgaas wrote:
+>>On Fri, Apr 27, 2012 at 3:27 AM, Richard Yang
+>><weiyang@linux.vnet.ibm.com> wrote:
 >>
->> On Sat, Apr 14, 2012 at 3:41 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > Hi,
->> >
->> > On Friday, April 13, 2012, Yan, Zheng wrote:
->> >> Hi all,
->> >>
->> >> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
->> >> beneath a PCIe port when they all have entered D3. A device in D3cold can only
->> >> generate wake event through the WAKE# pin. Because we can not access to a device's
->> >> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
->> >>
->> >> Any comment will be appreciated.
->> >>
->> >> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
->> >> ---
->> >> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->> >> index 0f150f2..e210e8cb 100644
->> >> --- a/drivers/pci/pci-acpi.c
->> >> +++ b/drivers/pci/pci-acpi.c
->> >> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->> >> Â  Â  Â  Â  Â  Â  Â  [PCI_D1] = ACPI_STATE_D1,
->> >> Â  Â  Â  Â  Â  Â  Â  [PCI_D2] = ACPI_STATE_D2,
->> >> Â  Â  Â  Â  Â  Â  Â  [PCI_D3hot] = ACPI_STATE_D3,
->> >> - Â  Â  Â  Â  Â  Â  [PCI_D3cold] = ACPI_STATE_D3
->> >> + Â  Â  Â  Â  Â  Â  [PCI_D3cold] = ACPI_STATE_D3_COLD
->> >> Â  Â  Â  };
->> >> Â  Â  Â  int error = -EINVAL;
->> >>
->> >
->> > Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
->> >
->> > We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
->> > instead. Â I'll prepare a patch for that over the weekend if no one has done
->> > that already.
->> >
->> >> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
->> >>
->> >> Â static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
->> >> Â {
->> >> - Â  Â  if (dev->pme_interrupt)
->> >> + Â  Â  /* PME interrupt isn't available in the D3cold case */
->> >> + Â  Â  if (dev->pme_interrupt && !dev->runtime_d3cold)
->> >
->> > This whole thing is wrong. Â First off, I don't think that the runtime_d3cold
->> > flag makes any sense. Â We already cover that in dev->pme_support.
+>>I assume your question relates to the Stratus ftServer topology.  If
+>>so, the lspci details might clarify things.
 >>
->> PCIe devices and PCIe root port may have proper PME interrupt support
->> (that is, dev->pme_interrupt = true), but the process of remote wakeup
->> from D3cold is as follow:
->>
->> 1) In D3cold, the power of the main link is turned off, aux power is
->> provided (PCIe L2 link state)
->> 2) Device detect condition to resume, then assert #WAKE pin
->> 2) ACPI circuit linked with #WAKE pin, and will generate a GPE for that
->> 3) GPE handler will resume device with ACPI (via _PS3 and _PR0), the
->> power of the main link is turned on, after a while, link goes into L0
->> state
->> 4) The PME message is sent to root port, pme interrupt generated
+> Yes, my picture is a little bit related to your previous mail.
+> While my intention is to find out how the physical world is represented
+> in the kernel.
 >
-> This isn't how it's supposed to work in theory. Â If the device can signal PME
-> from D3cold, it should be able to reestablish the link and send a PME
-> message from there. Â dev->pme_interrupt set means exactly that.
+> Below is a typical topology in PCIe spec r3.0.
 >
-> ACPI is only supposed to be needed for things that don't send PME
-> messages (in your case the PME interrupt generated by the port is essentially
-> useless, because the wakeup event has already been signaled through ACPI).
+>                          +------------------+
+>                          |                  |
+>                          |      RC          |
+>                          |       Bus#0      |
+>                          | -------------    |
+>                          |                  |
+>                          +-+-----+--------+-+
+>         00:0.0             |     |        |        00:02.0
+>  +---------+---------+      |     |        |       +------------+-------------+
+>  |                   +------+     |        +-------|  PCIe 2 PCI Bridge       |
+>  |   PCIe Endpoint   |            |                |                          |
+>  +-------------------+            |                |  Bus#2                   |
+>                                  |                |  --------------          |
+>                                  |                +-------+---------------+--+
+>                                  |                        |            |
+>                                  |  00:01.0               |02:00.0     |02:01.0
+>                     +------------+-------------+  +-------+------+ +---+-------+
+>                     |                          |  |PCI dev       | |PCI dev    |
+>                     |       Switch             |  |              | |           |
+>                     |       Bus#1              |  |              | |           |
+>                     |     ---------------      |  +--------------+ +-----------+
+>                     |                          |
+>                     +------------------------+-+
+>                        |                       |
+>                        |                       |
+>                        | 01:00.0               | 01:01.0
+>              +---------+-------+      +--------+----------------+
+>              |                 |      |                         |
+>              | PCI Endpoint    |      |  PCIe Endpoint          |
+>              |                 |      |                         |
+>              |                 |      |                         |
+>              +-----------------+      +-------------------------+
 >
->> So, for deivce, dev->pme_interrupt = true and dev->pme_support
->> advocate it support PME in D3cold. Â But we still need ACPI to setup
->> run wake for the device.
->
-> OK, so this is nonstandard.
+> Do you think the current assignment of bus number and pci_dev is
+> correct?
 
-This is the standard behavior.  Please refer to PCI Express Base
-Sepcification Revision 2.0, section 5.3.3.2 Link Wakeup.  In D1, D2
-and D3hot state, PCIe device can transit the link from L1 to L0 state,
-and send the PME message.  In D3cold, the main link is powered off,
-PCIe device will use a STANDARD sideband signal WAKE# to signal wakeup
-firstly, then platform (power controller in spec) will power on the
-main link for the device, after main link is back to L0, the PME
-message is send to root port, pme interrupt is generated.  So in
-theory, the wake up process can be divided into platform part (which
-power on the main link) and PCIe part (which send PME).
+I think assignments shown for the PCIe-to-PCI bridge are OK, although
+I would draw it like this because the bridge originates a single bus
+02 that may have multiple devices attached to it (this side is PCI,
+not PCIe, so it really is a shared bus):
 
->> So we need a way to inform acpi_pci_run_wake(), one way is using a
->> flag, there is other ways such as adding another parameter to
->> acpi_pci_run_wake() to tell it which power state to go.
->
-> I'm not sure what to do with that. Â It looks like we should use ACPI for
-> signaling remote wakeup on this platform and additionally provide a dummy
-> interrupt handler for root ports that will only clear PME Status.
->
->> > Second, pme_interrupt means that the _root_ _port_, not the device itself will
->> > trigger an interrupt whenever the device sends the PME message to it (which
->> > very well may happen for a device in D3_cold woken up by an external signal).
->>
->> As above, that may happend after ACPI GPE.
->
-> Because it's not a standard PCIe system.
->
->> >> Â  Â  Â  Â  Â  Â  Â  return 0;
->> >>
->> >> Â  Â  Â  if (!acpi_pm_device_run_wake(&dev->dev, enable))
->> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> >> index 8156744..bc16869 100644
->> >> --- a/drivers/pci/pci.c
->> >> +++ b/drivers/pci/pci.c
->> >> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->> >> Â  Â  Â  int error;
->> >>
->> >
->> > Guys, please. Â Never, _ever_, touch pci_set_power_state() without discussing
->> > your ideas with someone who knows how it works and _why_ it works this way.
->>
->> This patch is sent as RFC, I think this is to call for discussing
->> instead of merging, isn't it?
->>
->> > The problem here is that you can't program a PCI device into D3_cold, so it
->> > doesn't even make sense to have a helper for that.
->>
->> We need to program ACPI to make the PCI device go into D3_cold. Â That
->> is called in this function.
->>
->> pci_set_power_sate
->> Â  -> __pci_complete_power_transition
->> Â  Â  -> pci_platform_power_transition
->
-> So don't use pci_set_power_state() for that, because it's essentially
-> a different operation. Â You need a pci_platform_remove_power() helper or
-> similar for that.
->
-> What ACPI method exactly is used to remove power from the device?
+                                 ^
+                                 |
+                        +--------+--------+
+                        |     00:02.0     |
+                        | PCIe-PCI bridge |
+                        |                 |
+                        +--------+--------+
+                                 |
+                                 |
+                      +---------------------+    Bus 02
+                      |                     |
+                      |                     |
+                      |                     |
+                 +----v----+           +----v----+
+                 | 02:00.0 |           | 02:01.0 |
+                 +---------+           +---------+
 
-The ACPI method executed is as follow:
+I think the PCIe switch part is incorrect.  Here's Figure 1-3 from sec
+1.3.3 of the PCIe r3 spec:
 
-- _PS3 (if exist)
-- Power resources in _PR3 is turned on
-- Power resources in _PR0 is turned off
-- Power resources in _PR3 is turned off
+                                     ^
+                                     |
+     +-------------------------------|------------------------------+
+     |                               |                              |
+     |                          +----+----+                         |
+     |                          | virtual |                         |
+     |                          | PCI-PCI |                         |
+     |                          | bridge  |                         |
+     |                          +----+----+                         |
+     |                               |                              |
+     |                               |                              |
+     |                               |                              |
+     |          +----------------------------------------+          |
+     |          |                    |                   |          |
+     |          |                    |                   |          |
+     |          |                    |                   |          |
+     |     +----+----+          +----+----+         +----++---+     |
+     |     | virtual |          | virtual |         | virtual |     |
+     |     | PCI-PCI |          | PCI-PCI |         | PCI-PCI |     |
+     |     | bridge  |          | bridge  |         | bridge  |     |
+     |     +----+----+          +----+----+         +----+----+     |
+     |          |                    |                   |          |
+     |          |                    |                   |          |
+     +----------|--------------------|-------------------|----------+
+                |                    |                   |
+                v                    v                   v
 
-I think the process can fit pci_set_power_state() quite well, so why
-invent another helper for that?
 
->> >> Â  Â  Â  /* bound the state we're entering */
->> >> - Â  Â  if (state > PCI_D3hot)
->> >> - Â  Â  Â  Â  Â  Â  state = PCI_D3hot;
->> >> + Â  Â  if (state > PCI_D3cold)
->> >> + Â  Â  Â  Â  Â  Â  state = PCI_D3cold;
->> >> Â  Â  Â  else if (state < PCI_D0)
->> >> Â  Â  Â  Â  Â  Â  Â  state = PCI_D0;
->> >> Â  Â  Â  else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
->> >> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->> >> Â  Â  Â  if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
->> >> Â  Â  Â  Â  Â  Â  Â  return 0;
->> >>
->> >> - Â  Â  error = pci_raw_set_power_state(dev, state);
->> >> + Â  Â  error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
->> >> + Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  PCI_D3hot : state);
->> >>
->> >> Â  Â  Â  if (!__pci_complete_power_transition(dev, state))
->> >> Â  Â  Â  Â  Â  Â  Â  error = 0;
->> >> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
->> >> Â  Â  Â  return !!(dev->pme_support & (1 << state));
->> >> Â }
->> >>
->> >> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
->> >> +{
->> >> + Â  Â  struct pci_dev *bridge = dev->bus->self;
->> >> +
->> >> + Â  Â  /* don't poll the pme bit if parent is in low power state */
->> >> + Â  Â  if (bridge && bridge->current_state != PCI_D0)
->> >> + Â  Â  Â  Â  Â  Â  return;
->> >> +
->> >> + Â  Â  pci_pme_wakeup(dev, NULL);
->> >> +}
->> >
->> > This one actually makes some sense, although it might be better to put the
->> > test into pci_pme_wakeup() itself.
->> >
->> >> +
->> >> Â static void pci_pme_list_scan(struct work_struct *work)
->> >> Â {
->> >> Â  Â  Â  struct pci_pme_device *pme_dev, *n;
->> >> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
->> >> Â  Â  Â  if (!list_empty(&pci_pme_list)) {
->> >> Â  Â  Â  Â  Â  Â  Â  list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
->> >> Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  if (pme_dev->dev->pme_poll) {
->> >> - Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  pci_pme_wakeup(pme_dev->dev, NULL);
->> >> + Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  pci_pme_poll_wakeup(pme_dev->dev);
->> >> Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  } else {
->> >> Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  list_del(&pme_dev->list);
->> >> Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  kfree(pme_dev);
->> >> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->> >> Â  Â  Â  if (enable) {
->> >> Â  Â  Â  Â  Â  Â  Â  int error;
->> >>
->> >> + Â  Â  Â  Â  Â  Â  if (runtime && state >= PCI_D3cold)
->> >> + Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  dev->runtime_d3cold = true;
->> >> + Â  Â  Â  Â  Â  Â  else
->> >> + Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  dev->runtime_d3cold = false;
->> >> Â  Â  Â  Â  Â  Â  Â  if (pci_pme_capable(dev, state))
->> >> Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  pci_pme_active(dev, true);
->> >> Â  Â  Â  Â  Â  Â  Â  else
->> >> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
->> >> index e0610bd..d66b7e9 100644
->> >> --- a/drivers/pci/pcie/portdrv_pci.c
->> >> +++ b/drivers/pci/pcie/portdrv_pci.c
->> >> @@ -11,11 +11,13 @@
->> >> Â #include <linux/kernel.h>
->> >> Â #include <linux/errno.h>
->> >> Â #include <linux/pm.h>
->> >> +#include <linux/pm_runtime.h>
->> >> Â #include <linux/init.h>
->> >> Â #include <linux/pcieport_if.h>
->> >> Â #include <linux/aer.h>
->> >> Â #include <linux/dmi.h>
->> >> Â #include <linux/pci-aspm.h>
->> >> +#include <linux/delay.h>
->> >>
->> >> Â #include "portdrv.h"
->> >> Â #include "aer/aerdrv.h"
->> >> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
->> >> Â  Â  Â  return 0;
->> >> Â }
->> >>
->> >> +static int pcie_port_runtime_suspend(struct device *dev)
->> >> +{
->> >> + Â  Â  struct pci_dev *pdev = to_pci_dev(dev);
->> >> +
->> >> + Â  Â  pci_save_state(pdev);
->> >
->> > Are you sure this is sufficient?
->>
->> Maybe we need to pay attention to the pcie port drivers? Â Run ->runtime_
->
-> Yes.
->
->> >> + Â  Â  return 0;
->> >> +}
->> >> +
->> >> +static int pcie_port_runtime_resume(struct device *dev)
->> >> +{
->> >> + Â  Â  struct pci_dev *pdev = to_pci_dev(dev);
->> >> +
->> >> + Â  Â  pci_restore_state(pdev);
->> >> + Â  Â  if (pdev->runtime_d3cold)
->> >> + Â  Â  Â  Â  Â  Â  msleep(100);
->> >
->> > What's _that_ supposed to do?
->>
->> When resume from d3cold, PCIe main link will be powered on again, it
->> will take quite some time before the main link go into L0 state.
->> Otherwise, accessing devices under the port may return wrong result.
->
-> OK, but this is generic code and as per the standard the link should have been
-> reestablished at this point already.
+A PCIe switch appears as two or more PCI-PCI bridges.  One is
+associated with the upstream port; the others with the downstream
+ports.
 
-Maybe we can have some other way to check whether the link is
-reestablished.  I will check the this.
+A bridge always has a primary side and a secondary side.  In your
+diagram, the bridge associated with the upstream port would be 00:01.0
+(primary bus 00) and could have a secondary bus of 03 (since 02 is
+already consumed by the PCIe-PCI bridge).
 
-> Please don't put some nonstandard-platform-specific quirks like this into
-> code that's supposed to handle _every_ PCIe system.
->
->> >> +
->> >> + Â  Â  return 0;
->> >> +}
->> >> +
->> >> Â static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->> >> Â  Â  Â  .suspend Â  Â  Â  Â = pcie_port_device_suspend,
->> >> Â  Â  Â  .resume Â  Â  Â  Â  = pcie_port_device_resume,
->> >> @@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->> >> Â  Â  Â  .poweroff Â  Â  Â  = pcie_port_device_suspend,
->> >> Â  Â  Â  .restore Â  Â  Â  Â = pcie_port_device_resume,
->> >> Â  Â  Â  .resume_noirq Â  = pcie_port_resume_noirq,
->> >> + Â  Â  .runtime_suspend = pcie_port_runtime_suspend,
->> >> + Â  Â  .runtime_resume = pcie_port_runtime_resume,
->> >> Â };
->> >>
->> >> Â #define PCIE_PORTDRV_PM_OPS Â (&pcie_portdrv_pm_ops)
->> >> @@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
->> >> Â  Â  Â  Â  Â  Â  Â  return status;
->> >>
->> >> Â  Â  Â  pci_save_state(dev);
->> >> + Â  Â  pm_runtime_put_noidle(&dev->dev);
->> >
->> > What's the purpose of this?
->>
->> I think this is needed by PCI runtime PM support. Â Before ->probe,
->> pm_runtime_get_xxx() is executed on device.
->
-> ok
->
->> >> Â  Â  Â  return 0;
->> >> Â }
->> >>
->> >> Â static void pcie_portdrv_remove(struct pci_dev *dev)
->> >> Â {
->> >> + Â  Â  pm_runtime_get_noresume(&dev->dev);
->> >> Â  Â  Â  pcie_port_device_remove(dev);
->> >> Â  Â  Â  pci_disable_device(dev);
->> >> Â }
->> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> >> index e444f5b..b41d9a1 100644
->> >> --- a/include/linux/pci.h
->> >> +++ b/include/linux/pci.h
->> >> @@ -281,6 +281,7 @@ struct pci_dev {
->> >> Â  Â  Â  unsigned int Â  Â no_d1d2:1; Â  Â  Â /* Only allow D0 and D3 */
->> >> Â  Â  Â  unsigned int Â  Â mmio_always_on:1; Â  Â  Â  /* disallow turning off io/mem
->> >> Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â decoding during bar sizing */
->> >> + Â  Â  unsigned int Â  Â runtime_d3cold:1;
->> >> Â  Â  Â  unsigned int Â  Â wakeup_prepared:1;
->> >> Â  Â  Â  unsigned int Â  Â d3_delay; Â  Â  Â  /* D3->D0 transition time in ms */
->> >
->> > OK
->> >
->> > So now please tell me what exactly you want to achieve and why you want to do
->> > that in the first place.
->
-> Well, is there any chance to get that information?
+The bridges associated with the downstream ports are all logically on
+bus 03.  Their primary bus number would be 03; they might be 03:00.0,
+03:01.0, 03:02.0, etc.  Each would have its own secondary bus number,
+for example 04, 05, 06.  That secondary bus number is for the
+downstream link from the corresponding downstream port.
 
-You mean the runtime_d3cold flag? That flag is used to tell
-acpi_pci_run_wake() that we need ACPI wakeup setup for the device
-because that is needed by D3cold.  The ACPI wakeup setup here means
-turn on power resources needed by wake up (_PRW) and execute _DSW.
+The endpoints below the PCIe switch could then be 04:00.0 and 05:00.0
+(or these could be the upstream ports of more PCIe switches).
 
-If you mean the whole patch, we want to implement runtime D3cold
-support, which can save more power than D3hot.
-
-Best Regards,
-Huang Ying
+Bjorn
