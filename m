@@ -1,184 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:34728 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751308Ab2DMPXf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2012 11:23:35 -0400
-Message-ID: <4F8844E1.5080806@snewbury.org.uk>
-Date: Fri, 13 Apr 2012 16:23:13 +0100
-From: Steven Newbury <steve@snewbury.org.uk>
-MIME-Version: 1.0
-To: Daniel Vetter <daniel@ffwll.ch>
-CC: linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	"Barnes, Jesse" <jesse.barnes@intel.com>,
+Received: from ogre.sisk.pl ([193.178.161.156]:46290 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756418Ab2D3Viv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2012 17:38:51 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Oleksij Rempel <bug-track@fisher-privat.net>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+Date: Mon, 30 Apr 2012 23:43:34 +0200
+Cc: Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: drm-next i915 regression? ( was: Re: PCI resources above 4GB)
-References: <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <CAE9FiQXvHjW3pL4Nrb-3Oqw5Ht-7MqCL7_isL+Gm41qWOd1yRQ@mail.gmail.com> <1334317529.2910.21.camel@Nokia-N900> <4F8814F7.20808@snewbury.org.uk> <4F8820F0.5010607@snewbury.org.uk> <4F88297B.3020200@snewbury.org.uk> <1334325128.2910.24.camel@Nokia-N900> <4F883364.3080601@snewbury.org.uk> <20120413141305.GI4525@phenom.ffwll.local> <4F88360E.704@snewbury.org.uk>
-In-Reply-To: <4F88360E.704@snewbury.org.uk>
-Content-Type: multipart/mixed;
- boundary="------------050800080807070406090806"
+	Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Andrey Rahmatullin <wrar@wrar.name>,
+	Steven Rostedt <rostedt@goodmis.org>
+References: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org> <4F9F0473.9090408@fisher-privat.net>
+In-Reply-To: <4F9F0473.9090408@fisher-privat.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204302343.35215.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050800080807070406090806
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 13/04/12 15:19, Steven Newbury wrote:
-> On 13/04/12 15:13, Daniel Vetter wrote:
->> On Fri, Apr 13, 2012 at 03:08:36PM +0100, Steven Newbury wrote:
->>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
->>> 
->>> On 13/04/12 14:52, Steven Newbury wrote:
->>>> On Fri, 13 Apr 2012, 14:26:19 BST, Steven Newbury 
->>>> <steve@snewbury.org.uk> wrote:
->>>> 
->>>>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
->>>>> 
->>>>> On 13/04/12 13:49, Steven Newbury wrote:
->>>>>> On 13/04/12 12:58, Steven Newbury wrote:
->>>>>> 
->>>>>>>> It's not stable, crashes soon after GMA comes up. 
->>>>>>>> (Could be unrelated breakage in linus/master? 
->>>>>>>> Probably not but I will verify.)   I noticed the
->>>>>>>> high allocations are occuring from the top of 64-bit
->>>>>>>>  address-space, whilst /proc/cpuinfo shows only 48 
->>>>>>>> bits of virtual addressing.   Could that be why..?
->>>>>>> To reply to myself again, I should have said crashes 
->>>>>>> shortly after Xorg initialises using the intel driver,
->>>>>>>  in both cases! I'm building a kernel now without the 
->>>>>>> patch set to see if it's unrelated.   If it still dies
->>>>>>>  I'll try applying your patch set to a branch without 
->>>>>>> the changes from linus/master... (should have done that
->>>>>>> anyway...)
->>>>>> 
->>>>>> Okay, I instead created a branch from an older 3.4-rc1+ 
->>>>>> kernel tree, running it now, and it seems to be stable. 
->>>>>> Something perhaps in the newer tree not playing nicely. 
->>>>>> I'll see if I can bisect it, or at least base of rc2 if 
->>>>>> that works... (I'm a little wary of crashing the system 
->>>>>> too much and losing my btrfs filesystem...)
->>>>> rc2 is fine as well.   Not sure what happened there, I
->>>>> need to be more careful about keeping a clean tree to work
->>>>>  from.
->>>> I'm pretty sure the crash was a from a drm-next regression. 
->>>> I'll try bisecting it....
->>> Sorry, posted too soon!  Almost as I clicked on send it froze 
->>> again (using rc2 + for-pci-res-alloc ).  I had problems with 
->>> the earlier patches re. X/i915 stability.  Strange.  I'll see 
->>> if I can track it down.
+On Monday, April 30, 2012, Oleksij Rempel wrote:
+> On 30.04.2012 19:53, Alan Stern wrote:
+> > On Mon, 30 Apr 2012, Bjorn Helgaas wrote:
+> > 
+> >> On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >>> From: Oleksij Rempel <bug-track@fisher-privat.net>
+> >>>
+> >>> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+> >>> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+> >>>
+> >>> Some OEM use _SxD fileds do blacklist brocken Dx states.
+> >>> If _SxD/_SxW return values are check before suspend as appropriate,
+> >>> some nasty suspend/resume issues may be avoided.
+> >>>
+> >>> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+> >>> Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> >>> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> >>> ---
+> >>>
+> >>> Bjorn, Len,
+> >>>
+> >>> This is -stable material and therefore v3.4 as well, IMO. �Please let me
+> >>> know if one of you can take it or whether you want me to handle it all the
+> >>> way to Linus.
+> >>
+> >> I'm OK with this from a PCI perspective.  Most of the change is in
+> >> ACPI, so I propose that either you or Len take care of it.
+> >>
+> >> The second paragraph of the changelog has several typos
+> >> (fileds/fields, do/to, brocken/broken, etc).
+> > 
+> > It also turns out that the normal wakeup mechanism doesn't work for the
+> > devices in question.  Can this be detected by ACPI?  We don't want to 
+> > tell userspace that wakeup works when in fact it doesn't.
 > 
->> Please upgrade to the latest version of Linus' upstream git. A 
->> few fixes for regressions in drm/i915 just landed there for -rc3.
->> -Daniel
-> 
-> Okay.  I'll try clean latest linus + for-pci-res-alloc.  Will 
-> report back.
-> 
-Looks like either a btrfs regression or bad interaction with
-for-pci-res-alloc.  Oops attached.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+> hm... how about using pci config and acpi together. PCI config provides
+> map of Dx states and wakeup support of them. If pci says wakeup works
+> only on D0 and D3 and acpi say - we can use only D2 in S3, then there is
+> no wakeup.
 
-iEYEARECAAYFAk+IROAACgkQGcb56gMuC63hFQCguhdhV6AUoNKHnasgD0zjqJXt
-AwkAoKh8Rdrj3PqzuYUXpUkvyw3TujZV
-=XiAW
------END PGP SIGNATURE-----
+Not really.  ACPI trumps PCI here, so if ACPI says we can use D2 in S3,
+then we can.
 
---------------050800080807070406090806
-Content-Type: text/plain; charset=UTF-8;
- name="oops"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="oops"
+ACPI device states are not the same as PCI device states.  They usually map
+to each other directly, but they don't have to.
 
-Apr 13 15:10:02 infinity kernel: BUG: unable to handle kernel NULL pointer dereference at           (null)
-Apr 13 15:10:02 infinity kernel: IP: [<ffffffffa02778d0>] find_workspace+0x92/0x190 [btrfs]
-Apr 13 15:10:02 infinity kernel: PGD 7bfb2067 PUD d8978067 PMD 0 
-Apr 13 15:10:02 infinity kernel: Oops: 0000 [#1] SMP 
-Apr 13 15:10:02 infinity kernel: CPU 1 
-Apr 13 15:10:02 infinity kernel: Modules linked in: cryptd aes_x86_64 aes_generic fuse fbcon bitblit fbcon_rotate fbcon_ccw fbcon_ud fbcon_cw softcursor font tileblit joydev arc4 dell_wmi sparse_keymap 8250_pnp dell_laptop dcdbas btusb bluetooth snd_hda_codec_idt crc16 microcode psmouse pcspkr iwl4965 iwlegacy snd_hda_intel mac80211 snd_hda_codec snd_hwdep tg3 snd_pcm cfg80211 snd_page_alloc snd_timer snd soundcore wmi 8250 serial_core evdev smsc47m192 hwmon_vid tpm_tis tpm tpm_bios rfkill loop nfs nfs_acl auth_rpcgss fscache lockd sunrpc phc_intel mperf coretemp hwmon autofs4 usb_storage usb_libusual uas btrfs zlib_deflate sd_mod pata_acpi ahci libahci ata_piix libata scsi_mod ehci_hcd uhci_hcd usbcore usb_common i915 video intel_agp intel_gtt cfbfillrect cfbimgblt cfbcopyarea i2c_algo_bit backlight drm_kms_helper drm agpgart
-Apr 13 15:10:02 infinity kernel: 
-Apr 13 15:10:02 infinity kernel: Pid: 2591, comm: btrfs-endio-2 Not tainted 3.4.0-rc2-wl-00669-g502ad46 #110 Dell Inc. Latitude D830                   /0HN341
-Apr 13 15:10:02 infinity kernel: RIP: 0010:[<ffffffffa02778d0>]  [<ffffffffa02778d0>] find_workspace+0x92/0x190 [btrfs]
-Apr 13 15:10:02 infinity kernel: RSP: 0018:ffff880078e7fcc0  EFLAGS: 00010207
-Apr 13 15:10:02 infinity kernel: RAX: 0000000000000000 RBX: 0000000000000003 RCX: ffff88007bde9000
-Apr 13 15:10:02 infinity kernel: RDX: ffffffffa029d500 RSI: dead000000200200 RDI: ffffffffa029d4f6
-Apr 13 15:10:02 infinity kernel: RBP: ffff880078e7fd50 R08: 0000000000000008 R09: 0000000000004000
-Apr 13 15:10:02 infinity kernel: R10: 0000000000000200 R11: 0000000000000200 R12: ffff880078e7fcf8
-Apr 13 15:10:02 infinity kernel: R13: ffffffffa029d504 R14: ffffffffa029d4f6 R15: ffff880078e7fd10
-Apr 13 15:10:02 infinity kernel: FS:  0000000000000000(0000) GS:ffff88011fd00000(0000) knlGS:0000000000000000
-Apr 13 15:10:02 infinity kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-Apr 13 15:10:02 infinity kernel: CR2: 0000000000000000 CR3: 000000007bfe6000 CR4: 00000000000007e0
-Apr 13 15:10:02 infinity kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-Apr 13 15:10:02 infinity kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Apr 13 15:10:02 infinity kernel: Process btrfs-endio-2 (pid: 2591, threadinfo ffff880078e7e000, task ffff880119880000)
-Apr 13 15:10:02 infinity kernel: Stack:
-Apr 13 15:10:02 infinity kernel: ffff880078e7fcd0 ffffffff810bcacf ffff880119880000 ffffffffa029d500
-Apr 13 15:10:02 infinity kernel: 0000000200000003 ffffffffa029d548 ffff880078e7fd00 ffffffff811a1060
-Apr 13 15:10:02 infinity kernel: ffff880078e7fd20 ffffffff811764f9 0000000000000200 ffff880078e7fd40
-Apr 13 15:10:02 infinity kernel: Call Trace:
-Apr 13 15:10:02 infinity kernel: [<ffffffff810bcacf>] ? mempool_free_slab+0x17/0x19
-Apr 13 15:10:02 infinity kernel: [<ffffffff811a1060>] ? __crc32c_le+0x10/0x12
-Apr 13 15:10:02 infinity kernel: [<ffffffff811764f9>] ? chksum_update+0x19/0x24
-Apr 13 15:10:02 infinity kernel: [<ffffffffa02785ee>] btrfs_decompress_biovec+0x2b/0x7c [btrfs]
-Apr 13 15:10:02 infinity kernel: [<ffffffffa027874e>] end_compressed_bio_read+0x10f/0x19d [btrfs]
-Apr 13 15:10:02 infinity kernel: [<ffffffff81123ccd>] bio_endio+0x2d/0x2f
-Apr 13 15:10:02 infinity kernel: [<ffffffffa023beb2>] end_workqueue_fn+0x38/0x3d [btrfs]
-Apr 13 15:10:02 infinity kernel: [<ffffffffa02696f8>] worker_loop+0x16e/0x4a2 [btrfs]
-Apr 13 15:10:02 infinity kernel: [<ffffffffa026958a>] ? btrfs_queue_worker+0x281/0x281 [btrfs]
-Apr 13 15:10:02 infinity kernel: [<ffffffff8104c0e6>] kthread+0x8b/0x93
-Apr 13 15:10:02 infinity kernel: [<ffffffff8136b734>] kernel_thread_helper+0x4/0x10
-Apr 13 15:10:02 infinity kernel: [<ffffffff8104c05b>] ? kthread_freezable_should_stop+0x48/0x48
-Apr 13 15:10:02 infinity kernel: [<ffffffff8136b730>] ? gs_change+0xb/0xb
-Apr 13 15:10:02 infinity kernel: Code: 65 48 8b 04 25 80 b8 00 00 48 89 45 80 4c 89 f7 e8 be 20 0f e1 48 8b 55 88 48 8b 02 48 39 d0 74 3d 48 be 00 02 20 00 00 00 ad de <48> 8b 08 48 8b 50 08 48 89 51 08 48 89 0a 48 b9 00 01 10 00 00 
-Apr 13 15:10:02 infinity kernel: RIP  [<ffffffffa02778d0>] find_workspace+0x92/0x190 [btrfs]
-Apr 13 15:10:02 infinity kernel: RSP <ffff880078e7fcc0>
-Apr 13 15:10:02 infinity kernel: CR2: 0000000000000000
-Apr 13 15:10:02 infinity kernel: ---[ end trace 2e6b178742035e68 ]---
-Apr 13 15:10:07 infinity kernel: ICMPv6 RA: ndisc_router_discovery() failed to add default route.
-Apr 13 15:10:17 infinity NetworkManager[1019]: nm_ip6_config_add_nameserver: assertion `IN6_ARE_ADDR_EQUAL (nameserver, &nameservers[i]) == FALSE' failed
-Apr 13 15:10:22 infinity NetworkManager[1019]: nm_ip6_config_add_nameserver: assertion `IN6_ARE_ADDR_EQUAL (nameserver, &nameservers[i]) == FALSE' failed
-Apr 13 15:10:22 infinity NetworkManager[1019]: <info> Clearing nscd hosts cache.
-Apr 13 15:10:22 infinity NetworkManager[1019]: <info> Clearing nscd hosts cache.
-Apr 13 15:10:22 infinity NetworkManager[1019]: <info> Policy set 'snewbury.org.uk' (wlan0) as default for IPv4 routing and DNS.
-Apr 13 15:10:22 infinity NetworkManager[1019]: <info> Policy set 'snewbury.org.uk' (wlan0) as default for IPv6 routing and DNS.
-Apr 13 15:10:22 infinity NetworkManager[1019]: nm_ip6_config_add_nameserver: assertion `IN6_ARE_ADDR_EQUAL (nameserver, &nameservers[i]) == FALSE' failed
-Apr 13 15:10:41 infinity NetworkManager[1019]: nm_ip6_config_add_nameserver: assertion `IN6_ARE_ADDR_EQUAL (nameserver, &nameservers[i]) == FALSE' failed
-Apr 13 15:10:47 infinity NetworkManager[1019]: nm_ip6_config_add_nameserver: assertion `IN6_ARE_ADDR_EQUAL (nameserver, &nameservers[i]) == FALSE' failed
-Apr 13 15:11:03 infinity kernel: INFO: rcu_sched self-detected stall on CPU { 1}  (t=60000 jiffies)
-Apr 13 15:11:03 infinity kernel: Pid: 819, comm: btrfs-endio-2 Tainted: G      D      3.4.0-rc2-wl-00669-g502ad46 #110
-Apr 13 15:11:03 infinity kernel: Call Trace:
-Apr 13 15:11:03 infinity kernel: <IRQ>  [<ffffffff81093d0f>] __rcu_pending+0xc2/0x3c4
-Apr 13 15:11:03 infinity kernel: [<ffffffff8109403a>] rcu_pending+0x29/0x5a
-Apr 13 15:11:03 infinity kernel: [<ffffffff81094686>] rcu_check_callbacks+0x57/0x76
-Apr 13 15:11:03 infinity kernel: [<ffffffff8103e5a1>] update_process_times+0x3f/0x76
-Apr 13 15:11:03 infinity kernel: [<ffffffff8106ed0f>] tick_sched_timer+0x70/0x90
-Apr 13 15:11:03 infinity kernel: [<ffffffff8104f401>] __run_hrtimer+0xad/0x151
-Apr 13 15:11:03 infinity kernel: [<ffffffff8106ec9f>] ? tick_nohz_handler+0xce/0xce
-Apr 13 15:11:03 infinity kernel: [<ffffffff8104fb6c>] hrtimer_interrupt+0xe0/0x19d
-Apr 13 15:11:03 infinity kernel: [<ffffffff8136bf7c>] smp_apic_timer_interrupt+0x77/0x8a
-Apr 13 15:11:03 infinity kernel: [<ffffffff8136b0c7>] apic_timer_interrupt+0x67/0x70
-Apr 13 15:11:03 infinity kernel: <EOI>  [<ffffffff81073e3f>] ? do_raw_spin_lock+0x17/0x1d
-Apr 13 15:11:03 infinity kernel: [<ffffffff81369986>] _raw_spin_lock+0xe/0x10
-Apr 13 15:11:03 infinity kernel: [<ffffffffa02778ba>] find_workspace+0x7c/0x190 [btrfs]
-Apr 13 15:11:03 infinity kernel: [<ffffffff811a1060>] ? __crc32c_le+0x10/0x12
-Apr 13 15:11:03 infinity kernel: [<ffffffff811764f9>] ? chksum_update+0x19/0x24
-Apr 13 15:11:03 infinity kernel: [<ffffffffa02785ee>] btrfs_decompress_biovec+0x2b/0x7c [btrfs]
-Apr 13 15:11:03 infinity kernel: [<ffffffffa027874e>] end_compressed_bio_read+0x10f/0x19d [btrfs]
-Apr 13 15:11:03 infinity kernel: [<ffffffff81123ccd>] bio_endio+0x2d/0x2f
-Apr 13 15:11:03 infinity kernel: [<ffffffffa023beb2>] end_workqueue_fn+0x38/0x3d [btrfs]
-Apr 13 15:11:03 infinity kernel: [<ffffffffa02696f8>] worker_loop+0x16e/0x4a2 [btrfs]
-Apr 13 15:11:03 infinity kernel: [<ffffffffa026958a>] ? btrfs_queue_worker+0x281/0x281 [btrfs]
-Apr 13 15:11:03 infinity kernel: [<ffffffff8104c0e6>] kthread+0x8b/0x93
-Apr 13 15:11:03 infinity kernel: [<ffffffff8136b734>] kernel_thread_helper+0x4/0x10
-Apr 13 15:11:03 infinity kernel: [<ffffffff8104c05b>] ? kthread_freezable_should_stop+0x48/0x48
-Apr 13 15:11:03 infinity kernel: [<ffffffff8136b730>] ? gs_change+0xb/0xb
-
---------------050800080807070406090806--
+Thanks,
+Rafael
