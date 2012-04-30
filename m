@@ -1,42 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63966 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753792Ab2DYC7Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Apr 2012 22:59:25 -0400
-Message-ID: <4F976889.3010809@redhat.com>
-Date: Tue, 24 Apr 2012 22:59:21 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <1332135781-13695-6-git-send-email-yinghai@kernel.org>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org> <1332135781-13695-6-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Apr 2012 17:29:01 -0600
+Message-ID: <CAErSpo5AnsmfQs4oa3P7AQyPTJ+YqCVVh5p2L=bmDY=A+BO9PQ@mail.gmail.com>
+Subject: Re: [PATCH -v11 05/30] PCI: Add busn_res operation functions
 To: Yinghai Lu <yinghai@kernel.org>
-CC: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-References: <20120410090306.GA7056@richard>	<20120422155202.GA13540@richard>	<4F95B17B.3030401@redhat.com>	<CAE9FiQX52eL6ZFQ_X3uL5DukK03sPhByZpPh0++o6L=WF8BGXg@mail.gmail.com>	<4F95C50C.4060203@redhat.com> <CAE9FiQVAWqCYjy3tpvtnq6y4WMWRHoQFug-WsgUAtvjVpvkMqw@mail.gmail.com>
-In-Reply-To: <CAE9FiQVAWqCYjy3tpvtnq6y4WMWRHoQFug-WsgUAtvjVpvkMqw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/23/2012 06:22 PM, Yinghai Lu wrote:
-> On Mon, Apr 23, 2012 at 2:09 PM, Don Dutile<ddutile@redhat.com>  wrote:
->> even though I've tried every magic trick known with grub&  kernel boot
->> params.
->> ... the PCI log btwn early boot and until the console is reconfigured is
->> 'lost'
+On Sun, Mar 18, 2012 at 11:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Will use them insert/update busn res in pci_bus struct.
 >
-> please change
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/probe.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |    3 +++
+>  2 files changed, 53 insertions(+), 0 deletions(-)
 >
-> earlycon=uart82550,io,0x1030,115200 earlyprintk=serial,ttyS0,115200
-> console=tty0 console=ttyS0,115200n8
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index d30948d..9235b16 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1679,6 +1679,56 @@ err_out:
+>        return NULL;
+>  }
 >
-> ===>
->
-> earlycon=uart82550,io,0x1030,115200
->
->
-> Yinghai
-I'm pretty sure I tried that, and only added the earlyprintk
-and console args when the earlycon didn't work, but I'll give it another try...
+> +void pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+> +{
+> +       struct resource *res = &b->busn_res;
+> +       struct resource *parent_res;
+> +       int ret;
+> +
+> +       res->start = bus;
+> +       res->end = bus_max;
+> +       res->flags = IORESOURCE_BUS;
+> +
+> +       /* no parent for root bus' busn_res */
+> +       if (!pci_is_root_bus(b)) {
+> +               parent_res = &b->parent->busn_res;
+> +
+> +               ret = insert_resource(parent_res, res);
+> +
+> +               dev_printk(KERN_DEBUG, &b->dev,
+> +                       "busn_res: %pR %s inserted under %pR\n",
+> +                       res, ret ? "can not be" : "is", parent_res);
+> +       } else
+> +               dev_printk(KERN_DEBUG, &b->dev,
+> +                       "busn_res: %pR for root bus\n",
+> +                       res);
+> +}
+> +
+> +void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
+> +{
+> +       struct resource *res = &b->busn_res;
+> +       struct resource old_res = *res;
+> +
+> +       res->end = bus_max;
 
-
-
+I've mentioned before that I'm not comfortable with updating the
+struct resource after it's been inserted into the tree.  If you want
+to do an in-place update, I think you need to add a new interface in
+kernel/resource.c so it can make sure the resource tree remains
+consistent.
