@@ -1,285 +1,119 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43393 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756395Ab2D3Ryj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2012 13:54:39 -0400
+Received: by pbbrp8 with SMTP id rp8so3516088pbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 30 Apr 2012 10:54:39 -0700 (PDT)
+Message-ID: <4F9ED1DC.3050007@gmail.com>
+Date: Mon, 30 Apr 2012 10:54:36 -0700
+From: David Daney <ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201204132141.58063.rjw@sisk.pl>
-References: <4F8790F6.5080408@intel.com>
-	<201204132141.58063.rjw@sisk.pl>
-Date: Mon, 16 Apr 2012 16:58:58 +0800
-Message-ID: <CAC=cRTNYGGq2ncJr7mvEOm2udqXsAD3T9T=5Tafue_jrjAWCug@mail.gmail.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-From: huang ying <huang.ying.caritas@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: John Crispin <blogic@openwrt.org>,
+	Ralf Baechle <ralf@linux-mips.org>
+CC: Grant Likely <grant.likely@secretlab.ca>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	linux-mips@linux-mips.org
+Subject: Re: [PATCH] OF: PCI: const usage needed by MIPS
+References: <1335808019-24502-1-git-send-email-blogic@openwrt.org>
+In-Reply-To: <1335808019-24502-1-git-send-email-blogic@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Sat, Apr 14, 2012 at 3:41 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Hi,
+On 04/30/2012 10:46 AM, John Crispin wrote:
+> On MIPS we want to call of_irq_map_pci from inside
 >
-> On Friday, April 13, 2012, Yan, Zheng wrote:
->> Hi all,
->>
->> This patch adds PCIe runtime D3cold support, namely cut power supply for functions
->> beneath a PCIe port when they all have entered D3. A device in D3cold can only
->> generate wake event through the WAKE# pin. Because we can not access to a device's
->> configure space while it's in D3cold, pme_poll is disabled for devices in D3cold.
->>
->> Any comment will be appreciated.
->>
->> Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
->> ---
->> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->> index 0f150f2..e210e8cb 100644
->> --- a/drivers/pci/pci-acpi.c
->> +++ b/drivers/pci/pci-acpi.c
->> @@ -224,7 +224,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->>               [PCI_D1] = ACPI_STATE_D1,
->>               [PCI_D2] = ACPI_STATE_D2,
->>               [PCI_D3hot] = ACPI_STATE_D3,
->> -             [PCI_D3cold] = ACPI_STATE_D3
->> +             [PCI_D3cold] = ACPI_STATE_D3_COLD
->>       };
->>       int error = -EINVAL;
->>
+> arch/mips/include/asm/pci.h:extern int pcibios_map_irq(
+> 				const struct pci_dev *dev, u8 slot, u8 pin);
 >
-> Please don't use that ACPI_STATE_D3_COLD thing, it's not defined correctly.
+> For this to work we need to change several functions to const usage.
+
+I think there is a mismatch on this throughout the kernel.
+
+Properly fixing it requires touching many more places than these. 
+Although I haven't tried it, I wouldn't be surprised if doing this 
+caused warnings to appear in non-MIPS code.
+
+Ralf had a patch at one point that tried to make this consistent 
+tree-wide, but it is not yet applied.
+
+David Daney
+
 >
-> We should define ACPI_STATE_D3_COLD == ACPI_STATE_D3 and add ACPI_STATE_D3_HOT
-> instead.  I'll prepare a patch for that over the weekend if no one has done
-> that already.
+> Signed-off-by: John Crispin<blogic@openwrt.org>
+> Cc: linux-pci@vger.kernel.org
+> Cc: devicetree-discuss@lists.ozlabs.org
+> Cc: linux-mips@linux-mips.org
+> ---
+> I am not sure which tree this should go via. Grant, can you take it ?
 >
->> @@ -296,7 +296,8 @@ static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
->>
->>  static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
->>  {
->> -     if (dev->pme_interrupt)
->> +     /* PME interrupt isn't available in the D3cold case */
->> +     if (dev->pme_interrupt && !dev->runtime_d3cold)
+>   drivers/of/of_pci_irq.c |    2 +-
+>   drivers/pci/pci.c       |    2 +-
+>   include/linux/of_pci.h  |    2 +-
+>   include/linux/pci.h     |    5 +++--
+>   4 files changed, 6 insertions(+), 5 deletions(-)
 >
-> This whole thing is wrong.  First off, I don't think that the runtime_d3cold
-> flag makes any sense.  We already cover that in dev->pme_support.
-
-PCIe devices and PCIe root port may have proper PME interrupt support
-(that is, dev->pme_interrupt = true), but the process of remote wakeup
-from D3cold is as follow:
-
-1) In D3cold, the power of the main link is turned off, aux power is
-provided (PCIe L2 link state)
-2) Device detect condition to resume, then assert #WAKE pin
-2) ACPI circuit linked with #WAKE pin, and will generate a GPE for that
-3) GPE handler will resume device with ACPI (via _PS3 and _PR0), the
-power of the main link is turned on, after a while, link goes into L0
-state
-4) The PME message is sent to root port, pme interrupt generated
-
-So, for deivce, dev->pme_interrupt = true and dev->pme_support
-advocate it support PME in D3cold.  But we still need ACPI to setup
-run wake for the device.
-
-So we need a way to inform acpi_pci_run_wake(), one way is using a
-flag, there is other ways such as adding another parameter to
-acpi_pci_run_wake() to tell it which power state to go.
-
-> Second, pme_interrupt means that the _root_ _port_, not the device itself will
-> trigger an interrupt whenever the device sends the PME message to it (which
-> very well may happen for a device in D3_cold woken up by an external signal).
-
-As above, that may happend after ACPI GPE.
-
->>               return 0;
->>
->>       if (!acpi_pm_device_run_wake(&dev->dev, enable))
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 8156744..bc16869 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -731,8 +731,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->>       int error;
->>
+> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+> index 9312516..6770538 100644
+> --- a/drivers/of/of_pci_irq.c
+> +++ b/drivers/of/of_pci_irq.c
+> @@ -15,7 +15,7 @@
+>    * PCI tree until an device-node is found, at which point it will finish
+>    * resolving using the OF tree walking.
+>    */
+> -int of_irq_map_pci(struct pci_dev *pdev, struct of_irq *out_irq)
+> +int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq)
+>   {
+>   	struct device_node *dn, *ppnode;
+>   	struct pci_dev *ppdev;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d20f133..4c79586 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2363,7 +2363,7 @@ void pci_enable_acs(struct pci_dev *dev)
+>    * number is always 0 (see the Implementation Note in section 2.2.8.1 of
+>    * the PCI Express Base Specification, Revision 2.1)
+>    */
+> -u8 pci_swizzle_interrupt_pin(struct pci_dev *dev, u8 pin)
+> +u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin)
+>   {
+>   	int slot;
 >
-> Guys, please.  Never, _ever_, touch pci_set_power_state() without discussing
-> your ideas with someone who knows how it works and _why_ it works this way.
-
-This patch is sent as RFC, I think this is to call for discussing
-instead of merging, isn't it?
-
-> The problem here is that you can't program a PCI device into D3_cold, so it
-> doesn't even make sense to have a helper for that.
-
-We need to program ACPI to make the PCI device go into D3_cold.  That
-is called in this function.
-
-pci_set_power_sate
-  -> __pci_complete_power_transition
-    -> pci_platform_power_transition
-
->>       /* bound the state we're entering */
->> -     if (state > PCI_D3hot)
->> -             state = PCI_D3hot;
->> +     if (state > PCI_D3cold)
->> +             state = PCI_D3cold;
->>       else if (state < PCI_D0)
->>               state = PCI_D0;
->>       else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
->> @@ -750,7 +750,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->>       if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
->>               return 0;
->>
->> -     error = pci_raw_set_power_state(dev, state);
->> +     error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
->> +                                     PCI_D3hot : state);
->>
->>       if (!__pci_complete_power_transition(dev, state))
->>               error = 0;
->> @@ -1482,6 +1483,17 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
->>       return !!(dev->pme_support & (1 << state));
->>  }
->>
->> +static void pci_pme_poll_wakeup(struct pci_dev *dev)
->> +{
->> +     struct pci_dev *bridge = dev->bus->self;
->> +
->> +     /* don't poll the pme bit if parent is in low power state */
->> +     if (bridge && bridge->current_state != PCI_D0)
->> +             return;
->> +
->> +     pci_pme_wakeup(dev, NULL);
->> +}
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index f93e217..bb115de 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -5,7 +5,7 @@
 >
-> This one actually makes some sense, although it might be better to put the
-> test into pci_pme_wakeup() itself.
+>   struct pci_dev;
+>   struct of_irq;
+> -int of_irq_map_pci(struct pci_dev *pdev, struct of_irq *out_irq);
+> +int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
 >
->> +
->>  static void pci_pme_list_scan(struct work_struct *work)
->>  {
->>       struct pci_pme_device *pme_dev, *n;
->> @@ -1490,7 +1502,7 @@ static void pci_pme_list_scan(struct work_struct *work)
->>       if (!list_empty(&pci_pme_list)) {
->>               list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
->>                       if (pme_dev->dev->pme_poll) {
->> -                             pci_pme_wakeup(pme_dev->dev, NULL);
->> +                             pci_pme_poll_wakeup(pme_dev->dev);
->>                       } else {
->>                               list_del(&pme_dev->list);
->>                               kfree(pme_dev);
->> @@ -1608,6 +1620,10 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->>       if (enable) {
->>               int error;
->>
->> +             if (runtime && state >= PCI_D3cold)
->> +                     dev->runtime_d3cold = true;
->> +             else
->> +                     dev->runtime_d3cold = false;
->>               if (pci_pme_capable(dev, state))
->>                       pci_pme_active(dev, true);
->>               else
->> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
->> index e0610bd..d66b7e9 100644
->> --- a/drivers/pci/pcie/portdrv_pci.c
->> +++ b/drivers/pci/pcie/portdrv_pci.c
->> @@ -11,11 +11,13 @@
->>  #include <linux/kernel.h>
->>  #include <linux/errno.h>
->>  #include <linux/pm.h>
->> +#include <linux/pm_runtime.h>
->>  #include <linux/init.h>
->>  #include <linux/pcieport_if.h>
->>  #include <linux/aer.h>
->>  #include <linux/dmi.h>
->>  #include <linux/pci-aspm.h>
->> +#include <linux/delay.h>
->>
->>  #include "portdrv.h"
->>  #include "aer/aerdrv.h"
->> @@ -99,6 +101,25 @@ static int pcie_port_resume_noirq(struct device *dev)
->>       return 0;
->>  }
->>
->> +static int pcie_port_runtime_suspend(struct device *dev)
->> +{
->> +     struct pci_dev *pdev = to_pci_dev(dev);
->> +
->> +     pci_save_state(pdev);
+>   struct device_node;
+>   struct device_node *of_pci_find_child_device(struct device_node *parent,
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e444f5b..3bbc77e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -680,7 +680,7 @@ int __must_check pci_bus_add_device(struct pci_dev *dev);
+>   void pci_read_bridge_bases(struct pci_bus *child);
+>   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>   					  struct resource *res);
+> -u8 pci_swizzle_interrupt_pin(struct pci_dev *dev, u8 pin);
+> +u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
+>   int pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge);
+>   u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp);
+>   extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
+> @@ -1685,7 +1685,8 @@ extern void pci_release_bus_of_node(struct pci_bus *bus);
+>   /* Arch may override this (weak) */
+>   extern struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus);
 >
-> Are you sure this is sufficient?
+> -static inline struct device_node *pci_device_to_OF_node(struct pci_dev *pdev)
+> +static inline struct device_node *
+> +pci_device_to_OF_node(const struct pci_dev *pdev)
+>   {
+>   	return pdev ? pdev->dev.of_node : NULL;
+>   }
 
-Maybe we need to pay attention to the pcie port drivers?  Run ->runtime_
-
->> +     return 0;
->> +}
->> +
->> +static int pcie_port_runtime_resume(struct device *dev)
->> +{
->> +     struct pci_dev *pdev = to_pci_dev(dev);
->> +
->> +     pci_restore_state(pdev);
->> +     if (pdev->runtime_d3cold)
->> +             msleep(100);
->
-> What's _that_ supposed to do?
-
-When resume from d3cold, PCIe main link will be powered on again, it
-will take quite some time before the main link go into L0 state.
-Otherwise, accessing devices under the port may return wrong result.
-
->> +
->> +     return 0;
->> +}
->> +
->>  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->>       .suspend        = pcie_port_device_suspend,
->>       .resume         = pcie_port_device_resume,
->> @@ -107,6 +128,8 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->>       .poweroff       = pcie_port_device_suspend,
->>       .restore        = pcie_port_device_resume,
->>       .resume_noirq   = pcie_port_resume_noirq,
->> +     .runtime_suspend = pcie_port_runtime_suspend,
->> +     .runtime_resume = pcie_port_runtime_resume,
->>  };
->>
->>  #define PCIE_PORTDRV_PM_OPS  (&pcie_portdrv_pm_ops)
->> @@ -144,12 +167,14 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
->>               return status;
->>
->>       pci_save_state(dev);
->> +     pm_runtime_put_noidle(&dev->dev);
->
-> What's the purpose of this?
-
-I think this is needed by PCI runtime PM support.  Before ->probe,
-pm_runtime_get_xxx() is executed on device.
-
->>       return 0;
->>  }
->>
->>  static void pcie_portdrv_remove(struct pci_dev *dev)
->>  {
->> +     pm_runtime_get_noresume(&dev->dev);
->>       pcie_port_device_remove(dev);
->>       pci_disable_device(dev);
->>  }
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index e444f5b..b41d9a1 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -281,6 +281,7 @@ struct pci_dev {
->>       unsigned int    no_d1d2:1;      /* Only allow D0 and D3 */
->>       unsigned int    mmio_always_on:1;       /* disallow turning off io/mem
->>                                                  decoding during bar sizing */
->> +     unsigned int    runtime_d3cold:1;
->>       unsigned int    wakeup_prepared:1;
->>       unsigned int    d3_delay;       /* D3->D0 transition time in ms */
->
-> OK
->
-> So now please tell me what exactly you want to achieve and why you want to do
-> that in the first place.
-
-Best Regards,
-Huang Ying
