@@ -1,132 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f202.google.com ([74.125.82.202]:37024 "EHLO
-	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460Ab2EYThT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2012 15:37:19 -0400
-Received: by were53 with SMTP id e53so68669wer.1
-        for <linux-pci@vger.kernel.org>; Fri, 25 May 2012 12:37:18 -0700 (PDT)
-Date: Fri, 25 May 2012 13:37:16 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-Message-ID: <20120525193716.GA8817@google.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
- <1337754877-19759-3-git-send-email-yinghai@kernel.org>
- <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
- <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
- <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
- <20120525043651.GA1391@google.com>
- <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
- <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+Received: from mailout-de.gmx.net ([213.165.64.23]:40116 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753504Ab2EAQ1V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2012 12:27:21 -0400
+Message-ID: <4FA00EE5.2060403@fisher-privat.net>
+Date: Tue, 01 May 2012 18:27:17 +0200
+From: "Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Andrey Rahmatullin <wrar@wrar.name>,
+	Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+References: <Pine.LNX.4.44L0.1205011004030.1499-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1205011004030.1499-100000@iolanthe.rowland.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2012 at 11:39:26AM -0700, Yinghai Lu wrote:
-> On Fri, May 25, 2012 at 10:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >> I don't really like the dependency on PCIBIOS_MAX_MEM_32 + 1ULL
-> >> overflowing to zero -- that means the reader has to know what the
-> >> value of PCIBIOS_MAX_MEM_32 is, and things would break in non-obvious
-> >> ways if we changed it.
-> >>
-> 
-> please check if attached one is more clear.
-> 
-> make max and bottom is only related to _MEM and not default one.
-> 
-> -       if (!(res->flags & IORESOURCE_MEM_64))
-> -               max = PCIBIOS_MAX_MEM_32;
-> +       if (res->flags & IORESOURCE_MEM) {
-> +               if (!(res->flags & IORESOURCE_MEM_64))
-> +                       max = PCIBIOS_MAX_MEM_32;
-> +               else if (PCIBIOS_MAX_MEM_32 != -1)
-> +                       bottom = (resource_size_t)(1ULL<<32);
-> +       }
-> 
-> will still not affect to other arches.
+On 01.05.2012 16:11, Alan Stern wrote:
+> On Tue, 1 May 2012, Rafael J. Wysocki wrote:
+>
+>>> I mean not just the mapping.
+>>> I mean PCI:PME_SUP field.  If it PME(D0+,D1-,D2-,D3hot+,D3cold+), and
+>>> acpi trying to avoid D3 states for this device. then is is same like
+>>> PME(D0+,D1-,D2-)? Or not?
+>>
+>> Yes, if _S3D or _S3W are present.  If they are not present and _PRW is,
+>> that means "don't care".
+>>
+>>> According to spec.:
+>>> 7.2 Device Power Management Objects (page 287)
+>>> _S3D - Highest D-state supported by the device in the S3 state
+>>> _S3W - Lowest D-state supported by the device in the S3 state which can
+>>> wake the system.
+>>> by definition if _S3W is specified then we can assume, the device can
+>>> wake? But _SxW is not defined.
+>>
+>> The device can wake up the system if _PRW is present for it (and for
+>> PCIe devices even that is not formally necessary).
+>>
+>>> Are there any other method to forbid the system use broken state, after
+>>> device was actually produced? Usual BIOS flash utility will probably no
+>>> rewrite the PCIs EEPROM. Only hope is ACPI, what is correct method to do
+>>> define it by ACPI?
+>>
+>> Define _S3D that will return 2 (for example) and _PRW returning 3 as the
+>> deepest sleep state the system may be woken up from.  Then, we'll use
+>> D2 (after the @subject patch).
+>>
+>> The drawback is that the kernel will then think the device can wake up
+>> the system.
+>
+> There also remains a question about runtime power states and resume.
+>
+> Oleksij, with your patch, which state does the controller get put into
+> during runtime suspend, D2 or D3?  (You may need to enable runtime
+> suspend by doing
+>
+> 	echo auto>/sys/bus/pci/devices/0000:00:1d.0/power/control
+>
+> in order to test this.)  And if the controller is in runtime suspend,
+> does it resume correctly when you plug in a new USB device?
+>
+> I'm pretty sure that without the patch, the controller gets put into D3
+> and resume does work.
 
-That's goofy.  You're proposing to make only x86_64 and x86-PAE try to put
-64-bit BARs above 4GB.  Why should this be specific to x86?  I acknowledge
-that there's risk in doing this, but if it's a good idea for x86_64, it
-should also be a good idea for other 64-bit architectures.
+I do not know if device really suspended, but every thing works like 
+before. New usb devices are recognized and working.
 
-And testing for "is this x86_32 without PAE?" with
-"PCIBIOS_MAX_MEM_32 == -1" is just plain obtuse and hides an
-important bit of arch-specific behavior.
-
-Tangential question about allocate_resource():  Is its "max" argument
-really necessary?  We'll obviously only allocate from inside the root
-resource, so "max" is just a way to artificially avoid the end of
-that resource.  Is there really a case where that's required?
-
-"min" makes sense because in a case like this, it's valid to allocate from
-anywhere in the root resource, but we want to try to allocate from the >4GB
-part first, then fall back to allocating from the whole resource.  I'm not
-sure there's a corresponding case for "max."
-
-Getting back to this patch, I don't think we should need to adjust "max" at
-all.  For example, this:
-
-commit cb1c8e46244cfd84a1a2fe91be860a74c1cf4e25
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu May 24 22:15:26 2012 -0600
-
-    PCI: try to allocate 64-bit mem resources above 4GB
-    
-    If we have a 64-bit mem resource, try to allocate it above 4GB first.  If
-    that fails, we'll fall back to allocating space below 4GB.
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4ce5ef2..075e5b1 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -121,14 +121,16 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- {
- 	int i, ret = -ENOMEM;
- 	struct resource *r;
--	resource_size_t max = -1;
-+	resource_size_t start = 0;
-+	resource_size_t end = MAX_RESOURCE;
- 
- 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
- 
--	/* don't allocate too high if the pref mem doesn't support 64bit*/
--	if (!(res->flags & IORESOURCE_MEM_64))
--		max = PCIBIOS_MAX_MEM_32;
-+	/* If this is a 64-bit mem resource, try above 4GB first */
-+	if (res->flags & IORESOURCE_MEM_64)
-+		start = (resource_size_t) (1ULL << 32);
- 
-+again:
- 	pci_bus_for_each_resource(bus, r, i) {
- 		if (!r)
- 			continue;
-@@ -145,12 +147,18 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 
- 		/* Ok, try it out.. */
- 		ret = allocate_resource(r, res, size,
--					r->start ? : min,
--					max, align,
-+					max(start, r->start ? : min),
-+					end, align,
- 					alignf, alignf_data);
- 		if (ret == 0)
--			break;
-+			return 0;
-+	}
-+
-+	if (start != 0) {
-+		start = 0;
-+		goto again;
- 	}
-+
- 	return ret;
- }
- 
