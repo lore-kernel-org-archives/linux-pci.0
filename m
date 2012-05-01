@@ -1,59 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:50888 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751651Ab2DRBWV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2012 21:22:21 -0400
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:50643 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757798Ab2EAAcT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2012 20:32:19 -0400
 MIME-Version: 1.0
-In-Reply-To: <201204172243.39525.rjw@sisk.pl>
-References: <4F8790F6.5080408@intel.com>
-	<4F8CD18A.5080903@intel.com>
-	<CAC=cRTMk-NTvo+DJ2mAq6_ZeVLbeqiGx+ttZG6Hr_hQyyYkfLw@mail.gmail.com>
-	<201204172243.39525.rjw@sisk.pl>
-Date: Wed, 18 Apr 2012 09:22:20 +0800
-Message-ID: <CAC=cRTOTZ5Y-urtKLAbuyu8y1ttpG74u3AE0J0_eLg8_8C0PHA@mail.gmail.com>
-Subject: Re: [RFC PATCH] PCIe: Add PCIe runtime D3cold support
-From: huang ying <huang.ying.caritas@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Lin Ming <ming.m.lin@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAErSpo6Wbjh_pzDOkGRoog2WeJQET9UT0fiaanV0r15pq7hT6Q@mail.gmail.com>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+	<1332135781-13695-5-git-send-email-yinghai@kernel.org>
+	<CAErSpo6Wbjh_pzDOkGRoog2WeJQET9UT0fiaanV0r15pq7hT6Q@mail.gmail.com>
+Date: Mon, 30 Apr 2012 17:32:18 -0700
+Message-ID: <CAE9FiQV0XTd_1Ujz=tb6BSuwJvJ9nbT_GbE2PREtgMGv=yG0+g@mail.gmail.com>
+Subject: Re: [PATCH -v11 04/30] PCI: Add busn_res into struct pci_bus.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 18, 2012 at 4:43 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Tuesday, April 17, 2012, huang ying wrote:
->> On Tue, Apr 17, 2012 at 10:12 AM, Yan, Zheng <zheng.z.yan@intel.com> wrote:
->> > On 04/17/2012 01:07 AM, Rafael J. Wysocki wrote:
->> >
->> >> BTW, can you please explain to me what the #WAKE signal is and how it is
->> >> different from PME#?
->> >
->> > #WAKE signal is triggered by a pin connected to the root complex or other
->> > motherboard logic. PME# is triggered by PME message sent to the port.
+On Mon, Apr 30, 2012 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -419,6 +419,7 @@ struct pci_bus {
+>>        struct list_head slots;         /* list of slots on this bus */
+>>        struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
+>>        struct list_head resources;     /* address space routed to this bus */
+>> +       struct resource busn_res;       /* track registered bus num range */
 >>
->> PME# is a PCI pin, while WAKE# is a PCI Express pin. Â In PCI Express,
->> there is no PME#, PME is delivered between end point device and root
->> port or root complex event collector via PME message, and the PME
->> message will trigger IRQ on root port or root complex event collector.
->> Â WAKE# is not used for PCI Express D1, D2 and D3hot, it is just used
->> by D3cold. Â When remote wakeup detected by end point device, it will
->> assert WAKE# to notify power controller (implemented via ACPI on some
->> platform), then power controller will turn on power for main link,
->> after link goes back to L0, PME message will be sent to root port or
->> root complex event collector by end point device.
+>>        struct pci_ops  *ops;           /* configuration access functions */
+>>        void            *sysdata;       /* hook for sys-specific extension */
 >
-> OK
->
-> So do I understand correctly that the WAKE# signal here is the one described
-> in Section 5.3.3.2 Link Wakeup of PCI Express Base spec. 2.0?
->
-> So what happens is that it triggers a GPE and that GPE has a _Lxx method
-> associated with it, I suppose. Â Is that correct?
+> struct pci_bus already includes "secondary" and "subordinate".    This
+> new "busn_res" looks like it will contain the same information.  Why
+> do we need both?
 
-Yes.
+In some case the could be different.
+for root bus from _CRS, busn_res could bigger than subordinate,
+because scan_childbus will update subordinate.
 
-Best Regards,
-Huang Ying
+and also we have one resource to insert it into the resource tree, so
+later could probe/allocate bus num range.
+
+Yinghai
