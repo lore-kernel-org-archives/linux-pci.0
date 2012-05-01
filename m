@@ -1,69 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:61037 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753838Ab2DYQ2U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2012 12:28:20 -0400
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:42953 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750817Ab2EAEC1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 May 2012 00:02:27 -0400
+Received: by lahj13 with SMTP id j13so2278460lah.19
+        for <linux-pci@vger.kernel.org>; Mon, 30 Apr 2012 21:02:25 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
-References: <20120410090306.GA7056@richard>
-	<20120422155202.GA13540@richard>
-	<CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
-	<CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
-Date: Wed, 25 Apr 2012 09:28:19 -0700
-Message-ID: <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
-Subject: Re: One problem in reassign pci bus number?
-From: Yinghai Lu <yinghai@kernel.org>
-To: Wei Yang <weiyang.kernel@gmail.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <CAE9FiQV0XTd_1Ujz=tb6BSuwJvJ9nbT_GbE2PREtgMGv=yG0+g@mail.gmail.com>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+ <1332135781-13695-5-git-send-email-yinghai@kernel.org> <CAErSpo6Wbjh_pzDOkGRoog2WeJQET9UT0fiaanV0r15pq7hT6Q@mail.gmail.com>
+ <CAE9FiQV0XTd_1Ujz=tb6BSuwJvJ9nbT_GbE2PREtgMGv=yG0+g@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Apr 2012 22:02:05 -0600
+Message-ID: <CAErSpo57pH81KtUbYZ3j6y4kC+ka33Lzr4rfcywVWf8OTmH_5Q@mail.gmail.com>
+Subject: Re: [PATCH -v11 04/30] PCI: Add busn_res into struct pci_bus.
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 25, 2012 at 2:47 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
->> busn_alloc patchset should address your concern.
+On Mon, Apr 30, 2012 at 6:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Apr 30, 2012 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> --- a/include/linux/pci.h
+>>> +++ b/include/linux/pci.h
+>>> @@ -419,6 +419,7 @@ struct pci_bus {
+>>>        struct list_head slots;         /* list of slots on this bus */
+>>>        struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
+>>>        struct list_head resources;     /* address space routed to this bus */
+>>> +       struct resource busn_res;       /* track registered bus num range */
+>>>
+>>>        struct pci_ops  *ops;           /* configuration access functions */
+>>>        void            *sysdata;       /* hook for sys-specific extension */
 >>
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->> for-pci-busn-alloc
->>
-> Yinghai
+>> struct pci_bus already includes "secondary" and "subordinate".    This
+>> new "busn_res" looks like it will contain the same information.  Why
+>> do we need both?
 >
-> You mean this patch 44b2347b fix the problem?
->
-> In the comment, "do pass0 for all good bridge".
-> Then there are totally two pass for a whole pci domain?
+> In some case the could be different.
+> for root bus from _CRS, busn_res could bigger than subordinate,
+> because scan_childbus will update subordinate.
 
-also other commits about strict checking to see if it is good.
+For a bus below a P2P bridge, I think it's always the case that the
+bridge's Subordinate Bus Number in config space == bus->subordinate ==
+bus->busn_res.end (correct me if I'm wrong).  I don't like the
+redundancy in this case.
 
->
-> I tried "git grep busn_alloc", but not find anything.
+For a root bus where you set bus->busn_res from _CRS and
+bus->subordinate = pci_scan_child_bus(), bus->busn_res.end will
+generally be different from bus->subordinate, but there's no point in
+keeping track of bus->subordinate.
 
-the commit in the patchset.
+The reason we care about secondary and subordinate is so we can
+allocate bus numbers when enumerating devices behind a bridge.  The
+only thing we need for that is the aperture of the upstream bridge and
+the apertures of any peer bridges on the same bus.  Let's say we have
+this:
 
-  PCI: Add busn_res into struct pci_bus.
-  PCI: Add busn_res operation functions
-  PCI: Release busn_res when removing bus
-  PCI: Insert busn_res in pci_create_root_bus()
-  PCI: Checking busn_res in pci_scan_root_bus()
-  PCI: Add default busn_resource
-  PCI: Add default busn_res for pci_scan_bus()
-  x86, PCI: Add busn_res into resources list for acpi path
-  x86, PCI: Put busn resource in pci_root_info for not using _CRS path
-  PCI, ia64: Register busn_res for root buses
-  PCI, sparc: Register busn_res for root buses
-  PCI, powerpc: Register busn_res for root buses
-  PCI, parisc: Register busn_res for root buses
-  resources: Add probe_resource()
-  resources: Replace registered resource in tree.
-  PCI: Add pci_bus_extend/shrink_top()
-  PCI: Probe safe range that we can use for unassigned bridge.
-  PCI: Add pci_bus_replace_busn_res()
-  PCI: Allocate bus range instead of use max blindly
-  PCI: Strict checking of valid range for bridge
-  PCI: Kill pci_fixup_parent_subordinate_busnr()
-  PCI: Seperate child bus scanning to two passes overall
-  pcmcia: Remove workaround for fixing pci parent bus subordinate
-  PCI: Double checking setting for bus register and bus struct.
-  PCI, pciehp: Remove not needed bus number range checking
-  PCI: More strict checking of valid range for bridge
-  PCI: Don't shrink too much for hotplug bridge
+        pci 00:00.0 bridge to [bus a-b]
+        pci a:01.0 bridge to [bus c-d]  (already enumerated)
+        pci a:02.0 bridge to [bus e-f]  (already enumerated)
+        pci a:03.0 bridge to [bus x-y]  (enumerating now)
+
+We know [c-d] is contained in [a-b]; [e-f] is contained in [a-b]; a <
+c; and a < e.  To enumerate behind a:03.0, we need to assign x & y
+such that a < x; [x-y] is contained in [a-b]; and [x-y] does not
+overlap [c-d] or [e-f].  The value from pci_scan_child_bus() is
+probably useful for setting y, but we don't have to save it in the
+struct pci_bus for that.
+
+> and also we have one resource to insert it into the resource tree, so
+> later could probe/allocate bus num range.
+
+Sorry, I didn't understand this.
+
+Bjorn
