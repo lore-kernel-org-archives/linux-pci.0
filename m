@@ -1,154 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:5208 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756454Ab2DXDGa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2012 23:06:30 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Matthew Wilcox <matthew@wil.cx>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: RE: [PATCH v6] Quirk for IVB graphics FLR errata
-Date: Tue, 24 Apr 2012 03:06:27 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FD3ABC3@SHSMSX101.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD24698@SHSMSX102.ccr.corp.intel.com>
- <CAErSpo4Dm45uRsvdzSAfrvGNPPA_7QqvC_Se-JxpJErsasoTKw@mail.gmail.com>
-In-Reply-To: <CAErSpo4Dm45uRsvdzSAfrvGNPPA_7QqvC_Se-JxpJErsasoTKw@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mailout-de.gmx.net ([213.165.64.22]:56945 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750966Ab2EAGiv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2012 02:38:51 -0400
+Message-ID: <4F9F84F6.7000509@fisher-privat.net>
+Date: Tue, 01 May 2012 08:38:46 +0200
+From: "Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>
 MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Andrey Rahmatullin <wrar@wrar.name>,
+	Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+References: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org> <4F9F0473.9090408@fisher-privat.net> <201204302343.35215.rjw@sisk.pl>
+In-Reply-To: <201204302343.35215.rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 30.04.2012 23:43, Rafael J. Wysocki wrote:
+> On Monday, April 30, 2012, Oleksij Rempel wrote:
+>> On 30.04.2012 19:53, Alan Stern wrote:
+>>> On Mon, 30 Apr 2012, Bjorn Helgaas wrote:
+>>>
+>>>> On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki<rjw@sisk.pl>  wrote:
+>>>>> From: Oleksij Rempel<bug-track@fisher-privat.net>
+>>>>>
+>>>>> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+>>>>> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+>>>>>
+>>>>> Some OEM use _SxD fileds do blacklist brocken Dx states.
+>>>>> If _SxD/_SxW return values are check before suspend as appropriate,
+>>>>> some nasty suspend/resume issues may be avoided.
+>>>>>
+>>>>> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+>>>>> Signed-off-by: Oleksij Rempel<bug-track@fisher-privat.net>
+>>>>> Signed-off-by: Rafael J. Wysocki<rjw@sisk.pl>
+>>>>> ---
+>>>>>
+>>>>> Bjorn, Len,
+>>>>>
+>>>>> This is -stable material and therefore v3.4 as well, IMO. ï¿½Please let me
+>>>>> know if one of you can take it or whether you want me to handle it all the
+>>>>> way to Linus.
+>>>>
+>>>> I'm OK with this from a PCI perspective.  Most of the change is in
+>>>> ACPI, so I propose that either you or Len take care of it.
+>>>>
+>>>> The second paragraph of the changelog has several typos
+>>>> (fileds/fields, do/to, brocken/broken, etc).
+>>>
+>>> It also turns out that the normal wakeup mechanism doesn't work for the
+>>> devices in question.  Can this be detected by ACPI?  We don't want to
+>>> tell userspace that wakeup works when in fact it doesn't.
+>>
+>> hm... how about using pci config and acpi together. PCI config provides
+>> map of Dx states and wakeup support of them. If pci says wakeup works
+>> only on D0 and D3 and acpi say - we can use only D2 in S3, then there is
+>> no wakeup.
+>
+> Not really.  ACPI trumps PCI here, so if ACPI says we can use D2 in S3,
+> then we can.
+>
+> ACPI device states are not the same as PCI device states.  They usually map
+> to each other directly, but they don't have to.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Tuesday, April 24, 2012 5:07 AM
-> To: Hao, Xudong
-> Cc: linux-pci@vger.kernel.org; Don Dutile; Matthew Wilcox; Zhang, Xiantao
-> Subject: Re: [PATCH v6] Quirk for IVB graphics FLR errata
-> 
-> On Fri, Apr 20, 2012 at 1:08 AM, Hao, Xudong <xudong.hao@intel.com> wrote:
-> > Hi, Bjorn
-> >
-> > Do you have any other comments for this patch?
-> 
-> What happened with the idea of adding a .reset hook in struct pci_driver?  It
-> would be better if all the device-related code could live in the device-specific
-> driver, rather than having to put it in a quirk.  Everybody pays the cost of a
-> quirk, even on systems that don't include this device.
-> 
+I mean not just the mapping.
+I mean PCI:PME_SUP field.  If it PME(D0+,D1-,D2-,D3hot+,D3cold+), and 
+acpi trying to avoid D3 states for this device. then is is same like 
+PME(D0+,D1-,D2-)? Or not?
 
-The FLR happened on bus but not for device driver, considering one case that we just want to assign device to guest, but host do not have the device driver, how will a quirk be executed?
+According to spec.:
+7.2 Device Power Management Objects (page 287)
+_S3D - Highest D-state supported by the device in the S3 state
+_S3W - Lowest D-state supported by the device in the S3 state which can 
+wake the system.
+by definition if _S3W is specified then we can assume, the device can 
+wake? But _SxW is not defined.
 
-Thanks,
--Xudong
-
-> Bjorn
-> 
-> >> -----Original Message-----
-> >> From: Hao, Xudong
-> >> Sent: Monday, April 16, 2012 9:40 AM
-> >> To: 'Bjorn Helgaas'
-> >> Cc: 'linux-pci@vger.kernel.org'; 'Don Dutile'; 'Matthew Wilcox'
-> >> Subject: [PATCH v6] Quirk for IVB graphics FLR errata
-> >>
-> >> For IvyBridge Mobile platform, a system hang may occur if a
-> >> FLR(Function Level
-> >> Reset) is asserted to internal graphics.
-> >>
-> >> This quirk patch is workaround for the IVB FLR errata issue.
-> >> We are disabling the FLR reset handshake between the PCH and CPU
-> >> display, then manually powering down the panel power sequencing and
-> >> resetting the PCH display.
-> >>
-> >> Changes from v5:
-> >> - clean up patch with Matthew's comments.
-> >>
-> >> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-> >> Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
-> >> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> >> ---
-> >>  drivers/pci/quirks.c |   48
-> >> ++++++++++++++++++++++++++++++++++++++++++++++++
-> >>  1 files changed, 48 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
-> >> 4bf7102..213cad9
-> >> 100644
-> >> --- a/drivers/pci/quirks.c
-> >> +++ b/drivers/pci/quirks.c
-> >> @@ -29,6 +29,7 @@
-> >>  #include <linux/sched.h>
-> >>  #include <linux/ktime.h>
-> >>  #include <asm/dma.h> /* isa_dma_bridge_buggy */
-> >> +#include <asm/io.h>
-> >>  #include "pci.h"
-> >>
-> >>  /*
-> >> @@ -3085,11 +3086,58 @@ static int
-> >> reset_intel_82599_sfp_virtfn(struct
-> >> pci_dev *dev, int probe)
-> >>       return 0;
-> >>  }
-> >>
-> >> +#include "../gpu/drm/i915/i915_reg.h"
-> >> +#define MSG_CTL      0x45010
-> >> +#define IGD_OPERATION_TIMEOUT 10000     /* set timeout 10 seconds
-> */
-> >> +
-> >> +static int reset_ivb_igd(struct pci_dev *dev, int probe) {
-> >> +     void __iomem *mmio_base;
-> >> +     unsigned long timeout;
-> >> +     u32 val;
-> >> +
-> >> +     if (probe)
-> >> +             return 0;
-> >> +
-> >> +     mmio_base = ioremap_nocache(pci_resource_start(dev, 0),
-> >> +                              pci_resource_len(dev, 0));
-> >> +     if (!mmio_base)
-> >> +             return -ENOMEM;
-> >> +
-> >> +     /* Work Around */
-> >> +     writel(0x00000002, mmio_base + MSG_CTL);
-> >> +     /* Clobbering SOUTH_CHICKEN2 register is fine only if the next
-> >> +      * driver loaded sets the right bits. However, this's a reset
-> >> + and
-> >> +      * the bits have been set by i915 previously, so we clobber
-> >> +      * SOUTH_CHICKEN2 register directly here.
-> >> +      */
-> >> +     writel(0x00000005, mmio_base + SOUTH_CHICKEN2);
-> >> +     val = readl(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
-> >> +     writel(val, mmio_base + PCH_PP_CONTROL);
-> >> +     timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
-> >> +     while (time_before(jiffies, timeout)) {
-> >> +             val = readl(mmio_base + PCH_PP_STATUS);
-> >> +             if ((val & 0xB0000000) == 0)
-> >> +                     break;
-> >> +             cpu_relax();
-> >> +     }
-> >> +     writel(0x00000002, mmio_base + 0xd0100);
-> >> +
-> >> +     iounmap(pci_resource_start(dev, 0));
-> >> +     return 0;
-> >> +}
-> >> +
-> >>  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> >> +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156 #define
-> >> +PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
-> >>
-> >>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] =
-> >> {
-> >>       { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
-> >>                reset_intel_82599_sfp_virtfn },
-> >> +     { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-> >> +             reset_ivb_igd },
-> >> +     { PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-> >> +             reset_ivb_igd },
-> >>       { PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-> >>               reset_intel_generic_dev },
-> >>       { 0 }
-> >> --
-> >> 1.6.0.rc1
-> >
+Are there any other method to forbid the system use broken state, after 
+device was actually produced? Usual BIOS flash utility will probably no 
+rewrite the PCIs EEPROM. Only hope is ACPI, what is correct method to do 
+define it by ACPI?
