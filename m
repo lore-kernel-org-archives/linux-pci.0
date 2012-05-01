@@ -1,54 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:41620 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753384Ab2DFSoV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2012 14:44:21 -0400
-Date: Fri, 6 Apr 2012 14:39:32 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: "Hao, Xudong" <xudong.hao@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: Expose ltr/obff interface by sysfs
-Message-ID: <20120406183932.GB13473@phenom.dumpdata.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD0A434@SHSMSX102.ccr.corp.intel.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <403610A45A2B5242BD291EDAE8B37D300FD0A434@SHSMSX102.ccr.corp.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo5AnsmfQs4oa3P7AQyPTJ+YqCVVh5p2L=bmDY=A+BO9PQ@mail.gmail.com>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+	<1332135781-13695-6-git-send-email-yinghai@kernel.org>
+	<CAErSpo5AnsmfQs4oa3P7AQyPTJ+YqCVVh5p2L=bmDY=A+BO9PQ@mail.gmail.com>
+Date: Mon, 30 Apr 2012 17:34:45 -0700
+Message-ID: <CAE9FiQUH1SiToMBanL7brzem920rCoq70hh3KKxH-ps190=51w@mail.gmail.com>
+Subject: Re: [PATCH -v11 05/30] PCI: Add busn_res operation functions
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 06, 2012 at 02:43:59AM +0000, Hao, Xudong wrote:
-> Hi, 
-> 
-> I'm working on virtualization Xen/KVM. I saw there are ltr/obff enabling/disabling function in pci.c, but no called till now. I want to know if anybody(driver developer) are working for using it? Can driver change the LTR latency value dynamically?
-> 
-> /*
-> LTR(Latency tolerance reporting) allows devices to send messages to the root complex indicating their latency tolerance for snooped & unsnooped memory transactions.
-> OBFF (optimized buffer flush/fill), where supported, can help improve energy efficiency by giving devices information about when interrupts and other activity will have a reduced power impact.
-> */
-> 
-> One way to control ltr/obff is used by driver, however, I'm considering that in virtualization, how guest OS driver control them. I have an idea that expose an inode interface by sysfs, like "reset" inode implemented in pci-sysfs.c, so that system user/administrator can enable/disable ltr/obff or set latency value on userspace, but not limited on driver. Comments?
+On Mon, Apr 30, 2012 at 4:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sun, Mar 18, 2012 at 11:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> +void pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
+>> +{
+>> +       struct resource *res = &b->busn_res;
+>> +       struct resource old_res = *res;
+>> +
+>> +       res->end = bus_max;
+>
+> I've mentioned before that I'm not comfortable with updating the
+> struct resource after it's been inserted into the tree.  If you want
+> to do an in-place update, I think you need to add a new interface in
+> kernel/resource.c so it can make sure the resource tree remains
+> consistent.
 
-So right now the driver inside the guest can probably see it, but can't change them.
-(As those requests end up being filtered).
-
-But there is nothing wrong with your changing those values from within the host.
-
-But a better question is - why should this be done - especially from the guest which
-has a limited view of the machine? The machine might be running a lot of other
-requests so the OBFF inside the guest could be invalid.
-
-
-> 
-> < pls CC me when reply this mail, thanks >
-> 
-> Best Regards,
-> Xudong Hao
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ok, will add one function in kernel/resource.c to make sure that end
+could be updated safely
+by checking parent and children.
