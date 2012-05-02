@@ -1,121 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60797 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739Ab2EEETW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 May 2012 00:19:22 -0400
-Message-ID: <4FA4AA3E.1070903@gmail.com>
-Date: Sat, 05 May 2012 14:19:10 +1000
-From: Francois Rigaut <frigaut@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:49489 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754970Ab2EBAhd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2012 20:37:33 -0400
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Subject: RE: [PATCH v6] Quirk for IVB graphics FLR errata
+Date: Wed, 2 May 2012 00:37:30 +0000
+Message-ID: <403610A45A2B5242BD291EDAE8B37D300FDA2550@SHSMSX102.ccr.corp.intel.com>
+References: <403610A45A2B5242BD291EDAE8B37D300FD24698@SHSMSX102.ccr.corp.intel.com>
+ <CAErSpo4Dm45uRsvdzSAfrvGNPPA_7QqvC_Se-JxpJErsasoTKw@mail.gmail.com>
+ <403610A45A2B5242BD291EDAE8B37D300FD3ABC3@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo4Qm1DP-i2YWc1ZibiUAnPC-tLG9X0xceAvGFxs8e+mPQ@mail.gmail.com>
+ <403610A45A2B5242BD291EDAE8B37D300FD8BEA9@SHSMSX102.ccr.corp.intel.com>
+ <CAErSpo4tUnA6oFr1uXyfVPHQh7F-LMN913pu=MfaEsRi5isLLQ@mail.gmail.com>
+ <403610A45A2B5242BD291EDAE8B37D300FD906DD@SHSMSX102.ccr.corp.intel.com>
+ <20120427174141.GA11634@google.com>
+In-Reply-To: <20120427174141.GA11634@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Greg KH <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
-	Nico Schottelius <nico-linux-20120419@schottelius.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Linux Support for Thunderbolt using Apple Monitor
-References: <20120419163800.GB13977@schottelius.org> <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com> <20120502163629.GE928@schottelius.org> <20120502202509.GA26798@kroah.com> <20120503065003.GB13386@schottelius.org> <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com> <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com> <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com>
-In-Reply-To: <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Saturday, April 28, 2012 1:42 AM
+> To: Hao, Xudong
+> Cc: linux-pci@vger.kernel.org; Don Dutile; Matthew Wilcox; Zhang, Xiantao
+> Subject: Re: [PATCH v6] Quirk for IVB graphics FLR errata
+> 
+> On Fri, Apr 27, 2012 at 01:26:18AM +0000, Hao, Xudong wrote:
+> > Maybe something configuration wrong on my mail client, I attach the patch
+> as an attachment, can you open it in your side?
+> 
+> Yes, I could open the attachment.  But it makes it easier for everybody to
+> read & review your patches if you can figure out how to post patches
+> directly in the message rather than as an attachment.
+> 
 
-On 05/05/12 05:38, Yinghai Lu wrote:
-> On Fri, May 4, 2012 at 12:37 PM, Yinghai Lu<yinghai@kernel.org>  wrote:
->> On Fri, May 4, 2012 at 11:48 AM, Greg KH<gregkh@linuxfoundation.org>  wrote:
->>> Ok, it looks like these are the devices that we are missing while
->>> "hotplugging":
->>> 37:00.0 PCI bridge: Intel Corporation Device 1513
->>> 38:00.0 PCI bridge: Intel Corporation Device 1513
->>> 38:01.0 PCI bridge: Intel Corporation Device 1513
->>> 38:02.0 PCI bridge: Intel Corporation Device 1513
->>> 38:03.0 PCI bridge: Intel Corporation Device 1513
->>> 38:04.0 PCI bridge: Intel Corporation Device 1513
->>> 38:05.0 PCI bridge: Intel Corporation Device 1513
->>> 39:00.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
->>> 3a:03.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
->>> 3b:00.0 USB controller: Pericom Semiconductor Device 400e (rev 01)
->>> 3b:00.1 USB controller: Pericom Semiconductor Device 400e (rev 01)
->>> 3b:00.2 USB controller: Pericom Semiconductor Device 400f (rev 01)
->>> 3c:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57761 Gigabit Ethernet PCIe (rev 10)
->>> 3d:00.0 FireWire (IEEE 1394): nee Agere Systems nee Lucent
->>> Microelectronics FW643 PCI Express 1394b Controller (PHY/Link) (rev 08)
->>>
->>> Which is good, I was worried that there was a video controller out there
->>> on the end of the thunderbolt link.
->>>
->>> So, the problem really is two here:
->>>   - your video card doesn't detect the new display
->>>   - your pci devices do not show up
->>>
->>> The first one probably needs to be reported to the Intel video driver
->>> people, they can help you out the best.
-no it's definitely not the first one. As you saw, there'sa whole bunch 
-of other devices (3 USB, firewire, network) that do not show up either.
+Sure, I'm trying configure my email, make it better to work.
 
-The new info from Yinghai (thanks Yinghai) explains why hotpluging with 
-pciehp did not work/detect the PCIE hotplug and did not result in *any* 
-kernel messages.
+> Here's an updated version of your patch.  I changed the following:
+> 
+>     - Wrapped changelog text so it fits nicely for "git log".
+>     - Added #define for 0xd0100 offset (please supply a more useful name).
+>     - Used pci_iomap() and ioread32()/iowrite32().
+>     - Used msleep() rather than spinning (Matthew suggested this earlier,
+>       but you apparently missed it).  Note that I went back to your
+>       original "do {} while ()" structure to make sure we read PCH_PP_STATUS
+>       at least once.
+>     - Added message if reset times out.
+> 
+> This is still x86-specific code that clutters all other architectures.  We
+> might fix this someday by adding a DECLARE_PCI_FIXUP_RESET(), so the IVB
+> code could live in arch/x86, and the linker could still collect all the
+> device-specific reset methods.  But I haven't done that yet.
+> 
+> Please test and comment on this (and supply a name for 0xd0100):
+> 
 
-So the whole thing I guess boils down to making acpiphp work. And why it 
-outputs the "no such device" error message and does not load:
+We can named 0xd0100 "NSDE_PWR_STATE" instead of "XXXX" in code.
 
-I tried with debug=1 and got a bit more info in the log files:
+Testing done, patch works. 
 
-[root@poliahu frigaut]# lsmod | grep -e acpi -e pci
-acpi_cpufreq            5941  0
-mperf                   1275  1 acpi_cpufreq
-processor              26144  1 acpi_cpufreq
-[root@poliahu frigaut]# modprobe acpiphp debug=1
-ERROR: could not insert 'acpiphp': No such device
-
-at this point this message showed up in everything.log:
-May  5 14:09:55 localhost kernel: [28329.700022] pci_hotplug: PCI Hot 
-Plug PCI Core version: 0.5
-May  5 14:09:55 localhost kernel: [28329.702041] acpiphp: ACPI Hot Plug 
-PCI Controller Driver version: 0.5
-May  5 14:09:55 localhost kernel: [28329.702484] acpiphp_glue: found 
-PCI-to-PCI bridge at PCI 0000:04:00.0
-May  5 14:09:55 localhost kernel: [28329.702715] acpiphp_glue: Bus 
-0000:05 has 0 slots
-May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
-
-then:
-[root@poliahu frigaut]# lsmod | grep -e acpi -e pci
-pci_hotplug            25324  0
-acpi_cpufreq            5941  0
-mperf                   1275  1 acpi_cpufreq
-processor              26144  1 acpi_cpufreq
-[root@poliahu frigaut]#
-
-shows that acpiphp was indeed not loaded (I assume the error occurs 
-after it has written out the above messages in the log file), but 
-pci_hotplug was as a dep of acpiphp I assume (thus, correct behavior).
-
-So we're back to the issue of the acpiphp load error.
-
-Greg, I see you're one of the authors of acpiphp:
-#define DRIVER_VERSION    "0.5"
-#define DRIVER_AUTHOR    "Greg Kroah-Hartman <gregkh@us.ibm.com>, 
-Takayoshi Kochi <t-kochi@bq.jp.nec.com>, Matthew Wilcox <willy@hp.com>"
-#define DRIVER_DESC    "ACPI Hot Plug PCI Controller Driver"
-
-but that might have been a while back?
-
-Cheers, and thanks,
-Francois
+I do not send patch again, can you replace XXXX to NSDE_PWR_STATE and apply this patch?
 
 
-
->>>
->>> The second one means that something is up with the pci hotplug
->>> controller.  I've cced the linux-pci list, the people there should be
->>> able to help out better than I, as I no longer have any PCI hotplug
->>> hardware to work with anymore.
->>>
->> those devices are under 04:04.0, but that does not have slot cap
->> enabled by BIOS. So pciehp is going to to help.
-> should be: pciehp is not going to help.
->
-> so acpiphp are involved?
->
-> Yinghai
+> commit 8566df6d83bf89c8cad3810d5d333a31a95b133e
+> Author: Xudong Hao <xudong.hao@intel.com>
+> Date:   Fri Apr 27 09:16:46 2012 -0600
+> 
+>     PCI: work around IvyBridge internal graphics FLR erratum
+> 
+>     For IvyBridge Mobile platform, a system hang may occur if a FLR (Function
+>     Level Reset) is asserted to internal graphics.
+> 
+>     This quirk is a workaround for the IVB FLR errata issue.  We are
+>     disabling the FLR reset handshake between the PCH and CPU display, then
+>     manually powering down the panel power sequencing and resetting the
+> PCH
+>     display.
+> 
+>     Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+>     Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
+>     Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 4bf7102..d5646de 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3085,16 +3085,74 @@ static int reset_intel_82599_sfp_virtfn(struct
+> pci_dev *dev, int probe)
+>  	return 0;
+>  }
+> 
+> +#include "../gpu/drm/i915/i915_reg.h"
+> +#define MSG_CTL			0x45010
+> +#define XXXX			0xd0100
+> +#define IGD_OPERATION_TIMEOUT	10000     /* set timeout 10 seconds
+> */
+> +
+> +static int reset_ivb_igd(struct pci_dev *dev, int probe)
+> +{
+> +	void __iomem *mmio_base;
+> +	unsigned long timeout;
+> +	u32 val;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	mmio_base = pci_iomap(dev, 0, 0);
+> +	if (!mmio_base)
+> +		return -ENOMEM;
+> +
+> +	iowrite32(0x00000002, mmio_base + MSG_CTL);
+> +
+> +	/*
+> +	 * Clobbering SOUTH_CHICKEN2 register is fine only if the next
+> +	 * driver loaded sets the right bits. However, this's a reset and
+> +	 * the bits have been set by i915 previously, so we clobber
+> +	 * SOUTH_CHICKEN2 register directly here.
+> +	 */
+> +	iowrite32(0x00000005, mmio_base + SOUTH_CHICKEN2);
+> +
+> +	val = ioread32(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
+> +	iowrite32(val, mmio_base + PCH_PP_CONTROL);
+> +
+> +	timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
+> +	do {
+> +		val = ioread32(mmio_base + PCH_PP_STATUS);
+> +		if ((val & 0xB0000000) == 0)
+> +			goto reset_complete;
+> +		msleep(10);
+> +	} while (time_before(jiffies, timeout));
+> +	dev_warn(&dev->dev, "timeout during reset\n");
+> +
+> +reset_complete:
+> +	iowrite32(0x00000002, mmio_base + XXXX);
+> +
+> +	pci_iounmap(dev, mmio_base);
+> +	return 0;
+> +}
+> +
+>  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+> +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+> +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+> 
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
+> +		reset_ivb_igd },
+> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
+> +		reset_ivb_igd },
+>  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+>  		reset_intel_generic_dev },
+>  	{ 0 }
+>  };
+> 
+> +/*
+> + * These device-specific reset methods are here rather than in a driver
+> + * because when a host assigns a device to a guest VM, the host may need
+> + * to reset the device but probably doesn't have a driver for it.
+> + */
+>  int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>  {
+>  	const struct pci_dev_reset_methods *i;
