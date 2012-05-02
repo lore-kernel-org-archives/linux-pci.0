@@ -1,100 +1,215 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:59067 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948Ab2EYSj1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2012 14:39:27 -0400
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:49813 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443Ab2EBWbW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 May 2012 18:31:22 -0400
+Received: by lbbgm6 with SMTP id gm6so836654lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 02 May 2012 15:31:21 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
-	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-Date: Fri, 25 May 2012 11:39:26 -0700
-Message-ID: <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary=047d7b162fd718665c04c0e0b0cf
+In-Reply-To: <1333988568-11282-4-git-send-email-jiang.liu@huawei.com>
+References: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com> <1333988568-11282-4-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 2 May 2012 16:31:00 -0600
+Message-ID: <CAErSpo4S9V8fUJcbBHL4CPGzcVW768KiGsALdG78xD85feEvKw@mail.gmail.com>
+Subject: Re: [PATCH V2 3/6] PCI, x86: use RCU list to protect mmconfig list
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b162fd718665c04c0e0b0cf
-Content-Type: text/plain; charset=ISO-8859-1
+On Mon, Apr 9, 2012 at 10:22 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Use RCU list to protect mmconfig list from dynamic change
+> when supporting PCI host bridge hotplug.
 
-On Fri, May 25, 2012 at 10:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> I don't really like the dependency on PCIBIOS_MAX_MEM_32 + 1ULL
->> overflowing to zero -- that means the reader has to know what the
->> value of PCIBIOS_MAX_MEM_32 is, and things would break in non-obvious
->> ways if we changed it.
->>
+I'm not convinced this is safe.  But I'm not an RCU expert, so maybe
+you can convince me :)
 
-please check if attached one is more clear.
+Documentation/RCU/checklist.txt says the update code still requires
+mutual exclusion, and I don't see any in list_add_sorted() or its
+callers.
 
-make max and bottom is only related to _MEM and not default one.
+MMCONFIG accesses are already protected by the pci_config_lock
+spinlock, so I don't think the performance advantages of RCU really
+gain us anything in this situation.
 
--       if (!(res->flags & IORESOURCE_MEM_64))
--               max = PCIBIOS_MAX_MEM_32;
-+       if (res->flags & IORESOURCE_MEM) {
-+               if (!(res->flags & IORESOURCE_MEM_64))
-+                       max = PCIBIOS_MAX_MEM_32;
-+               else if (PCIBIOS_MAX_MEM_32 != -1)
-+                       bottom = (resource_size_t)(1ULL<<32);
-+       }
+It would definitely be simpler to just hold pci_config_lock while
+updating and searching the pci_mmcfg_list, but if there are issues
+with that, you can educate me about what they are and why this RCU
+code is correct.
 
-will still not affect to other arches.
+Bjorn
 
-
-Thanks
-
-Yinghai
-
---047d7b162fd718665c04c0e0b0cf
-Content-Type: application/octet-stream; name="allocate_high_at_first.patch"
-Content-Disposition: attachment; filename="allocate_high_at_first.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h2nlec0k0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IFRyeSB0byBhbGxvY2F0ZSBtZW02NCBhYm92ZSA0RyBhdCBm
-aXJzdAoKYW5kIHdpbGwgZmFsbCBiYWNrIHRvIGJlbG93IDRnIGlmIGl0IGNhbiBub3QgZmluZCBh
-bnkgYWJvdmUgNGcuCgpvbmx5IHg4NiBoYXZlIFBDSUJJT1NfTUFYX01FTV8zMiBzZXQgdG8gMHhm
-ZmZmZmZmZi4KaXQgd2lsbCBvbmx5IGFmZmVjdCB4ODZfNjQgYW5kIDMyYml0IHdpdGggcmVzb3Vy
-Y2Vfc2l6ZV90IDY0Yml0IHN1cHBvcnQuCm9ubHkgdGhhdCBjYXNlIGJvdHRvbSBpcyBzZXQgdG8g
-NGcgZm9yIGZpcnN0IHRyeS4KCng4NiAzMmJpdCB3aXRob3V0IFg4Nl9QQUUgc3VwcG9ydCB3aWxs
-IGhhdmUgYm90dG9tIHNldCB0byAwLCBiZWN1YXNlCnJlc291cmNlX3NpemVfdCBpcyAzMmJpdC4K
-CkFsc28gZm9yIDMyYml0IHdpdGggcmVzb3VyY2Vfc2l6ZV90IDY0Yml0IGtlcm5lbCBvbiBtYWNo
-aW5lIHdpdGggcGFlIHN1cHBvcnQKd2UgYXJlIHNhZmUgYmVjYXVzZSBpb21lbV9yZXNvdXJjZSBp
-cyBsaW1pdGVkIHRvIDMyYml0IGFjY29yZGluZyB0bwp4ODZfcGh5c19iaXRzLgoKLXYyOiB1cGRh
-dGUgYm90dG9tIGFzc2lnbmluZyB0byBtYWtlIGl0IGNsZWFyIGZvciBub24tcGFlIHN1cHBvcnQg
-bWFjaGluZS4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4K
-Ci0tLQogZHJpdmVycy9wY2kvYnVzLmMgfCAgIDIwICsrKysrKysrKysrKysrKystLS0tCiAxIGZp
-bGUgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51
-eC0yLjYvZHJpdmVycy9wY2kvYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJp
-dmVycy9wY2kvYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwpAQCAtMTIyLDEz
-ICsxMjIsMTkgQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1cyAqYgogCWlu
-dCBpLCByZXQgPSAtRU5PTUVNOwogCXN0cnVjdCByZXNvdXJjZSAqcjsKIAlyZXNvdXJjZV9zaXpl
-X3QgbWF4ID0gLTE7CisJcmVzb3VyY2Vfc2l6ZV90IGJvdHRvbSA9IDA7CiAKIAl0eXBlX21hc2sg
-fD0gSU9SRVNPVVJDRV9JTyB8IElPUkVTT1VSQ0VfTUVNOwogCiAJLyogZG9uJ3QgYWxsb2NhdGUg
-dG9vIGhpZ2ggaWYgdGhlIHByZWYgbWVtIGRvZXNuJ3Qgc3VwcG9ydCA2NGJpdCovCi0JaWYgKCEo
-cmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfTUVNXzY0KSkKLQkJbWF4ID0gUENJQklPU19NQVhfTUVN
-XzMyOworCWlmIChyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU0pIHsKKwkJaWYgKCEocmVzLT5m
-bGFncyAmIElPUkVTT1VSQ0VfTUVNXzY0KSkKKwkJCW1heCA9IFBDSUJJT1NfTUFYX01FTV8zMjsK
-KwkJZWxzZSBpZiAoUENJQklPU19NQVhfTUVNXzMyICE9IC0xKQorCQkJYm90dG9tID0gKHJlc291
-cmNlX3NpemVfdCkoMVVMTDw8MzIpOworCX0KIAorYWdhaW46CiAJcGNpX2J1c19mb3JfZWFjaF9y
-ZXNvdXJjZShidXMsIHIsIGkpIHsKIAkJaWYgKCFyKQogCQkJY29udGludWU7CkBAIC0xNDUsMTIg
-KzE1MSwxOCBAQCBwY2lfYnVzX2FsbG9jX3Jlc291cmNlKHN0cnVjdCBwY2lfYnVzICpiCiAKIAkJ
-LyogT2ssIHRyeSBpdCBvdXQuLiAqLwogCQlyZXQgPSBhbGxvY2F0ZV9yZXNvdXJjZShyLCByZXMs
-IHNpemUsCi0JCQkJCXItPnN0YXJ0ID8gOiBtaW4sCisJCQkJCW1heChib3R0b20sIHItPnN0YXJ0
-ID8gOiBtaW4pLAogCQkJCQltYXgsIGFsaWduLAogCQkJCQlhbGlnbmYsIGFsaWduZl9kYXRhKTsK
-IAkJaWYgKHJldCA9PSAwKQotCQkJYnJlYWs7CisJCQlyZXR1cm4gMDsKKwl9CisKKwlpZiAoYm90
-dG9tICE9IDApIHsKKwkJYm90dG9tID0gMDsKKwkJZ290byBhZ2FpbjsKIAl9CisKIAlyZXR1cm4g
-cmV0OwogfQogCg==
---047d7b162fd718665c04c0e0b0cf--
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> ---
+>  arch/x86/pci/mmconfig-shared.c |   11 ++++++-----
+>  arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
+>  arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
+>  3 files changed, 28 insertions(+), 9 deletions(-)
+>
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index 5e2cd2a..3bcc361 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -17,6 +17,7 @@
+>  #include <linux/bitmap.h>
+>  #include <linux/dmi.h>
+>  #include <linux/slab.h>
+> +#include <linux/rculist.h>
+>  #include <asm/e820.h>
+>  #include <asm/pci_x86.h>
+>  #include <asm/acpi.h>
+> @@ -45,20 +46,20 @@ static __init void free_all_mmcfg(void)
+>                pci_mmconfig_remove(cfg);
+>  }
+>
+> -static __init void list_add_sorted(struct pci_mmcfg_region *new)
+> +static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
+>  {
+>        struct pci_mmcfg_region *cfg;
+>
+>        /* keep list sorted by segment and starting bus number */
+> -       list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+> +       list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
+>                if (cfg->segment > new->segment ||
+>                    (cfg->segment == new->segment &&
+>                     cfg->start_bus >= new->start_bus)) {
+> -                       list_add_tail(&new->list, &cfg->list);
+> +                       list_add_tail_rcu(&new->list, &cfg->list);
+>                        return;
+>                }
+>        }
+> -       list_add_tail(&new->list, &pci_mmcfg_list);
+> +       list_add_tail_rcu(&new->list, &pci_mmcfg_list);
+>  }
+>
+>  static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
+> @@ -111,7 +112,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+>  {
+>        struct pci_mmcfg_region *cfg;
+>
+> -       list_for_each_entry(cfg, &pci_mmcfg_list, list)
+> +       list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+>                if (cfg->segment == segment &&
+>                    cfg->start_bus <= bus && bus <= cfg->end_bus)
+>                        return cfg;
+> diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+> index 5372e86..5dad04a 100644
+> --- a/arch/x86/pci/mmconfig_32.c
+> +++ b/arch/x86/pci/mmconfig_32.c
+> @@ -11,6 +11,7 @@
+>
+>  #include <linux/pci.h>
+>  #include <linux/init.h>
+> +#include <linux/rcupdate.h>
+>  #include <asm/e820.h>
+>  #include <asm/pci_x86.h>
+>  #include <acpi/acpi.h>
+> @@ -60,9 +61,12 @@ err:         *value = -1;
+>                return -EINVAL;
+>        }
+>
+> +       rcu_read_lock();
+>        base = get_base_addr(seg, bus, devfn);
+> -       if (!base)
+> +       if (!base) {
+> +               rcu_read_unlock();
+>                goto err;
+> +       }
+>
+>        raw_spin_lock_irqsave(&pci_config_lock, flags);
+>
+> @@ -80,6 +84,7 @@ err:          *value = -1;
+>                break;
+>        }
+>        raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+> +       rcu_read_unlock();
+>
+>        return 0;
+>  }
+> @@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+>        if ((bus > 255) || (devfn > 255) || (reg > 4095))
+>                return -EINVAL;
+>
+> +       rcu_read_lock();
+>        base = get_base_addr(seg, bus, devfn);
+> -       if (!base)
+> +       if (!base) {
+> +               rcu_read_unlock();
+>                return -EINVAL;
+> +       }
+>
+>        raw_spin_lock_irqsave(&pci_config_lock, flags);
+>
+> @@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+>                break;
+>        }
+>        raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+> +       rcu_read_unlock();
+>
+>        return 0;
+>  }
+> diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+> index 915a493..acc48c5 100644
+> --- a/arch/x86/pci/mmconfig_64.c
+> +++ b/arch/x86/pci/mmconfig_64.c
+> @@ -9,6 +9,7 @@
+>  #include <linux/init.h>
+>  #include <linux/acpi.h>
+>  #include <linux/bitmap.h>
+> +#include <linux/rcupdate.h>
+>  #include <asm/e820.h>
+>  #include <asm/pci_x86.h>
+>
+> @@ -34,9 +35,12 @@ err:         *value = -1;
+>                return -EINVAL;
+>        }
+>
+> +       rcu_read_lock();
+>        addr = pci_dev_base(seg, bus, devfn);
+> -       if (!addr)
+> +       if (!addr) {
+> +               rcu_read_unlock();
+>                goto err;
+> +       }
+>
+>        switch (len) {
+>        case 1:
+> @@ -49,6 +53,7 @@ err:          *value = -1;
+>                *value = mmio_config_readl(addr + reg);
+>                break;
+>        }
+> +       rcu_read_unlock();
+>
+>        return 0;
+>  }
+> @@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+>        if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+>                return -EINVAL;
+>
+> +       rcu_read_lock();
+>        addr = pci_dev_base(seg, bus, devfn);
+> -       if (!addr)
+> +       if (!addr) {
+> +               rcu_read_unlock();
+>                return -EINVAL;
+> +       }
+>
+>        switch (len) {
+>        case 1:
+> @@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+>                mmio_config_writel(addr + reg, value);
+>                break;
+>        }
+> +       rcu_read_unlock();
+>
+>        return 0;
+>  }
+> --
+> 1.7.5.4
+>
