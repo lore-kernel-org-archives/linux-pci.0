@@ -1,278 +1,234 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:59496 "EHLO
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:42853 "EHLO
 	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757562Ab2ERQD1 convert rfc822-to-8bit
+	by vger.kernel.org with ESMTP id S1754371Ab2EBRdk convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 May 2012 12:03:27 -0400
-Received: by lahd3 with SMTP id d3so2186949lah.19
-        for <linux-pci@vger.kernel.org>; Fri, 18 May 2012 09:03:26 -0700 (PDT)
+	Wed, 2 May 2012 13:33:40 -0400
+Received: by lahj13 with SMTP id j13so629515lah.19
+        for <linux-pci@vger.kernel.org>; Wed, 02 May 2012 10:33:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1336186830-10765-7-git-send-email-jiang.liu@huawei.com>
-References: <1336186830-10765-1-git-send-email-jiang.liu@huawei.com> <1336186830-10765-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <20120427143621.GC27535@alberich.amd.com>
+References: <20120427143410.GB27535@alberich.amd.com> <20120427143621.GC27535@alberich.amd.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 18 May 2012 10:03:05 -0600
-Message-ID: <CAErSpo5iiEqqhcMKj8gqfXZmqD2QaY4LBe7w9J2K-fgXbzO9Pg@mail.gmail.com>
-Subject: Re: [PATCH v5 6/6] PCI, ACPI, x86: update MMCFG information when
- hot-plugging PCI host bridges
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Date: Wed, 2 May 2012 11:33:17 -0600
+Message-ID: <CAErSpo7gkkqZgR0TZ5Xx162pLN9ZaYVhMmyHn+H8Lqr1CBSXXQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2][RESEND] x86/pci/amd: Restore early_fill_mp_bus_to_node
+To: Andreas Herrmann <andreas.herrmann3@amd.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 4, 2012 at 9:00 PM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
+On Fri, Apr 27, 2012 at 8:36 AM, Andreas Herrmann
+<andreas.herrmann3@amd.com> wrote:
 >
-> This patch enhances pci_root driver to update MMCFG information when
-> hot-plugging PCI root bridges on x86 platforms.
+> Once upon a time this function was overloaded with quirky stuff to fix
+> resource detection on systems w/ _CRS defects (seems that some Sun and
+> HP systems were affected).
 >
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
+> (x86: multi pci root bus with different io resource range, on 64-bit)
+>
+> Restore the old function and thus decouple it from the quirk that is
+> CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
+> I assume that the _CRS stuff is working on current systems.
+>
+> This is required to properly initilize the numa_node information of
+> existing PCI busses and associated devices.
+
+I applied some of Yinghai's patches that also touch this area.  Can
+you refresh these so they apply on top of my "next" branch
+(git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next)?
+
+Can you also be more specific about what these patches fix?
+
+My understanding is that amd_bus.c (1) sets NUMA info with
+set_mp_bus_to_node() and (2) figures out MMIO and I/O port apertures,
+which are only used when blind probing and when ignoring _CRS.
+
+It seems like the main change in this patch is that we skip (2)
+completely when family >= 0x11, and I don't understand what that could
+fix.
+
+[more comments below]
+
+> Signed-off-by: Andreas Herrmann <andreas.herrmann3@amd.com>
 > ---
->  arch/x86/include/asm/pci_x86.h |    1 +
->  arch/x86/pci/acpi.c            |   57 ++++++++++++++++++++++++++++++++++++++++
->  arch/x86/pci/mmconfig_32.c     |    2 +-
->  arch/x86/pci/mmconfig_64.c     |    2 +-
->  drivers/acpi/pci_root.c        |   22 ++++++++++++++++
->  include/acpi/acnames.h         |    1 +
->  include/acpi/acpi_bus.h        |    1 +
->  include/linux/pci-acpi.h       |    4 +++
->  8 files changed, 88 insertions(+), 2 deletions(-)
+>  arch/x86/pci/amd_bus.c |   84 +++++++++++++++++++++++++++++++----------------
+>  1 files changed, 55 insertions(+), 29 deletions(-)
 >
-> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-> index 3252c97..5e1d9a6 100644
-> --- a/arch/x86/include/asm/pci_x86.h
-> +++ b/arch/x86/include/asm/pci_x86.h
-> @@ -100,6 +100,7 @@ struct pci_raw_ops {
->  extern const struct pci_raw_ops *raw_pci_ops;
->  extern const struct pci_raw_ops *raw_pci_ext_ops;
+> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+> index 0567df3..0384e69 100644
+> --- a/arch/x86/pci/amd_bus.c
+> +++ b/arch/x86/pci/amd_bus.c
+> @@ -30,36 +30,19 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
+>        { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
+>  };
 >
-> +extern const struct pci_raw_ops pci_mmcfg;
->  extern const struct pci_raw_ops pci_direct_conf1;
->  extern bool port_cf9_safe;
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index da0149d..80cc3fa 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -4,6 +4,7 @@
->  #include <linux/irq.h>
->  #include <linux/dmi.h>
->  #include <linux/slab.h>
-> +#include <linux/pci-acpi.h>
->  #include <asm/numa.h>
->  #include <asm/pci_x86.h>
->
-> @@ -488,6 +489,62 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->        return bus;
->  }
->
-> +int __devinit arch_acpi_pci_root_add(struct acpi_pci_root *root,
-> +                                    unsigned long long base_addr)
-> +{
-> +       int result;
-> +
-> +       /* return success if MMCFG is not in use */
-> +       if (raw_pci_ext_ops && raw_pci_ext_ops != &pci_mmcfg)
-> +               return 0;
-> +
-> +       if (!(pci_probe & PCI_PROBE_MMCONF)) {
-> +               /* still could use raw_pci_ops for devices on segment 0 */
-> +               if (root->segment == 0)
-> +                       return 0;
-> +
-> +               printk(KERN_ERR "MMCFG is disabled, "
-> +                       "can't access CFG space for Bus %04x:%02x\n",
-> +                       root->segment, (unsigned int)root->secondary.start);
-> +               return -ENODEV;
-> +       }
-> +
-> +       result = pci_mmconfig_insert(root->segment, root->secondary.start,
-> +                                    root->secondary.end, base_addr);
-> +       if (result == -EEXIST) {
-> +               /* return success if MMCFG item already exists */
-> +               result = 0;
-> +       } else if (result == 0) {
-> +               /* enable MMCFG if it hasn't been enabled yet */
-> +               if (raw_pci_ext_ops == NULL)
-> +                       raw_pci_ext_ops = &pci_mmcfg;
-> +               root->mmconf_added = true;
-> +       } else if (root->segment == 0 && raw_pci_ext_ops == NULL &&
-> +                  raw_pci_ops != NULL) {
-> +               /*
-> +                * system doesn't support extended configuration space,
-> +                * still could use raw_pci_ops with it
-> +                */
-> +               result = 0;
-> +       } else {
-> +               printk(KERN_ERR
-> +                       "can't add MMCFG information for Bus %04x:%02x\n",
-> +                       root->segment, (unsigned int)root->secondary.start);
-> +       }
-> +
-> +       return result;
-> +}
-> +
-> +void arch_acpi_pci_root_remove(struct acpi_pci_root *root)
-> +{
-> +       if (root->mmconf_added) {
-> +               pci_mmconfig_delete(root->segment,
-> +                                   root->secondary.start,
-> +                                   root->secondary.end);
-> +               root->mmconf_added = false;
-> +       }
-> +}
-> +
->  int __init pci_acpi_init(void)
+> -#define RANGE_NUM 16
+> -
+>  /**
+>  * early_fill_mp_bus_to_node()
+>  * called before pcibios_scan_root and pci_scan_bus
+>  * fills the mp_bus_to_cpumask array based according to the LDT Bus Number
+>  * Registers found in the K8 northbridge
+>  */
+> -static int __init early_fill_mp_bus_info(void)
+> +static int __init early_fill_mp_bus_to_node(void)
 >  {
->        struct pci_dev *dev = NULL;
-> diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-> index a22785d..db63ac2 100644
-> --- a/arch/x86/pci/mmconfig_32.c
-> +++ b/arch/x86/pci/mmconfig_32.c
-> @@ -126,7 +126,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
->        return 0;
->  }
+> -       int i;
+> -       int j;
+> -       unsigned bus;
+> -       unsigned slot;
+> -       int node;
+> -       int link;
+> -       int def_node;
+> -       int def_link;
+> +       int i, j, node, link;
+> +       unsigned bus, slot;
+>        struct pci_root_info *info;
+>        u32 reg;
+> -       struct resource *res;
+> -       u64 start;
+> -       u64 end;
+> -       struct range range[RANGE_NUM];
+> -       u64 val;
+> -       u32 address;
+>        bool found;
+> -       struct resource fam10h_mmconf_res, *fam10h_mmconf;
+> -       u64 fam10h_mmconf_start;
+> -       u64 fam10h_mmconf_end;
 >
-> -static const struct pci_raw_ops pci_mmcfg = {
-> +const struct pci_raw_ops pci_mmcfg = {
->        .read =         pci_mmcfg_read,
->        .write =        pci_mmcfg_write,
->  };
-> diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-> index 4e05779..34c08dd 100644
-> --- a/arch/x86/pci/mmconfig_64.c
-> +++ b/arch/x86/pci/mmconfig_64.c
-> @@ -90,7 +90,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
->        return 0;
->  }
+>        if (!early_pci_allowed())
+>                return -1;
+> @@ -67,8 +50,7 @@ static int __init early_fill_mp_bus_info(void)
+>        found = false;
+>        for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
+>                u32 id;
+> -               u16 device;
+> -               u16 vendor;
+> +               u16 device, vendor;
 >
-> -static const struct pci_raw_ops pci_mmcfg = {
-> +const struct pci_raw_ops pci_mmcfg = {
->        .read =         pci_mmcfg_read,
->        .write =        pci_mmcfg_write,
->  };
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index b313125..8d3f821 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -448,6 +448,16 @@ out:
->  }
->  EXPORT_SYMBOL(acpi_pci_osc_control_set);
+>                bus = pci_probes[i].bus;
+>                slot = pci_probes[i].slot;
+> @@ -88,8 +70,7 @@ static int __init early_fill_mp_bus_info(void)
 >
-> +int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root,
-> +                                 unsigned long long base_addr)
-> +{
+>        pci_root_num = 0;
+>        for (i = 0; i < 4; i++) {
+> -               int min_bus;
+> -               int max_bus;
+> +               int min_bus, max_bus;
+>                reg = read_pci_config(bus, slot, 1, 0xe0 + (i << 2));
+>
+>                /* Check if that register is enabled for bus range */
+> @@ -111,9 +92,50 @@ static int __init early_fill_mp_bus_info(void)
+>                info->node = node;
+>                info->link = link;
+>                sprintf(info->name, "PCI Bus #%02x", min_bus);
+> +               printk(KERN_DEBUG "bus: [%02x, %02x] on node %x link %x\n",
+> +                      info->bus_min, info->bus_max, info->node, info->link);
+>                pci_root_num++;
+>        }
+>
 > +       return 0;
 > +}
 > +
-> +void __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
-> +{
-> +}
 > +
->  static int __devinit acpi_pci_root_add(struct acpi_device *device)
->  {
->        unsigned long long segment, bus;
-> @@ -457,6 +467,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->        acpi_handle handle;
->        struct acpi_device *child;
->        u32 flags, base_flags;
-> +       unsigned long long base_addr;
->
->        root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->        if (!root)
-> @@ -504,6 +515,15 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->        strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->        device->driver_data = root;
->
-> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
-> +                                      NULL, &base_addr);
-> +       if (ACPI_FAILURE(status))
-> +               base_addr = 0;
-
-I think the MCFG lookup should happen here, since MCFG is a generic
-ACPI table and is not arch-specific.  Maybe something like
-"phys_addr_t acpi_mcfg_lookup(int domain, struct resource *bus_nr, int
-*last_bus_nr)" that would return the bus 0-relative base address (like
-what _CBA gives you) and the end of the bus number range from MCFG.
-
-> +       if (arch_acpi_pci_root_add(root, base_addr)) {
-
-This should be something like "pci_add_mmconfig(int domain, struct
-resource *bus_nr, phys_addr_t  base)".  The bus_nr resource would be
-the range from _CRS or a copy truncated to the end we found in MCFG.
-
-> +               result = -ENODEV;
-
-I don't think this is a fatal error.  If we don't have MMCONFIG space
-for this host bridge, we can just fall back to the default pci_ops and
-still use the host bridge.
-
-> +               goto out_free;
+> +#define RANGE_NUM 16
+> +static int __init early_fill_mp_bus_info(void)
+> +{
+> +       int i, j, node, link, def_node, def_link;
+> +       unsigned bus, slot;
+> +       struct pci_root_info *info;
+> +       struct resource *res;
+> +       struct resource fam10h_mmconf_res, *fam10h_mmconf;
+> +       struct range range[RANGE_NUM];
+> +       u64 fam10h_mmconf_start, fam10h_mmconf_end;
+> +       u64 start, end, val;
+> +       u32 reg, address;
+> +       bool found;
+> +
+> +       found = false;
+> +       for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
+> +               u32 id;
+> +               u16 device, vendor;
+> +
+> +               bus = pci_probes[i].bus;
+> +               slot = pci_probes[i].slot;
+> +               id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
+> +
+> +               vendor = id & 0xffff;
+> +               device = (id>>16) & 0xffff;
+> +               if (pci_probes[i].vendor == vendor &&
+> +                   pci_probes[i].device == device) {
+> +                       found = true;
+> +                       break;
+> +               }
 > +       }
 > +
->        /*
->         * All supported architectures that use ACPI have support for
->         * PCI domains, so we indicate this in _OSC support capabilities.
-> @@ -629,6 +649,7 @@ out_del_root:
->        list_del_rcu(&root->node);
->        mutex_unlock(&acpi_pci_root_lock);
->        synchronize_rcu();
-> +       arch_acpi_pci_root_remove(root);
->  out_free:
->        kfree(root);
->        return result;
-> @@ -686,6 +707,7 @@ out:
->        list_del_rcu(&root->node);
->        mutex_unlock(&acpi_pci_root_lock);
->        synchronize_rcu();
-> +       arch_acpi_pci_root_remove(root);
->        kfree(root);
+> +       if (!found)
+> +               return 0;
+
+Please factor this out to a separate function.  Your current patch
+leaves us with two identical copies of the "search pci_probes" loop.
+Please make the refactoring its own separate patch.
+
+Or maybe even better, maybe you could just leave everything in
+early_fill_mp_bus_info(), and return after doing the
+set_mp_bus_to_node() stuff if you want to skip the rest, i.e.,
+
+    for (i = 0; i < 4; i++) {
+        ...
+        set_mp_bus_range_to_node(...);
+        ...
+    }
+
+    if (boot_cpu_data.x86 >= 0x11)
+        return;
+
+    /* get the default node and link for left over res */
+    ...
+
+
+> +
+>        /* get the default node and link for left over res */
+>        reg = read_pci_config(bus, slot, 0, 0x60);
+>        def_node = (reg >> 8) & 0x07;
+> @@ -310,14 +332,11 @@ static int __init early_fill_mp_bus_info(void)
+>        }
+>
+>        for (i = 0; i < pci_root_num; i++) {
+> -               int res_num;
+> -               int busnum;
+> +               int res_num, busnum;
+>
+>                info = &pci_root_info[i];
+>                res_num = info->res_num;
+>                busnum = info->bus_min;
+> -               printk(KERN_DEBUG "bus: [%02x, %02x] on node %x link %x\n",
+> -                      info->bus_min, info->bus_max, info->node, info->link);
+>                for (j = 0; j < res_num; j++) {
+>                        res = &info->res[j];
+>                        printk(KERN_DEBUG "bus: %02x index %x %pR\n",
+> @@ -412,7 +431,14 @@ static int __init amd_postcore_init(void)
+>        if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
+>                return 0;
+>
+> -       early_fill_mp_bus_info();
+> +       if ((early_fill_mp_bus_to_node() == 0) &&
+> +           (boot_cpu_data.x86 < 0x11)) {
+> +               /*
+> +                * call this only on older systems w/o _CRS for "multi
+> +                * pci root bus"
+> +                */
+> +               early_fill_mp_bus_info();
+> +       }
+>        pci_io_ecs_init();
 >
 >        return 0;
-> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
-> index 38f5088..99bda75 100644
-> --- a/include/acpi/acnames.h
-> +++ b/include/acpi/acnames.h
-> @@ -62,6 +62,7 @@
->  #define METHOD_NAME__AEI        "_AEI"
->  #define METHOD_NAME__PRW        "_PRW"
->  #define METHOD_NAME__SRS        "_SRS"
-> +#define METHOD_NAME__CBA       "_CBA"
->
->  /* Method names - these methods must appear at the namespace root */
->
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 333d38c..4171277 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -371,6 +371,7 @@ struct acpi_pci_root {
->        u32 osc_support_set;    /* _OSC state of support bits */
->        u32 osc_control_set;    /* _OSC state of control bits */
->        bool hot_added;
-> +       bool mmconf_added;
->  };
->
->  /* helper */
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index 4462350..d017dc0 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -18,6 +18,10 @@ extern acpi_status pci_acpi_add_pm_notifier(struct acpi_device *dev,
->                                             struct pci_dev *pci_dev);
->  extern acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev);
->
-> +int arch_acpi_pci_root_add(struct acpi_pci_root *root,
-> +                          unsigned long long base_addr);
-> +void arch_acpi_pci_root_remove(struct acpi_pci_root *root);
-> +
->  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
->  {
->        struct pci_bus *pbus = pdev->bus;
 > --
-> 1.7.9.5
+> 1.7.8.5
+>
+>
 >
