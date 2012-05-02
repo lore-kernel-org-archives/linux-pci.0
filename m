@@ -1,104 +1,125 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 28 May 2012 15:39:35 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE NIC
- as broken
-Message-ID: <20120528123934.GB21778@redhat.com>
-References: <4FBF90E5.8030800@siemens.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:39020 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753560Ab2EBGZE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 May 2012 02:25:04 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 2 May 2012 07:13:37 +1000
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q426Hqdj942132
+	for <linux-pci@vger.kernel.org>; Wed, 2 May 2012 16:17:52 +1000
+Received: from d23av03.au.ibm.com (loopback [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q426Ojtg018719
+	for <linux-pci@vger.kernel.org>; Wed, 2 May 2012 16:24:45 +1000
+Date: Wed, 2 May 2012 14:24:43 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: Does my understanding correct?
+Message-ID: <20120502062443.GB24172@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120427092704.GA22529@richard>
+ <CAErSpo6xy6AEQwROSOU6yrfdWpBgRpd+-hOGOyg0mv9UzKwOUA@mail.gmail.com>
+ <20120428050127.GA25916@richard>
+ <CAErSpo7mjeo8f=_3Uhj0V-Q1-q5dYqi8T7pMqBY6zdahpCWTRA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FBF90E5.8030800@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7mjeo8f=_3Uhj0V-Q1-q5dYqi8T7pMqBY6zdahpCWTRA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2012 at 11:02:13AM -0300, Jan Kiszka wrote:
-> According to Alexey, the T310 does not properly support INTx masking as
-> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
-> is masked. Mark this adapter as broken so that pci_intx_mask_supported
-> won't report it as compatible.
-> 
-> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+On Mon, Apr 30, 2012 at 09:56:13AM -0600, Bjorn Helgaas wrote:
+>On Fri, Apr 27, 2012 at 11:01 PM, Richard Yang
+><weiyang@linux.vnet.ibm.com> wrote:
+>
+Thanks for your nice chart.
+>I think assignments shown for the PCIe-to-PCI bridge are OK, although
+>I would draw it like this because the bridge originates a single bus
+>02 that may have multiple devices attached to it (this side is PCI,
+>not PCIe, so it really is a shared bus):
+>
+>                                 ^
+>                                 |
+>                        +--------+--------+
+>                        |     00:02.0     |
+>                        | PCIe-PCI bridge |
+>                        |                 |
+>                        +--------+--------+
+>                                 |
+>                                 |
+>                      +---------------------+    Bus 02
+>                      |                     |
+>                      |                     |
+>                      |                     |
+>                 +----v----+           +----v----+
+>                 | 02:00.0 |           | 02:01.0 |
+>                 +---------+           +---------+
+>
+So for this case, there is not internal bus, while this is really a
+physical shared bus, not a logical one.
+>I think the PCIe switch part is incorrect.  Here's Figure 1-3 from sec
+>1.3.3 of the PCIe r3 spec:
+
+                                     ^
+                                     |
+     +-------------------------------|------------------------------+
+     |                               |                              |
+     |                          +----+----+                         |
+     |                          | virtual |                         |
+     |                          | PCI-PCI |                         |
+     |                          | bridge  |                         |
+     |                          +----+----+                         |
+     |                               |                              |
+     |                               |Bus#3                         |
+     |                               |                              |
+     |          +----------------------------------------+          |
+     |          |                    |                   |          |
+     |          |                    |                   |          |
+     |          |03:00.0             |03:01.0            |03:02.0   |
+     |     +----+----+          +----+----+         +----++---+     |
+     |     | virtual |          | virtual |         | virtual |     |
+     |     | PCI-PCI |          | PCI-PCI |         | PCI-PCI |     |
+     |     | bridge  |          | bridge  |         | bridge  |     |
+     |     +----+----+          +----+----+         +----+----+     |
+     |          |Bus#4?              |                   |          |
+     |     -----+-------             |                   |          |
+     +----------|--------------------|-------------------|----------+
+                |                    |                   |
+                v                    v                   v
 
 
-Just a thought: would be nice to have a way to discover
-the quirk was activated. Add an attribute so that
-userspace can detect and report this properly to users?
-Or just log a warning message ...
+>A PCIe switch appears as two or more PCI-PCI bridges.  One is
+>associated with the upstream port; the others with the downstream
+>ports.
+>
+>A bridge always has a primary side and a secondary side.  In your
+>diagram, the bridge associated with the upstream port would be 00:01.0
+>(primary bus 00) and could have a secondary bus of 03 (since 02 is
+>already consumed by the PCIe-PCI bridge).
+Hmm... I am confused why is 03. 02 is used but 01 is not used.
+Switch should be configured after PCIe2PCI bridge?
+>
+>The bridges associated with the downstream ports are all logically on
+>bus 03.  Their primary bus number would be 03; they might be 03:00.0,
+>03:01.0, 03:02.0, etc.  Each would have its own secondary bus number,
+>for example 04, 05, 06.  That secondary bus number is for the
+>downstream link from the corresponding downstream port.
+Hmm, as you mentioned in previous letter, PCIe is an point-to-point
+protocol, then the secondary bus should reside in the Switch?
+Do you think my Bus#4 is correct?
+>
+>The endpoints below the PCIe switch could then be 04:00.0 and 05:00.0
+>(or these could be the upstream ports of more PCIe switches).
+So below the PCIe downstream port, there is only on PCIe device. 
+The whole bus is occupied by this device?
+That is why the device could have upto 256 functions?
+>
+>Bjorn
 
+-- 
+Richard Yang
+Help you, Help me
 
-> ---
-> 
-> Alexey, please test if this catches your case correctly.
-> 
->  drivers/pci/pci.c    |    3 +++
->  drivers/pci/quirks.c |   12 ++++++++++++
->  include/linux/pci.h  |    2 ++
->  3 files changed, 17 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f16900..3a1aeb5 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2876,6 +2876,9 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
->  	bool mask_supported = false;
->  	u16 orig, new;
->  
-> +	if (dev->broken_intx_masking)
-> +		return false;
-> +
->  	pci_cfg_access_lock(dev);
->  
->  	pci_read_config_word(dev, PCI_COMMAND, &orig);
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 2a75216..151e174 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2929,6 +2929,18 @@ static void __devinit disable_igfx_irq(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
->  
-> +/*
-> + * Some devices may pass our check in pci_intx_mask_supported if
-> + * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
-> + * support this feature.
-> + */
-> +static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
-> +{
-> +	dev->broken_intx_masking = 1;
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010,
-> +			quirk_broken_intx_masking);
-> +
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->  			  struct pci_fixup *end)
->  {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 17b7b5b..c7cfd73 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -324,6 +324,8 @@ struct pci_dev {
->  	unsigned int    is_hotplug_bridge:1;
->  	unsigned int    __aer_firmware_first_valid:1;
->  	unsigned int	__aer_firmware_first:1;
-> +	unsigned int	broken_intx_masking:1;	/* device's INTx masking
-> +						   support is not working */
->  	pci_dev_flags_t dev_flags;
->  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
->  
-> -- 
-> 1.7.3.4
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
