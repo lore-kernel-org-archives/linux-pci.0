@@ -1,106 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40023 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756056Ab2EYPWc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 May 2012 11:22:32 -0400
-Message-ID: <4FBFA39B.8080805@redhat.com>
-Date: Fri, 25 May 2012 11:22:03 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:47213 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753729Ab2EBPOZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 May 2012 11:14:25 -0400
+Received: by lahj13 with SMTP id j13so512805lah.19
+        for <linux-pci@vger.kernel.org>; Wed, 02 May 2012 08:14:24 -0700 (PDT)
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH v2 09/13] vfio: x86 IOMMU implementation
-References: <20120522043607.5871.11340.stgit@bling.home>	 <20120522050536.5871.65171.stgit@bling.home> <4FBEAA5C.4060105@redhat.com> <1337899615.4714.79.camel@ul30vt>
-In-Reply-To: <1337899615.4714.79.camel@ul30vt>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAE9FiQWa7fZsXXqch5HqQHjEz_HKHK3Oq7+2JPADqS2RwmMEOw@mail.gmail.com>
+References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
+ <1332135781-13695-18-git-send-email-yinghai@kernel.org> <CAErSpo4BZAf_i3ojXpg5WSFJ00G5i_vscVTu2va_Z3WJ0UHg=g@mail.gmail.com>
+ <CAE9FiQURuG9z655PZgP-QR3w7LoSFondt4fhioO0whP=Q7+2rA@mail.gmail.com> <CAE9FiQWa7fZsXXqch5HqQHjEz_HKHK3Oq7+2JPADqS2RwmMEOw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 2 May 2012 09:14:02 -0600
+Message-ID: <CAErSpo4Wmfsfw+iPs19BxF0y_CF6YjGg+p8OBJmwGuNBy3OrmA@mail.gmail.com>
+Subject: Re: [PATCH -v11 17/30] resources: Add probe_resource()
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/24/2012 06:46 PM, Alex Williamson wrote:
-> On Thu, 2012-05-24 at 17:38 -0400, Don Dutile wrote:
->> On 05/22/2012 01:05 AM, Alex Williamson wrote:
->>> x86 is probably the wrong name for this VFIO IOMMU driver, but x86
->>> is the primary target for it.  This driver support a very simple
->>> usage model using the existing IOMMU API.  The IOMMU is expected to
->>> support the full host address space with no special IOVA windows,
->>> number of mappings restrictions, or unique processor target options.
->>>
->>> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
->>> ---
->>>
->>>    Documentation/ioctl/ioctl-number.txt |    2
->>>    drivers/vfio/Kconfig                 |    6
->>>    drivers/vfio/Makefile                |    2
->>>    drivers/vfio/vfio.c                  |    7
->>>    drivers/vfio/vfio_iommu_x86.c        |  743 ++++++++++++++++++++++++++++++++++
->>>    include/linux/vfio.h                 |   52 ++
->>>    6 files changed, 811 insertions(+), 1 deletions(-)
->>>    create mode 100644 drivers/vfio/vfio_iommu_x86.c
->>>
->>> diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
->>> index 111e30a..9d1694e 100644
->>> --- a/Documentation/ioctl/ioctl-number.txt
->>> +++ b/Documentation/ioctl/ioctl-number.txt
->>> @@ -88,7 +88,7 @@ Code  Seq#(hex)	Include File		Comments
->>>    		and kernel/power/user.c
->>>    '8'	all				SNP8023 advanced NIC card
->>>    					<mailto:mcr@solidum.com>
->>> -';'	64-6F	linux/vfio.h
->>> +';'	64-72	linux/vfio.h
->>>    '@'	00-0F	linux/radeonfb.h	conflict!
->>>    '@'	00-0F	drivers/video/aty/aty128fb.c	conflict!
->>>    'A'	00-1F	linux/apm_bios.h	conflict!
->>> diff --git a/drivers/vfio/Kconfig b/drivers/vfio/Kconfig
->>> index 9acb1e7..bd88a30 100644
->>> --- a/drivers/vfio/Kconfig
->>> +++ b/drivers/vfio/Kconfig
->>> @@ -1,6 +1,12 @@
->>> +config VFIO_IOMMU_X86
->>> +	tristate
->>> +	depends on VFIO&&   X86
->>> +	default n
->>> +
->>>    menuconfig VFIO
->>>    	tristate "VFIO Non-Privileged userspace driver framework"
->>>    	depends on IOMMU_API
->>> +	select VFIO_IOMMU_X86 if X86
->>>    	help
->>>    	  VFIO provides a framework for secure userspace device drivers.
->>>    	  See Documentation/vfio.txt for more details.
+On Wed, May 2, 2012 at 1:01 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, May 1, 2012 at 10:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, May 1, 2012 at 4:57 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> I spent most of the day merging the patches up to this point, and they
+>>> mostly make sense, but this one and the following ones are beyond my
+>>> ken, so I gave up.
 >>
->> So a future refactoring that uses some chunk of this support
->> on a non-x86 machine could be a lot of useless renaming.
->>
->> Why not rename vfio_iommu_x86 to something like vfio_iommu_no_iova
->> and just make it conditionally compiled on X86 (as you've done above in Kconfig's)?
->> Then if another arch can use it, or refactors the file to use
->> some of it, and split x86 vs<other-arch>  into separate per-arch files,
->> or per-iova schemes, it's more descriptive and less disruptive?
->
-> Yep, the problem is how to concisely describe what we expect to support
-> here.  This file supports IOMMU API based usage of an IOMMU with
-> effectively no DMA window or mapping constraints, optimized for static
-> mapping of an address space.  What's a good name for that?  Maybe I
-> should follow the example of others and just call it a Type 1 IOMMU
-> implementation so the marketing material looks better!  ;-P  That may
-> honestly be better than calling it x86.  Thoughts?  Thanks,
->
-> Alex
->
-I'll vote for 'type1' over 'x86' ....
-Add a comment in the file what a 'type1 IOMMU' is.
-Then others can dupe format for typeX.
+>> ok, let me check if i could simplify that code more.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I suggested that you need a simpler *interface*, not just smaller
+patches and more comments.  If the interfaces make sense and the code
+is good, you don't need many comments.
 
+> Split this one into two patches, and add more comments.
+>
+> Please check if it is readable.
+
+Nope, sorry, I'm not putting my name on that.  If you still think
+that's the only reasonable way to do it, you might be able to find
+somebody else to merge the resource.c changes, and I'll just worry
+about the drivers/pci parts.
+
+Bjorn
