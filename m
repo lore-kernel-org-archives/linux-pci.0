@@ -1,39 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <alpine.SOC.1.00.1205142353430.20118@math.ut.ee>
-References: <alpine.SOC.1.00.1204122238400.16365@math.ut.ee>
- <CAErSpo6YnzywdjTTVdVEHj_E-B0ARBpZ+fiy29Rv==fO6m9-FA@mail.gmail.com>
- <1335557685.2386.62.camel@zim.stowe> <alpine.SOC.1.00.1204280819270.14507@math.ut.ee>
- <1335905694.2386.138.camel@zim.stowe> <1336430699.2427.117.camel@zim.stowe>
- <alpine.SOC.1.00.1205131811590.7097@math.ut.ee> <20120514202147.GA20652@google.com>
- <alpine.SOC.1.00.1205142353430.20118@math.ut.ee>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 May 2012 16:02:06 -0700
-Message-ID: <CAErSpo4zR-LGBcRXw--SVVzedCF9VdgeHD=_8A98LhvaVb0ULA@mail.gmail.com>
-Subject: Re: x86: runtime waring in pcibios_fwaddrmap_lookup
-To: Meelis Roos <mroos@linux.ee>
-Cc: Myron Stowe <mstowe@redhat.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:34019 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753011Ab2EBOnb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 May 2012 10:43:31 -0400
+Received: by pbbrp8 with SMTP id rp8so1180903pbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 02 May 2012 07:43:31 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH] PCI, x86: avoid redundant insert_resource() call in pci_mmcfg_insert_resources()
+Date: Wed,  2 May 2012 22:41:46 +0800
+Message-Id: <1335969706-13604-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <20120427151726.870d6966.izumi.taku@jp.fujitsu.com>
+References: <20120427151726.870d6966.izumi.taku@jp.fujitsu.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 14, 2012 at 1:53 PM, Meelis Roos <mroos@linux.ee> wrote:
->> > > > Thanks for the quick response Meelis (unlike myself; I've been consumed
->> > > > with a hard deadline task recently - sorry).
->> >
->> > Not so quick this time - I had to replace the HDD and then recreate the
->> > failing config. Took 2.4-rc7 as a base. This gives us another data point
->> > - it does not warn on SMP but warns only on UP.
->>
->> I think that's the critical point; thanks for mentioning it :)
->>
->> The following patch should fix it.  Can you confirm?
->
-> Yes, that fixes it, thanks!
+From: Jiang Liu <jiang.liu@huawei.com>
 
-I applied this to my "next" branch.
+For hot-pluggable host bridges present at boot time, pci_mmconfig_insert() will
+insert resources used by MMCFG items for those host bridges. So avoid redundant
+call to insert_resource() when pci_mmcfg_insert_resources() is called later.
 
-Bjorn
+Reported-By: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/x86/pci/mmconfig-shared.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index f4d9ff9..7bba722 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -371,8 +371,13 @@ static void __init pci_mmcfg_insert_resources(void)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
++	/*
++	 * Insert resources for MMCFG items if the resource hasn't been
++	 * inserted by pci_mmconfig_insert() yet.
++	 */
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		insert_resource(&iomem_resource, &cfg->res);
++		if (!cfg->res.parent)
++			insert_resource(&iomem_resource, &cfg->res);
+ 
+ 	/* Mark that the resources have been inserted. */
+ 	pci_mmcfg_resources_inserted = 1;
+-- 
+1.7.9.5
+
