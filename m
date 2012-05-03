@@ -1,52 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12072 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030218Ab2EQWQy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 May 2012 18:16:54 -0400
-Message-ID: <4FB578D4.9070301@redhat.com>
-Date: Thu, 17 May 2012 18:16:52 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 3 May 2012 14:54:55 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Wei Yang <weiyang.kernel@gmail.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120503065455.GA30042@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120410090306.GA7056@richard>
+ <20120422155202.GA13540@richard>
+ <CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+ <CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
+ <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
 MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci, Add AER_panic sysfs file
-References: <1337274270-18785-1-git-send-email-prarit@redhat.com> <4FB548A8.9010003@redhat.com> <4FB54960.5080500@redhat.com> <4FB54D49.8040302@redhat.com>
-In-Reply-To: <4FB54D49.8040302@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 05/17/2012 03:11 PM, Don Dutile wrote:
-> On 05/17/2012 02:54 PM, Prarit Bhargava wrote:
+On Wed, Apr 25, 2012 at 09:28:19AM -0700, Yinghai Lu wrote:
+>On Wed, Apr 25, 2012 at 2:47 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
+>>> busn_alloc patchset should address your concern.
+>>>
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>> for-pci-busn-alloc
+>>>
+>> Yinghai
 >>
->>>> +    if (dev->rp_AER_panic)
->>>> +        panic("%s: AER detected on Root Port", pci_name(dev));
->>>> +
->>> It'd be more informative if the Root Port D:B:D.F was printed out above,
->>> so one knows where the errors are coming from the system.  More likely than
->>> not, the root is ok, but a device dangling from it is the 'root cause' (all pun
->>> intended)
->>> of the error.
+>> You mean this patch 44b2347b fix the problem?
 >>
->> That's what pci_name() is.
+>> In the comment, "do pass0 for all good bridge".
+>> Then there are totally two pass for a whole pci domain?
+>
+>also other commits about strict checking to see if it is good.
+>
 >>
->> P.
-> 
-> ok. When I find where it's set, and what values it can be (init_name, vs
-> kobject->name)
-> at what times in the kernel boot.
+>> I tried "git grep busn_alloc", but not find anything.
+>
+>the commit in the patchset.
+>
+>  PCI: Add busn_res into struct pci_bus.
+>  PCI: Add busn_res operation functions
+>  PCI: Release busn_res when removing bus
+>  PCI: Insert busn_res in pci_create_root_bus()
+>  PCI: Checking busn_res in pci_scan_root_bus()
+>  PCI: Add default busn_resource
+>  PCI: Add default busn_res for pci_scan_bus()
+>  x86, PCI: Add busn_res into resources list for acpi path
+>  x86, PCI: Put busn resource in pci_root_info for not using _CRS path
+>  PCI, ia64: Register busn_res for root buses
+>  PCI, sparc: Register busn_res for root buses
+>  PCI, powerpc: Register busn_res for root buses
+>  PCI, parisc: Register busn_res for root buses
+>  resources: Add probe_resource()
+>  resources: Replace registered resource in tree.
+>  PCI: Add pci_bus_extend/shrink_top()
+>  PCI: Probe safe range that we can use for unassigned bridge.
+>  PCI: Add pci_bus_replace_busn_res()
+>  PCI: Allocate bus range instead of use max blindly
+>  PCI: Strict checking of valid range for bridge
+>  PCI: Kill pci_fixup_parent_subordinate_busnr()
+>  PCI: Seperate child bus scanning to two passes overall
+>  pcmcia: Remove workaround for fixing pci parent bus subordinate
+>  PCI: Double checking setting for bus register and bus struct.
+>  PCI, pciehp: Remove not needed bus number range checking
+>  PCI: More strict checking of valid range for bridge
+>  PCI: Don't shrink too much for hotplug bridge
 
-The device name is init'd in the function pci_setup_device().  It's name is not
-changed after that AFAICT.
+Yinghai,
 
-This is a well-used and well-known interface to get the address of a pci_dev in
-the form of a string.  pci_name(), by my count, is used 879 times throughout the
-linux kernel.
+For some functions, such as probe_resource() would you mind add some
+comments?  Such as explain the parameter usage.
+That would help for reading the function.
+-- 
+Richard Yang
+Help you, Help me
 
-P.
-
-> 
-> 
-> 
