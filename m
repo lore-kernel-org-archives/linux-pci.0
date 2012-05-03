@@ -1,59 +1,152 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [PATCH 15/21] ia64/PCI: register busn_res for root buses
-Date: Mon,  7 May 2012 13:30:00 -0700
-Message-Id: <1336422606-4244-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:38334 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399Ab2ECQkE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2012 12:40:04 -0400
+Received: by lbbgm6 with SMTP id gm6so1397497lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 03 May 2012 09:40:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120503062134.GC6255@richard>
+References: <20120427092704.GA22529@richard> <CAErSpo6xy6AEQwROSOU6yrfdWpBgRpd+-hOGOyg0mv9UzKwOUA@mail.gmail.com>
+ <20120428050127.GA25916@richard> <CAErSpo7mjeo8f=_3Uhj0V-Q1-q5dYqi8T7pMqBY6zdahpCWTRA@mail.gmail.com>
+ <20120502062443.GB24172@richard> <CAErSpo6uODF00jL6hHXbB8=f3XiG2UMr+5-5CxY2T+duQVfcTA@mail.gmail.com>
+ <20120503062134.GC6255@richard>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 May 2012 10:39:42 -0600
+Message-ID: <CAErSpo40hwqdnUOmjbdm+3TNt_w0rYg6-qD7nYmauRvaQXhkiQ@mail.gmail.com>
+Subject: Re: Does my understanding correct?
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the host bridge bus number aperture from _CRS to the resource list.
-Like the MMIO and I/O port apertures, this is used when assigning
-resources to hot-added devices or in the case of conflicts.
+On Thu, May 3, 2012 at 12:21 AM, Richard Yang
+<weiyang@linux.vnet.ibm.com> wrote:
+> On Wed, May 02, 2012 at 08:59:40AM -0600, Bjorn Helgaas wrote:
+>>On Wed, May 2, 2012 at 12:24 AM, Richard Yang
+>><weiyang@linux.vnet.ibm.com> wrote:
+>>> On Mon, Apr 30, 2012 at 09:56:13AM -0600, Bjorn Helgaas wrote:
+>>>>On Fri, Apr 27, 2012 at 11:01 PM, Richard Yang
+>>>><weiyang@linux.vnet.ibm.com> wrote:
+>>>>
+>>> Thanks for your nice chart.
+>>>>I think assignments shown for the PCIe-to-PCI bridge are OK, although
+>>>>I would draw it like this because the bridge originates a single bus
+>>>>02 that may have multiple devices attached to it (this side is PCI,
+>>>>not PCIe, so it really is a shared bus):
+>>>>
+>>>>                                 ^
+>>>>                                 |
+>>>>                        +--------+--------+
+>>>>                        |     00:02.0     |
+>>>>                        | PCIe-PCI bridge |
+>>>>                        |                 |
+>>>>                        +--------+--------+
+>>>>                                 |
+>>>>                                 |
+>>>>                      +---------------------+    Bus 02
+>>>>                      |                     |
+>>>>                      |                     |
+>>>>                      |                     |
+>>>>                 +----v----+           +----v----+
+>>>>                 | 02:00.0 |           | 02:01.0 |
+>>>>                 +---------+           +---------+
+>>>>
+>>> So for this case, there is not internal bus, while this is really a
+>>> physical shared bus, not a logical one.
+>>
+>>Yes.  The downstream side of the PCIe-PCI bridge is PCI.
+>>
+>>>>I think the PCIe switch part is incorrect.  Here's Figure 1-3 from sec
+>>>>1.3.3 of the PCIe r3 spec:
+>>>
+>>>>A PCIe switch appears as two or more PCI-PCI bridges.  One is
+>>>>associated with the upstream port; the others with the downstream
+>>>>ports.
+>>>>
+>>>>A bridge always has a primary side and a secondary side.  In your
+>>>>diagram, the bridge associated with the upstream port would be 00:01.0
+>>>>(primary bus 00) and could have a secondary bus of 03 (since 02 is
+>>>>already consumed by the PCIe-PCI bridge).
+>>> Hmm... I am confused why is 03. 02 is used but 01 is not used.
+>>> Switch should be configured after PCIe2PCI bridge?
+>>
+>>It's likely that the PCIe switch would be configured first, since its
+>>device number is lower, but that is not a requirement.  The
+>>requirement is that the bus number ranges consumed by bridges be
+>>non-overlapping.  In this case (using your original topology plus my
+>>PCIe switch diagram), we'd have:
+>>
+>>  1. an endpoint at 00:00.0 -- consumes no additional buses
+>>  2. a PCIe switch at 00:01.0 -- consumes at least [bus 03-06]
+>>  3. a PCIe-PCI bridge at 00:02.0 -- consumes least [bus 02] (its secondary bus)
 
-[bhelgaas: write changelog]
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/pci/pci.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+> So this is a sequence issue. Below is also a valid configuration.
+>  2. a PCIe switch at 00:01.0 -- consumes at least [bus 02-05]
+>  3. a PCIe-PCI bridge at 00:02.0 -- consumes least [bus 06] (its secondary bus)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 3ca9bed..d173a88 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -351,6 +351,8 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
- #endif
- 
- 	INIT_LIST_HEAD(&info.resources);
-+	/* insert busn resource at first */
-+	pci_add_resource(&info.resources, &root->secondary);
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
- 			&windows);
- 	if (windows) {
-@@ -384,7 +386,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 	}
- 
--	pbus->busn_res.end = pci_scan_child_bus(pbus);
-+	pci_scan_child_bus(pbus);
- 	return pbus;
- 
- out3:
--- 
-1.7.7
+Yes, this would also be valid.
 
+>>Bus 03 is the internal PCIe switch bus that connects the upstream port
+>>to the downstream ports.  Buses 04, 05, and 06 are the links
+>>originating from the downstream ports.
+>>
+>>>>The bridges associated with the downstream ports are all logically on
+>>>>bus 03.  Their primary bus number would be 03; they might be 03:00.0,
+>>>>03:01.0, 03:02.0, etc.  Each would have its own secondary bus number,
+>>>>for example 04, 05, 06.  That secondary bus number is for the
+>>>>downstream link from the corresponding downstream port.
+>>> Hmm, as you mentioned in previous letter, PCIe is an point-to-point
+>>> protocol, then the secondary bus should reside in the Switch?
+>>> Do you think my Bus#4 is correct?
+>>
+>>No.  Bus 04 is a PCIe link that connects the downstream port (03:00.0)
+>>to a single PCIe device.  That device (04:00) could be a PCIe
+>>endpoint, or it could be the upstream port of another PCIe switch.
+>>(If it is a switch, more bus numbers would be required.)
+>
+>
+>                                      ^
+>                                      |
+>      +-------------------------------|------------------------------+
+>      |                               |                              |
+>      |                          +----+----+                         |
+>      |                          | virtual |                         |
+>      |                          | PCI-PCI |                         |
+>      |                          | bridge  |                         |
+>      |                          +----+----+                         |
+>      |                               |                              |
+>      |                               |Bus#3                         |
+>      |                               |                              |
+>      |          +----------------------------------------+          |
+>      |          |                    |                   |          |
+>      |          |                    |                   |          |
+>      |          |03:00.0             |03:01.0            |03:02.0   |
+>      |     +----+----+          +----+----+         +----++---+     |
+>      |     | virtual |          | virtual |         | virtual |     |
+>      |     | PCI-PCI |          | PCI-PCI |         | PCI-PCI |     |
+>      |     | bridge  |          | bridge  |         | bridge  |     |
+>      |     +----+----+          +----+----+         +----+----+     |
+>      |          |                    |                   |          |
+>      |          |                    |                   |          |
+>      +----------|--------------------|-------------------|----------+
+>                 | Bus#4?             |                   |
+>                 v                    v                   v
+>
+> So the link itself is Bus#4?
+
+Exactly.
+
+> If there is no device under this link, will Bus#4 appear in kernel?
+
+Yes, I'm pretty sure we build the bus 04 pci_bus structure, then scan
+bus 04 for devices.  Even if we find none, the pci_bus struct for bus
+04 remains.
+
+> And then the PCIe switch is represented by 4 pci_dev structure and each
+> is bridge type?
+
+Yes.  And each has an associated pci_bus struct for its secondary bus.
+
+Bjorn
