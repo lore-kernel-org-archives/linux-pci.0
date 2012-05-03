@@ -1,131 +1,259 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45916 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964911Ab2EWDbb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 23:31:31 -0400
-Received: by pbbrp8 with SMTP id rp8so9259096pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 20:31:31 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120523024313.GA2888@redhat.com>
-References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
-	<CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
-	<20120523024313.GA2888@redhat.com>
-Date: Tue, 22 May 2012 20:31:30 -0700
-Message-ID: <CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
-Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jason Baron <jbaron@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
+In-Reply-To: <4FA22208.6070003@huawei.com>
+References: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com>
+ <1333988568-11282-4-git-send-email-jiang.liu@huawei.com> <CAErSpo4S9V8fUJcbBHL4CPGzcVW768KiGsALdG78xD85feEvKw@mail.gmail.com>
+ <4FA22208.6070003@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 May 2012 10:34:14 -0600
+Message-ID: <CAErSpo5R3-FQT9LmiPLmsTUrwxvASaWQUdEVpOqvLQ6Qme_g_Q@mail.gmail.com>
+Subject: Re: [PATCH V2 3/6] PCI, x86: use RCU list to protect mmconfig list
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2012 at 7:43 PM, Jason Baron <jbaron@redhat.com> wrote:
-> On Tue, May 22, 2012 at 02:21:13PM -0700, Yinghai Lu wrote:
->> On Tue, May 22, 2012 at 1:11 PM, Jason Baron <jbaron@redhat.com> wrote:
->> > I'm tyring to support bridge hotplug and devices below it in qemu via acpi
->> > hotplug. Currently only 1 level or 32 slots are supported. By allowing for a
->> > second level, we will be able to support 32^2 devices.
->> >
->> > If I first hotplug the bridge with no devices intially below it, the hotplug
->> > code sets the bridge memory window to 0 and does not increase it when
->> > subsequent devices are added below it.
->> >
->> > Fix this, by calling pci_rescan_bus_bridge_resize(), on the bridge directly
->> > below the root to re-size all the birdge windows that may have changed.
->> >
->> > Signed-off-by: Jason Baron <jbaron@redhat.com>
->> > ---
->> >  drivers/pci/hotplug/acpiphp_glue.c |    8 ++++++++
->> >  1 files changed, 8 insertions(+), 0 deletions(-)
->> >
->> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> > index 806c44f..8960c1e 100644
->> > --- a/drivers/pci/hotplug/acpiphp_glue.c
->> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> > @@ -792,6 +792,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->> >  {
->> >        struct pci_dev *dev;
->> >        struct pci_bus *bus = slot->bridge->pci_bus;
->> > +       struct pci_bus *rescan_bus;
->> >        struct acpiphp_func *func;
->> >        int retval = 0;
->> >        int num, max, pass;
->> > @@ -821,6 +822,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->> >                }
->> >        }
->> >
->> > +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
->> > +       rescan_bus = bus;
->> > +       while (rescan_bus->parent && rescan_bus->parent->self)
->> > +               rescan_bus = rescan_bus->parent;
->> > +       if (rescan_bus->self)
->> > +               pci_rescan_bus_bridge_resize(rescan_bus->self);
->> > +
+On Thu, May 3, 2012 at 12:13 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> Hi Bjorn,
+>        Thanks for your comments!
+>        I have thought about using pci_config_lock to serialize
+> access to the pci_mmcfg_list, but that may hurt MMCFG on x86_64
+> systems because mmconfig_64.c supports concurrent access to
+> the MMCFG space without holding the pci_config_lock. So I use
+> RCU to avoid possible performance penalty for x86_64 systems.
+
+Oh, right.  I only looked at mmconfig_32.c, which uses the lock, and
+assumed _64.c was the same.  I think you're right to avoid introducing
+locking where we didn't have it before.
+
+>        There are two mechanisms to protect list_add_sorted()
+> from concurrent updates. The first case is, list_add_sorted()
+> may be called without holding any lock for serialization at
+> early booting stages because the system is still in single-threaded
+> mode. The second case is, pci_config_lock is used to serialize
+> concurrent modification to the pci_mmcfg_list if list_add_sorted()
+> is called at runtime.
+>        The first case is cover by this patch, and the second case
+> is covered by "[PATCH V2 5/6] PCI, x86: introduce
+> pci_mmconfig_insert()/delete() for PCI root bridge hotplug".
+
+How hard would it be to convert the first (early boot) mechanism to
+use the second mechanism?  It'd be nicer if there were only one path
+that we use both places, even if it means the early boot path acquires
+a lock that is technically unnecessary.
+
+> On 2012-5-3 6:31, Bjorn Helgaas wrote:
 >>
->> No, you can not do that.  some parents bus could have other devices
->> and driver could be loaded for those devices.
->> so can not release resources that are used by those devices to resize
->> parent bridges.
+>> On Mon, Apr 9, 2012 at 10:22 AM, Jiang Liu<liuj97@gmail.com>  wrote:
+>>>
+>>> Use RCU list to protect mmconfig list from dynamic change
+>>> when supporting PCI host bridge hotplug.
+>>
+>>
+>> I'm not convinced this is safe.  But I'm not an RCU expert, so maybe
+>> you can convince me :)
+>>
+>> Documentation/RCU/checklist.txt says the update code still requires
+>> mutual exclusion, and I don't see any in list_add_sorted() or its
+>> callers.
+>>
+>> MMCONFIG accesses are already protected by the pci_config_lock
+>> spinlock, so I don't think the performance advantages of RCU really
+>> gain us anything in this situation.
+>>
+>> It would definitely be simpler to just hold pci_config_lock while
+>> updating and searching the pci_mmcfg_list, but if there are issues
+>> with that, you can educate me about what they are and why this RCU
+>> code is correct.
+>>
+>> Bjorn
+>>
+>>> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
+>>> ---
+>>>  arch/x86/pci/mmconfig-shared.c |   11 ++++++-----
+>>>  arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
+>>>  arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
+>>>  3 files changed, 28 insertions(+), 9 deletions(-)
+>>>
+>>> diff --git a/arch/x86/pci/mmconfig-shared.c
+>>> b/arch/x86/pci/mmconfig-shared.c
+>>> index 5e2cd2a..3bcc361 100644
+>>> --- a/arch/x86/pci/mmconfig-shared.c
+>>> +++ b/arch/x86/pci/mmconfig-shared.c
+>>> @@ -17,6 +17,7 @@
+>>>  #include<linux/bitmap.h>
+>>>  #include<linux/dmi.h>
+>>>  #include<linux/slab.h>
+>>> +#include<linux/rculist.h>
+>>>  #include<asm/e820.h>
+>>>  #include<asm/pci_x86.h>
+>>>  #include<asm/acpi.h>
+>>> @@ -45,20 +46,20 @@ static __init void free_all_mmcfg(void)
+>>>                pci_mmconfig_remove(cfg);
+>>>  }
+>>>
+>>> -static __init void list_add_sorted(struct pci_mmcfg_region *new)
+>>> +static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
+>>>  {
+>>>        struct pci_mmcfg_region *cfg;
+>>>
+>>>        /* keep list sorted by segment and starting bus number */
+>>> -       list_for_each_entry(cfg,&pci_mmcfg_list, list) {
+>>> +       list_for_each_entry_rcu(cfg,&pci_mmcfg_list, list) {
+>>>
+>>>                if (cfg->segment>  new->segment ||
+>>>                    (cfg->segment == new->segment&&
+>>>                     cfg->start_bus>= new->start_bus)) {
+>>> -                       list_add_tail(&new->list,&cfg->list);
+>>> +                       list_add_tail_rcu(&new->list,&cfg->list);
+>>>                        return;
+>>>                }
+>>>        }
+>>> -       list_add_tail(&new->list,&pci_mmcfg_list);
+>>> +       list_add_tail_rcu(&new->list,&pci_mmcfg_list);
+>>>  }
+>>>
+>>>  static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int
+>>> segment,
+>>> @@ -111,7 +112,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int
+>>> segment, int bus)
+>>>  {
+>>>        struct pci_mmcfg_region *cfg;
+>>>
+>>> -       list_for_each_entry(cfg,&pci_mmcfg_list, list)
+>>> +       list_for_each_entry_rcu(cfg,&pci_mmcfg_list, list)
+>>>
+>>>                if (cfg->segment == segment&&
+>>>                    cfg->start_bus<= bus&&  bus<= cfg->end_bus)
+>>>
+>>>                        return cfg;
+>>> diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+>>> index 5372e86..5dad04a 100644
+>>> --- a/arch/x86/pci/mmconfig_32.c
+>>> +++ b/arch/x86/pci/mmconfig_32.c
+>>> @@ -11,6 +11,7 @@
+>>>
+>>>  #include<linux/pci.h>
+>>>  #include<linux/init.h>
+>>> +#include<linux/rcupdate.h>
+>>>  #include<asm/e820.h>
+>>>  #include<asm/pci_x86.h>
+>>>  #include<acpi/acpi.h>
+>>> @@ -60,9 +61,12 @@ err:         *value = -1;
+>>>                return -EINVAL;
+>>>        }
+>>>
+>>> +       rcu_read_lock();
+>>>        base = get_base_addr(seg, bus, devfn);
+>>> -       if (!base)
+>>> +       if (!base) {
+>>> +               rcu_read_unlock();
+>>>                goto err;
+>>> +       }
+>>>
+>>>        raw_spin_lock_irqsave(&pci_config_lock, flags);
+>>>
+>>> @@ -80,6 +84,7 @@ err:          *value = -1;
+>>>                break;
+>>>        }
+>>>        raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+>>> +       rcu_read_unlock();
+>>>
+>>>        return 0;
+>>>  }
+>>> @@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned
+>>> int bus,
+>>>        if ((bus>  255) || (devfn>  255) || (reg>  4095))
+>>>                return -EINVAL;
+>>>
+>>> +       rcu_read_lock();
+>>>        base = get_base_addr(seg, bus, devfn);
+>>> -       if (!base)
+>>> +       if (!base) {
+>>> +               rcu_read_unlock();
+>>>                return -EINVAL;
+>>> +       }
+>>>
+>>>        raw_spin_lock_irqsave(&pci_config_lock, flags);
+>>>
+>>> @@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned
+>>> int bus,
+>>>                break;
+>>>        }
+>>>        raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+>>> +       rcu_read_unlock();
+>>>
+>>>        return 0;
+>>>  }
+>>> diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+>>> index 915a493..acc48c5 100644
+>>> --- a/arch/x86/pci/mmconfig_64.c
+>>> +++ b/arch/x86/pci/mmconfig_64.c
+>>> @@ -9,6 +9,7 @@
+>>>  #include<linux/init.h>
+>>>  #include<linux/acpi.h>
+>>>  #include<linux/bitmap.h>
+>>> +#include<linux/rcupdate.h>
+>>>  #include<asm/e820.h>
+>>>  #include<asm/pci_x86.h>
+>>>
+>>> @@ -34,9 +35,12 @@ err:         *value = -1;
+>>>                return -EINVAL;
+>>>        }
+>>>
+>>> +       rcu_read_lock();
+>>>        addr = pci_dev_base(seg, bus, devfn);
+>>> -       if (!addr)
+>>> +       if (!addr) {
+>>> +               rcu_read_unlock();
+>>>                goto err;
+>>> +       }
+>>>
+>>>        switch (len) {
+>>>        case 1:
+>>> @@ -49,6 +53,7 @@ err:          *value = -1;
+>>>                *value = mmio_config_readl(addr + reg);
+>>>                break;
+>>>        }
+>>> +       rcu_read_unlock();
+>>>
+>>>        return 0;
+>>>  }
+>>> @@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned
+>>> int bus,
+>>>        if (unlikely((bus>  255) || (devfn>  255) || (reg>  4095)))
+>>>                return -EINVAL;
+>>>
+>>> +       rcu_read_lock();
+>>>        addr = pci_dev_base(seg, bus, devfn);
+>>> -       if (!addr)
+>>> +       if (!addr) {
+>>> +               rcu_read_unlock();
+>>>                return -EINVAL;
+>>> +       }
+>>>
+>>>        switch (len) {
+>>>        case 1:
+>>> @@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned
+>>> int bus,
+>>>                mmio_config_writel(addr + reg, value);
+>>>                break;
+>>>        }
+>>> +       rcu_read_unlock();
+>>>
+>>>        return 0;
+>>>  }
+>>> --
+>>> 1.7.5.4
+>>>
+>>
+>> .
 >>
 >
-> hmmm...this patch also does what I want:
 >
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 806c44f..be63c72 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -821,6 +821,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->                }
->        }
->
-> +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
-> +       if (bus->self)
-> +               pci_assign_unassigned_bridge_resources(bus->self);
-> +
->        list_for_each_entry(func, &slot->funcs, sibling)
->                acpiphp_bus_add(func);
->
->
-> There appears to be a precedant for something very similar in:
-> drivers/pci/hotplug/pciehp_pci.c:pciehp_configure_device(), where there
-> is a call to 'pci_assign_unassigned_bridge_resources(), when a new
-> device is added...
-
-the bus could have other devices under that bridge already.
-
-so pci_assign_unassigned_bridge_resources() will still try to release
-the bridge resource and
-those devices resources.
-
-but pciehp we could do that, because it will only have one device
-under that pcie root port or downstream port.
-
-so you can make qemu to support pcie and pciehp.
-
-for hot add one hotplug bridge support, we have
-     bus->self->is_hotplug_bridge to set, so it will have allocate
-minimum resource.
-
-so you also could try to use quirk etc to get that bit set.
-please check
-drivers/pci/quirks.c::
-/* Allow manual resource allocation for PCI hotplug bridges
- * via pci=hpmemsize=nnM and pci=hpiosize=nnM parameters. For
- * some PCI-PCI hotplug bridges, like PLX 6254 (former HINT HB6),
- * kernel fails to allocate resources when hotplug device is
- * inserted and PCI bus is rescanned.
- */
-static void __devinit quirk_hotplug_bridge(struct pci_dev *dev)
-{
-        dev->is_hotplug_bridge = 1;
-}
-
-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
-
-but still would prefer you to make qemu to support pciehp.
-
-Thanks
-
-Yinghai
