@@ -1,268 +1,224 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
-	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-	<20120525193716.GA8817@google.com>
-	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
-	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-	<CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
-	<4FC50E09.4000204@zytor.com>
-	<CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
-	<CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com>
-Date: Tue, 29 May 2012 13:40:27 -0700
-Message-ID: <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:59416 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752647Ab2ECGmJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2012 02:42:09 -0400
+Date: Thu, 03 May 2012 14:39:05 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH 2/2] PCI, ACPI,
+ x86: update MMCFG information when hot-plugging PCI host bridges
+In-reply-to: <CAErSpo5K-foOsdantKQhK0=KOmV6-GCRGfjYYrdyi7ijecv-3w@mail.gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary=047d7b2ee18b493fdf04c132d88e
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Jiang Liu <liuj97@gmail.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	"Pearson, Greg" <greg.pearson@hp.com>
+Message-id: <4FA22809.1010701@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
+ <1333905129-8776-1-git-send-email-jiang.liu@huawei.com>
+ <1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo5K-foOsdantKQhK0=KOmV6-GCRGfjYYrdyi7ijecv-3w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b2ee18b493fdf04c132d88e
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, May 29, 2012 at 12:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote=
-:
-> On Tue, May 29, 2012 at 12:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Tue, May 29, 2012 at 10:57 AM, H. Peter Anvin <hpa@zytor.com> wrote:
->>> On 05/29/2012 10:55 AM, Yinghai Lu wrote:
->>>>
->>>> x86 are using 16bits.
->>>>
->>>> some others use 32 bits.
->>>> #define IO_SPACE_LIMIT 0xffffffff
->>>>
->>>> ia64 and sparc are using 64bits.
->>>> #define IO_SPACE_LIMIT =A0 =A0 =A0 =A0 =A0 =A0 =A0 0xffffffffffffffffU=
-L
->>>>
->>>> but pci only support 16bits and 32bits.
->>>>
->>>> maybe later we can add
->>>> PCI_MAX_RESOURCE_16
->>>>
->>>> to handle 16bits and 32bit io ports.
->>>>
->>>
->>> Shouldn't this be dealt by root port apertures?
->>>
+On 2012-5-3 7:55, Bjorn Helgaas wrote:
+> On Sun, Apr 8, 2012 at 11:12 AM, Jiang Liu<liuj97@gmail.com>  wrote:
+>> This patch enhances pci_root driver to update MMCFG information when
+>> hot-plugging PCI root bridges on x86 platforms.
 >>
->> pci bridge could support 16bits and 32bits io port.
->> but we did not record if 32bits is supported.
+>> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
+>> ---
+>>   arch/x86/pci/acpi.c      |   58 ++++++++++++++++++++++++++++++++++++++++++++++
+>>   drivers/acpi/pci_root.c  |   20 ++++++++++++++++
+>>   include/acpi/acnames.h   |    1 +
+>>   include/linux/pci-acpi.h |    3 ++
+>>   4 files changed, 82 insertions(+), 0 deletions(-)
 >>
->> so during allocating, could have allocated above 64k address to non
->> 32bit bridge.
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index da0149d..9184970 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -488,6 +488,64 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>>         return bus;
+>>   }
 >>
->> but =A0x86 is ok, because ioport.end always set to 0xffff.
->> other arches with IO_SPACE_LIMIT with 0xffffffff or
->> 0xffffffffffffffffUL may have problem.
+>> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
+>> +{
+>> +       int result = 0;
+>> +       acpi_status status;
+>> +       unsigned long long base_addr;
+>> +       struct pci_mmcfg_region *cfg;
+>> +
+>> +       /*
+>> +        * Try to insert MMCFG information for host bridges with _CBA method
+>> +        */
+>> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+>> +                                      NULL,&base_addr);
 >
-> I think current IO_SPACE_LIMIT usage is a little confused. =A0The
-> "ioport_resource.end =3D IO_SPACE_LIMIT" in kernel/resource.c refers to
-> a CPU-side address, not a bus address. =A0Other uses, e.g., in
-> __pci_read_base(), apply it to bus addresses from BARs, which is
-> wrong. =A0Host bridges apply I/O port offsets just like they apply
-> memory offsets. =A0The ia64 IO_SPACE_LIMIT of 0xffffffffffffffffUL means
-> there's no restriction on CPU-side I/O port addresses, but any given
-> host bridge will translate its I/O port aperture to bus addresses that
-> fit in 32 bits.
+> I would prefer to have _CBA evaluated in drivers/acpi/pci_root.c, not
+> in the arch code.  It's true that _CBA is probably only used by x86
+> today, but the spec says nothing about it being arch-dependent, and I
+> suspect it may be used on arm soon.
+Good point. I just noticed that IA64 doesn't need MMCFG, but haven't
+realized there's still another candidate.
+
 >
-> None of this is really relevant to the question I asked, namely, "why
-> Yinghai's patch doesn't limit I/O BAR values to 32 bits?" =A0That
-> constraint is clearly a requirement because I/O BARs are only 32 bits
-> wide, but I don't think it needs to be enforced in the code here. =A0The
-> host bridge or upstream P2P bridge apertures should already take care
-> of that automatically. =A0I don't think the 16- or 32-bitness of P2P
-> bridge apertures is relevant here, because the I/O resources available
-> on the secondary bus already reflect that.
+>> +       if (ACPI_SUCCESS(status)) {
+>> +               result = pci_mmconfig_insert(root->segment,
+>> +                                            root->secondary.start,
+>> +                                            root->secondary.end,
+>> +                                            base_addr);
+>> +               /*
+>> +                * MMCFG information for hot-pluggable host bridges may have
+>> +                * already been added by __pci_mmcfg_init();
+>> +                */
+>> +               if (result == -EEXIST)
+>> +                       result = 0;
+>> +       } else if (status == AE_NOT_FOUND) {
+>> +               /*
+>> +                * Check whether MMCFG information has been added for
+>> +                * host bridges without _CBA method.
+>> +                */
+>> +               rcu_read_lock();
+>> +               cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
+>> +               if (!cfg || cfg->end_bus<  root->secondary.end)
+>> +                       result = -ENODEV;
+>> +               rcu_read_unlock();
+>> +       } else
+>> +               result = -ENODEV;
+>> +
+>> +       return result;
+>> +}
+>> +
+>> +int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
+>> +{
+>> +       acpi_status status;
+>> +       unsigned long long base_addr;
+>> +
+>> +       /* Remove MMCFG information for host bridges with _CBA method */
+>> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+>> +                                      NULL,&base_addr);
 >
-> After all that discussion, I think my objection here boils down to
-> "you shouldn't change the I/O BAR constraints in a patch that claims
-> to allocate 64-bit *memory* BARs above 4GB."
+> I think the arch-specific "map MMCONFIG space at this addr" should
+> return a pointer or something that we can save and use to unmap it on
+> remove.  That way we don't have to evaluate _CBA again.
+OK, will change to follow that way.
+
 >
-> I think the code below is still the clearest way to set the constraints:
+>> +       if (ACPI_SUCCESS(status))
+>> +               return pci_mmconfig_delete(root->segment,
+>> +                                          root->secondary.start,
+>> +                                          root->secondary.end,
+>> +                                          base_addr);
+>> +       else if (status != AE_NOT_FOUND)
+>> +               return -ENODEV;
+>> +
+>> +       return 0;
+>> +}
+>> +
+>>   int __init pci_acpi_init(void)
+>>   {
+>>         struct pci_dev *dev = NULL;
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index 4a7d575..a62bfa8 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -448,6 +448,16 @@ out:
+>>   }
+>>   EXPORT_SYMBOL(acpi_pci_osc_control_set);
+>>
+>> +int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root)
+>> +{
+>> +       return 0;
+>> +}
+>> +
+>> +int __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
+>> +{
+>> +       return 0;
+>> +}
+>> +
+>>   static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>>   {
+>>         unsigned long long segment, bus;
+>> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>>         strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>>         device->driver_data = root;
+>>
+>> +       if (arch_acpi_pci_root_add(root)) {
+>> +               printk(KERN_ERR PREFIX
+>> +                       "can't add MMCFG information for Bus %04x:%02x\n",
+>> +                       root->segment, (unsigned int)root->secondary.start);
+>> +               result = -ENODEV;
+>> +               goto out_free;
+>> +       }
+>> +
+>>         /*
+>>          * All supported architectures that use ACPI have support for
+>>          * PCI domains, so we indicate this in _OSC support capabilities.
+>> @@ -629,6 +647,7 @@ out_del_root:
+>>         list_del_rcu(&root->node);
+>>         mutex_unlock(&acpi_pci_root_lock);
+>>         synchronize_rcu();
+>> +       arch_acpi_pci_root_remove(root);
+>>   out_free:
+>>         kfree(root);
+>>         return result;
+>> @@ -679,6 +698,7 @@ out:
+>>         list_del_rcu(&root->node);
+>>         mutex_unlock(&acpi_pci_root_lock);
+>>         synchronize_rcu();
+>> +       arch_acpi_pci_root_remove(root);
+>>         kfree(root);
+>>
+>>         return 0;
+>> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
+>> index 38f5088..99bda75 100644
+>> --- a/include/acpi/acnames.h
+>> +++ b/include/acpi/acnames.h
+>> @@ -62,6 +62,7 @@
+>>   #define METHOD_NAME__AEI        "_AEI"
+>>   #define METHOD_NAME__PRW        "_PRW"
+>>   #define METHOD_NAME__SRS        "_SRS"
+>> +#define METHOD_NAME__CBA       "_CBA"
+>>
+>>   /* Method names - these methods must appear at the namespace root */
+>>
+>> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+>> index ac93634..816b971 100644
+>> --- a/include/linux/pci-acpi.h
+>> +++ b/include/linux/pci-acpi.h
+>> @@ -38,6 +38,9 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+>>
+>>   void acpi_pci_root_rescan(void);
+>>
+>> +extern int arch_acpi_pci_root_add(struct acpi_pci_root *root);
+>> +extern int arch_acpi_pci_root_remove(struct acpi_pci_root *root);
+>> +
+>>   #else
+>>
+>>   static inline void acpi_pci_root_rescan(void) { }
 >
-> =A0 if (res->flags & IORESOURCE_MEM_64) {
-> =A0 =A0 =A0 start =3D (resource_size_t) (1ULL << 32);
-> =A0 =A0 =A0 end =3D PCI_MAX_RESOURCE;
-> =A0 } else {
-> =A0 =A0 =A0 start =3D 0;
-> =A0 =A0 =A0 end =3D PCI_MAX_RESOURCE_32;
-> =A0 }
+> I don't know where to put this in the conversation, but I think we
+> should separate the question of whether we do blind probing from the
+> question of how we set up MMCONFIG space from MCFG.
 >
-> It's not strictly necessary to limit I/O BARs to PCI_MAX_RESOURCE_32
-> because host bridge apertures should already enforce that, but I think
-> the code above just makes it clearer.
+> We currently parse the entire MCFG in some sort of initcall, but I
+> think we *could* change the x86 blind probing routines to attempt to
+> set up MMCONFIG space for the buses they find, just like
+> acpi_pci_root_add() does it for the ACPI host bridges.
+>
+> That way we can continue blind probing, but make MMCONFIG init more sensible.
+Good suggestion, will do more investigation about that.
+
+>
+> Bjorn
+>
+> .
+>
 
 
-ok, please check the version, that put back PCI_MAX_RESOURCE_32 for io port=
-s.
-
-also RFC to limit for 16 bit ioport handling.  only help other arches
-that does support 32bit ioports but have bridges only support 16bit io
-ports.
-
-Thanks
-
-Yinghai
-
---047d7b2ee18b493fdf04c132d88e
-Content-Type: application/octet-stream;
-	name="allocate_high_at_first_v5.patch"
-Content-Disposition: attachment; filename="allocate_high_at_first_v5.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h2tfifbc0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IFRyeSB0byBhbGxvY2F0ZSBtZW02NCBhYm92ZSA0RyBhdCBm
-aXJzdAoKYW5kIHdpbGwgZmFsbCBiYWNrIHRvIGJlbG93IDRnIGlmIGl0IGNhbiBub3QgZmluZCBh
-bnkgYWJvdmUgNGcuCgp4ODYgMzJiaXQgd2l0aG91dCBYODZfUEFFIHN1cHBvcnQgd2lsbCBoYXZl
-IGJvdHRvbSBzZXQgdG8gMCwgYmVjdWFzZQpyZXNvdXJjZV9zaXplX3QgaXMgMzJiaXQuCgpBbHNv
-IGZvciAzMmJpdCB3aXRoIHJlc291cmNlX3NpemVfdCA2NGJpdCBrZXJuZWwgb24gbWFjaGluZSB3
-aXRoIHBhZSBzdXBwb3J0CndlIGFyZSBzYWZlIGJlY2F1c2UgaW9tZW1fcmVzb3VyY2UgaXMgbGlt
-aXRlZCB0byAzMmJpdCBhY2NvcmRpbmcgdG8KeDg2X3BoeXNfYml0cy4KCi12MjogdXBkYXRlIGJv
-dHRvbSBhc3NpZ25pbmcgdG8gbWFrZSBpdCBjbGVhciBmb3Igbm9uLXBhZSBzdXBwb3J0IG1hY2hp
-bmUuCi12MzogQmpvcm4ncyBjaGFuZ2U6Cgl1c2UgTUFYX1JFT1VSQ0UgaW5zdGVhZCBvZiAtMQoJ
-dXNlIHN0YXJ0L2VuZCBpbnN0ZWFkIG9mIGJvdHRvbS9tYXgKCWZvciBhbGwgYXJjaCBpbnN0ZWFk
-IG9mIGp1c3QgeDg2XzY0Ci12NDogdXBkYXRlZCBhZnRlciBQQ0lfTUFYX1JFU09VUkNFXzMyIGNo
-YW5nZS4KLXY1OiByZXN0b3JlIGlvIGhhbmRsaW5nIHRvIHVzZSBQQ0lfTUFYX1JFU09VUkNFXzMy
-IGFzIGxpbWl0LgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3Jn
-PgoKLS0tCiBkcml2ZXJzL3BjaS9idXMuYyB8ICAgMzAgKysrKysrKysrKysrKysrKysrKysrKyst
-LS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgMjMgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSkK
-CkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvYnVzLmMKPT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgt
-Mi42Lm9yaWcvZHJpdmVycy9wY2kvYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMu
-YwpAQCAtMTIxLDE0ICsxMjEsMjQgQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNp
-X2J1cyAqYgogewogCWludCBpLCByZXQgPSAtRU5PTUVNOwogCXN0cnVjdCByZXNvdXJjZSAqcjsK
-LQlyZXNvdXJjZV9zaXplX3QgbWF4ID0gUENJX01BWF9SRVNPVVJDRTsKKwlyZXNvdXJjZV9zaXpl
-X3QgZW5kOworCXJlc291cmNlX3NpemVfdCBzdGFydDsKIAogCXR5cGVfbWFzayB8PSBJT1JFU09V
-UkNFX0lPIHwgSU9SRVNPVVJDRV9NRU07CiAKLQkvKiBkb24ndCBhbGxvY2F0ZSB0b28gaGlnaCBp
-ZiB0aGUgcHJlZiBtZW0gZG9lc24ndCBzdXBwb3J0IDY0Yml0Ki8KLQlpZiAoIShyZXMtPmZsYWdz
-ICYgSU9SRVNPVVJDRV9NRU1fNjQpKQotCQltYXggPSBQQ0lfTUFYX1JFU09VUkNFXzMyOworCS8q
-CisJICogZG9uJ3QgYWxsb2NhdGUgdG9vIGhpZ2ggaWYgdGhlIHByZWYgbWVtIGRvZXNuJ3Qgc3Vw
-cG9ydCA2NGJpdAorCSAqIGFsc28gaWYgdGhpcyBpcyBhIDY0LWJpdCBtZW0gcmVzb3VyY2UsIHRy
-eSBhYm92ZSA0R0IgZmlyc3QKKwkgKi8KKwlpZiAocmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfTUVN
-XzY0KSB7CisJCXN0YXJ0ID0gKHJlc291cmNlX3NpemVfdCkoMVVMTDw8MzIpOworCQllbmQgPSBQ
-Q0lfTUFYX1JFU09VUkNFOworCX0gZWxzZSB7CisJCXN0YXJ0ID0gMDsKKwkJZW5kID0gUENJX01B
-WF9SRVNPVVJDRV8zMjsKKwl9CiAKK2FnYWluOgogCXBjaV9idXNfZm9yX2VhY2hfcmVzb3VyY2Uo
-YnVzLCByLCBpKSB7CiAJCWlmICghcikKIAkJCWNvbnRpbnVlOwpAQCAtMTQ1LDEyICsxNTUsMTgg
-QEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1cyAqYgogCiAJCS8qIE9rLCB0
-cnkgaXQgb3V0Li4gKi8KIAkJcmV0ID0gYWxsb2NhdGVfcmVzb3VyY2UociwgcmVzLCBzaXplLAot
-CQkJCQlyLT5zdGFydCA/IDogbWluLAotCQkJCQltYXgsIGFsaWduLAorCQkJCQltYXgoc3RhcnQs
-IHItPnN0YXJ0ID8gOiBtaW4pLAorCQkJCQllbmQsIGFsaWduLAogCQkJCQlhbGlnbmYsIGFsaWdu
-Zl9kYXRhKTsKIAkJaWYgKHJldCA9PSAwKQotCQkJYnJlYWs7CisJCQlyZXR1cm4gMDsKKwl9CisK
-KwlpZiAoc3RhcnQgIT0gMCkgeworCQlzdGFydCA9IDA7CisJCWdvdG8gYWdhaW47CiAJfQorCiAJ
-cmV0dXJuIHJldDsKIH0KIAo=
---047d7b2ee18b493fdf04c132d88e
-Content-Type: application/octet-stream; name="fix_32bit_ioport.patch"
-Content-Disposition: attachment; filename="fix_32bit_ioport.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h2tfj5nh1
-
-U3ViamVjdDogW1JGQyBQQVRDSF0gUENJOiBpbyBwb3J0IDE2LzMyIGJpdHMgYWxsb2NhdGlvbgoK
-cGNpIGJyaWRnZSBjb3VsZCBvbmx5IHN1cHBvcnQgMTZiaXQgaW8gcG9ydC4KCnNvbWUgYXJjaGVz
-IGFyZSBzdXBwb3J0aW5nIDMyYml0IGlvIHBvcnRzLgoKU28gbmVlZCB0byBtYWtlIHN1cmUgMTZi
-aXQgaW9wb3J0IHdpbGwgYmUgYWxsb2NhdGVkIHVuZGVyIDY0ay4KRm9yIDMyYml0IGlvcG9ydCwg
-d2lsbCB0cnkgdG8gYWxsb2NhdGUgdGhhdCBbNjRrLCA0ZyksIGFuZCBpZiBpdCBmYWlsCndpbGwg
-ZmFsbCBiYWNrIHRvIFswLCA2NGspLgoKSXQgaXMgc29tZSBraW5kIG9mIGNsb25lIG9mIDY0Yml0
-IG1lbSBpbyBoYW5kbGluZy4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2Vy
-bmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvYnVzLmMgICAgICAgfCAgIDIwICsrKysrKysrKysr
-KysrKy0tLS0tCiBkcml2ZXJzL3BjaS9wY2kuaCAgICAgICB8ICAgIDEgKwogZHJpdmVycy9wY2kv
-cHJvYmUuYyAgICAgfCAgICA0ICsrKy0KIGRyaXZlcnMvcGNpL3NldHVwLWJ1cy5jIHwgICAxMSAr
-KysrKysrKystLQogaW5jbHVkZS9saW51eC9pb3BvcnQuaCAgfCAgICAxICsKIDUgZmlsZXMgY2hh
-bmdlZCwgMjkgaW5zZXJ0aW9ucygrKSwgOCBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYv
-ZHJpdmVycy9wY2kvYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9w
-Y2kvYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwpAQCAtMTMwLDEyICsxMzAs
-MjIgQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1cyAqYgogCSAqIGRvbid0
-IGFsbG9jYXRlIHRvbyBoaWdoIGlmIHRoZSBwcmVmIG1lbSBkb2Vzbid0IHN1cHBvcnQgNjRiaXQK
-IAkgKiBhbHNvIGlmIHRoaXMgaXMgYSA2NC1iaXQgbWVtIHJlc291cmNlLCB0cnkgYWJvdmUgNEdC
-IGZpcnN0CiAJICovCi0JaWYgKHJlcy0+ZmxhZ3MgJiBJT1JFU09VUkNFX01FTV82NCkgewotCQlz
-dGFydCA9IChyZXNvdXJjZV9zaXplX3QpKDFVTEw8PDMyKTsKLQkJZW5kID0gUENJX01BWF9SRVNP
-VVJDRTsKKwlpZiAocmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfTUVNKSB7CisJCWlmIChyZXMtPmZs
-YWdzICYgSU9SRVNPVVJDRV9NRU1fNjQpIHsKKwkJCXN0YXJ0ID0gKHJlc291cmNlX3NpemVfdCko
-MVVMTDw8MzIpOworCQkJZW5kID0gUENJX01BWF9SRVNPVVJDRTsKKwkJfSBlbHNlIHsKKwkJCXN0
-YXJ0ID0gMDsKKwkJCWVuZCA9IFBDSV9NQVhfUkVTT1VSQ0VfMzI7CisJCX0KIAl9IGVsc2Ugewot
-CQlzdGFydCA9IDA7Ci0JCWVuZCA9IFBDSV9NQVhfUkVTT1VSQ0VfMzI7CisJCWlmIChyZXMtPmZs
-YWdzICYgSU9SRVNPVVJDRV9JT18zMikgeworCQkJc3RhcnQgPSBQQ0lfTUFYX1JFU09VUkNFXzE2
-ICsgMTsKKwkJCWVuZCA9IFBDSV9NQVhfUkVTT1VSQ0VfMzI7CisJCX0gZWxzZSB7CisJCQlzdGFy
-dCA9IDA7CisJCQllbmQgPSBQQ0lfTUFYX1JFU09VUkNFXzE2OworCQl9CiAJfQogCiBhZ2FpbjoK
-SW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2kuaAo9PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0y
-LjYub3JpZy9kcml2ZXJzL3BjaS9wY2kuaAorKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3BjaS5o
-CkBAIC0yMTAsNiArMjEwLDcgQEAgZW51bSBwY2lfYmFyX3R5cGUgewogCiAjZGVmaW5lIFBDSV9N
-QVhfUkVTT1VSQ0UJKChyZXNvdXJjZV9zaXplX3QpfjApCiAjZGVmaW5lIFBDSV9NQVhfUkVTT1VS
-Q0VfMzIJKChyZXNvdXJjZV9zaXplX3QpMHhmZmZmZmZmZikKKyNkZWZpbmUgUENJX01BWF9SRVNP
-VVJDRV8xNgkoKHJlc291cmNlX3NpemVfdCkweGZmZmYpCiAKIGJvb2wgcGNpX2J1c19yZWFkX2Rl
-dl92ZW5kb3JfaWQoc3RydWN0IHBjaV9idXMgKmJ1cywgaW50IGRldmZuLCB1MzIgKnBsLAogCQkJ
-CWludCBjcnNfdGltZW91dCk7CkluZGV4OiBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9pb3BvcnQu
-aAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9pbmNsdWRlL2xpbnV4L2lvcG9ydC5oCisr
-KyBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9pb3BvcnQuaApAQCAtNDcsNiArNDcsNyBAQCBzdHJ1
-Y3QgcmVzb3VyY2UgewogI2RlZmluZSBJT1JFU09VUkNFX01FTV82NAkweDAwMTAwMDAwCiAjZGVm
-aW5lIElPUkVTT1VSQ0VfV0lORE9XCTB4MDAyMDAwMDAJLyogZm9yd2FyZGVkIGJ5IGJyaWRnZSAq
-LwogI2RlZmluZSBJT1JFU09VUkNFX01VWEVECTB4MDA0MDAwMDAJLyogUmVzb3VyY2UgaXMgc29m
-dHdhcmUgbXV4ZWQgKi8KKyNkZWZpbmUgSU9SRVNPVVJDRV9JT18zMgkweDAwODAwMDAwCiAKICNk
-ZWZpbmUgSU9SRVNPVVJDRV9FWENMVVNJVkUJMHgwODAwMDAwMAkvKiBVc2VybGFuZCBtYXkgbm90
-IG1hcCB0aGlzIHJlc291cmNlICovCiAjZGVmaW5lIElPUkVTT1VSQ0VfRElTQUJMRUQJMHgxMDAw
-MDAwMApJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3Byb2JlLmMKPT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0g
-bGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvcHJvYmUuYworKysgbGludXgtMi42L2RyaXZlcnMv
-cGNpL3Byb2JlLmMKQEAgLTEzMCw3ICsxMzAsNyBAQCBzdGF0aWMgaW5saW5lIHVuc2lnbmVkIGxv
-bmcgZGVjb2RlX2JhcihzCiAKIAlpZiAoKGJhciAmIFBDSV9CQVNFX0FERFJFU1NfU1BBQ0UpID09
-IFBDSV9CQVNFX0FERFJFU1NfU1BBQ0VfSU8pIHsKIAkJZmxhZ3MgPSBiYXIgJiB+UENJX0JBU0Vf
-QUREUkVTU19JT19NQVNLOwotCQlmbGFncyB8PSBJT1JFU09VUkNFX0lPOworCQlmbGFncyB8PSBJ
-T1JFU09VUkNFX0lPIHwgSU9SRVNPVVJDRV9JT18zMjsKIAkJcmV0dXJuIGZsYWdzOwogCX0KIApA
-QCAtMzI2LDYgKzMyNiw4IEBAIHN0YXRpYyB2b2lkIF9fZGV2aW5pdCBwY2lfcmVhZF9icmlkZ2Vf
-aW8KIAogCWlmIChiYXNlICYmIGJhc2UgPD0gbGltaXQpIHsKIAkJcmVzLT5mbGFncyA9IChpb19i
-YXNlX2xvICYgUENJX0lPX1JBTkdFX1RZUEVfTUFTSykgfCBJT1JFU09VUkNFX0lPOworCQlpZiAo
-KGlvX2Jhc2VfbG8gJiBQQ0lfSU9fUkFOR0VfVFlQRV9NQVNLKSA9PSBQQ0lfSU9fUkFOR0VfVFlQ
-RV8zMikKKwkJCXJlcy0+ZmxhZ3MgfD0gSU9SRVNPVVJDRV9JT18zMjsKIAkJcmVzMi5mbGFncyA9
-IHJlcy0+ZmxhZ3M7CiAJCXJlZ2lvbi5zdGFydCA9IGJhc2U7CiAJCXJlZ2lvbi5lbmQgPSBsaW1p
-dCArIDB4ZmZmOwpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCisrKyBsaW51
-eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTU5NSw4ICs1OTUsMTEgQEAgc3RhdGlj
-IHZvaWQgcGNpX2JyaWRnZV9jaGVja19yYW5nZXMoc3RydQogCQlwY2lfcmVhZF9jb25maWdfd29y
-ZChicmlkZ2UsIFBDSV9JT19CQVNFLCAmaW8pOwogIAkJcGNpX3dyaXRlX2NvbmZpZ193b3JkKGJy
-aWRnZSwgUENJX0lPX0JBU0UsIDB4MCk7CiAgCX0KLSAJaWYgKGlvKQorIAlpZiAoaW8pIHsKIAkJ
-Yl9yZXNbMF0uZmxhZ3MgfD0gSU9SRVNPVVJDRV9JTzsKKwkJaWYgKChpbyAmIFBDSV9JT19SQU5H
-RV9UWVBFX01BU0spID09IFBDSV9JT19SQU5HRV9UWVBFXzMyKQorCQkJYl9yZXNbMF0uZmxhZ3Mg
-fD0gSU9SRVNPVVJDRV9JT18zMjsKKwl9CiAJLyogIERFQ2NoaXAgMjEwNTAgcGFzcyAyIGVycmF0
-YTogdGhlIGJyaWRnZSBtYXkgbWlzcyBhbiBhZGRyZXNzCiAJICAgIGRpc2Nvbm5lY3QgYm91bmRh
-cnkgYnkgb25lIFBDSSBkYXRhIHBoYXNlLgogCSAgICBXb3JrYXJvdW5kOiBkbyBub3QgdXNlIHBy
-ZWZldGNoaW5nIG9uIHRoaXMgZGV2aWNlLiAqLwpAQCAtNzEwLDEwICs3MTMsMTMgQEAgc3RhdGlj
-IHZvaWQgcGJ1c19zaXplX2lvKHN0cnVjdCBwY2lfYnVzCiAJc3RydWN0IHJlc291cmNlICpiX3Jl
-cyA9IGZpbmRfZnJlZV9idXNfcmVzb3VyY2UoYnVzLCBJT1JFU09VUkNFX0lPKTsKIAl1bnNpZ25l
-ZCBsb25nIHNpemUgPSAwLCBzaXplMCA9IDAsIHNpemUxID0gMDsKIAlyZXNvdXJjZV9zaXplX3Qg
-Y2hpbGRyZW5fYWRkX3NpemUgPSAwOworCXVuc2lnbmVkIGludCBpbzMyX21hc2sgPSAwOwogCiAJ
-aWYgKCFiX3JlcykKICAJCXJldHVybjsKIAorCWlvMzJfbWFzayA9IGJfcmVzLT5mbGFncyAmIElP
-UkVTT1VSQ0VfSU9fMzI7CisJYl9yZXMtPmZsYWdzICY9IH5JT1JFU09VUkNFX0lPXzMyOwogCWxp
-c3RfZm9yX2VhY2hfZW50cnkoZGV2LCAmYnVzLT5kZXZpY2VzLCBidXNfbGlzdCkgewogCQlpbnQg
-aTsKIApAQCAtNzMxLDYgKzczNyw3IEBAIHN0YXRpYyB2b2lkIHBidXNfc2l6ZV9pbyhzdHJ1Y3Qg
-cGNpX2J1cwogCQkJZWxzZQogCQkJCXNpemUxICs9IHJfc2l6ZTsKIAorCQkJaW8zMl9tYXNrICY9
-IHItPmZsYWdzICYgSU9SRVNPVVJDRV9JT18zMjsKIAkJCWlmIChyZWFsbG9jX2hlYWQpCiAJCQkJ
-Y2hpbGRyZW5fYWRkX3NpemUgKz0gZ2V0X3Jlc19hZGRfc2l6ZShyZWFsbG9jX2hlYWQsIHIpOwog
-CQl9CkBAIC03NTMsNyArNzYwLDcgQEAgc3RhdGljIHZvaWQgcGJ1c19zaXplX2lvKHN0cnVjdCBw
-Y2lfYnVzCiAJLyogQWxpZ25tZW50IG9mIHRoZSBJTyB3aW5kb3cgaXMgYWx3YXlzIDRLICovCiAJ
-Yl9yZXMtPnN0YXJ0ID0gNDA5NjsKIAliX3Jlcy0+ZW5kID0gYl9yZXMtPnN0YXJ0ICsgc2l6ZTAg
-LSAxOwotCWJfcmVzLT5mbGFncyB8PSBJT1JFU09VUkNFX1NUQVJUQUxJR047CisJYl9yZXMtPmZs
-YWdzIHw9IElPUkVTT1VSQ0VfU1RBUlRBTElHTiB8IGlvMzJfbWFzazsKIAlpZiAoc2l6ZTEgPiBz
-aXplMCAmJiByZWFsbG9jX2hlYWQpIHsKIAkJYWRkX3RvX2xpc3QocmVhbGxvY19oZWFkLCBidXMt
-PnNlbGYsIGJfcmVzLCBzaXplMS1zaXplMCwgNDA5Nik7CiAJCWRldl9wcmludGsoS0VSTl9ERUJV
-RywgJmJ1cy0+c2VsZi0+ZGV2LCAiYnJpZGdlIHdpbmRvdyAiCg==
---047d7b2ee18b493fdf04c132d88e--
