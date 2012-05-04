@@ -1,125 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>, Helge Deller <deller@gmx.de>,
-	linux-parisc@vger.kernel.org
-Subject: [PATCH 18/21] parisc/PCI: register busn_res for root buses
-Date: Mon,  7 May 2012 13:30:03 -0700
-Message-Id: <1336422606-4244-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:37368 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750930Ab2EDFLZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 01:11:25 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 4 May 2012 04:44:18 +1000
+Date: Fri, 4 May 2012 12:52:05 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120504045205.GA21624@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120410090306.GA7056@richard>
+ <20120422155202.GA13540@richard>
+ <CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+ <CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
+ <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
+ <20120503065455.GA30042@richard>
+ <CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
+ <20120504024721.GA6775@richard>
+ <CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the host bridge bus number aperture to the resource list.
-Like the MMIO and I/O port apertures, this is used when assigning
-resources to hot-added devices or in the case of conflicts.
+On Thu, May 03, 2012 at 08:15:29PM -0700, Yinghai Lu wrote:
+>>>
+>>>I updated for-pci-busn-alloc branch with updating of probe_resource()...
+>>>and removing bus->secondary and subordinate.
+>>>
+>> You mean you remove the bus->secondary field?
+>> So the pci_bus->number hold the bus number?
+>> I think this is a huge work.
+>>>Please check if you can understand it ...
+>>>
+>>>http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=7de8df57b223d54af95ffe67f8da2dd39a265971
+>> Some question:
+>>
+>> +static resource_size_t __find_res_top_free_size(struct resource *res,
+>> +                                                int skip_nr)
+>> +{
+>> +       resource_size_t n_size;
+>> +       struct resource tmp_res;
+>> +
+>> +       */
+>> +        *   find out free number below res->end that we can use.
+>> +        *      res->start to res->start + skip_nr - 1 can not be used.
+>> +        */
+>> +       n_size = resource_size(res);
+>> +       if (n_size <= skip_nr)
+>> +               return 0;
+>> +
+>> +       n_size -= skip_nr;
+>> +       memset(&tmp_res, 0, sizeof(struct resource));
+>> +       while (n_size > 0) {
+>> +               int ret;
+>> +
+>> +               ret = __allocate_resource(res, &tmp_res, n_size,
+>> +                       res->end - n_size + skip_nr, res->end,
+>> +                       1, NULL, NULL, false);
+>> +               if (ret == 0) {
+>> +                       __release_resource(&tmp_res);
+>> +                       break;
+>> +               }
+>> +               n_size--;
+>> +       }
+>> +
+>> +       return n_size;
+>> +}
+>> So this is trying to find out the biggest free space of res?
+>> On the right side?
+>>
+>> For example we have , res like
+>>   90-150
+>>        105-140
+>> The __find_res_top_free_size() will return 10 instead of 15.
+>> So this is the design decision to find the right side free resouce not
+>> the left side?
+>
+> __find_res_top_free_size()  is called by probe_resource().
+>
+>probe_resource will return [91-104].
+Hmm... I think the result is returned by this while loop.
++       while (n_size >= needed_size) {
++               ret = allocate_resource(b_res, busn_res, n_size,
++                               b_res->start + skip_nr, b_res->end,
++                               1, NULL, NULL);
++               if (!ret)
++                       return ret;
++               n_size--;
++       }
+__find_res_top_free_size() is not called.
 
-[bhelgaas: set flags directly, at LBA bus_num init, write changelog]
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-CC: Kyle McMartin <kyle@mcmartin.ca>
-CC: Helge Deller <deller@gmx.de>
-CC: linux-parisc@vger.kernel.org
----
- drivers/parisc/dino.c    |   10 ++++++++--
- drivers/parisc/lba_pci.c |    8 ++++++--
- 2 files changed, 14 insertions(+), 4 deletions(-)
+BTW, even if this value is returned by __find_res_top_free_size(), or
+returned after this function is called, the purpose of the
+__find_res_top_free_size() is to get the biggest free space under the
+first parameter?
+>
+>Thanks
+>
+>Yinghai
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index 70517b0..ffddc4f 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -898,6 +898,7 @@ static int __init dino_probe(struct parisc_device *dev)
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
- 	unsigned long hpa = dev->hpa.start;
-+	int max;
- 
- 	name = "Dino";
- 	if (is_card_dino(&dev->id)) {
-@@ -983,6 +984,10 @@ static int __init dino_probe(struct parisc_device *dev)
- 	if (dino_dev->hba.gmmio_space.flags)
- 		pci_add_resource(&resources, &dino_dev->hba.gmmio_space);
- 
-+	dino_dev->hba.bus_num.start = dino_current_bus;
-+	dino_dev->hba.bus_num.end = 255;
-+	dino_dev->hba.bus_num.flags = IORESOURCE_BUS;
-+	pci_add_resource(&resources, &dino_dev->hba.bus_num);
- 	/*
- 	** It's not used to avoid chicken/egg problems
- 	** with configuration accessor functions.
-@@ -998,12 +1003,13 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
--	bus->busn_res.end = pci_scan_child_bus(bus);
-+	max = pci_scan_child_bus(bus);
-+	pci_bus_update_busn_res_end(bus, max);
- 
- 	/* This code *depends* on scanning being single threaded
- 	 * if it isn't, this global bus number count will fail
- 	 */
--	dino_current_bus = bus->busn_res.end + 1;
-+	dino_current_bus = max + 1;
- 	pci_bus_assign_resources(bus);
- 	pci_bus_add_devices(bus);
- 	return 0;
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index cd8f9ce..4f9cf24 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -989,6 +989,7 @@ lba_pat_resources(struct parisc_device *pa_dev, struct lba_device *lba_dev)
- 		case PAT_PBNUM:
- 			lba_dev->hba.bus_num.start = p->start;
- 			lba_dev->hba.bus_num.end   = p->end;
-+			lba_dev->hba.bus_num.flags = IORESOURCE_BUS;
- 			break;
- 
- 		case PAT_LMMIO:
-@@ -1366,6 +1367,7 @@ lba_driver_probe(struct parisc_device *dev)
- 	void *tmp_obj;
- 	char *version;
- 	void __iomem *addr = ioremap_nocache(dev->hpa.start, 4096);
-+	int max;
- 
- 	/* Read HW Rev First */
- 	func_class = READ_REG32(addr + LBA_FCLASS);
-@@ -1502,6 +1504,8 @@ lba_driver_probe(struct parisc_device *dev)
- 	if (lba_dev->hba.gmmio_space.flags)
- 		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
- 
-+	pci_add_resource(&resources, &lba_dev->hba.bus_num);
-+
- 	dev->dev.platform_data = lba_dev;
- 	lba_bus = lba_dev->hba.hba_bus =
- 		pci_create_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
-@@ -1511,7 +1515,7 @@ lba_driver_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
--	lba_bus->busn_res.end = pci_scan_child_bus(lba_bus);
-+	max = pci_scan_child_bus(lba_bus);
- 
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
- 	if (is_pdc_pat()) {
-@@ -1541,7 +1545,7 @@ lba_driver_probe(struct parisc_device *dev)
- 		lba_dev->flags |= LBA_FLAG_SKIP_PROBE;
- 	}
- 
--	lba_next_bus = lba_res->busn_res.end + 1;
-+	lba_next_bus = max + 1;
- 	pci_bus_add_devices(lba_bus);
- 
- 	/* Whew! Finally done! Tell services we got this one covered. */
 -- 
-1.7.7
+Richard Yang
+Help you, Help me
 
