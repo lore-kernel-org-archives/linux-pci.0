@@ -1,66 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:58050
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752542Ab2E2Ifr convert rfc822-to-8bit
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:33551 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759190Ab2EDQf0 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 May 2012 04:35:47 -0400
-Date: Tue, 29 May 2012 10:35:53 +0200
-From: Joerg Roedel <joerg.roedel@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Antonio Quartulli <ordex@autistici.org>,
-	<linux-pci@vger.kernel.org>, <iommu@lists.linux-foundation.org>
-Subject: Re: warn_slowpath_common in drivers/pci/search.c:44 on linux-3.4.0
-Message-ID: <20120529083552.GN2604@amd.com>
-References: <20120526082551.GA2723@ritirata.org>
- <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com>
+	Fri, 4 May 2012 12:35:26 -0400
+Received: by lahj13 with SMTP id j13so2141704lah.19
+        for <linux-pci@vger.kernel.org>; Fri, 04 May 2012 09:35:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com>
+In-Reply-To: <20120504130332.GC12199@alberich.amd.com>
+References: <20120427143410.GB27535@alberich.amd.com> <20120427143621.GC27535@alberich.amd.com>
+ <CAErSpo7gkkqZgR0TZ5Xx162pLN9ZaYVhMmyHn+H8Lqr1CBSXXQ@mail.gmail.com> <20120504130332.GC12199@alberich.amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 May 2012 10:35:05 -0600
+Message-ID: <CAErSpo5_ZB=ggNDGM5N8Rt1TtW8DQQm1k2s9FBwFHjh7nFA4hw@mail.gmail.com>
+Subject: Re: [PATCH 1/2][RESEND] x86/pci/amd: Restore early_fill_mp_bus_to_node
+To: Andreas Herrmann <andreas.herrmann3@amd.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Antonio,
+On Fri, May 4, 2012 at 7:03 AM, Andreas Herrmann
+<andreas.herrmann3@amd.com> wrote:
+> On Wed, May 02, 2012 at 11:33:17AM -0600, Bjorn Helgaas wrote:
+>> On Fri, Apr 27, 2012 at 8:36 AM, Andreas Herrmann
+>> <andreas.herrmann3@amd.com> wrote:
+>> >
+>> > Once upon a time this function was overloaded with quirky stuff to fix
+>> > resource detection on systems w/ _CRS defects (seems that some Sun and
+>> > HP systems were affected).
+>> >
+>> > See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
+>> > (x86: multi pci root bus with different io resource range, on 64-bit)
+>> >
+>> > Restore the old function and thus decouple it from the quirk that is
+>> > CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
+>> > I assume that the _CRS stuff is working on current systems.
+>> >
+>> > This is required to properly initilize the numa_node information of
+>> > existing PCI busses and associated devices.
+>>
+>> I applied some of Yinghai's patches that also touch this area.  Can
+>> you refresh these so they apply on top of my "next" branch
+>> (git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next)?
+>
+> Arrgh, will adapt my patch and resend it (asap).
+>
+>> Can you also be more specific about what these patches fix?
+>
+>> My understanding is that amd_bus.c (1) sets NUMA info with
+>> set_mp_bus_to_node() and (2) figures out MMIO and I/O port apertures,
+>> which are only used when blind probing and when ignoring _CRS.
+>>
+>> It seems like the main change in this patch is that we skip (2)
+>> completely when family >= 0x11, and I don't understand what that could
+>> fix.
+>
+> The patch restores a very old function that was used to detect the
+> nearest node for a PCI bus, so yes it's used to do (1). IMHO this
+> function was totally screwed up with Yinghai's code to do (2). It
+> seems that Sun has (had?) some systems where (2) was req'd. I don't
+> care about this part. But I'd like to do (1) on all AMD CPU NUMA
+> systems.
 
-On Sat, May 26, 2012 at 09:09:52AM -0600, Bjorn Helgaas wrote:
-> On Sat, May 26, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> wrote:
-> > [    1.054279] WARNING: at drivers/pci/search.c:44 pci_find_upstream_pcie_bridge+0x5e/0x70()
-> > [    1.054385] Hardware name: Latitude E5420
-> > [    1.054457] Modules linked in:
-> > [    1.054568] Pid: 1, comm: swapper/0 Not tainted 3.4.0ordex+ #3
-> > [    1.054643] Call Trace:
-> > [    1.054716]  [<ffffffff81033d4a>] warn_slowpath_common+0x7a/0xb0
-> > [    1.054793]  [<ffffffff81033d95>] warn_slowpath_null+0x15/0x20
-> > [    1.054869]  [<ffffffff8123899e>] pci_find_upstream_pcie_bridge+0x5e/0x70
-> > [    1.054949]  [<ffffffff813babe7>] intel_iommu_device_group+0x77/0x100
-> > [    1.055027]  [<ffffffff813b52d5>] add_iommu_group+0x35/0x60
-> > [    1.055113]  [<ffffffff813b52a0>] ? bus_set_iommu+0x50/0x50
-> > [    1.055191]  [<ffffffff8132c586>] bus_for_each_dev+0x56/0x90
-> > [    1.055267]  [<ffffffff813b528b>] bus_set_iommu+0x3b/0x50
-> > [    1.055344]  [<ffffffff818c4920>] intel_iommu_init+0xab0/0xb3f
-> > [    1.055421]  [<ffffffff81120b26>] ? sys_mkdirat+0x76/0xd0
-> > [    1.055499]  [<ffffffff8189b0db>] ? memblock_find_dma_reserve+0x13d/0x13d
-> > [    1.055578]  [<ffffffff8189b0ee>] pci_iommu_init+0x13/0x3e
-> > [    1.055655]  [<ffffffff810001ca>] do_one_initcall+0x3a/0x170
-> > [    1.055732]  [<ffffffff81897c35>] kernel_init+0x148/0x1cc
-> > [    1.055807]  [<ffffffff81897588>] ? do_early_param+0x86/0x86
-> > [    1.055884]  [<ffffffff814fc914>] kernel_thread_helper+0x4/0x10
-> > [    1.055963]  [<ffffffff8105de60>] ? finish_task_switch+0x80/0x110
-> > [    1.056040]  [<ffffffff814fafdd>] ? retint_restore_args+0xe/0xe
-> > [    1.056126]  [<ffffffff81897aed>] ? start_kernel+0x30b/0x30b
-> > [    1.056203]  [<ffffffff814fc910>] ? gs_change+0xb/0xb
+Thanks for the explanation.  But I'm afraid I'm still confused.
 
-Hmm, this looks like pci_find_upstream_pcie_bridge() found a PCIe device
-in the chain which is not a bridge. Can you please post the output of
-'lspci -vvv' and 'lspci -t'?
+First, it sounds like you're trying to change the way we do part (1),
+i.e., the set_mp_bus_to_node() calls, but I think the effect of your
+patch is to stop doing part (2) in some cases.
 
-Thanks,
+Second, I am pretty sure that the current early_fill_mp_bus_info()
+(before your patch) does the exact same set_mp_bus_to_node() calls as
+your early_fill_mp_bus_to_node() does.
 
-	Joerg
+Finally, on all systems with ACPI, the set_mp_bus_to_node() call in
+pci_acpi_scan_root() should be doing what you need.  In fact, that
+call happens later, so it should be overwriting the information filled
+in by amd_bus.c.  If there's something wrong in this ACPI path, the
+most likely cause is a BIOS defect, such as  a missing _PXM method on
+the PNP0A03/0A08 host bridge device.
 
--- 
-AMD Operating System Research Center
-
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
-
+Bjorn
