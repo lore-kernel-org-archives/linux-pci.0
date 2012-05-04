@@ -1,81 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:50511 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757663Ab2EGU3j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:29:39 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/7] PCI, cpci_hotplug: Simplify configure_slot
-Date: Mon,  7 May 2012 13:29:11 -0700
-Message-Id: <1336422556-4124-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
-References: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
+Received: from smtp.ctxuk.citrix.com ([62.200.22.115]:34032 "EHLO
+	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756056Ab2EDNaI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 09:30:08 -0400
+From: David Vrabel <david.vrabel@citrix.com>
+To: <xen-devel@lists.xensource.com>
+CC: David Vrabel <david.vrabel@citrix.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<x86@kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH v2] x86,xen,pci: don't use PCI BIOS service for configuration space accesses
+Date: Fri, 4 May 2012 14:29:46 +0100
+Message-ID: <1336138186-11423-1-git-send-email-david.vrabel@citrix.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For child p2p bridge hotplug support should use pci_scan_bridge instead.
+From: David Vrabel <david.vrabel@citrix.com>
 
-Make it more simillar to pciehp, just use pci_hp_add_bridge()
+The accessing PCI configuration space with the PCI BIOS32 service does
+not work in PV guests.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On systems without MMCONFIG or where the BIOS hasn't marked the
+MMCONFIG region as reserved in the e820 map, the BIOS service is
+probed (even though direct access is preferred) and this hangs.
+
+Signed-off-by: David Vrabel <david.vrabel@citrix.com>
 ---
- drivers/pci/hotplug/cpci_hotplug_pci.c |   35 +++++--------------------------
- 1 files changed, 6 insertions(+), 29 deletions(-)
+Changes in v2:
+- improve commit message
 
-diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
-index ae853cc..dcc75c7 100644
---- a/drivers/pci/hotplug/cpci_hotplug_pci.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
-@@ -285,42 +285,19 @@ int __ref cpci_configure_slot(struct slot *slot)
- 	for (fn = 0; fn < 8; fn++) {
- 		struct pci_dev *dev;
+---
+ arch/x86/xen/enlighten.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/arch/x86/xen/enlighten.c b/arch/x86/xen/enlighten.c
+index a8f8844..7ce2c78 100644
+--- a/arch/x86/xen/enlighten.c
++++ b/arch/x86/xen/enlighten.c
+@@ -63,6 +63,7 @@
+ #include <asm/stackprotector.h>
+ #include <asm/hypervisor.h>
+ #include <asm/mwait.h>
++#include <asm/pci_x86.h>
  
--		dev = pci_get_slot(parent, PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
-+		dev = pci_get_slot(parent,
-+				   PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
- 		if (!dev)
- 			continue;
- 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
--		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
--			/* Find an unused bus number for the new bridge */
--			struct pci_bus *child;
--			unsigned char busnr, start = parent->secondary;
--			unsigned char end = parent->subordinate;
--
--			for (busnr = start; busnr <= end; busnr++) {
--				if (!pci_find_bus(pci_domain_nr(parent),
--						  busnr))
--					break;
--			}
--			if (busnr >= end) {
--				err("No free bus for hot-added bridge\n");
--				pci_dev_put(dev);
--				continue;
--			}
--			child = pci_add_new_bus(parent, dev, busnr);
--			if (!child) {
--				err("Cannot add new bus for %s\n",
--				    pci_name(dev));
--				pci_dev_put(dev);
--				continue;
--			}
--			child->subordinate = pci_do_scan_bus(child);
--			pci_bus_size_bridges(child);
--		}
-+		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
-+			pci_hp_add_bridge(dev);
- 		pci_dev_put(dev);
+ #ifdef CONFIG_ACPI
+ #include <linux/acpi.h>
+@@ -1365,7 +1366,9 @@ asmlinkage void __init xen_start_kernel(void)
+ 		/* Make sure ACS will be enabled */
+ 		pci_request_acs();
  	}
- 
--	pci_bus_assign_resources(parent);
-+	pci_assign_unassigned_bridge_resources(parent->self);
+-		
 +
- 	pci_bus_add_devices(parent);
--	pci_enable_bridges(parent);
++	/* PCI BIOS service won't work from a PV guest. */
++	pci_probe &= ~PCI_PROBE_BIOS;
  
- 	dbg("%s - exit", __func__);
- 	return 0;
+ 	xen_raw_console_write("about to get started...\n");
+ 
 -- 
-1.7.7
+1.7.2.5
 
