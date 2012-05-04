@@ -1,93 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:39873 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752120Ab2EWFPH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 01:15:07 -0400
-Received: by wibhj8 with SMTP id hj8so4139237wib.1
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 22:15:05 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:33129 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399Ab2EDDPa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2012 23:15:30 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVs0U62NRxkDYdOC67EUiEBu1f5ojGxGXkdbt0O6XO4uQ@mail.gmail.com>
-References: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
-	<20120523043511.13449.22006.stgit@bhelgaas.mtv.corp.google.com>
-	<CAE9FiQVs0U62NRxkDYdOC67EUiEBu1f5ojGxGXkdbt0O6XO4uQ@mail.gmail.com>
-Date: Wed, 23 May 2012 13:15:05 +0800
-Message-ID: <CAFeW=pZiEODGx09=HaJDWujmCc92wCKt2fhZM03yNDb9CSs3gA@mail.gmail.com>
-Subject: [PATCH v7 2/2] PCI: acpiphp: remove all functions in slot, even
- without ACPI _EJx
-From: Amos Kong <kongjianjun@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	liuj97@gmail.com, qemu-devel@nongnu.org, jbarnes@virtuousgeek.org,
-	kaneshige.kenji@jp.fujitsu.com
-Content-Type: multipart/mixed; boundary=f46d0444e881da79bf04c0ad37e7
+In-Reply-To: <20120504024721.GA6775@richard>
+References: <20120410090306.GA7056@richard>
+	<20120422155202.GA13540@richard>
+	<CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+	<CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
+	<CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
+	<20120503065455.GA30042@richard>
+	<CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
+	<20120504024721.GA6775@richard>
+Date: Thu, 3 May 2012 20:15:29 -0700
+Message-ID: <CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
+Subject: Re: One problem in reassign pci bus number?
+From: Yinghai Lu <yinghai@kernel.org>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---f46d0444e881da79bf04c0ad37e7
-Content-Type: text/plain; charset=ISO-8859-1
+On Thu, May 3, 2012 at 7:47 PM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Thu, May 03, 2012 at 01:33:17AM -0700, Yinghai Lu wrote:
+>>On Wed, May 2, 2012 at 11:54 PM, Richard Yang
+>><weiyang@linux.vnet.ibm.com> wrote:
+>>> On Wed, Apr 25, 2012 at 09:28:19AM -0700, Yinghai Lu wrote:
+>>>>On Wed, Apr 25, 2012 at 2:47 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
+>>>>>> busn_alloc patchset should address your concern.
+>>>>>>
+>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>>>>> for-pci-busn-alloc
+>>>
+>>> For some functions, such as probe_resource() would you mind add some
+>>> comments?  Such as explain the parameter usage.
+>>> That would help for reading the function.
+>>
+>>I updated for-pci-busn-alloc branch with updating of probe_resource()...
+>>and removing bus->secondary and subordinate.
+>>
+> You mean you remove the bus->secondary field?
+> So the pci_bus->number hold the bus number?
+> I think this is a huge work.
+>>Please check if you can understand it ...
+>>
+>>http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=7de8df57b223d54af95ffe67f8da2dd39a265971
+> Some question:
+>
+> +static resource_size_t __find_res_top_free_size(struct resource *res,
+> +                                                int skip_nr)
+> +{
+> +       resource_size_t n_size;
+> +       struct resource tmp_res;
+> +
+> +       */
+> +        *   find out free number below res->end that we can use.
+> +        *      res->start to res->start + skip_nr - 1 can not be used.
+> +        */
+> +       n_size = resource_size(res);
+> +       if (n_size <= skip_nr)
+> +               return 0;
+> +
+> +       n_size -= skip_nr;
+> +       memset(&tmp_res, 0, sizeof(struct resource));
+> +       while (n_size > 0) {
+> +               int ret;
+> +
+> +               ret = __allocate_resource(res, &tmp_res, n_size,
+> +                       res->end - n_size + skip_nr, res->end,
+> +                       1, NULL, NULL, false);
+> +               if (ret == 0) {
+> +                       __release_resource(&tmp_res);
+> +                       break;
+> +               }
+> +               n_size--;
+> +       }
+> +
+> +       return n_size;
+> +}
+> So this is trying to find out the biggest free space of res?
+> On the right side?
+>
+> For example we have , res like
+>   90-150
+>        105-140
+> The __find_res_top_free_size() will return 10 instead of 15.
+> So this is the design decision to find the right side free resouce not
+> the left side?
 
-Attached the v7,  test passed.
+ __find_res_top_free_size()  is called by probe_resource().
 
---f46d0444e881da79bf04c0ad37e7
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0002-PCI-acpiphp-remove-all-functions-in-slot-even-withou.patch"
-Content-Disposition: attachment;
-	filename="0002-PCI-acpiphp-remove-all-functions-in-slot-even-withou.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h2jxun5v0
+probe_resource will return [91-104].
 
-RnJvbSBiZWM3ZWM3MWRiZWI5MmRjODMwNzE5YmU3YzExZjg3Nzg2ODMwODYzIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBBbW9zIEtvbmcgPGtvbmdqaWFuanVuQGdtYWlsLmNvbT4KRGF0
-ZTogVHVlLCAyMiBNYXkgMjAxMiAxODozNToxMSArMDAwMApTdWJqZWN0OiBbUEFUQ0ggMi8yXSBQ
-Q0k6IGFjcGlwaHA6IHJlbW92ZSBhbGwgZnVuY3Rpb25zIGluIHNsb3QsIGV2ZW4gd2l0aG91dCBB
-Q1BJIF9FSngKCldoZW4gd2UgYWRkIGEgZGV2aWNlIHdpdGggYWNwaXBocCwgd2UgZW51bWVyYXRl
-IGFsbCBmdW5jdGlvbnMgaW4gdGhlCnNsb3Qgd2l0aCBwY2lfc2Nhbl9zbG90KCksIHJlZ2FyZGxl
-c3Mgb2Ygd2hldGhlciB0aGV5IGhhdmUgYXNzb2NpYXRlZApBQ1BJIG1ldGhvZHMgc3VjaCBhcyBf
-RUowLgoKV2hlbiByZW1vdmluZyB0aGUgZGV2aWNlLCB3ZSBwcmV2aW91c2x5IHJlbW92ZWQgb25s
-eSB0aGUgZnVuY3Rpb25zCndpdGggdGhvc2UgQUNQSSBtZXRob2RzLiAgVGhpcyBwYXRjaCBtYWtl
-cyB0aGUgcmVtb3ZlIHN5bW1ldHJpYyB3aXRoIHRoZQphZGQ6IHdlIHJlbW92ZSBhbGwgZnVuY3Rp
-b25zIGluIHRoZSBzbG90LCB3aGV0aGVyIHRoZXkgaGF2ZSBhc3NvY2lhdGVkCkFDUEkgbWV0aG9k
-cyBvciBub3QuCgpXaXRoIHFlbXUta3ZtIGFuZCBTZWFCSU9TLCB3ZSBjYW4gYnVpbGQgYSBtdWx0
-aS1mdW5jdGlvbiBkZXZpY2Ugd2hlcmUKb25seSBmdW5jdGlvbiAwIGhhcyBfRUowIGFuZCBfQURS
-IChzZWUgYnVnemlsbGEgYmVsb3cpLiAgUmVtb3ZpbmcgYW5kCnJlLWFkZGluZyB0aGF0IGRldmlj
-ZSB3b3JrcyBjb3JyZWN0bHkgd2l0aCBXaW5kb3dzIGd1ZXN0cy4gIFRoaXMgcGF0Y2gKbWFrZXMg
-aXQgYWxzbyB3b3JrIGluIExpbnV4IGd1ZXN0cy4KCltiaGVsZ2FhczogcmVzdHJ1Y3R1cmUgbG9v
-cCBpdGVyYXRpb24sIHB1bGwgb3V0IG9mIHNsb3QtPmZ1bmNzIGxvb3BdClJlZmVyZW5jZTogaHR0
-cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD00MzIxOQpTaWduZWQtb2Zm
-LWJ5OiBBbW9zIEtvbmcgPGtvbmdqaWFuanVuQGdtYWlsLmNvbT4KU2lnbmVkLW9mZi1ieTogQmpv
-cm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KCi0tLQp2Nzoga2VlcCB0aGF0IHBjaV9i
-dXNfc2VtIG9wZXJhdGlvbiBwYWlyIG9uIHJldHVybiBwYXRoCi0tLQogZHJpdmVycy9wY2kvaG90
-cGx1Zy9hY3BpcGhwX2dsdWUuYyB8ICAgNDAgKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0t
-LS0tLS0tCiAxIGZpbGVzIGNoYW5nZWQsIDMwIGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygt
-KQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvYWNwaXBocF9nbHVlLmMgYi9kcml2
-ZXJzL3BjaS9ob3RwbHVnL2FjcGlwaHBfZ2x1ZS5jCmluZGV4IDBkODcxMzYuLmM5NGExMmYgMTAw
-NjQ0Ci0tLSBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvYWNwaXBocF9nbHVlLmMKKysrIGIvZHJpdmVy
-cy9wY2kvaG90cGx1Zy9hY3BpcGhwX2dsdWUuYwpAQCAtODc4LDYgKzg3OCwyMiBAQCBzdGF0aWMg
-dm9pZCBkaXNhYmxlX2JyaWRnZXMoc3RydWN0IHBjaV9idXMgKmJ1cykKIAl9CiB9CiAKKy8qIHJl
-dHVybiBmaXJzdCBkZXZpY2UgaW4gc2xvdCwgYWNxdWlyaW5nIGEgcmVmZXJlbmNlIG9uIGl0ICov
-CitzdGF0aWMgc3RydWN0IHBjaV9kZXYgKmRldl9pbl9zbG90KHN0cnVjdCBhY3BpcGhwX3Nsb3Qg
-KnNsb3QpCit7CisJc3RydWN0IHBjaV9idXMgKmJ1cyA9IHNsb3QtPmJyaWRnZS0+cGNpX2J1czsK
-KwlzdHJ1Y3QgcGNpX2RldiAqZGV2OworCWludCByZXQgPSBOVUxMOworCisJZG93bl9yZWFkKCZw
-Y2lfYnVzX3NlbSk7CisJbGlzdF9mb3JfZWFjaF9lbnRyeShkZXYsICZidXMtPmRldmljZXMsIGJ1
-c19saXN0KQorCQlpZiAoUENJX1NMT1QoZGV2LT5kZXZmbikgPT0gc2xvdC0+ZGV2aWNlKQorCQkJ
-cmV0ID0gcGNpX2Rldl9nZXQoZGV2KTsKKwl1cF9yZWFkKCZwY2lfYnVzX3NlbSk7CisKKwlyZXR1
-cm4gcmV0OworfQorCiAvKioKICAqIGRpc2FibGVfZGV2aWNlIC0gZGlzYWJsZSBhIHNsb3QKICAq
-IEBzbG90OiBBQ1BJIFBIUCBzbG90CkBAIC05MDIsMTggKzkxOCwyMiBAQCBzdGF0aWMgaW50IGRp
-c2FibGVfZGV2aWNlKHN0cnVjdCBhY3BpcGhwX3Nsb3QgKnNsb3QpCiAJCQkJCQkodTMyKTEsIE5V
-TEwsIE5VTEwpOwogCQkJZnVuYy0+YnJpZGdlID0gTlVMTDsKIAkJfQorCX0KIAotCQlwZGV2ID0g
-cGNpX2dldF9zbG90KHNsb3QtPmJyaWRnZS0+cGNpX2J1cywKLQkJCQkgICAgUENJX0RFVkZOKHNs
-b3QtPmRldmljZSwgZnVuYy0+ZnVuY3Rpb24pKTsKLQkJaWYgKHBkZXYpIHsKLQkJCXBjaV9zdG9w
-X2J1c19kZXZpY2UocGRldik7Ci0JCQlpZiAocGRldi0+c3Vib3JkaW5hdGUpIHsKLQkJCQlkaXNh
-YmxlX2JyaWRnZXMocGRldi0+c3Vib3JkaW5hdGUpOwotCQkJCXBjaV9kaXNhYmxlX2RldmljZShw
-ZGV2KTsKLQkJCX0KLQkJCV9fcGNpX3JlbW92ZV9idXNfZGV2aWNlKHBkZXYpOwotCQkJcGNpX2Rl
-dl9wdXQocGRldik7CisJLyoKKwkgKiBlbmFibGVfZGV2aWNlKCkgZW51bWVyYXRlcyBhbGwgZnVu
-Y3Rpb25zIGluIHRoaXMgZGV2aWNlIHZpYQorCSAqIHBjaV9zY2FuX3Nsb3QoKSwgd2hldGhlciB0
-aGV5IGhhdmUgYXNzb2NpYXRlZCBBQ1BJIGhvdHBsdWcKKwkgKiBtZXRob2RzIChfRUowLCBldGMu
-KSBvciBub3QuICBUaGVyZWZvcmUsIHdlIHJlbW92ZSBhbGwgZnVuY3Rpb25zCisJICogaGVyZS4K
-KwkgKi8KKwl3aGlsZSAoKHBkZXYgPSBkZXZfaW5fc2xvdChzbG90KSkpIHsKKwkJcGNpX3N0b3Bf
-YnVzX2RldmljZShwZGV2KTsKKwkJaWYgKHBkZXYtPnN1Ym9yZGluYXRlKSB7CisJCQlkaXNhYmxl
-X2JyaWRnZXMocGRldi0+c3Vib3JkaW5hdGUpOworCQkJcGNpX2Rpc2FibGVfZGV2aWNlKHBkZXYp
-OwogCQl9CisJCV9fcGNpX3JlbW92ZV9idXNfZGV2aWNlKHBkZXYpOworCQlwY2lfZGV2X3B1dChw
-ZGV2KTsKIAl9CiAKIAlsaXN0X2Zvcl9lYWNoX2VudHJ5KGZ1bmMsICZzbG90LT5mdW5jcywgc2li
-bGluZykgewotLSAKMS43LjEKCg==
---f46d0444e881da79bf04c0ad37e7--
+Thanks
+
+Yinghai
