@@ -1,116 +1,127 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4FBEAE70.8090908@redhat.com>
-Date: Thu, 24 May 2012 17:56:00 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52233 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759320Ab2EDSs4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 14:48:56 -0400
+Received: by pbbrp8 with SMTP id rp8so4173186pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 04 May 2012 11:48:55 -0700 (PDT)
+Date: Fri, 4 May 2012 11:48:51 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Francois Rigaut <frigaut@gmail.com>, linux-pci@vger.kernel.org
+Cc: Nico Schottelius <nico-linux-20120419@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Linux Support for Thunderbolt using Apple Monitor
+Message-ID: <20120504184851.GB11223@kroah.com>
+References: <20120419163800.GB13977@schottelius.org>
+ <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com>
+ <20120502163629.GE928@schottelius.org>
+ <20120502202509.GA26798@kroah.com>
+ <20120503065003.GB13386@schottelius.org>
+ <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com>
+ <20120503153547.GD20334@kroah.com>
+ <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com>
+ <20120503233858.GA13453@kroah.com>
+ <4FA358ED.1080705@gmail.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH v2 00/13] IOMMU Groups + VFIO
-References: <20120522043607.5871.11340.stgit@bling.home>
-In-Reply-To: <20120522043607.5871.11340.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FA358ED.1080705@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/22/2012 01:04 AM, Alex Williamson wrote:
-> Version 2 incorporating acks and feedback from v1.  The PCI DMA quirk
-> and ACS check are reworked, sysfs iommu groups ABI Documentation
-> added as well as numerous other fixes, including patches from Alexey
-> Kardashevskiy towards supporting POWER usage of VFIO and IOMMU groups.
->
-> This series can be found here on top of 3.4:
->
-> git://github.com/awilliam/linux-vfio.git iommu-group-vfio-20120521
->
-> The Qemu tree has also been updated to Qemu 1.1 and can be found here:
->
-> git://github.com/awilliam/qemu-vfio.git iommu-group-vfio
->
-> I'd really like to make a push to get this in for 3.5, so let's talk
-> about how to do that across iommu, pci, and new driver.  Joerg, are
-> you sufficiently happy with the IOMMU group concept and code?  We'll
-> also need David Woodhouse buyin on the intel-iommu changes in patches
-> 3&  6.  Who needs to approve VFIO as a new driver, GregKH?  Bjorn,
-> I'd be happy to send the PCI changes as a series for you, but I
-> wonder if it makes sense to collect acks for them if you approve and
-> bundle them in with the associated code that needs them so you're
-> not left with unused code.  Let me know which you prefer.  If there
-> are better ways to do it, please let me know.  Thanks,
->
-> Alex
->
-> ---
-ack to 1,2,4,6,8,10 & 11.
-provided some minor feedback on 3,9,&12.
-have to do final review of the big stuff, 7 & 13.
->
-> Alex Williamson (13):
->        vfio: Add PCI device driver
->        pci: Misc pci_reg additions
->        pci: Create common pcibios_err_to_errno
->        pci: export pci_user functions for use by other drivers
->        vfio: x86 IOMMU implementation
->        vfio: Add documentation
->        vfio: VFIO core
->        iommu: Make use of DMA quirking and ACS enabled check for groups
->        pci: Add ACS validation utility
->        pci: Add PCI DMA source ID quirk
->        iommu: IOMMU groups for VT-d and AMD-Vi
->        iommu: IOMMU Groups
->        driver core: Add iommu_group tracking to struct device
->
->
->   .../ABI/testing/sysfs-kernel-iommu_groups          |   14
->   Documentation/ioctl/ioctl-number.txt               |    1
->   Documentation/vfio.txt                             |  315 ++++
->   MAINTAINERS                                        |    8
->   drivers/Kconfig                                    |    2
->   drivers/Makefile                                   |    1
->   drivers/iommu/amd_iommu.c                          |   67 +
->   drivers/iommu/intel-iommu.c                        |   87 +
->   drivers/iommu/iommu.c                              |  578 +++++++-
->   drivers/pci/access.c                               |    6
->   drivers/pci/pci.c                                  |   76 +
->   drivers/pci/pci.h                                  |    7
->   drivers/pci/quirks.c                               |   69 +
->   drivers/vfio/Kconfig                               |   16
->   drivers/vfio/Makefile                              |    3
->   drivers/vfio/pci/Kconfig                           |    8
->   drivers/vfio/pci/Makefile                          |    4
->   drivers/vfio/pci/vfio_pci.c                        |  557 +++++++
->   drivers/vfio/pci/vfio_pci_config.c                 | 1522 ++++++++++++++++++++
->   drivers/vfio/pci/vfio_pci_intrs.c                  |  724 ++++++++++
->   drivers/vfio/pci/vfio_pci_private.h                |   91 +
->   drivers/vfio/pci/vfio_pci_rdwr.c                   |  269 ++++
->   drivers/vfio/vfio.c                                | 1413 +++++++++++++++++++
->   drivers/vfio/vfio_iommu_x86.c                      |  743 ++++++++++
->   drivers/xen/xen-pciback/conf_space.c               |    6
->   include/linux/device.h                             |    2
->   include/linux/iommu.h                              |  104 +
->   include/linux/pci.h                                |   49 +
->   include/linux/pci_regs.h                           |  112 +
->   include/linux/vfio.h                               |  444 ++++++
->   30 files changed, 7182 insertions(+), 116 deletions(-)
->   create mode 100644 Documentation/ABI/testing/sysfs-kernel-iommu_groups
->   create mode 100644 Documentation/vfio.txt
->   create mode 100644 drivers/vfio/Kconfig
->   create mode 100644 drivers/vfio/Makefile
->   create mode 100644 drivers/vfio/pci/Kconfig
->   create mode 100644 drivers/vfio/pci/Makefile
->   create mode 100644 drivers/vfio/pci/vfio_pci.c
->   create mode 100644 drivers/vfio/pci/vfio_pci_config.c
->   create mode 100644 drivers/vfio/pci/vfio_pci_intrs.c
->   create mode 100644 drivers/vfio/pci/vfio_pci_private.h
->   create mode 100644 drivers/vfio/pci/vfio_pci_rdwr.c
->   create mode 100644 drivers/vfio/vfio.c
->   create mode 100644 drivers/vfio/vfio_iommu_x86.c
->   create mode 100644 include/linux/vfio.h
+On Fri, May 04, 2012 at 02:19:57PM +1000, Francois Rigaut wrote:
+> Greg, Nico,
+> 
+> Thanks Greg for giving us some attention. I went ahead and collected
+> a number of information that could be useful to track down our
+> hotplug issue.
+> 
+> 1) Coldplug: Booting with the thunderbolt display attached. This
+> works. Several devices (additional to what I get without the display
+> attached) are listed. Here is the relevant info:
+> 
+> http://maumae.net/thunderbolt/coldplug_efi/log  -> kernel.log
+> http://maumae.net/thunderbolt/coldplug_efi/lspci -> lspci and lspci -vv
+> http://maumae.net/thunderbolt/coldplug_efi/lsmod
+> http://maumae.net/thunderbolt/coldplug_efi/config_excerpt.txt
+> full config @ http://maumae.net/thunderbolt/config.gz
+> http://maumae.net/thunderbolt/coldplug_efi/disconnect -> message
+> when disconnecting (pciehp loaded just before)
+> 
+> note that an attempt to reconnect leads to the same issue as
+> described before, i.e. nothing happens.
+> 
+> 2) Booting with the display/device not plugged, just for reference:
+> 
+> http://maumae.net/thunderbolt/notplugged_efi/log
+> http://maumae.net/thunderbolt/notplugged_efi/lsmod
+> http://maumae.net/thunderbolt/notplugged_efi/misc
+> http://maumae.net/thunderbolt/notplugged_efi/lspci
 
+Ok, it looks like these are the devices that we are missing while
+"hotplugging":
+37:00.0 PCI bridge: Intel Corporation Device 1513
+38:00.0 PCI bridge: Intel Corporation Device 1513
+38:01.0 PCI bridge: Intel Corporation Device 1513
+38:02.0 PCI bridge: Intel Corporation Device 1513
+38:03.0 PCI bridge: Intel Corporation Device 1513
+38:04.0 PCI bridge: Intel Corporation Device 1513
+38:05.0 PCI bridge: Intel Corporation Device 1513
+39:00.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
+3a:03.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
+3b:00.0 USB controller: Pericom Semiconductor Device 400e (rev 01)
+3b:00.1 USB controller: Pericom Semiconductor Device 400e (rev 01)
+3b:00.2 USB controller: Pericom Semiconductor Device 400f (rev 01)
+3c:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57761 Gigabit Ethernet PCIe (rev 10)
+3d:00.0 FireWire (IEEE 1394): nee Agere Systems nee Lucent
+Microelectronics FW643 PCI Express 1394b Controller (PHY/Link) (rev 08)
+
+Which is good, I was worried that there was a video controller out there
+on the end of the thunderbolt link.
+
+So, the problem really is two here:
+  - your video card doesn't detect the new display
+  - your pci devices do not show up
+
+The first one probably needs to be reported to the Intel video driver
+people, they can help you out the best.
+
+The second one means that something is up with the pci hotplug
+controller.  I've cced the linux-pci list, the people there should be
+able to help out better than I, as I no longer have any PCI hotplug
+hardware to work with anymore.
+
+> 3) Again, I have tried to load pciehp and acpiphp with both EFI boot
+> and BIOS emulation boot:
+> - pciehp loads ok but as I said earlier, no message whatsoever in
+> everything.log when I try to connect the thunderbolt display
+
+If you load it with debugging enabled, do you get extra messages in the
+log?
+
+> - acpiphp: I was wrong yesterday. In fact, trying to load acpiphp
+> gives me a message:
+> [root@poliahu thunderbolt]# modprobe acpiphp
+> ERROR: could not insert 'acpiphp': No such device
+
+Again, can you load it with debugging (I think both load with "debug=1"
+as a module option to do this).
+
+> Not sure what to make of it. I have tried to also load acpiphp after
+> a coldplug boot; same error message.
+> 
+> I've read somewhere that this error message may mean that the h/w
+> doesn't support hotplugging. However, I think the coldplug lspci -vv
+> above tells us the h/w does support pcie hotplug: all the pci
+> bridges appear to have D3hot+ capability (and it certainly does, as
+> this works under osx on the same machine).
+
+Yes, it "should" work, but figuring out what the pci hotplug method that
+is going on is going to be the main thing to solve here.
+
+Oh, what exact machine is this?  Maybe I can ask around and see if I can
+dig up one myself, and hey, I always need an excuse to get a new display
+:)
+
+thanks,
+
+greg k-h
