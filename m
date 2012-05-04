@@ -1,78 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65385 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752864Ab2EKKOh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 May 2012 06:14:37 -0400
-Date: Fri, 11 May 2012 13:14:15 +0300
-From: Gleb Natapov <gleb@redhat.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, linux-pci@vger.kernel.org,
-	seabios@seabios.org, qemu-devel@nongnu.org,
-	jbarnes@virtuousgeek.org, rjw@sisk.pl, alex.williamson@redhat.com,
-	Amos Kong <akong@redhat.com>
-Subject: Re: [SeaBIOS] [RESEND PATCH v3] hotplug: add device per func in ACPI
- DSDT tables
-Message-ID: <20120511101415.GD15230@redhat.com>
-References: <20111214010645.GA2044@morn.localdomain>
- <20120509072452.14872.92530.stgit@t>
- <4FABF832.1060708@gmail.com>
- <20120510174257.GD14647@redhat.com>
- <4FABFEE9.9060501@gmail.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:59757 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757695Ab2EDCrf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2012 22:47:35 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 4 May 2012 02:44:39 +1000
+Date: Fri, 4 May 2012 10:47:21 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120504024721.GA6775@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120410090306.GA7056@richard>
+ <20120422155202.GA13540@richard>
+ <CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+ <CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
+ <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
+ <20120503065455.GA30042@richard>
+ <CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FABFEE9.9060501@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2012 at 01:46:17AM +0800, Jiang Liu wrote:
-> On 05/11/2012 01:42 AM, Michael S. Tsirkin wrote:
-> > On Fri, May 11, 2012 at 01:17:38AM +0800, Jiang Liu wrote:
-> >> On 05/09/2012 03:24 PM, Amos Kong wrote:
-> >>
-> >>> ---
-> >>>  src/ssdt-pcihp.dsl |   17 
-> >>>  src/ssdt-pcihp.hex | 8869 +++++++++++++++++++++++++++++++++++++++++++++++++++-
-> >>>  2 files changed, 8781 insertions(+), 105 deletions(-)
-> >>>
-> >>> diff --git a/src/ssdt-pcihp.dsl b/src/ssdt-pcihp.dsl
-> >>> index 4b435b8..2a3c326 100644
-> >>> --- a/src/ssdt-pcihp.dsl
-> >>> +++ b/src/ssdt-pcihp.dsl
-> >>> @@ -17,14 +17,23 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
-> >>>          // at runtime, if the slot is detected to not support hotplug.
-> >>>          // Extract the offset of the address dword and the
-> >>>          // _EJ0 name to allow this patching.
-> >>> -#define hotplug_slot(slot)                              \
-> >>> -        Device (S##slot) {                              \
-> >>> +#define hotplug_func(slot, fn)                          \
-> >>> +        Device (S##slot##fn) {                          \
-> >>>             ACPI_EXTRACT_NAME_DWORD_CONST aml_adr_dword  \
-> >>> -           Name (_ADR, 0x##slot##0000)                  \
-> >>> +           Name (_ADR, 0x##slot##000##fn)               \
-> >>>             ACPI_EXTRACT_METHOD_STRING aml_ej0_name      \
-> >>>             Method (_EJ0, 1) { Return(PCEJ(0x##slot)) }  \
-> >>>             Name (_SUN, 0x##slot)                        \
-> >>>          }
-> >> It would be perfect if the Device object could also support _PS0 and _STA
-> >> methods.
-> > 
-> > It needs qemu support, and some backward compatibility hack.
-> > Why?
-> > 
-> >> Could we re-add the slot back after hot-removing it from the guest
-> >> OS with this ACPI implementation? Say execute following scripts from guest OS.
-> >> echo 0 > /sys/bus/pci/slot/xx/power
-> >> echo 1 > /sys/bus/pci/slot/xx/power
-> > 
-> > No because qemu removes device after eject.
-> > Do you have a need for this functionality? What is it?
-> 
-> I'm not familiar with qemu:(
-> On native OS, admin could trigger PCI device hotplug operations through
-> /sys/bus/pci/slot/xx/power. Not sure whether that's needed for guest OS too. 
-> 
-Why is it needed on physical HW? May be it is needed in a VM for the
-same reason?
+On Thu, May 03, 2012 at 01:33:17AM -0700, Yinghai Lu wrote:
+>On Wed, May 2, 2012 at 11:54 PM, Richard Yang
+><weiyang@linux.vnet.ibm.com> wrote:
+>> On Wed, Apr 25, 2012 at 09:28:19AM -0700, Yinghai Lu wrote:
+>>>On Wed, Apr 25, 2012 at 2:47 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
+>>>>> busn_alloc patchset should address your concern.
+>>>>>
+>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>>>> for-pci-busn-alloc
+>>
+>> For some functions, such as probe_resource() would you mind add some
+>> comments?  Such as explain the parameter usage.
+>> That would help for reading the function.
+>
+>I updated for-pci-busn-alloc branch with updating of probe_resource()...
+>and removing bus->secondary and subordinate.
+>
+You mean you remove the bus->secondary field?
+So the pci_bus->number hold the bus number?
+I think this is a huge work.
+>Please check if you can understand it ...
+>
+>http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=7de8df57b223d54af95ffe67f8da2dd39a265971
+Some question:
 
---
-			Gleb.
++static resource_size_t __find_res_top_free_size(struct resource *res,
++                                                int skip_nr)
++{
++       resource_size_t n_size;
++       struct resource tmp_res;
++
++       */
++        *   find out free number below res->end that we can use.
++        *      res->start to res->start + skip_nr - 1 can not be used.
++        */
++       n_size = resource_size(res);
++       if (n_size <= skip_nr)
++               return 0;
++
++       n_size -= skip_nr;
++       memset(&tmp_res, 0, sizeof(struct resource));
++       while (n_size > 0) {
++               int ret;
++
++               ret = __allocate_resource(res, &tmp_res, n_size,
++                       res->end - n_size + skip_nr, res->end,
++                       1, NULL, NULL, false);
++               if (ret == 0) {
++                       __release_resource(&tmp_res);
++                       break;
++               }
++               n_size--;
++       }
++
++       return n_size;
++}
+So this is trying to find out the biggest free space of res?
+On the right side?
+
+For example we have , res like
+   90-150
+        105-140
+The __find_res_top_free_size() will return 10 instead of 15. 
+So this is the design decision to find the right side free resouce not
+the left side?
+
+>
+>Thanks
+>
+>Yinghai
+
+-- 
+Richard Yang
+Help you, Help me
+
