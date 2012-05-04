@@ -1,53 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 29 May 2012 11:21:56 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Initializing iwl3945 error
-Message-ID: <20120529092154.GA2441@redhat.com>
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
- <20120313081235.GC15333@redhat.com>
- <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
- <CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com>
- <20120528140448.GA22783@redhat.com>
- <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:43760 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753002Ab2EDRQU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 May 2012 13:16:20 -0400
+Received: by lahj13 with SMTP id j13so2169776lah.19
+        for <linux-pci@vger.kernel.org>; Fri, 04 May 2012 10:16:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="sm4nu43k4a2Rpi4c"
-In-Reply-To: <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7mwheYBxM5_PhSmUdbybRbO9s1nTmZrL83NPuNW6g8SA@mail.gmail.com>
+References: <20120427190033.GA17588@ldl.usa.hp.com> <CAErSpo7mwheYBxM5_PhSmUdbybRbO9s1nTmZrL83NPuNW6g8SA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 May 2012 11:15:58 -0600
+Message-ID: <CAErSpo7LEDFq6=6vzBg+1eT-v+Y+oEm=AoUo2hiJ4-i3NafPYw@mail.gmail.com>
+Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
+To: linux-pci@vger.kernel.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, May 3, 2012 at 5:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Apr 27, 2012 at 1:00 PM, Khalid Aziz <khalid.aziz@hp.com> wrote:
+>> Disable Bus Master bit on the device in
+>> pci_device_shutdown() to ensure PCI devices do not continue
+>> to DMA data after shutdown. This can cause memory
+>> corruption in case of a kexec where the current kernel
+>> shuts down and transfers control to a new kernel while a
+>> PCI device continues to DMA to memory that does not belong
+>> to it any more in the new kernel.
+>>
+>> I have tested this code on two laptops, two workstations and
+>> a 16-socket server. kexec worked correctly on all of them.
+>>
+>>
+>> Signed-off-by: Khalid Aziz <khalid.aziz@hp.com>
+>> ---
+>>  drivers/pci/pci-driver.c |    6 ++++++
+>>  1 files changed, 6 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 6b54b23..9db5940 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -420,6 +420,12 @@ static void pci_device_shutdown(struct device *dev)
+>>        pci_msi_shutdown(pci_dev);
+>>        pci_msix_shutdown(pci_dev);
+>>
+>> +       /*
+>> +        * Turn off Bus Master bit on the device to tell it to not
+>> +        * continue to do DMA
+>> +        */
+>> +       pci_disable_device(pci_dev);
+>> +
+>>        /*
+>>         * Devices may be enabled to wake up by runtime PM, but they need not
+>>         * be supposed to wake up the system from its "power off" state (e.g.
+>
+> Any comment on this, Eric?  It seems reasonable to me.
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Applied to my "next" branch, thanks.
 
-On Mon, May 28, 2012 at 12:21:34PM -0600, Bjorn Helgaas wrote:
-> linked in vs. loaded as a module after boot?  What if you add a long
-> delay in the driver probe routine?
-
-I'm attaching patch which add 200 ms delay after pci_enable_device() in
-->probe routine.
-
-Stanislaw
-
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="iwl3945_pci_probe_delay.patch"
-
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index faec404..96fe43d 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3635,6 +3635,8 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto out_ieee80211_free_hw;
- 	}
- 
-+	msleep(200);
-+
- 	pci_set_master(pdev);
- 
- 	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-
---sm4nu43k4a2Rpi4c--
+Bjorn
