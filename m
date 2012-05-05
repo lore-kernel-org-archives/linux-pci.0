@@ -1,82 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 10/21] PCI: checking busn_res in pci_scan_root_bus()
-Date: Mon,  7 May 2012 13:29:55 -0700
-Message-Id: <1336422606-4244-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:49406 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758581Ab2EEA3E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 20:29:04 -0400
+Message-ID: <4FA47443.9040505@gmail.com>
+Date: Sat, 05 May 2012 10:28:51 +1000
+From: Francois Rigaut <frigaut@gmail.com>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: linux-pci@vger.kernel.org,
+	Nico Schottelius <nico-linux-20120419@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Linux Support for Thunderbolt using Apple Monitor
+References: <20120419163800.GB13977@schottelius.org> <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com> <20120502163629.GE928@schottelius.org> <20120502202509.GA26798@kroah.com> <20120503065003.GB13386@schottelius.org> <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com>
+In-Reply-To: <20120504184851.GB11223@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some callers do not supply the bus number aperture, usually because they do
-not know the end.  In this case, we assume the aperture extends from the
-root bus number to bus 255, scan the bus, and shrink the bus number
-resource so it ends at the largest bus number we found.
 
-This is obviously not correct because the actual end of the aperture may
-well be larger than the largest bus number we found.  But I guess it's all
-we have for now.
 
-Also print out one info about that, so we could find out which path
-does not have busn_res in resources list.
+On 05/05/12 04:48, Greg KH wrote:
+> Oh, what exact machine is this? Maybe I can ask around and see if I 
+> can dig up one myself, and hey, I always need an excuse to get a new 
+> display :) thanks, greg k-h 
+The machine is a macbook air 13" mid 2011, with a thunderbolt port 
+(physically identical to a mini display port). I hear Linus is using a 
+MBA 11", so I don't feel alone here running linux on this thing.
+The display is a 27" Apple thunderbolt display. It's a gorgeous display 
+with deep colors and lots of dynamics, and not (much) more expensive 
+than other 27" display. But it doesn't hot plug (in linux, yet) and the 
+only input is through the thunderbolt cable so no luck in using 
+alternatives like HDMI (neither VGA, but VGA doesn't support the display 
+resolution 2560x1440 anyway).
 
--v4: set found initial value to false.
-
-[bhelgaas: changelog, list _safe iterator unnecessary, use %pR format for bus]
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   22 +++++++++++++++++++++-
- 1 files changed, 21 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 59011ce..6258f6f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1788,13 +1788,33 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
-+	struct pci_host_bridge_window *window;
-+	bool found = false;
- 	struct pci_bus *b;
-+	int max;
-+
-+	list_for_each_entry(window, resources, list)
-+		if (window->res->flags & IORESOURCE_BUS) {
-+			found = true;
-+			break;
-+		}
- 
- 	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
- 	if (!b)
- 		return NULL;
- 
--	b->busn_res.end = pci_scan_child_bus(b);
-+	if (!found) {
-+		dev_info(&b->dev,
-+		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-+			bus);
-+		pci_bus_insert_busn_res(b, bus, 255);
-+	}
-+
-+	max = pci_scan_child_bus(b);
-+
-+	if (!found)
-+		pci_bus_update_busn_res_end(b, max);
-+
- 	pci_bus_add_devices(b);
- 	return b;
- }
--- 
-1.7.7
+Good luck,
+Francois
 
