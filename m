@@ -1,62 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.ctxuk.citrix.com ([62.200.22.115]:34032 "EHLO
-	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756056Ab2EDNaI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 09:30:08 -0400
-From: David Vrabel <david.vrabel@citrix.com>
-To: <xen-devel@lists.xensource.com>
-CC: David Vrabel <david.vrabel@citrix.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<x86@kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v2] x86,xen,pci: don't use PCI BIOS service for configuration space accesses
-Date: Fri, 4 May 2012 14:29:46 +0100
-Message-ID: <1336138186-11423-1-git-send-email-david.vrabel@citrix.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 5 May 2012 18:48:19 +0200
+From: Nico Schottelius <nico-linux-20120419@schottelius.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Francois Rigaut <frigaut@gmail.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org,
+	Nico Schottelius <nico-linux-20120419@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Linux Support for Thunderbolt using Apple Monitor
+Message-ID: <20120505164819.GA21599@schottelius.org>
+References: <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com>
+ <20120503153547.GD20334@kroah.com>
+ <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com>
+ <20120503233858.GA13453@kroah.com>
+ <4FA358ED.1080705@gmail.com>
+ <20120504184851.GB11223@kroah.com>
+ <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com>
+ <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com>
+ <4FA4AA3E.1070903@gmail.com>
+ <4FA544B1.3070705@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FA544B1.3070705@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Vrabel <david.vrabel@citrix.com>
+Hey Jiang,
 
-The accessing PCI configuration space with the PCI BIOS32 service does
-not work in PV guests.
+Jiang Liu [Sat, May 05, 2012 at 11:18:09PM +0800]:
+> 	It seems that the PCI topology related to the Thunderbird is:
 
-On systems without MMCONFIG or where the BIOS hasn't marked the
-MMCONFIG region as reserved in the e820 map, the BIOS service is
-probed (even though direct access is preferred) and this hangs.
+Thanks for digging into this, I've the feeling we could somehow get
+this running in the end...
 
-Signed-off-by: David Vrabel <david.vrabel@citrix.com>
----
-Changes in v2:
-- improve commit message
+> [...] 
+> According to the acpidump sent out by you, I guess the relationship among PCIe and ACPI is as below:
+>         Device (PCI0)	// PCIe host bridge
+>         {
+>             Name (_HID, EisaId ("PNP0A08"))
+>             Device (P0P2)	//00:01.0
+>             {
+>                 Name (_ADR, 0x00010000)
+>                 Device (UPSB)	//03:00.0
+>                 {
+>                     Name (_ADR, 0x00)
+>                     Device (DSB2)	//04:04.0
+>                     {
+>                         Name (_ADR, 0x00040000)
+>                         Method (_RMV, 0, NotSerialized)
+>                         {
+>                             Return (OSDW ()) // OSDW-> OS is Darwin
+>                         }
+>                         Device (UPS2)	//37:00.0
+>                         {
+>                             Name (_ADR, 0x00)
+> 			}
+> 		    }
+> 		}
+> 	    }
+> 	}
+> 
+> But _RMV method only returns 1 on iOS or Max OS X. That means ACPI based hotplug is disabled
+> on Linux for your system. And as Yinghai has pointed out, all the PCIe downstream ports on 
+> the system don't support PCIe hotplug. So need BIOS or hardware changes to support Thunderbolt
+> cable hotplug on your system.
 
----
- arch/x86/xen/enlighten.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+I'm not deep into how acpi works, but wondering: Can't we replace that part,
+change the tree or emulate a different OSDW() method similar to LD_PRELOAD?
 
-diff --git a/arch/x86/xen/enlighten.c b/arch/x86/xen/enlighten.c
-index a8f8844..7ce2c78 100644
---- a/arch/x86/xen/enlighten.c
-+++ b/arch/x86/xen/enlighten.c
-@@ -63,6 +63,7 @@
- #include <asm/stackprotector.h>
- #include <asm/hypervisor.h>
- #include <asm/mwait.h>
-+#include <asm/pci_x86.h>
- 
- #ifdef CONFIG_ACPI
- #include <linux/acpi.h>
-@@ -1365,7 +1366,9 @@ asmlinkage void __init xen_start_kernel(void)
- 		/* Make sure ACS will be enabled */
- 		pci_request_acs();
- 	}
--		
-+
-+	/* PCI BIOS service won't work from a PV guest. */
-+	pci_probe &= ~PCI_PROBE_BIOS;
- 
- 	xen_raw_console_write("about to get started...\n");
- 
+Cheers,
+
+Nico
+
 -- 
-1.7.2.5
-
+PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
