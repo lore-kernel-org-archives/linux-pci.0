@@ -1,89 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:33638 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758408Ab2EXX4y convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 May 2012 19:56:54 -0400
-Received: by lahd3 with SMTP id d3so258141lah.19
-        for <linux-pci@vger.kernel.org>; Thu, 24 May 2012 16:56:53 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:33551 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755951Ab2EEP14 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 May 2012 11:27:56 -0400
+Message-ID: <4FA546F1.1020008@gmail.com>
+Date: Sat, 05 May 2012 23:27:45 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEH94Lg2qs2_2_zGm9aChqz_6Ues57-KXwGmUquXjKFXo8RbeA@mail.gmail.com>
-References: <CAEH94Ljfjiu3MPLz8_P=1JSJS=hQVY_CJ4kZ=8Oq+0VpweGA4Q@mail.gmail.com>
- <CAJSP0QXgR5w09LgWDbFzg6EajEoMLY0DHmvA8DndmvnCcBRSZg@mail.gmail.com>
- <CAEH94Lh0gmHSR1ugVFg0ZhtFTahb9LQJsxjWZzwqzNLSO0aVug@mail.gmail.com>
- <CAJSP0QXoL3Tr7EAGxX77xZ71bj16oCf0ndL0iMopeYexLPJ93w@mail.gmail.com> <CAEH94Lg2qs2_2_zGm9aChqz_6Ues57-KXwGmUquXjKFXo8RbeA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 24 May 2012 17:56:31 -0600
-Message-ID: <CAErSpo7dySdFPdLvVZJN6WwB29xMx7CS0Xxdxs7=0=ME7kqBVA@mail.gmail.com>
-Subject: Re: PCI: cardbus bridge
-To: Zhi Yong Wu <zwu.kernel@gmail.com>
-Cc: Stefan Hajnoczi <stefanha@gmail.com>, linux-pci@vger.kernel.org,
-	Ram Pai <linuxram@us.ibm.com>
-Content-Type: text/plain; charset=windows-1252
+To: Francois Rigaut <frigaut@gmail.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org,
+	Nico Schottelius <nico-linux-20120419@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Linux Support for Thunderbolt using Apple Monitor
+References: <20120419163800.GB13977@schottelius.org> <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com> <20120502163629.GE928@schottelius.org> <20120502202509.GA26798@kroah.com> <20120503065003.GB13386@schottelius.org> <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com> <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com> <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com> <4FA4AA3E.1070903@gmail.com> <4FA4E259.9070903@gmail.com> <4FA4E93F.3050800@gmail.com>
+In-Reply-To: <4FA4E93F.3050800@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2012 at 3:24 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
-> On Thu, May 24, 2012 at 5:21 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
->> On Thu, May 24, 2012 at 9:56 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
->>> On Thu, May 24, 2012 at 4:37 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
->>>> On Thu, May 24, 2012 at 9:26 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
+There's another mysterious _DSM function under \_SB.PCI0.P0P2.UPSB.
+Seems it's related to Thunderbolt technology.
 
->>>>> By the way, someone usually mentioned pci host bridge, pci root
->>>>> bridge. What the differences among them are?
->>>>
->>>> I'm not sure what the exact difference is.  PCI "root" bridge refers
->>>> to the hierarchical nature of PCI, while PCI "host" bridge refers to
->>> You mean that PCI "root" bridge is one alias of another some bridge?
+                    Method (_DSM, 4, NotSerialized)
+                    {
+                        If (LEqual (Arg0, Buffer (0x10)
+                                {
+                                    /* 0000 */    0xC6, 0xB7, 0xB5, 0xA0, 0x18, 0x13, 0x1C, 0x44,
+                                    /* 0008 */    0xB0, 0xC9, 0xFE, 0x69, 0x5E, 0xAF, 0x94, 0x9B
+                                }))
+                        {
+                            Store (Package (0x02)
+                                {
+                                    "PCI-Thunderbolt",
+                                    0x01
+                                }, Local0)
+                            DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))
+                            Return (Local0)
+                        }
+
+                        Return (0x80000002)
+                    }
+
+
+On 05/05/2012 04:47 PM, Francois Rigaut wrote:
+> http://maumae.net/thunderbolt/acpidump.bin
+> Thanks.
+> Francois
+> 
+> 
+> On 05/05/12 18:18, Jiang Liu wrote:
+>> This log message below implies that your BIOS doesn't provide the ACPI interfaces
+>> needed by acpiphp driver. Maybe an ACPI dump file may help to identify the issue.
+>> You may generate acpidump file by:
+>> acpidump>  acpidump.bin
 >>
->> The root bridge is the root of a tree of PCI busses.  It's the bus
->> that the host interacts with - there may be PCI bridges that attach
->> additional busses.
+>>> May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
+>> On 05/05/2012 12:19 PM, Francois Rigaut wrote:
+>>> May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
 
-"Root bridge" and "host bridge" mean the same thing in Linux: a bridge
-that connects host CPUs to a PCI fabric.  This bridge is not
-architected.  The upstream interface and the programming interface are
-implementation specific.  The downstream interface is PCI, so that
-part is standard, but since the programming interface is not defined,
-you can't *do* anything useful to it without an
-implementation-specific driver.
-
-On x86 and ia64, that driver is an ACPI driver, and the BIOS supplies
-ACPI methods that hide the implementation details from the OS.
-
-The PCI and ACPI specs use the term "host bridge," so that's what I
-prefer.  The ACPI driver is "pci_root.c" and it calls it "PCI Root
-Bridge."
-
-A PCI bus immediately below a host bridge is commonly called a "root
-bus."  This may be bus 0, but it need not be.  Most modern systems
-have multiple host bridges, each of which has a root bus.
-
-A PCI-to-PCI bridge is different: it has PCI interfaces on both
-upstream ("primary") and downstream ("secondary") sides.  It is
-defined by the spec.
-
->> BTW I don't know the terminology, maybe it's PCI "domains" not
->> "busses".  Again, you'd have to look at the PCI specification to get
->> the exact definition.
-
-Linux uses "domain" to refer to what the PCI and ACPI specs call a
-"segment group."  Here's the definition (from the PCI Firmware Spec):
-
-"A number in the range 0…65535 that uniquely selects a PCI Segment Group.
-
-PCI Segment Group is purely a software concept managed by system
-firmware and used by the operation
-system. It is a logical collection of PCI buses (or bus segments).
-There is no tie to any physical entities. It is a
-way to logically group the PCI bus segments and PCI Express Hierarchies.
-
-PCI Segment Group concept enables support for more than 256 buses in a
-system by allowing the reuse of the PCI bus numbers. Within each PCI
-Segment Group, the bus numbers for the PCI buses must be unique. PCI
-buses in different PCI Segment Group are permitted to have the same
-bus number.
-
-A PCI Segment Group contains one or more PCI host bridges."
-
-Bjorn
