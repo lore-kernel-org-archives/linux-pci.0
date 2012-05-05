@@ -1,49 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:50547 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932139Ab2EGU3m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:29:42 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 6/7] PCI, sgihp: Using pci_hp_add_bridge
-Date: Mon,  7 May 2012 13:29:15 -0700
-Message-Id: <1336422556-4124-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
-References: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:56779 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758995Ab2EEDrg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 23:47:36 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sat, 5 May 2012 03:29:26 +1000
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q453ecGM22479092
+	for <linux-pci@vger.kernel.org>; Sat, 5 May 2012 13:40:38 +1000
+Received: from d23av03.au.ibm.com (loopback [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q453lWXR004113
+	for <linux-pci@vger.kernel.org>; Sat, 5 May 2012 13:47:32 +1000
+Date: Sat, 5 May 2012 11:47:30 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Optimize the resource overlap check
+Message-ID: <20120505034730.GA5648@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <1335425575-2023-1-git-send-email-weiyang@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1335425575-2023-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-instead of open code with pci_add_new_bus()/do_scan_bus...
+Bjorn,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/sgi_hotplug.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+How do you think of my this version?
 
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-index de57311..f64ca92 100644
---- a/drivers/pci/hotplug/sgi_hotplug.c
-+++ b/drivers/pci/hotplug/sgi_hotplug.c
-@@ -397,13 +397,11 @@ static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
- 			else
- 				sn_io_slot_fixup(dev);
- 			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--				unsigned char sec_bus;
--				pci_read_config_byte(dev, PCI_SECONDARY_BUS,
--						     &sec_bus);
--				new_bus = pci_add_new_bus(dev->bus, dev,
--							  sec_bus);
--				pci_scan_child_bus(new_bus);
--				new_ppb = 1;
-+				pci_hp_add_bridge(dev);
-+				if (dev->subordinate) {
-+					new_bus = dev->subordinate;
-+					new_ppb = 1;
-+				}
- 			}
- 			pci_dev_put(dev);
- 		}
+On Thu, Apr 26, 2012 at 03:32:55PM +0800, Wei Yang wrote:
+>In coalesce_windows() it tries to check whether the res1 and res2 overlap.
+>This function do four comparisons, which could be done with one
+>comparisons.
+>
+>Also make the resource_overlaps() a common function for others.
+>
+>Signed-Off-By: Wei Yang <weiyang@linux.vnet.ibm.com>
+>---
+> arch/x86/pci/acpi.c    |   12 +-----------
+> include/linux/ioport.h |    7 +++++++
+> 2 files changed, 8 insertions(+), 11 deletions(-)
+>
+>diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>index 68c3c13..fd3f541 100644
+>--- a/arch/x86/pci/acpi.c
+>+++ b/arch/x86/pci/acpi.c
+>@@ -181,13 +181,6 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+> 	return AE_OK;
+> }
+>
+>-static bool resource_contains(struct resource *res, resource_size_t point)
+>-{
+>-	if (res->start <= point && point <= res->end)
+>-		return true;
+>-	return false;
+>-}
+>-
+> static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+> {
+> 	int i, j;
+>@@ -208,10 +201,7 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+> 			 * our resources no longer match the ACPI _CRS, but
+> 			 * the kernel resource tree doesn't allow overlaps.
+> 			 */
+>-			if (resource_contains(res1, res2->start) ||
+>-			    resource_contains(res1, res2->end) ||
+>-			    resource_contains(res2, res1->start) ||
+>-			    resource_contains(res2, res1->end)) {
+>+			if (resource_overlaps(res1, res2)) {
+> 				res1->start = min(res1->start, res2->start);
+> 				res1->end = max(res1->end, res2->end);
+> 				dev_info(&info->bridge->dev,
+>diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+>index e9bb22c..05d2c70 100644
+>--- a/include/linux/ioport.h
+>+++ b/include/linux/ioport.h
+>@@ -198,5 +198,12 @@ extern int
+> walk_system_ram_range(unsigned long start_pfn, unsigned long nr_pages,
+> 		void *arg, int (*func)(unsigned long, unsigned long, void *));
+>
+>+static inline bool resource_overlaps(struct resource *r1,
+>+                                         struct resource *r2)
+>+{
+>+       return (r1->start <= r2->end && r1->end >= r2->start);
+>+}
+>+
+>+
+> #endif /* __ASSEMBLY__ */
+> #endif	/* _LINUX_IOPORT_H */
+>-- 
+>1.7.4.1
+
 -- 
-1.7.7
+Richard Yang
+Help you, Help me
 
