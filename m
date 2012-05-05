@@ -1,44 +1,219 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from blu0-omc4-s13.blu0.hotmail.com ([65.55.111.152]:3070 "EHLO
-	blu0-omc4-s13.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964796Ab2EPNM7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 May 2012 09:12:59 -0400
-Message-ID: <BLU0-SMTP12B809D527F768CCC42B18B7180@phx.gbl>
-Date: Wed, 16 May 2012 14:12:55 +0100
-From: Rob Allen <ra-kernel@hotmail.co.uk>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Clemens Ladisch <clemens@ladisch.de>,
-	Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	Ram Pai <linuxram@us.ibm.com>,
-	linux1394-devel@lists.sourceforge.net,
-	bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
-References: <bug-43244-4803@https.bugzilla.kernel.org/> <20120513221357.7574ae79@stein> <4FB0A6F6.9050504@ladisch.de> <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60421 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755102Ab2EEDBQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 23:01:16 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so4527911pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 04 May 2012 20:01:16 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v5 3/6] PCI, x86: use RCU list to protect mmconfig list
+Date: Sat,  5 May 2012 11:00:27 +0800
+Message-Id: <1336186830-10765-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1336186830-10765-1-git-send-email-jiang.liu@huawei.com>
+References: <1336186830-10765-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/05/12 07:39, Yinghai Lu wrote:
-> On Sun, May 13, 2012 at 11:32 PM, Clemens Ladisch<clemens@ladisch.de>  wrote:
->> I'm not sure how resource-related changes can result in something that looks
->> like a power management issue, but maybe the chip doesn't allow register
->> accesses after its resources are moved, or something like that.  Any ideas?
->>
->
-> can you post full log with pci debug enabled with lastest upsteam kernel?
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Yinghai,
+Use RCU list to protect mmconfig list from dynamic change
+when supporting PCI host bridge hotplug.
 
-Sorry for the delay.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   18 ++++++++++++------
+ arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
+ arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
+ 3 files changed, 34 insertions(+), 10 deletions(-)
 
-I'm happy to do that, although I need with some guidance on what I need 
-to enable to get the required output.
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 5e2cd2a..0ac97d5 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -17,6 +17,8 @@
+ #include <linux/bitmap.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/mutex.h>
++#include <linux/rculist.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <asm/acpi.h>
+@@ -25,6 +27,7 @@
+ 
+ /* Indicate if the mmcfg resources have been placed into the resource table. */
+ static int __initdata pci_mmcfg_resources_inserted;
++static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
+@@ -45,20 +48,20 @@ static __init void free_all_mmcfg(void)
+ 		pci_mmconfig_remove(cfg);
+ }
+ 
+-static __init void list_add_sorted(struct pci_mmcfg_region *new)
++static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	/* keep list sorted by segment and starting bus number */
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
+ 		if (cfg->segment > new->segment ||
+ 		    (cfg->segment == new->segment &&
+ 		     cfg->start_bus >= new->start_bus)) {
+-			list_add_tail(&new->list, &cfg->list);
++			list_add_tail_rcu(&new->list, &cfg->list);
+ 			return;
+ 		}
+ 	}
+-	list_add_tail(&new->list, &pci_mmcfg_list);
++	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
+ }
+ 
+ static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
+@@ -101,8 +104,11 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	struct pci_mmcfg_region *new;
+ 
+ 	new = pci_mmconfig_alloc(segment, start, end, addr);
+-	if (new)
++	if (new) {
++		mutex_lock(&pci_mmcfg_lock);
+ 		list_add_sorted(new);
++		mutex_unlock(&pci_mmcfg_lock);
++	}
+ 
+ 	return new;
+ }
+@@ -111,7 +117,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+ 		if (cfg->segment == segment &&
+ 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
+ 			return cfg;
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5372e86..5dad04a 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/init.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <acpi/acpi.h>
+@@ -60,9 +61,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -80,6 +84,7 @@ err:		*value = -1;
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if ((bus > 255) || (devfn > 255) || (reg > 4095))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index 915a493..acc48c5 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -9,6 +9,7 @@
+ #include <linux/init.h>
+ #include <linux/acpi.h>
+ #include <linux/bitmap.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -34,9 +35,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -49,6 +53,7 @@ err:		*value = -1;
+ 		*value = mmio_config_readl(addr + reg);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		mmio_config_writel(addr + reg, value);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+-- 
+1.7.9.5
 
-(I've been using pre-built kernels so far, and I've never built and 
-installed from source. I'm not averse to doing so, but please just bear 
-it in mind that I'm a newbie!)
-
-Thanks,
-Rob
