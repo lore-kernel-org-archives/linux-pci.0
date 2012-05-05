@@ -1,204 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:33373 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933363Ab2EQDuu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 May 2012 23:50:50 -0400
-Date: Thu, 17 May 2012 13:29:04 +1000
-From: David Gibson <david@gibson.dropbear.id.au>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH 02/13] iommu: IOMMU Groups
-Message-ID: <20120517032904.GC22069@truffala.fritz.box>
-References: <20120511222148.30496.68571.stgit@bling.home>
- <20120511225541.30496.34751.stgit@bling.home>
- <20120514011627.GB30229@truffala.fritz.box>
- <1337015502.6954.68.camel@bling.home>
- <20120515020328.GG30229@truffala.fritz.box>
- <1337063643.6954.166.camel@bling.home>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44111 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755391Ab2EEPSW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 May 2012 11:18:22 -0400
+Message-ID: <4FA544B1.3070705@gmail.com>
+Date: Sat, 05 May 2012 23:18:09 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1337063643.6954.166.camel@bling.home>
+To: Francois Rigaut <frigaut@gmail.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org,
+	Nico Schottelius <nico-linux-20120419@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Linux Support for Thunderbolt using Apple Monitor
+References: <20120419163800.GB13977@schottelius.org> <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com> <20120502163629.GE928@schottelius.org> <20120502202509.GA26798@kroah.com> <20120503065003.GB13386@schottelius.org> <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com> <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com> <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com> <4FA4AA3E.1070903@gmail.com>
+In-Reply-To: <4FA4AA3E.1070903@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 15, 2012 at 12:34:03AM -0600, Alex Williamson wrote:
-> On Tue, 2012-05-15 at 12:03 +1000, David Gibson wrote:
-> > On Mon, May 14, 2012 at 11:11:42AM -0600, Alex Williamson wrote:
-> > > On Mon, 2012-05-14 at 11:16 +1000, David Gibson wrote:
-> > > > On Fri, May 11, 2012 at 04:55:41PM -0600, Alex Williamson wrote:
-> > [snip]
-> > > > > +struct iommu_group {
-> > > > > +	struct kobject kobj;
-> > > > > +	struct kobject *devices_kobj;
-> > > > > +	struct list_head devices;
-> > > > > +	struct mutex mutex;
-> > > > > +	struct blocking_notifier_head notifier;
-> > > > > +	int id;
-> > > > 
-> > > > I think you should add some sort of name string to the group as well
-> > > > (supplied by the iommu driver creating the group).  That would make it
-> > > > easier to connect the arbitrary assigned IDs to any platform-standard
-> > > > naming convention for these things.
-> > > 
-> > > When would the name be used and how is it exposed?
-> > 
-> > I'm thinking of this basically as a debugging aid.  So I'd expect it
-> > to appear in a 'name' (or 'description') sysfs property on the group,
-> > and in printk messages regarding the group.
+Hi Francois,
+	It seems that the PCI topology related to the Thunderbird is:
+00:01.0 PCI bridge: Intel Corporation Xeon E3-1200/2nd Generation Core Processor Family PCI Express Root Port (rev 09)
+	03:00.0 PCI bridge: Intel Corporation Device 151a (rev 01)
+	04:00.0 PCI bridge: Intel Corporation Device 151a (rev 01)
+	04:03.0 PCI bridge: Intel Corporation Device 151a (rev 01)
+	04:04.0 PCI bridge: Intel Corporation Device 151a (rev 01)
+		37:00.0 PCI bridge: Intel Corporation Device 1513
+		38:00.0 PCI bridge: Intel Corporation Device 1513
+			39:00.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
+			3a:03.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
+				3b:00.0 USB controller: Pericom Semiconductor Device 400e (rev 01)
+				3b:00.1 USB controller: Pericom Semiconductor Device 400e (rev 01)
+				3b:00.2 USB controller: Pericom Semiconductor Device 400f (rev 01)
+		38:01.0 PCI bridge: Intel Corporation Device 1513
+			3c:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57761 Gigabit Ethernet PCIe (rev 10)
+		38:02.0 PCI bridge: Intel Corporation Device 1513
+			3d:00.0 FireWire (IEEE 1394): nee Agere Systems nee Lucent Microelectronics FW643 PCI Express 1394b Controller (PHY/Link) (rev 08)
+		38:03.0 PCI bridge: Intel Corporation Device 1513
+		38:04.0 PCI bridge: Intel Corporation Device 1513
+		38:05.0 PCI bridge: Intel Corporation Device 1513
+
+It's really a complex topology. The longest path has root port + 3 PCIe switches + endpoint.
+The device with id "Intel Corporation Device 151a", "Intel Corporation Device 1513" and
+"Pericom Semiconductor Device 400c" should be 3 PCIe switches. I guess the thunderbird
+cable is used to connect 04:04.0 to the second PCIe switch with device ID "Intel Corporation
+Device 1513". 
+
+According to the acpidump sent out by you, I guess the relationship among PCIe and ACPI is as below:
+        Device (PCI0)	// PCIe host bridge
+        {
+            Name (_HID, EisaId ("PNP0A08"))
+            Device (P0P2)	//00:01.0
+            {
+                Name (_ADR, 0x00010000)
+                Device (UPSB)	//03:00.0
+                {
+                    Name (_ADR, 0x00)
+                    Device (DSB2)	//04:04.0
+                    {
+                        Name (_ADR, 0x00040000)
+                        Method (_RMV, 0, NotSerialized)
+                        {
+                            Return (OSDW ()) // OSDW-> OS is Darwin
+                        }
+                        Device (UPS2)	//37:00.0
+                        {
+                            Name (_ADR, 0x00)
+			}
+		    }
+		}
+	    }
+	}
+
+But _RMV method only returns 1 on iOS or Max OS X. That means ACPI based hotplug is disabled
+on Linux for your system. And as Yinghai has pointed out, all the PCIe downstream ports on 
+the system don't support PCIe hotplug. So need BIOS or hardware changes to support Thunderbolt
+cable hotplug on your system.
+
+On 05/05/2012 12:19 PM, Francois Rigaut wrote:
 > 
-> Ok, so long as it's only descriptive/debugging I don't have a problem
-> adding something like that.
+> On 05/05/12 05:38, Yinghai Lu wrote:
+>> On Fri, May 4, 2012 at 12:37 PM, Yinghai Lu<yinghai@kernel.org>  wrote:
+>>> On Fri, May 4, 2012 at 11:48 AM, Greg KH<gregkh@linuxfoundation.org>  wrote:
+>>>> Ok, it looks like these are the devices that we are missing while
+>>>> "hotplugging":
+>>>> 37:00.0 PCI bridge: Intel Corporation Device 1513
+>>>> 38:00.0 PCI bridge: Intel Corporation Device 1513
+>>>> 38:01.0 PCI bridge: Intel Corporation Device 1513
+>>>> 38:02.0 PCI bridge: Intel Corporation Device 1513
+>>>> 38:03.0 PCI bridge: Intel Corporation Device 1513
+>>>> 38:04.0 PCI bridge: Intel Corporation Device 1513
+>>>> 38:05.0 PCI bridge: Intel Corporation Device 1513
+>>>> 39:00.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
+>>>> 3a:03.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
+>>>> 3b:00.0 USB controller: Pericom Semiconductor Device 400e (rev 01)
+>>>> 3b:00.1 USB controller: Pericom Semiconductor Device 400e (rev 01)
+>>>> 3b:00.2 USB controller: Pericom Semiconductor Device 400f (rev 01)
+>>>> 3c:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57761 Gigabit Ethernet PCIe (rev 10)
+>>>> 3d:00.0 FireWire (IEEE 1394): nee Agere Systems nee Lucent
+>>>> Microelectronics FW643 PCI Express 1394b Controller (PHY/Link) (rev 08)
+>>>>
+>>>> Which is good, I was worried that there was a video controller out there
+>>>> on the end of the thunderbolt link.
+>>>>
+>>>> So, the problem really is two here:
+>>>>   - your video card doesn't detect the new display
+>>>>   - your pci devices do not show up
+>>>>
+>>>> The first one probably needs to be reported to the Intel video driver
+>>>> people, they can help you out the best.
+> no it's definitely not the first one. As you saw, there'sa whole bunch of other devices (3 USB, firewire, network) that do not show up either.
 > 
-> > [snip]
-> > > > So, it's not clear that the kobject_name() here has to be unique
-> > > > across all devices in the group.  It might be better to use an
-> > > > arbitrary index here instead of a name to avoid that problem.
-> > > 
-> > > Hmm, that loses useful convenience when they are unique, such as on PCI.
-> > > I'll look and see if sysfs_create_link will fail on duplicate names and
-> > > see about adding some kind of instance to it.
-> > 
-> > Ok.  Is the name necessarily unique even for PCI, if the group crosses
-> > multiple domains?
+> The new info from Yinghai (thanks Yinghai) explains why hotpluging with pciehp did not work/detect the PCIE hotplug and did not result in *any* kernel messages.
 > 
-> Yes, it includes the domain in the dddd:bb:dd.f form.  I've found I can
-> just use sysfs_create_link_nowarn and add a .# index when we have a name
-> collision.
-
-Ok, that sounds good.
-
-> > [snip]
-> > > > > +	mutex_lock(&group->mutex);
-> > > > > +	list_for_each_entry(device, &group->devices, list) {
-> > > > > +		if (device->dev == dev) {
-> > > > > +			list_del(&device->list);
-> > > > > +			kfree(device);
-> > > > > +			break;
-> > > > > +		}
-> > > > > +	}
-> > > > > +	mutex_unlock(&group->mutex);
-> > > > > +
-> > > > > +	sysfs_remove_link(group->devices_kobj, kobject_name(&dev->kobj));
-> > > > > +	sysfs_remove_link(&dev->kobj, "iommu_group");
-> > > > > +
-> > > > > +	dev->iommu_group = NULL;
-> > > > 
-> > > > I suspect the dev -> group pointer should be cleared first, under the
-> > > > group lock, but I'm not certain about that.
-> > > 
-> > > group->mutex is protecting the group's device list.  I think my
-> > > assumption is that when a device is being removed, there should be no
-> > > references to it for anyone to race with iommu_group_get(dev), but I'm
-> > > not sure how valid that is.
-> > 
-> > What I'm concerned about here is someone grabbing the device by
-> > non-group-related means, grabbing a pointer to its group and that
-> > racing with remove_device().  It would then end up with a group
-> > pointer it thinks is right for the device, when the group no longer
-> > thinks it owns the device.
-> > 
-> > Doing it under the lock is so that on the other side, group aware code
-> > doesn't traverse the group member list and grab a reference to a
-> > device which no longer points back to the group.
+> So the whole thing I guess boils down to making acpiphp work. And why it outputs the "no such device" error message and does not load:
 > 
-> Our for_each function does grab the lock, as you noticed below, so
-> removing it from the list under lock prevents that path.  Where it gets
-> fuzzy is if someone can call iommu_group_get(dev) to get a group
-> reference in this gap.
-
-Right, that's what I'm concerned about.
-
->  Whether we clear the iommu_group pointer under
-> lock or not doesn't matter for that path since it doesn't retrieve it
-> under lock.  The assumption there is that the caller is going to have a
-> reference to the device and therefore the device is not being
-> removed.
-
-Hrm.  I guess that works, assuming that removing a device from the
-system is the only thing that will cause a device to be removed from
-the group.  How confident are we of that?
-
-> The asynchronous locking and reference counting is by far the hardest
-> part of iommu_groups and vfio core, so appreciate any hard analysis of
-> that.
-
-Well, I've given my recommendation on this small aspect.
-
-[snip]
-> > > > So, there's still the question of how to assign grouping for devices
-> > > > on a subordinate bus behind a bridge which is iommu managed.  The
-> > > > iommu driver for the top-level bus can't know about all possible
-> > > > subordinate bus types, but the subordinate devices will (in most
-> > > > cases, anyway) be iommu translated as if originating with the bus
-> > > > bridge.
-> > > 
-> > > Not just any bridge, there has to be a different bus_type on the
-> > > subordinate side.  Things like PCI-to-PCI work as is, but a PCI-to-ISA
-> > > would trigger this.
-> > 
-> > Right, although ISA-under-PCI is a bit of a special case anyway.  I
-> > think PCI to Firewire/IEEE1394 would also have this issue, as would
-> > SoC-bus-to-PCI for a SoC which had an IOMMU at the SoC bus level.  And
-> > virtual struct devices where the PCI driver is structured as a wrapper
-> > around a "vanilla" device driver, a pattern used in a number of
-> > drivers for chips with both PCI and non PCI variants.
+> I tried with debug=1 and got a bit more info in the log files:
 > 
-> Sorry, I jumped into reliving this issue without remembering how I
-> decided to rationalize it for IOMMU groups.  Let's step through it.
-> Given DeviceA that's a member of GroupA and potentially sources a
-> subordinate bus (A_bus_type) exposing DeviceA', what are the issues?
-> >From a VFIO perspective, GroupA isn't usable so long as DeviceA is
-> claimed by a non-VFIO driver.  That same non-VFIO driver is the one
-> causing DeviceA to source A_bus_type, so remove the driver and DeviceA'
-> goes away and we can freely give GroupA to userspace.  I believe this is
-> always true; there are no subordinate buses to devices that meet the
-> "viable" driver requirements of VFIO.  I don't see any problems with the
-> fact that userspace can then re-source A_bus_type and find DeviceA'.
-> That's what should happen.  If we want to assign just DeviceA' to
-> userspace, well, it has no IOMMU group of it's own, so clearly it's not
-> assignable on it's own.
+> [root@poliahu frigaut]# lsmod | grep -e acpi -e pci
+> acpi_cpufreq            5941  0
+> mperf                   1275  1 acpi_cpufreq
+> processor              26144  1 acpi_cpufreq
+> [root@poliahu frigaut]# modprobe acpiphp debug=1
+> ERROR: could not insert 'acpiphp': No such device
+> 
+> at this point this message showed up in everything.log:
+> May  5 14:09:55 localhost kernel: [28329.700022] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+> May  5 14:09:55 localhost kernel: [28329.702041] acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+> May  5 14:09:55 localhost kernel: [28329.702484] acpiphp_glue: found PCI-to-PCI bridge at PCI 0000:04:00.0
+> May  5 14:09:55 localhost kernel: [28329.702715] acpiphp_glue: Bus 0000:05 has 0 slots
+> May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
+> 
+> then:
+> [root@poliahu frigaut]# lsmod | grep -e acpi -e pci
+> pci_hotplug            25324  0
+> acpi_cpufreq            5941  0
+> mperf                   1275  1 acpi_cpufreq
+> processor              26144  1 acpi_cpufreq
+> [root@poliahu frigaut]#
+> 
+> shows that acpiphp was indeed not loaded (I assume the error occurs after it has written out the above messages in the log file), but pci_hotplug was as a dep of acpiphp I assume (thus, correct behavior).
+> 
+> So we're back to the issue of the acpiphp load error.
+> 
+> Greg, I see you're one of the authors of acpiphp:
+> #define DRIVER_VERSION    "0.5"
+> #define DRIVER_AUTHOR    "Greg Kroah-Hartman <gregkh@us.ibm.com>, Takayoshi Kochi <t-kochi@bq.jp.nec.com>, Matthew Wilcox <willy@hp.com>"
+> #define DRIVER_DESC    "ACPI Hot Plug PCI Controller Driver"
+> 
+> but that might have been a while back?
+> 
+> Cheers, and thanks,
+> Francois
+> 
+> 
+> 
+>>>>
+>>>> The second one means that something is up with the pci hotplug
+>>>> controller.  I've cced the linux-pci list, the people there should be
+>>>> able to help out better than I, as I no longer have any PCI hotplug
+>>>> hardware to work with anymore.
+>>>>
+>>> those devices are under 04:04.0, but that does not have slot cap
+>>> enabled by BIOS. So pciehp is going to to help.
+>> should be: pciehp is not going to help.
+>>
+>> so acpiphp are involved?
+>>
+>> Yinghai
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-Ah, right, so the assumption is that a bridge will only expose it's
-subordinate bus when it has an active kernel driver.  Yeah, I think
-that works at least for the current use cases.
-
-> For the more general IOMMU group case, I'm still struggling to figure
-> out why this is an issue.  If we were to do dma_ops via IOMMU groups, I
-> don't think it's unreasonable that map_page would discover there's no
-> iommu_ops on dev->bus (A_bus_type) and step up to dev->bus->self to find
-> both iommu_group on DeviceA and iommu_ops on DeviceA->bus.  Is there a
-> practical reason why DeviceA' would need to be listed as a member of
-> GroupA, or is it just an optimization?  I know we had a number of
-> discussions about these type of devices for isolation groups, but I
-> think that trying to strictly represent these types of devices was also
-> one of the downfalls of the isolation proposal.
-
-Yeah, walking up the tree to find a group is certainly a possibility
-as well.  Ok, so I'm happy enough only to track primary group members
-for now.  I think we should bear in mind the possibility we might need
-to track secondary members in future though (either as an optimization
-or as something we need for a use case we haven't pinned down yet).
-
-> This did make me think of one other generic quirk we might need.
-> There's some funkiness with USB that makes me think that it's
-> effectively a shared bus between 1.x and 2.0 controllers.  So assigning
-> the 1.x and 2.0 controllers to different groups potentially allows a
-> fast and a slow path to the same set of devices.  Is this true?  If so,
-> we probably need to quirk OHCI/UHCI and EHCI functions together when
-> they're on the same PCI device.  I think the PCI class code is
-> sufficient to do this.  Thanks,
-
-Ah, maybe.  I don't know enough about USB conventions to say for sure.
-
--- 
-David Gibson			| I'll have my music baroque, and my code
-david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
-				| _way_ _around_!
-http://www.ozlabs.org/~dgibson
