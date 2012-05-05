@@ -1,120 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:18058 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757668Ab2EGU3j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:29:39 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/7] PCI, pciehp: Separate pci_hp_add_bridge()
-Date: Mon,  7 May 2012 13:29:10 -0700
-Message-Id: <1336422556-4124-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
-References: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58562 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753890Ab2EEITf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 May 2012 04:19:35 -0400
+Message-ID: <4FA4E259.9070903@gmail.com>
+Date: Sat, 05 May 2012 16:18:33 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Francois Rigaut <frigaut@gmail.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org,
+	Nico Schottelius <nico-linux-20120419@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Linux Support for Thunderbolt using Apple Monitor
+References: <20120419163800.GB13977@schottelius.org> <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com> <20120502163629.GE928@schottelius.org> <20120502202509.GA26798@kroah.com> <20120503065003.GB13386@schottelius.org> <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com> <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com> <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com> <4FA4AA3E.1070903@gmail.com>
+In-Reply-To: <4FA4AA3E.1070903@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will use it for other pci hp hotplug support
+This log message below implies that your BIOS doesn't provide the ACPI interfaces
+needed by acpiphp driver. Maybe an ACPI dump file may help to identify the issue.
+You may generate acpidump file by:
+acpidump > acpidump.bin
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug-pci.c        |   23 +++++++++++++++++++++++
- drivers/pci/hotplug/pciehp_pci.c |   28 ++--------------------------
- drivers/pci/pci.h                |    1 +
- 3 files changed, 26 insertions(+), 26 deletions(-)
+>May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots 
 
-diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
-index d3509cd..1da0cae 100644
---- a/drivers/pci/hotplug-pci.c
-+++ b/drivers/pci/hotplug-pci.c
-@@ -4,6 +4,29 @@
- #include <linux/export.h>
- #include "pci.h"
- 
-+int __ref pci_hp_add_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *parent = dev->bus;
-+	int pass, busnr, start = parent->secondary;
-+	int end = parent->subordinate;
-+
-+	for (busnr = start; busnr <= end; busnr++) {
-+		if (!pci_find_bus(pci_domain_nr(parent), busnr))
-+			break;
-+	}
-+	if (busnr-- > end) {
-+		printk(KERN_ERR "No bus number available for hot-added bridge %s\n",
-+				pci_name(dev));
-+		return -1;
-+	}
-+	for (pass = 0; pass < 2; pass++)
-+		busnr = pci_scan_bridge(parent, dev, busnr, pass);
-+	if (!dev->subordinate)
-+		return -1;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_hp_add_bridge);
- 
- unsigned int __devinit pci_do_scan_bus(struct pci_bus *bus)
- {
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 47d9dc0..09cecaf 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -34,29 +34,6 @@
- #include "../pci.h"
- #include "pciehp.h"
- 
--static int __ref pciehp_add_bridge(struct pci_dev *dev)
--{
--	struct pci_bus *parent = dev->bus;
--	int pass, busnr, start = parent->secondary;
--	int end = parent->subordinate;
--
--	for (busnr = start; busnr <= end; busnr++) {
--		if (!pci_find_bus(pci_domain_nr(parent), busnr))
--			break;
--	}
--	if (busnr-- > end) {
--		err("No bus number available for hot-added bridge %s\n",
--				pci_name(dev));
--		return -1;
--	}
--	for (pass = 0; pass < 2; pass++)
--		busnr = pci_scan_bridge(parent, dev, busnr, pass);
--	if (!dev->subordinate)
--		return -1;
--
--	return 0;
--}
--
- int pciehp_configure_device(struct slot *p_slot)
- {
- 	struct pci_dev *dev;
-@@ -85,9 +62,8 @@ int pciehp_configure_device(struct slot *p_slot)
- 		if (!dev)
- 			continue;
- 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
--				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
--			pciehp_add_bridge(dev);
--		}
-+				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
-+			pci_hp_add_bridge(dev);
- 		pci_dev_put(dev);
- 	}
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e494347..f3e14ce 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -124,6 +124,7 @@ static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
- #endif
- 
- /* Functions for PCI Hotplug drivers to use */
-+int pci_hp_add_bridge(struct pci_dev *dev);
- extern unsigned int pci_do_scan_bus(struct pci_bus *bus);
- 
- #ifdef HAVE_PCI_LEGACY
--- 
-1.7.7
+On 05/05/2012 12:19 PM, Francois Rigaut wrote:
+> May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
 
