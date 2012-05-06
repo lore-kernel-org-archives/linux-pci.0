@@ -1,126 +1,180 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <4FC6204C.5000209@gmail.com>
-Date: Wed, 30 May 2012 21:27:40 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:36439 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571Ab2EFPVW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 May 2012 11:21:22 -0400
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 6 May 2012 20:51:19 +0530
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q46FLGSo8257948
+	for <linux-pci@vger.kernel.org>; Sun, 6 May 2012 20:51:17 +0530
+Received: from d28av02.in.ibm.com (loopback [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q46Kps4l004252
+	for <linux-pci@vger.kernel.org>; Mon, 7 May 2012 06:51:54 +1000
+Date: Sun, 6 May 2012 23:21:14 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: Does my understanding correct?
+Message-ID: <20120506152114.GB7773@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120427092704.GA22529@richard>
+ <CAErSpo6xy6AEQwROSOU6yrfdWpBgRpd+-hOGOyg0mv9UzKwOUA@mail.gmail.com>
+ <20120428050127.GA25916@richard>
+ <CAErSpo7mjeo8f=_3Uhj0V-Q1-q5dYqi8T7pMqBY6zdahpCWTRA@mail.gmail.com>
+ <20120502062443.GB24172@richard>
+ <CAErSpo6uODF00jL6hHXbB8=f3XiG2UMr+5-5CxY2T+duQVfcTA@mail.gmail.com>
+ <20120503062134.GC6255@richard>
+ <CAErSpo40hwqdnUOmjbdm+3TNt_w0rYg6-qD7nYmauRvaQXhkiQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, konrad.wilk@oracle.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	ddutile@redhat.com
-Subject: Re: [PATCH 1/5] pci: Add PCI DMA source ID quirk
-References: <20120530043142.1164.63415.stgit@bling.home> <20120530044834.1164.9081.stgit@bling.home>
-In-Reply-To: <20120530044834.1164.9081.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAErSpo40hwqdnUOmjbdm+3TNt_w0rYg6-qD7nYmauRvaQXhkiQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
-	pci_get_slot() will hold a reference count on the returned
-pci device, so need to release the reference count for balance.
-According to patches "[PATCH 5/7] amd_iommu: Make use of DMA quirks
-and ACS checks in IOMMU groups" and "[PATCH 6/7] intel-iommu: Make 
-use of DMA quirks and ACS checks in IOMMU groups", current patches 
-failed to release the reference count gained by pci_get_slot().
+On Thu, May 03, 2012 at 10:39:42AM -0600, Bjorn Helgaas wrote:
+>On Thu, May 3, 2012 at 12:21 AM, Richard Yang
+><weiyang@linux.vnet.ibm.com> wrote:
+>> On Wed, May 02, 2012 at 08:59:40AM -0600, Bjorn Helgaas wrote:
+>>>On Wed, May 2, 2012 at 12:24 AM, Richard Yang
+>>><weiyang@linux.vnet.ibm.com> wrote:
+>>>> On Mon, Apr 30, 2012 at 09:56:13AM -0600, Bjorn Helgaas wrote:
+>>>>>On Fri, Apr 27, 2012 at 11:01 PM, Richard Yang
+>>>>><weiyang@linux.vnet.ibm.com> wrote:
+>>>>>
+>>>> Thanks for your nice chart.
+>>>>>I think assignments shown for the PCIe-to-PCI bridge are OK, although
+>>>>>I would draw it like this because the bridge originates a single bus
+>>>>>02 that may have multiple devices attached to it (this side is PCI,
+>>>>>not PCIe, so it really is a shared bus):
+>>>>>
+>>>>>                                 ^
+>>>>>                                 |
+>>>>>                        +--------+--------+
+>>>>>                        |     00:02.0     |
+>>>>>                        | PCIe-PCI bridge |
+>>>>>                        |                 |
+>>>>>                        +--------+--------+
+>>>>>                                 |
+>>>>>                                 |
+>>>>>                      +---------------------+    Bus 02
+>>>>>                      |                     |
+>>>>>                      |                     |
+>>>>>                      |                     |
+>>>>>                 +----v----+           +----v----+
+>>>>>                 | 02:00.0 |           | 02:01.0 |
+>>>>>                 +---------+           +---------+
+>>>>>
+>>>> So for this case, there is not internal bus, while this is really a
+>>>> physical shared bus, not a logical one.
+>>>
+>>>Yes.  The downstream side of the PCIe-PCI bridge is PCI.
+>>>
+>>>>>I think the PCIe switch part is incorrect.  Here's Figure 1-3 from sec
+>>>>>1.3.3 of the PCIe r3 spec:
+>>>>
+>>>>>A PCIe switch appears as two or more PCI-PCI bridges.  One is
+>>>>>associated with the upstream port; the others with the downstream
+>>>>>ports.
+>>>>>
+>>>>>A bridge always has a primary side and a secondary side.  In your
+>>>>>diagram, the bridge associated with the upstream port would be 00:01.0
+>>>>>(primary bus 00) and could have a secondary bus of 03 (since 02 is
+>>>>>already consumed by the PCIe-PCI bridge).
+>>>> Hmm... I am confused why is 03. 02 is used but 01 is not used.
+>>>> Switch should be configured after PCIe2PCI bridge?
+>>>
+>>>It's likely that the PCIe switch would be configured first, since its
+>>>device number is lower, but that is not a requirement.  The
+>>>requirement is that the bus number ranges consumed by bridges be
+>>>non-overlapping.  In this case (using your original topology plus my
+>>>PCIe switch diagram), we'd have:
+>>>
+>>>  1. an endpoint at 00:00.0 -- consumes no additional buses
+>>>  2. a PCIe switch at 00:01.0 -- consumes at least [bus 03-06]
+>>>  3. a PCIe-PCI bridge at 00:02.0 -- consumes least [bus 02] (its secondary bus)
+>
+>> So this is a sequence issue. Below is also a valid configuration.
+>>  2. a PCIe switch at 00:01.0 -- consumes at least [bus 02-05]
+>>  3. a PCIe-PCI bridge at 00:02.0 -- consumes least [bus 06] (its secondary bus)
+>
+>Yes, this would also be valid.
+>
+>>>Bus 03 is the internal PCIe switch bus that connects the upstream port
+>>>to the downstream ports.  Buses 04, 05, and 06 are the links
+>>>originating from the downstream ports.
+>>>
+>>>>>The bridges associated with the downstream ports are all logically on
+>>>>>bus 03.  Their primary bus number would be 03; they might be 03:00.0,
+>>>>>03:01.0, 03:02.0, etc.  Each would have its own secondary bus number,
+>>>>>for example 04, 05, 06.  That secondary bus number is for the
+>>>>>downstream link from the corresponding downstream port.
+>>>> Hmm, as you mentioned in previous letter, PCIe is an point-to-point
+>>>> protocol, then the secondary bus should reside in the Switch?
+>>>> Do you think my Bus#4 is correct?
+>>>
+>>>No.  Bus 04 is a PCIe link that connects the downstream port (03:00.0)
+>>>to a single PCIe device.  That device (04:00) could be a PCIe
+>>>endpoint, or it could be the upstream port of another PCIe switch.
+>>>(If it is a switch, more bus numbers would be required.)
+>>
+>>
+>>                                      ^
+>>                                      |
+>>      +-------------------------------|------------------------------+
+>>      |                               |                              |
+>>      |                          +----+----+                         |
+>>      |                          | virtual |                         |
+>>      |                          | PCI-PCI |                         |
+>>      |                          | bridge  |                         |
+>>      |                          +----+----+                         |
+>>      |                               |                              |
+>>      |                               |Bus#3                         |
+>>      |                               |                              |
+>>      |          +----------------------------------------+          |
+>>      |          |                    |                   |          |
+>>      |          |                    |                   |          |
+>>      |          |03:00.0             |03:01.0            |03:02.0   |
+>>      |     +----+----+          +----+----+         +----++---+     |
+>>      |     | virtual |          | virtual |         | virtual |     |
+>>      |     | PCI-PCI |          | PCI-PCI |         | PCI-PCI |     |
+>>      |     | bridge  |          | bridge  |         | bridge  |     |
+>>      |     +----+----+          +----+----+         +----+----+     |
+>>      |          |                    |                   |          |
+>>      |          |                    |                   |          |
+>>      +----------|--------------------|-------------------|----------+
+>>                 | Bus#4?             |                   |
+>>                 v                    v                   v
+>>
+>> So the link itself is Bus#4?
+Bjorn,
+Sorry to disturb you again. 
 
-Thanks
-Gerry
- 
-On 05/30/2012 12:48 PM, Alex Williamson wrote:
-> DMA transactions are tagged with the source ID of the device making
-> the request.  Occasionally hardware screws this up and uses the
-> source ID of a different device (often the wrong function number of
-> a multifunction device).  A specific Ricoh multifunction device is
-> a prime example of this problem and included in this patch.  The
-> purpose of this function is that given a pci_dev, return the pci_dev
-> to use as the source ID for DMA.  When hardware works correctly,
-> this returns the input device.  For the components of the Ricoh
-> multifunction device, return the pci_dev for function 0.
-> 
-> This will be used by IOMMU drivers for determining the boundaries
-> of IOMMU groups as multiple devices using the same source ID must
-> be contained within the same group.  This can also be used by
-> existing streaming DMA paths for the same purpose.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
-> 
->  drivers/pci/quirks.c |   40 ++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h  |    5 +++++
->  2 files changed, 45 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 2a75216..004e167 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3179,3 +3179,43 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  
->  	return -ENOTTY;
->  }
-> +
-> +static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
-> +{
-> +	return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-> +}
-> +
-> +static const struct pci_dev_dma_source {
-> +	u16 vendor;
-> +	u16 device;
-> +	struct pci_dev *(*dma_source)(struct pci_dev *dev);
-> +} pci_dev_dma_source[] = {
-> +	/*
-> +	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
-> +	 *
-> +	 * Some Ricoh devices use the function 0 source ID for DMA on
-> +	 * other functions of a multifunction device.  The DMA devices
-> +	 * is therefore function 0, which will have implications of the
-> +	 * iommu grouping of these devices.
-> +	 */
-> +	{ PCI_VENDOR_ID_RICOH, 0xe822, pci_func_0_dma_source },
-> +	{ PCI_VENDOR_ID_RICOH, 0xe230, pci_func_0_dma_source },
-> +	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
-> +	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
-> +	{ 0 }
-> +};
-> +
-> +struct pci_dev *pci_dma_source(struct pci_dev *dev)
-> +{
-> +	const struct pci_dev_dma_source *i;
-> +
-> +	for (i = pci_dev_dma_source; i->dma_source; i++) {
-> +		if ((i->vendor == dev->vendor ||
-> +		     i->vendor == (u16)PCI_ANY_ID) &&
-> +		    (i->device == dev->device ||
-> +		     i->device == (u16)PCI_ANY_ID))
-> +			return i->dma_source(dev);
-> +	}
-> +
-> +	return dev;
-> +}
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d8c379d..5bc7502 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1486,9 +1486,14 @@ enum pci_fixup_pass {
->  
->  #ifdef CONFIG_PCI_QUIRKS
->  void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
-> +struct pci_dev *pci_dma_source(struct pci_dev *dev);
->  #else
->  static inline void pci_fixup_device(enum pci_fixup_pass pass,
->  				    struct pci_dev *dev) {}
-> +static inline struct pci_dev *pci_dma_source(struct pci_dev *dev)
-> +{
-> +	return dev;
-> +}
->  #endif
->  
->  void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If under this link, one SRIOV device is attached. 
+And VF is enabled, more than 256 VFs. 
+How the Bus#4 handle those PFs and VFs?
+How new Buses is organized?
+Or this is not standarded?
+>
+>Exactly.
+>
+>> If there is no device under this link, will Bus#4 appear in kernel?
+>
+>Yes, I'm pretty sure we build the bus 04 pci_bus structure, then scan
+>bus 04 for devices.  Even if we find none, the pci_bus struct for bus
+>04 remains.
+>
+>> And then the PCIe switch is represented by 4 pci_dev structure and each
+>> is bridge type?
+>
+>Yes.  And each has an associated pci_bus struct for its secondary bus.
+>
+>Bjorn
+
+-- 
+Richard Yang
+Help you, Help me
 
