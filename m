@@ -1,161 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:35647 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758882Ab2EXUKO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 May 2012 16:10:14 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH] PCI: allow acpiphp to handle PCIe ports without native PCIe hotplug capability
-Date: Thu, 24 May 2012 22:15:15 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-References: <1337226012-3688-1-git-send-email-jiang.liu@huawei.com> <201205180030.10964.rjw@sisk.pl> <4FB5D741.1050203@huawei.com>
-In-Reply-To: <4FB5D741.1050203@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201205242215.16179.rjw@sisk.pl>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQWsSWK-_zGe1ggaKuZu+RJ1kb1zuTEokdxqFSbE3UjNRw@mail.gmail.com>
+References: <20120422155202.GA13540@richard>
+	<CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+	<CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
+	<CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
+	<20120503065455.GA30042@richard>
+	<CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
+	<20120504024721.GA6775@richard>
+	<CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
+	<20120504045205.GA21624@richard>
+	<CAE9FiQWM4OTFp5NN+KOXxNREQxNWipDjWbbPPiHHJsb6yFmuiQ@mail.gmail.com>
+	<20120506151715.GA7773@richard>
+	<CAE9FiQWsSWK-_zGe1ggaKuZu+RJ1kb1zuTEokdxqFSbE3UjNRw@mail.gmail.com>
+Date: Sun, 6 May 2012 09:36:35 -0700
+Message-ID: <CAE9FiQXKjxLDLeh8TXU_OCNwFt+UMv3qFjcPrKcPcorA1YmkdQ@mail.gmail.com>
+Subject: Re: One problem in reassign pci bus number?
+From: Yinghai Lu <yinghai@kernel.org>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, May 18, 2012, Jiang Liu wrote:
-> On 2012-5-18 6:30, Rafael J. Wysocki wrote:
-> > On Thursday, May 17, 2012, Jiang Liu wrote:
-> >> From: Jiang Liu<jiang.liu@huawei.com>
-> >>
-> >> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
-> >> ignore root bridges using PCIe native hotplug) added code that made the
-> >> acpiphp driver completely ignore PCIe root complexes for which the kernel
-> >> had been granted control of the native PCIe hotplug feature by the BIOS
-> >> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
-> >> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
-> >> the constraints to allow acpiphp driver handle non-PCIe bridges under
-> >> such a complex. The constraint needs to be relaxed further to allow
-> >> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
-> >>
-> >> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
-> >> switches and may migrate downstream ports among virtual switches.
-> >> To migrate a downstream port from the source virtual switch to the target,
-> >> the port needs to be hot-removed from the source and hot-added into the
-> >> target. pciehp driver can't be used here because there's no slots within
-> >> the virtual PCIe switch. So acpiphp driver is used to support downstream
-> >> port migration. A typical configuration is as below:
-> >> [Root w/o native PCIe HP]
-> >> 	[Upstream port of vswitch w/o native PCIe HP]
-> >> 		[Downstream port of vswitch w/ native PCIe HP]
-> >> 			[PCIe enpoint]
-> >>
-> >> Here acpiphp driver will be used to handle root ports and upstream port
-> >> in the virtual switch, and pciehp driver will be used to handle downstream
-> >> ports in the virtual switch.
-> >
-> > I'm not sure that the patch is sufficient, but I don't have the time to
-> > look into the details at the moment.  I'll try to do that tomorrow.
-> Hi Rafael,
-> 	Thanks for your help!
-> 	This is the first patch to support downstream port migration
-> among virtual switches, there are still more changes needed to fully
-> support the above usage model. We are still testing those patches
-> and will send them out once they pass the tests.
+On Sun, May 6, 2012 at 9:35 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sun, May 6, 2012 at 8:17 AM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Fri, May 04, 2012 at 10:37:08AM -0700, Yinghai Lu wrote:
+>>>On Thu, May 3, 2012 at 9:52 PM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
+>>>>
+>>>> BTW, even if this value is returned by __find_res_top_free_size(), or
+>>>> returned after this function is called, the purpose of the
+>>>> __find_res_top_free_size() is to get the biggest free space under the
+>>>> first parameter?
+>>>
+>>>__find_res_top_free_size() is used to get size just under top,  and
+>>>then use it to calculate size above top that need to be extended.
+>>>
+>>>at last will combine free size under top and allocated size above top
+>>>and return.
+>> Yes, I get the general idea.
+>>
+>> then I want to confirm which size __find_res_top_free_size() will return.
+>>
+>> Come to the previous question, for one resource like this.
+>> res =   90-150
+>>    ->child      105-140
+>> We call __find_res_top_free_size(res, 1);
+>> This function should return which size?  10? 15? or 25?
+>>
+>> From the code
+>> +               ret = __allocate_resource(res, &tmp_res, n_size,
+>> +                       res->end - n_size + skip_nr, res->end,
+>> +                       1, NULL, NULL, false);
+>> I think it will check the free space near the end of res.
+>
+> yes. it is 15, [141-150]
 
-My only concern is that we have to be careful enough to prevent acpiphp
-from claiming bridges that it is not supposed to handle.
-
-I _think_ that the patch below covers all cases in which that might happen,
-but it will require some careful testing to verify that.
-
-So please feel free to add
-
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-
-to the patch, but please do test it carefully nevertheless.
-
-Thanks,
-Rafael
-
-
-> >> Signed-off-by: Jiang Liu<liuj97@gmail.com>
-> >> ---
-> >>   drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
-> >>   1 files changed, 39 insertions(+), 10 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> >> index 806c44f..4889448 100644
-> >> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> >> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> >> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
-> >>   	.handler = handle_hotplug_event_func,
-> >>   };
-> >>
-> >> +/* Check whether device is managed by native PCIe hotplug driver */
-> >> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
-> >> +{
-> >> +	int pos;
-> >> +	u16 reg16;
-> >> +	u32 reg32;
-> >> +	acpi_handle tmp;
-> >> +	struct acpi_pci_root *root;
-> >> +
-> >> +	if (!pci_is_pcie(pdev))
-> >> +		return false;
-> >> +
-> >> +	/* Check whether PCIe port supports native PCIe hotplug */
-> >> +	pos = pci_pcie_cap(pdev);
-> >> +	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS,&reg16);
-> >> +	if (!(reg16&  PCI_EXP_FLAGS_SLOT))
-> >> +		return false;
-> >> +	pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP,&reg32);
-> >> +	if (!(reg32&  PCI_EXP_SLTCAP_HPC))
-> >> +		return false;
-> >> +
-> >> +	/*
-> >> +	 * Check whether native PCIe hotplug has been enabled for
-> >> +	 * this PCIe hierarchy.
-> >> +	 */
-> >> +	tmp = acpi_find_root_bridge_handle(pdev);
-> >> +	if (!tmp)
-> >> +		return false;
-> >> +	root = acpi_pci_find_root(tmp);
-> >> +	if (!root)
-> >> +		return false;
-> >> +	if (!(root->osc_control_set&  OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> >> +		return false;
-> >> +
-> >> +	return true;
-> >> +}
-> >> +
-> >>   /* callback routine to register each ACPI PCI slot object */
-> >>   static acpi_status
-> >>   register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-> >> @@ -133,16 +170,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-> >>   		return AE_OK;
-> >>
-> >>   	pdev = pbus->self;
-> >> -	if (pdev&&  pci_is_pcie(pdev)) {
-> >> -		tmp = acpi_find_root_bridge_handle(pdev);
-> >> -		if (tmp) {
-> >> -			struct acpi_pci_root *root = acpi_pci_find_root(tmp);
-> >> -
-> >> -			if (root&&  (root->osc_control_set&
-> >> -					OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> >> -				return AE_OK;
-> >> -		}
-> >> -	}
-> >> +	if (pdev&&  device_is_managed_by_native_pciehp(pdev))
-> >> +		return AE_OK;
-> >>
-> >>   	acpi_evaluate_integer(handle, "_ADR", NULL,&adr);
-> >>   	device = (adr>>  16)&  0xffff;
-> >>
-> >
-> >
-> > .
-> >
-> 
-> 
-> 
-> 
-
+should 10, aka [141-150]
