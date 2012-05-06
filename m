@@ -1,64 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:40974 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972Ab2EZANB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2012 20:13:01 -0400
-Received: by lbbgm6 with SMTP id gm6so993168lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 25 May 2012 17:13:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
- <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
- <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
- <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
- <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
- <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
- <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
- <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com> <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 25 May 2012 18:12:39 -0600
-Message-ID: <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 6 May 2012 23:17:15 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120506151715.GA7773@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120422155202.GA13540@richard>
+ <CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
+ <CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
+ <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
+ <20120503065455.GA30042@richard>
+ <CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
+ <20120504024721.GA6775@richard>
+ <CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
+ <20120504045205.GA21624@richard>
+ <CAE9FiQWM4OTFp5NN+KOXxNREQxNWipDjWbbPPiHHJsb6yFmuiQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWM4OTFp5NN+KOXxNREQxNWipDjWbbPPiHHJsb6yFmuiQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2012 at 5:10 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, May 25, 2012 at 2:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I think we should fix this with a separate patch that removes
->> PCIBIOS_MAX_MEM_32 altogether, replacing this use with an explicit
->> 0xffffffff (or some other "max 32-bit value" symbol).  I don't think
->> there's anything arch-specific about this.
+On Fri, May 04, 2012 at 10:37:08AM -0700, Yinghai Lu wrote:
+>On Thu, May 3, 2012 at 9:52 PM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
 >>
->> So I'd like to see two patches here:
->>  1) Avoid allocating 64-bit regions for 32-bit BARs
->>  2) Try to allocate regions above 4GB for 64-bit BARs
+>> BTW, even if this value is returned by __find_res_top_free_size(), or
+>> returned after this function is called, the purpose of the
+>> __find_res_top_free_size() is to get the biggest free space under the
+>> first parameter?
 >
-> Sure. please check updated two patches.
+>__find_res_top_free_size() is used to get size just under top,  and
+>then use it to calculate size above top that need to be extended.
+>
+>at last will combine free size under top and allocated size above top
+>and return.
+Yes, I get the general idea.
 
-I think the first one looks good.
+then I want to confirm which size __find_res_top_free_size() will return.
 
-I'm curious about the second.  Why did you add the IORESOURCE_MEM
-test?  That's doesn't affect the "start =" piece because
-IORESOURCE_MEM is always set if IORESOURCE_MEM_64 is set.
+Come to the previous question, for one resource like this.
+res =   90-150
+    ->child      105-140
+We call __find_res_top_free_size(res, 1);
+This function should return which size?  10? 15? or 25?
 
-But it does affect the "end =" part.  Previously we limited all I/O
-and 32-bit mem BARs to the low 4GB.  This patch makes it so we limit
-32-bit mem BARs to the low 4GB, but we don't limit I/O BARs.  But I/O
-BARs can only have 32 bits of address, so it seems like we should
-limit them the same way as 32-bit mem BARs.  So I expected something
-like this:
+>From the code 
++               ret = __allocate_resource(res, &tmp_res, n_size,
++                       res->end - n_size + skip_nr, res->end,
++                       1, NULL, NULL, false);
+I think it will check the free space near the end of res. 
 
-    if (res->flags & IORESOURCE_MEM_64) {
-        start = (resource_size_t) (1ULL << 32);
-        end = PCI_MAX_RESOURCE;
-    } else {
-        start = 0;
-        end = PCI_MAX_RESOURCE_32;
-    }
+I did one test on __find_res_top_free_size(res, 1) of this example.
+And returned 10. Which means, it find the free space (141-150).
+
+So I want to confirm this function really returns the size of free space
+at the end of the res. not the biggest one or the sum.
+>
+>Yinghai
+
+-- 
+Richard Yang
+Help you, Help me
+
