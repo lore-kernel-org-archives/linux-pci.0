@@ -1,84 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:48952
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755856Ab2EDNZ6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 May 2012 09:25:58 -0400
-Date: Fri, 4 May 2012 15:25:49 +0200
-From: Andreas Herrmann <andreas.herrmann3@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH 2/2][RESEND] x86/pci/amd: Enable
- early_fill_mp_bus_to_node on AMD family 15h models 0-0xf
-Message-ID: <20120504132549.GD12199@alberich.amd.com>
-References: <20120427143410.GB27535@alberich.amd.com>
- <20120427143745.GD27535@alberich.amd.com>
- <CAErSpo584dcpGhmp-jcP_Zsznmz9ZkfPuxpF3UK9UVfcnFUdRA@mail.gmail.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:57677 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757318Ab2EGSkz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 14:40:55 -0400
+Received: by pbbrp8 with SMTP id rp8so7014394pbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 07 May 2012 11:40:55 -0700 (PDT)
+Date: Mon, 7 May 2012 11:40:50 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v2 10/19] PCI: serialize hotplug operaitons triggered by
+ the shpchp driver
+Message-ID: <20120507184050.GC725@kroah.com>
+References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
+ <1335539820-11232-11-git-send-email-jiang.liu@huawei.com>
+ <4FA4F3E5.5040600@fold.natur.cuni.cz>
+ <4FA5EF97.8010306@gmail.com>
+ <20120506152036.GA31551@kroah.com>
+ <4FA7D882.3070903@gmail.com>
+ <4FA7D839.9090109@fold.natur.cuni.cz>
+ <4FA7D894.3040700@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <CAErSpo584dcpGhmp-jcP_Zsznmz9ZkfPuxpF3UK9UVfcnFUdRA@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FA7D894.3040700@fold.natur.cuni.cz>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 02, 2012 at 11:34:15AM -0600, Bjorn Helgaas wrote:
-> On Fri, Apr 27, 2012 at 8:37 AM, Andreas Herrmann
-> <andreas.herrmann3@amd.com> wrote:
-> >
-> > While at it avoid calling this function on family 11h (aka Griffin)
-> > which was a mobile part and doesn't support NUMA.
-> 
-> This changelog doesn't seem like it goes with this patch.  It looks
-> more related to the first patch (though that affects family 11h and
-> greater, not just family 11h).
+On Mon, May 07, 2012 at 04:13:40PM +0200, Martin Mokrejs wrote:
+> Martin Mokrejs wrote:
+> > Hi Greg and Jiang,
+> >   I am confirming this issue still happens for me with my changed motherboard and express card slot
+> > of my Dell Vostro 3550 laptop. :( I trigger this when unplugging a FireWire express card. Not always
+> > but does happen. attached is a camera picture of the Oops.
+> > 
+> > 
+> > wq_worker_sleeping
+> > __schedule
+> > schedule
+> > do_exit
+> > oops_end
+> > no_context
+> > __bad_area_nosemaphore
+> > ? put_dec
+> > bad_area_nosemaphore
+> > do_page_fault
+> > ? pointer.clone
+> > ? vsnprintf
+> > page_fault
+> > ? sysfs_name_hash
+> > sysfs_find_dirent
+> > sysfs_hash_and_remove
+> > sysfs_remove_bin_file
+> > pci_remove_resource_files
 
-So maybe I should repeat the contents of the subject line in the
-changelog.
+Bjorn, the resource stuff changed recently, while pci hotplug didn't
+change at all.  Are we trying to remove files that aren't really there
+anymore?
 
-The first patch restores the function to set the NUMA node info for
-busses. Linux behaviour shouldn't change after the first patch at all.
+Or could we be removing the same file twice?
 
-This (the second) patch will enable node detection for AMD CPU family
-15h model 00-0fh (with 0x1600 as device id for NB function 0). (see
-subject line) In addition it removes the NB id for CPU family 11h from
-this code.  That CPU was used only in Laptops (single socket). A
-mapping of bus to node is not required there. And also figuring out
-MMIO and I/O port apertures while ignoring _CRS shouldn't be a use
-case for such systems.
+thanks,
 
-I think Device ID 0x1300 was added with commit
-35ddd068fb94b187e94a3fc497ccecf27bdda9ae (x86: use bus conf in NB conf
-fun1 to get bus range on, on 64-bit)
-
-But unfortunately the changelog of this patch doesn't mention why this
-is strictly req'd.
-
-
-HTH,
-
-Andreas
-
-> >  arch/x86/pci/amd_bus.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-> > index 0384e69..d552b29 100644
-> > --- a/arch/x86/pci/amd_bus.c
-> > +++ b/arch/x86/pci/amd_bus.c
-> > @@ -27,7 +27,7 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
-> >        { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
-> >        { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
-> >        { 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
-> > -       { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
-> > +       { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1600 },
-> >  };
-> >
-> >  /**
-> > --
-> > 1.7.8.5
-> >
-> >
-> >
-> 
-
-
+greg k-h
