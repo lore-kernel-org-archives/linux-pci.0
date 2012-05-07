@@ -1,85 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41266 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753834Ab2EaTsK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 May 2012 15:48:10 -0400
-Message-ID: <4FC7CAE5.7020306@redhat.com>
-Date: Thu, 31 May 2012 15:47:49 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: joerg.roedel@amd.com, dwmw2@infradead.org,
-	iommu@lists.linux-foundation.org, bhelgaas@google.com,
-	benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, liuj97@gmail.com
-Subject: Re: [PATCH v2 6/7] intel-iommu: Make use of DMA quirks and ACS checks
- in IOMMU groups
-References: <20120530201424.31527.33142.stgit@bling.home> <20120530201942.31527.51604.stgit@bling.home>
-In-Reply-To: <20120530201942.31527.51604.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [PATCH 15/21] ia64/PCI: register busn_res for root buses
+Date: Mon,  7 May 2012 13:30:00 -0700
+Message-Id: <1336422606-4244-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/30/2012 04:19 PM, Alex Williamson wrote:
-> Work around broken devices and adhere to ACS support when determining
-> IOMMU grouping.
->
-> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
-> ---
->
->   drivers/iommu/intel-iommu.c |   25 +++++++++++++++++++++++++
->   1 file changed, 25 insertions(+)
->
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index 4a43452..ebf2b31 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -4090,6 +4090,14 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
->   	return 0;
->   }
->
-> +static void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
-> +{
-> +	pci_dev_put(*from);
-> +	*from = to;
-> +}
-> +
-> +#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-> +
->   static int intel_iommu_add_device(struct device *dev)
->   {
->   	struct pci_dev *pdev = to_pci_dev(dev);
-> @@ -4112,6 +4120,23 @@ static int intel_iommu_add_device(struct device *dev)
->   	} else
->   		dma_pdev = pci_dev_get(pdev);
->
-> +	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
-> +
-> +	if (dma_pdev->multifunction&&
-> +	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
-> +		swap_pci_ref(&dma_pdev,
-> +			     pci_get_slot(dma_pdev->bus,
-> +					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
-> +					  0)));
-> +
-> +	while (!pci_is_root_bus(dma_pdev->bus)) {
-> +		if (pci_acs_path_enabled(dma_pdev->bus->self,
-> +					 NULL, REQ_ACS_FLAGS))
-> +			break;
-> +
-> +		swap_pci_ref(&dma_pdev, pci_dev_get(dma_pdev->bus->self));
-> +	}
-> +
-I'm having deja-vu on this patch....
-.... why not just make the above two patches as two functions in drivers/iommu/iommu.c,
-one exported for these two modules (and maybe others someday...), e.g., iommu_pdev_put())
-which [intel-,amd-]iommu.c call ?
+Add the host bridge bus number aperture from _CRS to the resource list.
+Like the MMIO and I/O port apertures, this is used when assigning
+resources to hot-added devices or in the case of conflicts.
 
-  
->   	group = iommu_group_get(&dma_pdev->dev);
->   	pci_dev_put(dma_pdev);
->   	if (!group) {
->
+[bhelgaas: write changelog]
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 3ca9bed..d173a88 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -351,6 +351,8 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ #endif
+ 
+ 	INIT_LIST_HEAD(&info.resources);
++	/* insert busn resource at first */
++	pci_add_resource(&info.resources, &root->secondary);
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+ 			&windows);
+ 	if (windows) {
+@@ -384,7 +386,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		return NULL;
+ 	}
+ 
+-	pbus->busn_res.end = pci_scan_child_bus(pbus);
++	pci_scan_child_bus(pbus);
+ 	return pbus;
+ 
+ out3:
+-- 
+1.7.7
 
