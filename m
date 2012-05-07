@@ -1,56 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:47901 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932224Ab2EQVfG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 May 2012 17:35:06 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1SV8Lf-0007pP-NB
-	for linux-pci@vger.kernel.org; Thu, 17 May 2012 23:35:04 +0200
-Received: from ztxe01cs301.austin.hp.com ([15.219.153.73])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Thu, 17 May 2012 23:35:03 +0200
-Received: from betty.dall by ztxe01cs301.austin.hp.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Thu, 17 May 2012 23:35:03 +0200
-To: linux-pci@vger.kernel.org
-From: Betty Dall <betty.dall@hp.com>
-Subject: Re: [PATCH] pci, Add =?utf-8?b?QUVSX3Bhbmlj?= sysfs file
-Date: Thu, 17 May 2012 21:32:16 +0000 (UTC)
-Message-ID: <loom.20120517T232328-930@post.gmane.org>
-References: <1337274270-18785-1-git-send-email-prarit@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 09/21] PCI: Insert busn_res in pci_create_root_bus()
+Date: Mon,  7 May 2012 13:29:54 -0700
+Message-Id: <1336422606-4244-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prarit Bhargava <prarit <at> redhat.com> writes:
+That busn_res is from resources list
 
->  /**
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 58ad791..dd6b352 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -346,6 +346,9 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
->  	u32 reg32;
->  	int pos;
-> 
-> +	if (dev->rp_AER_panic)
-> +		panic("%s: AER detected on Root Port", pci_name(dev));
-> +
->  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-
-I really like this idea. I just wonder if the panic can happen in do_recovery in 
-aerdrv_core.c before the broadcast_error_message() is done that invokes all of 
-the error_detected callbacks. It would be best to panic as soon as possible to 
-increase error containment. 
-
-If we don't move it to before the broadcast_error_message(), I was also looking 
-at if it would be appropriate to put the check for this in the 
-default_downstream_reset_link() in aerdrv_core.c too. What do you think?
-
--Betty Dall
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 7662ab7..59011ce 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1684,7 +1684,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		list_move_tail(&window->list, &bridge->windows);
+ 		res = window->res;
+ 		offset = window->offset;
+-		pci_bus_add_resource(b, res, 0);
++		if (res->flags & IORESOURCE_BUS)
++			pci_bus_insert_busn_res(b, bus, res->end);
++		else
++			pci_bus_add_resource(b, res, 0);
+ 		if (offset) {
+ 			if (resource_type(res) == IORESOURCE_IO)
+ 				fmt = " (bus address [%#06llx-%#06llx])";
+-- 
+1.7.7
 
