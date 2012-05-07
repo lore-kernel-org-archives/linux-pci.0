@@ -1,110 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58003 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752293Ab2EDThU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 15:37:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120504184851.GB11223@kroah.com>
-References: <20120419163800.GB13977@schottelius.org>
-	<CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com>
-	<20120502163629.GE928@schottelius.org>
-	<20120502202509.GA26798@kroah.com>
-	<20120503065003.GB13386@schottelius.org>
-	<CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com>
-	<20120503153547.GD20334@kroah.com>
-	<CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com>
-	<20120503233858.GA13453@kroah.com>
-	<4FA358ED.1080705@gmail.com>
-	<20120504184851.GB11223@kroah.com>
-Date: Fri, 4 May 2012 12:37:19 -0700
-Message-ID: <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com>
-Subject: Re: Linux Support for Thunderbolt using Apple Monitor
+Received: from rcsinet15.oracle.com ([148.87.113.117]:50524 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757663Ab2EGU3k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:29:40 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Francois Rigaut <frigaut@gmail.com>, linux-pci@vger.kernel.org,
-	Nico Schottelius <nico-linux-20120419@schottelius.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/7] PCI, shpchp: Simplify configure_device
+Date: Mon,  7 May 2012 13:29:12 -0700
+Message-Id: <1336422556-4124-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
+References: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 4, 2012 at 11:48 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> Ok, it looks like these are the devices that we are missing while
-> "hotplugging":
-> 37:00.0 PCI bridge: Intel Corporation Device 1513
-> 38:00.0 PCI bridge: Intel Corporation Device 1513
-> 38:01.0 PCI bridge: Intel Corporation Device 1513
-> 38:02.0 PCI bridge: Intel Corporation Device 1513
-> 38:03.0 PCI bridge: Intel Corporation Device 1513
-> 38:04.0 PCI bridge: Intel Corporation Device 1513
-> 38:05.0 PCI bridge: Intel Corporation Device 1513
-> 39:00.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
-> 3a:03.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
-> 3b:00.0 USB controller: Pericom Semiconductor Device 400e (rev 01)
-> 3b:00.1 USB controller: Pericom Semiconductor Device 400e (rev 01)
-> 3b:00.2 USB controller: Pericom Semiconductor Device 400f (rev 01)
-> 3c:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57761 Gigabit Ethernet PCIe (rev 10)
-> 3d:00.0 FireWire (IEEE 1394): nee Agere Systems nee Lucent
-> Microelectronics FW643 PCI Express 1394b Controller (PHY/Link) (rev 08)
->
-> Which is good, I was worried that there was a video controller out there
-> on the end of the thunderbolt link.
->
-> So, the problem really is two here:
->  - your video card doesn't detect the new display
->  - your pci devices do not show up
->
-> The first one probably needs to be reported to the Intel video driver
-> people, they can help you out the best.
->
-> The second one means that something is up with the pci hotplug
-> controller.  I've cced the linux-pci list, the people there should be
-> able to help out better than I, as I no longer have any PCI hotplug
-> hardware to work with anymore.
->
+For child p2p bridge hotplug support should use pci_scan_bridge instead.
 
-those devices are under 04:04.0, but that does not have slot cap
-enabled by BIOS. So pciehp is going to to help.
+Make it more simillar to pciehp, just use pci_hp_add_bridge()
 
-04:04.0 PCI bridge: Intel Corporation Device 151a (rev 01) (prog-if 00
-[Normal decode])
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 256 bytes
-	Bus: primary=04, secondary=37, subordinate=67, sec-latency=0
-	Memory behind bridge: a0900000-a09fffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [80] Power Management version 3
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
-	Capabilities: [88] MSI: Enable+ Count=1/1 Maskable- 64bit+
-		Address: 00000000fee0f00c  Data: 4189
-	Capabilities: [c0] Express (v2) Downstream Port (Slot-), MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-			ExtTag+ RBE+ FLReset-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-		LnkCap:	Port #4, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency L0
-unlimited, L1 unlimited
-			ClockPM- Surprise- LLActRep+ BwNot+
-		LnkCtl:	ASPM Disabled; Disabled- Retrain- CommClk-
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive-
-BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Not Supported, TimeoutDis- ARIFwd-
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-,
-Selectable De-emphasis: -6dB
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance-
-ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-,
-EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/shpchp_pci.c |   45 ++++++++++++-------------------------
+ 1 files changed, 15 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
+index df7e4bf..c627ed9 100644
+--- a/drivers/pci/hotplug/shpchp_pci.c
++++ b/drivers/pci/hotplug/shpchp_pci.c
+@@ -37,9 +37,10 @@
+ int __ref shpchp_configure_device(struct slot *p_slot)
+ {
+ 	struct pci_dev *dev;
+-	struct pci_bus *parent = p_slot->ctrl->pci_dev->subordinate;
+-	int num, fn;
+ 	struct controller *ctrl = p_slot->ctrl;
++	struct pci_dev *bridge = ctrl->pci_dev;
++	struct pci_bus *parent = bridge->subordinate;
++	int num, fn;
+ 
+ 	dev = pci_get_slot(parent, PCI_DEVFN(p_slot->device, 0));
+ 	if (dev) {
+@@ -61,39 +62,23 @@ int __ref shpchp_configure_device(struct slot *p_slot)
+ 		if (!dev)
+ 			continue;
+ 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+-				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
+-			/* Find an unused bus number for the new bridge */
+-			struct pci_bus *child;
+-			unsigned char busnr, start = parent->secondary;
+-			unsigned char end = parent->subordinate;
+-			for (busnr = start; busnr <= end; busnr++) {
+-				if (!pci_find_bus(pci_domain_nr(parent),
+-							busnr))
+-					break;
+-			}
+-			if (busnr > end) {
+-				ctrl_err(ctrl,
+-					 "No free bus for hot-added bridge\n");
+-				pci_dev_put(dev);
+-				continue;
+-			}
+-			child = pci_add_new_bus(parent, dev, busnr);
+-			if (!child) {
+-				ctrl_err(ctrl, "Cannot add new bus for %s\n",
+-					 pci_name(dev));
+-				pci_dev_put(dev);
+-				continue;
+-			}
+-			child->subordinate = pci_do_scan_bus(child);
+-			pci_bus_size_bridges(child);
+-		}
++		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
++			pci_hp_add_bridge(dev);
++		pci_dev_put(dev);
++	}
++
++	pci_assign_unassigned_bridge_resources(bridge);
++
++	for (fn = 0; fn < 8; fn++) {
++		dev = pci_get_slot(parent, PCI_DEVFN(p_slot->device, fn));
++		if (!dev)
++			continue;
+ 		pci_configure_slot(dev);
+ 		pci_dev_put(dev);
+ 	}
+ 
+-	pci_bus_assign_resources(parent);
+ 	pci_bus_add_devices(parent);
+-	pci_enable_bridges(parent);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.7
+
