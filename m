@@ -1,85 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:36066 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754591Ab2E2RzZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 13:55:25 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
-	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-	<20120525193716.GA8817@google.com>
-	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
-	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-Date: Tue, 29 May 2012 10:55:23 -0700
-Message-ID: <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+Received: from rcsinet15.oracle.com ([148.87.113.117]:50547 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932139Ab2EGU3m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:29:42 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 6/7] PCI, sgihp: Using pci_hp_add_bridge
+Date: Mon,  7 May 2012 13:29:15 -0700
+Message-Id: <1336422556-4124-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
+References: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2012 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, May 25, 2012 at 5:10 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, May 25, 2012 at 2:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> I think we should fix this with a separate patch that removes
->>> PCIBIOS_MAX_MEM_32 altogether, replacing this use with an explicit
->>> 0xffffffff (or some other "max 32-bit value" symbol).  I don't think
->>> there's anything arch-specific about this.
->>>
->>> So I'd like to see two patches here:
->>>  1) Avoid allocating 64-bit regions for 32-bit BARs
->>>  2) Try to allocate regions above 4GB for 64-bit BARs
->>
->> Sure. please check updated two patches.
->
-> I think the first one looks good.
->
-> I'm curious about the second.  Why did you add the IORESOURCE_MEM
-> test?  That's doesn't affect the "start =" piece because
-> IORESOURCE_MEM is always set if IORESOURCE_MEM_64 is set.
->
-> But it does affect the "end =" part.  Previously we limited all I/O
-> and 32-bit mem BARs to the low 4GB.  This patch makes it so we limit
-> 32-bit mem BARs to the low 4GB, but we don't limit I/O BARs.  But I/O
-> BARs can only have 32 bits of address, so it seems like we should
-> limit them the same way as 32-bit mem BARs.  So I expected something
-> like this:
->
->    if (res->flags & IORESOURCE_MEM_64) {
->        start = (resource_size_t) (1ULL << 32);
->        end = PCI_MAX_RESOURCE;
->    } else {
->        start = 0;
->        end = PCI_MAX_RESOURCE_32;
->    }
+instead of open code with pci_add_new_bus()/do_scan_bus...
 
-x86 are using 16bits.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/sgi_hotplug.c |   12 +++++-------
+ 1 files changed, 5 insertions(+), 7 deletions(-)
 
-some others use 32 bits.
-#define IO_SPACE_LIMIT 0xffffffff
+diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
+index de57311..f64ca92 100644
+--- a/drivers/pci/hotplug/sgi_hotplug.c
++++ b/drivers/pci/hotplug/sgi_hotplug.c
+@@ -397,13 +397,11 @@ static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
+ 			else
+ 				sn_io_slot_fixup(dev);
+ 			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+-				unsigned char sec_bus;
+-				pci_read_config_byte(dev, PCI_SECONDARY_BUS,
+-						     &sec_bus);
+-				new_bus = pci_add_new_bus(dev->bus, dev,
+-							  sec_bus);
+-				pci_scan_child_bus(new_bus);
+-				new_ppb = 1;
++				pci_hp_add_bridge(dev);
++				if (dev->subordinate) {
++					new_bus = dev->subordinate;
++					new_ppb = 1;
++				}
+ 			}
+ 			pci_dev_put(dev);
+ 		}
+-- 
+1.7.7
 
-ia64 and sparc are using 64bits.
-#define IO_SPACE_LIMIT               0xffffffffffffffffUL
-
-but pci only support 16bits and 32bits.
-
-maybe later we can add
-PCI_MAX_RESOURCE_16
-
-to handle 16bits and 32bit io ports.
-
-Yinghai
