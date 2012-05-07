@@ -1,52 +1,122 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 28 May 2012 16:21:10 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE NIC
- as broken
-Message-ID: <20120528132109.GB22623@redhat.com>
-References: <4FBF90E5.8030800@siemens.com>
- <20120528123934.GB21778@redhat.com>
- <4FC374CD.5000509@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FC374CD.5000509@web.de>
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 06/21] PCI: Add busn_res operation functions
+Date: Mon,  7 May 2012 13:29:51 -0700
+Message-Id: <1336422606-4244-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 28, 2012 at 02:51:25PM +0200, Jan Kiszka wrote:
-> On 2012-05-28 14:39, Michael S. Tsirkin wrote:
-> > On Fri, May 25, 2012 at 11:02:13AM -0300, Jan Kiszka wrote:
-> >> According to Alexey, the T310 does not properly support INTx masking as
-> >> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
-> >> is masked. Mark this adapter as broken so that pci_intx_mask_supported
-> >> won't report it as compatible.
-> >>
-> >> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> >> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
-> > 
-> > 
-> > Just a thought: would be nice to have a way to discover
-> > the quirk was activated. Add an attribute so that
-> > userspace can detect and report this properly to users?
-> > Or just log a warning message ...
-> 
-> pr_notice_once?
+Will use them insert/update busn res in pci_bus struct.
 
-OK IMO.
+-v2: use update_resource() requested by Bjorn.
+-v3: use domain_busn_res as root bus busn_res parent.
 
-> A flag for userspace would be significantly more
-> complicated (and not PCI layer hands).
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   63 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    3 ++
+ 2 files changed, 66 insertions(+), 0 deletions(-)
 
-Why not? I meant e.g. an attribute in pci-sysfs.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 674a477..bfbf064 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1714,6 +1714,69 @@ err_out:
+ 	return NULL;
+ }
+ 
++int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
++{
++	struct resource *res = &b->busn_res;
++	struct resource *parent_res;
++	int ret;
++
++	res->start = bus;
++	res->end = bus_max;
++	res->flags = IORESOURCE_BUS;
++
++	if (!pci_is_root_bus(b))
++		parent_res = &b->parent->busn_res;
++	else {
++		parent_res = get_pci_domain_busn_res(pci_domain_nr(b));
++		res->flags |= IORESOURCE_PCI_FIXED;
++	}
++
++	ret = insert_resource(parent_res, res);
++
++	dev_printk(KERN_DEBUG, &b->dev,
++			"busn_res: %pR %s inserted under %s %pR\n",
++			res, ret ? "can not be" : "is",
++			pci_is_root_bus(b) ? "domain":"", parent_res);
++
++	return ret;
++}
++
++int pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
++{
++	struct resource *res = &b->busn_res;
++	struct resource old_res = *res;
++	resource_size_t size;
++	int ret;
++
++	if (res->start > bus_max)
++		return -EINVAL;
++
++	size = bus_max - res->start + 1;
++	ret = adjust_resource(res, res->start, size);
++	dev_printk(KERN_DEBUG, &b->dev,
++			"busn_res: %pR end %s updated to %02x\n",
++			&old_res, ret ? "can not be" : "is", bus_max);
++
++	if (!ret && !res->parent)
++		pci_bus_insert_busn_res(b, res->start, res->end);
++
++	return ret;
++}
++
++void pci_bus_release_busn_res(struct pci_bus *b)
++{
++	struct resource *res = &b->busn_res;
++	int ret;
++
++	if (!res->flags || !res->parent)
++		return;
++
++	ret = release_resource(res);
++	dev_printk(KERN_DEBUG, &b->dev,
++			"busn_res: %pR %s released\n",
++			res, ret ? "can not be" : "is");
++}
++
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d588ef4..b5f2cc7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -667,6 +667,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
++int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
++void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus * __devinit pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+-- 
+1.7.7
 
-> Jan
-> 
