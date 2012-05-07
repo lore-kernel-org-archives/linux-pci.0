@@ -1,59 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40754 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161032Ab2ERK0G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 May 2012 06:26:06 -0400
-Message-ID: <4FB623BC.1010202@redhat.com>
-Date: Fri, 18 May 2012 06:26:04 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci, Add AER_panic sysfs file
-References: <1337274270-18785-1-git-send-email-prarit@redhat.com> <20120518045130.GA3281@kroah.com>
-In-Reply-To: <20120518045130.GA3281@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 21/21] PCI: insert busn_res for child bus
+Date: Mon,  7 May 2012 13:30:06 -0700
+Message-Id: <1336422606-4244-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Now we can insert busn_res now, after all root bus's get inserted.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-On 05/18/2012 12:51 AM, Greg KH wrote:
-> On Thu, May 17, 2012 at 01:04:30PM -0400, Prarit Bhargava wrote:
->> Consider the following case
->>
->> 		[ RP ]
->> 		  |
->> 		  |
->> 	+---------+-----------+
->> 	|	  |	      |
->>        [H1]      [H2]        [X1]
->>
->> where RP is a PCIE Root Port, H1 and H2 are devices with drivers that support
->> PCIE AER driver error handling (ie, they have pci_error_handlers defined in
->> the driver), and X1 is a device with a driver that does not support PCIE
->> AER driver error handling.
->>
->> If the Root Port takes an error what currently happens is that the
->> bus resets and H1 & H2 call their slot_reset functions.  X1 does nothing.
->>
->> In some cases a user may not wish the system to continue because X1 is
->> an unhardened driver.  In these cases, the system should not do a bus reset,
->> but rather the system should panic to avoid any further possible data
->> corruption.
->>
->> This patch implements an AER_panic sysfs entry for each root port which
->> a user can modify.  AER_panic = 1, means the system will panic on a
->> PCIE error which would have normally resulted in a secondary bus reset.
-> 
-> If you add/modify/delete a sysfs file, you have to also have a
-> corrisponding patch to Documentation/ABI/ in order to keep things sane.
-> Please do that as part of this patch the next time you submit it.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 9f68b9d..0840409 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -755,7 +755,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 			if (!child)
+ 				goto out;
+ 			child->primary = primary;
+-			child->busn_res.end = subordinate;
++			pci_bus_insert_busn_res(child, secondary, subordinate);
+ 			child->bridge_ctl = bctl;
+ 		}
+ 
+@@ -793,6 +793,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 			child = pci_add_new_bus(bus, dev, ++max);
+ 			if (!child)
+ 				goto out;
++			pci_bus_insert_busn_res(child, max, 0xff);
+ 		}
+ 		buses = (buses & 0xff000000)
+ 		      | ((unsigned int)(child->primary)     <<  0)
+@@ -864,7 +865,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
+-		child->busn_res.end = max;
++		pci_bus_update_busn_res_end(child, max);
+ 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
+ 	}
+ 
+-- 
+1.7.7
 
-Sorry about that Greg.  I'll submit a [v2] with that modification.
-
-P.
-> 
-> thanks,
-> 
-> greg k-h
