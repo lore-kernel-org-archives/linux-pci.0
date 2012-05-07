@@ -1,69 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:41534 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754694Ab2E2SRL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 14:17:11 -0400
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:36529 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754894Ab2EGDAO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 May 2012 23:00:14 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 7 May 2012 08:30:11 +0530
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q47307406816182
+	for <linux-pci@vger.kernel.org>; Mon, 7 May 2012 08:30:08 +0530
+Received: from d28av05.in.ibm.com (loopback [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q478UbpZ019649
+	for <linux-pci@vger.kernel.org>; Mon, 7 May 2012 18:30:37 +1000
+Date: Mon, 7 May 2012 11:00:05 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: Does my understanding correct?
+Message-ID: <20120507030005.GA13838@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120427092704.GA22529@richard>
+ <CAErSpo6xy6AEQwROSOU6yrfdWpBgRpd+-hOGOyg0mv9UzKwOUA@mail.gmail.com>
+ <20120428050127.GA25916@richard>
+ <CAErSpo7mjeo8f=_3Uhj0V-Q1-q5dYqi8T7pMqBY6zdahpCWTRA@mail.gmail.com>
+ <20120502062443.GB24172@richard>
+ <CAErSpo6uODF00jL6hHXbB8=f3XiG2UMr+5-5CxY2T+duQVfcTA@mail.gmail.com>
+ <20120503062134.GC6255@richard>
+ <CAErSpo40hwqdnUOmjbdm+3TNt_w0rYg6-qD7nYmauRvaQXhkiQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4FC50E09.4000204@zytor.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
-	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-	<20120525193716.GA8817@google.com>
-	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
-	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-	<CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
-	<4FC50E09.4000204@zytor.com>
-Date: Tue, 29 May 2012 11:17:10 -0700
-Message-ID: <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAErSpo40hwqdnUOmjbdm+3TNt_w0rYg6-qD7nYmauRvaQXhkiQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2012 at 10:57 AM, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 05/29/2012 10:55 AM, Yinghai Lu wrote:
+On Thu, May 03, 2012 at 10:39:42AM -0600, Bjorn Helgaas wrote:
 >>
->> x86 are using 16bits.
 >>
->> some others use 32 bits.
->> #define IO_SPACE_LIMIT 0xffffffff
+>>                          
+>>                          
+>>      +-------------------------------|------------------------------+
+>>      |                               |                              |
+>>      |                          +----+----+                         |
+>>      |                          | virtual |                         |
+>>      |                          | PCI-PCI |                         |
+>>      |                          | bridge  |                         |
+>>      |                          +----+----+       
+>>      |                               |        |
+>>      |                               |Bus#3      
+>>      |                               |                              |
+>>      |          +----------------------------------------+          |
+>>      |          |                    |                   |          |
+>>      |          |                    |                   |          |
+>>      |          |03:00.0             |03:01.0            |03:02.0   |
+>>      |     +----+----+          +----+----+         +----++---+     |
+>>      |     | virtual |          | virtual |         | virtual |     |
+>>      |     | PCI-PCI |          | PCI-PCI |         | PCI-PCI |     |
+>>      |     | bridge  |          | bridge  |         | bridge  |     |
+>>      |     +----+----+          +----+----+         +----+----+     |
+>>      |          |                    |                   |          |
+>>      |          |                    |                   |          |
+>>      +----------|--------------------|-------------------|----------+
+>>                 | Bus#4?             |                   |
+>>                 v                    v                   v
 >>
->> ia64 and sparc are using 64bits.
->> #define IO_SPACE_LIMIT               0xffffffffffffffffUL
->>
->> but pci only support 16bits and 32bits.
->>
->> maybe later we can add
->> PCI_MAX_RESOURCE_16
->>
->> to handle 16bits and 32bit io ports.
->>
+I read the code of pci_scan_child_bus(), in this function it will call
+pci_scan_slot() like this.
+
+	for (devfn = 0; devfn < 0x100; devfn += 8)
+		pci_scan_slot(bus, devfn);
+I think this scheme is based on the PCI LB specification.
+
+If the bus->self is ari enabled, one call of pci_scan_slot(bus, 0) will
+scan all the functions under this bus.
+
+Then next 2^5-1 times of pci_scan_slot() will configure the function which
+has already been configured, or even empty function.
+
+My idea is 
+if the bus is ari enabled, just one call of pci_scan_slot() will be
+called. 
+
+Do you think this works? Or may I miss some real case?
+
+>> So the link itself is Bus#4?
 >
-> Shouldn't this be dealt by root port apertures?
+>Exactly.
 >
+>> If there is no device under this link, will Bus#4 appear in kernel?
+>
+>Yes, I'm pretty sure we build the bus 04 pci_bus structure, then scan
+>bus 04 for devices.  Even if we find none, the pci_bus struct for bus
+>04 remains.
+>
+>> And then the PCIe switch is represented by 4 pci_dev structure and each
+>> is bridge type?
+>
+>Yes.  And each has an associated pci_bus struct for its secondary bus.
+>
+>Bjorn
 
-pci bridge could support 16bits and 32bits io port.
-but we did not record if 32bits is supported.
+-- 
+Richard Yang
+Help you, Help me
 
-so during allocating, could have allocated above 64k address to non
-32bit bridge.
-
-but  x86 is ok, because ioport.end always set to 0xffff.
-other arches with IO_SPACE_LIMIT with 0xffffffff or
-0xffffffffffffffffUL may have problem.
-
-Yinghai
