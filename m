@@ -1,59 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29799 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760371Ab2EVULk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 May 2012 16:11:40 -0400
-Date: Tue, 22 May 2012 16:11:38 -0400
-From: Jason Baron <jbaron@redhat.com>
-Message-Id: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: mst@redhat.com
-Subject: [PATCH] pci hotplug: rescan bridge after device hotplug
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	sparclinux@vger.kernel.org
+Subject: [PATCH 16/21] sparc/PCI: register busn_res for root buses
+Date: Mon,  7 May 2012 13:30:01 -0700
+Message-Id: <1336422606-4244-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm tyring to support bridge hotplug and devices below it in qemu via acpi
-hotplug. Currently only 1 level or 32 slots are supported. By allowing for a
-second level, we will be able to support 32^2 devices.
+Add the host bridge bus number aperture to the resource list.
+Like the MMIO and I/O port apertures, this is used when assigning
+resources to hot-added devices or in the case of conflicts.
 
-If I first hotplug the bridge with no devices intially below it, the hotplug
-code sets the bridge memory window to 0 and does not increase it when
-subsequent devices are added below it.
-
-Fix this, by calling pci_rescan_bus_bridge_resize(), on the bridge directly
-below the root to re-size all the birdge windows that may have changed.
-
-Signed-off-by: Jason Baron <jbaron@redhat.com>
+[bhelgaas: write changelog]
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ arch/sparc/kernel/pci.c      |    8 +++++---
+ arch/sparc/kernel/pci_impl.h |    1 +
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 806c44f..8960c1e 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -792,6 +792,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- {
- 	struct pci_dev *dev;
- 	struct pci_bus *bus = slot->bridge->pci_bus;
-+	struct pci_bus *rescan_bus;
- 	struct acpiphp_func *func;
- 	int retval = 0;
- 	int num, max, pass;
-@@ -821,6 +822,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 		}
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index c85bfd7..74e4bf3 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -535,7 +535,7 @@ static void __devinit of_scan_pci_bridge(struct pci_pbm_info *pbm,
  	}
  
-+	/* Ensure we rescan/setup a bridge for new devs hanging off of it */
-+	rescan_bus = bus;
-+	while (rescan_bus->parent && rescan_bus->parent->self)
-+		rescan_bus = rescan_bus->parent;
-+	if (rescan_bus->self)
-+		pci_rescan_bus_bridge_resize(rescan_bus->self);
-+
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		acpiphp_bus_add(func);
+ 	bus->primary = dev->bus->number;
+-	bus->busn_res.end = busrange[1];
++	pci_bus_insert_busn_res(bus, busrange[0], busrange[1]);
+ 	bus->bridge_ctl = 0;
  
+ 	/* parse ranges property, or cook one up by hand for Simba */
+@@ -685,6 +685,10 @@ struct pci_bus * __devinit pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				pbm->io_space.start);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+ 				pbm->mem_space.start);
++	pbm->busn.start = pbm->pci_first_busno;
++	pbm->busn.end	= pbm->pci_last_busn;
++	pbm->busn.flags	= IORESOURCE_BUS;
++	pci_add_resource(&resources, &pbm->busn);
+ 	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
+ 				  pbm, &resources);
+ 	if (!bus) {
+@@ -693,8 +697,6 @@ struct pci_bus * __devinit pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 		pci_free_resource_list(&resources);
+ 		return NULL;
+ 	}
+-	bus->busn_res.start = pbm->pci_first_busno;
+-	bus->busn_res.end = pbm->pci_last_busno;
+ 
+ 	pci_of_scan_bus(pbm, node, bus);
+ 	pci_bus_add_devices(bus);
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 6beb60d..918a203 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -97,6 +97,7 @@ struct pci_pbm_info {
+ 	/* PBM I/O and Memory space resources. */
+ 	struct resource			io_space;
+ 	struct resource			mem_space;
++	struct resource			busn;
+ 
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
+ 	unsigned long			config_space;
 -- 
-1.7.7.6
+1.7.7
 
