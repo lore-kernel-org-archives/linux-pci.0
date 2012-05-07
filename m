@@ -1,48 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:39655 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892Ab2EROau (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 10:30:50 -0400
-Message-ID: <4FB65D0E.9060004@gmail.com>
-Date: Fri, 18 May 2012 22:30:38 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
-CC: "Williams, Dan J" <dan.j.williams@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Keping Chen <chenkeping@huawei.com>
-Subject: Re: [RESEND,PATCH] DCA, x86: fix invalid memory access in DCA core
-References: <1336406288-9479-1-git-send-email-jiang.liu@huawei.com> <436EC33EF05C3442BBF5497FC9483FF41626EACA@IRSMSX101.ger.corp.intel.com> <4FAB20FB.6070508@gmail.com> <436EC33EF05C3442BBF5497FC9483FF4162732ED@IRSMSX101.ger.corp.intel.com>
-In-Reply-To: <436EC33EF05C3442BBF5497FC9483FF4162732ED@IRSMSX101.ger.corp.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from rcsinet15.oracle.com ([148.87.113.117]:50511 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757663Ab2EGU3j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:29:39 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/7] PCI, cpci_hotplug: Simplify configure_slot
+Date: Mon,  7 May 2012 13:29:11 -0700
+Message-Id: <1336422556-4124-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
+References: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/18/2012 10:10 PM, Sosnowski, Maciej wrote:
-> On Thu, May 07, May 10, 2012 3:59 AM, Jiang Liu <liuj97@gmail.com> wrote:
->>
->> Hi Maciej,
->> 	I feel we may also need to tune the multiple IOH support in DCA.
->> Multiple IOH support is disabled for CB3.0 devices, how about CB3.1 devices
->> in Ivrbridge or SandyBridge? Does the hardware limitation still exist? Or
->> could we support multiple IOHs with IvyBridge and SandyBridge?
->> 	If multiple IOH is supported, I think we should move the logic to
->> disable multiple IOH support for CB3.0 from DCA core into ioatdma. I have
->> also prepared two patches for that two.
->> 	Thanks!
->>
-> 
-> At this point I do not think we would need to tune multiple IOH for DCA.
-> The limitation you mention applies only to CB3.0. I do not think DCA is supported
-> with Sandy Bridge / Ivy Bridge regardless of multi-IOH case but let me confirm it
-> yet.
-It seems that Intel introduces DDIO technology for IvyBridge. Does it replace DCA
-technology on new platforms?
-Thanks!
+For child p2p bridge hotplug support should use pci_scan_bridge instead.
 
-> 
-> Thanks,
-> Maciej
+Make it more simillar to pciehp, just use pci_hp_add_bridge()
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/cpci_hotplug_pci.c |   35 +++++--------------------------
+ 1 files changed, 6 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index ae853cc..dcc75c7 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -285,42 +285,19 @@ int __ref cpci_configure_slot(struct slot *slot)
+ 	for (fn = 0; fn < 8; fn++) {
+ 		struct pci_dev *dev;
+ 
+-		dev = pci_get_slot(parent, PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
++		dev = pci_get_slot(parent,
++				   PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
+ 		if (!dev)
+ 			continue;
+ 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+-		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)) {
+-			/* Find an unused bus number for the new bridge */
+-			struct pci_bus *child;
+-			unsigned char busnr, start = parent->secondary;
+-			unsigned char end = parent->subordinate;
+-
+-			for (busnr = start; busnr <= end; busnr++) {
+-				if (!pci_find_bus(pci_domain_nr(parent),
+-						  busnr))
+-					break;
+-			}
+-			if (busnr >= end) {
+-				err("No free bus for hot-added bridge\n");
+-				pci_dev_put(dev);
+-				continue;
+-			}
+-			child = pci_add_new_bus(parent, dev, busnr);
+-			if (!child) {
+-				err("Cannot add new bus for %s\n",
+-				    pci_name(dev));
+-				pci_dev_put(dev);
+-				continue;
+-			}
+-			child->subordinate = pci_do_scan_bus(child);
+-			pci_bus_size_bridges(child);
+-		}
++		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
++			pci_hp_add_bridge(dev);
+ 		pci_dev_put(dev);
+ 	}
+ 
+-	pci_bus_assign_resources(parent);
++	pci_assign_unassigned_bridge_resources(parent->self);
++
+ 	pci_bus_add_devices(parent);
+-	pci_enable_bridges(parent);
+ 
+ 	dbg("%s - exit", __func__);
+ 	return 0;
+-- 
+1.7.7
 
