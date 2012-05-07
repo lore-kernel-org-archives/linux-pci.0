@@ -1,64 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:37387 "EHLO
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64768 "EHLO
 	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753534Ab2E1SV5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2012 14:21:57 -0400
-Received: by lbbgm6 with SMTP id gm6so2041377lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 28 May 2012 11:21:55 -0700 (PDT)
+	with ESMTP id S1756791Ab2EGRCD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 13:02:03 -0400
+Received: by lbbgm6 with SMTP id gm6so3586628lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 07 May 2012 10:02:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120528140448.GA22783@redhat.com>
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
- <20120313081235.GC15333@redhat.com> <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
- <CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com> <20120528140448.GA22783@redhat.com>
+In-Reply-To: <20120505034730.GA5648@richard>
+References: <1335425575-2023-1-git-send-email-weiyang@linux.vnet.ibm.com> <20120505034730.GA5648@richard>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 May 2012 12:21:34 -0600
-Message-ID: <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
-Subject: Re: Initializing iwl3945 error
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Mon, 7 May 2012 10:01:40 -0700
+Message-ID: <CAErSpo4-fxd8jxZ+o_Jv=eUx20M2mqh9LXpKZ=+uYUShJskPmQ@mail.gmail.com>
+Subject: Re: [PATCH] Optimize the resource overlap check
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry this got dropped on the floor for so long.  I don't see anything
-wrong with the PCI memory routing information in either the failing or
-the working logs.
+On Fri, May 4, 2012 at 8:47 PM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
+> Bjorn,
+>
+> How do you think of my this version?
 
-Kamil, you mentioned: "Driver can't initialize card as all
-ioread32/iowrite32 seems to not do their job. All reads finalize with
-0xffffffff."
+Applied to my 'next' branch, thanks.
 
-Normally this means we got no response, either because the transaction
-didn't reach the device, or the device didn't respond.  Here's the
-routing information I see, which looks fine:
-
-  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
-  pci_root PNP0A03:00: host bridge window [mem 0xe0000000-0xf7ffffff]
-  pci 0000:00:1c.1: PCI bridge to [bus 0b-0b]
-  pci 0000:00:1c.1:   bridge window [mem 0xf1e00000-0xf1efffff]
-  pci 0000:0b:00.0: [8086:4222] type 0 class 0x000280
-  pci 0000:0b:00.0: reg 10: [mem 0xf1eff000-0xf1efffff]
-
-And we enabled memory space decoding for the device:
-
-  iwl3945 0000:0b:00.0: enabling device (0000 -> 0002)
-
-so it *should* respond.  It's interesting that we didn't have to
-enable the device in the working ("noapic") case -- there's no
-"enabling device" line in that dmesg log, which means memory decoding
-was already enabled when we found it.
-
-You also said "If I access the memory directly, not by mapping, I can
-write and read pci memory but driver load fails anyway."  What exactly
-does that mean?  I assume you mean that even in the failing case, you
-can somehow access that region ([mem 0xf1eff000-0xf1efffff]).  What
-mechanism are you using?  ioremap() in the driver?  User-space mmap of
-a /sys file?
-
-You said "This issue is reproducible in 100% on my system when I turn
-on the machine. It doesn't occur after some work on it."  I wonder if
-there's some timing issue with that device coming out of reset or
-something.  Does the same problem happen if the driver is statically
-linked in vs. loaded as a module after boot?  What if you add a long
-delay in the driver probe routine?
+> On Thu, Apr 26, 2012 at 03:32:55PM +0800, Wei Yang wrote:
+>>In coalesce_windows() it tries to check whether the res1 and res2 overlap.
+>>This function do four comparisons, which could be done with one
+>>comparisons.
+>>
+>>Also make the resource_overlaps() a common function for others.
+>>
+>>Signed-Off-By: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>---
+>> arch/x86/pci/acpi.c    |   12 +-----------
+>> include/linux/ioport.h |    7 +++++++
+>> 2 files changed, 8 insertions(+), 11 deletions(-)
+>>
+>>diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>>index 68c3c13..fd3f541 100644
+>>--- a/arch/x86/pci/acpi.c
+>>+++ b/arch/x86/pci/acpi.c
+>>@@ -181,13 +181,6 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+>>       return AE_OK;
+>> }
+>>
+>>-static bool resource_contains(struct resource *res, resource_size_t point)
+>>-{
+>>-      if (res->start <= point && point <= res->end)
+>>-              return true;
+>>-      return false;
+>>-}
+>>-
+>> static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+>> {
+>>       int i, j;
+>>@@ -208,10 +201,7 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+>>                        * our resources no longer match the ACPI _CRS, but
+>>                        * the kernel resource tree doesn't allow overlaps.
+>>                        */
+>>-                      if (resource_contains(res1, res2->start) ||
+>>-                          resource_contains(res1, res2->end) ||
+>>-                          resource_contains(res2, res1->start) ||
+>>-                          resource_contains(res2, res1->end)) {
+>>+                      if (resource_overlaps(res1, res2)) {
+>>                               res1->start = min(res1->start, res2->start);
+>>                               res1->end = max(res1->end, res2->end);
+>>                               dev_info(&info->bridge->dev,
+>>diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+>>index e9bb22c..05d2c70 100644
+>>--- a/include/linux/ioport.h
+>>+++ b/include/linux/ioport.h
+>>@@ -198,5 +198,12 @@ extern int
+>> walk_system_ram_range(unsigned long start_pfn, unsigned long nr_pages,
+>>               void *arg, int (*func)(unsigned long, unsigned long, void *));
+>>
+>>+static inline bool resource_overlaps(struct resource *r1,
+>>+                                         struct resource *r2)
+>>+{
+>>+       return (r1->start <= r2->end && r1->end >= r2->start);
+>>+}
+>>+
+>>+
+>> #endif /* __ASSEMBLY__ */
+>> #endif        /* _LINUX_IOPORT_H */
+>>--
+>>1.7.4.1
+>
+> --
+> Richard Yang
+> Help you, Help me
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
