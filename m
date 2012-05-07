@@ -1,351 +1,146 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 08/13] vfio: Add documentation
-To: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org
-Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com,
-	alex.williamson@redhat.com
-Date: Fri, 11 May 2012 16:56:23 -0600
-Message-ID: <20120511225623.30496.80603.stgit@bling.home>
-In-Reply-To: <20120511222148.30496.68571.stgit@bling.home>
-References: <20120511222148.30496.68571.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:53027 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752641Ab2EGRmH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 13:42:07 -0400
+Message-ID: <4FA7FD9B.6090505@fold.natur.cuni.cz>
+Date: Mon, 07 May 2012 18:51:39 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: 3.4-rc5: Oops in run_timer_softirq()
+References: <4FA7DEC8.5040506@fold.natur.cuni.cz> <CAErSpo7pDQiMhfiZw_eG_8StuYJMU5wXQN7aWT=7yhsukStGcA@mail.gmail.com>
+In-Reply-To: <CAErSpo7pDQiMhfiZw_eG_8StuYJMU5wXQN7aWT=7yhsukStGcA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+Bjorn Helgaas wrote:
+> On Mon, May 7, 2012 at 7:40 AM, Martin Mokrejs
+> <mmokrejs@fold.natur.cuni.cz> wrote:
+>> Hi,
+>>  I have enabled my wifi in the Dell Vostro 3550 laptop by the hardware button combination
+>> Fn+F2 and disabled it back again after few seconds. The following crash happened, and is
+>> quite reproducible. Is that to be fixed by the patch in
+>> "Re: Suspicious RCU usage in mac80211" thread from this email list?
+> 
+> Did you mean linux-wireless (cc'd)?  I don't see any PCI issue here.
 
- Documentation/vfio.txt |  315 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 315 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/vfio.txt
+Um, no, I wanted to email directly linux-wireless. My mistake in address. Sorry for
+the spam on linux-pci.
+Martin
 
-diff --git a/Documentation/vfio.txt b/Documentation/vfio.txt
-new file mode 100644
-index 0000000..6808ac5
---- /dev/null
-+++ b/Documentation/vfio.txt
-@@ -0,0 +1,315 @@
-+VFIO - "Virtual Function I/O"[1]
-+-------------------------------------------------------------------------------
-+Many modern system now provide DMA and interrupt remapping facilities
-+to help ensure I/O devices behave within the boundaries they've been
-+allotted.  This includes x86 hardware with AMD-Vi and Intel VT-d,
-+POWER systems with Partitionable Endpoints (PEs) and embedded PowerPC
-+systems such as Freescale PAMU.  The VFIO driver is an IOMMU/device
-+agnostic framework for exposing direct device access to userspace, in
-+a secure, IOMMU protected environment.  In other words, this allows
-+safe[2], non-privileged, userspace drivers.
-+
-+Why do we want that?  Virtual machines often make use of direct device
-+access ("device assignment") when configured for the highest possible
-+I/O performance.  From a device and host perspective, this simply
-+turns the VM into a userspace driver, with the benefits of
-+significantly reduced latency, higher bandwidth, and direct use of
-+bare-metal device drivers[3].
-+
-+Some applications, particularly in the high performance computing
-+field, also benefit from low-overhead, direct device access from
-+userspace.  Examples include network adapters (often non-TCP/IP based)
-+and compute accelerators.  Prior to VFIO, these drivers had to either
-+go through the full development cycle to become proper upstream
-+driver, be maintained out of tree, or make use of the UIO framework,
-+which has no notion of IOMMU protection, limited interrupt support,
-+and requires root privileges to access things like PCI configuration
-+space.
-+
-+The VFIO driver framework intends to unify these, replacing both the
-+KVM PCI specific device assignment code as well as provide a more
-+secure, more featureful userspace driver environment than UIO.
-+
-+Groups, Devices, and IOMMUs
-+-------------------------------------------------------------------------------
-+
-+Devices are the main target of any I/O driver.  Devices typically
-+create a programming interface made up of I/O access, interrupts,
-+and DMA.  Without going into the details of each of these, DMA is
-+by far the most critical aspect for maintaining a secure environment
-+as allowing a device read-write access to system memory imposes the
-+greatest risk to the overall system integrity.
-+
-+To help mitigate this risk, many modern IOMMUs now incorporate
-+isolation properties into what was, in many cases, an interface only
-+meant for translation (ie. solving the addressing problems of devices
-+with limited address spaces).  With this, devices can now be isolated
-+from each other and from arbitrary memory access, thus allowing
-+things like secure direct assignment of devices into virtual machines.
-+
-+This isolation is not always at the granularity of a single device
-+though.  Even when an IOMMU is capable of this, properties of devices,
-+interconnects, and IOMMU topologies can each reduce this isolation.
-+For instance, an individual device may be part of a larger multi-
-+function enclosure.  While the IOMMU may be able to distinguish
-+between devices within the enclosure, the enclosure may not require
-+transactions between devices to reach the IOMMU.  Examples of this
-+could be anything from a multi-function PCI device with backdoors
-+between functions to a non-PCI-ACS (Access Control Services) capable
-+bridge allowing redirection without reaching the IOMMU.  Topology
-+can also play a factor in terms of hiding devices.  A PCIe-to-PCI
-+bridge masks the devices behind it, making transaction appear as if
-+from the bridge itself.  Obviously IOMMU design plays a major factor
-+as well.
-+
-+Therefore, while for the most part an IOMMU may have device level
-+granularity, any system is susceptible to reduced granularity.  The
-+IOMMU API therefore supports a notion of IOMMU groups.  A group is
-+a set of devices which is isolatable from all other devices in the
-+system.  Groups are therefore the unit of ownership used by VFIO.
-+
-+While the group is the minimum granularity that must be used to
-+ensure secure user access, it's not necessarily the preferred
-+granularity.  In IOMMUs which make use of page tables, it may be
-+possible to share a set of page tables between different groups,
-+reducing the overhead both to the platform (reduced TLB thrashing,
-+reduced duplicate page tables), and to the user (programming only
-+a single set of translations).  For this reason, VFIO makes use of
-+a container class, which may hold one or more groups.  A container
-+is created by simply opening the /dev/vfio/vfio character device.
-+
-+On it's own, the container provides little functionality, with all
-+but a couple version and extension query interfaces locked away.
-+The user needs to add a group into the container for the next level
-+of functionality.  To do this, the user first needs to identify the
-+group associated with the desired device.  This can be done using
-+the sysfs links described in the example below.  By unbinding the
-+device from the host driver and binding it to a VFIO driver, a new
-+VFIO group will appear for the group as /dev/vfio/$GROUP, where
-+$GROUP is the IOMMU group number of which the device is a member.
-+If the IOMMU group contains multiple devices, each will need to
-+be bound to a VFIO driver before operations on the VFIO group
-+are allowed (it's also sufficient to only unbind the device from
-+host drivers if a VFIO driver is unavailable; this will make the
-+group available, but not that particular device).  TBD - interface
-+for disabling driver probing/locking a device.
-+
-+Once the group is ready, it may be added to the container by opening
-+the VFIO group character device (/dev/vfio/$GROUP) and using the
-+VFIO_GROUP_SET_CONTAINER ioctl, passing the file descriptor of the
-+previously opened container file.  If desired and if the IOMMU driver
-+supports sharing the IOMMU context between groups, multiple groups may
-+be set to the same container.  If a group fails to set to a container
-+with existing groups, a new empty container will need to be used
-+instead.
-+
-+With a group (or groups) attached to a container, the remaining
-+ioctls become available, enabling access to the VFIO IOMMU interfaces.
-+Additionally, it now becomes possible to get file descriptors for each
-+device within a group using an ioctl on the VFIO group file descriptor.
-+
-+The VFIO device API includes ioctls for describing the device, the I/O
-+regions and their read/write/mmap offsets on the device descriptor, as
-+well as mechanisms for describing and registering interrupt
-+notifications.
-+
-+VFIO Usage Example
-+-------------------------------------------------------------------------------
-+
-+Assume user wants to access PCI device 0000:06:0d.0
-+
-+$ readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
-+../../../../kernel/iommu_groups/26
-+
-+This device is therefore in IOMMU group 26.  This device is on the
-+pci bus, therefore the user will make use of vfio-pci to manage the
-+group:
-+
-+# modprobe vfio-pci
-+
-+Binding this device to the vfio-pci driver creates the VFIO group
-+character devices for this group:
-+
-+$ lspci -n -s 0000:06:0d.0
-+06:0d.0 0401: 1102:0002 (rev 08)
-+# echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
-+# echo 1102 0002 > /sys/bus/pci/drivers/vfio/new_id
-+# echo 0000:06:0d.0 > /sys/bus/pci/drivers/vfio/bind
-+
-+Now we need to look at what other devices are in the group to free
-+it for use by VFIO:
-+
-+$ ls -l /sys/bus/pci/devices/0000:06:0d.0/iommu_group/devices
-+total 0
-+lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:00:1e.0 ->
-+	../../../../devices/pci0000:00/0000:00:1e.0
-+lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:06:0d.0 ->
-+	../../../../devices/pci0000:00/0000:00:1e.0/0000:06:0d.0
-+lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:06:0d.1 ->
-+	../../../../devices/pci0000:00/0000:00:1e.0/0000:06:0d.1
-+
-+This device is behind a PCIe-to-PCI bridge[4], therefore we also
-+need to add device 0000:06:0d.1 to the group following the same
-+procedure as above.  Device 0000:00:1e.0 is a bridge that does
-+not currently have a host driver, therefore it's not required to
-+bind this device to the vfio-pci driver (vfio-pci does not currently
-+support PCI bridges).
-+
-+The final step is to provide the user with access to the group if
-+unprivileged operation is desired (note that /dev/vfio/vfio provides
-+no capabilities on it's own and is therefore expected to be set to
-+mode 0666 by the system).
-+
-+# chown user:user /dev/vfio/26
-+
-+The user now has full access to all the devices and the iommu for this
-+group and can access them as follows:
-+
-+	int container, group, device, i;
-+	struct vfio_group_status group_status =
-+					{ .argsz = sizeof(group_status) };
-+	struct vfio_iommu_x86_info iommu_info = { .argsz = sizeof(iommu_info) };
-+	struct vfio_iommu_x86_dma_map dma_map = { .argsz = sizeof(dma_map) };
-+	struct vfio_device_info device_info = { .argsz = sizeof(device_info) };
-+
-+	/* Create a new container */
-+	container = open("/dev/vfio/vfio, O_RDWR);
-+
-+	if (ioctl(container, VFIO_GET_API_VERSION) != VFIO_API_VERSION)
-+		/* Unknown API version */
-+
-+	if (!ioctl(container, VFIO_CHECK_EXTENSION, VFIO_X86_IOMMU))
-+		/* Doesn't support the IOMMU driver we want. */
-+
-+	/* Open the group */
-+	group = open("/dev/vfio/26", O_RDWR);
-+
-+	/* Test the group is viable and available */
-+	ioctl(group, VFIO_GROUP_GET_STATUS, &group_status);
-+
-+	if (!(group_status.flags & VFIO_GROUP_FLAGS_VIABLE))
-+		/* Group is not viable (ie, not all devices bound for vfio) */
-+
-+	/* Add the group to the container */
-+	ioctl(group, VFIO_GROUP_SET_CONTAINER, &container);
-+
-+	/* Enable the IOMMU model we want */
-+	ioctl(container, VFIO_SET_IOMMU, VFIO_X86_IOMMU)
-+
-+	/* Get addition IOMMU info */
-+	ioctl(container, VFIO_IOMMU_GET_INFO, &iommu_info);
-+
-+	/* Allocate some space and setup a DMA mapping */
-+	dma_map.vaddr = mmap(0, 1024 * 1024, PROT_READ | PROT_WRITE,
-+			     MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-+	dma_map.size = 1024 * 1024;
-+	dma_map.iova = 0; /* 1MB starting at 0x0 from device view */
-+	dma_map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
-+
-+	ioctl(container, VFIO_IOMMU_MAP_DMA, &dma_map);
-+
-+	/* Get a file descriptor for the device */
-+	device = ioctl(group, VFIO_GROUP_GET_DEVICE_FD, "0000:06:0d.0");
-+
-+	/* Test and setup the device */
-+	ioctl(device, VFIO_DEVICE_GET_INFO, &device_info);
-+
-+	for (i = 0; i < device_info.num_regions; i++) {
-+		struct vfio_region_info reg = { .argsz = sizeof(reg) };
-+
-+		reg.index = i;
-+
-+		ioctl(device, VFIO_DEVICE_GET_REGION_INFO, &reg);
-+
-+		/* Setup mappings... read/write offsets, mmaps
-+		 * For PCI devices, config space is a region */
-+	}
-+
-+	for (i = 0; i < device_info.num_irqs; i++) {
-+		struct vfio_irq_info irq = { .argsz = sizeof(irq) };
-+
-+		irq.index = i;
-+
-+		ioctl(device, VFIO_DEVICE_GET_IRQ_INFO, &reg);
-+
-+		/* Setup IRQs... eventfds, VFIO_DEVICE_SET_IRQS */
-+	}
-+
-+	/* Gratuitous device reset and go... */
-+	ioctl(device, VFIO_DEVICE_RESET);
-+
-+VFIO User API
-+-------------------------------------------------------------------------------
-+
-+Please see include/linux/vfio.h for complete API documentation.
-+
-+VFIO bus driver API
-+-------------------------------------------------------------------------------
-+
-+VFIO bus drivers, such as vfio-pci make use of only a few interfaces
-+into VFIO core.  When devices are bound and unbound to the driver,
-+the driver should call vfio_add_group_dev() and vfio_del_group_dev()
-+respectively:
-+
-+extern int vfio_add_group_dev(struct iommu_group *iommu_group,
-+                              struct device *dev,
-+                              const struct vfio_device_ops *ops,
-+                              void *device_data);
-+
-+extern void *vfio_del_group_dev(struct device *dev);
-+
-+vfio_add_group_dev() indicates to the core to begin tracking the
-+specified iommu_group and register the specified dev as owned by
-+a VFIO bus driver.  The driver provides an ops structure for callbacks
-+similar to a file operations structure:
-+
-+struct vfio_device_ops {
-+	int	(*open)(void *device_data);
-+	void	(*release)(void *device_data);
-+	ssize_t	(*read)(void *device_data, char __user *buf,
-+			size_t count, loff_t *ppos);
-+	ssize_t	(*write)(void *device_data, const char __user *buf,
-+			 size_t size, loff_t *ppos);
-+	long	(*ioctl)(void *device_data, unsigned int cmd,
-+			 unsigned long arg);
-+	int	(*mmap)(void *device_data, struct vm_area_struct *vma);
-+};
-+
-+Each function is passed the device_data that was originally registered
-+in the vfio_add_group_dev() call above.  This allows the bus driver
-+an easy place to store it's opaque, private data.  The open/release
-+callbacks are issued when a new file descriptor is created for a
-+device (via VFIO_GROUP_GET_DEVICE_FD).  The ioctl interface provides
-+a direct pass through for VFIO_DEVICE_* ioctls.  The read/write/mmap
-+interfaces implement the device region access defined by the device's
-+own VFIO_DEVICE_GET_REGION_INFO ioctl.
-+
-+-------------------------------------------------------------------------------
-+
-+[1] VFIO was originally an acronym for "Virtual Function I/O" in it's
-+initial implementation by Tom Lyon while as Cisco.  We've since
-+outgrown the acronym, but it's catchy.
-+
-+[2] "safe" also depends upon a device being "well behaved".  It's
-+possible for multi-function devices to have backdoors between
-+functions and even for single function devices to have alternative
-+access to things like PCI config space through MMIO registers.  To
-+guard against the former we can include additional precautions in the
-+IOMMU driver to group multi-function PCI devices together
-+(iommu=group_mf).  The latter we can't prevent, but the IOMMU should
-+still provide isolation.  For PCI, SR-IOV Virtual Functions are the
-+best indicator of "well behaved", as these are designed for
-+virtualization usage models.
-+
-+[3] As always there are trade-offs to virtual machine device
-+assignment that are beyond the scope of VFIO.  It's expected that
-+future IOMMU technologies will reduce some, but maybe not all, of
-+these trade-offs.
-+
-+[4] In this case the device is below a PCI bridge, so transactions
-+from either function of the device are indistinguishable to the iommu:
-+
-+-[0000:00]-+-1e.0-[06]--+-0d.0
-+                        \-0d.1
-+
-+00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 90)
 
+> 
+>> [  385.231175] BUG: unable to handle kernel NULL pointer dereference at           (null)
+>> [  385.231226] IP: [<          (null)>]           (null)
+>> [  385.231245] PGD 0
+>> [  385.231257] Oops: 0010 [#1] SMP
+>> [  385.231273] CPU 3
+>> [  385.231283] Modules linked in: iwlwifi i2c_i801 usb_storage
+>> [  385.231308]
+>> [  385.231317] Pid: 0, comm: swapper/3 Not tainted 3.4.0-rc5-default #5 Dell Inc. Vostro 3550/0JGC48
+>> [  385.231350] RIP: 0010:[<0000000000000000>]  [<          (null)>]           (null)
+>> [  385.231383] RSP: 0018:ffff88041fb83e78  EFLAGS: 00010286
+>> [  385.231402] RAX: ffff88041fb83eb0 RBX: 0000000000000100 RCX: 0000000000000838
+>> [  385.231426] RDX: ffff88041fb83eb0 RSI: dead000000200200 RDI: 0000000000000000
+>> [  385.231449] RBP: ffff88041fb83ef0 R08: ffff88041fb83eb8 R09: 0000000000000001
+>> [  385.231480] R10: 0000000000000400 R11: ffffffff816074a5 R12: ffff88040f3b8000
+>> [  385.231503] R13: ffff88040f3c1fd8 R14: ffff88041fb83eb0 R15: 0000000000000000
+>> [  385.231526] FS:  0000000000000000(0000) GS:ffff88041fb80000(0000) knlGS:0000000000000000
+>> [  385.231552] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+>> [  385.231570] CR2: 0000000000000000 CR3: 0000000001913000 CR4: 00000000000407e0
+>> [  385.231592] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>> [  385.231614] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+>> [  385.231638] Process swapper/3 (pid: 0, threadinfo ffff88040f3c0000, task ffff88040f3bd350)
+>> [  385.231663] Stack:
+>> [  385.231673]  ffffffff81083f91 ffff88040f3c1fd8 ffff88040f3b9c20 ffff88040f3b9820
+>> [  385.231702]  ffff88040f3b9420 ffff88040f3b9020 0000000000000000 ffff88041fb83eb0
+>> [  385.231730]  ffff88041fb83eb0 ffffffff81043e21 ffffffff8190c088 ffff88040f3c1fd8
+>> [  385.231759] Call Trace:
+>> [  385.231770]  <IRQ>
+>> [  385.231784]  [<ffffffff81083f91>] ? run_timer_softirq+0x191/0x223
+>> [  385.231806]  [<ffffffff81043e21>] ? lapic_next_event+0x10/0x14
+>> [  385.231827]  [<ffffffff8107fbcc>] __do_softirq+0x83/0x10d
+>> [  385.231846]  [<ffffffff810ae18f>] ? tick_program_event+0x1f/0x21
+>> [  385.231869]  [<ffffffff815e2a8c>] call_softirq+0x1c/0x30
+>> [  385.231889]  [<ffffffff8102e042>] do_softirq+0x33/0x69
+>> [  385.231907]  [<ffffffff8107fe05>] irq_exit+0x3f/0x9a
+>> [  385.231926]  [<ffffffff8104417c>] smp_apic_timer_interrupt+0x77/0x85
+>> [  385.231948]  [<ffffffff815e2307>] apic_timer_interrupt+0x67/0x70
+>> [  385.231967]  <EOI>
+>> [  385.231979]  [<ffffffff8109a149>] ? wake_up_process+0x10/0x12
+>> [  385.231999]  [<ffffffff810aebce>] ? tick_nohz_idle_exit+0x135/0x13c
+>> [  385.232020]  [<ffffffff81033fcd>] cpu_idle+0x78/0x7f
+>> [  385.232039]  [<ffffffff815daf6b>] start_secondary+0x18f/0x193
+>> [  385.232057] Code:  Bad RIP value.
+>> [  385.232075] RIP  [<          (null)>]           (null)
+>> [  385.232093]  RSP <ffff88041fb83e78>
+>> [  385.232107] CR2: 0000000000000000
+>> [  385.232309] [drm] Changing LVDS panel from (-hsync, -vsync) to (+hsync, -vsync)
+>> [  385.593328] ---[ end trace e3eed09b44fc9be3 ]---
+>>
+>>
+>>
+>> 09:00.0 Network controller: Intel Corporation Centrino Wireless-N 1030 (rev 34)
+>>        Subsystem: Intel Corporation Centrino Wireless-N 1030 BGN
+>>        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>>        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>        Latency: 0, Cache Line Size: 64 bytes
+>>        Interrupt: pin A routed to IRQ 53
+>>        Region 0: Memory at f7e00000 (64-bit, non-prefetchable) [size=8K]
+>>        Capabilities: [c8] Power Management version 3
+>>                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>>                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>>        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>                Address: 00000000fee003f8  Data: 0000
+>>        Capabilities: [e0] Express (v1) Endpoint, MSI 00
+>>                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
+>>                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+>>                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>>                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+>>                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+>>                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+>>                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <32us
+>>                        ClockPM+ Surprise- LLActRep- BwNot-
+>>                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>>                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>>                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>>        Capabilities: [100 v1] Advanced Error Reporting
+>>                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>>                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>>                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>>                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+>>        Capabilities: [140 v1] Device Serial Number 4c-80-93-ff-ff-15-e6-c7
+>>        Kernel driver in use: iwlwifi
+>>        Kernel modules: iwlwifi
+>> 00: 86 80 8a 00 06 00 10 00 34 00 80 02 10 00 00 00
+>> 10: 04 00 e0 f7 00 00 00 00 00 00 00 00 00 00 00 00
+>> 20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 25 53
+>> 30: 00 00 00 00 c8 00 00 00 00 00 00 00 0a 01 00 00
+>> 40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> 60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> 70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> c0: 00 00 00 00 00 00 00 00 01 d0 23 c8 00 00 00 0d
+>> d0: 05 e0 81 00 f8 03 e0 fe 00 00 00 00 00 00 00 00
+>> e0: 10 00 01 00 c0 8e 00 10 00 08 19 00 11 ec 06 00
+>> f0: 40 00 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+>>
+>>
+>> Thanks,
+>> Martin
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
