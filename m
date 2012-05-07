@@ -1,69 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48040 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752517Ab2EYWPO convert rfc822-to-8bit
+Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:51061
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753021Ab2EGHf4 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 May 2012 18:15:14 -0400
-Received: by lahd3 with SMTP id d3so962835lah.19
-        for <linux-pci@vger.kernel.org>; Fri, 25 May 2012 15:15:13 -0700 (PDT)
+	Mon, 7 May 2012 03:35:56 -0400
+Date: Mon, 7 May 2012 09:35:47 +0200
+From: Andreas Herrmann <andreas.herrmann3@amd.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 1/2][RESEND] x86/pci/amd: Restore
+ early_fill_mp_bus_to_node
+Message-ID: <20120507073547.GE10668@alberich.amd.com>
+References: <20120427143410.GB27535@alberich.amd.com>
+ <20120427143621.GC27535@alberich.amd.com>
+ <CAErSpo7gkkqZgR0TZ5Xx162pLN9ZaYVhMmyHn+H8Lqr1CBSXXQ@mail.gmail.com>
+ <20120504130332.GC12199@alberich.amd.com>
+ <CAErSpo5_ZB=ggNDGM5N8Rt1TtW8DQQm1k2s9FBwFHjh7nFA4hw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4FC0009C.5000704@zytor.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
- <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
- <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
- <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
- <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
- <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
- <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
- <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com> <4FC0009C.5000704@zytor.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 25 May 2012 16:14:53 -0600
-Message-ID: <CAErSpo5-Wypc8LMfgE51=Ob0UV1ky9QxKTtaAigU8YyNcXxiQw@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo5_ZB=ggNDGM5N8Rt1TtW8DQQm1k2s9FBwFHjh7nFA4hw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2012 at 3:58 PM, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 05/25/2012 02:55 PM, Bjorn Helgaas wrote:
->>
->> I think we actually have a separate bug here. †On 64-bit non-x86
->> architectures, PCIBIOS_MAX_MEM_32 is a 64-bit -1, so the following
->> attempt to avoid putting a 32-bit BAR above 4G only works on x86,
->> where PCIBIOS_MAX_MEM_32 is 0xffffffff.
->>
->> † † † † /* don't allocate too high if the pref mem doesn't support 64bit*/
->> † † † † if (!(res->flags & IORESOURCE_MEM_64))
->> † † † † † † † † max = PCIBIOS_MAX_MEM_32;
->>
->> I think we should fix this with a separate patch that removes
->> PCIBIOS_MAX_MEM_32 altogether, replacing this use with an explicit
->> 0xffffffff (or some other "max 32-bit value" symbol). †I don't think
->> there's anything arch-specific about this.
->>
->> So I'd like to see two patches here:
->> † 1) Avoid allocating 64-bit regions for 32-bit BARs
->> † 2) Try to allocate regions above 4GB for 64-bit BARs
+On Fri, May 04, 2012 at 10:35:05AM -0600, Bjorn Helgaas wrote:
+> On Fri, May 4, 2012 at 7:03 AM, Andreas Herrmann
+> <andreas.herrmann3@amd.com> wrote:
+> > On Wed, May 02, 2012 at 11:33:17AM -0600, Bjorn Helgaas wrote:
+> >> On Fri, Apr 27, 2012 at 8:36 AM, Andreas Herrmann
+> >> <andreas.herrmann3@amd.com> wrote:
+> >> >
+> >> > Once upon a time this function was overloaded with quirky stuff to fix
+> >> > resource detection on systems w/ _CRS defects (seems that some Sun and
+> >> > HP systems were affected).
+> >> >
+> >> > See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
+> >> > (x86: multi pci root bus with different io resource range, on 64-bit)
+> >> >
+> >> > Restore the old function and thus decouple it from the quirk that is
+> >> > CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
+> >> > I assume that the _CRS stuff is working on current systems.
+> >> >
+> >> > This is required to properly initilize the numa_node information of
+> >> > existing PCI busses and associated devices.
+> >>
+> >> I applied some of Yinghai's patches that also touch this area. ¬†Can
+> >> you refresh these so they apply on top of my "next" branch
+> >> (git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next)?
+> >
+> > Arrgh, will adapt my patch and resend it (asap).
+> >
+> >> Can you also be more specific about what these patches fix?
+> >
+> >> My understanding is that amd_bus.c (1) sets NUMA info with
+> >> set_mp_bus_to_node() and (2) figures out MMIO and I/O port apertures,
+> >> which are only used when blind probing and when ignoring _CRS.
+> >>
+> >> It seems like the main change in this patch is that we skip (2)
+> >> completely when family >= 0x11, and I don't understand what that could
+> >> fix.
+> >
+> > The patch restores a very old function that was used to detect the
+> > nearest node for a PCI bus, so yes it's used to do (1). IMHO this
+> > function was totally screwed up with Yinghai's code to do (2). It
+> > seems that Sun has (had?) some systems where (2) was req'd. I don't
+> > care about this part. But I'd like to do (1) on all AMD CPU NUMA
+> > systems.
+> 
+> Thanks for the explanation.  But I'm afraid I'm still confused.
+> 
+> First, it sounds like you're trying to change the way we do part (1),
+> i.e., the set_mp_bus_to_node() calls, but I think the effect of your
+> patch is to stop doing part (2) in some cases.
 >
-> Do we also need to track the maximum address available to the CPU?
+> Second, I am pretty sure that the current early_fill_mp_bus_info()
+> (before your patch) does the exact same set_mp_bus_to_node() calls as
+> your early_fill_mp_bus_to_node() does.
 
-We are allocating from the resources available on this bus, which
-means the host bridge apertures or a subset.  If the arch supplies
-those, that should be enough.  If it doesn't, we default to
-iomem_resource.  On x86, we trim that down to only the supported
-address space:
 
-        iomem_resource.end = (1ULL << boot_cpu_data.x86_phys_bits) - 1;
+I want to do (1) on all AMD CPUs that might be used in NUMA systems.
 
-But I'm sure some other architectures don't do that yet.  I guess
-that's one of the risks -- if an arch is doesn't tell us the apertures
-and doesn't trim iomem_resource, we could allocate a non-addressable
-region.
+What's done for (2) is very specific to certain AMD CPU families --
+some of the register accesses are wrong/incomplete for newer AMD
+CPUs. Furhtermore _CRS should provide the required info. I really
+don't want to extend all the quirky stuff in (2) for future AMD CPUs.
 
-Bjorn
+> Finally, on all systems with ACPI, the set_mp_bus_to_node() call in
+> pci_acpi_scan_root() should be doing what you need.  In fact, that
+> call happens later, so it should be overwriting the information filled
+> in by amd_bus.c.  If there's something wrong in this ACPI path, the
+> most likely cause is a BIOS defect, such as  a missing _PXM method on
+> the PNP0A03/0A08 host bridge device.
+
+Good point. I'll check what's wrong in this ACPI path.
+
+
+Thanks,
+
+Andreas
+
+-- 
+Operating | Advanced Micro Devices GmbH
+  System  | Einsteinring 24, 85609 Dornach/Aschheim, Germany
+ Research | Gesch√§ftsf√ºhrer: Alberto Bozzo
+  Center  | Sitz: Dornach, Gemeinde Aschheim, Landkreis M√ºnchen
+  (OSRC)  | Registergericht M√ºnchen, HRB Nr. 43632, WEEE-Reg-Nr: DE 12919551
+
+
