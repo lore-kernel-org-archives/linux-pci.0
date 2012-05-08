@@ -1,197 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42350 "EHLO
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:41590 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751472Ab2EFD71 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 May 2012 23:59:27 -0400
-Message-ID: <4FA5F715.6000801@gmail.com>
-Date: Sun, 06 May 2012 13:59:17 +1000
-From: Francois Rigaut <frigaut@gmail.com>
+	with ESMTP id S1756625Ab2EHQ6X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2012 12:58:23 -0400
+Received: by pbbrp8 with SMTP id rp8so8263954pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 08 May 2012 09:58:23 -0700 (PDT)
+Message-ID: <4FA950A5.6040106@gmail.com>
+Date: Wed, 09 May 2012 00:58:13 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org,
-	Nico Schottelius <nico-linux-20120419@schottelius.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Linux Support for Thunderbolt using Apple Monitor
-References: <20120419163800.GB13977@schottelius.org> <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com> <20120502163629.GE928@schottelius.org> <20120502202509.GA26798@kroah.com> <20120503065003.GB13386@schottelius.org> <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com> <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com> <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com> <4FA4AA3E.1070903@gmail.com> <4FA544B1.3070705@gmail.com>
-In-Reply-To: <4FA544B1.3070705@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/6] PCI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <1336186830-10765-1-git-send-email-jiang.liu@huawei.com> <20120508172153.b67a8cc6.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120508172153.b67a8cc6.izumi.taku@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang Liu,
+Hi Taku,
+	Thanks for testing. Could you please help to try the patch below?
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index a8da5d4..2551586 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -708,6 +708,13 @@ int __devinit pci_mmconfig_insert(int segment, int start, int end
+        if (cfg) {
+                if (cfg->start_bus <= start && cfg->end_bus >= end) {
+                        rc = -EEXIST;
++               } else if (!addr) {
++                       /*
++                        * With some legacy BIOSes, the MCFG table only
++                        * partially covers bus ranges returned by
++                        * root bridges' _CRS method.
++                        */
++                       rc = -EEXIST;
+                } else {
+                        printk(KERN_WARNING PREFIX
+                               "MMCONFIG for domain %04x [bus %02x-%02x] "
 
-I guess this confirms a presentation at the last Linux Plumber 
-conference (September 2011) by John Ronciak (intel).
-The presentation is entitled "Thunderbolt Technology: What is it and 
-what are the Open Source Implications"
-You can get it here http://maumae.net/thunderbolt/Plumbers-Thunderbolt.odp
+On 05/08/2012 04:21 PM, Taku Izumi wrote:
+> 
+> Hi Jiang,
+> 
+>  I tested this pachset.
+>   (to be honest, as I used Bjorn tree, I changed a little of Patch6/6 
+>    to apply to his tree.)
+> 
+>  My machine failed to boot after applied your patchset.
+>  The reason is:
+>     My machine's MCFG table shows that End bus number is 0x13.
+> 
+> [000h 0000  4]                    Signature : "MCFG"    /* Memory Mapped Configuration table */
+> [004h 0004  4]                 Table Length : 00000040
+> [008h 0008  1]                     Revision : 01
+> [009h 0009  1]                     Checksum : 3E
+> [00Ah 0010  6]                       Oem ID : "PTLTD "
+> [010h 0016  8]                 Oem Table ID : "  MCFG  "
+> [018h 0024  4]                 Oem Revision : 06040001
+> [01Ch 0028  4]              Asl Compiler ID : " LTP"
+> [020h 0032  4]        Asl Compiler Revision : 00000000
+> 
+> [024h 0036  8]                     Reserved : 0000000000000000
+> 
+> [02Ch 0044  8]                 Base Address : 00000000F0000000
+> [034h 0052  2]         Segment Group Number : 0000
+> [036h 0054  1]             Start Bus Number : 00
+> [037h 0055  1]               End Bus Number : 13
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> [038h 0056  4]                     Reserved : 00000000
+> 
+>    But CRS shows bus range is 0x00 - 0xff. So arch_acpi_pci_root_add() failed
+>    because pci_mmconfig_insert() returns not -EEXIST but -EINVAL.
+> 
+> [    0.094236] PCI: MMCONFIG for domain 0000 [bus 00-ff] conflicts with domain 0000 [bus 00-13]
+> 
+> int __devinit pci_mmconfig_insert(int segment, int start, int end, u64 addr)
+> {
+> ..
+> (snip)
+> ...
+>         mutex_lock(&pci_mmcfg_lock);
+>         cfg = pci_mmconfig_lookup(segment, start);
+>         if (cfg) {
+>                 if (cfg->start_bus <= start && cfg->end_bus >= end) {
+>                         rc = -EEXIST;
+>                 } else {
+>                         printk(KERN_WARNING PREFIX
+>                                "MMCONFIG for domain %04x [bus %02x-%02x] "
+>                                "conflicts with domain %04x [bus %02x-%02x]\n",
+>                                segment, start, end,
+>                                cfg->segment, cfg->start_bus, cfg->end_bus);
+>                 }
+>                 goto out;
+> 
+> 
+>   My impression is my machine's firmware is broken.
+>   Howerver my machine boots well without your patchset. So I report as a problem.
+> 
+>    
+> Best regards,
+> Taku Izumi <izumi.taku@jp.fujitsu.com>
+> 
 
-In particular, slide 9 "Thunderbolt Technology: What does this mean for SW"
-states:
-"Hot plug PCIe (BIOS/ACPI/OS) - BIOS issues being worked"
-so I guess someone at intel is working in the same issue and has indeed 
-identified the same BIOS limitations.
-
-I'll try to contact John Ronciak (unless someone here knows him and 
-volunteer to ask) to inquire the state of progress of this work.
-
-Thanks to anyone that have provided insight !
-Francois
-
-
-On 06/05/12 01:18, Jiang Liu wrote:
-> Hi Francois,
-> 	It seems that the PCI topology related to the Thunderbird is:
-> 00:01.0 PCI bridge: Intel Corporation Xeon E3-1200/2nd Generation Core Processor Family PCI Express Root Port (rev 09)
-> 	03:00.0 PCI bridge: Intel Corporation Device 151a (rev 01)
-> 	04:00.0 PCI bridge: Intel Corporation Device 151a (rev 01)
-> 	04:03.0 PCI bridge: Intel Corporation Device 151a (rev 01)
-> 	04:04.0 PCI bridge: Intel Corporation Device 151a (rev 01)
-> 		37:00.0 PCI bridge: Intel Corporation Device 1513
-> 		38:00.0 PCI bridge: Intel Corporation Device 1513
-> 			39:00.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
-> 			3a:03.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
-> 				3b:00.0 USB controller: Pericom Semiconductor Device 400e (rev 01)
-> 				3b:00.1 USB controller: Pericom Semiconductor Device 400e (rev 01)
-> 				3b:00.2 USB controller: Pericom Semiconductor Device 400f (rev 01)
-> 		38:01.0 PCI bridge: Intel Corporation Device 1513
-> 			3c:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57761 Gigabit Ethernet PCIe (rev 10)
-> 		38:02.0 PCI bridge: Intel Corporation Device 1513
-> 			3d:00.0 FireWire (IEEE 1394): nee Agere Systems nee Lucent Microelectronics FW643 PCI Express 1394b Controller (PHY/Link) (rev 08)
-> 		38:03.0 PCI bridge: Intel Corporation Device 1513
-> 		38:04.0 PCI bridge: Intel Corporation Device 1513
-> 		38:05.0 PCI bridge: Intel Corporation Device 1513
->
-> It's really a complex topology. The longest path has root port + 3 PCIe switches + endpoint.
-> The device with id "Intel Corporation Device 151a", "Intel Corporation Device 1513" and
-> "Pericom Semiconductor Device 400c" should be 3 PCIe switches. I guess the thunderbird
-> cable is used to connect 04:04.0 to the second PCIe switch with device ID "Intel Corporation
-> Device 1513".
->
-> According to the acpidump sent out by you, I guess the relationship among PCIe and ACPI is as below:
->          Device (PCI0)	// PCIe host bridge
->          {
->              Name (_HID, EisaId ("PNP0A08"))
->              Device (P0P2)	//00:01.0
->              {
->                  Name (_ADR, 0x00010000)
->                  Device (UPSB)	//03:00.0
->                  {
->                      Name (_ADR, 0x00)
->                      Device (DSB2)	//04:04.0
->                      {
->                          Name (_ADR, 0x00040000)
->                          Method (_RMV, 0, NotSerialized)
->                          {
->                              Return (OSDW ()) // OSDW->  OS is Darwin
->                          }
->                          Device (UPS2)	//37:00.0
->                          {
->                              Name (_ADR, 0x00)
-> 			}
-> 		    }
-> 		}
-> 	    }
-> 	}
->
-> But _RMV method only returns 1 on iOS or Max OS X. That means ACPI based hotplug is disabled
-> on Linux for your system. And as Yinghai has pointed out, all the PCIe downstream ports on
-> the system don't support PCIe hotplug. So need BIOS or hardware changes to support Thunderbolt
-> cable hotplug on your system.
->
-> On 05/05/2012 12:19 PM, Francois Rigaut wrote:
->> On 05/05/12 05:38, Yinghai Lu wrote:
->>> On Fri, May 4, 2012 at 12:37 PM, Yinghai Lu<yinghai@kernel.org>   wrote:
->>>> On Fri, May 4, 2012 at 11:48 AM, Greg KH<gregkh@linuxfoundation.org>   wrote:
->>>>> Ok, it looks like these are the devices that we are missing while
->>>>> "hotplugging":
->>>>> 37:00.0 PCI bridge: Intel Corporation Device 1513
->>>>> 38:00.0 PCI bridge: Intel Corporation Device 1513
->>>>> 38:01.0 PCI bridge: Intel Corporation Device 1513
->>>>> 38:02.0 PCI bridge: Intel Corporation Device 1513
->>>>> 38:03.0 PCI bridge: Intel Corporation Device 1513
->>>>> 38:04.0 PCI bridge: Intel Corporation Device 1513
->>>>> 38:05.0 PCI bridge: Intel Corporation Device 1513
->>>>> 39:00.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
->>>>> 3a:03.0 PCI bridge: Pericom Semiconductor Device 400c (rev 02)
->>>>> 3b:00.0 USB controller: Pericom Semiconductor Device 400e (rev 01)
->>>>> 3b:00.1 USB controller: Pericom Semiconductor Device 400e (rev 01)
->>>>> 3b:00.2 USB controller: Pericom Semiconductor Device 400f (rev 01)
->>>>> 3c:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57761 Gigabit Ethernet PCIe (rev 10)
->>>>> 3d:00.0 FireWire (IEEE 1394): nee Agere Systems nee Lucent
->>>>> Microelectronics FW643 PCI Express 1394b Controller (PHY/Link) (rev 08)
->>>>>
->>>>> Which is good, I was worried that there was a video controller out there
->>>>> on the end of the thunderbolt link.
->>>>>
->>>>> So, the problem really is two here:
->>>>>    - your video card doesn't detect the new display
->>>>>    - your pci devices do not show up
->>>>>
->>>>> The first one probably needs to be reported to the Intel video driver
->>>>> people, they can help you out the best.
->> no it's definitely not the first one. As you saw, there'sa whole bunch of other devices (3 USB, firewire, network) that do not show up either.
->>
->> The new info from Yinghai (thanks Yinghai) explains why hotpluging with pciehp did not work/detect the PCIE hotplug and did not result in *any* kernel messages.
->>
->> So the whole thing I guess boils down to making acpiphp work. And why it outputs the "no such device" error message and does not load:
->>
->> I tried with debug=1 and got a bit more info in the log files:
->>
->> [root@poliahu frigaut]# lsmod | grep -e acpi -e pci
->> acpi_cpufreq            5941  0
->> mperf                   1275  1 acpi_cpufreq
->> processor              26144  1 acpi_cpufreq
->> [root@poliahu frigaut]# modprobe acpiphp debug=1
->> ERROR: could not insert 'acpiphp': No such device
->>
->> at this point this message showed up in everything.log:
->> May  5 14:09:55 localhost kernel: [28329.700022] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
->> May  5 14:09:55 localhost kernel: [28329.702041] acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
->> May  5 14:09:55 localhost kernel: [28329.702484] acpiphp_glue: found PCI-to-PCI bridge at PCI 0000:04:00.0
->> May  5 14:09:55 localhost kernel: [28329.702715] acpiphp_glue: Bus 0000:05 has 0 slots
->> May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
->>
->> then:
->> [root@poliahu frigaut]# lsmod | grep -e acpi -e pci
->> pci_hotplug            25324  0
->> acpi_cpufreq            5941  0
->> mperf                   1275  1 acpi_cpufreq
->> processor              26144  1 acpi_cpufreq
->> [root@poliahu frigaut]#
->>
->> shows that acpiphp was indeed not loaded (I assume the error occurs after it has written out the above messages in the log file), but pci_hotplug was as a dep of acpiphp I assume (thus, correct behavior).
->>
->> So we're back to the issue of the acpiphp load error.
->>
->> Greg, I see you're one of the authors of acpiphp:
->> #define DRIVER_VERSION    "0.5"
->> #define DRIVER_AUTHOR    "Greg Kroah-Hartman<gregkh@us.ibm.com>, Takayoshi Kochi<t-kochi@bq.jp.nec.com>, Matthew Wilcox<willy@hp.com>"
->> #define DRIVER_DESC    "ACPI Hot Plug PCI Controller Driver"
->>
->> but that might have been a while back?
->>
->> Cheers, and thanks,
->> Francois
->>
->>
->>
->>>>> The second one means that something is up with the pci hotplug
->>>>> controller.  I've cced the linux-pci list, the people there should be
->>>>> able to help out better than I, as I no longer have any PCI hotplug
->>>>> hardware to work with anymore.
->>>>>
->>>> those devices are under 04:04.0, but that does not have slot cap
->>>> enabled by BIOS. So pciehp is going to to help.
->>> should be: pciehp is not going to help.
->>>
->>> so acpiphp are involved?
->>>
->>> Yinghai
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
