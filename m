@@ -1,40 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 1 May 2012 22:10:27 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 06/19] PCI: prepare for serializing hotplug operations
- triggered by pciehp driver
-Message-ID: <20120502051027.GD23579@kroah.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
- <1335539820-11232-7-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f202.google.com ([209.85.216.202]:37637 "EHLO
+	mail-qc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755114Ab2EHXqM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2012 19:46:12 -0400
+Received: by qcsp5 with SMTP id p5so297510qcs.1
+        for <linux-pci@vger.kernel.org>; Tue, 08 May 2012 16:46:11 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
+	by wpzn3.hot.corp.google.com (Postfix) with ESMTP id 84BAF10004D
+	for <linux-pci@vger.kernel.org>; Tue,  8 May 2012 16:46:11 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
+	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id 3AFF4180170
+	for <linux-pci@vger.kernel.org>; Tue,  8 May 2012 16:46:11 -0700 (PDT)
+Subject: [PATCH 2/3] PCI: remove pci_max_busnr() (was already commented out)
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 08 May 2012 17:46:11 -0600
+Message-ID: <20120508234611.2085.95132.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120508234605.2085.32267.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120508234605.2085.32267.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1335539820-11232-7-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:16:47PM +0800, Jiang Liu wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
-> 
-> Split pciehp_wq into two workqueues to avoid possible deadlock issues
-> when using PCI hotplug lock to serialize hotplug operations triggered
-> by pciehp driver.
+pci_max_busnr() has been commented out for years (since 54c762fe62), and
+this patch removes it completely.
 
-Why two workqueues?  What is deadlocking?  And why name one "power" and
-one "event"?  What do they now do differently?  How are you serializing
-events across the workqueues as they can be doing the same thing at the
-same time to the same hardware now, right?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c |   24 ------------------------
+ 1 files changed, 0 insertions(+), 24 deletions(-)
 
-What am I missing?
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 69c21f0..09cd709 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -135,30 +135,6 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
+ EXPORT_SYMBOL_GPL(pci_ioremap_bar);
+ #endif
+ 
+-#if 0
+-/**
+- * pci_max_busnr - returns maximum PCI bus number
+- *
+- * Returns the highest PCI bus number present in the system global list of
+- * PCI buses.
+- */
+-unsigned char __devinit
+-pci_max_busnr(void)
+-{
+-	struct pci_bus *bus = NULL;
+-	unsigned char max, n;
+-
+-	max = 0;
+-	while ((bus = pci_find_next_bus(bus)) != NULL) {
+-		n = pci_bus_max_busnr(bus);
+-		if(n > max)
+-			max = n;
+-	}
+-	return max;
+-}
+-
+-#endif  /*  0  */
+-
+ #define PCI_FIND_CAP_TTL	48
+ 
+ static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
 
-Ick, I said I wasn't going to read anymore, I'm really stopping now.
-Sorry, it's like watching a train-wreck, you just can't turn away...
-
-greg k-h
