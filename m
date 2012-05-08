@@ -1,64 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:43760 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753002Ab2EDRQU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 May 2012 13:16:20 -0400
-Received: by lahj13 with SMTP id j13so2169776lah.19
-        for <linux-pci@vger.kernel.org>; Fri, 04 May 2012 10:16:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7mwheYBxM5_PhSmUdbybRbO9s1nTmZrL83NPuNW6g8SA@mail.gmail.com>
-References: <20120427190033.GA17588@ldl.usa.hp.com> <CAErSpo7mwheYBxM5_PhSmUdbybRbO9s1nTmZrL83NPuNW6g8SA@mail.gmail.com>
+Received: from mail-yw0-f74.google.com ([209.85.213.74]:63303 "EHLO
+	mail-yw0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755114Ab2EHXqH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2012 19:46:07 -0400
+Received: by yhgm50 with SMTP id m50so854179yhg.1
+        for <linux-pci@vger.kernel.org>; Tue, 08 May 2012 16:46:06 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
+	by wpzn4.hot.corp.google.com (Postfix) with ESMTP id 6B0061E004D
+	for <linux-pci@vger.kernel.org>; Tue,  8 May 2012 16:46:06 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
+	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id 195D0180170
+	for <linux-pci@vger.kernel.org>; Tue,  8 May 2012 16:46:06 -0700 (PDT)
+Subject: [PATCH 1/3] PCI: remove pci_bus_find_ext_capability() (unused)
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 May 2012 11:15:58 -0600
-Message-ID: <CAErSpo7LEDFq6=6vzBg+1eT-v+Y+oEm=AoUo2hiJ4-i3NafPYw@mail.gmail.com>
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-To: linux-pci@vger.kernel.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Tue, 08 May 2012 17:46:05 -0600
+Message-ID: <20120508234605.2085.32267.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 3, 2012 at 5:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Apr 27, 2012 at 1:00 PM, Khalid Aziz <khalid.aziz@hp.com> wrote:
->> Disable Bus Master bit on the device in
->> pci_device_shutdown() to ensure PCI devices do not continue
->> to DMA data after shutdown. This can cause memory
->> corruption in case of a kexec where the current kernel
->> shuts down and transfers control to a new kernel while a
->> PCI device continues to DMA to memory that does not belong
->> to it any more in the new kernel.
->>
->> I have tested this code on two laptops, two workstations and
->> a 16-socket server. kexec worked correctly on all of them.
->>
->>
->> Signed-off-by: Khalid Aziz <khalid.aziz@hp.com>
->> ---
->>  drivers/pci/pci-driver.c |    6 ++++++
->>  1 files changed, 6 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index 6b54b23..9db5940 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -420,6 +420,12 @@ static void pci_device_shutdown(struct device *dev)
->>        pci_msi_shutdown(pci_dev);
->>        pci_msix_shutdown(pci_dev);
->>
->> +       /*
->> +        * Turn off Bus Master bit on the device to tell it to not
->> +        * continue to do DMA
->> +        */
->> +       pci_disable_device(pci_dev);
->> +
->>        /*
->>         * Devices may be enabled to wake up by runtime PM, but they need not
->>         * be supposed to wake up the system from its "power off" state (e.g.
->
-> Any comment on this, Eric?  It seems reasonable to me.
+pci_bus_find_ext_capability() is unused, and this patch removes it.
 
-Applied to my "next" branch, thanks.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c   |   43 -------------------------------------------
+ include/linux/pci.h |    2 --
+ 2 files changed, 0 insertions(+), 45 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 111569c..69c21f0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -328,49 +328,6 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap)
+ }
+ EXPORT_SYMBOL_GPL(pci_find_ext_capability);
+ 
+-/**
+- * pci_bus_find_ext_capability - find an extended capability
+- * @bus:   the PCI bus to query
+- * @devfn: PCI device to query
+- * @cap:   capability code
+- *
+- * Like pci_find_ext_capability() but works for pci devices that do not have a
+- * pci_dev structure set up yet.
+- *
+- * Returns the address of the requested capability structure within the
+- * device's PCI configuration space or 0 in case the device does not
+- * support it.
+- */
+-int pci_bus_find_ext_capability(struct pci_bus *bus, unsigned int devfn,
+-				int cap)
+-{
+-	u32 header;
+-	int ttl;
+-	int pos = PCI_CFG_SPACE_SIZE;
+-
+-	/* minimum 8 bytes per capability */
+-	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
+-
+-	if (!pci_bus_read_config_dword(bus, devfn, pos, &header))
+-		return 0;
+-	if (header == 0xffffffff || header == 0)
+-		return 0;
+-
+-	while (ttl-- > 0) {
+-		if (PCI_EXT_CAP_ID(header) == cap)
+-			return pos;
+-
+-		pos = PCI_EXT_CAP_NEXT(header);
+-		if (pos < PCI_CFG_SPACE_SIZE)
+-			break;
+-
+-		if (!pci_bus_read_config_dword(bus, devfn, pos, &header))
+-			break;
+-	}
+-
+-	return 0;
+-}
+-
+ static int __pci_find_next_ht_cap(struct pci_dev *dev, int pos, int ht_cap)
+ {
+ 	int rc, ttl = PCI_FIND_CAP_TTL;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e444f5b..0e0c489 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -707,8 +707,6 @@ enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *dev);
+ int pci_find_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_capability(struct pci_dev *dev, u8 pos, int cap);
+ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+-int pci_bus_find_ext_capability(struct pci_bus *bus, unsigned int devfn,
+-				int cap);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+
