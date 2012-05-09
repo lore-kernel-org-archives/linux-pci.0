@@ -1,79 +1,36 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 2 May 2012 14:46:08 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+Date: Wed, 9 May 2012 19:58:26 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Chris Metcalf <cmetcalf@tilera.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 02/19] PCI: introduce recursive rwsem to serialize PCI
- hotplug operations
-Message-ID: <20120502214608.GB27281@kroah.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
- <1335539820-11232-3-git-send-email-jiang.liu@huawei.com>
- <20120502050025.GA23579@kroah.com>
- <4FA0E161.9060307@huawei.com>
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Arnd Bergmann <arnd@arndb.de>, Jiri Kosina <jkosina@suse.cz>,
+	Joe Perches <joe@perches.com>,
+	"David Howells <dhowells@redhat.com> Jesper Juhl" <jj@chaosbits.net>
+Subject: Re: [PATCH v2 2/2] arch/tile: tilegx PCI root complex support
+Message-ID: <20120509165825.GB21461@redhat.com>
+References: <201204072316.q37NGv8d019280@farm-0023.internal.tilera.com>
+ <201204072319.q37NJgrI019382@farm-0023.internal.tilera.com>
+ <alpine.LNX.2.00.1204080126300.4431@swampdragon.chaosbits.net>
+ <CAErSpo6_gV1XKJ1jsDSvHo+BEORL_5wLC2YRyVG+OjVNDYbHgw@mail.gmail.com>
+ <201204091359.13059.arnd@arndb.de>
+ <4F8356C7.60706@tilera.com>
+ <201204100914.06168.arnd@arndb.de>
+ <201205091555.q49FttvG010396@farm-0027.internal.tilera.com>
+ <201205091556.q49Fus3V010419@farm-0027.internal.tilera.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FA0E161.9060307@huawei.com>
+In-Reply-To: <201205091556.q49Fus3V010419@farm-0027.internal.tilera.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 02, 2012 at 03:25:21PM +0800, Jiang Liu wrote:
-> On 2012-5-2 13:00, Greg KH wrote:
-> >On Fri, Apr 27, 2012 at 11:16:43PM +0800, Jiang Liu wrote:
-> >>From: Jiang Liu<jiang.liu@huawei.com>
-> >>
-> >>There are multiple ways to trigger PCI hotplug requests concurrently,
-> >>such as:
-> >>1. Sysfs interfaces exported by the PCI core subsystem
-> >>2. Sysfs interfaces exported by the PCI hotplug subsystem
-> >>3. PCI hotplug events triggered by PCI Hotplug Controllers
-> >>4. ACPI hotplug events for PCI host bridges
-> >>5. Driver binding/unbinding events
-> >>
-> >>The PCI core subsystem doesn't support concurrent hotplug operations yet,
-> >>so all PCI hotplug requests should be globally serialized. This patch
-> >>introduces several new interfaces to serialize PCI hotplug operations.
-> >>
-> >>pci_hotplug_try_enter(): try to acquire write lock
-> >
-> >Ick, no, why would you ever want to do that?
-> >
-> >>pci_hotplug_enter(): acquire write lock
-> >>pci_hotplug_exit(): release write lock
-> >>pci_hotplug_disable(): acquire read lock
-> >>pci_hotplug_enable(): release read lock
-> >
-> >No, the pci hotplug core should not need a rwsem, just a simple lock, if
-> >that:
-> >	pci_hotplug_lock()
-> >	pci_hotplug_unlock()
-> >and that's it.
-> >
-> >Really you should not need these functions, the pci hotplug core should
-> >handle it for you, and the drivers should not care at all.  That's the
-> >"proper" way to fix this up, serialize stuff within the pci core, not
-> >the individual drivers.
-> >
-> >>Today we have reproduced the issue on a real platform by using
-> >>acpiphp driver. It's an IA64 platform running Suse 11SP1 (official
-> >>2.6.32.12 kernel). The test script is:
-> >>
-> >>This issue could be reproduced on an IA64 platform with Suse 11SP1
-> >>(official 2.6.32.12 kernel) and acpiphp driver.
-> >
-> >You do realize just how old that kernel is right?  Please don't assume
-> >that this kernel version is relevant to us all these years later.
-> This could be reproduced with latest kernel too, such as 3.3. We
-> use 2.6.32.12 because the all 3.x series kernels can't boot on
-> our IA64 platform due to an issue in scheduler. We have reproduced
-> similar issue on x86 platforms with 3.x kernels.
+On Tue, May 08, 2012 at 05:10:17PM -0400, Chris Metcalf wrote:
+> +extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
 
-That's wonderful, and is relevant, unlike what you originally wrote.
+Please don't put this here. asm-generic/pci_iomap.h already has
+a declaration.
 
-Please always write relevant changelog comments, otherwise they are...
-
-greg k-h
+-- 
+MST
