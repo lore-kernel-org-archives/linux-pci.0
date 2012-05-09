@@ -1,95 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49022 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965637Ab2EXVjH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 May 2012 17:39:07 -0400
-Message-ID: <4FBEAA5C.4060105@redhat.com>
-Date: Thu, 24 May 2012 17:38:36 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <4FAAC652.4060502@tilera.com>
+Date: Wed, 9 May 2012 15:32:34 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH v2 09/13] vfio: x86 IOMMU implementation
-References: <20120522043607.5871.11340.stgit@bling.home> <20120522050536.5871.65171.stgit@bling.home>
-In-Reply-To: <20120522050536.5871.65171.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arch@vger.kernel.org>
+Subject: Re: [PATCH 19/21] tile/PCI: Use pci_scan_root_bus instead pci_scan_bus
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org> <1336422606-4244-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1336422606-4244-20-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/22/2012 01:05 AM, Alex Williamson wrote:
-> x86 is probably the wrong name for this VFIO IOMMU driver, but x86
-> is the primary target for it.  This driver support a very simple
-> usage model using the existing IOMMU API.  The IOMMU is expected to
-> support the full host address space with no special IOVA windows,
-> number of mappings restrictions, or unique processor target options.
+On 5/7/2012 4:30 PM, Yinghai Lu wrote:
+> It will update busn_res accordingly, so we get that for last_busno.
 >
-> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Chris Metcalf <cmetcalf@tilera.com>
 > ---
+>  arch/tile/kernel/pci.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
 >
->   Documentation/ioctl/ioctl-number.txt |    2
->   drivers/vfio/Kconfig                 |    6
->   drivers/vfio/Makefile                |    2
->   drivers/vfio/vfio.c                  |    7
->   drivers/vfio/vfio_iommu_x86.c        |  743 ++++++++++++++++++++++++++++++++++
->   include/linux/vfio.h                 |   52 ++
->   6 files changed, 811 insertions(+), 1 deletions(-)
->   create mode 100644 drivers/vfio/vfio_iommu_x86.c
->
-> diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
-> index 111e30a..9d1694e 100644
-> --- a/Documentation/ioctl/ioctl-number.txt
-> +++ b/Documentation/ioctl/ioctl-number.txt
-> @@ -88,7 +88,7 @@ Code  Seq#(hex)	Include File		Comments
->   		and kernel/power/user.c
->   '8'	all				SNP8023 advanced NIC card
->   					<mailto:mcr@solidum.com>
-> -';'	64-6F	linux/vfio.h
-> +';'	64-72	linux/vfio.h
->   '@'	00-0F	linux/radeonfb.h	conflict!
->   '@'	00-0F	drivers/video/aty/aty128fb.c	conflict!
->   'A'	00-1F	linux/apm_bios.h	conflict!
-> diff --git a/drivers/vfio/Kconfig b/drivers/vfio/Kconfig
-> index 9acb1e7..bd88a30 100644
-> --- a/drivers/vfio/Kconfig
-> +++ b/drivers/vfio/Kconfig
-> @@ -1,6 +1,12 @@
-> +config VFIO_IOMMU_X86
-> +	tristate
-> +	depends on VFIO&&  X86
-> +	default n
-> +
->   menuconfig VFIO
->   	tristate "VFIO Non-Privileged userspace driver framework"
->   	depends on IOMMU_API
-> +	select VFIO_IOMMU_X86 if X86
->   	help
->   	  VFIO provides a framework for secure userspace device drivers.
->   	  See Documentation/vfio.txt for more details.
+> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+> index 7aa2743..4a951b87 100644
+> --- a/arch/tile/kernel/pci.c
+> +++ b/arch/tile/kernel/pci.c
+> @@ -310,6 +310,7 @@ int __devinit pcibios_init(void)
+>  		if (pci_scan_flags[i] == 0 && controllers[i].ops != NULL) {
+>  			struct pci_controller *controller = &controllers[i];
+>  			struct pci_bus *bus;
+> +			LIST_HEAD(resources);
+>  
+>  			if (tile_init_irqs(i, controller)) {
+>  				pr_err("PCI: Could not initialize IRQs\n");
+> @@ -327,7 +328,9 @@ int __devinit pcibios_init(void)
+>  			 * This is inlined in linux/pci.h and calls into
+>  			 * pci_scan_bus_parented() in probe.c.
+>  			 */
+> -			bus = pci_scan_bus(0, controller->ops, controller);
+> +			pci_add_resource(&resources, &ioport_resource);
+> +			pci_add_resource(&resources, &iomem_resource);
+> +			bus = pci_scan_root_bus(NULL, 0, controller->ops, controller, &resources);
+>  			controller->root_bus = bus;
+>  			controller->last_busno = bus->busn_res.end;
+>  		}
 
-So a future refactoring that uses some chunk of this support
-on a non-x86 machine could be a lot of useless renaming.
+We don't want ioport_resource on tilepro, since we don't support accessing
+I/O port space.
 
-Why not rename vfio_iommu_x86 to something like vfio_iommu_no_iova
-and just make it conditionally compiled on X86 (as you've done above in Kconfig's)?
-Then if another arch can use it, or refactors the file to use
-some of it, and split x86 vs <other-arch> into separate per-arch files,
-or per-iova schemes, it's more descriptive and less disruptive?
+With that one line removed:
 
-> diff --git a/drivers/vfio/Makefile b/drivers/vfio/Makefile
-> index 7500a67..1f1abee 100644
-> --- a/drivers/vfio/Makefile
-> +++ b/drivers/vfio/Makefile
-> @@ -1 +1,3 @@
->   obj-$(CONFIG_VFIO) += vfio.o
-> +obj-$(CONFIG_VFIO_IOMMU_X86) += vfio_iommu_x86.o
-> +obj-$(CONFIG_VFIO_PCI) += pci/
-> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-> index 6558eef..89899a8 100644
+Acked-by: Chris Metcalf <cmetcalf@tilera.com>
+
+Or, I can queue this change to take through the tile tree when the merge
+window opens.  Which would you prefer?
+
+-- 
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
+
