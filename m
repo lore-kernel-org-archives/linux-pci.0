@@ -1,113 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 06/13] iommu: Make use of DMA quirking and ACS enabled
- check for groups
-To: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org
-Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com,
-	ddutile@redhat.com, alex.williamson@redhat.com
-Date: Mon, 21 May 2012 23:05:15 -0600
-Message-ID: <20120522050515.5871.92344.stgit@bling.home>
-In-Reply-To: <20120522043607.5871.11340.stgit@bling.home>
-References: <20120522043607.5871.11340.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:47859 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758129Ab2EIQJD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2012 12:09:03 -0400
+Received: by lbbgm6 with SMTP id gm6so336792lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 09 May 2012 09:09:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <4FAAB134020000780008294F@nat28.tlf.novell.com>
+References: <4FAA4A5A0200007800082702@nat28.tlf.novell.com>
+ <CAErSpo68N5JYv_SX7Qzu4e0Z=x_g1U+FPaA-ux_W_zoB6iW+pw@mail.gmail.com> <4FAAB134020000780008294F@nat28.tlf.novell.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 9 May 2012 09:08:41 -0700
+Message-ID: <CAErSpo5Aidio0a6SjeYu=-9gXJU1aALMi5mUjg2aEB5pTsr8=Q@mail.gmail.com>
+Subject: Re: [PATCH 1/5, resend] PCI: adjust quirk handler section annotations
+To: Jan Beulich <JBeulich@suse.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Incorporate DMA quirking and ACS checking into amd_iommu and
-intel-iommu.  Note that IOMMU groups are not yet used for
-streaming DMA, so this doesn't immediately solve the problems
-with broken Ricoh devices.  This a very strict implementation of
-ACS checking, which will often result in multifunction devices
-being grouped together.  This is actually a good thing as we
-generally have no reason to trust isolation between functions,
-but I won't be surprised if we later add a boot option to relax
-this if a user wants to opt-in to a less secure grouping.
+On Wed, May 9, 2012 at 9:02 AM, Jan Beulich <JBeulich@suse.com> wrote:
+>>>> On 09.05.12 at 17:54, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Wed, May 9, 2012 at 1:43 AM, Jan Beulich <JBeulich@suse.com> wrote:
+>>> This is in preparation to adjust modpost to check section mismatches
+>>> on most of the .pci_fixup* sections:
+>>>
+>>> .pci_fixup_final is only used from .init.text, and hence can (along
+>>> with the respective handler functions) reside in .init.*.
+>>
+>> pci_apply_final_quirks() is currently __init, so this probably
+>> wouldn't break anything.   But the fact that it's all __init means
+>> that pci_fixup_final quirks are only run for devices present at boot,
+>> and they don't apply to hot-added devices.  That seems like a bug to
+>> me.
+>>
+>>> Several other .pci_fixup_* sections are needed only during boot and
+>>> suspend/resume, and can therefore be moved into .init.* if
+>>> !CONFIG_PM.
+>>
+>> My inclination is that all PCI fixups should work the same for
+>> hot-added devices as for those present at boot, which would suggest
+>> that we should always use __devinit, not __init.  If I'm missing
+>> something, please educate me :)
+>
+> That's certainly possible - I simply based the patch on what is there
+> currently.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+Yep, your patch makes perfect sense considering the tree as it is
+today.  But if you agree with my sense of what it *should* be, I think
+we should leave things as they are, or work on moving everything
+towards __devinit (I'd be thrilled if you wanted to work on that :)).
+Otherwise we'd just be changing things to __init that we'd have to
+change back later.
 
- drivers/iommu/amd_iommu.c   |   18 ++++++++++++++++++
- drivers/iommu/intel-iommu.c |   18 ++++++++++++++++++
- 2 files changed, 36 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index b7e5ddf..be72d6d 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -254,6 +254,8 @@ static bool check_device(struct device *dev)
- 	return true;
- }
- 
-+#define PCI_ACS_ENABLED	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-+
- static int iommu_init_device(struct device *dev)
- {
- 	struct pci_dev *dma_pdev, *pdev = to_pci_dev(dev);
-@@ -291,6 +293,22 @@ static int iommu_init_device(struct device *dev)
- 		dma_pdev = pci_get_slot(pdev->bus,
- 					PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
- 
-+	dma_pdev = pci_dma_source(dma_pdev);
-+
-+	if (dma_pdev->multifunction &&
-+	    !pci_acs_enabled(dma_pdev, PCI_ACS_ENABLED))
-+		dma_pdev = pci_get_slot(dma_pdev->bus,
-+					PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
-+					0));
-+
-+	while (!pci_is_root_bus(dma_pdev->bus)) {
-+		if (pci_acs_path_enabled(dma_pdev->bus->self,
-+					 NULL, PCI_ACS_ENABLED))
-+			break;
-+
-+		dma_pdev = dma_pdev->bus->self;
-+	}
-+
- 	group = iommu_group_get(&dma_pdev->dev);
- 	if (!group) {
- 		group = iommu_group_alloc();
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index e63b33b..cf2a650 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -4087,6 +4087,8 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
- 	return 0;
- }
- 
-+#define PCI_ACS_ENABLED	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-+
- static int intel_iommu_add_device(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -4113,6 +4115,22 @@ static int intel_iommu_add_device(struct device *dev)
- 		dma_pdev = pci_get_slot(pdev->bus,
- 					PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
- 
-+	dma_pdev = pci_dma_source(dma_pdev);
-+
-+	if (dma_pdev->multifunction &&
-+	    !pci_acs_enabled(dma_pdev, PCI_ACS_ENABLED))
-+		dma_pdev = pci_get_slot(dma_pdev->bus,
-+					PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
-+					0));
-+
-+	while (!pci_is_root_bus(dma_pdev->bus)) {
-+		if (pci_acs_path_enabled(dma_pdev->bus->self,
-+					 NULL, PCI_ACS_ENABLED))
-+			break;
-+
-+		dma_pdev = dma_pdev->bus->self;
-+	}
-+
- 	group = iommu_group_get(&dma_pdev->dev);
- 	if (!group) {
- 		group = iommu_group_alloc();
-
+Bjorn
