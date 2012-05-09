@@ -1,114 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:37368 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930Ab2EDFLZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 01:11:25 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 4 May 2012 04:44:18 +1000
-Date: Fri, 4 May 2012 12:52:05 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120504045205.GA21624@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120410090306.GA7056@richard>
- <20120422155202.GA13540@richard>
- <CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
- <CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
- <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
- <20120503065455.GA30042@richard>
- <CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
- <20120504024721.GA6775@richard>
- <CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:63498 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415Ab2EIKa4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2012 06:30:56 -0400
+Received: by pbbrp8 with SMTP id rp8so334101pbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 09 May 2012 03:30:56 -0700 (PDT)
+Message-ID: <4FAA4754.1010803@gmail.com>
+Date: Wed, 09 May 2012 18:30:44 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/6] PCI, x86: update MMCFG information when hot-plugging
+ PCI host bridges
+References: <1336186830-10765-1-git-send-email-jiang.liu@huawei.com> <20120508172153.b67a8cc6.izumi.taku@jp.fujitsu.com> <4FA950A5.6040106@gmail.com> <20120509162117.63d8c155.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120509162117.63d8c155.izumi.taku@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2012 at 08:15:29PM -0700, Yinghai Lu wrote:
->>>
->>>I updated for-pci-busn-alloc branch with updating of probe_resource()...
->>>and removing bus->secondary and subordinate.
->>>
->> You mean you remove the bus->secondary field?
->> So the pci_bus->number hold the bus number?
->> I think this is a huge work.
->>>Please check if you can understand it ...
->>>
->>>http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=7de8df57b223d54af95ffe67f8da2dd39a265971
->> Some question:
->>
->> +static resource_size_t __find_res_top_free_size(struct resource *res,
->> +                                                int skip_nr)
->> +{
->> +       resource_size_t n_size;
->> +       struct resource tmp_res;
->> +
->> +       */
->> +        *   find out free number below res->end that we can use.
->> +        *      res->start to res->start + skip_nr - 1 can not be used.
->> +        */
->> +       n_size = resource_size(res);
->> +       if (n_size <= skip_nr)
->> +               return 0;
->> +
->> +       n_size -= skip_nr;
->> +       memset(&tmp_res, 0, sizeof(struct resource));
->> +       while (n_size > 0) {
->> +               int ret;
->> +
->> +               ret = __allocate_resource(res, &tmp_res, n_size,
->> +                       res->end - n_size + skip_nr, res->end,
->> +                       1, NULL, NULL, false);
->> +               if (ret == 0) {
->> +                       __release_resource(&tmp_res);
->> +                       break;
->> +               }
->> +               n_size--;
->> +       }
->> +
->> +       return n_size;
->> +}
->> So this is trying to find out the biggest free space of res?
->> On the right side?
->>
->> For example we have , res like
->>   90-150
->>        105-140
->> The __find_res_top_free_size() will return 10 instead of 15.
->> So this is the design decision to find the right side free resouce not
->> the left side?
->
-> __find_res_top_free_size()  is called by probe_resource().
->
->probe_resource will return [91-104].
-Hmm... I think the result is returned by this while loop.
-+       while (n_size >= needed_size) {
-+               ret = allocate_resource(b_res, busn_res, n_size,
-+                               b_res->start + skip_nr, b_res->end,
-+                               1, NULL, NULL);
-+               if (!ret)
-+                       return ret;
-+               n_size--;
-+       }
-__find_res_top_free_size() is not called.
+Thanks, Taku!
 
-BTW, even if this value is returned by __find_res_top_free_size(), or
-returned after this function is called, the purpose of the
-__find_res_top_free_size() is to get the biggest free space under the
-first parameter?
->
->Thanks
->
->Yinghai
-
--- 
-Richard Yang
-Help you, Help me
-
+On 05/09/2012 03:21 PM, Taku Izumi wrote:
+> On Wed, 09 May 2012 00:58:13 +0800
+> Jiang Liu <liuj97@gmail.com> wrote:
+> 
+>> Hi Taku,
+>> 	Thanks for testing. Could you please help to try the patch below?
+> 
+>   Hi Jian,
+>   I confirmed this patch solves my problem.
+> 
+>   Best regards,
+>   Taku Izumi
+> 
