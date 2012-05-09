@@ -1,36 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:54969 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754009Ab2EEIsL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 May 2012 04:48:11 -0400
-Message-ID: <4FA4E93F.3050800@gmail.com>
-Date: Sat, 05 May 2012 18:47:59 +1000
-From: Francois Rigaut <frigaut@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:7897 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755724Ab2EIJyS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 May 2012 05:54:18 -0400
+Message-ID: <4FAA3EB0.1040908@redhat.com>
+Date: Wed, 09 May 2012 17:53:52 +0800
+From: Amos Kong <akong@redhat.com>
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org,
-	Nico Schottelius <nico-linux-20120419@schottelius.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Linux Support for Thunderbolt using Apple Monitor
-References: <20120419163800.GB13977@schottelius.org> <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com> <20120502163629.GE928@schottelius.org> <20120502202509.GA26798@kroah.com> <20120503065003.GB13386@schottelius.org> <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com> <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com> <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com> <4FA4AA3E.1070903@gmail.com> <4FA4E259.9070903@gmail.com>
-In-Reply-To: <4FA4E259.9070903@gmail.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: linux-pci@vger.kernel.org, seabios@seabios.org,
+	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org, rjw@sisk.pl,
+	alex.williamson@redhat.com, kevin@koconnor.net, liuj97@gmail.com
+Subject: Re: [Qemu-devel] [RESEND PATCH v3] hotplug: add device per func in
+ ACPI DSDT tables
+References: <20111214010645.GA2044@morn.localdomain> <20120509072452.14872.92530.stgit@t> <20120509084447.GA14189@redhat.com> <4FAA3205.4030300@redhat.com>
+In-Reply-To: <4FAA3205.4030300@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-http://maumae.net/thunderbolt/acpidump.bin
-Thanks.
-Francois
+On 09/05/12 16:59, Amos Kong wrote:
+> On 09/05/12 16:46, Michael S. Tsirkin wrote:
+>> On Wed, May 09, 2012 at 03:24:52PM +0800, Amos Kong wrote:
+>>> Boot up a Linux VM with 8 pci block devices which
+>>> are the 8 functions in one pci slot.
+>>> | # qemu-kvm ...
+>>> | -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
+>>> | -device virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
+>>> | ....
+>>> | -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
+>>> | -device virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
+>>>
+>>> Check devices in guest.
+>>> | vm)# ls /dev/vd*
+>>> | vda vdb vdc vde vdf vdg vdh
+>>> | vm)# lspci |grep block
+>>> | 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
+>>> | ...
+>>> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
+>>> |
 
 
-On 05/05/12 18:18, Jiang Liu wrote:
-> This log message below implies that your BIOS doesn't provide the ACPI interfaces
-> needed by acpiphp driver. Maybe an ACPI dump file may help to identify the issue.
-> You may generate acpidump file by:
-> acpidump>  acpidump.bin
+Discussed with mst, NAK this patch by myself.
+
+>>> Func1~7 still exist in guest after hot-removing the whole slot
+>>> through qemu monitor.
+>>> | vm)# lspci |grep block (00:03.0 disappeared)
+>>> | 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device
+>>> (rev ff)
+>>> | ...
+>>> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
+
+
+In this condition, ALL devices already removed, but the sysinfo
+(/proc , /sys) of func1~7 are not cleaned, this is why we can
+still see it in 'lspci' output.
+
+And Windows hotplug works fine with current seabios. In thread [1],
+Kenji Kaneshige and Bjorn Helgaas accept to fix this in linux pci driver.
+
+So NAK this seabios patch by myself, I will update original pci patch in 
+thread [1]
+[PATCH] pci: clean all funcs when hot-removing multifunc device
+
+
+[1] http://marc.info/?t=131597601700003&r=1&w=2
+
+>>> (rev ff)
+>>> | vm)# ls /dev/vd* (vda disappeared)
+>>> | vdb vdc vde vdf vdg vdh
+>>> | vm)# mkfs /dev/vdb
+>>> | INFO: task mkfs.ext2:1784 blocked for more than 120 seconds. (task
+>>> hung)
+>>>
+>>>
+>>> Currently only func0 is defined in ACPI DSDT table
+>>> of seabios, and only hot-adding func0 would cause
+>>> a ACPI event for notification. Other funcs except
+>>> func0 wouldn't be registered in linux pci driver.
+>>> (we can only found func0 in slot->funcs list of
+>>> pci driver).
+>>
+>> Isn't this what your patch 'PCI: Can continually add funcs after adding
+>> func0' addresses?
 >
->> May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
-> On 05/05/2012 12:19 PM, Francois Rigaut wrote:
->> May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
+> No.
+>
+> This patch fixes the problem that some funcs could not be removed.
+> the question is sending ACPI event for all functions (in same slot)
+> or only function 0.
+
+One event is enough to remove all functions, the real problem is in
+clean of linux pci driver.
+
+> I found all funcs are defined in ACPI DSDT table in microsoft's example:
+> http://www.microsoft.com/china/whdc/system/pnppwr/hotadd/hotplugpci.mspx#EUH
+>
+> Is it a useful attestation ?
+
+-- 
+			Amos.
