@@ -1,57 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:47859 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758129Ab2EIQJD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2012 12:09:03 -0400
-Received: by lbbgm6 with SMTP id gm6so336792lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 09 May 2012 09:09:02 -0700 (PDT)
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:34849 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757617Ab2EIQIN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2012 12:08:13 -0400
+Date: Wed, 09 May 2012 12:08:04 -0400 (EDT)
+From: Amos Kong <akong@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: mst@redhat.com, linux-pci@vger.kernel.org, seabios@seabios.org,
+	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org, rjw@sisk.pl,
+	kevin@koconnor.net
+Subject: Re: [Qemu-devel] [RESEND PATCH v3] hotplug: add device per func in ACPI DSDT tables
+Message-ID: <03e77e9a-0c63-496d-be33-3bc460ae8ffe@zmail13.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <1336571221.12477.136.camel@bling.home>
+Content-Type: text/plain; charset=utf-8
 MIME-Version: 1.0
-In-Reply-To: <4FAAB134020000780008294F@nat28.tlf.novell.com>
-References: <4FAA4A5A0200007800082702@nat28.tlf.novell.com>
- <CAErSpo68N5JYv_SX7Qzu4e0Z=x_g1U+FPaA-ux_W_zoB6iW+pw@mail.gmail.com> <4FAAB134020000780008294F@nat28.tlf.novell.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 May 2012 09:08:41 -0700
-Message-ID: <CAErSpo5Aidio0a6SjeYu=-9gXJU1aALMi5mUjg2aEB5pTsr8=Q@mail.gmail.com>
-Subject: Re: [PATCH 1/5, resend] PCI: adjust quirk handler section annotations
-To: Jan Beulich <JBeulich@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 9, 2012 at 9:02 AM, Jan Beulich <JBeulich@suse.com> wrote:
->>>> On 09.05.12 at 17:54, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Wed, May 9, 2012 at 1:43 AM, Jan Beulich <JBeulich@suse.com> wrote:
->>> This is in preparation to adjust modpost to check section mismatches
->>> on most of the .pci_fixup* sections:
->>>
->>> .pci_fixup_final is only used from .init.text, and hence can (along
->>> with the respective handler functions) reside in .init.*.
->>
->> pci_apply_final_quirks() is currently __init, so this probably
->> wouldn't break anything.   But the fact that it's all __init means
->> that pci_fixup_final quirks are only run for devices present at boot,
->> and they don't apply to hot-added devices.  That seems like a bug to
->> me.
->>
->>> Several other .pci_fixup_* sections are needed only during boot and
->>> suspend/resume, and can therefore be moved into .init.* if
->>> !CONFIG_PM.
->>
->> My inclination is that all PCI fixups should work the same for
->> hot-added devices as for those present at boot, which would suggest
->> that we should always use __devinit, not __init.  If I'm missing
->> something, please educate me :)
->
-> That's certainly possible - I simply based the patch on what is there
-> currently.
+----- Original Message -----
+> On Wed, 2012-05-09 at 15:24 +0800, Amos Kong wrote:
+> > Boot up a Linux VM with 8 pci block devices which
+> > are the 8 functions in one pci slot.
+> > | # qemu-kvm ...
+> > | -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
+> > | -device
+> > | virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
+> > | ....
+> > | -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
+> > | -device
+> > | virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
+> > 
+> > Check devices in guest.
+> > | vm)# ls /dev/vd*
+> > |    vda vdb vdc vde vdf vdg vdh
+> > | vm)# lspci |grep block
+> > | 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
+> > |    ...
+> > | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
+> > |
+> > 
+> > Func1~7 still exist in guest after hot-removing the whole slot
+> > through qemu monitor.
+> > | vm)# lspci |grep block    (00:03.0 disappeared)
+> > | 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device
+> > | (rev ff)
+> > |    ...
+> > | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
+> > | (rev ff)
+> > | vm)# ls /dev/vd*          (vda disappeared)
+> > |    vdb vdc vde vdf vdg vdh
+> > | vm)# mkfs /dev/vdb
+> > |    INFO: task mkfs.ext2:1784 blocked for more than 120 seconds.
+> > |    (task hung)
+> > 
+> > 
+> > Currently only func0 is defined in ACPI DSDT table
+> > of seabios, and only hot-adding func0 would cause
+> > a ACPI event for notification. Other funcs except
+> > func0 wouldn't be registered in linux pci driver.
+> > (we can only found func0 in slot->funcs list of
+> > pci driver).
+> > 
+> > When VM pci driver receives an ACPI event for
+> > hot-removing, it will only clean functions in
+> > slot->funcs list, the other funcs could not be
+> > cleaned.
+> > 
+> > This patch adds device per function in ACPI DSDT tables,
+> > then all funcs will be registered in slot->funcs list.
+> > It's coincident with microsoft's example:
+> > http://www.microsoft.com/china/whdc/system/pnppwr/hotadd/hotplugpci.mspx#EUH
+> > 
+> > Have tested with linux/winxp/win7, hot-adding/hot-remving,
+> > single/multiple function devices, they are all fine(all
+> > added devices can be removed).
+> > 
+> > This patch includes some bits mst wrote, thanks!
+> > ---
+> > old discussion: http://marc.info/?l=kvm&m=132428400917405&w=2
+> > 
+> > Signed-off-by: Amos Kong <akong@redhat.com>
+> > CC: Michael S. Tsirkin <mst@redhat.com>
+> > ---
+> >  src/ssdt-pcihp.dsl |   17
+> >  src/ssdt-pcihp.hex | 8869
+> >  +++++++++++++++++++++++++++++++++++++++++++++++++++-
+> >  2 files changed, 8781 insertions(+), 105 deletions(-)
+> > 
+> > diff --git a/src/ssdt-pcihp.dsl b/src/ssdt-pcihp.dsl
+> > index 4b435b8..2a3c326 100644
+> > --- a/src/ssdt-pcihp.dsl
+> > +++ b/src/ssdt-pcihp.dsl
+> > @@ -17,14 +17,23 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT",
+> > 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
+> >          // at runtime, if the slot is detected to not support
+> >          hotplug.
+> >          // Extract the offset of the address dword and the
+> >          // _EJ0 name to allow this patching.
+> > -#define hotplug_slot(slot)                              \
+> > -        Device (S##slot) {                              \
+> > +#define hotplug_func(slot, fn)                          \
+> > +        Device (S##slot##fn) {                          \
+> >             ACPI_EXTRACT_NAME_DWORD_CONST aml_adr_dword  \
+> > -           Name (_ADR, 0x##slot##0000)                  \
+> 
+> I would have guessed it to be sufficient to change _ADR to
+> 0x##slot##ffff, does that not work?
 
-Yep, your patch makes perfect sense considering the tree as it is
-today.  But if you agree with my sense of what it *should* be, I think
-we should leave things as they are, or work on moving everything
-towards __devinit (I'd be thrilled if you wanted to work on that :)).
-Otherwise we'd just be changing things to __init that we'd have to
-change back later.
 
-Bjorn
+No, changing this to "0x##slot##ffff" doesn't resolve the bug.
+(tested)
+
+I'm trying to fix this problem in guest pci driver.
+http://marc.info/?l=linux-pci&m=133657729118731&w=2
+
+
+Thanks, Amos
+
+> 
+> > +           Name (_ADR, 0x##slot##000##fn)               \
+> >             ACPI_EXTRACT_METHOD_STRING aml_ej0_name      \
+> >             Method (_EJ0, 1) { Return(PCEJ(0x##slot)) }  \
+> >             Name (_SUN, 0x##slot)                        \
+> >          }
+> > +#define hotplug_slot(slot)     \
+> > +        hotplug_func(slot, 0)  \
+> > +        hotplug_func(slot, 1)  \
+> > +        hotplug_func(slot, 2)  \
+> > +        hotplug_func(slot, 3)  \
+> > +        hotplug_func(slot, 4)  \
+> > +        hotplug_func(slot, 5)  \
+> > +        hotplug_func(slot, 6)  \
+> > +        hotplug_func(slot, 7)
+> >  
+> >          hotplug_slot(01)
+> >          hotplug_slot(02)
+> > @@ -59,7 +68,7 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01,
+> > "BXPC", "BXSSDTPCIHP", 0x1)
+> >          hotplug_slot(1f)
+> >  
+> >  #define gen_pci_hotplug(slot)   \
+> > -            If (LEqual(Arg0, 0x##slot)) { Notify(S##slot, Arg1) }
+> > +            If (LEqual(Arg0, 0x##slot)) { Notify(S##slot##0, Arg1)
+> > }
+> >  
+> >          Method(PCNT, 2) {
+> >              gen_pci_hotplug(01)
+> 
+> 
+> 
+> 
