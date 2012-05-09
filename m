@@ -1,65 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:62463 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958Ab2EWF3E convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 01:29:04 -0400
-Received: by pbbrp8 with SMTP id rp8so9371227pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 22:29:04 -0700 (PDT)
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAFeW=pZiEODGx09=HaJDWujmCc92wCKt2fhZM03yNDb9CSs3gA@mail.gmail.com>
-References: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
-	<20120523043511.13449.22006.stgit@bhelgaas.mtv.corp.google.com>
-	<CAE9FiQVs0U62NRxkDYdOC67EUiEBu1f5ojGxGXkdbt0O6XO4uQ@mail.gmail.com>
-	<CAFeW=pZiEODGx09=HaJDWujmCc92wCKt2fhZM03yNDb9CSs3gA@mail.gmail.com>
-Date: Tue, 22 May 2012 22:29:04 -0700
-Message-ID: <CAE9FiQWJcxbUvOcYf-mZYThKMogYzYUwk+w-Oc43dEU9KLA3oQ@mail.gmail.com>
-Subject: Re: [PATCH v7 2/2] PCI: acpiphp: remove all functions in slot, even
- without ACPI _EJx
+In-Reply-To: <4FAAC652.4060502@tilera.com>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+	<1336422606-4244-20-git-send-email-yinghai@kernel.org>
+	<4FAAC652.4060502@tilera.com>
+Date: Wed, 9 May 2012 12:45:50 -0700
+Message-ID: <CAE9FiQXLriREi1m==3-yXrQja3Qi+HNfnvvq_0Sr7Rpiu_JKTg@mail.gmail.com>
+Subject: Re: [PATCH 19/21] tile/PCI: Use pci_scan_root_bus instead pci_scan_bus
 From: Yinghai Lu <yinghai@kernel.org>
-To: Amos Kong <kongjianjun@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	liuj97@gmail.com, qemu-devel@nongnu.org, jbarnes@virtuousgeek.org,
-	kaneshige.kenji@jp.fujitsu.com
+To: Chris Metcalf <cmetcalf@tilera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2012 at 10:15 PM, Amos Kong <kongjianjun@gmail.com> wrote:
-> Attached the v7,  test passed.
+On Wed, May 9, 2012 at 12:32 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+> On 5/7/2012 4:30 PM, Yinghai Lu wrote:
+>> It will update busn_res accordingly, so we get that for last_busno.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Chris Metcalf <cmetcalf@tilera.com>
+>> ---
+>>  arch/tile/kernel/pci.c |    5 ++++-
+>>  1 files changed, 4 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+>> index 7aa2743..4a951b87 100644
+>> --- a/arch/tile/kernel/pci.c
+>> +++ b/arch/tile/kernel/pci.c
+>> @@ -310,6 +310,7 @@ int __devinit pcibios_init(void)
+>>               if (pci_scan_flags[i] == 0 && controllers[i].ops != NULL) {
+>>                       struct pci_controller *controller = &controllers[i];
+>>                       struct pci_bus *bus;
+>> +                     LIST_HEAD(resources);
+>>
+>>                       if (tile_init_irqs(i, controller)) {
+>>                               pr_err("PCI: Could not initialize IRQs\n");
+>> @@ -327,7 +328,9 @@ int __devinit pcibios_init(void)
+>>                        * This is inlined in linux/pci.h and calls into
+>>                        * pci_scan_bus_parented() in probe.c.
+>>                        */
+>> -                     bus = pci_scan_bus(0, controller->ops, controller);
+>> +                     pci_add_resource(&resources, &ioport_resource);
+>> +                     pci_add_resource(&resources, &iomem_resource);
+>> +                     bus = pci_scan_root_bus(NULL, 0, controller->ops, controller, &resources);
+>>                       controller->root_bus = bus;
+>>                       controller->last_busno = bus->busn_res.end;
+>>               }
+>
+> We don't want ioport_resource on tilepro, since we don't support accessing
+> I/O port space.
+>
+> With that one line removed:
+>
+> Acked-by: Chris Metcalf <cmetcalf@tilera.com>
 
-would be better to have break...
+Thanks.
 
-+static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
-+{
-+	struct pci_bus *bus = slot->bridge->pci_bus;
-+	struct pci_dev *dev;
-+	int ret = NULL;
-+
-+	down_read(&pci_bus_sem);
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (PCI_SLOT(dev->devfn) == slot->device)
-+			ret = pci_dev_get(dev);
-+	up_read(&pci_bus_sem);
-+
-+	return ret;
-+}
+>
+> Or, I can queue this change to take through the tile tree when the merge
+> window opens.  Which would you prefer?
 
-===>
+have to go through pci-next tree. because other change like
 
+ controller->last_busno = bus->busn_res.end;
 
-+static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
-+{
-+	struct pci_bus *bus = slot->bridge->pci_bus;
-+	struct pci_dev *dev;
-+	int ret = NULL;
-+
-+	down_read(&pci_bus_sem);
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (PCI_SLOT(dev->devfn) == slot->device) {
-+			ret = pci_dev_get(dev);
-+                      break;
-+              }
-+	up_read(&pci_bus_sem);
-+
-+	return ret;
-+}
+is in pci-next.
+
+Yinghai
