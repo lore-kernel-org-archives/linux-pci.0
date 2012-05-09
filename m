@@ -1,52 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:18078 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757668Ab2EGU3l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:29:41 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/7] PCI, cpqhp: Using pci_hp_add_bridge
-Date: Mon,  7 May 2012 13:29:13 -0700
-Message-Id: <1336422556-4124-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
-References: <1336422556-4124-1-git-send-email-yinghai@kernel.org>
+Received: from nat28.tlf.novell.com ([130.57.49.28]:36143 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760367Ab2EIQ4G convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:2:2>);
+	Wed, 9 May 2012 12:56:06 -0400
+Message-Id: <4FAABDDA0200007800082998@nat28.tlf.novell.com>
+Date: Wed, 09 May 2012 17:56:26 +0100
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Bjorn Helgaas" <bhelgaas@google.com>
+Cc: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Jesse Barnes" <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 1/5, resend] PCI: adjust quirk handler section
+ annotations
+References: <4FAA4A5A0200007800082702@nat28.tlf.novell.com>
+ <CAErSpo68N5JYv_SX7Qzu4e0Z=x_g1U+FPaA-ux_W_zoB6iW+pw@mail.gmail.com>
+ <4FAAB134020000780008294F@nat28.tlf.novell.com>
+ <CAErSpo5Aidio0a6SjeYu=-9gXJU1aALMi5mUjg2aEB5pTsr8=Q@mail.gmail.com>
+In-Reply-To: <CAErSpo5Aidio0a6SjeYu=-9gXJU1aALMi5mUjg2aEB5pTsr8=Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-instead of open code with pci_add_new_bus()/do_scan_bus...
+>>> On 09.05.12 at 18:08, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, May 9, 2012 at 9:02 AM, Jan Beulich <JBeulich@suse.com> wrote:
+>>>>> On 09.05.12 at 17:54, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> My inclination is that all PCI fixups should work the same for
+>>> hot-added devices as for those present at boot, which would suggest
+>>> that we should always use __devinit, not __init.  If I'm missing
+>>> something, please educate me :)
+>>
+>> That's certainly possible - I simply based the patch on what is there
+>> currently.
+> 
+> Yep, your patch makes perfect sense considering the tree as it is
+> today.  But if you agree with my sense of what it *should* be, I think
+> we should leave things as they are, or work on moving everything
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/cpqphp_pci.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+I indeed wondered why it isn't that way while doing this.
 
-diff --git a/drivers/pci/hotplug/cpqphp_pci.c b/drivers/pci/hotplug/cpqphp_pci.c
-index 1c84940..09801c6 100644
---- a/drivers/pci/hotplug/cpqphp_pci.c
-+++ b/drivers/pci/hotplug/cpqphp_pci.c
-@@ -83,7 +83,6 @@ static void __iomem *detect_HRT_floating_pointer(void __iomem *begin, void __iom
- 
- int cpqhp_configure_device (struct controller* ctrl, struct pci_func* func)
- {
--	unsigned char bus;
- 	struct pci_bus *child;
- 	int num;
- 
-@@ -106,9 +105,10 @@ int cpqhp_configure_device (struct controller* ctrl, struct pci_func* func)
- 	}
- 
- 	if (func->pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--		pci_read_config_byte(func->pci_dev, PCI_SECONDARY_BUS, &bus);
--		child = (struct pci_bus*) pci_add_new_bus(func->pci_dev->bus, (func->pci_dev), bus);
--		pci_do_scan_bus(child);
-+		pci_hp_add_bridge(func->pci_dev);
-+		child = func->pci_dev->subordinate;
-+		if (child)
-+			pci_bus_add_devices(child);
- 	}
- 
- 	pci_dev_put(func->pci_dev);
--- 
-1.7.7
+> towards __devinit (I'd be thrilled if you wanted to work on that :)).
+> Otherwise we'd just be changing things to __init that we'd have to
+> change back later.
+
+I'd perhaps rather drop my patches then, as the main benefit
+(moving stuff from resident text to init text) would go away.
+
+Jan
 
