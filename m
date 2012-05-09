@@ -1,136 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1337035766.6954.74.camel@bling.home>
-Subject: Re: [PATCH 05/13] pci: New pci_acs_enabled()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org
-Date: Mon, 14 May 2012 16:49:26 -0600
-In-Reply-To: <CAErSpo58hKPFb5duOi64sWuR5AJDTVp0rRHkQLotYE3CMXRRhA@mail.gmail.com>
-References: <20120511222148.30496.68571.stgit@bling.home>
-	 <20120511225602.30496.80438.stgit@bling.home>
-	 <CAErSpo58hKPFb5duOi64sWuR5AJDTVp0rRHkQLotYE3CMXRRhA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:62982 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757766Ab2EIQGA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2012 12:06:00 -0400
+Received: by dady13 with SMTP id y13so475075dad.19
+        for <linux-pci@vger.kernel.org>; Wed, 09 May 2012 09:06:00 -0700 (PDT)
+Date: Wed, 9 May 2012 09:05:55 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Nico Schottelius <nico-linux-20120419@schottelius.org>,
+	Francois Rigaut <frigaut@gmail.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Linux Support for Thunderbolt using Apple Monitor
+Message-ID: <20120509160555.GA13437@kroah.com>
+References: <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com>
+ <20120503233858.GA13453@kroah.com>
+ <4FA358ED.1080705@gmail.com>
+ <20120504184851.GB11223@kroah.com>
+ <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com>
+ <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com>
+ <4FA4AA3E.1070903@gmail.com>
+ <4FA544B1.3070705@gmail.com>
+ <20120505164819.GA21599@schottelius.org>
+ <4FA5EE63.1050208@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FA5EE63.1050208@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-05-14 at 16:02 -0600, Bjorn Helgaas wrote:
-> On Fri, May 11, 2012 at 4:56 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > In a PCIe environment, transactions aren't always required to
-> > reach the root bus before being re-routed.  Peer-to-peer DMA
-> > may actually not be seen by the IOMMU in these cases.  For
-> > IOMMU groups, we want to provide IOMMU drivers a way to detect
-> > these restrictions.  Provided with a PCI device, pci_acs_enabled
-> > returns the furthest downstream device with a complete PCI ACS
-> > chain.  This information can then be used in grouping to create
-> > fully isolated groups.  ACS chain logic extracted from libvirt.
+On Sun, May 06, 2012 at 11:22:11AM +0800, Jiang Liu wrote:
+> I'm afraid it won't work by just changing the OSDW() return value.
+> After analysis the ACPI table, I guess the BIOS ACPI implementation doesn't
+> confirm to the ACPI specification for hotplug, it needs special support in
+> OS to enable Thunderbolt cable hotplug on that system. Maybe that's the
+> reason why it's only enabled on Apple's OSes, not sure it's due to technical
+> or business considerations.
 > 
-> The name "pci_acs_enabled()" sounds like it returns a boolean, but it doesn't.
+> This PCIe device "05:00.0 System peripheral: Intel Corporation Device 151a
+> (rev 01)" may play a role in the Thunderbolt cable hotplug operations, but
+> haven't figured it out yet.
 
-Right, maybe this should be:
+Thanks for looking at this.
 
-struct pci_dev *pci_find_upstream_acs(struct pci_dev *pdev);
+So either we need a BIOS update for this platform so that other
+operating systems can work properly (i.e. full ACPI hotplug support), or
+we write a new hotplug driver to handle this hardware properly.
 
-> I'm not sure what "a complete PCI ACS chain" means.
-> 
-> The function starts from "dev" and searches *upstream*, so I'm
-> guessing it returns the root of a subtree that must be contained in a
-> group.
+Intel was rumored to have this working in their labs, I'll poke some
+people to see if they have anything they can release...
 
-Any intermediate switch between an endpoint and the root bus can
-redirect a dma access without iommu translation, so we're looking for
-the furthest upstream device for which acs is enabled all the way up to
-the root bus.  I'll fix the function name and comments/commit log if
-that makes it sufficiently clear.  Thanks,
+thanks,
 
-Alex
-
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >
-> >  drivers/pci/pci.c   |   43 +++++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h |    1 +
-> >  2 files changed, 44 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 111569c..d7f05ce 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -2358,6 +2358,49 @@ void pci_enable_acs(struct pci_dev *dev)
-> >        pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-> >  }
-> >
-> > +#define PCI_EXT_CAP_ACS_ENABLED                (PCI_ACS_SV | PCI_ACS_RR | \
-> > +                                        PCI_ACS_CR | PCI_ACS_UF)
-> > +
-> > +/**
-> > + * pci_acs_enabled - test ACS support in downstream chain
-> > + * @dev: starting PCI device
-> > + *
-> > + * Returns the furthest downstream device with an unbroken ACS chain.  If
-> > + * ACS is enabled throughout the chain, the returned device is the same as
-> > + * the one passed in.
-> > + */
-> > +struct pci_dev *pci_acs_enabled(struct pci_dev *dev)
-> > +{
-> > +       struct pci_dev *acs_dev;
-> > +       int pos;
-> > +       u16 ctrl;
-> > +
-> > +       if (!pci_is_root_bus(dev->bus))
-> > +               acs_dev = pci_acs_enabled(dev->bus->self);
-> > +       else
-> > +               return dev;
-> > +
-> > +       /* If the chain is already broken, pass on the device */
-> > +       if (acs_dev != dev->bus->self)
-> > +               return acs_dev;
-> > +
-> > +       if (!pci_is_pcie(dev) || (dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
-> > +               return dev;
-> > +
-> > +       if (dev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM)
-> > +               return dev;
-> > +
-> > +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-> > +       if (!pos)
-> > +               return acs_dev;
-> > +
-> > +       pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-> > +       if ((ctrl & PCI_EXT_CAP_ACS_ENABLED) != PCI_EXT_CAP_ACS_ENABLED)
-> > +               return acs_dev;
-> > +
-> > +       return dev;
-> > +}
-> > +
-> >  /**
-> >  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
-> >  * @dev: the PCI device
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 9910b5c..dc25da3 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1586,6 +1586,7 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
-> >  }
-> >
-> >  void pci_request_acs(void);
-> > +struct pci_dev *pci_acs_enabled(struct pci_dev *dev);
-> >
-> >
-> >  #define PCI_VPD_LRDT                   0x80    /* Large Resource Data Type */
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe kvm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+greg k-h
