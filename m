@@ -1,52 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:35542 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755890Ab2E2Xrx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 19:47:53 -0400
-Received: by yhmm54 with SMTP id m54so2822752yhm.19
-        for <linux-pci@vger.kernel.org>; Tue, 29 May 2012 16:47:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWmXLV4QsPP3Zab4iFogh1Lb6hxOwc8YnGyE5uTmwxB6Q@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
- <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
- <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
- <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
- <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
- <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
- <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
- <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
- <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
- <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
- <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
- <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
- <CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com>
- <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com>
- <CAErSpo44TViNFcZivjr5hAu8w8kpEpUjxNAWtazhAqwwsorZbw@mail.gmail.com> <CAE9FiQWmXLV4QsPP3Zab4iFogh1Lb6hxOwc8YnGyE5uTmwxB6Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 29 May 2012 17:47:31 -0600
-Message-ID: <CAErSpo4djeR8hQ5mQFxEH3mdvaiPvzWHsdtMr_zkne8+xXZq8Q@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:29618 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753699Ab2EINrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 May 2012 09:47:14 -0400
+Message-ID: <1336571221.12477.136.camel@bling.home>
+Subject: Re: [RESEND PATCH v3] hotplug: add device per func in ACPI DSDT
+ tables
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Amos Kong <akong@redhat.com>
+Cc: mst@redhat.com, linux-pci@vger.kernel.org, seabios@seabios.org,
+	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org, rjw@sisk.pl,
+	kevin@koconnor.net
+Date: Wed, 09 May 2012 07:47:01 -0600
+In-Reply-To: <20120509072452.14872.92530.stgit@t>
+References: <20111214010645.GA2044@morn.localdomain>
+	 <20120509072452.14872.92530.stgit@t>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2012 at 5:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, May 29, 2012 at 4:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I don't understand this one at all.  It looks like you mashed together
->> at least two changes: (1) prefer I/O space above 64K if available, and
->> (2) mark secondary bus resources with IORESOURCE_IO_32 when the P2P
->> bridge I/O window address decode type is PCI_IO_RANGE_TYPE_32 and use
->> that to limit allocations.
->
-> let drop the one about IORESOURCE_IO_32.
->
-> that should only fix one reallocation bug in theory out of x86.
+On Wed, 2012-05-09 at 15:24 +0800, Amos Kong wrote:
+> Boot up a Linux VM with 8 pci block devices which
+> are the 8 functions in one pci slot.
+> | # qemu-kvm ...
+> | -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
+> | -device virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
+> | ....
+> | -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
+> | -device virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
+> 
+> Check devices in guest.
+> | vm)# ls /dev/vd*
+> |    vda vdb vdc vde vdf vdg vdh
+> | vm)# lspci |grep block
+> | 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
+> |    ...
+> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
+> |
+> 
+> Func1~7 still exist in guest after hot-removing the whole slot
+> through qemu monitor.
+> | vm)# lspci |grep block    (00:03.0 disappeared)
+> | 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
+> |    ...
+> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
+> | vm)# ls /dev/vd*          (vda disappeared)
+> |    vdb vdc vde vdf vdg vdh
+> | vm)# mkfs /dev/vdb
+> |    INFO: task mkfs.ext2:1784 blocked for more than 120 seconds. (task hung)
+> 
+> 
+> Currently only func0 is defined in ACPI DSDT table
+> of seabios, and only hot-adding func0 would cause
+> a ACPI event for notification. Other funcs except
+> func0 wouldn't be registered in linux pci driver.
+> (we can only found func0 in slot->funcs list of
+> pci driver).
+> 
+> When VM pci driver receives an ACPI event for
+> hot-removing, it will only clean functions in
+> slot->funcs list, the other funcs could not be
+> cleaned.
+> 
+> This patch adds device per function in ACPI DSDT tables,
+> then all funcs will be registered in slot->funcs list.
+> It's coincident with microsoft's example:
+> http://www.microsoft.com/china/whdc/system/pnppwr/hotadd/hotplugpci.mspx#EUH
+> 
+> Have tested with linux/winxp/win7, hot-adding/hot-remving,
+> single/multiple function devices, they are all fine(all
+> added devices can be removed).
+> 
+> This patch includes some bits mst wrote, thanks!
+> ---
+> old discussion: http://marc.info/?l=kvm&m=132428400917405&w=2
+> 
+> Signed-off-by: Amos Kong <akong@redhat.com>
+> CC: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  src/ssdt-pcihp.dsl |   17 
+>  src/ssdt-pcihp.hex | 8869 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  2 files changed, 8781 insertions(+), 105 deletions(-)
+> 
+> diff --git a/src/ssdt-pcihp.dsl b/src/ssdt-pcihp.dsl
+> index 4b435b8..2a3c326 100644
+> --- a/src/ssdt-pcihp.dsl
+> +++ b/src/ssdt-pcihp.dsl
+> @@ -17,14 +17,23 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
+>          // at runtime, if the slot is detected to not support hotplug.
+>          // Extract the offset of the address dword and the
+>          // _EJ0 name to allow this patching.
+> -#define hotplug_slot(slot)                              \
+> -        Device (S##slot) {                              \
+> +#define hotplug_func(slot, fn)                          \
+> +        Device (S##slot##fn) {                          \
+>             ACPI_EXTRACT_NAME_DWORD_CONST aml_adr_dword  \
+> -           Name (_ADR, 0x##slot##0000)                  \
 
-If there's a bug, we should try to fix it.  I just don't understand
-what the bug *is*.
+I would have guessed it to be sufficient to change _ADR to
+0x##slot##ffff, does that not work?  Thanks,
+
+Alex
+
+> +           Name (_ADR, 0x##slot##000##fn)               \
+>             ACPI_EXTRACT_METHOD_STRING aml_ej0_name      \
+>             Method (_EJ0, 1) { Return(PCEJ(0x##slot)) }  \
+>             Name (_SUN, 0x##slot)                        \
+>          }
+> +#define hotplug_slot(slot)     \
+> +        hotplug_func(slot, 0)  \
+> +        hotplug_func(slot, 1)  \
+> +        hotplug_func(slot, 2)  \
+> +        hotplug_func(slot, 3)  \
+> +        hotplug_func(slot, 4)  \
+> +        hotplug_func(slot, 5)  \
+> +        hotplug_func(slot, 6)  \
+> +        hotplug_func(slot, 7)
+>  
+>          hotplug_slot(01)
+>          hotplug_slot(02)
+> @@ -59,7 +68,7 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
+>          hotplug_slot(1f)
+>  
+>  #define gen_pci_hotplug(slot)   \
+> -            If (LEqual(Arg0, 0x##slot)) { Notify(S##slot, Arg1) }
+> +            If (LEqual(Arg0, 0x##slot)) { Notify(S##slot##0, Arg1) }
+>  
+>          Method(PCNT, 2) {
+>              gen_pci_hotplug(01)
+
+
