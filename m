@@ -1,82 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:52255 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753885Ab2EWUbY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 16:31:24 -0400
-Received: by dady13 with SMTP id y13so10238601dad.19
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 13:31:24 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:28051 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754330Ab2EIJAN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 May 2012 05:00:13 -0400
+Message-ID: <4FAA3205.4030300@redhat.com>
+Date: Wed, 09 May 2012 16:59:49 +0800
+From: Amos Kong <akong@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20120523184449.GB23940@redhat.com>
-References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
-	<CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
-	<20120523024313.GA2888@redhat.com>
-	<CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
-	<CAE9FiQVPyjsB=oWp80sgqzkWw8KqX0GHg+csM39juo2N67P2Tg@mail.gmail.com>
-	<20120523155346.GA23940@redhat.com>
-	<CAE9FiQWPpKE5vmzZqw-E_L_0Lt1QpqV=xk=Hu6Stzva5vXk1_g@mail.gmail.com>
-	<20120523184449.GB23940@redhat.com>
-Date: Wed, 23 May 2012 13:31:23 -0700
-Message-ID: <CAE9FiQV91fk3wcpaMG_9uOrhJ1vnLtX=GhyO=gxQ0g_1Y=4u7g@mail.gmail.com>
-Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jason Baron <jbaron@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: linux-pci@vger.kernel.org, seabios@seabios.org,
+	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org, rjw@sisk.pl,
+	alex.williamson@redhat.com, kevin@koconnor.net, liuj97@gmail.com
+Subject: Re: [Qemu-devel] [RESEND PATCH v3] hotplug: add device per func in
+ ACPI DSDT tables
+References: <20111214010645.GA2044@morn.localdomain> <20120509072452.14872.92530.stgit@t> <20120509084447.GA14189@redhat.com>
+In-Reply-To: <20120509084447.GA14189@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2012 at 11:44 AM, Jason Baron <jbaron@redhat.com> wrote:
-> On Wed, May 23, 2012 at 10:16:06AM -0700, Yinghai Lu wrote:
->> On Wed, May 23, 2012 at 8:53 AM, Jason Baron <jbaron@redhat.com> wrote:
->> >> > but still would prefer you to make qemu to support pciehp.
->> >>
->> >> another solution could be:
->> >>
->> >> in qemu acpi dsdt, you could set bridge size for new added bridge.
->> >>
->> >> current pbus_size_mem() will not shrink the old bridge resource size.
->> >
->> > ok, I also tried hard-wiring the bridge io/mem base and limit registers on the
->> > qemu side. That seems to work without any guest-side hotplug code changes. And
->> > would seem to be more flexible than putting the limits in acpi.
+On 09/05/12 16:46, Michael S. Tsirkin wrote:
+> On Wed, May 09, 2012 at 03:24:52PM +0800, Amos Kong wrote:
+>> Boot up a Linux VM with 8 pci block devices which
+>> are the 8 functions in one pci slot.
+>> | # qemu-kvm ...
+>> | -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
+>> | -device virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
+>> | ....
+>> | -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
+>> | -device virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
 >>
->> that should be acpi asl code or SMI work. and should make sure that
->> range is not overlapped with resources that are used by other bridges
->> and pci devices.
+>> Check devices in guest.
+>> | vm)# ls /dev/vd*
+>> |    vda vdb vdc vde vdf vdg vdh
+>> | vm)# lspci |grep block
+>> | 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
+>> |    ...
+>> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
+>> |
 >>
+>> Func1~7 still exist in guest after hot-removing the whole slot
+>> through qemu monitor.
+>> | vm)# lspci |grep block    (00:03.0 disappeared)
+>> | 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
+>> |    ...
+>> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
+>> | vm)# ls /dev/vd*          (vda disappeared)
+>> |    vdb vdc vde vdf vdg vdh
+>> | vm)# mkfs /dev/vdb
+>> |    INFO: task mkfs.ext2:1784 blocked for more than 120 seconds. (task hung)
+>>
+>>
+>> Currently only func0 is defined in ACPI DSDT table
+>> of seabios, and only hot-adding func0 would cause
+>> a ACPI event for notification. Other funcs except
+>> func0 wouldn't be registered in linux pci driver.
+>> (we can only found func0 in slot->funcs list of
+>> pci driver).
 >
-> Ok. So you are saying to define a 'Name (_CRS, ResourceTemplate() {
-> Memory() IO() })' block for each bridge? The acpi code I currently have,
-> has one 'Device()' definition for each top-level hotplug slot. Would it
-> be ok to have the '_CRS' apply to either one?
->
-> Also, I'm wondering where in the acpiphp code it picks up the memory/io
-> ranges to configure them as bridge ranges?
->
-> I also see in ACPIspec40a.pdf, section "9.11 Module Device":
->
-> "
-> If no _CRS object is present, OSPM will assume that the module device is
-> a simple container object that does not produce the resources consumed by its
-> child devices. In this case, OSPM will assign resources to the child devices as
-> if they were direct children of the module device's parent object.
-> "
->
-> So not sure if that applies to hotplug, but that is not what acpiphp is
-> doing atm.
+> Isn't this what your patch 'PCI: Can continually add funcs after adding
+> func0' addresses?
 
-_CRS is only used for pci root bus.
+No.
 
-I mean in you _PS0 in your socket.
+This patch fixes the problem that some funcs could not be removed.
+the question is sending ACPI event for all functions (in same slot)
+or only function 0.
 
->
-> Finally, I don't see why putting the bridge window range logic into qemu is a
-> bad solution. Qemu knows memory ranges consumed by various resoures,
-> looking at 'info mtree', so why can't qemu hand out the bridge ranges
-> dynamically? In that way, it can re-size the windows more optimally than
-> something hard-coded into acpi. So to me, it seems like a better
-> approach.
+I found all funcs are defined in ACPI DSDT table in microsoft's example:
+http://www.microsoft.com/china/whdc/system/pnppwr/hotadd/hotplugpci.mspx#EUH 
 
-acpi could be dynamically too.
 
-Yinghai
+Is it a useful attestation ?
+
+> If yes it's commit f382a086f3129edc152b8044b69ccc6682e637bb in 3.4.
+
+This commit fix the problem that some funcs could not be added.
+
+> So let's class the problematic behaviour guest bug and avoid workarounds
+> in bios?
+
+-- 
+			Amos.
