@@ -1,112 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1337897864.4714.57.camel@ul30vt>
-Subject: Re: [PATCH v2 12/13] pci: Misc pci_reg additions
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Date: Thu, 24 May 2012 16:17:44 -0600
-In-Reply-To: <4FBEACE2.1050701@redhat.com>
-References: <20120522043607.5871.11340.stgit@bling.home>
-	 <20120522050557.5871.15364.stgit@bling.home> <4FBEACE2.1050701@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:51570 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572Ab2EJQur (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2012 12:50:47 -0400
+Received: by dady13 with SMTP id y13so1926973dad.19
+        for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 09:50:47 -0700 (PDT)
+Message-ID: <4FABF1DD.7090101@gmail.com>
+Date: Fri, 11 May 2012 00:50:37 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Amos Kong <akong@redhat.com>, mst@redhat.com,
+	linux-pci@vger.kernel.org, seabios@seabios.org,
+	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org, rjw@sisk.pl,
+	kevin@koconnor.net
+Subject: Re: [RESEND PATCH v3] hotplug: add device per func in ACPI DSDT tables
+References: <20111214010645.GA2044@morn.localdomain>  <20120509072452.14872.92530.stgit@t> <1336571221.12477.136.camel@bling.home>
+In-Reply-To: <1336571221.12477.136.camel@bling.home>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-05-24 at 17:49 -0400, Don Dutile wrote:
-> On 05/22/2012 01:05 AM, Alex Williamson wrote:
-> > Fill in many missing definitions and add sizeof fields for many
-> > sections allowing for more extensive config parsing.
-> >
-> > Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
-> > ---
-> >
-> overall, i'm very glad to see defines instead of hardcoded numbers in the code, but....
+On 05/09/2012 09:47 PM, Alex Williamson wrote:
+>> ---
+>>  src/ssdt-pcihp.dsl |   17 
+>>  src/ssdt-pcihp.hex | 8869 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+>>  2 files changed, 8781 insertions(+), 105 deletions(-)
+>>
+>> diff --git a/src/ssdt-pcihp.dsl b/src/ssdt-pcihp.dsl
+>> index 4b435b8..2a3c326 100644
+>> --- a/src/ssdt-pcihp.dsl
+>> +++ b/src/ssdt-pcihp.dsl
+>> @@ -17,14 +17,23 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
+>>          // at runtime, if the slot is detected to not support hotplug.
+>>          // Extract the offset of the address dword and the
+>>          // _EJ0 name to allow this patching.
+>> -#define hotplug_slot(slot)                              \
+>> -        Device (S##slot) {                              \
+>> +#define hotplug_func(slot, fn)                          \
+>> +        Device (S##slot##fn) {                          \
+>>             ACPI_EXTRACT_NAME_DWORD_CONST aml_adr_dword  \
+>> -           Name (_ADR, 0x##slot##0000)                  \
 > 
-> >   include/linux/pci_regs.h |  112 +++++++++++++++++++++++++++++++++++++++++-----
-> >   1 files changed, 100 insertions(+), 12 deletions(-)
-> >
-> > diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-> > index 4b608f5..379be84 100644
-> > --- a/include/linux/pci_regs.h
-> > +++ b/include/linux/pci_regs.h
-> > @@ -26,6 +26,7 @@
-> >    * Under PCI, each device has 256 bytes of configuration address space,
-> >    * of which the first 64 bytes are standardized as follows:
-> >    */
-> > +#define PCI_STD_HEADER_SIZEOF	64
-> >   #define PCI_VENDOR_ID		0x00	/* 16 bits */
-> >   #define PCI_DEVICE_ID		0x02	/* 16 bits */
-> >   #define PCI_COMMAND		0x04	/* 16 bits */
-> > @@ -209,9 +210,12 @@
-> >   #define  PCI_CAP_ID_SHPC 	0x0C	/* PCI Standard Hot-Plug Controller */
-> >   #define  PCI_CAP_ID_SSVID	0x0D	/* Bridge subsystem vendor/device ID */
-> >   #define  PCI_CAP_ID_AGP3	0x0E	/* AGP Target PCI-PCI bridge */
-> > +#define  PCI_CAP_ID_SECDEV	0x0F	/* Secure Device */
-> >   #define  PCI_CAP_ID_EXP 	0x10	/* PCI Express */
-> >   #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
-> > +#define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
-> >   #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
-> > +#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
-> >   #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
-> >   #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
-> >   #define PCI_CAP_SIZEOF		4
-> > @@ -276,6 +280,7 @@
-> >   #define  PCI_VPD_ADDR_MASK	0x7fff	/* Address mask */
-> >   #define  PCI_VPD_ADDR_F		0x8000	/* Write 0, 1 indicates completion */
-> >   #define PCI_VPD_DATA		4	/* 32-bits of data returned here */
-> > +#define PCI_CAP_VPD_SIZEOF	8
-> >
-> >   /* Slot Identification */
-> >
-> > @@ -297,8 +302,10 @@
-> >   #define PCI_MSI_ADDRESS_HI	8	/* Upper 32 bits (if PCI_MSI_FLAGS_64BIT set) */
-> >   #define PCI_MSI_DATA_32		8	/* 16 bits of data for 32-bit devices */
-> >   #define PCI_MSI_MASK_32		12	/* Mask bits register for 32-bit devices */
-> > +#define PCI_MSI_PENDING_32	16	/* Pending intrs for 32-bit devices */
-> >   #define PCI_MSI_DATA_64		12	/* 16 bits of data for 64-bit devices */
-> >   #define PCI_MSI_MASK_64		16	/* Mask bits register for 64-bit devices */
-> > +#define PCI_MSI_PENDING_64	20	/* Pending intrs for 64-bit devices */
-> >
-> >   /* MSI-X registers */
-> >   #define PCI_MSIX_FLAGS		2
-> > @@ -308,6 +315,7 @@
-> >   #define PCI_MSIX_TABLE		4
-> >   #define PCI_MSIX_PBA		8
-> >   #define  PCI_MSIX_FLAGS_BIRMASK	(7<<  0)
-> > +#define PCI_CAP_MSIX_SIZEOF	12	/* size of MSIX registers */
-> >
-> >   /* MSI-X entry's format */
-> >   #define PCI_MSIX_ENTRY_SIZE		16
-> > @@ -338,6 +346,7 @@
-> >   #define  PCI_AF_CTRL_FLR	0x01
-> >   #define PCI_AF_STATUS		5
-> >   #define  PCI_AF_STATUS_TP	0x01
-> > +#define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
-> >
-> >   /* PCI-X registers */
-> >
-> > @@ -374,6 +383,9 @@
-> >   #define  PCI_X_STATUS_SPL_ERR	0x20000000	/* Rcvd Split Completion Error Msg */
-> >   #define  PCI_X_STATUS_266MHZ	0x40000000	/* 266 MHz capable */
-> >   #define  PCI_X_STATUS_533MHZ	0x80000000	/* 533 MHz capable */
-> > +#define PCI_X_ECC_CSR		8	/* ECC control and status */
-> > +#define PCI_CAP_PCIX_SIZEOF_V0	8	/* size of registers for Version 0 */
-> > +#define PCI_CAP_PCIX_SIZEOF_V12	24	/* size for Version 1&  2 */
-> ew!
-> unlikely that version 12 will ever exist, but why not:
-> #define PCI_CAP_PCIX_SIZEOF_V1	24
-> #define PCI_CAP_PCIX_SIZEOF_V2	PCI_CAP_PCIX_SIZEOF_V1
+> I would have guessed it to be sufficient to change _ADR to
+> 0x##slot##ffff, does that not work?  Thanks,
+> 
+> Alex
+Currently Linux acpiphp driver doesn't support that yet.
 
-Works for me, will fix.  Thanks,
-
-Alex
+--gerry
 
