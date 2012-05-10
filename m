@@ -1,103 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-Date: Tue, 1 May 2012 16:04:16 +0200
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrey Rahmatullin <wrar@wrar.name>,
-	Steven Rostedt <rostedt@goodmis.org>
-References: <Pine.LNX.4.44L0.1204301348180.1558-100000@iolanthe.rowland.org> <201204302343.35215.rjw@sisk.pl> <4F9F84F6.7000509@fisher-privat.net>
-In-Reply-To: <4F9F84F6.7000509@fisher-privat.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:34228 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770Ab2EJFmH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2012 01:42:07 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201205011604.16556.rjw@sisk.pl>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20120510033551.GA25138@richard>
+References: <CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
+	<20120504045205.GA21624@richard>
+	<CAE9FiQWM4OTFp5NN+KOXxNREQxNWipDjWbbPPiHHJsb6yFmuiQ@mail.gmail.com>
+	<20120506151715.GA7773@richard>
+	<CAE9FiQWsSWK-_zGe1ggaKuZu+RJ1kb1zuTEokdxqFSbE3UjNRw@mail.gmail.com>
+	<CAE9FiQXKjxLDLeh8TXU_OCNwFt+UMv3qFjcPrKcPcorA1YmkdQ@mail.gmail.com>
+	<20120507011722.GA8122@richard>
+	<CAE9FiQUpcJdAvK=wisNc_zq5c9zDtgEM=MNugDcHN9h3=ZPUcA@mail.gmail.com>
+	<20120508024612.GA11485@richard>
+	<CAE9FiQUU+a4yQJTiud=aYx2xXcoQZpH2rJyVhj19TQKGN7=2BA@mail.gmail.com>
+	<20120510033551.GA25138@richard>
+Date: Wed, 9 May 2012 22:42:06 -0700
+Message-ID: <CAE9FiQXcFC-5VKGVDZc6Tb8Nw8cLG4sB=BEP-+zctf2c6n6oNg@mail.gmail.com>
+Subject: Re: One problem in reassign pci bus number?
+From: Yinghai Lu <yinghai@kernel.org>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, May 01, 2012, Oleksij Rempel (fishor) wrote:
-> On 30.04.2012 23:43, Rafael J. Wysocki wrote:
-> > On Monday, April 30, 2012, Oleksij Rempel wrote:
-> >> On 30.04.2012 19:53, Alan Stern wrote:
-> >>> On Mon, 30 Apr 2012, Bjorn Helgaas wrote:
-> >>>
-> >>>> On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki<rjw@sisk.pl>  wrote:
-> >>>>> From: Oleksij Rempel<bug-track@fisher-privat.net>
-> >>>>>
-> >>>>> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
-> >>>>> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
-> >>>>>
-> >>>>> Some OEM use _SxD fileds do blacklist brocken Dx states.
-> >>>>> If _SxD/_SxW return values are check before suspend as appropriate,
-> >>>>> some nasty suspend/resume issues may be avoided.
-> >>>>>
-> >>>>> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
-> >>>>> Signed-off-by: Oleksij Rempel<bug-track@fisher-privat.net>
-> >>>>> Signed-off-by: Rafael J. Wysocki<rjw@sisk.pl>
-> >>>>> ---
-> >>>>>
-> >>>>> Bjorn, Len,
-> >>>>>
-> >>>>> This is -stable material and therefore v3.4 as well, IMO. ï¿½Please let me
-> >>>>> know if one of you can take it or whether you want me to handle it all the
-> >>>>> way to Linus.
-> >>>>
-> >>>> I'm OK with this from a PCI perspective.  Most of the change is in
-> >>>> ACPI, so I propose that either you or Len take care of it.
-> >>>>
-> >>>> The second paragraph of the changelog has several typos
-> >>>> (fileds/fields, do/to, brocken/broken, etc).
-> >>>
-> >>> It also turns out that the normal wakeup mechanism doesn't work for the
-> >>> devices in question.  Can this be detected by ACPI?  We don't want to
-> >>> tell userspace that wakeup works when in fact it doesn't.
-> >>
-> >> hm... how about using pci config and acpi together. PCI config provides
-> >> map of Dx states and wakeup support of them. If pci says wakeup works
-> >> only on D0 and D3 and acpi say - we can use only D2 in S3, then there is
-> >> no wakeup.
-> >
-> > Not really.  ACPI trumps PCI here, so if ACPI says we can use D2 in S3,
-> > then we can.
-> >
-> > ACPI device states are not the same as PCI device states.  They usually map
-> > to each other directly, but they don't have to.
-> 
-> I mean not just the mapping.
-> I mean PCI:PME_SUP field.  If it PME(D0+,D1-,D2-,D3hot+,D3cold+), and 
-> acpi trying to avoid D3 states for this device. then is is same like 
-> PME(D0+,D1-,D2-)? Or not?
+On Wed, May 9, 2012 at 8:35 PM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Mon, May 07, 2012 at 08:42:59PM -0700, Yinghai Lu wrote:
+>>>>no, probe_resource will get from start if space is big enough.
+>>>>
+>>>>if not, it will try to extend top.
+>>>
+>>> Hmm... for example we still have this
+>>>               parent[70-160]
+>>> brother1[70-80]  res[90-150]  brother2[151-160]
+>>>                   ->child[105-140]
+>>>
+>>> if we call probe_resource(res, new_res, 16, par, 1, 0xff,
+>>> IORESOURCE_PCI_FIXED);
+>>>
+>>> I think this call is used to allocate a res of size 16 under res.
+>>> When there is no enough free space, it will expend res, and res->parent.
+>>>
+>>> While in this situation, res doesn't have enough free space. so it need
+>>> to expend itself.
+>>>
+>>> In the probe_resource() it tries to extend res on the right side.
+>>> So even there is enough space between brother1 and res, I think the
+>>> probe_resource() will not return 0.
+>>>
+>>> Do you think my analysis is correct?
+>>
+>>it will reduce needed size one by one. so at last it will return
+>>[91, 104]
+> Yes, agree. This is the current behavior.
+>
+> While in this case.
+>                70-160]
+>  brother1[70-80]  res[90-150]  brother151-160]
+>                    ->child
+>
+> There is free space between 81-89, and 90-104. These two free range add
+> up to 25, which is more than the required space, 16.
+>
+> If we have this resource tree.
+>           parent[70-180]
+>  brother1[70-80]  re[90-150]  brothr2[170-180]
+>                  d[105-140]
+>
+> There are enough free space between res and brother2.
+> Then probe_resource will return [141-156] with size 16.
+> And also expend res.
+>
+> So I mean this is the design decision to not count in the free space on
+> the left? Even there is enough free space?
 
-Yes, if _S3D or _S3W are present.  If they are not present and _PRW is,
-that means "don't care".
+We can not extend start.
 
-> According to spec.:
-> 7.2 Device Power Management Objects (page 287)
-> _S3D - Highest D-state supported by the device in the S3 state
-> _S3W - Lowest D-state supported by the device in the S3 state which can 
-> wake the system.
-> by definition if _S3W is specified then we can assume, the device can 
-> wake? But _SxW is not defined.
+when we have bridge using [90, 150] all children devices will be on bus 90.
+if change the bridge to use low like 81, then all device need to
+remove and rescan them.
 
-The device can wake up the system if _PRW is present for it (and for
-PCIe devices even that is not formally necessary).
+also keep the old bus number is safer.
 
-> Are there any other method to forbid the system use broken state, after 
-> device was actually produced? Usual BIOS flash utility will probably no 
-> rewrite the PCIs EEPROM. Only hope is ACPI, what is correct method to do 
-> define it by ACPI?
-
-Define _S3D that will return 2 (for example) and _PRW returning 3 as the
-deepest sleep state the system may be woken up from.  Then, we'll use
-D2 (after the @subject patch).
-
-The drawback is that the kernel will then think the device can wake up
-the system.
-
-Thanks,
-Rafael
+Yinghai
