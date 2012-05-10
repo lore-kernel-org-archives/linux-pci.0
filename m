@@ -1,86 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:45450 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966038Ab2EORcr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2012 13:32:47 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:33817 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752457Ab2EJXyZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 May 2012 19:54:25 -0400
+Message-ID: <4FAC5518.5060807@redhat.com>
+Date: Fri, 11 May 2012 07:54:00 +0800
+From: Amos Kong <akong@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20120514064615.GB26605@richard>
-References: <20120410090306.GA7056@richard>
-	<20120422155202.GA13540@richard>
-	<4F95B17B.3030401@redhat.com>
-	<20120514015536.GA3331@richard>
-	<CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
-	<20120514064615.GB26605@richard>
-Date: Tue, 15 May 2012 10:32:46 -0700
-Message-ID: <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
-Subject: Re: One problem in reassign pci bus number?
-From: Yinghai Lu <yinghai@kernel.org>
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	seabios@seabios.org, qemu-devel@nongnu.org,
+	jbarnes@virtuousgeek.org, alex.williamson@redhat.com,
+	kevin@koconnor.net
+Subject: Re: [Qemu-devel] [PATCH v3] pci: clean all funcs when hot-removing
+ multifunc device
+References: <1315976141-6684-1-git-send-email-akong@redhat.com> <20120510154423.11306.85353.stgit@t> <4FABF639.4070205@gmail.com> <20120510185516.GI14647@redhat.com>
+In-Reply-To: <20120510185516.GI14647@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 13, 2012 at 11:46 PM, Richard Yang
-<weiyang@linux.vnet.ibm.com> wrote:
-> On Sun, May 13, 2012 at 10:40:41PM -0700, Yinghai Lu wrote:
->>On Sun, May 13, 2012 at 6:55 PM, Richard Yang
->><weiyang@linux.vnet.ibm.com> wrote:
->>> On Mon, Apr 23, 2012 at 03:46:03PM -0400, Don Dutile wrote:
->>>>On 04/22/2012 11:52 AM, Richard Yang wrote:
->>>>>All,
->>>>>
->>>>>I am reading the pci_scan_bridge() and not sure what will happen in
->>>>>following situation.
->>>>>
->>>>>Suppose the kernel is not passed the pci=assign-busses.
->>>>>
->>>>>Below is a picture about the pci system.
->>>>>
->>>>>                    +-------+
->>>>>                    |       | root bridge(0,255)
->>>>>                    +---+---+
->>>>>                        |          Bus 0
->>>>>       -----+-----------+------------------------------+--
->>>>>            |                                          |
->>>>>            |                                          |
->>>>>            |                                          |
->>>>>       +----+----+                               +-----+-----+
->>>>>       |         |  B1(1,15)                     |           |B2(16,28)
->>>>>       +----+----+                               +-----+-----+
->>>>>            |  Bus 1                                   |    Bus 16
->>>>>       -----+-----------------------         ----------+----------------
->>>>>                             |
->>>>>                        +----+----+
->>>>>                        |         | B3
->>>>>                        +---------+
->>>>>
->>>>>Suppose B1 and B2 works fine with the BIOS, which get the right bus
->>>>>number and range.
->>>>>
->>>>>B3 does not works fine with the BIOS, which doesn't get the bus number.
->>>>>
->>> Take my original question.
->>>
->>> B3 doesn't get the bus number, which its parent doesn't have free bus
->>> number and there is no gap between B1 and B2.
->>>
->>> So in this case, the probe_resource() can't find bus number for B3.
->>> Then cause pci_bridge_probe_busn_res() return non-zero.
->>>
->>> Then B3 couldn't work fine?
+On 05/11/2012 02:55 AM, Michael S. Tsirkin wrote:
+> On Fri, May 11, 2012 at 01:09:13AM +0800, Jiang Liu wrote:
+>> On 05/10/2012 11:44 PM, Amos Kong wrote:
 >>
->>B3 is on Bus 1? B3 is the one of bridges on Bus1?
-> No,  I omit other bridges on Bus#1.
-> They will occupy bus number 2-15, which is calculated by BIOS and set to
-> bridge's configuration space.
+>>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>>> index 806c44f..a7442d9 100644
+>>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>>> @@ -885,7 +885,7 @@ static void disable_bridges(struct pci_bus *bus)
+>>>  static int disable_device(struct acpiphp_slot *slot)
+>>>  {
+>>>  	struct acpiphp_func *func;
+>>> -	struct pci_dev *pdev;
+>>> +	struct pci_dev *pdev, *tmp;
+>>>  	struct pci_bus *bus = slot->bridge->pci_bus;
+>>>  
+>>>  	/* The slot will be enabled when func 0 is added, so check
+>>> @@ -902,9 +902,10 @@ static int disable_device(struct acpiphp_slot *slot)
+>>>  			func->bridge = NULL;
+>>>  		}
+>>>  
+>>> -		pdev = pci_get_slot(slot->bridge->pci_bus,
+>>> -				    PCI_DEVFN(slot->device, func->function));
+>>> -		if (pdev) {
+>>> +		list_for_each_entry_safe(pdev, tmp, &bus->devices, bus_list) {
+>>> +			if (PCI_SLOT(pdev->devfn) != slot->device)
+>>> +				continue;
+>>> +
+>> The pci_bus_sem lock should be acquired when walking the bus->devices list.
+>> Otherwise it may cause invalid memory access if another thread is modifying
+>> the bus->devices list concurrently.
 
-with that new condition, probe_resource will return zero.
 
-for those kind of case:
-1. use echo 1 > /sys .../remove to remove devices under Bridge2.
-2. use setpci to change bus register of bridge2 to move high to make
-more space for bridge 1.
-3. rescan bridge 1 and bridge 2.
+>> BTW, what's the relationship with "[PATCH v3] hotplug: add device per func
+>> in ACPI DSDT tables"? Seems they are both solving the same issue.
 
-Yinghai
+Two work need to be done when we disable a slot, cleaning
+configuration(in OS) and power off slot.
+
+Currently the second part(power off) works fine, all funcs disappear
+from "(qemu)#info block" after hot-remove slot.
+The only problem is func 1~7 are not unconfigured, so I NAKed seabios
+patch, and try to fix this problem in pci driver.
+
+(btw, winxp & win7 hotplug works currently)
+
+/**
+ * acpiphp_disable_slot - power off slot
+ * @slot: ACPI PHP slot
+ */
+int acpiphp_disable_slot(struct acpiphp_slot *slot)
+{
+        mutex_lock(&slot->crit_sect);
+
+        /* unconfigure all functions */
+        retval = disable_device(slot);
+
+        /* power off all functions */
+        retval = power_off_slot(slot);
+        ....
+}
+
+> That's a bios patch. It's needed if you want broken linux to work.  This
+> makes linux behave properly on the original bios.
+> 
+>>>  			pci_stop_bus_device(pdev);
+>>>  			if (pdev->subordinate) {
+>>>  				disable_bridges(pdev->subordinate);
+
+
+
+-- 
+			Amos.
