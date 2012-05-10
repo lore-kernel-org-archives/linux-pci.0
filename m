@@ -1,157 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Dan Williams <dan.j.williams@intel.com>,
-	Maciej Sosnowski <maciej.sosnowski@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-	James Morris <jmorris@namei.org>,
-	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 4/7] dmaengine: enhance network subsystem to support DMA device hotplug
-Date: Mon, 14 May 2012 21:47:06 +0800
-Message-Id: <1337003229-9158-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38259 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760338Ab2EJSzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 May 2012 14:55:35 -0400
+Date: Thu, 10 May 2012 21:55:17 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Amos Kong <akong@redhat.com>, linux-pci@vger.kernel.org,
+	seabios@seabios.org, qemu-devel@nongnu.org,
+	jbarnes@virtuousgeek.org, alex.williamson@redhat.com,
+	kevin@koconnor.net
+Subject: Re: [PATCH v3] pci: clean all funcs when hot-removing multifunc
+ device
+Message-ID: <20120510185516.GI14647@redhat.com>
+References: <1315976141-6684-1-git-send-email-akong@redhat.com>
+ <20120510154423.11306.85353.stgit@t>
+ <4FABF639.4070205@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FABF639.4070205@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Fri, May 11, 2012 at 01:09:13AM +0800, Jiang Liu wrote:
+> On 05/10/2012 11:44 PM, Amos Kong wrote:
+> 
+> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> > index 806c44f..a7442d9 100644
+> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -885,7 +885,7 @@ static void disable_bridges(struct pci_bus *bus)
+> >  static int disable_device(struct acpiphp_slot *slot)
+> >  {
+> >  	struct acpiphp_func *func;
+> > -	struct pci_dev *pdev;
+> > +	struct pci_dev *pdev, *tmp;
+> >  	struct pci_bus *bus = slot->bridge->pci_bus;
+> >  
+> >  	/* The slot will be enabled when func 0 is added, so check
+> > @@ -902,9 +902,10 @@ static int disable_device(struct acpiphp_slot *slot)
+> >  			func->bridge = NULL;
+> >  		}
+> >  
+> > -		pdev = pci_get_slot(slot->bridge->pci_bus,
+> > -				    PCI_DEVFN(slot->device, func->function));
+> > -		if (pdev) {
+> > +		list_for_each_entry_safe(pdev, tmp, &bus->devices, bus_list) {
+> > +			if (PCI_SLOT(pdev->devfn) != slot->device)
+> > +				continue;
+> > +
+> The pci_bus_sem lock should be acquired when walking the bus->devices list.
+> Otherwise it may cause invalid memory access if another thread is modifying
+> the bus->devices list concurrently.
+> 
+> BTW, what's the relationship with "[PATCH v3] hotplug: add device per func
+> in ACPI DSDT tables"? Seems they are both solving the same issue.
 
-Enhance network subsystem to correctly update DMA channel reference counts,
-so it won't break DMA device hotplug logic.
+That's a bios patch. It's needed if you want broken linux to work.  This
+makes linux behave properly on the original bios.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- include/net/netdma.h |   26 ++++++++++++++++++++++++++
- net/ipv4/tcp.c       |   10 +++-------
- net/ipv4/tcp_input.c |    5 +----
- net/ipv4/tcp_ipv4.c  |    4 +---
- net/ipv6/tcp_ipv6.c  |    4 +---
- 5 files changed, 32 insertions(+), 17 deletions(-)
-
-diff --git a/include/net/netdma.h b/include/net/netdma.h
-index 8ba8ce2..6d71724 100644
---- a/include/net/netdma.h
-+++ b/include/net/netdma.h
-@@ -24,6 +24,32 @@
- #include <linux/dmaengine.h>
- #include <linux/skbuff.h>
- 
-+static inline bool
-+net_dma_capable(void)
-+{
-+	struct dma_chan *chan = net_dma_find_channel();
-+	dma_put_channel(chan);
-+
-+	return !!chan;
-+}
-+
-+static inline struct dma_chan *
-+net_dma_get_channel(struct tcp_sock *tp)
-+{
-+	if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
-+		tp->ucopy.dma_chan = net_dma_find_channel();
-+	return tp->ucopy.dma_chan;
-+}
-+
-+static inline void
-+net_dma_put_channel(struct tcp_sock *tp)
-+{
-+	if (tp->ucopy.dma_chan) {
-+		dma_put_channel(tp->ucopy.dma_chan);
-+		tp->ucopy.dma_chan = NULL;
-+	}
-+}
-+
- int dma_skb_copy_datagram_iovec(struct dma_chan* chan,
- 		struct sk_buff *skb, int offset, struct iovec *to,
- 		size_t len, struct dma_pinned_list *pinned_list);
-diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
-index 8bb6ade..aea4032 100644
---- a/net/ipv4/tcp.c
-+++ b/net/ipv4/tcp.c
-@@ -1451,8 +1451,7 @@ int tcp_recvmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
- 			available = TCP_SKB_CB(skb)->seq + skb->len - (*seq);
- 		if ((available < target) &&
- 		    (len > sysctl_tcp_dma_copybreak) && !(flags & MSG_PEEK) &&
--		    !sysctl_tcp_low_latency &&
--		    net_dma_find_channel()) {
-+		    !sysctl_tcp_low_latency && net_dma_capable()) {
- 			preempt_enable_no_resched();
- 			tp->ucopy.pinned_list =
- 					dma_pin_iovec_pages(msg->msg_iov, len);
-@@ -1666,10 +1665,7 @@ do_prequeue:
- 
- 		if (!(flags & MSG_TRUNC)) {
- #ifdef CONFIG_NET_DMA
--			if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
--				tp->ucopy.dma_chan = net_dma_find_channel();
--
--			if (tp->ucopy.dma_chan) {
-+			if (net_dma_get_channel(tp)) {
- 				tp->ucopy.dma_cookie = dma_skb_copy_datagram_iovec(
- 					tp->ucopy.dma_chan, skb, offset,
- 					msg->msg_iov, used,
-@@ -1758,7 +1754,7 @@ skip_copy:
- 
- #ifdef CONFIG_NET_DMA
- 	tcp_service_net_dma(sk, true);  /* Wait for queue to drain */
--	tp->ucopy.dma_chan = NULL;
-+	net_dma_put_channel(tp);
- 
- 	if (tp->ucopy.pinned_list) {
- 		dma_unpin_iovec_pages(tp->ucopy.pinned_list);
-diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
-index 9944c1d..3878916 100644
---- a/net/ipv4/tcp_input.c
-+++ b/net/ipv4/tcp_input.c
-@@ -5227,10 +5227,7 @@ static int tcp_dma_try_early_copy(struct sock *sk, struct sk_buff *skb,
- 	if (tp->ucopy.wakeup)
- 		return 0;
- 
--	if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
--		tp->ucopy.dma_chan = net_dma_find_channel();
--
--	if (tp->ucopy.dma_chan && skb_csum_unnecessary(skb)) {
-+	if (net_dma_get_channel(tp) && skb_csum_unnecessary(skb)) {
- 
- 		dma_cookie = dma_skb_copy_datagram_iovec(tp->ucopy.dma_chan,
- 							 skb, hlen,
-diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
-index 0cb86ce..90ea1c0 100644
---- a/net/ipv4/tcp_ipv4.c
-+++ b/net/ipv4/tcp_ipv4.c
-@@ -1729,9 +1729,7 @@ process:
- 	if (!sock_owned_by_user(sk)) {
- #ifdef CONFIG_NET_DMA
- 		struct tcp_sock *tp = tcp_sk(sk);
--		if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
--			tp->ucopy.dma_chan = net_dma_find_channel();
--		if (tp->ucopy.dma_chan)
-+		if (net_dma_get_channel(tp))
- 			ret = tcp_v4_do_rcv(sk, skb);
- 		else
- #endif
-diff --git a/net/ipv6/tcp_ipv6.c b/net/ipv6/tcp_ipv6.c
-index 86cfe60..fb81bbd 100644
---- a/net/ipv6/tcp_ipv6.c
-+++ b/net/ipv6/tcp_ipv6.c
-@@ -1644,9 +1644,7 @@ process:
- 	if (!sock_owned_by_user(sk)) {
- #ifdef CONFIG_NET_DMA
- 		struct tcp_sock *tp = tcp_sk(sk);
--		if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
--			tp->ucopy.dma_chan = net_dma_find_channel();
--		if (tp->ucopy.dma_chan)
-+		if (net_dma_get_channel(tp))
- 			ret = tcp_v6_do_rcv(sk, skb);
- 		else
- #endif
--- 
-1.7.9.5
-
+> >  			pci_stop_bus_device(pdev);
+> >  			if (pdev->subordinate) {
+> >  				disable_bridges(pdev->subordinate);
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
