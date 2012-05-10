@@ -1,67 +1,157 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 6 May 2012 23:17:15 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120506151715.GA7773@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120422155202.GA13540@richard>
- <CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
- <CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
- <CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
- <20120503065455.GA30042@richard>
- <CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
- <20120504024721.GA6775@richard>
- <CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
- <20120504045205.GA21624@richard>
- <CAE9FiQWM4OTFp5NN+KOXxNREQxNWipDjWbbPPiHHJsb6yFmuiQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:36824 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752761Ab2EJUJ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 May 2012 16:09:29 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+Date: Thu, 10 May 2012 22:14:20 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
+	LKML <linux-kernel@vger.kernel.org>
+References: <201204292244.16467.rjw@sisk.pl> <CAErSpo7oGWNVeT6OCgaFdb_+uPAumggE-Z+OdnH=9aW+_N3B6g@mail.gmail.com> <201204302341.12528.rjw@sisk.pl>
+In-Reply-To: <201204302341.12528.rjw@sisk.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQWM4OTFp5NN+KOXxNREQxNWipDjWbbPPiHHJsb6yFmuiQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201205102214.20947.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 04, 2012 at 10:37:08AM -0700, Yinghai Lu wrote:
->On Thu, May 3, 2012 at 9:52 PM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
->>
->> BTW, even if this value is returned by __find_res_top_free_size(), or
->> returned after this function is called, the purpose of the
->> __find_res_top_free_size() is to get the biggest free space under the
->> first parameter?
->
->__find_res_top_free_size() is used to get size just under top,  and
->then use it to calculate size above top that need to be extended.
->
->at last will combine free size under top and allocated size above top
->and return.
-Yes, I get the general idea.
+On Monday, April 30, 2012, Rafael J. Wysocki wrote:
+> On Monday, April 30, 2012, Bjorn Helgaas wrote:
+> > On Sun, Apr 29, 2012 at 2:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > From: Oleksij Rempel <bug-track@fisher-privat.net>
+> > >
+> > > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+> > > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+> > >
+> > > Some OEM use _SxD fileds do blacklist brocken Dx states.
+> > > If _SxD/_SxW return values are check before suspend as appropriate,
+> > > some nasty suspend/resume issues may be avoided.
+> > >
+> > > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+> > > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> > > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > > ---
+> > >
+> > > Bjorn, Len,
+> > >
+> > > This is -stable material and therefore v3.4 as well, IMO.  Please let me
+> > > know if one of you can take it or whether you want me to handle it all the
+> > > way to Linus.
+> > 
+> > I'm OK with this from a PCI perspective.  Most of the change is in
+> > ACPI, so I propose that either you or Len take care of it.
+> > 
+> > The second paragraph of the changelog has several typos
+> > (fileds/fields, do/to, brocken/broken, etc).
+> 
+> Thanks for spotting that, the version below should be better.
+> 
+> I'll wait for Len to respond till Friday and will take care of the patch myself
+> if he doesn't say anything.
+> 
+> May I assume an ACK from you?
+> 
+> Rafael
+> 
+> ---
+> From: Oleksij Rempel <bug-track@fisher-privat.net>
+> Subject: ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+> 
+> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+> 
+> Some OEM use _SxD fields to blacklist broken device Dx states, so
+> if _SxD/_SxW return values are checked before suspend as appropriate,
+> some nasty suspend/resume issues may be avoided.
+> 
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+> Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-then I want to confirm which size __find_res_top_free_size() will return.
+Len, this is an important fix, any chance to take it for v3.5 and -stable?
+Or do you want me to do that?
 
-Come to the previous question, for one resource like this.
-res =   90-150
-    ->child      105-140
-We call __find_res_top_free_size(res, 1);
-This function should return which size?  10? 15? or 25?
+Rafael
 
->From the code 
-+               ret = __allocate_resource(res, &tmp_res, n_size,
-+                       res->end - n_size + skip_nr, res->end,
-+                       1, NULL, NULL, false);
-I think it will check the free space near the end of res. 
 
-I did one test on __find_res_top_free_size(res, 1) of this example.
-And returned 10. Which means, it find the free space (141-150).
-
-So I want to confirm this function really returns the size of free space
-at the end of the res. not the biggest one or the sum.
->
->Yinghai
-
--- 
-Richard Yang
-Help you, Help me
+> ---
+>  drivers/acpi/sleep.c |   22 +++++++++++++++++++++-
+>  drivers/pci/pci.c    |   12 +++++++++++-
+>  2 files changed, 32 insertions(+), 2 deletions(-)
+> 
+> Index: linux/drivers/acpi/sleep.c
+> ===================================================================
+> --- linux.orig/drivers/acpi/sleep.c
+> +++ linux/drivers/acpi/sleep.c
+> @@ -720,10 +720,30 @@ int acpi_pm_device_sleep_state(struct de
+>  	 *
+>  	 * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
+>  	 * provided -- that's our fault recovery, we ignore retval.
+> +	 *
+> +	 * According to ACPI 4.0a (April 5, 2010), page 294,
+> +	 * Table 7-7 S3 Action / Result Table, we need to evaluate _SxW in
+> +	 * addition to _SxD if the device is configured for wakeup:
+> +	 * Desired Action    | _S3D | _PRW | _S3W | Resultant D-state
+> +	 * Enter S3          |  N/A |  D/C |  N/A | OSPM decides
+> +	 * Enter S3, No Wake |   2  |  D/C |  D/C | Enter D2 or D3
+> +	 * Enter S3, Wake    |   2  |   3  |  N/A | Enter D2
+> +	 * Enter S3, Wake    |   2  |   3  |   3  | Enter D2 or D3
+> +	 * Enter S3, Wake    |  N/A |   3  |   2  | Enter D0, D1 or D2
+>  	 */
+> -	if (acpi_target_sleep_state > ACPI_STATE_S0)
+> +	if (acpi_target_sleep_state > ACPI_STATE_S0) {
+> +		acpi_status status;
+> +
+>  		acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
+>  
+> +		if (device_may_wakeup(dev)) {
+> +			acpi_method[3] = 'W';
+> +			status = acpi_evaluate_integer(handle, acpi_method,
+> +						       NULL, &d_max);
+> +			if (ACPI_FAILURE(status))
+> +				d_max = d_min;
+> +		}
+> +	}
+>  	/*
+>  	 * If _PRW says we can wake up the system from the target sleep state,
+>  	 * the D-state returned by _SxD is sufficient for that (we assume a
+> Index: linux/drivers/pci/pci.c
+> ===================================================================
+> --- linux.orig/drivers/pci/pci.c
+> +++ linux/drivers/pci/pci.c
+> @@ -1691,10 +1691,20 @@ pci_power_t pci_target_state(struct pci_
+>  {
+>  	pci_power_t target_state = PCI_D3hot;
+>  
+> -	if (platform_pci_power_manageable(dev)) {
+> +	/*
+> +	 * According to ACPI 4.0a,7.2 Device Power Management Objects, device
+> +	 * with wake capability should have _PRW or _PSW object and can have
+> +	 * _SxD or _SxW object.
+> +	 * It looks like some OEMs use this fields to avoid buggy Dx states
+> +	 * of devices, so we need to check for _PRW or _PSW and see if _SxD or
+> +	 * _SxW indicate to overwrite Dx.
+> +	 */
+> +	if (platform_pci_power_manageable(dev)
+> +	    || platform_pci_can_wakeup(dev)) {
+>  		/*
+>  		 * Call the platform to choose the target state of the device
+>  		 * and enable wake-up from this state if supported.
+> +		 * (Check _SxD and _SxW)
+>  		 */
+>  		pci_power_t state = platform_pci_choose_state(dev);
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
