@@ -1,306 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Dan Williams <dan.j.williams@intel.com>,
-	Maciej Sosnowski <maciej.sosnowski@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [RFC PATCH v2 3/7] dmaengine: enhance dmaengine to support DMA device hotplug
-Date: Mon, 14 May 2012 21:47:05 +0800
-Message-Id: <1337003229-9158-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:40117 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457Ab2EJKlY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2012 06:41:24 -0400
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 710113EE0AE
+	for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 19:41:23 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 59EF845DE9E
+	for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 19:41:23 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 4116645DE7E
+	for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 19:41:23 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 352DB1DB803C
+	for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 19:41:23 +0900 (JST)
+Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id E89D11DB8038
+	for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 19:41:22 +0900 (JST)
+Received: from m003.css.fujitsu.com (m003 [127.0.0.1])
+	by m003.s.css.fujitsu.com (Postfix) with ESMTP id B990650EC16
+	for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 19:41:22 +0900 (JST)
+Received: from [127.0.0.1] (ubi135.utsfd.cs.fujitsu.co.jp [10.24.19.135])
+	by m003.s.css.fujitsu.com (Postfix) with ESMTP id 8546250EC10
+	for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 19:41:22 +0900 (JST)
+Message-ID: <4FAB9BFF.4080802@jp.fujitsu.com>
+Date: Thu, 10 May 2012 19:44:15 +0900
+From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+MIME-Version: 1.0
+To: linux-pci@vger.kernel.org
+Subject: [PATCH] microblaze/pci: Fix compile error
+Content-Type: multipart/mixed;
+ boundary="------------020206050806050608070006"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+This is a multi-part message in MIME format.
+--------------020206050806050608070006
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 
-From: Jiang Liu <liuj97@gmail.com>
+Hi
 
-To support DMA device hotplug, dmaengine must correctly manage
-reference count for DMA channels. On the other hand, DMA hot path
-is performance critical, reference count management code should
-avoid polluting global shared cachelines, otherwise it may cause
-heavy performance penalty.
 
-This patch introduces a lightweight DMA channel reference count
-management mechanism by using percpu counter. When DMA device
-hotplug is disabled, there's no performance penalty. When hotplug
-is enabled, a dma_find_channel()/dma_put_channel() pair adds two
-local memory accesses to the hot path.
+There is a compile error for microblaze pci because io_offset is not
+declared. This patch adds declaration of io_offset.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/dma/dmaengine.c   |  112 +++++++++++++++++++++++++++++++++++++++++----
- include/linux/dmaengine.h |   29 +++++++++++-
- 2 files changed, 129 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-index d3b1c48..eca45c0 100644
---- a/drivers/dma/dmaengine.c
-+++ b/drivers/dma/dmaengine.c
-@@ -61,12 +61,20 @@
- #include <linux/rculist.h>
- #include <linux/idr.h>
- #include <linux/slab.h>
-+#include <linux/sched.h>
- 
- static DEFINE_MUTEX(dma_list_mutex);
- static DEFINE_IDR(dma_idr);
- static LIST_HEAD(dma_device_list);
- static long dmaengine_client_count;
- 
-+#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-+static atomic_t dmaengine_dirty;
-+static struct static_key dmaengine_quiesce = STATIC_KEY_INIT_FALSE;
-+static DECLARE_WAIT_QUEUE_HEAD(dmaengine_wait_queue);
-+DEFINE_PER_CPU(long, dmaengine_chan_ref_count);
-+#endif	/* CONFIG_DMA_ENGINE_HOTPLUG */
-+
- /* --- sysfs implementation --- */
- 
- /**
-@@ -305,10 +313,40 @@ arch_initcall(dma_channel_table_init);
-  */
- struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type)
- {
--	return this_cpu_read(channel_table[tx_type]->chan);
-+	struct dma_chan *chan = this_cpu_read(channel_table[tx_type]->chan);
-+
-+#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-+	this_cpu_inc(dmaengine_chan_ref_count);
-+	if (static_key_false(&dmaengine_quiesce))
-+		chan = NULL;
-+#endif
-+
-+	return chan;
- }
- EXPORT_SYMBOL(dma_find_channel);
- 
-+#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-+struct dma_chan *dma_get_channel(struct dma_chan *chan)
-+{
-+	if (static_key_false(&dmaengine_quiesce))
-+		atomic_inc(&dmaengine_dirty);
-+	this_cpu_inc(dmaengine_chan_ref_count);
-+
-+	return chan;
-+}
-+EXPORT_SYMBOL(dma_get_channel);
-+#endif
-+
-+/**
-+ * dma_has_capability - check whether any channel supports tx_type
-+ * @tx_type: transaction type
-+ */
-+bool dma_has_capability(enum dma_transaction_type tx_type)
-+{
-+	return !!this_cpu_read(channel_table[tx_type]->chan);
-+}
-+EXPORT_SYMBOL(dma_has_capability);
-+
- /*
-  * net_dma_find_channel - find a channel for net_dma
-  * net_dma has alignment requirements
-@@ -316,10 +354,15 @@ EXPORT_SYMBOL(dma_find_channel);
- struct dma_chan *net_dma_find_channel(void)
- {
- 	struct dma_chan *chan = dma_find_channel(DMA_MEMCPY);
--	if (chan && !is_dma_copy_aligned(chan->device, 1, 1, 1))
--		return NULL;
- 
--	return chan;
-+	if (chan && is_dma_copy_aligned(chan->device, 1, 1, 1))
-+		return chan;
-+
-+#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-+	this_cpu_dec(dmaengine_chan_ref_count);
-+#endif
-+
-+	return NULL;
- }
- EXPORT_SYMBOL(net_dma_find_channel);
- 
-@@ -393,6 +436,37 @@ static struct dma_chan *nth_chan(enum dma_transaction_type cap, int n)
- 	return ret;
- }
- 
-+static void dma_channel_quiesce(void)
-+{
-+#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-+	int cpu;
-+	long ref_count;
-+	int quiesce_count = 0;
-+
-+	static_key_slow_inc(&dmaengine_quiesce);
-+
-+	do {
-+		atomic_set(&dmaengine_dirty, 0);
-+		schedule_timeout(1);
-+
-+		if (atomic_read(&dmaengine_dirty)) {
-+			quiesce_count = 0;
-+			continue;
-+		}
-+
-+		ref_count = 0;
-+		for_each_possible_cpu(cpu)
-+			ref_count += per_cpu(dmaengine_chan_ref_count, cpu);
-+		if (ref_count == 0)
-+			quiesce_count++;
-+		else
-+			quiesce_count = 0;
-+	} while (quiesce_count < 10);
-+
-+	static_key_slow_dec(&dmaengine_quiesce);
-+#endif
-+}
-+
- /**
-  * dma_channel_rebalance - redistribute the available channels
-  *
-@@ -401,7 +475,7 @@ static struct dma_chan *nth_chan(enum dma_transaction_type cap, int n)
-  * multi-tasking channels) in the non-SMP case.  Must be called under
-  * dma_list_mutex.
-  */
--static void dma_channel_rebalance(void)
-+static void dma_channel_rebalance(bool quiesce)
- {
- 	struct dma_chan *chan;
- 	struct dma_chan_tbl_ent *entry;
-@@ -431,6 +505,9 @@ static void dma_channel_rebalance(void)
- 				entry->chan = chan;
- 			}
- 
-+	if (quiesce)
-+		dma_channel_quiesce();
-+
- 	/* undo the last distribution */
- 	for_each_dma_cap_mask(cap, dma_cap_mask_all)
- 		for_each_possible_cpu(cpu) {
-@@ -532,6 +609,10 @@ void dma_release_channel(struct dma_chan *chan)
- 	if (--chan->device->privatecnt == 0)
- 		dma_cap_clear(DMA_PRIVATE, chan->device->cap_mask);
- 	mutex_unlock(&dma_list_mutex);
-+
-+#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-+	wake_up_all(&dmaengine_wait_queue);
-+#endif
- }
- EXPORT_SYMBOL_GPL(dma_release_channel);
- 
-@@ -546,7 +627,7 @@ void dmaengine_get(void)
- 	 * incorporated into the channel table
- 	 */
- 	if (++dmaengine_client_count == 1)
--		dma_channel_rebalance();
-+		dma_channel_rebalance(false);
- 	mutex_unlock(&dma_list_mutex);
- }
- EXPORT_SYMBOL(dmaengine_get);
-@@ -559,7 +640,7 @@ void dmaengine_put(void)
- 	mutex_lock(&dma_list_mutex);
- 	BUG_ON(dmaengine_client_count <= 0);
- 	if (--dmaengine_client_count == 0)
--		dma_channel_rebalance();
-+		dma_channel_rebalance(false);
- 	mutex_unlock(&dma_list_mutex);
- }
- EXPORT_SYMBOL(dmaengine_put);
-@@ -726,7 +807,7 @@ int dma_async_device_register(struct dma_device *device)
- 	if (dma_has_cap(DMA_PRIVATE, device->cap_mask))
- 		device->privatecnt++;	/* Always private */
- 	else
--		dma_channel_rebalance();
-+		dma_channel_rebalance(false);
- 	mutex_unlock(&dma_list_mutex);
- 
- 	return 0;
-@@ -767,14 +848,22 @@ void dma_async_device_unregister(struct dma_device *device)
- 
- 	mutex_lock(&dma_list_mutex);
- 	list_del_rcu(&device->global_node);
--	dma_channel_rebalance();
-+	dma_channel_rebalance(true);
- 	mutex_unlock(&dma_list_mutex);
- 
- 	/* Check whether it's called from module exit function. */
- 	if (try_module_get(device->dev->driver->owner)) {
-+#ifndef	CONFIG_DMA_ENGINE_HOTPLUG
- 		dev_warn(device->dev,
- 			"%s isn't called from module exit function.\n",
- 			__func__);
-+#else
-+		list_for_each_entry(chan, &device->channels, device_node) {
-+			/* TODO: notify clients to release channels*/
-+			wait_event(dmaengine_wait_queue,
-+				   chan->client_count == 0);
-+		}
-+#endif
- 		module_put(device->dev->driver->owner);
- 	}
- 
-@@ -788,6 +877,9 @@ void dma_async_device_unregister(struct dma_device *device)
- 		device_unregister(&chan->dev->device);
- 		free_percpu(chan->local);
- 	}
-+
-+	/* Synchronize with dma_issue_pending_all() */
-+	synchronize_rcu();
- }
- EXPORT_SYMBOL(dma_async_device_unregister);
- 
-@@ -1011,7 +1103,7 @@ hotcpu_rebalance(struct notifier_block *nfb, unsigned long action, void *hcpu)
- 	case CPU_ONLINE:
- 	case CPU_POST_DEAD:
- 		mutex_lock(&dma_list_mutex);
--		dma_channel_rebalance();
-+		dma_channel_rebalance(false);
- 		mutex_unlock(&dma_list_mutex);
- 		break;
- 	}
-diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-index f9a2e5e..e099b28 100644
---- a/include/linux/dmaengine.h
-+++ b/include/linux/dmaengine.h
-@@ -973,10 +973,35 @@ static inline void dma_release_channel(struct dma_chan *chan)
- int dma_async_device_register(struct dma_device *device);
- void dma_async_device_unregister(struct dma_device *device);
- void dma_run_dependencies(struct dma_async_tx_descriptor *tx);
--struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type);
--struct dma_chan *net_dma_find_channel(void);
- #define dma_request_channel(mask, x, y) __dma_request_channel(&(mask), x, y)
- 
-+/*
-+ * Special DMA channel reference count management scheme has been adopted
-+ * to support DMA device hotplug without introducing big performance penalty.
-+ * Please follow rules below to correctly manage channel reference count.
-+ * 1) dma_find_channel()/dma_get_channel() must be paired with
-+ *    dma_put_channel(), even if dma_find_channel() returns NULL.
-+ * 2) Only call dma_put_channel() if net_dma_find_channel() returns valid
-+ *    channel pointer.
-+ */
-+bool dma_has_capability(enum dma_transaction_type tx_type);
-+struct dma_chan *net_dma_find_channel(void);
-+struct dma_chan *dma_find_channel(enum dma_transaction_type tx_type);
-+#ifdef	CONFIG_DMA_ENGINE_HOTPLUG
-+DECLARE_PER_CPU(long, dmaengine_chan_ref_count);
-+static inline void dma_put_channel(struct dma_chan *chan)
-+{
-+	this_cpu_dec(dmaengine_chan_ref_count);
-+}
-+
-+struct dma_chan *dma_get_channel(struct dma_chan *chan);
-+#else	/* CONFIG_DMA_ENGINE_HOTPLUG */
-+static inline void dma_put_channel(struct dma_chan *chan) { }
-+static inline struct dma_chan *dma_get_channel(struct dma_chan *chan)
-+{ return chan; }
-+#endif	/* CONFIG_DMA_ENGINE_HOTPLUG */
-+
-+
- /* --- Helper iov-locking functions --- */
- 
- struct dma_page_list {
--- 
-1.7.9.5
+* Compile error message
+arch/microblaze/pci/pci-common.c: In function 'pcibios_setup_phb_resources':
+arch/microblaze/pci/pci-common.c:1525: error: 'io_offset' undeclared
+(first use in this function)
+arch/microblaze/pci/pci-common.c:1525: error: (Each undeclared
+identifier is reported only once
+arch/microblaze/pci/pci-common.c:1525: error: for each function it
+appears in.)
+make[1]: *** [arch/microblaze/pci/pci-common.o] Error 1
+make: *** [arch/microblaze/pci] Error 2
+
+
+Regards.
+
+Hiroo MATSUMOTO
+
+--------------020206050806050608070006
+Content-Type: text/plain;
+ name="fix-compile-error-for-microblaze-pci.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="fix-compile-error-for-microblaze-pci.patch"
+
+U2lnbmVkLW9mZi1ieTogSGlyb28gTUFUU1VNT1RPIDxtYXRzdW1vdG8uaGlyb29AanAuZnVq
+aXRzdS5jb20+CmRpZmYgLS1naXQgYS9hcmNoL21pY3JvYmxhemUvcGNpL3BjaS1jb21tb24u
+YyBiL2FyY2gvbWljcm9ibGF6ZS9wY2kvcGNpLWNvbW1vbi5jCmluZGV4IDg1ZjJhYzEuLjkw
+ZjgyMzggMTAwNjQ0Ci0tLSBhL2FyY2gvbWljcm9ibGF6ZS9wY2kvcGNpLWNvbW1vbi5jCisr
+KyBiL2FyY2gvbWljcm9ibGF6ZS9wY2kvcGNpLWNvbW1vbi5jCkBAIC0xNTE1LDYgKzE1MTUs
+NyBAQCBpbnQgcGNpYmlvc19lbmFibGVfZGV2aWNlKHN0cnVjdCBwY2lfZGV2ICpkZXYsIGlu
+dCBtYXNrKQogCiBzdGF0aWMgdm9pZCBfX2RldmluaXQgcGNpYmlvc19zZXR1cF9waGJfcmVz
+b3VyY2VzKHN0cnVjdCBwY2lfY29udHJvbGxlciAqaG9zZSwgc3RydWN0IGxpc3RfaGVhZCAq
+cmVzb3VyY2VzKQogeworCXVuc2lnbmVkIGxvbmcgaW9fb2Zmc2V0OwogCXN0cnVjdCByZXNv
+dXJjZSAqcmVzOwogCWludCBpOwogCg==
+--------------020206050806050608070006--
 
