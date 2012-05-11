@@ -1,70 +1,84 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <4FAAC652.4060502@tilera.com>
-Date: Wed, 9 May 2012 15:32:34 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 04/13] pci: New pci_dma_quirk()
+To: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org
+Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gregkh@linuxfoundation.org, bhelgaas@google.com,
+	alex.williamson@redhat.com
+Date: Fri, 11 May 2012 16:55:55 -0600
+Message-ID: <20120511225555.30496.80525.stgit@bling.home>
+In-Reply-To: <20120511222148.30496.68571.stgit@bling.home>
+References: <20120511222148.30496.68571.stgit@bling.home>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>
-Subject: Re: [PATCH 19/21] tile/PCI: Use pci_scan_root_bus instead pci_scan_bus
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org> <1336422606-4244-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-20-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/7/2012 4:30 PM, Yinghai Lu wrote:
-> It will update busn_res accordingly, so we get that for last_busno.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Chris Metcalf <cmetcalf@tilera.com>
-> ---
->  arch/tile/kernel/pci.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
->
-> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-> index 7aa2743..4a951b87 100644
-> --- a/arch/tile/kernel/pci.c
-> +++ b/arch/tile/kernel/pci.c
-> @@ -310,6 +310,7 @@ int __devinit pcibios_init(void)
->  		if (pci_scan_flags[i] == 0 && controllers[i].ops != NULL) {
->  			struct pci_controller *controller = &controllers[i];
->  			struct pci_bus *bus;
-> +			LIST_HEAD(resources);
->  
->  			if (tile_init_irqs(i, controller)) {
->  				pr_err("PCI: Could not initialize IRQs\n");
-> @@ -327,7 +328,9 @@ int __devinit pcibios_init(void)
->  			 * This is inlined in linux/pci.h and calls into
->  			 * pci_scan_bus_parented() in probe.c.
->  			 */
-> -			bus = pci_scan_bus(0, controller->ops, controller);
-> +			pci_add_resource(&resources, &ioport_resource);
-> +			pci_add_resource(&resources, &iomem_resource);
-> +			bus = pci_scan_root_bus(NULL, 0, controller->ops, controller, &resources);
->  			controller->root_bus = bus;
->  			controller->last_busno = bus->busn_res.end;
->  		}
+Integrating IOMMU groups more closely into the driver core allows
+us to more easily work around DMA quirks.  The Ricoh multifunction
+controller is a favorite example of devices that are currently
+incompatible with IOMMU isolation as all the functions use the
+requestor ID of function 0 for DMA.  Passing this device into
+pci_dma_quirk returns the PCI device to use for DMA.  The IOMMU
+driver can then construct an IOMMU group including both devices.
 
-We don't want ioport_resource on tilepro, since we don't support accessing
-I/O port space.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-With that one line removed:
+ drivers/pci/quirks.c |   22 ++++++++++++++++++++++
+ include/linux/pci.h  |    2 ++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
-Acked-by: Chris Metcalf <cmetcalf@tilera.com>
-
-Or, I can queue this change to take through the tile tree when the merge
-window opens.  Which would you prefer?
-
--- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 4bf7102..6f9f7f9 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3109,3 +3109,25 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 
+ 	return -ENOTTY;
+ }
++
++struct pci_dev *pci_dma_quirk(struct pci_dev *dev)
++{
++	struct pci_dev *dma_dev = dev;
++
++	/*
++	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
++	 *
++	 * Some Ricoh devices use the function 0 source ID for DMA on
++	 * other functions of a multifunction device.  The DMA devices
++	 * is therefore function 0, which will have implications of the
++	 * iommu grouping of these devices.
++	 */
++	if (dev->vendor == PCI_VENDOR_ID_RICOH &&
++	    (dev->device == 0xe822 || dev->device == 0xe230 ||
++	     dev->device == 0xe832 || dev->device == 0xe476)) {
++		dma_dev = pci_get_slot(dev->bus,
++				       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
++	}
++
++	return dma_dev;
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e444f5b..9910b5c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1479,9 +1479,11 @@ enum pci_fixup_pass {
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
++struct pci_dev *pci_dma_quirk(struct pci_dev *dev);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) {}
++struct pci_dev *pci_dma_quirk(struct pci_dev *dev) { return dev }
+ #endif
+ 
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
 
