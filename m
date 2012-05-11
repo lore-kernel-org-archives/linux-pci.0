@@ -1,6 +1,6 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 08/13] vfio: Add documentation
+Subject: [PATCH 08/13] vfio: Add documentation
 To: benh@kernel.crashing.org, aik@ozlabs.ru,
 	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
 	dwmw2@infradead.org
@@ -10,11 +10,11 @@ Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
 	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	gregkh@linuxfoundation.org, bhelgaas@google.com,
-	ddutile@redhat.com, alex.williamson@redhat.com
-Date: Mon, 21 May 2012 23:05:29 -0600
-Message-ID: <20120522050529.5871.84324.stgit@bling.home>
-In-Reply-To: <20120522043607.5871.11340.stgit@bling.home>
-References: <20120522043607.5871.11340.stgit@bling.home>
+	alex.williamson@redhat.com
+Date: Fri, 11 May 2012 16:56:23 -0600
+Message-ID: <20120511225623.30496.80603.stgit@bling.home>
+In-Reply-To: <20120511222148.30496.68571.stgit@bling.home>
+References: <20120511222148.30496.68571.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
@@ -29,7 +29,7 @@ Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 
 diff --git a/Documentation/vfio.txt b/Documentation/vfio.txt
 new file mode 100644
-index 0000000..1240874
+index 0000000..6808ac5
 --- /dev/null
 +++ b/Documentation/vfio.txt
 @@ -0,0 +1,315 @@
@@ -113,7 +113,7 @@ index 0000000..1240874
 +a container class, which may hold one or more groups.  A container
 +is created by simply opening the /dev/vfio/vfio character device.
 +
-+On its own, the container provides little functionality, with all
++On it's own, the container provides little functionality, with all
 +but a couple version and extension query interfaces locked away.
 +The user needs to add a group into the container for the next level
 +of functionality.  To do this, the user first needs to identify the
@@ -192,7 +192,7 @@ index 0000000..1240874
 +
 +The final step is to provide the user with access to the group if
 +unprivileged operation is desired (note that /dev/vfio/vfio provides
-+no capabilities on its own and is therefore expected to be set to
++no capabilities on it's own and is therefore expected to be set to
 +mode 0666 by the system).
 +
 +# chown user:user /dev/vfio/26
@@ -312,7 +312,7 @@ index 0000000..1240874
 +
 +Each function is passed the device_data that was originally registered
 +in the vfio_add_group_dev() call above.  This allows the bus driver
-+an easy place to store its opaque, private data.  The open/release
++an easy place to store it's opaque, private data.  The open/release
 +callbacks are issued when a new file descriptor is created for a
 +device (via VFIO_GROUP_GET_DEVICE_FD).  The ioctl interface provides
 +a direct pass through for VFIO_DEVICE_* ioctls.  The read/write/mmap
@@ -321,7 +321,7 @@ index 0000000..1240874
 +
 +-------------------------------------------------------------------------------
 +
-+[1] VFIO was originally an acronym for "Virtual Function I/O" in its
++[1] VFIO was originally an acronym for "Virtual Function I/O" in it's
 +initial implementation by Tom Lyon while as Cisco.  We've since
 +outgrown the acronym, but it's catchy.
 +
