@@ -1,94 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:48756 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753592Ab2ENGqX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2012 02:46:23 -0400
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 14 May 2012 12:16:20 +0530
-Date: Mon, 14 May 2012 14:46:15 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120514064615.GB26605@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120410090306.GA7056@richard>
- <20120422155202.GA13540@richard>
- <4F95B17B.3030401@redhat.com>
- <20120514015536.GA3331@richard>
- <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33513 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761178Ab2EKX6a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 May 2012 19:58:30 -0400
+Message-ID: <1336780681.12477.198.camel@bling.home>
+Subject: Re: [PATCH 01/13] driver core: Add iommu_group tracking to struct
+ device
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com
+Date: Fri, 11 May 2012 17:58:01 -0600
+In-Reply-To: <20120511233821.GA9335@kroah.com>
+References: <20120511222148.30496.68571.stgit@bling.home>
+	 <20120511225534.30496.54563.stgit@bling.home>
+	 <20120511233821.GA9335@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 13, 2012 at 10:40:41PM -0700, Yinghai Lu wrote:
->On Sun, May 13, 2012 at 6:55 PM, Richard Yang
-><weiyang@linux.vnet.ibm.com> wrote:
->> On Mon, Apr 23, 2012 at 03:46:03PM -0400, Don Dutile wrote:
->>>On 04/22/2012 11:52 AM, Richard Yang wrote:
->>>>All,
->>>>
->>>>I am reading the pci_scan_bridge() and not sure what will happen in
->>>>following situation.
->>>>
->>>>Suppose the kernel is not passed the pci=assign-busses.
->>>>
->>>>Below is a picture about the pci system.
->>>>
->>>>                    +-------+
->>>>                    |       | root bridge(0,255)
->>>>                    +---+---+
->>>>                        |          Bus 0
->>>>       -----+-----------+------------------------------+--
->>>>            |                                          |
->>>>            |                                          |
->>>>            |                                          |
->>>>       +----+----+                               +-----+-----+
->>>>       |         |  B1(1,15)                     |           |B2(16,28)
->>>>       +----+----+                               +-----+-----+
->>>>            |  Bus 1                                   |    Bus 16
->>>>       -----+-----------------------         ----------+----------------
->>>>                             |
->>>>                        +----+----+
->>>>                        |         | B3
->>>>                        +---------+
->>>>
->>>>Suppose B1 and B2 works fine with the BIOS, which get the right bus
->>>>number and range.
->>>>
->>>>B3 does not works fine with the BIOS, which doesn't get the bus number.
->>>>
->>>>So in pci_scan_bridge(), B3 will be met in the second pass and get bus
->>>>number 16?
->>>
->> Yinghai,
->>
->> Take my original question.
->>
->> B3 doesn't get the bus number, which its parent doesn't have free bus
->> number and there is no gap between B1 and B2.
->>
->> So in this case, the probe_resource() can't find bus number for B3.
->> Then cause pci_bridge_probe_busn_res() return non-zero.
->>
->> Then B3 couldn't work fine?
->
->B3 is on Bus 1? B3 is the one of bridges on Bus1?
-No,  I omit other bridges on Bus#1.
-They will occupy bus number 2-15, which is calculated by BIOS and set to
-bridge's configuration space.
->
->if B3 is only bridge on Bus1, it probe_resource should return [2,15]
->at first, and then scan B3.
->
->Yinghai
+On Fri, 2012-05-11 at 16:38 -0700, Greg KH wrote:
+> On Fri, May 11, 2012 at 04:55:35PM -0600, Alex Williamson wrote:
+> > IOMMU groups allow IOMMU drivers to represent DMA visibility
+> > and isolation of devices.  Multiple devices may be grouped
+> > together for the purposes of DMA.  Placing a pointer on
+> > struct device enable easy access for things like streaming
+> > DMA programming and drivers like VFIO.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> 
+> Can't you get this today from the iommu_ops pointer that is on the bus
+> that the device is associated with?  Or can devices on a bus have
+> different iommu_group pointers?
 
--- 
-Richard Yang
-Help you, Help me
+The latter, each device on a bus might be it's own group.  This is often
+the case on x86 unless PCIe-to-PCI bridges obscure the device
+visibility.  Thanks,
+
+Alex
 
