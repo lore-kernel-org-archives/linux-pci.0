@@ -1,56 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58730 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751368Ab2EXI4g convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2012 04:56:36 -0400
-Received: by pbbrp8 with SMTP id rp8so11164809pbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 24 May 2012 01:56:35 -0700 (PDT)
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:64769 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754526Ab2EKXjy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2012 19:39:54 -0400
+Received: by dady13 with SMTP id y13so3665519dad.19
+        for <linux-pci@vger.kernel.org>; Fri, 11 May 2012 16:39:54 -0700 (PDT)
+Date: Fri, 11 May 2012 16:39:50 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH 02/13] iommu: IOMMU Groups
+Message-ID: <20120511233950.GB9335@kroah.com>
+References: <20120511222148.30496.68571.stgit@bling.home>
+ <20120511225541.30496.34751.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <CAJSP0QXgR5w09LgWDbFzg6EajEoMLY0DHmvA8DndmvnCcBRSZg@mail.gmail.com>
-References: <CAEH94Ljfjiu3MPLz8_P=1JSJS=hQVY_CJ4kZ=8Oq+0VpweGA4Q@mail.gmail.com>
-	<CAJSP0QXgR5w09LgWDbFzg6EajEoMLY0DHmvA8DndmvnCcBRSZg@mail.gmail.com>
-Date: Thu, 24 May 2012 16:56:35 +0800
-Message-ID: <CAEH94Lh0gmHSR1ugVFg0ZhtFTahb9LQJsxjWZzwqzNLSO0aVug@mail.gmail.com>
-Subject: Re: PCI: cardbus bridge
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
-To: Stefan Hajnoczi <stefanha@gmail.com>
-Cc: linux-pci@vger.kernel.org, Ram Pai <linuxram@us.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120511225541.30496.34751.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2012 at 4:37 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
-> On Thu, May 24, 2012 at 9:26 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
->> Does anyone let me know what cardbus bridge is used for? What is the
->> difference between it and comon pci bridge?
->
-> CardBus is PCMCIA (PC Card):
->
-> http://en.wikipedia.org/wiki/PC_Card#CardBus
->
-> It's not used very much anymore.  There is PCI <-> PCMCIA integration
-> and that's why you see it come up in PCI code.
-got it. thanks.
->
->> By the way, someone usually mentioned pci host bridge, pci root
->> bridge. What the differences among them are?
->
-> I'm not sure what the exact difference is.  PCI "root" bridge refers
-> to the hierarchical nature of PCI, while PCI "host" bridge refers to
-You mean that PCI "root" bridge is one alias of another some bridge?
-> connecting the computer to the PCI bus.
-I guess that PCI "host" bridge is the one which connects PCI bus 0 to
-host bus, and it should be contained in PMC chipset (PCI Bridge and
-Memory Controller)
->
-> If you want to know the exact meanings, try the PCI and PCI Express
-> specifications.
->
-> Stefan
+On Fri, May 11, 2012 at 04:55:41PM -0600, Alex Williamson wrote:
+> IOMMU device groups are currently a rather vague associative notion
+> with assembly required by the user or user level driver provider to
+> do anything useful.  This patch intends to grow the IOMMU group concept
+> into something a bit more consumable.
+> 
+> To do this, we first create an object representing the group, struct
+> iommu_group.  This structure is allocated (iommu_group_alloc) and
+> filled (iommu_group_add_device) by the iommu driver.  The iommu driver
+> is free to add devices to the group using it's own set of policies.
+> This allows inclusion of devices based on physical hardware or topology
+> limitations of the platform, as well as soft requirements, such as
+> multi-function trust levels or peer-to-peer protection of the
+> interconnects.  Each device may only belong to a single iommu group,
+> which is linked from struct device.iommu_group.  IOMMU groups are
+> maintained using kobject reference counting, allowing for automatic
+> removal of empty, unreferenced groups.  It is the responsibility of
+> the iommu driver to remove devices from the group
+> (iommu_group_remove_device).
+> 
+> IOMMU groups also include a userspace representation in sysfs under
+> /sys/kernel/iommu_groups.  When allocated, each group is given a
+> dynamically assign ID (int).  The ID is managed by the core IOMMU group
+> code to support multiple heterogeneous iommu drivers, which could
+> potentially collide in group naming/numbering.  This also keeps group
+> IDs to small, easily managed values.  A directory is created under
+> /sys/kernel/iommu_groups for each group.  A further subdirectory named
+> "devices" contains links to each device within the group.  The iommu_group
+> file in the device's sysfs directory, which formerly contained a group
+> number when read, is now a link to the iommu group.  Example:
+> 
+> $ ls -l /sys/kernel/iommu_groups/26/devices/
 
+<snip>
 
+As you are creating new sysfs files and directories, you need to also
+add the proper Documentation/ABI/ files at the same time.
 
--- 
-Regards,
+thanks,
 
-Zhi Yong Wu
+greg k-h
