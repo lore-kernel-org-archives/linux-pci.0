@@ -1,129 +1,869 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751484Ab2EKW4H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 May 2012 18:56:07 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 02/13] iommu: IOMMU Groups
+To: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org
+Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 14/21] x86/PCI: put busn resource in pci_root_info for native host bridge drivers
-Date: Mon,  7 May 2012 13:29:59 -0700
-Message-Id: <1336422606-4244-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	gregkh@linuxfoundation.org, bhelgaas@google.com,
+	alex.williamson@redhat.com
+Date: Fri, 11 May 2012 16:55:41 -0600
+Message-ID: <20120511225541.30496.34751.stgit@bling.home>
+In-Reply-To: <20120511222148.30496.68571.stgit@bling.home>
+References: <20120511222148.30496.68571.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the host bridge bus number aperture to the resource list.
-Like the MMIO and I/O port apertures, this will be used when assigning
-resources to hot-added devices or in the case of conflicts.
+IOMMU device groups are currently a rather vague associative notion
+with assembly required by the user or user level driver provider to
+do anything useful.  This patch intends to grow the IOMMU group concept
+into something a bit more consumable.
 
-[bhelgaas: tidy printk, changelog]
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+To do this, we first create an object representing the group, struct
+iommu_group.  This structure is allocated (iommu_group_alloc) and
+filled (iommu_group_add_device) by the iommu driver.  The iommu driver
+is free to add devices to the group using it's own set of policies.
+This allows inclusion of devices based on physical hardware or topology
+limitations of the platform, as well as soft requirements, such as
+multi-function trust levels or peer-to-peer protection of the
+interconnects.  Each device may only belong to a single iommu group,
+which is linked from struct device.iommu_group.  IOMMU groups are
+maintained using kobject reference counting, allowing for automatic
+removal of empty, unreferenced groups.  It is the responsibility of
+the iommu driver to remove devices from the group
+(iommu_group_remove_device).
+
+IOMMU groups also include a userspace representation in sysfs under
+/sys/kernel/iommu_groups.  When allocated, each group is given a
+dynamically assign ID (int).  The ID is managed by the core IOMMU group
+code to support multiple heterogeneous iommu drivers, which could
+potentially collide in group naming/numbering.  This also keeps group
+IDs to small, easily managed values.  A directory is created under
+/sys/kernel/iommu_groups for each group.  A further subdirectory named
+"devices" contains links to each device within the group.  The iommu_group
+file in the device's sysfs directory, which formerly contained a group
+number when read, is now a link to the iommu group.  Example:
+
+$ ls -l /sys/kernel/iommu_groups/26/devices/
+total 0
+lrwxrwxrwx. 1 root root 0 Apr 17 12:57 0000:00:1e.0 ->
+		../../../../devices/pci0000:00/0000:00:1e.0
+lrwxrwxrwx. 1 root root 0 Apr 17 12:57 0000:06:0d.0 ->
+		../../../../devices/pci0000:00/0000:00:1e.0/0000:06:0d.0
+lrwxrwxrwx. 1 root root 0 Apr 17 12:57 0000:06:0d.1 ->
+		../../../../devices/pci0000:00/0000:00:1e.0/0000:06:0d.1
+
+$ ls -l  /sys/kernel/iommu_groups/26/devices/*/iommu_group
+[truncating perms/owner/timestamp]
+/sys/kernel/iommu_groups/26/devices/0000:00:1e.0/iommu_group ->
+					../../../kernel/iommu_groups/26
+/sys/kernel/iommu_groups/26/devices/0000:06:0d.0/iommu_group ->
+					../../../../kernel/iommu_groups/26
+/sys/kernel/iommu_groups/26/devices/0000:06:0d.1/iommu_group ->
+					../../../../kernel/iommu_groups/26
+
+Groups also include several exported functions for use by user level
+driver providers, for example VFIO.  These include:
+
+iommu_group_get(): Acquires a reference to a group from a device
+iommu_group_put(): Releases reference
+iommu_group_for_each_dev(): Iterates over group devices using callback
+iommu_group_[un]register_notifier(): Allows notification of device add
+        and remove operations relevant to the group
+iommu_group_id(): Return the group number
+
+This patch also extends the IOMMU API to allow attaching groups to
+domains.  This is currently a simple wrapper for iterating through
+devices within a group, but it's expected that the IOMMU API may
+eventually make groups a more integral part of domains.
+
+Groups intentionally do not try to manage group ownership.  A user
+level driver provider must independently acquire ownership for each
+device within a group before making use of the group as a whole.
+This may change in the future if group usage becomes more pervasive
+across both DMA and IOMMU ops.
+
+Groups intentionally do not provide a mechanism for driver locking
+or otherwise manipulating driver matching/probing of devices within
+the group.  Such interfaces are generic to devices and beyond the
+scope of IOMMU groups.  If implemented, user level providers have
+ready access via iommu_group_for_each_dev and group notifiers.
+
+Groups currently provide no storage for iommu context, but some kind
+of iommu_group_get/set_iommudata() interface is likely if groups
+become more pervasive in the dma layers.
+
+iommu_device_group() is removed here as it has no users.  The
+replacement is:
+
+	group = iommu_group_get(dev);
+	id = iommu_group_id(group);
+	iommu_group_put(group);
+
+AMD-Vi & Intel VT-d support re-added in following patches.
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/x86/pci/amd_bus.c  |    7 +++----
- arch/x86/pci/bus_numa.c |   22 +++++++++++++++++++---
- arch/x86/pci/bus_numa.h |    3 +--
- 3 files changed, 23 insertions(+), 9 deletions(-)
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index 5aed49b..e9e6ed5 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -121,7 +121,6 @@ static int __init early_fill_mp_bus_info(void)
- 		link = (reg >> 8) & 0x03;
+ drivers/iommu/amd_iommu.c   |   21 --
+ drivers/iommu/intel-iommu.c |   49 -----
+ drivers/iommu/iommu.c       |  449 ++++++++++++++++++++++++++++++++++++++++---
+ include/linux/iommu.h       |   84 ++++++++
+ 4 files changed, 499 insertions(+), 104 deletions(-)
+
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index a5bee8e..32c00cd 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3193,26 +3193,6 @@ static int amd_iommu_domain_has_cap(struct iommu_domain *domain,
+ 	return 0;
+ }
  
- 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
--		sprintf(info->name, "PCI Bus #%02x", min_bus);
- 	}
+-static int amd_iommu_device_group(struct device *dev, unsigned int *groupid)
+-{
+-	struct iommu_dev_data *dev_data = dev->archdata.iommu;
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	u16 devid;
+-
+-	if (!dev_data)
+-		return -ENODEV;
+-
+-	if (pdev->is_virtfn || !iommu_group_mf)
+-		devid = dev_data->devid;
+-	else
+-		devid = calc_devid(pdev->bus->number,
+-				   PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
+-
+-	*groupid = amd_iommu_alias_table[devid];
+-
+-	return 0;
+-}
+-
+ static struct iommu_ops amd_iommu_ops = {
+ 	.domain_init = amd_iommu_domain_init,
+ 	.domain_destroy = amd_iommu_domain_destroy,
+@@ -3222,7 +3202,6 @@ static struct iommu_ops amd_iommu_ops = {
+ 	.unmap = amd_iommu_unmap,
+ 	.iova_to_phys = amd_iommu_iova_to_phys,
+ 	.domain_has_cap = amd_iommu_domain_has_cap,
+-	.device_group = amd_iommu_device_group,
+ 	.pgsize_bitmap	= AMD_IOMMU_PGSIZES,
+ };
  
- 	/* get the default node and link for left over res */
-@@ -300,9 +299,9 @@ static int __init early_fill_mp_bus_info(void)
- 		int busnum;
- 		struct pci_root_res *root_res;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index f93d5ac..d4a0ff7 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -4087,54 +4087,6 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
+ 	return 0;
+ }
  
--		busnum = info->bus_min;
--		printk(KERN_DEBUG "bus: [%02x, %02x] on node %x link %x\n",
--		       info->bus_min, info->bus_max, info->node, info->link);
-+		busnum = info->busn.start;
-+		printk(KERN_DEBUG "bus: %pR on node %x link %x\n",
-+		       &info->busn, info->node, info->link);
- 		list_for_each_entry(root_res, &info->resources, list)
- 			printk(KERN_DEBUG "bus: %02x %pR\n",
- 				       busnum, &root_res->res);
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index 306579f..d37e2fe 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -14,7 +14,7 @@ static struct pci_root_info *x86_find_pci_root_info(int bus)
- 		return NULL;
+-/*
+- * Group numbers are arbitrary.  Device with the same group number
+- * indicate the iommu cannot differentiate between them.  To avoid
+- * tracking used groups we just use the seg|bus|devfn of the lowest
+- * level we're able to differentiate devices
+- */
+-static int intel_iommu_device_group(struct device *dev, unsigned int *groupid)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct pci_dev *bridge;
+-	union {
+-		struct {
+-			u8 devfn;
+-			u8 bus;
+-			u16 segment;
+-		} pci;
+-		u32 group;
+-	} id;
+-
+-	if (iommu_no_mapping(dev))
+-		return -ENODEV;
+-
+-	id.pci.segment = pci_domain_nr(pdev->bus);
+-	id.pci.bus = pdev->bus->number;
+-	id.pci.devfn = pdev->devfn;
+-
+-	if (!device_to_iommu(id.pci.segment, id.pci.bus, id.pci.devfn))
+-		return -ENODEV;
+-
+-	bridge = pci_find_upstream_pcie_bridge(pdev);
+-	if (bridge) {
+-		if (pci_is_pcie(bridge)) {
+-			id.pci.bus = bridge->subordinate->number;
+-			id.pci.devfn = 0;
+-		} else {
+-			id.pci.bus = bridge->bus->number;
+-			id.pci.devfn = bridge->devfn;
+-		}
+-	}
+-
+-	if (!pdev->is_virtfn && iommu_group_mf)
+-		id.pci.devfn = PCI_DEVFN(PCI_SLOT(id.pci.devfn), 0);
+-
+-	*groupid = id.group;
+-
+-	return 0;
+-}
+-
+ static struct iommu_ops intel_iommu_ops = {
+ 	.domain_init	= intel_iommu_domain_init,
+ 	.domain_destroy = intel_iommu_domain_destroy,
+@@ -4144,7 +4096,6 @@ static struct iommu_ops intel_iommu_ops = {
+ 	.unmap		= intel_iommu_unmap,
+ 	.iova_to_phys	= intel_iommu_iova_to_phys,
+ 	.domain_has_cap = intel_iommu_domain_has_cap,
+-	.device_group	= intel_iommu_device_group,
+ 	.pgsize_bitmap	= INTEL_IOMMU_PGSIZES,
+ };
  
- 	list_for_each_entry(info, &pci_root_infos, list)
--		if (info->bus_min == bus)
-+		if (info->busn.start == bus)
- 			return info;
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 2198b2d..f75004e 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -26,60 +26,404 @@
+ #include <linux/slab.h>
+ #include <linux/errno.h>
+ #include <linux/iommu.h>
++#include <linux/idr.h>
++#include <linux/notifier.h>
++
++static struct kset *iommu_group_kset;
++static struct ida iommu_group_ida;
++static struct mutex iommu_group_mutex;
++
++struct iommu_group {
++	struct kobject kobj;
++	struct kobject *devices_kobj;
++	struct list_head devices;
++	struct mutex mutex;
++	struct blocking_notifier_head notifier;
++	int id;
++};
++
++struct iommu_device {
++	struct list_head list;
++	struct device *dev;
++};
++
++struct iommu_group_attribute {
++	struct attribute attr;
++	ssize_t (*show)(struct iommu_group *group, char *buf);
++	ssize_t (*store)(struct iommu_group *group,
++			 const char *buf, size_t count);
++};
  
- 	return NULL;
-@@ -24,6 +24,8 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+-static ssize_t show_iommu_group(struct device *dev,
+-				struct device_attribute *attr, char *buf)
++#define to_iommu_group_attr(_attr)	\
++	container_of(_attr, struct iommu_group_attribute, attr)
++#define to_iommu_group(_kobj)		\
++	container_of(_kobj, struct iommu_group, kobj)
++
++static ssize_t iommu_group_attr_show(struct kobject *kobj,
++				     struct attribute *__attr, char *buf)
  {
- 	struct pci_root_info *info = x86_find_pci_root_info(bus);
- 	struct pci_root_res *root_res;
-+	struct pci_host_bridge_window *window;
-+	bool found = false;
+-	unsigned int groupid;
++	struct iommu_group_attribute *attr = to_iommu_group_attr(__attr);
++	struct iommu_group *group = to_iommu_group(kobj);
++	ssize_t ret = -EIO;
  
- 	if (!info)
- 		goto default_resources;
-@@ -31,6 +33,16 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	printk(KERN_DEBUG "PCI: root bus %02x: hardware-probed resources\n",
- 	       bus);
+-	if (iommu_device_group(dev, &groupid))
+-		return 0;
++	if (attr->show)
++		ret = attr->show(group, buf);
++	return ret;
++}
  
-+	/* already added by acpi ? */
-+	list_for_each_entry(window, resources, list)
-+		if (window->res->flags & IORESOURCE_BUS) {
-+			found = true;
+-	return sprintf(buf, "%u", groupid);
++static ssize_t iommu_group_attr_store(struct kobject *kobj,
++				      struct attribute *__attr,
++				      const char *buf, size_t count)
++{
++	struct iommu_group_attribute *attr = to_iommu_group_attr(__attr);
++	struct iommu_group *group = to_iommu_group(kobj);
++	ssize_t ret = -EIO;
++
++	if (attr->store)
++		ret = attr->store(group, buf, count);
++	return ret;
+ }
+-static DEVICE_ATTR(iommu_group, S_IRUGO, show_iommu_group, NULL);
+ 
+-static int add_iommu_group(struct device *dev, void *data)
++static void iommu_group_release(struct kobject *kobj)
+ {
+-	unsigned int groupid;
++	struct iommu_group *group = to_iommu_group(kobj);
+ 
+-	if (iommu_device_group(dev, &groupid) == 0)
+-		return device_create_file(dev, &dev_attr_iommu_group);
++	mutex_lock(&iommu_group_mutex);
++	ida_remove(&iommu_group_ida, group->id);
++	mutex_unlock(&iommu_group_mutex);
+ 
+-	return 0;
++	kfree(group);
+ }
+ 
+-static int remove_iommu_group(struct device *dev)
++static const struct sysfs_ops iommu_group_sysfs_ops = {
++	.show = iommu_group_attr_show,
++	.store = iommu_group_attr_store,
++};
++
++static struct kobj_type iommu_group_ktype = {
++	.sysfs_ops = &iommu_group_sysfs_ops,
++	.release = iommu_group_release,
++};
++
++/**
++ * iommu_group_alloc - Allocate a new group
++ *
++ * This function is called by an iommu driver to allocate a new iommu
++ * group.  The iommu group represents the minimum granularity of the iommu.
++ * Upon successful return, the caller holds a reference to the supplied
++ * group in order to hold the group until devices are added.  Use
++ * iommu_group_put() to release this extra reference count, allowing the
++ * group to be automatically reclaimed once it has no devices or external
++ * references.
++ */
++struct iommu_group *iommu_group_alloc(void)
+ {
+-	unsigned int groupid;
++	struct iommu_group *group;
++	int ret;
++
++	group = kzalloc(sizeof(*group), GFP_KERNEL);
++	if (!group)
++		return ERR_PTR(-ENOMEM);
++
++	group->kobj.kset = iommu_group_kset;
++	mutex_init(&group->mutex);
++	INIT_LIST_HEAD(&group->devices);
++	BLOCKING_INIT_NOTIFIER_HEAD(&group->notifier);
++
++	mutex_lock(&iommu_group_mutex);
++
++again:
++	if (unlikely(0 == ida_pre_get(&iommu_group_ida, GFP_KERNEL))) {
++		kfree(group);
++		mutex_unlock(&iommu_group_mutex);
++		return ERR_PTR(-ENOMEM);
++	}
++
++	if (-EAGAIN == ida_get_new(&iommu_group_ida, &group->id))
++		goto again;
+ 
+-	if (iommu_device_group(dev, &groupid) == 0)
+-		device_remove_file(dev, &dev_attr_iommu_group);
++	mutex_unlock(&iommu_group_mutex);
++
++	ret = kobject_init_and_add(&group->kobj, &iommu_group_ktype,
++				   NULL, "%d", group->id);
++	if (ret) {
++		mutex_lock(&iommu_group_mutex);
++		ida_remove(&iommu_group_ida, group->id);
++		mutex_unlock(&iommu_group_mutex);
++		kfree(group);
++		return ERR_PTR(ret);
++	}
++
++	group->devices_kobj = kobject_create_and_add("devices", &group->kobj);
++	if (!group->devices_kobj) {
++		kobject_put(&group->kobj); /* triggers .release & free */
++		return ERR_PTR(-ENOMEM);
++	}
++
++	/*
++	 * The devices_kobj holds a reference on the group kobject, so
++	 * as long as that exists so will the group.  We can therefore
++	 * use the devices_kobj for reference counting.
++	 */
++	kobject_put(&group->kobj);
++
++	return group;
++}
+ 
++/**
++ * iommu_group_add_device - add a device to an iommu group
++ * @group: the group into which to add the device (reference should be held)
++ * @dev: the device
++ *
++ * This function is called by an iommu driver to add a device into a
++ * group.  Adding a device increments the group reference count.
++ */
++int iommu_group_add_device(struct iommu_group *group, struct device *dev)
++{
++	int ret;
++	struct iommu_device *device;
++
++	device = kzalloc(sizeof(*device), GFP_KERNEL);
++	if (!device)
++		return -ENOMEM;
++
++	device->dev = dev;
++
++	ret = sysfs_create_link(&dev->kobj, &group->kobj, "iommu_group");
++	if (ret) {
++		kfree(device);
++		return ret;
++	}
++
++	ret = sysfs_create_link(group->devices_kobj, &dev->kobj,
++				kobject_name(&dev->kobj));
++	if (ret) {
++		sysfs_remove_link(&dev->kobj, "iommu_group");
++		kfree(device);
++		return ret;
++	}
++
++	kobject_get(group->devices_kobj);
++
++	dev->iommu_group = group;
++
++	mutex_lock(&group->mutex);
++	list_add_tail(&device->list, &group->devices);
++	mutex_unlock(&group->mutex);
++
++	/* Notify any listeners about change to group. */
++	blocking_notifier_call_chain(&group->notifier,
++				     IOMMU_GROUP_NOTIFY_ADD_DEVICE, dev);
+ 	return 0;
+ }
+ 
+-static int iommu_device_notifier(struct notifier_block *nb,
+-				 unsigned long action, void *data)
++/**
++ * iommu_group_remove_device - remove a device from it's current group
++ * @dev: device to be removed
++ *
++ * This function is called by an iommu driver to remove the device from
++ * it's current group.  This decrements the iommu group reference count.
++ */
++void iommu_group_remove_device(struct device *dev)
++{
++	struct iommu_group *group = dev->iommu_group;
++	struct iommu_device *device;
++
++	/* Pre-notify listeners that a device is being removed. */
++	blocking_notifier_call_chain(&group->notifier,
++				     IOMMU_GROUP_NOTIFY_DEL_DEVICE, dev);
++
++	mutex_lock(&group->mutex);
++	list_for_each_entry(device, &group->devices, list) {
++		if (device->dev == dev) {
++			list_del(&device->list);
++			kfree(device);
 +			break;
 +		}
++	}
++	mutex_unlock(&group->mutex);
 +
-+	if (!found)
-+		pci_add_resource(resources, &info->busn);
++	sysfs_remove_link(group->devices_kobj, kobject_name(&dev->kobj));
++	sysfs_remove_link(&dev->kobj, "iommu_group");
 +
- 	list_for_each_entry(root_res, &info->resources, list) {
- 		struct resource *res;
- 		struct resource *root;
-@@ -66,9 +78,13 @@ struct pci_root_info __init *alloc_pci_root_info(int bus_min, int bus_max,
- 	if (!info)
- 		return info;
++	dev->iommu_group = NULL;
++	kobject_put(group->devices_kobj);
++}
++
++/**
++ * iommu_group_for_each_dev - iterate over each device in the group
++ * @group: the group
++ * @data: caller opaque data to be passed to callback function
++ * @fn: caller supplied callback function
++ *
++ * This function is called by group users to iterate over group devices.
++ * Callers should hold a reference count to the group during callback.
++ */
++int iommu_group_for_each_dev(struct iommu_group *group, void *data,
++			     int (*fn)(struct device *, void *))
++{
++	struct iommu_device *device;
++	int ret = 0;
++
++	mutex_lock(&group->mutex);
++	list_for_each_entry(device, &group->devices, list) {
++		ret = fn(device->dev, data);
++		if (ret)
++			break;
++	}
++	mutex_unlock(&group->mutex);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iommu_group_for_each_dev);
++
++/**
++ * iommu_group_get - Return the group for a device and increment reference
++ * @dev: get the group that this device belongs to
++ *
++ * This function is called by iommu drivers and users to get the group
++ * for the specified device.  If found, the group is returned and the group
++ * reference in incremented, else NULL.
++ */
++struct iommu_group *iommu_group_get(struct device *dev)
++{
++	struct iommu_group *group = dev->iommu_group;
++
++	if (group)
++		kobject_get(group->devices_kobj);
++
++	return group;
++}
++EXPORT_SYMBOL_GPL(iommu_group_get);
++
++/**
++ * iommu_group_put - Decrement group reference
++ * @group: the group to use
++ *
++ * This function is called by iommu drivers and users to release the
++ * iommu group.  Once the reference count is zero, the group is released.
++ */
++void iommu_group_put(struct iommu_group *group)
++{
++	if (group)
++		kobject_put(group->devices_kobj);
++}
++EXPORT_SYMBOL_GPL(iommu_group_put);
++
++/**
++ * iommu_group_register_notifier - Register a notifier for group changes
++ * @group: the group to watch
++ * @nb: notifier block to signal
++ *
++ * This function allows iommu group users to track changes in a group.
++ * See include/linux/iommu.h for actions sent via this notifier.  Caller
++ * should hold a reference to the group throughout notifier registration.
++ */
++int iommu_group_register_notifier(struct iommu_group *group,
++				  struct notifier_block *nb)
++{
++	return blocking_notifier_chain_register(&group->notifier, nb);
++}
++EXPORT_SYMBOL_GPL(iommu_group_register_notifier);
++
++/**
++ * iommu_group_unregister_notifier - Unregister a notifier
++ * @group: the group to watch
++ * @nb: notifier block to signal
++ *
++ * Unregister a previously registered group notifier block.
++ */
++int iommu_group_unregister_notifier(struct iommu_group *group,
++				    struct notifier_block *nb)
++{
++	return blocking_notifier_chain_unregister(&group->notifier, nb);
++}
++EXPORT_SYMBOL_GPL(iommu_group_unregister_notifier);
++
++/**
++ * iommu_group_id - Return ID for a group
++ * @group: the group to ID
++ *
++ * Return the unique ID for the group matching the sysfs group number.
++ */
++int iommu_group_id(struct iommu_group *group)
++{
++	return group->id;
++}
++EXPORT_SYMBOL_GPL(iommu_group_id);
++
++static int add_iommu_group(struct device *dev, void *data)
++{
++	struct iommu_ops *ops = data;
++
++	if (!ops->add_device)
++		return -ENODEV;
++
++	WARN_ON(dev->iommu_group);
++
++	return ops->add_device(dev);
++}
++
++static int iommu_bus_notifier(struct notifier_block *nb,
++			      unsigned long action, void *data)
+ {
+ 	struct device *dev = data;
++	struct iommu_ops *ops = dev->bus->iommu_ops;
++	struct iommu_group *group;
++	unsigned long group_action = 0;
++
++	/*
++	 * ADD/DEL call into iommu driver ops if provided, which may
++	 * result in ADD/DEL notifiers to group->notifier
++	 */
++	if (action == BUS_NOTIFY_ADD_DEVICE) {
++		if (ops->add_device)
++			return ops->add_device(dev);
++	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
++		if (ops->remove_device && dev->iommu_group) {
++			ops->remove_device(dev);
++			return 0;
++		}
++	}
  
-+	sprintf(info->name, "PCI Bus #%02x", bus_min);
-+
- 	INIT_LIST_HEAD(&info->resources);
--	info->bus_min = bus_min;
--	info->bus_max = bus_max;
-+	info->busn.name  = info->name;
-+	info->busn.start = bus_min;
-+	info->busn.end   = bus_max;
-+	info->busn.flags = IORESOURCE_BUS;
- 	info->node = node;
- 	info->link = link;
+-	if (action == BUS_NOTIFY_ADD_DEVICE)
+-		return add_iommu_group(dev, NULL);
+-	else if (action == BUS_NOTIFY_DEL_DEVICE)
+-		return remove_iommu_group(dev);
++	/*
++	 * Remaining BUS_NOTIFYs get filtered and republished to the
++	 * group, if anyone is listening
++	 */
++	group = iommu_group_get(dev);
++	if (!group)
++		return 0;
  
-diff --git a/arch/x86/pci/bus_numa.h b/arch/x86/pci/bus_numa.h
-index 226a466..ff8f65b 100644
---- a/arch/x86/pci/bus_numa.h
-+++ b/arch/x86/pci/bus_numa.h
-@@ -13,8 +13,7 @@ struct pci_root_info {
- 	struct list_head list;
- 	char name[12];
- 	struct list_head resources;
--	int bus_min;
--	int bus_max;
-+	struct resource busn;
- 	int node;
- 	int link;
++	switch (action) {
++	case BUS_NOTIFY_BIND_DRIVER:
++		group_action = IOMMU_GROUP_NOTIFY_BIND_DRIVER;
++		break;
++	case BUS_NOTIFY_BOUND_DRIVER:
++		group_action = IOMMU_GROUP_NOTIFY_BOUND_DRIVER;
++		break;
++	case BUS_NOTIFY_UNBIND_DRIVER:
++		group_action = IOMMU_GROUP_NOTIFY_UNBIND_DRIVER;
++		break;
++	case BUS_NOTIFY_UNBOUND_DRIVER:
++		group_action = IOMMU_GROUP_NOTIFY_UNBOUND_DRIVER;
++		break;
++	}
++
++	if (group_action)
++		blocking_notifier_call_chain(&group->notifier,
++					     group_action, dev);
++
++	iommu_group_put(group);
+ 	return 0;
+ }
+ 
+-static struct notifier_block iommu_device_nb = {
+-	.notifier_call = iommu_device_notifier,
++static struct notifier_block iommu_bus_nb = {
++	.notifier_call = iommu_bus_notifier,
  };
--- 
-1.7.7
+ 
+ static void iommu_bus_init(struct bus_type *bus, struct iommu_ops *ops)
+ {
+-	bus_register_notifier(bus, &iommu_device_nb);
+-	bus_for_each_dev(bus, NULL, NULL, add_iommu_group);
++	bus_register_notifier(bus, &iommu_bus_nb);
++	bus_for_each_dev(bus, NULL, ops, add_iommu_group);
+ }
+ 
+ /**
+@@ -189,6 +533,45 @@ void iommu_detach_device(struct iommu_domain *domain, struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(iommu_detach_device);
+ 
++/*
++ * IOMMU groups are really the natrual working unit of the IOMMU, but
++ * the IOMMU API works on domains and devices.  Bridge that gap by
++ * iterating over the devices in a group.  Ideally we'd have a single
++ * device which represents the requestor ID of the group, but we also
++ * allow IOMMU drivers to create policy defined minimum sets, where
++ * the physical hardware may be able to distiguish members, but we
++ * wish to group them at a higher level (ex. untrusted multi-function
++ * PCI devices).  Thus we attach each device.
++ */
++static int iommu_group_do_attach_device(struct device *dev, void *data)
++{
++	struct iommu_domain *domain = data;
++
++	return iommu_attach_device(domain, dev);
++}
++
++int iommu_attach_group(struct iommu_domain *domain, struct iommu_group *group)
++{
++	return iommu_group_for_each_dev(group, domain,
++					iommu_group_do_attach_device);
++}
++EXPORT_SYMBOL_GPL(iommu_attach_group);
++
++static int iommu_group_do_detach_device(struct device *dev, void *data)
++{
++	struct iommu_domain *domain = data;
++
++	iommu_detach_device(domain, dev);
++
++	return 0;
++}
++
++void iommu_detach_group(struct iommu_domain *domain, struct iommu_group *group)
++{
++	iommu_group_for_each_dev(group, domain, iommu_group_do_detach_device);
++}
++EXPORT_SYMBOL_GPL(iommu_detach_group);
++
+ phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain,
+ 			       unsigned long iova)
+ {
+@@ -333,11 +716,15 @@ size_t iommu_unmap(struct iommu_domain *domain, unsigned long iova, size_t size)
+ }
+ EXPORT_SYMBOL_GPL(iommu_unmap);
+ 
+-int iommu_device_group(struct device *dev, unsigned int *groupid)
++static int __init iommu_init(void)
+ {
+-	if (iommu_present(dev->bus) && dev->bus->iommu_ops->device_group)
+-		return dev->bus->iommu_ops->device_group(dev, groupid);
++	iommu_group_kset = kset_create_and_add("iommu_groups",
++					       NULL, kernel_kobj);
++	ida_init(&iommu_group_ida);
++	mutex_init(&iommu_group_mutex);
+ 
+-	return -ENODEV;
++	BUG_ON(!iommu_group_kset);
++
++	return 0;
+ }
+-EXPORT_SYMBOL_GPL(iommu_device_group);
++subsys_initcall(iommu_init);
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index d937580..92cf3c2 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -26,6 +26,7 @@
+ #define IOMMU_CACHE	(4) /* DMA cache coherency */
+ 
+ struct iommu_ops;
++struct iommu_group;
+ struct bus_type;
+ struct device;
+ struct iommu_domain;
+@@ -59,6 +60,8 @@ struct iommu_domain {
+  * @iova_to_phys: translate iova to physical address
+  * @domain_has_cap: domain capabilities query
+  * @commit: commit iommu domain
++ * @add_device: add device to iommu grouping
++ * @remove_device: remove device from iommu grouping
+  * @pgsize_bitmap: bitmap of supported page sizes
+  */
+ struct iommu_ops {
+@@ -74,10 +77,18 @@ struct iommu_ops {
+ 				    unsigned long iova);
+ 	int (*domain_has_cap)(struct iommu_domain *domain,
+ 			      unsigned long cap);
+-	int (*device_group)(struct device *dev, unsigned int *groupid);
++	int (*add_device)(struct device *dev);
++	void (*remove_device)(struct device *dev);
+ 	unsigned long pgsize_bitmap;
+ };
+ 
++#define IOMMU_GROUP_NOTIFY_ADD_DEVICE		1 /* Device added */
++#define IOMMU_GROUP_NOTIFY_DEL_DEVICE		2 /* Pre Device removed */
++#define IOMMU_GROUP_NOTIFY_BIND_DRIVER		3 /* Pre Driver bind */
++#define IOMMU_GROUP_NOTIFY_BOUND_DRIVER		4 /* Post Driver bind */
++#define IOMMU_GROUP_NOTIFY_UNBIND_DRIVER	5 /* Pre Driver unbind */
++#define IOMMU_GROUP_NOTIFY_UNBOUND_DRIVER	6 /* Post Driver unbind */
++
+ extern int bus_set_iommu(struct bus_type *bus, struct iommu_ops *ops);
+ extern bool iommu_present(struct bus_type *bus);
+ extern struct iommu_domain *iommu_domain_alloc(struct bus_type *bus);
+@@ -96,7 +107,24 @@ extern int iommu_domain_has_cap(struct iommu_domain *domain,
+ 				unsigned long cap);
+ extern void iommu_set_fault_handler(struct iommu_domain *domain,
+ 					iommu_fault_handler_t handler);
+-extern int iommu_device_group(struct device *dev, unsigned int *groupid);
++
++extern int iommu_attach_group(struct iommu_domain *domain,
++			      struct iommu_group *group);
++extern void iommu_detach_group(struct iommu_domain *domain,
++			       struct iommu_group *group);
++extern struct iommu_group *iommu_group_alloc(void);
++extern int iommu_group_add_device(struct iommu_group *group,
++				  struct device *dev);
++extern void iommu_group_remove_device(struct device *dev);
++extern int iommu_group_for_each_dev(struct iommu_group *group, void *data,
++				    int (*fn)(struct device *, void *));
++extern struct iommu_group *iommu_group_get(struct device *dev);
++extern void iommu_group_put(struct iommu_group *group);
++extern int iommu_group_register_notifier(struct iommu_group *group,
++					 struct notifier_block *nb);
++extern int iommu_group_unregister_notifier(struct iommu_group *group,
++					   struct notifier_block *nb);
++extern int iommu_group_id(struct iommu_group *group);
+ 
+ /**
+  * report_iommu_fault() - report about an IOMMU fault to the IOMMU framework
+@@ -140,6 +168,7 @@ static inline int report_iommu_fault(struct iommu_domain *domain,
+ #else /* CONFIG_IOMMU_API */
+ 
+ struct iommu_ops {};
++struct iommu_group {};
+ 
+ static inline bool iommu_present(struct bus_type *bus)
+ {
+@@ -195,11 +224,60 @@ static inline void iommu_set_fault_handler(struct iommu_domain *domain,
+ {
+ }
+ 
+-static inline int iommu_device_group(struct device *dev, unsigned int *groupid)
++int iommu_attach_group(struct iommu_domain *domain, struct iommu_group *group)
++{
++	return -ENODEV;
++}
++
++void iommu_detach_group(struct iommu_domain *domain, struct iommu_group *group)
++{
++}
++
++struct iommu_group *iommu_group_alloc(void)
++{
++	return ERR_PTR(-ENODEV);
++}
++
++int iommu_group_add_device(struct iommu_group *group, struct device *dev)
++{
++	return -ENODEV;
++}
++
++void iommu_group_remove_device(struct device *dev)
++{
++}
++
++int iommu_group_for_each_dev(struct iommu_group *group, void *data,
++			     int (*fn)(struct device *, void *))
+ {
+ 	return -ENODEV;
+ }
+ 
++struct iommu_group *iommu_group_get(struct device *dev)
++{
++	return NULL;
++}
++
++void iommu_group_put(struct iommu_group *group)
++{
++}
++
++int iommu_group_register_notifier(struct iommu_group *group,
++				  struct notifier_block *nb)
++{
++	return -ENODEV;
++}
++
++int iommu_group_unregister_notifier(struct iommu_group *group,
++				    struct notifier_block *nb)
++{
++	return 0;
++}
++
++int iommu_group_id(struct iommu_group *group)
++{
++	return -ENODEV;
++}
+ #endif /* CONFIG_IOMMU_API */
+ 
+ #endif /* __LINUX_IOMMU_H */
 
