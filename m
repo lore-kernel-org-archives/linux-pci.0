@@ -1,131 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54386 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750706Ab2EKWz7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 May 2012 18:55:59 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 00/13] IOMMU Groups + VFIO
-To: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org
-Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com,
-	alex.williamson@redhat.com
-Date: Fri, 11 May 2012 16:55:25 -0600
-Message-ID: <20120511222148.30496.68571.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:65255 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754905Ab2ENNsy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2012 09:48:54 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Dan Williams <dan.j.williams@intel.com>,
+	Maciej Sosnowski <maciej.sosnowski@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [RFC PATCH v2 0/7] dmaengine: enhance dmaengine to support DMA device hotplug
+Date: Mon, 14 May 2012 21:47:02 +0800
+Message-Id: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the latest incantation of IOMMU Groups and matching VFIO
-code.  After some discussions with BenH and David Gibson I think
-we have some agreement on moving forward with the IOMMU Group
-approach, which covers the first 6 patches in this series.  The
-basic idea of this is that IOMMU groups need to be a more
-integrated part of the driver model.  The current iommu_device_group
-interface requires the user to do all all the heavy lifting of
-finding devices reporting the same ID and putting them together into
-something useful.  If an esoteric driver like VFIO is the only user
-of the groups, this works nicely, but if we want to use groups for
-common DMA paths, it's too much overhead.  We therefore add an
-iommu_group pointer off the device so we can easily get to the group
-for fast paths like streaming DMA (GregKH, does this work for you?).
+From: Jiang Liu <liuj97@gmail.com>
 
-I include code to support IOMMU group on both amd_iommu and
-intel-iommu.  These take into account device quirks, like the Ricoh
-device that David Woodhouse has noted on a few occasions.  I'll
-leave it to the iommu owners to make use of these.
+From: Jiang Liu <liuj97@gmail.com>
 
-For VFIO itself, the core has had nearly a complete rewrite to
-support the IOMMU group interface and also to switch to a new model
-for allowing IOMMU domains to share context (merge is gone).  To
-allow the most flexibility (and also to avoid ratholing on the exposed
-IOMMU interface), the VFIO IOMMU backend is completely modular,
-allowing the user to probe and initiate a specific backend for a
-group.  I've poorly chosen the name "x86" for the current IOMMU
-backend, simply for lack of a good way to describe a non-window based,
-page table driven IOMMU implementation.
+This patch set enhances the dmaengine core and its clients to support
+hot-removal of DMA devices at runtime, especially for IOAT devices.
 
-These patches can be found in git here:
+Intel IOAT (Crystal Beach) devices are often built into PCIe root complex.
+When hot-plugging a PCI root complex (IOH) on Intel Nehalem/Westmere
+platforms, all IOAT devices built in the IOH must be handled first.
+For future Intel processors with Integrated IOH (IIO), IOAT device will
+get involved even when hot-plugging physical processors.
 
-git://github.com/awilliam/linux-vfio.git (iommu-group-vfio-20120511)
+The dmaengine core already supports hot-add of IOAT devices, but hot-removal
+of IOAT devices is still unsupported due to a design limiation in the
+dmaengine core.
 
-The matching qemu tree supporting VFIO device assignment is here:
+Currently dmaengine has an assumption that DMA devices could only be
+deregistered when there's no any clients making use of DMA devices.
+So dma_async_device_unregister() is designed to be called by DMA device
+driver's module_exit routines only. But the ioatdma driver doesn't
+conform to that rule, it calls dma_async_device_unregister() from its
+driver detaching routine instead of module_exit routine.
 
-git://github.com/awilliam/qemu-vfio.git (iommu-group-vfio)
+This patch set enhances the dmaengine core to support DMA device hotplug,
+so that dma_async_device_unregister() could be called by DMA driver's
+detach routines to hot-remove DMA devices at runtime. It also tries
+to optimize DMA channel allocation policy according to NUMA affinity.
 
-Sorry, this is based on Qemu-1.0.  Updating to 1.1 is next on my
-todo list.
+v2: use percpu counter for channel reference count to avoid polluting
+    global shared cachelines
 
-I'd really like to move forward with this, so please provide
-comments and feedback.  This touches iommu, x86 iommu drivers, pci,
-device, and adds a new driver, so I appreciate any kind of ack
-(or nak I suppose) to know if we've got end-to-end support.  Thanks!
+echo 0000:80:16.7 > /sys/bus/pci/drivers/ioatdma/unbind
+ioatdma 0000:80:16.7: Removing dma and dca services
+------------[ cut here ]------------
+WARNING: at drivers/dma/dmaengine.c:831 dma_async_device_unregister+0xd5/0xf0() (Tainted: G           ---------------- T)
+Hardware name: System x3850 X5 -[7143O3G]-
+dma_async_device_unregister called while 17 clients hold a reference
+Modules linked in: ebtable_nat ebtables ipt_MASQUERADE iptable_nat nf_nat xt_CHECKSUM iptable_mangle bridge stp llc autofs4 sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 vfat fat vhost_net macvtap macvlan tun kvm_intel kvm uinput microcode sg serio_raw cdc_ether usbnet mii be2net i2c_i801 i2c_core iTCO_wdt iTCO_vendor_support shpchp i7core_edac edac_core ioatdma igb dca e1000e bnx2 ext4 mbcache jbd2 sr_mod cdrom sd_mod crc_t10dif qla2xxx pmcraid pata_acpi ata_generic ata_piix bfa(T) scsi_transport_fc scsi_tgt megaraid_sas dm_mirror dm_region_hash dm_log dm_mod [last unloaded: scsi_wait_scan]
+Pid: 5143, comm: bash Tainted: G           ---------------- T 2.6.32-220.el6.x86_64 #1
+Call Trace:
+ [<ffffffff81069b77>] ? warn_slowpath_common+0x87/0xc0
+ [<ffffffff81069c66>] ? warn_slowpath_fmt+0x46/0x50
+ [<ffffffff813fe465>] ? dma_async_device_unregister+0xd5/0xf0
+ [<ffffffffa00ec5e9>] ? ioat_dma_remove+0x28/0x4a [ioatdma]
+ [<ffffffffa00ec5b9>] ? ioat_remove+0x82/0x8a [ioatdma]
+ [<ffffffff8128ab37>] ? pci_device_remove+0x37/0x70
+ [<ffffffff8134623f>] ? __device_release_driver+0x6f/0xe0
+ [<ffffffff813463ad>] ? device_release_driver+0x2d/0x40
+ [<ffffffff81345711>] ? driver_unbind+0xa1/0xc0
+ [<ffffffff81344b7c>] ? drv_attr_store+0x2c/0x30
+ [<ffffffff811eb445>] ? sysfs_write_file+0xe5/0x170
+ [<ffffffff811765d8>] ? vfs_write+0xb8/0x1a0
+ [<ffffffff810d46e2>] ? audit_syscall_entry+0x272/0x2a0
+ [<ffffffff81176fe1>] ? sys_write+0x51/0x90
+ [<ffffffff8100b0f2>] ? system_call_fastpath+0x16/0x1b
+---[ end trace 436e184dbc830d94 ]---
+ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073536000 busy
+ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073533000 busy
+ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff88107352f000 busy
+ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff88107352c000 busy
+ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073529000 busy
+ioatdma 0000:80:16.7: dma_pool_destroy completion_pool, ffff881073527000 busy
 
-Alex
----
+Jiang Liu (7):
+  dmaengine: enhance DMA channel reference count management
+  dmaengine: rebalance DMA channels when CPU hotplug happens
+  dmaengine: enhance dmaengine to support DMA device hotplug
+  dmaengine: enhance network subsystem to support DMA device hotplug
+  dmaengine: enhance ASYNC_TX subsystem to support DMA device hotplug
+  dmaengine: introduce CONFIG_DMA_ENGINE_HOTPLUG for DMA device hotplug
+  dmaengine: assign DMA channel to CPU according to NUMA affinity
 
-Alex Williamson (13):
-      vfio: Add PCI device driver
-      pci: Misc pci_reg additions
-      pci: Create common pcibios_err_to_errno
-      pci: export pci_user functions for use by other drivers
-      vfio: x86 IOMMU implementation
-      vfio: Add documentation
-      vfio: VFIO core
-      iommu: Make use of DMA quirking and ACS enabled check for groups
-      pci: New pci_acs_enabled()
-      pci: New pci_dma_quirk()
-      iommu: IOMMU groups for VT-d and AMD-Vi
-      iommu: IOMMU Groups
-      driver core: Add iommu_group tracking to struct device
+ crypto/async_tx/async_memcpy.c      |    2 +
+ crypto/async_tx/async_memset.c      |    2 +
+ crypto/async_tx/async_pq.c          |   10 +-
+ crypto/async_tx/async_raid6_recov.c |    8 +-
+ crypto/async_tx/async_tx.c          |    6 +-
+ crypto/async_tx/async_xor.c         |   13 +-
+ drivers/dma/Kconfig                 |    6 +
+ drivers/dma/dmaengine.c             |  360 ++++++++++++++++++++++-------------
+ include/linux/async_tx.h            |   13 ++
+ include/linux/dmaengine.h           |   43 ++++-
+ include/net/netdma.h                |   26 +++
+ net/ipv4/tcp.c                      |   10 +-
+ net/ipv4/tcp_input.c                |    5 +-
+ net/ipv4/tcp_ipv4.c                 |    4 +-
+ net/ipv6/tcp_ipv6.c                 |    4 +-
+ 15 files changed, 350 insertions(+), 162 deletions(-)
 
+-- 
+1.7.9.5
 
- Documentation/ioctl/ioctl-number.txt |    1 
- Documentation/vfio.txt               |  315 +++++++
- MAINTAINERS                          |    8 
- drivers/Kconfig                      |    2 
- drivers/Makefile                     |    1 
- drivers/iommu/amd_iommu.c            |   52 +
- drivers/iommu/intel-iommu.c          |   72 +-
- drivers/iommu/iommu.c                |  449 +++++++++-
- drivers/pci/access.c                 |    6 
- drivers/pci/pci.c                    |   43 +
- drivers/pci/pci.h                    |    8 
- drivers/pci/quirks.c                 |   22 
- drivers/vfio/Kconfig                 |   16 
- drivers/vfio/Makefile                |    3 
- drivers/vfio/pci/Kconfig             |    8 
- drivers/vfio/pci/Makefile            |    4 
- drivers/vfio/pci/vfio_pci.c          |  557 ++++++++++++
- drivers/vfio/pci/vfio_pci_config.c   | 1527 ++++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_intrs.c    |  724 ++++++++++++++++
- drivers/vfio/pci/vfio_pci_private.h  |   91 ++
- drivers/vfio/pci/vfio_pci_rdwr.c     |  267 ++++++
- drivers/vfio/vfio.c                  | 1406 +++++++++++++++++++++++++++++++
- drivers/vfio/vfio_iommu_x86.c        |  743 +++++++++++++++++
- drivers/xen/xen-pciback/conf_space.c |    6 
- include/linux/device.h               |    2 
- include/linux/iommu.h                |   84 ++
- include/linux/pci.h                  |   37 +
- include/linux/pci_regs.h             |  112 ++
- include/linux/vfio.h                 |  442 ++++++++++
- 29 files changed, 6892 insertions(+), 116 deletions(-)
- create mode 100644 Documentation/vfio.txt
- create mode 100644 drivers/vfio/Kconfig
- create mode 100644 drivers/vfio/Makefile
- create mode 100644 drivers/vfio/pci/Kconfig
- create mode 100644 drivers/vfio/pci/Makefile
- create mode 100644 drivers/vfio/pci/vfio_pci.c
- create mode 100644 drivers/vfio/pci/vfio_pci_config.c
- create mode 100644 drivers/vfio/pci/vfio_pci_intrs.c
- create mode 100644 drivers/vfio/pci/vfio_pci_private.h
- create mode 100644 drivers/vfio/pci/vfio_pci_rdwr.c
- create mode 100644 drivers/vfio/vfio.c
- create mode 100644 drivers/vfio/vfio_iommu_x86.c
- create mode 100644 include/linux/vfio.h
