@@ -1,229 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:60629 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758863Ab2EWDvu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 23:51:50 -0400
-Received: from huawei.com (szxga05-in [172.24.2.49])
- by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M4G002C2IPQOA@szxga05-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:26 +0800 (CST)
-Received: from szxrg01-dlp.huawei.com ([172.24.2.119])
- by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M4G00HWFIPQOS@szxga05-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:26 +0800 (CST)
-Date: Wed, 23 May 2012 11:50:20 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH v6 3/9] PCI, x86: use RCU list to protect mmconfig list
-In-reply-to: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Message-id: <1337745026-1180-4-git-send-email-jiang.liu@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain
-References: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:48756 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753592Ab2ENGqX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2012 02:46:23 -0400
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 14 May 2012 12:16:20 +0530
+Date: Mon, 14 May 2012 14:46:15 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120514064615.GB26605@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120410090306.GA7056@richard>
+ <20120422155202.GA13540@richard>
+ <4F95B17B.3030401@redhat.com>
+ <20120514015536.GA3331@richard>
+ <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On Sun, May 13, 2012 at 10:40:41PM -0700, Yinghai Lu wrote:
+>On Sun, May 13, 2012 at 6:55 PM, Richard Yang
+><weiyang@linux.vnet.ibm.com> wrote:
+>> On Mon, Apr 23, 2012 at 03:46:03PM -0400, Don Dutile wrote:
+>>>On 04/22/2012 11:52 AM, Richard Yang wrote:
+>>>>All,
+>>>>
+>>>>I am reading the pci_scan_bridge() and not sure what will happen in
+>>>>following situation.
+>>>>
+>>>>Suppose the kernel is not passed the pci=assign-busses.
+>>>>
+>>>>Below is a picture about the pci system.
+>>>>
+>>>>                    +-------+
+>>>>                    |       | root bridge(0,255)
+>>>>                    +---+---+
+>>>>                        |          Bus 0
+>>>>       -----+-----------+------------------------------+--
+>>>>            |                                          |
+>>>>            |                                          |
+>>>>            |                                          |
+>>>>       +----+----+                               +-----+-----+
+>>>>       |         |  B1(1,15)                     |           |B2(16,28)
+>>>>       +----+----+                               +-----+-----+
+>>>>            |  Bus 1                                   |    Bus 16
+>>>>       -----+-----------------------         ----------+----------------
+>>>>                             |
+>>>>                        +----+----+
+>>>>                        |         | B3
+>>>>                        +---------+
+>>>>
+>>>>Suppose B1 and B2 works fine with the BIOS, which get the right bus
+>>>>number and range.
+>>>>
+>>>>B3 does not works fine with the BIOS, which doesn't get the bus number.
+>>>>
+>>>>So in pci_scan_bridge(), B3 will be met in the second pass and get bus
+>>>>number 16?
+>>>
+>> Yinghai,
+>>
+>> Take my original question.
+>>
+>> B3 doesn't get the bus number, which its parent doesn't have free bus
+>> number and there is no gap between B1 and B2.
+>>
+>> So in this case, the probe_resource() can't find bus number for B3.
+>> Then cause pci_bridge_probe_busn_res() return non-zero.
+>>
+>> Then B3 couldn't work fine?
+>
+>B3 is on Bus 1? B3 is the one of bridges on Bus1?
+No,  I omit other bridges on Bus#1.
+They will occupy bus number 2-15, which is calculated by BIOS and set to
+bridge's configuration space.
+>
+>if B3 is only bridge on Bus1, it probe_resource should return [2,15]
+>at first, and then scan B3.
+>
+>Yinghai
 
-From: Jiang Liu <jiang.liu@huawei.com>
-
-Use RCU list to protect mmconfig list from dynamic change
-when supporting PCI host bridge hotplug.
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- arch/x86/pci/mmconfig-shared.c |   18 ++++++++++++------
- arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
- arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
- 3 files changed, 34 insertions(+), 10 deletions(-)
-
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 5e2cd2a..0ac97d5 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -17,6 +17,8 @@
- #include <linux/bitmap.h>
- #include <linux/dmi.h>
- #include <linux/slab.h>
-+#include <linux/mutex.h>
-+#include <linux/rculist.h>
- #include <asm/e820.h>
- #include <asm/pci_x86.h>
- #include <asm/acpi.h>
-@@ -25,6 +27,7 @@
- 
- /* Indicate if the mmcfg resources have been placed into the resource table. */
- static int __initdata pci_mmcfg_resources_inserted;
-+static DEFINE_MUTEX(pci_mmcfg_lock);
- 
- LIST_HEAD(pci_mmcfg_list);
- 
-@@ -45,20 +48,20 @@ static __init void free_all_mmcfg(void)
- 		pci_mmconfig_remove(cfg);
- }
- 
--static __init void list_add_sorted(struct pci_mmcfg_region *new)
-+static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
- {
- 	struct pci_mmcfg_region *cfg;
- 
- 	/* keep list sorted by segment and starting bus number */
--	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-+	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
- 		if (cfg->segment > new->segment ||
- 		    (cfg->segment == new->segment &&
- 		     cfg->start_bus >= new->start_bus)) {
--			list_add_tail(&new->list, &cfg->list);
-+			list_add_tail_rcu(&new->list, &cfg->list);
- 			return;
- 		}
- 	}
--	list_add_tail(&new->list, &pci_mmcfg_list);
-+	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
- }
- 
- static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
-@@ -101,8 +104,11 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
- 	struct pci_mmcfg_region *new;
- 
- 	new = pci_mmconfig_alloc(segment, start, end, addr);
--	if (new)
-+	if (new) {
-+		mutex_lock(&pci_mmcfg_lock);
- 		list_add_sorted(new);
-+		mutex_unlock(&pci_mmcfg_lock);
-+	}
- 
- 	return new;
- }
-@@ -111,7 +117,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
- {
- 	struct pci_mmcfg_region *cfg;
- 
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
- 		if (cfg->segment == segment &&
- 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
- 			return cfg;
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index 5372e86..5dad04a 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -11,6 +11,7 @@
- 
- #include <linux/pci.h>
- #include <linux/init.h>
-+#include <linux/rcupdate.h>
- #include <asm/e820.h>
- #include <asm/pci_x86.h>
- #include <acpi/acpi.h>
-@@ -60,9 +61,12 @@ err:		*value = -1;
- 		return -EINVAL;
- 	}
- 
-+	rcu_read_lock();
- 	base = get_base_addr(seg, bus, devfn);
--	if (!base)
-+	if (!base) {
-+		rcu_read_unlock();
- 		goto err;
-+	}
- 
- 	raw_spin_lock_irqsave(&pci_config_lock, flags);
- 
-@@ -80,6 +84,7 @@ err:		*value = -1;
- 		break;
- 	}
- 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
-+	rcu_read_unlock();
- 
- 	return 0;
- }
-@@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	if ((bus > 255) || (devfn > 255) || (reg > 4095))
- 		return -EINVAL;
- 
-+	rcu_read_lock();
- 	base = get_base_addr(seg, bus, devfn);
--	if (!base)
-+	if (!base) {
-+		rcu_read_unlock();
- 		return -EINVAL;
-+	}
- 
- 	raw_spin_lock_irqsave(&pci_config_lock, flags);
- 
-@@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 		break;
- 	}
- 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
-+	rcu_read_unlock();
- 
- 	return 0;
- }
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index 915a493..acc48c5 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -9,6 +9,7 @@
- #include <linux/init.h>
- #include <linux/acpi.h>
- #include <linux/bitmap.h>
-+#include <linux/rcupdate.h>
- #include <asm/e820.h>
- #include <asm/pci_x86.h>
- 
-@@ -34,9 +35,12 @@ err:		*value = -1;
- 		return -EINVAL;
- 	}
- 
-+	rcu_read_lock();
- 	addr = pci_dev_base(seg, bus, devfn);
--	if (!addr)
-+	if (!addr) {
-+		rcu_read_unlock();
- 		goto err;
-+	}
- 
- 	switch (len) {
- 	case 1:
-@@ -49,6 +53,7 @@ err:		*value = -1;
- 		*value = mmio_config_readl(addr + reg);
- 		break;
- 	}
-+	rcu_read_unlock();
- 
- 	return 0;
- }
-@@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
- 		return -EINVAL;
- 
-+	rcu_read_lock();
- 	addr = pci_dev_base(seg, bus, devfn);
--	if (!addr)
-+	if (!addr) {
-+		rcu_read_unlock();
- 		return -EINVAL;
-+	}
- 
- 	switch (len) {
- 	case 1:
-@@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 		mmio_config_writel(addr + reg, value);
- 		break;
- 	}
-+	rcu_read_unlock();
- 
- 	return 0;
- }
 -- 
-1.7.1
-
+Richard Yang
+Help you, Help me
 
