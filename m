@@ -1,45 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:52387 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088Ab2EWRQG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 13:16:06 -0400
-Received: by dady13 with SMTP id y13so10013941dad.19
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 10:16:06 -0700 (PDT)
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:51605 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753519Ab2ENG2e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2012 02:28:34 -0400
+Message-ID: <4FB0A6F6.9050504@ladisch.de>
+Date: Mon, 14 May 2012 08:32:22 +0200
+From: Clemens Ladisch <clemens@ladisch.de>
 MIME-Version: 1.0
-In-Reply-To: <20120523155346.GA23940@redhat.com>
-References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
-	<CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
-	<20120523024313.GA2888@redhat.com>
-	<CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
-	<CAE9FiQVPyjsB=oWp80sgqzkWw8KqX0GHg+csM39juo2N67P2Tg@mail.gmail.com>
-	<20120523155346.GA23940@redhat.com>
-Date: Wed, 23 May 2012 10:16:06 -0700
-Message-ID: <CAE9FiQWPpKE5vmzZqw-E_L_0Lt1QpqV=xk=Hu6Stzva5vXk1_g@mail.gmail.com>
-Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jason Baron <jbaron@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Ram Pai <linuxram@us.ibm.com>, Yinghai Lu <yinghai@kernel.org>
+CC: linux1394-devel@lists.sourceforge.net,
+	Rob Allen <ra-kernel@hotmail.co.uk>,
+	bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
+References: <bug-43244-4803@https.bugzilla.kernel.org/> <20120513221357.7574ae79@stein>
+In-Reply-To: <20120513221357.7574ae79@stein>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2012 at 8:53 AM, Jason Baron <jbaron@redhat.com> wrote:
->> > but still would prefer you to make qemu to support pciehp.
+Stefan Richter wrote:
+> On May 13 bugzilla-daemon@bugzilla.kernel.org wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=43244
 >>
->> another solution could be:
+>> firewire_ohci: Failed to set Link Power Status
 >>
->> in qemu acpi dsdt, you could set bridge size for new added bridge.
+>> Afterwards, the machine is completely dead (ignoring Magic SysRq), requiring
+>> holding the power button to get anywhere.
 >>
->> current pbus_size_mem() will not shrink the old bridge resource size.
+>> Blacklisting firewire_ohci allows the kernel to boot okay.
+>>
+>> Having experimented with Ubuntu's mainline kernel builds, it seem to have been
+>> introduced between 3.1.0-rc2 (working) and 3.1.0-rc3.
 >
-> ok, I also tried hard-wiring the bridge io/mem base and limit registers on the
-> qemu side. That seems to work without any guest-side hotplug code changes. And
-> would seem to be more flexible than putting the limits in acpi.
+> 0a:09.0 CardBus bridge: O2 Micro, Inc. OZ711MP1/MS1 MemoryCardBus Controller (rev 21)
+> 0a:09.1 CardBus bridge: O2 Micro, Inc. OZ711MP1/MS1 MemoryCardBus Controller (rev 21)
+> 0a:09.4 FireWire (IEEE 1394): O2 Micro, Inc. Firewire (IEEE 1394) (rev 02) (prog-if 10 [OHCI])
+>
+> $ git shortlog v3.1-rc2..v3.1-rc3 drivers/firewire/
+>
+> Stefan Richter (3):
+>       firewire: cdev: fix 32 bit userland on 64 bit kernel compat corner cases
+>       firewire: ohci: fix DMA unmapping in an error path
+>       firewire: core: handle ack_busy when fetching the Config ROM
+>
+> None of that code is in the path that is taken up to and after "failed to
+> set Link Power Status".  Hence the bug was most certainly not introduced
+> by these but
+>   - either outside v3.1-rc2..v3.1-rc3, and the bisection went wrong
+>     due to a false negative,
+>   - or inside v3.1-rc2..v3.1-rc3 but due to some changes to the kernel
+>     or to the kernel configuration that are not directly related to
+>     firewire.
 
-that should be acpi asl code or SMI work. and should make sure that
-range is not overlapped with resources that are used by other bridges
-and pci devices.
+These integrated chips tend to have incestuous relationships between their
+PCI functions; it's possible that some CardBus change broke things.
 
-Thanks
+And indeed:
 
-Yinghai
+$ git shortlog v3.1-rc2..v3.1-rc3 drivers/pci/
+...
+Ram Pai (3):
+      PCI : ability to relocate assigned pci-resources
+      PCI: make cardbus-bridge resources optional
+      PCI: code and comments cleanup
+
+Yinghai Lu (2):
+      PCI: honor child buses add_size in hot plug configuration
+      PCI: make SRIOV resources optional
+
+
+I'm not sure how resource-related changes can result in something that looks
+like a power management issue, but maybe the chip doesn't allow register
+accesses after its resources are moved, or something like that.  Any ideas?
+
+
+Regards,
+Clemens
