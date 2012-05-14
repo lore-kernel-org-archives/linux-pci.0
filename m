@@ -1,87 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47734 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752645Ab2E3USt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 May 2012 16:18:49 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 0/7] IOMMU: Groups support
-To: joerg.roedel@amd.com, dwmw2@infradead.org,
-	iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, ddutile@redhat.com,
-	alex.williamson@redhat.com, liuj97@gmail.com
-Date: Wed, 30 May 2012 14:18:29 -0600
-Message-ID: <20120530201424.31527.33142.stgit@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 14 May 2012 23:53:58 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Myron Stowe <mstowe@redhat.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: x86: runtime waring in pcibios_fwaddrmap_lookup
+In-Reply-To: <20120514202147.GA20652@google.com>
+Message-ID: <alpine.SOC.1.00.1205142353430.20118@math.ut.ee>
+References: <alpine.SOC.1.00.1204122238400.16365@math.ut.ee> <CAErSpo6YnzywdjTTVdVEHj_E-B0ARBpZ+fiy29Rv==fO6m9-FA@mail.gmail.com> <1335557685.2386.62.camel@zim.stowe> <alpine.SOC.1.00.1204280819270.14507@math.ut.ee> <1335905694.2386.138.camel@zim.stowe>
+ <1336430699.2427.117.camel@zim.stowe> <alpine.SOC.1.00.1205131811590.7097@math.ut.ee> <20120514202147.GA20652@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v2:
- - Trickle down changes from pci_get_dma_source() to better handle
-   PCI device reference counting in IOMMU driver patches
+> > > > Thanks for the quick response Meelis (unlike myself; I've been consumed
+> > > > with a hard deadline task recently - sorry).
+> > 
+> > Not so quick this time - I had to replace the HDD and then recreate the 
+> > failing config. Took 2.4-rc7 as a base. This gives us another data point 
+> > - it does not warn on SMP but warns only on UP.
+> 
+> I think that's the critical point; thanks for mentioning it :)
+> 
+> The following patch should fix it.  Can you confirm?
 
-This depends on v2 PCI patches:
+Yes, that fixes it, thanks!
 
-http://marc.info/?l=linux-kernel&m=133840870510712
-
-Thanks,
-
-Alex
-
-v1:
-These are the IOMMU related patches from the v2 IOMMU Groups +
-VFIO series.  I've separated out PCI and VFIO to try to make
-progress on the foundation we need for VFIO.  Patches 5 & 6
-of this series depend on patches 1 & 2 of the PCI series found
-here:
-
-http://marc.info/?l=linux-kernel&m=133835363021384
-
-Patch 1 adds an iommu_group pointer to struct device so that we
-have a place to link a device to a specific iommu group.  GregKH
-has already acked this, so it should go in with the group support
-itself.  Patch 2 is the core of the IOMMU group support.  Patches
-3 & 4 allow groups to be created on AMD-Vi and Intel VT-d systems.
-Patches 5 & 6 make use of the additional PCI DMA quirks and ACS
-support checking to make groups more secure.  Patch 7 removes the
-iommu=group_mf option as ACS checking results in most multifunction
-devices being grouped already.
-
-These patches, as well as the PCI support patches and VFIO can be
-found in git here:
-
-git://github.com/awilliam/linux-vfio.git (iommu-group-vfio-next-20120529)
-
-Please consider these for 3.5, but I'll settle for any kind of next
-branch.  Thanks,
-
-Alex
-
----
-
-Alex Williamson (7):
-      iommu: Remove group_mf
-      intel-iommu: Make use of DMA quirks and ACS checks in IOMMU groups
-      amd_iommu: Make use of DMA quirks and ACS checks in IOMMU groups
-      intel-iommu: Support IOMMU groups
-      amd_iommu: Support IOMMU groups
-      iommu: IOMMU Groups
-      driver core: Add iommu_group tracking to struct device
-
-
- .../ABI/testing/sysfs-kernel-iommu_groups          |   14 
- Documentation/kernel-parameters.txt                |    1 
- arch/ia64/include/asm/iommu.h                      |    2 
- arch/ia64/kernel/pci-dma.c                         |    1 
- arch/x86/include/asm/iommu.h                       |    1 
- arch/x86/kernel/pci-dma.c                          |   11 
- drivers/iommu/amd_iommu.c                          |   70 ++
- drivers/iommu/intel-iommu.c                        |   89 ++-
- drivers/iommu/iommu.c                              |  578 +++++++++++++++++++-
- include/linux/device.h                             |    2 
- include/linux/iommu.h                              |  104 +++-
- 11 files changed, 767 insertions(+), 106 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-kernel-iommu_groups
+-- 
+Meelis Roos (mroos@linux.ee)
