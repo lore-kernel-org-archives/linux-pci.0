@@ -1,57 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14672 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751279Ab2EJREF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 May 2012 13:04:05 -0400
-Date: Thu, 10 May 2012 20:03:47 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Amos Kong <akong@redhat.com>, linux-pci@vger.kernel.org,
-	seabios@seabios.org, qemu-devel@nongnu.org,
-	jbarnes@virtuousgeek.org, rjw@sisk.pl, kevin@koconnor.net
-Subject: Re: [RESEND PATCH v3] hotplug: add device per func in ACPI DSDT
- tables
-Message-ID: <20120510170345.GC14647@redhat.com>
-References: <20111214010645.GA2044@morn.localdomain>
- <20120509072452.14872.92530.stgit@t>
- <1336571221.12477.136.camel@bling.home>
- <4FABF1DD.7090101@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FABF1DD.7090101@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20120511225636.30496.26907.stgit@bling.home>
+References: <20120511222148.30496.68571.stgit@bling.home> <20120511225636.30496.26907.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 14 May 2012 15:20:40 -0600
+Message-ID: <CAErSpo6-Oy6eTgUBNRfM3HwFSLpDXJt3K1N0DKFpyYsNiSxwRQ@mail.gmail.com>
+Subject: Re: [PATCH 10/13] pci: export pci_user functions for use by other drivers
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2012 at 12:50:37AM +0800, Jiang Liu wrote:
-> On 05/09/2012 09:47 PM, Alex Williamson wrote:
-> >> ---
-> >>  src/ssdt-pcihp.dsl |   17 
-> >>  src/ssdt-pcihp.hex | 8869 +++++++++++++++++++++++++++++++++++++++++++++++++++-
-> >>  2 files changed, 8781 insertions(+), 105 deletions(-)
-> >>
-> >> diff --git a/src/ssdt-pcihp.dsl b/src/ssdt-pcihp.dsl
-> >> index 4b435b8..2a3c326 100644
-> >> --- a/src/ssdt-pcihp.dsl
-> >> +++ b/src/ssdt-pcihp.dsl
-> >> @@ -17,14 +17,23 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
-> >>          // at runtime, if the slot is detected to not support hotplug.
-> >>          // Extract the offset of the address dword and the
-> >>          // _EJ0 name to allow this patching.
-> >> -#define hotplug_slot(slot)                              \
-> >> -        Device (S##slot) {                              \
-> >> +#define hotplug_func(slot, fn)                          \
-> >> +        Device (S##slot##fn) {                          \
-> >>             ACPI_EXTRACT_NAME_DWORD_CONST aml_adr_dword  \
-> >> -           Name (_ADR, 0x##slot##0000)                  \
-> > 
-> > I would have guessed it to be sufficient to change _ADR to
-> > 0x##slot##ffff, does that not work?  Thanks,
-> > 
-> > Alex
-> Currently Linux acpiphp driver doesn't support that yet.
-> 
-> --gerry
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index dc25da3..b437225 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -770,6 +770,14 @@ static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
+>        return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+>  }
+>
+> +/* user-space driven config access */
+> +extern int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
+> +extern int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
+> +extern int pci_user_read_config_dword(struct pci_dev *dev, int where, u32 *val);
+> +extern int pci_user_write_config_byte(struct pci_dev *dev, int where, u8 val);
+> +extern int pci_user_write_config_word(struct pci_dev *dev, int where, u16 val);
+> +extern int pci_user_write_config_dword(struct pci_dev *dev, int where, u32 val);
 
-If memory serves neither does windows.
+If you repost this, can you remove the externs when you move these
+declarations?  I know the file's currently a random mix, but we might
+as well make a tiny improvement.
 
+Looks fine to me otherwise, and if you don't have any other reason to
+update this series, don't worry about it.
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+>  int __must_check pci_enable_device(struct pci_dev *dev);
+>  int __must_check pci_enable_device_io(struct pci_dev *dev);
+>  int __must_check pci_enable_device_mem(struct pci_dev *dev);
+>
