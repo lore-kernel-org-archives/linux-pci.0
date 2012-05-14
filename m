@@ -1,44 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:40006 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751655Ab2E3QbK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 May 2012 12:31:10 -0400
-Message-ID: <4FC64B3E.2020002@zytor.com>
-Date: Wed, 30 May 2012 09:30:54 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Steven Newbury <steve@snewbury.org.uk>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:53275 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753730Ab2ENBzq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 May 2012 21:55:46 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 14 May 2012 01:36:21 +1000
+Date: Mon, 14 May 2012 09:55:36 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: yinghai@kernel.org
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com> <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com> <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com> <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com> <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com> <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com> <CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com> <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com> <CAErSpo44TViNFcZivjr5hAu8w8kpEpUjxNAWtazhAqwwsorZbw@mail.gmail.com> <4FC5CEF1.6000509@snewbury.org.uk> <CAErSpo6zU898KBv+vFFkymMjpDrPokj0dJq9MMX0z6WZOALbmQ@mail.gmail.!
- com>
-In-Reply-To: <CAErSpo6zU898KBv+vFFkymMjpDrPokj0dJq9MMX0z6WZOALbmQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120514015536.GA3331@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120410090306.GA7056@richard>
+ <20120422155202.GA13540@richard>
+ <4F95B17B.3030401@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F95B17B.3030401@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/30/2012 09:27 AM, Bjorn Helgaas wrote:
-> 
-> You're right, the spec does allow the upper 16 bits of I/O BARs to be
-> hardwired to zero (PCI spec rev 3.0, p. 226), so this part does make
-> some sense.  I don't think it applies to x86, since I don't think
-> there's a way to generate an I/O access to anything above 64K, but it
-> could help other arches.
-> 
-> I'm inclined to be conservative and wait until we find a problem where
-> a patch like this would help.
-> 
+On Mon, Apr 23, 2012 at 03:46:03PM -0400, Don Dutile wrote:
+>On 04/22/2012 11:52 AM, Richard Yang wrote:
+>>All,
+>>
+>>I am reading the pci_scan_bridge() and not sure what will happen in
+>>following situation.
+>>
+>>Suppose the kernel is not passed the pci=assign-busses.
+>>
+>>Below is a picture about the pci system.
+>>
+>>                    +-------+
+>>                    |       | root bridge(0,255)
+>>                    +---+---+
+>>                        |          Bus 0
+>>       -----+-----------+------------------------------+--
+>>            |                                          |
+>>            |                                          |
+>>            |                                          |
+>>       +----+----+                               +-----+-----+
+>>       |         |  B1(1,15)                     |           |B2(16,28)
+>>       +----+----+                               +-----+-----+
+>>            |  Bus 1                                   |    Bus 16
+>>       -----+-----------------------         ----------+----------------
+>>                             |
+>>                        +----+----+
+>>                        |         | B3
+>>                        +---------+
+>>
+>>Suppose B1 and B2 works fine with the BIOS, which get the right bus
+>>number and range.
+>>
+>>B3 does not works fine with the BIOS, which doesn't get the bus number.
+>>
+>>So in pci_scan_bridge(), B3 will be met in the second pass and get bus
+>>number 16?
+>
+Yinghai,
 
-The really conservative thing is to just use 16-bit addresses for I/O on
-all platforms.  I think a lot of non-x86 platforms does that.
+Take my original question. 
 
-	-hpa
+B3 doesn't get the bus number, which its parent doesn't have free bus
+number and there is no gap between B1 and B2. 
+
+So in this case, the probe_resource() can't find bus number for B3. 
+Then cause pci_bridge_probe_busn_res() return non-zero. 
+
+Then B3 couldn't work fine?
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+Richard Yang
+Help you, Help me
 
