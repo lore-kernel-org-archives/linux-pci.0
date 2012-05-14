@@ -1,76 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35634 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750903Ab2E3UIq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 May 2012 16:08:46 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 0/5] PCI: Prep for VFIO and IOMMU Groups
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, konrad.wilk@oracle.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	ddutile@redhat.com, alex.williamson@redhat.com,
-	shangw@linux.vnet.ibm.com, liuj97@gmail.com
-Date: Wed, 30 May 2012 14:08:15 -0600
-Message-ID: <20120530200343.31085.78920.stgit@bling.home>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:39785 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754059Ab2ENGjL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2012 02:39:11 -0400
+Received: by pbbrp8 with SMTP id rp8so5711638pbb.19
+        for <linux-pci@vger.kernel.org>; Sun, 13 May 2012 23:39:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4FB0A6F6.9050504@ladisch.de>
+References: <bug-43244-4803@https.bugzilla.kernel.org/>
+	<20120513221357.7574ae79@stein>
+	<4FB0A6F6.9050504@ladisch.de>
+Date: Sun, 13 May 2012 23:39:10 -0700
+Message-ID: <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com>
+Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
+From: Yinghai Lu <yinghai@kernel.org>
+To: Clemens Ladisch <clemens@ladisch.de>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Ram Pai <linuxram@us.ibm.com>,
+	linux1394-devel@lists.sourceforge.net,
+	Rob Allen <ra-kernel@hotmail.co.uk>,
+	bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v2:
- - Test that we're not given func 0 before doing lookup
- - Fix duplicate ricoh quirk
- - Rename pci_dma_source() to pci_get_dma_source() and make sure
-   we always take a reference for the returned pci_dev.  Add comment
+On Sun, May 13, 2012 at 11:32 PM, Clemens Ladisch <clemens@ladisch.de> wrote:
+> Stefan Richter wrote:
+>> On May 13 bugzilla-daemon@bugzilla.kernel.org wrote:
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=43244
+>>>
+>>> firewire_ohci: Failed to set Link Power Status
+>>>
+>>> Afterwards, the machine is completely dead (ignoring Magic SysRq), requiring
+>>> holding the power button to get anywhere.
+>>>
+>>> Blacklisting firewire_ohci allows the kernel to boot okay.
+>>>
+>>> Having experimented with Ubuntu's mainline kernel builds, it seem to have been
+>>> introduced between 3.1.0-rc2 (working) and 3.1.0-rc3.
+>>
+>> 0a:09.0 CardBus bridge: O2 Micro, Inc. OZ711MP1/MS1 MemoryCardBus Controller (rev 21)
+>> 0a:09.1 CardBus bridge: O2 Micro, Inc. OZ711MP1/MS1 MemoryCardBus Controller (rev 21)
+>> 0a:09.4 FireWire (IEEE 1394): O2 Micro, Inc. Firewire (IEEE 1394) (rev 02) (prog-if 10 [OHCI])
+>>
+>> $ git shortlog v3.1-rc2..v3.1-rc3 drivers/firewire/
+>>
+>> Stefan Richter (3):
+>>       firewire: cdev: fix 32 bit userland on 64 bit kernel compat corner cases
+>>       firewire: ohci: fix DMA unmapping in an error path
+>>       firewire: core: handle ack_busy when fetching the Config ROM
+>>
+>> None of that code is in the path that is taken up to and after "failed to
+>> set Link Power Status".  Hence the bug was most certainly not introduced
+>> by these but
+>>   - either outside v3.1-rc2..v3.1-rc3, and the bisection went wrong
+>>     due to a false negative,
+>>   - or inside v3.1-rc2..v3.1-rc3 but due to some changes to the kernel
+>>     or to the kernel configuration that are not directly related to
+>>     firewire.
+>
+> These integrated chips tend to have incestuous relationships between their
+> PCI functions; it's possible that some CardBus change broke things.
+>
+> And indeed:
+>
+> $ git shortlog v3.1-rc2..v3.1-rc3 drivers/pci/
+> ...
+> Ram Pai (3):
+>      PCI : ability to relocate assigned pci-resources
+>      PCI: make cardbus-bridge resources optional
+>      PCI: code and comments cleanup
+>
+> Yinghai Lu (2):
+>      PCI: honor child buses add_size in hot plug configuration
+>      PCI: make SRIOV resources optional
+>
+>
+> I'm not sure how resource-related changes can result in something that looks
+> like a power management issue, but maybe the chip doesn't allow register
+> accesses after its resources are moved, or something like that.  Any ideas?
+>
 
-These last two changes trickle down through the IOMMU series, so
-will generate a v2 there as well.  Thanks,
+can you post full log with pci debug enabled with lastest upsteam kernel?
 
-Alex
+Thanks
 
-v1:
-These are the PCI related patches from the previously submitted
-v2 IOMMU Groups + VFIO series.  I've updated them with Don's
-comments and split them off on their own so that we can hopefully
-make some progress getting these in.  Patches are against 20120529
-linux-next tree.
-
-Patches 1 & 2 provide DMA quirking and ACS checking which will be
-used by IOMMU drivers supporting IOMMU groups.  Patch 3 enables the
-set of pci user config access functions to be called from other
-modules, which will be used by VFIO-pci.  Patch 4 enables a common
-translation of pcibios errors into errno for returning to userspace,
-also to be used by VFIO-pci.  Patch 5 adds additional PCI register
-definitions so we can more easily parse config space for devices in
-VFIO-pci.
-
-These patches, as well as IOMMU group support and VFIO can be
-found in git here:
-
-git://github.com/awilliam/linux-vfio.git (iommu-group-vfio-next-20120529)
-
-Please consider these for 3.5, but I'll settle for any kind of next
-branch.  Thanks,
-
-Alex
-
----
-
-Alex Williamson (5):
-      pci: Misc pci_reg additions
-      pci: Create common pcibios_err_to_errno
-      pci: export pci_user functions for use by other drivers
-      pci: Add ACS validation utility
-      pci: Add PCI DMA source ID quirk
-
-
- drivers/pci/access.c                 |    6 +-
- drivers/pci/pci.c                    |   68 ++++++++++++++++++++
- drivers/pci/pci.h                    |    7 --
- drivers/pci/quirks.c                 |   80 ++++++++++++++++++++++++
- drivers/xen/xen-pciback/conf_space.c |    6 +-
- include/linux/pci.h                  |   49 ++++++++++++++-
- include/linux/pci_regs.h             |  113 ++++++++++++++++++++++++++++++----
- 7 files changed, 304 insertions(+), 25 deletions(-)
+Yinghai
