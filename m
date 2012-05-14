@@ -1,77 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 06/13] iommu: Make use of DMA quirking and ACS enabled check
- for groups
-To: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org
-Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com,
-	alex.williamson@redhat.com
-Date: Fri, 11 May 2012 16:56:09 -0600
-Message-ID: <20120511225609.30496.92191.stgit@bling.home>
-In-Reply-To: <20120511222148.30496.68571.stgit@bling.home>
-References: <20120511222148.30496.68571.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:58552 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757665Ab2ENUVs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2012 16:21:48 -0400
+Received: by yenl3 with SMTP id l3so657012yen.1
+        for <linux-pci@vger.kernel.org>; Mon, 14 May 2012 13:21:47 -0700 (PDT)
+Date: Mon, 14 May 2012 14:21:47 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Myron Stowe <mstowe@redhat.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: x86: runtime waring in pcibios_fwaddrmap_lookup
+Message-ID: <20120514202147.GA20652@google.com>
+References: <alpine.SOC.1.00.1204122238400.16365@math.ut.ee>
+ <CAErSpo6YnzywdjTTVdVEHj_E-B0ARBpZ+fiy29Rv==fO6m9-FA@mail.gmail.com>
+ <1335557685.2386.62.camel@zim.stowe>
+ <alpine.SOC.1.00.1204280819270.14507@math.ut.ee>
+ <1335905694.2386.138.camel@zim.stowe>
+ <1336430699.2427.117.camel@zim.stowe>
+ <alpine.SOC.1.00.1205131811590.7097@math.ut.ee>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.SOC.1.00.1205131811590.7097@math.ut.ee>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Incorporate DMA quirking and ACS checking into amd_iommu and
-intel-iommu.  Note that IOMMU groups are not yet used for
-streaming DMA, so this doesn't immediately solve the problems
-with broken Ricoh devices.
+On Sun, May 13, 2012 at 06:15:18PM +0300, Meelis Roos wrote:
+> > > Thanks for the quick response Meelis (unlike myself; I've been consumed
+> > > with a hard deadline task recently - sorry).
+> 
+> Not so quick this time - I had to replace the HDD and then recreate the 
+> failing config. Took 2.4-rc7 as a base. This gives us another data point 
+> - it does not warn on SMP but warns only on UP.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+I think that's the critical point; thanks for mentioning it :)
 
- drivers/iommu/amd_iommu.c   |    3 +++
- drivers/iommu/intel-iommu.c |    3 +++
- drivers/pci/pci.h           |    1 +
- 3 files changed, 7 insertions(+), 0 deletions(-)
+The following patch should fix it.  Can you confirm?
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index b7e5ddf..a165311 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -291,6 +291,9 @@ static int iommu_init_device(struct device *dev)
- 		dma_pdev = pci_get_slot(pdev->bus,
- 					PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
- 
-+	dma_pdev = pci_dma_quirk(dma_pdev);
-+	dma_pdev = pci_acs_enabled(dma_pdev);
-+
- 	group = iommu_group_get(&dma_pdev->dev);
- 	if (!group) {
- 		group = iommu_group_alloc();
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index e63b33b..5f526c7 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -4113,6 +4113,9 @@ static int intel_iommu_add_device(struct device *dev)
- 		dma_pdev = pci_get_slot(pdev->bus,
- 					PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
- 
-+	dma_pdev = pci_dma_quirk(dma_pdev);
-+	dma_pdev = pci_acs_enabled(dma_pdev);
-+
- 	group = iommu_group_get(&dma_pdev->dev);
- 	if (!group) {
- 		group = iommu_group_alloc();
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e494347..e8f2f8f 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -310,6 +310,7 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- }
- 
- extern void pci_enable_acs(struct pci_dev *dev);
-+extern struct pci_dev *pci_acs_enabled(struct pci_dev *dev);
- 
- struct pci_dev_reset_methods {
- 	u16 vendor;
+commit d7d1398aa087445ce04a1b1d45c4de7485590f57
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Mon May 14 12:01:26 2012 -0600
 
+    x86/PCI: only check for spinlock being held in SMP kernels
+    
+    spin_is_locked() is always false on UP kernels: spin_lock_irqsave() does no
+    locking, so we can't tell whether the lock is held or not.  Therefore,
+    this warning is only valid for SMP kernels.
+    
+    Reported-and-tested-by: Meelis Roos <mroos@linux.ee>
+    CC: Myron Stowe <myron.stowe@redhat.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 831971e..dd8ca6f 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -57,7 +57,7 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
+ {
+ 	struct pcibios_fwaddrmap *map;
+ 
+-	WARN_ON(!spin_is_locked(&pcibios_fwaddrmap_lock));
++	WARN_ON_SMP(!spin_is_locked(&pcibios_fwaddrmap_lock));
+ 
+ 	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
+ 		if (map->dev == dev)
