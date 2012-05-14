@@ -1,47 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:44157 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753656Ab2EYV7J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 May 2012 17:59:09 -0400
-Message-ID: <4FC0009C.5000704@zytor.com>
-Date: Fri, 25 May 2012 14:58:52 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 14 May 2012 10:48:16 +0800
+From: Xudong Hao <xudong.hao@linux.intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, avi@redhat.com, alex.williamson@redhat.com,
+	xiantao.zhang@intel.com, xudong.hao@intel.com
+Subject: [PATCH 1/1] Enable LTR/OBFF before device is used by driver
+Message-ID: <20120514024816.GA15371@hp-xd.sh.intel.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com> <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com> <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com> <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com> <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-In-Reply-To: <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/25/2012 02:55 PM, Bjorn Helgaas wrote:
-> 
-> I think we actually have a separate bug here.  On 64-bit non-x86
-> architectures, PCIBIOS_MAX_MEM_32 is a 64-bit -1, so the following
-> attempt to avoid putting a 32-bit BAR above 4G only works on x86,
-> where PCIBIOS_MAX_MEM_32 is 0xffffffff.
-> 
->         /* don't allocate too high if the pref mem doesn't support 64bit*/
->         if (!(res->flags & IORESOURCE_MEM_64))
->                 max = PCIBIOS_MAX_MEM_32;
-> 
-> I think we should fix this with a separate patch that removes
-> PCIBIOS_MAX_MEM_32 altogether, replacing this use with an explicit
-> 0xffffffff (or some other "max 32-bit value" symbol).  I don't think
-> there's anything arch-specific about this.
-> 
-> So I'd like to see two patches here:
->   1) Avoid allocating 64-bit regions for 32-bit BARs
->   2) Try to allocate regions above 4GB for 64-bit BARs
-> 
+Enable LTR(Latency tolerance reporting) and OBFF(optimized buffer flush/fill) in
+ pci_enable_device(), so that they are enabled before the device is used by driver.
 
-Do we also need to track the maximum address available to the CPU?
+Signed-off-by: Xudong Hao <xudong.hao@intel.com>
 
-	-hpa
+---
+ drivers/pci/pci.c |   29 +++++++++++++++++++++++++++++
+ 1 files changed, 29 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 111569c..2369883 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1134,6 +1134,31 @@ int pci_load_and_free_saved_state(struct pci_dev *dev,
+ }
+ EXPORT_SYMBOL_GPL(pci_load_and_free_saved_state);
+
++static void pci_enable_dev_caps(struct pci_dev *dev)
++{
++       /* set default value */
++       unsigned long type = PCI_EXP_OBFF_SIGNAL_ALWAYS;
++
++       /* LTR(Latency tolerance reporting) allows devices to send
++        * messages to the root complex indicating their latency
++        * tolerance for snooped & unsnooped memory transactions.
++        */
++       pci_enable_ltr(dev);
++
++       /* OBFF (optimized buffer flush/fill), where supported,
++        * can help improve energy efficiency by giving devices
++        * information about when interrupts and other activity
++        * will have a reduced power impact.
++        */
++       pci_enable_obff(dev, type);
++}
++
++static void pci_disable_dev_caps(struct pci_dev *dev)
++{
++       pci_disable_obff(dev);
++       pci_disable_ltr(dev);
++}
++
+ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ {
+        int err;
+@@ -1146,6 +1171,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+                return err;
+        pci_fixup_device(pci_fixup_enable, dev);
+
++       /* Enable some device capibility before it's used by driver. */
++       pci_enable_dev_caps(dev);
++
+        return 0;
+ }
+
+@@ -1361,6 +1389,7 @@ static void do_pci_disable_device(struct pci_dev *dev)
+        }
+
+        pcibios_disable_device(dev);
++       pci_disable_dev_caps(dev);
+ }
+
+ /**
+--
+1.6.0.rc1
 
