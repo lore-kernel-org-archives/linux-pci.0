@@ -1,164 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:58821 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754616Ab2ECGtb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2012 02:49:31 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 3 May 2012 11:52:22 +0530
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q436Lboi32833624
-	for <linux-pci@vger.kernel.org>; Thu, 3 May 2012 11:51:37 +0530
-Received: from d28av01.in.ibm.com (loopback [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q43BpHup019386
-	for <linux-pci@vger.kernel.org>; Thu, 3 May 2012 17:21:17 +0530
-Date: Thu, 3 May 2012 14:21:34 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:23736 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966817Ab2EOVJn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 May 2012 17:09:43 -0400
+Message-ID: <1337116157.6954.212.camel@bling.home>
+Subject: Re: [PATCH 05/13] pci: New pci_acs_enabled()
+From: Alex Williamson <alex.williamson@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: Does my understanding correct?
-Message-ID: <20120503062134.GC6255@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120427092704.GA22529@richard>
- <CAErSpo6xy6AEQwROSOU6yrfdWpBgRpd+-hOGOyg0mv9UzKwOUA@mail.gmail.com>
- <20120428050127.GA25916@richard>
- <CAErSpo7mjeo8f=_3Uhj0V-Q1-q5dYqi8T7pMqBY6zdahpCWTRA@mail.gmail.com>
- <20120502062443.GB24172@richard>
- <CAErSpo6uODF00jL6hHXbB8=f3XiG2UMr+5-5CxY2T+duQVfcTA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAErSpo6uODF00jL6hHXbB8=f3XiG2UMr+5-5CxY2T+duQVfcTA@mail.gmail.com>
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org
+Date: Tue, 15 May 2012 15:09:17 -0600
+In-Reply-To: <CAErSpo48ES5iLDCh1WzmHezSEYhPjhtgD5uxoY-TCTKgUBab2g@mail.gmail.com>
+References: <20120511222148.30496.68571.stgit@bling.home>
+	 <20120511225602.30496.80438.stgit@bling.home>
+	 <CAErSpo58hKPFb5duOi64sWuR5AJDTVp0rRHkQLotYE3CMXRRhA@mail.gmail.com>
+	 <1337035766.6954.74.camel@bling.home>
+	 <CAErSpo48ES5iLDCh1WzmHezSEYhPjhtgD5uxoY-TCTKgUBab2g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 02, 2012 at 08:59:40AM -0600, Bjorn Helgaas wrote:
->On Wed, May 2, 2012 at 12:24 AM, Richard Yang
-><weiyang@linux.vnet.ibm.com> wrote:
->> On Mon, Apr 30, 2012 at 09:56:13AM -0600, Bjorn Helgaas wrote:
->>>On Fri, Apr 27, 2012 at 11:01 PM, Richard Yang
->>><weiyang@linux.vnet.ibm.com> wrote:
->>>
->> Thanks for your nice chart.
->>>I think assignments shown for the PCIe-to-PCI bridge are OK, although
->>>I would draw it like this because the bridge originates a single bus
->>>02 that may have multiple devices attached to it (this side is PCI,
->>>not PCIe, so it really is a shared bus):
->>>
->>>                                 ^
->>>                                 |
->>>                        +--------+--------+
->>>                        |     00:02.0     |
->>>                        | PCIe-PCI bridge |
->>>                        |                 |
->>>                        +--------+--------+
->>>                                 |
->>>                                 |
->>>                      +---------------------+    Bus 02
->>>                      |                     |
->>>                      |                     |
->>>                      |                     |
->>>                 +----v----+           +----v----+
->>>                 | 02:00.0 |           | 02:01.0 |
->>>                 +---------+           +---------+
->>>
->> So for this case, there is not internal bus, while this is really a
->> physical shared bus, not a logical one.
->
->Yes.  The downstream side of the PCIe-PCI bridge is PCI.
->
->>>I think the PCIe switch part is incorrect.  Here's Figure 1-3 from sec
->>>1.3.3 of the PCIe r3 spec:
->>
->>>A PCIe switch appears as two or more PCI-PCI bridges.  One is
->>>associated with the upstream port; the others with the downstream
->>>ports.
->>>
->>>A bridge always has a primary side and a secondary side.  In your
->>>diagram, the bridge associated with the upstream port would be 00:01.0
->>>(primary bus 00) and could have a secondary bus of 03 (since 02 is
->>>already consumed by the PCIe-PCI bridge).
->> Hmm... I am confused why is 03. 02 is used but 01 is not used.
->> Switch should be configured after PCIe2PCI bridge?
->
->It's likely that the PCIe switch would be configured first, since its
->device number is lower, but that is not a requirement.  The
->requirement is that the bus number ranges consumed by bridges be
->non-overlapping.  In this case (using your original topology plus my
->PCIe switch diagram), we'd have:
->
->  1. an endpoint at 00:00.0 -- consumes no additional buses
->  2. a PCIe switch at 00:01.0 -- consumes at least [bus 03-06]
->  3. a PCIe-PCI bridge at 00:02.0 -- consumes least [bus 02] (its secondary bus)
-So this is a sequence issue. Below is also a valid configuration.
-  2. a PCIe switch at 00:01.0 -- consumes at least [bus 02-05]
-  3. a PCIe-PCI bridge at 00:02.0 -- consumes least [bus 06] (its secondary bus)
->
->Bus 03 is the internal PCIe switch bus that connects the upstream port
->to the downstream ports.  Buses 04, 05, and 06 are the links
->originating from the downstream ports.
->
->>>The bridges associated with the downstream ports are all logically on
->>>bus 03.  Their primary bus number would be 03; they might be 03:00.0,
->>>03:01.0, 03:02.0, etc.  Each would have its own secondary bus number,
->>>for example 04, 05, 06.  That secondary bus number is for the
->>>downstream link from the corresponding downstream port.
->> Hmm, as you mentioned in previous letter, PCIe is an point-to-point
->> protocol, then the secondary bus should reside in the Switch?
->> Do you think my Bus#4 is correct?
->
->No.  Bus 04 is a PCIe link that connects the downstream port (03:00.0)
->to a single PCIe device.  That device (04:00) could be a PCIe
->endpoint, or it could be the upstream port of another PCIe switch.
->(If it is a switch, more bus numbers would be required.)
+On Tue, 2012-05-15 at 13:56 -0600, Bjorn Helgaas wrote:
+> On Mon, May 14, 2012 at 4:49 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Mon, 2012-05-14 at 16:02 -0600, Bjorn Helgaas wrote:
+> >> On Fri, May 11, 2012 at 4:56 PM, Alex Williamson
+> >> <alex.williamson@redhat.com> wrote:
+> >> > In a PCIe environment, transactions aren't always required to
+> >> > reach the root bus before being re-routed.  Peer-to-peer DMA
+> >> > may actually not be seen by the IOMMU in these cases.  For
+> >> > IOMMU groups, we want to provide IOMMU drivers a way to detect
+> >> > these restrictions.  Provided with a PCI device, pci_acs_enabled
+> >> > returns the furthest downstream device with a complete PCI ACS
+> >> > chain.  This information can then be used in grouping to create
+> >> > fully isolated groups.  ACS chain logic extracted from libvirt.
+> >>
+> >> The name "pci_acs_enabled()" sounds like it returns a boolean, but it doesn't.
+> >
+> > Right, maybe this should be:
+> >
+> > struct pci_dev *pci_find_upstream_acs(struct pci_dev *pdev);
+> >
+> >> I'm not sure what "a complete PCI ACS chain" means.
+> >>
+> >> The function starts from "dev" and searches *upstream*, so I'm
+> >> guessing it returns the root of a subtree that must be contained in a
+> >> group.
+> >
+> > Any intermediate switch between an endpoint and the root bus can
+> > redirect a dma access without iommu translation,
+> 
+> Is this "redirection" just the normal PCI bridge forwarding that
+> allows peer-to-peer transactions, i.e., the rule (from P2P bridge
+> spec, rev 1.2, sec 4.1) that the bridge apertures define address
+> ranges that are forwarded from primary to secondary interface, and the
+> inverse ranges are forwarded from secondary to primary?  For example,
+> here:
+> 
+>                    ^
+>                    |
+>           +--------+-------+
+>           |                |
+>    +------+-----+    +-----++-----+
+>    | Downstream |    | Downstream |
+>    |    Port    |    |    Port    |
+>    |   06:05.0  |    |   06:06.0  |
+>    +------+-----+    +------+-----+
+>           |                 |
+>      +----v----+       +----v----+
+>      | Endpoint|       | Endpoint|
+>      | 07:00.0 |       | 08:00.0 |
+>      +---------+       +---------+
+> 
+> that rule is all that's needed for a transaction from 07:00.0 to be
+> forwarded from upstream to the internal switch bus 06, then claimed by
+> 06:06.0 and forwarded downstream to 08:00.0.  This is plain old PCI,
+> nothing specific to PCIe.
 
+Right, I think the main PCI difference is the point-to-point nature of
+PCIe vs legacy PCI bus.  On a legacy PCI bus there's no way to prevent
+devices talking to each other, but on PCIe the transaction makes a
+U-turn at some point and heads out another downstream port.  ACS allows
+us to prevent that from happening.
 
-                                      ^
-                                      |
-      +-------------------------------|------------------------------+
-      |                               |                              |
-      |                          +----+----+                         |
-      |                          | virtual |                         |
-      |                          | PCI-PCI |                         |
-      |                          | bridge  |                         |
-      |                          +----+----+                         |
-      |                               |                              |
-      |                               |Bus#3                         |
-      |                               |                              |
-      |          +----------------------------------------+          |
-      |          |                    |                   |          |
-      |          |                    |                   |          |
-      |          |03:00.0             |03:01.0            |03:02.0   |
-      |     +----+----+          +----+----+         +----++---+     |
-      |     | virtual |          | virtual |         | virtual |     |
-      |     | PCI-PCI |          | PCI-PCI |         | PCI-PCI |     |
-      |     | bridge  |          | bridge  |         | bridge  |     |
-      |     +----+----+          +----+----+         +----+----+     |
-      |          |                    |                   |          |
-      |          |                    |                   |          |
-      +----------|--------------------|-------------------|----------+
-                 | Bus#4?             |                   |
-                 v                    v                   v
+> I don't understand ACS very well, but it looks like it basically
+> provides ways to prevent that peer-to-peer forwarding, so transactions
+> would be sent upstream toward the root (and specifically, the IOMMU)
+> instead of being directly claimed by 06:06.0.
 
-So the link itself is Bus#4?
+Yep, that's my meager understanding as well.
 
-If there is no device under this link, will Bus#4 appear in kernel?
-And then the PCIe switch is represented by 4 pci_dev structure and each
-is bridge type?
+> > so we're looking for
+> > the furthest upstream device for which acs is enabled all the way up to
+> > the root bus.
+> 
+> Correct me if this is wrong: To force device A's DMAs to be processed
+> by an IOMMU, ACS must be enabled on the root port and every downstream
+> port along the path to A.
 
->
->>>The endpoints below the PCIe switch could then be 04:00.0 and 05:00.0
->>>(or these could be the upstream ports of more PCIe switches).
->> So below the PCIe downstream port, there is only on PCIe device.
->> The whole bus is occupied by this device?
->> That is why the device could have upto 256 functions?
->
->Yes, if it supports ARI.
->
->Bjorn
+Yes, modulo this comment in libvirt source:
 
--- 
-Richard Yang
-Help you, Help me
+    /* if we have no parent, and this is the root bus, ACS doesn't come
+     * into play since devices on the root bus can't P2P without going
+     * through the root IOMMU.
+     */
+
+So we assume that a redirect at the point of the iommu will factor in
+iommu translation.
+
+> If so, I think you're trying to find out the closest upstream device X
+> such that everything leading to X has ACS enabled.  Every device below
+> X can DMA freely to other devices below X, so they would all have to
+> be in the same isolated group.
+
+Yes
+
+> I tried to work through some examples to develop some intuition about this:
+
+(inserting fixed url)
+> http://www.asciiflow.com/#3736558963405980039
+
+> pci_acs_enabled(00:00.0) = 00:00.0 (on root bus (but doesn't it matter
+> if 00:00.0 is PCIe or if RP has ACS?))
+
+Hmm, the latter is the assumption above.  For the former, I think
+libvirt was probably assuming that PCI devices must have a PCIe device
+upstream from them because x86 doesn't have assignment friendly IOMMUs
+except on PCIe.  I'll need to work on making that more generic.
+
+> pci_acs_enabled(00:01.0) = 00:01.0 (on root bus)
+> pci_acs_enabled(01:00.0) = 01:00.0 (acs_dev = 00:01.0, 01:00.0 is not
+> PCIe; seems wrong)
+
+Oops, I'm calling pci_find_upstream_pcie_bridge() first on any of my
+input devices, so this was passing for me.  I'll need to incorporate
+that generically.
+
+> pci_acs_enabled(00:02.0) = 00:02.0 (on root bus; seems wrong if RP
+> doesn't have ACS)
+
+Yeah, let me validate the libvirt assumption.  I see ACS on my root
+port, so maybe they're just assuming it's always enabled or that the
+precedence favors IOMMU translation.  I'm also starting to think that we
+might want "from" and "to" struct pci_dev parameters to make it more
+flexible where the iommu lives in the system.
+
+> pci_acs_enabled(02:00.0) = 00:02.0 (acs_dev = 00:02.0, 02:00.0 has no ACS cap)
+> pci_acs_enabled(03:00.0) = 00:02.0 (acs_dev = 00:02.0)
+> pci_acs_enabled(02:01.0) = 02:01.0 (acs_dev = 00:02.0, 02:01.0 has ACS enabled)
+> pci_acs_enabled(04:00.0) = 04:00.0 (acs_dev = 02:01.0, 04:00.0 is not
+> a bridge; seems wrong if 04:00 is a multi-function device)
+
+AIUI, ACS is not an endpoint property, so this is what should happen.  I
+don't think multifunction plays a role other than how much do we trust
+the implementation to not allow back channels between functions (the
+answer should probably be not at all).
+
+> pci_acs_enabled(02:02.0) = 02:02.0 (acs_dev = 00:02.0, 02:02.0 has ACS enabled)
+> pci_acs_enabled(05:00.0) = 05:00.0 (acs_dev = 02:02.0, 05:00.0 is not a bridge)
+> 
+> But it didn't really help.  I still can't develop a mental picture of
+> what this function does.
+
+It helped me :)  These are good examples, I'll work on fixing it for
+them.  Thanks,
+
+Alex
+
 
