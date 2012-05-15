@@ -1,172 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:49489 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754970Ab2EBAhd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2012 20:37:33 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: RE: [PATCH v6] Quirk for IVB graphics FLR errata
-Date: Wed, 2 May 2012 00:37:30 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FDA2550@SHSMSX102.ccr.corp.intel.com>
-References: <403610A45A2B5242BD291EDAE8B37D300FD24698@SHSMSX102.ccr.corp.intel.com>
- <CAErSpo4Dm45uRsvdzSAfrvGNPPA_7QqvC_Se-JxpJErsasoTKw@mail.gmail.com>
- <403610A45A2B5242BD291EDAE8B37D300FD3ABC3@SHSMSX101.ccr.corp.intel.com>
- <CAErSpo4Qm1DP-i2YWc1ZibiUAnPC-tLG9X0xceAvGFxs8e+mPQ@mail.gmail.com>
- <403610A45A2B5242BD291EDAE8B37D300FD8BEA9@SHSMSX102.ccr.corp.intel.com>
- <CAErSpo4tUnA6oFr1uXyfVPHQh7F-LMN913pu=MfaEsRi5isLLQ@mail.gmail.com>
- <403610A45A2B5242BD291EDAE8B37D300FD906DD@SHSMSX102.ccr.corp.intel.com>
- <20120427174141.GA11634@google.com>
-In-Reply-To: <20120427174141.GA11634@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48727 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966659Ab2EOXUq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 May 2012 19:20:46 -0400
+Received: by lahd3 with SMTP id d3so88083lah.19
+        for <linux-pci@vger.kernel.org>; Tue, 15 May 2012 16:20:44 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4FABAFE4.7000208@jp.fujitsu.com>
+References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com>
+ <4F7AA3A2.1080900@jp.fujitsu.com> <4F7C003B.4040208@jp.fujitsu.com>
+ <4F866184.4000403@jp.fujitsu.com> <CAErSpo6Xb6rbZ757VHuQnWWsXbnygTM9JQFzvOnOiM895D+R-g@mail.gmail.com>
+ <4F876C54.5040408@jp.fujitsu.com> <4F8BBCE5.6010108@jp.fujitsu.com>
+ <CAErSpo4yicqFBGEFWYuDfknWaeFcisWzpk4u3DR=7BkVA1XZwA@mail.gmail.com>
+ <4FAB9A9A.2080009@jp.fujitsu.com> <4FABAFE4.7000208@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 15 May 2012 17:20:24 -0600
+Message-ID: <CAErSpo5Av10CdgsmU8euWHLbqcFc-gMymB6BWN8-n_+HP0bbLg@mail.gmail.com>
+Subject: Re: [RFC] pciehp: Add archdata setting
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
+	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Saturday, April 28, 2012 1:42 AM
-> To: Hao, Xudong
-> Cc: linux-pci@vger.kernel.org; Don Dutile; Matthew Wilcox; Zhang, Xiantao
-> Subject: Re: [PATCH v6] Quirk for IVB graphics FLR errata
-> 
-> On Fri, Apr 27, 2012 at 01:26:18AM +0000, Hao, Xudong wrote:
-> > Maybe something configuration wrong on my mail client, I attach the patch
-> as an attachment, can you open it in your side?
-> 
-> Yes, I could open the attachment.  But it makes it easier for everybody to
-> read & review your patches if you can figure out how to post patches
-> directly in the message rather than as an attachment.
-> 
+On Thu, May 10, 2012 at 6:09 AM, Kenji Kaneshige
+<kaneshige.kenji@jp.fujitsu.com> wrote:
+> Hi,
+>
+> I have some comments.
+>
+> - I think the patch should be split into two, for microblaze and
+>  for powerpc.
+>
+> - The following code looks redundant. I think dev->is_added is
+>  always false at the BUS_NOTIFY_ADD_DEVICE time.
+>
+> +               /* Cardbus can call us to add new devices to a bus, so ignore
+> +                * those who are already fully discovered
+> +                */
+> +               if (dev->is_added)
+> +                       break;
+>
+> - You need to add patch description.
 
-Sure, I'm trying configure my email, make it better to work.
+Thanks for doing this; I think the code looks great.  Please address
+Kenji-san's dev->is_added comment.
 
-> Here's an updated version of your patch.  I changed the following:
-> 
->     - Wrapped changelog text so it fits nicely for "git log".
->     - Added #define for 0xd0100 offset (please supply a more useful name).
->     - Used pci_iomap() and ioread32()/iowrite32().
->     - Used msleep() rather than spinning (Matthew suggested this earlier,
->       but you apparently missed it).  Note that I went back to your
->       original "do {} while ()" structure to make sure we read PCH_PP_STATUS
->       at least once.
->     - Added message if reset times out.
-> 
-> This is still x86-specific code that clutters all other architectures.  We
-> might fix this someday by adding a DECLARE_PCI_FIXUP_RESET(), so the IVB
-> code could live in arch/x86, and the linker could still collect all the
-> device-specific reset methods.  But I haven't done that yet.
-> 
-> Please test and comment on this (and supply a name for 0xd0100):
-> 
+He's also right that we need this in two patches.  Add cc: Benjamin
+Herrenschmidt <benh@kernel.crashing.org> when you repost it so he can
+ack/nack the powerpc part.
 
-We can named 0xd0100 "NSDE_PWR_STATE" instead of "XXXX" in code.
-
-Testing done, patch works. 
-
-I do not send patch again, can you replace XXXX to NSDE_PWR_STATE and apply this patch?
-
-
-> commit 8566df6d83bf89c8cad3810d5d333a31a95b133e
-> Author: Xudong Hao <xudong.hao@intel.com>
-> Date:   Fri Apr 27 09:16:46 2012 -0600
-> 
->     PCI: work around IvyBridge internal graphics FLR erratum
-> 
->     For IvyBridge Mobile platform, a system hang may occur if a FLR (Function
->     Level Reset) is asserted to internal graphics.
-> 
->     This quirk is a workaround for the IVB FLR errata issue.  We are
->     disabling the FLR reset handshake between the PCH and CPU display, then
->     manually powering down the panel power sequencing and resetting the
-> PCH
->     display.
-> 
->     Signed-off-by: Xudong Hao <xudong.hao@intel.com>
->     Signed-off-by: Kay, Allen M <allen.m.kay@intel.com>
->     Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 4bf7102..d5646de 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3085,16 +3085,74 @@ static int reset_intel_82599_sfp_virtfn(struct
-> pci_dev *dev, int probe)
->  	return 0;
->  }
-> 
-> +#include "../gpu/drm/i915/i915_reg.h"
-> +#define MSG_CTL			0x45010
-> +#define XXXX			0xd0100
-> +#define IGD_OPERATION_TIMEOUT	10000     /* set timeout 10 seconds
-> */
-> +
-> +static int reset_ivb_igd(struct pci_dev *dev, int probe)
-> +{
-> +	void __iomem *mmio_base;
-> +	unsigned long timeout;
-> +	u32 val;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	mmio_base = pci_iomap(dev, 0, 0);
-> +	if (!mmio_base)
-> +		return -ENOMEM;
-> +
-> +	iowrite32(0x00000002, mmio_base + MSG_CTL);
-> +
-> +	/*
-> +	 * Clobbering SOUTH_CHICKEN2 register is fine only if the next
-> +	 * driver loaded sets the right bits. However, this's a reset and
-> +	 * the bits have been set by i915 previously, so we clobber
-> +	 * SOUTH_CHICKEN2 register directly here.
-> +	 */
-> +	iowrite32(0x00000005, mmio_base + SOUTH_CHICKEN2);
-> +
-> +	val = ioread32(mmio_base + PCH_PP_CONTROL) & 0xfffffffe;
-> +	iowrite32(val, mmio_base + PCH_PP_CONTROL);
-> +
-> +	timeout = jiffies + msecs_to_jiffies(IGD_OPERATION_TIMEOUT);
-> +	do {
-> +		val = ioread32(mmio_base + PCH_PP_STATUS);
-> +		if ((val & 0xB0000000) == 0)
-> +			goto reset_complete;
-> +		msleep(10);
-> +	} while (time_before(jiffies, timeout));
-> +	dev_warn(&dev->dev, "timeout during reset\n");
-> +
-> +reset_complete:
-> +	iowrite32(0x00000002, mmio_base + XXXX);
-> +
-> +	pci_iounmap(dev, mmio_base);
-> +	return 0;
-> +}
-> +
->  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> +#define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-> +#define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
-> 
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-> +		reset_ivb_igd },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-> +		reset_ivb_igd },
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
->  		reset_intel_generic_dev },
->  	{ 0 }
->  };
-> 
-> +/*
-> + * These device-specific reset methods are here rather than in a driver
-> + * because when a host assigns a device to a guest VM, the host may need
-> + * to reset the device but probably doesn't have a driver for it.
-> + */
->  int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  {
->  	const struct pci_dev_reset_methods *i;
+> (2012/05/10 19:38), Hiroo Matsumoto wrote:
+>> Hi, Bjorn
+>>
+>>
+>> Refer to your review and comment, I updated bus notifier code.
+>> This works good. Thanks for your comments.
+>> And I think this way can be applied to microblaze.
+>> Please review this patch.
+>>
+>>
+>> * Changes
+>> 1. Moving pcibios_setup_bus_devices code to pcibios_device_change_notifier so that boot and hotplug use same code. This will change boot message on powerpc platform but there is no difference. Please see "Not patched boot message" and "Patched message".
+>> 2. Calling bus_register_notifier in pcibios_init.
+>> 3. Using bus notifier not only on powerpc platform but also on microblaze platform because microblaze pcibios_setup_bus_devices is a similer way with powerpc.
+>> 4. Removing caller and callee of pcibios_setup_bus_devices because bus notifier works instead of pcibios_setup_bus_devices.
+>>
+>> * Not patched boot message
+>> PCI: Probing PCI hardware
+>> <snip>
+>> pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+>> pci 0000:00:00.0: bridge window [io 0x0000-0x0000] (disabled)
+>> pci 0000:00:00.0: bridge window [mem 0xa0000000-0xa01fffff]
+>> pci 0000:00:00.0: bridge window [mem 0x10000000-0x000fffff pref] (disabled)
+>> irq: irq 4 on host /soc@ffe00000/pic@40000 mapped to virtual irq 16
+>> <snip>
+>> pci 0000:01:00.0: PCI bridge to [bus 02-ff]
+>> pci 0000:01:00.0: bridge window [io 0x1000-0x1fff]
+>> pci 0000:01:00.0: bridge window [mem 0xa0100000-0xa01fffff]
+>> pci 0000:01:00.0: bridge window [mem 0x10000000-0x000fffff pref] (disabled)
+>> irq: irq 5 on host /soc@ffe00000/pic@40000 mapped to virtual irq 17
+>> irq: irq 7 on host /soc@ffe00000/pic@40000 mapped to virtual irq 18
+>>
+>> * Patched boot message
+>> PCI: Probing PCI hardware
+>> <snip>
+>> pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+>> pci 0000:00:00.0: bridge window [io 0x0000-0x0000] (disabled)
+>> pci 0000:00:00.0: bridge window [mem 0xa0000000-0xa01fffff]
+>> pci 0000:00:00.0: bridge window [mem 0x10000000-0x000fffff pref] (disabled)
+>> <snip>
+>> pci 0000:01:00.0: PCI bridge to [bus 02-ff]
+>> pci 0000:01:00.0: bridge window [io 0x1000-0x1fff]
+>> pci 0000:01:00.0: bridge window [mem 0xa0100000-0xa01fffff]
+>> pci 0000:01:00.0: bridge window [mem 0x10000000-0x000fffff pref] (disabled)
+>> <snip>
+>> irq: irq 4 on host /soc@ffe00000/pic@40000 mapped to virtual irq 16
+>> irq: irq 5 on host /soc@ffe00000/pic@40000 mapped to virtual irq 17
+>> irq: irq 7 on host /soc@ffe00000/pic@40000 mapped to virtual irq 18
+>>
+>> * Not patched pciehp message on powerpc platform
+>> # echo 1 > /sys/bus/pci/slots/1/power
+>> <snip>
+>> pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
+>> pcieport 0000:02:01.0: bridge window [io 0xff7ee000-0xff7eefff]
+>> pcieport 0000:02:01.0: bridge window [mem 0xa0100000-0xa01fffff]
+>> pcieport 0000:02:01.0: bridge window [mem 0xa0200000-0xa02fffff 64bit pref]
+>> pci 0000:03:00.0: no hotplug settings from platform
+>> e1000e 0000:03:00.0: Disabling ASPM L1
+>> e1000e 0000:03:00.0: enabling device (0000 -> 0002)
+>> e1000e 0000:03:00.0: No usable DMA configuration, aborting
+>> e1000e: probe of 0000:03:00.0 failed with error -5
+>>
+>> * Patched pciehp message on powerpc platform
+>> # echo 1 > /sys/bus/pci/slots/1/power
+>> <snip>
+>> pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
+>> pcieport 0000:02:01.0: bridge window [io 0xff7ee000-0xff7eefff]
+>> pcieport 0000:02:01.0: bridge window [mem 0xa0100000-0xa01fffff]
+>> pcieport 0000:02:01.0: bridge window [mem 0xa0200000-0xa02fffff 64bit pref]
+>> pci 0000:03:00.0: no hotplug settings from platform
+>> e1000e 0000:03:00.0: Disabling ASPM L1
+>> e1000e 0000:03:00.0: enabling device (0000 -> 0002)
+>> irq: irq 6 on host /soc@ffe00000/msi@41600 mapped to virtual irq 27
+>> e1000e 0000:03:00.0: eth0: (PCI Express:2.5GT/s:Width x1) 00:15:17:bf:c0:c9
+>> e1000e 0000:03:00.0: eth0: Intel(R) PRO/1000 Network Connection
+>> e1000e 0000:03:00.0: eth0: MAC: 1, PHY: 4, PBA No: D50861-003
+>>
+>>
+>> Regards.
+>>
+>> Hiroo MATSUMOTO
+>>
+>>
+>>> Instead of making this a rootfs_initcall(), can you call
+>>> bus_register_notifier() explicitly in pcibios_init()? That way
+>>> pcibios_device_change_notifier() should get called for *all* new PCI
+>>> devices, whether we find them at boot-time or they're hot-added later.
+>>>
+>>> If you do that, I think you can move all the
+>>> pcibios_setup_bus_devices() code into the
+>>> pcibios_device_change_notifier() path, including the NUMA node and IRQ
+>>> fixups.
+>>>
+>>> Your patch will also need a changelog.
+>>>
+>>> Bjorn
+>>>
+>>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
