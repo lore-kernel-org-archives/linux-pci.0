@@ -1,75 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([58.251.152.66]:59290 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828Ab2EBHWj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 May 2012 03:22:39 -0400
-Date: Wed, 02 May 2012 15:20:15 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH v2 04/19] PCI: serialize hotplug operations triggered by
- PCI hotplug sysfs interfaces
-In-reply-to: <20120502050625.GB23579@kroah.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Message-id: <4FA0E02F.5040901@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
- <1335539820-11232-5-git-send-email-jiang.liu@huawei.com>
- <20120502050625.GB23579@kroah.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:60798 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966182Ab2EOXKs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2012 19:10:48 -0400
+Received: by lbbgm6 with SMTP id gm6so92199lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 15 May 2012 16:10:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FAB9BFF.4080802@jp.fujitsu.com>
+References: <4FAB9BFF.4080802@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 15 May 2012 17:10:26 -0600
+Message-ID: <CAErSpo7FbzR+xkjK2qMTF3cew0ardH__1QpYpyoxy+k4nH8Guw@mail.gmail.com>
+Subject: Re: [PATCH] microblaze/pci: Fix compile error
+To: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-5-2 13:06, Greg KH wrote:
-> On Fri, Apr 27, 2012 at 11:16:45PM +0800, Jiang Liu wrote:
->> +	/* Avoid deadlock with pci_hp_deregister() */
->> +	while (!pci_hotplug_try_enter()) {
->> +		/* Check whether the slot has been deregistered. */
->> +		if (list_empty(&slot->slot_list)) {
->> +			retval = -ENODEV;
->> +			goto exit_put;
->> +		}
->> +		msleep(1);
->> +	}
+On Thu, May 10, 2012 at 4:44 AM, Hiroo Matsumoto
+<matsumoto.hiroo@jp.fujitsu.com> wrote:
+> Hi
 >
-> Oh my.
 >
-> Wow.
+> There is a compile error for microblaze pci because io_offset is not
+> declared. This patch adds declaration of io_offset.
 >
-> {sigh}
 >
-> ick.
+> * Compile error message
+> arch/microblaze/pci/pci-common.c: In function 'pcibios_setup_phb_resources':
+> arch/microblaze/pci/pci-common.c:1525: error: 'io_offset' undeclared
+> (first use in this function)
+> arch/microblaze/pci/pci-common.c:1525: error: (Each undeclared
+> identifier is reported only once
+> arch/microblaze/pci/pci-common.c:1525: error: for each function it
+> appears in.)
+> make[1]: *** [arch/microblaze/pci/pci-common.o] Error 1
+> make: *** [arch/microblaze/pci] Error 2
 >
-> My eyes hurt.
 >
-> And your cpu load just went crazy.
+> Regards.
 >
-> You can now handle all of the nasty emails from sysadmins asking why
-> their systems look like their load is high for no good reason.
-My bad, should use schedule_timeout_interruptible() instead of
-msleep(1) here to avoid busy waiting.
-
+> Hiroo MATSUMOTO
 >
-> Not to mention all of the other issues here.
+> Signed-off-by: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
+> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+> index 85f2ac1..90f8238 100644
+> --- a/arch/microblaze/pci/pci-common.c
+> +++ b/arch/microblaze/pci/pci-common.c
+> @@ -1515,6 +1515,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
 >
-> My statement about not inventing new lock types has now been proven
-> true.
->
-> The fact that this would even be a chunk of code that was proposed to be
-> merged makes me weep.
->
-> You owe me a bottle of whatever you are drinking if you expect me to
-> continue to review these patch submissions.
->
-> I'm stopping here in the series, please rework this whole thing in a
-> major way.
->
-> greg k-h
+>  static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, struct list_head *resources)
+>  {
+> +       unsigned long io_offset;
+>        struct resource *res;
+>        int i;
 >
 >
 
+Applied to my "next" branch, thanks.
 
+Bjorn
