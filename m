@@ -1,61 +1,35 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:52402 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966091Ab2EOUFp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2012 16:05:45 -0400
+Received: by lbbgm6 with SMTP id gm6so4422121lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 15 May 2012 13:05:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4FC51D79.6010804@zytor.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
-	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-	<20120525193716.GA8817@google.com>
-	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
-	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-	<CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
-	<4FC50E09.4000204@zytor.com>
-	<CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
-	<4FC51D79.6010804@zytor.com>
-Date: Tue, 29 May 2012 13:46:03 -0700
-Message-ID: <CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>,
-	David Miller <davem@davemloft.net>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <CAErSpo48ES5iLDCh1WzmHezSEYhPjhtgD5uxoY-TCTKgUBab2g@mail.gmail.com>
+References: <20120511222148.30496.68571.stgit@bling.home> <20120511225602.30496.80438.stgit@bling.home>
+ <CAErSpo58hKPFb5duOi64sWuR5AJDTVp0rRHkQLotYE3CMXRRhA@mail.gmail.com>
+ <1337035766.6954.74.camel@bling.home> <CAErSpo48ES5iLDCh1WzmHezSEYhPjhtgD5uxoY-TCTKgUBab2g@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 15 May 2012 14:05:23 -0600
+Message-ID: <CAErSpo4LSSfBNj7dDZ1B5aR=teNkRFHvyibRmNsSmZ03dt5xPw@mail.gmail.com>
+Subject: Re: [PATCH 05/13] pci: New pci_acs_enabled()
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2012 at 12:03 PM, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 05/29/2012 11:17 AM, Yinghai Lu wrote:
->>
->> pci bridge could support 16bits and 32bits io port.
->> but we did not record if 32bits is supported.
->>
->
-> Okay, so this is the actual problem, no?
+> I tried to work through some examples to develop some intuition about this:
 
-their fw could not need kernel help to allocate io ports, or they are
-only use device that support 32bit ioport.
+Sorry, gmail inserted line breaks that ruined this picture.  Here's a
+URL for it:
 
->
->> so during allocating, could have allocated above 64k address to non
->> 32bit bridge.
->>
->> but  x86 is ok, because ioport.end always set to 0xffff.
->> other arches with IO_SPACE_LIMIT with 0xffffffff or
->> 0xffffffffffffffffUL may have problem.
->
-> The latter is nonsense, the PCI-side address space is only 32 bits wide.
->
-maybe they have unified io include ioport and mem io?
-
-Yinghai
+http://www.asciiflow.com/#3736558963405980039
