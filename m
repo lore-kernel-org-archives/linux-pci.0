@@ -1,110 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:65255 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754905Ab2ENNsy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2012 09:48:54 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Dan Williams <dan.j.williams@intel.com>,
-	Maciej Sosnowski <maciej.sosnowski@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [RFC PATCH v2 0/7] dmaengine: enhance dmaengine to support DMA device hotplug
-Date: Mon, 14 May 2012 21:47:02 +0800
-Message-Id: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:31742 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967054Ab2EPNaS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 May 2012 09:30:18 -0400
+Message-ID: <4FB3ABCF.4030708@redhat.com>
+Date: Wed, 16 May 2012 09:29:51 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
+	B07421@freescale.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+	linux-pci@vger.kernel.org, agraf@suse.de, qemu-devel@nongnu.org,
+	chrisw@sous-sol.org, B08248@freescale.com,
+	iommu@lists.linux-foundation.org, gregkh@linuxfoundation.org,
+	avi@redhat.com, benve@cisco.com, dwmw2@infradead.org,
+	linux-kernel@vger.kernel.org, david@gibson.dropbear.id.au
+Subject: Re: [PATCH 05/13] pci: New pci_acs_enabled()
+References: <20120511222148.30496.68571.stgit@bling.home>	<20120511225602.30496.80438.stgit@bling.home>	<CAErSpo58hKPFb5duOi64sWuR5AJDTVp0rRHkQLotYE3CMXRRhA@mail.gmail.com>	<1337035766.6954.74.camel@bling.home>	<CAErSpo48ES5iLDCh1WzmHezSEYhPjhtgD5uxoY-TCTKgUBab2g@mail.gmail.com> <1337116157.6954.212.camel@bling.home>
+In-Reply-To: <1337116157.6954.212.camel@bling.home>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On 05/15/2012 05:09 PM, Alex Williamson wrote:
+> On Tue, 2012-05-15 at 13:56 -0600, Bjorn Helgaas wrote:
+>> On Mon, May 14, 2012 at 4:49 PM, Alex Williamson
+>> <alex.williamson@redhat.com>  wrote:
+>>> On Mon, 2012-05-14 at 16:02 -0600, Bjorn Helgaas wrote:
+>>>> On Fri, May 11, 2012 at 4:56 PM, Alex Williamson
+>>>> <alex.williamson@redhat.com>  wrote:
+>>>>> In a PCIe environment, transactions aren't always required to
+>>>>> reach the root bus before being re-routed.  Peer-to-peer DMA
+>>>>> may actually not be seen by the IOMMU in these cases.  For
+>>>>> IOMMU groups, we want to provide IOMMU drivers a way to detect
+>>>>> these restrictions.  Provided with a PCI device, pci_acs_enabled
+>>>>> returns the furthest downstream device with a complete PCI ACS
+>>>>> chain.  This information can then be used in grouping to create
+>>>>> fully isolated groups.  ACS chain logic extracted from libvirt.
+>>>>
+>>>> The name "pci_acs_enabled()" sounds like it returns a boolean, but it doesn't.
+>>>
+>>> Right, maybe this should be:
+>>>
+>>> struct pci_dev *pci_find_upstream_acs(struct pci_dev *pdev);
+>>>
++1; there is a global in the PCI code, pci_acs_enable,
+and a function pci_enable_acs(), which the above name certainly
+confuses.  I recommend  pci_find_top_acs_bridge()
+would be most descriptive.
 
-From: Jiang Liu <liuj97@gmail.com>
+>>>> I'm not sure what "a complete PCI ACS chain" means.
+>>>>
+>>>> The function starts from "dev" and searches *upstream*, so I'm
+>>>> guessing it returns the root of a subtree that must be contained in a
+>>>> group.
+>>>
+>>> Any intermediate switch between an endpoint and the root bus can
+>>> redirect a dma access without iommu translation,
+>>
+>> Is this "redirection" just the normal PCI bridge forwarding that
+>> allows peer-to-peer transactions, i.e., the rule (from P2P bridge
+>> spec, rev 1.2, sec 4.1) that the bridge apertures define address
+>> ranges that are forwarded from primary to secondary interface, and the
+>> inverse ranges are forwarded from secondary to primary?  For example,
+>> here:
+>>
+>>                     ^
+>>                     |
+>>            +--------+-------+
+>>            |                |
+>>     +------+-----+    +-----++-----+
+>>     | Downstream |    | Downstream |
+>>     |    Port    |    |    Port    |
+>>     |   06:05.0  |    |   06:06.0  |
+>>     +------+-----+    +------+-----+
+>>            |                 |
+>>       +----v----+       +----v----+
+>>       | Endpoint|       | Endpoint|
+>>       | 07:00.0 |       | 08:00.0 |
+>>       +---------+       +---------+
+>>
+>> that rule is all that's needed for a transaction from 07:00.0 to be
+>> forwarded from upstream to the internal switch bus 06, then claimed by
+>> 06:06.0 and forwarded downstream to 08:00.0.  This is plain old PCI,
+>> nothing specific to PCIe.
+>
+> Right, I think the main PCI difference is the point-to-point nature of
+> PCIe vs legacy PCI bus.  On a legacy PCI bus there's no way to prevent
+> devices talking to each other, but on PCIe the transaction makes a
+> U-turn at some point and heads out another downstream port.  ACS allows
+> us to prevent that from happening.
+>
+detail: PCIe up/downstream routing is really done by an internal switch;
+         ACS forces the legacy, PCI base-limit address routing and *forces*
+         the switch to always route the transaction from a downstream port
+         to the upstream port.
 
-This patch set enhances the dmaengine core and its clients to support
-hot-removal of DMA devices at runtime, especially for IOAT devices.
+>> I don't understand ACS very well, but it looks like it basically
+>> provides ways to prevent that peer-to-peer forwarding, so transactions
+>> would be sent upstream toward the root (and specifically, the IOMMU)
+>> instead of being directly claimed by 06:06.0.
+>
+> Yep, that's my meager understanding as well.
+>
++1
 
-Intel IOAT (Crystal Beach) devices are often built into PCIe root complex.
-When hot-plugging a PCI root complex (IOH) on Intel Nehalem/Westmere
-platforms, all IOAT devices built in the IOH must be handled first.
-For future Intel processors with Integrated IOH (IIO), IOAT device will
-get involved even when hot-plugging physical processors.
+>>> so we're looking for
+>>> the furthest upstream device for which acs is enabled all the way up to
+>>> the root bus.
+>>
+>> Correct me if this is wrong: To force device A's DMAs to be processed
+>> by an IOMMU, ACS must be enabled on the root port and every downstream
+>> port along the path to A.
+>
+> Yes, modulo this comment in libvirt source:
+>
+>      /* if we have no parent, and this is the root bus, ACS doesn't come
+>       * into play since devices on the root bus can't P2P without going
+>       * through the root IOMMU.
+>       */
+>
+Correct. PCIe spec says roots must support ACS. I believe all the
+root bridges that have an IOMMU have ACS wired in/on.
 
-The dmaengine core already supports hot-add of IOAT devices, but hot-removal
-of IOAT devices is still unsupported due to a design limiation in the
-dmaengine core.
+> So we assume that a redirect at the point of the iommu will factor in
+> iommu translation.
+>
+>> If so, I think you're trying to find out the closest upstream device X
+>> such that everything leading to X has ACS enabled.  Every device below
+>> X can DMA freely to other devices below X, so they would all have to
+>> be in the same isolated group.
+>
+> Yes
+>
+>> I tried to work through some examples to develop some intuition about this:
+>
+> (inserting fixed url)
+>> http://www.asciiflow.com/#3736558963405980039
+>
+>> pci_acs_enabled(00:00.0) = 00:00.0 (on root bus (but doesn't it matter
+>> if 00:00.0 is PCIe or if RP has ACS?))
+>
+> Hmm, the latter is the assumption above.  For the former, I think
+> libvirt was probably assuming that PCI devices must have a PCIe device
+> upstream from them because x86 doesn't have assignment friendly IOMMUs
+> except on PCIe.  I'll need to work on making that more generic.
+>
+>> pci_acs_enabled(00:01.0) = 00:01.0 (on root bus)
+>> pci_acs_enabled(01:00.0) = 01:00.0 (acs_dev = 00:01.0, 01:00.0 is not
+>> PCIe; seems wrong)
+>
+> Oops, I'm calling pci_find_upstream_pcie_bridge() first on any of my
+> input devices, so this was passing for me.  I'll need to incorporate
+> that generically.
+>
+>> pci_acs_enabled(00:02.0) = 00:02.0 (on root bus; seems wrong if RP
+>> doesn't have ACS)
+>
+> Yeah, let me validate the libvirt assumption.  I see ACS on my root
+> port, so maybe they're just assuming it's always enabled or that the
+> precedence favors IOMMU translation.  I'm also starting to think that we
+> might want "from" and "to" struct pci_dev parameters to make it more
+> flexible where the iommu lives in the system.
+>
+see comment above wrt root ports that have IOMMUs in them.
 
-Currently dmaengine has an assumption that DMA devices could only be
-deregistered when there's no any clients making use of DMA devices.
-So dma_async_device_unregister() is designed to be called by DMA device
-driver's module_exit routines only. But the ioatdma driver doesn't
-conform to that rule, it calls dma_async_device_unregister() from its
-driver detaching routine instead of module_exit routine.
+>> pci_acs_enabled(02:00.0) = 00:02.0 (acs_dev = 00:02.0, 02:00.0 has no ACS cap)
+>> pci_acs_enabled(03:00.0) = 00:02.0 (acs_dev = 00:02.0)
+>> pci_acs_enabled(02:01.0) = 02:01.0 (acs_dev = 00:02.0, 02:01.0 has ACS enabled)
+>> pci_acs_enabled(04:00.0) = 04:00.0 (acs_dev = 02:01.0, 04:00.0 is not
+>> a bridge; seems wrong if 04:00 is a multi-function device)
+>
+> AIUI, ACS is not an endpoint property, so this is what should happen.  I
+> don't think multifunction plays a role other than how much do we trust
+> the implementation to not allow back channels between functions (the
+> answer should probably be not at all).
+>
+correct. ACS is a *bridge* property.
+The unknown wrt multifunction devices is that such devices *could* be implemented
+by a hidden (not responding to PCI cfg accesses from downstream port) PCI bridge
+btwn the functions within a device.
+Such a bridge could allow peer-to-peer xactions and there is no way for OS's to
+force ACS.  So, one has to ask the hw vendors if such a hidden device exists
+in the implementation, and whether peer-to-peer is enabled/allowed -- a hidden PCI
+bridge/PCIe-switch could just be hardwired to push all IO to upstream port,
+and allow parent bridge re-route it back down if peer-to-peer is desired.
+Debate exists whether multifunction devices are 'secure' b/c of this unknown.
+Maybe a PCIe (min., SRIOV) spec change is needed in this area to
+determine this status about a device (via pci cfg/cap space).
 
-This patch set enhances the dmaengine core to support DMA device hotplug,
-so that dma_async_device_unregister() could be called by DMA driver's
-detach routines to hot-remove DMA devices at runtime. It also tries
-to optimize DMA channel allocation policy according to NUMA affinity.
-
-v2: use percpu counter for channel reference count to avoid polluting
-    global shared cachelines
-
-echo 0000:80:16.7 > /sys/bus/pci/drivers/ioatdma/unbind
-ioatdma 0000:80:16.7: Removing dma and dca services
-------------[ cut here ]------------
-WARNING: at drivers/dma/dmaengine.c:831 dma_async_device_unregister+0xd5/0xf0() (Tainted: G           ---------------- T)
-Hardware name: System x3850 X5 -[7143O3G]-
-dma_async_device_unregister called while 17 clients hold a reference
-Modules linked in: ebtable_nat ebtables ipt_MASQUERADE iptable_nat nf_nat xt_CHECKSUM iptable_mangle bridge stp llc autofs4 sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 vfat fat vhost_net macvtap macvlan tun kvm_intel kvm uinput microcode sg serio_raw cdc_ether usbnet mii be2net i2c_i801 i2c_core iTCO_wdt iTCO_vendor_support shpchp i7core_edac edac_core ioatdma igb dca e1000e bnx2 ext4 mbcache jbd2 sr_mod cdrom sd_mod crc_t10dif qla2xxx pmcraid pata_acpi ata_generic ata_piix bfa(T) scsi_transport_fc scsi_tgt megaraid_sas dm_mirror dm_region_hash dm_log dm_mod [last unloaded: scsi_wait_scan]
-Pid: 5143, comm: bash Tainted: G           ---------------- T 2.6.32-220.el6.x86_64 #1
-Call Trace:
- [<ffffffff81069b77>] ? warn_slowpath_common+0x87/0xc0
- [<ffffffff81069c66>] ? warn_slowpath_fmt+0x46/0x50
- [<ffffffff813fe465>] ? dma_async_device_unregister+0xd5/0xf0
- [<ffffffffa00ec5e9>] ? ioat_dma_remove+0x28/0x4a [ioatdma]
- [<ffffffffa00ec5b9>] ? ioat_remove+0x82/0x8a [ioatdma]
- [<ffffffff8128ab37>] ? pci_device_remove+0x37/0x70
- [<ffffffff8134623f>] ? __device_release_driver+0x6f/0xe0
- [<ffffffff813463ad>] ? device_release_driver+0x2d/0x40
- [<ffffffff81345711>] ? driver_unbind+0xa1/0xc0
- [<ffffffff81344b7c>] ? drv_attr_store+0x2c/0x30
- [<ffffffff811eb445>] ? sysfs_write_file+0xe5/0x170
- [<ffffffff811765d8>] ? vfs_write+0xb8/0x1a0
- [<ffffffff810d46e2>] ? audit_syscall_entry+0x272/0x2a0
- [<ffffffff81176fe1>] ? sys_write+0x51/0x90
- [<ffffffff8100b0f2>] ? system_call_fastpath+0x16/0x1b
----[ end trace 436e184dbc830d94 ]---
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073536000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073533000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff88107352f000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff88107352c000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy dma_desc_pool, ffff881073529000 busy
-ioatdma 0000:80:16.7: dma_pool_destroy completion_pool, ffff881073527000 busy
-
-Jiang Liu (7):
-  dmaengine: enhance DMA channel reference count management
-  dmaengine: rebalance DMA channels when CPU hotplug happens
-  dmaengine: enhance dmaengine to support DMA device hotplug
-  dmaengine: enhance network subsystem to support DMA device hotplug
-  dmaengine: enhance ASYNC_TX subsystem to support DMA device hotplug
-  dmaengine: introduce CONFIG_DMA_ENGINE_HOTPLUG for DMA device hotplug
-  dmaengine: assign DMA channel to CPU according to NUMA affinity
-
- crypto/async_tx/async_memcpy.c      |    2 +
- crypto/async_tx/async_memset.c      |    2 +
- crypto/async_tx/async_pq.c          |   10 +-
- crypto/async_tx/async_raid6_recov.c |    8 +-
- crypto/async_tx/async_tx.c          |    6 +-
- crypto/async_tx/async_xor.c         |   13 +-
- drivers/dma/Kconfig                 |    6 +
- drivers/dma/dmaengine.c             |  360 ++++++++++++++++++++++-------------
- include/linux/async_tx.h            |   13 ++
- include/linux/dmaengine.h           |   43 ++++-
- include/net/netdma.h                |   26 +++
- net/ipv4/tcp.c                      |   10 +-
- net/ipv4/tcp_input.c                |    5 +-
- net/ipv4/tcp_ipv4.c                 |    4 +-
- net/ipv6/tcp_ipv6.c                 |    4 +-
- 15 files changed, 350 insertions(+), 162 deletions(-)
-
--- 
-1.7.9.5
+>> pci_acs_enabled(02:02.0) = 02:02.0 (acs_dev = 00:02.0, 02:02.0 has ACS enabled)
+>> pci_acs_enabled(05:00.0) = 05:00.0 (acs_dev = 02:02.0, 05:00.0 is not a bridge)
+>>
+>> But it didn't really help.  I still can't develop a mental picture of
+>> what this function does.
+>
+> It helped me :)  These are good examples, I'll work on fixing it for
+> them.  Thanks,
+>
+> Alex
+>
+>
+> _______________________________________________
+> iommu mailing list
+> iommu@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
 
