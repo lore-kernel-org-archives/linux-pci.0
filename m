@@ -1,96 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:64267 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965672Ab2ERSNJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 14:13:09 -0400
-Received: by dady13 with SMTP id y13so4149588dad.19
-        for <linux-pci@vger.kernel.org>; Fri, 18 May 2012 11:13:08 -0700 (PDT)
-Date: Fri, 18 May 2012 11:13:05 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Shyam Iyer <Shyam_Iyer@Dell.com>, ddutile@redhat.com
-Subject: Re: [PATCH] pci, Add AER_panic sysfs file
-Message-ID: <20120518181305.GB27021@kroah.com>
-References: <20120518045130.GA3281@kroah.com>
- <1337350606-32648-1-git-send-email-prarit@redhat.com>
- <20120518154715.GA21043@kroah.com>
- <4FB68442.1010506@redhat.com>
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:48565 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932839Ab2EPBSl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2012 21:18:41 -0400
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 16 May 2012 06:48:38 +0530
+Date: Wed, 16 May 2012 09:18:34 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120516011833.GA6599@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120410090306.GA7056@richard>
+ <20120422155202.GA13540@richard>
+ <4F95B17B.3030401@redhat.com>
+ <20120514015536.GA3331@richard>
+ <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
+ <20120514064615.GB26605@richard>
+ <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FB68442.1010506@redhat.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2012 at 01:17:54PM -0400, Prarit Bhargava wrote:
-> 
-> > 
-> > Please define "unhardened".  Why aren't all drivers "hardened"?
-> 
-> Most drivers _currently_ do not handle reading all f's (or -1) from hardware.
-> Some drivers do handle some situations but definitely not all of them.
-> Hardening a driver involves making the driver "-1" safe.
+On Tue, May 15, 2012 at 10:32:46AM -0700, Yinghai Lu wrote:
+>On Sun, May 13, 2012 at 11:46 PM, Richard Yang
+><weiyang@linux.vnet.ibm.com> wrote:
+>> On Sun, May 13, 2012 at 10:40:41PM -0700, Yinghai Lu wrote:
+>>>On Sun, May 13, 2012 at 6:55 PM, Richard Yang
+>>><weiyang@linux.vnet.ibm.com> wrote:
+>>>> On Mon, Apr 23, 2012 at 03:46:03PM -0400, Don Dutile wrote:
+>>>>>On 04/22/2012 11:52 AM, Richard Yang wrote:
+>>>>>>All,
+>>>>>>
+>>>>>>I am reading the pci_scan_bridge() and not sure what will happen in
+>>>>>>following situation.
+>>>>>>
+>>>>>>Suppose the kernel is not passed the pci=assign-busses.
+>>>>>>
+>>>>>>Below is a picture about the pci system.
+>>>>>>
+>>>>>>                    +-------+
+>>>>>>                    |       | root bridge(0,255)
+>>>>>>                    +---+---+
+>>>>>>                        |          Bus 0
+>>>>>>       -----+-----------+------------------------------+--
+>>>>>>            |                                          |
+>>>>>>            |                                          |
+>>>>>>            |                                          |
+>>>>>>       +----+----+                               +-----+-----+
+>>>>>>       |         |  B1(1,15)                     |           |B2(16,28)
+>>>>>>       +----+----+                               +-----+-----+
+>>>>>>            |  Bus 1                                   |    Bus 16
+>>>>>>       -----+-----------------------         ----------+----------------
+>>>>>>                             |
+>>>>>>                        +----+----+
+>>>>>>                        |         | B3
+>>>>>>                        +---------+
+>>>>>>
+>>>>>>Suppose B1 and B2 works fine with the BIOS, which get the right bus
+>>>>>>number and range.
+>>>>>>
+>>>>>>B3 does not works fine with the BIOS, which doesn't get the bus number.
+>>>>>>
+>>>> Take my original question.
+>>>>
+>>>> B3 doesn't get the bus number, which its parent doesn't have free bus
+>>>> number and there is no gap between B1 and B2.
+>>>>
+>>>> So in this case, the probe_resource() can't find bus number for B3.
+>>>> Then cause pci_bridge_probe_busn_res() return non-zero.
+>>>>
+>>>> Then B3 couldn't work fine?
+>>>
+>>>B3 is on Bus 1? B3 is the one of bridges on Bus1?
+>> No,  I omit other bridges on Bus#1.
+>> They will occupy bus number 2-15, which is calculated by BIOS and set to
+>> bridge's configuration space.
+>
+>with that new condition, probe_resource will return zero.
+>
+>for those kind of case:
+>1. use echo 1 > /sys .../remove to remove devices under Bridge2.
+>2. use setpci to change bus register of bridge2 to move high to make
+>more space for bridge 1.
+>3. rescan bridge 1 and bridge 2.
+So these steps is done after boot up and user find B3 doesn't work?
+>
+>Yinghai
 
-That's not "hardening", it should be written as, "fixing broken
-drivers".  It's a bug if a PCI driver can not handle this as that is
-exactly what happens when a PCI device is removed from the system
-without the driver knowing about it.
+-- 
+Richard Yang
+Help you, Help me
 
-> Some companies do ship hardened drivers, but the ones in the tree are not hardened.
-
-Why are there out-of-tree drivers that are so-called "hardened" and why
-are those bug fixes not merged into the kernel tree?
-
-> [The above comment is in no way an approval of shipping drivers outside of the
-> kernel.  I'm just stating a fact.]
-
-Any specific drivers you are referring to so that I can go and kick
-someone to get their act together?
-
-Seriously, this is a bug in the PCI drivers, not anything else, it needs
-to be fixed there, not papered over with a kernel crash from the PCI
-core.
-
-> The effort involved in hardening this drivers is significant.
-
-It shouldn't be, this has been well known for what, 13+ years now?  This
-is nothing new at all, and again, is a bug if the driver can't handle
-this.
-
-> It will be a long time before anyone considers the in-tree drivers
-> hardened.  We should start with a baby-step of acknowledging the
-> problem and giving current users a way of protecting their data.
-
-No, we need to fix the drivers, again, this is a well-known issue.
-
-What specific drivers do you see in the kernel tree right now that can
-not handle this type of thing.  A list would be great so that we can fix
-them now.
-
-> >> In these cases, the system should not do a bus reset, but rather the
-> >> system should panic to avoid any further possible data corruption.
-> > 
-> > Really?  You really want to panic the whole system and shut down and
-> > potentially loose everything?  That does not sound like a good idea at
-> > all to me, is there really no way to recover from this?
-> 
-> Yes, that's _exactly_ what I want to do.  Having a driver that is capable of
-> writing corrupted data to a disk or corrupting memory is much worse than
-> panicking and stopping the system for a short period of time.
-
-But by panicking, you just lost data and have potentially corrupt data
-written to the disk in a half-finished manner, plus you now have a
-broken system that is stuck and needs to be rebooted :)
-
-> The default is to handle an AER through a bus reset so a user must actively
-> request the panic.
-
-Fair enough, I can understand why some people might want this type of
-control over a system, and if they reboot-on-panic, they can recover
-quickly and get back up and running.
-
-But again, this needs to be fixed in the drivers themselves, otherwise
-they are broken on systems that, again, have been shipping for 13+ years
-now.  It's unacceptable for the driver authors to be that sloppy.
-
-greg k-h
