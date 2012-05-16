@@ -1,54 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:50157 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751978Ab2EREvf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 00:51:35 -0400
-Received: by pbbrp8 with SMTP id rp8so3440438pbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 17 May 2012 21:51:34 -0700 (PDT)
-Date: Thu, 17 May 2012 21:51:30 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci, Add AER_panic sysfs file
-Message-ID: <20120518045130.GA3281@kroah.com>
-References: <1337274270-18785-1-git-send-email-prarit@redhat.com>
+Received: from blu0-omc4-s13.blu0.hotmail.com ([65.55.111.152]:3070 "EHLO
+	blu0-omc4-s13.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964796Ab2EPNM7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 May 2012 09:12:59 -0400
+Message-ID: <BLU0-SMTP12B809D527F768CCC42B18B7180@phx.gbl>
+Date: Wed, 16 May 2012 14:12:55 +0100
+From: Rob Allen <ra-kernel@hotmail.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1337274270-18785-1-git-send-email-prarit@redhat.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Clemens Ladisch <clemens@ladisch.de>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Ram Pai <linuxram@us.ibm.com>,
+	linux1394-devel@lists.sourceforge.net,
+	bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
+References: <bug-43244-4803@https.bugzilla.kernel.org/> <20120513221357.7574ae79@stein> <4FB0A6F6.9050504@ladisch.de> <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 17, 2012 at 01:04:30PM -0400, Prarit Bhargava wrote:
-> Consider the following case
-> 
-> 		[ RP ]
-> 		  |
-> 		  |
-> 	+---------+-----------+
-> 	|	  |	      |
->        [H1]      [H2]        [X1]
-> 
-> where RP is a PCIE Root Port, H1 and H2 are devices with drivers that support
-> PCIE AER driver error handling (ie, they have pci_error_handlers defined in
-> the driver), and X1 is a device with a driver that does not support PCIE
-> AER driver error handling.
-> 
-> If the Root Port takes an error what currently happens is that the
-> bus resets and H1 & H2 call their slot_reset functions.  X1 does nothing.
-> 
-> In some cases a user may not wish the system to continue because X1 is
-> an unhardened driver.  In these cases, the system should not do a bus reset,
-> but rather the system should panic to avoid any further possible data
-> corruption.
-> 
-> This patch implements an AER_panic sysfs entry for each root port which
-> a user can modify.  AER_panic = 1, means the system will panic on a
-> PCIE error which would have normally resulted in a secondary bus reset.
+On 14/05/12 07:39, Yinghai Lu wrote:
+> On Sun, May 13, 2012 at 11:32 PM, Clemens Ladisch<clemens@ladisch.de>  wrote:
+>> I'm not sure how resource-related changes can result in something that looks
+>> like a power management issue, but maybe the chip doesn't allow register
+>> accesses after its resources are moved, or something like that.  Any ideas?
+>>
+>
+> can you post full log with pci debug enabled with lastest upsteam kernel?
 
-If you add/modify/delete a sysfs file, you have to also have a
-corrisponding patch to Documentation/ABI/ in order to keep things sane.
-Please do that as part of this patch the next time you submit it.
+Yinghai,
 
-thanks,
+Sorry for the delay.
 
-greg k-h
+I'm happy to do that, although I need with some guidance on what I need 
+to enable to get the required output.
+
+(I've been using pre-built kernels so far, and I've never built and 
+installed from source. I'm not averse to doing so, but please just bear 
+it in mind that I'm a newbie!)
+
+Thanks,
+Rob
