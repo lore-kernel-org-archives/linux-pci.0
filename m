@@ -1,113 +1,224 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:18755 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209Ab2EGUbO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:31:14 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 17/21] powerpc/PCI: register busn_res for root buses
-Date: Mon,  7 May 2012 13:30:02 -0700
-Message-Id: <1336422606-4244-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1337196962.6954.254.camel@bling.home>
+Subject: Re: [PATCH 05/13] pci: New pci_acs_enabled()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
+	B07421@freescale.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+	linux-pci@vger.kernel.org, agraf@suse.de, qemu-devel@nongnu.org,
+	chrisw@sous-sol.org, B08248@freescale.com,
+	iommu@lists.linux-foundation.org, gregkh@linuxfoundation.org,
+	avi@redhat.com, benve@cisco.com, dwmw2@infradead.org,
+	linux-kernel@vger.kernel.org, david@gibson.dropbear.id.au
+Date: Wed, 16 May 2012 13:36:02 -0600
+In-Reply-To: <1337185318.6954.243.camel@bling.home>
+References: <20120511222148.30496.68571.stgit@bling.home>
+	 <20120511225602.30496.80438.stgit@bling.home>
+	 <CAErSpo58hKPFb5duOi64sWuR5AJDTVp0rRHkQLotYE3CMXRRhA@mail.gmail.com>
+	 <1337035766.6954.74.camel@bling.home>
+	 <CAErSpo48ES5iLDCh1WzmHezSEYhPjhtgD5uxoY-TCTKgUBab2g@mail.gmail.com>
+	 <1337116157.6954.212.camel@bling.home> <4FB3ABCF.4030708@redhat.com>
+	 <1337185318.6954.243.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the host bridge bus number aperture to the resource list.
-Like the MMIO and I/O port apertures, this is used when assigning
-resources to hot-added devices or in the case of conflicts.
+On Wed, 2012-05-16 at 10:21 -0600, Alex Williamson wrote:
+> On Wed, 2012-05-16 at 09:29 -0400, Don Dutile wrote:
+> > On 05/15/2012 05:09 PM, Alex Williamson wrote:
+> > > On Tue, 2012-05-15 at 13:56 -0600, Bjorn Helgaas wrote:
+> > >> pci_acs_enabled(02:00.0) = 00:02.0 (acs_dev = 00:02.0, 02:00.0 has no ACS cap)
+> > >> pci_acs_enabled(03:00.0) = 00:02.0 (acs_dev = 00:02.0)
+> > >> pci_acs_enabled(02:01.0) = 02:01.0 (acs_dev = 00:02.0, 02:01.0 has ACS enabled)
+> > >> pci_acs_enabled(04:00.0) = 04:00.0 (acs_dev = 02:01.0, 04:00.0 is not
+> > >> a bridge; seems wrong if 04:00 is a multi-function device)
+> > >
+> > > AIUI, ACS is not an endpoint property, so this is what should happen.  I
+> > > don't think multifunction plays a role other than how much do we trust
+> > > the implementation to not allow back channels between functions (the
+> > > answer should probably be not at all).
+> > >
+> > correct. ACS is a *bridge* property.
+> > The unknown wrt multifunction devices is that such devices *could* be implemented
+> > by a hidden (not responding to PCI cfg accesses from downstream port) PCI bridge
+> > btwn the functions within a device.
+> > Such a bridge could allow peer-to-peer xactions and there is no way for OS's to
+> > force ACS.  So, one has to ask the hw vendors if such a hidden device exists
+> > in the implementation, and whether peer-to-peer is enabled/allowed -- a hidden PCI
+> > bridge/PCIe-switch could just be hardwired to push all IO to upstream port,
+> > and allow parent bridge re-route it back down if peer-to-peer is desired.
+> > Debate exists whether multifunction devices are 'secure' b/c of this unknown.
+> > Maybe a PCIe (min., SRIOV) spec change is needed in this area to
+> > determine this status about a device (via pci cfg/cap space).
+> 
+> Well, there is actually a section of the ACS part of the spec
+> identifying valid flags for multifunction devices.  Secretly I'd like to
+> use this as justification for blacklisting all multifunction devices
+> that don't explicitly support ACS, but that makes for pretty course
+> granularity.  For instance, all these devices end up in a group:
+> 
+>    +-14.0  ATI Technologies Inc SBx00 SMBus Controller
+>    +-14.2  ATI Technologies Inc SBx00 Azalia (Intel HDA)
+>    +-14.3  ATI Technologies Inc SB7x0/SB8x0/SB9x0 LPC host controller
+>    +-14.4-[05]----0e.0  VIA Technologies, Inc. VT6306/7/8 [Fire II(M)] IEEE 1394 OHCI Controller
+> 
+>   00:14.4 PCI bridge: ATI Technologies Inc SBx00 PCI to PCI Bridge (rev 40)
+> 
+> And these in another:
+> 
+>    +-15.0-[06]----00.0  Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller
+>    +-15.1-[07]----00.0  Etron Technology, Inc. EJ168 USB 3.0 Host Controller
+>    +-15.2-[08]--
+>    +-15.3-[09]--
+> 
+>   00:15.0 PCI bridge: ATI Technologies Inc SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
+>   00:15.1 PCI bridge: ATI Technologies Inc SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
+>   00:15.2 PCI bridge: ATI Technologies Inc SB900 PCI to PCI bridge (PCIE port 2)
+>   00:15.3 PCI bridge: ATI Technologies Inc SB900 PCI to PCI bridge (PCIE port 3)
+> 
+> Am I misinterpreting the spec or is this the correct, if strict,
+> interpretation?
 
-[bhelgaas: write changelog]
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci-common.c      |   17 +++++++++++------
- arch/powerpc/kernel/pci_of_scan.c     |    2 +-
- 3 files changed, 13 insertions(+), 7 deletions(-)
+Here's what I'm currently thinking.  This is a much more simple
+interface, but I don't know if I'm correctly accounting for
+multifunciton devices.  Callers use something like:
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index ac39e6a..8cccbee 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -30,6 +30,7 @@ struct pci_controller {
- 	int first_busno;
- 	int last_busno;
- 	int self_busno;
-+	struct resource busn;
- 
- 	void __iomem *io_base_virt;
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 3532b53..7320f36 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1637,6 +1637,11 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	/* Wire up PHB bus resources */
- 	pcibios_setup_phb_resources(hose, &resources);
- 
-+	hose->busn.start = hose->first_busno;
-+	hose->busn.end	 = hose->last_busno;
-+	hose->busn.flags = IORESOURCE_BUS;
-+	pci_add_resource(&resources, &hose->busn);
++       if (dma_pdev->multifunction &&
++           !pci_acs_enabled(dma_pdev, PCI_ACS_ENABLED))
++               dma_pdev = pci_get_slot(dma_pdev->bus,
++                                       PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
++                                       0));
 +
- 	/* Create an empty bus for the toplevel */
- 	bus = pci_create_root_bus(hose->parent, hose->first_busno,
- 				  hose->ops, hose, &resources);
-@@ -1646,7 +1651,6 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 		pci_free_resource_list(&resources);
- 		return;
- 	}
--	bus->busn_res.start = hose->first_busno;
- 	hose->bus = bus;
++       while (!pci_is_root_bus(dma_pdev->bus)) {
++               if (pci_acs_path_enabled(dma_pdev->bus->self,
++                                        NULL, PCI_ACS_ENABLED))
++                       break;
++
++               dma_pdev = dma_pdev->bus->self;
++       }
+
+Where the first test is where we have the option to make a very strict
+ACS check for multifunction.  Does this start to make more sense?
+Interested in opinions on multifunction strict-ness.  Thanks,
+
+Alex
+
+Author: Alex Williamson <alex.williamson@redhat.com>
+Date:   Wed May 16 13:17:24 2012 -0600
+
+    pci: Add ACS validation utility
+    
+    In a PCIe environment, transactions aren't always required to
+    reach the root bus before being re-routed.  Intermediate
+    switches between an endpoint and the root bus can redirect
+    DMA back downstream before things like IOMMU have a chance
+    to intervene.  This utility function allows us to determine
+    the closest device for which ACS is enabled back to the root
+    bus for use in determining the boundaries of an iommu group.
+    Logic for this extracted from libvirt.
+    
+    Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 111569c..0300e7a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2359,6 +2359,79 @@ void pci_enable_acs(struct pci_dev *dev)
+ }
  
- 	/* Get probe mode and perform scan */
-@@ -1654,13 +1658,14 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
- 	if (node && ppc_md.pci_probe_mode)
- 		mode = ppc_md.pci_probe_mode(bus);
- 	pr_debug("    probe mode: %d\n", mode);
--	if (mode == PCI_PROBE_DEVTREE) {
--		bus->busn_res.end = hose->last_busno;
-+	if (mode == PCI_PROBE_DEVTREE)
- 		of_scan_bus(node, bus);
--	}
- 
--	if (mode == PCI_PROBE_NORMAL)
--		hose->last_busno = bus->busn_res.end = pci_scan_child_bus(bus);
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
-+		hose->last_busno = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, hose->last_busno);
+ /**
++ * pci_acs_enable - test ACS against required flags for a given device
++ * @pdev: device to test
++ * @acs_flags: required PCI ACS flags
++ *
++ * Return true if the device supports the provided flags.  Automatically
++ * filters out flags that are not implemented on multifunction devices.
++ */
++bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
++{
++	int pos;
++	u16 ctrl;
++
++	if (!pci_is_pcie(pdev))
++		return false;
++
++	if (pdev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM ||
++	    pdev->pcie_type == PCI_EXP_TYPE_ROOT_PORT) {
++		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
++		if (!pos)
++			return false;
++
++		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
++		if ((ctrl & acs_flags) != acs_flags)
++			return false;
++	} else if (pdev->multifunction) {
++		/* Filter out flags not applicable to multifunction */
++		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
++			      PCI_ACS_EC | PCI_ACS_DT);
++
++		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
++		if (!pos)
++			return false;
++
++		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
++		if ((ctrl & acs_flags) != acs_flags)
++			return false;
 +	}
++
++	return true;
++}
++EXPORT_SYMBOL_GPL(pci_acs_enabled);
++	
++/**
++ * pci_acs_path_enable - test ACS flags from start to end in a hierarchy
++ * @start: starting downstream device
++ * @end: ending upstream device or NULL to search to the root bus
++ * @acs_flags: required flags
++ *
++ * Walk up a device tree from start to end testing PCI ACS support.  If
++ * any step along the way does not support the required flags, return false.
++ */
++bool pci_acs_path_enabled(struct pci_dev *start,
++			  struct pci_dev *end, u16 acs_flags)
++{
++	struct pci_dev *pdev, *parent = start;
++
++	do {
++		pdev = parent;
++
++		if (!pci_acs_enabled(pdev, acs_flags))
++			return false;
++
++		if (pci_is_root_bus(pdev->bus))
++			return (end == NULL);
++
++		parent = pdev->bus->self;
++	} while (pdev != end);
++
++	return true;
++}
++EXPORT_SYMBOL_GPL(pci_acs_path_enabled);
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTD, 4=INTD)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9910b5c..83c1711 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1586,7 +1586,9 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
+ }
  
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index a36281a..ae5ea5e 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -240,7 +240,7 @@ void __devinit of_scan_pci_bridge(struct pci_dev *dev)
- 	}
+ void pci_request_acs(void);
+-
++bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
++bool pci_acs_path_enabled(struct pci_dev *start,
++			  struct pci_dev *end, u16 acs_flags);
  
- 	bus->primary = dev->bus->number;
--	bus->busn_res.end = busrange[1];
-+	pci_bus_insert_busn_res(bus, busrange[0], busrange[1]);
- 	bus->bridge_ctl = 0;
- 
- 	/* parse ranges property */
--- 
-1.7.7
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+ #define PCI_VPD_LRDT_ID(x)		(x | PCI_VPD_LRDT)
+
+
 
