@@ -1,47 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:57667 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752302Ab2EEKFH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 5 May 2012 06:05:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1SQbrM-00059o-Fc
-	for linux-pci@vger.kernel.org; Sat, 05 May 2012 12:05:04 +0200
-Received: from 139.99.16.28 ([139.99.16.28])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sat, 05 May 2012 12:05:04 +0200
-Received: from jlburr by 139.99.16.28 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sat, 05 May 2012 12:05:04 +0200
-To: linux-pci@vger.kernel.org
-From: "J.L. Burr" <jlburr@cadence.com>
-Subject: [PATCH] pciutils: correct VC status display
-Date: Sat, 05 May 2012 06:02:27 -0400
-Message-ID: <4FA4FAB3.9060904@cadence.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Cc: mj@ucw.cz
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:56937 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761738Ab2EQSAX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 14:00:23 -0400
+From: <Shyam_Iyer@Dell.com>
+To: <prarit@redhat.com>
+CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
+Date: Thu, 17 May 2012 11:00:13 -0700
+Subject: RE: [PATCH] pci, Add AER_panic sysfs file
+Message-ID: <DBFB1B45AF80394ABD1C807E9F28D15707BC8F0D00@BLRX7MCDC203.AMER.DELL.COM>
+References: <1337274270-18785-1-git-send-email-prarit@redhat.com>
+ <DBFB1B45AF80394ABD1C807E9F28D15707BC8F0CE9@BLRX7MCDC203.AMER.DELL.COM>
+ <4FB537B4.1040505@redhat.com>
+ <DBFB1B45AF80394ABD1C807E9F28D15707BC712175@BLRX7MCDC203.AMER.DELL.COM>
+In-Reply-To: <DBFB1B45AF80394ABD1C807E9F28D15707BC712175@BLRX7MCDC203.AMER.DELL.COM>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I think there is a bug displaying the virtual channel status bits
-"NegoPending" and "InProgress".  The wrong offset is being used.
 
-Signed-off-by: John L. Burr <jlburr@cadence.com>
----
 
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index cd342aa..161c275 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -339,7 +339,7 @@ cap_vc(struct device *d, int where)
- 	}
-       rcap = get_conf_long(d, pos);
-       rctrl = get_conf_long(d, pos+4);
--      rstatus = get_conf_word(d, pos+8);
-+      rstatus = get_conf_word(d, pos+10);
+> -----Original Message-----
+> From: Iyer, Shyam
+> Sent: Thursday, May 17, 2012 1:52 PM
+> To: 'Prarit Bhargava'
+> Cc: 'linux-pci@vger.kernel.org'; 'bhelgaas@google.com'
+> Subject: RE: [PATCH] pci, Add AER_panic sysfs file
+> 
+> 
+> 
+> > -----Original Message-----
+> > From: Prarit Bhargava [mailto:prarit@redhat.com]
+> > Sent: Thursday, May 17, 2012 1:39 PM
+> > To: Iyer, Shyam
+> > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com
+> > Subject: Re: [PATCH] pci, Add AER_panic sysfs file
+> >
+> >
+> >
+> > On 05/17/2012 01:29 PM, Shyam_Iyer@Dell.com wrote:
+> > >
+> > >
+> > >> -----Original Message-----
+> > >> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> > >> owner@vger.kernel.org] On Behalf Of Prarit Bhargava
+> > >> Sent: Thursday, May 17, 2012 1:05 PM
+> > >> To: linux-pci@vger.kernel.org
+> > >> Cc: Prarit Bhargava; Bjorn Helgaas
+> > >> Subject: [PATCH] pci, Add AER_panic sysfs file
+> > >>
+> > >> Consider the following case
+> > >>
+> > >> 		[ RP ]
+> > >> 		  |
+> > >> 		  |
+> > >> 	+---------+-----------+
+> > >> 	|	  |	      |
+> > >>        [H1]      [H2]        [X1]
+> > >>
+> > >> where RP is a PCIE Root Port, H1 and H2 are devices with drivers
+> > that
+> > >> support
+> > >> PCIE AER driver error handling (ie, they have pci_error_handlers
+> > >> defined in
+> > >> the driver), and X1 is a device with a driver that does not
+> support
+> > >> PCIE
+> > >> AER driver error handling.
+> > >>
+> > >> If the Root Port takes an error what currently happens is that the
+> > >> bus resets and H1 & H2 call their slot_reset functions.  X1 does
+> > >> nothing.
+> > >>
+> > >> In some cases a user may not wish the system to continue because
+> X1
+> > is
+> > >> an unhardened driver.  In these cases, the system should not do a
+> > bus
+> > >> reset,
+> > >> but rather the system should panic to avoid any further possible
+> > data
+> > >> corruption.
+> > >
+> > > Do we neeed to panic for both correctable and uncorrectable
+> errors..
+> > ?
+> > >
+> > > I thought correctable errors could recover without a bus reset.
+> >
+> > Will a bus reset be issued on a correctable error?  I thought the
+> code
+> > path was
+> > that the bus reset was issued on the uncorrectable error.
+> >
+> > drivers/pci/pcie/aer/aerdrv_core.c: do_recovery()
+> >
+> >         if (severity == AER_FATAL) {
+> >                 result = reset_link(dev);
+> >                 if (result != PCI_ERS_RESULT_RECOVERED)
+> >                         goto failed;
+> >         }
+> >
+> > I may not be looking at the right spot of code.  Care to enlighten
+> me?
+> > :)
+> >
+> > P.
+> 
+> Actually I was reading the documentation ..
+> Documentation/PCI/pcieaer-howto.txt
+> 
+> "
+> Correctable errors pose no impacts on the functionality of the
+> interface. The PCI Express protocol can recover without any software
+> intervention or any loss of data. These errors are detected and
+> corrected by hardware. Unlike correctable errors, uncorrectable
+> errors impact functionality of the interface. Uncorrectable errors
+> can cause a particular transaction or a particular PCI Express link
+> to be unreliable. Depending on those error conditions, uncorrectable
+> errors are further classified into non-fatal errors and fatal errors.
+> Non-fatal errors cause the particular transaction to be unreliable,
+> but the PCI Express link itself is fully functional. Fatal errors, on
+> the other hand, cause the link to be unreliable.
+> "
+> 
+> But anyways the AER_FATAL is true for uncorrectable errors only and not
+> for correctable errors which means reset_link doesn't happen for
+> correctable errors.
+> 
+> drivers/pci/pcie/aer/aerdrv_core.c
+> 
+> if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
+>                 e_info->id = ERR_UNCOR_ID(e_src->id);
+> 
+>                 if (e_src->status & PCI_ERR_ROOT_FATAL_RCV)
+>                         e_info->severity = AER_FATAL;
+>                 else
+>                         e_info->severity = AER_NONFATAL;
+> 
+>                 if (e_src->status & PCI_ERR_ROOT_MULTI_UNCOR_RCV)
+>                         e_info->multi_error_valid = 1;
+>                 else
+>                         e_info->multi_error_valid = 0;
+> 
+>                 aer_print_port_info(p_device->port, e_info);
+> 
+>                 if (find_source_device(p_device->port, e_info))
+>                         aer_process_err_devices(p_device, e_info);
+>         }
 
-       pat_pos = BITS(rcap, 24, 8);
-       printf("Caps:\tPATOffset=%02x MaxTimeSlots=%d RejSnoopTrans%c\n",
+
+
+Looks like we are saying the same thing and I just misunderstood that you were doing a panic for each error. 
+
+The patch looks good to me if it matters.
+
 
