@@ -1,60 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:38932 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212Ab2E3Qep convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 May 2012 12:34:45 -0400
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:37655 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966338Ab2EQPnO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 11:43:14 -0400
+Received: by dady13 with SMTP id y13so2572548dad.19
+        for <linux-pci@vger.kernel.org>; Thu, 17 May 2012 08:43:14 -0700 (PDT)
+Message-ID: <4FB51C89.5080905@gmail.com>
+Date: Thu, 17 May 2012 23:43:05 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6zU898KBv+vFFkymMjpDrPokj0dJq9MMX0z6WZOALbmQ@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
- <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
- <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
- <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
- <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
- <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
- <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
- <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
- <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
- <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
- <CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com>
- <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com>
- <CAErSpo44TViNFcZivjr5hAu8w8kpEpUjxNAWtazhAqwwsorZbw@mail.gmail.com>
- <4FC5CEF1.6000509@snewbury.org.uk> <CAErSpo6zU898KBv+vFFkymMjpDrPokj0dJq9MMX0z6WZOALbmQ@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 30 May 2012 09:33:00 -0700
-Message-ID: <CA+55aFzeG4a1gAxTp1G6252xCrxpB=5x_aDkjtU4WY0o0nqC+w@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Steven Newbury <steve@snewbury.org.uk>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+CC: Vinod Koul <vinod.koul@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH v1 0/8] enhance dmaengine core to support DMA device hotplug
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2012 at 9:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>On Mon, Apr 23, 2012 at 6:51 AM, Jiang Liu <liuj97@xxxxxxxxx> wrote:
+>> From: Jiang Liu <liuj97@xxxxxxxxx>
+>>
+>> This patchset tries to enhance the dmaengine and its clients to support
+>> hot-removal of DMA devices at runtime, especially for IOAT devices.
+>>
+>> When hot-removing IOH (PCI host bridge) on Intel Nehalem/Westmere platform,
+>> we need to remove all IOAT devices embedded in the IOH. For future Intel
+>> processor with IIO (Embedded IOH), we need to remove IOAT devices even
+>> when hot-removing a physical processor. But current dmaengine implementation
+>> doesn't support hot-removal of IOAT devices at runtime.
 >
-> You're right, the spec does allow the upper 16 bits of I/O BARs to be
-> hardwired to zero (PCI spec rev 3.0, p. 226), so this part does make
-> some sense.  I don't think it applies to x86, since I don't think
-> there's a way to generate an I/O access to anything above 64K, but it
-> could help other arches.
->
-> I'm inclined to be conservative and wait until we find a problem where
-> a patch like this would help.
+>Removal of the host bridge means several devices disappear at once.
+>Is it safe to assume that this action is coordinated by userspace?
+>I.e. is the kernel given a chance to shut everything down and remove
+>drivers, or is this a "surprise" unplug?
 
-I agree. I would be *very* suspicious of "it might help with other
-architectures".
-
-Sure, other architectures might be using non-16-bit IO addresses for
-their motherboard resources (just because they can). However, any
-hotplug device is most likely (by far) to have been tested and
-designed for x86, which means that even if it might look like it has
-more than 16 bits of IO space, it will never have been tested that
-way.
-
-So rather than make it likely to help other architectures, I'd say
-that it would make it likely to break things.
-
-                 Linus
+Hi Dan,
+	Sorry for late reply! I just noticed this mail by browsing the linux-pci
+mail list web archive just now.
+	Yes, it will be coordinated by user/kernel hotplug manager. We don't 
+plan to support surprisingly removal yet. It seems a little craze to support
+that.
+	Thanks!
+	Gerry
