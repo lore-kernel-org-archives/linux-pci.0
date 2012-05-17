@@ -1,157 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48727 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966659Ab2EOXUq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 May 2012 19:20:46 -0400
-Received: by lahd3 with SMTP id d3so88083lah.19
-        for <linux-pci@vger.kernel.org>; Tue, 15 May 2012 16:20:44 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:40451 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967579Ab2EQSvS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 May 2012 14:51:18 -0400
+Message-ID: <4FB548A8.9010003@redhat.com>
+Date: Thu, 17 May 2012 14:51:20 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <4FABAFE4.7000208@jp.fujitsu.com>
-References: <4F79584B.2010301@jp.fujitsu.com> <CAErSpo4Yy9d93gNzDadFxSN+41NkEKBz4yai9KzB1aaCP3pwWw@mail.gmail.com>
- <4F7AA3A2.1080900@jp.fujitsu.com> <4F7C003B.4040208@jp.fujitsu.com>
- <4F866184.4000403@jp.fujitsu.com> <CAErSpo6Xb6rbZ757VHuQnWWsXbnygTM9JQFzvOnOiM895D+R-g@mail.gmail.com>
- <4F876C54.5040408@jp.fujitsu.com> <4F8BBCE5.6010108@jp.fujitsu.com>
- <CAErSpo4yicqFBGEFWYuDfknWaeFcisWzpk4u3DR=7BkVA1XZwA@mail.gmail.com>
- <4FAB9A9A.2080009@jp.fujitsu.com> <4FABAFE4.7000208@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 May 2012 17:20:24 -0600
-Message-ID: <CAErSpo5Av10CdgsmU8euWHLbqcFc-gMymB6BWN8-n_+HP0bbLg@mail.gmail.com>
-Subject: Re: [RFC] pciehp: Add archdata setting
-To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
-	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Prarit Bhargava <prarit@redhat.com>
+CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci, Add AER_panic sysfs file
+References: <1337274270-18785-1-git-send-email-prarit@redhat.com>
+In-Reply-To: <1337274270-18785-1-git-send-email-prarit@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 10, 2012 at 6:09 AM, Kenji Kaneshige
-<kaneshige.kenji@jp.fujitsu.com> wrote:
-> Hi,
+On 05/17/2012 01:04 PM, Prarit Bhargava wrote:
+> Consider the following case
 >
-> I have some comments.
+> 		[ RP ]
+> 		  |
+> 		  |
+> 	+---------+-----------+
+> 	|	  |	      |
+>         [H1]      [H2]        [X1]
 >
-> - I think the patch should be split into two, for microblaze and
->  for powerpc.
+> where RP is a PCIE Root Port, H1 and H2 are devices with drivers that support
+> PCIE AER driver error handling (ie, they have pci_error_handlers defined in
+> the driver), and X1 is a device with a driver that does not support PCIE
+> AER driver error handling.
 >
-> - The following code looks redundant. I think dev->is_added is
->  always false at the BUS_NOTIFY_ADD_DEVICE time.
+> If the Root Port takes an error what currently happens is that the
+> bus resets and H1&  H2 call their slot_reset functions.  X1 does nothing.
 >
-> +               /* Cardbus can call us to add new devices to a bus, so ignore
-> +                * those who are already fully discovered
-> +                */
-> +               if (dev->is_added)
-> +                       break;
+> In some cases a user may not wish the system to continue because X1 is
+> an unhardened driver.  In these cases, the system should not do a bus reset,
+> but rather the system should panic to avoid any further possible data
+> corruption.
 >
-> - You need to add patch description.
+> This patch implements an AER_panic sysfs entry for each root port which
+> a user can modify.  AER_panic = 1, means the system will panic on a
+> PCIE error which would have normally resulted in a secondary bus reset.
+>
+> Signed-off-by: Prarit Bhargava<prarit@redhat.com>
+> Cc: Bjorn Helgaas<bhelgaas@google.com>
+> ---
+>   drivers/pci/pci-sysfs.c       |   42 ++++++++++++++++++++++++++++++++++++++++-
+>   drivers/pci/pcie/aer/aerdrv.c |    3 ++
+>   include/linux/pci.h           |    1 +
+>   3 files changed, 45 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index a55e248..8c6d525 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1135,6 +1135,35 @@ static ssize_t reset_store(struct device *dev,
+>
+>   static struct device_attribute reset_attr = __ATTR(reset, 0200, NULL, reset_store);
+>
+> +static ssize_t AER_panic_show(struct device *dev,
+> +				 struct device_attribute *attr, char *buf)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	return sprintf(buf, "%d\n", pdev->rp_AER_panic);
+> +}
+> +
+> +static ssize_t AER_panic_store(struct device *dev,
+> +				  struct device_attribute *attr,
+> +				  const char *buf, size_t count)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	unsigned long val;
+> +
+> +	if (kstrtoul(buf, 0,&val)<  0)
+> +		return -EINVAL;
+> +
+> +	if ((val>  1) || (val<  0))
+> +		return -EINVAL;
+> +
+> +	pdev->rp_AER_panic = val;
+> +
+> +	return count;
+> +}
+> +
+> +static struct device_attribute rp_AER_panic_attr =
+> +	      __ATTR(AER_panic, 0600, AER_panic_show, AER_panic_store);
+> +
+>   static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+>   {
+>   	int retval;
+> @@ -1169,8 +1198,16 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+>   			goto error;
+>   		dev->reset_fn = 1;
+>   	}
+> -	return 0;
+>
+> +	/* PCIE Root Port panic-on-AER allows a user to configure each root
+> +	 * port to panic on an AER error instead of issuing a bus reset.
+> +	 */
+> +	if (dev->pcie_type == PCI_EXP_TYPE_ROOT_PORT) {
+> +		retval = device_create_file(&dev->dev,&rp_AER_panic_attr);
+> +		if (retval)
+> +			goto error;
+> +	}
+> +	return 0;
+>   error:
+>   	pcie_aspm_remove_sysfs_dev_files(dev);
+>   	if (dev->vpd&&  dev->vpd->attr) {
+> @@ -1279,6 +1316,9 @@ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
+>   		device_remove_file(&dev->dev,&reset_attr);
+>   		dev->reset_fn = 0;
+>   	}
+> +
+> +	if (dev->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
+> +		device_remove_file(&dev->dev,&rp_AER_panic_attr);
+>   }
+>
+>   /**
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index 58ad791..dd6b352 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -346,6 +346,9 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+>   	u32 reg32;
+>   	int pos;
+>
+> +	if (dev->rp_AER_panic)
+> +		panic("%s: AER detected on Root Port", pci_name(dev));
+> +
+It'd be more informative if the Root Port D:B:D.F was printed out above,
+so one knows where the errors are coming from the system.  More likely than
+not, the root is ok, but a device dangling from it is the 'root cause' (all pun intended)
+of the error.
 
-Thanks for doing this; I think the code looks great.  Please address
-Kenji-san's dev->is_added comment.
-
-He's also right that we need this in two patches.  Add cc: Benjamin
-Herrenschmidt <benh@kernel.crashing.org> when you repost it so he can
-ack/nack the powerpc part.
-
-> (2012/05/10 19:38), Hiroo Matsumoto wrote:
->> Hi, Bjorn
->>
->>
->> Refer to your review and comment, I updated bus notifier code.
->> This works good. Thanks for your comments.
->> And I think this way can be applied to microblaze.
->> Please review this patch.
->>
->>
->> * Changes
->> 1. Moving pcibios_setup_bus_devices code to pcibios_device_change_notifier so that boot and hotplug use same code. This will change boot message on powerpc platform but there is no difference. Please see "Not patched boot message" and "Patched message".
->> 2. Calling bus_register_notifier in pcibios_init.
->> 3. Using bus notifier not only on powerpc platform but also on microblaze platform because microblaze pcibios_setup_bus_devices is a similer way with powerpc.
->> 4. Removing caller and callee of pcibios_setup_bus_devices because bus notifier works instead of pcibios_setup_bus_devices.
->>
->> * Not patched boot message
->> PCI: Probing PCI hardware
->> <snip>
->> pci 0000:00:00.0: PCI bridge to [bus 01-ff]
->> pci 0000:00:00.0: bridge window [io 0x0000-0x0000] (disabled)
->> pci 0000:00:00.0: bridge window [mem 0xa0000000-0xa01fffff]
->> pci 0000:00:00.0: bridge window [mem 0x10000000-0x000fffff pref] (disabled)
->> irq: irq 4 on host /soc@ffe00000/pic@40000 mapped to virtual irq 16
->> <snip>
->> pci 0000:01:00.0: PCI bridge to [bus 02-ff]
->> pci 0000:01:00.0: bridge window [io 0x1000-0x1fff]
->> pci 0000:01:00.0: bridge window [mem 0xa0100000-0xa01fffff]
->> pci 0000:01:00.0: bridge window [mem 0x10000000-0x000fffff pref] (disabled)
->> irq: irq 5 on host /soc@ffe00000/pic@40000 mapped to virtual irq 17
->> irq: irq 7 on host /soc@ffe00000/pic@40000 mapped to virtual irq 18
->>
->> * Patched boot message
->> PCI: Probing PCI hardware
->> <snip>
->> pci 0000:00:00.0: PCI bridge to [bus 01-ff]
->> pci 0000:00:00.0: bridge window [io 0x0000-0x0000] (disabled)
->> pci 0000:00:00.0: bridge window [mem 0xa0000000-0xa01fffff]
->> pci 0000:00:00.0: bridge window [mem 0x10000000-0x000fffff pref] (disabled)
->> <snip>
->> pci 0000:01:00.0: PCI bridge to [bus 02-ff]
->> pci 0000:01:00.0: bridge window [io 0x1000-0x1fff]
->> pci 0000:01:00.0: bridge window [mem 0xa0100000-0xa01fffff]
->> pci 0000:01:00.0: bridge window [mem 0x10000000-0x000fffff pref] (disabled)
->> <snip>
->> irq: irq 4 on host /soc@ffe00000/pic@40000 mapped to virtual irq 16
->> irq: irq 5 on host /soc@ffe00000/pic@40000 mapped to virtual irq 17
->> irq: irq 7 on host /soc@ffe00000/pic@40000 mapped to virtual irq 18
->>
->> * Not patched pciehp message on powerpc platform
->> # echo 1 > /sys/bus/pci/slots/1/power
->> <snip>
->> pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
->> pcieport 0000:02:01.0: bridge window [io 0xff7ee000-0xff7eefff]
->> pcieport 0000:02:01.0: bridge window [mem 0xa0100000-0xa01fffff]
->> pcieport 0000:02:01.0: bridge window [mem 0xa0200000-0xa02fffff 64bit pref]
->> pci 0000:03:00.0: no hotplug settings from platform
->> e1000e 0000:03:00.0: Disabling ASPM L1
->> e1000e 0000:03:00.0: enabling device (0000 -> 0002)
->> e1000e 0000:03:00.0: No usable DMA configuration, aborting
->> e1000e: probe of 0000:03:00.0 failed with error -5
->>
->> * Patched pciehp message on powerpc platform
->> # echo 1 > /sys/bus/pci/slots/1/power
->> <snip>
->> pcieport 0000:02:01.0: PCI bridge to [bus 03-03]
->> pcieport 0000:02:01.0: bridge window [io 0xff7ee000-0xff7eefff]
->> pcieport 0000:02:01.0: bridge window [mem 0xa0100000-0xa01fffff]
->> pcieport 0000:02:01.0: bridge window [mem 0xa0200000-0xa02fffff 64bit pref]
->> pci 0000:03:00.0: no hotplug settings from platform
->> e1000e 0000:03:00.0: Disabling ASPM L1
->> e1000e 0000:03:00.0: enabling device (0000 -> 0002)
->> irq: irq 6 on host /soc@ffe00000/msi@41600 mapped to virtual irq 27
->> e1000e 0000:03:00.0: eth0: (PCI Express:2.5GT/s:Width x1) 00:15:17:bf:c0:c9
->> e1000e 0000:03:00.0: eth0: Intel(R) PRO/1000 Network Connection
->> e1000e 0000:03:00.0: eth0: MAC: 1, PHY: 4, PBA No: D50861-003
->>
->>
->> Regards.
->>
->> Hiroo MATSUMOTO
->>
->>
->>> Instead of making this a rootfs_initcall(), can you call
->>> bus_register_notifier() explicitly in pcibios_init()? That way
->>> pcibios_device_change_notifier() should get called for *all* new PCI
->>> devices, whether we find them at boot-time or they're hot-added later.
->>>
->>> If you do that, I think you can move all the
->>> pcibios_setup_bus_devices() code into the
->>> pcibios_device_change_notifier() path, including the NUMA node and IRQ
->>> fixups.
->>>
->>> Your patch will also need a changelog.
->>>
->>> Bjorn
->>>
->>>
+>   	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   	/* Disable Root's interrupt in response to error messages */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e444f5b..a4e6a5a 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -324,6 +324,7 @@ struct pci_dev {
+>   	unsigned int    is_hotplug_bridge:1;
+>   	unsigned int    __aer_firmware_first_valid:1;
+>   	unsigned int	__aer_firmware_first:1;
+> +	unsigned int	rp_AER_panic:1; /* if 1, panic on AER bus reset */
+>   	pci_dev_flags_t dev_flags;
+>   	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+>
+
