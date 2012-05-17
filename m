@@ -1,41 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:43966 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760659Ab2EWRfd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 13:35:33 -0400
+Received: from webmail.solarflare.com ([12.187.104.25]:21090 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1760893Ab2EQOOU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 10:14:20 -0400
+Message-ID: <1337264056.2496.8.camel@bwh-desktop.uk.solarflarecom.com>
+Subject: [PATCH] Only decode defined fields of PCI Express Link Control 2
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Martin Mares <mj@ucw.cz>
+CC: <linux-pci@vger.kernel.org>
+Date: Thu, 17 May 2012 15:14:16 +0100
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFzgMPobmuCM86Z2obEnEB=uTA4n8VQQJUZoQsW8oTS7gA@mail.gmail.com>
-References: <20120521170539.GA13635@google.com>
-	<CA+55aFyyEhYcoh2gugVJELfW+dGrLbrow=ZoXsPs3kxft7Tu4g@mail.gmail.com>
-	<CA+8MBbJ00Kgycu-7v6vofQYst_Cujoiu78_Ke5RqM6Bx=-+F1g@mail.gmail.com>
-	<CA+55aFzgMPobmuCM86Z2obEnEB=uTA4n8VQQJUZoQsW8oTS7gA@mail.gmail.com>
-Date: Wed, 23 May 2012 10:35:32 -0700
-Message-ID: <CA+8MBbJwXELb1Q4ZaD8HhtNqXyv1WJiJC0omERa0Gmffov1qQA@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI updates for 3.5 merge window
-From: Tony Luck <tony.luck@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2012 at 9:52 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> I would strongly recommend just doing
->
->   git clone git://github.com/gitster/git
->   cd git
->   make
->   make install
+On a PCI Express multi-function device associated with an upstream
+port, all bits of the Link Control 2 register are currently reserved
+on functions > 0.
 
-My distro needed some "curl" and "expat" bits added ... but that worked
-and I now have shiny new:
-$ git --version
-git version 1.7.10.2.552.gaa3bb87
+The Selectable De-emphasis field is reserved on all but downstream
+ports.
 
-which does indeed have a smarter git request-pull.
+Signed-off-by: Ben Hutchings <bhutchings@solarflare.com>
+---
+ ls-caps.c |   20 +++++++++++++-------
+ 1 files changed, 13 insertions(+), 7 deletions(-)
 
-Thanks
+diff --git a/ls-caps.c b/ls-caps.c
+index 9645e5a..4a75ce7 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -991,22 +991,28 @@ static const char *cap_express_link2_transmargin(int type)
+     }
+ }
+ 
+-static void cap_express_link2(struct device *d, int where, int type UNUSED)
++static void cap_express_link2(struct device *d, int where, int type)
+ {
+   u16 w;
+ 
+-  w = get_conf_word(d, where + PCI_EXP_LNKCTL2);
+-  printf("\t\tLnkCtl2: Target Link Speed: %s, EnterCompliance%c SpeedDis%c, Selectable De-emphasis: %s\n"
+-	"\t\t\t Transmit Margin: %s, EnterModifiedCompliance%c ComplianceSOS%c\n"
+-	"\t\t\t Compliance De-emphasis: %s\n",
++  if (!((type == PCI_EXP_TYPE_ENDPOINT || type == PCI_EXP_TYPE_LEG_END) &&
++	(d->dev->dev != 0 || d->dev->func != 0))) {
++    w = get_conf_word(d, where + PCI_EXP_LNKCTL2);
++    printf("\t\tLnkCtl2: Target Link Speed: %s, EnterCompliance%c SpeedDis%c",
+ 	cap_express_link2_speed(PCI_EXP_LNKCTL2_SPEED(w)),
+ 	FLAG(w, PCI_EXP_LNKCTL2_CMPLNC),
+-	FLAG(w, PCI_EXP_LNKCTL2_SPEED_DIS),
+-	cap_express_link2_deemphasis(PCI_EXP_LNKCTL2_DEEMPHASIS(w)),
++	FLAG(w, PCI_EXP_LNKCTL2_SPEED_DIS));
++    if (type == PCI_EXP_TYPE_DOWNSTREAM)
++      printf(", Selectable De-emphasis: %s",
++	cap_express_link2_deemphasis(PCI_EXP_LNKCTL2_DEEMPHASIS(w)));
++    printf("\n"
++	"\t\t\t Transmit Margin: %s, EnterModifiedCompliance%c ComplianceSOS%c\n"
++	"\t\t\t Compliance De-emphasis: %s\n",
+ 	cap_express_link2_transmargin(PCI_EXP_LNKCTL2_MARGIN(w)),
+ 	FLAG(w, PCI_EXP_LNKCTL2_MOD_CMPLNC),
+ 	FLAG(w, PCI_EXP_LNKCTL2_CMPLNC_SOS),
+ 	cap_express_link2_deemphasis(PCI_EXP_LNKCTL2_COM_DEEMPHASIS(w)));
++  }
+ 
+   w = get_conf_word(d, where + PCI_EXP_LNKSTA2);
+   printf("\t\tLnkSta2: Current De-emphasis Level: %s, EqualizationComplete%c, EqualizationPhase1%c\n"
+-- 
+1.7.7.6
 
--Tony
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
