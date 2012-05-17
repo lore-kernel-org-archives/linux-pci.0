@@ -1,70 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:44789 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760833Ab2EJRqZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2012 13:46:25 -0400
-Received: by dady13 with SMTP id y13so1984815dad.19
-        for <linux-pci@vger.kernel.org>; Thu, 10 May 2012 10:46:24 -0700 (PDT)
-Message-ID: <4FABFEE9.9060501@gmail.com>
-Date: Fri, 11 May 2012 01:46:17 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:36817 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752141Ab2EQBP2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 May 2012 21:15:28 -0400
+Received: by pbbrp8 with SMTP id rp8so1830100pbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 16 May 2012 18:15:28 -0700 (PDT)
 MIME-Version: 1.0
-To: "Michael S. Tsirkin" <mst@redhat.com>
-CC: Amos Kong <akong@redhat.com>, linux-pci@vger.kernel.org,
-	seabios@seabios.org, qemu-devel@nongnu.org,
-	jbarnes@virtuousgeek.org, rjw@sisk.pl, alex.williamson@redhat.com,
-	kevin@koconnor.net
-Subject: Re: [RESEND PATCH v3] hotplug: add device per func in ACPI DSDT tables
-References: <20111214010645.GA2044@morn.localdomain> <20120509072452.14872.92530.stgit@t> <4FABF832.1060708@gmail.com> <20120510174257.GD14647@redhat.com>
-In-Reply-To: <20120510174257.GD14647@redhat.com>
+In-Reply-To: <1337213485.7669.YahooMailNeo@web160306.mail.bf1.yahoo.com>
+References: <1337136686.80168.YahooMailNeo@web160302.mail.bf1.yahoo.com>
+	<CAE9FiQWK0Ur+dnQmJ4D_Zve+Bcqxt2u+R=Qp6s39vJCZJfhRqg@mail.gmail.com>
+	<1337197170.68237.YahooMailNeo@web160304.mail.bf1.yahoo.com>
+	<CAE9FiQU-aCZokS7V_77cpNMN-jK=WEekSJX3F4vnv8ZSEuv4Ow@mail.gmail.com>
+	<1337213485.7669.YahooMailNeo@web160306.mail.bf1.yahoo.com>
+Date: Wed, 16 May 2012 18:15:28 -0700
+Message-ID: <CAE9FiQVGfMWH+yvmFRUsUsC+JzhR=Q2uAc2a_5tsUVQQM9MOrA@mail.gmail.com>
+Subject: Re: Hotplug Debugging
+From: Yinghai Lu <yinghai@kernel.org>
+To: LinuxDrvDev <ushmasonal-linuxmail@yahoo.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/2012 01:42 AM, Michael S. Tsirkin wrote:
-> On Fri, May 11, 2012 at 01:17:38AM +0800, Jiang Liu wrote:
->> On 05/09/2012 03:24 PM, Amos Kong wrote:
->>
->>> ---
->>>  src/ssdt-pcihp.dsl |   17 
->>>  src/ssdt-pcihp.hex | 8869 +++++++++++++++++++++++++++++++++++++++++++++++++++-
->>>  2 files changed, 8781 insertions(+), 105 deletions(-)
->>>
->>> diff --git a/src/ssdt-pcihp.dsl b/src/ssdt-pcihp.dsl
->>> index 4b435b8..2a3c326 100644
->>> --- a/src/ssdt-pcihp.dsl
->>> +++ b/src/ssdt-pcihp.dsl
->>> @@ -17,14 +17,23 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
->>>          // at runtime, if the slot is detected to not support hotplug.
->>>          // Extract the offset of the address dword and the
->>>          // _EJ0 name to allow this patching.
->>> -#define hotplug_slot(slot)                              \
->>> -        Device (S##slot) {                              \
->>> +#define hotplug_func(slot, fn)                          \
->>> +        Device (S##slot##fn) {                          \
->>>             ACPI_EXTRACT_NAME_DWORD_CONST aml_adr_dword  \
->>> -           Name (_ADR, 0x##slot##0000)                  \
->>> +           Name (_ADR, 0x##slot##000##fn)               \
->>>             ACPI_EXTRACT_METHOD_STRING aml_ej0_name      \
->>>             Method (_EJ0, 1) { Return(PCEJ(0x##slot)) }  \
->>>             Name (_SUN, 0x##slot)                        \
->>>          }
->> It would be perfect if the Device object could also support _PS0 and _STA
->> methods.
-> 
-> It needs qemu support, and some backward compatibility hack.
-> Why?
-> 
->> Could we re-add the slot back after hot-removing it from the guest
->> OS with this ACPI implementation? Say execute following scripts from guest OS.
->> echo 0 > /sys/bus/pci/slot/xx/power
->> echo 1 > /sys/bus/pci/slot/xx/power
-> 
-> No because qemu removes device after eject.
-> Do you have a need for this functionality? What is it?
+On Wed, May 16, 2012 at 5:11 PM, LinuxDrvDev
+<ushmasonal-linuxmail@yahoo.com> wrote:
+>
+>
+>>can you post whole log with "debug ignore_loglevel pciehp.pciehp_debug=1" ?
+> Attached here is the log with above parameters.
+>
+> I will also try your kernel with resetting of pcie link.
 
-I'm not familiar with qemu:(
-On native OS, admin could trigger PCI device hotplug operations through
-/sys/bus/pci/slot/xx/power. Not sure whether that's needed for guest OS too. 
+pciehp: pcie_port_service_register = 0
+pciehp: PCI Express Hot Plug Controller Driver version: 0.4
 
+looks like your BIOS does not enable pcie native hotplug.
 
+Yinghai
