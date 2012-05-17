@@ -1,109 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:51061
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753021Ab2EGHf4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 May 2012 03:35:56 -0400
-Date: Mon, 7 May 2012 09:35:47 +0200
-From: Andreas Herrmann <andreas.herrmann3@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 1/2][RESEND] x86/pci/amd: Restore
- early_fill_mp_bus_to_node
-Message-ID: <20120507073547.GE10668@alberich.amd.com>
-References: <20120427143410.GB27535@alberich.amd.com>
- <20120427143621.GC27535@alberich.amd.com>
- <CAErSpo7gkkqZgR0TZ5Xx162pLN9ZaYVhMmyHn+H8Lqr1CBSXXQ@mail.gmail.com>
- <20120504130332.GC12199@alberich.amd.com>
- <CAErSpo5_ZB=ggNDGM5N8Rt1TtW8DQQm1k2s9FBwFHjh7nFA4hw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12072 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030218Ab2EQWQy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 May 2012 18:16:54 -0400
+Message-ID: <4FB578D4.9070301@redhat.com>
+Date: Thu, 17 May 2012 18:16:52 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <CAErSpo5_ZB=ggNDGM5N8Rt1TtW8DQQm1k2s9FBwFHjh7nFA4hw@mail.gmail.com>
+To: Don Dutile <ddutile@redhat.com>
+CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci, Add AER_panic sysfs file
+References: <1337274270-18785-1-git-send-email-prarit@redhat.com> <4FB548A8.9010003@redhat.com> <4FB54960.5080500@redhat.com> <4FB54D49.8040302@redhat.com>
+In-Reply-To: <4FB54D49.8040302@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 04, 2012 at 10:35:05AM -0600, Bjorn Helgaas wrote:
-> On Fri, May 4, 2012 at 7:03 AM, Andreas Herrmann
-> <andreas.herrmann3@amd.com> wrote:
-> > On Wed, May 02, 2012 at 11:33:17AM -0600, Bjorn Helgaas wrote:
-> >> On Fri, Apr 27, 2012 at 8:36 AM, Andreas Herrmann
-> >> <andreas.herrmann3@amd.com> wrote:
-> >> >
-> >> > Once upon a time this function was overloaded with quirky stuff to fix
-> >> > resource detection on systems w/ _CRS defects (seems that some Sun and
-> >> > HP systems were affected).
-> >> >
-> >> > See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
-> >> > (x86: multi pci root bus with different io resource range, on 64-bit)
-> >> >
-> >> > Restore the old function and thus decouple it from the quirk that is
-> >> > CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
-> >> > I assume that the _CRS stuff is working on current systems.
-> >> >
-> >> > This is required to properly initilize the numa_node information of
-> >> > existing PCI busses and associated devices.
-> >>
-> >> I applied some of Yinghai's patches that also touch this area.  Can
-> >> you refresh these so they apply on top of my "next" branch
-> >> (git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next)?
-> >
-> > Arrgh, will adapt my patch and resend it (asap).
-> >
-> >> Can you also be more specific about what these patches fix?
-> >
-> >> My understanding is that amd_bus.c (1) sets NUMA info with
-> >> set_mp_bus_to_node() and (2) figures out MMIO and I/O port apertures,
-> >> which are only used when blind probing and when ignoring _CRS.
-> >>
-> >> It seems like the main change in this patch is that we skip (2)
-> >> completely when family >= 0x11, and I don't understand what that could
-> >> fix.
-> >
-> > The patch restores a very old function that was used to detect the
-> > nearest node for a PCI bus, so yes it's used to do (1). IMHO this
-> > function was totally screwed up with Yinghai's code to do (2). It
-> > seems that Sun has (had?) some systems where (2) was req'd. I don't
-> > care about this part. But I'd like to do (1) on all AMD CPU NUMA
-> > systems.
+
+
+On 05/17/2012 03:11 PM, Don Dutile wrote:
+> On 05/17/2012 02:54 PM, Prarit Bhargava wrote:
+>>
+>>>> +    if (dev->rp_AER_panic)
+>>>> +        panic("%s: AER detected on Root Port", pci_name(dev));
+>>>> +
+>>> It'd be more informative if the Root Port D:B:D.F was printed out above,
+>>> so one knows where the errors are coming from the system.  More likely than
+>>> not, the root is ok, but a device dangling from it is the 'root cause' (all pun
+>>> intended)
+>>> of the error.
+>>
+>> That's what pci_name() is.
+>>
+>> P.
 > 
-> Thanks for the explanation.  But I'm afraid I'm still confused.
+> ok. When I find where it's set, and what values it can be (init_name, vs
+> kobject->name)
+> at what times in the kernel boot.
+
+The device name is init'd in the function pci_setup_device().  It's name is not
+changed after that AFAICT.
+
+This is a well-used and well-known interface to get the address of a pci_dev in
+the form of a string.  pci_name(), by my count, is used 879 times throughout the
+linux kernel.
+
+P.
+
 > 
-> First, it sounds like you're trying to change the way we do part (1),
-> i.e., the set_mp_bus_to_node() calls, but I think the effect of your
-> patch is to stop doing part (2) in some cases.
->
-> Second, I am pretty sure that the current early_fill_mp_bus_info()
-> (before your patch) does the exact same set_mp_bus_to_node() calls as
-> your early_fill_mp_bus_to_node() does.
-
-
-I want to do (1) on all AMD CPUs that might be used in NUMA systems.
-
-What's done for (2) is very specific to certain AMD CPU families --
-some of the register accesses are wrong/incomplete for newer AMD
-CPUs. Furhtermore _CRS should provide the required info. I really
-don't want to extend all the quirky stuff in (2) for future AMD CPUs.
-
-> Finally, on all systems with ACPI, the set_mp_bus_to_node() call in
-> pci_acpi_scan_root() should be doing what you need.  In fact, that
-> call happens later, so it should be overwriting the information filled
-> in by amd_bus.c.  If there's something wrong in this ACPI path, the
-> most likely cause is a BIOS defect, such as  a missing _PXM method on
-> the PNP0A03/0A08 host bridge device.
-
-Good point. I'll check what's wrong in this ACPI path.
-
-
-Thanks,
-
-Andreas
-
--- 
-Operating | Advanced Micro Devices GmbH
-  System  | Einsteinring 24, 85609 Dornach/Aschheim, Germany
- Research | Geschäftsführer: Alberto Bozzo
-  Center  | Sitz: Dornach, Gemeinde Aschheim, Landkreis München
-  (OSRC)  | Registergericht München, HRB Nr. 43632, WEEE-Reg-Nr: DE 12919551
-
-
+> 
+> 
