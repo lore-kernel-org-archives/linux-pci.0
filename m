@@ -1,14 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33012 "EHLO mx1.redhat.com"
+Received: from ozlabs.org ([203.10.76.45]:51253 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101Ab2EXWrT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 May 2012 18:47:19 -0400
-Message-ID: <1337899615.4714.79.camel@ul30vt>
-Subject: Re: [PATCH v2 09/13] vfio: x86 IOMMU implementation
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	id S966147Ab2EQDuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 May 2012 23:50:55 -0400
+Date: Thu, 17 May 2012 13:39:14 +1000
+From: David Gibson <david@gibson.dropbear.id.au>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru, joerg.roedel@amd.com,
 	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
 	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
 	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
@@ -16,82 +14,67 @@ Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
 	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
 	bhelgaas@google.com
-Date: Thu, 24 May 2012 16:46:55 -0600
-In-Reply-To: <4FBEAA5C.4060105@redhat.com>
-References: <20120522043607.5871.11340.stgit@bling.home>
-	 <20120522050536.5871.65171.stgit@bling.home> <4FBEAA5C.4060105@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH 04/13] pci: New pci_dma_quirk()
+Message-ID: <20120517033914.GF22069@truffala.fritz.box>
+References: <20120511222148.30496.68571.stgit@bling.home>
+ <20120511225555.30496.80525.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120511225555.30496.80525.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-05-24 at 17:38 -0400, Don Dutile wrote:
-> On 05/22/2012 01:05 AM, Alex Williamson wrote:
-> > x86 is probably the wrong name for this VFIO IOMMU driver, but x86
-> > is the primary target for it.  This driver support a very simple
-> > usage model using the existing IOMMU API.  The IOMMU is expected to
-> > support the full host address space with no special IOVA windows,
-> > number of mappings restrictions, or unique processor target options.
-> >
-> > Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
-> > ---
-> >
-> >   Documentation/ioctl/ioctl-number.txt |    2
-> >   drivers/vfio/Kconfig                 |    6
-> >   drivers/vfio/Makefile                |    2
-> >   drivers/vfio/vfio.c                  |    7
-> >   drivers/vfio/vfio_iommu_x86.c        |  743 ++++++++++++++++++++++++++++++++++
-> >   include/linux/vfio.h                 |   52 ++
-> >   6 files changed, 811 insertions(+), 1 deletions(-)
-> >   create mode 100644 drivers/vfio/vfio_iommu_x86.c
-> >
-> > diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
-> > index 111e30a..9d1694e 100644
-> > --- a/Documentation/ioctl/ioctl-number.txt
-> > +++ b/Documentation/ioctl/ioctl-number.txt
-> > @@ -88,7 +88,7 @@ Code  Seq#(hex)	Include File		Comments
-> >   		and kernel/power/user.c
-> >   '8'	all				SNP8023 advanced NIC card
-> >   					<mailto:mcr@solidum.com>
-> > -';'	64-6F	linux/vfio.h
-> > +';'	64-72	linux/vfio.h
-> >   '@'	00-0F	linux/radeonfb.h	conflict!
-> >   '@'	00-0F	drivers/video/aty/aty128fb.c	conflict!
-> >   'A'	00-1F	linux/apm_bios.h	conflict!
-> > diff --git a/drivers/vfio/Kconfig b/drivers/vfio/Kconfig
-> > index 9acb1e7..bd88a30 100644
-> > --- a/drivers/vfio/Kconfig
-> > +++ b/drivers/vfio/Kconfig
-> > @@ -1,6 +1,12 @@
-> > +config VFIO_IOMMU_X86
-> > +	tristate
-> > +	depends on VFIO&&  X86
-> > +	default n
-> > +
-> >   menuconfig VFIO
-> >   	tristate "VFIO Non-Privileged userspace driver framework"
-> >   	depends on IOMMU_API
-> > +	select VFIO_IOMMU_X86 if X86
-> >   	help
-> >   	  VFIO provides a framework for secure userspace device drivers.
-> >   	  See Documentation/vfio.txt for more details.
+On Fri, May 11, 2012 at 04:55:55PM -0600, Alex Williamson wrote:
+> Integrating IOMMU groups more closely into the driver core allows
+> us to more easily work around DMA quirks.  The Ricoh multifunction
+> controller is a favorite example of devices that are currently
+> incompatible with IOMMU isolation as all the functions use the
+> requestor ID of function 0 for DMA.  Passing this device into
+> pci_dma_quirk returns the PCI device to use for DMA.  The IOMMU
+> driver can then construct an IOMMU group including both devices.
 > 
-> So a future refactoring that uses some chunk of this support
-> on a non-x86 machine could be a lot of useless renaming.
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
 > 
-> Why not rename vfio_iommu_x86 to something like vfio_iommu_no_iova
-> and just make it conditionally compiled on X86 (as you've done above in Kconfig's)?
-> Then if another arch can use it, or refactors the file to use
-> some of it, and split x86 vs <other-arch> into separate per-arch files,
-> or per-iova schemes, it's more descriptive and less disruptive?
+>  drivers/pci/quirks.c |   22 ++++++++++++++++++++++
+>  include/linux/pci.h  |    2 ++
+>  2 files changed, 24 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 4bf7102..6f9f7f9 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3109,3 +3109,25 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>  
+>  	return -ENOTTY;
+>  }
+> +
+> +struct pci_dev *pci_dma_quirk(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *dma_dev = dev;
+> +
+> +	/*
+> +	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
+> +	 *
+> +	 * Some Ricoh devices use the function 0 source ID for DMA on
+> +	 * other functions of a multifunction device.  The DMA devices
+> +	 * is therefore function 0, which will have implications of the
+> +	 * iommu grouping of these devices.
+> +	 */
+> +	if (dev->vendor == PCI_VENDOR_ID_RICOH &&
+> +	    (dev->device == 0xe822 || dev->device == 0xe230 ||
+> +	     dev->device == 0xe832 || dev->device == 0xe476)) {
+> +		dma_dev = pci_get_slot(dev->bus,
+> +				       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> +	}
 
-Yep, the problem is how to concisely describe what we expect to support
-here.  This file supports IOMMU API based usage of an IOMMU with
-effectively no DMA window or mapping constraints, optimized for static
-mapping of an address space.  What's a good name for that?  Maybe I
-should follow the example of others and just call it a Type 1 IOMMU
-implementation so the marketing material looks better!  ;-P  That may
-honestly be better than calling it x86.  Thoughts?  Thanks,
+Hrm.  This seems like a very generic name for a function performing a
+very specific test.  We could well have devices with the same problem
+in future, so shouldn't this be set up so the same quirk can be easily
+added to new device ids without changing the function code itself.
 
-Alex
-
+-- 
+David Gibson			| I'll have my music baroque, and my code
+david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
+				| _way_ _around_!
+http://www.ozlabs.org/~dgibson
