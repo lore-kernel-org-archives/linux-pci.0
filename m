@@ -1,212 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:54551 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751777Ab2EBX4V convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 May 2012 19:56:21 -0400
-Received: by lahj13 with SMTP id j13so866639lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 02 May 2012 16:56:19 -0700 (PDT)
+Received: from ozlabs.org ([203.10.76.45]:50722 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966120Ab2EQDuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 May 2012 23:50:55 -0400
+Date: Thu, 17 May 2012 13:37:14 +1000
+From: David Gibson <david@gibson.dropbear.id.au>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH 03/13] iommu: IOMMU groups for VT-d and AMD-Vi
+Message-ID: <20120517033714.GE22069@truffala.fritz.box>
+References: <20120511222148.30496.68571.stgit@bling.home>
+ <20120511225548.30496.34428.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
-References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
- <1333905129-8776-1-git-send-email-jiang.liu@huawei.com> <1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 2 May 2012 17:55:58 -0600
-Message-ID: <CAErSpo5K-foOsdantKQhK0=KOmV6-GCRGfjYYrdyi7ijecv-3w@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI, ACPI, x86: update MMCFG information when
- hot-plugging PCI host bridges
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	"Pearson, Greg" <greg.pearson@hp.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120511225548.30496.34428.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 8, 2012 at 11:12 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> This patch enhances pci_root driver to update MMCFG information when
-> hot-plugging PCI root bridges on x86 platforms.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  arch/x86/pci/acpi.c      |   58 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/pci_root.c  |   20 ++++++++++++++++
->  include/acpi/acnames.h   |    1 +
->  include/linux/pci-acpi.h |    3 ++
->  4 files changed, 82 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index da0149d..9184970 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -488,6 +488,64 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->        return bus;
->  }
->
-> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
-> +{
-> +       int result = 0;
-> +       acpi_status status;
-> +       unsigned long long base_addr;
-> +       struct pci_mmcfg_region *cfg;
-> +
-> +       /*
-> +        * Try to insert MMCFG information for host bridges with _CBA method
-> +        */
-> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
-> +                                      NULL, &base_addr);
+On Fri, May 11, 2012 at 04:55:48PM -0600, Alex Williamson wrote:
+> Add back group support for AMD & Intel.  amd_iommu already tracks
+> devices and has init and uninit routines to manage groups.
+> intel-iommu does this on the fly, so we make use of the notifier
+> support built into iommu groups to create and remove groups.
 
-I would prefer to have _CBA evaluated in drivers/acpi/pci_root.c, not
-in the arch code.  It's true that _CBA is probably only used by x86
-today, but the spec says nothing about it being arch-dependent, and I
-suspect it may be used on arm soon.
+Looks ok to me.
 
-> +       if (ACPI_SUCCESS(status)) {
-> +               result = pci_mmconfig_insert(root->segment,
-> +                                            root->secondary.start,
-> +                                            root->secondary.end,
-> +                                            base_addr);
-> +               /*
-> +                * MMCFG information for hot-pluggable host bridges may have
-> +                * already been added by __pci_mmcfg_init();
-> +                */
-> +               if (result == -EEXIST)
-> +                       result = 0;
-> +       } else if (status == AE_NOT_FOUND) {
-> +               /*
-> +                * Check whether MMCFG information has been added for
-> +                * host bridges without _CBA method.
-> +                */
-> +               rcu_read_lock();
-> +               cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-> +               if (!cfg || cfg->end_bus < root->secondary.end)
-> +                       result = -ENODEV;
-> +               rcu_read_unlock();
-> +       } else
-> +               result = -ENODEV;
-> +
-> +       return result;
-> +}
-> +
-> +int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
-> +{
-> +       acpi_status status;
-> +       unsigned long long base_addr;
-> +
-> +       /* Remove MMCFG information for host bridges with _CBA method */
-> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
-> +                                      NULL, &base_addr);
-
-I think the arch-specific "map MMCONFIG space at this addr" should
-return a pointer or something that we can save and use to unmap it on
-remove.  That way we don't have to evaluate _CBA again.
-
-> +       if (ACPI_SUCCESS(status))
-> +               return pci_mmconfig_delete(root->segment,
-> +                                          root->secondary.start,
-> +                                          root->secondary.end,
-> +                                          base_addr);
-> +       else if (status != AE_NOT_FOUND)
-> +               return -ENODEV;
-> +
-> +       return 0;
-> +}
-> +
->  int __init pci_acpi_init(void)
->  {
->        struct pci_dev *dev = NULL;
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 4a7d575..a62bfa8 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -448,6 +448,16 @@ out:
->  }
->  EXPORT_SYMBOL(acpi_pci_osc_control_set);
->
-> +int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root)
-> +{
-> +       return 0;
-> +}
-> +
-> +int __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
-> +{
-> +       return 0;
-> +}
-> +
->  static int __devinit acpi_pci_root_add(struct acpi_device *device)
->  {
->        unsigned long long segment, bus;
-> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->        strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->        device->driver_data = root;
->
-> +       if (arch_acpi_pci_root_add(root)) {
-> +               printk(KERN_ERR PREFIX
-> +                       "can't add MMCFG information for Bus %04x:%02x\n",
-> +                       root->segment, (unsigned int)root->secondary.start);
-> +               result = -ENODEV;
-> +               goto out_free;
-> +       }
-> +
->        /*
->         * All supported architectures that use ACPI have support for
->         * PCI domains, so we indicate this in _OSC support capabilities.
-> @@ -629,6 +647,7 @@ out_del_root:
->        list_del_rcu(&root->node);
->        mutex_unlock(&acpi_pci_root_lock);
->        synchronize_rcu();
-> +       arch_acpi_pci_root_remove(root);
->  out_free:
->        kfree(root);
->        return result;
-> @@ -679,6 +698,7 @@ out:
->        list_del_rcu(&root->node);
->        mutex_unlock(&acpi_pci_root_lock);
->        synchronize_rcu();
-> +       arch_acpi_pci_root_remove(root);
->        kfree(root);
->
->        return 0;
-> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
-> index 38f5088..99bda75 100644
-> --- a/include/acpi/acnames.h
-> +++ b/include/acpi/acnames.h
-> @@ -62,6 +62,7 @@
->  #define METHOD_NAME__AEI        "_AEI"
->  #define METHOD_NAME__PRW        "_PRW"
->  #define METHOD_NAME__SRS        "_SRS"
-> +#define METHOD_NAME__CBA       "_CBA"
->
->  /* Method names - these methods must appear at the namespace root */
->
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index ac93634..816b971 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -38,6 +38,9 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
->
->  void acpi_pci_root_rescan(void);
->
-> +extern int arch_acpi_pci_root_add(struct acpi_pci_root *root);
-> +extern int arch_acpi_pci_root_remove(struct acpi_pci_root *root);
-> +
->  #else
->
->  static inline void acpi_pci_root_rescan(void) { }
-
-I don't know where to put this in the conversation, but I think we
-should separate the question of whether we do blind probing from the
-question of how we set up MMCONFIG space from MCFG.
-
-We currently parse the entire MCFG in some sort of initcall, but I
-think we *could* change the x86 blind probing routines to attempt to
-set up MMCONFIG space for the buses they find, just like
-acpi_pci_root_add() does it for the ACPI host bridges.
-
-That way we can continue blind probing, but make MMCONFIG init more sensible.
-
-Bjorn
+-- 
+David Gibson			| I'll have my music baroque, and my code
+david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
+				| _way_ _around_!
+http://www.ozlabs.org/~dgibson
