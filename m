@@ -1,68 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f202.google.com ([209.85.213.202]:58552 "EHLO
-	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757665Ab2ENUVs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2012 16:21:48 -0400
-Received: by yenl3 with SMTP id l3so657012yen.1
-        for <linux-pci@vger.kernel.org>; Mon, 14 May 2012 13:21:47 -0700 (PDT)
-Date: Mon, 14 May 2012 14:21:47 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Myron Stowe <mstowe@redhat.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: x86: runtime waring in pcibios_fwaddrmap_lookup
-Message-ID: <20120514202147.GA20652@google.com>
-References: <alpine.SOC.1.00.1204122238400.16365@math.ut.ee>
- <CAErSpo6YnzywdjTTVdVEHj_E-B0ARBpZ+fiy29Rv==fO6m9-FA@mail.gmail.com>
- <1335557685.2386.62.camel@zim.stowe>
- <alpine.SOC.1.00.1204280819270.14507@math.ut.ee>
- <1335905694.2386.138.camel@zim.stowe>
- <1336430699.2427.117.camel@zim.stowe>
- <alpine.SOC.1.00.1205131811590.7097@math.ut.ee>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:64813 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966571Ab2ERBvK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 21:51:10 -0400
+Received: by yenm10 with SMTP id m10so2439399yen.19
+        for <linux-pci@vger.kernel.org>; Thu, 17 May 2012 18:51:10 -0700 (PDT)
+Message-ID: <4FB57862.5000700@gmail.com>
+Date: Thu, 17 May 2012 17:14:58 -0500
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.SOC.1.00.1205131811590.7097@math.ut.ee>
+To: John Crispin <blogic@openwrt.org>
+CC: Grant Likely <grant.likely@secretlab.ca>,
+	linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] OF: PCI: const usage needed by MIPS
+References: <1335808019-24502-1-git-send-email-blogic@openwrt.org> <4F9ED1DC.3050007@gmail.com> <4F9FE4F6.5070909@openwrt.org> <CAErSpo4bZ=0=DtbDots_GOGeLNhX6Q4eJrdetaFQMv4iiv5+XA@mail.gmail.com> <4FA32E47.7020406@gmail.com> <4FA3B596.3050106@openwrt.org> <CAErSpo4AQh3cJzULkmP_Dqsf0cSPRP1WqvhuQR3gePXw2rN7rQ@mail.gmail.com> <4FADFB39.6010100@openwrt.org>
+In-Reply-To: <4FADFB39.6010100@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 13, 2012 at 06:15:18PM +0300, Meelis Roos wrote:
-> > > Thanks for the quick response Meelis (unlike myself; I've been consumed
-> > > with a hard deadline task recently - sorry).
+On 05/12/2012 12:55 AM, John Crispin wrote:
 > 
-> Not so quick this time - I had to replace the HDD and then recreate the 
-> failing config. Took 2.4-rc7 as a base. This gives us another data point 
-> - it does not warn on SMP but warns only on UP.
+>> I compiled alpha, ia64, mips, parisc, powerpc, sh, sparc, and x86 and
+>> didn't see any issues related to this patch.  There might still be
+>> something,  but I'm willing to help work through them or revert this
+>> if it turns out to be a problem.  I'm still assuming that Grant will
+>> handle this.
+>>
+>> Bjorn
+> Hi Grant,
+> 
+> Is this patch ok with you ? If so would you mind if Ralf takes this via
+> his tree ? (this would avoid merge order problems)
+> 
 
-I think that's the critical point; thanks for mentioning it :)
+This looks fine to me and merging thru Ralf's tree is fine.
 
-The following patch should fix it.  Can you confirm?
+Acked-by: Rob Herring <rob.herring@calxeda.com>
 
-commit d7d1398aa087445ce04a1b1d45c4de7485590f57
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon May 14 12:01:26 2012 -0600
+Rob
 
-    x86/PCI: only check for spinlock being held in SMP kernels
-    
-    spin_is_locked() is always false on UP kernels: spin_lock_irqsave() does no
-    locking, so we can't tell whether the lock is held or not.  Therefore,
-    this warning is only valid for SMP kernels.
-    
-    Reported-and-tested-by: Meelis Roos <mroos@linux.ee>
-    CC: Myron Stowe <myron.stowe@redhat.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Thanks,
+> John
+> _______________________________________________
+> devicetree-discuss mailing list
+> devicetree-discuss@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/devicetree-discuss
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 831971e..dd8ca6f 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -57,7 +57,7 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
- {
- 	struct pcibios_fwaddrmap *map;
- 
--	WARN_ON(!spin_is_locked(&pcibios_fwaddrmap_lock));
-+	WARN_ON_SMP(!spin_is_locked(&pcibios_fwaddrmap_lock));
- 
- 	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
- 		if (map->dev == dev)
