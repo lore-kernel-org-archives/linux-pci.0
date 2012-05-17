@@ -1,43 +1,23 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 20/21] PCI: Register busn_res for iov bus
-Date: Mon,  7 May 2012 13:30:05 -0700
-Message-Id: <1336422606-4244-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64536 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135Ab2EQQRS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 12:17:18 -0400
+Received: by lbbgm6 with SMTP id gm6so1424823lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 17 May 2012 09:17:16 -0700 (PDT)
+MIME-Version: 1.0
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 17 May 2012 10:16:56 -0600
+Message-ID: <CAErSpo6vBpY3P1WiofhhRehVn_06MiSWYaHoz4-bUnciSp1v_A@mail.gmail.com>
+Subject: [Bug 43192] various ExpressCards are not recognized
+To: Elmar Stellnberger <estellnb@gmail.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Insert that to tree.
+https://bugzilla.kernel.org/show_bug.cgi?id=43192
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/iov.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index e873060..74bbaf8 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -47,7 +47,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- 	if (!child)
- 		return NULL;
- 
--	child->busn_res.end = busnr;
-+	pci_bus_insert_busn_res(child, busnr, busnr);
- 	child->dev.parent = bus->bridge;
- 	rc = pci_bus_add_child(child);
- 	if (rc) {
--- 
-1.7.7
-
+Hi Elmar, can you attach a complete dmesg log and "lspci -vv" output
+to the bugzilla?  Let's start with the system with native ExpressCard
+interface, with an ExpressCard plugged in before booting the system.
