@@ -1,46 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:45327 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754226Ab2E2R4q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 13:56:46 -0400
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:6613 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762214Ab2EQRlD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 13:41:03 -0400
+From: <Shyam_Iyer@Dell.com>
+To: <prarit@redhat.com>, <linux-pci@vger.kernel.org>
+CC: <bhelgaas@google.com>
+Date: Thu, 17 May 2012 10:29:07 -0700
+Subject: RE: [PATCH] pci, Add AER_panic sysfs file
+Message-ID: <DBFB1B45AF80394ABD1C807E9F28D15707BC8F0CE9@BLRX7MCDC203.AMER.DELL.COM>
+References: <1337274270-18785-1-git-send-email-prarit@redhat.com>
+In-Reply-To: <1337274270-18785-1-git-send-email-prarit@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5iQr9Q3=94DBkUPNKTWS3F0SNKyBgrpCATWgtLeJ-98g@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
-	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-	<20120525193716.GA8817@google.com>
-	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
-	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-	<CAErSpo5iQr9Q3=94DBkUPNKTWS3F0SNKyBgrpCATWgtLeJ-98g@mail.gmail.com>
-Date: Tue, 29 May 2012 10:56:45 -0700
-Message-ID: <CAE9FiQWnQyiUdTkuinqsv05auaBsRhQvjZkBsYM8_gLN6ZVtQQ@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 26, 2012 at 8:01 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Another bug here: we're trying to restrict the *bus* addresses we
-> allocate, but we're applying the limits to *CPU* addresses.
-> Therefore, this only works as intended when CPU addresses are the same
-> as bus addresses, i.e., when the host bridge applies no address
-> translation.  That happens to be the case for x86, but is not the case
-> in general.
->
-> I think we need a third patch to fix this problem.
 
-yes.
+
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Prarit Bhargava
+> Sent: Thursday, May 17, 2012 1:05 PM
+> To: linux-pci@vger.kernel.org
+> Cc: Prarit Bhargava; Bjorn Helgaas
+> Subject: [PATCH] pci, Add AER_panic sysfs file
+> 
+> Consider the following case
+> 
+> 		[ RP ]
+> 		  |
+> 		  |
+> 	+---------+-----------+
+> 	|	  |	      |
+>        [H1]      [H2]        [X1]
+> 
+> where RP is a PCIE Root Port, H1 and H2 are devices with drivers that
+> support
+> PCIE AER driver error handling (ie, they have pci_error_handlers
+> defined in
+> the driver), and X1 is a device with a driver that does not support
+> PCIE
+> AER driver error handling.
+> 
+> If the Root Port takes an error what currently happens is that the
+> bus resets and H1 & H2 call their slot_reset functions.  X1 does
+> nothing.
+> 
+> In some cases a user may not wish the system to continue because X1 is
+> an unhardened driver.  In these cases, the system should not do a bus
+> reset,
+> but rather the system should panic to avoid any further possible data
+> corruption.
+
+Do we neeed to panic for both correctable and uncorrectable errors.. ?
+
+I thought correctable errors could recover without a bus reset.
