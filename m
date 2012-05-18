@@ -1,70 +1,19 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 09/11] PCI: Add is_pci_iov_resource_idx()
-Date: Tue, 22 May 2012 23:34:35 -0700
-Message-Id: <1337754877-19759-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nm32-vm3.bullet.mail.bf1.yahoo.com ([72.30.239.139]:28212 "HELO
+	nm32-vm3.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1760971Ab2ERBJ7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 May 2012 21:09:59 -0400
+Message-ID: <1337303397.34504.YahooMailNeo@web160306.mail.bf1.yahoo.com>
+Date: Thu, 17 May 2012 18:09:57 -0700 (PDT)
+From: LinuxDrvDev <ushmasonal-linuxmail@yahoo.com>
+Reply-To: LinuxDrvDev <ushmasonal-linuxmail@yahoo.com>
+Subject: PCIe Hotpluggable Systems
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we can remove one ifdef in setup-bus.c. and will share the code in that
-ifdef block.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |    7 +++----
- include/linux/pci.h     |    8 ++++++++
- 2 files changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4d6823f..99bc728 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -813,16 +813,15 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (r->parent || (r->flags & mask) != type)
- 				continue;
- 			r_size = resource_size(r);
--#ifdef CONFIG_PCI_IOV
-+
- 			/* put SRIOV requested res to the optional list */
--			if (realloc_head && i >= PCI_IOV_RESOURCES &&
--					i <= PCI_IOV_RESOURCE_END) {
-+			if (realloc_head && is_pci_iov_resource_idx(i)) {
- 				r->end = r->start - 1;
- 				add_to_list(realloc_head, dev, r, r_size, 0/* dont' care */);
- 				children_add_size += r_size;
- 				continue;
- 			}
--#endif
-+
- 			/* For bridges size != alignment */
- 			align = pci_resource_alignment(dev, r);
- 			order = __ffs(align) - 20;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c0704a0..0d254d9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -114,6 +114,14 @@ enum {
- 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
- };
- 
-+static inline bool is_pci_iov_resource_idx(int i)
-+{
-+#ifdef CONFIG_PCI_IOV
-+	return i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END;
-+#endif
-+	return false;
-+}
-+
- typedef int __bitwise pci_power_t;
- 
- #define PCI_D0		((pci_power_t __force) 0)
--- 
-1.7.7
-
+I am looking for a reliable PCIe hot pluggable system. I am not able to find reliable information on workstations from usual vendors like Dell and HP. Their servers supports this feature but they are kind of pricey for us to verify hotpluggability of our device. I had a system with one slot which supported hot plug but the bios didn't enabled it(and there was no way for user to enable it). So if anyone is using any mother board which has reliable hot plug feature, please recommend it. 
+Thanks.
