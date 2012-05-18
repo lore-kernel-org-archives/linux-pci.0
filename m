@@ -1,179 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:51773 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932717Ab2EOCGc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 May 2012 22:06:32 -0400
-Date: Tue, 15 May 2012 12:03:28 +1000
-From: David Gibson <david@gibson.dropbear.id.au>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH 02/13] iommu: IOMMU Groups
-Message-ID: <20120515020328.GG30229@truffala.fritz.box>
-References: <20120511222148.30496.68571.stgit@bling.home>
- <20120511225541.30496.34751.stgit@bling.home>
- <20120514011627.GB30229@truffala.fritz.box>
- <1337015502.6954.68.camel@bling.home>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:40206 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758748Ab2ERQ4o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 12:56:44 -0400
+Received: by dady13 with SMTP id y13so4068907dad.19
+        for <linux-pci@vger.kernel.org>; Fri, 18 May 2012 09:56:43 -0700 (PDT)
+Message-ID: <4FB67F40.9030804@gmail.com>
+Date: Sat, 19 May 2012 00:56:32 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1337015502.6954.68.camel@bling.home>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 6/6] PCI, ACPI, x86: update MMCFG information when
+ hot-plugging PCI host bridges
+References: <1336186830-10765-1-git-send-email-jiang.liu@huawei.com> <1336186830-10765-7-git-send-email-jiang.liu@huawei.com> <CAErSpo5iiEqqhcMKj8gqfXZmqD2QaY4LBe7w9J2K-fgXbzO9Pg@mail.gmail.com>
+In-Reply-To: <CAErSpo5iiEqqhcMKj8gqfXZmqD2QaY4LBe7w9J2K-fgXbzO9Pg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 14, 2012 at 11:11:42AM -0600, Alex Williamson wrote:
-> On Mon, 2012-05-14 at 11:16 +1000, David Gibson wrote:
-> > On Fri, May 11, 2012 at 04:55:41PM -0600, Alex Williamson wrote:
-[snip]
-> > > +struct iommu_group {
-> > > +	struct kobject kobj;
-> > > +	struct kobject *devices_kobj;
-> > > +	struct list_head devices;
-> > > +	struct mutex mutex;
-> > > +	struct blocking_notifier_head notifier;
-> > > +	int id;
-> > 
-> > I think you should add some sort of name string to the group as well
-> > (supplied by the iommu driver creating the group).  That would make it
-> > easier to connect the arbitrary assigned IDs to any platform-standard
-> > naming convention for these things.
+On 05/19/2012 12:03 AM, Bjorn Helgaas wrote:
+> On Fri, May 4, 2012 at 9:00 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>> From: Jiang Liu <jiang.liu@huawei.com>
+>>
+>> This patch enhances pci_root driver to update MMCFG information when
+>> hot-plugging PCI root bridges on x86 platforms.
+>>
+>> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+>> ---
+..........
+>> @@ -504,6 +515,15 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>>        strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>>        device->driver_data = root;
+>>
+>> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
+>> +                                      NULL, &base_addr);
+>> +       if (ACPI_FAILURE(status))
+>> +               base_addr = 0;
 > 
-> When would the name be used and how is it exposed?
+> I think the MCFG lookup should happen here, since MCFG is a generic
+> ACPI table and is not arch-specific.  Maybe something like
+> "phys_addr_t acpi_mcfg_lookup(int domain, struct resource *bus_nr, int
+> *last_bus_nr)" that would return the bus 0-relative base address (like
+> what _CBA gives you) and the end of the bus number range from MCFG.
+Yes, that's the most suitable place for it.
+But I still have a question about blind probing. When blindly probing, we only
+know the start bus and can't tell the end bus for hidden root buses. So it's 
+hard to setup MMCFG information on demand for blind probe. And we only do blind
+probe on segment 0 for backward compatibility. If we could take the trade-off
+below, thing becomes doable.
+1) For backward compatibility, add all MMCFG entries for segment 0 when
+   parsing the MCFG table at boot time.
+2) For root buses not on segment 0, add MMCFG info for them on demand when
+   binding pci_root driver to them.
+How about the trade-off above?
 
-I'm thinking of this basically as a debugging aid.  So I'd expect it
-to appear in a 'name' (or 'description') sysfs property on the group,
-and in printk messages regarding the group.
-
-[snip]
-> > So, it's not clear that the kobject_name() here has to be unique
-> > across all devices in the group.  It might be better to use an
-> > arbitrary index here instead of a name to avoid that problem.
+>> +       if (arch_acpi_pci_root_add(root, base_addr)) {
 > 
-> Hmm, that loses useful convenience when they are unique, such as on PCI.
-> I'll look and see if sysfs_create_link will fail on duplicate names and
-> see about adding some kind of instance to it.
+> This should be something like "pci_add_mmconfig(int domain, struct
+> resource *bus_nr, phys_addr_t  base)".  The bus_nr resource would be
+> the range from _CRS or a copy truncated to the end we found in MCFG.
+We need to set a flag on the "root" to mark whether we have succeeded to add
+an MMCFG entry for this root bus. Later we will remove this MMCFG entry if it's
+added by arch_acpi_pci_root_add(). So we pass in "root" instead of 
+"domain, res" pair.
 
-Ok.  Is the name necessarily unique even for PCI, if the group crosses
-multiple domains?
-
-[snip]
-> > > +	mutex_lock(&group->mutex);
-> > > +	list_for_each_entry(device, &group->devices, list) {
-> > > +		if (device->dev == dev) {
-> > > +			list_del(&device->list);
-> > > +			kfree(device);
-> > > +			break;
-> > > +		}
-> > > +	}
-> > > +	mutex_unlock(&group->mutex);
-> > > +
-> > > +	sysfs_remove_link(group->devices_kobj, kobject_name(&dev->kobj));
-> > > +	sysfs_remove_link(&dev->kobj, "iommu_group");
-> > > +
-> > > +	dev->iommu_group = NULL;
-> > 
-> > I suspect the dev -> group pointer should be cleared first, under the
-> > group lock, but I'm not certain about that.
+>> +               result = -ENODEV;
 > 
-> group->mutex is protecting the group's device list.  I think my
-> assumption is that when a device is being removed, there should be no
-> references to it for anyone to race with iommu_group_get(dev), but I'm
-> not sure how valid that is.
+> I don't think this is a fatal error.  If we don't have MMCONFIG space
+> for this host bridge, we can just fall back to the default pci_ops and
+> still use the host bridge.
+arch_acpi_pci_root_add() in arch/x86/pci/acpi.c is designed to return error only if:
+1) MMCFG is disabled and the root bus is on a segment other than segment 0.
+2) We failed to add MMCFG entry for this root bus and it's on a segment other
+   than segment 0.
 
-What I'm concerned about here is someone grabbing the device by
-non-group-related means, grabbing a pointer to its group and that
-racing with remove_device().  It would then end up with a group
-pointer it thinks is right for the device, when the group no longer
-thinks it owns the device.
+Under above two cases, it's fatal because we have no way to access configuration
+space under the new root bus.
 
-Doing it under the lock is so that on the other side, group aware code
-doesn't traverse the group member list and grab a reference to a
-device which no longer points back to the group.
-
-> > [snip]
-> > > +/**
-> > > + * iommu_group_for_each_dev - iterate over each device in the group
-> > > + * @group: the group
-> > > + * @data: caller opaque data to be passed to callback function
-> > > + * @fn: caller supplied callback function
-> > > + *
-> > > + * This function is called by group users to iterate over group devices.
-> > > + * Callers should hold a reference count to the group during
-> > > callback.
-> > 
-> > Probably also worth noting in this doco that the group lock will be
-> > held across the callback.
-> 
-> Yes; calling iommu_group_remove_device through this would be a bad idea.
-
-Or anything which blocks.
-
-> > [snip]
-> > > +static int iommu_bus_notifier(struct notifier_block *nb,
-> > > +			      unsigned long action, void *data)
-> > >  {
-> > >  	struct device *dev = data;
-> > > +	struct iommu_ops *ops = dev->bus->iommu_ops;
-> > > +	struct iommu_group *group;
-> > > +	unsigned long group_action = 0;
-> > > +
-> > > +	/*
-> > > +	 * ADD/DEL call into iommu driver ops if provided, which may
-> > > +	 * result in ADD/DEL notifiers to group->notifier
-> > > +	 */
-> > > +	if (action == BUS_NOTIFY_ADD_DEVICE) {
-> > > +		if (ops->add_device)
-> > > +			return ops->add_device(dev);
-> > > +	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
-> > > +		if (ops->remove_device && dev->iommu_group) {
-> > > +			ops->remove_device(dev);
-> > > +			return 0;
-> > > +		}
-> > > +	}
-> > 
-> > So, there's still the question of how to assign grouping for devices
-> > on a subordinate bus behind a bridge which is iommu managed.  The
-> > iommu driver for the top-level bus can't know about all possible
-> > subordinate bus types, but the subordinate devices will (in most
-> > cases, anyway) be iommu translated as if originating with the bus
-> > bridge.
-> 
-> Not just any bridge, there has to be a different bus_type on the
-> subordinate side.  Things like PCI-to-PCI work as is, but a PCI-to-ISA
-> would trigger this.
-
-Right, although ISA-under-PCI is a bit of a special case anyway.  I
-think PCI to Firewire/IEEE1394 would also have this issue, as would
-SoC-bus-to-PCI for a SoC which had an IOMMU at the SoC bus level.  And
-virtual struct devices where the PCI driver is structured as a wrapper
-around a "vanilla" device driver, a pattern used in a number of
-drivers for chips with both PCI and non PCI variants.
-
->  In general, I don't know how to handle it and I'm
-> open to suggestions.  Perhaps we need to register notifiers for every
-> bus_type and create notifiers for new bus_types.
-
-I think we do need to do something like that and basically ensure that
-if a new device is not explicitly claimed by an IOMMU driver, it
-inherits its group from its parent bridge.
-
->  If we can catch the
-> ADD_DEVICE for it, we can walk up to the first parent bus that supports
-> an iommu_ops and add the device there.  But then we need some kind of
-> foreign bus support for the group since the iommu driver won't know what
-> to do with the device if we call add_device with it.  Other ideas?
-
-Hrm, yeah.  We may need a distinction between primary group members
-(i.e. explicitly claimed by the IOMMU driver) and subordinate group
-members (devices which are descendents of a primary group member).
-
--- 
-David Gibson			| I'll have my music baroque, and my code
-david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
-				| _way_ _around_!
-http://www.ozlabs.org/~dgibson
+Thanks!
+Gerry
