@@ -1,62 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:62818 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756655Ab2ERPrW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 11:47:22 -0400
-Received: by pbbrp8 with SMTP id rp8so4106957pbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 18 May 2012 08:47:22 -0700 (PDT)
-Date: Fri, 18 May 2012 08:47:15 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Shyam Iyer <Shyam_Iyer@Dell.com>, ddutile@redhat.com
-Subject: Re: [PATCH] pci, Add AER_panic sysfs file
-Message-ID: <20120518154715.GA21043@kroah.com>
-References: <20120518045130.GA3281@kroah.com>
- <1337350606-32648-1-git-send-email-prarit@redhat.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1337350606-32648-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo71rKrZ7ptJjE5Lb6YnrqXVe1eGhn3pyF2Qjp=o8JHQmg@mail.gmail.com>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+	<1336422606-4244-6-git-send-email-yinghai@kernel.org>
+	<CAErSpo71rKrZ7ptJjE5Lb6YnrqXVe1eGhn3pyF2Qjp=o8JHQmg@mail.gmail.com>
+Date: Fri, 18 May 2012 10:54:36 -0700
+Message-ID: <CAE9FiQUebVR_AdhQVE_Hq-RhB7h5AfH0Z20WaZh=ky5vHEt5BQ@mail.gmail.com>
+Subject: Re: [PATCH 05/21] resource: adjust_resource handle resource without parent
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2012 at 10:16:46AM -0400, Prarit Bhargava wrote:
-> Bjorn, ... [v2] with missing Doc file.
-> 
-> P.
-> 
-> ----8<----
-> 
-> Consider the following case
-> 
-> 		[ RP ]
-> 		  |
-> 		  |
-> 	+---------+-----------+
-> 	|	  |	      |
->        [H1]      [H2]        [X1]
-> 
-> where RP is a PCIE Root Port, H1 and H2 are devices with drivers that support
-> PCIE AER driver error handling (ie, they have pci_error_handlers defined in
-> the driver), and X1 is a device with a driver that does not support PCIE
-> AER driver error handling.
+On Fri, May 18, 2012 at 10:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, May 7, 2012 at 2:29 PM, Yinghai Lu <yinghai@kernel.org> wrote:
 
-Why can't we provide "default" error handlers that recover from such
-errors?
+> Where does this case occur?  When do you need to adjust a resource
+> that has no parent?
 
-> If the Root Port takes an error what currently happens is that the
-> bus resets and H1 & H2 call their slot_reset functions.  X1 does nothing.
-> 
-> In some cases a user may not wish the system to continue because X1 is
-> an unhardened driver.
+for unassigned pci bridge from BIOS, before scan busn_res.end is 0xff,
+so you can not insert them, because the bridge could in the middle.
+Have to update the busn_res.end and insert after the bridge is scanned
 
-Please define "unhardened".  Why aren't all drivers "hardened"?
-
-> In these cases, the system should not do a bus reset, but rather the
-> system should panic to avoid any further possible data corruption.
-
-Really?  You really want to panic the whole system and shut down and
-potentially loose everything?  That does not sound like a good idea at
-all to me, is there really no way to recover from this?
-
-greg k-h
+Yinghai
