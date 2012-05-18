@@ -1,146 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51259 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758241Ab2ETC7h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 19 May 2012 22:59:37 -0400
-From: kongjianjun@gmail.com
-To: liuj97@gmail.com, linux-pci@vger.kernel.org, qemu-devel@nongnu.org,
-	jbarnes@virtuousgeek.org, kaneshige.kenji@jp.fujitsu.com,
-	bhelgaas@google.com
-Cc: Amos Kong <kongjianjun@gmail.com>
-Subject: [PATCH v5] pci: clean all funcs when hot-removing multifunc device
-Date: Sun, 20 May 2012 10:59:21 +0800
-Message-Id: <1337482761-6265-1-git-send-email-kongjianjun@gmail.com>
-In-Reply-To: <CAErSpo6bVG+-+E8JBcNv19+KHoQmswMTPrH-OsmRZmjAMT5e5g@mail.gmail.com>
-References: <CAErSpo6bVG+-+E8JBcNv19+KHoQmswMTPrH-OsmRZmjAMT5e5g@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXN5z0riswyECKw5OKe+nPUBN2yZ1d4=Asb3kqaj770NA@mail.gmail.com>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+ <CAErSpo6OZYXz-M=C9r154MY7kwC7LRR3ZnQe3pnmVJY2uoWeRw@mail.gmail.com> <CAE9FiQXN5z0riswyECKw5OKe+nPUBN2yZ1d4=Asb3kqaj770NA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 18 May 2012 17:32:17 -0600
+Message-ID: <CAErSpo71805jTs1qVMx+9ghzUub77r47VqpXF0sVOFuDSq6pmg@mail.gmail.com>
+Subject: Re: [PATCH 00/21] PCI: use busn_res to replace bus secondary/subordinate
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Amos Kong <kongjianjun@gmail.com>
+On Thu, May 17, 2012 at 8:13 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, May 17, 2012 at 3:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Sigh.  You previously said we should do this order:
+>>
+>>        for-pci-hostbridge-cleanup
+>>        for-pci-busn-alloc
+>>        for-pci-res-alloc
+>>        for-pci-root-bus-hotplug
+>>        for-pci-for-each-res-addon
+>>
+>> I merged for-pci-hostbridge-cleanup already.  I was about to start
+>> merging for-pci-busn-alloc.
+>>
+>> But now you added for-pci-hotplug-cleanup and made for-pci-busn-alloc
+>> depend on it.  I have some comments on for-pci-hotplug-cleanup, so I'm
+>> not ready to merge it quite yet.  Can you please just go back to the
+>> original order and put the new hotplug cleanup stuff at the *end*?
+>
+> ok, update for-pci-busn_res branch, now it is based on your next branch.
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-busn_res
 
-Hotplug CallTrace:
-int acpiphp_enable_slot(struct acpiphp_slot *slot)
-    \_enable_device(slot);
-       \_pci_bus_add_devices(bus);
-            # un-added new devs(all funcs in slot) will be added
-            list_for_each_entry(dev, &bus->devices, bus_list) {
-                if (dev->is_added)
-                        continue;
-                pci_bus_add_device(dev);
-                device_add(&dev->dev);
-                dev->is_added = 1;
+OK.  You just incorporated the hotplug-cleanup stuff into that branch,
+which isn't what I had in mind.  But in the interest of making forward
+progress, I merged as much as I could.  The result is at:
 
-'dev->is_added' is used to trace if pci dev is added to bus, all funcs in
-same slot would be added to bus in enable_device(slot). So we need to clean
-all funcs of same slot in disable_device(slot).
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next-3.5
 
-But hot-remove exists bug: https://bugzilla.kernel.org/show_bug.cgi?id=43219
-(dmesg and DSDT were attached in bz), detail:
+After Linus pulls my current "next" branch during the merge window,
+I'll put the "next-3.5" stuff into the "next" branch.
 
-. Boot up a Linux VM with 8 pci block devices which are the 8
-functions in one pci slot.
-| # qemu-kvm ...
-| -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
-| -device virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
-| ....
-| -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
-| -device virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
+Note that I stopped at your probe_resource() patch -- I already told
+you I won't merge that in its current form because I think the
+interface you propose is too complicated.
 
-. Check devices in guest.
-| vm)# ls /dev/vd*
-|    vda vdb vdc vde vdf vdg vdh
-| vm)# lspci |grep block
-| 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
-|    ...
-| 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
-|
+Let me know what series you'd like me to work on next, and send the
+current patches to the list.
 
-. Func1~7 still exist in guest after hot-removing the whole slot
-by qemu monitor cmd.
-| vm)# lspci |grep block    (00:03.0 disappeared)
-| 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
-|    ...
-| 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
-| vm)# ls /dev/vd*          (vda disappeared)
-|    vdb vdc vde vdf vdg vdh
-| vm)# mkfs /dev/vdb
-|    INFO: task mkfs.ext2:1784 blocked for more than 120 seconds.
-
-We process pci slot as a whole device in pciphp spec, seabios only
-defines one device for a slot in ACPI DSDT table.
-In acpiphp_glue.c:register_slot(), only one entry is added (for func#0)
-into 'slot->funcs' list. When we release the whole slot, only
-the entry in 'slot->funcs' will be cleaned, so func#1~7 could
-not be cleaned from system.
-
-| drivers/pci/hotplug/acpiphp_glue.c:
-| static int disable_device(struct acpiphp_slot *slot) {
-| 	list_for_each_entry(func, &slot->funcs, sibling) {
-| 		pdev = pci_get_slot(slot->bridge->pci_bus,
-| 		       PCI_DEVFN(slot->device, func->function));
-| 		..clean code.. // those code is only executed 1 time(for func#0)
-|                 __pci_remove_bus_device(pdev);
-|                 pci_dev_put(pdev);
-
-Hotpluging multifunc of guests(WinXp/Win7) is fine.
-
-Changes from v1:
-- rebase patch to latest linux.git
-- remove unnecessary multiplefunction check
-- rename 'i' to meaningful 'fn'
-- fix coding style
-
-Changes from v2:
-- update detail reason(calltrace) to commitlog
-- remove hardcode 8, find funcs in pci devlist
-
-Changes from v3:
-- use pci_bus_sem lock when walking bus->devices list
-
-Changes from V4:
-- check null point of pdev
-
-Signed-off-by: Amos Kong <kongjianjun@gmail.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 806c44f..ba46724 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -893,6 +893,7 @@ static int disable_device(struct acpiphp_slot *slot)
- 	pdev = pci_get_slot(bus, PCI_DEVFN(slot->device, 0));
- 	if (!pdev)
- 		goto err_exit;
-+	pci_dev_put(pdev);
- 
- 	list_for_each_entry(func, &slot->funcs, sibling) {
- 		if (func->bridge) {
-@@ -902,9 +903,20 @@ static int disable_device(struct acpiphp_slot *slot)
- 			func->bridge = NULL;
- 		}
- 
--		pdev = pci_get_slot(slot->bridge->pci_bus,
--				    PCI_DEVFN(slot->device, func->function));
--		if (pdev) {
-+		while (1) {
-+			/* pci_bus_sem is used to protect bus->devices list,
-+			   it may cause invalid memory access if threads
-+			   modify bus->devices list concurrently. */
-+			down_read(&pci_bus_sem);
-+			list_for_each_entry(pdev, &bus->devices, bus_list)
-+				if (PCI_SLOT(pdev->devfn) == slot->device) {
-+					pci_dev_get(pdev);
-+					break;
-+				}
-+			up_read(&pci_bus_sem);
-+
-+			if (!pdev || PCI_SLOT(pdev->devfn) != slot->device)
-+				break;
- 			pci_stop_bus_device(pdev);
- 			if (pdev->subordinate) {
- 				disable_bridges(pdev->subordinate);
--- 
-1.7.9.5
-
+Bjorn
