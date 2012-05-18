@@ -1,94 +1,188 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 29 May 2012 17:49:39 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-	Maciej Sosnowski <maciej.sosnowski@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v2 0/7] dmaengine: enhance dmaengine to support DMA
- device hotplug
-Message-Id: <20120529174939.5ddfe690.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <4FC1070B.2040403@gmail.com>
-References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-	<20120525094919.078fdff9.izumi.taku@jp.fujitsu.com>
-	<4FC1070B.2040403@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:40307 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045Ab2EROtp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 10:49:45 -0400
+Message-ID: <4FB6617E.9050803@gmail.com>
+Date: Fri, 18 May 2012 22:49:34 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
+CC: "Williams, Dan J" <dan.j.williams@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Keping Chen <chenkeping@huawei.com>
+Subject: Re: [RESEND,PATCH] DCA, x86: fix invalid memory access in DCA core
+References: <1336406288-9479-1-git-send-email-jiang.liu@huawei.com> <436EC33EF05C3442BBF5497FC9483FF4162732BC@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <436EC33EF05C3442BBF5497FC9483FF4162732BC@IRSMSX101.ger.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Maciej,
+	Thanks for your help!
+	I think your patch is correct but I could only test it on next Monday.
+My previous patch may cause NULL pointer dereference when calling 
+dca_sysfs_remove_provider(dca) the second time for the same DCA device. 
+I'm just curious why the NULL pointer dereference issue hasn't been triggered
+during tests, will ping my team member about that.
+	Thanks!
+	Gerry
 
-
-On Sun, 27 May 2012 00:38:35 +0800
-Jiang Liu <liuj97@gmail.com> wrote:
-
-> Hi Taku,
-> 	Sorry, forgot to export the percpu variable. Could you please
-> help to test the patch below?
-> 	Thanks!
-
-  Hi Jiang,
-
-  Thank you. 
-  This patch can fix my build issue.
- 
-  Best regards,
-  Taku Izumi
-
-
+On 05/18/2012 10:04 PM, Sosnowski, Maciej wrote:
+> On Mon, May 07, 2012 5:58 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>>
+>> From: Jiang Liu <jiang.liu@huawei.com>
+>>
+>> When unregister_dca_providers() is called, it will remove all registered
+>> providers from the dca_providrers list by calling list_del(&dca->node).
+>> list_del(node) poisons node->next and node->prev as 0xDEADBEEF and
+>> 0xBEEFDEAD.
+>> Later when unregister_dca_provider() is called to remove a DCA provier,
+>> it calls list_del(&dca->node) to remove the dca from the list again,
+>> but dca->node has already been poisoned, then causes invalid memory
+>> access.
+>>
+>> The solution here is to use list_del_init(&dca->node) instead of
+>> list_del(&dca->node) in function unregister_dca_providers(), so it won't
+>> cause invalid memory access in unregister_dca_provider() later.
+>>
+>> ---
+>>
+>> This issue is triggered when hot-removing IOHs on Intel platforms, which
+>> will remove all IOAT devices built in the IOHs.
+>>
+>> ioatdma 0000:80:16.7: Removing dma and dca services
+>> ioatdma 0000:80:16.7: PCI INT D disabled
+>> ioatdma 0000:80:16.6: Removing dma and dca services
+>> ioatdma 0000:80:16.7: Removing dma and dca services
+>> ioatdma 0000:80:16.7: PCI INT D disabled
+>> ioatdma 0000:80:16.6: Removing dma and dca services
+>> ioatdma 0000:80:16.6: PCI INT C disabled
+>> ioatdma 0000:00:16.0: Removing dma and dca services
+>> ------------[ cut here ]------------
+>> WARNING: at lib/list_debug.c:47 __list_del_entry+0x63/0xd0()
+>> Hardware name: System x3850 X5 -[7143O3G]-
+>> list_del corruption, ffff880463540bc0->next is LIST_POISON1
+>> (dead000000100100)
+>> Modules linked in: ebtable_nat ebtables ipt_MASQUERADE iptable_nat
+>> nf_nat xt_CHECKSUM iptable_mangle bridge stp llc autofs4 sunrpc
+>> cpufreq_ondemand acpi_cpufreq freq_table mperf ipt_REJECT
+>> nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT
+>> nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter
+>> ip6_tables ipv6 vfat fat vhost_net macvtap macvlan tun kvm_intel kvm uinput
+>> microcode pcspkr serio_raw pmcraid sg be2net cdc_ether usbnet mii i2c_i801
+>> i2c_core iTCO_wdt iTCO_vendor_support shpchp ioatdma i7core_edac
+>> edac_core igb dca e1000e bnx2 ext4 mbcache jbd2 sr_mod cdrom sd_mod
+>> crc_t10dif qla2xxx pata_acpi ata_generic ata_piix bfa scsi_transport_fc
+>> scsi_tgt megaraid_sas dm_mirror dm_region_hash dm_log dm_mod [last
+>> unloaded: scsi_wait_scan]
+>> Pid: 10049, comm: bash.sh Not tainted 3.2.0IOAT+ #5
+>> Call Trace:
+>> [<ffffffff8106426f>] warn_slowpath_common+0x7f/0xc0
+>> [<ffffffff81064366>] warn_slowpath_fmt+0x46/0x50
+>> [<ffffffff8108c675>] ? __blocking_notifier_call_chain+0x65/0x80
+>> [<ffffffff81256073>] __list_del_entry+0x63/0xd0
+>> [<ffffffff812560f1>] list_del+0x11/0x40
+>> [<ffffffffa001b2e2>] unregister_dca_provider+0x42/0xe0 [dca]
+>> [<ffffffffa021f87d>] ioat_remove+0x43/0x67 [ioatdma]
+>> [<ffffffff8126b1a2>] pci_device_remove+0x52/0x120
+>> [<ffffffff8132b2dc>] __device_release_driver+0x7c/0xe0
+>> [<ffffffff8132b42d>] device_release_driver+0x2d/0x40
+>> [<ffffffff8132a871>] driver_unbind+0xa1/0xc0
+>> [<ffffffff81329cbc>] drv_attr_store+0x2c/0x30
+>> [<ffffffff811d72ef>] sysfs_write_file+0xef/0x170
+>> [<ffffffff81167338>] vfs_write+0xc8/0x190
+>> [<ffffffff81167501>] sys_write+0x51/0x90
+>> [<ffffffff814fa382>] system_call_fastpath+0x16/0x1b
+>> ---[ end trace b81b51e7c494ec0d ]---
+>> BUG: unable to handle kernel NULL pointer dereference at 0000000000000010
+>> IP: [<ffffffffa001b360>] unregister_dca_provider+0xc0/0xe0 [dca]
+>> PGD 1465b48067 PUD 1465035067 PMD 0
+>> Oops: 0000 [#1] SMP
+>> CPU 57
+>> Modules linked in: ebtable_nat ebtables ipt_MASQUERADE iptable_nat
+>> nf_nat xt_CHECKSUM iptable_mangle bridge stp llc autofs4 sunrpc
+>> cpufreq_ondemand acpi_cpufreq freq_table mperf ipt_REJECT
+>> nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT
+>> nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter
+>> ip6_tables ipv6 vfat fat vhost_net macvtap macvlan tun kvm_intel kvm uinput
+>> microcode pcspkr serio_raw pmcraid sg be2net cdc_ether usbnet mii i2c_i801
+>> i2c_core iTCO_wdt iTCO_vendor_support shpchp ioatdma i7core_edac
+>> edac_core igb dca e1000e bnx2 ext4 mbcache jbd2 sr_mod cdrom sd_mod
+>> crc_t10dif qla2xxx pata_acpi ata_generic ata_piix bfa scsi_transport_fc
+>> scsi_tgt megaraid_sas dm_mirror dm_region_hash dm_log dm_mod [last
+>> unloaded: scsi_wait_scan]
+>>
+>> Pid: 10049, comm: bash.sh Tainted: G        W    3.2.0IOAT+ #5 IBM System x3850
+>> X5 -[7143O3G]-/Node 1, Processor Card
+>> RIP: 0010:[<ffffffffa001b360>]  [<ffffffffa001b360>]
+>> unregister_dca_provider+0xc0/0xe0 [dca]
+>> RSP: 0018:ffff880c4eafbdb8  EFLAGS: 00010046
+>> RAX: 0000000000000010 RBX: ffff880463540bc0 RCX: 0000000000002288
+>> RDX: ffff881465a51800 RSI: 0000000000000046 RDI: 0000000000000009
+>> RBP: ffff880c4eafbdd8 R08: 0000000000000000 R09: 0000000000000000
+>> R10: 0000000000000010 R11: 000000000000000b R12: 0000000000000000
+>> R13: 0000000000000257 R14: ffff881465abe000 R15: ffff881464199840
+>> FS:  00007f91d8314700(0000) GS:ffff88147fd20000(0000)
+>> knlGS:0000000000000000
+>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>> CR2: 0000000000000010 CR3: 0000001457b07000 CR4: 00000000000006e0
+>> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+>> Process bash.sh (pid: 10049, threadinfo ffff880c4eafa000, task
+>> ffff880c4e3b8af0)
+>> Stack:
+>> 0000000000000206 ffff88046133a218 ffff881465abe090 ffffffffa0222560
+>> ffff880c4eafbdf8 ffffffffa021f87d ffff881465abe090 ffff881465abe208
+>> ffff880c4eafbe28 ffffffff8126b1a2 ffff881465abe090 ffffffffa02225c0
+>> Call Trace:
+>> [<ffffffffa021f87d>] ioat_remove+0x43/0x67 [ioatdma]
+>> [<ffffffff8126b1a2>] pci_device_remove+0x52/0x120
+>> [<ffffffff8132b2dc>] __device_release_driver+0x7c/0xe0
+>> [<ffffffff8132b42d>] device_release_driver+0x2d/0x40
+>> [<ffffffff8132a871>] driver_unbind+0xa1/0xc0
+>> [<ffffffff81329cbc>] drv_attr_store+0x2c/0x30
+>> [<ffffffff811d72ef>] sysfs_write_file+0xef/0x170
+>> [<ffffffff81167338>] vfs_write+0xc8/0x190
+>> [<ffffffff81167501>] sys_write+0x51/0x90
+>> [<ffffffff814fa382>] system_call_fastpath+0x16/0x1b
+>> Code: c7 20 c0 01 a0 e8 51 6c 4d e1 48 89 df e8 c9 05 00 00 48 83 c4 08 5b 41 5c 41
+>> 5d c9 c3 66 0f 1f 44 00 00 45 31 e4 49 8d 44 24 10 <49> 39 44 24 10 75 c9 4c 89 e7
+>> e8 71 ad 23 e1 4c 89 e7 e8 19 7b
+>> RIP  [<ffffffffa001b360>] unregister_dca_provider+0xc0/0xe0 [dca]
+>> RSP <ffff880c4eafbdb8>
+>> CR2: 0000000000000010
+>> ---[ end trace b81b51e7c494ec0e ]---
+> 
+> Jiang,
+> 
+> Could you verify if the following fixes the issue above?
+> 
+> Thanks,
+> Maciej
 > ---
-> diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-> index 8a41bdf..26316f6 100644
-> --- a/drivers/dma/dmaengine.c
-> +++ b/drivers/dma/dmaengine.c
-> @@ -73,6 +73,7 @@ static atomic_t dmaengine_dirty;
->  static struct static_key dmaengine_quiesce = STATIC_KEY_INIT_FALSE;
->  static DECLARE_WAIT_QUEUE_HEAD(dmaengine_wait_queue);
->  DEFINE_PER_CPU(long, dmaengine_chan_ref_count);
-> +EXPORT_PER_CPU_SYMBOL(dmaengine_chan_ref_count);
->  #endif /* CONFIG_DMA_ENGINE_HOTPLUG */
+> 
+>  drivers/dca/dca-core.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/dca/dca-core.c b/drivers/dca/dca-core.c
+> index bc6f5fa..819dfda 100644
+> --- a/drivers/dca/dca-core.c
+> +++ b/drivers/dca/dca-core.c
+> @@ -420,6 +420,11 @@ void unregister_dca_provider(struct dca_
 >  
->  /* --- sysfs implementation --- */
-> 
-> On 05/25/2012 08:49 AM, Taku Izumi wrote:
-> > Hi Jiang,
-> > 
-> >  Build failed with "Device Drivers/DMA Engine Support/Async_tx: Offload
-> >   support for the async_tx api" enabled because of undefined symbol. 
-> >  Patch 5/7 needs a fix?
-> > 
-> > (snip)
-> >   CHK     include/linux/version.h
-> >   CHK     include/generated/utsrelease.h
-> >   CALL    scripts/checksyscalls.sh
-> >   CHK     include/generated/compile.h
-> >   CHK     include/linux/version.h
-> > make[2]: Nothing to be done for `all'.
-> >   Building modules, stage 2.
-> >   TEST    posttest
-> >   MODPOST 2201 modules
-> > Succeed: decoded and checked 1356146 instructions
-> >   TEST    posttest
-> > Success: decoded and checked 1000000 random instructions with 0 errors (seed:0x9432fb9e)
-> > Kernel: arch/x86/boot/bzImage is ready  (#13)
-> > ERROR: "dmaengine_chan_ref_count" [crypto/async_tx/async_xor.ko] undefined!
-> > ERROR: "dmaengine_chan_ref_count" [crypto/async_tx/async_raid6_recov.ko] undefined!
-> > ERROR: "dmaengine_chan_ref_count" [crypto/async_tx/async_pq.ko] undefined!
-> > ERROR: "dmaengine_chan_ref_count" [crypto/async_tx/async_memcpy.ko] undefined!
-> > make[1]: *** [__modpost] Error 1
-> > make: *** [modules] Error 2
-> > 
-> > Best regards,
-> > Taku Izumi <izumi.taku@jp.fujitsu.com>
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>  	raw_spin_lock_irqsave(&dca_lock, flags);
+>  
+> +	if (list_empty(&dca_domains)) {
+> +		raw_spin_unlock_irqrestore(&dca_lock, flags);
+> +		return;
+> +	}
+> +
+>  	list_del(&dca->node);
+>  
+>  	pci_rc = dca_pci_rc_from_dev(dev);
 
 
 
