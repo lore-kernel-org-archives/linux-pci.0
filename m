@@ -1,69 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:65481 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754584Ab2EXJYt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2012 05:24:49 -0400
-Received: by dady13 with SMTP id y13so11051818dad.19
-        for <linux-pci@vger.kernel.org>; Thu, 24 May 2012 02:24:48 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:62818 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756655Ab2ERPrW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 11:47:22 -0400
+Received: by pbbrp8 with SMTP id rp8so4106957pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 18 May 2012 08:47:22 -0700 (PDT)
+Date: Fri, 18 May 2012 08:47:15 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Shyam Iyer <Shyam_Iyer@Dell.com>, ddutile@redhat.com
+Subject: Re: [PATCH] pci, Add AER_panic sysfs file
+Message-ID: <20120518154715.GA21043@kroah.com>
+References: <20120518045130.GA3281@kroah.com>
+ <1337350606-32648-1-git-send-email-prarit@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJSP0QXoL3Tr7EAGxX77xZ71bj16oCf0ndL0iMopeYexLPJ93w@mail.gmail.com>
-References: <CAEH94Ljfjiu3MPLz8_P=1JSJS=hQVY_CJ4kZ=8Oq+0VpweGA4Q@mail.gmail.com>
-	<CAJSP0QXgR5w09LgWDbFzg6EajEoMLY0DHmvA8DndmvnCcBRSZg@mail.gmail.com>
-	<CAEH94Lh0gmHSR1ugVFg0ZhtFTahb9LQJsxjWZzwqzNLSO0aVug@mail.gmail.com>
-	<CAJSP0QXoL3Tr7EAGxX77xZ71bj16oCf0ndL0iMopeYexLPJ93w@mail.gmail.com>
-Date: Thu, 24 May 2012 17:24:47 +0800
-Message-ID: <CAEH94Lg2qs2_2_zGm9aChqz_6Ues57-KXwGmUquXjKFXo8RbeA@mail.gmail.com>
-Subject: Re: PCI: cardbus bridge
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
-To: Stefan Hajnoczi <stefanha@gmail.com>
-Cc: linux-pci@vger.kernel.org, Ram Pai <linuxram@us.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1337350606-32648-1-git-send-email-prarit@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2012 at 5:21 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
-> On Thu, May 24, 2012 at 9:56 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
->> On Thu, May 24, 2012 at 4:37 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
->>> On Thu, May 24, 2012 at 9:26 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
->>>> Does anyone let me know what cardbus bridge is used for? What is the
->>>> difference between it and comon pci bridge?
->>>
->>> CardBus is PCMCIA (PC Card):
->>>
->>> http://en.wikipedia.org/wiki/PC_Card#CardBus
->>>
->>> It's not used very much anymore.  There is PCI <-> PCMCIA integration
->>> and that's why you see it come up in PCI code.
->> got it. thanks.
->>>
->>>> By the way, someone usually mentioned pci host bridge, pci root
->>>> bridge. What the differences among them are?
->>>
->>> I'm not sure what the exact difference is.  PCI "root" bridge refers
->>> to the hierarchical nature of PCI, while PCI "host" bridge refers to
->> You mean that PCI "root" bridge is one alias of another some bridge?
->
-> The root bridge is the root of a tree of PCI busses.  It's the bus
-> that the host interacts with - there may be PCI bridges that attach
-> additional busses.
->
-> BTW I don't know the terminology, maybe it's PCI "domains" not
-> "busses".  Again, you'd have to look at the PCI specification to get
-> the exact definition.
-thanks
->
->>> connecting the computer to the PCI bus.
->> I guess that PCI "host" bridge is the one which connects PCI bus 0 to
->> host bus, and it should be contained in PMC chipset (PCI Bridge and
->> Memory Controller)
->
-> Yes.
->
-> Stefan
+On Fri, May 18, 2012 at 10:16:46AM -0400, Prarit Bhargava wrote:
+> Bjorn, ... [v2] with missing Doc file.
+> 
+> P.
+> 
+> ----8<----
+> 
+> Consider the following case
+> 
+> 		[ RP ]
+> 		  |
+> 		  |
+> 	+---------+-----------+
+> 	|	  |	      |
+>        [H1]      [H2]        [X1]
+> 
+> where RP is a PCIE Root Port, H1 and H2 are devices with drivers that support
+> PCIE AER driver error handling (ie, they have pci_error_handlers defined in
+> the driver), and X1 is a device with a driver that does not support PCIE
+> AER driver error handling.
 
+Why can't we provide "default" error handlers that recover from such
+errors?
 
+> If the Root Port takes an error what currently happens is that the
+> bus resets and H1 & H2 call their slot_reset functions.  X1 does nothing.
+> 
+> In some cases a user may not wish the system to continue because X1 is
+> an unhardened driver.
 
--- 
-Regards,
+Please define "unhardened".  Why aren't all drivers "hardened"?
 
-Zhi Yong Wu
+> In these cases, the system should not do a bus reset, but rather the
+> system should panic to avoid any further possible data corruption.
+
+Really?  You really want to panic the whole system and shut down and
+potentially loose everything?  That does not sound like a good idea at
+all to me, is there really no way to recover from this?
+
+greg k-h
