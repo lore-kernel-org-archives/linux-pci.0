@@ -1,59 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:45699 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755872Ab2EGPLa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 May 2012 11:11:30 -0400
-Received: by lahd3 with SMTP id d3so358782lah.19
-        for <linux-pci@vger.kernel.org>; Mon, 07 May 2012 08:11:28 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
+To: Jiang Liu <liuj97@gmail.com>
+CC: "Williams, Dan J" <dan.j.williams@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Keping Chen <chenkeping@huawei.com>
+Subject: RE: [RESEND,PATCH] DCA, x86: fix invalid memory access in DCA core
+Date: Fri, 18 May 2012 14:10:04 +0000
+Message-ID: <436EC33EF05C3442BBF5497FC9483FF4162732ED@IRSMSX101.ger.corp.intel.com>
+References: <1336406288-9479-1-git-send-email-jiang.liu@huawei.com>
+ <436EC33EF05C3442BBF5497FC9483FF41626EACA@IRSMSX101.ger.corp.intel.com>
+ <4FAB20FB.6070508@gmail.com>
+In-Reply-To: <4FAB20FB.6070508@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <4FA3B596.3050106@openwrt.org>
-References: <1335808019-24502-1-git-send-email-blogic@openwrt.org>
- <4F9ED1DC.3050007@gmail.com> <4F9FE4F6.5070909@openwrt.org>
- <CAErSpo4bZ=0=DtbDots_GOGeLNhX6Q4eJrdetaFQMv4iiv5+XA@mail.gmail.com>
- <4FA32E47.7020406@gmail.com> <4FA3B596.3050106@openwrt.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 May 2012 08:11:08 -0700
-Message-ID: <CAErSpo4AQh3cJzULkmP_Dqsf0cSPRP1WqvhuQR3gePXw2rN7rQ@mail.gmail.com>
-Subject: Re: [PATCH] OF: PCI: const usage needed by MIPS
-To: John Crispin <blogic@openwrt.org>
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	linux-mips@linux-mips.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 4, 2012 at 3:55 AM, John Crispin <blogic@openwrt.org> wrote:
-> Hi David,
+On Thu, May 07, May 10, 2012 3:59 AM, Jiang Liu <liuj97@gmail.com> wrote:
 >
->> The problem is when you start declaring function pointers in various
->> ops vectors.
->>
->> Consider:
->>
->> void (*foo)(const struct pci_dev *)
->> void (*bar)(struct pci_dev *)
->>
->> foo and bar are not type compatible, and you will get compiler
->> warnings if you use one where the other is expected.
-
-Oh, right.  I vaguely remember tripping over this a few years ago when
-I refactored pci_swizzle_interrupt_pin().  Thanks for enhancing my
-simple understanding.
-
->> So the question is:  Are we ever going to the address of any of the
->> functions that are being modified?  If so, we have created a problem.
+>Hi Maciej,
+>	I feel we may also need to tune the multiple IOH support in DCA.
+>Multiple IOH support is disabled for CB3.0 devices, how about CB3.1 devices
+>in Ivrbridge or SandyBridge? Does the hardware limitation still exist? Or
+>could we support multiple IOHs with IvyBridge and SandyBridge?
+>	If multiple IOH is supported, I think we should move the logic to
+>disable multiple IOH support for CB3.0 from DCA core into ioatdma. I have
+>also prepared two patches for that two.
+>	Thanks!
 >
-> i could not find any place in the code where this happens, which does
-> not mean that there are none.
 
-I compiled alpha, ia64, mips, parisc, powerpc, sh, sparc, and x86 and
-didn't see any issues related to this patch.  There might still be
-something,  but I'm willing to help work through them or revert this
-if it turns out to be a problem.  I'm still assuming that Grant will
-handle this.
+At this point I do not think we would need to tune multiple IOH for DCA.
+The limitation you mention applies only to CB3.0. I do not think DCA is supported
+with Sandy Bridge / Ivy Bridge regardless of multi-IOH case but let me confirm it
+yet.
 
-Bjorn
+Thanks,
+Maciej
