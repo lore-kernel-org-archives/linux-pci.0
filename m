@@ -1,67 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:51617 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756962Ab2ECPVu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2012 11:21:50 -0400
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Alessio Igor Bogani <abogani@kernel.org>,
-	Michal Marek <mmarek@suse.cz>, linux-kbuild@vger.kernel.org,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH] scripts/modpost: check for bad refernces in .pci.fixups area
-Date: Thu,  3 May 2012 17:23:09 +0200
-Message-Id: <1336058590-18049-1-git-send-email-bigeasy@linutronix.de>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:62908 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932552Ab2ESA1r convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 May 2012 20:27:47 -0400
+Received: by lahd3 with SMTP id d3so2462517lah.19
+        for <linux-pci@vger.kernel.org>; Fri, 18 May 2012 17:27:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <403610A45A2B5242BD291EDAE8B37D300FDBDA97@SHSMSX102.ccr.corp.intel.com>
+References: <20120506151156.GA13805@hp-xd.sh.intel.com> <CAErSpo5-iwY1X6GrKzEAHM=eZS1hs_6wNV1fB0GhLuo3YQcV-A@mail.gmail.com>
+ <403610A45A2B5242BD291EDAE8B37D300FDBDA97@SHSMSX102.ccr.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 18 May 2012 18:27:24 -0600
+Message-ID: <CAErSpo4p9mRukyv8j6jhuFgiOE0usxF7xde7Vp+zNtAEowX-gQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: save/restore max Latency Value for device LTR
+To: "Hao, Xudong" <xudong.hao@intel.com>
+Cc: Xudong Hao <xudong.hao@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Functions used for PCI fixups (like DECLARE_PCI_FIXUP_HEADER) are often
-marked __init. This is okay as long as nobody is using PCI hotplug.
-That means if one executes
-| echo 1 > /sys/bus/pci/rescan
+On Tue, May 8, 2012 at 3:09 AM, Hao, Xudong <xudong.hao@intel.com> wrote:
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> >  }
+>> >
+>>
+>> This doesn't make any sense to me.  "pos" is the offset of the PCI
+>> Express Capability (identifier 10h).  LTR is a separate extended
+>> capability (identifier 18h), so you at least have to look up its
+>> offset.
+>>
+> Sorry paste a wrong patch...
+>
+> How about this patch, not a formal patch.
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 111569c..eced407 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -910,6 +910,45 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
+>                pci_write_config_word(dev, pos + PCI_EXP_SLTCTL2, cap[i++]);
+>  }
+>
+> +static int pci_save_ltr_value(struct pci_dev *dev)
+> +{
+> +       int i = 0, pos;
+> +       struct pci_cap_saved_state *save_state;
+> +       u16 *cap;
+> +
+> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
+> +       if (!pos)
+> +               return -ENOTSUPP;
+> +
+> +       save_state = pci_find_saved_cap(dev, PCI_EXT_CAP_ID_LTR);
+> +       if (!save_state) {
+> +               dev_err(&dev->dev, "buffer not found in %s\n", __func__);
+> +               return -ENOMEM;
+> +       }
+> +       cap = (u16 *)&save_state->cap.ltr_data[0];
+> +
+> +       pci_read_config_word(dev, pos + PCI_LTR_MAX_SNOOP_LAT, &cap[i++]);
+> +       pci_read_config_word(dev, pos + PCI_LTR_MAX_NOSNOOP_LAT, &cap[i++]);
+> +}
+> +
+> +static void pci_restore_ltr_value(struct pci_dev *dev)
+> +{
+> +       int i = 0, pos;
+> +       struct pci_cap_saved_state *save_state;
+> +       u16 *cap;
+> +
+> +       if (!pci_ltr_supported(dev))
+> +               return;
+> +
+> +       save_state = pci_find_saved_cap(dev, PCI_EXT_CAP_ID_LTR);
+> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
+> +       if (!save_state || !pos)
+> +               return;
+> +       cap = (u16 *)&save_state->cap.ltr_data[0];
+> +
+> +       pci_write_config_word(dev, pos + PCI_LTR_MAX_SNOOP_LAT, cap[i++]);
+> +       pci_write_config_word(dev, pos + PCI_LTR_MAX_NOSNOOP_LAT, cap[i++]);
+> +}
+>
+>  static int pci_save_pcix_state(struct pci_dev *dev)
+>  {
+> @@ -964,6 +1003,10 @@ pci_save_state(struct pci_dev *dev)
+>                return i;
+>        if ((i = pci_save_pcix_state(dev)) != 0)
+>                return i;
+> +
+> +       if (pci_ltr_supported(dev))
+> +               return pci_save_ltr_value(dev);
+> +
+>        return 0;
+>  }
+>
+> @@ -1032,6 +1075,7 @@ void pci_restore_state(struct pci_dev *dev)
+>        pci_restore_pcix_state(dev);
+>        pci_restore_msi_state(dev);
+>        pci_restore_iov_state(dev);
+> +       pci_restore_ltr_value(dev);
+>
+>        dev->state_saved = false;
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e444f5b..6343aeb 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -220,6 +220,7 @@ struct pci_cap_saved_data {
+>        char cap_nr;
+>        unsigned int size;
+>        u32 data[0];
+> +       u32 ltr_data[0];
+>  };
+>
+>  struct pci_cap_saved_state {
 
-and we hit a module which is marked __init instead of __devinit then we
-go boom because the code is removed after the kernel booted. This patch
-helps to see those section miss-matches.
-During rescan I saw that pci_fixup_early, pci_fixup_header and
-pci_fixup_enable have been called. I added pci_fixup_final (which has no
-users) and resume hooks as they should also not remain in __init
-section.
+Did you test this?
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- scripts/mod/modpost.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+I can't believe this works at all.  You're calling
+"pci_find_saved_cap(dev, PCI_EXT_CAP_ID_LTR)", which searches the
+pci_dev->saved_cap_space list, but you never add a PCI_EXT_CAP_ID_LTR
+buffer to that list.
 
-diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
-index c4e7d15..b6fa8be 100644
---- a/scripts/mod/modpost.c
-+++ b/scripts/mod/modpost.c
-@@ -862,6 +862,11 @@ static void check_section(const char *modname, struct elf_info *elf,
- #define ALL_EXIT_TEXT_SECTIONS \
- 	".exit.text$", ".devexit.text$", ".cpuexit.text$", ".memexit.text$"
- 
-+#define ALL_PCI_INIT_SECTIONS	\
-+	".pci_fixup_early$", ".pci_fixup_header$", ".pci_fixup_final$", \
-+	".pci_fixup_enable$", ".pci_fixup_resume$", \
-+	".pci_fixup_resume_early$", ".pci_fixup_suspend$"
-+
- #define ALL_XXXINIT_SECTIONS DEV_INIT_SECTIONS, CPU_INIT_SECTIONS, \
- 	MEM_INIT_SECTIONS
- #define ALL_XXXEXIT_SECTIONS DEV_EXIT_SECTIONS, CPU_EXIT_SECTIONS, \
-@@ -1024,6 +1029,12 @@ const struct sectioncheck sectioncheck[] = {
- 	.mismatch = ANY_EXIT_TO_ANY_INIT,
- 	.symbol_white_list = { DEFAULT_SYMBOL_WHITE_LIST, NULL },
- },
-+{
-+	.fromsec = { ALL_PCI_INIT_SECTIONS, NULL },
-+	.tosec   = { INIT_SECTIONS, NULL },
-+	.mismatch = ANY_INIT_TO_ANY_EXIT,
-+	.symbol_white_list = { NULL },
-+},
- /* Do not export init/exit functions or data */
- {
- 	.fromsec = { "__ksymtab*", NULL },
--- 
-1.7.10
-
+Bjorn
