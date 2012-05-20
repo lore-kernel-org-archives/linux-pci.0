@@ -1,81 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47999 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110Ab2EFDWX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 May 2012 23:22:23 -0400
-Message-ID: <4FA5EE63.1050208@gmail.com>
-Date: Sun, 06 May 2012 11:22:11 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:58200 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754497Ab2ETCgJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 May 2012 22:36:09 -0400
+Received: by obbtb18 with SMTP id tb18so6128358obb.19
+        for <linux-pci@vger.kernel.org>; Sat, 19 May 2012 19:36:09 -0700 (PDT)
 MIME-Version: 1.0
-To: Nico Schottelius <nico-linux-20120419@schottelius.org>,
-	Francois Rigaut <frigaut@gmail.com>,
+In-Reply-To: <CAErSpo6bVG+-+E8JBcNv19+KHoQmswMTPrH-OsmRZmjAMT5e5g@mail.gmail.com>
+References: <1315976141-6684-1-git-send-email-akong@redhat.com>
+	<20120510154423.11306.85353.stgit@t>
+	<4FABF639.4070205@gmail.com>
+	<20120510185516.GI14647@redhat.com>
+	<4FAC5518.5060807@redhat.com>
+	<4FAC5C32.9080009@redhat.com>
+	<4FAD1B88.2060905@gmail.com>
+	<CAErSpo6bVG+-+E8JBcNv19+KHoQmswMTPrH-OsmRZmjAMT5e5g@mail.gmail.com>
+Date: Sun, 20 May 2012 10:36:09 +0800
+Message-ID: <CAFeW=paB3Xtn5A-aSpoQbfxE9o-PpzzyCZh1oPWhP_ZcRTKQeA@mail.gmail.com>
+Subject: Re: [Qemu-devel] [PATCH v3] pci: clean all funcs when hot-removing
+ multifunc device
+From: Amos Kong <kongjianjun@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Amos Kong <akong@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>, linux-pci@vger.kernel.org,
+	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org,
+	alex.williamson@redhat.com, kevin@koconnor.net,
 	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Linux Support for Thunderbolt using Apple Monitor
-References: <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com> <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com> <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com> <4FA4AA3E.1070903@gmail.com> <4FA544B1.3070705@gmail.com> <20120505164819.GA21599@schottelius.org>
-In-Reply-To: <20120505164819.GA21599@schottelius.org>
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm afraid it won't work by just changing the OSDW() return value.
-After analysis the ACPI table, I guess the BIOS ACPI implementation doesn't
-confirm to the ACPI specification for hotplug, it needs special support in
-OS to enable Thunderbolt cable hotplug on that system. Maybe that's the
-reason why it's only enabled on Apple's OSes, not sure it's due to technical
-or business considerations.
+On Wed, May 16, 2012 at 11:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, May 11, 2012 at 8:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> On 05/11/2012 08:24 AM, Amos Kong wrote:
+>>> On 05/11/2012 07:54 AM, Amos Kong wrote:
+>>>> On 05/11/2012 02:55 AM, Michael S. Tsirkin wrote:
+>>>>> On Fri, May 11, 2012 at 01:09:13AM +0800, Jiang Liu wrote:
+>>>>>> On 05/10/2012 11:44 PM, Amos Kong wrote:
+>>>>>>
+>>>>>>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>>>>>>> index 806c44f..a7442d9 100644
+>>>>>>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>>>>>>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>>>>>>> @@ -885,7 +885,7 @@ static void disable_bridges(struct pci_bus *bus)
+>>>>>>>  static int disable_device(struct acpiphp_slot *slot)
+>>>>>>>  {
+>>>>>>>   struct acpiphp_func *func;
+>>>>>>> - struct pci_dev *pdev;
+>>>>>>> + struct pci_dev *pdev, *tmp;
+>>>>>>>   struct pci_bus *bus = slot->bridge->pci_bus;
+>>>>>>>
+>>>>>>>   /* The slot will be enabled when func 0 is added, so check
+>>>>>>> @@ -902,9 +902,10 @@ static int disable_device(struct acpiphp_slot *slot)
+>>>>>>>                   func->bridge = NULL;
+>>>>>>>           }
+>>>>>>>
+>>>>>>> -         pdev = pci_get_slot(slot->bridge->pci_bus,
+>>>>>>> -                             PCI_DEVFN(slot->device, func->function));
+>>>>>>> -         if (pdev) {
+>>>>>>> +         list_for_each_entry_safe(pdev, tmp, &bus->devices, bus_list) {
+>>>>>>> +                 if (PCI_SLOT(pdev->devfn) != slot->device)
+>>>>>>> +                         continue;
+>
+> I think the concept is good: in enable_device(), we use
+> pci_scan_slot(), which scans all possible functions in the slot.  So
+> in disable_device() we should do something symmetric to remove all the
+> functions.
 
-This PCIe device "05:00.0 System peripheral: Intel Corporation Device 151a
-(rev 01)" may play a role in the Thunderbolt cable hotplug operations, but
-haven't figured it out yet.
+Right!
 
-On 05/06/2012 12:48 AM, Nico Schottelius wrote:
-> Hey Jiang,
-> 
-> Jiang Liu [Sat, May 05, 2012 at 11:18:09PM +0800]:
->> 	It seems that the PCI topology related to the Thunderbird is:
-> 
-> Thanks for digging into this, I've the feeling we could somehow get
-> this running in the end...
-> 
->> [...] 
->> According to the acpidump sent out by you, I guess the relationship among PCIe and ACPI is as below:
->>         Device (PCI0)	// PCIe host bridge
->>         {
->>             Name (_HID, EisaId ("PNP0A08"))
->>             Device (P0P2)	//00:01.0
->>             {
->>                 Name (_ADR, 0x00010000)
->>                 Device (UPSB)	//03:00.0
->>                 {
->>                     Name (_ADR, 0x00)
->>                     Device (DSB2)	//04:04.0
->>                     {
->>                         Name (_ADR, 0x00040000)
->>                         Method (_RMV, 0, NotSerialized)
->>                         {
->>                             Return (OSDW ()) // OSDW-> OS is Darwin
->>                         }
->>                         Device (UPS2)	//37:00.0
->>                         {
->>                             Name (_ADR, 0x00)
->> 			}
->> 		    }
->> 		}
->> 	    }
->> 	}
->>
->> But _RMV method only returns 1 on iOS or Max OS X. That means ACPI based hotplug is disabled
->> on Linux for your system. And as Yinghai has pointed out, all the PCIe downstream ports on 
->> the system don't support PCIe hotplug. So need BIOS or hardware changes to support Thunderbolt
->> cable hotplug on your system.
-> 
-> I'm not deep into how acpi works, but wondering: Can't we replace that part,
-> change the tree or emulate a different OSDW() method similar to LD_PRELOAD?
-> 
-> Cheers,
-> 
-> Nico
-> 
+>>>>>>> +
+>>>>>> The pci_bus_sem lock should be acquired when walking the bus->devices list.
+>>>>>> Otherwise it may cause invalid memory access if another thread is modifying
+>>>>>> the bus->devices list concurrently.
+>>>
+>>> pci_bus_sem lock is only request for writing &bus->devices list, right ?
+>>> and this protection already exists in pci_destory_dev().
+>> That's for writer. For reader to walk the pci_bus->devices list, you also need
+>> to acquire the reader lock by down_read(&pci_bus_sem). Please refer to
+>> pci_get_slot() for example. This especially import for native OS because there
+>> may be multiple PCI slots/devices on the bus.
+>
+> There is a lot of existing code that walks bus->devices without
+> holding pci_bus_sem, but most of it is boot-time code that is arguably
+> safe (though I think things like pcibios_fixup_bus() are poorly
+> designed and don't fit well in the hotplug-enabled world).
 
+disable_remove() is not boot-time code, we might hot-remove devices
+when system is running.
+
+> In this case, I do think we need to protect against updates while
+> we're walking bus->devices.  It's probably not trivial because
+> __pci_remove_bus_device() calls pci_destroy_dev(), where we do the
+> down_write(), so simply wrapping the whole thing with down_read() will
+> cause a deadlock.
+
+I posted a V4 to add pci_bus_sem protection , please help to review.
+Thanks for Jiang Liu's guide.
+
+> Kenji-san, Yinghai, do you have any input?
+>
+> Bjorn
