@@ -1,84 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28051 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754330Ab2EIJAN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 May 2012 05:00:13 -0400
-Message-ID: <4FAA3205.4030300@redhat.com>
-Date: Wed, 09 May 2012 16:59:49 +0800
-From: Amos Kong <akong@redhat.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: "Michael S. Tsirkin" <mst@redhat.com>
-CC: linux-pci@vger.kernel.org, seabios@seabios.org,
-	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org, rjw@sisk.pl,
-	alex.williamson@redhat.com, kevin@koconnor.net, liuj97@gmail.com
-Subject: Re: [Qemu-devel] [RESEND PATCH v3] hotplug: add device per func in
- ACPI DSDT tables
-References: <20111214010645.GA2044@morn.localdomain> <20120509072452.14872.92530.stgit@t> <20120509084447.GA14189@redhat.com>
-In-Reply-To: <20120509084447.GA14189@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQX-Ut3=WfjeKVBBO55NMQTXZdCC2NbsrX=p3MHVWLahtQ@mail.gmail.com>
+References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+ <CAErSpo6OZYXz-M=C9r154MY7kwC7LRR3ZnQe3pnmVJY2uoWeRw@mail.gmail.com>
+ <CAE9FiQXN5z0riswyECKw5OKe+nPUBN2yZ1d4=Asb3kqaj770NA@mail.gmail.com>
+ <CAErSpo71805jTs1qVMx+9ghzUub77r47VqpXF0sVOFuDSq6pmg@mail.gmail.com> <CAE9FiQX-Ut3=WfjeKVBBO55NMQTXZdCC2NbsrX=p3MHVWLahtQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 21 May 2012 14:06:23 -0600
+Message-ID: <CAErSpo4zxo+A-uLNCGj1Fe25t2TD+0cjgpdncV9kykTe0pd0CQ@mail.gmail.com>
+Subject: Re: [PATCH 00/21] PCI: use busn_res to replace bus secondary/subordinate
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/05/12 16:46, Michael S. Tsirkin wrote:
-> On Wed, May 09, 2012 at 03:24:52PM +0800, Amos Kong wrote:
->> Boot up a Linux VM with 8 pci block devices which
->> are the 8 functions in one pci slot.
->> | # qemu-kvm ...
->> | -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
->> | -device virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
->> | ....
->> | -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
->> | -device virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
->>
->> Check devices in guest.
->> | vm)# ls /dev/vd*
->> |    vda vdb vdc vde vdf vdg vdh
->> | vm)# lspci |grep block
->> | 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
->> |    ...
->> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
->> |
->>
->> Func1~7 still exist in guest after hot-removing the whole slot
->> through qemu monitor.
->> | vm)# lspci |grep block    (00:03.0 disappeared)
->> | 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
->> |    ...
->> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
->> | vm)# ls /dev/vd*          (vda disappeared)
->> |    vdb vdc vde vdf vdg vdh
->> | vm)# mkfs /dev/vdb
->> |    INFO: task mkfs.ext2:1784 blocked for more than 120 seconds. (task hung)
->>
->>
->> Currently only func0 is defined in ACPI DSDT table
->> of seabios, and only hot-adding func0 would cause
->> a ACPI event for notification. Other funcs except
->> func0 wouldn't be registered in linux pci driver.
->> (we can only found func0 in slot->funcs list of
->> pci driver).
+On Fri, May 18, 2012 at 10:38 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, May 18, 2012 at 4:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+
+> looks one of commit author is messed up.
 >
-> Isn't this what your patch 'PCI: Can continually add funcs after adding
-> func0' addresses?
+> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commitdiff;h=b20238f05059818de8edd76cb5523b6bf8e26527
+>
+> author  Bjorn Helgaas <bhelgaas@google.com>
+>        Fri, 18 May 2012 17:35:50 +0000 (11:35 -0600)
+> committer       Bjorn Helgaas <bhelgaas@google.com>
+>        Fri, 18 May 2012 20:00:35 +0000 (14:00 -0600)
+> Will use them insert/update busn res in pci_bus struct.
+>
+> [bhelgaas: print conflicting entry if insertion fails]
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> but if changing it would take you too much time, just leave it as is.
 
-No.
+Oops, sorry, I squashed two patches into one (no point in two patches
+that (1) add A and (2) clean up A), and I must have screwed up the
+author then.  I fixed it in my tree.
 
-This patch fixes the problem that some funcs could not be removed.
-the question is sending ACPI event for all functions (in same slot)
-or only function 0.
+I also changed the branch name to "for-3.6" to make it more obvious
+that the changes there are targeted for the 3.6 merge window, not for
+3.5.  After Linus pulls my current "next" branch into 3.5-rcX, I'll
+move the for-3.6 stuff to the "next" branch as usual.
 
-I found all funcs are defined in ACPI DSDT table in microsoft's example:
-http://www.microsoft.com/china/whdc/system/pnppwr/hotadd/hotplugpci.mspx#EUH 
+>> Let me know what series you'd like me to work on next, and send the
+>> current patches to the list.
+>
+> Maybe for-pci-res-alloc could be moved forwarded, then
+> for-pci-busn-alloc
+> for-pci-root-bus-hotplug
+> for-pci-for-each-res-addon
 
+OK, just send your current patches to the list so everybody has a
+chance to see them.
 
-Is it a useful attestation ?
-
-> If yes it's commit f382a086f3129edc152b8044b69ccc6682e637bb in 3.4.
-
-This commit fix the problem that some funcs could not be added.
-
-> So let's class the problematic behaviour guest bug and avoid workarounds
-> in bios?
-
--- 
-			Amos.
+Bjorn
