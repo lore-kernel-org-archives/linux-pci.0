@@ -1,103 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Dan Williams <dan.j.williams@intel.com>,
-	Maciej Sosnowski <maciej.sosnowski@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 7/7] dmaengine: assign DMA channel to CPU according to NUMA affinity
-Date: Mon, 14 May 2012 21:47:09 +0800
-Message-Id: <1337003229-9158-8-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from blu0-omc4-s9.blu0.hotmail.com ([65.55.111.148]:12357 "EHLO
+	blu0-omc4-s9.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752749Ab2EUTdx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2012 15:33:53 -0400
+Message-ID: <BLU0-SMTP47479D78AA811CB0B224ADFB71D0@phx.gbl>
+Date: Mon, 21 May 2012 20:33:49 +0100
+From: Rob Allen <ra-kernel@hotmail.co.uk>
+MIME-Version: 1.0
+To: Clemens Ladisch <clemens@ladisch.de>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Ram Pai <linuxram@us.ibm.com>,
+	linux1394-devel@lists.sourceforge.net, linux-pci@vger.kernel.org
+Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
+References: <bug-43244-4803@https.bugzilla.kernel.org/> <20120513221357.7574ae79@stein> <4FB0A6F6.9050504@ladisch.de> <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com> <BLU0-SMTP12B809D527F768CCC42B18B7180@phx.gbl> <4FB3B159.2090401@ladisch.de>
+In-Reply-To: <4FB3B159.2090401@ladisch.de>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On 16/05/12 14:53, Clemens Ladisch wrote:
+> Rob Allen wrote:
+>> On 14/05/12 07:39, Yinghai Lu wrote:
+>>> can you post full log with pci debug enabled with lastest upsteam kernel?
+>>
+>> I'm happy to do that, although I need with some guidance on what I need to
+>> enable to get the required output.
+>
+> For Ubuntu, see<https://wiki.ubuntu.com/KernelTeam/GitKernelBuild>.
+>
+> To enable PCI debugging, enable the configuration options
+> CONFIG_DEBUG_KERNEL and CONFIG_PCI_DEBUG.
 
-On systems with multiple CPUs and DMA devices, try optimize DMA
-performance by assigning DMA channels to CPUs according to NUMA
-affinity relationship. This may help architectures with memory
-controllers and DMA devices built into the same physical processor
-to avoid unnecessary cross socket traffic.
+Thanks. I've built the kernel and I can replicate the failure.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/dma/dmaengine.c |   45 +++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 43 insertions(+), 2 deletions(-)
+However, I'm having trouble getting the log output. As soon as I see the 
+"firewire_ohci: Failed to set Link Power Status" message, the machine 
+locks up. After cycling the power, that log output isn't anywhere in 
+/var/log anywhere (even if I booted with 'rw').
 
-diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-index eca45c0..8a41bdf 100644
---- a/drivers/dma/dmaengine.c
-+++ b/drivers/dma/dmaengine.c
-@@ -266,6 +266,7 @@ static dma_cap_mask_t dma_cap_mask_all;
- struct dma_chan_tbl_ent {
- 	struct dma_chan *chan;
- 	struct dma_chan *prev_chan;
-+	int node;
- };
- 
- /**
-@@ -467,6 +468,46 @@ static void dma_channel_quiesce(void)
- #endif
- }
- 
-+/* Assign DMA channels to CPUs according to NUMA affinity relationship */
-+static void dma_channel_set(int cap, int cpu, struct dma_chan *chan)
-+{
-+	int node;
-+	int src_cpu;
-+	struct dma_chan *src_chan;
-+	struct dma_chan_tbl_ent *entry;
-+	struct dma_chan_tbl_ent *src_entry;
-+
-+	entry = per_cpu_ptr(channel_table[cap], cpu);
-+	node = dev_to_node(chan->device->dev);
-+
-+	/* Try to optimize if CPU and DMA channel belong to different node. */
-+	if (node != -1 && node != cpu_to_node(cpu)) {
-+		for_each_online_cpu(src_cpu) {
-+			src_entry = per_cpu_ptr(channel_table[cap], src_cpu);
-+			src_chan = src_entry->chan;
-+
-+			/*
-+			 * CPU online map may change beneath us due to
-+			 * CPU hotplug operations.
-+			 */
-+			if (src_chan == NULL)
-+				continue;
-+
-+			if (src_entry->node == node ||
-+			    cpu_to_node(src_cpu) == node) {
-+				entry->node = src_entry->node;
-+				src_entry->node = node;
-+				entry->chan = src_chan;
-+				src_entry->chan = chan;
-+				return;
-+			}
-+		}
-+	}
-+
-+	entry->node = node;
-+	entry->chan = chan;
-+}
-+
- /**
-  * dma_channel_rebalance - redistribute the available channels
-  *
-@@ -501,8 +542,8 @@ static void dma_channel_rebalance(bool quiesce)
- 					chan = nth_chan(cap, n++);
- 				else
- 					chan = nth_chan(cap, -1);
--				entry = per_cpu_ptr(channel_table[cap], cpu);
--				entry->chan = chan;
-+				if (chan)
-+					dma_channel_set(cap, cpu, chan);
- 			}
- 
- 	if (quiesce)
--- 
-1.7.9.5
+After some searching, I guess a decent route is to output to a serial 
+console. The machine in question doesn't have a serial port, although I 
+have a PCI-e serial card somewhere. (Is that likely to work so early in 
+the boot process?)
 
+Can you suggest the best way to get the log output?
+
+Thanks,
+Rob
