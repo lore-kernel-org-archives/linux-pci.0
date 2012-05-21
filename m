@@ -1,81 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1337227613.6954.306.camel@bling.home>
-Subject: Re: [PATCH 04/13] pci: New pci_dma_quirk()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: David Gibson <david@gibson.dropbear.id.au>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Date: Wed, 16 May 2012 22:06:53 -0600
-In-Reply-To: <20120517033914.GF22069@truffala.fritz.box>
-References: <20120511222148.30496.68571.stgit@bling.home>
-	 <20120511225555.30496.80525.stgit@bling.home>
-	 <20120517033914.GF22069@truffala.fritz.box>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:59695 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754093Ab2EUR1Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2012 13:27:25 -0400
+Message-ID: <4FBA7AEE.3090402@snewbury.org.uk>
+Date: Mon, 21 May 2012 18:27:10 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: Re: PCI resources above 4GB
+References: <1333968563.5678.19.camel@infinity> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com> <4F8AA0DC.6010902@snewbury.org.uk> <4F8AB312.7060606@snewbury.org.uk> <4F8B04A4.4070507@snewbury.org.uk> <4F8B0609.8010603@snewbury.org.uk> <CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com> <CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com> <CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com> <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com> <4F96770D.2050606@snewbury.org.uk> <4FB227D3.7090002@snewbury.org.uk> <CAE9FiQX48eCS85eWMFxm6fCWgu2zwxvSywtQhsf-35WEvBfJVQ@mail.gmail.com> <4FB4EE99.10509@snewbury.org.uk> <4FB4F039.2040308@snewbury.org.uk> <CAE9FiQUpdVJeF06BtqOKo448n1oH+AMJyC03FpB13=fOdkwM+w@mail.gmail.com> <CAE9FiQWOoEX3H6V7+c+azm8DJieX8bpXRmsYuOE+ZUDJ-p3-yQ@mail.gmail.com> <CAE9FiQU1Bq3xpo0m_eNwBHoxF+oH=pXpg59hQguf_5GpWytyKg@mail.gmail.com>
+In-Reply-To: <CAE9FiQU1Bq3xpo0m_eNwBHoxF+oH=pXpg59hQguf_5GpWytyKg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-05-17 at 13:39 +1000, David Gibson wrote:
-> On Fri, May 11, 2012 at 04:55:55PM -0600, Alex Williamson wrote:
-> > Integrating IOMMU groups more closely into the driver core allows
-> > us to more easily work around DMA quirks.  The Ricoh multifunction
-> > controller is a favorite example of devices that are currently
-> > incompatible with IOMMU isolation as all the functions use the
-> > requestor ID of function 0 for DMA.  Passing this device into
-> > pci_dma_quirk returns the PCI device to use for DMA.  The IOMMU
-> > driver can then construct an IOMMU group including both devices.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> > 
-> >  drivers/pci/quirks.c |   22 ++++++++++++++++++++++
-> >  include/linux/pci.h  |    2 ++
-> >  2 files changed, 24 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 4bf7102..6f9f7f9 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3109,3 +3109,25 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
-> >  
-> >  	return -ENOTTY;
-> >  }
-> > +
-> > +struct pci_dev *pci_dma_quirk(struct pci_dev *dev)
-> > +{
-> > +	struct pci_dev *dma_dev = dev;
-> > +
-> > +	/*
-> > +	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
-> > +	 *
-> > +	 * Some Ricoh devices use the function 0 source ID for DMA on
-> > +	 * other functions of a multifunction device.  The DMA devices
-> > +	 * is therefore function 0, which will have implications of the
-> > +	 * iommu grouping of these devices.
-> > +	 */
-> > +	if (dev->vendor == PCI_VENDOR_ID_RICOH &&
-> > +	    (dev->device == 0xe822 || dev->device == 0xe230 ||
-> > +	     dev->device == 0xe832 || dev->device == 0xe476)) {
-> > +		dma_dev = pci_get_slot(dev->bus,
-> > +				       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-> > +	}
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 18/05/12 10:08, Yinghai Lu wrote:
+> On Fri, May 18, 2012 at 12:45 AM, Yinghai Lu <yinghai@kernel.org>
+> wrote:
+>> On Thu, May 17, 2012 at 9:36 AM, Yinghai Lu <yinghai@kernel.org>
+>> wrote:
+>>> On Thu, May 17, 2012 at 5:34 AM, Steven Newbury
+>>> <steve@snewbury.org.uk> wrote:
+>>>> -----BEGIN PGP SIGNED MESSAGE----- Strange, the busn branch
+>>>> is merged with for-pci-res-alloc, but for some reason it
+>>>> isn't working.  Only the bridge is detected, not the devices
+>>>> behind it.
+>>> 
+>>> Can you post the boot log ? maybe recently reordering patches
+>>> applying sequence break it.
+>> 
+>> Never mind, found the problem.
 > 
-> Hrm.  This seems like a very generic name for a function performing a
-> very specific test.  We could well have devices with the same problem
-> in future, so shouldn't this be set up so the same quirk can be easily
-> added to new device ids without changing the function code itself.
+> updated for-pci-res-alloc branch. please check it.
+> 
+Tested and working fine now.  Some random update broke gnome-shell, so
+couldn't test it straight away.  In the end I gave up fixing it and
+reverted to an earlier system snapshot.  btrfs can be very useful! :)
 
-I've since added a USB quirk here to group all the USB functions in a
-slot.  I'll take a closer look at the quirk helpers to see if anything
-makes this easier, but I didn't see much point in spending a lot of time
-over-optimizing this for 1 or 2 quirks that we can just step through in
-a monolithic function.  Thanks,
+There is an outstanding issue with i915 though.  With the moved BAR
+the screen remains blank when i915 loads (should show fbcon) and
+doesn't light up until X initialises. (X produces a modeset I assume.)
+ After that everything works fine.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-Alex
-
+iEYEARECAAYFAk+6eu4ACgkQGcb56gMuC61InACfa+SvYmWXxJb3x1YTXOJhQWLE
+0HkAoKcKhk7elSx1LIaxVdrxiBZibzDa
+=MaOP
+-----END PGP SIGNATURE-----
