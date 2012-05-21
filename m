@@ -1,85 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 13/21] x86/PCI: add busn_res into resources list for ACPI path
-Date: Mon,  7 May 2012 13:29:58 -0700
-Message-Id: <1336422606-4244-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33886 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758184Ab2EUUVY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2012 16:21:24 -0400
+Message-ID: <4FBAA3A5.4070200@ladisch.de>
+Date: Mon, 21 May 2012 22:20:53 +0200
+From: Clemens Ladisch <clemens@ladisch.de>
+MIME-Version: 1.0
+To: Rob Allen <ra-kernel@hotmail.co.uk>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Ram Pai <linuxram@us.ibm.com>,
+	linux1394-devel@lists.sourceforge.net, linux-pci@vger.kernel.org
+Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
+References: <bug-43244-4803@https.bugzilla.kernel.org/> <20120513221357.7574ae79@stein> <4FB0A6F6.9050504@ladisch.de> <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com> <BLU0-SMTP12B809D527F768CCC42B18B7180@phx.gbl> <4FB3B159.2090401@ladisch.de> <BLU0-SMTP47479D78AA811CB0B224ADFB71D0@phx.gbl>
+In-Reply-To: <BLU0-SMTP47479D78AA811CB0B224ADFB71D0@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the host bridge bus number aperture from _CRS to the resource list.
-Like the MMIO and I/O port apertures, this will be used when assigning
-resources to hot-added devices or in the case of conflicts.
+Rob Allen wrote:
+> I've built the kernel and I can replicate the failure.
+>
+> However, I'm having trouble getting the log output. As soon as I see
+> the "firewire_ohci: Failed to set Link Power Status" message, the
+> machine locks up. After cycling the power, that log output isn't
+> anywhere in /var/log anywhere (even if I booted with 'rw').
 
-Always insert that even pci_use_crs is not used.
+Blacklist the firewire-ohci module (man modprobe.d), then you should be
+able to get the log output until before the driver loads.  To see the
+remaining messages on the screen, load it with "modprobe firewire-ohci"
+after raising the console log level with "dmesg -n 8".
 
-[bhelgaas: rewrite changelog]
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/acpi.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 350fe63..2bb885a 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,7 +12,6 @@ struct pci_root_info {
- 	char name[16];
- 	unsigned int res_num;
- 	struct resource *res;
--	int busnum;
- 	struct pci_sysdata sd;
- };
- 
-@@ -347,7 +346,9 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- {
- 	size_t size;
- 
-+	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 	info->bridge = device;
-+
- 	info->res_num = 0;
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
- 				info);
-@@ -360,8 +361,6 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	if (!info->res)
- 		return;
- 
--	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
--
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
- 				info);
- }
-@@ -426,6 +425,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	} else {
- 		probe_pci_root_info(info, device, busnum, domain);
- 
-+		/* insert busn res at first */
-+		pci_add_resource(&resources,  &root->secondary);
- 		/*
- 		 * _CRS with no apertures is normal, so only fall back to
- 		 * defaults or native bridge info if we're ignoring _CRS.
-@@ -440,7 +441,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
- 					  &resources);
- 		if (bus) {
--			bus->busn_res.end = pci_scan_child_bus(bus);
-+			pci_scan_child_bus(bus);
- 			pci_set_host_bridge_release(
- 				to_pci_host_bridge(bus->bridge),
- 				release_pci_root_info, info);
--- 
-1.7.7
-
+Regards,
+Clemens
