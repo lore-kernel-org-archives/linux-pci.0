@@ -1,159 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:56937 "EHLO
-	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761738Ab2EQSAX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 14:00:23 -0400
-From: <Shyam_Iyer@Dell.com>
-To: <prarit@redhat.com>
-CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
-Date: Thu, 17 May 2012 11:00:13 -0700
-Subject: RE: [PATCH] pci, Add AER_panic sysfs file
-Message-ID: <DBFB1B45AF80394ABD1C807E9F28D15707BC8F0D00@BLRX7MCDC203.AMER.DELL.COM>
-References: <1337274270-18785-1-git-send-email-prarit@redhat.com>
- <DBFB1B45AF80394ABD1C807E9F28D15707BC8F0CE9@BLRX7MCDC203.AMER.DELL.COM>
- <4FB537B4.1040505@redhat.com>
- <DBFB1B45AF80394ABD1C807E9F28D15707BC712175@BLRX7MCDC203.AMER.DELL.COM>
-In-Reply-To: <DBFB1B45AF80394ABD1C807E9F28D15707BC712175@BLRX7MCDC203.AMER.DELL.COM>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from szxga01-in.huawei.com ([58.251.152.64]:32809 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754414Ab2EUM2X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2012 08:28:23 -0400
+Date: Mon, 21 May 2012 20:27:06 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [RESEND,PATCH] DCA, x86: fix invalid memory access in DCA core
+In-reply-to: <436EC33EF05C3442BBF5497FC9483FF4162732BC@IRSMSX101.ger.corp.intel.com>
+To: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	"Williams, Dan J" <dan.j.williams@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Keping Chen <chenkeping@huawei.com>
+Message-id: <4FBA349A.8020808@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8; format=flowed
+References: <1336406288-9479-1-git-send-email-jiang.liu@huawei.com>
+ <436EC33EF05C3442BBF5497FC9483FF4162732BC@IRSMSX101.ger.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Maciej，
+	It works as expected, thanks for your kindly help.
+Tested-By: Gaohuai Han <hangaohuai@huawei.com>
 
+Thanks
+Gerry
 
-> -----Original Message-----
-> From: Iyer, Shyam
-> Sent: Thursday, May 17, 2012 1:52 PM
-> To: 'Prarit Bhargava'
-> Cc: 'linux-pci@vger.kernel.org'; 'bhelgaas@google.com'
-> Subject: RE: [PATCH] pci, Add AER_panic sysfs file
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: Prarit Bhargava [mailto:prarit@redhat.com]
-> > Sent: Thursday, May 17, 2012 1:39 PM
-> > To: Iyer, Shyam
-> > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com
-> > Subject: Re: [PATCH] pci, Add AER_panic sysfs file
-> >
-> >
-> >
-> > On 05/17/2012 01:29 PM, Shyam_Iyer@Dell.com wrote:
-> > >
-> > >
-> > >> -----Original Message-----
-> > >> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > >> owner@vger.kernel.org] On Behalf Of Prarit Bhargava
-> > >> Sent: Thursday, May 17, 2012 1:05 PM
-> > >> To: linux-pci@vger.kernel.org
-> > >> Cc: Prarit Bhargava; Bjorn Helgaas
-> > >> Subject: [PATCH] pci, Add AER_panic sysfs file
-> > >>
-> > >> Consider the following case
-> > >>
-> > >> 		[ RP ]
-> > >> 		  |
-> > >> 		  |
-> > >> 	+---------+-----------+
-> > >> 	|	  |	      |
-> > >>        [H1]      [H2]        [X1]
-> > >>
-> > >> where RP is a PCIE Root Port, H1 and H2 are devices with drivers
-> > that
-> > >> support
-> > >> PCIE AER driver error handling (ie, they have pci_error_handlers
-> > >> defined in
-> > >> the driver), and X1 is a device with a driver that does not
-> support
-> > >> PCIE
-> > >> AER driver error handling.
-> > >>
-> > >> If the Root Port takes an error what currently happens is that the
-> > >> bus resets and H1 & H2 call their slot_reset functions.  X1 does
-> > >> nothing.
-> > >>
-> > >> In some cases a user may not wish the system to continue because
-> X1
-> > is
-> > >> an unhardened driver.  In these cases, the system should not do a
-> > bus
-> > >> reset,
-> > >> but rather the system should panic to avoid any further possible
-> > data
-> > >> corruption.
-> > >
-> > > Do we neeed to panic for both correctable and uncorrectable
-> errors..
-> > ?
-> > >
-> > > I thought correctable errors could recover without a bus reset.
-> >
-> > Will a bus reset be issued on a correctable error?  I thought the
-> code
-> > path was
-> > that the bus reset was issued on the uncorrectable error.
-> >
-> > drivers/pci/pcie/aer/aerdrv_core.c: do_recovery()
-> >
-> >         if (severity == AER_FATAL) {
-> >                 result = reset_link(dev);
-> >                 if (result != PCI_ERS_RESULT_RECOVERED)
-> >                         goto failed;
-> >         }
-> >
-> > I may not be looking at the right spot of code.  Care to enlighten
-> me?
-> > :)
-> >
-> > P.
-> 
-> Actually I was reading the documentation ..
-> Documentation/PCI/pcieaer-howto.txt
-> 
-> "
-> Correctable errors pose no impacts on the functionality of the
-> interface. The PCI Express protocol can recover without any software
-> intervention or any loss of data. These errors are detected and
-> corrected by hardware. Unlike correctable errors, uncorrectable
-> errors impact functionality of the interface. Uncorrectable errors
-> can cause a particular transaction or a particular PCI Express link
-> to be unreliable. Depending on those error conditions, uncorrectable
-> errors are further classified into non-fatal errors and fatal errors.
-> Non-fatal errors cause the particular transaction to be unreliable,
-> but the PCI Express link itself is fully functional. Fatal errors, on
-> the other hand, cause the link to be unreliable.
-> "
-> 
-> But anyways the AER_FATAL is true for uncorrectable errors only and not
-> for correctable errors which means reset_link doesn't happen for
-> correctable errors.
-> 
-> drivers/pci/pcie/aer/aerdrv_core.c
-> 
-> if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
->                 e_info->id = ERR_UNCOR_ID(e_src->id);
-> 
->                 if (e_src->status & PCI_ERR_ROOT_FATAL_RCV)
->                         e_info->severity = AER_FATAL;
->                 else
->                         e_info->severity = AER_NONFATAL;
-> 
->                 if (e_src->status & PCI_ERR_ROOT_MULTI_UNCOR_RCV)
->                         e_info->multi_error_valid = 1;
->                 else
->                         e_info->multi_error_valid = 0;
-> 
->                 aer_print_port_info(p_device->port, e_info);
-> 
->                 if (find_source_device(p_device->port, e_info))
->                         aer_process_err_devices(p_device, e_info);
->         }
-
-
-
-Looks like we are saying the same thing and I just misunderstood that you were doing a panic for each error. 
-
-The patch looks good to me if it matters.
+On 2012-5-18 22:04, Sosnowski, Maciej wrote:
+> On Mon, May 07, 2012 5:58 PM, Jiang Liu<liuj97@gmail.com>  wrote:
+>>
+>> From: Jiang Liu<jiang.liu@huawei.com>
+>>
+>> When unregister_dca_providers() is called, it will remove all registered
+>> providers from the dca_providrers list by calling list_del(&dca->node).
+>> list_del(node) poisons node->next and node->prev as 0xDEADBEEF and
+>> 0xBEEFDEAD.
+>> Later when unregister_dca_provider() is called to remove a DCA provier,
+>> it calls list_del(&dca->node) to remove the dca from the list again,
+>> but dca->node has already been poisoned, then causes invalid memory
+>> access.
+>>
+>> The solution here is to use list_del_init(&dca->node) instead of
+>> list_del(&dca->node) in function unregister_dca_providers(), so it won't
+>> cause invalid memory access in unregister_dca_provider() later.
+>>
+>> ---
+>>
+>> This issue is triggered when hot-removing IOHs on Intel platforms, which
+>> will remove all IOAT devices built in the IOHs.
+>>
+>> ioatdma 0000:80:16.7: Removing dma and dca services
+>> ioatdma 0000:80:16.7: PCI INT D disabled
+>> ioatdma 0000:80:16.6: Removing dma and dca services
+>> ioatdma 0000:80:16.7: Removing dma and dca services
+>> ioatdma 0000:80:16.7: PCI INT D disabled
+>> ioatdma 0000:80:16.6: Removing dma and dca services
+>> ioatdma 0000:80:16.6: PCI INT C disabled
+>> ioatdma 0000:00:16.0: Removing dma and dca services
+>> ------------[ cut here ]------------
+>> WARNING: at lib/list_debug.c:47 __list_del_entry+0x63/0xd0()
+>> Hardware name: System x3850 X5 -[7143O3G]-
+>> list_del corruption, ffff880463540bc0->next is LIST_POISON1
+>> (dead000000100100)
+>> Modules linked in: ebtable_nat ebtables ipt_MASQUERADE iptable_nat
+>> nf_nat xt_CHECKSUM iptable_mangle bridge stp llc autofs4 sunrpc
+>> cpufreq_ondemand acpi_cpufreq freq_table mperf ipt_REJECT
+>> nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT
+>> nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter
+>> ip6_tables ipv6 vfat fat vhost_net macvtap macvlan tun kvm_intel kvm uinput
+>> microcode pcspkr serio_raw pmcraid sg be2net cdc_ether usbnet mii i2c_i801
+>> i2c_core iTCO_wdt iTCO_vendor_support shpchp ioatdma i7core_edac
+>> edac_core igb dca e1000e bnx2 ext4 mbcache jbd2 sr_mod cdrom sd_mod
+>> crc_t10dif qla2xxx pata_acpi ata_generic ata_piix bfa scsi_transport_fc
+>> scsi_tgt megaraid_sas dm_mirror dm_region_hash dm_log dm_mod [last
+>> unloaded: scsi_wait_scan]
+>> Pid: 10049, comm: bash.sh Not tainted 3.2.0IOAT+ #5
+>> Call Trace:
+>> [<ffffffff8106426f>] warn_slowpath_common+0x7f/0xc0
+>> [<ffffffff81064366>] warn_slowpath_fmt+0x46/0x50
+>> [<ffffffff8108c675>] ? __blocking_notifier_call_chain+0x65/0x80
+>> [<ffffffff81256073>] __list_del_entry+0x63/0xd0
+>> [<ffffffff812560f1>] list_del+0x11/0x40
+>> [<ffffffffa001b2e2>] unregister_dca_provider+0x42/0xe0 [dca]
+>> [<ffffffffa021f87d>] ioat_remove+0x43/0x67 [ioatdma]
+>> [<ffffffff8126b1a2>] pci_device_remove+0x52/0x120
+>> [<ffffffff8132b2dc>] __device_release_driver+0x7c/0xe0
+>> [<ffffffff8132b42d>] device_release_driver+0x2d/0x40
+>> [<ffffffff8132a871>] driver_unbind+0xa1/0xc0
+>> [<ffffffff81329cbc>] drv_attr_store+0x2c/0x30
+>> [<ffffffff811d72ef>] sysfs_write_file+0xef/0x170
+>> [<ffffffff81167338>] vfs_write+0xc8/0x190
+>> [<ffffffff81167501>] sys_write+0x51/0x90
+>> [<ffffffff814fa382>] system_call_fastpath+0x16/0x1b
+>> ---[ end trace b81b51e7c494ec0d ]---
+>> BUG: unable to handle kernel NULL pointer dereference at 0000000000000010
+>> IP: [<ffffffffa001b360>] unregister_dca_provider+0xc0/0xe0 [dca]
+>> PGD 1465b48067 PUD 1465035067 PMD 0
+>> Oops: 0000 [#1] SMP
+>> CPU 57
+>> Modules linked in: ebtable_nat ebtables ipt_MASQUERADE iptable_nat
+>> nf_nat xt_CHECKSUM iptable_mangle bridge stp llc autofs4 sunrpc
+>> cpufreq_ondemand acpi_cpufreq freq_table mperf ipt_REJECT
+>> nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT
+>> nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter
+>> ip6_tables ipv6 vfat fat vhost_net macvtap macvlan tun kvm_intel kvm uinput
+>> microcode pcspkr serio_raw pmcraid sg be2net cdc_ether usbnet mii i2c_i801
+>> i2c_core iTCO_wdt iTCO_vendor_support shpchp ioatdma i7core_edac
+>> edac_core igb dca e1000e bnx2 ext4 mbcache jbd2 sr_mod cdrom sd_mod
+>> crc_t10dif qla2xxx pata_acpi ata_generic ata_piix bfa scsi_transport_fc
+>> scsi_tgt megaraid_sas dm_mirror dm_region_hash dm_log dm_mod [last
+>> unloaded: scsi_wait_scan]
+>>
+>> Pid: 10049, comm: bash.sh Tainted: G        W    3.2.0IOAT+ #5 IBM System x3850
+>> X5 -[7143O3G]-/Node 1, Processor Card
+>> RIP: 0010:[<ffffffffa001b360>]  [<ffffffffa001b360>]
+>> unregister_dca_provider+0xc0/0xe0 [dca]
+>> RSP: 0018:ffff880c4eafbdb8  EFLAGS: 00010046
+>> RAX: 0000000000000010 RBX: ffff880463540bc0 RCX: 0000000000002288
+>> RDX: ffff881465a51800 RSI: 0000000000000046 RDI: 0000000000000009
+>> RBP: ffff880c4eafbdd8 R08: 0000000000000000 R09: 0000000000000000
+>> R10: 0000000000000010 R11: 000000000000000b R12: 0000000000000000
+>> R13: 0000000000000257 R14: ffff881465abe000 R15: ffff881464199840
+>> FS:  00007f91d8314700(0000) GS:ffff88147fd20000(0000)
+>> knlGS:0000000000000000
+>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>> CR2: 0000000000000010 CR3: 0000001457b07000 CR4: 00000000000006e0
+>> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+>> Process bash.sh (pid: 10049, threadinfo ffff880c4eafa000, task
+>> ffff880c4e3b8af0)
+>> Stack:
+>> 0000000000000206 ffff88046133a218 ffff881465abe090 ffffffffa0222560
+>> ffff880c4eafbdf8 ffffffffa021f87d ffff881465abe090 ffff881465abe208
+>> ffff880c4eafbe28 ffffffff8126b1a2 ffff881465abe090 ffffffffa02225c0
+>> Call Trace:
+>> [<ffffffffa021f87d>] ioat_remove+0x43/0x67 [ioatdma]
+>> [<ffffffff8126b1a2>] pci_device_remove+0x52/0x120
+>> [<ffffffff8132b2dc>] __device_release_driver+0x7c/0xe0
+>> [<ffffffff8132b42d>] device_release_driver+0x2d/0x40
+>> [<ffffffff8132a871>] driver_unbind+0xa1/0xc0
+>> [<ffffffff81329cbc>] drv_attr_store+0x2c/0x30
+>> [<ffffffff811d72ef>] sysfs_write_file+0xef/0x170
+>> [<ffffffff81167338>] vfs_write+0xc8/0x190
+>> [<ffffffff81167501>] sys_write+0x51/0x90
+>> [<ffffffff814fa382>] system_call_fastpath+0x16/0x1b
+>> Code: c7 20 c0 01 a0 e8 51 6c 4d e1 48 89 df e8 c9 05 00 00 48 83 c4 08 5b 41 5c 41
+>> 5d c9 c3 66 0f 1f 44 00 00 45 31 e4 49 8d 44 24 10<49>  39 44 24 10 75 c9 4c 89 e7
+>> e8 71 ad 23 e1 4c 89 e7 e8 19 7b
+>> RIP  [<ffffffffa001b360>] unregister_dca_provider+0xc0/0xe0 [dca]
+>> RSP<ffff880c4eafbdb8>
+>> CR2: 0000000000000010
+>> ---[ end trace b81b51e7c494ec0e ]---
+>
+> Jiang,
+>
+> Could you verify if the following fixes the issue above?
+>
+> Thanks,
+> Maciej
+> ---
+>
+>   drivers/dca/dca-core.c |    5 +++++
+>   1 files changed, 5 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/dca/dca-core.c b/drivers/dca/dca-core.c
+> index bc6f5fa..819dfda 100644
+> --- a/drivers/dca/dca-core.c
+> +++ b/drivers/dca/dca-core.c
+> @@ -420,6 +420,11 @@ void unregister_dca_provider(struct dca_
+>
+>   	raw_spin_lock_irqsave(&dca_lock, flags);
+>
+> +	if (list_empty(&dca_domains)) {
+> +		raw_spin_unlock_irqrestore(&dca_lock, flags);
+> +		return;
+> +	}
+> +
+>   	list_del(&dca->node);
+>
+>   	pci_rc = dca_pci_rc_from_dev(dev);
+>
+>
+>
+> .
+>
 
 
