@@ -1,60 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:45076 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754631Ab2EXJVY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 May 2012 05:21:24 -0400
-Received: by lahd3 with SMTP id d3so5754473lah.19
-        for <linux-pci@vger.kernel.org>; Thu, 24 May 2012 02:21:22 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 21 May 2012 11:05:39 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [GIT PULL] PCI updates for 3.5 merge window
+Message-ID: <20120521170539.GA13635@google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEH94Lh0gmHSR1ugVFg0ZhtFTahb9LQJsxjWZzwqzNLSO0aVug@mail.gmail.com>
-References: <CAEH94Ljfjiu3MPLz8_P=1JSJS=hQVY_CJ4kZ=8Oq+0VpweGA4Q@mail.gmail.com>
-	<CAJSP0QXgR5w09LgWDbFzg6EajEoMLY0DHmvA8DndmvnCcBRSZg@mail.gmail.com>
-	<CAEH94Lh0gmHSR1ugVFg0ZhtFTahb9LQJsxjWZzwqzNLSO0aVug@mail.gmail.com>
-Date: Thu, 24 May 2012 10:21:22 +0100
-Message-ID: <CAJSP0QXoL3Tr7EAGxX77xZ71bj16oCf0ndL0iMopeYexLPJ93w@mail.gmail.com>
-Subject: Re: PCI: cardbus bridge
-From: Stefan Hajnoczi <stefanha@gmail.com>
-To: Zhi Yong Wu <zwu.kernel@gmail.com>
-Cc: linux-pci@vger.kernel.org, Ram Pai <linuxram@us.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2012 at 9:56 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
-> On Thu, May 24, 2012 at 4:37 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
->> On Thu, May 24, 2012 at 9:26 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
->>> Does anyone let me know what cardbus bridge is used for? What is the
->>> difference between it and comon pci bridge?
->>
->> CardBus is PCMCIA (PC Card):
->>
->> http://en.wikipedia.org/wiki/PC_Card#CardBus
->>
->> It's not used very much anymore.  There is PCI <-> PCMCIA integration
->> and that's why you see it come up in PCI code.
-> got it. thanks.
->>
->>> By the way, someone usually mentioned pci host bridge, pci root
->>> bridge. What the differences among them are?
->>
->> I'm not sure what the exact difference is.  PCI "root" bridge refers
->> to the hierarchical nature of PCI, while PCI "host" bridge refers to
-> You mean that PCI "root" bridge is one alias of another some bridge?
+Hi Linus,
 
-The root bridge is the root of a tree of PCI busses.  It's the bus
-that the host interacts with - there may be PCI bridges that attach
-additional busses.
+Please pull the signed tag "pci-for-3.5" to get these PCI changes for the
+v3.5 merge window.  I'm a newbie, so don't hesitate to help me improve my
+pull requests :)
 
-BTW I don't know the terminology, maybe it's PCI "domains" not
-"busses".  Again, you'd have to look at the PCI specification to get
-the exact definition.
+The changes include:
+  - Host bridge cleanups from Yinghai
+  - Disable Bus Master bit on PCI device shutdown (kexec-related)
+  - Stratus ftServer fix
+  - pci_dev_reset() locking fix
+  - IvyBridge graphics erratum workaround
 
->> connecting the computer to the PCI bus.
-> I guess that PCI "host" bridge is the one which connects PCI bus 0 to
-> host bus, and it should be contained in PMC chipset (PCI Bridge and
-> Memory Controller)
+Bjorn
 
-Yes.
 
-Stefan
+The following changes since commit 66f75a5d028beaf67c931435fdc3e7823125730c:
+
+  Linux 3.4-rc4 (2012-04-21 14:47:52 -0700)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+
+Bjorn Helgaas (6):
+      PCI: work around Stratus ftServer broken PCIe hierarchy
+      Merge branch 'topic/yinghai-hostbridge-cleanup' into next
+      MAINTAINERS: update PCI git tree and patchwork
+      Merge branch 'topic/stratus' into next
+      x86/PCI: only check for spinlock being held in SMP kernels
+      microblaze/PCI: fix "io_offset undeclared" error
+
+Chunhe Lan (1):
+      PCI: fix uninitialized variable 'cap_mask'
+
+Khalid Aziz (1):
+      PCI: disable Bus Master on PCI device shutdown
+
+Konrad Rzeszutek Wilk (1):
+      PCI: move mutex locking out of pci_dev_reset function
+
+Wei Yang (1):
+      resources: add resource_overlaps()
+
+Xudong Hao (1):
+      PCI: work around IvyBridge internal graphics FLR erratum
+
+Yinghai Lu (12):
+      PCI: move host bridge-related code to host-bridge.c
+      x86/PCI: fix memleak with get_current_resources()
+      PCI: rename pci_host_bridge() to find_pci_root_bridge()
+      PCI: add generic device into pci_host_bridge struct
+      PCI: add host bridge release support
+      x86/PCI: refactor get_current_resources()
+      x86/PCI: add host bridge resource release for _CRS path
+      x86/PCI: embed name into pci_root_info struct
+      x86/PCI: embed pci_sysdata into pci_root_info on ACPI path
+      x86/PCI: dynamically allocate pci_root_info for native host bridge drivers
+      x86/PCI: merge pcibios_scan_root() and pci_scan_bus_on_node()
+      x86/PCI: fix unused variable warning in amd_bus.c
+
+ Documentation/kernel-parameters.txt |    3 +
+ MAINTAINERS                         |   10 +--
+ arch/microblaze/pci/pci-common.c    |    1 +
+ arch/x86/pci/acpi.c                 |  128 ++++++++++++++++-------------
+ arch/x86/pci/amd_bus.c              |   91 +++++++++------------
+ arch/x86/pci/broadcom_bus.c         |   12 +--
+ arch/x86/pci/bus_numa.c             |   69 +++++++++++-----
+ arch/x86/pci/bus_numa.h             |   18 +++--
+ arch/x86/pci/common.c               |   43 +++++-----
+ arch/x86/pci/i386.c                 |    2 +-
+ drivers/pci/Makefile                |    2 +-
+ drivers/pci/host-bridge.c           |   96 ++++++++++++++++++++++
+ drivers/pci/pci-driver.c            |    6 ++
+ drivers/pci/pci.c                   |   30 +++++---
+ drivers/pci/pcie/portdrv_core.c     |    2 +-
+ drivers/pci/probe.c                 |  154 ++++++++++-------------------------
+ drivers/pci/quirks.c                |   58 +++++++++++++
+ include/asm-generic/pci-bridge.h    |    6 ++
+ include/linux/ioport.h              |    7 ++
+ include/linux/pci.h                 |    9 ++-
+ 20 files changed, 442 insertions(+), 305 deletions(-)
+ create mode 100644 drivers/pci/host-bridge.c
