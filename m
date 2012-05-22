@@ -1,136 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1338392205.23475.4.camel@bling.home>
-Subject: Re: [PATCH 1/5] pci: Add PCI DMA source ID quirk
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, konrad.wilk@oracle.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	ddutile@redhat.com
-Date: Wed, 30 May 2012 09:36:45 -0600
-In-Reply-To: <20120530083457.GB7364@shangw>
-References: <20120530043142.1164.63415.stgit@bling.home>
-	 <20120530044834.1164.9081.stgit@bling.home> <20120530083457.GB7364@shangw>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:38726 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760400Ab2EVUew (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 16:34:52 -0400
+Received: by dady13 with SMTP id y13so8734627dad.19
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 13:34:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
+References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
+Date: Tue, 22 May 2012 13:34:51 -0700
+Message-ID: <CAE9FiQX1zUUMr4YM7A=WWvj2cYi2ztyDU6wADw1aucTsV6TH8g@mail.gmail.com>
+Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jason Baron <jbaron@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-05-30 at 16:34 +0800, Gavin Shan wrote:
-> Hi Alex,
-> 
-> >DMA transactions are tagged with the source ID of the device making
-> >the request.  Occasionally hardware screws this up and uses the
-> >source ID of a different device (often the wrong function number of
-> >a multifunction device).  A specific Ricoh multifunction device is
-> >a prime example of this problem and included in this patch.  The
-> >purpose of this function is that given a pci_dev, return the pci_dev
-> >to use as the source ID for DMA.  When hardware works correctly,
-> >this returns the input device.  For the components of the Ricoh
-> >multifunction device, return the pci_dev for function 0.
-> >
-> >This will be used by IOMMU drivers for determining the boundaries
-> >of IOMMU groups as multiple devices using the same source ID must
-> >be contained within the same group.  This can also be used by
-> >existing streaming DMA paths for the same purpose.
-> >
-> >Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> >---
-> >
-> > drivers/pci/quirks.c |   40 ++++++++++++++++++++++++++++++++++++++++
-> > include/linux/pci.h  |    5 +++++
-> > 2 files changed, 45 insertions(+)
-> >
-> >diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >index 2a75216..004e167 100644
-> >--- a/drivers/pci/quirks.c
-> >+++ b/drivers/pci/quirks.c
-> >@@ -3179,3 +3179,43 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
-> >
-> > 	return -ENOTTY;
-> > }
-> >+
-> >+static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
-> >+{
-> >+	return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-> >+}
-> 
-> I think we needn't retrieve the PCI device passed in again from the list
-> of PCI devices if its function number is zero.
-> 
-> 	if (!PCI_FUNC(dev->devfn))
-> 		return dev;
+On Tue, May 22, 2012 at 1:11 PM, Jason Baron <jbaron@redhat.com> wrote:
+> I'm tyring to support bridge hotplug and devices below it in qemu via acpi
+> hotplug. Currently only 1 level or 32 slots are supported. By allowing for a
+> second level, we will be able to support 32^2 devices.
+>
+> If I first hotplug the bridge with no devices intially below it, the hotplug
+> code sets the bridge memory window to 0 and does not increase it when
+> subsequent devices are added below it.
+>
+> Fix this, by calling pci_rescan_bus_bridge_resize(), on the bridge directly
+> below the root to re-size all the birdge windows that may have changed.
+>
+> Signed-off-by: Jason Baron <jbaron@redhat.com>
 
-I guess I was expecting we wouldn't quirk a function 0 device, but
-looking again at the bug below I see that I am including the func 0
-vendor/device.  I've also got a bad cut-n-paste as I'm including the
-same device twice.  I'll take your suggestion.  Thanks,
+can you check patch in
 
-Alex
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=patch;h=174dfefc6066bf0af21e0989ad3aa7b1cc3cd46a
 
-> >+
-> >+static const struct pci_dev_dma_source {
-> >+	u16 vendor;
-> >+	u16 device;
-> >+	struct pci_dev *(*dma_source)(struct pci_dev *dev);
-> >+} pci_dev_dma_source[] = {
-> >+	/*
-> >+	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
-> >+	 *
-> >+	 * Some Ricoh devices use the function 0 source ID for DMA on
-> >+	 * other functions of a multifunction device.  The DMA devices
-> >+	 * is therefore function 0, which will have implications of the
-> >+	 * iommu grouping of these devices.
-> >+	 */
-> >+	{ PCI_VENDOR_ID_RICOH, 0xe822, pci_func_0_dma_source },
-> >+	{ PCI_VENDOR_ID_RICOH, 0xe230, pci_func_0_dma_source },
-> >+	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
-> >+	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
-> >+	{ 0 }
-> >+};
-> >+
-> >+struct pci_dev *pci_dma_source(struct pci_dev *dev)
-> >+{
-> >+	const struct pci_dev_dma_source *i;
-> >+
-> >+	for (i = pci_dev_dma_source; i->dma_source; i++) {
-> >+		if ((i->vendor == dev->vendor ||
-> >+		     i->vendor == (u16)PCI_ANY_ID) &&
-> >+		    (i->device == dev->device ||
-> >+		     i->device == (u16)PCI_ANY_ID))
-> >+			return i->dma_source(dev);
-> >+	}
-> >+
-> >+	return dev;
-> >+}
-> >diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >index d8c379d..5bc7502 100644
-> >--- a/include/linux/pci.h
-> >+++ b/include/linux/pci.h
-> >@@ -1486,9 +1486,14 @@ enum pci_fixup_pass {
-> >
-> > #ifdef CONFIG_PCI_QUIRKS
-> > void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
-> >+struct pci_dev *pci_dma_source(struct pci_dev *dev);
-> > #else
-> > static inline void pci_fixup_device(enum pci_fixup_pass pass,
-> > 				    struct pci_dev *dev) {}
-> >+static inline struct pci_dev *pci_dma_source(struct pci_dev *dev)
-> >+{
-> >+	return dev;
-> >+}
-> > #endif
-> >
-> > void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
-> >
-> >--
-> >To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
+During checking acpiphp code, found following sequence:
+        pci_bus_size_bridges(bus);
+        pci_bus_assign_resources(bus);
+	pci_enable_bridges(bus);
 
+The problem is that when bus is not root bus, pci_bus_size_bridges
+would also size
+own pci bridge bus->self if that bridge resource is not inserted before.
+but later pci_bus_assign_resources will not allocate those size bridge res.
 
+So try make it less confusing, let it does not include self sizing.
+and add with_self parameter info __pci_bus_size_bridge()
 
+Fixes caller in pci hotplug componets.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    3 ++-
+ drivers/pci/setup-bus.c            |   24 +++++++++++++++---------
+ include/linux/pci.h                |    1 +
+ 3 files changed, 18 insertions(+), 10 deletions(-)
+..
+
+it should address your problem.
+
+Yinghai
