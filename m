@@ -1,224 +1,351 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:59416 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752647Ab2ECGmJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2012 02:42:09 -0400
-Date: Thu, 03 May 2012 14:39:05 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 2/2] PCI, ACPI,
- x86: update MMCFG information when hot-plugging PCI host bridges
-In-reply-to: <CAErSpo5K-foOsdantKQhK0=KOmV6-GCRGfjYYrdyi7ijecv-3w@mail.gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	"Pearson, Greg" <greg.pearson@hp.com>
-Message-id: <4FA22809.1010701@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20120406115948.3536e6c8.izumi.taku@jp.fujitsu.com>
- <1333905129-8776-1-git-send-email-jiang.liu@huawei.com>
- <1333905129-8776-3-git-send-email-jiang.liu@huawei.com>
- <CAErSpo5K-foOsdantKQhK0=KOmV6-GCRGfjYYrdyi7ijecv-3w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 08/13] vfio: Add documentation
+To: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org
+Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gregkh@linuxfoundation.org, bhelgaas@google.com,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Mon, 21 May 2012 23:05:29 -0600
+Message-ID: <20120522050529.5871.84324.stgit@bling.home>
+In-Reply-To: <20120522043607.5871.11340.stgit@bling.home>
+References: <20120522043607.5871.11340.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-5-3 7:55, Bjorn Helgaas wrote:
-> On Sun, Apr 8, 2012 at 11:12 AM, Jiang Liu<liuj97@gmail.com>  wrote:
->> This patch enhances pci_root driver to update MMCFG information when
->> hot-plugging PCI root bridges on x86 platforms.
->>
->> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->> ---
->>   arch/x86/pci/acpi.c      |   58 ++++++++++++++++++++++++++++++++++++++++++++++
->>   drivers/acpi/pci_root.c  |   20 ++++++++++++++++
->>   include/acpi/acnames.h   |    1 +
->>   include/linux/pci-acpi.h |    3 ++
->>   4 files changed, 82 insertions(+), 0 deletions(-)
->>
->> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->> index da0149d..9184970 100644
->> --- a/arch/x86/pci/acpi.c
->> +++ b/arch/x86/pci/acpi.c
->> @@ -488,6 +488,64 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->>         return bus;
->>   }
->>
->> +int arch_acpi_pci_root_add(struct acpi_pci_root *root)
->> +{
->> +       int result = 0;
->> +       acpi_status status;
->> +       unsigned long long base_addr;
->> +       struct pci_mmcfg_region *cfg;
->> +
->> +       /*
->> +        * Try to insert MMCFG information for host bridges with _CBA method
->> +        */
->> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
->> +                                      NULL,&base_addr);
->
-> I would prefer to have _CBA evaluated in drivers/acpi/pci_root.c, not
-> in the arch code.  It's true that _CBA is probably only used by x86
-> today, but the spec says nothing about it being arch-dependent, and I
-> suspect it may be used on arm soon.
-Good point. I just noticed that IA64 doesn't need MMCFG, but haven't
-realized there's still another candidate.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
->
->> +       if (ACPI_SUCCESS(status)) {
->> +               result = pci_mmconfig_insert(root->segment,
->> +                                            root->secondary.start,
->> +                                            root->secondary.end,
->> +                                            base_addr);
->> +               /*
->> +                * MMCFG information for hot-pluggable host bridges may have
->> +                * already been added by __pci_mmcfg_init();
->> +                */
->> +               if (result == -EEXIST)
->> +                       result = 0;
->> +       } else if (status == AE_NOT_FOUND) {
->> +               /*
->> +                * Check whether MMCFG information has been added for
->> +                * host bridges without _CBA method.
->> +                */
->> +               rcu_read_lock();
->> +               cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
->> +               if (!cfg || cfg->end_bus<  root->secondary.end)
->> +                       result = -ENODEV;
->> +               rcu_read_unlock();
->> +       } else
->> +               result = -ENODEV;
->> +
->> +       return result;
->> +}
->> +
->> +int arch_acpi_pci_root_remove(struct acpi_pci_root *root)
->> +{
->> +       acpi_status status;
->> +       unsigned long long base_addr;
->> +
->> +       /* Remove MMCFG information for host bridges with _CBA method */
->> +       status = acpi_evaluate_integer(root->device->handle, METHOD_NAME__CBA,
->> +                                      NULL,&base_addr);
->
-> I think the arch-specific "map MMCONFIG space at this addr" should
-> return a pointer or something that we can save and use to unmap it on
-> remove.  That way we don't have to evaluate _CBA again.
-OK, will change to follow that way.
+ Documentation/vfio.txt |  315 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 315 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/vfio.txt
 
->
->> +       if (ACPI_SUCCESS(status))
->> +               return pci_mmconfig_delete(root->segment,
->> +                                          root->secondary.start,
->> +                                          root->secondary.end,
->> +                                          base_addr);
->> +       else if (status != AE_NOT_FOUND)
->> +               return -ENODEV;
->> +
->> +       return 0;
->> +}
->> +
->>   int __init pci_acpi_init(void)
->>   {
->>         struct pci_dev *dev = NULL;
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 4a7d575..a62bfa8 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -448,6 +448,16 @@ out:
->>   }
->>   EXPORT_SYMBOL(acpi_pci_osc_control_set);
->>
->> +int __weak arch_acpi_pci_root_add(struct acpi_pci_root *root)
->> +{
->> +       return 0;
->> +}
->> +
->> +int __weak arch_acpi_pci_root_remove(struct acpi_pci_root *root)
->> +{
->> +       return 0;
->> +}
->> +
->>   static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>   {
->>         unsigned long long segment, bus;
->> @@ -504,6 +514,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->>         strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->>         device->driver_data = root;
->>
->> +       if (arch_acpi_pci_root_add(root)) {
->> +               printk(KERN_ERR PREFIX
->> +                       "can't add MMCFG information for Bus %04x:%02x\n",
->> +                       root->segment, (unsigned int)root->secondary.start);
->> +               result = -ENODEV;
->> +               goto out_free;
->> +       }
->> +
->>         /*
->>          * All supported architectures that use ACPI have support for
->>          * PCI domains, so we indicate this in _OSC support capabilities.
->> @@ -629,6 +647,7 @@ out_del_root:
->>         list_del_rcu(&root->node);
->>         mutex_unlock(&acpi_pci_root_lock);
->>         synchronize_rcu();
->> +       arch_acpi_pci_root_remove(root);
->>   out_free:
->>         kfree(root);
->>         return result;
->> @@ -679,6 +698,7 @@ out:
->>         list_del_rcu(&root->node);
->>         mutex_unlock(&acpi_pci_root_lock);
->>         synchronize_rcu();
->> +       arch_acpi_pci_root_remove(root);
->>         kfree(root);
->>
->>         return 0;
->> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
->> index 38f5088..99bda75 100644
->> --- a/include/acpi/acnames.h
->> +++ b/include/acpi/acnames.h
->> @@ -62,6 +62,7 @@
->>   #define METHOD_NAME__AEI        "_AEI"
->>   #define METHOD_NAME__PRW        "_PRW"
->>   #define METHOD_NAME__SRS        "_SRS"
->> +#define METHOD_NAME__CBA       "_CBA"
->>
->>   /* Method names - these methods must appear at the namespace root */
->>
->> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
->> index ac93634..816b971 100644
->> --- a/include/linux/pci-acpi.h
->> +++ b/include/linux/pci-acpi.h
->> @@ -38,6 +38,9 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
->>
->>   void acpi_pci_root_rescan(void);
->>
->> +extern int arch_acpi_pci_root_add(struct acpi_pci_root *root);
->> +extern int arch_acpi_pci_root_remove(struct acpi_pci_root *root);
->> +
->>   #else
->>
->>   static inline void acpi_pci_root_rescan(void) { }
->
-> I don't know where to put this in the conversation, but I think we
-> should separate the question of whether we do blind probing from the
-> question of how we set up MMCONFIG space from MCFG.
->
-> We currently parse the entire MCFG in some sort of initcall, but I
-> think we *could* change the x86 blind probing routines to attempt to
-> set up MMCONFIG space for the buses they find, just like
-> acpi_pci_root_add() does it for the ACPI host bridges.
->
-> That way we can continue blind probing, but make MMCONFIG init more sensible.
-Good suggestion, will do more investigation about that.
-
->
-> Bjorn
->
-> .
->
-
+diff --git a/Documentation/vfio.txt b/Documentation/vfio.txt
+new file mode 100644
+index 0000000..1240874
+--- /dev/null
++++ b/Documentation/vfio.txt
+@@ -0,0 +1,315 @@
++VFIO - "Virtual Function I/O"[1]
++-------------------------------------------------------------------------------
++Many modern system now provide DMA and interrupt remapping facilities
++to help ensure I/O devices behave within the boundaries they've been
++allotted.  This includes x86 hardware with AMD-Vi and Intel VT-d,
++POWER systems with Partitionable Endpoints (PEs) and embedded PowerPC
++systems such as Freescale PAMU.  The VFIO driver is an IOMMU/device
++agnostic framework for exposing direct device access to userspace, in
++a secure, IOMMU protected environment.  In other words, this allows
++safe[2], non-privileged, userspace drivers.
++
++Why do we want that?  Virtual machines often make use of direct device
++access ("device assignment") when configured for the highest possible
++I/O performance.  From a device and host perspective, this simply
++turns the VM into a userspace driver, with the benefits of
++significantly reduced latency, higher bandwidth, and direct use of
++bare-metal device drivers[3].
++
++Some applications, particularly in the high performance computing
++field, also benefit from low-overhead, direct device access from
++userspace.  Examples include network adapters (often non-TCP/IP based)
++and compute accelerators.  Prior to VFIO, these drivers had to either
++go through the full development cycle to become proper upstream
++driver, be maintained out of tree, or make use of the UIO framework,
++which has no notion of IOMMU protection, limited interrupt support,
++and requires root privileges to access things like PCI configuration
++space.
++
++The VFIO driver framework intends to unify these, replacing both the
++KVM PCI specific device assignment code as well as provide a more
++secure, more featureful userspace driver environment than UIO.
++
++Groups, Devices, and IOMMUs
++-------------------------------------------------------------------------------
++
++Devices are the main target of any I/O driver.  Devices typically
++create a programming interface made up of I/O access, interrupts,
++and DMA.  Without going into the details of each of these, DMA is
++by far the most critical aspect for maintaining a secure environment
++as allowing a device read-write access to system memory imposes the
++greatest risk to the overall system integrity.
++
++To help mitigate this risk, many modern IOMMUs now incorporate
++isolation properties into what was, in many cases, an interface only
++meant for translation (ie. solving the addressing problems of devices
++with limited address spaces).  With this, devices can now be isolated
++from each other and from arbitrary memory access, thus allowing
++things like secure direct assignment of devices into virtual machines.
++
++This isolation is not always at the granularity of a single device
++though.  Even when an IOMMU is capable of this, properties of devices,
++interconnects, and IOMMU topologies can each reduce this isolation.
++For instance, an individual device may be part of a larger multi-
++function enclosure.  While the IOMMU may be able to distinguish
++between devices within the enclosure, the enclosure may not require
++transactions between devices to reach the IOMMU.  Examples of this
++could be anything from a multi-function PCI device with backdoors
++between functions to a non-PCI-ACS (Access Control Services) capable
++bridge allowing redirection without reaching the IOMMU.  Topology
++can also play a factor in terms of hiding devices.  A PCIe-to-PCI
++bridge masks the devices behind it, making transaction appear as if
++from the bridge itself.  Obviously IOMMU design plays a major factor
++as well.
++
++Therefore, while for the most part an IOMMU may have device level
++granularity, any system is susceptible to reduced granularity.  The
++IOMMU API therefore supports a notion of IOMMU groups.  A group is
++a set of devices which is isolatable from all other devices in the
++system.  Groups are therefore the unit of ownership used by VFIO.
++
++While the group is the minimum granularity that must be used to
++ensure secure user access, it's not necessarily the preferred
++granularity.  In IOMMUs which make use of page tables, it may be
++possible to share a set of page tables between different groups,
++reducing the overhead both to the platform (reduced TLB thrashing,
++reduced duplicate page tables), and to the user (programming only
++a single set of translations).  For this reason, VFIO makes use of
++a container class, which may hold one or more groups.  A container
++is created by simply opening the /dev/vfio/vfio character device.
++
++On its own, the container provides little functionality, with all
++but a couple version and extension query interfaces locked away.
++The user needs to add a group into the container for the next level
++of functionality.  To do this, the user first needs to identify the
++group associated with the desired device.  This can be done using
++the sysfs links described in the example below.  By unbinding the
++device from the host driver and binding it to a VFIO driver, a new
++VFIO group will appear for the group as /dev/vfio/$GROUP, where
++$GROUP is the IOMMU group number of which the device is a member.
++If the IOMMU group contains multiple devices, each will need to
++be bound to a VFIO driver before operations on the VFIO group
++are allowed (it's also sufficient to only unbind the device from
++host drivers if a VFIO driver is unavailable; this will make the
++group available, but not that particular device).  TBD - interface
++for disabling driver probing/locking a device.
++
++Once the group is ready, it may be added to the container by opening
++the VFIO group character device (/dev/vfio/$GROUP) and using the
++VFIO_GROUP_SET_CONTAINER ioctl, passing the file descriptor of the
++previously opened container file.  If desired and if the IOMMU driver
++supports sharing the IOMMU context between groups, multiple groups may
++be set to the same container.  If a group fails to set to a container
++with existing groups, a new empty container will need to be used
++instead.
++
++With a group (or groups) attached to a container, the remaining
++ioctls become available, enabling access to the VFIO IOMMU interfaces.
++Additionally, it now becomes possible to get file descriptors for each
++device within a group using an ioctl on the VFIO group file descriptor.
++
++The VFIO device API includes ioctls for describing the device, the I/O
++regions and their read/write/mmap offsets on the device descriptor, as
++well as mechanisms for describing and registering interrupt
++notifications.
++
++VFIO Usage Example
++-------------------------------------------------------------------------------
++
++Assume user wants to access PCI device 0000:06:0d.0
++
++$ readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
++../../../../kernel/iommu_groups/26
++
++This device is therefore in IOMMU group 26.  This device is on the
++pci bus, therefore the user will make use of vfio-pci to manage the
++group:
++
++# modprobe vfio-pci
++
++Binding this device to the vfio-pci driver creates the VFIO group
++character devices for this group:
++
++$ lspci -n -s 0000:06:0d.0
++06:0d.0 0401: 1102:0002 (rev 08)
++# echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
++# echo 1102 0002 > /sys/bus/pci/drivers/vfio/new_id
++# echo 0000:06:0d.0 > /sys/bus/pci/drivers/vfio/bind
++
++Now we need to look at what other devices are in the group to free
++it for use by VFIO:
++
++$ ls -l /sys/bus/pci/devices/0000:06:0d.0/iommu_group/devices
++total 0
++lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:00:1e.0 ->
++	../../../../devices/pci0000:00/0000:00:1e.0
++lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:06:0d.0 ->
++	../../../../devices/pci0000:00/0000:00:1e.0/0000:06:0d.0
++lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:06:0d.1 ->
++	../../../../devices/pci0000:00/0000:00:1e.0/0000:06:0d.1
++
++This device is behind a PCIe-to-PCI bridge[4], therefore we also
++need to add device 0000:06:0d.1 to the group following the same
++procedure as above.  Device 0000:00:1e.0 is a bridge that does
++not currently have a host driver, therefore it's not required to
++bind this device to the vfio-pci driver (vfio-pci does not currently
++support PCI bridges).
++
++The final step is to provide the user with access to the group if
++unprivileged operation is desired (note that /dev/vfio/vfio provides
++no capabilities on its own and is therefore expected to be set to
++mode 0666 by the system).
++
++# chown user:user /dev/vfio/26
++
++The user now has full access to all the devices and the iommu for this
++group and can access them as follows:
++
++	int container, group, device, i;
++	struct vfio_group_status group_status =
++					{ .argsz = sizeof(group_status) };
++	struct vfio_iommu_x86_info iommu_info = { .argsz = sizeof(iommu_info) };
++	struct vfio_iommu_x86_dma_map dma_map = { .argsz = sizeof(dma_map) };
++	struct vfio_device_info device_info = { .argsz = sizeof(device_info) };
++
++	/* Create a new container */
++	container = open("/dev/vfio/vfio, O_RDWR);
++
++	if (ioctl(container, VFIO_GET_API_VERSION) != VFIO_API_VERSION)
++		/* Unknown API version */
++
++	if (!ioctl(container, VFIO_CHECK_EXTENSION, VFIO_X86_IOMMU))
++		/* Doesn't support the IOMMU driver we want. */
++
++	/* Open the group */
++	group = open("/dev/vfio/26", O_RDWR);
++
++	/* Test the group is viable and available */
++	ioctl(group, VFIO_GROUP_GET_STATUS, &group_status);
++
++	if (!(group_status.flags & VFIO_GROUP_FLAGS_VIABLE))
++		/* Group is not viable (ie, not all devices bound for vfio) */
++
++	/* Add the group to the container */
++	ioctl(group, VFIO_GROUP_SET_CONTAINER, &container);
++
++	/* Enable the IOMMU model we want */
++	ioctl(container, VFIO_SET_IOMMU, VFIO_X86_IOMMU)
++
++	/* Get addition IOMMU info */
++	ioctl(container, VFIO_IOMMU_GET_INFO, &iommu_info);
++
++	/* Allocate some space and setup a DMA mapping */
++	dma_map.vaddr = mmap(0, 1024 * 1024, PROT_READ | PROT_WRITE,
++			     MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
++	dma_map.size = 1024 * 1024;
++	dma_map.iova = 0; /* 1MB starting at 0x0 from device view */
++	dma_map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
++
++	ioctl(container, VFIO_IOMMU_MAP_DMA, &dma_map);
++
++	/* Get a file descriptor for the device */
++	device = ioctl(group, VFIO_GROUP_GET_DEVICE_FD, "0000:06:0d.0");
++
++	/* Test and setup the device */
++	ioctl(device, VFIO_DEVICE_GET_INFO, &device_info);
++
++	for (i = 0; i < device_info.num_regions; i++) {
++		struct vfio_region_info reg = { .argsz = sizeof(reg) };
++
++		reg.index = i;
++
++		ioctl(device, VFIO_DEVICE_GET_REGION_INFO, &reg);
++
++		/* Setup mappings... read/write offsets, mmaps
++		 * For PCI devices, config space is a region */
++	}
++
++	for (i = 0; i < device_info.num_irqs; i++) {
++		struct vfio_irq_info irq = { .argsz = sizeof(irq) };
++
++		irq.index = i;
++
++		ioctl(device, VFIO_DEVICE_GET_IRQ_INFO, &reg);
++
++		/* Setup IRQs... eventfds, VFIO_DEVICE_SET_IRQS */
++	}
++
++	/* Gratuitous device reset and go... */
++	ioctl(device, VFIO_DEVICE_RESET);
++
++VFIO User API
++-------------------------------------------------------------------------------
++
++Please see include/linux/vfio.h for complete API documentation.
++
++VFIO bus driver API
++-------------------------------------------------------------------------------
++
++VFIO bus drivers, such as vfio-pci make use of only a few interfaces
++into VFIO core.  When devices are bound and unbound to the driver,
++the driver should call vfio_add_group_dev() and vfio_del_group_dev()
++respectively:
++
++extern int vfio_add_group_dev(struct iommu_group *iommu_group,
++                              struct device *dev,
++                              const struct vfio_device_ops *ops,
++                              void *device_data);
++
++extern void *vfio_del_group_dev(struct device *dev);
++
++vfio_add_group_dev() indicates to the core to begin tracking the
++specified iommu_group and register the specified dev as owned by
++a VFIO bus driver.  The driver provides an ops structure for callbacks
++similar to a file operations structure:
++
++struct vfio_device_ops {
++	int	(*open)(void *device_data);
++	void	(*release)(void *device_data);
++	ssize_t	(*read)(void *device_data, char __user *buf,
++			size_t count, loff_t *ppos);
++	ssize_t	(*write)(void *device_data, const char __user *buf,
++			 size_t size, loff_t *ppos);
++	long	(*ioctl)(void *device_data, unsigned int cmd,
++			 unsigned long arg);
++	int	(*mmap)(void *device_data, struct vm_area_struct *vma);
++};
++
++Each function is passed the device_data that was originally registered
++in the vfio_add_group_dev() call above.  This allows the bus driver
++an easy place to store its opaque, private data.  The open/release
++callbacks are issued when a new file descriptor is created for a
++device (via VFIO_GROUP_GET_DEVICE_FD).  The ioctl interface provides
++a direct pass through for VFIO_DEVICE_* ioctls.  The read/write/mmap
++interfaces implement the device region access defined by the device's
++own VFIO_DEVICE_GET_REGION_INFO ioctl.
++
++-------------------------------------------------------------------------------
++
++[1] VFIO was originally an acronym for "Virtual Function I/O" in its
++initial implementation by Tom Lyon while as Cisco.  We've since
++outgrown the acronym, but it's catchy.
++
++[2] "safe" also depends upon a device being "well behaved".  It's
++possible for multi-function devices to have backdoors between
++functions and even for single function devices to have alternative
++access to things like PCI config space through MMIO registers.  To
++guard against the former we can include additional precautions in the
++IOMMU driver to group multi-function PCI devices together
++(iommu=group_mf).  The latter we can't prevent, but the IOMMU should
++still provide isolation.  For PCI, SR-IOV Virtual Functions are the
++best indicator of "well behaved", as these are designed for
++virtualization usage models.
++
++[3] As always there are trade-offs to virtual machine device
++assignment that are beyond the scope of VFIO.  It's expected that
++future IOMMU technologies will reduce some, but maybe not all, of
++these trade-offs.
++
++[4] In this case the device is below a PCI bridge, so transactions
++from either function of the device are indistinguishable to the iommu:
++
++-[0000:00]-+-1e.0-[06]--+-0d.0
++                        \-0d.1
++
++00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 90)
 
