@@ -1,96 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:36155 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751875Ab2EBGmO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 May 2012 02:42:14 -0400
-Received: by pbbrp8 with SMTP id rp8so640688pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 01 May 2012 23:42:13 -0700 (PDT)
-Date: Tue, 1 May 2012 22:00:25 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 02/19] PCI: introduce recursive rwsem to serialize PCI
- hotplug operations
-Message-ID: <20120502050025.GA23579@kroah.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
- <1335539820-11232-3-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 04/13] pci: Add PCI DMA source ID quirk
+To: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org
+Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gregkh@linuxfoundation.org, bhelgaas@google.com,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Mon, 21 May 2012 23:05:01 -0600
+Message-ID: <20120522050501.5871.89639.stgit@bling.home>
+In-Reply-To: <20120522043607.5871.11340.stgit@bling.home>
+References: <20120522043607.5871.11340.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1335539820-11232-3-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:16:43PM +0800, Jiang Liu wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
-> 
-> There are multiple ways to trigger PCI hotplug requests concurrently,
-> such as:
-> 1. Sysfs interfaces exported by the PCI core subsystem
-> 2. Sysfs interfaces exported by the PCI hotplug subsystem
-> 3. PCI hotplug events triggered by PCI Hotplug Controllers
-> 4. ACPI hotplug events for PCI host bridges
-> 5. Driver binding/unbinding events
-> 
-> The PCI core subsystem doesn't support concurrent hotplug operations yet,
-> so all PCI hotplug requests should be globally serialized. This patch
-> introduces several new interfaces to serialize PCI hotplug operations.
-> 
-> pci_hotplug_try_enter(): try to acquire write lock
+DMA transactions are tagged with the source ID of the device making
+the request.  Occasionally hardware screws this up and uses the
+source ID of a different device (often the wrong function number of
+a multifunction device).  A specific Ricoh multifunction device is
+a prime example of this problem and included in this patch.  The
+purpose of this function is that given a pci_dev, return the pci_dev
+to use as the source ID for DMA.  When hardware works correctly,
+this returns the input device.  For the components of the Ricoh
+multifunction device, return the pci_dev for function 0.
 
-Ick, no, why would you ever want to do that?
+This will be used by IOMMU drivers for determining the boundaries
+of IOMMU groups as multiple devices using the same source ID must
+be contained within the same group.  This can also be used by
+existing streaming DMA paths for the same purpose.
 
-> pci_hotplug_enter(): acquire write lock
-> pci_hotplug_exit(): release write lock
-> pci_hotplug_disable(): acquire read lock
-> pci_hotplug_enable(): release read lock
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-No, the pci hotplug core should not need a rwsem, just a simple lock, if
-that:
-	pci_hotplug_lock()
-	pci_hotplug_unlock()
-and that's it.
+ drivers/pci/quirks.c |   40 ++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    5 +++++
+ 2 files changed, 45 insertions(+), 0 deletions(-)
 
-Really you should not need these functions, the pci hotplug core should
-handle it for you, and the drivers should not care at all.  That's the
-"proper" way to fix this up, serialize stuff within the pci core, not
-the individual drivers.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 4bf7102..a2dd77f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3109,3 +3109,43 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 
+ 	return -ENOTTY;
+ }
++
++static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
++{
++	return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
++}
++
++static const struct pci_dev_dma_source {
++	u16 vendor;
++	u16 device;
++	struct pci_dev *(*dma_source)(struct pci_dev *dev);
++} pci_dev_dma_source[] = {
++	/*
++	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
++	 *
++	 * Some Ricoh devices use the function 0 source ID for DMA on
++	 * other functions of a multifunction device.  The DMA devices
++	 * is therefore function 0, which will have implications of the
++	 * iommu grouping of these devices.
++	 */
++	{ PCI_VENDOR_ID_RICOH, 0xe822, pci_func_0_dma_source },
++	{ PCI_VENDOR_ID_RICOH, 0xe230, pci_func_0_dma_source },
++	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
++	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
++	{ 0 }
++};
++
++struct pci_dev *pci_dma_source(struct pci_dev *dev)
++{
++	const struct pci_dev_dma_source *i;
++
++	for (i = pci_dev_dma_source; i->dma_source; i++) {
++		if ((i->vendor == dev->vendor ||
++		     i->vendor == (u16)PCI_ANY_ID) &&
++		    (i->device == dev->device ||
++		     i->device == (u16)PCI_ANY_ID))
++			return i->dma_source(dev);
++	}
++
++	return dev;
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e444f5b..02dbfed 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1479,9 +1479,14 @@ enum pci_fixup_pass {
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
++struct pci_dev *pci_dma_source(struct pci_dev *dev);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) {}
++static inline struct pci_dev *pci_dma_source(struct pci_dev *dev)
++{
++	return dev;
++}
+ #endif
+ 
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
 
-> Today we have reproduced the issue on a real platform by using
-> acpiphp driver. It's an IA64 platform running Suse 11SP1 (official
-> 2.6.32.12 kernel). The test script is:
-> 
-> This issue could be reproduced on an IA64 platform with Suse 11SP1
-> (official 2.6.32.12 kernel) and acpiphp driver.
-
-You do realize just how old that kernel is right?  Please don't assume
-that this kernel version is relevant to us all these years later.
-
-> +/*
-> + * trylock for writing -- returns 1 if successful, 0 if contention
-> + */
-> +int pci_hotplug_try_enter(void)
-> +{
-> +	if (current != pci_hotplug_mutex_owner) {
-> +		if (down_write_trylock(&pci_hotplug_rwsem) == 0)
-> +			return 0;
-> +		pci_hotplug_mutex_owner = current;
-> +	}
-> +	pci_hotplug_mutex_recursive++;
-> +
-> +	return 1;
-> +}
-> +EXPORT_SYMBOL(pci_hotplug_try_enter);
-
-Don't try to invent new lock types like this, you are bound to get it
-wrong.  And don't create recursive locks, fix the code up to never need
-it.
-
-thanks,
-
-greg k-h
