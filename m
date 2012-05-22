@@ -1,93 +1,101 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 11/13] pci: Create common pcibios_err_to_errno
+To: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org
+Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
+	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
+	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gregkh@linuxfoundation.org, bhelgaas@google.com,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Mon, 21 May 2012 23:05:51 -0600
+Message-ID: <20120522050550.5871.80143.stgit@bling.home>
+In-Reply-To: <20120522043607.5871.11340.stgit@bling.home>
+References: <20120522043607.5871.11340.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <4FBF90E5.8030800@siemens.com>
-References: <4FBF90E5.8030800@siemens.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 25 May 2012 08:11:53 -0600
-Message-ID: <CAErSpo78Pp7YW3tLbT7QR0oOeSUHzxf55CBW8bDW3kWx0Gy1ug@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE NIC
- as broken
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2012 at 8:02 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
-> According to Alexey, the T310 does not properly support INTx masking as
-> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
-> is masked. Mark this adapter as broken so that pci_intx_mask_supported
-> won't report it as compatible.
+For returning errors out to non-PCI code.  Re-name xen's version.
 
-Please include a reference to a bugzilla, mailing list discussion, or
-other details about how this was found and debugged.  Thanks!
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
 
-> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
-> ---
->
-> Alexey, please test if this catches your case correctly.
->
->  drivers/pci/pci.c    |    3 +++
->  drivers/pci/quirks.c |   12 ++++++++++++
->  include/linux/pci.h  |    2 ++
->  3 files changed, 17 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f16900..3a1aeb5 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2876,6 +2876,9 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
->        bool mask_supported = false;
->        u16 orig, new;
->
-> +       if (dev->broken_intx_masking)
-> +               return false;
-> +
->        pci_cfg_access_lock(dev);
->
->        pci_read_config_word(dev, PCI_COMMAND, &orig);
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 2a75216..151e174 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2929,6 +2929,18 @@ static void __devinit disable_igfx_irq(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
->
-> +/*
-> + * Some devices may pass our check in pci_intx_mask_supported if
-> + * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
-> + * support this feature.
-> + */
-> +static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
-> +{
-> +       dev->broken_intx_masking = 1;
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010,
-> +                       quirk_broken_intx_masking);
-> +
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->                          struct pci_fixup *end)
->  {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 17b7b5b..c7cfd73 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -324,6 +324,8 @@ struct pci_dev {
->        unsigned int    is_hotplug_bridge:1;
->        unsigned int    __aer_firmware_first_valid:1;
->        unsigned int    __aer_firmware_first:1;
-> +       unsigned int    broken_intx_masking:1;  /* device's INTx masking
-> +                                                  support is not working */
->        pci_dev_flags_t dev_flags;
->        atomic_t        enable_cnt;     /* pci_enable_device has been called */
->
-> --
-> 1.7.3.4
+ drivers/xen/xen-pciback/conf_space.c |    6 +++---
+ include/linux/pci.h                  |   26 ++++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/xen/xen-pciback/conf_space.c b/drivers/xen/xen-pciback/conf_space.c
+index 30d7be0..46ae0f9 100644
+--- a/drivers/xen/xen-pciback/conf_space.c
++++ b/drivers/xen/xen-pciback/conf_space.c
+@@ -124,7 +124,7 @@ static inline u32 merge_value(u32 val, u32 new_val, u32 new_val_mask,
+ 	return val;
+ }
+ 
+-static int pcibios_err_to_errno(int err)
++static int xen_pcibios_err_to_errno(int err)
+ {
+ 	switch (err) {
+ 	case PCIBIOS_SUCCESSFUL:
+@@ -202,7 +202,7 @@ out:
+ 		       pci_name(dev), size, offset, value);
+ 
+ 	*ret_val = value;
+-	return pcibios_err_to_errno(err);
++	return xen_pcibios_err_to_errno(err);
+ }
+ 
+ int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
+@@ -290,7 +290,7 @@ int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
+ 		}
+ 	}
+ 
+-	return pcibios_err_to_errno(err);
++	return xen_pcibios_err_to_errno(err);
+ }
+ 
+ void xen_pcibk_config_free_dyn_fields(struct pci_dev *dev)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0cf57d5..b0f79b3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -467,6 +467,32 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
+ #define PCIBIOS_SET_FAILED		0x88
+ #define PCIBIOS_BUFFER_TOO_SMALL	0x89
+ 
++/*
++ * Translate above to generic errno for passing back through non-pci.
++ */
++static inline int pcibios_err_to_errno(int err)
++{
++	if (err <= PCIBIOS_SUCCESSFUL)
++		return err; /* Assume already errno */
++
++	switch (err) {
++	case PCIBIOS_FUNC_NOT_SUPPORTED:
++		return -ENOENT;
++	case PCIBIOS_BAD_VENDOR_ID:
++		return -EINVAL;
++	case PCIBIOS_DEVICE_NOT_FOUND:
++		return -ENODEV;
++	case PCIBIOS_BAD_REGISTER_NUMBER:
++		return -EFAULT;
++	case PCIBIOS_SET_FAILED:
++		return -EIO;
++	case PCIBIOS_BUFFER_TOO_SMALL:
++		return -ENOSPC;
++	}
++
++	return -ENOTTY;
++}
++
+ /* Low-level architecture-dependent routines */
+ 
+ struct pci_ops {
+
