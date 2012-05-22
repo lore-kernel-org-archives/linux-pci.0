@@ -1,68 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:50932 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932180Ab2EGUaX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 16:30:23 -0400
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:49221 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917Ab2EVVVO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 17:21:14 -0400
+Received: by dady13 with SMTP id y13so8779464dad.19
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 14:21:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
+References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
+Date: Tue, 22 May 2012 14:21:13 -0700
+Message-ID: <CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
+Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 05/21] resource: adjust_resource handle resource without parent
-Date: Mon,  7 May 2012 13:29:50 -0700
-Message-Id: <1336422606-4244-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
+To: Jason Baron <jbaron@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-for no parent no siling case.
+On Tue, May 22, 2012 at 1:11 PM, Jason Baron <jbaron@redhat.com> wrote:
+> I'm tyring to support bridge hotplug and devices below it in qemu via acpi
+> hotplug. Currently only 1 level or 32 slots are supported. By allowing for a
+> second level, we will be able to support 32^2 devices.
+>
+> If I first hotplug the bridge with no devices intially below it, the hotplug
+> code sets the bridge memory window to 0 and does not increase it when
+> subsequent devices are added below it.
+>
+> Fix this, by calling pci_rescan_bus_bridge_resize(), on the bridge directly
+> below the root to re-size all the birdge windows that may have changed.
+>
+> Signed-off-by: Jason Baron <jbaron@redhat.com>
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |    8 ++++++++
+>  1 files changed, 8 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 806c44f..8960c1e 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -792,6 +792,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>  {
+>        struct pci_dev *dev;
+>        struct pci_bus *bus = slot->bridge->pci_bus;
+> +       struct pci_bus *rescan_bus;
+>        struct acpiphp_func *func;
+>        int retval = 0;
+>        int num, max, pass;
+> @@ -821,6 +822,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>                }
+>        }
+>
+> +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
+> +       rescan_bus = bus;
+> +       while (rescan_bus->parent && rescan_bus->parent->self)
+> +               rescan_bus = rescan_bus->parent;
+> +       if (rescan_bus->self)
+> +               pci_rescan_bus_bridge_resize(rescan_bus->self);
+> +
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- kernel/resource.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+No, you can not do that.  some parents bus could have other devices
+and driver could be loaded for those devices.
+so can not release resources that are used by those devices to resize
+parent bridges.
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 7e8ea66..51ade23 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -722,14 +722,12 @@ int adjust_resource(struct resource *res, resource_size_t start, resource_size_t
- 
- 	write_lock(&resource_lock);
- 
-+	if (!parent)
-+		goto skip;
-+
- 	if ((start < parent->start) || (end > parent->end))
- 		goto out;
- 
--	for (tmp = res->child; tmp; tmp = tmp->sibling) {
--		if ((tmp->start < start) || (tmp->end > end))
--			goto out;
--	}
--
- 	if (res->sibling && (res->sibling->start <= end))
- 		goto out;
- 
-@@ -741,6 +739,11 @@ int adjust_resource(struct resource *res, resource_size_t start, resource_size_t
- 			goto out;
- 	}
- 
-+skip:
-+	for (tmp = res->child; tmp; tmp = tmp->sibling)
-+		if ((tmp->start < start) || (tmp->end > end))
-+			goto out;
-+
- 	res->start = start;
- 	res->end = end;
- 	result = 0;
--- 
-1.7.7
-
+>        list_for_each_entry(func, &slot->funcs, sibling)
+>                acpiphp_bus_add(func);
+>
+> --
+> 1.7.7.6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
