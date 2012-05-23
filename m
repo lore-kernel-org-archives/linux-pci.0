@@ -1,57 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 01/13] driver core: Add iommu_group tracking to struct
- device
-To: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org
-Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com,
-	ddutile@redhat.com, alex.williamson@redhat.com
-Date: Mon, 21 May 2012 23:04:39 -0600
-Message-ID: <20120522050438.5871.56283.stgit@bling.home>
-In-Reply-To: <20120522043607.5871.11340.stgit@bling.home>
-References: <20120522043607.5871.11340.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 09/11] PCI: Add is_pci_iov_resource_idx()
+Date: Tue, 22 May 2012 23:34:35 -0700
+Message-Id: <1337754877-19759-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IOMMU groups allow IOMMU drivers to represent DMA visibility
-and isolation of devices.  Multiple devices may be grouped
-together for the purposes of DMA.  Placing a pointer on
-struct device enable easy access for things like streaming
-DMA programming and drivers like VFIO.
+So we can remove one ifdef in setup-bus.c. and will share the code in that
+ifdef block.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/setup-bus.c |    7 +++----
+ include/linux/pci.h     |    8 ++++++++
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
- include/linux/device.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 5ad17cc..13dd26b 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -35,6 +35,7 @@ struct subsys_private;
- struct bus_type;
- struct device_node;
- struct iommu_ops;
-+struct iommu_group;
- 
- struct bus_attribute {
- 	struct attribute	attr;
-@@ -677,6 +678,7 @@ struct device {
- 	const struct attribute_group **groups;	/* optional groups */
- 
- 	void	(*release)(struct device *dev);
-+	struct iommu_group	*iommu_group;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4d6823f..99bc728 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -813,16 +813,15 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			if (r->parent || (r->flags & mask) != type)
+ 				continue;
+ 			r_size = resource_size(r);
+-#ifdef CONFIG_PCI_IOV
++
+ 			/* put SRIOV requested res to the optional list */
+-			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+-					i <= PCI_IOV_RESOURCE_END) {
++			if (realloc_head && is_pci_iov_resource_idx(i)) {
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* dont' care */);
+ 				children_add_size += r_size;
+ 				continue;
+ 			}
+-#endif
++
+ 			/* For bridges size != alignment */
+ 			align = pci_resource_alignment(dev, r);
+ 			order = __ffs(align) - 20;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c0704a0..0d254d9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -114,6 +114,14 @@ enum {
+ 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
  };
  
- /* Get the wakeup routines, which depend on struct device */
++static inline bool is_pci_iov_resource_idx(int i)
++{
++#ifdef CONFIG_PCI_IOV
++	return i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END;
++#endif
++	return false;
++}
++
+ typedef int __bitwise pci_power_t;
+ 
+ #define PCI_D0		((pci_power_t __force) 0)
+-- 
+1.7.7
 
