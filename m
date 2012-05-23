@@ -1,130 +1,153 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
- <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
- <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
- <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
- <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
- <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
- <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
- <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
- <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
- <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
- <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
- <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
- <CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com> <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vb0-f74.google.com ([209.85.212.74]:52064 "EHLO
+	mail-vb0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527Ab2EWWoI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 18:44:08 -0400
+Received: by vbnl22 with SMTP id l22so947883vbn.1
+        for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 15:44:07 -0700 (PDT)
+Subject: [PATCH v3 2/2] microblaze/PCI: move DMA & IRQ init to device_add()
+	notification path
+To: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 29 May 2012 17:24:44 -0600
-Message-ID: <CAErSpo7+7fReDEzzgjonz76FD5MZFC5trPAiKZ8hLq5Wi2j13Q@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Michal Simek <monstr@monstr.eu>, benh@kernel.crashing.org,
+	microblaze-uclinux@itee.uq.edu.au, linux-pci@vger.kernel.org,
+	Jesse Larrew <jlarrew@linux.vnet.ibm.com>,
+	jbarnes@virtuousgeek.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linuxppc-dev@lists.ozlabs.org
+Date: Wed, 23 May 2012 16:37:05 -0600
+Message-ID: <20120523223705.24276.20161.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2012 at 2:40 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, May 29, 2012 at 12:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, May 29, 2012 at 12:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Tue, May 29, 2012 at 10:57 AM, H. Peter Anvin <hpa@zytor.com> wrote:
->>>> On 05/29/2012 10:55 AM, Yinghai Lu wrote:
->>>>>
->>>>> x86 are using 16bits.
->>>>>
->>>>> some others use 32 bits.
->>>>> #define IO_SPACE_LIMIT 0xffffffff
->>>>>
->>>>> ia64 and sparc are using 64bits.
->>>>> #define IO_SPACE_LIMIT               0xffffffffffffffffUL
->>>>>
->>>>> but pci only support 16bits and 32bits.
->>>>>
->>>>> maybe later we can add
->>>>> PCI_MAX_RESOURCE_16
->>>>>
->>>>> to handle 16bits and 32bit io ports.
->>>>>
->>>>
->>>> Shouldn't this be dealt by root port apertures?
->>>>
->>>
->>> pci bridge could support 16bits and 32bits io port.
->>> but we did not record if 32bits is supported.
->>>
->>> so during allocating, could have allocated above 64k address to non
->>> 32bit bridge.
->>>
->>> but  x86 is ok, because ioport.end always set to 0xffff.
->>> other arches with IO_SPACE_LIMIT with 0xffffffff or
->>> 0xffffffffffffffffUL may have problem.
->>
->> I think current IO_SPACE_LIMIT usage is a little confused.  The
->> "ioport_resource.end = IO_SPACE_LIMIT" in kernel/resource.c refers to
->> a CPU-side address, not a bus address.  Other uses, e.g., in
->> __pci_read_base(), apply it to bus addresses from BARs, which is
->> wrong.  Host bridges apply I/O port offsets just like they apply
->> memory offsets.  The ia64 IO_SPACE_LIMIT of 0xffffffffffffffffUL means
->> there's no restriction on CPU-side I/O port addresses, but any given
->> host bridge will translate its I/O port aperture to bus addresses that
->> fit in 32 bits.
->>
->> None of this is really relevant to the question I asked, namely, "why
->> Yinghai's patch doesn't limit I/O BAR values to 32 bits?"  That
->> constraint is clearly a requirement because I/O BARs are only 32 bits
->> wide, but I don't think it needs to be enforced in the code here.  The
->> host bridge or upstream P2P bridge apertures should already take care
->> of that automatically.  I don't think the 16- or 32-bitness of P2P
->> bridge apertures is relevant here, because the I/O resources available
->> on the secondary bus already reflect that.
->>
->> After all that discussion, I think my objection here boils down to
->> "you shouldn't change the I/O BAR constraints in a patch that claims
->> to allocate 64-bit *memory* BARs above 4GB."
->>
->> I think the code below is still the clearest way to set the constraints:
->>
->>   if (res->flags & IORESOURCE_MEM_64) {
->>       start = (resource_size_t) (1ULL << 32);
->>       end = PCI_MAX_RESOURCE;
->>   } else {
->>       start = 0;
->>       end = PCI_MAX_RESOURCE_32;
->>   }
->>
->> It's not strictly necessary to limit I/O BARs to PCI_MAX_RESOURCE_32
->> because host bridge apertures should already enforce that, but I think
->> the code above just makes it clearer.
->
->
-> ok, please check the version, that put back PCI_MAX_RESOURCE_32 for io ports.
+From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
 
-I like the fact that this patch no longer changes anything for I/O
-resources.  I assume this is part of fixing some bug (Steven's?)  I'd
-like to have a pointer in the changelog to a bugzilla or discussion
-about the bug.
+Microblaze initialized DMA and IRQ information in the pci_scan_child_bus()
+-> pcibios_fixup_bus() path.  Some hotplug drivers use that path, but
+others don't, e.g., pciehp, so sometimes hot-added devices are only
+partly initialized.
 
-The effect of this patch is similar to what I did earlier with
-b126b4703afa4 and e7f8567db9a7 (allocate space from top down), though
-this one is more limited and it won't change quite as much.  We ran
-into problems (BIOS defects, I think) and had to revert my patches, so
-it's quite possible that we'll run into similar problems here.
+This patch moves that initialization from pcibios_fixup_bus() to a new
+pci_bus_notify() called in the pci_bus_add_device() -> device_add() path.
+That means the initialization happens the same way for all PCI devices,
+whether they are present at boot or hot-added later.
 
-I'm a little nervous because this is a fundamental area that explores
-new areas of the address space minefield.  I think we're generally
-safer if we  follow a path similar to where Windows has been.  I think
-Windows also prefers space above 4GB for 64-bit BARs, but I suspect
-that's just a natural consequence of allocating from the top down.  So
-we'll place things just above 4GB, and Windows will place things as
-high as possible.
+[bhelgaas: changelog, notifier name, inline registration]
+Signed-off-by: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/microblaze/include/asm/pci.h |    1 -
+ arch/microblaze/pci/pci-common.c  |   62 ++++++++++++++++++++-----------------
+ 2 files changed, 34 insertions(+), 29 deletions(-)
 
-I don't know the best solution here.  This patch ("bottom-up above
-4GB") is one possibility.  Another is to allocate only 64-bit BARs
-top-down.  Or maybe allocate everything top-down on machines newer
-than some date.  They all seem ugly.  What makes me uneasy is that
-your patch strikes out on a new path that is different from what we've
-done before *and* different from what Windows does.
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index a0da88b..2aa97fd 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -141,7 +141,6 @@ extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 				 const struct resource *rsrc,
+ 				 resource_size_t *start, resource_size_t *end);
+ 
+-extern void pcibios_setup_bus_devices(struct pci_bus *bus);
+ extern void pcibios_setup_bus_self(struct pci_bus *bus);
+ 
+ /* This part of code was originally in xilinx-pci.h */
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 9b32483..6487ed0 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -983,31 +983,6 @@ void __devinit pcibios_setup_bus_self(struct pci_bus *bus)
+ 		pcibios_fixup_bridge(bus);
+ }
+ 
+-void __devinit pcibios_setup_bus_devices(struct pci_bus *bus)
+-{
+-	struct pci_dev *dev;
+-
+-	pr_debug("PCI: Fixup bus devices %d (%s)\n",
+-		 bus->number, bus->self ? pci_name(bus->self) : "PHB");
+-
+-	list_for_each_entry(dev, &bus->devices, bus_list) {
+-		/* Setup OF node pointer in archdata */
+-		dev->dev.of_node = pci_device_to_OF_node(dev);
+-
+-		/* Fixup NUMA node as it may not be setup yet by the generic
+-		 * code and is needed by the DMA init
+-		 */
+-		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+-
+-		/* Hook up default DMA ops */
+-		set_dma_ops(&dev->dev, pci_dma_ops);
+-		dev->dev.archdata.dma_data = (void *)PCI_DRAM_OFFSET;
+-
+-		/* Read default IRQs and fixup if necessary */
+-		pci_read_irq_line(dev);
+-	}
+-}
+-
+ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ 	/* When called from the generic PCI probe, read PCI<->PCI bridge
+@@ -1019,9 +994,6 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+ 
+ 	/* Now fixup the bus bus */
+ 	pcibios_setup_bus_self(bus);
+-
+-	/* Now fixup devices on that bus */
+-	pcibios_setup_bus_devices(bus);
+ }
+ EXPORT_SYMBOL(pcibios_fixup_bus);
+ 
+@@ -1512,6 +1484,38 @@ static void __devinit pcibios_scan_phb(struct pci_controller *hose)
+ 	hose->last_busno = bus->busn_res.end;
+ }
+ 
++static int pci_bus_notify(struct notifier_block *nb, unsigned long action,
++			  void *data)
++{
++	struct pci_dev *dev = to_pci_dev(data);
++
++	switch (action) {
++	case BUS_NOTIFY_ADD_DEVICE:
++		/* Setup OF node pointer in archdata */
++		dev->dev.of_node = pci_device_to_OF_node(dev);
++
++		/* Fixup NUMA node as it may not be setup yet by the generic
++		 * code and is needed by the DMA init
++		 */
++		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
++
++		/* Hook up default DMA ops */
++		set_dma_ops(&dev->dev, pci_dma_ops);
++		dev->dev.archdata.dma_data = (void *)PCI_DRAM_OFFSET;
++
++		/* Read default IRQs and fixup if necessary */
++		pci_read_irq_line(dev);
++
++		break;
++	}
++
++	return 0;
++}
++
++static struct notifier_block device_nb = {
++	.notifier_call = pci_bus_notify,
++};
++
+ static int __init pcibios_init(void)
+ {
+ 	struct pci_controller *hose, *tmp;
+@@ -1519,6 +1523,8 @@ static int __init pcibios_init(void)
+ 
+ 	printk(KERN_INFO "PCI: Probing PCI hardware\n");
+ 
++	bus_register_notifier(&pci_bus_type, &device_nb);
++
+ 	/* Scan all of the recorded PCI controllers.  */
+ 	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+ 		hose->last_busno = 0xff;
+
