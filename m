@@ -1,104 +1,229 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:58200 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754497Ab2ETCgJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 May 2012 22:36:09 -0400
-Received: by obbtb18 with SMTP id tb18so6128358obb.19
-        for <linux-pci@vger.kernel.org>; Sat, 19 May 2012 19:36:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6bVG+-+E8JBcNv19+KHoQmswMTPrH-OsmRZmjAMT5e5g@mail.gmail.com>
-References: <1315976141-6684-1-git-send-email-akong@redhat.com>
-	<20120510154423.11306.85353.stgit@t>
-	<4FABF639.4070205@gmail.com>
-	<20120510185516.GI14647@redhat.com>
-	<4FAC5518.5060807@redhat.com>
-	<4FAC5C32.9080009@redhat.com>
-	<4FAD1B88.2060905@gmail.com>
-	<CAErSpo6bVG+-+E8JBcNv19+KHoQmswMTPrH-OsmRZmjAMT5e5g@mail.gmail.com>
-Date: Sun, 20 May 2012 10:36:09 +0800
-Message-ID: <CAFeW=paB3Xtn5A-aSpoQbfxE9o-PpzzyCZh1oPWhP_ZcRTKQeA@mail.gmail.com>
-Subject: Re: [Qemu-devel] [PATCH v3] pci: clean all funcs when hot-removing
- multifunc device
-From: Amos Kong <kongjianjun@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Amos Kong <akong@redhat.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>, linux-pci@vger.kernel.org,
-	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org,
-	alex.williamson@redhat.com, kevin@koconnor.net,
+Received: from szxga01-in.huawei.com ([58.251.152.64]:60629 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758863Ab2EWDvu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 23:51:50 -0400
+Received: from huawei.com (szxga05-in [172.24.2.49])
+ by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4G002C2IPQOA@szxga05-in.huawei.com> for
+ linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:26 +0800 (CST)
+Received: from szxrg01-dlp.huawei.com ([172.24.2.119])
+ by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4G00HWFIPQOS@szxga05-in.huawei.com> for
+ linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:26 +0800 (CST)
+Date: Wed, 23 May 2012 11:50:20 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v6 3/9] PCI, x86: use RCU list to protect mmconfig list
+In-reply-to: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Message-id: <1337745026-1180-4-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 16, 2012 at 11:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, May 11, 2012 at 8:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> On 05/11/2012 08:24 AM, Amos Kong wrote:
->>> On 05/11/2012 07:54 AM, Amos Kong wrote:
->>>> On 05/11/2012 02:55 AM, Michael S. Tsirkin wrote:
->>>>> On Fri, May 11, 2012 at 01:09:13AM +0800, Jiang Liu wrote:
->>>>>> On 05/10/2012 11:44 PM, Amos Kong wrote:
->>>>>>
->>>>>>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->>>>>>> index 806c44f..a7442d9 100644
->>>>>>> --- a/drivers/pci/hotplug/acpiphp_glue.c
->>>>>>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->>>>>>> @@ -885,7 +885,7 @@ static void disable_bridges(struct pci_bus *bus)
->>>>>>>  static int disable_device(struct acpiphp_slot *slot)
->>>>>>>  {
->>>>>>>   struct acpiphp_func *func;
->>>>>>> - struct pci_dev *pdev;
->>>>>>> + struct pci_dev *pdev, *tmp;
->>>>>>>   struct pci_bus *bus = slot->bridge->pci_bus;
->>>>>>>
->>>>>>>   /* The slot will be enabled when func 0 is added, so check
->>>>>>> @@ -902,9 +902,10 @@ static int disable_device(struct acpiphp_slot *slot)
->>>>>>>                   func->bridge = NULL;
->>>>>>>           }
->>>>>>>
->>>>>>> -         pdev = pci_get_slot(slot->bridge->pci_bus,
->>>>>>> -                             PCI_DEVFN(slot->device, func->function));
->>>>>>> -         if (pdev) {
->>>>>>> +         list_for_each_entry_safe(pdev, tmp, &bus->devices, bus_list) {
->>>>>>> +                 if (PCI_SLOT(pdev->devfn) != slot->device)
->>>>>>> +                         continue;
->
-> I think the concept is good: in enable_device(), we use
-> pci_scan_slot(), which scans all possible functions in the slot.  So
-> in disable_device() we should do something symmetric to remove all the
-> functions.
+From: Jiang Liu <liuj97@gmail.com>
 
-Right!
+From: Jiang Liu <jiang.liu@huawei.com>
 
->>>>>>> +
->>>>>> The pci_bus_sem lock should be acquired when walking the bus->devices list.
->>>>>> Otherwise it may cause invalid memory access if another thread is modifying
->>>>>> the bus->devices list concurrently.
->>>
->>> pci_bus_sem lock is only request for writing &bus->devices list, right ?
->>> and this protection already exists in pci_destory_dev().
->> That's for writer. For reader to walk the pci_bus->devices list, you also need
->> to acquire the reader lock by down_read(&pci_bus_sem). Please refer to
->> pci_get_slot() for example. This especially import for native OS because there
->> may be multiple PCI slots/devices on the bus.
->
-> There is a lot of existing code that walks bus->devices without
-> holding pci_bus_sem, but most of it is boot-time code that is arguably
-> safe (though I think things like pcibios_fixup_bus() are poorly
-> designed and don't fit well in the hotplug-enabled world).
+Use RCU list to protect mmconfig list from dynamic change
+when supporting PCI host bridge hotplug.
 
-disable_remove() is not boot-time code, we might hot-remove devices
-when system is running.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   18 ++++++++++++------
+ arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
+ arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
+ 3 files changed, 34 insertions(+), 10 deletions(-)
 
-> In this case, I do think we need to protect against updates while
-> we're walking bus->devices.  It's probably not trivial because
-> __pci_remove_bus_device() calls pci_destroy_dev(), where we do the
-> down_write(), so simply wrapping the whole thing with down_read() will
-> cause a deadlock.
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 5e2cd2a..0ac97d5 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -17,6 +17,8 @@
+ #include <linux/bitmap.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/mutex.h>
++#include <linux/rculist.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <asm/acpi.h>
+@@ -25,6 +27,7 @@
+ 
+ /* Indicate if the mmcfg resources have been placed into the resource table. */
+ static int __initdata pci_mmcfg_resources_inserted;
++static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
+@@ -45,20 +48,20 @@ static __init void free_all_mmcfg(void)
+ 		pci_mmconfig_remove(cfg);
+ }
+ 
+-static __init void list_add_sorted(struct pci_mmcfg_region *new)
++static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	/* keep list sorted by segment and starting bus number */
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
+ 		if (cfg->segment > new->segment ||
+ 		    (cfg->segment == new->segment &&
+ 		     cfg->start_bus >= new->start_bus)) {
+-			list_add_tail(&new->list, &cfg->list);
++			list_add_tail_rcu(&new->list, &cfg->list);
+ 			return;
+ 		}
+ 	}
+-	list_add_tail(&new->list, &pci_mmcfg_list);
++	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
+ }
+ 
+ static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
+@@ -101,8 +104,11 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	struct pci_mmcfg_region *new;
+ 
+ 	new = pci_mmconfig_alloc(segment, start, end, addr);
+-	if (new)
++	if (new) {
++		mutex_lock(&pci_mmcfg_lock);
+ 		list_add_sorted(new);
++		mutex_unlock(&pci_mmcfg_lock);
++	}
+ 
+ 	return new;
+ }
+@@ -111,7 +117,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+ 		if (cfg->segment == segment &&
+ 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
+ 			return cfg;
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5372e86..5dad04a 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/init.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <acpi/acpi.h>
+@@ -60,9 +61,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -80,6 +84,7 @@ err:		*value = -1;
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if ((bus > 255) || (devfn > 255) || (reg > 4095))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index 915a493..acc48c5 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -9,6 +9,7 @@
+ #include <linux/init.h>
+ #include <linux/acpi.h>
+ #include <linux/bitmap.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -34,9 +35,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -49,6 +53,7 @@ err:		*value = -1;
+ 		*value = mmio_config_readl(addr + reg);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		mmio_config_writel(addr + reg, value);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+-- 
+1.7.1
 
-I posted a V4 to add pci_bus_sem protection , please help to review.
-Thanks for Jiang Liu's guide.
 
-> Kenji-san, Yinghai, do you have any input?
->
-> Bjorn
