@@ -1,101 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45588 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754155Ab2E3EtF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 May 2012 00:49:05 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 4/5] pci: Create common pcibios_err_to_errno
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, konrad.wilk@oracle.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	ddutile@redhat.com, alex.williamson@redhat.com
-Date: Tue, 29 May 2012 22:48:54 -0600
-Message-ID: <20120530044853.1164.5594.stgit@bling.home>
-In-Reply-To: <20120530043142.1164.63415.stgit@bling.home>
-References: <20120530043142.1164.63415.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 11/11] PCI: Treat ROM resource as optional during assigning.
+Date: Tue, 22 May 2012 23:34:37 -0700
+Message-Id: <1337754877-19759-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For returning errors out to non-PCI code.  Re-name xen's version.
+So will try to allocate them together with requested ones, if can not assign
+them, could go with requested one only, and just skip ROM resource.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/setup-bus.c |   21 +++++++--------------
+ include/linux/pci.h     |    5 +++++
+ 2 files changed, 12 insertions(+), 14 deletions(-)
 
- drivers/xen/xen-pciback/conf_space.c |    6 +++---
- include/linux/pci.h                  |   26 ++++++++++++++++++++++++++
- 2 files changed, 29 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/xen/xen-pciback/conf_space.c b/drivers/xen/xen-pciback/conf_space.c
-index 30d7be0..46ae0f9 100644
---- a/drivers/xen/xen-pciback/conf_space.c
-+++ b/drivers/xen/xen-pciback/conf_space.c
-@@ -124,7 +124,7 @@ static inline u32 merge_value(u32 val, u32 new_val, u32 new_val_mask,
- 	return val;
- }
- 
--static int pcibios_err_to_errno(int err)
-+static int xen_pcibios_err_to_errno(int err)
- {
- 	switch (err) {
- 	case PCIBIOS_SUCCESSFUL:
-@@ -202,7 +202,7 @@ out:
- 		       pci_name(dev), size, offset, value);
- 
- 	*ret_val = value;
--	return pcibios_err_to_errno(err);
-+	return xen_pcibios_err_to_errno(err);
- }
- 
- int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
-@@ -290,7 +290,7 @@ int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ed32864..41c08d6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -305,18 +305,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		idx = res - &dev_res->dev->resource[0];
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource_fit(dev_res->dev, idx, fit)) {
+-			if (fail_head) {
+-				/*
+-				 * if the failed res is for ROM BAR, and it will
+-				 * be enabled later, don't add it to the list
+-				 */
+-				if (!((idx == PCI_ROM_RESOURCE) &&
+-				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
+-					add_to_list(fail_head,
+-						    dev_res->dev, res,
+-						    0 /* dont care */,
+-						    0 /* dont care */);
+-			}
++			if (fail_head)
++				add_to_list(fail_head, dev_res->dev, res,
++					    0 /* dont care */,
++					    0 /* dont care */);
+ 			reset_resource(res);
  		}
  	}
+@@ -833,8 +825,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				continue;
+ 			r_size = resource_size(r);
  
--	return pcibios_err_to_errno(err);
-+	return xen_pcibios_err_to_errno(err);
- }
- 
- void xen_pcibk_config_free_dyn_fields(struct pci_dev *dev)
+-			/* put SRIOV requested res to the optional list */
+-			if (realloc_head && is_pci_iov_resource_idx(i)) {
++			/* put SRIOV/ROM requested res to the optional list */
++			if (realloc_head && (is_pci_iov_resource_idx(i) ||
++					     is_pci_rom_resource_idx(i))) {
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* dont' care */);
+ 				children_add_size += r_size;
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1b6d1c5..a8b5e8c 100644
+index 0d254d9..08c081c 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -474,6 +474,32 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
- #define PCIBIOS_SET_FAILED		0x88
- #define PCIBIOS_BUFFER_TOO_SMALL	0x89
+@@ -122,6 +122,11 @@ static inline bool is_pci_iov_resource_idx(int i)
+ 	return false;
+ }
  
-+/*
-+ * Translate above to generic errno for passing back through non-pci.
-+ */
-+static inline int pcibios_err_to_errno(int err)
++static inline bool is_pci_rom_resource_idx(int i)
 +{
-+	if (err <= PCIBIOS_SUCCESSFUL)
-+		return err; /* Assume already errno */
-+
-+	switch (err) {
-+	case PCIBIOS_FUNC_NOT_SUPPORTED:
-+		return -ENOENT;
-+	case PCIBIOS_BAD_VENDOR_ID:
-+		return -EINVAL;
-+	case PCIBIOS_DEVICE_NOT_FOUND:
-+		return -ENODEV;
-+	case PCIBIOS_BAD_REGISTER_NUMBER:
-+		return -EFAULT;
-+	case PCIBIOS_SET_FAILED:
-+		return -EIO;
-+	case PCIBIOS_BUFFER_TOO_SMALL:
-+		return -ENOSPC;
-+	}
-+
-+	return -ENOTTY;
++	return i == PCI_ROM_RESOURCE;
 +}
 +
- /* Low-level architecture-dependent routines */
+ typedef int __bitwise pci_power_t;
  
- struct pci_ops {
+ #define PCI_D0		((pci_power_t __force) 0)
+-- 
+1.7.7
 
