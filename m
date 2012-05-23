@@ -1,34 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:43254 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750749Ab2EYUSe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 May 2012 16:18:34 -0400
-Message-ID: <4FBFE90A.5090407@zytor.com>
-Date: Fri, 25 May 2012 13:18:18 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
-MIME-Version: 1.0
+Received: from rcsinet15.oracle.com ([148.87.113.117]:32458 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965122Ab2EWGew (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 02:34:52 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
+Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com> <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com> <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com> <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com>
-In-Reply-To: <20120525193716.GA8817@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+Date: Tue, 22 May 2012 23:34:28 -0700
+Message-Id: <1337754877-19759-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/25/2012 12:37 PM, Bjorn Helgaas wrote:
-> 
-> That's goofy.  You're proposing to make only x86_64 and x86-PAE try to put
-> 64-bit BARs above 4GB.  Why should this be specific to x86?  I acknowledge
-> that there's risk in doing this, but if it's a good idea for x86_64, it
-> should also be a good idea for other 64-bit architectures.
-> 
+and will fall back to below 4g if it can not find any above 4g.
 
-And so it is (assuming, of course, that we can address that memory.)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
 
-	-hpa
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4ce5ef2..2429f1f 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -122,13 +122,17 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 	int i, ret = -ENOMEM;
+ 	struct resource *r;
+ 	resource_size_t max = -1;
++	resource_size_t bottom = PCIBIOS_MAX_MEM_32 + 1ULL;
+ 
+ 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
+ 
+ 	/* don't allocate too high if the pref mem doesn't support 64bit*/
+-	if (!(res->flags & IORESOURCE_MEM_64))
++	if (!(res->flags & IORESOURCE_MEM_64)) {
+ 		max = PCIBIOS_MAX_MEM_32;
++		bottom = 0;
++	}
+ 
++again:
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		if (!r)
+ 			continue;
+@@ -145,12 +149,18 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ 		/* Ok, try it out.. */
+ 		ret = allocate_resource(r, res, size,
+-					r->start ? : min,
++					max(bottom, r->start ? : min),
+ 					max, align,
+ 					alignf, alignf_data);
+ 		if (ret == 0)
+-			break;
++			return 0;
+ 	}
++
++	if (bottom != 0) {
++		bottom = 0;
++		goto again;
++	}
++
+ 	return ret;
+ }
+ 
+-- 
+1.7.7
 
