@@ -1,146 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43406 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967351Ab2EQREj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 May 2012 13:04:39 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] pci, Add AER_panic sysfs file
-Date: Thu, 17 May 2012 13:04:30 -0400
-Message-Id: <1337274270-18785-1-git-send-email-prarit@redhat.com>
+Received: from szxga03-in.huawei.com ([58.251.152.66]:34469 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932160Ab2EWDwG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 23:52:06 -0400
+Received: from huawei.com (szxga03-in [172.24.2.9])
+ by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4G0010PIPSFL@szxga03-in.huawei.com> for
+ linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:28 +0800 (CST)
+Received: from szxrg02-dlp.huawei.com ([172.24.2.119])
+ by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4G00G5KIPSQM@szxga03-in.huawei.com> for
+ linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:28 +0800 (CST)
+Date: Wed, 23 May 2012 11:50:21 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v6 4/9] PCI,
+ x86: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
+In-reply-to: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Message-id: <1337745026-1180-5-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Consider the following case
+From: Jiang Liu <liuj97@gmail.com>
 
-		[ RP ]
-		  |
-		  |
-	+---------+-----------+
-	|	  |	      |
-       [H1]      [H2]        [X1]
+From: Jiang Liu <jiang.liu@huawei.com>
 
-where RP is a PCIE Root Port, H1 and H2 are devices with drivers that support
-PCIE AER driver error handling (ie, they have pci_error_handlers defined in
-the driver), and X1 is a device with a driver that does not support PCIE
-AER driver error handling.
+Introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap(), which will be used
+when supporting PCI root bridge hotplug.
 
-If the Root Port takes an error what currently happens is that the
-bus resets and H1 & H2 call their slot_reset functions.  X1 does nothing.
-
-In some cases a user may not wish the system to continue because X1 is
-an unhardened driver.  In these cases, the system should not do a bus reset,
-but rather the system should panic to avoid any further possible data
-corruption.
-
-This patch implements an AER_panic sysfs entry for each root port which
-a user can modify.  AER_panic = 1, means the system will panic on a
-PCIE error which would have normally resulted in a secondary bus reset.
-
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- drivers/pci/pci-sysfs.c       |   42 ++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/pcie/aer/aerdrv.c |    3 ++
- include/linux/pci.h           |    1 +
- 3 files changed, 45 insertions(+), 1 deletions(-)
+ arch/x86/include/asm/pci_x86.h |    2 ++
+ arch/x86/pci/mmconfig_32.c     |   15 +++++++++++++++
+ arch/x86/pci/mmconfig_64.c     |   22 +++++++++++++++++++++-
+ 3 files changed, 38 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index a55e248..8c6d525 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1135,6 +1135,35 @@ static ssize_t reset_store(struct device *dev,
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index b3a5317..df898ce 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -135,6 +135,8 @@ struct pci_mmcfg_region {
  
- static struct device_attribute reset_attr = __ATTR(reset, 0200, NULL, reset_store);
+ extern int __init pci_mmcfg_arch_init(void);
+ extern void __init pci_mmcfg_arch_free(void);
++extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
++extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
  
-+static ssize_t AER_panic_show(struct device *dev,
-+				 struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return sprintf(buf, "%d\n", pdev->rp_AER_panic);
-+}
-+
-+static ssize_t AER_panic_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	unsigned long val;
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if ((val > 1) || (val < 0))
-+		return -EINVAL;
-+
-+	pdev->rp_AER_panic = val;
-+
-+	return count;
-+}
-+
-+static struct device_attribute rp_AER_panic_attr =
-+	      __ATTR(AER_panic, 0600, AER_panic_show, AER_panic_store);
-+
- static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+ extern struct list_head pci_mmcfg_list;
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5dad04a..a22785d 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -141,3 +141,18 @@ int __init pci_mmcfg_arch_init(void)
+ void __init pci_mmcfg_arch_free(void)
  {
- 	int retval;
-@@ -1169,8 +1198,16 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- 			goto error;
- 		dev->reset_fn = 1;
- 	}
--	return 0;
- 
-+	/* PCIE Root Port panic-on-AER allows a user to configure each root
-+	 * port to panic on an AER error instead of issuing a bus reset.
-+	 */
-+	if (dev->pcie_type == PCI_EXP_TYPE_ROOT_PORT) {
-+		retval = device_create_file(&dev->dev, &rp_AER_panic_attr);
-+		if (retval)
-+			goto error;
-+	}
-+	return 0;
- error:
- 	pcie_aspm_remove_sysfs_dev_files(dev);
- 	if (dev->vpd && dev->vpd->attr) {
-@@ -1279,6 +1316,9 @@ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
- 		device_remove_file(&dev->dev, &reset_attr);
- 		dev->reset_fn = 0;
- 	}
-+
-+	if (dev->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
-+		device_remove_file(&dev->dev, &rp_AER_panic_attr);
  }
- 
- /**
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 58ad791..dd6b352 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -346,6 +346,9 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	u32 reg32;
- 	int pos;
- 
-+	if (dev->rp_AER_panic)
-+		panic("%s: AER detected on Root Port", pci_name(dev));
 +
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	return 0;
++}
++
++void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	unsigned long flags;
++
++	/* Invalidate the cached mmcfg map entry. */
++	raw_spin_lock_irqsave(&pci_config_lock, flags);
++	mmcfg_last_accessed_device = 0;
++	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++}
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index acc48c5..4e05779 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -95,7 +95,7 @@ static const struct pci_raw_ops pci_mmcfg = {
+ 	.write =	pci_mmcfg_write,
+ };
  
- 	/* Disable Root's interrupt in response to error messages */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e444f5b..a4e6a5a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -324,6 +324,7 @@ struct pci_dev {
- 	unsigned int    is_hotplug_bridge:1;
- 	unsigned int    __aer_firmware_first_valid:1;
- 	unsigned int	__aer_firmware_first:1;
-+	unsigned int	rp_AER_panic:1; /* if 1, panic on AER bus reset */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
+-static void __iomem * __init mcfg_ioremap(struct pci_mmcfg_region *cfg)
++static void __iomem * __devinit mcfg_ioremap(struct pci_mmcfg_region *cfg)
+ {
+ 	void __iomem *addr;
+ 	u64 start, size;
+@@ -138,3 +138,23 @@ void __init pci_mmcfg_arch_free(void)
+ 		}
+ 	}
+ }
++
++int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	cfg->virt = mcfg_ioremap(cfg);
++	if (!cfg->virt) {
++		printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
++		       &cfg->res);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	if (cfg && cfg->virt) {
++		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
++		cfg->virt = NULL;
++	}
++}
 -- 
-1.7.7.6
+1.7.1
+
 
