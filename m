@@ -1,31 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58221 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762234Ab2EQSy0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 May 2012 14:54:26 -0400
-Message-ID: <4FB54960.5080500@redhat.com>
-Date: Thu, 17 May 2012 14:54:24 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci, Add AER_panic sysfs file
-References: <1337274270-18785-1-git-send-email-prarit@redhat.com> <4FB548A8.9010003@redhat.com>
-In-Reply-To: <4FB548A8.9010003@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from szxga04-in.huawei.com ([58.251.152.67]:62768 "EHLO
+	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757431Ab2EWDv7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 23:51:59 -0400
+Received: from huawei.com (szxga04-in [172.24.2.12])
+ by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4G00722IPK85@szxga04-in.huawei.com> for
+ linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:20 +0800 (CST)
+Received: from szxrg01-dlp.huawei.com ([172.24.2.119])
+ by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4G00H21IP7RA@szxga04-in.huawei.com> for
+ linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:20 +0800 (CST)
+Date: Wed, 23 May 2012 11:50:19 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v6 2/9] PCI, x86: split out pci_mmconfig_alloc() for code reuse
+In-reply-to: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Message-id: <1337745026-1180-3-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Jiang Liu <liuj97@gmail.com>
 
->> +    if (dev->rp_AER_panic)
->> +        panic("%s: AER detected on Root Port", pci_name(dev));
->> +
-> It'd be more informative if the Root Port D:B:D.F was printed out above,
-> so one knows where the errors are coming from the system.  More likely than
-> not, the root is ok, but a device dangling from it is the 'root cause' (all pun
-> intended)
-> of the error.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-That's what pci_name() is.
+Split out pci_mmconfig_alloc() for code reuse, which will be used
+when supporting PCI root bridge hotplug.
 
-P.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   19 +++++++++++++++----
+ 1 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index f799949..5e2cd2a 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -61,8 +61,9 @@ static __init void list_add_sorted(struct pci_mmcfg_region *new)
+ 	list_add_tail(&new->list, &pci_mmcfg_list);
+ }
+ 
+-static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+-							int end, u64 addr)
++static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
++							     int start,
++							     int end, u64 addr)
+ {
+ 	struct pci_mmcfg_region *new;
+ 	struct resource *res;
+@@ -79,8 +80,6 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	new->start_bus = start;
+ 	new->end_bus = end;
+ 
+-	list_add_sorted(new);
+-
+ 	res = &new->res;
+ 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
+ 	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
+@@ -96,6 +95,18 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	return new;
+ }
+ 
++static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
++							int end, u64 addr)
++{
++	struct pci_mmcfg_region *new;
++
++	new = pci_mmconfig_alloc(segment, start, end, addr);
++	if (new)
++		list_add_sorted(new);
++
++	return new;
++}
++
+ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+ {
+ 	struct pci_mmcfg_region *cfg;
+-- 
+1.7.1
+
+
