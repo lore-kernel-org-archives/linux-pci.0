@@ -1,189 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120525193716.GA8817@google.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
-	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-	<20120525193716.GA8817@google.com>
-Date: Fri, 25 May 2012 13:19:46 -0700
-Message-ID: <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary=047d7b2ee03ff64db504c0e216b4
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 23 May 2012 11:50:23 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v6 6/9] PCI, ACPI: provide MCFG address for PCI host bridges
+In-reply-to: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-acpi <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Message-id: <1337745026-1180-7-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b2ee03ff64db504c0e216b4
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Jiang Liu <liuj97@gmail.com>
 
-On Fri, May 25, 2012 at 12:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote=
-:
-> On Fri, May 25, 2012 at 11:39:26AM -0700, Yinghai Lu wrote:
->> On Fri, May 25, 2012 at 10:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> >> I don't really like the dependency on PCIBIOS_MAX_MEM_32 + 1ULL
->> >> overflowing to zero -- that means the reader has to know what the
->> >> value of PCIBIOS_MAX_MEM_32 is, and things would break in non-obvious
->> >> ways if we changed it.
->> >>
->>
->> please check if attached one is more clear.
->>
->> make max and bottom is only related to _MEM and not default one.
->>
->> - =A0 =A0 =A0 if (!(res->flags & IORESOURCE_MEM_64))
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 max =3D PCIBIOS_MAX_MEM_32;
->> + =A0 =A0 =A0 if (res->flags & IORESOURCE_MEM) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!(res->flags & IORESOURCE_MEM_64))
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 max =3D PCIBIOS_MAX_MEM_32=
-;
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 else if (PCIBIOS_MAX_MEM_32 !=3D -1)
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bottom =3D (resource_size_=
-t)(1ULL<<32);
->> + =A0 =A0 =A0 }
->>
->> will still not affect to other arches.
->
-> That's goofy. =A0You're proposing to make only x86_64 and x86-PAE try to =
-put
-> 64-bit BARs above 4GB. =A0Why should this be specific to x86? =A0I acknow=
-ledge
-> that there's risk in doing this, but if it's a good idea for x86_64, it
-> should also be a good idea for other 64-bit architectures.
->
-> And testing for "is this x86_32 without PAE?" with
-> "PCIBIOS_MAX_MEM_32 =3D=3D -1" is just plain obtuse and hides an
-> important bit of arch-specific behavior.
->
-> Tangential question about allocate_resource(): =A0Is its "max" argument
-> really necessary? =A0We'll obviously only allocate from inside the root
-> resource, so "max" is just a way to artificially avoid the end of
-> that resource. =A0Is there really a case where that's required?
->
-> "min" makes sense because in a case like this, it's valid to allocate fro=
-m
-> anywhere in the root resource, but we want to try to allocate from the >4=
-GB
-> part first, then fall back to allocating from the whole resource. =A0I'm =
-not
-> sure there's a corresponding case for "max."
->
-> Getting back to this patch, I don't think we should need to adjust "max" =
-at
-> all. =A0For example, this:
->
-> commit cb1c8e46244cfd84a1a2fe91be860a74c1cf4e25
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date: =A0 Thu May 24 22:15:26 2012 -0600
->
-> =A0 =A0PCI: try to allocate 64-bit mem resources above 4GB
->
-> =A0 =A0If we have a 64-bit mem resource, try to allocate it above 4GB fir=
-st. =A0If
-> =A0 =A0that fails, we'll fall back to allocating space below 4GB.
->
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 4ce5ef2..075e5b1 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -121,14 +121,16 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct =
-resource *res,
-> =A0{
-> =A0 =A0 =A0 =A0int i, ret =3D -ENOMEM;
-> =A0 =A0 =A0 =A0struct resource *r;
-> - =A0 =A0 =A0 resource_size_t max =3D -1;
-> + =A0 =A0 =A0 resource_size_t start =3D 0;
-> + =A0 =A0 =A0 resource_size_t end =3D MAX_RESOURCE;
+From: Jiang Liu <jiang.liu@huawei.com>
 
-yeah, MAX_RESOURCE is better than -1.
+This patch provide MCFG address for PCI host bridges, which will
+be used to support host bridge hotplug. It gets MCFG address
+by evaluating _CBA method if available, or by scanning the ACPI
+MCFG table.
 
->
-> =A0 =A0 =A0 =A0type_mask |=3D IORESOURCE_IO | IORESOURCE_MEM;
->
-> - =A0 =A0 =A0 /* don't allocate too high if the pref mem doesn't support =
-64bit*/
-> - =A0 =A0 =A0 if (!(res->flags & IORESOURCE_MEM_64))
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 max =3D PCIBIOS_MAX_MEM_32;
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/acpi/pci_root.c  |   12 ++++++++++++
+ drivers/pci/pci-acpi.c   |   34 ++++++++++++++++++++++++++++++++++
+ include/acpi/acnames.h   |    1 +
+ include/acpi/acpi_bus.h  |    3 +++
+ include/linux/pci-acpi.h |    5 +++++
+ 5 files changed, 55 insertions(+), 0 deletions(-)
 
-can not remove this one.
-otherwise will could allocate above 4g range to non MEM64 resource.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 7aff631..fc716cf 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -458,6 +458,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	acpi_handle handle;
+ 	struct acpi_device *child;
+ 	u32 flags, base_flags;
++	int end_bus = -1;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -505,6 +506,17 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+ 	device->driver_data = root;
+ 
++	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle,
++		root->segment, (uint8_t)root->secondary.start, &end_bus);
++
++	/*
++	 * End bus number for MCFG may be less than root's subordinary
++	 * bus number with buggy BIOS implementation.
++	 */
++	if (end_bus < 0 || end_bus > root->secondary.end)
++		end_bus = root->secondary.end;
++	root->mcfg_end_bus = (uint8_t)end_bus;
++
+ 	/*
+ 	 * All supported architectures that use ACPI have support for
+ 	 * PCI domains, so we indicate this in _OSC support capabilities.
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 0f150f2..9af71d2 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -162,6 +162,40 @@ acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+ 	return remove_pm_notifier(dev, pci_acpi_wake_dev);
+ }
+ 
++/* acpi_table_parse() is marked as __init, so cache MCFG info at boot time */
++int pci_acpi_mcfg_entries;
++struct acpi_mcfg_allocation *pci_acpi_mcfg_array;
++
++phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle, uint16_t seg,
++					uint8_t start, int *endp)
++{
++	int i, end_bus = -1;
++	acpi_status status = AE_NOT_EXIST;
++	unsigned long long mcfg_addr = 0;
++	struct acpi_mcfg_allocation *cfg;
++
++	if (handle)
++		status = acpi_evaluate_integer(handle, METHOD_NAME__CBA,
++					       NULL, &mcfg_addr);
++	if (ACPI_FAILURE(status) && pci_acpi_mcfg_entries &&
++	    pci_acpi_mcfg_array) {
++		mcfg_addr = 0;
++		cfg = pci_acpi_mcfg_array;
++		for (i = 0; i < pci_acpi_mcfg_entries; i++, cfg++)
++			if (seg == cfg->pci_segment &&
++			    start >= cfg->start_bus_number &&
++			    start <= cfg->end_bus_number) {
++				end_bus = cfg->end_bus_number;
++				mcfg_addr = cfg->address;
++				break;
++			}
++	}
++	if (endp)
++		*endp = end_bus;
++
++	return (phys_addr_t)mcfg_addr;
++}
++
+ /*
+  * _SxD returns the D-state with the highest power
+  * (lowest D-state number) supported in the S-state "x".
+diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
+index 38f5088..99bda75 100644
+--- a/include/acpi/acnames.h
++++ b/include/acpi/acnames.h
+@@ -62,6 +62,7 @@
+ #define METHOD_NAME__AEI        "_AEI"
+ #define METHOD_NAME__PRW        "_PRW"
+ #define METHOD_NAME__SRS        "_SRS"
++#define METHOD_NAME__CBA	"_CBA"
+ 
+ /* Method names - these methods must appear at the namespace root */
+ 
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index f1c8ca6..8bc5229 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -370,6 +370,9 @@ struct acpi_pci_root {
+ 
+ 	u32 osc_support_set;	/* _OSC state of support bits */
+ 	u32 osc_control_set;	/* _OSC state of control bits */
++	uint8_t mcfg_end_bus;	/* End bus for MCFG may differ from
++				 * root's subordinary bus. */
++	phys_addr_t mcfg_addr;
+ };
+ 
+ /* helper */
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 4462350..0369149 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -11,12 +11,17 @@
+ #include <linux/acpi.h>
+ 
+ #ifdef CONFIG_ACPI
++extern int pci_acpi_mcfg_entries;
++extern struct acpi_mcfg_allocation *pci_acpi_mcfg_array;
++
+ extern acpi_status pci_acpi_add_bus_pm_notifier(struct acpi_device *dev,
+ 						 struct pci_bus *pci_bus);
+ extern acpi_status pci_acpi_remove_bus_pm_notifier(struct acpi_device *dev);
+ extern acpi_status pci_acpi_add_pm_notifier(struct acpi_device *dev,
+ 					     struct pci_dev *pci_dev);
+ extern acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev);
++extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle,
++			uint16_t seg, uint8_t start, int *endp);
+ 
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+ {
+-- 
+1.7.1
 
 
-> + =A0 =A0 =A0 /* If this is a 64-bit mem resource, try above 4GB first */
-> + =A0 =A0 =A0 if (res->flags & IORESOURCE_MEM_64)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 start =3D (resource_size_t) (1ULL << 32);
-
-could affect other arches. let's see if other arches is ok.
-
-please check merged version.
-
-also we have
-
-include/linux/range.h:#define MAX_RESOURCE ((resource_size_t)~0)
-arch/x86/kernel/e820.c:#define MAX_RESOURCE_SIZE ((resource_size_t)-1)
-
-we should merge them later?
-
-Thanks
-
-Yinghai
-
---047d7b2ee03ff64db504c0e216b4
-Content-Type: application/octet-stream;
-	name="allocate_high_at_first_v3.patch"
-Content-Disposition: attachment; filename="allocate_high_at_first_v3.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h2nozh280
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IFRyeSB0byBhbGxvY2F0ZSBtZW02NCBhYm92ZSA0RyBhdCBm
-aXJzdAoKYW5kIHdpbGwgZmFsbCBiYWNrIHRvIGJlbG93IDRnIGlmIGl0IGNhbiBub3QgZmluZCBh
-bnkgYWJvdmUgNGcuCgpvbmx5IHg4NiBoYXZlIFBDSUJJT1NfTUFYX01FTV8zMiBzZXQgdG8gMHhm
-ZmZmZmZmZi4KaXQgd2lsbCBvbmx5IGFmZmVjdCB4ODZfNjQgYW5kIDMyYml0IHdpdGggcmVzb3Vy
-Y2Vfc2l6ZV90IDY0Yml0IHN1cHBvcnQuCm9ubHkgdGhhdCBjYXNlIGJvdHRvbSBpcyBzZXQgdG8g
-NGcgZm9yIGZpcnN0IHRyeS4KCng4NiAzMmJpdCB3aXRob3V0IFg4Nl9QQUUgc3VwcG9ydCB3aWxs
-IGhhdmUgYm90dG9tIHNldCB0byAwLCBiZWN1YXNlCnJlc291cmNlX3NpemVfdCBpcyAzMmJpdC4K
-CkFsc28gZm9yIDMyYml0IHdpdGggcmVzb3VyY2Vfc2l6ZV90IDY0Yml0IGtlcm5lbCBvbiBtYWNo
-aW5lIHdpdGggcGFlIHN1cHBvcnQKd2UgYXJlIHNhZmUgYmVjYXVzZSBpb21lbV9yZXNvdXJjZSBp
-cyBsaW1pdGVkIHRvIDMyYml0IGFjY29yZGluZyB0bwp4ODZfcGh5c19iaXRzLgoKLXYyOiB1cGRh
-dGUgYm90dG9tIGFzc2lnbmluZyB0byBtYWtlIGl0IGNsZWFyIGZvciBub24tcGFlIHN1cHBvcnQg
-bWFjaGluZS4KLXYzOiBCam9ybidzIGNoYW5nZToKCXVzZSBNQVhfUkVPVVJDRSBpbnN0ZWFkIG9m
-IC0xCgl1c2Ugc3RhcnQvZW5kIGluc3RlYWQgb2YgYm90dG9tL21heAoJZm9yIGFsbCBhcmNoIGlu
-c3RlYWQgb2YganVzdCB4ODZfNjQKClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlA
-a2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvYnVzLmMgfCAgIDI5ICsrKysrKysrKysrKysr
-KysrKysrKystLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgMjIgaW5zZXJ0aW9ucygrKSwgNyBkZWxl
-dGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvYnVzLmMKPT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQot
-LS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJz
-L3BjaS9idXMuYwpAQCAtMTIxLDE0ICsxMjEsMjMgQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShz
-dHJ1Y3QgcGNpX2J1cyAqYgogewogCWludCBpLCByZXQgPSAtRU5PTUVNOwogCXN0cnVjdCByZXNv
-dXJjZSAqcjsKLQlyZXNvdXJjZV9zaXplX3QgbWF4ID0gLTE7CisJcmVzb3VyY2Vfc2l6ZV90IGVu
-ZCA9IE1BWF9SRVNPVVJDRTsKKwlyZXNvdXJjZV9zaXplX3Qgc3RhcnQgPSAwOwogCiAJdHlwZV9t
-YXNrIHw9IElPUkVTT1VSQ0VfSU8gfCBJT1JFU09VUkNFX01FTTsKIAotCS8qIGRvbid0IGFsbG9j
-YXRlIHRvbyBoaWdoIGlmIHRoZSBwcmVmIG1lbSBkb2Vzbid0IHN1cHBvcnQgNjRiaXQqLwotCWlm
-ICghKHJlcy0+ZmxhZ3MgJiBJT1JFU09VUkNFX01FTV82NCkpCi0JCW1heCA9IFBDSUJJT1NfTUFY
-X01FTV8zMjsKKwkvKgorCSAqIGRvbid0IGFsbG9jYXRlIHRvbyBoaWdoIGlmIHRoZSBwcmVmIG1l
-bSBkb2Vzbid0IHN1cHBvcnQgNjRiaXQKKwkgKiBhbHNvIGlmIHRoaXMgaXMgYSA2NC1iaXQgbWVt
-IHJlc291cmNlLCB0cnkgYWJvdmUgNEdCIGZpcnN0CisJICovCisJaWYgKHJlcy0+ZmxhZ3MgJiBJ
-T1JFU09VUkNFX01FTSkgeworCQlpZiAoIShyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU1fNjQp
-KQorCQkJZW5kID0gUENJQklPU19NQVhfTUVNXzMyOworCQllbHNlCisJCQlzdGFydCA9IChyZXNv
-dXJjZV9zaXplX3QpKDFVTEw8PDMyKTsKKwl9CiAKK2FnYWluOgogCXBjaV9idXNfZm9yX2VhY2hf
-cmVzb3VyY2UoYnVzLCByLCBpKSB7CiAJCWlmICghcikKIAkJCWNvbnRpbnVlOwpAQCAtMTQ1LDEy
-ICsxNTQsMTggQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1cyAqYgogCiAJ
-CS8qIE9rLCB0cnkgaXQgb3V0Li4gKi8KIAkJcmV0ID0gYWxsb2NhdGVfcmVzb3VyY2UociwgcmVz
-LCBzaXplLAotCQkJCQlyLT5zdGFydCA/IDogbWluLAotCQkJCQltYXgsIGFsaWduLAorCQkJCQlt
-YXgoc3RhcnQsIHItPnN0YXJ0ID8gOiBtaW4pLAorCQkJCQllbmQsIGFsaWduLAogCQkJCQlhbGln
-bmYsIGFsaWduZl9kYXRhKTsKIAkJaWYgKHJldCA9PSAwKQotCQkJYnJlYWs7CisJCQlyZXR1cm4g
-MDsKKwl9CisKKwlpZiAoc3RhcnQgIT0gMCkgeworCQlzdGFydCA9IDA7CisJCWdvdG8gYWdhaW47
-CiAJfQorCiAJcmV0dXJuIHJldDsKIH0KIAo=
---047d7b2ee03ff64db504c0e216b4--
