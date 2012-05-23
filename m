@@ -1,69 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38259 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760338Ab2EJSzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 May 2012 14:55:35 -0400
-Date: Thu, 10 May 2012 21:55:17 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Amos Kong <akong@redhat.com>, linux-pci@vger.kernel.org,
-	seabios@seabios.org, qemu-devel@nongnu.org,
-	jbarnes@virtuousgeek.org, alex.williamson@redhat.com,
-	kevin@koconnor.net
-Subject: Re: [PATCH v3] pci: clean all funcs when hot-removing multifunc
- device
-Message-ID: <20120510185516.GI14647@redhat.com>
-References: <1315976141-6684-1-git-send-email-akong@redhat.com>
- <20120510154423.11306.85353.stgit@t>
- <4FABF639.4070205@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FABF639.4070205@gmail.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:34436 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755052Ab2EWGev (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 02:34:51 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <ying6hai@kernel.org>
+Subject: [PATCH 00/11] PCI: resource allocation related
+Date: Tue, 22 May 2012 23:34:26 -0700
+Message-Id: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2012 at 01:09:13AM +0800, Jiang Liu wrote:
-> On 05/10/2012 11:44 PM, Amos Kong wrote:
-> 
-> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> > index 806c44f..a7442d9 100644
-> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -885,7 +885,7 @@ static void disable_bridges(struct pci_bus *bus)
-> >  static int disable_device(struct acpiphp_slot *slot)
-> >  {
-> >  	struct acpiphp_func *func;
-> > -	struct pci_dev *pdev;
-> > +	struct pci_dev *pdev, *tmp;
-> >  	struct pci_bus *bus = slot->bridge->pci_bus;
-> >  
-> >  	/* The slot will be enabled when func 0 is added, so check
-> > @@ -902,9 +902,10 @@ static int disable_device(struct acpiphp_slot *slot)
-> >  			func->bridge = NULL;
-> >  		}
-> >  
-> > -		pdev = pci_get_slot(slot->bridge->pci_bus,
-> > -				    PCI_DEVFN(slot->device, func->function));
-> > -		if (pdev) {
-> > +		list_for_each_entry_safe(pdev, tmp, &bus->devices, bus_list) {
-> > +			if (PCI_SLOT(pdev->devfn) != slot->device)
-> > +				continue;
-> > +
-> The pci_bus_sem lock should be acquired when walking the bus->devices list.
-> Otherwise it may cause invalid memory access if another thread is modifying
-> the bus->devices list concurrently.
-> 
-> BTW, what's the relationship with "[PATCH v3] hotplug: add device per func
-> in ACPI DSDT tables"? Seems they are both solving the same issue.
+From: Yinghai Lu <ying6hai@kernel.org>
 
-That's a bios patch. It's needed if you want broken linux to work.  This
-makes linux behave properly on the original bios.
+This patchset will try to make allocation to find suitable assignement.
+1. will try to assign 64 bit resource above 4g at first.
+2. will find space that is matched with needed size
+3. will put resource in right location to leave more big alignment with left blank resource
+4. will try option rom BAR as optional resources.
 
-> >  			pci_stop_bus_device(pdev);
-> >  			if (pdev->subordinate) {
-> >  				disable_bridges(pdev->subordinate);
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Could be found:
+	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-res-alloc
+
+and it is based on pci for-3.6 branch.
+
+Thanks
+
+Yinghai Lu
+
+Yinghai Lu (11):
+  PCI: Should add children device res to fail list
+  PCI: Try to allocate mem64 above 4G at first
+  intel-gtt: Read 64bit for gmar_bus_addr
+  PCI: Make sure assign same align with large size resource at first
+  resources: Split out __allocate_resource()
+  resource: make find_resource could return just fit resource
+  PCI: Don't allocate small resource in big empty space.
+  resource: only return range with needed align
+  PCI: Add is_pci_iov_resource_idx()
+  PCI: Sort unassigned resources with correct alignment
+  PCI: Treat ROM resource as optional during assigning.
+
+ drivers/char/agp/intel-gtt.c |   14 ++++--
+ drivers/pci/bus.c            |   38 +++++++++++---
+ drivers/pci/setup-bus.c      |   78 ++++++++++++++++++-----------
+ drivers/pci/setup-res.c      |   28 +++++++----
+ include/linux/ioport.h       |    8 +++
+ include/linux/pci.h          |   23 ++++++++
+ kernel/resource.c            |  114 ++++++++++++++++++++++++++++++++++++++---
+ 7 files changed, 243 insertions(+), 60 deletions(-)
+
+-- 
+1.7.7
+
