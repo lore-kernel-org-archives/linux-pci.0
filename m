@@ -1,42 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:55908 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751380Ab2E2TDk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 May 2012 15:03:40 -0400
-Message-ID: <4FC51D79.6010804@zytor.com>
-Date: Tue, 29 May 2012 12:03:21 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from mail-gg0-f202.google.com ([209.85.161.202]:39423 "EHLO
+	mail-gg0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156Ab2EWEfJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 00:35:09 -0400
+Received: by ggeh3 with SMTP id h3so829248gge.1
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 21:35:09 -0700 (PDT)
+Subject: [PATCH v6 1/2] PCI: acpiphp: fix function 0 leak when disabling a slot
+To: Amos Kong <kongjianjun@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, liuj97@gmail.com, qemu-devel@nongnu.org,
+	jbarnes@virtuousgeek.org, kaneshige.kenji@jp.fujitsu.com
+Date: Tue, 22 May 2012 22:35:06 -0600
+Message-ID: <20120523043506.13449.81850.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com> <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com> <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com> <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com> <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com> <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com> <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com> <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com> <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
-In-Reply-To: <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/29/2012 11:17 AM, Yinghai Lu wrote:
-> 
-> pci bridge could support 16bits and 32bits io port.
-> but we did not record if 32bits is supported.
-> 
+From: Amos Kong <kongjianjun@gmail.com>
 
-Okay, so this is the actual problem, no?
+Previously, we acquired two references to function 0, but only released
+one.
 
-> so during allocating, could have allocated above 64k address to non
-> 32bit bridge.
-> 
-> but  x86 is ok, because ioport.end always set to 0xffff.
-> other arches with IO_SPACE_LIMIT with 0xffffffff or
-> 0xffffffffffffffffUL may have problem.
+[bhelgaas: split this out from "remove all functions" fix]
+Signed-off-by: Amos Kong <kongjianjun@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-The latter is nonsense, the PCI-side address space is only 32 bits wide.
-
-	-hpa
-
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 62d0ae4..c8f9991 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -893,6 +893,7 @@ static int disable_device(struct acpiphp_slot *slot)
+ 	pdev = pci_get_slot(bus, PCI_DEVFN(slot->device, 0));
+ 	if (!pdev)
+ 		goto err_exit;
++	pci_dev_put(pdev);
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		if (func->bridge) {
 
