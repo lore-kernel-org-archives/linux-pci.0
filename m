@@ -1,96 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:32795 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965833Ab2EPU2C convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 May 2012 16:28:02 -0400
-Received: by dady13 with SMTP id y13so1462636dad.19
-        for <linux-pci@vger.kernel.org>; Wed, 16 May 2012 13:28:02 -0700 (PDT)
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:39873 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120Ab2EWFPH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 01:15:07 -0400
+Received: by wibhj8 with SMTP id hj8so4139237wib.1
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 22:15:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1337197170.68237.YahooMailNeo@web160304.mail.bf1.yahoo.com>
-References: <1337136686.80168.YahooMailNeo@web160302.mail.bf1.yahoo.com>
-	<CAE9FiQWK0Ur+dnQmJ4D_Zve+Bcqxt2u+R=Qp6s39vJCZJfhRqg@mail.gmail.com>
-	<1337197170.68237.YahooMailNeo@web160304.mail.bf1.yahoo.com>
-Date: Wed, 16 May 2012 13:28:02 -0700
-Message-ID: <CAE9FiQU-aCZokS7V_77cpNMN-jK=WEekSJX3F4vnv8ZSEuv4Ow@mail.gmail.com>
-Subject: Re: Hotplug Debugging
-From: Yinghai Lu <yinghai@kernel.org>
-To: LinuxDrvDev <ushmasonal-linuxmail@yahoo.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAE9FiQVs0U62NRxkDYdOC67EUiEBu1f5ojGxGXkdbt0O6XO4uQ@mail.gmail.com>
+References: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
+	<20120523043511.13449.22006.stgit@bhelgaas.mtv.corp.google.com>
+	<CAE9FiQVs0U62NRxkDYdOC67EUiEBu1f5ojGxGXkdbt0O6XO4uQ@mail.gmail.com>
+Date: Wed, 23 May 2012 13:15:05 +0800
+Message-ID: <CAFeW=pZiEODGx09=HaJDWujmCc92wCKt2fhZM03yNDb9CSs3gA@mail.gmail.com>
+Subject: [PATCH v7 2/2] PCI: acpiphp: remove all functions in slot, even
+ without ACPI _EJx
+From: Amos Kong <kongjianjun@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	liuj97@gmail.com, qemu-devel@nongnu.org, jbarnes@virtuousgeek.org,
+	kaneshige.kenji@jp.fujitsu.com
+Content-Type: multipart/mixed; boundary=f46d0444e881da79bf04c0ad37e7
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 16, 2012 at 12:39 PM, LinuxDrvDev
-<ushmasonal-linuxmail@yahoo.com> wrote:
->
->
-> Thanks Yinghai. It looks like the slot I was using  didn't supported the Hotplug. However, then I moved to another slot which did supported Hotplug+ but didn't supported surprise- removal.  Here is the tree of my devices.
->
-> -[0000:00]-+-00.0
->            +-02.0-[01]--+-00.0
->            |            \-00.1
->            +-04.0-[02]----00.0
->            +-09.0-[03]----00.0
->            +-11.0
->            +-12.0
->            +-12.2
->            +-13.0
->            +-13.2
->            +-14.0
->            +-14.1
->            +-14.2
->            +-14.3
->            +-14.4-[04]--
->            +-14.5
->            +-15.0-[05]--+-00.0
->            |            \-00.1
->            +-16.0
->            +-16.2
->            +-18.0
->            +-18.1
->            +-18.2
->            +-18.3
->            \-18.4
->
-> Here is the info on the slot  -
->
-> 00:15.0 PCI bridge: ATI Technologies Inc SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0) (prog-if 00 [Normal decode])
->     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> ---
->     BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
->         PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> ----
->         SltCap:    AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surpise-
->             Slot #  0, PowerLimit 0.000000; Interlock- NoCompl+
+--f46d0444e881da79bf04c0ad37e7
+Content-Type: text/plain; charset=ISO-8859-1
 
-interesting. No attention button and not support surprise removal.
+Attached the v7,  test passed.
 
+--f46d0444e881da79bf04c0ad37e7
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0002-PCI-acpiphp-remove-all-functions-in-slot-even-withou.patch"
+Content-Disposition: attachment;
+	filename="0002-PCI-acpiphp-remove-all-functions-in-slot-even-withou.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h2jxun5v0
 
->         SltCtl:    Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
->             Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
->         SltSta:    Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
->             Changed: MRL- PresDet+ LinkState+
->
-> Now if I first remove the device from the kernel by issuing
->
->
-> "echo 1 > /sys/devices/pci0000:\00/0000\:00\:15.0"
->
-> I see the device being removed from the kernel. lspci output shows that device no longer existed.  Then I physically pull out the device from the slot, and then reinsert the device to the same slot and I issue
->
-> "echo 1 > /sys/bus/pci/rescan"
->
-> I only see the bridge device being rescanned but don't see my SATA controller being recognized. ie. devices on secondary side of bus 15 does not appear in lspci output.
-
-can you post whole log with "debug ignore_loglevel pciehp.pciehp_debug=1" ?
-
->
-> I also tried "resetting secondary bus" using the bridge control register but of no avail.
-
-may need to reset the pcie-link?
-
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=afa42ff2f3987f57ee2523f07af5ec9a7c9132be
-
-
-Yinghai
+RnJvbSBiZWM3ZWM3MWRiZWI5MmRjODMwNzE5YmU3YzExZjg3Nzg2ODMwODYzIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbW9zIEtvbmcgPGtvbmdqaWFuanVuQGdtYWlsLmNvbT4KRGF0
+ZTogVHVlLCAyMiBNYXkgMjAxMiAxODozNToxMSArMDAwMApTdWJqZWN0OiBbUEFUQ0ggMi8yXSBQ
+Q0k6IGFjcGlwaHA6IHJlbW92ZSBhbGwgZnVuY3Rpb25zIGluIHNsb3QsIGV2ZW4gd2l0aG91dCBB
+Q1BJIF9FSngKCldoZW4gd2UgYWRkIGEgZGV2aWNlIHdpdGggYWNwaXBocCwgd2UgZW51bWVyYXRl
+IGFsbCBmdW5jdGlvbnMgaW4gdGhlCnNsb3Qgd2l0aCBwY2lfc2Nhbl9zbG90KCksIHJlZ2FyZGxl
+c3Mgb2Ygd2hldGhlciB0aGV5IGhhdmUgYXNzb2NpYXRlZApBQ1BJIG1ldGhvZHMgc3VjaCBhcyBf
+RUowLgoKV2hlbiByZW1vdmluZyB0aGUgZGV2aWNlLCB3ZSBwcmV2aW91c2x5IHJlbW92ZWQgb25s
+eSB0aGUgZnVuY3Rpb25zCndpdGggdGhvc2UgQUNQSSBtZXRob2RzLiAgVGhpcyBwYXRjaCBtYWtl
+cyB0aGUgcmVtb3ZlIHN5bW1ldHJpYyB3aXRoIHRoZQphZGQ6IHdlIHJlbW92ZSBhbGwgZnVuY3Rp
+b25zIGluIHRoZSBzbG90LCB3aGV0aGVyIHRoZXkgaGF2ZSBhc3NvY2lhdGVkCkFDUEkgbWV0aG9k
+cyBvciBub3QuCgpXaXRoIHFlbXUta3ZtIGFuZCBTZWFCSU9TLCB3ZSBjYW4gYnVpbGQgYSBtdWx0
+aS1mdW5jdGlvbiBkZXZpY2Ugd2hlcmUKb25seSBmdW5jdGlvbiAwIGhhcyBfRUowIGFuZCBfQURS
+IChzZWUgYnVnemlsbGEgYmVsb3cpLiAgUmVtb3ZpbmcgYW5kCnJlLWFkZGluZyB0aGF0IGRldmlj
+ZSB3b3JrcyBjb3JyZWN0bHkgd2l0aCBXaW5kb3dzIGd1ZXN0cy4gIFRoaXMgcGF0Y2gKbWFrZXMg
+aXQgYWxzbyB3b3JrIGluIExpbnV4IGd1ZXN0cy4KCltiaGVsZ2FhczogcmVzdHJ1Y3R1cmUgbG9v
+cCBpdGVyYXRpb24sIHB1bGwgb3V0IG9mIHNsb3QtPmZ1bmNzIGxvb3BdClJlZmVyZW5jZTogaHR0
+cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD00MzIxOQpTaWduZWQtb2Zm
+LWJ5OiBBbW9zIEtvbmcgPGtvbmdqaWFuanVuQGdtYWlsLmNvbT4KU2lnbmVkLW9mZi1ieTogQmpv
+cm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KCi0tLQp2Nzoga2VlcCB0aGF0IHBjaV9i
+dXNfc2VtIG9wZXJhdGlvbiBwYWlyIG9uIHJldHVybiBwYXRoCi0tLQogZHJpdmVycy9wY2kvaG90
+cGx1Zy9hY3BpcGhwX2dsdWUuYyB8ICAgNDAgKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0t
+LS0tLS0tCiAxIGZpbGVzIGNoYW5nZWQsIDMwIGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygt
+KQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvYWNwaXBocF9nbHVlLmMgYi9kcml2
+ZXJzL3BjaS9ob3RwbHVnL2FjcGlwaHBfZ2x1ZS5jCmluZGV4IDBkODcxMzYuLmM5NGExMmYgMTAw
+NjQ0Ci0tLSBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvYWNwaXBocF9nbHVlLmMKKysrIGIvZHJpdmVy
+cy9wY2kvaG90cGx1Zy9hY3BpcGhwX2dsdWUuYwpAQCAtODc4LDYgKzg3OCwyMiBAQCBzdGF0aWMg
+dm9pZCBkaXNhYmxlX2JyaWRnZXMoc3RydWN0IHBjaV9idXMgKmJ1cykKIAl9CiB9CiAKKy8qIHJl
+dHVybiBmaXJzdCBkZXZpY2UgaW4gc2xvdCwgYWNxdWlyaW5nIGEgcmVmZXJlbmNlIG9uIGl0ICov
+CitzdGF0aWMgc3RydWN0IHBjaV9kZXYgKmRldl9pbl9zbG90KHN0cnVjdCBhY3BpcGhwX3Nsb3Qg
+KnNsb3QpCit7CisJc3RydWN0IHBjaV9idXMgKmJ1cyA9IHNsb3QtPmJyaWRnZS0+cGNpX2J1czsK
+KwlzdHJ1Y3QgcGNpX2RldiAqZGV2OworCWludCByZXQgPSBOVUxMOworCisJZG93bl9yZWFkKCZw
+Y2lfYnVzX3NlbSk7CisJbGlzdF9mb3JfZWFjaF9lbnRyeShkZXYsICZidXMtPmRldmljZXMsIGJ1
+c19saXN0KQorCQlpZiAoUENJX1NMT1QoZGV2LT5kZXZmbikgPT0gc2xvdC0+ZGV2aWNlKQorCQkJ
+cmV0ID0gcGNpX2Rldl9nZXQoZGV2KTsKKwl1cF9yZWFkKCZwY2lfYnVzX3NlbSk7CisKKwlyZXR1
+cm4gcmV0OworfQorCiAvKioKICAqIGRpc2FibGVfZGV2aWNlIC0gZGlzYWJsZSBhIHNsb3QKICAq
+IEBzbG90OiBBQ1BJIFBIUCBzbG90CkBAIC05MDIsMTggKzkxOCwyMiBAQCBzdGF0aWMgaW50IGRp
+c2FibGVfZGV2aWNlKHN0cnVjdCBhY3BpcGhwX3Nsb3QgKnNsb3QpCiAJCQkJCQkodTMyKTEsIE5V
+TEwsIE5VTEwpOwogCQkJZnVuYy0+YnJpZGdlID0gTlVMTDsKIAkJfQorCX0KIAotCQlwZGV2ID0g
+cGNpX2dldF9zbG90KHNsb3QtPmJyaWRnZS0+cGNpX2J1cywKLQkJCQkgICAgUENJX0RFVkZOKHNs
+b3QtPmRldmljZSwgZnVuYy0+ZnVuY3Rpb24pKTsKLQkJaWYgKHBkZXYpIHsKLQkJCXBjaV9zdG9w
+X2J1c19kZXZpY2UocGRldik7Ci0JCQlpZiAocGRldi0+c3Vib3JkaW5hdGUpIHsKLQkJCQlkaXNh
+YmxlX2JyaWRnZXMocGRldi0+c3Vib3JkaW5hdGUpOwotCQkJCXBjaV9kaXNhYmxlX2RldmljZShw
+ZGV2KTsKLQkJCX0KLQkJCV9fcGNpX3JlbW92ZV9idXNfZGV2aWNlKHBkZXYpOwotCQkJcGNpX2Rl
+dl9wdXQocGRldik7CisJLyoKKwkgKiBlbmFibGVfZGV2aWNlKCkgZW51bWVyYXRlcyBhbGwgZnVu
+Y3Rpb25zIGluIHRoaXMgZGV2aWNlIHZpYQorCSAqIHBjaV9zY2FuX3Nsb3QoKSwgd2hldGhlciB0
+aGV5IGhhdmUgYXNzb2NpYXRlZCBBQ1BJIGhvdHBsdWcKKwkgKiBtZXRob2RzIChfRUowLCBldGMu
+KSBvciBub3QuICBUaGVyZWZvcmUsIHdlIHJlbW92ZSBhbGwgZnVuY3Rpb25zCisJICogaGVyZS4K
+KwkgKi8KKwl3aGlsZSAoKHBkZXYgPSBkZXZfaW5fc2xvdChzbG90KSkpIHsKKwkJcGNpX3N0b3Bf
+YnVzX2RldmljZShwZGV2KTsKKwkJaWYgKHBkZXYtPnN1Ym9yZGluYXRlKSB7CisJCQlkaXNhYmxl
+X2JyaWRnZXMocGRldi0+c3Vib3JkaW5hdGUpOworCQkJcGNpX2Rpc2FibGVfZGV2aWNlKHBkZXYp
+OwogCQl9CisJCV9fcGNpX3JlbW92ZV9idXNfZGV2aWNlKHBkZXYpOworCQlwY2lfZGV2X3B1dChw
+ZGV2KTsKIAl9CiAKIAlsaXN0X2Zvcl9lYWNoX2VudHJ5KGZ1bmMsICZzbG90LT5mdW5jcywgc2li
+bGluZykgewotLSAKMS43LjEKCg==
+--f46d0444e881da79bf04c0ad37e7--
