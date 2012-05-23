@@ -1,48 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:57185 "EHLO gate.crashing.org"
+Received: from mx1.redhat.com ([209.132.183.28]:61185 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752419Ab2EYDi5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 May 2012 23:38:57 -0400
-Message-ID: <1337917105.16119.11.camel@pasglop>
-Subject: Re: [PATCH v3 1/2] powerpc/PCI: move DMA & IRQ init to device_add()
- notification path
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
-	Michal Simek <monstr@monstr.eu>,
-	microblaze-uclinux@itee.uq.edu.au, linux-pci@vger.kernel.org,
-	Jesse Larrew <jlarrew@linux.vnet.ibm.com>,
-	jbarnes@virtuousgeek.org,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linuxppc-dev@lists.ozlabs.org
-Date: Fri, 25 May 2012 13:38:25 +1000
-In-Reply-To: <CAErSpo6W28r4f5pJmZr=ofUAaffiUtOqgXWeabGpr+DmKw+Z+g@mail.gmail.com>
-References: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com>
-	 <20120523223700.24276.76804.stgit@bhelgaas.mtv.corp.google.com>
-	 <1337914811.16119.7.camel@pasglop>
-	 <CAErSpo6W28r4f5pJmZr=ofUAaffiUtOqgXWeabGpr+DmKw+Z+g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753046Ab2EWSox (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 May 2012 14:44:53 -0400
+Date: Wed, 23 May 2012 14:44:49 -0400
+From: Jason Baron <jbaron@redhat.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
+Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
+Message-ID: <20120523184449.GB23940@redhat.com>
+References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
+ <CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
+ <20120523024313.GA2888@redhat.com>
+ <CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
+ <CAE9FiQVPyjsB=oWp80sgqzkWw8KqX0GHg+csM39juo2N67P2Tg@mail.gmail.com>
+ <20120523155346.GA23940@redhat.com>
+ <CAE9FiQWPpKE5vmzZqw-E_L_0Lt1QpqV=xk=Hu6Stzva5vXk1_g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWPpKE5vmzZqw-E_L_0Lt1QpqV=xk=Hu6Stzva5vXk1_g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-05-24 at 21:08 -0600, Bjorn Helgaas wrote:
+On Wed, May 23, 2012 at 10:16:06AM -0700, Yinghai Lu wrote:
+> On Wed, May 23, 2012 at 8:53 AM, Jason Baron <jbaron@redhat.com> wrote:
+> >> > but still would prefer you to make qemu to support pciehp.
+> >>
+> >> another solution could be:
+> >>
+> >> in qemu acpi dsdt, you could set bridge size for new added bridge.
+> >>
+> >> current pbus_size_mem() will not shrink the old bridge resource size.
+> >
+> > ok, I also tried hard-wiring the bridge io/mem base and limit registers on the
+> > qemu side. That seems to work without any guest-side hotplug code changes. And
+> > would seem to be more flexible than putting the limits in acpi.
 > 
-> OK.  Are you worried about cardbus in particular?
+> that should be acpi asl code or SMI work. and should make sure that
+> range is not overlapped with resources that are used by other bridges
+> and pci devices.
 > 
-> This is headed for the 3.6, not 3.5, so we should have plenty of time.
->  As soon as everything for the current merge window gets merged and
-> -next is ready for the next batch, I'll put this in there.
 
-I'm not that worried about cardbus ... in fact I wouldn't be surprised
-if it's already somewhat broken, I haven't tested it in a long time...
+Ok. So you are saying to define a 'Name (_CRS, ResourceTemplate() {
+Memory() IO() })' block for each bridge? The acpi code I currently have,
+has one 'Device()' definition for each top-level hotplug slot. Would it
+be ok to have the '_CRS' apply to either one?
 
-I'm more worried about basic functionality and expectations about when
-things happen during boot vs. platform hacks, that and pseries specific
-kind of hotplug which can be a bit odd.
+Also, I'm wondering where in the acpiphp code it picks up the memory/io
+ranges to configure them as bridge ranges?
 
-Cheers,
-Ben.
+I also see in ACPIspec40a.pdf, section "9.11 Module Device":
 
+"
+If no _CRS object is present, OSPM will assume that the module device is
+a simple container object that does not produce the resources consumed by its
+child devices. In this case, OSPM will assign resources to the child devices as
+if they were direct children of the module device's parent object.
+"
 
+So not sure if that applies to hotplug, but that is not what acpiphp is
+doing atm.
+
+Finally, I don't see why putting the bridge window range logic into qemu is a
+bad solution. Qemu knows memory ranges consumed by various resoures,
+looking at 'info mtree', so why can't qemu hand out the bridge ranges
+dynamically? In that way, it can re-size the windows more optimally than
+something hard-coded into acpi. So to me, it seems like a better
+approach.
+
+Thanks,
+
+-Jason
