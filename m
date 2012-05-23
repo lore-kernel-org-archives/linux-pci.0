@@ -1,69 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:35860 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752511Ab2E2XT3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 19:19:29 -0400
-Received: by gglu4 with SMTP id u4so3046531ggl.19
-        for <linux-pci@vger.kernel.org>; Tue, 29 May 2012 16:19:29 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47655 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735Ab2EWEHz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 00:07:55 -0400
+Received: by pbbrp8 with SMTP id rp8so9294040pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 21:07:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4FBA7AEE.3090402@snewbury.org.uk>
-References: <1333968563.5678.19.camel@infinity> <4F89CE43.7040200@snewbury.org.uk>
- <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
- <4F8AA0DC.6010902@snewbury.org.uk> <4F8AB312.7060606@snewbury.org.uk>
- <4F8B04A4.4070507@snewbury.org.uk> <4F8B0609.8010603@snewbury.org.uk>
- <CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com>
- <CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com>
- <CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com>
- <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com>
- <4F96770D.2050606@snewbury.org.uk> <4FB227D3.7090002@snewbury.org.uk>
- <CAE9FiQX48eCS85eWMFxm6fCWgu2zwxvSywtQhsf-35WEvBfJVQ@mail.gmail.com>
- <4FB4EE99.10509@snewbury.org.uk> <4FB4F039.2040308@snewbury.org.uk>
- <CAE9FiQUpdVJeF06BtqOKo448n1oH+AMJyC03FpB13=fOdkwM+w@mail.gmail.com>
- <CAE9FiQWOoEX3H6V7+c+azm8DJieX8bpXRmsYuOE+ZUDJ-p3-yQ@mail.gmail.com>
- <CAE9FiQU1Bq3xpo0m_eNwBHoxF+oH=pXpg59hQguf_5GpWytyKg@mail.gmail.com> <4FBA7AEE.3090402@snewbury.org.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 29 May 2012 17:19:07 -0600
-Message-ID: <CAErSpo6iGaQA8DTKRK9Q+m2RqJk1R-Gfa9qk+YMrf=9Ww45MFw@mail.gmail.com>
-Subject: Re: PCI resources above 4GB
-To: Steven Newbury <steve@snewbury.org.uk>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
+In-Reply-To: <CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
+References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
+	<CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
+	<20120523024313.GA2888@redhat.com>
+	<CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
+Date: Tue, 22 May 2012 21:07:54 -0700
+Message-ID: <CAE9FiQVPyjsB=oWp80sgqzkWw8KqX0GHg+csM39juo2N67P2Tg@mail.gmail.com>
+Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jason Baron <jbaron@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 21, 2012 at 11:27 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
->
-> On 18/05/12 10:08, Yinghai Lu wrote:
->> On Fri, May 18, 2012 at 12:45 AM, Yinghai Lu <yinghai@kernel.org>
->> wrote:
->>> On Thu, May 17, 2012 at 9:36 AM, Yinghai Lu <yinghai@kernel.org>
->>> wrote:
->>>> On Thu, May 17, 2012 at 5:34 AM, Steven Newbury
->>>> <steve@snewbury.org.uk> wrote:
->>>>> -----BEGIN PGP SIGNED MESSAGE----- Strange, the busn branch
->>>>> is merged with for-pci-res-alloc, but for some reason it
->>>>> isn't working.  Only the bridge is detected, not the devices
->>>>> behind it.
->>>>
->>>> Can you post the boot log ? maybe recently reordering patches
->>>> applying sequence break it.
+On Tue, May 22, 2012 at 8:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, May 22, 2012 at 7:43 PM, Jason Baron <jbaron@redhat.com> wrote:
+>> On Tue, May 22, 2012 at 02:21:13PM -0700, Yinghai Lu wrote:
+>>> On Tue, May 22, 2012 at 1:11 PM, Jason Baron <jbaron@redhat.com> wrote:
+>>> > I'm tyring to support bridge hotplug and devices below it in qemu via acpi
+>>> > hotplug. Currently only 1 level or 32 slots are supported. By allowing for a
+>>> > second level, we will be able to support 32^2 devices.
+>>> >
+>>> > If I first hotplug the bridge with no devices intially below it, the hotplug
+>>> > code sets the bridge memory window to 0 and does not increase it when
+>>> > subsequent devices are added below it.
+>>> >
+>>> > Fix this, by calling pci_rescan_bus_bridge_resize(), on the bridge directly
+>>> > below the root to re-size all the birdge windows that may have changed.
+>>> >
+>>> > Signed-off-by: Jason Baron <jbaron@redhat.com>
+>>> > ---
+>>> >  drivers/pci/hotplug/acpiphp_glue.c |    8 ++++++++
+>>> >  1 files changed, 8 insertions(+), 0 deletions(-)
+>>> >
+>>> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>>> > index 806c44f..8960c1e 100644
+>>> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+>>> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>>> > @@ -792,6 +792,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>>> >  {
+>>> >        struct pci_dev *dev;
+>>> >        struct pci_bus *bus = slot->bridge->pci_bus;
+>>> > +       struct pci_bus *rescan_bus;
+>>> >        struct acpiphp_func *func;
+>>> >        int retval = 0;
+>>> >        int num, max, pass;
+>>> > @@ -821,6 +822,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>>> >                }
+>>> >        }
+>>> >
+>>> > +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
+>>> > +       rescan_bus = bus;
+>>> > +       while (rescan_bus->parent && rescan_bus->parent->self)
+>>> > +               rescan_bus = rescan_bus->parent;
+>>> > +       if (rescan_bus->self)
+>>> > +               pci_rescan_bus_bridge_resize(rescan_bus->self);
+>>> > +
 >>>
->>> Never mind, found the problem.
+>>> No, you can not do that.  some parents bus could have other devices
+>>> and driver could be loaded for those devices.
+>>> so can not release resources that are used by those devices to resize
+>>> parent bridges.
+>>>
 >>
->> updated for-pci-res-alloc branch. please check it.
+>> hmmm...this patch also does what I want:
 >>
-> Tested and working fine now.
+>>
+>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> index 806c44f..be63c72 100644
+>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> @@ -821,6 +821,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>>                }
+>>        }
+>>
+>> +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
+>> +       if (bus->self)
+>> +               pci_assign_unassigned_bridge_resources(bus->self);
+>> +
+>>        list_for_each_entry(func, &slot->funcs, sibling)
+>>                acpiphp_bus_add(func);
+>>
+>>
+>> There appears to be a precedant for something very similar in:
+>> drivers/pci/hotplug/pciehp_pci.c:pciehp_configure_device(), where there
+>> is a call to 'pci_assign_unassigned_bridge_resources(), when a new
+>> device is added...
+>
+> the bus could have other devices under that bridge already.
+>
+> so pci_assign_unassigned_bridge_resources() will still try to release
+> the bridge resource and
+> those devices resources.
+>
+> but pciehp we could do that, because it will only have one device
+> under that pcie root port or downstream port.
+>
+> so you can make qemu to support pcie and pciehp.
+>
+> for hot add one hotplug bridge support, we have
+>     bus->self->is_hotplug_bridge to set, so it will have allocate
+> minimum resource.
+>
+> so you also could try to use quirk etc to get that bit set.
+> please check
+> drivers/pci/quirks.c::
+> /* Allow manual resource allocation for PCI hotplug bridges
+>  * via pci=hpmemsize=nnM and pci=hpiosize=nnM parameters. For
+>  * some PCI-PCI hotplug bridges, like PLX 6254 (former HINT HB6),
+>  * kernel fails to allocate resources when hotplug device is
+>  * inserted and PCI bus is rescanned.
+>  */
+> static void __devinit quirk_hotplug_bridge(struct pci_dev *dev)
+> {
+>        dev->is_hotplug_bridge = 1;
+> }
+>
+> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+>
+> but still would prefer you to make qemu to support pciehp.
 
-Can you attach dmesg logs without Yinghai's patches (where I assume it
-doesn't work) and with them (where it *does* work) to the bugzilla?  I
-assume https://bugzilla.kernel.org/show_bug.cgi?id=10461 is still the
-relevant report.
+another solution could be:
 
-I'm confused because I thought your _CRS showed no apertures above
-4GB, and I'm trying to figure out how Yinghai's patches can help if
-that's the case.
+in qemu acpi dsdt, you could set bridge size for new added bridge.
 
-Bjorn
+current pbus_size_mem() will not shrink the old bridge resource size.
+
+Thanks
+
+Yinghai Lu
