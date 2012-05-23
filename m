@@ -1,121 +1,27 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:39878 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107Ab2EZJ5e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 May 2012 05:57:34 -0400
-Received: from huawei.com (szxga05-in [172.24.2.49])
- by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M4M00LDDJNNJS@szxga05-in.huawei.com> for
- linux-pci@vger.kernel.org; Sat, 26 May 2012 17:57:23 +0800 (CST)
-Received: from szxrg01-dlp.huawei.com ([172.24.2.119])
- by szxga05-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M4M000WWJNG8J@szxga05-in.huawei.com> for
- linux-pci@vger.kernel.org; Sat, 26 May 2012 17:57:23 +0800 (CST)
-Date: Sat, 26 May 2012 17:53:57 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH v7 04/10] PCI,
- x86: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
-In-reply-to: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Message-id: <1338026043-3968-5-git-send-email-jiang.liu@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain
-References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1337754877-19759-3-git-send-email-yinghai@kernel.org>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <1337754877-19759-3-git-send-email-yinghai@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Wed, 23 May 2012 08:57:41 -0700
+Message-ID: <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap(), which will be used
-when supporting PCI root bridge hotplug.
+On Tue, May 22, 2012 at 11:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> and will fall back to below 4g if it can not find any above 4g.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- arch/x86/include/asm/pci_x86.h |    2 ++
- arch/x86/pci/mmconfig_32.c     |   15 +++++++++++++++
- arch/x86/pci/mmconfig_64.c     |   22 +++++++++++++++++++++-
- 3 files changed, 38 insertions(+), 1 deletions(-)
+Has this been tested on 32-bit machines without PAE? There might be
+things that just happen to work because their allocations were always
+done bottom-up.
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index b3a5317..df898ce 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -135,6 +135,8 @@ struct pci_mmcfg_region {
- 
- extern int __init pci_mmcfg_arch_init(void);
- extern void __init pci_mmcfg_arch_free(void);
-+extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
-+extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
- extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
- 
- extern struct list_head pci_mmcfg_list;
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index 5dad04a..a22785d 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -141,3 +141,18 @@ int __init pci_mmcfg_arch_init(void)
- void __init pci_mmcfg_arch_free(void)
- {
- }
-+
-+int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
-+{
-+	return 0;
-+}
-+
-+void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
-+{
-+	unsigned long flags;
-+
-+	/* Invalidate the cached mmcfg map entry. */
-+	raw_spin_lock_irqsave(&pci_config_lock, flags);
-+	mmcfg_last_accessed_device = 0;
-+	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
-+}
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index acc48c5..4e05779 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -95,7 +95,7 @@ static const struct pci_raw_ops pci_mmcfg = {
- 	.write =	pci_mmcfg_write,
- };
- 
--static void __iomem * __init mcfg_ioremap(struct pci_mmcfg_region *cfg)
-+static void __iomem * __devinit mcfg_ioremap(struct pci_mmcfg_region *cfg)
- {
- 	void __iomem *addr;
- 	u64 start, size;
-@@ -138,3 +138,23 @@ void __init pci_mmcfg_arch_free(void)
- 		}
- 	}
- }
-+
-+int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
-+{
-+	cfg->virt = mcfg_ioremap(cfg);
-+	if (!cfg->virt) {
-+		printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
-+		       &cfg->res);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
-+{
-+	if (cfg && cfg->virt) {
-+		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
-+		cfg->virt = NULL;
-+	}
-+}
--- 
-1.7.1
+Or do we have something else that protects us from the "oops, we can't
+actually *map* those pages"?
 
-
+                       Linus
