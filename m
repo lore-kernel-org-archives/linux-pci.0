@@ -1,53 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:58920 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357Ab2EYAtY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2012 20:49:24 -0400
-Date: Fri, 25 May 2012 09:49:19 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-	Maciej Sosnowski <maciej.sosnowski@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v2 0/7] dmaengine: enhance dmaengine to support DMA
- device hotplug
-Message-Id: <20120525094919.078fdff9.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-References: <1337003229-9158-1-git-send-email-jiang.liu@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from acsinet15.oracle.com ([141.146.126.227]:34493 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965160Ab2EWGe5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 02:34:57 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 06/11] resource: make find_resource could return just fit resource
+Date: Tue, 22 May 2012 23:34:32 -0700
+Message-Id: <1337754877-19759-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang,
+Find all suitable empty slots and pick one just fit, so we could spare the big
+slot for needed ones later.
 
- Build failed with "Device Drivers/DMA Engine Support/Async_tx: Offload
-  support for the async_tx api" enabled because of undefined symbol. 
- Patch 5/7 needs a fix?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ kernel/resource.c |   60 +++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 56 insertions(+), 4 deletions(-)
 
-(snip)
-  CHK     include/linux/version.h
-  CHK     include/generated/utsrelease.h
-  CALL    scripts/checksyscalls.sh
-  CHK     include/generated/compile.h
-  CHK     include/linux/version.h
-make[2]: Nothing to be done for `all'.
-  Building modules, stage 2.
-  TEST    posttest
-  MODPOST 2201 modules
-Succeed: decoded and checked 1356146 instructions
-  TEST    posttest
-Success: decoded and checked 1000000 random instructions with 0 errors (seed:0x9432fb9e)
-Kernel: arch/x86/boot/bzImage is ready  (#13)
-ERROR: "dmaengine_chan_ref_count" [crypto/async_tx/async_xor.ko] undefined!
-ERROR: "dmaengine_chan_ref_count" [crypto/async_tx/async_raid6_recov.ko] undefined!
-ERROR: "dmaengine_chan_ref_count" [crypto/async_tx/async_pq.ko] undefined!
-ERROR: "dmaengine_chan_ref_count" [crypto/async_tx/async_memcpy.ko] undefined!
-make[1]: *** [__modpost] Error 1
-make: *** [modules] Error 2
-
-Best regards,
-Taku Izumi <izumi.taku@jp.fujitsu.com>
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 41d7050..45ab24d 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -435,7 +435,7 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 			alloc.end = alloc.start + size - 1;
+ 			if (resource_contains(&avail, &alloc)) {
+ 				new->start = alloc.start;
+-				new->end = alloc.end;
++				new->end = !old ? avail.end : alloc.end;
+ 				return 0;
+ 			}
+ 		}
+@@ -450,14 +450,66 @@ next:		if (!this || this->end == root->end)
+ 	return -EBUSY;
+ }
+ 
++struct avail_resource {
++	struct list_head list;
++	struct resource res;
++};
+ /*
+  * Find empty slot in the resource tree given range and alignment.
+  */
+ static int find_resource(struct resource *root, struct resource *new,
+ 			resource_size_t size,
+-			struct resource_constraint  *constraint)
++			struct resource_constraint *constraint, bool fit)
+ {
+-	return  __find_resource(root, NULL, new, size, constraint);
++	int ret = -1;
++	LIST_HEAD(head);
++	struct avail_resource *avail, *tmp;
++	resource_size_t avail_start = 0, avail_size = -1ULL;
++
++	if (!fit) {
++		ret = __find_resource(root, NULL, new, size, constraint);
++		if (!ret)
++			new->end = new->start + size - 1;
++		return ret;
++	}
++
++again:
++	/* find all suitable ones */
++	avail = kzalloc(sizeof(*avail), GFP_KERNEL);
++	if (!avail)
++		goto out;
++
++	avail->res.start = new->start;
++	avail->res.end = new->end;
++	avail->res.flags = new->flags;
++	ret = __find_resource(root, NULL, &avail->res, size, constraint);
++	if (ret || __request_resource(root, &avail->res)) {
++		ret = -EBUSY;
++		kfree(avail);
++		goto out;
++	}
++	/* add to the list */
++	list_add(&avail->list, &head);
++	goto again;
++
++out:
++	/* pick up the smallest one and delete the list */
++	list_for_each_entry_safe(avail, tmp, &head, list) {
++		if (resource_size(&avail->res) < avail_size) {
++			avail_size = resource_size(&avail->res);
++			avail_start = avail->res.start;
++			ret = 0;
++		}
++		list_del(&avail->list);
++		__release_resource(&avail->res);
++		kfree(avail);
++	}
++
++	if (!ret) {
++		new->start = avail_start;
++		new->end = new->start + size - 1;
++	}
++	return ret;
+ }
+ 
+ /**
+@@ -550,7 +602,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 
+ 	if (lock)
+ 		write_lock(&resource_lock);
+-	err = find_resource(root, new, size, &constraint);
++	err = find_resource(root, new, size, &constraint, false);
+ 	if (err >= 0 && __request_resource(root, new))
+ 		err = -EBUSY;
+ 	if (lock)
+-- 
+1.7.7
 
