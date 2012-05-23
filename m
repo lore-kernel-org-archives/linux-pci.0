@@ -1,110 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:41590 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756625Ab2EHQ6X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2012 12:58:23 -0400
-Received: by pbbrp8 with SMTP id rp8so8263954pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 08 May 2012 09:58:23 -0700 (PDT)
-Message-ID: <4FA950A5.6040106@gmail.com>
-Date: Wed, 09 May 2012 00:58:13 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:52255 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885Ab2EWUbY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 16:31:24 -0400
+Received: by dady13 with SMTP id y13so10238601dad.19
+        for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 13:31:24 -0700 (PDT)
 MIME-Version: 1.0
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 0/6] PCI, x86: update MMCFG information when hot-plugging
- PCI host bridges
-References: <1336186830-10765-1-git-send-email-jiang.liu@huawei.com> <20120508172153.b67a8cc6.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120508172153.b67a8cc6.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120523184449.GB23940@redhat.com>
+References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
+	<CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
+	<20120523024313.GA2888@redhat.com>
+	<CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
+	<CAE9FiQVPyjsB=oWp80sgqzkWw8KqX0GHg+csM39juo2N67P2Tg@mail.gmail.com>
+	<20120523155346.GA23940@redhat.com>
+	<CAE9FiQWPpKE5vmzZqw-E_L_0Lt1QpqV=xk=Hu6Stzva5vXk1_g@mail.gmail.com>
+	<20120523184449.GB23940@redhat.com>
+Date: Wed, 23 May 2012 13:31:23 -0700
+Message-ID: <CAE9FiQV91fk3wcpaMG_9uOrhJ1vnLtX=GhyO=gxQ0g_1Y=4u7g@mail.gmail.com>
+Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jason Baron <jbaron@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Taku,
-	Thanks for testing. Could you please help to try the patch below?
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index a8da5d4..2551586 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -708,6 +708,13 @@ int __devinit pci_mmconfig_insert(int segment, int start, int end
-        if (cfg) {
-                if (cfg->start_bus <= start && cfg->end_bus >= end) {
-                        rc = -EEXIST;
-+               } else if (!addr) {
-+                       /*
-+                        * With some legacy BIOSes, the MCFG table only
-+                        * partially covers bus ranges returned by
-+                        * root bridges' _CRS method.
-+                        */
-+                       rc = -EEXIST;
-                } else {
-                        printk(KERN_WARNING PREFIX
-                               "MMCONFIG for domain %04x [bus %02x-%02x] "
+On Wed, May 23, 2012 at 11:44 AM, Jason Baron <jbaron@redhat.com> wrote:
+> On Wed, May 23, 2012 at 10:16:06AM -0700, Yinghai Lu wrote:
+>> On Wed, May 23, 2012 at 8:53 AM, Jason Baron <jbaron@redhat.com> wrote:
+>> >> > but still would prefer you to make qemu to support pciehp.
+>> >>
+>> >> another solution could be:
+>> >>
+>> >> in qemu acpi dsdt, you could set bridge size for new added bridge.
+>> >>
+>> >> current pbus_size_mem() will not shrink the old bridge resource size.
+>> >
+>> > ok, I also tried hard-wiring the bridge io/mem base and limit registers on the
+>> > qemu side. That seems to work without any guest-side hotplug code changes. And
+>> > would seem to be more flexible than putting the limits in acpi.
+>>
+>> that should be acpi asl code or SMI work. and should make sure that
+>> range is not overlapped with resources that are used by other bridges
+>> and pci devices.
+>>
+>
+> Ok. So you are saying to define a 'Name (_CRS, ResourceTemplate() {
+> Memory() IO() })' block for each bridge? The acpi code I currently have,
+> has one 'Device()' definition for each top-level hotplug slot. Would it
+> be ok to have the '_CRS' apply to either one?
+>
+> Also, I'm wondering where in the acpiphp code it picks up the memory/io
+> ranges to configure them as bridge ranges?
+>
+> I also see in ACPIspec40a.pdf, section "9.11 Module Device":
+>
+> "
+> If no _CRS object is present, OSPM will assume that the module device is
+> a simple container object that does not produce the resources consumed by its
+> child devices. In this case, OSPM will assign resources to the child devices as
+> if they were direct children of the module device's parent object.
+> "
+>
+> So not sure if that applies to hotplug, but that is not what acpiphp is
+> doing atm.
 
-On 05/08/2012 04:21 PM, Taku Izumi wrote:
-> 
-> Hi Jiang,
-> 
->  I tested this pachset.
->   (to be honest, as I used Bjorn tree, I changed a little of Patch6/6 
->    to apply to his tree.)
-> 
->  My machine failed to boot after applied your patchset.
->  The reason is:
->     My machine's MCFG table shows that End bus number is 0x13.
-> 
-> [000h 0000  4]                    Signature : "MCFG"    /* Memory Mapped Configuration table */
-> [004h 0004  4]                 Table Length : 00000040
-> [008h 0008  1]                     Revision : 01
-> [009h 0009  1]                     Checksum : 3E
-> [00Ah 0010  6]                       Oem ID : "PTLTD "
-> [010h 0016  8]                 Oem Table ID : "  MCFG  "
-> [018h 0024  4]                 Oem Revision : 06040001
-> [01Ch 0028  4]              Asl Compiler ID : " LTP"
-> [020h 0032  4]        Asl Compiler Revision : 00000000
-> 
-> [024h 0036  8]                     Reserved : 0000000000000000
-> 
-> [02Ch 0044  8]                 Base Address : 00000000F0000000
-> [034h 0052  2]         Segment Group Number : 0000
-> [036h 0054  1]             Start Bus Number : 00
-> [037h 0055  1]               End Bus Number : 13
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> [038h 0056  4]                     Reserved : 00000000
-> 
->    But CRS shows bus range is 0x00 - 0xff. So arch_acpi_pci_root_add() failed
->    because pci_mmconfig_insert() returns not -EEXIST but -EINVAL.
-> 
-> [    0.094236] PCI: MMCONFIG for domain 0000 [bus 00-ff] conflicts with domain 0000 [bus 00-13]
-> 
-> int __devinit pci_mmconfig_insert(int segment, int start, int end, u64 addr)
-> {
-> ..
-> (snip)
-> ...
->         mutex_lock(&pci_mmcfg_lock);
->         cfg = pci_mmconfig_lookup(segment, start);
->         if (cfg) {
->                 if (cfg->start_bus <= start && cfg->end_bus >= end) {
->                         rc = -EEXIST;
->                 } else {
->                         printk(KERN_WARNING PREFIX
->                                "MMCONFIG for domain %04x [bus %02x-%02x] "
->                                "conflicts with domain %04x [bus %02x-%02x]\n",
->                                segment, start, end,
->                                cfg->segment, cfg->start_bus, cfg->end_bus);
->                 }
->                 goto out;
-> 
-> 
->   My impression is my machine's firmware is broken.
->   Howerver my machine boots well without your patchset. So I report as a problem.
-> 
->    
-> Best regards,
-> Taku Izumi <izumi.taku@jp.fujitsu.com>
-> 
+_CRS is only used for pci root bus.
 
+I mean in you _PS0 in your socket.
+
+>
+> Finally, I don't see why putting the bridge window range logic into qemu is a
+> bad solution. Qemu knows memory ranges consumed by various resoures,
+> looking at 'info mtree', so why can't qemu hand out the bridge ranges
+> dynamically? In that way, it can re-size the windows more optimally than
+> something hard-coded into acpi. So to me, it seems like a better
+> approach.
+
+acpi could be dynamically too.
+
+Yinghai
