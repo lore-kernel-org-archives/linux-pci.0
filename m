@@ -1,57 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:59695 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754093Ab2EUR1Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2012 13:27:25 -0400
-Message-ID: <4FBA7AEE.3090402@snewbury.org.uk>
-Date: Mon, 21 May 2012 18:27:10 +0100
-From: Steven Newbury <steve@snewbury.org.uk>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64343 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab2EWSfs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 14:35:48 -0400
+Received: by lbbgm6 with SMTP id gm6so5298498lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 11:35:46 -0700 (PDT)
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Subject: Re: PCI resources above 4GB
-References: <1333968563.5678.19.camel@infinity> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com> <4F8AA0DC.6010902@snewbury.org.uk> <4F8AB312.7060606@snewbury.org.uk> <4F8B04A4.4070507@snewbury.org.uk> <4F8B0609.8010603@snewbury.org.uk> <CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com> <CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com> <CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com> <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com> <4F96770D.2050606@snewbury.org.uk> <4FB227D3.7090002@snewbury.org.uk> <CAE9FiQX48eCS85eWMFxm6fCWgu2zwxvSywtQhsf-35WEvBfJVQ@mail.gmail.com> <4FB4EE99.10509@snewbury.org.uk> <4FB4F039.2040308@snewbury.org.uk> <CAE9FiQUpdVJeF06BtqOKo448n1oH+AMJyC03FpB13=fOdkwM+w@mail.gmail.com> <CAE9FiQWOoEX3H6V7+c+azm8DJieX8bpXRmsYuOE+ZUDJ-p3-yQ@mail.gmail.com> <CAE9FiQU1Bq3xpo0m_eNwBHoxF+oH=pXpg59hQguf_5GpWytyKg@mail.gmail.com>
-In-Reply-To: <CAE9FiQU1Bq3xpo0m_eNwBHoxF+oH=pXpg59hQguf_5GpWytyKg@mail.gmail.com>
+In-Reply-To: <4FBD23BD.6050703@linux.vnet.ibm.com>
+References: <4FBC4C92.7080902@jp.fujitsu.com> <4FBD23BD.6050703@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 23 May 2012 12:35:26 -0600
+Message-ID: <CAErSpo5G1gFXdQwyjm1uhL41G7gLijbVd6gGkz_k8=XsWdcPNw@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] powerpc/PCI: Add pcibios_device_change_notifier
+ for powerpc
+To: Jesse Larrew <jlarrew@linux.vnet.ibm.com>
+Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	jbarnes@virtuousgeek.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Wed, May 23, 2012 at 11:51 AM, Jesse Larrew
+<jlarrew@linux.vnet.ibm.com> wrote:
+> On 05/22/2012 09:33 PM, Hiroo Matsumoto wrote:
+>
+>> +static int pcibios_device_change_notifier(struct notifier_block *nb,
+>> +                                       unsigned long action, void *data)
+>> +{
+>> +     struct pci_dev *dev = to_pci_dev(data);
+>> +
+>
+>
+>
+> In the general case, we don't know what *data contains until we evaluate
+> 'action'. This conversion should probably be moved inside the case:
+> statement.
 
-On 18/05/12 10:08, Yinghai Lu wrote:
-> On Fri, May 18, 2012 at 12:45 AM, Yinghai Lu <yinghai@kernel.org>
-> wrote:
->> On Thu, May 17, 2012 at 9:36 AM, Yinghai Lu <yinghai@kernel.org>
->> wrote:
->>> On Thu, May 17, 2012 at 5:34 AM, Steven Newbury
->>> <steve@snewbury.org.uk> wrote:
->>>> -----BEGIN PGP SIGNED MESSAGE----- Strange, the busn branch
->>>> is merged with for-pci-res-alloc, but for some reason it
->>>> isn't working.  Only the bridge is detected, not the devices
->>>> behind it.
->>> 
->>> Can you post the boot log ? maybe recently reordering patches
->>> applying sequence break it.
->> 
->> Never mind, found the problem.
-> 
-> updated for-pci-res-alloc branch. please check it.
-> 
-Tested and working fine now.  Some random update broke gnome-shell, so
-couldn't test it straight away.  In the end I gave up fixing it and
-reverted to an earlier system snapshot.  btrfs can be very useful! :)
+We registered it with  "bus_register_notifier(&pci_bus_type, ...)" and
+every user of the bus_notifier change passes a "struct device *", so I
+think we do know that we have a PCI device.
 
-There is an outstanding issue with i915 though.  With the moved BAR
-the screen remains blank when i915 loads (should show fbcon) and
-doesn't light up until X initialises. (X produces a modeset I assume.)
- After that everything works fine.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+A future bus_notifier user *could* pass something other than a "struct
+device *", but the pattern Hiroo used here ("struct pci_dev *dev =
+to_pci_dev(data);" before looking at "action") seems pretty common, so
+I don't think it's likely.
 
-iEYEARECAAYFAk+6eu4ACgkQGcb56gMuC61InACfa+SvYmWXxJb3x1YTXOJhQWLE
-0HkAoKcKhk7elSx1LIaxVdrxiBZibzDa
-=MaOP
------END PGP SIGNATURE-----
+>> +     switch (action) {
+>> +     case BUS_NOTIFY_ADD_DEVICE:
+>> +             /* Setup OF node pointer in the device */
+>> +             dev->dev.of_node = pci_device_to_OF_node(dev);
+>> +
+>> +             /* Fixup NUMA node as it may not be setup yet by the generic
+>> +              * code and is needed by the DMA init
+>> +              */
+>> +             set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+>> +
+>> +             /* Hook up default DMA ops */
+>> +             set_dma_ops(&dev->dev, pci_dma_ops);
+>> +             set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
+>> +
+>> +             /* Additional platform DMA/iommu setup */
+>> +             if (ppc_md.pci_dma_dev_setup)
+>> +                     ppc_md.pci_dma_dev_setup(dev);
+>> +
+>> +             /* Read default IRQs and fixup if necessary */
+>> +             pci_read_irq_line(dev);
+>> +             if (ppc_md.pci_irq_fixup)
+>> +                     ppc_md.pci_irq_fixup(dev);
+>> +
+>> +             break;
+>> +     }
+>> +
+>> +     return 0;
+>> +}
+>> +
+>> +static struct notifier_block device_nb = {
+>> +     .notifier_call = pcibios_device_change_notifier,
+>> +};
+>
+>
+>
+> This is just a nit pick, but I think the naming of
+> pcibios_device_change_notifier() is a bit misleading. It doesn't
+> actually notify anything, but instead it *handles* notifications.
+> Perhaps a better name would be pcibios_device_change_handler() or
+> pcibios_device_change_callback()?
+
+Good point.  "_notify()" seems to be a common name, how about
+pci_bus_notify()?  It's static to the file, so it doesn't have to be
+very unique.
+
+I happened to be merging these patches just now, so I'll make this
+change provisionally, pending any more discussion.
+
+Thanks a lot for reviewing this!
+
+Bjorn
