@@ -1,50 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33431 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753209Ab2EAN3p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 May 2012 09:29:45 -0400
-Message-ID: <4F9FE4F6.5070909@openwrt.org>
-Date: Tue, 01 May 2012 15:28:22 +0200
-From: John Crispin <blogic@openwrt.org>
-MIME-Version: 1.0
-To: David Daney <ddaney.cavm@gmail.com>
-CC: Ralf Baechle <ralf@linux-mips.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	linux-mips@linux-mips.org
-Subject: Re: [PATCH] OF: PCI: const usage needed by MIPS
-References: <1335808019-24502-1-git-send-email-blogic@openwrt.org> <4F9ED1DC.3050007@gmail.com>
-In-Reply-To: <4F9ED1DC.3050007@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 10/11] PCI: Sort unassigned resources with correct alignment
+Date: Tue, 22 May 2012 23:34:36 -0700
+Message-Id: <1337754877-19759-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/04/12 19:54, David Daney wrote:
-> On 04/30/2012 10:46 AM, John Crispin wrote:
->> On MIPS we want to call of_irq_map_pci from inside
->>
->> arch/mips/include/asm/pci.h:extern int pcibios_map_irq(
->>                 const struct pci_dev *dev, u8 slot, u8 pin);
->>
->> For this to work we need to change several functions to const usage.
->
-> I think there is a mismatch on this throughout the kernel.
->
-> Properly fixing it requires touching many more places than these.
-> Although I haven't tried it, I wouldn't be surprised if doing this
-> caused warnings to appear in non-MIPS code.
->
-> Ralf had a patch at one point that tried to make this consistent
-> tree-wide, but it is not yet applied.
->
-> David Daney
+For SIZEALIGN type resource, we need to add back add_size in optional
+resource list during __dev_sort_resources(), otherwise those optional
+resources  will get skipped.
 
-Hi,
+SRIOV BAR is specical one, it will always re-read size for BAR.
 
-Ok, lets see what Ralf has to say.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   33 ++++++++++++++++++++++++++-------
+ 1 files changed, 26 insertions(+), 7 deletions(-)
 
-I just tested the patch on x86 with OF enabled and drivers turned on
-that use the API. I did not see any errors appear.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 99bc728..ed32864 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -120,8 +120,25 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	return 0;
+ }
+ 
++static resource_size_t __pci_resource_alignment(
++				struct pci_dev *dev,
++				struct resource *r,
++				struct list_head *realloc_head)
++{
++	resource_size_t r_align, add_size = 0;
++
++	if ((r->flags & IORESOURCE_SIZEALIGN) && realloc_head)
++		add_size = get_res_add_size(realloc_head, r);
++	r->end += add_size;
++	r_align = pci_resource_alignment(dev, r);
++	r->end -= add_size;
++
++	return r_align;
++}
+ /* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
++static void pdev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
++				 struct list_head *head)
+ {
+ 	int i;
+ 
+@@ -139,7 +156,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		if (!(r->flags) || r->parent)
+ 			continue;
+ 
+-		r_align = pci_resource_alignment(dev, r);
++		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+ 				 i, r);
+@@ -159,8 +176,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		list_for_each_entry(dev_res, head, list) {
+ 			resource_size_t align;
+ 
+-			align = pci_resource_alignment(dev_res->dev,
+-							 dev_res->res);
++			align = __pci_resource_alignment(dev_res->dev,
++							 dev_res->res,
++							 realloc_head);
+ 
+ 			if (r_align > align ||
+ 			    (r_align == align &&
+@@ -175,6 +193,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ }
+ 
+ static void __dev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+ 	u16 class = dev->class >> 8;
+@@ -191,7 +210,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
+ 
+-	pdev_sort_resources(dev, head);
++	pdev_sort_resources(dev, realloc_head, head);
+ }
+ 
+ static inline void reset_resource(struct resource *res)
+@@ -387,7 +406,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, &head);
++	__dev_sort_resources(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -400,7 +419,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, &head);
++		__dev_sort_resources(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
+-- 
+1.7.7
 
-Thanks,
-John
