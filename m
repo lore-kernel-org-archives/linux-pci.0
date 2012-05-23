@@ -1,76 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:50651 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755623Ab2EWHVw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 03:21:52 -0400
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:45916 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964911Ab2EWDbb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 23:31:31 -0400
+Received: by pbbrp8 with SMTP id rp8so9259096pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 20:31:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1337754877-19759-4-git-send-email-yinghai@kernel.org>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<1337754877-19759-4-git-send-email-yinghai@kernel.org>
-Date: Wed, 23 May 2012 08:21:51 +0100
-Message-ID: <CAPM=9tyZLm+F1Sq3-ycOS7GmedjiU7DR-GQ=4Hj0BzaAxHHYxQ@mail.gmail.com>
-Subject: Re: [PATCH 03/11] intel-gtt: Read 64bit for gmar_bus_addr
-From: Dave Airlie <airlied@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Airlie <airlied@linux.ie>,
-	Daniel Vetter <daniel@ffwll.ch>
+In-Reply-To: <20120523024313.GA2888@redhat.com>
+References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
+	<CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
+	<20120523024313.GA2888@redhat.com>
+Date: Tue, 22 May 2012 20:31:30 -0700
+Message-ID: <CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
+Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jason Baron <jbaron@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2012 at 7:34 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> That bar could be 64bit pref mem.
+On Tue, May 22, 2012 at 7:43 PM, Jason Baron <jbaron@redhat.com> wrote:
+> On Tue, May 22, 2012 at 02:21:13PM -0700, Yinghai Lu wrote:
+>> On Tue, May 22, 2012 at 1:11 PM, Jason Baron <jbaron@redhat.com> wrote:
+>> > I'm tyring to support bridge hotplug and devices below it in qemu via acpi
+>> > hotplug. Currently only 1 level or 32 slots are supported. By allowing for a
+>> > second level, we will be able to support 32^2 devices.
+>> >
+>> > If I first hotplug the bridge with no devices intially below it, the hotplug
+>> > code sets the bridge memory window to 0 and does not increase it when
+>> > subsequent devices are added below it.
+>> >
+>> > Fix this, by calling pci_rescan_bus_bridge_resize(), on the bridge directly
+>> > below the root to re-size all the birdge windows that may have changed.
+>> >
+>> > Signed-off-by: Jason Baron <jbaron@redhat.com>
+>> > ---
+>> >  drivers/pci/hotplug/acpiphp_glue.c |    8 ++++++++
+>> >  1 files changed, 8 insertions(+), 0 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> > index 806c44f..8960c1e 100644
+>> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> > @@ -792,6 +792,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>> >  {
+>> >        struct pci_dev *dev;
+>> >        struct pci_bus *bus = slot->bridge->pci_bus;
+>> > +       struct pci_bus *rescan_bus;
+>> >        struct acpiphp_func *func;
+>> >        int retval = 0;
+>> >        int num, max, pass;
+>> > @@ -821,6 +822,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>> >                }
+>> >        }
+>> >
+>> > +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
+>> > +       rescan_bus = bus;
+>> > +       while (rescan_bus->parent && rescan_bus->parent->self)
+>> > +               rescan_bus = rescan_bus->parent;
+>> > +       if (rescan_bus->self)
+>> > +               pci_rescan_bus_bridge_resize(rescan_bus->self);
+>> > +
+>>
+>> No, you can not do that.  some parents bus could have other devices
+>> and driver could be loaded for those devices.
+>> so can not release resources that are used by those devices to resize
+>> parent bridges.
+>>
 >
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: David Airlie <airlied@linux.ie>
-
-Adding Daniel Vetter.
-
-Dave.
-> ---
->  drivers/char/agp/intel-gtt.c |   14 ++++++++++----
->  1 files changed, 10 insertions(+), 4 deletions(-)
+> hmmm...this patch also does what I want:
 >
-> diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
-> index 7f025fb..77e150e 100644
-> --- a/drivers/char/agp/intel-gtt.c
-> +++ b/drivers/char/agp/intel-gtt.c
-> @@ -770,16 +770,22 @@ static void i830_write_entry(dma_addr_t addr, unsigned int entry,
->  static bool intel_enable_gtt(void)
->  {
->        u32 gma_addr;
-> +       u32 addr_hi = 0;
->        u8 __iomem *reg;
-> +       int pos;
 >
->        if (INTEL_GTT_GEN <= 2)
-> -               pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
-> -                                     &gma_addr);
-> +               pos = I810_GMADDR;
->        else
-> -               pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
-> -                                     &gma_addr);
-> +               pos = I915_GMADDR;
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 806c44f..be63c72 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -821,6 +821,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>                }
+>        }
+>
+> +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
+> +       if (bus->self)
+> +               pci_assign_unassigned_bridge_resources(bus->self);
 > +
-> +       pci_read_config_dword(intel_private.pcidev, pos, &gma_addr);
-> +
-> +       if (gma_addr & PCI_BASE_ADDRESS_MEM_TYPE_64)
-> +               pci_read_config_dword(intel_private.pcidev, pos + 4, &addr_hi);
+>        list_for_each_entry(func, &slot->funcs, sibling)
+>                acpiphp_bus_add(func);
 >
->        intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
-> +       intel_private.gma_bus_addr |= (u64)addr_hi << 32;
 >
->        if (INTEL_GTT_GEN >= 6)
->            return true;
-> --
-> 1.7.7
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> There appears to be a precedant for something very similar in:
+> drivers/pci/hotplug/pciehp_pci.c:pciehp_configure_device(), where there
+> is a call to 'pci_assign_unassigned_bridge_resources(), when a new
+> device is added...
+
+the bus could have other devices under that bridge already.
+
+so pci_assign_unassigned_bridge_resources() will still try to release
+the bridge resource and
+those devices resources.
+
+but pciehp we could do that, because it will only have one device
+under that pcie root port or downstream port.
+
+so you can make qemu to support pcie and pciehp.
+
+for hot add one hotplug bridge support, we have
+     bus->self->is_hotplug_bridge to set, so it will have allocate
+minimum resource.
+
+so you also could try to use quirk etc to get that bit set.
+please check
+drivers/pci/quirks.c::
+/* Allow manual resource allocation for PCI hotplug bridges
+ * via pci=hpmemsize=nnM and pci=hpiosize=nnM parameters. For
+ * some PCI-PCI hotplug bridges, like PLX 6254 (former HINT HB6),
+ * kernel fails to allocate resources when hotplug device is
+ * inserted and PCI bus is rescanned.
+ */
+static void __devinit quirk_hotplug_bridge(struct pci_dev *dev)
+{
+        dev->is_hotplug_bridge = 1;
+}
+
+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+
+but still would prefer you to make qemu to support pciehp.
+
+Thanks
+
+Yinghai
