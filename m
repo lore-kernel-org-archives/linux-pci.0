@@ -1,43 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:49182 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756161Ab2EVVSR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 17:18:17 -0400
-Received: by dady13 with SMTP id y13so8776792dad.19
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 14:18:17 -0700 (PDT)
+Received: from mail-vc0-f202.google.com ([209.85.220.202]:39724 "EHLO
+	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751656Ab2EWWg4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 18:36:56 -0400
+Received: by vcbfl13 with SMTP id fl13so240925vcb.1
+        for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 15:36:56 -0700 (PDT)
+Subject: [PATCH v3 0/2] archdata init in device_add() notifier
+To: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <monstr@monstr.eu>, benh@kernel.crashing.org,
+	microblaze-uclinux@itee.uq.edu.au, linux-pci@vger.kernel.org,
+	Jesse Larrew <jlarrew@linux.vnet.ibm.com>,
+	jbarnes@virtuousgeek.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linuxppc-dev@lists.ozlabs.org
+Date: Wed, 23 May 2012 16:36:55 -0600
+Message-ID: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX1zUUMr4YM7A=WWvj2cYi2ztyDU6wADw1aucTsV6TH8g@mail.gmail.com>
-References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
-	<CAE9FiQX1zUUMr4YM7A=WWvj2cYi2ztyDU6wADw1aucTsV6TH8g@mail.gmail.com>
-Date: Tue, 22 May 2012 14:18:17 -0700
-Message-ID: <CAE9FiQUMgXdFP6VN45GUPOFOXvpgSj-cRXbe4P6HavRR-+6ciQ@mail.gmail.com>
-Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jason Baron <jbaron@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2012 at 1:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, May 22, 2012 at 1:11 PM, Jason Baron <jbaron@redhat.com> wrote:
->> I'm tyring to support bridge hotplug and devices below it in qemu via acpi
->> hotplug. Currently only 1 level or 32 slots are supported. By allowing for a
->> second level, we will be able to support 32^2 devices.
->>
->> If I first hotplug the bridge with no devices intially below it, the hotplug
->> code sets the bridge memory window to 0 and does not increase it when
->> subsequent devices are added below it.
->>
->> Fix this, by calling pci_rescan_bus_bridge_resize(), on the bridge directly
->> below the root to re-size all the birdge windows that may have changed.
->>
->> Signed-off-by: Jason Baron <jbaron@redhat.com>
->
-> can you check patch in
->
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=patch;h=174dfefc6066bf0af21e0989ad3aa7b1cc3cd46a
->
-never mind, that seems another problem.
+Here's what I put in my "for-3.6" branch for now.  We can still change
+it, so let me know if you see any problems.
 
-Yinghai
+I reworked the changelogs, changed the notification function name per
+Jesse, folded the one-line pcibios_setup_bus_notifier() into the only
+caller (on microblaze), and changed it from __devinit to __init (on
+powerpc) since it now has nothing to do with hotplug.
+
+Thank you very much for doing this work, Matsumoto-san.  I hope to
+eventually get rid of pcibios_fixup_bus() altogether, and this is a
+significant step in that direction.
+
+Bjorn
+---
+
+Hiroo Matsumoto (2):
+      powerpc/PCI: move DMA & IRQ init to device_add() notification path
+      microblaze/PCI: move DMA & IRQ init to device_add() notification path
+
+
+ arch/microblaze/include/asm/pci.h          |    1 
+ arch/microblaze/pci/pci-common.c           |   62 +++++++++++---------
+ arch/powerpc/include/asm/pci.h             |    2 -
+ arch/powerpc/kernel/pci-common.c           |   87 ++++++++++++++--------------
+ arch/powerpc/kernel/pci_32.c               |    2 +
+ arch/powerpc/kernel/pci_64.c               |    2 +
+ arch/powerpc/kernel/pci_of_scan.c          |    1 
+ arch/powerpc/platforms/pseries/pci_dlpar.c |    1 
+ drivers/pci/pci.c                          |    5 --
+ drivers/pcmcia/cardbus.c                   |    3 -
+ include/linux/pci.h                        |    3 -
+ 11 files changed, 83 insertions(+), 86 deletions(-)
