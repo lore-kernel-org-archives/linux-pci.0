@@ -1,79 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 1 May 2012 22:08:33 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 05/19] PCI: correctly flush workqueue when destroy
- pcie hotplug controller
-Message-ID: <20120502050833.GC23579@kroah.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
- <1335539820-11232-6-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:62463 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958Ab2EWF3E convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 01:29:04 -0400
+Received: by pbbrp8 with SMTP id rp8so9371227pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 22:29:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1335539820-11232-6-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAFeW=pZiEODGx09=HaJDWujmCc92wCKt2fhZM03yNDb9CSs3gA@mail.gmail.com>
+References: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
+	<20120523043511.13449.22006.stgit@bhelgaas.mtv.corp.google.com>
+	<CAE9FiQVs0U62NRxkDYdOC67EUiEBu1f5ojGxGXkdbt0O6XO4uQ@mail.gmail.com>
+	<CAFeW=pZiEODGx09=HaJDWujmCc92wCKt2fhZM03yNDb9CSs3gA@mail.gmail.com>
+Date: Tue, 22 May 2012 22:29:04 -0700
+Message-ID: <CAE9FiQWJcxbUvOcYf-mZYThKMogYzYUwk+w-Oc43dEU9KLA3oQ@mail.gmail.com>
+Subject: Re: [PATCH v7 2/2] PCI: acpiphp: remove all functions in slot, even
+ without ACPI _EJx
+From: Yinghai Lu <yinghai@kernel.org>
+To: Amos Kong <kongjianjun@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	liuj97@gmail.com, qemu-devel@nongnu.org, jbarnes@virtuousgeek.org,
+	kaneshige.kenji@jp.fujitsu.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:16:46PM +0800, Jiang Liu wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
-> 
-> When destroying a PCIe hotplug controller, all work items associated with
-> that controller should be flushed.  Function pcie_cleanup_slot() calls
-> cancel_delayed_work() and flush_workqueue() to achieve that.
-> Function flush_workqueue() will flush all work items already submitted,
-> but new work items submitted by those already submitted work items may
-> still be in live state when returning from flush_workqueue().
-> 
-> For the extreme case, pciehp driver may expierence following calling path:
-> 1) pcie_isr() -> pciehp_handle_xxx() -> queue_interrupt_event()->queue_work()
-> 2) interrupt_event_handler() -> handle_button_press_event() ->
->    queue_delayed_work()
-> 3) pciehp_queue_pushbutton_work() -> queue_work()
-> 
-> So enhance pcie_cleanup_slot() to correctly flush workqueue when destroying
-> PCIe hotplug controller.
-> 
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |   14 +++++++++++++-
->  1 files changed, 13 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index a960fae..98b775f 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -889,8 +889,20 @@ static int pcie_init_slot(struct controller *ctrl)
->  static void pcie_cleanup_slot(struct controller *ctrl)
->  {
->  	struct slot *slot = ctrl->slot;
-> -	cancel_delayed_work(&slot->work);
-> +
-> +	/*
-> +	 * Following workqueue flushing logic is to deal with the special
-> +	 * call path:
-> +	 * 1) pcie_isr() -> pciehp_handle_xxx() ->
-> +	 *    queue_interrupt_event(pciehp_wq_event)->queue_work(pciehp_wq)
-> +	 * 2) interrupt_event_handler() -> handle_button_press_event() ->
-> +	 *    queue_delayed_work(pciehp_wq)
-> +	 * 3) pciehp_queue_pushbutton_work() -> queue_work(pciehp_wq)
-> +	 */
->  	flush_workqueue(pciehp_wq);
-> +	cancel_delayed_work_sync(&slot->work);
-> +	flush_workqueue(pciehp_wq);
+On Tue, May 22, 2012 at 10:15 PM, Amos Kong <kongjianjun@gmail.com> wrote:
+> Attached the v7,  test passed.
 
-Why just flush it twice?  Why not three times?
+would be better to have break...
 
-Like the magic "sync && sync && sync" invocation long typed by
-sysadmins.
++static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
++{
++	struct pci_bus *bus = slot->bridge->pci_bus;
++	struct pci_dev *dev;
++	int ret = NULL;
++
++	down_read(&pci_bus_sem);
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (PCI_SLOT(dev->devfn) == slot->device)
++			ret = pci_dev_get(dev);
++	up_read(&pci_bus_sem);
++
++	return ret;
++}
 
-This really does not feel right, sorry.
+===>
 
-Odds are the whole workqueue path needs to be reworked here, right?
 
-greg k-h
++static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
++{
++	struct pci_bus *bus = slot->bridge->pci_bus;
++	struct pci_dev *dev;
++	int ret = NULL;
++
++	down_read(&pci_bus_sem);
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (PCI_SLOT(dev->devfn) == slot->device) {
++			ret = pci_dev_get(dev);
++                      break;
++              }
++	up_read(&pci_bus_sem);
++
++	return ret;
++}
