@@ -1,101 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2 13/19] PCI: trivial code clean up in cpci_hotplug_core.c
-Date: Fri, 27 Apr 2012 23:16:54 +0800
-Message-Id: <1335539820-11232-14-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:59649 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872Ab2EWRw4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 13:52:56 -0400
+Received: from /spool/local
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <jlarrew@linux.vnet.ibm.com>;
+	Wed, 23 May 2012 11:52:55 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id BCBCC3E40047
+	for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 11:52:13 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q4NHq0Yc179366
+	for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 11:52:00 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q4NHpxTq026768
+	for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 11:52:00 -0600
+Message-ID: <4FBD23BD.6050703@linux.vnet.ibm.com>
+Date: Wed, 23 May 2012 12:51:57 -0500
+From: Jesse Larrew <jlarrew@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, jbarnes@virtuousgeek.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [PATCH v2 1/2] powerpc/PCI: Add pcibios_device_change_notifier
+ for powerpc
+References: <4FBC4C92.7080902@jp.fujitsu.com>
+In-Reply-To: <4FBC4C92.7080902@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On 05/22/2012 09:33 PM, Hiroo Matsumoto wrote:
 
-1) get rid of redundant lock operations in cpcihp_core.
-2) return suitable error code instead of -1.
+> +static int pcibios_device_change_notifier(struct notifier_block *nb,
+> +					  unsigned long action, void *data)
+> +{
+> +	struct pci_dev *dev = to_pci_dev(data);
+> +
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/cpci_hotplug_core.c |   16 +++-------------
- 1 files changed, 3 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
-index 3fadf2f..7898023 100644
---- a/drivers/pci/hotplug/cpci_hotplug_core.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_core.c
-@@ -304,7 +304,7 @@ cpci_hp_unregister_bus(struct pci_bus *bus)
- 	down_write(&list_rwsem);
- 	if (!slots) {
- 		up_write(&list_rwsem);
--		return -1;
-+		return -ENODEV;
- 	}
- 	list_for_each_entry_safe(slot, tmp, &slot_list, slot_list) {
- 		if (slot->bus == bus) {
-@@ -357,11 +357,6 @@ init_slots(int clear_ins)
- 	struct pci_dev* dev;
- 
- 	dbg("%s - enter", __func__);
--	down_read(&list_rwsem);
--	if (!slots) {
--		up_read(&list_rwsem);
--		return -1;
--	}
- 	list_for_each_entry(slot, &slot_list, slot_list) {
- 		dbg("%s - looking at slot %s", __func__, slot_name(slot));
- 		if (clear_ins && cpci_check_and_clear_ins(slot))
-@@ -376,7 +371,6 @@ init_slots(int clear_ins)
- 			slot->dev = dev;
- 		}
- 	}
--	up_read(&list_rwsem);
- 	dbg("%s - exit", __func__);
- 	return 0;
- }
-@@ -585,7 +579,7 @@ cpci_hp_register_controller(struct cpci_hp_controller *new_controller)
- 	int status = 0;
- 
- 	if (controller)
--		return -1;
-+		return -EBUSY;
- 	if (!(new_controller && new_controller->ops))
- 		return -EINVAL;
- 	if (new_controller->irq) {
-@@ -620,15 +614,11 @@ cleanup_slots(void)
- 	 * and free up all memory that we had allocated.
- 	 */
- 	down_write(&list_rwsem);
--	if (!slots)
--		goto cleanup_null;
- 	list_for_each_entry_safe(slot, tmp, &slot_list, slot_list) {
- 		list_del(&slot->slot_list);
- 		pci_hp_deregister(slot->hotplug_slot);
- 	}
--cleanup_null:
- 	up_write(&list_rwsem);
--	return;
- }
- 
- int
-@@ -663,9 +653,9 @@ cpci_hp_start(void)
- 		up_read(&list_rwsem);
- 		return -ENODEV;
- 	}
-+	status = init_slots(first);
- 	up_read(&list_rwsem);
- 
--	status = init_slots(first);
- 	if (first)
- 		first = 0;
- 	if (status)
--- 
-1.7.5.4
+
+In the general case, we don't know what *data contains until we evaluate
+'action'. This conversion should probably be moved inside the case:
+statement.
+
+> +	switch (action) {
+> +	case BUS_NOTIFY_ADD_DEVICE:
+> +		/* Setup OF node pointer in the device */
+> +		dev->dev.of_node = pci_device_to_OF_node(dev);
+> +
+> +		/* Fixup NUMA node as it may not be setup yet by the generic
+> +		 * code and is needed by the DMA init
+> +		 */
+> +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+> +
+> +		/* Hook up default DMA ops */
+> +		set_dma_ops(&dev->dev, pci_dma_ops);
+> +		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
+> +
+> +		/* Additional platform DMA/iommu setup */
+> +		if (ppc_md.pci_dma_dev_setup)
+> +			ppc_md.pci_dma_dev_setup(dev);
+> +
+> +		/* Read default IRQs and fixup if necessary */
+> +		pci_read_irq_line(dev);
+> +		if (ppc_md.pci_irq_fixup)
+> +			ppc_md.pci_irq_fixup(dev);
+> +
+> +		break;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static struct notifier_block device_nb = {
+> +	.notifier_call = pcibios_device_change_notifier,
+> +};
+
+
+
+This is just a nit pick, but I think the naming of
+pcibios_device_change_notifier() is a bit misleading. It doesn't
+actually notify anything, but instead it *handles* notifications.
+Perhaps a better name would be pcibios_device_change_handler() or
+pcibios_device_change_callback()?
+
+Sincerely,
+
+Jesse Larrew
+Software Engineer, Linux on Power Kernel Team
+IBM Linux Technology Center
+Phone: (512) 973-2052 (T/L: 363-2052)
+jlarrew@linux.vnet.ibm.com
 
