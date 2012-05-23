@@ -1,59 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10708 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932692Ab2EWPMI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 11:12:08 -0400
-From: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
-To: Jiang Liu <liuj97@gmail.com>
-CC: "Williams, Dan J" <dan.j.williams@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Keping Chen <chenkeping@huawei.com>
-Subject: RE: [RESEND,PATCH] DCA, x86: fix invalid memory access in DCA core
-Date: Wed, 23 May 2012 15:11:48 +0000
-Message-ID: <436EC33EF05C3442BBF5497FC9483FF416274D2A@IRSMSX101.ger.corp.intel.com>
-References: <1336406288-9479-1-git-send-email-jiang.liu@huawei.com>
- <436EC33EF05C3442BBF5497FC9483FF41626EACA@IRSMSX101.ger.corp.intel.com>
- <4FAB20FB.6070508@gmail.com>
- <436EC33EF05C3442BBF5497FC9483FF4162732ED@IRSMSX101.ger.corp.intel.com>
- <4FB65D0E.9060004@gmail.com>
-In-Reply-To: <4FB65D0E.9060004@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:50651 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755623Ab2EWHVw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 03:21:52 -0400
 MIME-Version: 1.0
+In-Reply-To: <1337754877-19759-4-git-send-email-yinghai@kernel.org>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+	<1337754877-19759-4-git-send-email-yinghai@kernel.org>
+Date: Wed, 23 May 2012 08:21:51 +0100
+Message-ID: <CAPM=9tyZLm+F1Sq3-ycOS7GmedjiU7DR-GQ=4Hj0BzaAxHHYxQ@mail.gmail.com>
+Subject: Re: [PATCH 03/11] intel-gtt: Read 64bit for gmar_bus_addr
+From: Dave Airlie <airlied@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel@ffwll.ch>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2012 4:31 PM, Jiang Liu <liuj97@gmail.com> wrote:
+On Wed, May 23, 2012 at 7:34 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> That bar could be 64bit pref mem.
 >
->On 05/18/2012 10:10 PM, Sosnowski, Maciej wrote:
->> On Thu, May 07, May 10, 2012 3:59 AM, Jiang Liu <liuj97@gmail.com> wrote:
->>>
->>> Hi Maciej,
->>> 	I feel we may also need to tune the multiple IOH support in DCA.
->>> Multiple IOH support is disabled for CB3.0 devices, how about CB3.1
->devices
->>> in Ivrbridge or SandyBridge? Does the hardware limitation still exist? Or
->>> could we support multiple IOHs with IvyBridge and SandyBridge?
->>> 	If multiple IOH is supported, I think we should move the logic to
->>> disable multiple IOH support for CB3.0 from DCA core into ioatdma. I have
->>> also prepared two patches for that two.
->>> 	Thanks!
->>>
->>
->> At this point I do not think we would need to tune multiple IOH for DCA.
->> The limitation you mention applies only to CB3.0. I do not think DCA is
->supported
->> with Sandy Bridge / Ivy Bridge regardless of multi-IOH case but let me
->confirm it
->> yet.
->It seems that Intel introduces DDIO technology for IvyBridge. Does it replace
->DCA
->technology on new platforms?
->Thanks!
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: David Airlie <airlied@linux.ie>
 
-Yes, in general DDIO is used instead of DCA on new platforms.
-Note however that DDIO is supported in Xeon E5 only, not in Xeon E3.
+Adding Daniel Vetter.
 
-Thanks,
-Maciej
+Dave.
+> ---
+>  drivers/char/agp/intel-gtt.c |   14 ++++++++++----
+>  1 files changed, 10 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+> index 7f025fb..77e150e 100644
+> --- a/drivers/char/agp/intel-gtt.c
+> +++ b/drivers/char/agp/intel-gtt.c
+> @@ -770,16 +770,22 @@ static void i830_write_entry(dma_addr_t addr, unsigned int entry,
+>  static bool intel_enable_gtt(void)
+>  {
+>        u32 gma_addr;
+> +       u32 addr_hi = 0;
+>        u8 __iomem *reg;
+> +       int pos;
+>
+>        if (INTEL_GTT_GEN <= 2)
+> -               pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
+> -                                     &gma_addr);
+> +               pos = I810_GMADDR;
+>        else
+> -               pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
+> -                                     &gma_addr);
+> +               pos = I915_GMADDR;
+> +
+> +       pci_read_config_dword(intel_private.pcidev, pos, &gma_addr);
+> +
+> +       if (gma_addr & PCI_BASE_ADDRESS_MEM_TYPE_64)
+> +               pci_read_config_dword(intel_private.pcidev, pos + 4, &addr_hi);
+>
+>        intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
+> +       intel_private.gma_bus_addr |= (u64)addr_hi << 32;
+>
+>        if (INTEL_GTT_GEN >= 6)
+>            return true;
+> --
+> 1.7.7
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
