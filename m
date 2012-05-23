@@ -1,101 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1723 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933646Ab2EWTIl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 May 2012 15:08:41 -0400
-Date: Wed, 23 May 2012 22:08:42 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Jason Baron <jbaron@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
-Message-ID: <20120523190841.GC32207@redhat.com>
-References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
- <CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
- <20120523024313.GA2888@redhat.com>
- <CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
- <CAE9FiQVPyjsB=oWp80sgqzkWw8KqX0GHg+csM39juo2N67P2Tg@mail.gmail.com>
- <20120523155346.GA23940@redhat.com>
- <CAE9FiQWPpKE5vmzZqw-E_L_0Lt1QpqV=xk=Hu6Stzva5vXk1_g@mail.gmail.com>
- <20120523184449.GB23940@redhat.com>
+Received: from mail-lb0-f202.google.com ([209.85.217.202]:42348 "EHLO
+	mail-lb0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373Ab2EWEfO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 00:35:14 -0400
+Received: by lbbgp10 with SMTP id gp10so394685lbb.1
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 21:35:12 -0700 (PDT)
+Subject: [PATCH v6 2/2] PCI: acpiphp: remove all functions in slot,
+	even without ACPI _EJx
+To: Amos Kong <kongjianjun@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, liuj97@gmail.com, qemu-devel@nongnu.org,
+	jbarnes@virtuousgeek.org, kaneshige.kenji@jp.fujitsu.com
+Date: Tue, 22 May 2012 22:35:11 -0600
+Message-ID: <20120523043511.13449.22006.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120523184449.GB23940@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2012 at 02:44:49PM -0400, Jason Baron wrote:
-> On Wed, May 23, 2012 at 10:16:06AM -0700, Yinghai Lu wrote:
-> > On Wed, May 23, 2012 at 8:53 AM, Jason Baron <jbaron@redhat.com> wrote:
-> > >> > but still would prefer you to make qemu to support pciehp.
-> > >>
-> > >> another solution could be:
-> > >>
-> > >> in qemu acpi dsdt, you could set bridge size for new added bridge.
-> > >>
-> > >> current pbus_size_mem() will not shrink the old bridge resource size.
-> > >
-> > > ok, I also tried hard-wiring the bridge io/mem base and limit registers on the
-> > > qemu side. That seems to work without any guest-side hotplug code changes. And
-> > > would seem to be more flexible than putting the limits in acpi.
-> > 
-> > that should be acpi asl code or SMI work. and should make sure that
-> > range is not overlapped with resources that are used by other bridges
-> > and pci devices.
-> > 
-> 
-> Ok. So you are saying to define a 'Name (_CRS, ResourceTemplate() {
-> Memory() IO() })' block for each bridge?
+From: Amos Kong <kongjianjun@gmail.com>
 
-We are talking about hotplugging bridges.
-This sounds strange.
+When we add a device with acpiphp, we enumerate all functions in the
+slot with pci_scan_slot(), regardless of whether they have associated
+ACPI methods such as _EJ0.
 
-> The acpi code I currently have,
-> has one 'Device()' definition for each top-level hotplug slot. Would it
-> be ok to have the '_CRS' apply to either one?
-> 
-> Also, I'm wondering where in the acpiphp code it picks up the memory/io
-> ranges to configure them as bridge ranges?
-> 
-> I also see in ACPIspec40a.pdf, section "9.11 Module Device":
-> 
-> "
-> If no _CRS object is present, OSPM will assume that the module device is
-> a simple container object that does not produce the resources consumed by its
-> child devices. In this case, OSPM will assign resources to the child devices as
-> if they were direct children of the module device's parent object.
-> "
-> 
-> So not sure if that applies to hotplug, but that is not what acpiphp is
-> doing atm.
-> 
-> Finally, I don't see why putting the bridge window range logic into qemu is a
-> bad solution. Qemu knows memory ranges consumed by various resoures,
-> looking at 'info mtree', so why can't qemu hand out the bridge ranges
-> dynamically? In that way, it can re-size the windows more optimally than
-> something hard-coded into acpi. So to me, it seems like a better
-> approach.
-> 
-> Thanks,
-> 
-> -Jason
+When removing the device, we previously removed only the functions
+with those ACPI methods.  This patch makes the remove symmetric with the
+add: we remove all functions in the slot, whether they have associated
+ACPI methods or not.
 
-Because this is not how real hardware behaves.
+With qemu-kvm and SeaBIOS, we can build a multi-function device where
+only function 0 has _EJ0 and _ADR (see bugzilla below).  Removing and
+re-adding that device works correctly with Windows guests.  This patch
+makes it also work in Linux guests.
 
-Fundamentally BARs are under guest control.
-So while you are handing out memory for the bridges you would have to
-tiptoe around guest assigned BARs.
+[bhelgaas: restructure loop iteration, pull out of slot->funcs loop]
+Reference: https://bugzilla.kernel.org/show_bug.cgi?id=43219
+Signed-off-by: Amos Kong <kongjianjun@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   39 +++++++++++++++++++++++++++---------
+ 1 files changed, 29 insertions(+), 10 deletions(-)
 
-Also what happens after reboot? bios currently
-assigns memory to bridges that are present on boot.
-So this makes it even messier as who assigns memory
-depends on whether device is hotplugged.
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index c8f9991..9aff4f0 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -878,6 +878,21 @@ static void disable_bridges(struct pci_bus *bus)
+ 	}
+ }
+ 
++/* return first device in slot, acquiring a reference on it */
++static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
++{
++	struct pci_bus *bus = slot->bridge->pci_bus;
++	struct pci_dev *dev;
++
++	down_read(&pci_bus_sem);
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (PCI_SLOT(dev->devfn) == slot->device)
++			return pci_dev_get(dev);
++	up_read(&pci_bus_sem);
++
++	return NULL;
++}
++
+ /**
+  * disable_device - disable a slot
+  * @slot: ACPI PHP slot
+@@ -902,18 +917,22 @@ static int disable_device(struct acpiphp_slot *slot)
+ 						(u32)1, NULL, NULL);
+ 			func->bridge = NULL;
+ 		}
++	}
+ 
+-		pdev = pci_get_slot(slot->bridge->pci_bus,
+-				    PCI_DEVFN(slot->device, func->function));
+-		if (pdev) {
+-			pci_stop_bus_device(pdev);
+-			if (pdev->subordinate) {
+-				disable_bridges(pdev->subordinate);
+-				pci_disable_device(pdev);
+-			}
+-			__pci_remove_bus_device(pdev);
+-			pci_dev_put(pdev);
++	/*
++	 * enable_device() enumerates all functions in this device via
++	 * pci_scan_slot(), whether they have associated ACPI hotplug
++	 * methods (_EJ0, etc.) or not.  Therefore, we remove all functions
++	 * here.
++	 */
++	while ((pdev = dev_in_slot(slot))) {
++		pci_stop_bus_device(pdev);
++		if (pdev->subordinate) {
++			disable_bridges(pdev->subordinate);
++			pci_disable_device(pdev);
+ 		}
++		__pci_remove_bus_device(pdev);
++		pci_dev_put(pdev);
+ 	}
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
 
-Cleaner to have guest do it.
-
-I think Windows even can even rebalance BARs
-as needed. So this is just a linux bug that needs
-to be fixed.
-
--- 
-MST
