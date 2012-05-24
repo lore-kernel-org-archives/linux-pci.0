@@ -1,84 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:51540 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757813Ab2EUUKT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2012 16:10:19 -0400
-Date: Mon, 21 May 2012 22:08:30 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Rob Allen <ra-kernel@hotmail.co.uk>
-Cc: Clemens Ladisch <clemens@ladisch.de>,
-	Yinghai Lu <yinghai@kernel.org>, Ram Pai <linuxram@us.ibm.com>,
-	linux1394-devel@lists.sourceforge.net, linux-pci@vger.kernel.org
-Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
-Message-ID: <20120521220830.3732cc8d@stein>
-In-Reply-To: <BLU0-SMTP47479D78AA811CB0B224ADFB71D0@phx.gbl>
-References: <bug-43244-4803@https.bugzilla.kernel.org/>
-	<20120513221357.7574ae79@stein>
-	<4FB0A6F6.9050504@ladisch.de>
-	<CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com>
-	<BLU0-SMTP12B809D527F768CCC42B18B7180@phx.gbl>
-	<4FB3B159.2090401@ladisch.de>
-	<BLU0-SMTP47479D78AA811CB0B224ADFB71D0@phx.gbl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:65354 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752022Ab2EXPal convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 May 2012 11:30:41 -0400
+Received: by lahd3 with SMTP id d3so6007743lah.19
+        for <linux-pci@vger.kernel.org>; Thu, 24 May 2012 08:30:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFeW=pazkYZ9bYZ1uG3hXxSzUC5bD3nOo2KDHLir6=Q7J-O5iw@mail.gmail.com>
+References: <20120523043347.13449.1063.stgit@bhelgaas.mtv.corp.google.com>
+ <20120523043511.13449.22006.stgit@bhelgaas.mtv.corp.google.com>
+ <CAE9FiQVs0U62NRxkDYdOC67EUiEBu1f5ojGxGXkdbt0O6XO4uQ@mail.gmail.com>
+ <CAFeW=pZiEODGx09=HaJDWujmCc92wCKt2fhZM03yNDb9CSs3gA@mail.gmail.com>
+ <CAE9FiQWJcxbUvOcYf-mZYThKMogYzYUwk+w-Oc43dEU9KLA3oQ@mail.gmail.com> <CAFeW=pazkYZ9bYZ1uG3hXxSzUC5bD3nOo2KDHLir6=Q7J-O5iw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 24 May 2012 09:30:19 -0600
+Message-ID: <CAErSpo7A27_9GuUX6qT2WQEBaDcoUtLbjBE1LLenkPuatkiZQg@mail.gmail.com>
+Subject: Re: [PATCH v8 2/2] PCI: acpiphp: remove all functions in slot, even
+ without ACPI _EJx
+To: Amos Kong <kongjianjun@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	liuj97@gmail.com, qemu-devel@nongnu.org, jbarnes@virtuousgeek.org,
+	kaneshige.kenji@jp.fujitsu.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On May 21 Rob Allen wrote:
-> On 16/05/12 14:53, Clemens Ladisch wrote:
-> > Rob Allen wrote:
-> >> On 14/05/12 07:39, Yinghai Lu wrote:
-> >>> can you post full log with pci debug enabled with lastest upsteam kernel?
-> >>
-> >> I'm happy to do that, although I need with some guidance on what I need to
-> >> enable to get the required output.
-> >
-> > For Ubuntu, see<https://wiki.ubuntu.com/KernelTeam/GitKernelBuild>.
-> >
-> > To enable PCI debugging, enable the configuration options
-> > CONFIG_DEBUG_KERNEL and CONFIG_PCI_DEBUG.
-> 
-> Thanks. I've built the kernel and I can replicate the failure.
-> 
-> However, I'm having trouble getting the log output. As soon as I see the 
-> "firewire_ohci: Failed to set Link Power Status" message, the machine 
-> locks up. After cycling the power, that log output isn't anywhere in 
-> /var/log anywhere (even if I booted with 'rw').
-> 
-> After some searching, I guess a decent route is to output to a serial 
-> console. The machine in question doesn't have a serial port, although I 
-> have a PCI-e serial card somewhere. (Is that likely to work so early in 
-> the boot process?)
-> 
-> Can you suggest the best way to get the log output?
+On Wed, May 23, 2012 at 1:03 AM, Amos Kong <kongjianjun@gmail.com> wrote:
+> On Wed, May 23, 2012 at 1:29 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, May 22, 2012 at 10:15 PM, Amos Kong <kongjianjun@gmail.com> wrote:
+>>> Attached the v7,  test passed.
+>>
+>> would be better to have break...
+>
+> Yeah. Otherwise, it will delete from the last function.
+> Attached v8, test passed.
+>
+>
+>> +static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
+>> +{
+>> +       struct pci_bus *bus = slot->bridge->pci_bus;
+>> +       struct pci_dev *dev;
+>> +       int ret = NULL;
+>> +
+>> +       down_read(&pci_bus_sem);
+>> +       list_for_each_entry(dev, &bus->devices, bus_list)
+>> +               if (PCI_SLOT(dev->devfn) == slot->device)
+>> +                       ret = pci_dev_get(dev);
+>> +       up_read(&pci_bus_sem);
+>> +
+>> +       return ret;
+>> +}
+>>
+>> ===>
+>>
+>>
+>> +static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
+>> +{
+>> +       struct pci_bus *bus = slot->bridge->pci_bus;
+>> +       struct pci_dev *dev;
+>> +       int ret = NULL;
+>> +
+>> +       down_read(&pci_bus_sem);
+>> +       list_for_each_entry(dev, &bus->devices, bus_list)
+>> +               if (PCI_SLOT(dev->devfn) == slot->device) {
+>> +                       ret = pci_dev_get(dev);
+>> +                      break;
+>> +              }
+>> +       up_read(&pci_bus_sem);
+>> +
+>> +       return ret;
+>> +}
 
-If there is anything more than that on the text console when the PC locks
-up and you have a digital camera at your disposal, just take a photograph,
-attach it to bugzilla, and post the link.
+I applied the v6 1/2 and this v8 patch to my "for-3.6" branch.
 
-If there is nothing interesting to photograph, then you could try
-netconsole.  You need a second PC on which you configure syslogd to
-receive log messages from the test PC.  On the test PC, you need to have
-netconsole loaded before the lockup and need to specify the target.
+Thanks for fixing this, Amos!  It's another step towards rationalizing
+all the hotplug drivers we have.
 
-Here is what works for me:
-
-On the logging PC at 192.168.0.37:
-----------------------------------
-$ tail -3 /etc/syslog-ng/syslog-ng.conf 
-# netconsole:
-source net { udp(ip("192.168.0.37") port(6666)); };
-log { source(net); destination(messages); };
-
-On the test PC:
----------------
-# alias netconsole
-alias netconsole='modprobe netconsole netconsole="@/,@192.168.0.37/" && dmesg -n 7'
-
-Since you crash at boot, I guess it's easiest to link netconsole
-statically into the kernel and of course specify the parameter in the
-bootloader's kernel command line.
--- 
-Stefan Richter
--=====-===-- -=-= =-=-=
-http://arcgraph.de/sr/
+Bjorn
