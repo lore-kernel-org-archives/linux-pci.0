@@ -1,87 +1,246 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 05/11] resources: Split out __allocate_resource()
-Date: Tue, 22 May 2012 23:34:31 -0700
-Message-Id: <1337754877-19759-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:21360 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965389Ab2EXVbM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 May 2012 17:31:12 -0400
+Message-ID: <4FBEA887.6010908@redhat.com>
+Date: Thu, 24 May 2012 17:30:47 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH v2 05/13] pci: Add ACS validation utility
+References: <20120522043607.5871.11340.stgit@bling.home> <20120522050508.5871.96269.stgit@bling.home>
+In-Reply-To: <20120522050508.5871.96269.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will take bool lock, so we could use it in other functions that
-hold the resource lock.
+On 05/22/2012 01:05 AM, Alex Williamson wrote:
+> In a PCI environment, transactions aren't always required to reach
+> the root bus before being re-routed.  Intermediate switches between
+> an endpoint and the root bus can redirect DMA back downstream before
+> things like IOMMUs have a chance to intervene.  Legacy PCI is always
+> susceptible to this as it operates on a shared bus.  PCIe added a
+> new capability to describe and control this behavior, Access Control
+> Services, or ACS.  The utility function pci_acs_enabled() allows us
+> to test the ACS capabilities of an individual devices against a set
+> of flags while pci_acs_path_enabled() tests a complete path from
+> a given downstream device up to the specified upstream device.  We
+> also include the ability to add device specific tests as it's
+> likely we'll see devices that do no implement ACS, but want to
+> indicate support for various capabilities in this space.
+>
+> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
+> ---
+>
+>   drivers/pci/pci.c    |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>   drivers/pci/quirks.c |   29 +++++++++++++++++++
+>   include/linux/pci.h  |   10 ++++++-
+>   3 files changed, 114 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 111569c..ab6c2a6 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2359,6 +2359,82 @@ void pci_enable_acs(struct pci_dev *dev)
+>   }
+>
+>   /**
+> + * pci_acs_enable - test ACS against required flags for a given device
+typo:               ^^^ missing 'd'
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
----
- kernel/resource.c |   26 +++++++++++++++++++++-----
- 1 files changed, 21 insertions(+), 5 deletions(-)
+> + * @pdev: device to test
+> + * @acs_flags: required PCI ACS flags
+> + *
+> + * Return true if the device supports the provided flags.  Automatically
+> + * filters out flags that are not implemented on multifunction devices.
+> + */
+> +bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+> +{
+> +	int pos;
+> +	u16 ctrl;
+> +
+> +	if (pci_dev_specific_acs_enabled(pdev, acs_flags))
+> +		return true;
+> +
+> +	if (!pci_is_pcie(pdev))
+> +		return false;
+> +
+> +	if (pdev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM ||
+> +	    pdev->pcie_type == PCI_EXP_TYPE_ROOT_PORT) {
+> +		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+> +		if (!pos)
+> +			return false;
+> +
+> +		pci_read_config_word(pdev, pos + PCI_ACS_CTRL,&ctrl);
+> +		if ((ctrl&  acs_flags) != acs_flags)
+> +			return false;
+> +	} else if (pdev->multifunction) {
+> +		/* Filter out flags not applicable to multifunction */
+> +		acs_flags&= (PCI_ACS_RR | PCI_ACS_CR |
+> +			      PCI_ACS_EC | PCI_ACS_DT);
+> +
+> +		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+> +		if (!pos)
+> +			return false;
+> +
+> +		pci_read_config_word(pdev, pos + PCI_ACS_CTRL,&ctrl);
+> +		if ((ctrl&  acs_flags) != acs_flags)
+> +			return false;
+> +	}
+> +
+> +	return true;
+or, to reduce duplicated code (which compiler may do?):
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 51ade23..41d7050 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -521,14 +521,14 @@ out:
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-  */
--int allocate_resource(struct resource *root, struct resource *new,
-+static int __allocate_resource(struct resource *root, struct resource *new,
- 		      resource_size_t size, resource_size_t min,
- 		      resource_size_t max, resource_size_t align,
- 		      resource_size_t (*alignf)(void *,
- 						const struct resource *,
- 						resource_size_t,
- 						resource_size_t),
--		      void *alignf_data)
-+		      void *alignf_data, bool lock)
- {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -542,19 +542,35 @@ int allocate_resource(struct resource *root, struct resource *new,
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
- 
--	if ( new->parent ) {
-+	if (new->parent && lock) {
- 		/* resource is already allocated, try reallocating with
- 		   the new constraints */
- 		return reallocate_resource(root, new, size, &constraint);
- 	}
- 
--	write_lock(&resource_lock);
-+	if (lock)
-+		write_lock(&resource_lock);
- 	err = find_resource(root, new, size, &constraint);
- 	if (err >= 0 && __request_resource(root, new))
- 		err = -EBUSY;
--	write_unlock(&resource_lock);
-+	if (lock)
-+		write_unlock(&resource_lock);
- 	return err;
- }
-+int allocate_resource(struct resource *root, struct resource *new,
-+		      resource_size_t size, resource_size_t min,
-+		      resource_size_t max, resource_size_t align,
-+		      resource_size_t (*alignf)(void *,
-+						const struct resource *,
-+						resource_size_t,
-+						resource_size_t),
-+		      void *alignf_data)
-+{
-+	bool lock = true;
-+
-+	return __allocate_resource(root, new, size, min, max, align,
-+				   alignf, alignf_data, lock);
-+}
- 
- EXPORT_SYMBOL(allocate_resource);
- 
--- 
-1.7.7
+	/* Filter out flags not applicable to multifunction */
+	if (pdev->multifunction)
+		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
+			      PCI_ACS_EC | PCI_ACS_DT);
+
+	if (pdev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM ||
+	    pdev->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+             pdev->multifunction) {
+		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+		if (!pos)
+			return false;
+		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+		if ((ctrl & acs_flags) != acs_flags)
+			return false;
+	}
+
+	return true;
+> +}
+
+But the above doesn't handle the case where the RC does not do
+peer-to-peer btwn root ports. Per ACS spec, such a RC's root ports
+don't need to provide an ACS cap, since peer-to-peer port xfers aren't
+allowed/enabled/supported, so by design, the root port is ACS compliant.
+ATM, an IOMMU-capable system is a pre-req for VFIO,
+and all such systems have an ACS cap, but they may not always be true.
+
+> +EXPORT_SYMBOL_GPL(pci_acs_enabled);
+> +
+> +/**
+> + * pci_acs_path_enable - test ACS flags from start to end in a hierarchy
+> + * @start: starting downstream device
+> + * @end: ending upstream device or NULL to search to the root bus
+> + * @acs_flags: required flags
+> + *
+> + * Walk up a device tree from start to end testing PCI ACS support.  If
+> + * any step along the way does not support the required flags, return false.
+> + */
+> +bool pci_acs_path_enabled(struct pci_dev *start,
+> +			  struct pci_dev *end, u16 acs_flags)
+> +{
+> +	struct pci_dev *pdev, *parent = start;
+> +
+> +	do {
+> +		pdev = parent;
+> +
+> +		if (!pci_acs_enabled(pdev, acs_flags))
+> +			return false;
+> +
+> +		if (pci_is_root_bus(pdev->bus))
+> +			return (end == NULL);
+doesn't this mean that a caller can't pass the pdev of the root port?
+I would think that is a valid call, albeit not the common one.
+Also worried that the above code may be true on Intel machines, but not on AMD
+machines (the latter reps its IOMMU as a pdev of root bus, doesn't it?)
+
+> +
+> +		parent = pdev->bus->self;
+> +	} while (pdev != end);
+> +
+> +	return true;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_acs_path_enabled);
+> +
+> +/**
+>    * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+>    * @dev: the PCI device
+>    * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTD, 4=INTD)
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index a2dd77f..4ed6aa6 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3149,3 +3149,32 @@ struct pci_dev *pci_dma_source(struct pci_dev *dev)
+>
+>   	return dev;
+>   }
+> +
+> +static const struct pci_dev_acs_enabled {
+> +	u16 vendor;
+> +	u16 device;
+> +	bool (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
+> +} pci_dev_acs_enabled[] = {
+> +	{ 0 }
+> +};
+> +
+> +bool pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
+> +{
+> +	const struct pci_dev_acs_enabled *i;
+> +
+> +	/*
+> +	 * Allow devices that do not expose standard PCI ACS capabilities
+> +	 * or control to indicate their support here.  Multi-function devices
+> +	 * which do not allow internal peer-to-peer between functions, but
+> +	 * do not implement PCI ACS may wish to return true here.
+> +	 */
+> +	for (i = pci_dev_acs_enabled; i->acs_enabled; i++) {
+> +		if ((i->vendor == dev->vendor ||
+> +		     i->vendor == (u16)PCI_ANY_ID)&&
+> +		    (i->device == dev->device ||
+> +		     i->device == (u16)PCI_ANY_ID))
+> +			return i->acs_enabled(dev, acs_flags);
+> +	}
+> +
+> +	return false;
+> +}
+I can't wait until these quirks are filled in! :)
+
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 02dbfed..2559735 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1480,6 +1480,7 @@ enum pci_fixup_pass {
+>   #ifdef CONFIG_PCI_QUIRKS
+>   void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+>   struct pci_dev *pci_dma_source(struct pci_dev *dev);
+> +bool pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+>   #else
+>   static inline void pci_fixup_device(enum pci_fixup_pass pass,
+>   				    struct pci_dev *dev) {}
+> @@ -1487,6 +1488,11 @@ static inline struct pci_dev *pci_dma_source(struct pci_dev *dev)
+>   {
+>   	return dev;
+>   }
+> +static inline bool pci_dev_specific_acs_enabled(struct pci_dev *dev,
+> +						u16 acs_flags)
+> +{
+> +	return false;
+> +}
+>   #endif
+>
+>   void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+> @@ -1589,7 +1595,9 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
+>   }
+>
+>   void pci_request_acs(void);
+> -
+> +bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+> +bool pci_acs_path_enabled(struct pci_dev *start,
+> +			  struct pci_dev *end, u16 acs_flags);
+>
+>   #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+>   #define PCI_VPD_LRDT_ID(x)		(x | PCI_VPD_LRDT)
+>
 
