@@ -1,12 +1,15 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:51253 "EHLO ozlabs.org"
+Received: from mx1.redhat.com ([209.132.183.28]:9413 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966147Ab2EQDuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 May 2012 23:50:55 -0400
-Date: Thu, 17 May 2012 13:39:14 +1000
-From: David Gibson <david@gibson.dropbear.id.au>
+	id S1755382Ab2EXVBl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 May 2012 17:01:41 -0400
+Message-ID: <4FBEA18F.1040607@redhat.com>
+Date: Thu, 24 May 2012 17:01:03 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
 To: Alex Williamson <alex.williamson@redhat.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru, joerg.roedel@amd.com,
+CC: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
 	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
 	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
 	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
@@ -14,67 +17,148 @@ Cc: benh@kernel.crashing.org, aik@ozlabs.ru, joerg.roedel@amd.com,
 	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
 	bhelgaas@google.com
-Subject: Re: [PATCH 04/13] pci: New pci_dma_quirk()
-Message-ID: <20120517033914.GF22069@truffala.fritz.box>
-References: <20120511222148.30496.68571.stgit@bling.home>
- <20120511225555.30496.80525.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120511225555.30496.80525.stgit@bling.home>
+Subject: Re: [PATCH v2 03/13] iommu: IOMMU groups for VT-d and AMD-Vi
+References: <20120522043607.5871.11340.stgit@bling.home> <20120522050454.5871.67086.stgit@bling.home>
+In-Reply-To: <20120522050454.5871.67086.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2012 at 04:55:55PM -0600, Alex Williamson wrote:
-> Integrating IOMMU groups more closely into the driver core allows
-> us to more easily work around DMA quirks.  The Ricoh multifunction
-> controller is a favorite example of devices that are currently
-> incompatible with IOMMU isolation as all the functions use the
-> requestor ID of function 0 for DMA.  Passing this device into
-> pci_dma_quirk returns the PCI device to use for DMA.  The IOMMU
-> driver can then construct an IOMMU group including both devices.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+On 05/22/2012 01:04 AM, Alex Williamson wrote:
+> Add back group support for AMD&  Intel.  amd_iommu already tracks
+> devices and has init and uninit routines to manage groups.
+> intel-iommu does this on the fly, so we make use of the notifier
+> support built into iommu groups to create and remove groups.
+>
+> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
 > ---
-> 
->  drivers/pci/quirks.c |   22 ++++++++++++++++++++++
->  include/linux/pci.h  |    2 ++
->  2 files changed, 24 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 4bf7102..6f9f7f9 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3109,3 +3109,25 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  
->  	return -ENOTTY;
->  }
+>
+>   drivers/iommu/amd_iommu.c   |   28 +++++++++++++++++++++++++-
+>   drivers/iommu/intel-iommu.c |   46 +++++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 73 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> index 32c00cd..b7e5ddf 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -256,9 +256,11 @@ static bool check_device(struct device *dev)
+>
+>   static int iommu_init_device(struct device *dev)
+>   {
+> -	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct pci_dev *dma_pdev, *pdev = to_pci_dev(dev);
+>   	struct iommu_dev_data *dev_data;
+> +	struct iommu_group *group;
+>   	u16 alias;
+> +	int ret;
+>
+>   	if (dev->archdata.iommu)
+>   		return 0;
+> @@ -279,8 +281,30 @@ static int iommu_init_device(struct device *dev)
+>   			return -ENOTSUPP;
+>   		}
+>   		dev_data->alias_data = alias_data;
 > +
-> +struct pci_dev *pci_dma_quirk(struct pci_dev *dev)
+> +		dma_pdev = pci_get_bus_and_slot(alias>>  8, alias&  0xff);
+> +	} else
+> +		dma_pdev = pdev;
+> +
+> +	if (!pdev->is_virtfn&&  PCI_FUNC(pdev->devfn)&&  iommu_group_mf&&
+> +	    pdev->hdr_type == PCI_HEADER_TYPE_NORMAL)
+> +		dma_pdev = pci_get_slot(pdev->bus,
+> +					PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
+> +
+> +	group = iommu_group_get(&dma_pdev->dev);
+> +	if (!group) {
+> +		group = iommu_group_alloc();
+> +		if (IS_ERR(group))
+> +			return PTR_ERR(group);
+>   	}
+>
+> +	ret = iommu_group_add_device(group, dev);
+> +
+> +	iommu_group_put(group);
+> +
+do you want to do a put if there is a failure in the iommu_group_add_device()?
+> +	if (ret)
+> +		return ret;
+> +
+>   	if (pci_iommuv2_capable(pdev)) {
+>   		struct amd_iommu *iommu;
+>
+> @@ -309,6 +333,8 @@ static void iommu_ignore_device(struct device *dev)
+>
+>   static void iommu_uninit_device(struct device *dev)
+>   {
+> +	iommu_group_remove_device(dev);
+> +
+>   	/*
+>   	 * Nothing to do here - we keep dev_data around for unplugged devices
+>   	 * and reuse it when the device is re-plugged - not doing so would
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index d4a0ff7..e63b33b 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -4087,6 +4087,50 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
+>   	return 0;
+>   }
+>
+> +static int intel_iommu_add_device(struct device *dev)
 > +{
-> +	struct pci_dev *dma_dev = dev;
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct pci_dev *bridge, *dma_pdev = pdev;
+> +	struct iommu_group *group;
+> +	int ret;
 > +
-> +	/*
-> +	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
-> +	 *
-> +	 * Some Ricoh devices use the function 0 source ID for DMA on
-> +	 * other functions of a multifunction device.  The DMA devices
-> +	 * is therefore function 0, which will have implications of the
-> +	 * iommu grouping of these devices.
-> +	 */
-> +	if (dev->vendor == PCI_VENDOR_ID_RICOH &&
-> +	    (dev->device == 0xe822 || dev->device == 0xe230 ||
-> +	     dev->device == 0xe832 || dev->device == 0xe476)) {
-> +		dma_dev = pci_get_slot(dev->bus,
-> +				       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> +	if (!device_to_iommu(pci_domain_nr(pdev->bus),
+> +			     pdev->bus->number, pdev->devfn))
+> +		return -ENODEV;
+> +
+> +	bridge = pci_find_upstream_pcie_bridge(pdev);
+> +	if (bridge) {
+> +		if (pci_is_pcie(bridge))
+> +			dma_pdev = pci_get_domain_bus_and_slot(
+> +						pci_domain_nr(pdev->bus),
+> +						bridge->subordinate->number, 0);
+> +		else
+> +			dma_pdev = bridge;
 > +	}
+> +
+> +	if (!pdev->is_virtfn&&  PCI_FUNC(pdev->devfn)&&  iommu_group_mf&&
+> +	    pdev->hdr_type == PCI_HEADER_TYPE_NORMAL)
+> +		dma_pdev = pci_get_slot(pdev->bus,
+> +					PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
+> +
+> +	group = iommu_group_get(&dma_pdev->dev);
+> +	if (!group) {
+> +		group = iommu_group_alloc();
+> +		if (IS_ERR(group))
+> +			return PTR_ERR(group);
+> +	}
+> +
+> +	ret = iommu_group_add_device(group, dev);
+> +
+ditto.
+> +	iommu_group_put(group);
+> +	return ret;
+> +}
+> +
+> +static void intel_iommu_remove_device(struct device *dev)
+> +{
+> +	iommu_group_remove_device(dev);
+> +}
+> +
+>   static struct iommu_ops intel_iommu_ops = {
+>   	.domain_init	= intel_iommu_domain_init,
+>   	.domain_destroy = intel_iommu_domain_destroy,
+> @@ -4096,6 +4140,8 @@ static struct iommu_ops intel_iommu_ops = {
+>   	.unmap		= intel_iommu_unmap,
+>   	.iova_to_phys	= intel_iommu_iova_to_phys,
+>   	.domain_has_cap = intel_iommu_domain_has_cap,
+> +	.add_device	= intel_iommu_add_device,
+> +	.remove_device	= intel_iommu_remove_device,
+>   	.pgsize_bitmap	= INTEL_IOMMU_PGSIZES,
+>   };
+>
+>
 
-Hrm.  This seems like a very generic name for a function performing a
-very specific test.  We could well have devices with the same problem
-in future, so shouldn't this be set up so the same quirk can be easily
-added to new device ids without changing the function code itself.
-
--- 
-David Gibson			| I'll have my music baroque, and my code
-david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
-				| _way_ _around_!
-http://www.ozlabs.org/~dgibson
