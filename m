@@ -1,40 +1,33 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 08/21] PCI: release busn_res when removing bus
-Date: Mon,  7 May 2012 13:29:53 -0700
-Message-Id: <1336422606-4244-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 24 May 2012 21:45:38 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, Wei Kong <wkong@novell.com>,
+	Jean Delvare <jdelvare@suse.com>
+Subject: Re: [PATCH] PCI / ACPI: Do not request control of ASPM if the BIOS
+ has disabled it
+Message-ID: <20120524204538.GA27819@srcf.ucam.org>
+References: <201205242245.45888.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201205242245.45888.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/remove.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Thu, May 24, 2012 at 10:45:45PM +0200, Rafael J. Wysocki wrote:
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index fd77e2b..04a4861 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -68,6 +68,7 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- 
- 	down_write(&pci_bus_sem);
- 	list_del(&pci_bus->node);
-+	pci_bus_release_busn_res(pci_bus);
- 	up_write(&pci_bus_sem);
- 	if (!pci_bus->is_added)
- 		return;
+> However, knowing that the BIOS doesn't support ASPM, we shouldn't
+> request the control of it, so we should remove
+> (OSC_ACTIVE_STATE_PWR_SUPPORT | OSC_CLOCK_PWR_CAPABILITY_SUPPORT)
+> from the flags before calling acpi_pci_osc_control_set() in those
+> cases.  Failing to do so causes the evaluation of _OSC for the PCI
+> root bridge to return error codes on some systems where it should
+> work correctly.
+
+Is there an example of an affected machine's DSDT?
+
 -- 
-1.7.7
-
+Matthew Garrett | mjg59@srcf.ucam.org
