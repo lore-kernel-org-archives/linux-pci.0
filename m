@@ -1,62 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:49446 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967836Ab2ERJIQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 05:08:16 -0400
-Received: by dady13 with SMTP id y13so3582069dad.19
-        for <linux-pci@vger.kernel.org>; Fri, 18 May 2012 02:08:15 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:49022 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965637Ab2EXVjH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 May 2012 17:39:07 -0400
+Message-ID: <4FBEAA5C.4060105@redhat.com>
+Date: Thu, 24 May 2012 17:38:36 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWOoEX3H6V7+c+azm8DJieX8bpXRmsYuOE+ZUDJ-p3-yQ@mail.gmail.com>
-References: <1333968563.5678.19.camel@infinity>
-	<CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com>
-	<1334248841.2910.6.camel@Nokia-N900>
-	<4F89B5E8.3040906@snewbury.org.uk>
-	<4F89BC84.50308@snewbury.org.uk>
-	<4F89C513.3000006@snewbury.org.uk>
-	<4F89CB16.2000908@snewbury.org.uk>
-	<4F89CE43.7040200@snewbury.org.uk>
-	<CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
-	<4F8AA0DC.6010902@snewbury.org.uk>
-	<4F8AB312.7060606@snewbury.org.uk>
-	<4F8B04A4.4070507@snewbury.org.uk>
-	<4F8B0609.8010603@snewbury.org.uk>
-	<CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com>
-	<CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com>
-	<CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com>
-	<CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com>
-	<4F96770D.2050606@snewbury.org.uk>
-	<4FB227D3.7090002@snewbury.org.uk>
-	<CAE9FiQX48eCS85eWMFxm6fCWgu2zwxvSywtQhsf-35WEvBfJVQ@mail.gmail.com>
-	<4FB4EE99.10509@snewbury.org.uk>
-	<4FB4F039.2040308@snewbury.org.uk>
-	<CAE9FiQUpdVJeF06BtqOKo448n1oH+AMJyC03FpB13=fOdkwM+w@mail.gmail.com>
-	<CAE9FiQWOoEX3H6V7+c+azm8DJieX8bpXRmsYuOE+ZUDJ-p3-yQ@mail.gmail.com>
-Date: Fri, 18 May 2012 02:08:15 -0700
-Message-ID: <CAE9FiQU1Bq3xpo0m_eNwBHoxF+oH=pXpg59hQguf_5GpWytyKg@mail.gmail.com>
-Subject: Re: PCI resources above 4GB
-From: Yinghai Lu <yinghai@kernel.org>
-To: Steven Newbury <steve@snewbury.org.uk>
-Cc: linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH v2 09/13] vfio: x86 IOMMU implementation
+References: <20120522043607.5871.11340.stgit@bling.home> <20120522050536.5871.65171.stgit@bling.home>
+In-Reply-To: <20120522050536.5871.65171.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2012 at 12:45 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, May 17, 2012 at 9:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Thu, May 17, 2012 at 5:34 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
->>> -----BEGIN PGP SIGNED MESSAGE-----
->>> Strange, the busn branch is merged with for-pci-res-alloc, but for
->>> some reason it isn't working.  Only the bridge is detected, not the
->>> devices behind it.
->>
->> Can you post the boot log ? maybe recently reordering patches applying
->> sequence break it.
+On 05/22/2012 01:05 AM, Alex Williamson wrote:
+> x86 is probably the wrong name for this VFIO IOMMU driver, but x86
+> is the primary target for it.  This driver support a very simple
+> usage model using the existing IOMMU API.  The IOMMU is expected to
+> support the full host address space with no special IOVA windows,
+> number of mappings restrictions, or unique processor target options.
 >
-> Never mind, found the problem.
+> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
+> ---
+>
+>   Documentation/ioctl/ioctl-number.txt |    2
+>   drivers/vfio/Kconfig                 |    6
+>   drivers/vfio/Makefile                |    2
+>   drivers/vfio/vfio.c                  |    7
+>   drivers/vfio/vfio_iommu_x86.c        |  743 ++++++++++++++++++++++++++++++++++
+>   include/linux/vfio.h                 |   52 ++
+>   6 files changed, 811 insertions(+), 1 deletions(-)
+>   create mode 100644 drivers/vfio/vfio_iommu_x86.c
+>
+> diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
+> index 111e30a..9d1694e 100644
+> --- a/Documentation/ioctl/ioctl-number.txt
+> +++ b/Documentation/ioctl/ioctl-number.txt
+> @@ -88,7 +88,7 @@ Code  Seq#(hex)	Include File		Comments
+>   		and kernel/power/user.c
+>   '8'	all				SNP8023 advanced NIC card
+>   					<mailto:mcr@solidum.com>
+> -';'	64-6F	linux/vfio.h
+> +';'	64-72	linux/vfio.h
+>   '@'	00-0F	linux/radeonfb.h	conflict!
+>   '@'	00-0F	drivers/video/aty/aty128fb.c	conflict!
+>   'A'	00-1F	linux/apm_bios.h	conflict!
+> diff --git a/drivers/vfio/Kconfig b/drivers/vfio/Kconfig
+> index 9acb1e7..bd88a30 100644
+> --- a/drivers/vfio/Kconfig
+> +++ b/drivers/vfio/Kconfig
+> @@ -1,6 +1,12 @@
+> +config VFIO_IOMMU_X86
+> +	tristate
+> +	depends on VFIO&&  X86
+> +	default n
+> +
+>   menuconfig VFIO
+>   	tristate "VFIO Non-Privileged userspace driver framework"
+>   	depends on IOMMU_API
+> +	select VFIO_IOMMU_X86 if X86
+>   	help
+>   	  VFIO provides a framework for secure userspace device drivers.
+>   	  See Documentation/vfio.txt for more details.
 
-updated for-pci-res-alloc branch. please check it.
+So a future refactoring that uses some chunk of this support
+on a non-x86 machine could be a lot of useless renaming.
 
-Thanks
+Why not rename vfio_iommu_x86 to something like vfio_iommu_no_iova
+and just make it conditionally compiled on X86 (as you've done above in Kconfig's)?
+Then if another arch can use it, or refactors the file to use
+some of it, and split x86 vs <other-arch> into separate per-arch files,
+or per-iova schemes, it's more descriptive and less disruptive?
 
-Yinghai
+> diff --git a/drivers/vfio/Makefile b/drivers/vfio/Makefile
+> index 7500a67..1f1abee 100644
+> --- a/drivers/vfio/Makefile
+> +++ b/drivers/vfio/Makefile
+> @@ -1 +1,3 @@
+>   obj-$(CONFIG_VFIO) += vfio.o
+> +obj-$(CONFIG_VFIO_IOMMU_X86) += vfio_iommu_x86.o
+> +obj-$(CONFIG_VFIO_PCI) += pci/
+> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+> index 6558eef..89899a8 100644
