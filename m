@@ -1,139 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47655 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735Ab2EWEHz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 00:07:55 -0400
-Received: by pbbrp8 with SMTP id rp8so9294040pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2012 21:07:54 -0700 (PDT)
+Received: from mail-wg0-f74.google.com ([74.125.82.74]:37443 "EHLO
+	mail-wg0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755630Ab2EXScI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2012 14:32:08 -0400
+Received: by wgbdt11 with SMTP id dt11so4478wgb.1
+        for <linux-pci@vger.kernel.org>; Thu, 24 May 2012 11:32:07 -0700 (PDT)
+Date: Thu, 24 May 2012 12:26:01 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>, Jiang Liu <liuj97@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 0/9] PCI, x86: update MMCFG information when
+ hot-plugging PCI host bridges
+Message-ID: <20120524182601.GA7551@google.com>
+References: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
-References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
-	<CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
-	<20120523024313.GA2888@redhat.com>
-	<CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
-Date: Tue, 22 May 2012 21:07:54 -0700
-Message-ID: <CAE9FiQVPyjsB=oWp80sgqzkWw8KqX0GHg+csM39juo2N67P2Tg@mail.gmail.com>
-Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jason Baron <jbaron@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2012 at 8:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, May 22, 2012 at 7:43 PM, Jason Baron <jbaron@redhat.com> wrote:
->> On Tue, May 22, 2012 at 02:21:13PM -0700, Yinghai Lu wrote:
->>> On Tue, May 22, 2012 at 1:11 PM, Jason Baron <jbaron@redhat.com> wrote:
->>> > I'm tyring to support bridge hotplug and devices below it in qemu via acpi
->>> > hotplug. Currently only 1 level or 32 slots are supported. By allowing for a
->>> > second level, we will be able to support 32^2 devices.
->>> >
->>> > If I first hotplug the bridge with no devices intially below it, the hotplug
->>> > code sets the bridge memory window to 0 and does not increase it when
->>> > subsequent devices are added below it.
->>> >
->>> > Fix this, by calling pci_rescan_bus_bridge_resize(), on the bridge directly
->>> > below the root to re-size all the birdge windows that may have changed.
->>> >
->>> > Signed-off-by: Jason Baron <jbaron@redhat.com>
->>> > ---
->>> >  drivers/pci/hotplug/acpiphp_glue.c |    8 ++++++++
->>> >  1 files changed, 8 insertions(+), 0 deletions(-)
->>> >
->>> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->>> > index 806c44f..8960c1e 100644
->>> > --- a/drivers/pci/hotplug/acpiphp_glue.c
->>> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
->>> > @@ -792,6 +792,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->>> >  {
->>> >        struct pci_dev *dev;
->>> >        struct pci_bus *bus = slot->bridge->pci_bus;
->>> > +       struct pci_bus *rescan_bus;
->>> >        struct acpiphp_func *func;
->>> >        int retval = 0;
->>> >        int num, max, pass;
->>> > @@ -821,6 +822,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->>> >                }
->>> >        }
->>> >
->>> > +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
->>> > +       rescan_bus = bus;
->>> > +       while (rescan_bus->parent && rescan_bus->parent->self)
->>> > +               rescan_bus = rescan_bus->parent;
->>> > +       if (rescan_bus->self)
->>> > +               pci_rescan_bus_bridge_resize(rescan_bus->self);
->>> > +
->>>
->>> No, you can not do that.  some parents bus could have other devices
->>> and driver could be loaded for those devices.
->>> so can not release resources that are used by those devices to resize
->>> parent bridges.
->>>
->>
->> hmmm...this patch also does what I want:
->>
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index 806c44f..be63c72 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -821,6 +821,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->>                }
->>        }
->>
->> +       /* Ensure we rescan/setup a bridge for new devs hanging off of it */
->> +       if (bus->self)
->> +               pci_assign_unassigned_bridge_resources(bus->self);
->> +
->>        list_for_each_entry(func, &slot->funcs, sibling)
->>                acpiphp_bus_add(func);
->>
->>
->> There appears to be a precedant for something very similar in:
->> drivers/pci/hotplug/pciehp_pci.c:pciehp_configure_device(), where there
->> is a call to 'pci_assign_unassigned_bridge_resources(), when a new
->> device is added...
->
-> the bus could have other devices under that bridge already.
->
-> so pci_assign_unassigned_bridge_resources() will still try to release
-> the bridge resource and
-> those devices resources.
->
-> but pciehp we could do that, because it will only have one device
-> under that pcie root port or downstream port.
->
-> so you can make qemu to support pcie and pciehp.
->
-> for hot add one hotplug bridge support, we have
->     bus->self->is_hotplug_bridge to set, so it will have allocate
-> minimum resource.
->
-> so you also could try to use quirk etc to get that bit set.
-> please check
-> drivers/pci/quirks.c::
-> /* Allow manual resource allocation for PCI hotplug bridges
->  * via pci=hpmemsize=nnM and pci=hpiosize=nnM parameters. For
->  * some PCI-PCI hotplug bridges, like PLX 6254 (former HINT HB6),
->  * kernel fails to allocate resources when hotplug device is
->  * inserted and PCI bus is rescanned.
->  */
-> static void __devinit quirk_hotplug_bridge(struct pci_dev *dev)
-> {
->        dev->is_hotplug_bridge = 1;
-> }
->
-> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
->
-> but still would prefer you to make qemu to support pciehp.
+On Wed, May 23, 2012 at 11:50:17AM +0800, Jiang Liu wrote:
+> From: Jiang Liu <liuj97@gmail.com>
+> 
+> From: Jiang Liu <jiang.liu@huawei.com>
+> 
+> This patchset enhance pci_root driver to update MMCFG information when
+> hot-plugging PCI root bridges. It applies to 
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next-3.5
+> 
+> -v2: split into smaller patches and skip updating MMCFG information when
+>      MMCFG is disabled
+> -v3: add mmconf_added to simply free path, also make pci_mmconfig_insert()
+>      to process extra exist case --- By Yinghai
+> -v4: tune arch_acpi_pci_root_add() to handle a corner case raised by Kenji
+> -v5: address review comments from Bjorn and Taku, also better handle corner
+>      cases in arch_acpi_pci_root_add()
+> -v6: get rid of arch_acpi_pci_root_xxx() by using existing hooks
+>      add MCFG information for host bridges on demand
+>      more corner cases clear up
+>      correctly handle condition compilation
+>      fix section mismatch issues
+>      fix a issue reported by Taku about a BIOS bug
+> 
+> The first 4 patches in series is the same with v5.
 
-another solution could be:
+I tried this on one of my machines.  Before your patches:
 
-in qemu acpi dsdt, you could set bridge size for new added bridge.
+    ACPI: bus type pci registered
+    PCI: MMCONFIG for domain 0000 [bus 00-ff] at [mem 0x80000000-0x8fffffff] (base 0x80000000)
+    PCI: MMCONFIG at [mem 0x80000000-0x8fffffff] reserved in E820
+    ...
+    ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7e])
 
-current pbus_size_mem() will not shrink the old bridge resource size.
+After:
 
-Thanks
+    ACPI: bus type pci registered
+1)  PCI: MMCONFIG for domain 0000 [bus 00-ff] at [mem 0x80000000-0x8fffffff] (base 0x80000000)
+    PCI: MMCONFIG at [mem 0x80000000-0x8fffffff] reserved in E820
+    ...
+    ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7e])
+2)  PCI: MMCONFIG for domain 0000 [bus 00-7e] at [mem 0x80000000-0x87efffff] (base 0x80000000)
+3)  [Firmware Bug]: PCI: MMCONFIG at [mem 0x80000000-0x87efffff] not reserved in ACPI motherboard resources
+4)  PCI: MMCONFIG at [mem 0x80000000-0x87efffff] reserved in E820
 
-Yinghai Lu
+I really like the MMCONFIG info being associated with the host bridge in
+dmesg, and I really like it being split out in /proc/iomem.  That's much
+cleaner than it used to be.  MMCONFIG is defined by the PCIe spec, and
+there are non-x86 architectures that use the same mechanism, so I can
+imagine someday (not now!) making it more generic.
+
+1): Do we really need this early MCFG scan?  Conceptually it seems like we
+don't need to look at MCFG until we add a host bridge or do a blind probe.
+
+2) and 4): These should be dev_info() with the host bridge device, e.g.,
+
+    pci_root PNP0A08:00: MMCONFIG at [mem 0x80000000-0x87efffff]
+
+Now that we can associate it with the bridge, the bus number range is
+redundant.  It might be useful to know whether the MMCONFIG range came from
+_CBA or MCFG, if that's easy to do.
+
+Here's I'm thinking: right now we have some message confusion -- the arch
+prints window info, e.g., "pci_root PNP0A08:00: host bridge window [io
+0x0000-0x03af]", and then the PCI core prints the same thing but associated
+with the bus: "pci_bus 0000:00: root bus resource [io  0x0000-0x03af]".
+I'd like this to become more uniform, and have only the core print it, but
+using the host bridge device, not the bus.
+
+3): Something seems wrong here -- this "bug" message didn't appear before,
+so I don't think it should now.  I haven't tried to chase this down.
+
+Bjorn
