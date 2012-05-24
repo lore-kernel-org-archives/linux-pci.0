@@ -1,152 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:34849 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757617Ab2EIQIN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2012 12:08:13 -0400
-Date: Wed, 09 May 2012 12:08:04 -0400 (EDT)
-From: Amos Kong <akong@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: mst@redhat.com, linux-pci@vger.kernel.org, seabios@seabios.org,
-	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org, rjw@sisk.pl,
-	kevin@koconnor.net
-Subject: Re: [Qemu-devel] [RESEND PATCH v3] hotplug: add device per func in ACPI DSDT tables
-Message-ID: <03e77e9a-0c63-496d-be33-3bc460ae8ffe@zmail13.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <1336571221.12477.136.camel@bling.home>
-Content-Type: text/plain; charset=utf-8
+Received: from ogre.sisk.pl ([193.178.161.156]:35647 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758882Ab2EXUKO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 May 2012 16:10:14 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH] PCI: allow acpiphp to handle PCIe ports without native PCIe hotplug capability
+Date: Thu, 24 May 2012 22:15:15 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+References: <1337226012-3688-1-git-send-email-jiang.liu@huawei.com> <201205180030.10964.rjw@sisk.pl> <4FB5D741.1050203@huawei.com>
+In-Reply-To: <4FB5D741.1050203@huawei.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <201205242215.16179.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------ Original Message -----
-> On Wed, 2012-05-09 at 15:24 +0800, Amos Kong wrote:
-> > Boot up a Linux VM with 8 pci block devices which
-> > are the 8 functions in one pci slot.
-> > | # qemu-kvm ...
-> > | -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
-> > | -device
-> > | virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
-> > | ....
-> > | -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
-> > | -device
-> > | virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
-> > 
-> > Check devices in guest.
-> > | vm)# ls /dev/vd*
-> > |    vda vdb vdc vde vdf vdg vdh
-> > | vm)# lspci |grep block
-> > | 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
-> > |    ...
-> > | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
-> > |
-> > 
-> > Func1~7 still exist in guest after hot-removing the whole slot
-> > through qemu monitor.
-> > | vm)# lspci |grep block    (00:03.0 disappeared)
-> > | 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device
-> > | (rev ff)
-> > |    ...
-> > | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
-> > | (rev ff)
-> > | vm)# ls /dev/vd*          (vda disappeared)
-> > |    vdb vdc vde vdf vdg vdh
-> > | vm)# mkfs /dev/vdb
-> > |    INFO: task mkfs.ext2:1784 blocked for more than 120 seconds.
-> > |    (task hung)
-> > 
-> > 
-> > Currently only func0 is defined in ACPI DSDT table
-> > of seabios, and only hot-adding func0 would cause
-> > a ACPI event for notification. Other funcs except
-> > func0 wouldn't be registered in linux pci driver.
-> > (we can only found func0 in slot->funcs list of
-> > pci driver).
-> > 
-> > When VM pci driver receives an ACPI event for
-> > hot-removing, it will only clean functions in
-> > slot->funcs list, the other funcs could not be
-> > cleaned.
-> > 
-> > This patch adds device per function in ACPI DSDT tables,
-> > then all funcs will be registered in slot->funcs list.
-> > It's coincident with microsoft's example:
-> > http://www.microsoft.com/china/whdc/system/pnppwr/hotadd/hotplugpci.mspx#EUH
-> > 
-> > Have tested with linux/winxp/win7, hot-adding/hot-remving,
-> > single/multiple function devices, they are all fine(all
-> > added devices can be removed).
-> > 
-> > This patch includes some bits mst wrote, thanks!
-> > ---
-> > old discussion: http://marc.info/?l=kvm&m=132428400917405&w=2
-> > 
-> > Signed-off-by: Amos Kong <akong@redhat.com>
-> > CC: Michael S. Tsirkin <mst@redhat.com>
-> > ---
-> >  src/ssdt-pcihp.dsl |   17
-> >  src/ssdt-pcihp.hex | 8869
-> >  +++++++++++++++++++++++++++++++++++++++++++++++++++-
-> >  2 files changed, 8781 insertions(+), 105 deletions(-)
-> > 
-> > diff --git a/src/ssdt-pcihp.dsl b/src/ssdt-pcihp.dsl
-> > index 4b435b8..2a3c326 100644
-> > --- a/src/ssdt-pcihp.dsl
-> > +++ b/src/ssdt-pcihp.dsl
-> > @@ -17,14 +17,23 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT",
-> > 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
-> >          // at runtime, if the slot is detected to not support
-> >          hotplug.
-> >          // Extract the offset of the address dword and the
-> >          // _EJ0 name to allow this patching.
-> > -#define hotplug_slot(slot)                              \
-> > -        Device (S##slot) {                              \
-> > +#define hotplug_func(slot, fn)                          \
-> > +        Device (S##slot##fn) {                          \
-> >             ACPI_EXTRACT_NAME_DWORD_CONST aml_adr_dword  \
-> > -           Name (_ADR, 0x##slot##0000)                  \
-> 
-> I would have guessed it to be sufficient to change _ADR to
-> 0x##slot##ffff, does that not work?
+On Friday, May 18, 2012, Jiang Liu wrote:
+> On 2012-5-18 6:30, Rafael J. Wysocki wrote:
+> > On Thursday, May 17, 2012, Jiang Liu wrote:
+> >> From: Jiang Liu<jiang.liu@huawei.com>
+> >>
+> >> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
+> >> ignore root bridges using PCIe native hotplug) added code that made the
+> >> acpiphp driver completely ignore PCIe root complexes for which the kernel
+> >> had been granted control of the native PCIe hotplug feature by the BIOS
+> >> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
+> >> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
+> >> the constraints to allow acpiphp driver handle non-PCIe bridges under
+> >> such a complex. The constraint needs to be relaxed further to allow
+> >> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
+> >>
+> >> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
+> >> switches and may migrate downstream ports among virtual switches.
+> >> To migrate a downstream port from the source virtual switch to the target,
+> >> the port needs to be hot-removed from the source and hot-added into the
+> >> target. pciehp driver can't be used here because there's no slots within
+> >> the virtual PCIe switch. So acpiphp driver is used to support downstream
+> >> port migration. A typical configuration is as below:
+> >> [Root w/o native PCIe HP]
+> >> 	[Upstream port of vswitch w/o native PCIe HP]
+> >> 		[Downstream port of vswitch w/ native PCIe HP]
+> >> 			[PCIe enpoint]
+> >>
+> >> Here acpiphp driver will be used to handle root ports and upstream port
+> >> in the virtual switch, and pciehp driver will be used to handle downstream
+> >> ports in the virtual switch.
+> >
+> > I'm not sure that the patch is sufficient, but I don't have the time to
+> > look into the details at the moment.  I'll try to do that tomorrow.
+> Hi Rafael,
+> 	Thanks for your help!
+> 	This is the first patch to support downstream port migration
+> among virtual switches, there are still more changes needed to fully
+> support the above usage model. We are still testing those patches
+> and will send them out once they pass the tests.
+
+My only concern is that we have to be careful enough to prevent acpiphp
+from claiming bridges that it is not supposed to handle.
+
+I _think_ that the patch below covers all cases in which that might happen,
+but it will require some careful testing to verify that.
+
+So please feel free to add
+
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+
+to the patch, but please do test it carefully nevertheless.
+
+Thanks,
+Rafael
 
 
-No, changing this to "0x##slot##ffff" doesn't resolve the bug.
-(tested)
+> >> Signed-off-by: Jiang Liu<liuj97@gmail.com>
+> >> ---
+> >>   drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
+> >>   1 files changed, 39 insertions(+), 10 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> >> index 806c44f..4889448 100644
+> >> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> >> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> >> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
+> >>   	.handler = handle_hotplug_event_func,
+> >>   };
+> >>
+> >> +/* Check whether device is managed by native PCIe hotplug driver */
+> >> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
+> >> +{
+> >> +	int pos;
+> >> +	u16 reg16;
+> >> +	u32 reg32;
+> >> +	acpi_handle tmp;
+> >> +	struct acpi_pci_root *root;
+> >> +
+> >> +	if (!pci_is_pcie(pdev))
+> >> +		return false;
+> >> +
+> >> +	/* Check whether PCIe port supports native PCIe hotplug */
+> >> +	pos = pci_pcie_cap(pdev);
+> >> +	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS,&reg16);
+> >> +	if (!(reg16&  PCI_EXP_FLAGS_SLOT))
+> >> +		return false;
+> >> +	pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP,&reg32);
+> >> +	if (!(reg32&  PCI_EXP_SLTCAP_HPC))
+> >> +		return false;
+> >> +
+> >> +	/*
+> >> +	 * Check whether native PCIe hotplug has been enabled for
+> >> +	 * this PCIe hierarchy.
+> >> +	 */
+> >> +	tmp = acpi_find_root_bridge_handle(pdev);
+> >> +	if (!tmp)
+> >> +		return false;
+> >> +	root = acpi_pci_find_root(tmp);
+> >> +	if (!root)
+> >> +		return false;
+> >> +	if (!(root->osc_control_set&  OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+> >> +		return false;
+> >> +
+> >> +	return true;
+> >> +}
+> >> +
+> >>   /* callback routine to register each ACPI PCI slot object */
+> >>   static acpi_status
+> >>   register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+> >> @@ -133,16 +170,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+> >>   		return AE_OK;
+> >>
+> >>   	pdev = pbus->self;
+> >> -	if (pdev&&  pci_is_pcie(pdev)) {
+> >> -		tmp = acpi_find_root_bridge_handle(pdev);
+> >> -		if (tmp) {
+> >> -			struct acpi_pci_root *root = acpi_pci_find_root(tmp);
+> >> -
+> >> -			if (root&&  (root->osc_control_set&
+> >> -					OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+> >> -				return AE_OK;
+> >> -		}
+> >> -	}
+> >> +	if (pdev&&  device_is_managed_by_native_pciehp(pdev))
+> >> +		return AE_OK;
+> >>
+> >>   	acpi_evaluate_integer(handle, "_ADR", NULL,&adr);
+> >>   	device = (adr>>  16)&  0xffff;
+> >>
+> >
+> >
+> > .
+> >
+> 
+> 
+> 
+> 
 
-I'm trying to fix this problem in guest pci driver.
-http://marc.info/?l=linux-pci&m=133657729118731&w=2
-
-
-Thanks, Amos
-
-> 
-> > +           Name (_ADR, 0x##slot##000##fn)               \
-> >             ACPI_EXTRACT_METHOD_STRING aml_ej0_name      \
-> >             Method (_EJ0, 1) { Return(PCEJ(0x##slot)) }  \
-> >             Name (_SUN, 0x##slot)                        \
-> >          }
-> > +#define hotplug_slot(slot)     \
-> > +        hotplug_func(slot, 0)  \
-> > +        hotplug_func(slot, 1)  \
-> > +        hotplug_func(slot, 2)  \
-> > +        hotplug_func(slot, 3)  \
-> > +        hotplug_func(slot, 4)  \
-> > +        hotplug_func(slot, 5)  \
-> > +        hotplug_func(slot, 6)  \
-> > +        hotplug_func(slot, 7)
-> >  
-> >          hotplug_slot(01)
-> >          hotplug_slot(02)
-> > @@ -59,7 +68,7 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01,
-> > "BXPC", "BXSSDTPCIHP", 0x1)
-> >          hotplug_slot(1f)
-> >  
-> >  #define gen_pci_hotplug(slot)   \
-> > -            If (LEqual(Arg0, 0x##slot)) { Notify(S##slot, Arg1) }
-> > +            If (LEqual(Arg0, 0x##slot)) { Notify(S##slot##0, Arg1)
-> > }
-> >  
-> >          Method(PCNT, 2) {
-> >              gen_pci_hotplug(01)
-> 
-> 
-> 
-> 
