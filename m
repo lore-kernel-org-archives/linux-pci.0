@@ -1,121 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([58.251.152.66]:34469 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932160Ab2EWDwJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 23:52:09 -0400
-Received: from huawei.com (szxga03-in [172.24.2.9])
- by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M4G0053TIPVL6@szxga03-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:32 +0800 (CST)
-Received: from szxrg01-dlp.huawei.com ([172.24.2.119])
- by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M4G00B7DIPPK7@szxga03-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:31 +0800 (CST)
-Date: Wed, 23 May 2012 11:50:26 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH v6 9/9] PCI, x86: simplify pci_mmcfg_late_insert_resources()
-In-reply-to: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Message-id: <1337745026-1180-10-git-send-email-jiang.liu@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain
-References: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <4FBF9529.6030906@siemens.com>
+Date: Fri, 25 May 2012 11:20:25 -0300
+From: Jan Kiszka <jan.kiszka@siemens.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE
+ NIC as broken
+References: <4FBF90E5.8030800@siemens.com> <CAErSpo78Pp7YW3tLbT7QR0oOeSUHzxf55CBW8bDW3kWx0Gy1ug@mail.gmail.com>
+In-Reply-To: <CAErSpo78Pp7YW3tLbT7QR0oOeSUHzxf55CBW8bDW3kWx0Gy1ug@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On 2012-05-25 11:11, Bjorn Helgaas wrote:
+> On Fri, May 25, 2012 at 8:02 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
+>> According to Alexey, the T310 does not properly support INTx masking as
+>> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
+>> is masked. Mark this adapter as broken so that pci_intx_mask_supported
+>> won't report it as compatible.
+> 
+> Please include a reference to a bugzilla, mailing list discussion, or
+> other details about how this was found and debugged.  Thanks!
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Sorry, it's documented here:
+http://thread.gmane.org/gmane.comp.emulators.kvm.devel/91388. Will
+repost with this information included once Alexey provided his tested-by.
 
-Reduce redundant code to simplify pci_mmcfg_late_insert_resources().
+Jan
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- arch/x86/pci/mmconfig-shared.c |   32 +++++++-------------------------
- 1 files changed, 7 insertions(+), 25 deletions(-)
+> 
+>> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+>> ---
+>>
+>> Alexey, please test if this catches your case correctly.
+>>
+>>  drivers/pci/pci.c    |    3 +++
+>>  drivers/pci/quirks.c |   12 ++++++++++++
+>>  include/linux/pci.h  |    2 ++
+>>  3 files changed, 17 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 8f16900..3a1aeb5 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -2876,6 +2876,9 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
+>>        bool mask_supported = false;
+>>        u16 orig, new;
+>>
+>> +       if (dev->broken_intx_masking)
+>> +               return false;
+>> +
+>>        pci_cfg_access_lock(dev);
+>>
+>>        pci_read_config_word(dev, PCI_COMMAND, &orig);
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 2a75216..151e174 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -2929,6 +2929,18 @@ static void __devinit disable_igfx_irq(struct pci_dev *dev)
+>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+>>
+>> +/*
+>> + * Some devices may pass our check in pci_intx_mask_supported if
+>> + * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
+>> + * support this feature.
+>> + */
+>> +static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
+>> +{
+>> +       dev->broken_intx_masking = 1;
+>> +}
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010,
+>> +                       quirk_broken_intx_masking);
+>> +
+>>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>>                          struct pci_fixup *end)
+>>  {
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 17b7b5b..c7cfd73 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -324,6 +324,8 @@ struct pci_dev {
+>>        unsigned int    is_hotplug_bridge:1;
+>>        unsigned int    __aer_firmware_first_valid:1;
+>>        unsigned int    __aer_firmware_first:1;
+>> +       unsigned int    broken_intx_masking:1;  /* device's INTx masking
+>> +                                                  support is not working */
+>>        pci_dev_flags_t dev_flags;
+>>        atomic_t        enable_cnt;     /* pci_enable_device has been called */
+>>
+>> --
+>> 1.7.3.4
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index a7a2efd..01a775f 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -27,7 +27,6 @@
- #define PREFIX "PCI: "
- 
- /* Indicate if the mmcfg resources have been placed into the resource table. */
--static int __initdata pci_mmcfg_resources_inserted;
- static bool pci_mmcfg_arch_init_failed;
- static DEFINE_MUTEX(pci_mmcfg_lock);
- 
-@@ -372,22 +371,6 @@ static int __init pci_mmcfg_check_hostbridge(void)
- 	return !list_empty(&pci_mmcfg_list);
- }
- 
--static void __init pci_mmcfg_insert_resources(void)
--{
--	struct pci_mmcfg_region *cfg;
--
--	/*
--	 * Insert resources for MMCFG items if the resource hasn't been
--	 * inserted by pci_mmconfig_insert() yet.
--	 */
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		if (!cfg->res.parent)
--			insert_resource(&iomem_resource, &cfg->res);
--
--	/* Mark that the resources have been inserted. */
--	pci_mmcfg_resources_inserted = 1;
--}
--
- static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
- 						 void *data)
- {
-@@ -670,11 +653,7 @@ static void __init __pci_mmcfg_init(int early)
- 	if (pci_mmcfg_arch_init())
- 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
- 	else {
--		/*
--		 * Signal not to attempt to insert mmcfg resources because
--		 * the architecture mmcfg setup could not initialize.
--		 */
--		pci_mmcfg_resources_inserted = 1;
-+		free_all_mmcfg();
- 		pci_mmcfg_arch_init_failed = true;
- 	}
- 
-@@ -699,12 +678,13 @@ void __init pci_mmcfg_late_init(void)
- 
- static int __init pci_mmcfg_late_insert_resources(void)
- {
-+	struct pci_mmcfg_region *cfg;
-+
- 	/*
- 	 * If resources are already inserted or we are not using MMCONFIG,
- 	 * don't insert the resources.
- 	 */
--	if ((pci_mmcfg_resources_inserted == 1) ||
--	    (pci_probe & PCI_PROBE_MMCONF) == 0 ||
-+	if ((pci_probe & PCI_PROBE_MMCONF) == 0 ||
- 	    list_empty(&pci_mmcfg_list))
- 		return 1;
- 
-@@ -713,7 +693,9 @@ static int __init pci_mmcfg_late_insert_resources(void)
- 	 * marked so it won't cause request errors when __request_region is
- 	 * called.
- 	 */
--	pci_mmcfg_insert_resources();
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		if (!cfg->res.parent)
-+			insert_resource(&iomem_resource, &cfg->res);
- 
- 	return 0;
- }
 -- 
-1.7.1
-
-
+Siemens AG, Corporate Technology, CT T DE IT 1
+Corporate Competence Center Embedded Linux
