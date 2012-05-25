@@ -1,23 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:64536 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135Ab2EQQRS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 12:17:18 -0400
-Received: by lbbgm6 with SMTP id gm6so1424823lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 17 May 2012 09:17:16 -0700 (PDT)
+Received: from terminus.zytor.com ([198.137.202.10]:44157 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753656Ab2EYV7J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 25 May 2012 17:59:09 -0400
+Message-ID: <4FC0009C.5000704@zytor.com>
+Date: Fri, 25 May 2012 14:58:52 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 17 May 2012 10:16:56 -0600
-Message-ID: <CAErSpo6vBpY3P1WiofhhRehVn_06MiSWYaHoz4-bUnciSp1v_A@mail.gmail.com>
-Subject: [Bug 43192] various ExpressCards are not recognized
-To: Elmar Stellnberger <estellnb@gmail.com>
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com> <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com> <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com> <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com> <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
+In-Reply-To: <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43192
+On 05/25/2012 02:55 PM, Bjorn Helgaas wrote:
+> 
+> I think we actually have a separate bug here.  On 64-bit non-x86
+> architectures, PCIBIOS_MAX_MEM_32 is a 64-bit -1, so the following
+> attempt to avoid putting a 32-bit BAR above 4G only works on x86,
+> where PCIBIOS_MAX_MEM_32 is 0xffffffff.
+> 
+>         /* don't allocate too high if the pref mem doesn't support 64bit*/
+>         if (!(res->flags & IORESOURCE_MEM_64))
+>                 max = PCIBIOS_MAX_MEM_32;
+> 
+> I think we should fix this with a separate patch that removes
+> PCIBIOS_MAX_MEM_32 altogether, replacing this use with an explicit
+> 0xffffffff (or some other "max 32-bit value" symbol).  I don't think
+> there's anything arch-specific about this.
+> 
+> So I'd like to see two patches here:
+>   1) Avoid allocating 64-bit regions for 32-bit BARs
+>   2) Try to allocate regions above 4GB for 64-bit BARs
+> 
 
-Hi Elmar, can you attach a complete dmesg log and "lspci -vv" output
-to the bugzilla?  Let's start with the system with native ExpressCard
-interface, with an ExpressCard plugged in before booting the system.
+Do we also need to track the maximum address available to the CPU?
+
+	-hpa
+
