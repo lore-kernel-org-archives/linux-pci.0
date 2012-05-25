@@ -1,90 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:35973 "EHLO
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:59067 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757349Ab2EHAB7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 20:01:59 -0400
-Received: by pbbrp8 with SMTP id rp8so7306994pbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 07 May 2012 17:01:59 -0700 (PDT)
-Message-ID: <4FA8623C.4010400@gmail.com>
-Date: Tue, 08 May 2012 08:01:00 +0800
-From: Jiang Liu <liuj97@gmail.com>
+	with ESMTP id S1752948Ab2EYSj1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2012 14:39:27 -0400
 MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 10/19] PCI: serialize hotplug operaitons triggered
- by the shpchp driver
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com> <1335539820-11232-11-git-send-email-jiang.liu@huawei.com> <4FA4F3E5.5040600@fold.natur.cuni.cz> <4FA5EF97.8010306@gmail.com> <20120506152036.GA31551@kroah.com>
-In-Reply-To: <20120506152036.GA31551@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
+	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
+	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
+	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+	<20120525043651.GA1391@google.com>
+	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+Date: Fri, 25 May 2012 11:39:26 -0700
+Message-ID: <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed; boundary=047d7b162fd718665c04c0e0b0cf
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-resend and cc linux-pci list.
+--047d7b162fd718665c04c0e0b0cf
+Content-Type: text/plain; charset=ISO-8859-1
 
-On 05/06/2012 11:20 PM, Greg Kroah-Hartman wrote:
-> A: No.
-> Q: Should I include quotations after my reply?
->
-> http://daringfireball.net/2007/07/on_top
-Thanks for your kindly reminder, Greg!
-I'm a newbie to Linux community and there are still many things for me to learn.
+On Fri, May 25, 2012 at 10:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> I don't really like the dependency on PCIBIOS_MAX_MEM_32 + 1ULL
+>> overflowing to zero -- that means the reader has to know what the
+>> value of PCIBIOS_MAX_MEM_32 is, and things would break in non-obvious
+>> ways if we changed it.
+>>
 
->> 	I'm afraid that we can't get the patch set merged in to v3.4. 
-> The merge window for 3.4 was months ago, of course this can't be fixed
-> there with your large patchset, sorry.
-Actually the patch set is still in RFC stage, I forgot to mark it as RFC
-last time, will pay attention to this in future.
+please check if attached one is more clear.
 
->> Greg doesn't like the implementation to solve this issue, and asked me
->> to redo it in other ways, but I haven't found other way yet until now.
->> Still keeping punching my header for better solution now.
-> I gave you hints on how to implement this properly if you want to, did
-> they not work?
-I think your have raised three main concerns.
-1) Avoid busy wait.
-2) Do not introduce a new style lock.
-3) Enhance the PCI core instead of changing each PCI hotplug driver.
+make max and bottom is only related to _MEM and not default one.
 
-We could improve or avoid the first issue by replacing msleep() with wait queue.
+-       if (!(res->flags & IORESOURCE_MEM_64))
+-               max = PCIBIOS_MAX_MEM_32;
++       if (res->flags & IORESOURCE_MEM) {
++               if (!(res->flags & IORESOURCE_MEM_64))
++                       max = PCIBIOS_MAX_MEM_32;
++               else if (PCIBIOS_MAX_MEM_32 != -1)
++                       bottom = (resource_size_t)(1ULL<<32);
++       }
 
-For the second issue, we may have two candidate solutions: 
-a) introduce a global lock for all PCI devices
-b) introduce pci_branch_lock()/unlock() to lock/unlock a PCI subtree for hotplug
-operations. 
-According to my experience with other OS, the second solution is complex and
-deadlock prune. It may become more complex on linux due to the device tree abstraction,
-and pci_dev/pci_bus splitting. So I took the first solution for trade off. It
-may cost more time for hotplug operations, but the implementation will be simpler
-and won't cause regression to the PCI core.
+will still not affect to other arches.
 
-If we adopt a global lock for all PCI devices solution, we do need the 
-pci_hotplug_try_lock() interface to break deadlock cases. For example,
-	Thread A				Thread B
-1) try to remove a downstream PCIe port with
-   PCIe native hotplug support
-2) acquire the global lock
-						3) PCIe hotplug event happens, a work
-						   item is queued into the workqueue
-						4) worker thread wake up and try to
-						   handle the hotplug event
-						5) try to acquire the global lock
-6) try to destroy the PCIe device for the 
-   PCIe native hotplug service
-7) unbind the pciehp driver and flush the
-   workqueue
-8) wait for all queued work items to be finished
 
-Then deadlock happens. Interface pci_hotplug_try_lock() is used to break the
-deadlock in the worker thread. There are similar deadlock scenario in other
-drivers.
+Thanks
 
-For the third issue, it depends on the solution for the second issue.
+Yinghai
 
-Some patches in the v2 patch set doesn't depend on the solution for issue two.
-So to make things simpler, I will try to split out those patches.
+--047d7b162fd718665c04c0e0b0cf
+Content-Type: application/octet-stream; name="allocate_high_at_first.patch"
+Content-Disposition: attachment; filename="allocate_high_at_first.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h2nlec0k0
 
-Thanks, Greg! Really appreciate your comments and suggestions! 
-
--- gerry
+U3ViamVjdDogW1BBVENIXSBQQ0k6IFRyeSB0byBhbGxvY2F0ZSBtZW02NCBhYm92ZSA0RyBhdCBm
+aXJzdAoKYW5kIHdpbGwgZmFsbCBiYWNrIHRvIGJlbG93IDRnIGlmIGl0IGNhbiBub3QgZmluZCBh
+bnkgYWJvdmUgNGcuCgpvbmx5IHg4NiBoYXZlIFBDSUJJT1NfTUFYX01FTV8zMiBzZXQgdG8gMHhm
+ZmZmZmZmZi4KaXQgd2lsbCBvbmx5IGFmZmVjdCB4ODZfNjQgYW5kIDMyYml0IHdpdGggcmVzb3Vy
+Y2Vfc2l6ZV90IDY0Yml0IHN1cHBvcnQuCm9ubHkgdGhhdCBjYXNlIGJvdHRvbSBpcyBzZXQgdG8g
+NGcgZm9yIGZpcnN0IHRyeS4KCng4NiAzMmJpdCB3aXRob3V0IFg4Nl9QQUUgc3VwcG9ydCB3aWxs
+IGhhdmUgYm90dG9tIHNldCB0byAwLCBiZWN1YXNlCnJlc291cmNlX3NpemVfdCBpcyAzMmJpdC4K
+CkFsc28gZm9yIDMyYml0IHdpdGggcmVzb3VyY2Vfc2l6ZV90IDY0Yml0IGtlcm5lbCBvbiBtYWNo
+aW5lIHdpdGggcGFlIHN1cHBvcnQKd2UgYXJlIHNhZmUgYmVjYXVzZSBpb21lbV9yZXNvdXJjZSBp
+cyBsaW1pdGVkIHRvIDMyYml0IGFjY29yZGluZyB0bwp4ODZfcGh5c19iaXRzLgoKLXYyOiB1cGRh
+dGUgYm90dG9tIGFzc2lnbmluZyB0byBtYWtlIGl0IGNsZWFyIGZvciBub24tcGFlIHN1cHBvcnQg
+bWFjaGluZS4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4K
+Ci0tLQogZHJpdmVycy9wY2kvYnVzLmMgfCAgIDIwICsrKysrKysrKysrKysrKystLS0tCiAxIGZp
+bGUgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51
+eC0yLjYvZHJpdmVycy9wY2kvYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJp
+dmVycy9wY2kvYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwpAQCAtMTIyLDEz
+ICsxMjIsMTkgQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1cyAqYgogCWlu
+dCBpLCByZXQgPSAtRU5PTUVNOwogCXN0cnVjdCByZXNvdXJjZSAqcjsKIAlyZXNvdXJjZV9zaXpl
+X3QgbWF4ID0gLTE7CisJcmVzb3VyY2Vfc2l6ZV90IGJvdHRvbSA9IDA7CiAKIAl0eXBlX21hc2sg
+fD0gSU9SRVNPVVJDRV9JTyB8IElPUkVTT1VSQ0VfTUVNOwogCiAJLyogZG9uJ3QgYWxsb2NhdGUg
+dG9vIGhpZ2ggaWYgdGhlIHByZWYgbWVtIGRvZXNuJ3Qgc3VwcG9ydCA2NGJpdCovCi0JaWYgKCEo
+cmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfTUVNXzY0KSkKLQkJbWF4ID0gUENJQklPU19NQVhfTUVN
+XzMyOworCWlmIChyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU0pIHsKKwkJaWYgKCEocmVzLT5m
+bGFncyAmIElPUkVTT1VSQ0VfTUVNXzY0KSkKKwkJCW1heCA9IFBDSUJJT1NfTUFYX01FTV8zMjsK
+KwkJZWxzZSBpZiAoUENJQklPU19NQVhfTUVNXzMyICE9IC0xKQorCQkJYm90dG9tID0gKHJlc291
+cmNlX3NpemVfdCkoMVVMTDw8MzIpOworCX0KIAorYWdhaW46CiAJcGNpX2J1c19mb3JfZWFjaF9y
+ZXNvdXJjZShidXMsIHIsIGkpIHsKIAkJaWYgKCFyKQogCQkJY29udGludWU7CkBAIC0xNDUsMTIg
+KzE1MSwxOCBAQCBwY2lfYnVzX2FsbG9jX3Jlc291cmNlKHN0cnVjdCBwY2lfYnVzICpiCiAKIAkJ
+LyogT2ssIHRyeSBpdCBvdXQuLiAqLwogCQlyZXQgPSBhbGxvY2F0ZV9yZXNvdXJjZShyLCByZXMs
+IHNpemUsCi0JCQkJCXItPnN0YXJ0ID8gOiBtaW4sCisJCQkJCW1heChib3R0b20sIHItPnN0YXJ0
+ID8gOiBtaW4pLAogCQkJCQltYXgsIGFsaWduLAogCQkJCQlhbGlnbmYsIGFsaWduZl9kYXRhKTsK
+IAkJaWYgKHJldCA9PSAwKQotCQkJYnJlYWs7CisJCQlyZXR1cm4gMDsKKwl9CisKKwlpZiAoYm90
+dG9tICE9IDApIHsKKwkJYm90dG9tID0gMDsKKwkJZ290byBhZ2FpbjsKIAl9CisKIAlyZXR1cm4g
+cmV0OwogfQogCg==
+--047d7b162fd718665c04c0e0b0cf--
