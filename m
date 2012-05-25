@@ -1,57 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from queueout02-winn.ispmail.ntl.com ([81.103.221.56]:63129 "EHLO
-	queueout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756915Ab2EQQPS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 12:15:18 -0400
-Message-ID: <4FB4EE99.10509@snewbury.org.uk>
-Date: Thu, 17 May 2012 13:27:05 +0100
-From: Steven Newbury <steve@snewbury.org.uk>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: linux-pci@vger.kernel.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Subject: Re: PCI resources above 4GB
-References: <1333968563.5678.19.camel@infinity> <1334229754.30606.7.camel@Nokia-N900> <CAE9FiQXhzAOErMeQxz6U-BSYAK1LirHMpiFH90iRoXxwduPhPw@mail.gmail.com> <1334248841.2910.6.camel@Nokia-N900> <4F89B5E8.3040906@snewbury.org.uk> <4F89BC84.50308@snewbury.org.uk> <4F89C513.3000006@snewbury.org.uk> <4F89CB16.2000908@snewbury.org.uk> <4F89CE43.7040200@snewbury.org.uk> <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com> <4F8AA0DC.6010902@snewbury.org.uk> <4F8AB312.7060606@snewbury.org.uk> <4F8B04A4.4070507@snewbury.org.uk> <4F8B0609.8010603@snewbury.org.uk> <CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com> <CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com> <CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com> <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com> <4F96770D.2050606@snewbury.org.uk> <4FB227D3.7090002@snewbury.org.uk> <CAE9FiQX48eCS85eWMFxm6fCWgu2zwxvSywtQhsf-35WEvBfJVQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQX48eCS85eWMFxm6fCWgu2zwxvSywtQhsf-35WEvBfJVQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from gate.crashing.org ([63.228.1.57]:57185 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752419Ab2EYDi5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 May 2012 23:38:57 -0400
+Message-ID: <1337917105.16119.11.camel@pasglop>
+Subject: Re: [PATCH v3 1/2] powerpc/PCI: move DMA & IRQ init to device_add()
+ notification path
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
+	Michal Simek <monstr@monstr.eu>,
+	microblaze-uclinux@itee.uq.edu.au, linux-pci@vger.kernel.org,
+	Jesse Larrew <jlarrew@linux.vnet.ibm.com>,
+	jbarnes@virtuousgeek.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linuxppc-dev@lists.ozlabs.org
+Date: Fri, 25 May 2012 13:38:25 +1000
+In-Reply-To: <CAErSpo6W28r4f5pJmZr=ofUAaffiUtOqgXWeabGpr+DmKw+Z+g@mail.gmail.com>
+References: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com>
+	 <20120523223700.24276.76804.stgit@bhelgaas.mtv.corp.google.com>
+	 <1337914811.16119.7.camel@pasglop>
+	 <CAErSpo6W28r4f5pJmZr=ofUAaffiUtOqgXWeabGpr+DmKw+Z+g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Thu, 2012-05-24 at 21:08 -0600, Bjorn Helgaas wrote:
+> 
+> OK.  Are you worried about cardbus in particular?
+> 
+> This is headed for the 3.6, not 3.5, so we should have plenty of time.
+>  As soon as everything for the current merge window gets merged and
+> -next is ready for the next batch, I'll put this in there.
 
-On 15/05/12 18:42, Yinghai Lu wrote:
-> On Tue, May 15, 2012 at 2:54 AM, Steven Newbury
-> <steve@snewbury.org.uk> wrote:
-> 
->> I'll get re-synced back up, and if they're still relevant give
->> the patches a test.  Is there an updated branch I should work
->> from?
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->
-> 
-for-pci-res-alloc
-> 
-> and attached patch.
-> 
-> Thanks
-> 
-> Yinghai
+I'm not that worried about cardbus ... in fact I wouldn't be surprised
+if it's already somewhat broken, I haven't tested it in a long time...
 
-Hi Yinghai,
-I also cherry-picked the pref_bar patch and my local "Intel Flush
-Page" patch.
+I'm more worried about basic functionality and expectations about when
+things happen during boot vs. platform hacks, that and pseries specific
+kind of hotplug which can be a bit odd.
 
-It boots, and the Intel GMA is allocated >4G, but the radeon doesn't
-get detected with "for-pci-res-alloc" on hotplug (needs busn-alloc
-patches), so I can't test it.  Booting docked, then undocking/docking
-does work though.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+Cheers,
+Ben.
 
-iEYEARECAAYFAk+07pkACgkQGcb56gMuC634nwCfcmr5Ub8mA9HOXjsFdWmttjEb
-NTAAn0ul6BEKzGz2eoobq2CvpOTzUBzf
-=kq5H
------END PGP SIGNATURE-----
+
