@@ -1,58 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:57925 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966624Ab2ERCNF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 22:13:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6OZYXz-M=C9r154MY7kwC7LRR3ZnQe3pnmVJY2uoWeRw@mail.gmail.com>
-References: <1336422606-4244-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo6OZYXz-M=C9r154MY7kwC7LRR3ZnQe3pnmVJY2uoWeRw@mail.gmail.com>
-Date: Thu, 17 May 2012 19:13:03 -0700
-Message-ID: <CAE9FiQXN5z0riswyECKw5OKe+nPUBN2yZ1d4=Asb3kqaj770NA@mail.gmail.com>
-Subject: Re: [PATCH 00/21] PCI: use busn_res to replace bus secondary/subordinate
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
+Received: from mail-we0-f202.google.com ([74.125.82.202]:37024 "EHLO
+	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460Ab2EYThT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2012 15:37:19 -0400
+Received: by were53 with SMTP id e53so68669wer.1
+        for <linux-pci@vger.kernel.org>; Fri, 25 May 2012 12:37:18 -0700 (PDT)
+Date: Fri, 25 May 2012 13:37:16 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+Message-ID: <20120525193716.GA8817@google.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+ <1337754877-19759-3-git-send-email-yinghai@kernel.org>
+ <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
+ <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
+ <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+ <20120525043651.GA1391@google.com>
+ <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+ <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 17, 2012 at 3:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Sigh.  You previously said we should do this order:
->
->        for-pci-hostbridge-cleanup
->        for-pci-busn-alloc
->        for-pci-res-alloc
->        for-pci-root-bus-hotplug
->        for-pci-for-each-res-addon
->
-> I merged for-pci-hostbridge-cleanup already.  I was about to start
-> merging for-pci-busn-alloc.
->
-> But now you added for-pci-hotplug-cleanup and made for-pci-busn-alloc
-> depend on it.  I have some comments on for-pci-hotplug-cleanup, so I'm
-> not ready to merge it quite yet.  Can you please just go back to the
-> original order and put the new hotplug cleanup stuff at the *end*?
+On Fri, May 25, 2012 at 11:39:26AM -0700, Yinghai Lu wrote:
+> On Fri, May 25, 2012 at 10:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> I don't really like the dependency on PCIBIOS_MAX_MEM_32 + 1ULL
+> >> overflowing to zero -- that means the reader has to know what the
+> >> value of PCIBIOS_MAX_MEM_32 is, and things would break in non-obvious
+> >> ways if we changed it.
+> >>
+> 
+> please check if attached one is more clear.
+> 
+> make max and bottom is only related to _MEM and not default one.
+> 
+> -       if (!(res->flags & IORESOURCE_MEM_64))
+> -               max = PCIBIOS_MAX_MEM_32;
+> +       if (res->flags & IORESOURCE_MEM) {
+> +               if (!(res->flags & IORESOURCE_MEM_64))
+> +                       max = PCIBIOS_MAX_MEM_32;
+> +               else if (PCIBIOS_MAX_MEM_32 != -1)
+> +                       bottom = (resource_size_t)(1ULL<<32);
+> +       }
+> 
+> will still not affect to other arches.
 
-ok, update for-pci-busn_res branch, now it is based on your next branch.
+That's goofy.  You're proposing to make only x86_64 and x86-PAE try to put
+64-bit BARs above 4GB.  Why should this be specific to x86?  I acknowledge
+that there's risk in doing this, but if it's a good idea for x86_64, it
+should also be a good idea for other 64-bit architectures.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-busn_res
+And testing for "is this x86_32 without PAE?" with
+"PCIBIOS_MAX_MEM_32 == -1" is just plain obtuse and hides an
+important bit of arch-specific behavior.
 
-later will push out
+Tangential question about allocate_resource():  Is its "max" argument
+really necessary?  We'll obviously only allocate from inside the root
+resource, so "max" is just a way to artificially avoid the end of
+that resource.  Is there really a case where that's required?
 
-       for-pci-hotplug
-       for-pci-busn-alloc
-       for-pci-root-bus-hotplug
-       for-pci-for-each-res-addon
-       for-pci-res-alloc
+"min" makes sense because in a case like this, it's valid to allocate from
+anywhere in the root resource, but we want to try to allocate from the >4GB
+part first, then fall back to allocating from the whole resource.  I'm not
+sure there's a corresponding case for "max."
 
-Yinghai
+Getting back to this patch, I don't think we should need to adjust "max" at
+all.  For example, this:
+
+commit cb1c8e46244cfd84a1a2fe91be860a74c1cf4e25
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu May 24 22:15:26 2012 -0600
+
+    PCI: try to allocate 64-bit mem resources above 4GB
+    
+    If we have a 64-bit mem resource, try to allocate it above 4GB first.  If
+    that fails, we'll fall back to allocating space below 4GB.
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4ce5ef2..075e5b1 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -121,14 +121,16 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ 	int i, ret = -ENOMEM;
+ 	struct resource *r;
+-	resource_size_t max = -1;
++	resource_size_t start = 0;
++	resource_size_t end = MAX_RESOURCE;
+ 
+ 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
+ 
+-	/* don't allocate too high if the pref mem doesn't support 64bit*/
+-	if (!(res->flags & IORESOURCE_MEM_64))
+-		max = PCIBIOS_MAX_MEM_32;
++	/* If this is a 64-bit mem resource, try above 4GB first */
++	if (res->flags & IORESOURCE_MEM_64)
++		start = (resource_size_t) (1ULL << 32);
+ 
++again:
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		if (!r)
+ 			continue;
+@@ -145,12 +147,18 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ 		/* Ok, try it out.. */
+ 		ret = allocate_resource(r, res, size,
+-					r->start ? : min,
+-					max, align,
++					max(start, r->start ? : min),
++					end, align,
+ 					alignf, alignf_data);
+ 		if (ret == 0)
+-			break;
++			return 0;
++	}
++
++	if (start != 0) {
++		start = 0;
++		goto again;
+ 	}
++
+ 	return ret;
+ }
+ 
