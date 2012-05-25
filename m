@@ -1,101 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:50803 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753005Ab2EYBIH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2012 21:08:07 -0400
-Received: by pbbrp8 with SMTP id rp8so1032006pbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 24 May 2012 18:08:07 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 24 May 2012 22:36:51 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+Message-ID: <20120525043651.GA1391@google.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+ <1337754877-19759-3-git-send-email-yinghai@kernel.org>
+ <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
+ <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
+ <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7dySdFPdLvVZJN6WwB29xMx7CS0Xxdxs7=0=ME7kqBVA@mail.gmail.com>
-References: <CAEH94Ljfjiu3MPLz8_P=1JSJS=hQVY_CJ4kZ=8Oq+0VpweGA4Q@mail.gmail.com>
-	<CAJSP0QXgR5w09LgWDbFzg6EajEoMLY0DHmvA8DndmvnCcBRSZg@mail.gmail.com>
-	<CAEH94Lh0gmHSR1ugVFg0ZhtFTahb9LQJsxjWZzwqzNLSO0aVug@mail.gmail.com>
-	<CAJSP0QXoL3Tr7EAGxX77xZ71bj16oCf0ndL0iMopeYexLPJ93w@mail.gmail.com>
-	<CAEH94Lg2qs2_2_zGm9aChqz_6Ues57-KXwGmUquXjKFXo8RbeA@mail.gmail.com>
-	<CAErSpo7dySdFPdLvVZJN6WwB29xMx7CS0Xxdxs7=0=ME7kqBVA@mail.gmail.com>
-Date: Fri, 25 May 2012 09:08:07 +0800
-Message-ID: <CAEH94LgjHNmFOAaDOVHmmKTDvj2krh29K8Q9kJ1bcEcBEcV_sQ@mail.gmail.com>
-Subject: Re: PCI: cardbus bridge
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stefan Hajnoczi <stefanha@gmail.com>, linux-pci@vger.kernel.org,
-	Ram Pai <linuxram@us.ibm.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2012 at 7:56 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, May 24, 2012 at 3:24 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
->> On Thu, May 24, 2012 at 5:21 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
->>> On Thu, May 24, 2012 at 9:56 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
->>>> On Thu, May 24, 2012 at 4:37 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
->>>>> On Thu, May 24, 2012 at 9:26 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
->
->>>>>> By the way, someone usually mentioned pci host bridge, pci root
->>>>>> bridge. What the differences among them are?
->>>>>
->>>>> I'm not sure what the exact difference is.  PCI "root" bridge refers
->>>>> to the hierarchical nature of PCI, while PCI "host" bridge refers to
->>>> You mean that PCI "root" bridge is one alias of another some bridge?
->>>
->>> The root bridge is the root of a tree of PCI busses.  It's the bus
->>> that the host interacts with - there may be PCI bridges that attach
->>> additional busses.
->
-> "Root bridge" and "host bridge" mean the same thing in Linux: a bridge
-> that connects host CPUs to a PCI fabric.  This bridge is not
-> architected.  The upstream interface and the programming interface are
-> implementation specific.  The downstream interface is PCI, so that
-> part is standard, but since the programming interface is not defined,
-> you can't *do* anything useful to it without an
-> implementation-specific driver.
->
-> On x86 and ia64, that driver is an ACPI driver, and the BIOS supplies
-> ACPI methods that hide the implementation details from the OS.
->
-> The PCI and ACPI specs use the term "host bridge," so that's what I
-> prefer.  The ACPI driver is "pci_root.c" and it calls it "PCI Root
-> Bridge."
->
-> A PCI bus immediately below a host bridge is commonly called a "root
-> bus."  This may be bus 0, but it need not be.  Most modern systems
-> have multiple host bridges, each of which has a root bus.
->
-> A PCI-to-PCI bridge is different: it has PCI interfaces on both
-> upstream ("primary") and downstream ("secondary") sides.  It is
-> defined by the spec.
->
->>> BTW I don't know the terminology, maybe it's PCI "domains" not
->>> "busses".  Again, you'd have to look at the PCI specification to get
->>> the exact definition.
->
-> Linux uses "domain" to refer to what the PCI and ACPI specs call a
-> "segment group."  Here's the definition (from the PCI Firmware Spec):
->
-> "A number in the range 0…65535 that uniquely selects a PCI Segment Group.
->
-> PCI Segment Group is purely a software concept managed by system
-> firmware and used by the operation
-> system. It is a logical collection of PCI buses (or bus segments).
-> There is no tie to any physical entities. It is a
-> way to logically group the PCI bus segments and PCI Express Hierarchies.
->
-> PCI Segment Group concept enables support for more than 256 buses in a
-> system by allowing the reuse of the PCI bus numbers. Within each PCI
-> Segment Group, the bus numbers for the PCI buses must be unique. PCI
-> buses in different PCI Segment Group are permitted to have the same
-> bus number.
->
-> A PCI Segment Group contains one or more PCI host bridges."
-Great, very very clear, it is very helpful to me, maybe plus other
-guys, thanks a lot.
+On Wed, May 23, 2012 at 11:40:46AM -0700, Yinghai Lu wrote:
+> On Wed, May 23, 2012 at 10:30 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Wed, May 23, 2012 at 8:57 AM, Linus Torvalds
+> > <torvalds@linux-foundation.org> wrote:
+> >> On Tue, May 22, 2012 at 11:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >>> and will fall back to below 4g if it can not find any above 4g.
+> >>
+> >> Has this been tested on 32-bit machines without PAE? There might be
+> >> things that just happen to work because their allocations were always
+> >> done bottom-up.
+> >
+> > Good point. that problem should be addressed at first before this patch.
+> 
+> Just checked code for 32bit machines without PAE.
+> 
+> when X86_PAE is not set, phys_addr_t aka resource_size_t will be 32bit.
+> so in drivers/pci/bus.c::pci_bus_alloc_resource_fit()
+> will have bottom to 0.
+>     resource_size_t bottom = PCIBIOS_MAX_MEM_32 + 1ULL;
+> also in arch/x86/kernel/setup.c::setup_arch()
+>    iomem_resource.end = (1ULL << boot_cpu_data.x86_phys_bits) - 1;
+> will have iomem_resource.end to 0xffffffff
+> 
+> when X86_PAE is set, but CPU does not support PAE.
+> phys_addr_t aka resource_size_t will be 32bit.
 
->
-> Bjorn
+I think you meant phys_addr_t and resource_size_t will be *64* bit
+when X86_PAE is set.  Obvious to you, but quite confusing to non-x86
+experts like me :)
 
+> so in drivers/pci/bus.c::pci_bus_alloc_resource_fit()
+> will have bottom to 4g.
+>     resource_size_t bottom = PCIBIOS_MAX_MEM_32 + 1ULL;
+> but
+> in arch/x86/kernel/setup.c::setup_arch()
+>    iomem_resource.end = (1ULL << boot_cpu_data.x86_phys_bits) - 1;
+> will have iomem_resource.end to 0xffffffff, because x86_phys_bits is 32 when PAE
+> is not detected in arch/x86/kernel/cpu/common.c::get_cpu_cap.
+> that mean first try will fail, so it will go to second try with bottom to 0.
+> 
+> so both case are safe with this patch.
 
+I don't really like the dependency on PCIBIOS_MAX_MEM_32 + 1ULL
+overflowing to zero -- that means the reader has to know what the
+value of PCIBIOS_MAX_MEM_32 is, and things would break in non-obvious
+ways if we changed it.
 
--- 
-Regards,
+What do you think of a patch like the following?  It makes it
+explicit that we can only allocate space the CPU can address.
 
-Zhi Yong Wu
+commit feded2ae21d6160292726ccd5128080d42395be4
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu May 24 22:15:26 2012 -0600
+
+    PCI: try to allocate 64-bit resources above 4GB
+    
+    If we have a 64-bit resource, try to allocate it above 4GB first.  If that
+    fails, either because there's no space or the CPU can't address space above
+    4GB (iomem_resource.end is the highest address the CPU supports), we'll
+    fall back to allocating space below 4GB.
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4ce5ef2..2c56693 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -121,14 +121,18 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ 	int i, ret = -ENOMEM;
+ 	struct resource *r;
+-	resource_size_t max = -1;
++	resource_size_t start = 0;
++	resource_size_t end = PCIBIOS_MAX_MEM_32;
+ 
+ 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
+ 
+-	/* don't allocate too high if the pref mem doesn't support 64bit*/
+-	if (!(res->flags & IORESOURCE_MEM_64))
+-		max = PCIBIOS_MAX_MEM_32;
++	/* If this is a 64-bit resource, prefer space above 4GB */
++	if (res->flags & IORESOURCE_MEM_64) {
++		start = PCIBIOS_MAX_MEM_32 + 1ULL;
++		end = iomem_resource.end;
++	}
+ 
++again:
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		if (!r)
+ 			continue;
+@@ -145,12 +149,18 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ 		/* Ok, try it out.. */
+ 		ret = allocate_resource(r, res, size,
+-					r->start ? : min,
+-					max, align,
++					max(start, r->start ? : min),
++					end, align,
+ 					alignf, alignf_data);
+ 		if (ret == 0)
+-			break;
++			return 0;
+ 	}
++
++	if (start != 0) {
++		start = 0;
++		goto again;
++	}
++
+ 	return ret;
+ }
+ 
