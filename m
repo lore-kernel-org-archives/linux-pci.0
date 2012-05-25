@@ -1,39 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:50722 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966120Ab2EQDuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 May 2012 23:50:55 -0400
-Date: Thu, 17 May 2012 13:37:14 +1000
-From: David Gibson <david@gibson.dropbear.id.au>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH 03/13] iommu: IOMMU groups for VT-d and AMD-Vi
-Message-ID: <20120517033714.GE22069@truffala.fritz.box>
-References: <20120511222148.30496.68571.stgit@bling.home>
- <20120511225548.30496.34428.stgit@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120511225548.30496.34428.stgit@bling.home>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4FBF90E5.8030800@siemens.com>
+References: <4FBF90E5.8030800@siemens.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 25 May 2012 08:11:53 -0600
+Message-ID: <CAErSpo78Pp7YW3tLbT7QR0oOeSUHzxf55CBW8bDW3kWx0Gy1ug@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE NIC
+ as broken
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2012 at 04:55:48PM -0600, Alex Williamson wrote:
-> Add back group support for AMD & Intel.  amd_iommu already tracks
-> devices and has init and uninit routines to manage groups.
-> intel-iommu does this on the fly, so we make use of the notifier
-> support built into iommu groups to create and remove groups.
+On Fri, May 25, 2012 at 8:02 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
+> According to Alexey, the T310 does not properly support INTx masking as
+> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
+> is masked. Mark this adapter as broken so that pci_intx_mask_supported
+> won't report it as compatible.
 
-Looks ok to me.
+Please include a reference to a bugzilla, mailing list discussion, or
+other details about how this was found and debugged.  Thanks!
 
--- 
-David Gibson			| I'll have my music baroque, and my code
-david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
-				| _way_ _around_!
-http://www.ozlabs.org/~dgibson
+> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+> ---
+>
+> Alexey, please test if this catches your case correctly.
+>
+>  drivers/pci/pci.c    |    3 +++
+>  drivers/pci/quirks.c |   12 ++++++++++++
+>  include/linux/pci.h  |    2 ++
+>  3 files changed, 17 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f16900..3a1aeb5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2876,6 +2876,9 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
+>        bool mask_supported = false;
+>        u16 orig, new;
+>
+> +       if (dev->broken_intx_masking)
+> +               return false;
+> +
+>        pci_cfg_access_lock(dev);
+>
+>        pci_read_config_word(dev, PCI_COMMAND, &orig);
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 2a75216..151e174 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2929,6 +2929,18 @@ static void __devinit disable_igfx_irq(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+>
+> +/*
+> + * Some devices may pass our check in pci_intx_mask_supported if
+> + * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
+> + * support this feature.
+> + */
+> +static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
+> +{
+> +       dev->broken_intx_masking = 1;
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010,
+> +                       quirk_broken_intx_masking);
+> +
+>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>                          struct pci_fixup *end)
+>  {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 17b7b5b..c7cfd73 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -324,6 +324,8 @@ struct pci_dev {
+>        unsigned int    is_hotplug_bridge:1;
+>        unsigned int    __aer_firmware_first_valid:1;
+>        unsigned int    __aer_firmware_first:1;
+> +       unsigned int    broken_intx_masking:1;  /* device's INTx masking
+> +                                                  support is not working */
+>        pci_dev_flags_t dev_flags;
+>        atomic_t        enable_cnt;     /* pci_enable_device has been called */
+>
+> --
+> 1.7.3.4
