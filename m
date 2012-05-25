@@ -1,112 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:48310 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429Ab2E1FiP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2012 01:38:15 -0400
-Received: by yenm10 with SMTP id m10so1170250yen.19
-        for <linux-pci@vger.kernel.org>; Sun, 27 May 2012 22:38:15 -0700 (PDT)
-Date: Mon, 28 May 2012 00:38:07 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Jeroen Nijhof <jeroen@nijhof.co.uk>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: HP Pavilion dv6 laptop fails to boot with
- CONFIG_HOTPLUG_PCI_ACPI=y
-Message-ID: <20120528053807.GA10976@burratino>
-References: <87obp91jgc.fsf@tux.huis>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:50803 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753005Ab2EYBIH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2012 21:08:07 -0400
+Received: by pbbrp8 with SMTP id rp8so1032006pbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 24 May 2012 18:08:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87obp91jgc.fsf@tux.huis>
+In-Reply-To: <CAErSpo7dySdFPdLvVZJN6WwB29xMx7CS0Xxdxs7=0=ME7kqBVA@mail.gmail.com>
+References: <CAEH94Ljfjiu3MPLz8_P=1JSJS=hQVY_CJ4kZ=8Oq+0VpweGA4Q@mail.gmail.com>
+	<CAJSP0QXgR5w09LgWDbFzg6EajEoMLY0DHmvA8DndmvnCcBRSZg@mail.gmail.com>
+	<CAEH94Lh0gmHSR1ugVFg0ZhtFTahb9LQJsxjWZzwqzNLSO0aVug@mail.gmail.com>
+	<CAJSP0QXoL3Tr7EAGxX77xZ71bj16oCf0ndL0iMopeYexLPJ93w@mail.gmail.com>
+	<CAEH94Lg2qs2_2_zGm9aChqz_6Ues57-KXwGmUquXjKFXo8RbeA@mail.gmail.com>
+	<CAErSpo7dySdFPdLvVZJN6WwB29xMx7CS0Xxdxs7=0=ME7kqBVA@mail.gmail.com>
+Date: Fri, 25 May 2012 09:08:07 +0800
+Message-ID: <CAEH94LgjHNmFOAaDOVHmmKTDvj2krh29K8Q9kJ1bcEcBEcV_sQ@mail.gmail.com>
+Subject: Re: PCI: cardbus bridge
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stefan Hajnoczi <stefanha@gmail.com>, linux-pci@vger.kernel.org,
+	Ram Pai <linuxram@us.ibm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(just forwarding without attachments to appease mail filters)
-Hi,
+On Fri, May 25, 2012 at 7:56 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, May 24, 2012 at 3:24 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
+>> On Thu, May 24, 2012 at 5:21 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
+>>> On Thu, May 24, 2012 at 9:56 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
+>>>> On Thu, May 24, 2012 at 4:37 PM, Stefan Hajnoczi <stefanha@gmail.com> wrote:
+>>>>> On Thu, May 24, 2012 at 9:26 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
+>
+>>>>>> By the way, someone usually mentioned pci host bridge, pci root
+>>>>>> bridge. What the differences among them are?
+>>>>>
+>>>>> I'm not sure what the exact difference is.  PCI "root" bridge refers
+>>>>> to the hierarchical nature of PCI, while PCI "host" bridge refers to
+>>>> You mean that PCI "root" bridge is one alias of another some bridge?
+>>>
+>>> The root bridge is the root of a tree of PCI busses.  It's the bus
+>>> that the host interacts with - there may be PCI bridges that attach
+>>> additional busses.
+>
+> "Root bridge" and "host bridge" mean the same thing in Linux: a bridge
+> that connects host CPUs to a PCI fabric.  This bridge is not
+> architected.  The upstream interface and the programming interface are
+> implementation specific.  The downstream interface is PCI, so that
+> part is standard, but since the programming interface is not defined,
+> you can't *do* anything useful to it without an
+> implementation-specific driver.
+>
+> On x86 and ia64, that driver is an ACPI driver, and the BIOS supplies
+> ACPI methods that hide the implementation details from the OS.
+>
+> The PCI and ACPI specs use the term "host bridge," so that's what I
+> prefer.  The ACPI driver is "pci_root.c" and it calls it "PCI Root
+> Bridge."
+>
+> A PCI bus immediately below a host bridge is commonly called a "root
+> bus."  This may be bus 0, but it need not be.  Most modern systems
+> have multiple host bridges, each of which has a root bus.
+>
+> A PCI-to-PCI bridge is different: it has PCI interfaces on both
+> upstream ("primary") and downstream ("secondary") sides.  It is
+> defined by the spec.
+>
+>>> BTW I don't know the terminology, maybe it's PCI "domains" not
+>>> "busses".  Again, you'd have to look at the PCI specification to get
+>>> the exact definition.
+>
+> Linux uses "domain" to refer to what the PCI and ACPI specs call a
+> "segment group."  Here's the definition (from the PCI Firmware Spec):
+>
+> "A number in the range 0…65535 that uniquely selects a PCI Segment Group.
+>
+> PCI Segment Group is purely a software concept managed by system
+> firmware and used by the operation
+> system. It is a logical collection of PCI buses (or bus segments).
+> There is no tie to any physical entities. It is a
+> way to logically group the PCI bus segments and PCI Express Hierarchies.
+>
+> PCI Segment Group concept enables support for more than 256 buses in a
+> system by allowing the reuse of the PCI bus numbers. Within each PCI
+> Segment Group, the bus numbers for the PCI buses must be unique. PCI
+> buses in different PCI Segment Group are permitted to have the same
+> bus number.
+>
+> A PCI Segment Group contains one or more PCI host bridges."
+Great, very very clear, it is very helpful to me, maybe plus other
+guys, thanks a lot.
 
-Jeroen Nijhof wrote:
+>
+> Bjorn
 
-> My laptop stopped booting (properly) after upgrading
-[...]
-> I reported that as  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665493 .
->
-> Further investigation shows the difference was not the extra patches,
-> but a configuration change: I narrowed it down to the change from
->
->            CONFIG_HOTPLUG_PCI_ACPI=m
->  to 
->            CONFIG_HOTPLUG_PCI_ACPI=y
->
-> Namely, configuring linux-stable v3.2.15 with the attached
-> config-3.2.15-good booted alright, but with
-> config-3.2.15-bad, with CONFIG_HOTPLUG_PCI_ACPI changed from 'm' to 'y'
-> it did not -- failing one way or the other 100% of the time.
 
-Thanks.  I'm cc-ing Bjorn Helgaas because it seems that your message
-didn't hit the linux-pci list.  (Maybe it hit some length limit?)
 
-> The problem persists with Debian's linux-image-3.3.0-trunk-amd64:amd64 
-> v. 3.3.6-1~experimental.1 . And also with upstream v3.4.0: 
-> compiled with the attached config-3.4.0-good (= Debian's
-> config-3.2.0-1-amd64  + make oldconfig and accept defaults) it boots fine,
-> but compiled with config-3.4.0-bad (= config-3.2.0-2-amd64 + make oldconfig)
-> it does not.
->
-> What happens for the bad v3.4.0 is that the booting gets half-way,
-> but then gets stuck after "cfg80221: Calling CRDA for country: US".
-> Pressing control-C then makes it continue with
-> "Starting Braille terminal driver". Since /etc/rcS.d contains
-> S01mountkernfs.sh, S02udev and S03brltty, in that order,
-> it seems that it was stuck in S02udev.
->
-> It then continues to the extent that I can log in, but it keeps
-> switching virtual terminals every few seconds. I did manage to capture
-> dmesg, though -- attached as dmesg-3.4.0-bad (up to 7.83 s before the control-C,
-> from 34.94 after the control-C). 
-> Please note the Oops at 6.23s: 
->
-> [    6.231033] [drm:drm_pci_agp_init] *ERROR* Cannot initialize the agpgart module.
-> [    6.233172] BUG: unable to handle kernel NULL pointer dereference at           (null)
-> [    6.233325] IP: [<ffffffff8135804d>] __mutex_lock_common.isra.5+0xa0/0x167
-> [    6.233426] PGD 0 
-> [    6.233513] Oops: 0002 [#1] SMP 
->
-> Also, udevd starts complaining continuously:
->
-> udevd[364]: timeout: killing '/sbin/modprobe -b pci:v00008086d00001C20sv0000103Csd00003581bc04sc03i00' [411]
-> udevd[366]: timeout: killing '/sbin/modprobe -b pci:v00001002d00006760sv0000103Csd00003581bc03sc00i00' [411]
->
-> So it looks like it got stuck with the Intel audio controller (00:1b.0)
-> and the Radeon VGA controler (01:00.0)
+-- 
+Regards,
 
-Gah.
-
-> A following warm reboot is even worse: now it doesn't get further than
->
-> Loading, please wait...
-> modprobe: module unix not found in modules.dep
-> INIT: version 2.88 booting
-> [info] Using makefile-style concurrent booting in runlevel S
-> [ ok ] Starting the hotplug events dispatcher: udevd
-> [ ok ] Synthesizing the initial hotplug events...done
-> [....] Waiting for /dev to be fully populated....
->
-> -- and then it is stuck completely (that was with the 'normal' boot with
-> the 'silent' parameter set)
->
-> Since the Oops mentioned a lock, I thought I'ld try turn on lockdep,
-> starting from config-3.4.0-bad and set
-> CONFIG_LOCKDEP=y and CONFIG_PROVE_LOCKING=y , resulting in
-> config-3.4.0-also-good . Unfortunately, this one boots without problems!
-> The dmesg output from this kernel is attached as dmesg-3.4.0-also-good.
->
-> Finally, I've attached the output of acpidump (acpidump.out).
->
-> Any suggestions on how to narrow it down further? I'ld be happy to try
-> some patches.
-
-Thanks for a thorough report.  linux-pci folks: the attachments from
-Jeroen's original message can be found at [1].  Ideas?
-
-Thanks,
-Jonathan
-
-[1] http://bugs.debian.org/cgi-bin/bugreport.cgi?msg=27;bug=665493
+Zhi Yong Wu
