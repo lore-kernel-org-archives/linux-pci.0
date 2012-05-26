@@ -1,40 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:37902 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753740Ab2E1Nju (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2012 09:39:50 -0400
-Received: from albireo.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id 733E31C00EB
-	for <linux-pci@vger.kernel.org>; Mon, 28 May 2012 15:39:49 +0200 (CEST)
-Date: Mon, 28 May 2012 15:39:47 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Only decode defined fields of PCI Express Link Control
- 2
-Message-ID: <mj+md-20120528.133942.12427.albireo@ucw.cz>
-References: <1337264056.2496.8.camel@bwh-desktop.uk.solarflarecom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1337264056.2496.8.camel@bwh-desktop.uk.solarflarecom.com>
+Received: from szxga04-in.huawei.com ([58.251.152.67]:50979 "EHLO
+	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752070Ab2EZJyc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 May 2012 05:54:32 -0400
+Received: from huawei.com (szxga04-in [172.24.2.12])
+ by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4M005O2JJTOV@szxga04-in.huawei.com> for
+ linux-pci@vger.kernel.org; Sat, 26 May 2012 17:55:05 +0800 (CST)
+Received: from szxrg01-dlp.huawei.com ([172.24.2.119])
+ by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4M00330JJT65@szxga04-in.huawei.com> for
+ linux-pci@vger.kernel.org; Sat, 26 May 2012 17:55:05 +0800 (CST)
+Date: Sat, 26 May 2012 17:54:03 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v7 10/10] PCI, x86: get rid of redundant log messages
+In-reply-to: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Message-id: <1338026043-3968-11-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+For each resource of a PCI host bridge, the arch code and PCI
+code log following messages:
+"pci_root PNP0A08:00: host bridge window [io 0x0000-0x03af]",
+"pci_bus 0000:00: root bus resource [io  0x0000-0x03af]"
 
-> On a PCI Express multi-function device associated with an upstream
-> port, all bits of the Link Control 2 register are currently reserved
-> on functions > 0.
-> 
-> The Selectable De-emphasis field is reserved on all but downstream
-> ports.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/x86/pci/acpi.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-Thanks, applied.
-
-				Have a nice fortnight
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 76ad029..4368387 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -295,13 +295,6 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	}
+ 
+ 	info->res_num++;
+-	if (addr.translation_offset)
+-		dev_info(&info->bridge->dev, "host bridge window %pR "
+-			 "(PCI address [%#llx-%#llx])\n",
+-			 res, res->start - addr.translation_offset,
+-			 res->end - addr.translation_offset);
+-	else
+-		dev_info(&info->bridge->dev, "host bridge window %pR\n", res);
+ 
+ 	return AE_OK;
+ }
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Got mole problems? Call Avogadro, 602-1023!
+1.7.1
+
+
