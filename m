@@ -1,127 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17960 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758144Ab2EIPZv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 May 2012 11:25:51 -0400
-Subject: [PATCH v2] pci: clean all funcs when hot-removing multifunc device
-To: mst@redhat.com, linux-pci@vger.kernel.org, seabios@seabios.org,
-	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org,
-	alex.williamson@redhat.com, kevin@koconnor.net
-From: Amos Kong <akong@redhat.com>
-Date: Wed, 09 May 2012 23:25:43 +0800
-Message-ID: <20120509152543.11307.20072.stgit@t>
-In-Reply-To: <1315976141-6684-1-git-send-email-akong@redhat.com>
-References: <1315976141-6684-1-git-send-email-akong@redhat.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:38878 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752987Ab2EZPCM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 26 May 2012 11:02:12 -0400
+Received: by lahd3 with SMTP id d3so1201790lah.19
+        for <linux-pci@vger.kernel.org>; Sat, 26 May 2012 08:02:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+ <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
+ <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
+ <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+ <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+ <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+ <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
+ <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
+ <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com> <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 26 May 2012 09:01:47 -0600
+Message-ID: <CAErSpo5iQr9Q3=94DBkUPNKTWS3F0SNKyBgrpCATWgtLeJ-98g@mail.gmail.com>
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RHBZ: https://bugzilla.redhat.com/show_bug.cgi?id=737720#c8
-(dmesg and DSDT were attached in bz)
+On Fri, May 25, 2012 at 6:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, May 25, 2012 at 5:10 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Fri, May 25, 2012 at 2:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> I think we should fix this with a separate patch that removes
+>>> PCIBIOS_MAX_MEM_32 altogether, replacing this use with an explicit
+>>> 0xffffffff (or some other "max 32-bit value" symbol).  I don't think
+>>> there's anything arch-specific about this.
+>>>
+>>> So I'd like to see two patches here:
+>>>  1) Avoid allocating 64-bit regions for 32-bit BARs
+>>>  2) Try to allocate regions above 4GB for 64-bit BARs
+>>
+>> Sure. please check updated two patches.
+>
+> I think the first one looks good.
+>
+> I'm curious about the second.  Why did you add the IORESOURCE_MEM
+> test?  That's doesn't affect the "start =" piece because
+> IORESOURCE_MEM is always set if IORESOURCE_MEM_64 is set.
+>
+> But it does affect the "end =" part.  Previously we limited all I/O
+> and 32-bit mem BARs to the low 4GB.  This patch makes it so we limit
+> 32-bit mem BARs to the low 4GB, but we don't limit I/O BARs.  But I/O
+> BARs can only have 32 bits of address, so it seems like we should
+> limit them the same way as 32-bit mem BARs.  So I expected something
+> like this:
+>
+>    if (res->flags & IORESOURCE_MEM_64) {
+>        start = (resource_size_t) (1ULL << 32);
+>        end = PCI_MAX_RESOURCE;
+>    } else {
+>        start = 0;
+>        end = PCI_MAX_RESOURCE_32;
+>    }
 
-Boot up a Linux VM with 8 pci block devices which
-are the 8 functions in one pci slot.
-| # qemu-kvm ...
-| -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
-| -device virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
-| ....
-| -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
-| -device virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
+Another bug here: we're trying to restrict the *bus* addresses we
+allocate, but we're applying the limits to *CPU* addresses.
+Therefore, this only works as intended when CPU addresses are the same
+as bus addresses, i.e., when the host bridge applies no address
+translation.  That happens to be the case for x86, but is not the case
+in general.
 
-Check devices in guest.
-| vm)# ls /dev/vd*
-|    vda vdb vdc vde vdf vdg vdh
-| vm)# lspci |grep block
-| 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
-|    ...
-| 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
-|
-
-Func1~7 still exist in guest after hot-removing the whole slot
-by qemu monitor cmd.
-| vm)# lspci |grep block    (00:03.0 disappeared)
-| 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
-|    ...
-| 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
-| vm)# ls /dev/vd*          (vda disappeared)
-|    vdb vdc vde vdf vdg vdh
-| vm)# mkfs /dev/vdb
-|    INFO: task mkfs.ext2:1784 blocked for more than 120 seconds.
-
-We process pci slot as a whole device, in seabios only defines one
-device for a slot in ACPI DSDT table, then there is only one entry
-(for func#0) would be added into 'slot->funcs' list.
-When we release the whole slot, only the entry in 'slot->funcs' will
-be cleaned, so func#1~7 could not be cleaned from system.
-
-| drivers/pci/hotplug/acpiphp_glue.c:
-| static int disable_device(struct acpiphp_slot *slot) {
-| 	list_for_each_entry(func, &slot->funcs, sibling) {
-| 		pdev = pci_get_slot(slot->bridge->pci_bus,
-| 		       PCI_DEVFN(slot->device, func->function));
-| 		..clean code.. // those code is only executed 1 time(for func#0)
-|                 __pci_remove_bus_device(pdev);
-|                 pci_dev_put(pdev);
-
-I try to add entries for all hotpluged device in enable_device(), but
-it doesn't work, because 'slot->funcs' is used in many place which we
-only need to process func#0. This patch just try to clean all funcs in
-disable_device().
-
-Hotpluging multifunc of guests(WinXp/Win7) is fine.
-
----
-v1 thread: http://marc.info/?t=131597601700003&r=1&w=2
-
-Changes from v1:
-- rebase patch to latest linux.git
-- remove unnecessary multiplefunction check
-- rename 'i' to meaningful 'fn'
-- fix coding style
-
-Signed-off-by: Amos Kong <akong@redhat.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 806c44f..42f9bb9 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -887,6 +887,7 @@ static int disable_device(struct acpiphp_slot *slot)
- 	struct acpiphp_func *func;
- 	struct pci_dev *pdev;
- 	struct pci_bus *bus = slot->bridge->pci_bus;
-+	int fn;
- 
- 	/* The slot will be enabled when func 0 is added, so check
- 	   func 0 before disable the slot. */
-@@ -902,16 +903,17 @@ static int disable_device(struct acpiphp_slot *slot)
- 			func->bridge = NULL;
- 		}
- 
--		pdev = pci_get_slot(slot->bridge->pci_bus,
--				    PCI_DEVFN(slot->device, func->function));
--		if (pdev) {
--			pci_stop_bus_device(pdev);
--			if (pdev->subordinate) {
--				disable_bridges(pdev->subordinate);
--				pci_disable_device(pdev);
-+		for (fn = 0; fn < 8; fn++) {
-+			pdev = pci_get_slot(bus, PCI_DEVFN(slot->device, fn));
-+			if (pdev) {
-+				pci_stop_bus_device(pdev);
-+				if (pdev->subordinate) {
-+					disable_bridges(pdev->subordinate);
-+					pci_disable_device(pdev);
-+				}
-+				__pci_remove_bus_device(pdev);
-+				pci_dev_put(pdev);
- 			}
--			__pci_remove_bus_device(pdev);
--			pci_dev_put(pdev);
- 		}
- 	}
- 
-
+I think we need a third patch to fix this problem.
