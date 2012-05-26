@@ -1,330 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:47365 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751960Ab2EYDBA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 May 2012 23:01:00 -0400
-Message-ID: <1337914811.16119.7.camel@pasglop>
-Subject: Re: [PATCH v3 1/2] powerpc/PCI: move DMA & IRQ init to device_add()
- notification path
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
-	Michal Simek <monstr@monstr.eu>,
-	microblaze-uclinux@itee.uq.edu.au, linux-pci@vger.kernel.org,
-	Jesse Larrew <jlarrew@linux.vnet.ibm.com>,
-	jbarnes@virtuousgeek.org,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
+Received: from szxga03-in.huawei.com ([58.251.152.66]:61951 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887Ab2EZJyb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 May 2012 05:54:31 -0400
+Received: from huawei.com (szxga03-in [172.24.2.9])
+ by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4M003J5JJO9G@szxga03-in.huawei.com> for
+ linux-pci@vger.kernel.org; Sat, 26 May 2012 17:55:01 +0800 (CST)
+Received: from szxrg01-dlp.huawei.com ([172.24.2.119])
+ by szxga03-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4M004Q0JJOY9@szxga03-in.huawei.com> for
+ linux-pci@vger.kernel.org; Sat, 26 May 2012 17:55:00 +0800 (CST)
+Date: Sat, 26 May 2012 17:53:59 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v7 06/10] PCI, ACPI: provide MCFG address for PCI host bridges
+In-reply-to: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linuxppc-dev@lists.ozlabs.org
-Date: Fri, 25 May 2012 13:00:11 +1000
-In-Reply-To: <20120523223700.24276.76804.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com>
-	 <20120523223700.24276.76804.stgit@bhelgaas.mtv.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Message-id: <1338026043-3968-7-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-05-23 at 16:37 -0600, Bjorn Helgaas wrote:
-> From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
-> 
-> PowerPC initialized DMA and IRQ information in the pci_scan_child_bus()
-> -> pcibios_fixup_bus() path.  Some hotplug drivers use that path, but
-> others don't, e.g., pciehp, so sometimes hot-added devices are only
-> partly initialized.
-> 
-> This patch moves that initialization from pcibios_fixup_bus() to a new
-> pci_bus_notify() called in the pci_bus_add_device() -> device_add() path.
-> That means the initialization happens the same way for all PCI devices,
-> whether they are present at boot or hot-added later.
-> 
-> Note that powerpc was the only user of pci_fixup_cardbus(), which was
-> used to do this same setup for cardbus devices.  That's no longer
-> needed because this setup will now be done in the same device_add()
-> notification path as all other PCI devices.
+This patch provide MCFG address for PCI host bridges, which will
+be used to support host bridge hotplug. It gets MCFG address
+by evaluating _CBA method if available, or by scanning the ACPI
+MCFG table.
 
-Hrm. That will require a good deal of testing... Unfortunately I'm out
-for a few weeks getting some surgery and then recovering...
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/acpi/pci_root.c  |   12 ++++++++++++
+ drivers/pci/pci-acpi.c   |   34 ++++++++++++++++++++++++++++++++++
+ include/acpi/acnames.h   |    1 +
+ include/acpi/acpi_bus.h  |    3 +++
+ include/linux/pci-acpi.h |    5 +++++
+ 5 files changed, 55 insertions(+), 0 deletions(-)
 
-Our PCI code has ancient roots and I wouldn't be surprised if that
-change breaks subtle assumptions made here or there, we'd need to test
-at least on a good range of macs and ibm hotplug stuff.
-
-Cheers,
-Ben.
-
-> Typical failure of a hot-added e1000e device prior to this change:
-> 
->     # echo 1 > /sys/bus/pci/slots/1/power
->     <snip>
->     e1000e 0000:03:00.0: enabling device (0000 -> 0002)
->     e1000e 0000:03:00.0: No usable DMA configuration, aborting
->     e1000e: probe of 0000:03:00.0 failed with error -5
-> 
-> Successful initialization after this change:
-> 
->     # echo 1 > /sys/bus/pci/slots/1/power
->     <snip>
->     e1000e 0000:03:00.0: enabling device (0000 -> 0002)
->     irq: irq 6 on host /soc@ffe00000/msi@41600 mapped to virtual irq 27
->     e1000e 0000:03:00.0: eth0: (PCI Express:2.5GT/s:Width x1) 00:15:17:bf:c0:c9
->     e1000e 0000:03:00.0: eth0: Intel(R) PRO/1000 Network Connection
->     e1000e 0000:03:00.0: eth0: MAC: 1, PHY: 4, PBA No: D50861-003
-> 
-> [bhelgaas: changelog, notifier name, registration can be __init]
-> CC: Dominik Brodowski <linux@dominikbrodowski.net>
-> Signed-off-by: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/powerpc/include/asm/pci.h             |    2 -
->  arch/powerpc/kernel/pci-common.c           |   87 ++++++++++++++--------------
->  arch/powerpc/kernel/pci_32.c               |    2 +
->  arch/powerpc/kernel/pci_64.c               |    2 +
->  arch/powerpc/kernel/pci_of_scan.c          |    1 
->  arch/powerpc/platforms/pseries/pci_dlpar.c |    1 
->  drivers/pci/pci.c                          |    5 --
->  drivers/pcmcia/cardbus.c                   |    3 -
->  include/linux/pci.h                        |    3 -
->  9 files changed, 49 insertions(+), 57 deletions(-)
-> 
-> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-> index 6653f27..d6a36a4 100644
-> --- a/arch/powerpc/include/asm/pci.h
-> +++ b/arch/powerpc/include/asm/pci.h
-> @@ -183,10 +183,10 @@ extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
->  				 resource_size_t *start, resource_size_t *end);
->  
->  extern resource_size_t pcibios_io_space_offset(struct pci_controller *hose);
-> -extern void pcibios_setup_bus_devices(struct pci_bus *bus);
->  extern void pcibios_setup_bus_self(struct pci_bus *bus);
->  extern void pcibios_setup_phb_io_space(struct pci_controller *hose);
->  extern void pcibios_scan_phb(struct pci_controller *hose);
-> +extern void pcibios_setup_bus_notifier(void);
->  
->  #endif	/* __KERNEL__ */
->  #endif /* __ASM_POWERPC_PCI_H */
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 7320f36..41b39ba 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1009,40 +1009,6 @@ void __devinit pcibios_setup_bus_self(struct pci_bus *bus)
->  		ppc_md.pci_dma_bus_setup(bus);
->  }
->  
-> -void __devinit pcibios_setup_bus_devices(struct pci_bus *bus)
-> -{
-> -	struct pci_dev *dev;
-> -
-> -	pr_debug("PCI: Fixup bus devices %d (%s)\n",
-> -		 bus->number, bus->self ? pci_name(bus->self) : "PHB");
-> -
-> -	list_for_each_entry(dev, &bus->devices, bus_list) {
-> -		/* Cardbus can call us to add new devices to a bus, so ignore
-> -		 * those who are already fully discovered
-> -		 */
-> -		if (dev->is_added)
-> -			continue;
-> -
-> -		/* Fixup NUMA node as it may not be setup yet by the generic
-> -		 * code and is needed by the DMA init
-> -		 */
-> -		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
-> -
-> -		/* Hook up default DMA ops */
-> -		set_dma_ops(&dev->dev, pci_dma_ops);
-> -		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
-> -
-> -		/* Additional platform DMA/iommu setup */
-> -		if (ppc_md.pci_dma_dev_setup)
-> -			ppc_md.pci_dma_dev_setup(dev);
-> -
-> -		/* Read default IRQs and fixup if necessary */
-> -		pci_read_irq_line(dev);
-> -		if (ppc_md.pci_irq_fixup)
-> -			ppc_md.pci_irq_fixup(dev);
-> -	}
-> -}
-> -
->  void pcibios_set_master(struct pci_dev *dev)
->  {
->  	/* No special bus mastering setup handling */
-> @@ -1059,19 +1025,9 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
->  
->  	/* Now fixup the bus bus */
->  	pcibios_setup_bus_self(bus);
-> -
-> -	/* Now fixup devices on that bus */
-> -	pcibios_setup_bus_devices(bus);
->  }
->  EXPORT_SYMBOL(pcibios_fixup_bus);
->  
-> -void __devinit pci_fixup_cardbus(struct pci_bus *bus)
-> -{
-> -	/* Now fixup devices on that bus */
-> -	pcibios_setup_bus_devices(bus);
-> -}
-> -
-> -
->  static int skip_isa_ioresource_align(struct pci_dev *dev)
->  {
->  	if (pci_has_flag(PCI_CAN_SKIP_ISA_ALIGN) &&
-> @@ -1685,6 +1641,49 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
->  	}
->  }
->  
-> +static int pci_bus_notify(struct notifier_block *nb, unsigned long action,
-> +			  void *data)
-> +{
-> +	struct pci_dev *dev = to_pci_dev(data);
-> +
-> +	switch (action) {
-> +	case BUS_NOTIFY_ADD_DEVICE:
-> +		/* Setup OF node pointer in the device */
-> +		dev->dev.of_node = pci_device_to_OF_node(dev);
-> +
-> +		/* Fixup NUMA node as it may not be setup yet by the generic
-> +		 * code and is needed by the DMA init
-> +		 */
-> +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
-> +
-> +		/* Hook up default DMA ops */
-> +		set_dma_ops(&dev->dev, pci_dma_ops);
-> +		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
-> +
-> +		/* Additional platform DMA/iommu setup */
-> +		if (ppc_md.pci_dma_dev_setup)
-> +			ppc_md.pci_dma_dev_setup(dev);
-> +
-> +		/* Read default IRQs and fixup if necessary */
-> +		pci_read_irq_line(dev);
-> +		if (ppc_md.pci_irq_fixup)
-> +			ppc_md.pci_irq_fixup(dev);
-> +
-> +		break;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static struct notifier_block device_nb = {
-> +	.notifier_call = pci_bus_notify,
-> +};
-> +
-> +void __init pcibios_setup_bus_notifier(void)
-> +{
-> +	bus_register_notifier(&pci_bus_type, &device_nb);
-> +}
-> +
->  static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
->  {
->  	int i, class = dev->class >> 8;
-> diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
-> index 4b06ec5..640cc35 100644
-> --- a/arch/powerpc/kernel/pci_32.c
-> +++ b/arch/powerpc/kernel/pci_32.c
-> @@ -231,6 +231,8 @@ static int __init pcibios_init(void)
->  
->  	printk(KERN_INFO "PCI: Probing PCI hardware\n");
->  
-> +	pcibios_setup_bus_notifier();
-> +
->  	if (pci_has_flag(PCI_REASSIGN_ALL_BUS))
->  		pci_assign_all_buses = 1;
->  
-> diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-> index 4ff190f..8b212d3 100644
-> --- a/arch/powerpc/kernel/pci_64.c
-> +++ b/arch/powerpc/kernel/pci_64.c
-> @@ -48,6 +48,8 @@ static int __init pcibios_init(void)
->  
->  	printk(KERN_INFO "PCI: Probing PCI hardware\n");
->  
-> +	pcibios_setup_bus_notifier();
-> +
->  	/* For now, override phys_mem_access_prot. If we need it,g
->  	 * later, we may move that initialization to each ppc_md
->  	 */
-> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-> index ae5ea5e..eb09eca 100644
-> --- a/arch/powerpc/kernel/pci_of_scan.c
-> +++ b/arch/powerpc/kernel/pci_of_scan.c
-> @@ -333,7 +333,6 @@ static void __devinit __of_scan_bus(struct device_node *node,
->  	 */
->  	if (!rescan_existing)
->  		pcibios_setup_bus_self(bus);
-> -	pcibios_setup_bus_devices(bus);
->  
->  	/* Now scan child busses */
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> index 3ccebc8..0b1b6b3 100644
-> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> @@ -120,7 +120,6 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
->  		num = pci_scan_slot(bus, PCI_DEVFN(slotno, 0));
->  		if (!num)
->  			return;
-> -		pcibios_setup_bus_devices(bus);
->  		max = bus->busn_res.start;
->  		for (pass=0; pass < 2; pass++)
->  			list_for_each_entry(dev, &bus->devices, bus_list) {
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 15d442a..43e0a4f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3789,11 +3789,6 @@ int __attribute__ ((weak)) pci_ext_cfg_avail(struct pci_dev *dev)
->  	return 1;
->  }
->  
-> -void __weak pci_fixup_cardbus(struct pci_bus *bus)
-> -{
-> -}
-> -EXPORT_SYMBOL(pci_fixup_cardbus);
-> -
->  static int __init pci_setup(char *str)
->  {
->  	while (str) {
-> diff --git a/drivers/pcmcia/cardbus.c b/drivers/pcmcia/cardbus.c
-> index 24caeaf..a980691 100644
-> --- a/drivers/pcmcia/cardbus.c
-> +++ b/drivers/pcmcia/cardbus.c
-> @@ -71,7 +71,6 @@ int __ref cb_alloc(struct pcmcia_socket *s)
->  	unsigned int max, pass;
->  
->  	s->functions = pci_scan_slot(bus, PCI_DEVFN(0, 0));
-> -	pci_fixup_cardbus(bus);
->  
->  	max = bus->busn_res.start;
->  	for (pass = 0; pass < 2; pass++)
-> @@ -85,7 +84,6 @@ int __ref cb_alloc(struct pcmcia_socket *s)
->  	 */
->  	pci_bus_size_bridges(bus);
->  	pci_bus_assign_resources(bus);
-> -	cardbus_config_irq_and_cls(bus, s->pci_irq);
->  
->  	/* socket specific tune function */
->  	if (s->tune_bridge)
-> @@ -93,6 +91,7 @@ int __ref cb_alloc(struct pcmcia_socket *s)
->  
->  	pci_enable_bridges(bus);
->  	pci_bus_add_devices(bus);
-> +	cardbus_config_irq_and_cls(bus, s->pci_irq);
->  
->  	return 0;
->  }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a0e2d7f..3924c02 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -651,9 +651,6 @@ resource_size_t pcibios_align_resource(void *, const struct resource *,
->  				resource_size_t);
->  void pcibios_update_irq(struct pci_dev *, int irq);
->  
-> -/* Weak but can be overriden by arch */
-> -void pci_fixup_cardbus(struct pci_bus *);
-> -
->  /* Generic PCI functions used internally */
->  
->  void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 7aff631..fc716cf 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -458,6 +458,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	acpi_handle handle;
+ 	struct acpi_device *child;
+ 	u32 flags, base_flags;
++	int end_bus = -1;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -505,6 +506,17 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+ 	device->driver_data = root;
+ 
++	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle,
++		root->segment, (uint8_t)root->secondary.start, &end_bus);
++
++	/*
++	 * End bus number for MCFG may be less than root's subordinary
++	 * bus number with buggy BIOS implementation.
++	 */
++	if (end_bus < 0 || end_bus > root->secondary.end)
++		end_bus = root->secondary.end;
++	root->mcfg_end_bus = (uint8_t)end_bus;
++
+ 	/*
+ 	 * All supported architectures that use ACPI have support for
+ 	 * PCI domains, so we indicate this in _OSC support capabilities.
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 0f150f2..9af71d2 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -162,6 +162,40 @@ acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+ 	return remove_pm_notifier(dev, pci_acpi_wake_dev);
+ }
+ 
++/* acpi_table_parse() is marked as __init, so cache MCFG info at boot time */
++int pci_acpi_mcfg_entries;
++struct acpi_mcfg_allocation *pci_acpi_mcfg_array;
++
++phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle, uint16_t seg,
++					uint8_t start, int *endp)
++{
++	int i, end_bus = -1;
++	acpi_status status = AE_NOT_EXIST;
++	unsigned long long mcfg_addr = 0;
++	struct acpi_mcfg_allocation *cfg;
++
++	if (handle)
++		status = acpi_evaluate_integer(handle, METHOD_NAME__CBA,
++					       NULL, &mcfg_addr);
++	if (ACPI_FAILURE(status) && pci_acpi_mcfg_entries &&
++	    pci_acpi_mcfg_array) {
++		mcfg_addr = 0;
++		cfg = pci_acpi_mcfg_array;
++		for (i = 0; i < pci_acpi_mcfg_entries; i++, cfg++)
++			if (seg == cfg->pci_segment &&
++			    start >= cfg->start_bus_number &&
++			    start <= cfg->end_bus_number) {
++				end_bus = cfg->end_bus_number;
++				mcfg_addr = cfg->address;
++				break;
++			}
++	}
++	if (endp)
++		*endp = end_bus;
++
++	return (phys_addr_t)mcfg_addr;
++}
++
+ /*
+  * _SxD returns the D-state with the highest power
+  * (lowest D-state number) supported in the S-state "x".
+diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
+index 38f5088..99bda75 100644
+--- a/include/acpi/acnames.h
++++ b/include/acpi/acnames.h
+@@ -62,6 +62,7 @@
+ #define METHOD_NAME__AEI        "_AEI"
+ #define METHOD_NAME__PRW        "_PRW"
+ #define METHOD_NAME__SRS        "_SRS"
++#define METHOD_NAME__CBA	"_CBA"
+ 
+ /* Method names - these methods must appear at the namespace root */
+ 
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index f1c8ca6..8bc5229 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -370,6 +370,9 @@ struct acpi_pci_root {
+ 
+ 	u32 osc_support_set;	/* _OSC state of support bits */
+ 	u32 osc_control_set;	/* _OSC state of control bits */
++	uint8_t mcfg_end_bus;	/* End bus for MCFG may differ from
++				 * root's subordinary bus. */
++	phys_addr_t mcfg_addr;
+ };
+ 
+ /* helper */
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 4462350..0369149 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -11,12 +11,17 @@
+ #include <linux/acpi.h>
+ 
+ #ifdef CONFIG_ACPI
++extern int pci_acpi_mcfg_entries;
++extern struct acpi_mcfg_allocation *pci_acpi_mcfg_array;
++
+ extern acpi_status pci_acpi_add_bus_pm_notifier(struct acpi_device *dev,
+ 						 struct pci_bus *pci_bus);
+ extern acpi_status pci_acpi_remove_bus_pm_notifier(struct acpi_device *dev);
+ extern acpi_status pci_acpi_add_pm_notifier(struct acpi_device *dev,
+ 					     struct pci_dev *pci_dev);
+ extern acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev);
++extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle,
++			uint16_t seg, uint8_t start, int *endp);
+ 
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+ {
+-- 
+1.7.1
 
 
