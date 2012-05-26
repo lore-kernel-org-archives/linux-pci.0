@@ -1,114 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:57520 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757349Ab2EHASx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 20:18:53 -0400
-Received: by pbbrp8 with SMTP id rp8so7319055pbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 07 May 2012 17:18:52 -0700 (PDT)
-Date: Mon, 7 May 2012 17:18:48 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 10/19] PCI: serialize hotplug operaitons triggered by
- the shpchp driver
-Message-ID: <20120508001848.GA20753@kroah.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
- <1335539820-11232-11-git-send-email-jiang.liu@huawei.com>
- <4FA4F3E5.5040600@fold.natur.cuni.cz>
- <4FA5EF97.8010306@gmail.com>
- <20120506152036.GA31551@kroah.com>
- <4FA8623C.4010400@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FA8623C.4010400@gmail.com>
+Received: from szxga04-in.huawei.com ([58.251.152.67]:50979 "EHLO
+	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752160Ab2EZJyi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 May 2012 05:54:38 -0400
+Received: from huawei.com (szxga04-in [172.24.2.12])
+ by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4M00AHMJJT9I@szxga04-in.huawei.com> for
+ linux-pci@vger.kernel.org; Sat, 26 May 2012 17:55:05 +0800 (CST)
+Received: from szxrg02-dlp.huawei.com ([172.24.2.119])
+ by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
+ 8 2006)) with ESMTP id <0M4M00JJ6JJT8P@szxga04-in.huawei.com> for
+ linux-pci@vger.kernel.org; Sat, 26 May 2012 17:55:05 +0800 (CST)
+Date: Sat, 26 May 2012 17:54:01 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
+In-reply-to: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Message-id: <1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 08, 2012 at 08:01:00AM +0800, Jiang Liu wrote:
-> >> Greg doesn't like the implementation to solve this issue, and asked me
-> >> to redo it in other ways, but I haven't found other way yet until now.
-> >> Still keeping punching my header for better solution now.
-> > I gave you hints on how to implement this properly if you want to, did
-> > they not work?
-> I think your have raised three main concerns.
-> 1) Avoid busy wait.
-> 2) Do not introduce a new style lock.
-> 3) Enhance the PCI core instead of changing each PCI hotplug driver.
-> 
-> We could improve or avoid the first issue by replacing msleep() with wait queue.
+This patch changes mmconfig logic on x86 platforms to add MMCFG
+information on demand instead of adding all MMCFG entries from
+the ACPI MCFG table at boot time. So only MMCFG address ranges
+used by active PCI host bridges will be actually mapped.
 
-No, wait, you should never have done #1 or #2 in the first place.  Don't
-try to "solve" #1 any other way than just flat out not doing that at
-all.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/x86/include/asm/pci_x86.h |    5 +++
+ arch/x86/pci/legacy.c          |    1 +
+ arch/x86/pci/mmconfig-shared.c |   54 +++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 56 insertions(+), 4 deletions(-)
 
-> For the second issue, we may have two candidate solutions: 
-> a) introduce a global lock for all PCI devices
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 3e5f43c..4a1a9aa 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -142,6 +142,11 @@ extern int __devinit pci_mmconfig_insert(struct device *dev,
+ 					 uint16_t seg, uint8_t start,
+ 					 uint8_t end, phys_addr_t addr);
+ extern int pci_mmconfig_delete(uint16_t seg, uint8_t start, uint8_t end);
++#ifdef	CONFIG_ACPI
++extern void pci_mmconfig_probe(uint8_t start);
++#else
++static inline void pci_mmconfig_probe(uint8_t start) { }
++#endif
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+ 
+ extern struct list_head pci_mmcfg_list;
+diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+index a1df191..e9a2384 100644
+--- a/arch/x86/pci/legacy.c
++++ b/arch/x86/pci/legacy.c
+@@ -49,6 +49,7 @@ void __devinit pcibios_scan_specific_bus(int busn)
+ 		    l != 0x0000 && l != 0xffff) {
+ 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+ 			printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
++			pci_mmconfig_probe(busn);
+ 			pci_scan_bus_on_node(busn, &pci_root_ops, node);
+ 			return;
+ 		}
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index fa0aa90..e80b5c2 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -19,6 +19,7 @@
+ #include <linux/slab.h>
+ #include <linux/mutex.h>
+ #include <linux/rculist.h>
++#include <linux/pci-acpi.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <asm/acpi.h>
+@@ -616,6 +617,16 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
+ 			return -ENODEV;
+ 		}
+ 
++		/*
++		 * MMCFG information for host brideges will be added on demand
++		 * by pci_root driver if ACPI is enabled. But there are special
++		 * requirements for devices on segment 0, MMCFG information may
++		 * be needed for fixing hardware quirks and probing for hidden
++		 * buses.
++		 */
++		if (!acpi_disabled && cfg->pci_segment)
++			continue;
++
+ 		if (pci_mmconfig_add(cfg->pci_segment, cfg->start_bus_number,
+ 				   cfg->end_bus_number, cfg->address) == NULL) {
+ 			printk(KERN_WARNING PREFIX
+@@ -625,6 +636,13 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
+ 		}
+ 	}
+ 
++	i = entries * sizeof(*cfg_table);
++	pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
++	if (pci_acpi_mcfg_array) {
++		memcpy(pci_acpi_mcfg_array, cfg_table, i);
++		pci_acpi_mcfg_entries = entries;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -634,14 +652,14 @@ static void __init __pci_mmcfg_init(int early)
+ 	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+ 		return;
+ 
+-	/* MMCONFIG already enabled */
+-	if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
+-		return;
+-
+ 	/* for late to exit */
+ 	if (known_bridge)
+ 		return;
+ 
++	/* MMCONFIG already enabled */
++	if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
++		goto out;
++
+ 	if (early) {
+ 		if (pci_mmcfg_check_hostbridge())
+ 			known_bridge = 1;
+@@ -675,6 +693,14 @@ static void __init __pci_mmcfg_init(int early)
+ 		pci_mmcfg_resources_inserted = 1;
+ 		pci_mmcfg_arch_init_failed = true;
+ 	}
++
++out:
++	/*
++	 * Free all MCFG entries if ACPI is enabled. MCFG information will
++	 * be added back on demand by the pci_root driver later.
++	 */
++	if (!early && !acpi_disabled && !known_bridge && pci_acpi_mcfg_array)
++		free_all_mmcfg();
+ }
+ 
+ void __init pci_mmcfg_early_init(void)
+@@ -809,3 +835,23 @@ int pci_mmconfig_delete(uint16_t seg, uint8_t start, uint8_t end)
+ 
+ 	return -ENOENT;
+ }
++
++/* Probe MMCFG information for PCI bus blind probe */
++void __devinit pci_mmconfig_probe(uint8_t start)
++{
++	int end_bus, temp;
++	phys_addr_t addr;
++
++	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
++		return;
++
++	addr = acpi_pci_root_get_mcfg_addr(NULL, 0, start, &end_bus);
++	if (addr && end_bus >= 0 && end_bus <= 255) {
++		for (temp = start + 1; temp <= end_bus; temp++)
++			if (pci_find_bus(0, temp))
++				break;
++
++		temp--;
++		pci_mmconfig_insert(NULL, 0, start, (uint8_t)temp, addr);
++	}
++}
+-- 
+1.7.1
 
-The driver core already has one, so why create another one?
 
-> b) introduce pci_branch_lock()/unlock() to lock/unlock a PCI subtree for hotplug
-> operations. 
-> According to my experience with other OS, the second solution is complex and
-> deadlock prune. It may become more complex on linux due to the device tree abstraction,
-> and pci_dev/pci_bus splitting. So I took the first solution for trade off.
-
-I agree, we don't want to lock branches, that is wrong as you have found
-out as well.
-
-> It may cost more time for hotplug operations, but the implementation
-> will be simpler and won't cause regression to the PCI core.
-
-There are no speed issues with hotplug pci operations, the spec itself
-has wait times required in _seconds_, so we are fine here.
-
-> If we adopt a global lock for all PCI devices solution, we do need the 
-> pci_hotplug_try_lock() interface to break deadlock cases. For example,
-> 	Thread A				Thread B
-> 1) try to remove a downstream PCIe port with
->    PCIe native hotplug support
-> 2) acquire the global lock
-> 						3) PCIe hotplug event happens, a work
-> 						   item is queued into the workqueue
-
-Wait right here, how did a "pcie hotplug event happen"?
-
-> 						4) worker thread wake up and try to
-> 						   handle the hotplug event
-> 						5) try to acquire the global lock
-> 6) try to destroy the PCIe device for the 
->    PCIe native hotplug service
-> 7) unbind the pciehp driver and flush the
->    workqueue
-> 8) wait for all queued work items to be finished
-
-Why would you want to do these last 2 options?
-
-hotplug events should be "simple" in that they happen anytime, and as
-you have pointed out, from different places, so just make them block
-waiting for other events to complete.
-
-> Then deadlock happens. Interface pci_hotplug_try_lock() is used to break the
-> deadlock in the worker thread. There are similar deadlock scenario in other
-> drivers.
-> 
-> For the third issue, it depends on the solution for the second issue.
-> 
-> Some patches in the v2 patch set doesn't depend on the solution for issue two.
-> So to make things simpler, I will try to split out those patches.
-> 
-> Thanks, Greg! Really appreciate your comments and suggestions! 
-
-Use a single lock, in the pci hotplug core, for this type of thing.
-And, I'm pretty sure we have a lock already for this, in the pci core,
-as part of the driver core, so you should be fine.
-
-Don't try to make this more complex than it is.  Yes, it's going to take
-some refactoring of the messy pci hotplug drivers (sorry, they are a
-mess in places), but that will make this all be much simpler in the end,
-hopefully.
-
-good luck,
-
-greg k-h
