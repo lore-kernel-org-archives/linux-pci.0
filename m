@@ -1,265 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:39099 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755884Ab2EDCki (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2012 22:40:38 -0400
-Message-ID: <4FA3419D.2050202@gmail.com>
-Date: Fri, 04 May 2012 10:40:29 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from latitanza.investici.org ([82.94.249.234]:23028 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362Ab2EZIul (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 May 2012 04:50:41 -0400
+Date: Sat, 26 May 2012 10:25:52 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: warn_slowpath_common in drivers/pci/search.c:44 on linux-3.4.0
+Message-ID: <20120526082551.GA2723@ritirata.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Keping Chen <chenkeping@huawei.com>, x86@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH V2 3/6] PCI, x86: use RCU list to protect mmconfig list
-References: <1333988568-11282-1-git-send-email-jiang.liu@huawei.com> <1333988568-11282-4-git-send-email-jiang.liu@huawei.com> <CAErSpo4S9V8fUJcbBHL4CPGzcVW768KiGsALdG78xD85feEvKw@mail.gmail.com> <4FA22208.6070003@huawei.com> <CAErSpo5R3-FQT9LmiPLmsTUrwxvASaWQUdEVpOqvLQ6Qme_g_Q@mail.gmail.com>
-In-Reply-To: <CAErSpo5R3-FQT9LmiPLmsTUrwxvASaWQUdEVpOqvLQ6Qme_g_Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/04/2012 12:34 AM, Bjorn Helgaas wrote:
-> On Thu, May 3, 2012 at 12:13 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->> Hi Bjorn,
->>        Thanks for your comments!
->>        I have thought about using pci_config_lock to serialize
->> access to the pci_mmcfg_list, but that may hurt MMCFG on x86_64
->> systems because mmconfig_64.c supports concurrent access to
->> the MMCFG space without holding the pci_config_lock. So I use
->> RCU to avoid possible performance penalty for x86_64 systems.
-> 
-> Oh, right.  I only looked at mmconfig_32.c, which uses the lock, and
-> assumed _64.c was the same.  I think you're right to avoid introducing
-> locking where we didn't have it before.
-> 
->>        There are two mechanisms to protect list_add_sorted()
->> from concurrent updates. The first case is, list_add_sorted()
->> may be called without holding any lock for serialization at
->> early booting stages because the system is still in single-threaded
->> mode. The second case is, pci_config_lock is used to serialize
->> concurrent modification to the pci_mmcfg_list if list_add_sorted()
->> is called at runtime.
->>        The first case is cover by this patch, and the second case
->> is covered by "[PATCH V2 5/6] PCI, x86: introduce
->> pci_mmconfig_insert()/delete() for PCI root bridge hotplug".
-> 
-> How hard would it be to convert the first (early boot) mechanism to
-> use the second mechanism?  It'd be nicer if there were only one path
-> that we use both places, even if it means the early boot path acquires
-> a lock that is technically unnecessary.
-That should be easy, will change it. 
 
-> 
->> On 2012-5-3 6:31, Bjorn Helgaas wrote:
->>>
->>> On Mon, Apr 9, 2012 at 10:22 AM, Jiang Liu<liuj97@gmail.com>  wrote:
->>>>
->>>> Use RCU list to protect mmconfig list from dynamic change
->>>> when supporting PCI host bridge hotplug.
->>>
->>>
->>> I'm not convinced this is safe.  But I'm not an RCU expert, so maybe
->>> you can convince me :)
->>>
->>> Documentation/RCU/checklist.txt says the update code still requires
->>> mutual exclusion, and I don't see any in list_add_sorted() or its
->>> callers.
->>>
->>> MMCONFIG accesses are already protected by the pci_config_lock
->>> spinlock, so I don't think the performance advantages of RCU really
->>> gain us anything in this situation.
->>>
->>> It would definitely be simpler to just hold pci_config_lock while
->>> updating and searching the pci_mmcfg_list, but if there are issues
->>> with that, you can educate me about what they are and why this RCU
->>> code is correct.
->>>
->>> Bjorn
->>>
->>>> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->>>> ---
->>>>  arch/x86/pci/mmconfig-shared.c |   11 ++++++-----
->>>>  arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
->>>>  arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
->>>>  3 files changed, 28 insertions(+), 9 deletions(-)
->>>>
->>>> diff --git a/arch/x86/pci/mmconfig-shared.c
->>>> b/arch/x86/pci/mmconfig-shared.c
->>>> index 5e2cd2a..3bcc361 100644
->>>> --- a/arch/x86/pci/mmconfig-shared.c
->>>> +++ b/arch/x86/pci/mmconfig-shared.c
->>>> @@ -17,6 +17,7 @@
->>>>  #include<linux/bitmap.h>
->>>>  #include<linux/dmi.h>
->>>>  #include<linux/slab.h>
->>>> +#include<linux/rculist.h>
->>>>  #include<asm/e820.h>
->>>>  #include<asm/pci_x86.h>
->>>>  #include<asm/acpi.h>
->>>> @@ -45,20 +46,20 @@ static __init void free_all_mmcfg(void)
->>>>                pci_mmconfig_remove(cfg);
->>>>  }
->>>>
->>>> -static __init void list_add_sorted(struct pci_mmcfg_region *new)
->>>> +static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
->>>>  {
->>>>        struct pci_mmcfg_region *cfg;
->>>>
->>>>        /* keep list sorted by segment and starting bus number */
->>>> -       list_for_each_entry(cfg,&pci_mmcfg_list, list) {
->>>> +       list_for_each_entry_rcu(cfg,&pci_mmcfg_list, list) {
->>>>
->>>>                if (cfg->segment>  new->segment ||
->>>>                    (cfg->segment == new->segment&&
->>>>                     cfg->start_bus>= new->start_bus)) {
->>>> -                       list_add_tail(&new->list,&cfg->list);
->>>> +                       list_add_tail_rcu(&new->list,&cfg->list);
->>>>                        return;
->>>>                }
->>>>        }
->>>> -       list_add_tail(&new->list,&pci_mmcfg_list);
->>>> +       list_add_tail_rcu(&new->list,&pci_mmcfg_list);
->>>>  }
->>>>
->>>>  static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int
->>>> segment,
->>>> @@ -111,7 +112,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int
->>>> segment, int bus)
->>>>  {
->>>>        struct pci_mmcfg_region *cfg;
->>>>
->>>> -       list_for_each_entry(cfg,&pci_mmcfg_list, list)
->>>> +       list_for_each_entry_rcu(cfg,&pci_mmcfg_list, list)
->>>>
->>>>                if (cfg->segment == segment&&
->>>>                    cfg->start_bus<= bus&&  bus<= cfg->end_bus)
->>>>
->>>>                        return cfg;
->>>> diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
->>>> index 5372e86..5dad04a 100644
->>>> --- a/arch/x86/pci/mmconfig_32.c
->>>> +++ b/arch/x86/pci/mmconfig_32.c
->>>> @@ -11,6 +11,7 @@
->>>>
->>>>  #include<linux/pci.h>
->>>>  #include<linux/init.h>
->>>> +#include<linux/rcupdate.h>
->>>>  #include<asm/e820.h>
->>>>  #include<asm/pci_x86.h>
->>>>  #include<acpi/acpi.h>
->>>> @@ -60,9 +61,12 @@ err:         *value = -1;
->>>>                return -EINVAL;
->>>>        }
->>>>
->>>> +       rcu_read_lock();
->>>>        base = get_base_addr(seg, bus, devfn);
->>>> -       if (!base)
->>>> +       if (!base) {
->>>> +               rcu_read_unlock();
->>>>                goto err;
->>>> +       }
->>>>
->>>>        raw_spin_lock_irqsave(&pci_config_lock, flags);
->>>>
->>>> @@ -80,6 +84,7 @@ err:          *value = -1;
->>>>                break;
->>>>        }
->>>>        raw_spin_unlock_irqrestore(&pci_config_lock, flags);
->>>> +       rcu_read_unlock();
->>>>
->>>>        return 0;
->>>>  }
->>>> @@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned
->>>> int bus,
->>>>        if ((bus>  255) || (devfn>  255) || (reg>  4095))
->>>>                return -EINVAL;
->>>>
->>>> +       rcu_read_lock();
->>>>        base = get_base_addr(seg, bus, devfn);
->>>> -       if (!base)
->>>> +       if (!base) {
->>>> +               rcu_read_unlock();
->>>>                return -EINVAL;
->>>> +       }
->>>>
->>>>        raw_spin_lock_irqsave(&pci_config_lock, flags);
->>>>
->>>> @@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned
->>>> int bus,
->>>>                break;
->>>>        }
->>>>        raw_spin_unlock_irqrestore(&pci_config_lock, flags);
->>>> +       rcu_read_unlock();
->>>>
->>>>        return 0;
->>>>  }
->>>> diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
->>>> index 915a493..acc48c5 100644
->>>> --- a/arch/x86/pci/mmconfig_64.c
->>>> +++ b/arch/x86/pci/mmconfig_64.c
->>>> @@ -9,6 +9,7 @@
->>>>  #include<linux/init.h>
->>>>  #include<linux/acpi.h>
->>>>  #include<linux/bitmap.h>
->>>> +#include<linux/rcupdate.h>
->>>>  #include<asm/e820.h>
->>>>  #include<asm/pci_x86.h>
->>>>
->>>> @@ -34,9 +35,12 @@ err:         *value = -1;
->>>>                return -EINVAL;
->>>>        }
->>>>
->>>> +       rcu_read_lock();
->>>>        addr = pci_dev_base(seg, bus, devfn);
->>>> -       if (!addr)
->>>> +       if (!addr) {
->>>> +               rcu_read_unlock();
->>>>                goto err;
->>>> +       }
->>>>
->>>>        switch (len) {
->>>>        case 1:
->>>> @@ -49,6 +53,7 @@ err:          *value = -1;
->>>>                *value = mmio_config_readl(addr + reg);
->>>>                break;
->>>>        }
->>>> +       rcu_read_unlock();
->>>>
->>>>        return 0;
->>>>  }
->>>> @@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned
->>>> int bus,
->>>>        if (unlikely((bus>  255) || (devfn>  255) || (reg>  4095)))
->>>>                return -EINVAL;
->>>>
->>>> +       rcu_read_lock();
->>>>        addr = pci_dev_base(seg, bus, devfn);
->>>> -       if (!addr)
->>>> +       if (!addr) {
->>>> +               rcu_read_unlock();
->>>>                return -EINVAL;
->>>> +       }
->>>>
->>>>        switch (len) {
->>>>        case 1:
->>>> @@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned
->>>> int bus,
->>>>                mmio_config_writel(addr + reg, value);
->>>>                break;
->>>>        }
->>>> +       rcu_read_unlock();
->>>>
->>>>        return 0;
->>>>  }
->>>> --
->>>> 1.7.5.4
->>>>
->>>
->>> .
->>>
->>
->>
+--nFreZHaLTZJo0R7j
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Hello,
+
+I'm getting this warning with linux-3.4.0. My laptop is a DELL E5420.
+Please tell me if you need further testing/debug.
+
+Cheers,
+
+[    1.054279] WARNING: at drivers/pci/search.c:44 pci_find_upstream_pcie_b=
+ridge+0x5e/0x70()
+[    1.054385] Hardware name: Latitude E5420
+[    1.054457] Modules linked in:
+[    1.054568] Pid: 1, comm: swapper/0 Not tainted 3.4.0ordex+ #3
+[    1.054643] Call Trace:
+[    1.054716]  [<ffffffff81033d4a>] warn_slowpath_common+0x7a/0xb0
+[    1.054793]  [<ffffffff81033d95>] warn_slowpath_null+0x15/0x20
+[    1.054869]  [<ffffffff8123899e>] pci_find_upstream_pcie_bridge+0x5e/0x70
+[    1.054949]  [<ffffffff813babe7>] intel_iommu_device_group+0x77/0x100
+[    1.055027]  [<ffffffff813b52d5>] add_iommu_group+0x35/0x60
+[    1.055113]  [<ffffffff813b52a0>] ? bus_set_iommu+0x50/0x50
+[    1.055191]  [<ffffffff8132c586>] bus_for_each_dev+0x56/0x90
+[    1.055267]  [<ffffffff813b528b>] bus_set_iommu+0x3b/0x50
+[    1.055344]  [<ffffffff818c4920>] intel_iommu_init+0xab0/0xb3f
+[    1.055421]  [<ffffffff81120b26>] ? sys_mkdirat+0x76/0xd0
+[    1.055499]  [<ffffffff8189b0db>] ? memblock_find_dma_reserve+0x13d/0x13d
+[    1.055578]  [<ffffffff8189b0ee>] pci_iommu_init+0x13/0x3e
+[    1.055655]  [<ffffffff810001ca>] do_one_initcall+0x3a/0x170
+[    1.055732]  [<ffffffff81897c35>] kernel_init+0x148/0x1cc
+[    1.055807]  [<ffffffff81897588>] ? do_early_param+0x86/0x86
+[    1.055884]  [<ffffffff814fc914>] kernel_thread_helper+0x4/0x10
+[    1.055963]  [<ffffffff8105de60>] ? finish_task_switch+0x80/0x110
+[    1.056040]  [<ffffffff814fafdd>] ? retint_restore_args+0xe/0xe
+[    1.056126]  [<ffffffff81897aed>] ? start_kernel+0x30b/0x30b
+[    1.056203]  [<ffffffff814fc910>] ? gs_change+0xb/0xb
+
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--nFreZHaLTZJo0R7j
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPwJOPAAoJEFMQTLzJFOZFPQwH/iwpageWWE0YguQfAfp/QLkM
+kBTGfKw4muAhJJpFZ558aZ6hukuYwvEB64DaBIWxRL8GELLktVN8ZBzi/SCdxDmE
+4VHVVAbOr7WozqwI5myd6tqJJCfq6KnK/yoBvUF6+SR1PHjaY5ygD2e2gQMjXS6U
+886UkqPBwucLeUPaBkKI1h0e3NdHzPqhalwFyOaTKsRUV70LPcsdzrQMJcmEUDvt
+faVUY6owIbKkG7Hbi63ThHziY0RanrbvIbZsY3+V0xt3TLqZYm9+5iu5MsKzU78v
+1d6ypQ34JgQJMuEHfoJsNXoi2khODj7k+FtKMCKnYXEmHIsw+jGcjr9XwgZhMDA=
+=Bkad
+-----END PGP SIGNATURE-----
+
+--nFreZHaLTZJo0R7j--
