@@ -1,49 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:51407 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752768Ab2E2L7J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 07:59:09 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 29 May 2012 17:29:06 +0530
-Date: Tue, 29 May 2012 19:59:00 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120529115900.GA31679@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120410090306.GA7056@richard>
- <20120422155202.GA13540@richard>
- <4F95B17B.3030401@redhat.com>
- <20120514015536.GA3331@richard>
- <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
- <20120514064615.GB26605@richard>
- <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
- <20120516011833.GA6599@richard>
- <CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:40040 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785Ab2EZPKO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 May 2012 11:10:14 -0400
+Received: by lbbgm6 with SMTP id gm6so1195271lbb.19
+        for <linux-pci@vger.kernel.org>; Sat, 26 May 2012 08:10:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
+In-Reply-To: <20120526082551.GA2723@ritirata.org>
+References: <20120526082551.GA2723@ritirata.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 26 May 2012 09:09:52 -0600
+Message-ID: <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com>
+Subject: Re: warn_slowpath_common in drivers/pci/search.c:44 on linux-3.4.0
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 15, 2012 at 07:11:34PM -0700, Yinghai Lu wrote:
->> So these steps is done after boot up and user find B3 doesn't work?
+On Sat, May 26, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+> Hello,
 >
->yes, after os is booted up.
+> I'm getting this warning with linux-3.4.0. My laptop is a DELL E5420.
+> Please tell me if you need further testing/debug.
+
+Hi Antonio,
+
+Thanks for the report.  Is this a regression?  If so, what's the most
+recent kernel that works correctly?  Can you collect a complete dmesg
+log and the output of "lspci -vv"?
+
+> [    1.054279] WARNING: at drivers/pci/search.c:44 pci_find_upstream_pcie_bridge+0x5e/0x70()
+> [    1.054385] Hardware name: Latitude E5420
+> [    1.054457] Modules linked in:
+> [    1.054568] Pid: 1, comm: swapper/0 Not tainted 3.4.0ordex+ #3
+> [    1.054643] Call Trace:
+> [    1.054716]  [<ffffffff81033d4a>] warn_slowpath_common+0x7a/0xb0
+> [    1.054793]  [<ffffffff81033d95>] warn_slowpath_null+0x15/0x20
+> [    1.054869]  [<ffffffff8123899e>] pci_find_upstream_pcie_bridge+0x5e/0x70
+> [    1.054949]  [<ffffffff813babe7>] intel_iommu_device_group+0x77/0x100
+> [    1.055027]  [<ffffffff813b52d5>] add_iommu_group+0x35/0x60
+> [    1.055113]  [<ffffffff813b52a0>] ? bus_set_iommu+0x50/0x50
+> [    1.055191]  [<ffffffff8132c586>] bus_for_each_dev+0x56/0x90
+> [    1.055267]  [<ffffffff813b528b>] bus_set_iommu+0x3b/0x50
+> [    1.055344]  [<ffffffff818c4920>] intel_iommu_init+0xab0/0xb3f
+> [    1.055421]  [<ffffffff81120b26>] ? sys_mkdirat+0x76/0xd0
+> [    1.055499]  [<ffffffff8189b0db>] ? memblock_find_dma_reserve+0x13d/0x13d
+> [    1.055578]  [<ffffffff8189b0ee>] pci_iommu_init+0x13/0x3e
+> [    1.055655]  [<ffffffff810001ca>] do_one_initcall+0x3a/0x170
+> [    1.055732]  [<ffffffff81897c35>] kernel_init+0x148/0x1cc
+> [    1.055807]  [<ffffffff81897588>] ? do_early_param+0x86/0x86
+> [    1.055884]  [<ffffffff814fc914>] kernel_thread_helper+0x4/0x10
+> [    1.055963]  [<ffffffff8105de60>] ? finish_task_switch+0x80/0x110
+> [    1.056040]  [<ffffffff814fafdd>] ? retint_restore_args+0xe/0xe
+> [    1.056126]  [<ffffffff81897aed>] ? start_kernel+0x30b/0x30b
+> [    1.056203]  [<ffffffff814fc910>] ? gs_change+0xb/0xb
 >
->Yinghai
-
-Yinghai
-
-I think about this issue again, this behavior of kernel will bring some
-unconvenience to the user. 
-
-Do you think the kernel could handle this situation?
--- 
-Richard Yang
-Help you, Help me
-
+>
+>
+> --
+> Antonio Quartulli
+>
+> ..each of us alone is worth nothing..
+> Ernesto "Che" Guevara
