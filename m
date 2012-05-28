@@ -1,59 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:57178 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754735Ab2E2UvL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 May 2012 16:51:11 -0400
-Message-ID: <4FC536A5.6020600@zytor.com>
-Date: Tue, 29 May 2012 13:50:45 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:37902 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753740Ab2E1Nju (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2012 09:39:50 -0400
+Received: from albireo.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id 733E31C00EB
+	for <linux-pci@vger.kernel.org>; Mon, 28 May 2012 15:39:49 +0200 (CEST)
+Date: Mon, 28 May 2012 15:39:47 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Only decode defined fields of PCI Express Link Control
+ 2
+Message-ID: <mj+md-20120528.133942.12427.albireo@ucw.cz>
+References: <1337264056.2496.8.camel@bwh-desktop.uk.solarflarecom.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: David Miller <davem@davemloft.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com> <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com> <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com> <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com> <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com> <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com> <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com> <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com> <4FC51D79.6010804@zytor.com> <CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
-In-Reply-To: <CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1337264056.2496.8.camel@bwh-desktop.uk.solarflarecom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/29/2012 01:46 PM, Yinghai Lu wrote:
-> On Tue, May 29, 2012 at 12:03 PM, H. Peter Anvin <hpa@zytor.com> wrote:
->> On 05/29/2012 11:17 AM, Yinghai Lu wrote:
->>>
->>> pci bridge could support 16bits and 32bits io port.
->>> but we did not record if 32bits is supported.
->>>
->>
->> Okay, so this is the actual problem, no?
+Hi!
+
+> On a PCI Express multi-function device associated with an upstream
+> port, all bits of the Link Control 2 register are currently reserved
+> on functions > 0.
 > 
-> their fw could not need kernel help to allocate io ports, or they are
-> only use device that support 32bit ioport.
-> 
+> The Selectable De-emphasis field is reserved on all but downstream
+> ports.
 
-That barely parses, never mind makes sense.
+Thanks, applied.
 
->>
->>> so during allocating, could have allocated above 64k address to non
->>> 32bit bridge.
->>>
->>> but  x86 is ok, because ioport.end always set to 0xffff.
->>> other arches with IO_SPACE_LIMIT with 0xffffffff or
->>> 0xffffffffffffffffUL may have problem.
->>
->> The latter is nonsense, the PCI-side address space is only 32 bits wide.
->>
-> maybe they have unified io include ioport and mem io?
-> 
-
-The bus-side address space should not be more than 32 bits no matter
-what.  As Bjorn indicates, you seem to be mixing up bus and cpu
-addresses all over the place.
-
-	-hpa
-
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Got mole problems? Call Avogadro, 602-1023!
