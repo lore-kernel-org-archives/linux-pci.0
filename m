@@ -1,133 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29618 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753699Ab2EINrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 May 2012 09:47:14 -0400
-Message-ID: <1336571221.12477.136.camel@bling.home>
-Subject: Re: [RESEND PATCH v3] hotplug: add device per func in ACPI DSDT
- tables
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Amos Kong <akong@redhat.com>
-Cc: mst@redhat.com, linux-pci@vger.kernel.org, seabios@seabios.org,
-	qemu-devel@nongnu.org, jbarnes@virtuousgeek.org, rjw@sisk.pl,
-	kevin@koconnor.net
-Date: Wed, 09 May 2012 07:47:01 -0600
-In-Reply-To: <20120509072452.14872.92530.stgit@t>
-References: <20111214010645.GA2044@morn.localdomain>
-	 <20120509072452.14872.92530.stgit@t>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <4FC37DD6.7090000@web.de>
+Date: Mon, 28 May 2012 15:29:58 +0200
+From: Jan Kiszka <jan.kiszka@web.de>
+MIME-Version: 1.0
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE
+ NIC as broken
+References: <4FBF90E5.8030800@siemens.com> <20120528123934.GB21778@redhat.com> <4FC374CD.5000509@web.de> <20120528132109.GB22623@redhat.com>
+In-Reply-To: <20120528132109.GB22623@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigB9AA42A9FC14B52246BE44AE"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-05-09 at 15:24 +0800, Amos Kong wrote:
-> Boot up a Linux VM with 8 pci block devices which
-> are the 8 functions in one pci slot.
-> | # qemu-kvm ...
-> | -drive file=images/u0,if=none,id=drv0,format=qcow2,cache=none \
-> | -device virtio-blk-pci,drive=drv0,id=v0,multifunction=on,addr=0x03.0 \
-> | ....
-> | -drive file=images/u7,if=none,id=drv7,format=qcow2,cache=none \
-> | -device virtio-blk-pci,drive=drv7,id=v7,multifunction=on,addr=0x03.7 \
-> 
-> Check devices in guest.
-> | vm)# ls /dev/vd*
-> |    vda vdb vdc vde vdf vdg vdh
-> | vm)# lspci |grep block
-> | 00:03.0 SCSI storage controller: Red Hat, Inc Virtio block device
-> |    ...
-> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device
-> |
-> 
-> Func1~7 still exist in guest after hot-removing the whole slot
-> through qemu monitor.
-> | vm)# lspci |grep block    (00:03.0 disappeared)
-> | 00:03.1 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
-> |    ...
-> | 00:03.7 SCSI storage controller: Red Hat, Inc Virtio block device (rev ff)
-> | vm)# ls /dev/vd*          (vda disappeared)
-> |    vdb vdc vde vdf vdg vdh
-> | vm)# mkfs /dev/vdb
-> |    INFO: task mkfs.ext2:1784 blocked for more than 120 seconds. (task hung)
-> 
-> 
-> Currently only func0 is defined in ACPI DSDT table
-> of seabios, and only hot-adding func0 would cause
-> a ACPI event for notification. Other funcs except
-> func0 wouldn't be registered in linux pci driver.
-> (we can only found func0 in slot->funcs list of
-> pci driver).
-> 
-> When VM pci driver receives an ACPI event for
-> hot-removing, it will only clean functions in
-> slot->funcs list, the other funcs could not be
-> cleaned.
-> 
-> This patch adds device per function in ACPI DSDT tables,
-> then all funcs will be registered in slot->funcs list.
-> It's coincident with microsoft's example:
-> http://www.microsoft.com/china/whdc/system/pnppwr/hotadd/hotplugpci.mspx#EUH
-> 
-> Have tested with linux/winxp/win7, hot-adding/hot-remving,
-> single/multiple function devices, they are all fine(all
-> added devices can be removed).
-> 
-> This patch includes some bits mst wrote, thanks!
-> ---
-> old discussion: http://marc.info/?l=kvm&m=132428400917405&w=2
-> 
-> Signed-off-by: Amos Kong <akong@redhat.com>
-> CC: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  src/ssdt-pcihp.dsl |   17 
->  src/ssdt-pcihp.hex | 8869 +++++++++++++++++++++++++++++++++++++++++++++++++++-
->  2 files changed, 8781 insertions(+), 105 deletions(-)
-> 
-> diff --git a/src/ssdt-pcihp.dsl b/src/ssdt-pcihp.dsl
-> index 4b435b8..2a3c326 100644
-> --- a/src/ssdt-pcihp.dsl
-> +++ b/src/ssdt-pcihp.dsl
-> @@ -17,14 +17,23 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
->          // at runtime, if the slot is detected to not support hotplug.
->          // Extract the offset of the address dword and the
->          // _EJ0 name to allow this patching.
-> -#define hotplug_slot(slot)                              \
-> -        Device (S##slot) {                              \
-> +#define hotplug_func(slot, fn)                          \
-> +        Device (S##slot##fn) {                          \
->             ACPI_EXTRACT_NAME_DWORD_CONST aml_adr_dword  \
-> -           Name (_ADR, 0x##slot##0000)                  \
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigB9AA42A9FC14B52246BE44AE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-I would have guessed it to be sufficient to change _ADR to
-0x##slot##ffff, does that not work?  Thanks,
+On 2012-05-28 15:21, Michael S. Tsirkin wrote:
+> On Mon, May 28, 2012 at 02:51:25PM +0200, Jan Kiszka wrote:
+>> On 2012-05-28 14:39, Michael S. Tsirkin wrote:
+>>> On Fri, May 25, 2012 at 11:02:13AM -0300, Jan Kiszka wrote:
+>>>> According to Alexey, the T310 does not properly support INTx masking=
+ as
+>>>> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the inter=
+rupt
+>>>> is masked. Mark this adapter as broken so that pci_intx_mask_support=
+ed
+>>>> won't report it as compatible.
+>>>>
+>>>> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>>>> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+>>>
+>>>
+>>> Just a thought: would be nice to have a way to discover
+>>> the quirk was activated. Add an attribute so that
+>>> userspace can detect and report this properly to users?
+>>> Or just log a warning message ...
+>>
+>> pr_notice_once?
+>=20
+> OK IMO.
+>=20
+>> A flag for userspace would be significantly more
+>> complicated (and not PCI layer hands).
+>=20
+> Why not? I meant e.g. an attribute in pci-sysfs.
 
-Alex
+Possible. But what is the preferred way of doing this? Are there any
+precedences?
 
-> +           Name (_ADR, 0x##slot##000##fn)               \
->             ACPI_EXTRACT_METHOD_STRING aml_ej0_name      \
->             Method (_EJ0, 1) { Return(PCEJ(0x##slot)) }  \
->             Name (_SUN, 0x##slot)                        \
->          }
-> +#define hotplug_slot(slot)     \
-> +        hotplug_func(slot, 0)  \
-> +        hotplug_func(slot, 1)  \
-> +        hotplug_func(slot, 2)  \
-> +        hotplug_func(slot, 3)  \
-> +        hotplug_func(slot, 4)  \
-> +        hotplug_func(slot, 5)  \
-> +        hotplug_func(slot, 6)  \
-> +        hotplug_func(slot, 7)
->  
->          hotplug_slot(01)
->          hotplug_slot(02)
-> @@ -59,7 +68,7 @@ DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
->          hotplug_slot(1f)
->  
->  #define gen_pci_hotplug(slot)   \
-> -            If (LEqual(Arg0, 0x##slot)) { Notify(S##slot, Arg1) }
-> +            If (LEqual(Arg0, 0x##slot)) { Notify(S##slot##0, Arg1) }
->  
->          Method(PCNT, 2) {
->              gen_pci_hotplug(01)
+Jan
 
 
+--------------enigB9AA42A9FC14B52246BE44AE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk/DfdYACgkQitSsb3rl5xSVfACfebwPII9PPy5fmXRH0rBr4fWI
+djIAoLIFcpLgdi3EJZZ23uTqdr5XvyjA
+=5cfg
+-----END PGP SIGNATURE-----
+
+--------------enigB9AA42A9FC14B52246BE44AE--
