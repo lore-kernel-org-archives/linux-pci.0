@@ -1,78 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:40751 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752468Ab2EDN6G convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:5:1>);
-	Fri, 4 May 2012 09:58:06 -0400
-Message-Id: <4FA3FC8A0200007800081AC3@nat28.tlf.novell.com>
-Date: Fri, 04 May 2012 14:58:02 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "David Vrabel" <david.vrabel@citrix.com>
-Cc: <x86@kernel.org>, "xen-devel" <xen-devel@lists.xen.org>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH v2] x86, xen, pci: don't use PCI BIOS
- service for configuration space accesses
-References: <1336138186-11423-1-git-send-email-david.vrabel@citrix.com>
-In-Reply-To: <1336138186-11423-1-git-send-email-david.vrabel@citrix.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:37387 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753534Ab2E1SV5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2012 14:21:57 -0400
+Received: by lbbgm6 with SMTP id gm6so2041377lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 28 May 2012 11:21:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120528140448.GA22783@redhat.com>
+References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
+ <20120313081235.GC15333@redhat.com> <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
+ <CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com> <20120528140448.GA22783@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 May 2012 12:21:34 -0600
+Message-ID: <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
+Subject: Re: Initializing iwl3945 error
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 04.05.12 at 15:29, David Vrabel <david.vrabel@citrix.com> wrote:
-> From: David Vrabel <david.vrabel@citrix.com>
-> 
-> The accessing PCI configuration space with the PCI BIOS32 service does
-> not work in PV guests.
-> 
-> On systems without MMCONFIG or where the BIOS hasn't marked the
-> MMCONFIG region as reserved in the e820 map, the BIOS service is
-> probed (even though direct access is preferred) and this hangs.
-> 
-> Signed-off-by: David Vrabel <david.vrabel@citrix.com>
+Sorry this got dropped on the floor for so long.  I don't see anything
+wrong with the PCI memory routing information in either the failing or
+the working logs.
 
-Acked-by: Jan Beulich <jbeulich@suse.com>
+Kamil, you mentioned: "Driver can't initialize card as all
+ioread32/iowrite32 seems to not do their job. All reads finalize with
+0xffffffff."
 
-> ---
-> Changes in v2:
-> - improve commit message
-> 
-> ---
->  arch/x86/xen/enlighten.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/arch/x86/xen/enlighten.c b/arch/x86/xen/enlighten.c
-> index a8f8844..7ce2c78 100644
-> --- a/arch/x86/xen/enlighten.c
-> +++ b/arch/x86/xen/enlighten.c
-> @@ -63,6 +63,7 @@
->  #include <asm/stackprotector.h>
->  #include <asm/hypervisor.h>
->  #include <asm/mwait.h>
-> +#include <asm/pci_x86.h>
->  
->  #ifdef CONFIG_ACPI
->  #include <linux/acpi.h>
-> @@ -1365,7 +1366,9 @@ asmlinkage void __init xen_start_kernel(void)
->  		/* Make sure ACS will be enabled */
->  		pci_request_acs();
->  	}
-> -		
-> +
-> +	/* PCI BIOS service won't work from a PV guest. */
-> +	pci_probe &= ~PCI_PROBE_BIOS;
->  
->  	xen_raw_console_write("about to get started...\n");
->  
-> -- 
-> 1.7.2.5
-> 
-> 
-> _______________________________________________
-> Xen-devel mailing list
-> Xen-devel@lists.xen.org 
-> http://lists.xen.org/xen-devel 
+Normally this means we got no response, either because the transaction
+didn't reach the device, or the device didn't respond.  Here's the
+routing information I see, which looks fine:
 
+  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+  pci_root PNP0A03:00: host bridge window [mem 0xe0000000-0xf7ffffff]
+  pci 0000:00:1c.1: PCI bridge to [bus 0b-0b]
+  pci 0000:00:1c.1:   bridge window [mem 0xf1e00000-0xf1efffff]
+  pci 0000:0b:00.0: [8086:4222] type 0 class 0x000280
+  pci 0000:0b:00.0: reg 10: [mem 0xf1eff000-0xf1efffff]
 
+And we enabled memory space decoding for the device:
 
+  iwl3945 0000:0b:00.0: enabling device (0000 -> 0002)
+
+so it *should* respond.  It's interesting that we didn't have to
+enable the device in the working ("noapic") case -- there's no
+"enabling device" line in that dmesg log, which means memory decoding
+was already enabled when we found it.
+
+You also said "If I access the memory directly, not by mapping, I can
+write and read pci memory but driver load fails anyway."  What exactly
+does that mean?  I assume you mean that even in the failing case, you
+can somehow access that region ([mem 0xf1eff000-0xf1efffff]).  What
+mechanism are you using?  ioremap() in the driver?  User-space mmap of
+a /sys file?
+
+You said "This issue is reproducible in 100% on my system when I turn
+on the machine. It doesn't occur after some work on it."  I wonder if
+there's some timing issue with that device coming out of reset or
+something.  Does the same problem happen if the driver is statically
+linked in vs. loaded as a module after boot?  What if you add a long
+delay in the driver probe routine?
