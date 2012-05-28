@@ -1,100 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:48565 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932839Ab2EPBSl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2012 21:18:41 -0400
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 16 May 2012 06:48:38 +0530
-Date: Wed, 16 May 2012 09:18:34 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120516011833.GA6599@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120410090306.GA7056@richard>
- <20120422155202.GA13540@richard>
- <4F95B17B.3030401@redhat.com>
- <20120514015536.GA3331@richard>
- <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
- <20120514064615.GB26605@richard>
- <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 28 May 2012 16:39:47 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Jan Kiszka <jan.kiszka@web.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE NIC
+ as broken
+Message-ID: <20120528133946.GA23024@redhat.com>
+References: <4FBF90E5.8030800@siemens.com>
+ <20120528123934.GB21778@redhat.com>
+ <4FC374CD.5000509@web.de>
+ <20120528132109.GB22623@redhat.com>
+ <4FC37DD6.7090000@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FC37DD6.7090000@web.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 15, 2012 at 10:32:46AM -0700, Yinghai Lu wrote:
->On Sun, May 13, 2012 at 11:46 PM, Richard Yang
-><weiyang@linux.vnet.ibm.com> wrote:
->> On Sun, May 13, 2012 at 10:40:41PM -0700, Yinghai Lu wrote:
->>>On Sun, May 13, 2012 at 6:55 PM, Richard Yang
->>><weiyang@linux.vnet.ibm.com> wrote:
->>>> On Mon, Apr 23, 2012 at 03:46:03PM -0400, Don Dutile wrote:
->>>>>On 04/22/2012 11:52 AM, Richard Yang wrote:
->>>>>>All,
->>>>>>
->>>>>>I am reading the pci_scan_bridge() and not sure what will happen in
->>>>>>following situation.
->>>>>>
->>>>>>Suppose the kernel is not passed the pci=assign-busses.
->>>>>>
->>>>>>Below is a picture about the pci system.
->>>>>>
->>>>>>                    +-------+
->>>>>>                    |       | root bridge(0,255)
->>>>>>                    +---+---+
->>>>>>                        |          Bus 0
->>>>>>       -----+-----------+------------------------------+--
->>>>>>            |                                          |
->>>>>>            |                                          |
->>>>>>            |                                          |
->>>>>>       +----+----+                               +-----+-----+
->>>>>>       |         |  B1(1,15)                     |           |B2(16,28)
->>>>>>       +----+----+                               +-----+-----+
->>>>>>            |  Bus 1                                   |    Bus 16
->>>>>>       -----+-----------------------         ----------+----------------
->>>>>>                             |
->>>>>>                        +----+----+
->>>>>>                        |         | B3
->>>>>>                        +---------+
->>>>>>
->>>>>>Suppose B1 and B2 works fine with the BIOS, which get the right bus
->>>>>>number and range.
->>>>>>
->>>>>>B3 does not works fine with the BIOS, which doesn't get the bus number.
->>>>>>
->>>> Take my original question.
->>>>
->>>> B3 doesn't get the bus number, which its parent doesn't have free bus
->>>> number and there is no gap between B1 and B2.
->>>>
->>>> So in this case, the probe_resource() can't find bus number for B3.
->>>> Then cause pci_bridge_probe_busn_res() return non-zero.
->>>>
->>>> Then B3 couldn't work fine?
->>>
->>>B3 is on Bus 1? B3 is the one of bridges on Bus1?
->> No,  I omit other bridges on Bus#1.
->> They will occupy bus number 2-15, which is calculated by BIOS and set to
->> bridge's configuration space.
->
->with that new condition, probe_resource will return zero.
->
->for those kind of case:
->1. use echo 1 > /sys .../remove to remove devices under Bridge2.
->2. use setpci to change bus register of bridge2 to move high to make
->more space for bridge 1.
->3. rescan bridge 1 and bridge 2.
-So these steps is done after boot up and user find B3 doesn't work?
->
->Yinghai
+On Mon, May 28, 2012 at 03:29:58PM +0200, Jan Kiszka wrote:
+> On 2012-05-28 15:21, Michael S. Tsirkin wrote:
+> > On Mon, May 28, 2012 at 02:51:25PM +0200, Jan Kiszka wrote:
+> >> On 2012-05-28 14:39, Michael S. Tsirkin wrote:
+> >>> On Fri, May 25, 2012 at 11:02:13AM -0300, Jan Kiszka wrote:
+> >>>> According to Alexey, the T310 does not properly support INTx masking as
+> >>>> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
+> >>>> is masked. Mark this adapter as broken so that pci_intx_mask_supported
+> >>>> won't report it as compatible.
+> >>>>
+> >>>> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> >>>> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+> >>>
+> >>>
+> >>> Just a thought: would be nice to have a way to discover
+> >>> the quirk was activated. Add an attribute so that
+> >>> userspace can detect and report this properly to users?
+> >>> Or just log a warning message ...
+> >>
+> >> pr_notice_once?
+> > 
+> > OK IMO.
+> > 
+> >> A flag for userspace would be significantly more
+> >> complicated (and not PCI layer hands).
+> > 
+> > Why not? I meant e.g. an attribute in pci-sysfs.
+> 
+> Possible. But what is the preferred way of doing this? Are there any
+> precedences?
+> 
+> Jan
+> 
+
+E.g. a reset attribute is there only if device reset is supported.
+I don't insist on this - merely asking how does userspace report
+an attempt to share IRQs and whether the reason is
+discoverable in some way.
 
 -- 
-Richard Yang
-Help you, Help me
-
+MST
