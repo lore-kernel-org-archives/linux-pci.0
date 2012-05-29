@@ -1,113 +1,63 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:35308 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754137Ab2E2QOL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 12:14:11 -0400
+Received: by dady13 with SMTP id y13so5624058dad.19
+        for <linux-pci@vger.kernel.org>; Tue, 29 May 2012 09:14:10 -0700 (PDT)
+Message-ID: <4FC4F5BC.5000102@gmail.com>
+Date: Wed, 30 May 2012 00:13:48 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUOsMOQgZXCuPHpc6ZSEGnY3nv+uy1o0xvrW8-LKwNZrg@mail.gmail.com>
-References: <1332135781-13695-1-git-send-email-yinghai@kernel.org>
- <1332135781-13695-5-git-send-email-yinghai@kernel.org> <CAErSpo6Wbjh_pzDOkGRoog2WeJQET9UT0fiaanV0r15pq7hT6Q@mail.gmail.com>
- <CAE9FiQV0XTd_1Ujz=tb6BSuwJvJ9nbT_GbE2PREtgMGv=yG0+g@mail.gmail.com>
- <CAErSpo57pH81KtUbYZ3j6y4kC+ka33Lzr4rfcywVWf8OTmH_5Q@mail.gmail.com> <CAE9FiQUOsMOQgZXCuPHpc6ZSEGnY3nv+uy1o0xvrW8-LKwNZrg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 1 May 2012 09:40:05 -0600
-Message-ID: <CAErSpo5EdBY-8M5FnQaGHOAvhaGO7qLHdDkmYGyDRN9de4umNw@mail.gmail.com>
-Subject: Re: [PATCH -v11 04/30] PCI: Add busn_res into struct pci_bus.
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
+To: Joerg Roedel <joerg.roedel@amd.com>
+CC: Antonio Quartulli <ordex@autistici.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: Re: warn_slowpath_common in drivers/pci/search.c:44 on linux-3.4.0
+References: <20120526082551.GA2723@ritirata.org> <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com> <20120529083552.GN2604@amd.com> <20120529085648.GA13941@ritirata.org> <20120529101657.GO2604@amd.com>
+In-Reply-To: <20120529101657.GO2604@amd.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 1, 2012 at 12:27 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Apr 30, 2012 at 9:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Mon, Apr 30, 2012 at 6:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Mon, Apr 30, 2012 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>> --- a/include/linux/pci.h
->>>>> +++ b/include/linux/pci.h
->>>>> @@ -419,6 +419,7 @@ struct pci_bus {
->>>>>        struct list_head slots;         /* list of slots on this bus */
->>>>>        struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
->>>>>        struct list_head resources;     /* address space routed to this bus */
->>>>> +       struct resource busn_res;       /* track registered bus num range */
->>>>>
->>>>>        struct pci_ops  *ops;           /* configuration access functions */
->>>>>        void            *sysdata;       /* hook for sys-specific extension */
->>>>
->>>> struct pci_bus already includes "secondary" and "subordinate".    This
->>>> new "busn_res" looks like it will contain the same information.  Why
->>>> do we need both?
->>>
->>> In some case the could be different.
->>> for root bus from _CRS, busn_res could bigger than subordinate,
->>> because scan_childbus will update subordinate.
->>
->> For a bus below a P2P bridge, I think it's always the case that the
->> bridge's Subordinate Bus Number in config space == bus->subordinate ==
->> bus->busn_res.end (correct me if I'm wrong).  I don't like the
->> redundancy in this case.
->
-> there are about 70 bus->subordinate reference and 40 bus->secondary reference.
->
-> could try to update them in following patch set.
+On 05/29/2012 06:16 PM, Joerg Roedel wrote:
+> On Tue, May 29, 2012 at 10:56:50AM +0200, Antonio Quartulli wrote:
+>> attached!
+>> Some days ago I tried to put some printk in the code and, as far as I can
+>> understand, you are right.
+> 
+> Hmm, looks like device 03:00.0 is a 32bit PCI device attached to device
+> 00:1c.2 which calls itself a Root Port instead of a PCI Bridge. I am
+> not sure if the check in search.c is really necessary. As I see it there
+> are also other possible pcie_types like PCI_EXP_TYPE_PCIE_BRIDGE.
+> Putting Anil Keshavamurthy on Cc.
+> 
+> Anil, is this check in pci_find_upstream_pcie_bridge() really
+> necessary:
+> 
+>         /* PCI device should connect to a PCIe bridge */
+>         if (pdev->pcie_type != PCI_EXP_TYPE_PCI_BRIDGE) {
+>                 /* Busted hardware? */
+>                 WARN_ON_ONCE(1);
+>                 return NULL;
+>         }
+> 
+> ? In the warning that triggers for Antonio the value of pcie_type seems
+> to be PCI_EXP_TYPE_ROOT_PORT and from the available types I think that
+> PCI_EXP_TYPE_PCIE_BRIDGE is also possible.
+It seems that device 00:1c.2 is a real PCIe root port, and device 03:00.0
+is a CardBus bridge. Should we call device 03:00.0 as Legacy Endpoint here?
+Could a PCIe legacy endpoint be directly connected to root port and downstream
+port? If the answer is yes, the assumption in pci_find_upstream_pcie_bridge()
 
-If you're proposing this:
-  1. add bus->busn_res
-  2. remove bus->subordinate and bus->secondary
-I fully support that, and I'd like to merge both pieces at the same
-time (different patches is fine; I just want to make sure both pieces
-actually happen).
+BTW, does PCI_EXP_TYPE_PCIE_BRIDGE mean PCI/PCI-X to PCIe bridge? Do we
+really have such chipsets?
 
->> For a root bus where you set bus->busn_res from _CRS and
->> bus->subordinate = pci_scan_child_bus(), bus->busn_res.end will
->> generally be different from bus->subordinate, but there's no point in
->> keeping track of bus->subordinate.
->>
->> The reason we care about secondary and subordinate is so we can
->> allocate bus numbers when enumerating devices behind a bridge.  The
->> only thing we need for that is the aperture of the upstream bridge and
->> the apertures of any peer bridges on the same bus.  Let's say we have
->> this:
->>
->>        pci 00:00.0 bridge to [bus a-b]
->>        pci a:01.0 bridge to [bus c-d]  (already enumerated)
->>        pci a:02.0 bridge to [bus e-f]  (already enumerated)
->>        pci a:03.0 bridge to [bus x-y]  (enumerating now)
->>
->> We know [c-d] is contained in [a-b]; [e-f] is contained in [a-b]; a <
->> c; and a < e.  To enumerate behind a:03.0, we need to assign x & y
->> such that a < x; [x-y] is contained in [a-b]; and [x-y] does not
->> overlap [c-d] or [e-f].  The value from pci_scan_child_bus() is
->> probably useful for setting y, but we don't have to save it in the
->> struct pci_bus for that.
->
-> busn alloc will try to solve x-y may need big range than [a,b], it
-> will extend top of b and parents of bus a.
-> instead of just b+1 blindly.
->
-> and will have more strict checking to avoid overlapping.
+Thanks
+Gerry
+> 
+> Thanks,
+> 
+> 	Joerg
+> 
 
-Obviously the completely general problem of allocating bus numbers may
-require traversing up the tree.  My point is that I don't think it's
-necessary to keep both busn_res.end and subordinate to do that.
-
->>> and also we have one resource to insert it into the resource tree, so
->>> later could probe/allocate bus num range.
->>
->> Sorry, I didn't understand this.
->
-> Using busn_res to track and allocate busn range, by put them in the
-> resource tree could reuse resource allocating code.
-
-Yes, I agree that replacing secondary & subordinate with a struct
-resource is a good idea.  That will allow a resource tree of bus
-numbers, as well as other useful things like the ability to "%pR".
-
-I just don't want *both* busn_resource and secondary & subordinate.
-
-Bjorn
