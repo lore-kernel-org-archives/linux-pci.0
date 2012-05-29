@@ -1,71 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45270 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760568Ab2EWUxL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 16:53:11 -0400
-Received: by pbbrp8 with SMTP id rp8so10405472pbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 13:53:10 -0700 (PDT)
+Received: from terminus.zytor.com ([198.137.202.10]:55908 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380Ab2E2TDk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 May 2012 15:03:40 -0400
+Message-ID: <4FC51D79.6010804@zytor.com>
+Date: Tue, 29 May 2012 12:03:21 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-In-Reply-To: <20120523190841.GC32207@redhat.com>
-References: <201205222011.q4MKBcMo024624@int-mx02.intmail.prod.int.phx2.redhat.com>
-	<CAE9FiQVkOsCpxa2WzhYguX6CxM=HF+i7h9dM2XHiaCQXSmFU6g@mail.gmail.com>
-	<20120523024313.GA2888@redhat.com>
-	<CAE9FiQV4hgUGqAz3jhRrjJyEGrV-=K=LwRhr7zePncKirajoSw@mail.gmail.com>
-	<CAE9FiQVPyjsB=oWp80sgqzkWw8KqX0GHg+csM39juo2N67P2Tg@mail.gmail.com>
-	<20120523155346.GA23940@redhat.com>
-	<CAE9FiQWPpKE5vmzZqw-E_L_0Lt1QpqV=xk=Hu6Stzva5vXk1_g@mail.gmail.com>
-	<20120523184449.GB23940@redhat.com>
-	<20120523190841.GC32207@redhat.com>
-Date: Wed, 23 May 2012 13:53:10 -0700
-Message-ID: <CAE9FiQX8j__V+VG-by+N9zZ7GJPtiLL0qJtiji7jHWddvJnOmQ@mail.gmail.com>
-Subject: Re: [PATCH] pci hotplug: rescan bridge after device hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Jason Baron <jbaron@redhat.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com> <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com> <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com> <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com> <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com> <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com> <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com> <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com> <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
+In-Reply-To: <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2012 at 12:08 PM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> Fundamentally BARs are under guest control.
-> So while you are handing out memory for the bridges you would have to
-> tiptoe around guest assigned BARs.
->
-> Also what happens after reboot? bios currently
-> assigns memory to bridges that are present on boot.
-> So this makes it even messier as who assigns memory
-> depends on whether device is hotplugged.
->
-> Cleaner to have guest do it.
+On 05/29/2012 11:17 AM, Yinghai Lu wrote:
+> 
+> pci bridge could support 16bits and 32bits io port.
+> but we did not record if 32bits is supported.
+> 
 
-assume here  "guest' mean: BIOS + kernel + (acpi dsl code from BIOS).
+Okay, so this is the actual problem, no?
 
->
-> I think Windows even can even rebalance BARs
-> as needed. So this is just a linux bug that needs
-> to be fixed.
+> so during allocating, could have allocated above 64k address to non
+> 32bit bridge.
+> 
+> but  x86 is ok, because ioport.end always set to 0xffff.
+> other arches with IO_SPACE_LIMIT with 0xffffffff or
+> 0xffffffffffffffffUL may have problem.
 
-Now pciehp in Linux will resize the bridge.
-but not for acpiphp. reason: acpiphp could handle more complicated case.
-does not mean new add card have to been under one bridge existing.
+The latter is nonsense, the PCI-side address space is only 32 bits wide.
 
-slot just on root bus, you could just add device or bridge in it.
-and the bridge could have other hotlpug slots.
+	-hpa
 
-in that case, if one of children slot already have card
-installed/driver loaded, later
-after another card is put in another child slot, we can not simple
-resize the bridge in parent slot.
-because other child devices is operating...
 
-solution will be
-1. add quirks to set is_hotplug_bridge for apciphp....
-2. or probe_resource in busn_alloc patchset, that maybe still need to
-extend to support alignment.
-
-BTW, I was thinking Linux is the ONLY one that will scratch bridge BAR
-if that is big enough for children devices.
-Do you have evidence that other os does that?
-
-Yinghai
