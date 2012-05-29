@@ -1,51 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:42090 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755777Ab2EKBXS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2012 21:23:18 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 11 May 2012 06:53:15 +0530
-Date: Fri, 11 May 2012 09:23:09 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120511012309.GA5392@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <CAE9FiQWM4OTFp5NN+KOXxNREQxNWipDjWbbPPiHHJsb6yFmuiQ@mail.gmail.com>
- <20120506151715.GA7773@richard>
- <CAE9FiQWsSWK-_zGe1ggaKuZu+RJ1kb1zuTEokdxqFSbE3UjNRw@mail.gmail.com>
- <CAE9FiQXKjxLDLeh8TXU_OCNwFt+UMv3qFjcPrKcPcorA1YmkdQ@mail.gmail.com>
- <20120507011722.GA8122@richard>
- <CAE9FiQUpcJdAvK=wisNc_zq5c9zDtgEM=MNugDcHN9h3=ZPUcA@mail.gmail.com>
- <20120508024612.GA11485@richard>
- <CAE9FiQUU+a4yQJTiud=aYx2xXcoQZpH2rJyVhj19TQKGN7=2BA@mail.gmail.com>
- <20120510033551.GA25138@richard>
- <CAE9FiQXcFC-5VKGVDZc6Tb8Nw8cLG4sB=BEP-+zctf2c6n6oNg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQXcFC-5VKGVDZc6Tb8Nw8cLG4sB=BEP-+zctf2c6n6oNg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4FC51D79.6010804@zytor.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+	<1337754877-19759-3-git-send-email-yinghai@kernel.org>
+	<CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
+	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
+	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+	<20120525043651.GA1391@google.com>
+	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+	<20120525193716.GA8817@google.com>
+	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
+	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
+	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
+	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
+	<CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
+	<4FC50E09.4000204@zytor.com>
+	<CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
+	<4FC51D79.6010804@zytor.com>
+Date: Tue, 29 May 2012 13:46:03 -0700
+Message-ID: <CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+From: Yinghai Lu <yinghai@kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>,
+	David Miller <davem@davemloft.net>,
+	Tony Luck <tony.luck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 09, 2012 at 10:42:06PM -0700, Yinghai Lu wrote:
+On Tue, May 29, 2012 at 12:03 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> On 05/29/2012 11:17 AM, Yinghai Lu wrote:
+>>
+>> pci bridge could support 16bits and 32bits io port.
+>> but we did not record if 32bits is supported.
+>>
 >
->We can not extend start.
->
->when we have bridge using [90, 150] all children devices will be on bus 90.
->if change the bridge to use low like 81, then all device need to
->remove and rescan them.
->
->also keep the old bus number is safer.
-Oh, got it. 
->
->Yinghai
+> Okay, so this is the actual problem, no?
 
--- 
-Richard Yang
-Help you, Help me
+their fw could not need kernel help to allocate io ports, or they are
+only use device that support 32bit ioport.
 
+>
+>> so during allocating, could have allocated above 64k address to non
+>> 32bit bridge.
+>>
+>> but  x86 is ok, because ioport.end always set to 0xffff.
+>> other arches with IO_SPACE_LIMIT with 0xffffffff or
+>> 0xffffffffffffffffUL may have problem.
+>
+> The latter is nonsense, the PCI-side address space is only 32 bits wide.
+>
+maybe they have unified io include ioport and mem io?
+
+Yinghai
