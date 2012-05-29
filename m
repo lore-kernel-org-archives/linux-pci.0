@@ -1,81 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:38646 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753479Ab2EGTUQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2012 15:20:16 -0400
-Message-ID: <4FA82123.8060406@fold.natur.cuni.cz>
-Date: Mon, 07 May 2012 21:23:15 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:35860 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752511Ab2E2XT3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 19:19:29 -0400
+Received: by gglu4 with SMTP id u4so3046531ggl.19
+        for <linux-pci@vger.kernel.org>; Tue, 29 May 2012 16:19:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v2 10/19] PCI: serialize hotplug operaitons triggered
- by the shpchp driver
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com> <1335539820-11232-11-git-send-email-jiang.liu@huawei.com> <4FA4F3E5.5040600@fold.natur.cuni.cz> <4FA5EF97.8010306@gmail.com> <20120506152036.GA31551@kroah.com> <4FA7D882.3070903@gmail.com> <4FA7D839.9090109@fold.natur.cuni.cz> <4FA7D894.3040700@fold.natur.cuni.cz> <20120507184050.GC725@kroah.com>
-In-Reply-To: <20120507184050.GC725@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4FBA7AEE.3090402@snewbury.org.uk>
+References: <1333968563.5678.19.camel@infinity> <4F89CE43.7040200@snewbury.org.uk>
+ <CAE9FiQVwDNM9MkqG_g139LDf6Ypjx0uygzVqosDe=fF=c_Y3gA@mail.gmail.com>
+ <4F8AA0DC.6010902@snewbury.org.uk> <4F8AB312.7060606@snewbury.org.uk>
+ <4F8B04A4.4070507@snewbury.org.uk> <4F8B0609.8010603@snewbury.org.uk>
+ <CAE9FiQUsQjUNeW1sa_mQL6MEaDhxvoMhFaN9wLPAqOXzh+AXPQ@mail.gmail.com>
+ <CAE9FiQVzC2YCkXtFDPkCMVMcMqt9c0t8hKVvpgFpwjRdBen0Uw@mail.gmail.com>
+ <CAE9FiQX7iVYZSoEJVVHJTx1gUSKh6RP+iJRGJqMZmDgkFDnPQQ@mail.gmail.com>
+ <CAE9FiQXrF+o9UW-J+UDSN3OR4SOWWAZwJbH=39k4xFf2m-Jd9A@mail.gmail.com>
+ <4F96770D.2050606@snewbury.org.uk> <4FB227D3.7090002@snewbury.org.uk>
+ <CAE9FiQX48eCS85eWMFxm6fCWgu2zwxvSywtQhsf-35WEvBfJVQ@mail.gmail.com>
+ <4FB4EE99.10509@snewbury.org.uk> <4FB4F039.2040308@snewbury.org.uk>
+ <CAE9FiQUpdVJeF06BtqOKo448n1oH+AMJyC03FpB13=fOdkwM+w@mail.gmail.com>
+ <CAE9FiQWOoEX3H6V7+c+azm8DJieX8bpXRmsYuOE+ZUDJ-p3-yQ@mail.gmail.com>
+ <CAE9FiQU1Bq3xpo0m_eNwBHoxF+oH=pXpg59hQguf_5GpWytyKg@mail.gmail.com> <4FBA7AEE.3090402@snewbury.org.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 May 2012 17:19:07 -0600
+Message-ID: <CAErSpo6iGaQA8DTKRK9Q+m2RqJk1R-Gfa9qk+YMrf=9Ww45MFw@mail.gmail.com>
+Subject: Re: PCI resources above 4GB
+To: Steven Newbury <steve@snewbury.org.uk>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Greg Kroah-Hartman wrote:
-> On Mon, May 07, 2012 at 04:13:40PM +0200, Martin Mokrejs wrote:
->> Martin Mokrejs wrote:
->>> Hi Greg and Jiang,
->>>   I am confirming this issue still happens for me with my changed motherboard and express card slot
->>> of my Dell Vostro 3550 laptop. :( I trigger this when unplugging a FireWire express card. Not always
->>> but does happen. attached is a camera picture of the Oops.
+On Mon, May 21, 2012 at 11:27 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> On 18/05/12 10:08, Yinghai Lu wrote:
+>> On Fri, May 18, 2012 at 12:45 AM, Yinghai Lu <yinghai@kernel.org>
+>> wrote:
+>>> On Thu, May 17, 2012 at 9:36 AM, Yinghai Lu <yinghai@kernel.org>
+>>> wrote:
+>>>> On Thu, May 17, 2012 at 5:34 AM, Steven Newbury
+>>>> <steve@snewbury.org.uk> wrote:
+>>>>> -----BEGIN PGP SIGNED MESSAGE----- Strange, the busn branch
+>>>>> is merged with for-pci-res-alloc, but for some reason it
+>>>>> isn't working.  Only the bridge is detected, not the devices
+>>>>> behind it.
+>>>>
+>>>> Can you post the boot log ? maybe recently reordering patches
+>>>> applying sequence break it.
 >>>
->>>
->>> wq_worker_sleeping
->>> __schedule
->>> schedule
->>> do_exit
->>> oops_end
->>> no_context
->>> __bad_area_nosemaphore
->>> ? put_dec
->>> bad_area_nosemaphore
->>> do_page_fault
->>> ? pointer.clone
->>> ? vsnprintf
->>> page_fault
->>> ? sysfs_name_hash
->>> sysfs_find_dirent
->>> sysfs_hash_and_remove
->>> sysfs_remove_bin_file
->>> pci_remove_resource_files
-> 
-> Bjorn, the resource stuff changed recently, while pci hotplug didn't
-> change at all.  Are we trying to remove files that aren't really there
-> anymore?
-> 
-> Or could we be removing the same file twice?
+>>> Never mind, found the problem.
+>>
+>> updated for-pci-res-alloc branch. please check it.
+>>
+> Tested and working fine now.
 
-If you give me some debug patch I can provide you with dozens of inserts and reinserts
-of the card and corresponding output (the normal scenario). Unfortunately not the Oops case,
-that will not be synced to disk and my remote ttyUSB0 works only partially, only few lines
-I ever managed to record. But still you could compare the stacktrace with the correct path?
+Can you attach dmesg logs without Yinghai's patches (where I assume it
+doesn't work) and with them (where it *does* work) to the bugzilla?  I
+assume https://bugzilla.kernel.org/show_bug.cgi?id=10461 is still the
+relevant report.
 
-It seems to me Oops happens when I just pull out the card out of the slot. Maybe the
-expected way would be to push the card into the slot to release some lock and it would
-be pulled out by itself. I fear this is the intended way to unplug a card.
+I'm confused because I thought your _CRS showed no apertures above
+4GB, and I'm trying to figure out how Yinghai's patches can help if
+that's the case.
 
-I played with that a bit now it seems if I just pull out the card, the mechanical lock still
-stays in "inserted" position. Next insertion of the card will fail (insert+slip out).
-So, every second insertion attempt will succeed and my card will really be held in.
-
-I think I see in logs that output slightly differs on every second ... re-insert of the
-card. Although the card presence detection does not work if catches up on card insertion
-(some mechanical lock flips). I think removal of the by card pushing it in at least ensures
-the lock is flipped as well. Just my impression why something differs on every second
-insertion of the card.
-
-I just retested with 3.4-rc6 and this Oops still happens. If I did did not screw it up it
-happens even when I carefully always push in the card to get it popped out (the maybe intended
-and only allowed card removal?). So the above "every second" scenario does not really help.
-
-Thanks,
-Martin
+Bjorn
