@@ -1,69 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:64769 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754526Ab2EKXjy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2012 19:39:54 -0400
-Received: by dady13 with SMTP id y13so3665519dad.19
-        for <linux-pci@vger.kernel.org>; Fri, 11 May 2012 16:39:54 -0700 (PDT)
-Date: Fri, 11 May 2012 16:39:50 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH 02/13] iommu: IOMMU Groups
-Message-ID: <20120511233950.GB9335@kroah.com>
-References: <20120511222148.30496.68571.stgit@bling.home>
- <20120511225541.30496.34751.stgit@bling.home>
+Received: from mx1.redhat.com ([209.132.183.28]:49912 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753082Ab2E2JwH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 May 2012 05:52:07 -0400
+Date: Tue, 29 May 2012 12:51:55 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE NIC
+ as broken
+Message-ID: <20120529095155.GA27043@redhat.com>
+References: <4FBF90E5.8030800@siemens.com>
+ <20120528123934.GB21778@redhat.com>
+ <4FC374CD.5000509@web.de>
+ <20120528132109.GB22623@redhat.com>
+ <4FC37DD6.7090000@web.de>
+ <20120528133946.GA23024@redhat.com>
+ <4FC47FED.1060000@siemens.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120511225541.30496.34751.stgit@bling.home>
+In-Reply-To: <4FC47FED.1060000@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2012 at 04:55:41PM -0600, Alex Williamson wrote:
-> IOMMU device groups are currently a rather vague associative notion
-> with assembly required by the user or user level driver provider to
-> do anything useful.  This patch intends to grow the IOMMU group concept
-> into something a bit more consumable.
+On Tue, May 29, 2012 at 09:51:09AM +0200, Jan Kiszka wrote:
+> On 2012-05-28 15:39, Michael S. Tsirkin wrote:
+> > On Mon, May 28, 2012 at 03:29:58PM +0200, Jan Kiszka wrote:
+> >> On 2012-05-28 15:21, Michael S. Tsirkin wrote:
+> >>> On Mon, May 28, 2012 at 02:51:25PM +0200, Jan Kiszka wrote:
+> >>>> On 2012-05-28 14:39, Michael S. Tsirkin wrote:
+> >>>>> On Fri, May 25, 2012 at 11:02:13AM -0300, Jan Kiszka wrote:
+> >>>>>> According to Alexey, the T310 does not properly support INTx masking as
+> >>>>>> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
+> >>>>>> is masked. Mark this adapter as broken so that pci_intx_mask_supported
+> >>>>>> won't report it as compatible.
+> >>>>>>
+> >>>>>> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> >>>>>> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+> >>>>>
+> >>>>>
+> >>>>> Just a thought: would be nice to have a way to discover
+> >>>>> the quirk was activated. Add an attribute so that
+> >>>>> userspace can detect and report this properly to users?
+> >>>>> Or just log a warning message ...
+> >>>>
+> >>>> pr_notice_once?
+> >>>
+> >>> OK IMO.
+> >>>
+> >>>> A flag for userspace would be significantly more
+> >>>> complicated (and not PCI layer hands).
+> >>>
+> >>> Why not? I meant e.g. an attribute in pci-sysfs.
+> >>
+> >> Possible. But what is the preferred way of doing this? Are there any
+> >> precedences?
+> >>
+> >> Jan
+> >>
+> > 
+> > E.g. a reset attribute is there only if device reset is supported.
+> > I don't insist on this - merely asking how does userspace report
+> > an attempt to share IRQs and whether the reason is
+> > discoverable in some way.
 > 
-> To do this, we first create an object representing the group, struct
-> iommu_group.  This structure is allocated (iommu_group_alloc) and
-> filled (iommu_group_add_device) by the iommu driver.  The iommu driver
-> is free to add devices to the group using it's own set of policies.
-> This allows inclusion of devices based on physical hardware or topology
-> limitations of the platform, as well as soft requirements, such as
-> multi-function trust levels or peer-to-peer protection of the
-> interconnects.  Each device may only belong to a single iommu group,
-> which is linked from struct device.iommu_group.  IOMMU groups are
-> maintained using kobject reference counting, allowing for automatic
-> removal of empty, unreferenced groups.  It is the responsibility of
-> the iommu driver to remove devices from the group
-> (iommu_group_remove_device).
+> Well, so far there is no attribute associated with INTx masking that we
+> could hide to express this.
 > 
-> IOMMU groups also include a userspace representation in sysfs under
-> /sys/kernel/iommu_groups.  When allocated, each group is given a
-> dynamically assign ID (int).  The ID is managed by the core IOMMU group
-> code to support multiple heterogeneous iommu drivers, which could
-> potentially collide in group naming/numbering.  This also keeps group
-> IDs to small, easily managed values.  A directory is created under
-> /sys/kernel/iommu_groups for each group.  A further subdirectory named
-> "devices" contains links to each device within the group.  The iommu_group
-> file in the device's sysfs directory, which formerly contained a group
-> number when read, is now a link to the iommu group.  Example:
-> 
-> $ ls -l /sys/kernel/iommu_groups/26/devices/
+> Jan
 
-<snip>
+Thinking about it some more, userspace using this functionality
+is pretty recent. So if we just teach it to report
+'intx mask or status bit unsupported' on failure,
+plus add pr_notice as you suggested, then that's
+probably enough.
 
-As you are creating new sysfs files and directories, you need to also
-add the proper Documentation/ABI/ files at the same time.
 
-thanks,
-
-greg k-h
+> -- 
+> Siemens AG, Corporate Technology, CT T DE IT 1
+> Corporate Competence Center Embedded Linux
