@@ -1,50 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:36143 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760367Ab2EIQ4G convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:2:2>);
-	Wed, 9 May 2012 12:56:06 -0400
-Message-Id: <4FAABDDA0200007800082998@nat28.tlf.novell.com>
-Date: Wed, 09 May 2012 17:56:26 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Bjorn Helgaas" <bhelgaas@google.com>
-Cc: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Jesse Barnes" <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH 1/5, resend] PCI: adjust quirk handler section
- annotations
-References: <4FAA4A5A0200007800082702@nat28.tlf.novell.com>
- <CAErSpo68N5JYv_SX7Qzu4e0Z=x_g1U+FPaA-ux_W_zoB6iW+pw@mail.gmail.com>
- <4FAAB134020000780008294F@nat28.tlf.novell.com>
- <CAErSpo5Aidio0a6SjeYu=-9gXJU1aALMi5mUjg2aEB5pTsr8=Q@mail.gmail.com>
-In-Reply-To: <CAErSpo5Aidio0a6SjeYu=-9gXJU1aALMi5mUjg2aEB5pTsr8=Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:58050
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752542Ab2E2Ifr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 May 2012 04:35:47 -0400
+Date: Tue, 29 May 2012 10:35:53 +0200
+From: Joerg Roedel <joerg.roedel@amd.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Antonio Quartulli <ordex@autistici.org>,
+	<linux-pci@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+Subject: Re: warn_slowpath_common in drivers/pci/search.c:44 on linux-3.4.0
+Message-ID: <20120529083552.GN2604@amd.com>
+References: <20120526082551.GA2723@ritirata.org>
+ <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 09.05.12 at 18:08, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, May 9, 2012 at 9:02 AM, Jan Beulich <JBeulich@suse.com> wrote:
->>>>> On 09.05.12 at 17:54, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> My inclination is that all PCI fixups should work the same for
->>> hot-added devices as for those present at boot, which would suggest
->>> that we should always use __devinit, not __init.  If I'm missing
->>> something, please educate me :)
->>
->> That's certainly possible - I simply based the patch on what is there
->> currently.
-> 
-> Yep, your patch makes perfect sense considering the tree as it is
-> today.  But if you agree with my sense of what it *should* be, I think
-> we should leave things as they are, or work on moving everything
+Hi Antonio,
 
-I indeed wondered why it isn't that way while doing this.
+On Sat, May 26, 2012 at 09:09:52AM -0600, Bjorn Helgaas wrote:
+> On Sat, May 26, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+> > [    1.054279] WARNING: at drivers/pci/search.c:44 pci_find_upstream_pcie_bridge+0x5e/0x70()
+> > [    1.054385] Hardware name: Latitude E5420
+> > [    1.054457] Modules linked in:
+> > [    1.054568] Pid: 1, comm: swapper/0 Not tainted 3.4.0ordex+ #3
+> > [    1.054643] Call Trace:
+> > [    1.054716]  [<ffffffff81033d4a>] warn_slowpath_common+0x7a/0xb0
+> > [    1.054793]  [<ffffffff81033d95>] warn_slowpath_null+0x15/0x20
+> > [    1.054869]  [<ffffffff8123899e>] pci_find_upstream_pcie_bridge+0x5e/0x70
+> > [    1.054949]  [<ffffffff813babe7>] intel_iommu_device_group+0x77/0x100
+> > [    1.055027]  [<ffffffff813b52d5>] add_iommu_group+0x35/0x60
+> > [    1.055113]  [<ffffffff813b52a0>] ? bus_set_iommu+0x50/0x50
+> > [    1.055191]  [<ffffffff8132c586>] bus_for_each_dev+0x56/0x90
+> > [    1.055267]  [<ffffffff813b528b>] bus_set_iommu+0x3b/0x50
+> > [    1.055344]  [<ffffffff818c4920>] intel_iommu_init+0xab0/0xb3f
+> > [    1.055421]  [<ffffffff81120b26>] ? sys_mkdirat+0x76/0xd0
+> > [    1.055499]  [<ffffffff8189b0db>] ? memblock_find_dma_reserve+0x13d/0x13d
+> > [    1.055578]  [<ffffffff8189b0ee>] pci_iommu_init+0x13/0x3e
+> > [    1.055655]  [<ffffffff810001ca>] do_one_initcall+0x3a/0x170
+> > [    1.055732]  [<ffffffff81897c35>] kernel_init+0x148/0x1cc
+> > [    1.055807]  [<ffffffff81897588>] ? do_early_param+0x86/0x86
+> > [    1.055884]  [<ffffffff814fc914>] kernel_thread_helper+0x4/0x10
+> > [    1.055963]  [<ffffffff8105de60>] ? finish_task_switch+0x80/0x110
+> > [    1.056040]  [<ffffffff814fafdd>] ? retint_restore_args+0xe/0xe
+> > [    1.056126]  [<ffffffff81897aed>] ? start_kernel+0x30b/0x30b
+> > [    1.056203]  [<ffffffff814fc910>] ? gs_change+0xb/0xb
 
-> towards __devinit (I'd be thrilled if you wanted to work on that :)).
-> Otherwise we'd just be changing things to __init that we'd have to
-> change back later.
+Hmm, this looks like pci_find_upstream_pcie_bridge() found a PCIe device
+in the chain which is not a bridge. Can you please post the output of
+'lspci -vvv' and 'lspci -t'?
 
-I'd perhaps rather drop my patches then, as the main benefit
-(moving stuff from resident text to init text) would go away.
+Thanks,
 
-Jan
+	Joerg
+
+-- 
+AMD Operating System Research Center
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
 
