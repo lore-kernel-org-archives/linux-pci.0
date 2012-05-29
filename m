@@ -1,91 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([58.251.152.67]:62768 "EHLO
-	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757431Ab2EWDv7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2012 23:51:59 -0400
-Received: from huawei.com (szxga04-in [172.24.2.12])
- by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M4G00722IPK85@szxga04-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:20 +0800 (CST)
-Received: from szxrg01-dlp.huawei.com ([172.24.2.119])
- by szxga04-in.huawei.com (iPlanet Messaging Server 5.2 HotFix 2.14 (built Aug
- 8 2006)) with ESMTP id <0M4G00H21IP7RA@szxga04-in.huawei.com> for
- linux-pci@vger.kernel.org; Wed, 23 May 2012 11:51:20 +0800 (CST)
-Date: Wed, 23 May 2012 11:50:19 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH v6 2/9] PCI, x86: split out pci_mmconfig_alloc() for code reuse
-In-reply-to: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Message-id: <1337745026-1180-3-git-send-email-jiang.liu@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain
-References: <1337745026-1180-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:35542 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755890Ab2E2Xrx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 19:47:53 -0400
+Received: by yhmm54 with SMTP id m54so2822752yhm.19
+        for <linux-pci@vger.kernel.org>; Tue, 29 May 2012 16:47:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWmXLV4QsPP3Zab4iFogh1Lb6hxOwc8YnGyE5uTmwxB6Q@mail.gmail.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+ <1337754877-19759-3-git-send-email-yinghai@kernel.org> <CA+55aFzd1BWqidt95qZLc1x_YU=WeGS=mKUOMvO_3omOhc_5VA@mail.gmail.com>
+ <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
+ <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+ <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+ <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+ <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
+ <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
+ <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
+ <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
+ <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
+ <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
+ <CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com>
+ <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com>
+ <CAErSpo44TViNFcZivjr5hAu8w8kpEpUjxNAWtazhAqwwsorZbw@mail.gmail.com> <CAE9FiQWmXLV4QsPP3Zab4iFogh1Lb6hxOwc8YnGyE5uTmwxB6Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 May 2012 17:47:31 -0600
+Message-ID: <CAErSpo4djeR8hQ5mQFxEH3mdvaiPvzWHsdtMr_zkne8+xXZq8Q@mail.gmail.com>
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On Tue, May 29, 2012 at 5:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, May 29, 2012 at 4:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> I don't understand this one at all.  It looks like you mashed together
+>> at least two changes: (1) prefer I/O space above 64K if available, and
+>> (2) mark secondary bus resources with IORESOURCE_IO_32 when the P2P
+>> bridge I/O window address decode type is PCI_IO_RANGE_TYPE_32 and use
+>> that to limit allocations.
+>
+> let drop the one about IORESOURCE_IO_32.
+>
+> that should only fix one reallocation bug in theory out of x86.
 
-From: Jiang Liu <jiang.liu@huawei.com>
-
-Split out pci_mmconfig_alloc() for code reuse, which will be used
-when supporting PCI root bridge hotplug.
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- arch/x86/pci/mmconfig-shared.c |   19 +++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index f799949..5e2cd2a 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -61,8 +61,9 @@ static __init void list_add_sorted(struct pci_mmcfg_region *new)
- 	list_add_tail(&new->list, &pci_mmcfg_list);
- }
- 
--static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
--							int end, u64 addr)
-+static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
-+							     int start,
-+							     int end, u64 addr)
- {
- 	struct pci_mmcfg_region *new;
- 	struct resource *res;
-@@ -79,8 +80,6 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
- 	new->start_bus = start;
- 	new->end_bus = end;
- 
--	list_add_sorted(new);
--
- 	res = &new->res;
- 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
- 	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
-@@ -96,6 +95,18 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
- 	return new;
- }
- 
-+static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-+							int end, u64 addr)
-+{
-+	struct pci_mmcfg_region *new;
-+
-+	new = pci_mmconfig_alloc(segment, start, end, addr);
-+	if (new)
-+		list_add_sorted(new);
-+
-+	return new;
-+}
-+
- struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
- {
- 	struct pci_mmcfg_region *cfg;
--- 
-1.7.1
-
-
+If there's a bug, we should try to fix it.  I just don't understand
+what the bug *is*.
