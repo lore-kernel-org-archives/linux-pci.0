@@ -1,53 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 1/7] driver core: Add iommu_group tracking to struct device
-To: joerg.roedel@amd.com, dwmw2@infradead.org,
-	iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, ddutile@redhat.com,
-	alex.williamson@redhat.com, liuj97@gmail.com
-Date: Wed, 30 May 2012 14:18:41 -0600
-Message-ID: <20120530201840.31527.47813.stgit@bling.home>
-In-Reply-To: <20120530201424.31527.33142.stgit@bling.home>
-References: <20120530201424.31527.33142.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([198.137.202.10]:57178 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754735Ab2E2UvL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 May 2012 16:51:11 -0400
+Message-ID: <4FC536A5.6020600@zytor.com>
+Date: Tue, 29 May 2012 13:50:45 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: David Miller <davem@davemloft.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com> <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com> <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com> <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com> <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com> <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com> <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com> <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com> <4FC51D79.6010804@zytor.com> <CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
+In-Reply-To: <CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IOMMU groups allow IOMMU drivers to represent DMA visibility
-and isolation of devices.  Multiple devices may be grouped
-together for the purposes of DMA.  Placing a pointer on
-struct device enable easy access for things like streaming
-DMA programming and drivers like VFIO.
+On 05/29/2012 01:46 PM, Yinghai Lu wrote:
+> On Tue, May 29, 2012 at 12:03 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+>> On 05/29/2012 11:17 AM, Yinghai Lu wrote:
+>>>
+>>> pci bridge could support 16bits and 32bits io port.
+>>> but we did not record if 32bits is supported.
+>>>
+>>
+>> Okay, so this is the actual problem, no?
+> 
+> their fw could not need kernel help to allocate io ports, or they are
+> only use device that support 32bit ioport.
+> 
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
+That barely parses, never mind makes sense.
 
- include/linux/device.h |    2 ++
- 1 file changed, 2 insertions(+)
+>>
+>>> so during allocating, could have allocated above 64k address to non
+>>> 32bit bridge.
+>>>
+>>> but  x86 is ok, because ioport.end always set to 0xffff.
+>>> other arches with IO_SPACE_LIMIT with 0xffffffff or
+>>> 0xffffffffffffffffUL may have problem.
+>>
+>> The latter is nonsense, the PCI-side address space is only 32 bits wide.
+>>
+> maybe they have unified io include ioport and mem io?
+> 
 
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 161d962..d0e4d99 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -36,6 +36,7 @@ struct subsys_private;
- struct bus_type;
- struct device_node;
- struct iommu_ops;
-+struct iommu_group;
- 
- struct bus_attribute {
- 	struct attribute	attr;
-@@ -687,6 +688,7 @@ struct device {
- 	const struct attribute_group **groups;	/* optional groups */
- 
- 	void	(*release)(struct device *dev);
-+	struct iommu_group	*iommu_group;
- };
- 
- /* Get the wakeup routines, which depend on struct device */
+The bus-side address space should not be more than 32 bits no matter
+what.  As Bjorn indicates, you seem to be mixing up bus and cpu
+addresses all over the place.
+
+	-hpa
 
