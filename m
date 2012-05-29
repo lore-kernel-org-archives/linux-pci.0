@@ -1,60 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from goliath.siemens.de ([192.35.17.28]:20262 "EHLO
+	goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868Ab2E2Hvc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2012 03:51:32 -0400
+Message-ID: <4FC47FED.1060000@siemens.com>
+Date: Tue, 29 May 2012 09:51:09 +0200
+From: Jan Kiszka <jan.kiszka@siemens.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWsSWK-_zGe1ggaKuZu+RJ1kb1zuTEokdxqFSbE3UjNRw@mail.gmail.com>
-References: <20120422155202.GA13540@richard>
-	<CAE9FiQXoUcUw5kOcBmsbBu_hJ+GbKk--qFt+WyUHbjJPwY+8Pw@mail.gmail.com>
-	<CADLM8XPryGVVWVruB=sZ9zxPp-nEhz8xKeMhY3u8KBShk2suBQ@mail.gmail.com>
-	<CAE9FiQXLxEEu68tJvph3LB53nqycK+YctwDKMEF824koXVM5AA@mail.gmail.com>
-	<20120503065455.GA30042@richard>
-	<CAE9FiQUVNA_jdRfsSR9Rv47aa6JX-HKET0z3SfK19wT=Fcd9Cg@mail.gmail.com>
-	<20120504024721.GA6775@richard>
-	<CAE9FiQUz2w815gU5vY5b0BPf+1pz_pafgzqVKizJC++z27RTaQ@mail.gmail.com>
-	<20120504045205.GA21624@richard>
-	<CAE9FiQWM4OTFp5NN+KOXxNREQxNWipDjWbbPPiHHJsb6yFmuiQ@mail.gmail.com>
-	<20120506151715.GA7773@richard>
-	<CAE9FiQWsSWK-_zGe1ggaKuZu+RJ1kb1zuTEokdxqFSbE3UjNRw@mail.gmail.com>
-Date: Sun, 6 May 2012 09:36:35 -0700
-Message-ID: <CAE9FiQXKjxLDLeh8TXU_OCNwFt+UMv3qFjcPrKcPcorA1YmkdQ@mail.gmail.com>
-Subject: Re: One problem in reassign pci bus number?
-From: Yinghai Lu <yinghai@kernel.org>
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang.kernel@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE
+ NIC as broken
+References: <4FBF90E5.8030800@siemens.com> <20120528123934.GB21778@redhat.com> <4FC374CD.5000509@web.de> <20120528132109.GB22623@redhat.com> <4FC37DD6.7090000@web.de> <20120528133946.GA23024@redhat.com>
+In-Reply-To: <20120528133946.GA23024@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 6, 2012 at 9:35 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sun, May 6, 2012 at 8:17 AM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Fri, May 04, 2012 at 10:37:08AM -0700, Yinghai Lu wrote:
->>>On Thu, May 3, 2012 at 9:52 PM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
+On 2012-05-28 15:39, Michael S. Tsirkin wrote:
+> On Mon, May 28, 2012 at 03:29:58PM +0200, Jan Kiszka wrote:
+>> On 2012-05-28 15:21, Michael S. Tsirkin wrote:
+>>> On Mon, May 28, 2012 at 02:51:25PM +0200, Jan Kiszka wrote:
+>>>> On 2012-05-28 14:39, Michael S. Tsirkin wrote:
+>>>>> On Fri, May 25, 2012 at 11:02:13AM -0300, Jan Kiszka wrote:
+>>>>>> According to Alexey, the T310 does not properly support INTx masking as
+>>>>>> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
+>>>>>> is masked. Mark this adapter as broken so that pci_intx_mask_supported
+>>>>>> won't report it as compatible.
+>>>>>>
+>>>>>> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>>>>>> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+>>>>>
+>>>>>
+>>>>> Just a thought: would be nice to have a way to discover
+>>>>> the quirk was activated. Add an attribute so that
+>>>>> userspace can detect and report this properly to users?
+>>>>> Or just log a warning message ...
 >>>>
->>>> BTW, even if this value is returned by __find_res_top_free_size(), or
->>>> returned after this function is called, the purpose of the
->>>> __find_res_top_free_size() is to get the biggest free space under the
->>>> first parameter?
+>>>> pr_notice_once?
 >>>
->>>__find_res_top_free_size() is used to get size just under top,  and
->>>then use it to calculate size above top that need to be extended.
+>>> OK IMO.
 >>>
->>>at last will combine free size under top and allocated size above top
->>>and return.
->> Yes, I get the general idea.
+>>>> A flag for userspace would be significantly more
+>>>> complicated (and not PCI layer hands).
+>>>
+>>> Why not? I meant e.g. an attribute in pci-sysfs.
 >>
->> then I want to confirm which size __find_res_top_free_size() will return.
+>> Possible. But what is the preferred way of doing this? Are there any
+>> precedences?
 >>
->> Come to the previous question, for one resource like this.
->> res =   90-150
->>    ->child      105-140
->> We call __find_res_top_free_size(res, 1);
->> This function should return which size?  10? 15? or 25?
+>> Jan
 >>
->> From the code
->> +               ret = __allocate_resource(res, &tmp_res, n_size,
->> +                       res->end - n_size + skip_nr, res->end,
->> +                       1, NULL, NULL, false);
->> I think it will check the free space near the end of res.
->
-> yes. it is 15, [141-150]
+> 
+> E.g. a reset attribute is there only if device reset is supported.
+> I don't insist on this - merely asking how does userspace report
+> an attempt to share IRQs and whether the reason is
+> discoverable in some way.
 
-should 10, aka [141-150]
+Well, so far there is no attribute associated with INTx masking that we
+could hide to express this.
+
+Jan
+
+-- 
+Siemens AG, Corporate Technology, CT T DE IT 1
+Corporate Competence Center Embedded Linux
