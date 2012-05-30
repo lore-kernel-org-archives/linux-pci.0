@@ -1,73 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe010.messaging.microsoft.com ([216.32.180.30]:13423
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751162Ab2EDNDo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2012 09:03:44 -0400
-Date: Fri, 4 May 2012 15:03:33 +0200
-From: Andreas Herrmann <andreas.herrmann3@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 1/2][RESEND] x86/pci/amd: Restore
- early_fill_mp_bus_to_node
-Message-ID: <20120504130332.GC12199@alberich.amd.com>
-References: <20120427143410.GB27535@alberich.amd.com>
- <20120427143621.GC27535@alberich.amd.com>
- <CAErSpo7gkkqZgR0TZ5Xx162pLN9ZaYVhMmyHn+H8Lqr1CBSXXQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 3/7] amd_iommu: Support IOMMU groups
+To: joerg.roedel@amd.com, dwmw2@infradead.org,
+	iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, ddutile@redhat.com,
+	alex.williamson@redhat.com
+Date: Tue, 29 May 2012 23:10:21 -0600
+Message-ID: <20120530051021.1543.35393.stgit@bling.home>
+In-Reply-To: <20120530045150.1543.73660.stgit@bling.home>
+References: <20120530045150.1543.73660.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <CAErSpo7gkkqZgR0TZ5Xx162pLN9ZaYVhMmyHn+H8Lqr1CBSXXQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 02, 2012 at 11:33:17AM -0600, Bjorn Helgaas wrote:
-> On Fri, Apr 27, 2012 at 8:36 AM, Andreas Herrmann
-> <andreas.herrmann3@amd.com> wrote:
-> >
-> > Once upon a time this function was overloaded with quirky stuff to fix
-> > resource detection on systems w/ _CRS defects (seems that some Sun and
-> > HP systems were affected).
-> >
-> > See commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
-> > (x86: multi pci root bus with different io resource range, on 64-bit)
-> >
-> > Restore the old function and thus decouple it from the quirk that is
-> > CPU family specific (e.g. it won't work on AMD family 15h CPUs). BTW,
-> > I assume that the _CRS stuff is working on current systems.
-> >
-> > This is required to properly initilize the numa_node information of
-> > existing PCI busses and associated devices.
-> 
-> I applied some of Yinghai's patches that also touch this area.  Can
-> you refresh these so they apply on top of my "next" branch
-> (git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next)?
+Add IOMMU group support to AMD-Vi device init and uninit code.
+Existing notifiers make sure this gets called for each device.
 
-Arrgh, will adapt my patch and resend it (asap).
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-> Can you also be more specific about what these patches fix?
+ drivers/iommu/amd_iommu.c |   28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-> My understanding is that amd_bus.c (1) sets NUMA info with
-> set_mp_bus_to_node() and (2) figures out MMIO and I/O port apertures,
-> which are only used when blind probing and when ignoring _CRS.
-> 
-> It seems like the main change in this patch is that we skip (2)
-> completely when family >= 0x11, and I don't understand what that could
-> fix.
-> 
-
-The patch restores a very old function that was used to detect the
-nearest node for a PCI bus, so yes it's used to do (1). IMHO this
-function was totally screwed up with Yinghai's code to do (2). It
-seems that Sun has (had?) some systems where (2) was req'd. I don't
-care about this part. But I'd like to do (1) on all AMD CPU NUMA
-systems.
-
-> [more comments below]
-
-Will consider them when reworking the patch.
-
-
-Thanks,
-Andreas
-
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 0ad46f1..c0385b3 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -256,9 +256,11 @@ static bool check_device(struct device *dev)
+ 
+ static int iommu_init_device(struct device *dev)
+ {
+-	struct pci_dev *pdev = to_pci_dev(dev);
++	struct pci_dev *dma_pdev, *pdev = to_pci_dev(dev);
+ 	struct iommu_dev_data *dev_data;
++	struct iommu_group *group;
+ 	u16 alias;
++	int ret;
+ 
+ 	if (dev->archdata.iommu)
+ 		return 0;
+@@ -279,8 +281,30 @@ static int iommu_init_device(struct device *dev)
+ 			return -ENOTSUPP;
+ 		}
+ 		dev_data->alias_data = alias_data;
++
++		dma_pdev = pci_get_bus_and_slot(alias >> 8, alias & 0xff);
++	} else
++		dma_pdev = pdev;
++
++	if (!pdev->is_virtfn && PCI_FUNC(pdev->devfn) && iommu_group_mf &&
++	    pdev->hdr_type == PCI_HEADER_TYPE_NORMAL)
++		dma_pdev = pci_get_slot(pdev->bus,
++					PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
++
++	group = iommu_group_get(&dma_pdev->dev);
++	if (!group) {
++		group = iommu_group_alloc();
++		if (IS_ERR(group))
++			return PTR_ERR(group);
+ 	}
+ 
++	ret = iommu_group_add_device(group, dev);
++
++	iommu_group_put(group);
++
++	if (ret)
++		return ret;
++
+ 	if (pci_iommuv2_capable(pdev)) {
+ 		struct amd_iommu *iommu;
+ 
+@@ -309,6 +333,8 @@ static void iommu_ignore_device(struct device *dev)
+ 
+ static void iommu_uninit_device(struct device *dev)
+ {
++	iommu_group_remove_device(dev);
++
+ 	/*
+ 	 * Nothing to do here - we keep dev_data around for unplugged devices
+ 	 * and reuse it when the device is re-plugged - not doing so would
 
