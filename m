@@ -1,58 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:34019 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753011Ab2EBOnb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 May 2012 10:43:31 -0400
-Received: by pbbrp8 with SMTP id rp8so1180903pbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 02 May 2012 07:43:31 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH] PCI, x86: avoid redundant insert_resource() call in pci_mmcfg_insert_resources()
-Date: Wed,  2 May 2012 22:41:46 +0800
-Message-Id: <1335969706-13604-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <20120427151726.870d6966.izumi.taku@jp.fujitsu.com>
-References: <20120427151726.870d6966.izumi.taku@jp.fujitsu.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 3/5] pci: export pci_user functions for use by other drivers
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, konrad.wilk@oracle.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Tue, 29 May 2012 22:48:47 -0600
+Message-ID: <20120530044847.1164.58282.stgit@bling.home>
+In-Reply-To: <20120530043142.1164.63415.stgit@bling.home>
+References: <20120530043142.1164.63415.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+VFIO PCI support will make use of these for user initiated
+PCI config accesses.
 
-For hot-pluggable host bridges present at boot time, pci_mmconfig_insert() will
-insert resources used by MMCFG items for those host bridges. So avoid redundant
-call to insert_resource() when pci_mmcfg_insert_resources() is called later.
-
-Reported-By: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/pci/mmconfig-shared.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index f4d9ff9..7bba722 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -371,8 +371,13 @@ static void __init pci_mmcfg_insert_resources(void)
- {
- 	struct pci_mmcfg_region *cfg;
+ drivers/pci/access.c |    6 ++++--
+ drivers/pci/pci.h    |    7 -------
+ include/linux/pci.h  |    8 ++++++++
+ 3 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 2a58164..ba91a7e 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -162,7 +162,8 @@ int pci_user_read_config_##size						\
+ 	if (ret > 0)							\
+ 		ret = -EINVAL;						\
+ 	return ret;							\
+-}
++}									\
++EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
  
-+	/*
-+	 * Insert resources for MMCFG items if the resource hasn't been
-+	 * inserted by pci_mmconfig_insert() yet.
-+	 */
- 	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		insert_resource(&iomem_resource, &cfg->res);
-+		if (!cfg->res.parent)
-+			insert_resource(&iomem_resource, &cfg->res);
+ /* Returns 0 on success, negative values indicate error. */
+ #define PCI_USER_WRITE_CONFIG(size,type)				\
+@@ -181,7 +182,8 @@ int pci_user_write_config_##size					\
+ 	if (ret > 0)							\
+ 		ret = -EINVAL;						\
+ 	return ret;							\
+-}
++}									\
++EXPORT_SYMBOL_GPL(pci_user_write_config_##size);
  
- 	/* Mark that the resources have been inserted. */
- 	pci_mmcfg_resources_inserted = 1;
--- 
-1.7.9.5
+ PCI_USER_READ_CONFIG(byte, u8)
+ PCI_USER_READ_CONFIG(word, u16)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e494347..f2dcc46 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -86,13 +86,6 @@ static inline bool pci_is_bridge(struct pci_dev *pci_dev)
+ 	return !!(pci_dev->subordinate);
+ }
+ 
+-extern int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
+-extern int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
+-extern int pci_user_read_config_dword(struct pci_dev *dev, int where, u32 *val);
+-extern int pci_user_write_config_byte(struct pci_dev *dev, int where, u8 val);
+-extern int pci_user_write_config_word(struct pci_dev *dev, int where, u16 val);
+-extern int pci_user_write_config_dword(struct pci_dev *dev, int where, u32 val);
+-
+ struct pci_vpd_ops {
+ 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8ceef38..1b6d1c5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -777,6 +777,14 @@ static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
+ 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+ }
+ 
++/* user-space driven config access */
++int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
++int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
++int pci_user_read_config_dword(struct pci_dev *dev, int where, u32 *val);
++int pci_user_write_config_byte(struct pci_dev *dev, int where, u8 val);
++int pci_user_write_config_word(struct pci_dev *dev, int where, u16 val);
++int pci_user_write_config_dword(struct pci_dev *dev, int where, u32 val);
++
+ int __must_check pci_enable_device(struct pci_dev *dev);
+ int __must_check pci_enable_device_io(struct pci_dev *dev);
+ int __must_check pci_enable_device_mem(struct pci_dev *dev);
 
