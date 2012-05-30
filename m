@@ -1,88 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49912 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753082Ab2E2JwH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 May 2012 05:52:07 -0400
-Date: Tue, 29 May 2012 12:51:55 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE NIC
- as broken
-Message-ID: <20120529095155.GA27043@redhat.com>
-References: <4FBF90E5.8030800@siemens.com>
- <20120528123934.GB21778@redhat.com>
- <4FC374CD.5000509@web.de>
- <20120528132109.GB22623@redhat.com>
- <4FC37DD6.7090000@web.de>
- <20120528133946.GA23024@redhat.com>
- <4FC47FED.1060000@siemens.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:38932 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752212Ab2E3Qep convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 May 2012 12:34:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FC47FED.1060000@siemens.com>
+In-Reply-To: <CAErSpo6zU898KBv+vFFkymMjpDrPokj0dJq9MMX0z6WZOALbmQ@mail.gmail.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+ <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+ <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+ <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+ <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
+ <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
+ <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
+ <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
+ <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
+ <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
+ <CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com>
+ <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com>
+ <CAErSpo44TViNFcZivjr5hAu8w8kpEpUjxNAWtazhAqwwsorZbw@mail.gmail.com>
+ <4FC5CEF1.6000509@snewbury.org.uk> <CAErSpo6zU898KBv+vFFkymMjpDrPokj0dJq9MMX0z6WZOALbmQ@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Wed, 30 May 2012 09:33:00 -0700
+Message-ID: <CA+55aFzeG4a1gAxTp1G6252xCrxpB=5x_aDkjtU4WY0o0nqC+w@mail.gmail.com>
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Steven Newbury <steve@snewbury.org.uk>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2012 at 09:51:09AM +0200, Jan Kiszka wrote:
-> On 2012-05-28 15:39, Michael S. Tsirkin wrote:
-> > On Mon, May 28, 2012 at 03:29:58PM +0200, Jan Kiszka wrote:
-> >> On 2012-05-28 15:21, Michael S. Tsirkin wrote:
-> >>> On Mon, May 28, 2012 at 02:51:25PM +0200, Jan Kiszka wrote:
-> >>>> On 2012-05-28 14:39, Michael S. Tsirkin wrote:
-> >>>>> On Fri, May 25, 2012 at 11:02:13AM -0300, Jan Kiszka wrote:
-> >>>>>> According to Alexey, the T310 does not properly support INTx masking as
-> >>>>>> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
-> >>>>>> is masked. Mark this adapter as broken so that pci_intx_mask_supported
-> >>>>>> won't report it as compatible.
-> >>>>>>
-> >>>>>> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> >>>>>> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
-> >>>>>
-> >>>>>
-> >>>>> Just a thought: would be nice to have a way to discover
-> >>>>> the quirk was activated. Add an attribute so that
-> >>>>> userspace can detect and report this properly to users?
-> >>>>> Or just log a warning message ...
-> >>>>
-> >>>> pr_notice_once?
-> >>>
-> >>> OK IMO.
-> >>>
-> >>>> A flag for userspace would be significantly more
-> >>>> complicated (and not PCI layer hands).
-> >>>
-> >>> Why not? I meant e.g. an attribute in pci-sysfs.
-> >>
-> >> Possible. But what is the preferred way of doing this? Are there any
-> >> precedences?
-> >>
-> >> Jan
-> >>
-> > 
-> > E.g. a reset attribute is there only if device reset is supported.
-> > I don't insist on this - merely asking how does userspace report
-> > an attempt to share IRQs and whether the reason is
-> > discoverable in some way.
-> 
-> Well, so far there is no attribute associated with INTx masking that we
-> could hide to express this.
-> 
-> Jan
+On Wed, May 30, 2012 at 9:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> You're right, the spec does allow the upper 16 bits of I/O BARs to be
+> hardwired to zero (PCI spec rev 3.0, p. 226), so this part does make
+> some sense.  I don't think it applies to x86, since I don't think
+> there's a way to generate an I/O access to anything above 64K, but it
+> could help other arches.
+>
+> I'm inclined to be conservative and wait until we find a problem where
+> a patch like this would help.
 
-Thinking about it some more, userspace using this functionality
-is pretty recent. So if we just teach it to report
-'intx mask or status bit unsupported' on failure,
-plus add pr_notice as you suggested, then that's
-probably enough.
+I agree. I would be *very* suspicious of "it might help with other
+architectures".
 
+Sure, other architectures might be using non-16-bit IO addresses for
+their motherboard resources (just because they can). However, any
+hotplug device is most likely (by far) to have been tested and
+designed for x86, which means that even if it might look like it has
+more than 16 bits of IO space, it will never have been tested that
+way.
 
-> -- 
-> Siemens AG, Corporate Technology, CT T DE IT 1
-> Corporate Competence Center Embedded Linux
+So rather than make it likely to help other architectures, I'd say
+that it would make it likely to break things.
+
+                 Linus
