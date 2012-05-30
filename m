@@ -1,77 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:21090 "EHLO
-	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1760893Ab2EQOOU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2012 10:14:20 -0400
-Message-ID: <1337264056.2496.8.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: [PATCH] Only decode defined fields of PCI Express Link Control 2
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Martin Mares <mj@ucw.cz>
-CC: <linux-pci@vger.kernel.org>
-Date: Thu, 17 May 2012 15:14:16 +0100
-Content-Type: text/plain; charset="UTF-8"
+Received: from nm35-vm8.bullet.mail.sg3.yahoo.com ([106.10.151.63]:44863 "HELO
+	nm35-vm8.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753571Ab2E3Mr7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 May 2012 08:47:59 -0400
+Message-ID: <1338381700.64703.YahooMailClassic@web15305.mail.cnb.yahoo.com>
+Date: Wed, 30 May 2012 20:41:40 +0800 (CST)
+From: =?utf-8?B?5LiA6Z2ZIOeOiw==?= <wangyijing0307@yahoo.com.cn>
+Subject: acpiphp_sanitize_bus() in acpiphp module is safe and necessary ?
+To: rajesh.shah@intel.com
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	wangyijing@huawei.com, wangyijing0307@yahoo.com.cn
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On a PCI Express multi-function device associated with an upstream
-port, all bits of the Link Control 2 register are currently reserved
-on functions > 0.
+hi ,
+    I was confused with acpiphp_sanitize_bus() function in acpiphp module, first i think list_for_each_entry operation is not safe because pci_remove_bus_device(dev) delete device out of the device list;second,when i hot-add PLX8696(have one upstream port and several downstream ports, and the downstream ports support hotplug pcie devices), acpiphp_sanitize_bus can only check the pci devices under the first bus(the bus between hp-port in system and upstream-port), because the function is not recursive.Can anyone help me? thank you very much!  
 
-The Selectable De-emphasis field is reserved on all but downstream
-ports.
+static void acpiphp_sanitize_bus(struct pci_bus *bus)
+{
+    struct pci_dev *dev;
+    int i;
+    unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
 
-Signed-off-by: Ben Hutchings <bhutchings@solarflare.com>
----
- ls-caps.c |   20 +++++++++++++-------
- 1 files changed, 13 insertions(+), 7 deletions(-)
-
-diff --git a/ls-caps.c b/ls-caps.c
-index 9645e5a..4a75ce7 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -991,22 +991,28 @@ static const char *cap_express_link2_transmargin(int type)
-     }
- }
- 
--static void cap_express_link2(struct device *d, int where, int type UNUSED)
-+static void cap_express_link2(struct device *d, int where, int type)
- {
-   u16 w;
- 
--  w = get_conf_word(d, where + PCI_EXP_LNKCTL2);
--  printf("\t\tLnkCtl2: Target Link Speed: %s, EnterCompliance%c SpeedDis%c, Selectable De-emphasis: %s\n"
--	"\t\t\t Transmit Margin: %s, EnterModifiedCompliance%c ComplianceSOS%c\n"
--	"\t\t\t Compliance De-emphasis: %s\n",
-+  if (!((type == PCI_EXP_TYPE_ENDPOINT || type == PCI_EXP_TYPE_LEG_END) &&
-+	(d->dev->dev != 0 || d->dev->func != 0))) {
-+    w = get_conf_word(d, where + PCI_EXP_LNKCTL2);
-+    printf("\t\tLnkCtl2: Target Link Speed: %s, EnterCompliance%c SpeedDis%c",
- 	cap_express_link2_speed(PCI_EXP_LNKCTL2_SPEED(w)),
- 	FLAG(w, PCI_EXP_LNKCTL2_CMPLNC),
--	FLAG(w, PCI_EXP_LNKCTL2_SPEED_DIS),
--	cap_express_link2_deemphasis(PCI_EXP_LNKCTL2_DEEMPHASIS(w)),
-+	FLAG(w, PCI_EXP_LNKCTL2_SPEED_DIS));
-+    if (type == PCI_EXP_TYPE_DOWNSTREAM)
-+      printf(", Selectable De-emphasis: %s",
-+	cap_express_link2_deemphasis(PCI_EXP_LNKCTL2_DEEMPHASIS(w)));
-+    printf("\n"
-+	"\t\t\t Transmit Margin: %s, EnterModifiedCompliance%c ComplianceSOS%c\n"
-+	"\t\t\t Compliance De-emphasis: %s\n",
- 	cap_express_link2_transmargin(PCI_EXP_LNKCTL2_MARGIN(w)),
- 	FLAG(w, PCI_EXP_LNKCTL2_MOD_CMPLNC),
- 	FLAG(w, PCI_EXP_LNKCTL2_CMPLNC_SOS),
- 	cap_express_link2_deemphasis(PCI_EXP_LNKCTL2_COM_DEEMPHASIS(w)));
-+  }
- 
-   w = get_conf_word(d, where + PCI_EXP_LNKSTA2);
-   printf("\t\tLnkSta2: Current De-emphasis Level: %s, EqualizationComplete%c, EqualizationPhase1%c\n"
--- 
-1.7.7.6
-
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+    list_for_each_entry(dev, &bus->devices, bus_list) {
+        for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
+            struct resource *res = &dev->resource[i];
+            if ((res->flags & type_mask) && !res->start &&
+                    res->end) {
+                /* Could not assign a required resources
+                 * for this device, remove it */
+                pci_remove_bus_device(dev);
+                break;
+            }
+        }
+    }
+}
 
