@@ -1,102 +1,91 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 21 May 2012 13:55:10 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com
-Subject: Re: [PATCH 11/13] pci: Create common pcibios_err_to_errno
-Message-ID: <20120521175510.GB13990@phenom.dumpdata.com>
-References: <20120511222148.30496.68571.stgit@bling.home>
- <20120511225643.30496.36823.stgit@bling.home>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 4/7] intel-iommu: Support IOMMU groups
+To: joerg.roedel@amd.com, dwmw2@infradead.org,
+	iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, ddutile@redhat.com,
+	alex.williamson@redhat.com, liuj97@gmail.com
+Date: Wed, 30 May 2012 14:19:19 -0600
+Message-ID: <20120530201919.31527.45209.stgit@bling.home>
+In-Reply-To: <20120530201424.31527.33142.stgit@bling.home>
+References: <20120530201424.31527.33142.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120511225643.30496.36823.stgit@bling.home>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2012 at 04:56:44PM -0600, Alex Williamson wrote:
-> For returning errors out to non-PCI code.  Re-name xen's version.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Add IOMMU group support to Intel VT-d code.  This driver sets up
+devices ondemand, so make use of the add_device/remove_device
+callbacks in IOMMU API to manage setting up the groups.
 
-Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
-> 
->  drivers/xen/xen-pciback/conf_space.c |    6 +++---
->  include/linux/pci.h                  |   26 ++++++++++++++++++++++++++
->  2 files changed, 29 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/xen/xen-pciback/conf_space.c b/drivers/xen/xen-pciback/conf_space.c
-> index 30d7be0..46ae0f9 100644
-> --- a/drivers/xen/xen-pciback/conf_space.c
-> +++ b/drivers/xen/xen-pciback/conf_space.c
-> @@ -124,7 +124,7 @@ static inline u32 merge_value(u32 val, u32 new_val, u32 new_val_mask,
->  	return val;
->  }
->  
-> -static int pcibios_err_to_errno(int err)
-> +static int xen_pcibios_err_to_errno(int err)
->  {
->  	switch (err) {
->  	case PCIBIOS_SUCCESSFUL:
-> @@ -202,7 +202,7 @@ out:
->  		       pci_name(dev), size, offset, value);
->  
->  	*ret_val = value;
-> -	return pcibios_err_to_errno(err);
-> +	return xen_pcibios_err_to_errno(err);
->  }
->  
->  int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
-> @@ -290,7 +290,7 @@ int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
->  		}
->  	}
->  
-> -	return pcibios_err_to_errno(err);
-> +	return xen_pcibios_err_to_errno(err);
->  }
->  
->  void xen_pcibk_config_free_dyn_fields(struct pci_dev *dev)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index b437225..20a8f2e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -467,6 +467,32 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
->  #define PCIBIOS_SET_FAILED		0x88
->  #define PCIBIOS_BUFFER_TOO_SMALL	0x89
->  
-> +/*
-> + * Translate above to generic errno for passing back through non-pci.
-> + */
-> +static inline int pcibios_err_to_errno(int err)
-> +{
-> +	if (err <= PCIBIOS_SUCCESSFUL)
-> +		return err; /* Assume already errno */
-> +
-> +	switch (err) {
-> +	case PCIBIOS_FUNC_NOT_SUPPORTED:
-> +		return -ENOENT;
-> +	case PCIBIOS_BAD_VENDOR_ID:
-> +		return -EINVAL;
-> +	case PCIBIOS_DEVICE_NOT_FOUND:
-> +		return -ENODEV;
-> +	case PCIBIOS_BAD_REGISTER_NUMBER:
-> +		return -EFAULT;
-> +	case PCIBIOS_SET_FAILED:
-> +		return -EIO;
-> +	case PCIBIOS_BUFFER_TOO_SMALL:
-> +		return -ENOSPC;
-> +	}
-> +
-> +	return -ENOTTY;
-> +}
-> +
->  /* Low-level architecture-dependent routines */
->  
->  struct pci_ops {
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+
+ drivers/iommu/intel-iommu.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index c62f2df..4a43452 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -4090,6 +4090,47 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
+ 	return 0;
+ }
+ 
++static int intel_iommu_add_device(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct pci_dev *bridge, *dma_pdev;
++	struct iommu_group *group;
++	int ret;
++
++	if (!device_to_iommu(pci_domain_nr(pdev->bus),
++			     pdev->bus->number, pdev->devfn))
++		return -ENODEV;
++
++	bridge = pci_find_upstream_pcie_bridge(pdev);
++	if (bridge) {
++		if (pci_is_pcie(bridge))
++			dma_pdev = pci_get_domain_bus_and_slot(
++						pci_domain_nr(pdev->bus),
++						bridge->subordinate->number, 0);
++		else
++			dma_pdev = pci_dev_get(bridge);
++	} else
++		dma_pdev = pci_dev_get(pdev);
++
++	group = iommu_group_get(&dma_pdev->dev);
++	pci_dev_put(dma_pdev);
++	if (!group) {
++		group = iommu_group_alloc();
++		if (IS_ERR(group))
++			return PTR_ERR(group);
++	}
++
++	ret = iommu_group_add_device(group, dev);
++
++	iommu_group_put(group);
++	return ret;
++}
++
++static void intel_iommu_remove_device(struct device *dev)
++{
++	iommu_group_remove_device(dev);
++}
++
+ static struct iommu_ops intel_iommu_ops = {
+ 	.domain_init	= intel_iommu_domain_init,
+ 	.domain_destroy = intel_iommu_domain_destroy,
+@@ -4099,6 +4140,8 @@ static struct iommu_ops intel_iommu_ops = {
+ 	.unmap		= intel_iommu_unmap,
+ 	.iova_to_phys	= intel_iommu_iova_to_phys,
+ 	.domain_has_cap = intel_iommu_domain_has_cap,
++	.add_device	= intel_iommu_add_device,
++	.remove_device	= intel_iommu_remove_device,
+ 	.pgsize_bitmap	= INTEL_IOMMU_PGSIZES,
+ };
+ 
+
