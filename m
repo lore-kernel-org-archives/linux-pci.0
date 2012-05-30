@@ -1,84 +1,96 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 0/4] VFIO
+To: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, gregkh@linuxfoundation.org
+Cc: joerg.roedel@amd.com, dwmw2@infradead.org, chrisw@sous-sol.org,
+	agraf@suse.de, benve@cisco.com, aafabbri@cisco.com,
+	B08248@freescale.com, B07421@freescale.com, avi@redhat.com,
+	konrad.wilk@oracle.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Tue, 29 May 2012 23:34:05 -0600
+Message-ID: <20120530051317.1934.28218.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <20120516011833.GA6599@richard>
-References: <20120410090306.GA7056@richard>
-	<20120422155202.GA13540@richard>
-	<4F95B17B.3030401@redhat.com>
-	<20120514015536.GA3331@richard>
-	<CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
-	<20120514064615.GB26605@richard>
-	<CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
-	<20120516011833.GA6599@richard>
-Date: Tue, 15 May 2012 19:11:34 -0700
-Message-ID: <CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
-Subject: Re: One problem in reassign pci bus number?
-From: Yinghai Lu <yinghai@kernel.org>
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 15, 2012 at 6:18 PM, Richard Yang
-<weiyang@linux.vnet.ibm.com> wrote:
-> On Tue, May 15, 2012 at 10:32:46AM -0700, Yinghai Lu wrote:
->>>>>>On 04/22/2012 11:52 AM, Richard Yang wrote:
->>>>>>>All,
->>>>>>>
->>>>>>>I am reading the pci_scan_bridge() and not sure what will happen in
->>>>>>>following situation.
->>>>>>>
->>>>>>>Suppose the kernel is not passed the pci=assign-busses.
->>>>>>>
->>>>>>>Below is a picture about the pci system.
->>>>>>>
->>>>>>>                    +-------+
->>>>>>>                    |       | root bridge(0,255)
->>>>>>>                    +---+---+
->>>>>>>                        |          Bus 0
->>>>>>>       -----+-----------+------------------------------+--
->>>>>>>            |                                          |
->>>>>>>            |                                          |
->>>>>>>            |                                          |
->>>>>>>       +----+----+                               +-----+-----+
->>>>>>>       |         |  B1(1,15)                     |           |B2(16,28)
->>>>>>>       +----+----+                               +-----+-----+
->>>>>>>            |  Bus 1                                   |    Bus 16
->>>>>>>       -----+-----------------------         ----------+----------------
->>>>>>>                             |
->>>>>>>                        +----+----+
->>>>>>>                        |         | B3
->>>>>>>                        +---------+
->>>>>>>
->>>>>>>Suppose B1 and B2 works fine with the BIOS, which get the right bus
->>>>>>>number and range.
->>>>>>>
->>>>>>>B3 does not works fine with the BIOS, which doesn't get the bus number.
->>>>>>>
->>>>> Take my original question.
->>>>>
->>>>> B3 doesn't get the bus number, which its parent doesn't have free bus
->>>>> number and there is no gap between B1 and B2.
->>>>>
->>>>> So in this case, the probe_resource() can't find bus number for B3.
->>>>> Then cause pci_bridge_probe_busn_res() return non-zero.
->>>>>
->>>>> Then B3 couldn't work fine?
->>>>
->>>>B3 is on Bus 1? B3 is the one of bridges on Bus1?
->>> No,  I omit other bridges on Bus#1.
->>> They will occupy bus number 2-15, which is calculated by BIOS and set to
->>> bridge's configuration space.
->>
->>with that new condition, probe_resource will return zero.
->>
->>for those kind of case:
->>1. use echo 1 > /sys .../remove to remove devices under Bridge2.
->>2. use setpci to change bus register of bridge2 to move high to make
->>more space for bridge 1.
->>3. rescan bridge 1 and bridge 2.
-> So these steps is done after boot up and user find B3 doesn't work?
+This series implements the core VFIO infrastructure, documentation,
+an IOMMU backend suitable for x86 usage, and a PCI device driver.
+These patches are based on the previous v2 IOMMU Groups + VFIO
+patches and are dependent on the previously sent out PCI and IOMMU
+groups series found here:
 
-yes, after os is booted up.
+http://marc.info/?l=linux-kernel&m=133835363021384
+http://marc.info/?l=linux-kernel&m=133835480021716
 
-Yinghai
+As noted in previous postings and the included documentation, VFIO
+provides secure, IOMMU protected, userspace access to I/O devices
+for use by things like PCI device assignment to virtual machines
+in Qemu.  This driver is meant to replace existing KVM device
+assignment and hopefully take over much of what UIO does today.
+
+I'm looking for suggestions not only on the code, but on the best
+way to get this upstream.  If we can get some initial blessing for
+this driver I'd be happy to host a next branch for it or submit it
+as a staging driver.  I think Bjorn and Joerg would probably
+appreciate and kind of nod that this driver has legs in order to
+include the PCI and IOMMU backend support.  Alexey Kardashevskiy
+has already posted an initial draft of POWER support for VFIO
+giving some validation as a cross architecture solution.
+
+These patches, as well as the PCI support patches and IOMMU group
+infrastructure can be found in git here:
+
+git://github.com/awilliam/linux-vfio.git (iommu-group-vfio-next-20120529)
+
+A qemu tree including a vfio-pci driver capable of assigning PCI
+devices to Qemu guests can be found here:
+
+git://github.com/awilliam/qemu-vfio.git (iommu-group-vfio)
+
+Thanks, 
+Alex
+
+---
+
+Alex Williamson (4):
+      vfio: Add PCI device driver
+      vfio: Type1 IOMMU implementation
+      vfio: Add documentation
+      vfio: VFIO core
+
+
+ Documentation/ioctl/ioctl-number.txt |    1 
+ Documentation/vfio.txt               |  315 +++++++
+ MAINTAINERS                          |    8 
+ drivers/Kconfig                      |    2 
+ drivers/Makefile                     |    1 
+ drivers/vfio/Kconfig                 |   16 
+ drivers/vfio/Makefile                |    3 
+ drivers/vfio/pci/Kconfig             |    8 
+ drivers/vfio/pci/Makefile            |    4 
+ drivers/vfio/pci/vfio_pci.c          |  559 ++++++++++++
+ drivers/vfio/pci/vfio_pci_config.c   | 1528 ++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_intrs.c    |  725 ++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h  |   91 ++
+ drivers/vfio/pci/vfio_pci_rdwr.c     |  269 ++++++
+ drivers/vfio/vfio.c                  | 1422 ++++++++++++++++++++++++++++++++
+ drivers/vfio/vfio_iommu_type1.c      |  754 +++++++++++++++++
+ include/linux/vfio.h                 |  445 ++++++++++
+ 17 files changed, 6151 insertions(+)
+ create mode 100644 Documentation/vfio.txt
+ create mode 100644 drivers/vfio/Kconfig
+ create mode 100644 drivers/vfio/Makefile
+ create mode 100644 drivers/vfio/pci/Kconfig
+ create mode 100644 drivers/vfio/pci/Makefile
+ create mode 100644 drivers/vfio/pci/vfio_pci.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_config.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_intrs.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_private.h
+ create mode 100644 drivers/vfio/pci/vfio_pci_rdwr.c
+ create mode 100644 drivers/vfio/vfio.c
+ create mode 100644 drivers/vfio/vfio_iommu_type1.c
+ create mode 100644 include/linux/vfio.h
