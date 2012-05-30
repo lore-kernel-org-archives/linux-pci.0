@@ -1,32 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58562 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753890Ab2EEITf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 May 2012 04:19:35 -0400
-Message-ID: <4FA4E259.9070903@gmail.com>
-Date: Sat, 05 May 2012 16:18:33 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35634 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750903Ab2E3UIq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 May 2012 16:08:46 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 0/5] PCI: Prep for VFIO and IOMMU Groups
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, konrad.wilk@oracle.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com, alex.williamson@redhat.com,
+	shangw@linux.vnet.ibm.com, liuj97@gmail.com
+Date: Wed, 30 May 2012 14:08:15 -0600
+Message-ID: <20120530200343.31085.78920.stgit@bling.home>
 MIME-Version: 1.0
-To: Francois Rigaut <frigaut@gmail.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org,
-	Nico Schottelius <nico-linux-20120419@schottelius.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Linux Support for Thunderbolt using Apple Monitor
-References: <20120419163800.GB13977@schottelius.org> <CAMVeQ8r_3vuAxzbLyKoecOHOOGijUDkLfw+MK7o-WoWbuOGSrg@mail.gmail.com> <20120502163629.GE928@schottelius.org> <20120502202509.GA26798@kroah.com> <20120503065003.GB13386@schottelius.org> <CAMVeQ8qYu4bShd_+pwRv8bShhusJMDa-jjoqu7EujS4jt7RSNA@mail.gmail.com> <20120503153547.GD20334@kroah.com> <CAMVeQ8q3PMMGmFSgrnqbW2HVdfmN+LgatX3TSfv5_2Ebuuj=QQ@mail.gmail.com> <20120503233858.GA13453@kroah.com> <4FA358ED.1080705@gmail.com> <20120504184851.GB11223@kroah.com> <CAE9FiQWuePNRWV=ncJkF57aQZ0ZT91xxZ0sZMexq8HgN9NcAfA@mail.gmail.com> <CAE9FiQWcyRfLKB+YivOfa-GydbhoaMx06n6a4VMDWoTOMkj7ig@mail.gmail.com> <4FA4AA3E.1070903@gmail.com>
-In-Reply-To: <4FA4AA3E.1070903@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This log message below implies that your BIOS doesn't provide the ACPI interfaces
-needed by acpiphp driver. Maybe an ACPI dump file may help to identify the issue.
-You may generate acpidump file by:
-acpidump > acpidump.bin
+v2:
+ - Test that we're not given func 0 before doing lookup
+ - Fix duplicate ricoh quirk
+ - Rename pci_dma_source() to pci_get_dma_source() and make sure
+   we always take a reference for the returned pci_dev.  Add comment
 
->May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots 
+These last two changes trickle down through the IOMMU series, so
+will generate a v2 there as well.  Thanks,
 
-On 05/05/2012 12:19 PM, Francois Rigaut wrote:
-> May  5 14:09:55 localhost kernel: [28329.702720] acpiphp_glue: Total 0 slots
+Alex
 
+v1:
+These are the PCI related patches from the previously submitted
+v2 IOMMU Groups + VFIO series.  I've updated them with Don's
+comments and split them off on their own so that we can hopefully
+make some progress getting these in.  Patches are against 20120529
+linux-next tree.
+
+Patches 1 & 2 provide DMA quirking and ACS checking which will be
+used by IOMMU drivers supporting IOMMU groups.  Patch 3 enables the
+set of pci user config access functions to be called from other
+modules, which will be used by VFIO-pci.  Patch 4 enables a common
+translation of pcibios errors into errno for returning to userspace,
+also to be used by VFIO-pci.  Patch 5 adds additional PCI register
+definitions so we can more easily parse config space for devices in
+VFIO-pci.
+
+These patches, as well as IOMMU group support and VFIO can be
+found in git here:
+
+git://github.com/awilliam/linux-vfio.git (iommu-group-vfio-next-20120529)
+
+Please consider these for 3.5, but I'll settle for any kind of next
+branch.  Thanks,
+
+Alex
+
+---
+
+Alex Williamson (5):
+      pci: Misc pci_reg additions
+      pci: Create common pcibios_err_to_errno
+      pci: export pci_user functions for use by other drivers
+      pci: Add ACS validation utility
+      pci: Add PCI DMA source ID quirk
+
+
+ drivers/pci/access.c                 |    6 +-
+ drivers/pci/pci.c                    |   68 ++++++++++++++++++++
+ drivers/pci/pci.h                    |    7 --
+ drivers/pci/quirks.c                 |   80 ++++++++++++++++++++++++
+ drivers/xen/xen-pciback/conf_space.c |    6 +-
+ include/linux/pci.h                  |   49 ++++++++++++++-
+ include/linux/pci_regs.h             |  113 ++++++++++++++++++++++++++++++----
+ 7 files changed, 304 insertions(+), 25 deletions(-)
