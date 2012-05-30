@@ -1,63 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:60798 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966182Ab2EOXKs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2012 19:10:48 -0400
-Received: by lbbgm6 with SMTP id gm6so92199lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 15 May 2012 16:10:46 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:47734 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752645Ab2E3USt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 May 2012 16:18:49 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 0/7] IOMMU: Groups support
+To: joerg.roedel@amd.com, dwmw2@infradead.org,
+	iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, ddutile@redhat.com,
+	alex.williamson@redhat.com, liuj97@gmail.com
+Date: Wed, 30 May 2012 14:18:29 -0600
+Message-ID: <20120530201424.31527.33142.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <4FAB9BFF.4080802@jp.fujitsu.com>
-References: <4FAB9BFF.4080802@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 May 2012 17:10:26 -0600
-Message-ID: <CAErSpo7FbzR+xkjK2qMTF3cew0ardH__1QpYpyoxy+k4nH8Guw@mail.gmail.com>
-Subject: Re: [PATCH] microblaze/pci: Fix compile error
-To: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 10, 2012 at 4:44 AM, Hiroo Matsumoto
-<matsumoto.hiroo@jp.fujitsu.com> wrote:
-> Hi
->
->
-> There is a compile error for microblaze pci because io_offset is not
-> declared. This patch adds declaration of io_offset.
->
->
-> * Compile error message
-> arch/microblaze/pci/pci-common.c: In function 'pcibios_setup_phb_resources':
-> arch/microblaze/pci/pci-common.c:1525: error: 'io_offset' undeclared
-> (first use in this function)
-> arch/microblaze/pci/pci-common.c:1525: error: (Each undeclared
-> identifier is reported only once
-> arch/microblaze/pci/pci-common.c:1525: error: for each function it
-> appears in.)
-> make[1]: *** [arch/microblaze/pci/pci-common.o] Error 1
-> make: *** [arch/microblaze/pci] Error 2
->
->
-> Regards.
->
-> Hiroo MATSUMOTO
->
-> Signed-off-by: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
-> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-> index 85f2ac1..90f8238 100644
-> --- a/arch/microblaze/pci/pci-common.c
-> +++ b/arch/microblaze/pci/pci-common.c
-> @@ -1515,6 +1515,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->
->  static void __devinit pcibios_setup_phb_resources(struct pci_controller *hose, struct list_head *resources)
->  {
-> +       unsigned long io_offset;
->        struct resource *res;
->        int i;
->
->
+v2:
+ - Trickle down changes from pci_get_dma_source() to better handle
+   PCI device reference counting in IOMMU driver patches
 
-Applied to my "next" branch, thanks.
+This depends on v2 PCI patches:
 
-Bjorn
+http://marc.info/?l=linux-kernel&m=133840870510712
+
+Thanks,
+
+Alex
+
+v1:
+These are the IOMMU related patches from the v2 IOMMU Groups +
+VFIO series.  I've separated out PCI and VFIO to try to make
+progress on the foundation we need for VFIO.  Patches 5 & 6
+of this series depend on patches 1 & 2 of the PCI series found
+here:
+
+http://marc.info/?l=linux-kernel&m=133835363021384
+
+Patch 1 adds an iommu_group pointer to struct device so that we
+have a place to link a device to a specific iommu group.  GregKH
+has already acked this, so it should go in with the group support
+itself.  Patch 2 is the core of the IOMMU group support.  Patches
+3 & 4 allow groups to be created on AMD-Vi and Intel VT-d systems.
+Patches 5 & 6 make use of the additional PCI DMA quirks and ACS
+support checking to make groups more secure.  Patch 7 removes the
+iommu=group_mf option as ACS checking results in most multifunction
+devices being grouped already.
+
+These patches, as well as the PCI support patches and VFIO can be
+found in git here:
+
+git://github.com/awilliam/linux-vfio.git (iommu-group-vfio-next-20120529)
+
+Please consider these for 3.5, but I'll settle for any kind of next
+branch.  Thanks,
+
+Alex
+
+---
+
+Alex Williamson (7):
+      iommu: Remove group_mf
+      intel-iommu: Make use of DMA quirks and ACS checks in IOMMU groups
+      amd_iommu: Make use of DMA quirks and ACS checks in IOMMU groups
+      intel-iommu: Support IOMMU groups
+      amd_iommu: Support IOMMU groups
+      iommu: IOMMU Groups
+      driver core: Add iommu_group tracking to struct device
+
+
+ .../ABI/testing/sysfs-kernel-iommu_groups          |   14 
+ Documentation/kernel-parameters.txt                |    1 
+ arch/ia64/include/asm/iommu.h                      |    2 
+ arch/ia64/kernel/pci-dma.c                         |    1 
+ arch/x86/include/asm/iommu.h                       |    1 
+ arch/x86/kernel/pci-dma.c                          |   11 
+ drivers/iommu/amd_iommu.c                          |   70 ++
+ drivers/iommu/intel-iommu.c                        |   89 ++-
+ drivers/iommu/iommu.c                              |  578 +++++++++++++++++++-
+ include/linux/device.h                             |    2 
+ include/linux/iommu.h                              |  104 +++-
+ 11 files changed, 767 insertions(+), 106 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-kernel-iommu_groups
