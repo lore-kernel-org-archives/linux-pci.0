@@ -1,55 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f202.google.com ([209.85.220.202]:39724 "EHLO
-	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751656Ab2EWWg4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2012 18:36:56 -0400
-Received: by vcbfl13 with SMTP id fl13so240925vcb.1
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2012 15:36:56 -0700 (PDT)
-Subject: [PATCH v3 0/2] archdata init in device_add() notifier
-To: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <monstr@monstr.eu>, benh@kernel.crashing.org,
-	microblaze-uclinux@itee.uq.edu.au, linux-pci@vger.kernel.org,
-	Jesse Larrew <jlarrew@linux.vnet.ibm.com>,
-	jbarnes@virtuousgeek.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linuxppc-dev@lists.ozlabs.org
-Date: Wed, 23 May 2012 16:36:55 -0600
-Message-ID: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 5/7] amd_iommu: Make use of DMA quirks and ACS checks in
+ IOMMU groups
+To: joerg.roedel@amd.com, dwmw2@infradead.org,
+	iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, ddutile@redhat.com,
+	alex.williamson@redhat.com, liuj97@gmail.com
+Date: Wed, 30 May 2012 14:19:31 -0600
+Message-ID: <20120530201931.31527.57970.stgit@bling.home>
+In-Reply-To: <20120530201424.31527.33142.stgit@bling.home>
+References: <20120530201424.31527.33142.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here's what I put in my "for-3.6" branch for now.  We can still change
-it, so let me know if you see any problems.
+Work around broken devices and adhere to ACS support when determining
+IOMMU grouping.
 
-I reworked the changelogs, changed the notification function name per
-Jesse, folded the one-line pcibios_setup_bus_notifier() into the only
-caller (on microblaze), and changed it from __devinit to __init (on
-powerpc) since it now has nothing to do with hotplug.
-
-Thank you very much for doing this work, Matsumoto-san.  I hope to
-eventually get rid of pcibios_fixup_bus() altogether, and this is a
-significant step in that direction.
-
-Bjorn
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
 
-Hiroo Matsumoto (2):
-      powerpc/PCI: move DMA & IRQ init to device_add() notification path
-      microblaze/PCI: move DMA & IRQ init to device_add() notification path
+ drivers/iommu/amd_iommu.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index e072bd1..0e78d3c 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -254,6 +254,14 @@ static bool check_device(struct device *dev)
+ 	return true;
+ }
+ 
++static void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
++{
++	pci_dev_put(*from);
++	*from = to;
++}
++
++#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
++
+ static int iommu_init_device(struct device *dev)
+ {
+ 	struct pci_dev *dma_pdev, *pdev = to_pci_dev(dev);
+@@ -286,6 +294,23 @@ static int iommu_init_device(struct device *dev)
+ 	} else
+ 		dma_pdev = pci_dev_get(pdev);
+ 
++	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
++
++	if (dma_pdev->multifunction &&
++	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
++		swap_pci_ref(&dma_pdev,
++			     pci_get_slot(dma_pdev->bus,
++					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
++					  0)));
++
++	while (!pci_is_root_bus(dma_pdev->bus)) {
++		if (pci_acs_path_enabled(dma_pdev->bus->self,
++					 NULL, REQ_ACS_FLAGS))
++			break;
++
++		swap_pci_ref(&dma_pdev, pci_dev_get(dma_pdev->bus->self));
++	}
++
+ 	group = iommu_group_get(&dma_pdev->dev);
+ 	pci_dev_put(dma_pdev);
+ 	if (!group) {
 
- arch/microblaze/include/asm/pci.h          |    1 
- arch/microblaze/pci/pci-common.c           |   62 +++++++++++---------
- arch/powerpc/include/asm/pci.h             |    2 -
- arch/powerpc/kernel/pci-common.c           |   87 ++++++++++++++--------------
- arch/powerpc/kernel/pci_32.c               |    2 +
- arch/powerpc/kernel/pci_64.c               |    2 +
- arch/powerpc/kernel/pci_of_scan.c          |    1 
- arch/powerpc/platforms/pseries/pci_dlpar.c |    1 
- drivers/pci/pci.c                          |    5 --
- drivers/pcmcia/cardbus.c                   |    3 -
- include/linux/pci.h                        |    3 -
- 11 files changed, 83 insertions(+), 86 deletions(-)
