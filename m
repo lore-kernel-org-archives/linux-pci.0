@@ -1,105 +1,137 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 05/13] pci: New pci_acs_enabled()
-To: benh@kernel.crashing.org, aik@ozlabs.ru,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:39823 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932319Ab2E3InZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 May 2012 04:43:25 -0400
+Received: from /spool/local
+	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Wed, 30 May 2012 02:43:25 -0600
+Date: Wed, 30 May 2012 16:34:57 +0800
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, aik@ozlabs.ru,
 	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org
-Cc: chrisw@sous-sol.org, agraf@suse.de, benve@cisco.com,
-	aafabbri@cisco.com, B08248@freescale.com, B07421@freescale.com,
-	avi@redhat.com, konrad.wilk@oracle.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com,
-	alex.williamson@redhat.com
-Date: Fri, 11 May 2012 16:56:02 -0600
-Message-ID: <20120511225602.30496.80438.stgit@bling.home>
-In-Reply-To: <20120511222148.30496.68571.stgit@bling.home>
-References: <20120511222148.30496.68571.stgit@bling.home>
+	dwmw2@infradead.org, konrad.wilk@oracle.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Subject: Re: [PATCH 1/5] pci: Add PCI DMA source ID quirk
+Message-ID: <20120530083457.GB7364@shangw>
+Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
+References: <20120530043142.1164.63415.stgit@bling.home>
+ <20120530044834.1164.9081.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120530044834.1164.9081.stgit@bling.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In a PCIe environment, transactions aren't always required to
-reach the root bus before being re-routed.  Peer-to-peer DMA
-may actually not be seen by the IOMMU in these cases.  For
-IOMMU groups, we want to provide IOMMU drivers a way to detect
-these restrictions.  Provided with a PCI device, pci_acs_enabled
-returns the furthest downstream device with a complete PCI ACS
-chain.  This information can then be used in grouping to create
-fully isolated groups.  ACS chain logic extracted from libvirt.
+Hi Alex,
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+>DMA transactions are tagged with the source ID of the device making
+>the request.  Occasionally hardware screws this up and uses the
+>source ID of a different device (often the wrong function number of
+>a multifunction device).  A specific Ricoh multifunction device is
+>a prime example of this problem and included in this patch.  The
+>purpose of this function is that given a pci_dev, return the pci_dev
+>to use as the source ID for DMA.  When hardware works correctly,
+>this returns the input device.  For the components of the Ricoh
+>multifunction device, return the pci_dev for function 0.
+>
+>This will be used by IOMMU drivers for determining the boundaries
+>of IOMMU groups as multiple devices using the same source ID must
+>be contained within the same group.  This can also be used by
+>existing streaming DMA paths for the same purpose.
+>
+>Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>---
+>
+> drivers/pci/quirks.c |   40 ++++++++++++++++++++++++++++++++++++++++
+> include/linux/pci.h  |    5 +++++
+> 2 files changed, 45 insertions(+)
+>
+>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>index 2a75216..004e167 100644
+>--- a/drivers/pci/quirks.c
+>+++ b/drivers/pci/quirks.c
+>@@ -3179,3 +3179,43 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>
+> 	return -ENOTTY;
+> }
+>+
+>+static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+>+{
+>+	return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+>+}
 
- drivers/pci/pci.c   |   43 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 44 insertions(+), 0 deletions(-)
+I think we needn't retrieve the PCI device passed in again from the list
+of PCI devices if its function number is zero.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 111569c..d7f05ce 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2358,6 +2358,49 @@ void pci_enable_acs(struct pci_dev *dev)
- 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
- }
- 
-+#define PCI_EXT_CAP_ACS_ENABLED		(PCI_ACS_SV | PCI_ACS_RR | \
-+					 PCI_ACS_CR | PCI_ACS_UF)
-+
-+/**
-+ * pci_acs_enabled - test ACS support in downstream chain
-+ * @dev: starting PCI device
-+ *
-+ * Returns the furthest downstream device with an unbroken ACS chain.  If
-+ * ACS is enabled throughout the chain, the returned device is the same as
-+ * the one passed in.
-+ */
-+struct pci_dev *pci_acs_enabled(struct pci_dev *dev)
-+{
-+	struct pci_dev *acs_dev;
-+	int pos;
-+	u16 ctrl;
-+
-+	if (!pci_is_root_bus(dev->bus))
-+		acs_dev = pci_acs_enabled(dev->bus->self);
-+	else
-+		return dev;
-+
-+	/* If the chain is already broken, pass on the device */
-+	if (acs_dev != dev->bus->self)
-+		return acs_dev;
-+
-+	if (!pci_is_pcie(dev) || (dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
-+		return dev;
-+
-+	if (dev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM)
-+		return dev;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return acs_dev;
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+	if ((ctrl & PCI_EXT_CAP_ACS_ENABLED) != PCI_EXT_CAP_ACS_ENABLED)
-+		return acs_dev;
-+
-+	return dev;
-+}
-+
- /**
-  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
-  * @dev: the PCI device
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9910b5c..dc25da3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1586,6 +1586,7 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
- }
- 
- void pci_request_acs(void);
-+struct pci_dev *pci_acs_enabled(struct pci_dev *dev);
- 
- 
- #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+	if (!PCI_FUNC(dev->devfn))
+		return dev;
+
+Thanks,
+Gavin
+
+>+
+>+static const struct pci_dev_dma_source {
+>+	u16 vendor;
+>+	u16 device;
+>+	struct pci_dev *(*dma_source)(struct pci_dev *dev);
+>+} pci_dev_dma_source[] = {
+>+	/*
+>+	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
+>+	 *
+>+	 * Some Ricoh devices use the function 0 source ID for DMA on
+>+	 * other functions of a multifunction device.  The DMA devices
+>+	 * is therefore function 0, which will have implications of the
+>+	 * iommu grouping of these devices.
+>+	 */
+>+	{ PCI_VENDOR_ID_RICOH, 0xe822, pci_func_0_dma_source },
+>+	{ PCI_VENDOR_ID_RICOH, 0xe230, pci_func_0_dma_source },
+>+	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
+>+	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
+>+	{ 0 }
+>+};
+>+
+>+struct pci_dev *pci_dma_source(struct pci_dev *dev)
+>+{
+>+	const struct pci_dev_dma_source *i;
+>+
+>+	for (i = pci_dev_dma_source; i->dma_source; i++) {
+>+		if ((i->vendor == dev->vendor ||
+>+		     i->vendor == (u16)PCI_ANY_ID) &&
+>+		    (i->device == dev->device ||
+>+		     i->device == (u16)PCI_ANY_ID))
+>+			return i->dma_source(dev);
+>+	}
+>+
+>+	return dev;
+>+}
+>diff --git a/include/linux/pci.h b/include/linux/pci.h
+>index d8c379d..5bc7502 100644
+>--- a/include/linux/pci.h
+>+++ b/include/linux/pci.h
+>@@ -1486,9 +1486,14 @@ enum pci_fixup_pass {
+>
+> #ifdef CONFIG_PCI_QUIRKS
+> void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+>+struct pci_dev *pci_dma_source(struct pci_dev *dev);
+> #else
+> static inline void pci_fixup_device(enum pci_fixup_pass pass,
+> 				    struct pci_dev *dev) {}
+>+static inline struct pci_dev *pci_dma_source(struct pci_dev *dev)
+>+{
+>+	return dev;
+>+}
+> #endif
+>
+> void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
