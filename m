@@ -1,56 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:59013 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755802Ab2EBReh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 May 2012 13:34:37 -0400
-Received: by lahj13 with SMTP id j13so630257lah.19
-        for <linux-pci@vger.kernel.org>; Wed, 02 May 2012 10:34:36 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:10017 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751948Ab2E3Esp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 May 2012 00:48:45 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 0/5] PCI: Prep for VFIO and IOMMU Groups
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, konrad.wilk@oracle.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Tue, 29 May 2012 22:48:25 -0600
+Message-ID: <20120530043142.1164.63415.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <20120427143745.GD27535@alberich.amd.com>
-References: <20120427143410.GB27535@alberich.amd.com> <20120427143745.GD27535@alberich.amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 2 May 2012 11:34:15 -0600
-Message-ID: <CAErSpo584dcpGhmp-jcP_Zsznmz9ZkfPuxpF3UK9UVfcnFUdRA@mail.gmail.com>
-Subject: Re: [PATCH 2/2][RESEND] x86/pci/amd: Enable early_fill_mp_bus_to_node
- on AMD family 15h models 0-0xf
-To: Andreas Herrmann <andreas.herrmann3@amd.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 8:37 AM, Andreas Herrmann
-<andreas.herrmann3@amd.com> wrote:
->
-> While at it avoid calling this function on family 11h (aka Griffin)
-> which was a mobile part and doesn't support NUMA.
+These are the PCI related patches from the previously submitted
+v2 IOMMU Groups + VFIO series.  I've updated them with Don's
+comments and split them off on their own so that we can hopefully
+make some progress getting these in.  Patches are against 20120529
+linux-next tree.
 
-This changelog doesn't seem like it goes with this patch.  It looks
-more related to the first patch (though that affects family 11h and
-greater, not just family 11h).
+Patches 1 & 2 provide DMA quirking and ACS checking which will be
+used by IOMMU drivers supporting IOMMU groups.  Patch 3 enables the
+set of pci user config access functions to be called from other
+modules, which will be used by VFIO-pci.  Patch 4 enables a common
+translation of pcibios errors into errno for returning to userspace,
+also to be used by VFIO-pci.  Patch 5 adds additional PCI register
+definitions so we can more easily parse config space for devices in
+VFIO-pci.
 
-> Signed-off-by: Andreas Herrmann <andreas.herrmann3@amd.com>
-> ---
->  arch/x86/pci/amd_bus.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-> index 0384e69..d552b29 100644
-> --- a/arch/x86/pci/amd_bus.c
-> +++ b/arch/x86/pci/amd_bus.c
-> @@ -27,7 +27,7 @@ static struct pci_hostbridge_probe pci_probes[] __initdata = {
->        { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
->        { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
->        { 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
-> -       { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
-> +       { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1600 },
->  };
->
->  /**
-> --
-> 1.7.8.5
->
->
->
+These patches, as well as IOMMU group support and VFIO can be
+found in git here:
+
+git://github.com/awilliam/linux-vfio.git (iommu-group-vfio-next-20120529)
+
+Please consider these for 3.5, but I'll settle for any kind of next
+branch.  Thanks,
+
+Alex
+
+---
+
+Alex Williamson (5):
+      pci: Misc pci_reg additions
+      pci: Create common pcibios_err_to_errno
+      pci: export pci_user functions for use by other drivers
+      pci: Add ACS validation utility
+      pci: Add PCI DMA source ID quirk
+
+
+ drivers/pci/access.c                 |    6 +-
+ drivers/pci/pci.c                    |   68 ++++++++++++++++++++
+ drivers/pci/pci.h                    |    7 --
+ drivers/pci/quirks.c                 |   69 +++++++++++++++++++++
+ drivers/xen/xen-pciback/conf_space.c |    6 +-
+ include/linux/pci.h                  |   49 ++++++++++++++-
+ include/linux/pci_regs.h             |  113 ++++++++++++++++++++++++++++++----
+ 7 files changed, 293 insertions(+), 25 deletions(-)
