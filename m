@@ -1,63 +1,65 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 1 May 2012 22:06:25 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 04/19] PCI: serialize hotplug operations triggered by
- PCI hotplug sysfs interfaces
-Message-ID: <20120502050625.GB23579@kroah.com>
-References: <1335539820-11232-1-git-send-email-jiang.liu@huawei.com>
- <1335539820-11232-5-git-send-email-jiang.liu@huawei.com>
+Message-ID: <4FC5CEF1.6000509@snewbury.org.uk>
+Date: Wed, 30 May 2012 08:40:33 +0100
+From: Steven Newbury <steve@snewbury.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1335539820-11232-5-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org> <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com> <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com> <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com> <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com> <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com> <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com> <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com> <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com> <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com> <CAErSpo4ywho4UmPVAjT7yZNROc9e1zCx+UoaS5un+v4aN=akJA@mail.gmail.com> <CAE9FiQWORRjxEQwr+933ReNAAKAEoJ5B6AWte4gr33_BO+4heQ@mail.gmail.com> <CAErSpo44TViNFcZivjr5hAu8w8kpEpUjxNAWtazhAqwwsorZbw@mail.gmail.com>
+In-Reply-To: <CAErSpo44TViNFcZivjr5hAu8w8kpEpUjxNAWtazhAqwwsorZbw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:16:45PM +0800, Jiang Liu wrote:
-> +	/* Avoid deadlock with pci_hp_deregister() */
-> +	while (!pci_hotplug_try_enter()) {
-> +		/* Check whether the slot has been deregistered. */
-> +		if (list_empty(&slot->slot_list)) {
-> +			retval = -ENODEV;
-> +			goto exit_put;
-> +		}
-> +		msleep(1);
-> +	}
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Oh my.
+On 30/05/12 00:27, Bjorn Helgaas wrote:
+> On Tue, May 29, 2012 at 2:40 PM, Yinghai Lu <yinghai@kernel.org>
+> wrote:
+>> On Tue, May 29, 2012 at 12:23 PM, Bjorn Helgaas
+>> <bhelgaas@google.com> wrote:
+>>> On Tue, May 29, 2012 at 12:17 PM, Yinghai Lu
+>>> <yinghai@kernel.org> wrote:
+>>>> On Tue, May 29, 2012 at 10:57 AM, H. Peter Anvin
+>>>> <hpa@zytor.com> wrote:
+>>>>> On 05/29/2012 10:55 AM, Yinghai Lu wrote:
 
-Wow.
+*SNIP*
 
-{sigh}
+>> 
+>> 
+>> ok, please check the version, that put back PCI_MAX_RESOURCE_32
+>> for io ports.
+>> 
+>> also RFC to limit for 16 bit ioport handling.  only help other
+>> arches that does support 32bit ioports but have bridges only
+>> support 16bit io ports.
+> 
+> I don't understand this one at all.  It looks like you mashed
+> together at least two changes: (1) prefer I/O space above 64K if
+> available, and (2) mark secondary bus resources with
+> IORESOURCE_IO_32 when the P2P bridge I/O window address decode type
+> is PCI_IO_RANGE_TYPE_32 and use that to limit allocations.
+> 
+> I don't see the justification for (1).  What problem does this
+> solve?
+> 
+I can potentially see this helping with hotplug, where a new device
+has only 16 bit io ports, but if there's no space remaining under 64k
+allocation would fail.  Preferring above 64k means preserving that
+limited resource.  This is exactly equivalent to my original
+motivation for preferring 64 bit PCI mem in order to preserve 32 bit
+address space for hotplug devices without 64 bit BARs.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-ick.
-
-My eyes hurt.
-
-And your cpu load just went crazy.
-
-You can now handle all of the nasty emails from sysadmins asking why
-their systems look like their load is high for no good reason.
-
-Not to mention all of the other issues here.
-
-My statement about not inventing new lock types has now been proven
-true.
-
-The fact that this would even be a chunk of code that was proposed to be
-merged makes me weep.
-
-You owe me a bottle of whatever you are drinking if you expect me to
-continue to review these patch submissions.
-
-I'm stopping here in the series, please rework this whole thing in a
-major way.
-
-greg k-h
+iEYEARECAAYFAk/FzvEACgkQGcb56gMuC61lYwCfchbsyzN5KLCWTuyQiMcJR0DH
+l4gAoJAY1D0HN6m5JnQLu705hvm85p5a
+=whd3
+-----END PGP SIGNATURE-----
