@@ -1,128 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:44350 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933269Ab2ESBUZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2012 21:20:25 -0400
-Received: by lbbgm6 with SMTP id gm6so2456747lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 18 May 2012 18:20:23 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:41266 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753834Ab2EaTsK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 May 2012 15:48:10 -0400
+Message-ID: <4FC7CAE5.7020306@redhat.com>
+Date: Thu, 31 May 2012 15:47:49 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20120514024816.GA15371@hp-xd.sh.intel.com>
-References: <20120514024816.GA15371@hp-xd.sh.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 18 May 2012 19:20:02 -0600
-Message-ID: <CAErSpo6jE+3uzjrx9v+f=memXP6TpmHnOBcqW5bH1HJO_EQVuw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Enable LTR/OBFF before device is used by driver
-To: Xudong Hao <xudong.hao@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, avi@redhat.com, alex.williamson@redhat.com,
-	xiantao.zhang@intel.com, xudong.hao@intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: joerg.roedel@amd.com, dwmw2@infradead.org,
+	iommu@lists.linux-foundation.org, bhelgaas@google.com,
+	benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, liuj97@gmail.com
+Subject: Re: [PATCH v2 6/7] intel-iommu: Make use of DMA quirks and ACS checks
+ in IOMMU groups
+References: <20120530201424.31527.33142.stgit@bling.home> <20120530201942.31527.51604.stgit@bling.home>
+In-Reply-To: <20120530201942.31527.51604.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 13, 2012 at 8:48 PM, Xudong Hao <xudong.hao@linux.intel.com> wrote:
-> Enable LTR(Latency tolerance reporting) and OBFF(optimized buffer flush/fill) in
->  pci_enable_device(), so that they are enabled before the device is used by driver.
-
-Please split this into two patches (one for LTR and another for OBFF)
-so they can be reverted individually if they cause trouble.  It would
-be nice if you bundled these together with your other "save/restore
-max Latency Value" patch so they were all together on the mailing
-list.
-
-I read the LTR sections of the PCIe spec, but I can't figure out how
-it's supposed to work.  It says "power management policies ... can be
-implemented to consider Endpoint service requirements."  Does that
-mean there's some OS software that might be involved, or is this just
-a matter of software flipping the LTR-enable bit and the hardware
-doing everything else?  How confident can we be that enabling this is
-safe?
-
-For OBFF, is there some OS piece not included here that tells a Root
-Complex that "now is a good time for Endpoints to do something," e.g.,
-the spec mentions an "operating system timer tick."  Is there some
-benefit to this patch without that piece?  I don't understand the big
-picture yet.
-
-> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+On 05/30/2012 04:19 PM, Alex Williamson wrote:
+> Work around broken devices and adhere to ACS support when determining
+> IOMMU grouping.
 >
+> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
 > ---
->  drivers/pci/pci.c |   29 +++++++++++++++++++++++++++++
->  1 files changed, 29 insertions(+), 0 deletions(-)
 >
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 111569c..2369883 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1134,6 +1134,31 @@ int pci_load_and_free_saved_state(struct pci_dev *dev,
->  }
->  EXPORT_SYMBOL_GPL(pci_load_and_free_saved_state);
+>   drivers/iommu/intel-iommu.c |   25 +++++++++++++++++++++++++
+>   1 file changed, 25 insertions(+)
 >
-> +static void pci_enable_dev_caps(struct pci_dev *dev)
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index 4a43452..ebf2b31 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -4090,6 +4090,14 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
+>   	return 0;
+>   }
+>
+> +static void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
 > +{
-> +       /* set default value */
-> +       unsigned long type = PCI_EXP_OBFF_SIGNAL_ALWAYS;
-
-There's only one use of this value, so skip the variable and just use
-PCI_EXP_OBFF_SIGNAL_ALWAYS in the call.
-
-The comment at pci_enable_obff() says PCI_OBFF_SIGNAL_L0 is the
-preferred type, so please explain why you're not using that.
-
-> +
-> +       /* LTR(Latency tolerance reporting) allows devices to send
-> +        * messages to the root complex indicating their latency
-> +        * tolerance for snooped & unsnooped memory transactions.
-> +        */
-
-Follow Linux comment style, i.e.,
-
-    /*
-     * LTR ...
-     */
-
-> +       pci_enable_ltr(dev);
-> +
-> +       /* OBFF (optimized buffer flush/fill), where supported,
-> +        * can help improve energy efficiency by giving devices
-> +        * information about when interrupts and other activity
-> +        * will have a reduced power impact.
-> +        */
-> +       pci_enable_obff(dev, type);
+> +	pci_dev_put(*from);
+> +	*from = to;
 > +}
 > +
-> +static void pci_disable_dev_caps(struct pci_dev *dev)
-> +{
-> +       pci_disable_obff(dev);
-> +       pci_disable_ltr(dev);
-> +}
+> +#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
 > +
->  static int do_pci_enable_device(struct pci_dev *dev, int bars)
->  {
->        int err;
-> @@ -1146,6 +1171,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->                return err;
->        pci_fixup_device(pci_fixup_enable, dev);
+>   static int intel_iommu_add_device(struct device *dev)
+>   {
+>   	struct pci_dev *pdev = to_pci_dev(dev);
+> @@ -4112,6 +4120,23 @@ static int intel_iommu_add_device(struct device *dev)
+>   	} else
+>   		dma_pdev = pci_dev_get(pdev);
 >
-> +       /* Enable some device capibility before it's used by driver. */
-> +       pci_enable_dev_caps(dev);
-
-Why is this here?  It seems similar to what's already in
-pci_init_capabilities().  Is there a reason to do this in the
-pci_enable_device() path rather than in the pci_device_add() path?
-
+> +	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
 > +
->        return 0;
->  }
+> +	if (dma_pdev->multifunction&&
+> +	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
+> +		swap_pci_ref(&dma_pdev,
+> +			     pci_get_slot(dma_pdev->bus,
+> +					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
+> +					  0)));
+> +
+> +	while (!pci_is_root_bus(dma_pdev->bus)) {
+> +		if (pci_acs_path_enabled(dma_pdev->bus->self,
+> +					 NULL, REQ_ACS_FLAGS))
+> +			break;
+> +
+> +		swap_pci_ref(&dma_pdev, pci_dev_get(dma_pdev->bus->self));
+> +	}
+> +
+I'm having deja-vu on this patch....
+.... why not just make the above two patches as two functions in drivers/iommu/iommu.c,
+one exported for these two modules (and maybe others someday...), e.g., iommu_pdev_put())
+which [intel-,amd-]iommu.c call ?
+
+  
+>   	group = iommu_group_get(&dma_pdev->dev);
+>   	pci_dev_put(dma_pdev);
+>   	if (!group) {
 >
-> @@ -1361,6 +1389,7 @@ static void do_pci_disable_device(struct pci_dev *dev)
->        }
->
->        pcibios_disable_device(dev);
-> +       pci_disable_dev_caps(dev);
->  }
->
->  /**
-> --
-> 1.6.0.rc1
->
+
