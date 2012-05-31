@@ -1,40 +1,126 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
-To: Jiang Liu <liuj97@gmail.com>
-CC: "Williams, Dan J" <dan.j.williams@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:17327 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757700Ab2EaCRP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 May 2012 22:17:15 -0400
+From: "Hao, Xudong" <xudong.hao@intel.com>
+To: Don Dutile <ddutile@redhat.com>,
+	Xudong Hao <xudong.hao@linux.intel.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Keping Chen <chenkeping@huawei.com>
-Subject: RE: [RESEND,PATCH] DCA, x86: fix invalid memory access in DCA core
-Date: Fri, 18 May 2012 14:10:04 +0000
-Message-ID: <436EC33EF05C3442BBF5497FC9483FF4162732ED@IRSMSX101.ger.corp.intel.com>
-References: <1336406288-9479-1-git-send-email-jiang.liu@huawei.com>
- <436EC33EF05C3442BBF5497FC9483FF41626EACA@IRSMSX101.ger.corp.intel.com>
- <4FAB20FB.6070508@gmail.com>
-In-Reply-To: <4FAB20FB.6070508@gmail.com>
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"avi@redhat.com" <avi@redhat.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"Zhang, Xiantao" <xiantao.zhang@intel.com>
+Subject: RE: [PATCH 1/1] Enable LTR/OBFF before device is used by driver
+Date: Thu, 31 May 2012 02:17:12 +0000
+Message-ID: <403610A45A2B5242BD291EDAE8B37D300FDCBB73@SHSMSX102.ccr.corp.intel.com>
+References: <20120514024816.GA15371@hp-xd.sh.intel.com>
+ <4FC6471A.5090208@redhat.com>
+In-Reply-To: <4FC6471A.5090208@redhat.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 07, May 10, 2012 3:59 AM, Jiang Liu <liuj97@gmail.com> wrote:
->
->Hi Maciej,
->	I feel we may also need to tune the multiple IOH support in DCA.
->Multiple IOH support is disabled for CB3.0 devices, how about CB3.1 devices
->in Ivrbridge or SandyBridge? Does the hardware limitation still exist? Or
->could we support multiple IOHs with IvyBridge and SandyBridge?
->	If multiple IOH is supported, I think we should move the logic to
->disable multiple IOH support for CB3.0 from DCA core into ioatdma. I have
->also prepared two patches for that two.
->	Thanks!
->
+> -----Original Message-----
+> From: Don Dutile [mailto:ddutile@redhat.com]
+> Sent: Thursday, May 31, 2012 12:13 AM
+> To: Xudong Hao
+> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org;
+> linux-kernel@vger.kernel.org; kvm@vger.kernel.org; avi@redhat.com;
+> alex.williamson@redhat.com; Zhang, Xiantao; Hao, Xudong
+> Subject: Re: [PATCH 1/1] Enable LTR/OBFF before device is used by driver
+> 
+> While you are making the other recommended fixes, could
+> you add/create a pci_obff_supported() function, like the pci_ltr_supported()
+> function, and more importantly, add it to the pci_disable_obff() function?
+> The latter does not check that DEVCAP2 is supported, and thus, could be
+> writing to non-existent (potentially private) cap space (i.e., a V1 CAP device,
+> which do exist in the marketplace).
+> 
+> The [enable,disable]_ltr functions do a good job of doing pci_ltr_supported()
+> checks, but the obff enable,disable functions should have similar calls.
+> 
 
-At this point I do not think we would need to tune multiple IOH for DCA.
-The limitation you mention applies only to CB3.0. I do not think DCA is supported
-with Sandy Bridge / Ivy Bridge regardless of multi-IOH case but let me confirm it
-yet.
+Yeah, it's a good suggestion, I'll add pci_obff_supported() function.
 
-Thanks,
-Maciej
+> 
+> On 05/13/2012 10:48 PM, Xudong Hao wrote:
+> > Enable LTR(Latency tolerance reporting) and OBFF(optimized buffer flush/fill)
+> in
+> >   pci_enable_device(), so that they are enabled before the device is used by
+> driver.
+> >
+> > Signed-off-by: Xudong Hao<xudong.hao@intel.com>
+> >
+> > ---
+> >   drivers/pci/pci.c |   29 +++++++++++++++++++++++++++++
+> >   1 files changed, 29 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 111569c..2369883 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -1134,6 +1134,31 @@ int pci_load_and_free_saved_state(struct
+> pci_dev *dev,
+> >   }
+> >   EXPORT_SYMBOL_GPL(pci_load_and_free_saved_state);
+> >
+> > +static void pci_enable_dev_caps(struct pci_dev *dev)
+> > +{
+> > +       /* set default value */
+> > +       unsigned long type = PCI_EXP_OBFF_SIGNAL_ALWAYS;
+> > +
+> > +       /* LTR(Latency tolerance reporting) allows devices to send
+> > +        * messages to the root complex indicating their latency
+> > +        * tolerance for snooped&  unsnooped memory transactions.
+> > +        */
+> > +       pci_enable_ltr(dev);
+> > +
+> > +       /* OBFF (optimized buffer flush/fill), where supported,
+> > +        * can help improve energy efficiency by giving devices
+> > +        * information about when interrupts and other activity
+> > +        * will have a reduced power impact.
+> > +        */
+> > +       pci_enable_obff(dev, type);
+> > +}
+> > +
+> > +static void pci_disable_dev_caps(struct pci_dev *dev)
+> > +{
+> > +       pci_disable_obff(dev);
+> > +       pci_disable_ltr(dev);
+> > +}
+> > +
+> >   static int do_pci_enable_device(struct pci_dev *dev, int bars)
+> >   {
+> >          int err;
+> > @@ -1146,6 +1171,9 @@ static int do_pci_enable_device(struct pci_dev
+> *dev, int bars)
+> >                  return err;
+> >          pci_fixup_device(pci_fixup_enable, dev);
+> >
+> > +       /* Enable some device capibility before it's used by driver. */
+> > +       pci_enable_dev_caps(dev);
+> > +
+> >          return 0;
+> >   }
+> >
+> > @@ -1361,6 +1389,7 @@ static void do_pci_disable_device(struct pci_dev
+> *dev)
+> >          }
+> >
+> >          pcibios_disable_device(dev);
+> > +       pci_disable_dev_caps(dev);
+> >   }
+> >
+> >   /**
+> > --
+> > 1.6.0.rc1
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
