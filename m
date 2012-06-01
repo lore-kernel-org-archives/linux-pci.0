@@ -1,62 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:44659 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755483Ab2F1JpW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jun 2012 05:45:22 -0400
-Received: by gglu4 with SMTP id u4so1658343ggl.19
-        for <linux-pci@vger.kernel.org>; Thu, 28 Jun 2012 02:45:22 -0700 (PDT)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:42375 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754604Ab2FAPru (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2012 11:47:50 -0400
+Received: by lbbgm6 with SMTP id gm6so1764255lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 01 Jun 2012 08:47:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1340782554-9865-1-git-send-email-airlied@gmail.com>
-References: <1340782554-9865-1-git-send-email-airlied@gmail.com>
-Date: Thu, 28 Jun 2012 10:45:21 +0100
-Message-ID: <CAPM=9tys7x5CmK-nrETA93B-9xS1uschZSgrb14-a9k9s_DNMA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] pci_regs: define LNKSTA2 pcie cap + bits.
-From: Dave Airlie <airlied@gmail.com>
-To: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <Pine.LNX.4.64.1205311412210.11510@info>
+References: <Pine.LNX.4.64.1205311412210.11510@info>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 1 Jun 2012 09:47:28 -0600
+Message-ID: <CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com>
+Subject: [Bug 43331] Re: Bug on bootup of Linux kernel on Panasonic Toughbook S10
+To: Bill Unruh <unruh@physics.ubc.ca>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bugzilla-daemon@bugzilla.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 27, 2012 at 8:35 AM, Dave Airlie <airlied@gmail.com> wrote:
-> From: Dave Airlie <airlied@redhat.com>
+On Thu, May 31, 2012 at 3:39 PM, Bill Unruh <unruh@physics.ubc.ca> wrote:
+> I am running Mageia 2 kernel 3.3.6-desktop586-2.mga2
 >
-> We need these for detecting the max link speed for drm drivers.
+> Every time I boot up I get the error messages
+> pci 0000:00:04.0: BAR 0: error updating (0xdfa00004 != 0xfed98004)
 
-Hi Bjorn,
+Thanks very much for this report.  I opened this bug report to help me
+keep track of it: https://bugzilla.kernel.org/show_bug.cgi?id=43331
 
-Can you ack this patch so I can carry it in the drm-next tree? we need
-these regs for getting the PCIE v2/v3 supported link speeds.
+The message means that we tried to write address 0xdfa00000 to BAR 0
+of device 00:04.0 (a "signal processing controller," whatever that
+is), but when we read the BAR back, we read 0xfed98004 instead.
+That's an interesting address because it looks a lot like a resource
+of an ACPI PNP0c02 device:
 
-Thanks,
-Dave.
+  system 00:0e: [mem 0xfed98000-0xfed9ffff] has been reserved
+  system 00:0e: Plug and Play ACPI device, IDs PNP0c02 (active)
 
->
-> Signed-off-by: Dave Airlie <airlied@redhat.com>
-> ---
->  include/linux/pci_regs.h |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
->
-> diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-> index 4b608f5..7f04132 100644
-> --- a/include/linux/pci_regs.h
-> +++ b/include/linux/pci_regs.h
-> @@ -521,6 +521,11 @@
->  #define  PCI_EXP_OBFF_MSGA_EN  0x2000  /* OBFF enable with Message type A */
->  #define  PCI_EXP_OBFF_MSGB_EN  0x4000  /* OBFF enable with Message type B */
->  #define  PCI_EXP_OBFF_WAKE_EN  0x6000  /* OBFF using WAKE# signaling */
-> +#define PCI_EXP_LNKCAP2                44      /* Link Capability 2 */
-> +#define  PCI_EXP_LNKCAP2_SLS_2_5GB 0x01        /* Current Link Speed 2.5GT/s */
-> +#define  PCI_EXP_LNKCAP2_SLS_5_0GB 0x02        /* Current Link Speed 5.0GT/s */
-> +#define  PCI_EXP_LNKCAP2_SLS_8_0GB 0x04        /* Current Link Speed 8.0GT/s */
-> +#define  PCI_EXP_LNKCAP2_CROSSLINK 0x100 /* Crosslink supported */
->  #define PCI_EXP_LNKCTL2                48      /* Link Control 2 */
->  #define PCI_EXP_SLTCTL2                56      /* Slot Control 2 */
->
-> --
-> 1.7.7.6
->
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/dri-devel
+You say your machine runs OK (with "noapic"), but I'm doubtful that
+00:04.0 is working -- it doesn't even seem to have a driver bound to
+it.  I don't know what the device does, but if you're not using it,
+it's not surprising that you wouldn't notice it being broken.
+
+Can you attach the complete dmesg log to the bugzilla?  It will have
+more details about other devices and the ranges from which we allocate
+resources for PCI devices.
+
+You mention that the machine is not reliable unless you use "noapic".
+That sounds like a separate bug, but also something it would be good
+to track down.
