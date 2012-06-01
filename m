@@ -1,59 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:51290 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753648Ab2FSTuz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 15:50:55 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 0/4] PCI: PCIe capability structure related cleanup/fixes
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
+Date: Fri, 01 Jun 2012 15:16:19 -0600
+Message-ID: <20120601211619.20328.36769.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <201204072319.q37NJlNp019384@farm-0023.internal.tilera.com>
-References: <201204072316.q37NGv8d019280@farm-0023.internal.tilera.com>
-	<201204072319.q37NJlNp019384@farm-0023.internal.tilera.com>
-Date: Tue, 19 Jun 2012 21:50:54 +0200
-Message-ID: <CAMuHMdX_XYQLs7gmzYS=dNmXxkQQiU3GBNW5b6EZso9bia5JqQ@mail.gmail.com>
-Subject: Re: [PATCH 3/3] arch/tile: tilegx PCI root complex support
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Chris Metcalf <cmetcalf@tilera.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>, Jiri Kosina <jkosina@suse.cz>,
-	Joe Perches <joe@perches.com>,
-	David Howells <dhowells@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Chris,
+The following series introduces PCI Express 'capability structure'
+related cleanup, fixes, and optimizations.
 
-On Sat, Apr 7, 2012 at 11:10 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
-> This change implements PCIe root complex support for tilegx using
-> the kernel support layer for accessing the TRIO hardware shim.
+Patch 1/4 changes pci_ltr_supported() to a static routine.
 
-> --- /dev/null
-> +++ b/arch/tile/kernel/pci_gx.c
+Patch 2/4 removes redundant checking in various PCI Express features as
+suggested by Bjorn Helgaas in
+http://marc.info/?l=linux-pci&m=130463494319762&w=2
 
-> +               bus = pci_scan_bus(0, controller->ops, controller);
-> +               controller->root_bus = bus;
-> +               controller->last_busno = bus->subordinate;
+There is a similar idiom in use that could be similarly be re-factored:
+    if (!pci_is_pcie(dev))
+	return;
 
-As of commit 3527ed81ca01bbaf09df952e68528377a9cd092f
-("PCI: remove secondary/subordinate in struct pci_bus") in linux-next, the
-"subordinate" field no longer exists:
+    pos = pci_find_ext_capability(dev, ...);
+    if (!pos)
+	return;
 
-http://kisskb.ellerman.id.au/kisskb/buildresult/6546355/
-arch/tile/kernel/pci_gx.c:852:31: error: 'struct pci_bus' has no
-member named 'subordinate'
-make[3]: *** [arch/tile/kernel/pci_gx.o] Error 1
+At first it seemed incorrect to remove the redundant call of
+pci_is_pcie() in these cases as a PCI or PCI-X (< 2.0) device may be
+involved.  In such cases an "extended capability" list would not exist,
+as it was not introduced until PCI-X 2.0, and accesses outside of the
+device's configuration space would be attempted.  However, upon further
+review of pci_find_ext_capability() it looks as if such accesses would
+be handled correctly due to the short-circuiting logic involved -
 
-Gr{oetje,eeting}s,
+    if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
+	return 0;
 
-                        Geert
+As such, I'll entertain comments as to whether or not we should also
+make similar removals of pci_is_pcie() in these cases.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Patch 3/4 introduces pci_pcie_cap2() for use in v2 capability related
+feature code.  The makeup of Express' capability structure varies
+substantially between v1 and v2.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+There is still some redundancy in PCIe v2 capabilities checking related
+to the Latency Tolerance Reporting (LTR) feature routines that likely
+could be re-factored further; please feel free to respond with ideas.
+
+Patch 4/4 makes a minor optimization to the saving and restoring of
+PCI Express capability structures.
+
+Seems like the same type of optimization could be done to remove the
+'if (pcie_cap_has_lnkctl(dev->pcie_type, flags))' check.  According to
+section 7.8 "PCI Express Capability Structure" of the PCI Express 1.0a
+specification:
+
+    "Figure 7-10 details allocation of register fields in the PCI
+     Express Capability structure. The PCI Express Capabilities,
+     Device Capabilities, Device Status/Control, Link Capabilities,
+     and Link Status/Control registers are required for all PCI
+     Express devices. Endpoints are not required to implement
+     registers other than those listed above and terminate the
+     capability structure."
+
+There may have been some early Express devices that did not properly
+follow the specification which required the introduction of
+'pcie_cap_has_lnkctl()' so I did not make the additional optimization.
+---
+
+Myron Stowe (4):
+      PCI: Remove redundant capabilities checking in pci_{save,restore}_pcie_state
+      PCI: Add pci_pcie_cap2() check for PCIe feature capabilities >= v2
+      PCI: Remove redundant checking in PCI Express capability routines
+      PCI: make pci_ltr_supported static.
+
+
+ drivers/pci/pci.c        |   93 ++++++++++++++++++++++++++++------------------
+ include/linux/pci.h      |    1 
+ include/linux/pci_regs.h |    7 +++
+ 3 files changed, 64 insertions(+), 37 deletions(-)
+
+-- 
