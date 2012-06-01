@@ -1,126 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:17327 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757700Ab2EaCRP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 May 2012 22:17:15 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Don Dutile <ddutile@redhat.com>,
-	Xudong Hao <xudong.hao@linux.intel.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"avi@redhat.com" <avi@redhat.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"Zhang, Xiantao" <xiantao.zhang@intel.com>
-Subject: RE: [PATCH 1/1] Enable LTR/OBFF before device is used by driver
-Date: Thu, 31 May 2012 02:17:12 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D300FDCBB73@SHSMSX102.ccr.corp.intel.com>
-References: <20120514024816.GA15371@hp-xd.sh.intel.com>
- <4FC6471A.5090208@redhat.com>
-In-Reply-To: <4FC6471A.5090208@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 4/4] PCI: Remove redundant capabilities checking in pci_{save,
+	restore}_pcie_state
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
+Date: Fri, 01 Jun 2012 15:16:43 -0600
+Message-ID: <20120601211643.20328.26918.stgit@amt.stowe>
+In-Reply-To: <20120601211619.20328.36769.stgit@amt.stowe>
+References: <20120601211619.20328.36769.stgit@amt.stowe>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Don Dutile [mailto:ddutile@redhat.com]
-> Sent: Thursday, May 31, 2012 12:13 AM
-> To: Xudong Hao
-> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org;
-> linux-kernel@vger.kernel.org; kvm@vger.kernel.org; avi@redhat.com;
-> alex.williamson@redhat.com; Zhang, Xiantao; Hao, Xudong
-> Subject: Re: [PATCH 1/1] Enable LTR/OBFF before device is used by driver
-> 
-> While you are making the other recommended fixes, could
-> you add/create a pci_obff_supported() function, like the pci_ltr_supported()
-> function, and more importantly, add it to the pci_disable_obff() function?
-> The latter does not check that DEVCAP2 is supported, and thus, could be
-> writing to non-existent (potentially private) cap space (i.e., a V1 CAP device,
-> which do exist in the marketplace).
-> 
-> The [enable,disable]_ltr functions do a good job of doing pci_ltr_supported()
-> checks, but the obff enable,disable functions should have similar calls.
-> 
+Unlike PCI Express v1's Capabilities Structure, v2's requires the entire
+structure to be implemented.  In v2 structures, register fields that are
+not necessarly implemented, are present but hardwired to 0x0.  These may
+include: Link Capabilities, Status, and Control; Slot Capabilities,
+Status, and Control; Root Capabilities, Status, and Control; and all of
+the '2' (Device, Link, and Slot) Capabilities, Status, and Control
+registers.
 
-Yeah, it's a good suggestion, I'll add pci_obff_supported() function.
+This patch removes the redundant capability checks corresponding to the
+Link 2's and Slot 2's, Capabilities, Status, and Control registers as they
+will be present if Device Capabilities 2's registers are (which explains
+why the macros for each of the three are identical).
 
-> 
-> On 05/13/2012 10:48 PM, Xudong Hao wrote:
-> > Enable LTR(Latency tolerance reporting) and OBFF(optimized buffer flush/fill)
-> in
-> >   pci_enable_device(), so that they are enabled before the device is used by
-> driver.
-> >
-> > Signed-off-by: Xudong Hao<xudong.hao@intel.com>
-> >
-> > ---
-> >   drivers/pci/pci.c |   29 +++++++++++++++++++++++++++++
-> >   1 files changed, 29 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 111569c..2369883 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -1134,6 +1134,31 @@ int pci_load_and_free_saved_state(struct
-> pci_dev *dev,
-> >   }
-> >   EXPORT_SYMBOL_GPL(pci_load_and_free_saved_state);
-> >
-> > +static void pci_enable_dev_caps(struct pci_dev *dev)
-> > +{
-> > +       /* set default value */
-> > +       unsigned long type = PCI_EXP_OBFF_SIGNAL_ALWAYS;
-> > +
-> > +       /* LTR(Latency tolerance reporting) allows devices to send
-> > +        * messages to the root complex indicating their latency
-> > +        * tolerance for snooped&  unsnooped memory transactions.
-> > +        */
-> > +       pci_enable_ltr(dev);
-> > +
-> > +       /* OBFF (optimized buffer flush/fill), where supported,
-> > +        * can help improve energy efficiency by giving devices
-> > +        * information about when interrupts and other activity
-> > +        * will have a reduced power impact.
-> > +        */
-> > +       pci_enable_obff(dev, type);
-> > +}
-> > +
-> > +static void pci_disable_dev_caps(struct pci_dev *dev)
-> > +{
-> > +       pci_disable_obff(dev);
-> > +       pci_disable_ltr(dev);
-> > +}
-> > +
-> >   static int do_pci_enable_device(struct pci_dev *dev, int bars)
-> >   {
-> >          int err;
-> > @@ -1146,6 +1171,9 @@ static int do_pci_enable_device(struct pci_dev
-> *dev, int bars)
-> >                  return err;
-> >          pci_fixup_device(pci_fixup_enable, dev);
-> >
-> > +       /* Enable some device capibility before it's used by driver. */
-> > +       pci_enable_dev_caps(dev);
-> > +
-> >          return 0;
-> >   }
-> >
-> > @@ -1361,6 +1389,7 @@ static void do_pci_disable_device(struct pci_dev
-> *dev)
-> >          }
-> >
-> >          pcibios_disable_device(dev);
-> > +       pci_disable_dev_caps(dev);
-> >   }
-> >
-> >   /**
-> > --
-> > 1.6.0.rc1
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ drivers/pci/pci.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 26933ff..f9f8036 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -903,12 +903,11 @@ static int pci_save_pcie_state(struct pci_dev *dev)
+ 		pci_read_config_word(dev, pos + PCI_EXP_SLTCTL, &cap[i++]);
+ 	if (pcie_cap_has_rtctl(dev->pcie_type, flags))
+ 		pci_read_config_word(dev, pos + PCI_EXP_RTCTL, &cap[i++]);
+-	if (pcie_cap_has_devctl2(dev->pcie_type, flags))
++	if (pcie_cap_has_devctl2(dev->pcie_type, flags)) {
+ 		pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &cap[i++]);
+-	if (pcie_cap_has_lnkctl2(dev->pcie_type, flags))
+ 		pci_read_config_word(dev, pos + PCI_EXP_LNKCTL2, &cap[i++]);
+-	if (pcie_cap_has_sltctl2(dev->pcie_type, flags))
+ 		pci_read_config_word(dev, pos + PCI_EXP_SLTCTL2, &cap[i++]);
++	}
+ 
+ 	return 0;
+ }
+@@ -936,12 +935,11 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
+ 		pci_write_config_word(dev, pos + PCI_EXP_SLTCTL, cap[i++]);
+ 	if (pcie_cap_has_rtctl(dev->pcie_type, flags))
+ 		pci_write_config_word(dev, pos + PCI_EXP_RTCTL, cap[i++]);
+-	if (pcie_cap_has_devctl2(dev->pcie_type, flags))
++	if (pcie_cap_has_devctl2(dev->pcie_type, flags)) {
+ 		pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, cap[i++]);
+-	if (pcie_cap_has_lnkctl2(dev->pcie_type, flags))
+ 		pci_write_config_word(dev, pos + PCI_EXP_LNKCTL2, cap[i++]);
+-	if (pcie_cap_has_sltctl2(dev->pcie_type, flags))
+ 		pci_write_config_word(dev, pos + PCI_EXP_SLTCTL2, cap[i++]);
++	}
+ }
+ 
+ 
 
