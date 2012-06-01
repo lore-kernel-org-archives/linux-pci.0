@@ -1,54 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:52639 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555Ab2FLP4U convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 11:56:20 -0400
-Received: by lbbgm6 with SMTP id gm6so483282lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 08:56:19 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 1/4] PCI: make pci_ltr_supported static.
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
+Date: Fri, 01 Jun 2012 15:16:25 -0600
+Message-ID: <20120601211625.20328.37250.stgit@amt.stowe>
+In-Reply-To: <20120601211619.20328.36769.stgit@amt.stowe>
+References: <20120601211619.20328.36769.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <20120612062000.GA6932@8bytes.org>
-References: <20120611152021.25959.71601.stgit@bling.home> <CAErSpo434tDtnSOxB_REG2jFNrZL=aZERWTmmK-cdjqM4z6yWg@mail.gmail.com>
- <20120612062000.GA6932@8bytes.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 Jun 2012 09:55:59 -0600
-Message-ID: <CAErSpo6J61+XhtEeXdE-5Evhs-SJ4=3iEZDAXGuRi9moAU8KhQ@mail.gmail.com>
-Subject: Re: [PATCH v3 0/5] PCI: Prep for VFIO and IOMMU Groups
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	benh@kernel.crashing.org, aik@ozlabs.ru, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
-	dwmw2@infradead.org, david@gibson.dropbear.id.au
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 12, 2012 at 12:20 AM, Joerg Roedel <joro@8bytes.org> wrote:
-> Hi Bjorn,
->
-> On Mon, Jun 11, 2012 at 06:59:25PM -0600, Bjorn Helgaas wrote:
->> On Mon, Jun 11, 2012 at 8:26 AM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > v3:
->> >  - Small change to device specific ACS check to allow quirk to
->> >   support yes/no/pass type functionality. (no change to other
->> >   patches and no trickle down through IOMMU series)
->> >
->> > Bjorn, what's needed to get these in?  Thanks,
->>
->> Sorry for the delay.  I applied these to my "next" branch (headed for
->> 3.6).  I didn't feel comfortable pushing them towards 3.5 since
->> they're not bugfixes, and they haven't been in -next yet.
->
-> Great. Do you applied them directly to your next branch or do you have
-> them in a seperate branch I can pull in to merge the IOMMU Groups
-> patches on-top? The later would be really good :)
+The PCI Express Latency Tolerance Reporting (LTR) feature's
+pci_ltr_supported() routine is currently only used within
+drivers/pci/pci.c so make it static.
 
-Hi Joerg, I have Alex's patches on a separate topic branch.  I folded
-in the pci_get_dev() fix and pushed it to here:
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-topic/alex-vfio-prep
+ drivers/pci/pci.c   |    4 ++--
+ include/linux/pci.h |    1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-This is also included in my "next" branch.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 447e834..64471b1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -39,6 +39,7 @@ EXPORT_SYMBOL(pci_pci_problems);
+ 
+ unsigned int pci_pm_d3_delay;
+ 
++static bool pci_ltr_supported(struct pci_dev *dev);
+ static void pci_pme_list_scan(struct work_struct *work);
+ 
+ static LIST_HEAD(pci_pme_list);
+@@ -2169,7 +2170,7 @@ EXPORT_SYMBOL(pci_disable_obff);
+  * RETURNS:
+  * True if @dev supports latency tolerance reporting, false otherwise.
+  */
+-bool pci_ltr_supported(struct pci_dev *dev)
++static bool pci_ltr_supported(struct pci_dev *dev)
+ {
+ 	int pos;
+ 	u32 cap;
+@@ -2185,7 +2186,6 @@ bool pci_ltr_supported(struct pci_dev *dev)
+ 
+ 	return cap & PCI_EXP_DEVCAP2_LTR;
+ }
+-EXPORT_SYMBOL(pci_ltr_supported);
+ 
+ /**
+  * pci_enable_ltr - enable latency tolerance reporting
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d8c379d..b2bec26 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -875,7 +875,6 @@ enum pci_obff_signal_type {
+ int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type);
+ void pci_disable_obff(struct pci_dev *dev);
+ 
+-bool pci_ltr_supported(struct pci_dev *dev);
+ int pci_enable_ltr(struct pci_dev *dev);
+ void pci_disable_ltr(struct pci_dev *dev);
+ int pci_set_ltr(struct pci_dev *dev, int snoop_lat_ns, int nosnoop_lat_ns);
 
-Bjorn
