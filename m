@@ -1,113 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:22490 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688Ab2FUJs4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:48:56 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v9 04/11] x86/PCI: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
-Date: Thu, 21 Jun 2012 17:36:56 +0800
-Message-ID: <1340271423-4352-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
-References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:19414 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933654Ab2FAWAv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Jun 2012 18:00:51 -0400
+Message-ID: <4FC93B90.1010907@redhat.com>
+Date: Fri, 01 Jun 2012 18:00:48 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Myron Stowe <myron.stowe@redhat.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, xudong.hao@linux.intel.com,
+	yu.zhao@intel.com
+Subject: Re: [PATCH 4/4] PCI: Remove redundant capabilities checking in pci_{save,
+ restore}_pcie_state
+References: <20120601211619.20328.36769.stgit@amt.stowe> <20120601211643.20328.26918.stgit@amt.stowe>
+In-Reply-To: <20120601211643.20328.26918.stgit@amt.stowe>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap(), which will be used
-when supporting PCI root bridge hotplug.
+On 06/01/2012 05:16 PM, Myron Stowe wrote:
+> Unlike PCI Express v1's Capabilities Structure, v2's requires the entire
+> structure to be implemented.  In v2 structures, register fields that are
+> not necessarly implemented, are present but hardwired to 0x0.  These may
+> include: Link Capabilities, Status, and Control; Slot Capabilities,
+> Status, and Control; Root Capabilities, Status, and Control; and all of
+> the '2' (Device, Link, and Slot) Capabilities, Status, and Control
+> registers.
+>
+> This patch removes the redundant capability checks corresponding to the
+> Link 2's and Slot 2's, Capabilities, Status, and Control registers as they
+> will be present if Device Capabilities 2's registers are (which explains
+> why the macros for each of the three are identical).
+>
+> Signed-off-by: Myron Stowe<myron.stowe@redhat.com>
+> ---
+>
+>   drivers/pci/pci.c |   10 ++++------
+>   1 files changed, 4 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 26933ff..f9f8036 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -903,12 +903,11 @@ static int pci_save_pcie_state(struct pci_dev *dev)
+>   		pci_read_config_word(dev, pos + PCI_EXP_SLTCTL,&cap[i++]);
+>   	if (pcie_cap_has_rtctl(dev->pcie_type, flags))
+>   		pci_read_config_word(dev, pos + PCI_EXP_RTCTL,&cap[i++]);
+> -	if (pcie_cap_has_devctl2(dev->pcie_type, flags))
+> +	if (pcie_cap_has_devctl2(dev->pcie_type, flags)) {
+and why not use your new function:
++	pos = pci_pcie_cap2(bridge);
++	if (!pos)
+instead of this devctl2-specific check, so it's obvious it's the whole cap-struct (additional regs)?
+  
+>   		pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2,&cap[i++]);
+> -	if (pcie_cap_has_lnkctl2(dev->pcie_type, flags))
+>   		pci_read_config_word(dev, pos + PCI_EXP_LNKCTL2,&cap[i++]);
+> -	if (pcie_cap_has_sltctl2(dev->pcie_type, flags))
+>   		pci_read_config_word(dev, pos + PCI_EXP_SLTCTL2,&cap[i++]);
+> +	}
+>
+>   	return 0;
+>   }
+> @@ -936,12 +935,11 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
+>   		pci_write_config_word(dev, pos + PCI_EXP_SLTCTL, cap[i++]);
+>   	if (pcie_cap_has_rtctl(dev->pcie_type, flags))
+>   		pci_write_config_word(dev, pos + PCI_EXP_RTCTL, cap[i++]);
+> -	if (pcie_cap_has_devctl2(dev->pcie_type, flags))
+> +	if (pcie_cap_has_devctl2(dev->pcie_type, flags)) {
+ditto.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/include/asm/pci_x86.h |    2 ++
- arch/x86/pci/mmconfig_32.c     |   15 +++++++++++++++
- arch/x86/pci/mmconfig_64.c     |   22 +++++++++++++++++++++-
- 3 files changed, 38 insertions(+), 1 deletions(-)
-
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index b3a5317..df898ce 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -135,6 +135,8 @@ struct pci_mmcfg_region {
- 
- extern int __init pci_mmcfg_arch_init(void);
- extern void __init pci_mmcfg_arch_free(void);
-+extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
-+extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
- extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
- 
- extern struct list_head pci_mmcfg_list;
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index 5dad04a..a22785d 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -141,3 +141,18 @@ int __init pci_mmcfg_arch_init(void)
- void __init pci_mmcfg_arch_free(void)
- {
- }
-+
-+int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
-+{
-+	return 0;
-+}
-+
-+void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
-+{
-+	unsigned long flags;
-+
-+	/* Invalidate the cached mmcfg map entry. */
-+	raw_spin_lock_irqsave(&pci_config_lock, flags);
-+	mmcfg_last_accessed_device = 0;
-+	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
-+}
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index acc48c5..4e05779 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -95,7 +95,7 @@ static const struct pci_raw_ops pci_mmcfg = {
- 	.write =	pci_mmcfg_write,
- };
- 
--static void __iomem * __init mcfg_ioremap(struct pci_mmcfg_region *cfg)
-+static void __iomem * __devinit mcfg_ioremap(struct pci_mmcfg_region *cfg)
- {
- 	void __iomem *addr;
- 	u64 start, size;
-@@ -138,3 +138,23 @@ void __init pci_mmcfg_arch_free(void)
- 		}
- 	}
- }
-+
-+int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
-+{
-+	cfg->virt = mcfg_ioremap(cfg);
-+	if (!cfg->virt) {
-+		printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
-+		       &cfg->res);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
-+{
-+	if (cfg && cfg->virt) {
-+		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
-+		cfg->virt = NULL;
-+	}
-+}
--- 
-1.7.1
-
+>   		pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, cap[i++]);
+> -	if (pcie_cap_has_lnkctl2(dev->pcie_type, flags))
+>   		pci_write_config_word(dev, pos + PCI_EXP_LNKCTL2, cap[i++]);
+> -	if (pcie_cap_has_sltctl2(dev->pcie_type, flags))
+>   		pci_write_config_word(dev, pos + PCI_EXP_SLTCTL2, cap[i++]);
+> +	}
+>   }
+>
+>
+>
 
