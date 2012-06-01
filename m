@@ -1,174 +1,217 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 8/9] PCI: move final fixup quirks from __init to __devinit
+Subject: [PATCH 3/4] PCI: Add pci_pcie_cap2() check for PCIe feature
+	capabilities >= v2
 To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
-	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, linux-kernel@vger.kernel.org
-Date: Thu, 21 Jun 2012 14:25:05 -0600
-Message-ID: <20120621202504.16865.35445.stgit@amt.stowe>
-In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
-References: <20120621202415.16865.6226.stgit@amt.stowe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
+Date: Fri, 01 Jun 2012 15:16:37 -0600
+Message-ID: <20120601211637.20328.108.stgit@amt.stowe>
+In-Reply-To: <20120601211619.20328.36769.stgit@amt.stowe>
+References: <20120601211619.20328.36769.stgit@amt.stowe>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI subsystem's final fixups are executed once during boot, after the
-pci-device is found.  As long as the system does not support hot-plug,
-specifying __init is fine.
+This patch resolves potential issues when accessing PCI Express
+capability structures.  The makeup of Express' capability structure
+varies substantially between v1 and v2:
 
-With hot-plug, either physically based hot-plug events or pseudo hot-plug
-events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
-PCI bus during run time and have it rediscovered which will require the
-call of the fixups again in order for the device to function properly.
+    PCI Express 1.0 and 1.1 base neither requires the endpoint to
+    implement the entire PCIe capability structure nor specifies
+    default values of registers that are not implemented by the
+    device.  Its capability version is 1.
 
-This patch prepares specific quirk(s) for use with hot-plug events.
+    PCIe 1.1 Capability Structure Expansion ECN, PCIe 2.0, 2.1, and
+    3.0 added additional registers to the structure and require all
+    registers to be either implemented or hardwired to 0.  Their PCIe
+    capability version is 2.
+
+Due to the differences in the capability structures, code dealing with
+capability features must be careful not to access the additional
+registers introduced with v2 unless the device is specifically known to
+be a v2 capable device.  Otherwise, attempts to access non-existant
+registers will occur.  This is a subtle issue that is hard to track down
+when it occurs (and it has - see commit 864d296cf94).
+
+To try and help mitigate such occurrances, this patch introduces
+pci_pcie_cap2() which is similar to pci_pcie_cap() but also checks
+that the PCIe capability version is >= 2.  pci_pcie_cap2() should be
+used for qualifying PCIe capability features introduced after v1.
+
+Suggested by Don Dutile.
 
 Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
 
- drivers/pci/quirks.c |   31 ++++++++++++++++---------------
- 1 files changed, 16 insertions(+), 15 deletions(-)
+ drivers/pci/pci.c        |   65 +++++++++++++++++++++++++++++++++++-----------
+ include/linux/pci_regs.h |    7 +++++
+ 2 files changed, 57 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 1a7effa..815c009 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -57,7 +57,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX,PCI_DEVICE_ID_MELLANOX_TAVOR_BRID
- 
- /* Deal with broken BIOS'es that neglect to enable passive release,
-    which can cause problems in combination with the 82441FX/PPro MTRRs */
--static void quirk_passive_release(struct pci_dev *dev)
-+static void __devinit quirk_passive_release(struct pci_dev *dev)
- {
- 	struct pci_dev *d = NULL;
- 	unsigned char dlc;
-@@ -173,7 +173,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 	PCI_DEVICE_ID_INTEL_82439TX, 	quir
-  *	Updated based on further information from the site and also on
-  *	information provided by VIA 
-  */
--static void quirk_vialatency(struct pci_dev *dev)
-+static void __devinit quirk_vialatency(struct pci_dev *dev)
- {
- 	struct pci_dev *p;
- 	u8 busarb;
-@@ -733,7 +733,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_XIO2000A,
-  * TODO: When we have device-specific interrupt routers,
-  * this code will go away from quirks.
-  */
--static void quirk_via_ioapic(struct pci_dev *dev)
-+static void __devinit quirk_via_ioapic(struct pci_dev *dev)
- {
- 	u8 tmp;
- 	
-@@ -757,7 +757,7 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686,	quir
-  * Set this bit to get rid of cycle wastage.
-  * Otherwise uncritical.
-  */
--static void quirk_via_vt8237_bypass_apic_deassert(struct pci_dev *dev)
-+static void __devinit quirk_via_vt8237_bypass_apic_deassert(struct pci_dev *dev)
- {
- 	u8 misc_control2;
- #define BYPASS_APIC_DEASSERT 8
-@@ -939,7 +939,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C597_0,	quirk_vt
-  * do this even if the Linux CardBus driver is not loaded, because
-  * the Linux i82365 driver does not (and should not) handle CardBus.
-  */
--static void quirk_cardbus_legacy(struct pci_dev *dev)
-+static void __devinit quirk_cardbus_legacy(struct pci_dev *dev)
- {
- 	pci_write_config_dword(dev, PCI_CB_LEGACY_MODE_BASE, 0);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ff0beb0..26933ff 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -279,6 +279,38 @@ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap)
  }
-@@ -955,7 +955,7 @@ DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(PCI_ANY_ID, PCI_ANY_ID,
-  * To be fair to AMD, it follows the spec by default, its BIOS people
-  * who turn it off!
-  */
--static void quirk_amd_ordering(struct pci_dev *dev)
-+static void __devinit quirk_amd_ordering(struct pci_dev *dev)
+ 
+ /**
++ * pci_pcie_cap2 - query for devices' PCI_CAP_ID_EXP v2 capability structure
++ * @dev: PCI device to check
++ *
++ * Like pci_pcie_cap() but also checks that the PCIe capability version is
++ * >= 2.  Note that v1 capability structures could be sparse in that not
++ * all register fields were required.  v2 requires the entire structure to
++ * be present size wise, while still allowing for non-implemented registers
++ * to exist but they must be hardwired to 0.
++ *
++ * Due to the differences in the versions of capability structures, one
++ * must be careful not to try and access non-existant registers that may
++ * exist in early versions - v1 - of Express devices.
++ *
++ * Returns the offset of the PCIe capability structure as long as the
++ * capability version is >= 2; otherwise 0 is returned.
++ */
++static int pci_pcie_cap2(struct pci_dev *dev)
++{
++	u16 flags;
++	int pos;
++
++	pos = pci_pcie_cap(dev);
++	if (pos) {
++		pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &flags);
++		if ((flags & PCI_EXP_FLAGS_VERS) < 2)
++			pos = 0;
++	}
++
++	return pos;
++}
++
++/**
+  * pci_find_ext_capability - Find an extended capability
+  * @dev: PCI device to query
+  * @cap: capability code
+@@ -1984,7 +2016,7 @@ void pci_enable_ari(struct pci_dev *dev)
  {
- 	u32 pcic;
- 	pci_read_config_dword(dev, 0x4C, &pcic);
-@@ -1005,7 +1005,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TOSHIBA,	0x605,	quirk_transparent_bridge)
-  * datasheets found at http://www.national.com/analog for info on what
-  * these bits do.  <christer@weinigel.se>
-  */
--static void quirk_mediagx_master(struct pci_dev *dev)
-+static void __devinit quirk_mediagx_master(struct pci_dev *dev)
- {
- 	u8 reg;
- 	pci_read_config_byte(dev, 0x41, &reg);
-@@ -1023,7 +1023,7 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_CYRIX,	PCI_DEVICE_ID_CYRIX_PCI_MASTER, qu
-  *	the BIOS but in the odd case it is not the results are corruption
-  *	hence the presence of a Linux check
-  */
--static void quirk_disable_pxb(struct pci_dev *pdev)
-+static void __devinit quirk_disable_pxb(struct pci_dev *pdev)
- {
- 	u16 config;
- 	
-@@ -1591,7 +1591,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_PXHV,	quirk_pci
-  * Some Intel PCI Express chipsets have trouble with downstream
-  * device power management.
-  */
--static void quirk_intel_pcie_pm(struct pci_dev * dev)
-+static void __devinit quirk_intel_pcie_pm(struct pci_dev *dev)
- {
- 	pci_pm_d3_delay = 120;
- 	dev->no_d1d2 = 1;
-@@ -1626,7 +1626,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260b, quirk_intel_pcie_pm);
-  * that a PCI device's interrupt handler is installed on the boot interrupt
-  * line instead.
-  */
--static void quirk_reroute_to_boot_interrupts_intel(struct pci_dev *dev)
-+static void __devinit
-+quirk_reroute_to_boot_interrupts_intel(struct pci_dev *dev)
- {
- 	if (noioapicquirk || noioapicreroute)
+ 	int pos;
+ 	u32 cap;
+-	u16 flags, ctrl;
++	u16 ctrl;
+ 	struct pci_dev *bridge;
+ 
+ 	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
+@@ -1998,13 +2030,9 @@ void pci_enable_ari(struct pci_dev *dev)
+ 	if (!bridge)
  		return;
-@@ -1664,7 +1665,7 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_80332_1,	quirk
- #define INTEL_6300_IOAPIC_ABAR		0x40
- #define INTEL_6300_DISABLE_BOOT_IRQ	(1<<14)
  
--static void quirk_disable_intel_boot_interrupt(struct pci_dev *dev)
-+static void __devinit quirk_disable_intel_boot_interrupt(struct pci_dev *dev)
- {
- 	u16 pci_config_word;
+-	pos = pci_pcie_cap(bridge);
+-	if (!pos)
+-		return;
+-
+ 	/* ARI is a PCIe v2 feature */
+-	pci_read_config_word(bridge, pos + PCI_EXP_FLAGS, &flags);
+-	if ((flags & PCI_EXP_FLAGS_VERS) < 2)
++	pos = pci_pcie_cap2(bridge);
++	if (!pos)
+ 		return;
  
-@@ -1689,7 +1690,7 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL,   PCI_DEVICE_ID_INTEL_ESB_10, 	qui
- #define BC_HT1000_MAP_IDX		0xC00
- #define BC_HT1000_MAP_DATA		0xC01
+ 	pci_read_config_dword(bridge, pos + PCI_EXP_DEVCAP2, &cap);
+@@ -2019,7 +2047,7 @@ void pci_enable_ari(struct pci_dev *dev)
+ }
  
--static void quirk_disable_broadcom_boot_interrupt(struct pci_dev *dev)
-+static void __devinit quirk_disable_broadcom_boot_interrupt(struct pci_dev *dev)
- {
- 	u32 pci_config_dword;
- 	u8 irq;
-@@ -1727,7 +1728,7 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_SERVERWORKS,   PCI_DEVICE_ID_SERVERWORKS_
- #define AMD_813X_REV_B1			0x12
- #define AMD_813X_REV_B2			0x13
+ /**
+- * pci_enable_ido - enable ID-based ordering on a device
++ * pci_enable_ido - enable ID-based Ordering on a device
+  * @dev: the PCI device
+  * @type: which types of IDO to enable
+  *
+@@ -2032,7 +2060,8 @@ void pci_enable_ido(struct pci_dev *dev, unsigned long type)
+ 	int pos;
+ 	u16 ctrl;
  
--static void quirk_disable_amd_813x_boot_interrupt(struct pci_dev *dev)
-+static void __devinit quirk_disable_amd_813x_boot_interrupt(struct pci_dev *dev)
- {
- 	u32 pci_config_dword;
+-	pos = pci_pcie_cap(dev);
++	/* ID-based Ordering is a PCIe v2 feature */
++	pos = pci_pcie_cap2(dev);
+ 	if (!pos)
+ 		return;
  
-@@ -1751,7 +1752,7 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_8132_BRIDGE,	quirk
+@@ -2055,7 +2084,8 @@ void pci_disable_ido(struct pci_dev *dev, unsigned long type)
+ 	int pos;
+ 	u16 ctrl;
  
- #define AMD_8111_PCI_IRQ_ROUTING	0x56
+-	pos = pci_pcie_cap(dev);
++	/* ID-based Ordering is a PCIe v2 feature */
++	pos = pci_pcie_cap2(dev);
+ 	if (!pos)
+ 		return;
  
--static void quirk_disable_amd_8111_boot_interrupt(struct pci_dev *dev)
-+static void __devinit quirk_disable_amd_8111_boot_interrupt(struct pci_dev *dev)
- {
- 	u16 pci_config_word;
+@@ -2094,7 +2124,8 @@ int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
+ 	u16 ctrl;
+ 	int ret;
  
-@@ -1989,7 +1990,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x1460,		quirk_p64h2_1k_io_fix_iobl
-  * Force it to be linked by setting the corresponding control bit in the
-  * config space.
-  */
--static void quirk_nvidia_ck804_pcie_aer_ext_cap(struct pci_dev *dev)
-+static void __devinit quirk_nvidia_ck804_pcie_aer_ext_cap(struct pci_dev *dev)
- {
- 	uint8_t b;
- 	if (pci_read_config_byte(dev, 0xf41, &b) == 0) {
+-	pos = pci_pcie_cap(dev);
++	/* OBFF is a PCIe v2 feature */
++	pos = pci_pcie_cap2(dev);
+ 	if (!pos)
+ 		return -ENOTSUPP;
+ 
+@@ -2144,7 +2175,8 @@ void pci_disable_obff(struct pci_dev *dev)
+ 	int pos;
+ 	u16 ctrl;
+ 
+-	pos = pci_pcie_cap(dev);
++	/* OBFF is a PCIe v2 feature */
++	pos = pci_pcie_cap2(dev);
+ 	if (!pos)
+ 		return;
+ 
+@@ -2166,7 +2198,8 @@ static bool pci_ltr_supported(struct pci_dev *dev)
+ 	int pos;
+ 	u32 cap;
+ 
+-	pos = pci_pcie_cap(dev);
++	/* LTR is a PCIe v2 feature */
++	pos = pci_pcie_cap2(dev);
+ 	if (!pos)
+ 		return false;
+ 
+@@ -2194,7 +2227,8 @@ int pci_enable_ltr(struct pci_dev *dev)
+ 	if (!pci_ltr_supported(dev))
+ 		return -ENOTSUPP;
+ 
+-	pos = pci_pcie_cap(dev);
++	/* LTR is a PCIe v2 feature */
++	pos = pci_pcie_cap2(dev);
+ 	if (!pos)
+ 		return -ENOTSUPP;
+ 
+@@ -2229,7 +2263,8 @@ void pci_disable_ltr(struct pci_dev *dev)
+ 	if (!pci_ltr_supported(dev))
+ 		return;
+ 
+-	pos = pci_pcie_cap(dev);
++	/* LTR is a PCIe v2 feature */
++	pos = pci_pcie_cap2(dev);
+ 	if (!pos)
+ 		return;
+ 
+diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
+index 4b608f5..bc1b54d 100644
+--- a/include/linux/pci_regs.h
++++ b/include/linux/pci_regs.h
+@@ -507,6 +507,13 @@
+ #define PCI_EXP_RTSTA		32	/* Root Status */
+ #define PCI_EXP_RTSTA_PME	0x10000 /* PME status */
+ #define PCI_EXP_RTSTA_PENDING	0x20000 /* PME pending */
++/*
++ * Note that the following PCI Express 'Capability Structure' registers
++ * were introduced with 'Capability Version' 0x2 (v2).  These registers
++ * do not exist, and thus should not be attempted to be accesses, by
++ * PCI Express v1 devices (see pci_pcie_cap2() for use in qualifying
++ * PCI Express v2 capability related features).
++ */
+ #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
+ #define  PCI_EXP_DEVCAP2_ARI	0x20	/* Alternative Routing-ID */
+ #define  PCI_EXP_DEVCAP2_LTR	0x800	/* Latency tolerance reporting */
 
