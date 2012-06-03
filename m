@@ -1,90 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:53008 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159Ab2F0CW6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 22:22:58 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 27 Jun 2012 07:52:55 +0530
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5R2MrAk10355098
-	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 07:52:53 +0530
-Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5R7q9Sc010253
-	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 17:52:10 +1000
-Date: Wed, 27 Jun 2012 10:22:51 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Ram Pai <linuxram@us.ibm.com>
-Subject: Re: One question about the useage of pci_dev->resource[]
-Message-ID: <20120627022250.GA14772@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120620084515.GA22809@richard>
- <20120626015740.GA8128@richard>
- <CAErSpo4_qy59KS1K+t5rU8P95NNR8fB9x-ufe8VB8deGriOZ9A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAErSpo4_qy59KS1K+t5rU8P95NNR8fB9x-ufe8VB8deGriOZ9A@mail.gmail.com>
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:47041 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754019Ab2FCT0l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jun 2012 15:26:41 -0400
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: linux-pci@vger.kernel.org
+Cc: linux-kbuild@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Marek <mmarek@suse.cz>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Paul Mundt <lethal@linux-sh.org>
+Subject: [PATCH 9/9] sh: move PCI fixup hooks from __init to __devinit
+Date: Sun,  3 Jun 2012 20:48:25 +0200
+Message-Id: <1338749305-22558-10-git-send-email-sebastian@breakpoint.cc>
+In-Reply-To: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 26, 2012 at 06:16:08AM -0600, Bjorn Helgaas wrote:
->On Mon, Jun 25, 2012 at 7:57 PM, Richard Yang
-><weiyang@linux.vnet.ibm.com> wrote:
->> On Wed, Jun 20, 2012 at 04:45:15PM +0800, Richard Yang wrote:
->>>All,
->>>
->>>I want to confirm something for the pci_dev->resource[].
->>>
->>>As in the definition in the pci.h, this resource array is divided into
->>>several parts.
->>>    0-5  for standard PCI resources
->>>    6    for ROM resource
->>>    7-10 for bridge resource( if no iov )
->>>
->>>
->>>1. For P2P bridge, 0-5 is left empty?
->>>2. If so, in code pci_setup_device(), I think it set the wrong resource.
->>>   It call pci_read_bases(dev, 2, PCI_ROM_ADDRESS1), for a p2p bridge.
->>>   And in pci_read_bases(), BAR information is retrieved and set to
->>>   pci_dev->resource[0|1].
->>>3. If pci_setup_device() just set first two resource, the child bus will
->>>   point to empty resource.
->>>   In pci_alloc_child_bus(), child->resource[0-3] will be point to
->>>   bridge->resource[7-10], which is not set in pci_setup_device().
->>>4. Another question is, is there any convention for pci_bus->resource[].
->>>   [0] for io, [1] for mem, [2] for prefetch?
->> All,
->>
->> I go through the code again and find pci_dev->resource[7-10] is used for
->> io/mem base/limit, which is used by the bridge to determine whether it
->> will forward one pci transaction.
->>
->> So pci_dev->[0-1] is used by the bridge's driver?
->
->Per the PCI-to-PCI Bridge spec v1.2, config space for type 1 devices
->(bridges) has two BARs in addition to the I/O, mem, and prefetchable
->mem windows.  These two BARs are optional and can be used for
->device-specific configuration of the bridge itself.  This is unrelated
->to forwarding transactions.  See sec 3.2.5.1.
->
->The bridge consumes the address space described by the windows and
->forwards it to its secondary interface.  It also consumes the address
->space described by those BARs, without forwarding it.  Therefore, we
->have to read the BARs to make sure we don't allocate that space to
->anything else.
->
->There *could* be device-specific bridge drivers that actually do
->something with those BARs, but I'm not aware of any in Linux.
-Thanks for your confirmation. :-)
->
->Bjorn
+The fixups are executed once the pci-device is found which is during
+boot process so __init seems fine as long as the platform does not
+support hotplug.
+However it is possible to remove the PCI bus at run time and have it
+rediscovered again via "echo 1 > /sys/bus/pci/rescan" and this will call
+the fixups again.
 
+Cc: Paul Mundt <lethal@linux-sh.org>
+Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/sh/drivers/pci/fixups-dreamcast.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/sh/drivers/pci/fixups-dreamcast.c b/arch/sh/drivers/pci/fixups-dreamcast.c
+index edeea89..a5fe1b5 100644
+--- a/arch/sh/drivers/pci/fixups-dreamcast.c
++++ b/arch/sh/drivers/pci/fixups-dreamcast.c
+@@ -28,7 +28,7 @@
+ #include <asm/irq.h>
+ #include <mach/pci.h>
+ 
+-static void __init gapspci_fixup_resources(struct pci_dev *dev)
++static void __devinit gapspci_fixup_resources(struct pci_dev *dev)
+ {
+ 	struct pci_channel *p = dev->sysdata;
+ 
 -- 
-Richard Yang
-Help you, Help me
+1.7.10
 
