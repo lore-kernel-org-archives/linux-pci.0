@@ -1,82 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:63046 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757317Ab2FFXSR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 19:18:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <1339023839.25761.764.camel@lyra>
-References: <20120427190033.GA17588@ldl.usa.hp.com>
-	<20120606135009.GB1517@srcf.ucam.org>
-	<1338999463.25761.630.camel@lyra>
-	<20120606162703.GA6779@srcf.ucam.org>
-	<1339003956.25761.667.camel@lyra>
-	<20120606174202.GA8750@srcf.ucam.org>
-	<1339006060.25761.689.camel@lyra>
-	<CAL-B5D3Wda7TV_NBJWEbzJm=0eCs=b-wgGLdJUFRTwP_ewXGGg@mail.gmail.com>
-	<1339023839.25761.764.camel@lyra>
-Date: Wed, 6 Jun 2012 17:18:16 -0600
-Message-ID: <CAL-B5D3_MvP8PG_=4vh9oxgBPbpaoDscw3b5PK5Hr5s0Qk9xrg@mail.gmail.com>
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Khalid Aziz <khalid.aziz@hp.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:47052 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754360Ab2FCT04 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jun 2012 15:26:56 -0400
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: linux-pci@vger.kernel.org
+Cc: linux-kbuild@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Marek <mmarek@suse.cz>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	David Howells <dhowells@redhat.com>
+Subject: [PATCH 6/9] frv: move PCI fixup hooks from __init to __devinit
+Date: Sun,  3 Jun 2012 20:48:22 +0200
+Message-Id: <1338749305-22558-7-git-send-email-sebastian@breakpoint.cc>
+In-Reply-To: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 6, 2012 at 5:03 PM, Khalid Aziz <khalid.aziz@hp.com> wrote:
-> On Wed, 2012-06-06 at 14:16 -0600, Myron Stowe wrote:
->> Hay Khalid,
->>
->> I've been following this discussion but still do not understand what the
->> perceived correct fix is for the situation you were originally trying to
->> circumvent - namely, stopping NIC devices from triggering DMA activity
->> upon receipt of an incoming packet.
->>
->> From the discussion it sounds like a driver, upon shutdown, can end
->> all active I/O
->> clearing the I/O queue, and also (?) shut down its DMA engine, and may
->> also go as far as disabling the Bus Master bit.
->>
->> What was occurring in the original issue - was the driver in question not
->> shutting down its DMA engine for some, possibly valid, reason?
->>
->> Thanks,
->>  Myron
->
-> Hi Myron,
->
-> The last driver issue with kexec was reported on kexec mailing list in
-> July of last year and that was with qla driver. From what H Peter Anvin
-> described, the driver left DMA engine running.
->
-> For the issue I found on an ia64 platform, it was so many years ago that
-> you are now taxing my old and decrepit memory :)
+The fixups are executed once the pci-device is found which is during
+boot process so __init seems fine as long as the platform does not
+support hotplug.
+However it is possible to remove the PCI bus at run time and have it
+rediscovered again via "echo 1 > /sys/bus/pci/rescan" and this will call
+the fixups again.
 
-Yeah, if it was more than a couple of weeks ago then I'm likely to have
-forgotten myself.
+Cc: David Howells <dhowells@redhat.com>
+Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/frv/mb93090-mb00/pci-vdk.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-If you can find it great but don't spend too much time digging.  I just wanted
-some validation of my understanding -
-  o  That drivers must consider both "active I/O" and "DMA" (when
-shutting down),
-  o  That the Bus Master disablement was trying to compensate for a driver not
-quiescing "DMA" as it probably should have (I wasn't sure if these were separate
-capabilities and/or if there was possibly a valid reason for a driver
-leaving "DMA"
-in an enabled state upon shutdown - i.e. Wake on LAN or something similar).
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index 6b0b82f..d04ed14 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -268,7 +268,7 @@ static void __init pci_fixup_umc_ide(struct pci_dev *d)
+ 		d->resource[i].flags |= PCI_BASE_ADDRESS_SPACE_IO;
+ }
+ 
+-static void __init pci_fixup_ide_bases(struct pci_dev *d)
++static void __devinit pci_fixup_ide_bases(struct pci_dev *d)
+ {
+ 	int i;
+ 
+@@ -287,7 +287,7 @@ static void __init pci_fixup_ide_bases(struct pci_dev *d)
+ 	}
+ }
+ 
+-static void __init pci_fixup_ide_trash(struct pci_dev *d)
++static void __devinit pci_fixup_ide_trash(struct pci_dev *d)
+ {
+ 	int i;
+ 
+-- 
+1.7.10
 
-Myron
-
-> I am digging through
-> old internal bug reports and will let you know once I find that original
-> bug report.
->
-> ====================================================================
-> Khalid Aziz                                         Unix Systems Lab
-> (970)898-9214                                        Hewlett-Packard
-> khalid.aziz@hp.com                                  Fort Collins, CO
->
