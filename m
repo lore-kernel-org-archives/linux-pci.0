@@ -1,59 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:46544 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751257Ab2F2Gsr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jun 2012 02:48:47 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Fri, 29 Jun 2012 02:48:46 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5T6ltXa2097500
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:47:55 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5T6ls50006777
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:47:55 -0400
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
-Cc: bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
-	linuxram@us.ibm.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH V5 0/7] minimal alignment for p2p bars
-Date: Fri, 29 Jun 2012 14:47:43 +0800
-Message-Id: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:47048 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754217Ab2FCT0t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jun 2012 15:26:49 -0400
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: linux-pci@vger.kernel.org
+Cc: linux-kbuild@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Marek <mmarek@suse.cz>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: [PATCH 1/9] scripts/modpost: check for bad refernces in .pci.fixups area
+Date: Sun,  3 Jun 2012 20:48:17 +0200
+Message-Id: <1338749305-22558-2-git-send-email-sebastian@breakpoint.cc>
+In-Reply-To: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v1 -> v2:
-	* Shorten the varaible names so that they looks more short.
-	* Changelog adjustment so that they looks more meaningful.
+Functions used for PCI fixups (like DECLARE_PCI_FIXUP_HEADER) are often
+marked __init. This is okay as long as nobody is using PCI hotplug.
+However if one does execute
+| echo 1 > /sys/bus/pci/rescan
 
-v2 -> v3:
-	* Rebase to 3.5.RC4
+and we hit a module which is marked __init istead of __devinit then we
+go boom because the code is removed after the kernel booted. This patch
+help to see those section miss-matches.
 
-v3 -> v4:
-	* Merge Yinghai's patches.
+Acked-By: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Marek <mmarek@suse.cz>
+Cc: linux-kbuild@vger.kernel.org
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ scripts/mod/modpost.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-v3 -> v4:
-	* Split patch for easy review.
-	* Add function to retrieve the minimal alignment of p2p bridge. 
-
-Lu Yinghai(3):
-  pci: change variable name for find_pci_host_bridge
-  pci: argument pci_bus for find_pci_host_bridge
-  pci: fiddle with conversion of pci and CPU address
-
-Gavin Shan(4)
-  pci: make find_pci_host_bridge global
-  pci: minimal alignment for bars of P2P bridges
-  pci: function to retrieve alignment of p2p bars
-  pci: resource assignment based on p2p alignment
-
- drivers/pci/host-bridge.c |   59 ++++++++++++++++++++++++++++++++++++---------
- drivers/pci/probe.c       |    5 ++++
- drivers/pci/setup-bus.c   |   22 +++++++++++------
- include/linux/pci.h       |   15 +++++++++++-
- 4 files changed, 81 insertions(+), 20 deletions(-)
-
-Thanks,
-Gavin
+diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
+index 0f84bb3..68e9f5e 100644
+--- a/scripts/mod/modpost.c
++++ b/scripts/mod/modpost.c
+@@ -865,6 +865,11 @@ static void check_section(const char *modname, struct elf_info *elf,
+ #define ALL_EXIT_TEXT_SECTIONS \
+ 	".exit.text$", ".devexit.text$", ".cpuexit.text$", ".memexit.text$"
+ 
++#define ALL_PCI_INIT_SECTIONS	\
++	".pci_fixup_early$", ".pci_fixup_header$", ".pci_fixup_final$", \
++	".pci_fixup_enable$", ".pci_fixup_resume$", \
++	".pci_fixup_resume_early$", ".pci_fixup_suspend$"
++
+ #define ALL_XXXINIT_SECTIONS DEV_INIT_SECTIONS, CPU_INIT_SECTIONS, \
+ 	MEM_INIT_SECTIONS
+ #define ALL_XXXEXIT_SECTIONS DEV_EXIT_SECTIONS, CPU_EXIT_SECTIONS, \
+@@ -1027,6 +1032,12 @@ const struct sectioncheck sectioncheck[] = {
+ 	.mismatch = ANY_EXIT_TO_ANY_INIT,
+ 	.symbol_white_list = { DEFAULT_SYMBOL_WHITE_LIST, NULL },
+ },
++{
++	.fromsec = { ALL_PCI_INIT_SECTIONS, NULL },
++	.tosec   = { INIT_SECTIONS, NULL },
++	.mismatch = ANY_INIT_TO_ANY_EXIT,
++	.symbol_white_list = { NULL },
++},
+ /* Do not export init/exit functions or data */
+ {
+ 	.fromsec = { "__ksymtab*", NULL },
+-- 
+1.7.10
 
