@@ -1,291 +1,256 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:50461 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761699Ab2FVIkS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 04:40:18 -0400
-Date: Thu, 21 Jun 2012 08:47:22 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Mitch Bradley <wmb@firmworks.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-Message-ID: <20120621064722.GA1122@avionic-0098.mockup.avionic-design.de>
-References: <4FD849CF.4030009@firmworks.com>
- <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
- <4FD85127.8050301@firmworks.com>
- <20120614091905.GA9081@avionic-0098.mockup.avionic-design.de>
- <4FDA2DDA.1030704@wwwdotorg.org>
- <20120614192903.GA2212@avionic-0098.mockup.avionic-design.de>
- <4FDA40A0.4030206@wwwdotorg.org>
- <20120615061236.GA4081@avionic-0098.mockup.avionic-design.de>
- <20120619133001.GB24138@avionic-0098.mockup.avionic-design.de>
- <4FE0EFBB.6090206@firmworks.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8t9RHnE3ZwKMSgU+"
-In-Reply-To: <4FE0EFBB.6090206@firmworks.com>
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:47053 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754360Ab2FCT05 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jun 2012 15:26:57 -0400
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: linux-pci@vger.kernel.org
+Cc: linux-kbuild@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Marek <mmarek@suse.cz>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ralf Baechle <ralf@linux-mips.org>
+Subject: [PATCH 7/9] mips: move PCI fixup hooks from __init to __devinit
+Date: Sun,  3 Jun 2012 20:48:23 +0200
+Message-Id: <1338749305-22558-8-git-send-email-sebastian@breakpoint.cc>
+In-Reply-To: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The fixups are executed once the pci-device is found which is during
+boot process so __init seems fine as long as the platform does not
+support hotplug.
+However it is possible to remove the PCI bus at run time and have it
+rediscovered again via "echo 1 > /sys/bus/pci/rescan" and this will call
+the fixups again.
 
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/mips/mti-malta/malta-pci.c |    2 +-
+ arch/mips/pci/fixup-fuloong2e.c |   12 ++++++------
+ arch/mips/pci/fixup-lemote2f.c  |   12 ++++++------
+ arch/mips/pci/fixup-malta.c     |    4 ++--
+ arch/mips/pci/fixup-sb1250.c    |    6 +++---
+ arch/mips/pci/ops-tx4927.c      |    2 +-
+ arch/mips/pci/pci-ip27.c        |    2 +-
+ arch/mips/txx9/generic/pci.c    |    2 +-
+ 8 files changed, 21 insertions(+), 21 deletions(-)
 
-On Tue, Jun 19, 2012 at 11:31:39AM -1000, Mitch Bradley wrote:
-> On 6/19/2012 3:30 AM, Thierry Reding wrote:
-> >On Fri, Jun 15, 2012 at 08:12:36AM +0200, Thierry Reding wrote:
-> >>On Thu, Jun 14, 2012 at 01:50:56PM -0600, Stephen Warren wrote:
-> >>>On 06/14/2012 01:29 PM, Thierry Reding wrote:
-> >>>>On Thu, Jun 14, 2012 at 12:30:50PM -0600, Stephen Warren wrote:
-> >>>>>On 06/14/2012 03:19 AM, Thierry Reding wrote:
-> >>>...
-> >>>>>>#address-cells =3D <1>; #size-cells =3D <1>;
-> >>>>>>
-> >>>>>>pci@80000000 {
-> >>>>>
-> >>>>>I'm still not convinced that using the address of the port's
-> >>>>>registers is the correct way to represent each port. The port
-> >>>>>index seems much more useful.
-> >>>>>
-> >>>>>The main reason here is that there are a lot of registers that
-> >>>>>contain fields for each port - far more than the combination of
-> >>>>>this node's reg and ctrl-offset (which I assume is an address
-> >>>>>offset for just one example of this issue) properties can
-> >>>>>describe. The bit position and bit stride of these fields isn't
-> >>>>>necessarily the same in each register. Do we want a property like
-> >>>>>ctrl-offset for every single type of field in every single shared
-> >>>>>register that describes the location of the relevant data, or
-> >>>>>just a single "port ID" bit that can be applied to anything?
-> >>>>>
-> >>>>>(Perhaps this isn't so obvious looking at the TRM since it
-> >>>>>doesn't document all registers, and I'm also looking at the
-> >>>>>Tegra30 documentation too, which might be more exposed to this -
-> >>>>>I haven't correlated all the documentation sources to be sure
-> >>>>>though)
-> >>>>
-> >>>>I agree that maybe adding properties for each bit position or
-> >>>>register offset may not work out too well. But I think it still
-> >>>>makes sense to use the base address of the port's registers (see
-> >>>>below). We could of course add some code to determine the index
-> >>>>from the base address at initialization time and reuse the index
-> >>>>where appropriate.
-> >>>
-> >>>To me, working back from address to ID then using the ID to calculate
-> >>>some other addresses seems far more icky than just calculating all the
-> >>>addresses based off of one ID. But, I suppose this doesn't make a huge
-> >>>practical difference.
-> >>
-> >>This really depends on the device vs. no device decision below. If we c=
-an
-> >>make it work without needing an extra device for it, then using the ind=
-ex
-> >>is certainly better. However, if we instantiate devices from the DT, th=
-en
-> >>we have the address anyway and adding the index as a property would be
-> >>redundant and error prone (what happens if somebody sets the index of t=
-he
-> >>port at address 0x80000000 to 2?).
-> >
-> >An additional problem with this is that we'd have to add the following
-> >to the pcie-controller node:
-> >
-> >	#address-cells =3D <1>;
-> >	#size-cells =3D <0>;
-> >
-> >This will conflict with the "ranges" property, because suddenly we can
-> >no longer map the regions properly. Maybe Mitch can comment on whether
-> >this is possible or not?
-> >
-> >To make it clearer what I'm talking about, here's the DT snippet again
-> >(with the compatible property removed from the pci@ nodes because they
-> >are no longer probed by a driver, the "simple-bus" removed from the
-> >pcie-controller node's compatible property removed and its #address-
-> >and #size-cells properties adjusted as described above).
-> >
-> >	pcie-controller {
-> >		compatible =3D "nvidia,tegra20-pcie";
-> >		reg =3D <0x80003000 0x00000800   /* PADS registers */
-> >		       0x80003800 0x00000200   /* AFI registers */
-> >		       0x80004000 0x00100000   /* configuration space */
-> >		       0x80104000 0x00100000>; /* extended configuration space */
-> >		interrupts =3D <0 98 0x04   /* controller interrupt */
-> >			      0 99 0x04>; /* MSI interrupt */
-> >		status =3D "disabled";
-> >
-> >		ranges =3D <0x80000000 0x80000000 0x00002000   /* 2 root ports */
-> >			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
-> >			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
-> >			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
-> >
-> >		#address-cells =3D <1>;
-> >		#size-cells =3D <0>;
-> >
-> >		pci@0 {
-> >			reg =3D <2>;
-> >			status =3D "disabled";
-> >
-> >			#address-cells =3D <3>;
-> >			#size-cells =3D <2>;
-> >
-> >			ranges =3D <0x81000000 0 0 0x80400000 0 0x00008000   /* I/O */
-> >				  0x82000000 0 0 0x90000000 0 0x08000000   /* non-prefetchable memor=
-y */
-> >				  0xc2000000 0 0 0xa0000000 0 0x08000000>; /* prefetchable memory */
-> >
-> >			nvidia,ctrl-offset =3D <0x110>;
-> >			nvidia,num-lanes =3D <2>;
-> >		};
-> >
-> >		pci@1 {
-> >			reg =3D <1>;
-> >			status =3D "disabled";
-> >
-> >			#address-cells =3D <3>;
-> >			#size-cells =3D <2>;
-> >
-> >			ranges =3D <0x81000000 0 0 0x80408000 0 0x00008000   /* I/O */
-> >				  0x82000000 0 0 0x98000000 0 0x08000000   /* non-prefetchable memor=
-y */
-> >				  0xc2000000 0 0 0xa8000000 0 0x08000000>; /* prefetchable memory */
-> >
-> >			nvidia,ctrl-offset =3D <0x118>;
-> >			nvidia,num-lanes =3D <2>;
-> >		};
-> >	};
-> >
-> >AIUI none of the ranges properties are valid anymore, because the bus
-> >represented by pcie-controller no longer reflects the truth, namely that
-> >it translates the CPU address space to the PCI address space.
-> >
->=20
-> I think you can use a small-integer port number as an address by
-> defining the intermediate address space properly, and using
-> appropriate ranges above and below.  Here's a swag at how that would
-> look.
->=20
-> I present three versions, using different choices for the
-> intermediate address space encoding.  The intermediate address space
-> may seem somewhat artificial, in that it decouples the "linear pass
-> through of ranges" between the lower PCI address space and the upper
-> CPU address space.  But in another sense, it accurately reflects
-> that fact that the bus bridge "slices and dices" that linear address
-> space into non-contiguous pieces.
->=20
-> Note that I'm also fixing a problem that I neglected to mention
-> earlier - namely the fact that config space is part of the child PCI
-> address space so it must be passed through.
+diff --git a/arch/mips/mti-malta/malta-pci.c b/arch/mips/mti-malta/malta-pci.c
+index bf80921..b663402 100644
+--- a/arch/mips/mti-malta/malta-pci.c
++++ b/arch/mips/mti-malta/malta-pci.c
+@@ -253,7 +253,7 @@ void __init mips_pcibios_init(void)
+ }
+ 
+ /* Enable PCI 2.1 compatibility in PIIX4 */
+-static void __init quirk_dlcsetup(struct pci_dev *dev)
++static void __devinit quirk_dlcsetup(struct pci_dev *dev)
+ {
+ 	u8 odlc, ndlc;
+ 	(void) pci_read_config_byte(dev, 0x82, &odlc);
+diff --git a/arch/mips/pci/fixup-fuloong2e.c b/arch/mips/pci/fixup-fuloong2e.c
+index d5d4c01..0857ab8 100644
+--- a/arch/mips/pci/fixup-fuloong2e.c
++++ b/arch/mips/pci/fixup-fuloong2e.c
+@@ -48,7 +48,7 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-static void __init loongson2e_nec_fixup(struct pci_dev *pdev)
++static void __devinit loongson2e_nec_fixup(struct pci_dev *pdev)
+ {
+ 	unsigned int val;
+ 
+@@ -60,7 +60,7 @@ static void __init loongson2e_nec_fixup(struct pci_dev *pdev)
+ 	pci_write_config_dword(pdev, 0xe4, 1 << 5);
+ }
+ 
+-static void __init loongson2e_686b_func0_fixup(struct pci_dev *pdev)
++static void __devinit loongson2e_686b_func0_fixup(struct pci_dev *pdev)
+ {
+ 	unsigned char c;
+ 
+@@ -135,7 +135,7 @@ static void __init loongson2e_686b_func0_fixup(struct pci_dev *pdev)
+ 	printk(KERN_INFO"via686b fix: ISA bridge done\n");
+ }
+ 
+-static void __init loongson2e_686b_func1_fixup(struct pci_dev *pdev)
++static void __devinit loongson2e_686b_func1_fixup(struct pci_dev *pdev)
+ {
+ 	printk(KERN_INFO"via686b fix: IDE\n");
+ 
+@@ -168,19 +168,19 @@ static void __init loongson2e_686b_func1_fixup(struct pci_dev *pdev)
+ 	printk(KERN_INFO"via686b fix: IDE done\n");
+ }
+ 
+-static void __init loongson2e_686b_func2_fixup(struct pci_dev *pdev)
++static void __devinit loongson2e_686b_func2_fixup(struct pci_dev *pdev)
+ {
+ 	/* irq routing */
+ 	pci_write_config_byte(pdev, PCI_INTERRUPT_LINE, 10);
+ }
+ 
+-static void __init loongson2e_686b_func3_fixup(struct pci_dev *pdev)
++static void __devinit loongson2e_686b_func3_fixup(struct pci_dev *pdev)
+ {
+ 	/* irq routing */
+ 	pci_write_config_byte(pdev, PCI_INTERRUPT_LINE, 11);
+ }
+ 
+-static void __init loongson2e_686b_func5_fixup(struct pci_dev *pdev)
++static void __devinit loongson2e_686b_func5_fixup(struct pci_dev *pdev)
+ {
+ 	unsigned int val;
+ 	unsigned char c;
+diff --git a/arch/mips/pci/fixup-lemote2f.c b/arch/mips/pci/fixup-lemote2f.c
+index 4b9768d..a7b917dcf 100644
+--- a/arch/mips/pci/fixup-lemote2f.c
++++ b/arch/mips/pci/fixup-lemote2f.c
+@@ -96,21 +96,21 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
+ }
+ 
+ /* CS5536 SPEC. fixup */
+-static void __init loongson_cs5536_isa_fixup(struct pci_dev *pdev)
++static void __devinit loongson_cs5536_isa_fixup(struct pci_dev *pdev)
+ {
+ 	/* the uart1 and uart2 interrupt in PIC is enabled as default */
+ 	pci_write_config_dword(pdev, PCI_UART1_INT_REG, 1);
+ 	pci_write_config_dword(pdev, PCI_UART2_INT_REG, 1);
+ }
+ 
+-static void __init loongson_cs5536_ide_fixup(struct pci_dev *pdev)
++static void __devinit loongson_cs5536_ide_fixup(struct pci_dev *pdev)
+ {
+ 	/* setting the mutex pin as IDE function */
+ 	pci_write_config_dword(pdev, PCI_IDE_CFG_REG,
+ 			       CS5536_IDE_FLASH_SIGNATURE);
+ }
+ 
+-static void __init loongson_cs5536_acc_fixup(struct pci_dev *pdev)
++static void __devinit loongson_cs5536_acc_fixup(struct pci_dev *pdev)
+ {
+ 	/* enable the AUDIO interrupt in PIC  */
+ 	pci_write_config_dword(pdev, PCI_ACC_INT_REG, 1);
+@@ -118,14 +118,14 @@ static void __init loongson_cs5536_acc_fixup(struct pci_dev *pdev)
+ 	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0xc0);
+ }
+ 
+-static void __init loongson_cs5536_ohci_fixup(struct pci_dev *pdev)
++static void __devinit loongson_cs5536_ohci_fixup(struct pci_dev *pdev)
+ {
+ 	/* enable the OHCI interrupt in PIC */
+ 	/* THE OHCI, EHCI, UDC, OTG are shared with interrupt in PIC */
+ 	pci_write_config_dword(pdev, PCI_OHCI_INT_REG, 1);
+ }
+ 
+-static void __init loongson_cs5536_ehci_fixup(struct pci_dev *pdev)
++static void __devinit loongson_cs5536_ehci_fixup(struct pci_dev *pdev)
+ {
+ 	u32 hi, lo;
+ 
+@@ -137,7 +137,7 @@ static void __init loongson_cs5536_ehci_fixup(struct pci_dev *pdev)
+ 	pci_write_config_dword(pdev, PCI_EHCI_FLADJ_REG, 0x2000);
+ }
+ 
+-static void __init loongson_nec_fixup(struct pci_dev *pdev)
++static void __devinit loongson_nec_fixup(struct pci_dev *pdev)
+ {
+ 	unsigned int val;
+ 
+diff --git a/arch/mips/pci/fixup-malta.c b/arch/mips/pci/fixup-malta.c
+index 0f48498..59cfbc8 100644
+--- a/arch/mips/pci/fixup-malta.c
++++ b/arch/mips/pci/fixup-malta.c
+@@ -49,7 +49,7 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-static void __init malta_piix_func0_fixup(struct pci_dev *pdev)
++static void __devinit malta_piix_func0_fixup(struct pci_dev *pdev)
+ {
+ 	unsigned char reg_val;
+ 	static int piixirqmap[16] __initdata = {  /* PIIX PIRQC[A:D] irq mappings */
+@@ -83,7 +83,7 @@ static void __init malta_piix_func0_fixup(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371AB_0,
+ 	 malta_piix_func0_fixup);
+ 
+-static void __init malta_piix_func1_fixup(struct pci_dev *pdev)
++static void __devinit malta_piix_func1_fixup(struct pci_dev *pdev)
+ {
+ 	unsigned char reg_val;
+ 
+diff --git a/arch/mips/pci/fixup-sb1250.c b/arch/mips/pci/fixup-sb1250.c
+index f0bb914..d02900a 100644
+--- a/arch/mips/pci/fixup-sb1250.c
++++ b/arch/mips/pci/fixup-sb1250.c
+@@ -15,7 +15,7 @@
+  * Set the BCM1250, etc. PCI host bridge's TRDY timeout
+  * to the finite max.
+  */
+-static void __init quirk_sb1250_pci(struct pci_dev *dev)
++static void __devinit quirk_sb1250_pci(struct pci_dev *dev)
+ {
+ 	pci_write_config_byte(dev, 0x40, 0xff);
+ }
+@@ -25,7 +25,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIBYTE, PCI_DEVICE_ID_BCM1250_PCI,
+ /*
+  * The BCM1250, etc. PCI/HT bridge reports as a host bridge.
+  */
+-static void __init quirk_sb1250_ht(struct pci_dev *dev)
++static void __devinit quirk_sb1250_ht(struct pci_dev *dev)
+ {
+ 	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
+ }
+@@ -35,7 +35,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIBYTE, PCI_DEVICE_ID_BCM1250_HT,
+ /*
+  * Set the SP1011 HT/PCI bridge's TRDY timeout to the finite max.
+  */
+-static void __init quirk_sp1011(struct pci_dev *dev)
++static void __devinit quirk_sp1011(struct pci_dev *dev)
+ {
+ 	pci_write_config_byte(dev, 0x64, 0xff);
+ }
+diff --git a/arch/mips/pci/ops-tx4927.c b/arch/mips/pci/ops-tx4927.c
+index a1e7e6d..bc13e29 100644
+--- a/arch/mips/pci/ops-tx4927.c
++++ b/arch/mips/pci/ops-tx4927.c
+@@ -495,7 +495,7 @@ irqreturn_t tx4927_pcierr_interrupt(int irq, void *dev_id)
+ }
+ 
+ #ifdef CONFIG_TOSHIBA_FPCIB0
+-static void __init tx4927_quirk_slc90e66_bridge(struct pci_dev *dev)
++static void __devinit tx4927_quirk_slc90e66_bridge(struct pci_dev *dev)
+ {
+ 	struct tx4927_pcic_reg __iomem *pcicptr = pci_bus_to_pcicptr(dev->bus);
+ 
+diff --git a/arch/mips/pci/pci-ip27.c b/arch/mips/pci/pci-ip27.c
+index 0fbe4c0..fdc2444 100644
+--- a/arch/mips/pci/pci-ip27.c
++++ b/arch/mips/pci/pci-ip27.c
+@@ -212,7 +212,7 @@ static inline void pci_enable_swapping(struct pci_dev *dev)
+ 	bridge->b_widget.w_tflush;	/* Flush */
+ }
+ 
+-static void __init pci_fixup_ioc3(struct pci_dev *d)
++static void __devinit pci_fixup_ioc3(struct pci_dev *d)
+ {
+ 	pci_disable_swapping(d);
+ }
+diff --git a/arch/mips/txx9/generic/pci.c b/arch/mips/txx9/generic/pci.c
+index 682efb0..64eb71b 100644
+--- a/arch/mips/txx9/generic/pci.c
++++ b/arch/mips/txx9/generic/pci.c
+@@ -269,7 +269,7 @@ txx9_i8259_irq_setup(int irq)
+ 	return err;
+ }
+ 
+-static void __init quirk_slc90e66_bridge(struct pci_dev *dev)
++static void __devinit quirk_slc90e66_bridge(struct pci_dev *dev)
+ {
+ 	int irq;	/* PCI/ISA Bridge interrupt */
+ 	u8 reg_64;
+-- 
+1.7.10
 
-This doesn't quite match how the Tegra PCIe controller works. Basically,
-every access to a device's (extended) configuration space goes through a
-single region of memory-mapped registers, independent of which port is
-the parent of the device.
-
-Is it okay to pass both configuration spaces via the ranges property but
-still list them in the reg property of the controller?
-
-> Version A - 3 address cells:  In this version, the intermediate
-> address space has 3 cells:  port#, address type, offset.  Address
-> type is
->   0 : root port
->   1 : config space
->   2 : extended config space
->   3 : I/O
->   4 : non-prefetchable memory
->   5 : prefetchable memory.
->=20
-> The third cell "offset" is necessary so that the size field has a
-> number space that can include it.
->=20
-> 	pcie-controller {
-> 		compatible =3D "nvidia,tegra20-pcie";
-> 		reg =3D <0x80003000 0x00000800   /* PADS registers */
-> 		       0x80003800 0x00000200>; /* extended configuration space */
-> 		interrupts =3D <0 98 0x04   /* controller interrupt */
-> 			      0 99 0x04>; /* MSI interrupt */
-> 		status =3D "disabled";
->=20
-> 		ranges =3D <0 0 0  0x80000000 0x00001000   /* Root port 0 */
-> 			  0 1 0  0x80004000 0x00080000   /* Port 0 config space */
-> 			  0 2 0  0x80104000 0x00080000   /* Port 0 ext config space *
-> 			  0 3 0  0x80400000 0x00008000   /* Port 0 downstream I/O */
-> 			  0 4 0  0x90000000 0x08000000   /* Port 0 non-prefetchable memory */
-> 			  0 5 0  0xa0000000 0x08000000   /* Port 0 prefetchable memory */
->=20
-> 			  1 0 0  0x80001000 0x00001000   /* Root port 1 */
-> 			  1 1 0  0x80004000 0x00080000   /* Port 1 config space */
-> 			  1 2 0  0x80184000 0x00080000   /* Port 1 ext config space */
-> 			  1 3 0  0x80408000 0x00010000   /* Port 1 downstream I/O */
-> 			  1 4 0  0x98000000 0x08000000   /* Port 1 non-prefetchable memory */
-> 			  1 5 0  0xa0000000 0x08000000>; /* Port 1 prefetchable memory */
->=20
-> 		#address-cells =3D <3>;
-> 		#size-cells =3D <1>;
->=20
-> 		pci@0 {
-> 			reg =3D <0 0 0 0x1000>;
-> 			status =3D "disabled";
->=20
-> 			#address-cells =3D <3>;
-> 			#size-cells =3D <2>;
->=20
-> 			ranges =3D <0x80000000 0 0  0 1 0  0 0x00080000   /* config */
-> 				  0x90000000 0 0  0 2 0  0 0x00080000   /* extended config */
-> 				  0x81000000 0 0  0 3 0  0 0x00008000   /* I/O */
-> 				  0x82000000 0 0  0 4 0  0 0x08000000   /* non-prefetchable memory */
-> 				  0xc2000000 0 0  0 5 0  0 0x08000000>; /* prefetchable memory */
->=20
-> 			nvidia,ctrl-offset =3D <0x110>;
-> 			nvidia,num-lanes =3D <2>;
-> 		};
->=20
->=20
-> 		pci@1 {
-> 			reg =3D <1 0 0 0x1000>;
-> 			status =3D "disabled";
->=20
-> 			#address-cells =3D <3>;
-> 			#size-cells =3D <2>;
->=20
-> 			ranges =3D <0x80000000 0 0  1 1 0  0 0x00080000   /* config */
-> 				  0x90000000 0 0  1 2 0  0 0x00080000   /* extended config */
-> 				  0x81000000 0 0  1 3 0  0 0x00008000   /* I/O */
-> 				  0x82000000 0 0  1 4 0  0 0x08000000   /* non-prefetchable memory */
-> 				  0xc2000000 0 0  1 5 0  0 0x08000000>; /* prefetchable memory */
->=20
-> 			nvidia,ctrl-offset =3D <0x118>;
-> 			nvidia,num-lanes =3D <2>;
-> 		};
-
-Everybody seems to be happy with this approach, so I'll give it a shot.
-There is one thing I'm still unsure about, though. What if somebody uses
-the above scheme and maps the registers to the wrong port. The same goes
-for the nvidia,ctrl-offset property. It needs to match the register
-offset because they are directly related. I suppose we could leave that
-property away and look up the register via the port index (which, as
-Stephen already said, we'll have to do in other places anyway, unless we
-list all bit positions in the DT).
-
-Can we safely ignore such issues and assume the device tree to always be
-right? Should we just not care if somebody uses it wrongly?
-
-Thierry
-
---8t9RHnE3ZwKMSgU+
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/iw3oACgkQZ+BJyKLjJp+oqACgokmj4bDFavnlgFsWF7zgH75q
-JVMAnREOTTQ1em33LhIZGWWUXM0f5GRH
-=Ojn1
------END PGP SIGNATURE-----
-
---8t9RHnE3ZwKMSgU+--
