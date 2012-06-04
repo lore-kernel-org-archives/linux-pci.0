@@ -1,87 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ra.se.axis.com ([195.60.68.13]:54793 "EHLO ra.se.axis.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754357Ab2FTMYp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jun 2012 08:24:45 -0400
-Date: Wed, 20 Jun 2012 14:17:40 +0200
-From: Jesper Nilsson <jesper.nilsson@axis.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mikael Starvik <starvik@axis.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-cris-kernel <linux-cris-kernel@axis.com>
-Subject: Re: [PATCH] cris/PCI: remove pcibios_assign_resources()
-Message-ID: <20120620121739.GR25226@axis.com>
-References: <20120618181853.6254.2635.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120618181853.6254.2635.stgit@bhelgaas.mtv.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQXi23-mY6p2Dr1EJmukhTSPxvBGtjvQ8wyJYPDS+6o5ZA@mail.gmail.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+ <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
+ <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+ <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+ <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+ <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
+ <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
+ <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
+ <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
+ <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
+ <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
+ <4FC51D79.6010804@zytor.com> <CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
+ <4FC536A5.6020600@zytor.com> <CAE9FiQXi23-mY6p2Dr1EJmukhTSPxvBGtjvQ8wyJYPDS+6o5ZA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sun, 3 Jun 2012 18:05:46 -0700
+Message-ID: <CAErSpo67h_mdZtoEn-W_OOXZ8m7gs3g6Q25kte285ZX=2FKf+A@mail.gmail.com>
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	David Miller <davem@davemloft.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 18, 2012 at 08:18:53PM +0200, Bjorn Helgaas wrote:
-> There's no caller of pcibios_assign_resources() in the tree.  It is
-> exported, so an out-of-tree module *could* call it, but no other arch
-> exports pcibios_assign_resources(), so it would have to be a CRIS-specific
-> module.  I doubt such a caller exists.
+On Fri, Jun 1, 2012 at 4:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, May 29, 2012 at 1:50 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+>>
+>> The bus-side address space should not be more than 32 bits no matter
+>> what.  As Bjorn indicates, you seem to be mixing up bus and cpu
+>> addresses all over the place.
+>
+> please check update patches that is using converted pci bus address
+> for boundary checking.
 
-There was such a caller, but it was never used and has rotted completely.
-I'll take this into the CRIS-tree, thanks!
+What problem does this fix?  There's significant risk that this
+allocation change  will make us trip over something, so it must fix
+something to make it worth considering.
 
-> CC: Mikael Starvik <starvik@axis.com>
-> CC: Jesper Nilsson <jesper.nilsson@axis.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/cris/arch-v32/drivers/pci/bios.c |   25 -------------------------
->  arch/cris/include/asm/pci.h           |    1 -
->  2 files changed, 0 insertions(+), 26 deletions(-)
-> 
-> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-> index bc0cfda..f748ced 100644
-> --- a/arch/cris/arch-v32/drivers/pci/bios.c
-> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
-> @@ -102,28 +102,3 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  		pcibios_enable_irq(dev);
->  	return 0;
->  }
-> -
-> -int pcibios_assign_resources(void)
-> -{
-> -	struct pci_dev *dev = NULL;
-> -	int idx;
-> -	struct resource *r;
-> -
-> -	while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
-> -		int class = dev->class >> 8;
-> -
-> -		/* Don't touch classless devices and host bridges */
-> -		if (!class || class == PCI_CLASS_BRIDGE_HOST)
-> -			continue;
-> -
-> -		for(idx=0; idx<6; idx++) {
-> -			r = &dev->resource[idx];
-> -
-> -			if (!r->start && r->end)
-> -				pci_assign_resource(dev, idx);
-> -		}
-> -	}
-> -	return 0;
-> -}
-> -
-> -EXPORT_SYMBOL(pcibios_assign_resources);
-> diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
-> index 9f1cd56..146da90 100644
-> --- a/arch/cris/include/asm/pci.h
-> +++ b/arch/cris/include/asm/pci.h
-> @@ -19,7 +19,6 @@ extern unsigned long pci_mem_start;
->  
->  void pcibios_config_init(void);
->  struct pci_bus * pcibios_scan_root(int bus);
-> -int pcibios_assign_resources(void);
->  
->  void pcibios_set_master(struct pci_dev *dev);
->  void pcibios_penalize_isa_irq(int irq);
-> 
+Steve's problem doesn't count because that's a "pci=nocrs" case that
+will always require special handling.  A general solution is not
+possible without a BIOS change (to describe >4GB apertures) or a
+native host bridge driver (to discover >4GB apertures from the
+hardware).  These patches only make Steve's machine work by accident
+-- they make us put the video device above 4GB, and we're just lucky
+that the host bridge claims that region.
 
-/^JN - Jesper Nilsson
--- 
-               Jesper Nilsson -- jesper.nilsson@axis.com
+One possibility is some sort of boot-time option to force a PCI device
+to a specified address.  That would be useful for debugging as well as
+for Steve's machine.
