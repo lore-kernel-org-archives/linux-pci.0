@@ -1,271 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs130.luxsci.com ([72.32.115.17]:42392 "EHLO rs130.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756628Ab2FVRKK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Jun 2012 13:10:10 -0400
-Message-ID: <4FE4A6D9.3090902@firmworks.com>
-Date: Fri, 22 Jun 2012 07:09:45 -1000
-From: Mitch Bradley <wmb@firmworks.com>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-References: <4FD849CF.4030009@firmworks.com> <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de> <4FD85127.8050301@firmworks.com> <20120614091905.GA9081@avionic-0098.mockup.avionic-design.de> <4FDA2DDA.1030704@wwwdotorg.org> <20120614192903.GA2212@avionic-0098.mockup.avionic-design.de> <4FDA40A0.4030206@wwwdotorg.org> <20120615061236.GA4081@avionic-0098.mockup.avionic-design.de> <20120619133001.GB24138@avionic-0098.mockup.avionic-design.de> <4FE0EFBB.6090206@firmworks.com> <20120621064722.GA1122@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120621064722.GA1122@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from szxga01-in.huawei.com ([58.251.152.64]:58110 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400Ab2FDHtO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2012 03:49:14 -0400
+Date: Mon, 04 Jun 2012 15:44:54 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe ports
+ without native PCIe hotplug capability
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Message-id: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/20/2012 8:47 PM, Thierry Reding wrote:
-> On Tue, Jun 19, 2012 at 11:31:39AM -1000, Mitch Bradley wrote:
->> On 6/19/2012 3:30 AM, Thierry Reding wrote:
->>> On Fri, Jun 15, 2012 at 08:12:36AM +0200, Thierry Reding wrote:
->>>> On Thu, Jun 14, 2012 at 01:50:56PM -0600, Stephen Warren wrote:
->>>>> On 06/14/2012 01:29 PM, Thierry Reding wrote:
->>>>>> On Thu, Jun 14, 2012 at 12:30:50PM -0600, Stephen Warren wrote:
->>>>>>> On 06/14/2012 03:19 AM, Thierry Reding wrote:
->>>>> ...
->>>>>>>> #address-cells = <1>; #size-cells = <1>;
->>>>>>>>
->>>>>>>> pci@80000000 {
->>>>>>>
->>>>>>> I'm still not convinced that using the address of the port's
->>>>>>> registers is the correct way to represent each port. The port
->>>>>>> index seems much more useful.
->>>>>>>
->>>>>>> The main reason here is that there are a lot of registers that
->>>>>>> contain fields for each port - far more than the combination of
->>>>>>> this node's reg and ctrl-offset (which I assume is an address
->>>>>>> offset for just one example of this issue) properties can
->>>>>>> describe. The bit position and bit stride of these fields isn't
->>>>>>> necessarily the same in each register. Do we want a property like
->>>>>>> ctrl-offset for every single type of field in every single shared
->>>>>>> register that describes the location of the relevant data, or
->>>>>>> just a single "port ID" bit that can be applied to anything?
->>>>>>>
->>>>>>> (Perhaps this isn't so obvious looking at the TRM since it
->>>>>>> doesn't document all registers, and I'm also looking at the
->>>>>>> Tegra30 documentation too, which might be more exposed to this -
->>>>>>> I haven't correlated all the documentation sources to be sure
->>>>>>> though)
->>>>>>
->>>>>> I agree that maybe adding properties for each bit position or
->>>>>> register offset may not work out too well. But I think it still
->>>>>> makes sense to use the base address of the port's registers (see
->>>>>> below). We could of course add some code to determine the index
->>>>> >from the base address at initialization time and reuse the index
->>>>>> where appropriate.
->>>>>
->>>>> To me, working back from address to ID then using the ID to calculate
->>>>> some other addresses seems far more icky than just calculating all the
->>>>> addresses based off of one ID. But, I suppose this doesn't make a huge
->>>>> practical difference.
->>>>
->>>> This really depends on the device vs. no device decision below. If we can
->>>> make it work without needing an extra device for it, then using the index
->>>> is certainly better. However, if we instantiate devices from the DT, then
->>>> we have the address anyway and adding the index as a property would be
->>>> redundant and error prone (what happens if somebody sets the index of the
->>>> port at address 0x80000000 to 2?).
->>>
->>> An additional problem with this is that we'd have to add the following
->>> to the pcie-controller node:
->>>
->>> 	#address-cells = <1>;
->>> 	#size-cells = <0>;
->>>
->>> This will conflict with the "ranges" property, because suddenly we can
->>> no longer map the regions properly. Maybe Mitch can comment on whether
->>> this is possible or not?
->>>
->>> To make it clearer what I'm talking about, here's the DT snippet again
->>> (with the compatible property removed from the pci@ nodes because they
->>> are no longer probed by a driver, the "simple-bus" removed from the
->>> pcie-controller node's compatible property removed and its #address-
->>> and #size-cells properties adjusted as described above).
->>>
->>> 	pcie-controller {
->>> 		compatible = "nvidia,tegra20-pcie";
->>> 		reg = <0x80003000 0x00000800   /* PADS registers */
->>> 		       0x80003800 0x00000200   /* AFI registers */
->>> 		       0x80004000 0x00100000   /* configuration space */
->>> 		       0x80104000 0x00100000>; /* extended configuration space */
->>> 		interrupts = <0 98 0x04   /* controller interrupt */
->>> 			      0 99 0x04>; /* MSI interrupt */
->>> 		status = "disabled";
->>>
->>> 		ranges = <0x80000000 0x80000000 0x00002000   /* 2 root ports */
->>> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
->>> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
->>> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
->>>
->>> 		#address-cells = <1>;
->>> 		#size-cells = <0>;
->>>
->>> 		pci@0 {
->>> 			reg = <2>;
->>> 			status = "disabled";
->>>
->>> 			#address-cells = <3>;
->>> 			#size-cells = <2>;
->>>
->>> 			ranges = <0x81000000 0 0 0x80400000 0 0x00008000   /* I/O */
->>> 				  0x82000000 0 0 0x90000000 0 0x08000000   /* non-prefetchable memory */
->>> 				  0xc2000000 0 0 0xa0000000 0 0x08000000>; /* prefetchable memory */
->>>
->>> 			nvidia,ctrl-offset = <0x110>;
->>> 			nvidia,num-lanes = <2>;
->>> 		};
->>>
->>> 		pci@1 {
->>> 			reg = <1>;
->>> 			status = "disabled";
->>>
->>> 			#address-cells = <3>;
->>> 			#size-cells = <2>;
->>>
->>> 			ranges = <0x81000000 0 0 0x80408000 0 0x00008000   /* I/O */
->>> 				  0x82000000 0 0 0x98000000 0 0x08000000   /* non-prefetchable memory */
->>> 				  0xc2000000 0 0 0xa8000000 0 0x08000000>; /* prefetchable memory */
->>>
->>> 			nvidia,ctrl-offset = <0x118>;
->>> 			nvidia,num-lanes = <2>;
->>> 		};
->>> 	};
->>>
->>> AIUI none of the ranges properties are valid anymore, because the bus
->>> represented by pcie-controller no longer reflects the truth, namely that
->>> it translates the CPU address space to the PCI address space.
->>>
->>
->> I think you can use a small-integer port number as an address by
->> defining the intermediate address space properly, and using
->> appropriate ranges above and below.  Here's a swag at how that would
->> look.
->>
->> I present three versions, using different choices for the
->> intermediate address space encoding.  The intermediate address space
->> may seem somewhat artificial, in that it decouples the "linear pass
->> through of ranges" between the lower PCI address space and the upper
->> CPU address space.  But in another sense, it accurately reflects
->> that fact that the bus bridge "slices and dices" that linear address
->> space into non-contiguous pieces.
->>
->> Note that I'm also fixing a problem that I neglected to mention
->> earlier - namely the fact that config space is part of the child PCI
->> address space so it must be passed through.
->
-> This doesn't quite match how the Tegra PCIe controller works. Basically,
-> every access to a device's (extended) configuration space goes through a
-> single region of memory-mapped registers, independent of which port is
-> the parent of the device.
->
-> Is it okay to pass both configuration spaces via the ranges property but
-> still list them in the reg property of the controller?
+Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
+ignore root bridges using PCIe native hotplug) added code that made the
+acpiphp driver completely ignore PCIe root complexes for which the kernel
+had been granted control of the native PCIe hotplug feature by the BIOS
+through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
+"PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
+the constraints to allow acpiphp driver handle non-PCIe bridges under
+such a complex. The constraint needs to be relaxed further to allow
+acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
 
+Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
+switches and may migrate downstream ports among virtual switches.
+To migrate a downstream port from the source virtual switch to the target,
+the port needs to be hot-removed from the source and hot-added into the
+target. pciehp driver can't be used here because there's no slots within
+the virtual PCIe switch. So acpiphp driver is used to support downstream
+port migration. A typical configuration is as below:
+[Root w/o native PCIe HP]
+	[Upstream port of vswitch w/o native PCIe HP]
+		[Downstream port of vswitch w/ native PCIe HP]
+			[PCIe enpoint]
 
-It's a small hierarchy violation, but I expect that it would work in 
-practice.
+Here acpiphp driver will be used to handle root ports and upstream port
+in the virtual switch, and pciehp driver will be used to handle downstream
+ports in the virtual switch.
 
->
->> Version A - 3 address cells:  In this version, the intermediate
->> address space has 3 cells:  port#, address type, offset.  Address
->> type is
->>    0 : root port
->>    1 : config space
->>    2 : extended config space
->>    3 : I/O
->>    4 : non-prefetchable memory
->>    5 : prefetchable memory.
->>
->> The third cell "offset" is necessary so that the size field has a
->> number space that can include it.
->>
->> 	pcie-controller {
->> 		compatible = "nvidia,tegra20-pcie";
->> 		reg = <0x80003000 0x00000800   /* PADS registers */
->> 		       0x80003800 0x00000200>; /* extended configuration space */
->> 		interrupts = <0 98 0x04   /* controller interrupt */
->> 			      0 99 0x04>; /* MSI interrupt */
->> 		status = "disabled";
->>
->> 		ranges = <0 0 0  0x80000000 0x00001000   /* Root port 0 */
->> 			  0 1 0  0x80004000 0x00080000   /* Port 0 config space */
->> 			  0 2 0  0x80104000 0x00080000   /* Port 0 ext config space *
->> 			  0 3 0  0x80400000 0x00008000   /* Port 0 downstream I/O */
->> 			  0 4 0  0x90000000 0x08000000   /* Port 0 non-prefetchable memory */
->> 			  0 5 0  0xa0000000 0x08000000   /* Port 0 prefetchable memory */
->>
->> 			  1 0 0  0x80001000 0x00001000   /* Root port 1 */
->> 			  1 1 0  0x80004000 0x00080000   /* Port 1 config space */
->> 			  1 2 0  0x80184000 0x00080000   /* Port 1 ext config space */
->> 			  1 3 0  0x80408000 0x00010000   /* Port 1 downstream I/O */
->> 			  1 4 0  0x98000000 0x08000000   /* Port 1 non-prefetchable memory */
->> 			  1 5 0  0xa0000000 0x08000000>; /* Port 1 prefetchable memory */
->>
->> 		#address-cells = <3>;
->> 		#size-cells = <1>;
->>
->> 		pci@0 {
->> 			reg = <0 0 0 0x1000>;
->> 			status = "disabled";
->>
->> 			#address-cells = <3>;
->> 			#size-cells = <2>;
->>
->> 			ranges = <0x80000000 0 0  0 1 0  0 0x00080000   /* config */
->> 				  0x90000000 0 0  0 2 0  0 0x00080000   /* extended config */
->> 				  0x81000000 0 0  0 3 0  0 0x00008000   /* I/O */
->> 				  0x82000000 0 0  0 4 0  0 0x08000000   /* non-prefetchable memory */
->> 				  0xc2000000 0 0  0 5 0  0 0x08000000>; /* prefetchable memory */
->>
->> 			nvidia,ctrl-offset = <0x110>;
->> 			nvidia,num-lanes = <2>;
->> 		};
->>
->>
->> 		pci@1 {
->> 			reg = <1 0 0 0x1000>;
->> 			status = "disabled";
->>
->> 			#address-cells = <3>;
->> 			#size-cells = <2>;
->>
->> 			ranges = <0x80000000 0 0  1 1 0  0 0x00080000   /* config */
->> 				  0x90000000 0 0  1 2 0  0 0x00080000   /* extended config */
->> 				  0x81000000 0 0  1 3 0  0 0x00008000   /* I/O */
->> 				  0x82000000 0 0  1 4 0  0 0x08000000   /* non-prefetchable memory */
->> 				  0xc2000000 0 0  1 5 0  0 0x08000000>; /* prefetchable memory */
->>
->> 			nvidia,ctrl-offset = <0x118>;
->> 			nvidia,num-lanes = <2>;
->> 		};
->
-> Everybody seems to be happy with this approach, so I'll give it a shot.
-> There is one thing I'm still unsure about, though. What if somebody uses
-> the above scheme and maps the registers to the wrong port. The same goes
-> for the nvidia,ctrl-offset property. It needs to match the register
-> offset because they are directly related. I suppose we could leave that
-> property away and look up the register via the port index (which, as
-> Stephen already said, we'll have to do in other places anyway, unless we
-> list all bit positions in the DT).
->
-> Can we safely ignore such issues and assume the device tree to always be
-> right? Should we just not care if somebody uses it wrongly?
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
+ 1 files changed, 39 insertions(+), 10 deletions(-)
 
-To the extent that the device tree is the definitive answer about the 
-system addressing, if you get it wrong, either the system will not work 
-or the OS isn't paying attention to that part of the device tree, 
-hardcoding the right answer.
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 806c44f..4889448 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
+ 	.handler = handle_hotplug_event_func,
+ };
+ 
++/* Check whether device is managed by native PCIe hotplug driver */
++static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
++{
++	int pos;
++	u16 reg16;
++	u32 reg32;
++	acpi_handle tmp;
++	struct acpi_pci_root *root;
++
++	if (!pci_is_pcie(pdev))
++		return false;
++
++	/* Check whether PCIe port supports native PCIe hotplug */
++	pos = pci_pcie_cap(pdev);
++	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
++	if (!(reg16 & PCI_EXP_FLAGS_SLOT))
++		return false;
++	pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP, &reg32);
++	if (!(reg32 & PCI_EXP_SLTCAP_HPC))
++		return false;
++
++	/*
++	 * Check whether native PCIe hotplug has been enabled for
++	 * this PCIe hierarchy.
++	 */
++	tmp = acpi_find_root_bridge_handle(pdev);
++	if (!tmp)
++		return false;
++	root = acpi_pci_find_root(tmp);
++	if (!root)
++		return false;
++	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
++		return false;
++
++	return true;
++}
++
+ /* callback routine to register each ACPI PCI slot object */
+ static acpi_status
+ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+@@ -133,16 +170,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 		return AE_OK;
+ 
+ 	pdev = pbus->self;
+-	if (pdev && pci_is_pcie(pdev)) {
+-		tmp = acpi_find_root_bridge_handle(pdev);
+-		if (tmp) {
+-			struct acpi_pci_root *root = acpi_pci_find_root(tmp);
+-
+-			if (root && (root->osc_control_set &
+-					OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+-				return AE_OK;
+-		}
+-	}
++	if (pdev && device_is_managed_by_native_pciehp(pdev))
++		return AE_OK;
+ 
+ 	acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
+ 	device = (adr >> 16) & 0xffff;
+-- 
+1.7.1
 
->
-> Thierry
->
 
