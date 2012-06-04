@@ -1,96 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:29810 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758728Ab2FZSyi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 14:54:38 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 04 Jun 2012 13:17:01 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [RFC PATCH v1 5/6] PCI, ACPI: update ACPI hotplug slot information
+ when PCI hotplug event happens
+In-reply-to: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v12 01/15] resources: Split out __allocate_resource()
-Date: Tue, 26 Jun 2012 11:53:55 -0700
-Message-Id: <1340736849-14875-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Alex Chiang <achiang@hp.com>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-id: <1338787022-400-5-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will take bool lock, so we could use it in other functions that
-hold the resource lock already.
+From: Jiang Liu <liuj97@gmail.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Currently the acpiphp driver fails to update hotplug slot information under
+several conditions, such as:
+1) The bridge device is removed through /sys/bus/pci/devices/.../remove
+2) The bridge device is added/removed by PCI hotplug driver other than the
+   acpiphp driver itself. For example, if an IO expansion box with ACPI
+   hotplug slots available is hot-added by the pciehp driver, all ACPI
+   hotplug slots won't be discovered by the acpiphp driver.
+
+So hook the BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events to
+update ACPI hotplug slot information when PCI hotplug event happens.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- kernel/resource.c |   26 +++++++++++++++++++++-----
- 1 files changed, 21 insertions(+), 5 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   64 ++++++++++++++++++++++++++++++++++--
+ 1 files changed, 61 insertions(+), 3 deletions(-)
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index dc8b477..3f6e522 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -521,14 +521,14 @@ out:
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-  */
--int allocate_resource(struct resource *root, struct resource *new,
-+static int __allocate_resource(struct resource *root, struct resource *new,
- 		      resource_size_t size, resource_size_t min,
- 		      resource_size_t max, resource_size_t align,
- 		      resource_size_t (*alignf)(void *,
- 						const struct resource *,
- 						resource_size_t,
- 						resource_size_t),
--		      void *alignf_data)
-+		      void *alignf_data, bool lock)
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 73af337..44d055c 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -61,6 +61,7 @@ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+ static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
++static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle);
+ 
+ /* callback routine to check for the existence of a pci dock device */
+ static acpi_status
+@@ -377,7 +378,7 @@ static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
+ 
+ 
+ /* allocate and initialize host bridge data structure */
+-static void add_host_bridge(acpi_handle *handle)
++static void add_host_bridge(acpi_handle handle)
  {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -542,19 +542,35 @@ int allocate_resource(struct resource *root, struct resource *new,
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
- 
--	if ( new->parent ) {
-+	if (new->parent && lock) {
- 		/* resource is already allocated, try reallocating with
- 		   the new constraints */
- 		return reallocate_resource(root, new, size, &constraint);
- 	}
- 
--	write_lock(&resource_lock);
-+	if (lock)
-+		write_lock(&resource_lock);
- 	err = find_resource(root, new, size, &constraint);
- 	if (err >= 0 && __request_resource(root, new))
- 		err = -EBUSY;
--	write_unlock(&resource_lock);
-+	if (lock)
-+		write_unlock(&resource_lock);
- 	return err;
+ 	struct acpiphp_bridge *bridge;
+ 	struct acpi_pci_root *root = acpi_pci_find_root(handle);
+@@ -396,12 +397,14 @@ static void add_host_bridge(acpi_handle *handle)
+ 	init_bridge_misc(bridge);
  }
-+int allocate_resource(struct resource *root, struct resource *new,
-+		      resource_size_t size, resource_size_t min,
-+		      resource_size_t max, resource_size_t align,
-+		      resource_size_t (*alignf)(void *,
-+						const struct resource *,
-+						resource_size_t,
-+						resource_size_t),
-+		      void *alignf_data)
-+{
-+	bool lock = true;
-+
-+	return __allocate_resource(root, new, size, min, max, align,
-+				   alignf, alignf_data, lock);
-+}
  
- EXPORT_SYMBOL(allocate_resource);
+-
+ /* allocate and initialize PCI-to-PCI bridge data structure */
+-static void add_p2p_bridge(acpi_handle *handle)
++static void add_p2p_bridge(acpi_handle handle)
+ {
+ 	struct acpiphp_bridge *bridge;
+ 
++	if (acpiphp_handle_to_bridge(handle))
++		return;
++
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+ 	if (bridge == NULL) {
+ 		err("out of memory\n");
+@@ -1419,6 +1422,58 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	return AE_OK ;
+ }
+ 
++static void acpiphp_hp_notify_add(struct pci_dev *dev)
++{
++	acpi_handle handle = DEVICE_ACPI_HANDLE(&dev->dev);
++
++	if (!dev->subordinate || !handle)
++		return;
++
++	/* check if this bridge has ejectable slots */
++	if (detect_ejectable_slots(handle) > 0) {
++		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
++		add_p2p_bridge(handle);
++	}
++}
++
++static void acpiphp_hp_notify_del(struct pci_dev *dev)
++{
++	struct acpiphp_bridge *bridge, *tmp;
++	struct pci_bus *bus = dev->subordinate;
++
++	if (!bus)
++		return;
++
++	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
++		if (bridge->pci_bus == bus) {
++			cleanup_bridge(bridge);
++			break;
++		}
++}
++
++static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
++				 unsigned long event, void *data)
++{
++	struct device *dev = data;
++
++	switch (event) {
++	case BUS_NOTIFY_ADD_DEVICE:
++		acpiphp_hp_notify_add(to_pci_dev(dev));
++		break;
++	case BUS_NOTIFY_DEL_DEVICE:
++		acpiphp_hp_notify_del(to_pci_dev(dev));
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block acpi_pci_hp_notifier = {
++	.notifier_call = &acpi_pci_hp_notify_fn,
++};
++
+ static struct acpi_pci_driver acpi_pci_hp_driver = {
+ 	.add =		add_bridge,
+ 	.remove =	remove_bridge,
+@@ -1439,6 +1494,8 @@ int __init acpiphp_glue_init(void)
+ 	else
+ 		acpi_pci_register_driver(&acpi_pci_hp_driver);
+ 
++	bus_register_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
++
+ 	return 0;
+ }
+ 
+@@ -1450,6 +1507,7 @@ int __init acpiphp_glue_init(void)
+  */
+ void  acpiphp_glue_exit(void)
+ {
++	bus_unregister_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
+ 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
+ }
  
 -- 
-1.7.7
+1.7.1
+
 
