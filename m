@@ -1,77 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:38811 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885Ab2FFGSN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 02:18:13 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 6 Jun 2012 06:17:56 +1000
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q565LJRE36044864
-	for <linux-pci@vger.kernel.org>; Wed, 6 Jun 2012 15:21:19 +1000
-Received: from d23av03.au.ibm.com (loopback [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q565Sb1H022352
-	for <linux-pci@vger.kernel.org>; Wed, 6 Jun 2012 15:28:39 +1000
-Date: Wed, 6 Jun 2012 13:28:35 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: One chart on pci bridge and its bus and their children
-Message-ID: <20120606052835.GB17042@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120605032627.GA23271@richard>
- <20120605041146.GD6637@ram-ThinkPad-T61>
- <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
- <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
- <CAE9FiQUCV1+ePfyX7bqOyZ+Wcsj1neCO91MvuM5vNh3+UPERDQ@mail.gmail.com>
- <20120605063538.GE6637@ram-ThinkPad-T61>
- <CAE9FiQV66_eUiQKJc79CMvRA9th8MOinjaVnYKLgpPz_4_pxww@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQV66_eUiQKJc79CMvRA9th8MOinjaVnYKLgpPz_4_pxww@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 04 Jun 2012 13:16:57 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [RFC PATCH v1 1/6] PCI: change PCI device management logic to better
+ follow device model
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-id: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 05, 2012 at 12:38:52PM -0700, Yinghai Lu wrote:
->>
->> Yinghai,
->>
->> is there a reason why this can't be fixed in
->> pci_create_root_bus() by having
->>   bus->self = bridge; /* 'bridge' is the pci_device of the corresponding host bridge */
->>   get_device(&bridge->dev);
->
->self is pointer to pci_dev bridge.
->
->and for root bus, it is NULL. that mean no pci bridge device related.
->
->bridge is device, and have that assigned from host bridge dev, or pci
->bridge dev.
->
->also for virtfn of iov, new bus from there will not have self assigned too.
->for it even bridge is not assigned.
->
->so bridge is just generic way to save bridge (pci, host) device ...
+From: Jiang Liu <liuj97@gmail.com>
 
-I did a summarize, we have three types of pci_bus.
+According to device model documentation, the way to add/remove device
+object should be symmetric.
 
+/**
+ * device_del - delete device from system.
+ * @dev: device.
+ *
+ * This is the first part of the device unregistration
+ * sequence. This removes the device from the lists we control
+ * from here, has it removed from the other driver model
+ * subsystems it was added to in device_add(), and removes it
+ * from the kobject hierarchy.
+ *
+ * NOTE: this should be called manually _iff_ device_add() was
+ * also called manually.
+ */
 
-Can we identify the type by following method?
+The rule here is to either use
+1) device_register()/device_unregister()
+or
+2) device_initialize()/device_add()/device_del()/put_device().
 
-+--------------------+--------------------------------------------------+
-| bus type           |   identification                                 |
-+--------------------+--------------------------------------------------+
-| root_bus           |parent is NULL, bridge point to host_bridge dev   |
-+--------------------+--------------------------------------------------+
-| general_bus        |parent to parent bus, bridge point to the bridge  |
-+--------------------+--------------------------------------------------+
-| iov_bus            |parent to parent bus, bridge point to NULL        |
-+--------------------+--------------------------------------------------+
+So change PCI core to follow the rule and get rid of the redundant
+pci_dev_get()/pci_dev_put() pair.
 
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/probe.c  |    1 -
+ drivers/pci/remove.c |    4 ++--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0840409..dacca26 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1294,7 +1294,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	device_initialize(&dev->dev);
+ 	dev->dev.release = pci_release_dev;
+-	pci_dev_get(dev);
+ 
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 04a4861..6c07bc5 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 	if (dev->is_added) {
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
+-		device_unregister(&dev->dev);
++		device_del(&dev->dev);
+ 		dev->is_added = 0;
+ 	}
+ 
+@@ -40,7 +40,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	up_write(&pci_bus_sem);
+ 
+ 	pci_free_resources(dev);
+-	pci_dev_put(dev);
++	put_device(&dev->dev);
+ }
+ 
+ /**
 -- 
-Richard Yang
-Help you, Help me
+1.7.1
+
 
