@@ -1,43 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:64958 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762167Ab2FVNsw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 09:48:52 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-Date: Fri, 22 Jun 2012 13:48:39 +0000
-Cc: Mitch Bradley <wmb@firmworks.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-References: <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de> <20120622110403.GA15710@avionic-0098.mockup.avionic-design.de> <20120622132253.GA30704@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120622132253.GA30704@avionic-0098.mockup.avionic-design.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201206221348.39346.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 04 Jun 2012 13:16:58 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [RFC PATCH v1 2/6] PCI: split PCI bus device registration into two
+ stages
+In-reply-to: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-id: <1338787022-400-2-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 22 June 2012, Thierry Reding wrote:
-> > It seems like this isn't working properly. For some reason both the reg
-> > property of pci@0 and pci@1 are translated to the same parent address
-> > 0x80000000. I'll have to investigate where exactly this goes wrong.
-> 
-> So it turns out that while of_read_number() can actually read any number
-> of cells, only the two least significant are kept because it returns a
-> u64. Since of_bus_default_map() uses of_read_number() the addresses
-> <0 0 0> and <1 0 0> are in fact the same. I'm not sure how best to solve
-> this. I'm not aware of a 128 bit integer type in the kernel, so I guess
-> the better alternative would be to fix of_bus_default_map() to cope with
-> #address-cells > 2 properly.
+From: Jiang Liu <liuj97@gmail.com>
 
-of_translate_address should get it right. Which codes uses of_read_number()?
-Can it be converted to use of_translate_address()?
+When handling BUS_NOTIFY_ADD_DEVICE event for a new PCI bridge
+device, the notification handler can't hold reference count
+to the new PCI bus because the device object for the new bus
+(pci_dev->subordinate->dev) hasn't been initialized yet.
 
-	Arnd
+Split the PCI bus device registration into two stages as below,
+so that the event handler could hold reference counts to the new
+PCI bus when handling BUS_NOTIFY_ADD_DEVICE event.
+
+1) device_initialize(&pci_dev->dev)
+2) device_initialize(&pci_dev->subordinate->dev)
+3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
+4) device_add(&pci_dev->dev)
+5) device_add(&pci_dev->subordinate->dev)
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/bus.c    |    2 +-
+ drivers/pci/probe.c  |    1 +
+ drivers/pci/remove.c |   10 +++++-----
+ 3 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4ce5ef2..e2a0c52 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -187,7 +187,7 @@ int pci_bus_add_child(struct pci_bus *bus)
+ 	if (bus->bridge)
+ 		bus->dev.parent = bus->bridge;
+ 
+-	retval = device_register(&bus->dev);
++	retval = device_add(&bus->dev);
+ 	if (retval)
+ 		return retval;
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dacca26..47ffa6c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -667,6 +667,7 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
+ 		down_write(&pci_bus_sem);
+ 		list_add_tail(&child->node, &parent->children);
+ 		up_write(&pci_bus_sem);
++		device_initialize(&child->dev);
+ 	}
+ 	return child;
+ }
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 6c07bc5..edbd117 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -70,11 +70,11 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+ 	list_del(&pci_bus->node);
+ 	pci_bus_release_busn_res(pci_bus);
+ 	up_write(&pci_bus_sem);
+-	if (!pci_bus->is_added)
+-		return;
+-
+-	pci_remove_legacy_files(pci_bus);
+-	device_unregister(&pci_bus->dev);
++	if (pci_bus->is_added) {
++		pci_remove_legacy_files(pci_bus);
++		device_del(&pci_bus->dev);
++	}
++	put_device(&pci_bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
+-- 
+1.7.1
+
+
