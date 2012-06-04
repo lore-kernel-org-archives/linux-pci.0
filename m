@@ -1,118 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:48135 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258Ab2F2GsF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jun 2012 02:48:05 -0400
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:48739 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754032Ab2FDNfg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2012 09:35:36 -0400
 Received: from /spool/local
-	by e2.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Fri, 29 Jun 2012 02:48:04 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5T6m0Rk436760
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:48:00 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5TCIoW3011672
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 08:18:52 -0400
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
-Cc: bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
-	linuxram@us.ibm.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 4/7] pci: fiddle with conversion of pci and CPU address
-Date: Fri, 29 Jun 2012 14:47:47 +0800
-Message-Id: <0532dabef0679c8cc7a6e2e31e9f27204256b8a8.1340949637.git.shangw@linux.vnet.ibm.com>
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 4 Jun 2012 19:05:33 +0530
+Date: Mon, 4 Jun 2012 21:34:57 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120604133457.GA2969@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120422155202.GA13540@richard>
+ <4F95B17B.3030401@redhat.com>
+ <20120514015536.GA3331@richard>
+ <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
+ <20120514064615.GB26605@richard>
+ <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
+ <20120516011833.GA6599@richard>
+ <CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
+ <20120529115900.GA31679@richard>
+ <CAE9FiQWO1C76ppjZF4Lm4FVpQYPRv5ZirGp9iOM3pm-xrm3Epg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWO1C76ppjZF4Lm4FVpQYPRv5ZirGp9iOM3pm-xrm3Epg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch fiddles with the those functions used to do conversion
-between PCI and CPU address. More specificly, 2 functions are
-involved: pcibios_bus_to_resource() and pcibios_resource_to_bus()
+On Tue, May 29, 2012 at 10:14:51AM -0700, Yinghai Lu wrote:
+>On Tue, May 29, 2012 at 4:59 AM, Richard Yang
+><weiyang@linux.vnet.ibm.com> wrote:
+>>
+>> I think about this issue again, this behavior of kernel will bring some
+>> unconvenience to the user.
+>>
+>> Do you think the kernel could handle this situation?
+>
+>in this extreme case, you may need user to do some comprise.
+>
+>We should always try to use setting from BIOS if it is sane.
+>
+>Yinghai
+Yinghai
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
----
- drivers/pci/host-bridge.c |   24 +++++++++++++++++++-----
- include/linux/pci.h       |    5 ++++-
- 2 files changed, 23 insertions(+), 6 deletions(-)
+                    +-------+
+                    |       | root bridge(0,255)
+                    +---+---+
+                        |          Bus 0
+       -----+-----------+------------------------------+--
+            |                                          |
+            |                                          |
+            |                                          |
+       +----+----+                               +-----+-----+
+       |         |  B1(1,15)                     |           |B2(32,35)
+       +----+----+                               +-----+-----+
+            |  Bus 1                                   |    Bus 32 
+       -----+-----------------------             -----------
+                             |
+                        +----+----+
+                        |         | B3
+                        +---------+
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index a43d393..1854a2d 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -37,10 +37,10 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
- 	return res1->start <= res2->start && res1->end >= res2->end;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
-+void __pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
-+			       struct resource *res)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev->bus);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -57,6 +57,13 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 	region->start = res->start - offset;
- 	region->end = res->end - offset;
- }
-+
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res)
-+{
-+	__pcibios_resource_to_bus(dev->bus, region, res);
-+}
-+
- EXPORT_SYMBOL(pcibios_resource_to_bus);
- 
- static bool region_contains(struct pci_bus_region *region1,
-@@ -65,10 +72,10 @@ static bool region_contains(struct pci_bus_region *region1,
- 	return region1->start <= region2->start && region1->end >= region2->end;
- }
- 
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev->bus);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -90,4 +97,11 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 	res->start = region->start + offset;
- 	res->end = region->end + offset;
- }
-+
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region)
-+{
-+	__pcibios_bus_to_resource(dev->bus, res, region);
-+}
-+
- EXPORT_SYMBOL(pcibios_bus_to_resource);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 615ac90..e66f4b2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -657,9 +657,12 @@ void pcibios_update_irq(struct pci_dev *, int irq);
- void pci_fixup_cardbus(struct pci_bus *);
- 
- /* Generic PCI functions used internally */
--
-+void __pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
-+				struct resource *res);
- void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 			     struct resource *res);
-+void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-+			       struct pci_bus_region *region);
- void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 			     struct pci_bus_region *region);
- void pcibios_scan_specific_bus(int busn);
+I reread the current code, v3.4, in linus tree,
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+And I come up with another condition which will have a problem when
+kernel is not given the parameter, pci=assign-busses.
+
+Same condition as previous:
+-------------------------------------------------------------------------------
+B1 and B2 works fine with the BIOS and get the bus number assigned. 
+B3 is not probed by BIOS.
+
+Difference between the previous example:
+-------------------------------------------------------------------------------
+In this case, B2 is assigned bus range (32, 35), which has a gap between
+B1 number range (1, 15).
+
+When kernel meets B3 in second pass, B3 will be assigned with bus number
+16. Well, this time the bus number 16 doesn't overlap with bus number of
+B2. 
+
+But, the pci_fixup_parent_subordinate_busnr() will not work since the
+pci=assign-buses is not passed to kernel. 
+
+So B1's bus window is still (1,15) not (1,16).
+
+BTW, is this also a extrem case?
+
 -- 
-1.7.9.5
+Richard Yang
+Help you, Help me
 
