@@ -1,211 +1,306 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:51923 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969Ab2F0StF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jun 2012 14:49:05 -0400
-Received: by bkcji2 with SMTP id ji2so1322702bkc.19
-        for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 11:49:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340808525-24996-2-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com> <1340808525-24996-2-git-send-email-shangw@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 27 Jun 2012 12:48:42 -0600
-Message-ID: <CAErSpo64g0ZMJdW+YR-dH=dbcR0rApEf8sPzz7YWqb3v8O2V3Q@mail.gmail.com>
-Subject: Re: [PATCH V4 2/2] PCI: minimal alignment for bars of P2P bridges
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	yinghai@kernel.org, benh@kernel.crashing.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 04 Jun 2012 13:16:59 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+Subject: [RFC PATCH v1 3/6] PCI, ACPI: correctly update binding info when PCI
+ hotplug event happens
+In-reply-to: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Len Brown <lenb@kernel.org>, Alexander Chiang <achiang@hp.com>,
+	Rui Zhang <rui.zhang@intel.com>
+Cc: Jiang Liu <liuj97@gmail.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-id: <1338787022-400-3-git-send-email-jiang.liu@huawei.com>
+MIME-version: 1.0
+Content-type: text/plain
+References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 27, 2012 at 8:48 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
-> On some powerpc platforms, device BARs need to be assigned to separate
-> "segments" of the address space in order for the error isolation and HW
-> virtualization mechanisms (EEH) to work properly. Those "segments" have
-> a minimum size that can be fairly large (16M). In order to be able to
-> use the generic resource assignment code rather than re-inventing our
-> own, we chose to group devices by bus. That way, a simple change of the
-> minimum alignment requirements of resources assigned to PCI to PCI (P2P)
-> bridges is enough to ensure that all BARs for devices below those bridges
-> will fit into contiguous sets of segments and there will be no overlap.
+From: Jiang Liu <liuj97@gmail.com>
 
-Is this something that is currently broken on powerpc?  I don't see
-any corresponding powerpc change, like a removal of whatever the
-previous way of doing this was.
+Currently acpi/pci_bind.c is used to maintain binding relationship
+among ACPI and PCI devices. But it's broken when dealing PCI hotplug
+events.
 
-I'm not sure this is generic enough to warrant putting it in the core
-code (though I don't know whether we have any pcibios_*() hooks that
-would allow us to do it in the arch).
+For the acpiphp driver, it's designed to update the binding relationship
+when PCI hotplug event happensr, but the implementation is broken.
+For PCI device hot-adding:
+enable_device()
+    pci_scan_slot()
+    acpiphp_bus_add()
+        acpi_bus_add()
+	    acpi_pci_bind()
+		acpi_get_pci_dev()
+		    return NULL because dev->archdata.acpi_handle is
+		    still unset
+		return without updating actual binding relationship
+    pci_bus_add_devices()
+	pci_bus_add_device()
+	    device_add()
+		platform_notify()
+		    acpi_bind_one()
+			set dev->archdata.acpi_handle
 
-> This patch provides a way for the host bridge to override the default
-> alignment values used by the resource allocation code for that purpose.
->
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
-> Reviewed-by: Richard Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  drivers/pci/probe.c     |    5 +++++
->  drivers/pci/setup-bus.c |   28 +++++++++++++++++++++-------
->  include/linux/pci.h     |    8 ++++++++
->  3 files changed, 34 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 658ac97..a196529 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -431,6 +431,11 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
->        if (bridge) {
->                INIT_LIST_HEAD(&bridge->windows);
->                bridge->bus = b;
-> +
-> +               /* Set minimal alignment shift of P2P bridges */
-> +               bridge->io_align_shift = PCI_DEFAULT_IO_ALIGN_SHIFT;
-> +               bridge->mem_align_shift = PCI_DEFAULT_MEM_ALIGN_SHIFT;
-> +               bridge->pmem_align_shift = PCI_DEFAULT_PMEM_ALIGN_SHIFT;
->        }
->
->        return bridge;
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 8fa2d4b..caebe98 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -706,10 +706,12 @@ static resource_size_t calculate_memsize(resource_size_t size,
->  static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->                resource_size_t add_size, struct list_head *realloc_head)
->  {
-> +       struct pci_host_bridge *phb;
->        struct pci_dev *dev;
->        struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
->        unsigned long size = 0, size0 = 0, size1 = 0;
->        resource_size_t children_add_size = 0;
-> +       resource_size_t io_align;
->
->        if (!b_res)
->                return;
-> @@ -735,13 +737,17 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->                                children_add_size += get_res_add_size(realloc_head, r);
->                }
->        }
-> +
-> +       phb = find_pci_host_bridge(bus);
+For PCI device hot-removal,
+disable_device()
+    pci_stop_bus_device()
+    __pci_remove_bus_device()
+    acpiphp_bus_trim()
+	acpi_bus_remove()
+	    acpi_pci_unbind()
+		return without really unbinding because PCI device has
+		already been destroyed
 
-I guess this explains why you want find_pci_host_bridge() to take a
-pci_bus, not a pci_dev..
+For other PCI hotplug drivers, such as pciehp etc, they even don't
+bother to update binding relationship. So hook into acpi_bind_one()
+and acpi_unbind_one() in drivers/acpi/glue.c to update PCI/ACPI
+binding relationship.
 
-> +       io_align = (1 << phb->io_align_shift);
-> +
->        size0 = calculate_iosize(size, min_size, size1,
-> -                       resource_size(b_res), 4096);
-> +                       resource_size(b_res), io_align);
->        if (children_add_size > add_size)
->                add_size = children_add_size;
->        size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
->                calculate_iosize(size, min_size, add_size + size1,
-> -                       resource_size(b_res), 4096);
-> +                       resource_size(b_res), io_align);
->        if (!size0 && !size1) {
->                if (b_res->start || b_res->end)
->                        dev_info(&bus->self->dev, "disabling bridge window "
-> @@ -751,11 +757,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->                return;
->        }
->        /* Alignment of the IO window is always 4K */
-> -       b_res->start = 4096;
-> +       b_res->start = io_align;
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/acpi/glue.c     |    4 ++
+ drivers/acpi/internal.h |    2 +
+ drivers/acpi/pci_bind.c |  103 ++++++++++++++++++++++++++++++-----------------
+ drivers/acpi/pci_root.c |   22 ----------
+ 4 files changed, 72 insertions(+), 59 deletions(-)
 
-This looks like something that will collide with the changes in the
-pipe to support I/O windows smaller than 4K.
+diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+index 29a4a5c..1a07c3c 100644
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -160,6 +160,8 @@ static int acpi_bind_one(struct device *dev, acpi_handle handle)
+ 	}
+ 	dev->archdata.acpi_handle = handle;
+ 
++	acpi_pci_bind_notify(dev->archdata.acpi_handle, dev, true);
++
+ 	status = acpi_bus_get_device(handle, &acpi_dev);
+ 	if (!ACPI_FAILURE(status)) {
+ 		int ret;
+@@ -191,6 +193,8 @@ static int acpi_unbind_one(struct device *dev)
+ 			sysfs_remove_link(&acpi_dev->dev.kobj, "physical_node");
+ 		}
+ 
++		acpi_pci_bind_notify(dev->archdata.acpi_handle, dev, false);
++
+ 		acpi_detach_data(dev->archdata.acpi_handle,
+ 				 acpi_glue_data_handler);
+ 		dev->archdata.acpi_handle = NULL;
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index ca75b9c..5396b20 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -93,4 +93,6 @@ static inline int suspend_nvs_save(void) { return 0; }
+ static inline void suspend_nvs_restore(void) {}
+ #endif
+ 
++void acpi_pci_bind_notify(acpi_handle handle, struct device *dev, bool bind);
++
+ #endif /* _ACPI_INTERNAL_H_ */
+diff --git a/drivers/acpi/pci_bind.c b/drivers/acpi/pci_bind.c
+index 2ef0409..208e6cd 100644
+--- a/drivers/acpi/pci_bind.c
++++ b/drivers/acpi/pci_bind.c
+@@ -35,54 +35,56 @@
+ #define _COMPONENT		ACPI_PCI_COMPONENT
+ ACPI_MODULE_NAME("pci_bind");
+ 
+-static int acpi_pci_unbind(struct acpi_device *device)
+-{
+-	struct pci_dev *dev;
++static int acpi_pci_bind(struct acpi_device *device);
+ 
+-	dev = acpi_get_pci_dev(device->handle);
+-	if (!dev)
+-		goto out;
+-
+-	device_set_run_wake(&dev->dev, false);
++static int __acpi_pci_unbind(struct acpi_device *device, struct pci_dev *pdev)
++{
++	device_set_run_wake(&pdev->dev, false);
+ 	pci_acpi_remove_pm_notifier(device);
+ 
+-	if (!dev->subordinate)
+-		goto out;
++	if (pdev->subordinate) {
++		acpi_pci_irq_del_prt(pdev->subordinate);
++		device->ops.bind = NULL;
++		device->ops.unbind = NULL;
++	}
+ 
+-	acpi_pci_irq_del_prt(dev->subordinate);
++	return 0;
++}
+ 
+-	device->ops.bind = NULL;
+-	device->ops.unbind = NULL;
++static int acpi_pci_unbind(struct acpi_device *device)
++{
++	int rc = 0;
++	struct pci_dev *pdev;
+ 
+-out:
+-	pci_dev_put(dev);
+-	return 0;
++	pdev = acpi_get_pci_dev(device->handle);
++	if (pdev) {
++		rc = __acpi_pci_unbind(device, pdev);
++		pci_dev_put(pdev);
++	}
++
++	return rc;
+ }
+ 
+-static int acpi_pci_bind(struct acpi_device *device)
++static int __acpi_pci_bind(struct acpi_device *device, struct pci_dev *pdev)
+ {
+ 	acpi_status status;
+ 	acpi_handle handle;
+ 	struct pci_bus *bus;
+-	struct pci_dev *dev;
+ 
+-	dev = acpi_get_pci_dev(device->handle);
+-	if (!dev)
+-		return 0;
+-
+-	pci_acpi_add_pm_notifier(device, dev);
++	pci_acpi_add_pm_notifier(device, pdev);
+ 	if (device->wakeup.flags.run_wake)
+-		device_set_run_wake(&dev->dev, true);
++		device_set_run_wake(&pdev->dev, true);
+ 
+ 	/*
+ 	 * Install the 'bind' function to facilitate callbacks for
+ 	 * children of the P2P bridge.
+ 	 */
+-	if (dev->subordinate) {
++	if (pdev->subordinate) {
+ 		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+ 				  "Device %04x:%02x:%02x.%d is a PCI bridge\n",
+-				  pci_domain_nr(dev->bus), dev->bus->number,
+-				  PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn)));
++				  pci_domain_nr(pdev->bus), pdev->bus->number,
++				  PCI_SLOT(pdev->devfn),
++				  PCI_FUNC(pdev->devfn)));
+ 		device->ops.bind = acpi_pci_bind;
+ 		device->ops.unbind = acpi_pci_unbind;
+ 	}
+@@ -96,19 +98,29 @@ static int acpi_pci_bind(struct acpi_device *device)
+ 	 * TBD: Can _PRTs exist within the scope of non-bridge PCI devices?
+ 	 */
+ 	status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
+-	if (ACPI_FAILURE(status))
+-		goto out;
++	if (ACPI_SUCCESS(status)) {
++		if (pdev->subordinate)
++			bus = pdev->subordinate;
++		else
++			bus = pdev->bus;
++		acpi_pci_irq_add_prt(device->handle, bus);
++	}
++
++	return 0;
++}
+ 
+-	if (dev->subordinate)
+-		bus = dev->subordinate;
+-	else
+-		bus = dev->bus;
++static int acpi_pci_bind(struct acpi_device *device)
++{
++	int rc = 0;
++	struct pci_dev *pdev;
+ 
+-	acpi_pci_irq_add_prt(device->handle, bus);
++	pdev = acpi_get_pci_dev(device->handle);
++	if (pdev) {
++		rc = __acpi_pci_bind(device, pdev);
++		pci_dev_put(pdev);
++	}
+ 
+-out:
+-	pci_dev_put(dev);
+-	return 0;
++	return rc;
+ }
+ 
+ int acpi_pci_bind_root(struct acpi_device *device)
+@@ -118,3 +130,20 @@ int acpi_pci_bind_root(struct acpi_device *device)
+ 
+ 	return 0;
+ }
++
++void acpi_pci_bind_notify(acpi_handle handle, struct device *dev, bool bind)
++{
++	struct acpi_device *acpi_dev;
++
++	if (!dev_is_pci(dev))
++		return;
++	if (acpi_bus_get_device(handle, &acpi_dev))
++		return;
++	if (!acpi_dev || !acpi_dev->parent)
++		return;
++
++	if (bind && acpi_dev->parent->ops.bind)
++		__acpi_pci_bind(acpi_dev, to_pci_dev(dev));
++	else if (acpi_dev->parent->ops.unbind)
++		__acpi_pci_unbind(acpi_dev, to_pci_dev(dev));
++}
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 7aff631..cd2f7af 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -195,21 +195,6 @@ static acpi_status try_get_root_bridge_busnr(acpi_handle handle,
+ 	return AE_OK;
+ }
+ 
+-static void acpi_pci_bridge_scan(struct acpi_device *device)
+-{
+-	int status;
+-	struct acpi_device *child = NULL;
+-
+-	if (device->flags.bus_address)
+-		if (device->parent && device->parent->ops.bind) {
+-			status = device->parent->ops.bind(device);
+-			if (!status) {
+-				list_for_each_entry(child, &device->children, node)
+-					acpi_pci_bridge_scan(child);
+-			}
+-		}
+-}
+-
+ static u8 pci_osc_uuid_str[] = "33DB4D5B-1FF7-401C-9657-7441C03DD766";
+ 
+ static acpi_status acpi_pci_run_osc(acpi_handle handle,
+@@ -456,7 +441,6 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	int result;
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle;
+-	struct acpi_device *child;
+ 	u32 flags, base_flags;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+@@ -557,12 +541,6 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	if (ACPI_SUCCESS(status))
+ 		result = acpi_pci_irq_add_prt(device->handle, root->bus);
+ 
+-	/*
+-	 * Scan and bind all _ADR-Based Devices
+-	 */
+-	list_for_each_entry(child, &device->children, node)
+-		acpi_pci_bridge_scan(child);
+-
+ 	/* Indicate support for various _OSC capabilities. */
+ 	if (pci_ext_cfg_avail(root->bus->self))
+ 		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
+-- 
+1.7.1
 
->        b_res->end = b_res->start + size0 - 1;
->        b_res->flags |= IORESOURCE_STARTALIGN;
->        if (size1 > size0 && realloc_head) {
-> -               add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
-> +               add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
->                dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
->                                 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
->                                 bus->secondary, bus->subordinate, size1-size0);
-> @@ -778,6 +784,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->                        resource_size_t add_size,
->                        struct list_head *realloc_head)
->  {
-> +       struct pci_host_bridge *phb;
->        struct pci_dev *dev;
->        resource_size_t min_align, align, size, size0, size1;
->        resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
-> @@ -785,10 +792,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->        struct resource *b_res = find_free_bus_resource(bus, type);
->        unsigned int mem64_mask = 0;
->        resource_size_t children_add_size = 0;
-> +       int mem_align_shift;
->
->        if (!b_res)
->                return 0;
->
-> +       phb = find_pci_host_bridge(bus);
-> +       if (type & IORESOURCE_PREFETCH)
-> +               mem_align_shift = phb->pmem_align_shift;
-> +       else
-> +               mem_align_shift = phb->mem_align_shift;
-> +
->        memset(aligns, 0, sizeof(aligns));
->        max_order = 0;
->        size = 0;
-> @@ -818,8 +832,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  #endif
->                        /* For bridges size != alignment */
->                        align = pci_resource_alignment(dev, r);
-> -                       order = __ffs(align) - 20;
-> -                       if (order > 11) {
-> +                       order = __ffs(align) - mem_align_shift;
-> +                       if (order > (11 - (mem_align_shift - 20))) {
->                                dev_warn(&dev->dev, "disabling BAR %d: %pR "
->                                         "(bad alignment %#llx)\n", i, r,
->                                         (unsigned long long) align);
-> @@ -846,7 +860,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->        for (order = 0; order <= max_order; order++) {
->                resource_size_t align1 = 1;
->
-> -               align1 <<= (order + 20);
-> +               align1 <<= (order + mem_align_shift);
 
-This code must encode somewhere the assumption that mem windows must
-be at least 1MB aligned.  Maybe it has something to do with the "20"
-constants above.  Independent of your patch, it'd be nice to make this
-more explicit.
-
->
->                if (!align)
->                        min_align = align1;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2b559f1..879de4e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -376,9 +376,17 @@ struct pci_host_bridge_window {
->        resource_size_t offset;         /* bus address + offset = CPU address */
->  };
->
-> +/* Default shits for P2P I/O and MMIO bar minimal alignment shifts */
-
-"Default shifts"
-
-> +#define PCI_DEFAULT_IO_ALIGN_SHIFT     12      /* 4KB  */
-> +#define PCI_DEFAULT_MEM_ALIGN_SHIFT    20      /* 1MB  */
-> +#define PCI_DEFAULT_PMEM_ALIGN_SHIFT   20      /* 1MB */
-> +
->  struct pci_host_bridge {
->        struct device dev;
->        struct pci_bus *bus;            /* root bus */
-> +       int io_align_shift;             /* P2P I/O bar minimal alignment shift  */
-> +       int mem_align_shift;            /* P2P MMIO bar minimal alignment shift */
-> +       int pmem_align_shift;           /* P2P prefetchable MMIO bar minimal alignment shift */
->        struct list_head windows;       /* pci_host_bridge_windows */
->        void (*release_fn)(struct pci_host_bridge *);
->        void *release_data;
-> --
-> 1.7.9.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
