@@ -1,46 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:43610 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026Ab2FZTBl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 15:01:41 -0400
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:57976 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751769Ab2FDXge convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2012 19:36:34 -0400
 MIME-Version: 1.0
-In-Reply-To: <1340736849-14875-2-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org> <1340736849-14875-2-git-send-email-yinghai@kernel.org>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 26 Jun 2012 12:01:19 -0700
-Message-ID: <CA+55aFzi7tHg=3k8Fmga8XmxFbn6tZLLV97vt67Xx_WtckQo6g@mail.gmail.com>
-Subject: Re: [PATCH -v12 01/15] resources: Split out __allocate_resource()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
+In-Reply-To: <20120604133457.GA2969@richard>
+References: <20120422155202.GA13540@richard>
+	<4F95B17B.3030401@redhat.com>
+	<20120514015536.GA3331@richard>
+	<CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
+	<20120514064615.GB26605@richard>
+	<CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
+	<20120516011833.GA6599@richard>
+	<CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
+	<20120529115900.GA31679@richard>
+	<CAE9FiQWO1C76ppjZF4Lm4FVpQYPRv5ZirGp9iOM3pm-xrm3Epg@mail.gmail.com>
+	<20120604133457.GA2969@richard>
+Date: Mon, 4 Jun 2012 16:36:33 -0700
+Message-ID: <CAE9FiQWw=dMBajvGQy_1KoPbGa1wvER5U81oULbkXCjBzQDRpQ@mail.gmail.com>
+Subject: Re: One problem in reassign pci bus number?
+From: Yinghai Lu <yinghai@kernel.org>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 26, 2012 at 11:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> It will take bool lock, so we could use it in other functions that
-> hold the resource lock already.
+On Mon, Jun 4, 2012 at 6:34 AM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Tue, May 29, 2012 at 10:14:51AM -0700, Yinghai Lu wrote:
+>>On Tue, May 29, 2012 at 4:59 AM, Richard Yang
+>><weiyang@linux.vnet.ibm.com> wrote:
+>>>
+>>> I think about this issue again, this behavior of kernel will bring some
+>>> unconvenience to the user.
+>>>
+>>> Do you think the kernel could handle this situation?
+>>
+>>in this extreme case, you may need user to do some comprise.
+>>
+>>We should always try to use setting from BIOS if it is sane.
+>>
+>>Yinghai
+> Yinghai
+>
+>                    +-------+
+>                    |       | root bridge(0,255)
+>                    +---+---+
+>                        |          Bus 0
+>       -----+-----------+------------------------------+--
+>            |                                          |
+>            |                                          |
+>            |                                          |
+>       +----+----+                               +-----+-----+
+>       |         |  B1(1,15)                     |           |B2(32,35)
+>       +----+----+                               +-----+-----+
+>            |  Bus 1                                   |    Bus 32
+>       -----+-----------------------             -----------
+>                             |
+>                        +----+----+
+>                        |         | B3
+>                        +---------+
+>
+> I reread the current code, v3.4, in linus tree,
+> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+> And I come up with another condition which will have a problem when
+> kernel is not given the parameter, pci=assign-busses.
+>
+> Same condition as previous:
+> -------------------------------------------------------------------------------
+> B1 and B2 works fine with the BIOS and get the bus number assigned.
+> B3 is not probed by BIOS.
+>
+> Difference between the previous example:
+> -------------------------------------------------------------------------------
+> In this case, B2 is assigned bus range (32, 35), which has a gap between
+> B1 number range (1, 15).
+>
+> When kernel meets B3 in second pass, B3 will be assigned with bus number
+> 16. Well, this time the bus number 16 doesn't overlap with bus number of
+> B2.
+>
+> But, the pci_fixup_parent_subordinate_busnr() will not work since the
+> pci=assign-buses is not passed to kernel.
+>
+> So B1's bus window is still (1,15) not (1,16).
+>
+> BTW, is this also a extrem case?
 
-This is too damn ugly.
+that should be handled by busn_alloc branch.
 
-These kinds of "conditionally take lock" things are always just bugs
-waiting to happen. Don't do it.
+kernel will try to probe in [1,15] at first, and could extend B1 range
+to [1, 31] if needed.
 
-Just make the rule be that the caller of the __allocate_resource
-helper has to hold the lock. Sure, that means that you need to then
-use split reallocate_resource() into a helper function (ie a static
-__reallocate_resource() that needs to have the lock taken by the
-caller too), but dammit, that's definitely the right thing to do
-anyway.
+Thanks
 
-These kinds of "bool lock" crap things have to die. They are *wrong*.
-They are a sign of bad locking rules.
-
-                  Linus
+Yinghai
