@@ -1,27 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:46216 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756266Ab2FEFlj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 01:41:39 -0400
+Received: from e36.co.us.ibm.com ([32.97.110.154]:42834 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825Ab2FEVwW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 17:52:22 -0400
 Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 5 Jun 2012 11:11:37 +0530
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q555fYrK10158386
-	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 11:11:35 +0530
-Received: from d28av04.in.ibm.com (loopback [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q55BBL29019325
-	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 21:11:22 +1000
-Date: Tue, 5 Jun 2012 13:41:32 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Tue, 5 Jun 2012 15:52:21 -0600
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 15BE53E4004E
+	for <linux-pci@vger.kernel.org>; Tue,  5 Jun 2012 21:52:18 +0000 (WET)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q55LqGJ1187962
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 15:52:16 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q55LqF9v009623
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 15:52:16 -0600
+Date: Wed, 6 Jun 2012 06:52:11 +0900
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
 To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>,
 	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+	linux-pci@vger.kernel.org
 Subject: Re: One chart on pci bridge and its bus and their children
-Message-ID: <20120605054132.GB24358@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Message-ID: <20120605215211.GA5564@shangw>
+Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
 References: <20120605032627.GA23271@richard>
  <20120605041146.GD6637@ram-ThinkPad-T61>
  <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
@@ -33,9 +36,9 @@ In-Reply-To: <CAE9FiQUCV1+ePfyX7bqOyZ+Wcsj1neCO91MvuM5vNh3+UPERDQ@mail.gmail.com
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 04, 2012 at 10:20:51PM -0700, Yinghai Lu wrote:
->On Mon, Jun 4, 2012 at 10:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Mon, Jun 4, 2012 at 9:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+
+Hi YingHai,
+
 >>> That's true, but I don't think it answers the question.  If we have:
 >>>
 >>>    pci_bus->bridge == pci_bus->self->dev
@@ -48,17 +51,32 @@ On Mon, Jun 04, 2012 at 10:20:51PM -0700, Yinghai Lu wrote:
 >> root bus ->self should be NULL.
 >>
 >> root bus ->bridge is to the hostbridge->dev.
+
+As I understood, the current implementation is to trace the PCI host bridge
+through the PCI root bus. The problem would be avoided if you change it for
+a little bit to trace the PCI host bridge through (PCI domain number), which
+will simplify the current implementation in 3.5.RC1 as well even though not
+much. For example: When looking for the PCI host bridge for the child bus,
+we only need get the PCI domain number, then get the corresponding PCI host
+bridge. We needn't go through the whole PCI bus tree from the bottom to the
+top until the PCI root bus.
+
+I'm not sure that will introduce performance improvement or not.
+
 >
 >also
 >
 >b->bridge = get_device(&bridge->dev);
 >
 >so there is one reference held by pci bus.
+>
 
-Hmm... so can we just have b->bridge, and then convert bridge to self if
-necessary?
+If we ignore the return value of get_device() here, that would be possible
+to merge "bridge"/"self" for child PCI bus. However, we still need differentiate
+the PCI root bus and child bus because the "bridge"/"self" of PCI root bus
+would be "NULL", but "bridge"/"self" (might be merged to "bridge") would point
+pci_dev of the P2P bridge.
 
--- 
-Richard Yang
-Help you, Help me
+Thanks,
+Gavin
 
