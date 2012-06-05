@@ -1,97 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:43710 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757699Ab2FEChH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2012 22:37:07 -0400
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:46216 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756266Ab2FEFlj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 01:41:39 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 5 Jun 2012 11:11:37 +0530
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q555fYrK10158386
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 11:11:35 +0530
+Received: from d28av04.in.ibm.com (loopback [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q55BBL29019325
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 21:11:22 +1000
+Date: Tue, 5 Jun 2012 13:41:32 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: One chart on pci bridge and its bus and their children
+Message-ID: <20120605054132.GB24358@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120605032627.GA23271@richard>
+ <20120605041146.GD6637@ram-ThinkPad-T61>
+ <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
+ <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
+ <CAE9FiQUCV1+ePfyX7bqOyZ+Wcsj1neCO91MvuM5vNh3+UPERDQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo67h_mdZtoEn-W_OOXZ8m7gs3g6Q25kte285ZX=2FKf+A@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-	<20120525193716.GA8817@google.com>
-	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
-	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-	<CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
-	<4FC50E09.4000204@zytor.com>
-	<CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
-	<4FC51D79.6010804@zytor.com>
-	<CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
-	<4FC536A5.6020600@zytor.com>
-	<CAE9FiQXi23-mY6p2Dr1EJmukhTSPxvBGtjvQ8wyJYPDS+6o5ZA@mail.gmail.com>
-	<CAErSpo67h_mdZtoEn-W_OOXZ8m7gs3g6Q25kte285ZX=2FKf+A@mail.gmail.com>
-Date: Mon, 4 Jun 2012 19:37:06 -0700
-Message-ID: <CAE9FiQV7jpBWkcXy2vgixnxx2fhid28Wj0iHAhGkVVdQn6epNQ@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	David Miller <davem@davemloft.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQUCV1+ePfyX7bqOyZ+Wcsj1neCO91MvuM5vNh3+UPERDQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 3, 2012 at 6:05 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Jun 1, 2012 at 4:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Tue, May 29, 2012 at 1:50 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+On Mon, Jun 04, 2012 at 10:20:51PM -0700, Yinghai Lu wrote:
+>On Mon, Jun 4, 2012 at 10:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Mon, Jun 4, 2012 at 9:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> That's true, but I don't think it answers the question.  If we have:
 >>>
->>> The bus-side address space should not be more than 32 bits no matter
->>> what.  As Bjorn indicates, you seem to be mixing up bus and cpu
->>> addresses all over the place.
+>>>    pci_bus->bridge == pci_bus->self->dev
+>>>
+>>> why would we need both "self" and "bridge"?  It would be interesting
+>>> to try to remove "bridge" and replace uses of it with "self->dev".
 >>
->> please check update patches that is using converted pci bus address
->> for boundary checking.
+>> then how about root bus?
+>>
+>> root bus ->self should be NULL.
+>>
+>> root bus ->bridge is to the hostbridge->dev.
 >
-> What problem does this fix?  There's significant risk that this
-> allocation change  will make us trip over something, so it must fix
-> something to make it worth considering.
-
-If we do not enable that, we would not find the problem.
-
-On one my test setup that _CRS does state 64bit resource range,
-but when I clear some device resource manually and let kernel allocate
-high, just then find out those devices does not work with drivers.
-It turns out _CRS have more big range than what the chipset setting states.
-with fixing in BIOS, allocate high is working now on that platform.
-
+>also
 >
-> Steve's problem doesn't count because that's a "pci=nocrs" case that
-> will always require special handling.
-
-but pci=nocrs is still supported, even some systems does not work with
-pci=use_crs
-
-> A general solution is not
-> possible without a BIOS change (to describe >4GB apertures) or a
-> native host bridge driver (to discover >4GB apertures from the
-> hardware).  These patches only make Steve's machine work by accident
-> -- they make us put the video device above 4GB, and we're just lucky
-> that the host bridge claims that region.
-
-Some bios looks enabling the non-stated range default to legacy chain.
-Some bios does not do that. only stated range count.
-So with pci=nocrs we still have some chance to get allocate high working.
-
+>b->bridge = get_device(&bridge->dev);
 >
-> One possibility is some sort of boot-time option to force a PCI device
-> to a specified address.  That would be useful for debugging as well as
-> for Steve's machine.
+>so there is one reference held by pci bus.
 
-yeah, how about
+Hmm... so can we just have b->bridge, and then convert bridge to self if
+necessary?
 
-pci=alloc_high
+-- 
+Richard Yang
+Help you, Help me
 
-and default to disabled ?
-
-Thanks
-
-Yinghai
