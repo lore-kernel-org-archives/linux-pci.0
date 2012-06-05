@@ -1,149 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:11162 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751907Ab2FWCX5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Jun 2012 22:23:57 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Zheng Yan <zheng.z.yan@intel.com>, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH -v7 1/4] ACPI, PM, Specify lowest allowed state for device sleep state
-Date: Sat, 23 Jun 2012 10:23:48 +0800
-Message-Id: <1340418231-10134-2-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1340418231-10134-1-git-send-email-ying.huang@intel.com>
-References: <1340418231-10134-1-git-send-email-ying.huang@intel.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:50982 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505Ab2FETlh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 15:41:37 -0400
+Received: by dady13 with SMTP id y13so7726116dad.19
+        for <linux-pci@vger.kernel.org>; Tue, 05 Jun 2012 12:41:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120605060202.GC24358@richard>
+References: <20120605032627.GA23271@richard>
+	<20120605041146.GD6637@ram-ThinkPad-T61>
+	<CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
+	<CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
+	<20120605060202.GC24358@richard>
+Date: Tue, 5 Jun 2012 12:41:36 -0700
+Message-ID: <CAE9FiQVkdH8OxBwgR9a0QS9BWkS0jOoHaGQdAZFafQtBdULQwA@mail.gmail.com>
+Subject: Re: One chart on pci bridge and its bus and their children
+From: Yinghai Lu <yinghai@kernel.org>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>,
+	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lower device sleep state can save more power, but has more exit
-latency too.  Sometimes, to satisfy some power QoS and other
-requirement, we need to constrain the lowest device sleep state.
+On Mon, Jun 4, 2012 at 11:02 PM, Richard Yang
+<weiyang@linux.vnet.ibm.com> wrote:
+> On Mon, Jun 04, 2012 at 10:18:46PM -0700, Yinghai Lu wrote:
+>
+> BTW, if the dev is the hostbrige->dev, why not pci_host_bridge contain a
+> field "dev"?
 
-In this patch, a parameter to specify lowest allowed state for
-acpi_pm_device_sleep_state is added.  So that the caller can enforce
-the constraint via the parameter.
+we have that from 3.5-rc1
 
-This is needed by PCIe D3cold support, where the lowest power state
-allowed may be D3_HOT instead of default D3_COLD.
+>
+> And, why root bus differs with other bus a lot?
+> Both root bus and other bus use self/bridge point to the "PCI BRIDGE"
+> device.
+> I think we can determine whether this is a root bus by bus->parent?
 
-Signed-off-by: Huang Ying <ying.huang@intel.com>
-Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/sleep.c       |   24 +++++++++++++++++++-----
- drivers/pci/pci-acpi.c     |    3 ++-
- drivers/pnp/pnpacpi/core.c |    4 ++--
- include/acpi/acpi_bus.h    |    6 +++---
- 4 files changed, 26 insertions(+), 11 deletions(-)
+self is for real pci dev bridge.
+bridge is the for pci_dev bridge generic device pointer. or host
+bridge device pointer.
 
---- a/drivers/acpi/sleep.c
-+++ b/drivers/acpi/sleep.c
-@@ -716,8 +716,9 @@ int acpi_suspend(u32 acpi_state)
-  *	@dev: device to examine; its driver model wakeup flags control
-  *		whether it should be able to wake up the system
-  *	@d_min_p: used to store the upper limit of allowed states range
-- *	Return value: preferred power state of the device on success, -ENODEV on
-- *		failure (ie. if there's no 'struct acpi_device' for @dev)
-+ *	@d_max_in: specify the lowest allowed states
-+ *	Return value: preferred power state of the device on success, -ENODEV
-+ *	(ie. if there's no 'struct acpi_device' for @dev) or -EINVAL on failure
-  *
-  *	Find the lowest power (highest number) ACPI device power state that
-  *	device @dev can be in while the system is in the sleep state represented
-@@ -732,13 +733,15 @@ int acpi_suspend(u32 acpi_state)
-  *	via @wake.
-  */
- 
--int acpi_pm_device_sleep_state(struct device *dev, int *d_min_p)
-+int acpi_pm_device_sleep_state(struct device *dev, int *d_min_p, int d_max_in)
- {
- 	acpi_handle handle = DEVICE_ACPI_HANDLE(dev);
- 	struct acpi_device *adev;
- 	char acpi_method[] = "_SxD";
- 	unsigned long long d_min, d_max;
- 
-+	if (d_max_in < ACPI_STATE_D0 || d_max_in > ACPI_STATE_D3)
-+		return -EINVAL;
- 	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &adev))) {
- 		printk(KERN_DEBUG "ACPI handle has no context!\n");
- 		return -ENODEV;
-@@ -746,8 +749,10 @@ int acpi_pm_device_sleep_state(struct de
- 
- 	acpi_method[2] = '0' + acpi_target_sleep_state;
- 	/*
--	 * If the sleep state is S0, we will return D3, but if the device has
--	 * _S0W, we will use the value from _S0W
-+	 * If the sleep state is S0, the lowest limit from ACPI is D3,
-+	 * but if the device has _S0W, we will use the value from _S0W
-+	 * as the lowest limit from ACPI.  Finally, we will constrain
-+	 * the lowest limit with the specified one.
- 	 */
- 	d_min = ACPI_STATE_D0;
- 	d_max = ACPI_STATE_D3;
-@@ -791,8 +796,17 @@ int acpi_pm_device_sleep_state(struct de
- 		}
- 	}
- 
-+	if (d_max_in < d_min)
-+		return -EINVAL;
- 	if (d_min_p)
- 		*d_min_p = d_min;
-+	/* constrain d_max with specified lowest limit (max number) */
-+	if (d_max > d_max_in) {
-+		for (d_max = d_max_in; d_max > d_min; d_max--) {
-+			if (adev->power.states[d_max].flags.valid)
-+				break;
-+		}
-+	}
- 	return d_max;
- }
- #endif /* CONFIG_PM */
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -203,7 +203,8 @@ static pci_power_t acpi_pci_choose_state
- {
- 	int acpi_state;
- 
--	acpi_state = acpi_pm_device_sleep_state(&pdev->dev, NULL);
-+	acpi_state = acpi_pm_device_sleep_state(&pdev->dev, NULL,
-+						ACPI_STATE_D3);
- 	if (acpi_state < 0)
- 		return PCI_POWER_ERROR;
- 
---- a/drivers/pnp/pnpacpi/core.c
-+++ b/drivers/pnp/pnpacpi/core.c
-@@ -170,8 +170,8 @@ static int pnpacpi_suspend(struct pnp_de
- 	}
- 
- 	if (acpi_bus_power_manageable(handle)) {
--		int power_state = acpi_pm_device_sleep_state(&dev->dev, NULL);
--
-+		int power_state = acpi_pm_device_sleep_state(&dev->dev, NULL,
-+							     ACPI_STATE_D3);
- 		if (power_state < 0)
- 			power_state = (state.event == PM_EVENT_ON) ?
- 					ACPI_STATE_D0 : ACPI_STATE_D3;
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -415,13 +415,13 @@ int acpi_enable_wakeup_device_power(stru
- int acpi_disable_wakeup_device_power(struct acpi_device *dev);
- 
- #ifdef CONFIG_PM
--int acpi_pm_device_sleep_state(struct device *, int *);
-+int acpi_pm_device_sleep_state(struct device *, int *, int);
- #else
--static inline int acpi_pm_device_sleep_state(struct device *d, int *p)
-+static inline int acpi_pm_device_sleep_state(struct device *d, int *p, int m)
- {
- 	if (p)
- 		*p = ACPI_STATE_D0;
--	return ACPI_STATE_D3;
-+	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3) ? m : ACPI_STATE_D0;
- }
- #endif
- 
+Yinghai
