@@ -1,136 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:39468 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755995Ab2FPUhL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2012 16:37:11 -0400
-Message-ID: <201206162037.q5GKbBaU017780@lab-41.internal.tilera.com>
-From: Chris Metcalf <cmetcalf@tilera.com>
-Date: Wed, 13 Jun 2012 14:46:40 -0400
-Subject: [PATCH 2/3] arch/tile: enable ZONE_DMA for tilegx
-In-Reply-To: <201206162036.q5GKacEK017774@lab-41.internal.tilera.com>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:36238 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737Ab2FEEN0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 00:13:26 -0400
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Mon, 4 Jun 2012 22:13:25 -0600
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id C30151FF001D
+	for <linux-pci@vger.kernel.org>; Tue,  5 Jun 2012 04:12:43 +0000 (WET)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q554C6kh066540
+	for <linux-pci@vger.kernel.org>; Mon, 4 Jun 2012 22:12:26 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q554Bot7020736
+	for <linux-pci@vger.kernel.org>; Mon, 4 Jun 2012 22:11:50 -0600
+Date: Tue, 5 Jun 2012 12:11:46 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: One chart on pci bridge and its bus and their children
+Message-ID: <20120605041146.GD6637@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <20120605032627.GA23271@richard>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120605032627.GA23271@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is required for PCI root complex legacy support and USB OHCI root
-complex support.  With this change tilegx now supports allocating memory
-whose PA fits in 32 bits.
+On Tue, Jun 05, 2012 at 11:26:27AM +0800, Richard Yang wrote:
+> 
+> All, 
+> 
+> I draw a chart on the relationship of bridge/bus/devics.
+> 
+> I am not sure it is exact, so please correct me if it is not correct.
 
-Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/tile/Kconfig          |    3 +++
- arch/tile/kernel/pci-dma.c |   15 +++++++++------
- arch/tile/kernel/setup.c   |   12 +++++++++++-
- arch/tile/mm/init.c        |   11 +++++------
- 4 files changed, 28 insertions(+), 13 deletions(-)
+A clearer representation can be found at http://tldp.org/LDP/tlk/dd/pci.html		
+in section 6.6.1
 
-diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-index a5302d3..0ad771f 100644
---- a/arch/tile/Kconfig
-+++ b/arch/tile/Kconfig
-@@ -212,6 +212,9 @@ config HIGHMEM
- 
- 	  If unsure, say "true".
- 
-+config ZONE_DMA
-+	def_bool y
-+
- # We do not currently support disabling NUMA.
- config NUMA
- 	bool # "NUMA Memory Allocation and Scheduler Support"
-diff --git a/arch/tile/kernel/pci-dma.c b/arch/tile/kernel/pci-dma.c
-index 9814d70..edd856a 100644
---- a/arch/tile/kernel/pci-dma.c
-+++ b/arch/tile/kernel/pci-dma.c
-@@ -45,14 +45,17 @@ void *dma_alloc_coherent(struct device *dev,
- 	gfp |= __GFP_ZERO;
- 
- 	/*
--	 * By forcing NUMA node 0 for 32-bit masks we ensure that the
--	 * high 32 bits of the resulting PA will be zero.  If the mask
--	 * size is, e.g., 24, we may still not be able to guarantee a
--	 * suitable memory address, in which case we will return NULL.
--	 * But such devices are uncommon.
-+	 * If the mask specifies that the memory be in the first 4 GB, then
-+	 * we force the allocation to come from the DMA zone.  We also
-+	 * force the node to 0 since that's the only node where the DMA
-+	 * zone isn't empty.  If the mask size is smaller than 32 bits, we
-+	 * may still not be able to guarantee a suitable memory address, in
-+	 * which case we will return NULL.  But such devices are uncommon.
- 	 */
--	if (dma_mask <= DMA_BIT_MASK(32))
-+	if (dma_mask <= DMA_BIT_MASK(32)) {
-+		gfp |= GFP_DMA;
- 		node = 0;
-+	}
- 
- 	pg = homecache_alloc_pages_node(node, gfp, order, PAGE_HOME_DMA);
- 	if (pg == NULL)
-diff --git a/arch/tile/kernel/setup.c b/arch/tile/kernel/setup.c
-index 6d179df..fdde3b6 100644
---- a/arch/tile/kernel/setup.c
-+++ b/arch/tile/kernel/setup.c
-@@ -658,6 +658,8 @@ static void __init zone_sizes_init(void)
- 	unsigned long zones_size[MAX_NR_ZONES] = { 0 };
- 	int size = percpu_size();
- 	int num_cpus = smp_height * smp_width;
-+	const unsigned long dma_end = (1UL << (32 - PAGE_SHIFT));
-+
- 	int i;
- 
- 	for (i = 0; i < num_cpus; ++i)
-@@ -729,6 +731,14 @@ static void __init zone_sizes_init(void)
- 		zones_size[ZONE_NORMAL] = end - start;
- #endif
- 
-+		if (start < dma_end) {
-+			zones_size[ZONE_DMA] = min(zones_size[ZONE_NORMAL],
-+						   dma_end - start);
-+			zones_size[ZONE_NORMAL] -= zones_size[ZONE_DMA];
-+		} else {
-+			zones_size[ZONE_DMA] = 0;
-+		}
-+
- 		/* Take zone metadata from controller 0 if we're isolnode. */
- 		if (node_isset(i, isolnodes))
- 			NODE_DATA(i)->bdata = &bootmem_node_data[0];
-@@ -738,7 +748,7 @@ static void __init zone_sizes_init(void)
- 		       PFN_UP(node_percpu[i]));
- 
- 		/* Track the type of memory on each node */
--		if (zones_size[ZONE_NORMAL])
-+		if (zones_size[ZONE_NORMAL] || zones_size[ZONE_DMA])
- 			node_set_state(i, N_NORMAL_MEMORY);
- #ifdef CONFIG_HIGHMEM
- 		if (end != start)
-diff --git a/arch/tile/mm/init.c b/arch/tile/mm/init.c
-index a2417a0..ef29d6c 100644
---- a/arch/tile/mm/init.c
-+++ b/arch/tile/mm/init.c
-@@ -733,16 +733,15 @@ static void __init set_non_bootmem_pages_init(void)
- 	for_each_zone(z) {
- 		unsigned long start, end;
- 		int nid = z->zone_pgdat->node_id;
-+#ifdef CONFIG_HIGHMEM
- 		int idx = zone_idx(z);
-+#endif
- 
- 		start = z->zone_start_pfn;
--		if (start == 0)
--			continue;  /* bootmem */
- 		end = start + z->spanned_pages;
--		if (idx == ZONE_NORMAL) {
--			BUG_ON(start != node_start_pfn[nid]);
--			start = node_free_pfn[nid];
--		}
-+		start = max(start, node_free_pfn[nid]);
-+		start = max(start, max_low_pfn);
-+
- #ifdef CONFIG_HIGHMEM
- 		if (idx == ZONE_HIGHMEM)
- 			totalhigh_pages += z->spanned_pages;
--- 
-1.7.10.3
+> 
+> BTW, the pci_bus->self, pci_bus->bridge seem to point the same thing.
+> So this is really necessary to do this?
+
+pci_bus->self points to the pci_dev structure, and pci_bus->bridge
+points to the device structure. Both correspond to the same bridge. BTW: device
+structure is the basic structure to represent any device in the system,
+not necessarily pci device.
+
+
+> 
+>                             Bus 0(pci_bus)                      
+>                             +--------------------+<----+
+>                             |                    |     |
+>                             +--------------------+     |
+>                                                        |
+>                                                        |
+>                              Bridge(pci_dev)           |                     
+>                             +--------------------+<----|---+--------------+
+>                             |subordinate(pci_bus)|-+   |   |              |
+>                             +--------------------+ |   |   |              |
+>                                                    |   |   |              |
+>                                                    |   |   |              |
+>                                                    |   |   |              |
+>                             Bus 1(pci_bus)         |   |   |              |
+>                        +--->+-------------------+<-+   |   |              |
+>                        |    |parent(pci_bus)    |------+   |              |
+>                        |    +-------------------+          |              |
+>                        |    |self(pci_dev)      |----------+              |
+>                        |    |bridge(device)     |                         |
+>                        |    +-------------------+                         |
+>                        |    |devices(list_head) |                         |
+>                        |    +--------+----------+                         |
+>                        |             |                                    |
+>                        |      ----+--+---+----                            |
+>    pci_dev             |          |      |          pci_dev               |
+>    +---------------+<--|----------+      +--------->+-----------------+   |
+>    |bus(pci_bus)   |---+                            |bus(pci_bus)     |   |
+>    +---------------+                                +-----------------+   |
+>    |dev.parent     |                                |dev.parent       |---+
+>    +---------------+                                +-----------------+
 
