@@ -1,110 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:51919 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753553Ab2FLQpF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jun 2012 12:45:05 -0400
-Received: by lahd3 with SMTP id d3so3668087lah.19
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 09:45:03 -0700 (PDT)
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:48491 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753693Ab2FEGfr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jun 2012 02:35:47 -0400
+Received: from /spool/local
+	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Tue, 5 Jun 2012 02:35:46 -0400
+Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id A788238C8054
+	for <linux-pci@vger.kernel.org>; Tue,  5 Jun 2012 02:35:43 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q556ZhqG122210
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 02:35:43 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q556ZgvF028943
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 03:35:43 -0300
+Date: Tue, 5 Jun 2012 14:35:38 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: One chart on pci bridge and its bus and their children
+Message-ID: <20120605063538.GE6637@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <20120605032627.GA23271@richard>
+ <20120605041146.GD6637@ram-ThinkPad-T61>
+ <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
+ <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
+ <CAE9FiQUCV1+ePfyX7bqOyZ+Wcsj1neCO91MvuM5vNh3+UPERDQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1339518884.2415.2.camel@zim.stowe>
-References: <20120601211619.20328.36769.stgit@amt.stowe> <CAErSpo5yZdr4dgqjO6O9PSi3XZXfSOHmjjJRemaqAfmpv5WREA@mail.gmail.com>
- <1339518884.2415.2.camel@zim.stowe>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 Jun 2012 10:44:43 -0600
-Message-ID: <CAErSpo42C0Uo5x6dzvPWRkfjvZhBzi5g1yCs+pNfpFnfvCtqKA@mail.gmail.com>
-Subject: Re: [PATCH 0/4] PCI: PCIe capability structure related cleanup/fixes
-To: Myron Stowe <mstowe@redhat.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xudong.hao@linux.intel.com,
-	ddutile@redhat.com, yu.zhao@intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQUCV1+ePfyX7bqOyZ+Wcsj1neCO91MvuM5vNh3+UPERDQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 12, 2012 at 10:34 AM, Myron Stowe <mstowe@redhat.com> wrote:
-> On Mon, 2012-06-11 at 19:52 -0700, Bjorn Helgaas wrote:
->> On Fri, Jun 1, 2012 at 2:16 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
->> > The following series introduces PCI Express 'capability structure'
->> > related cleanup, fixes, and optimizations.
->> >
->> > Patch 1/4 changes pci_ltr_supported() to a static routine.
->> >
->> > Patch 2/4 removes redundant checking in various PCI Express features as
->> > suggested by Bjorn Helgaas in
->> > http://marc.info/?l=linux-pci&m=130463494319762&w=2
->> >
->> > There is a similar idiom in use that could be similarly be re-factored:
->> >    if (!pci_is_pcie(dev))
->> >        return;
->> >
->> >    pos = pci_find_ext_capability(dev, ...);
->> >    if (!pos)
->> >        return;
->> >
->> > At first it seemed incorrect to remove the redundant call of
->> > pci_is_pcie() in these cases as a PCI or PCI-X (< 2.0) device may be
->> > involved.  In such cases an "extended capability" list would not exist,
->> > as it was not introduced until PCI-X 2.0, and accesses outside of the
->> > device's configuration space would be attempted.  However, upon further
->> > review of pci_find_ext_capability() it looks as if such accesses would
->> > be handled correctly due to the short-circuiting logic involved -
->> >
->> >    if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
->> >        return 0;
->> >
->> > As such, I'll entertain comments as to whether or not we should also
->> > make similar removals of pci_is_pcie() in these cases.
->> >
->> > Patch 3/4 introduces pci_pcie_cap2() for use in v2 capability related
->> > feature code.  The makeup of Express' capability structure varies
->> > substantially between v1 and v2.
->> >
->> > There is still some redundancy in PCIe v2 capabilities checking related
->> > to the Latency Tolerance Reporting (LTR) feature routines that likely
->> > could be re-factored further; please feel free to respond with ideas.
->> >
->> > Patch 4/4 makes a minor optimization to the saving and restoring of
->> > PCI Express capability structures.
->> >
->> > Seems like the same type of optimization could be done to remove the
->> > 'if (pcie_cap_has_lnkctl(dev->pcie_type, flags))' check.  According to
->> > section 7.8 "PCI Express Capability Structure" of the PCI Express 1.0a
->> > specification:
->> >
->> >    "Figure 7-10 details allocation of register fields in the PCI
->> >     Express Capability structure. The PCI Express Capabilities,
->> >     Device Capabilities, Device Status/Control, Link Capabilities,
->> >     and Link Status/Control registers are required for all PCI
->> >     Express devices. Endpoints are not required to implement
->> >     registers other than those listed above and terminate the
->> >     capability structure."
->> >
->> > There may have been some early Express devices that did not properly
->> > follow the specification which required the introduction of
->> > 'pcie_cap_has_lnkctl()' so I did not make the additional optimization.
->> > ---
->> >
->> > Myron Stowe (4):
->> >      PCI: Remove redundant capabilities checking in pci_{save,restore}_pcie_state
->> >      PCI: Add pci_pcie_cap2() check for PCIe feature capabilities >= v2
->> >      PCI: Remove redundant checking in PCI Express capability routines
->> >      PCI: make pci_ltr_supported static.
->>
->> I added Don's acks, made a couple minor changes he suggested, removed
->> the static pci_ltr_supported() function declaration (unnecessary,
->> AFAICS), and pushed these to:
->>
->>   http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/topic/stowe-cap-cleanup
->>
->> If everything looks right to you, I'll merge it into "next" tomorrow.
->> Thanks for doing this; I think it's some nice cleanup and will make
->> things safer and easier to understand.
->
-> Looks good - thanks to both Don and yourself for the suggestions and
-> changes to make the patch headers more comprehensible with respect to
-> the capabilities structure versions.
+On Mon, Jun 04, 2012 at 10:20:51PM -0700, Yinghai Lu wrote:
+> On Mon, Jun 4, 2012 at 10:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Mon, Jun 4, 2012 at 9:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> That's true, but I don't think it answers the question.  If we have:
+> >>
+> >>    pci_bus->bridge == pci_bus->self->dev
+> >>
+> >> why would we need both "self" and "bridge"?  It would be interesting
+> >> to try to remove "bridge" and replace uses of it with "self->dev".
+> >
+> > then how about root bus?
+> >
+> > root bus ->self should be NULL.
+> >
+> > root bus ->bridge is to the hostbridge->dev.
 
-Great, I merged that topic branch to "next" and pushed it.
+Yinghai,
 
-Bjorn
+is there a reason why this can't be fixed in
+pci_create_root_bus() by having
+   bus->self = bridge; /* 'bridge' is the pci_device of the corresponding host bridge */
+   get_device(&bridge->dev);
+
+
+RP
+
