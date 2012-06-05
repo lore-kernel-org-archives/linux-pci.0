@@ -1,185 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:63979 "EHLO
-	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964978Ab2FAQU1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2012 12:20:27 -0400
-Message-ID: <4FC8EBC8.20807@inria.fr>
-Date: Fri, 01 Jun 2012 18:20:24 +0200
-From: Brice Goglin <Brice.Goglin@inria.fr>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54329 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731Ab2FEFE5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 01:04:57 -0400
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: wrong link speed reported in lspci?
+In-Reply-To: <CAErSpo7ivA4NpTv8jT=sxe9qAEZZ89qm6km+WBGq1UZK1Uhz8A@mail.gmail.com>
+References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
+	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
+	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
+	<20120525043651.GA1391@google.com>
+	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
+	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
+	<20120525193716.GA8817@google.com>
+	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
+	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
+	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
+	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
+	<CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
+	<4FC50E09.4000204@zytor.com>
+	<CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
+	<4FC51D79.6010804@zytor.com>
+	<CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
+	<4FC536A5.6020600@zytor.com>
+	<CAE9FiQXi23-mY6p2Dr1EJmukhTSPxvBGtjvQ8wyJYPDS+6o5ZA@mail.gmail.com>
+	<CAErSpo67h_mdZtoEn-W_OOXZ8m7gs3g6Q25kte285ZX=2FKf+A@mail.gmail.com>
+	<CAE9FiQV7jpBWkcXy2vgixnxx2fhid28Wj0iHAhGkVVdQn6epNQ@mail.gmail.com>
+	<CAErSpo7ivA4NpTv8jT=sxe9qAEZZ89qm6km+WBGq1UZK1Uhz8A@mail.gmail.com>
+Date: Mon, 4 Jun 2012 22:04:57 -0700
+Message-ID: <CAE9FiQWbET=awz9o=6JBwonv_obe5KzRPNXjowNtFWrN3_4T_w@mail.gmail.com>
+Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	David Miller <davem@davemloft.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Steven Newbury <steve@snewbury.org.uk>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Mon, Jun 4, 2012 at 9:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jun 4, 2012 at 7:37 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Sun, Jun 3, 2012 at 6:05 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Fri, Jun 1, 2012 at 4:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> On Tue, May 29, 2012 at 1:50 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+>>>>>
+>>>>> The bus-side address space should not be more than 32 bits no matter
+>>>>> what.  As Bjorn indicates, you seem to be mixing up bus and cpu
+>>>>> addresses all over the place.
+>>>>
+>>>> please check update patches that is using converted pci bus address
+>>>> for boundary checking.
+>>>
+>>> What problem does this fix?  There's significant risk that this
+>>> allocation change  will make us trip over something, so it must fix
+>>> something to make it worth considering.
+>>
+>> If we do not enable that, we would not find the problem.
+>
+> Sorry, that didn't make any sense to me.  I'm hoping you will point us
+> to a bug report that is fixed by this patch.
 
-I am trying to find out the PCI link speed of some of my devices to
-understand their observed DMA throughput. I have different machines
-where NVIDIA GPUs show 6GB/s DMA throughput in both direction.
+current it only help Steve's test case.
 
-On some machines, lspci:
-        Capabilities: [78] Express (v2) Endpoint, MSI 00
-                LnkCap: Port #0, Speed 5GT/s, Width x16, ASPM L0s L1,
-Latency L0 <256ns, L1 <1us
-                LnkSta: Speed 5GT/s, Width x16, TrErr- Train- SlotClk-
-DLActive- BWMgmt- ABWMgmt-
-That's 8GB/s, so it's OK to get 6GB/s in my benchmark.
+>
+>> On one my test setup that _CRS does state 64bit resource range,
+>> but when I clear some device resource manually and let kernel allocate
+>> high, just then find out those devices does not work with drivers.
+>> It turns out _CRS have more big range than what the chipset setting states.
+>> with fixing in BIOS, allocate high is working now on that platform.
+>
+> I didn't understand this either, sorry.  Are you saying that this
+> patch helps us work around a BIOS defect?
 
-But on other machines, lspci reports 16x 2.5GT/s:
-        Capabilities: [78] Express (v2) Endpoint, MSI 00
-                LnkCap: Port #0, Speed 2.5GT/s, Width x16, ASPM L0s L1,
-Latency L0 <256ns, L1 <4us
-                LnkSta: Speed 2.5GT/s, Width x16, TrErr- Train- SlotClk+
-DLActive- BWMgmt- ABWMgmt-
-That's 4GB/s, so I shouldn't see 6 GB/s DMA there. These machines and
-devices support 16x PCIe v2, so ideally the link should come at 16x 5GB/s.
+Help us find out one BIOS defect.
 
-Am I missing something in the lspci output that would explain why the
-second linkspeed isn't actually limited to 4GB/s?
+>
+>> yeah, how about
+>>
+>> pci=alloc_high
+>>
+>> and default to disabled ?
+>
+> I was actually thinking of something more specific, e.g., a way to
+> place one device at an exact address.  I've implemented that a couple
+> times already for testing various things.  But maybe a more general
+> option like "pci=alloc_high" would make sense, too.
 
-I am pasting both detailled lspci output below.
-Thanks.
-Brice
+yeah.
 
+>
+....
+> Linux has a long history of allocating bottom-up.  Windows has a long
+> history of allocating top-down.  You're proposing a third alternative,
+> allocating bottom-up starting at 4GB for 64-bit BARs.  If we change
+> this area, I would prefer something that follows Windows because I
+> think it will be closer to what's been tested by Windows.  Do you
+> think your alternative is better?
 
+hope we can figure out how windows is making it work.
 
-Device where things look strange:
+Steve, Can you check if Windows is working with your test case ?
 
-05:00.0 3D controller: NVIDIA Corporation Tesla M2075 Dual-Slot Computing Processor Module (rev a1)
-        Subsystem: NVIDIA Corporation Device 0888
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupt: pin A routed to IRQ 48
-        Region 0: Memory at d8000000 (32-bit, non-prefetchable) [size=16M]
-        Region 1: Memory at c0000000 (64-bit, prefetchable) [size=128M]
-        Region 3: Memory at ce000000 (64-bit, prefetchable) [size=32M]
-        Region 5: I/O ports at ec80 [size=128]
-        [virtual] Expansion ROM at d9800000 [disabled] [size=512K]
-        Capabilities: [60] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [78] Express (v2) Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 <64us
-                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
-                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x16, ASPM L0s L1, Latency L0 <256ns, L1 <4us
-                        ClockPM+ Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x16, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis+
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [b4] Vendor Specific Information: Len=14 <?>
-        Capabilities: [100 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Capabilities: [128 v1] Power Budgeting <?>
-        Capabilities: [600 v1] Vendor Specific Information: ID=0001 Rev=1 Len=024 <?>
-        Kernel driver in use: nvidia
-00: de 10 94 10 07 00 10 00 a1 00 02 03 00 00 00 00
-10: 00 00 00 d8 0c 00 00 c0 00 00 00 00 0c 00 00 ce
-20: 00 00 00 00 81 ec 00 00 00 00 00 00 de 10 88 08
-30: 00 00 00 00 60 00 00 00 00 00 00 00 0f 01 00 00
-40: de 10 88 08 00 00 00 00 00 00 00 00 00 00 00 00
-50: 01 00 00 00 01 00 00 00 ce d6 23 00 00 00 00 00
-60: 01 68 03 00 08 00 00 00 05 78 80 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 10 b4 02 00 e0 8d 64 00
-80: 1e 21 00 00 01 2d 05 00 40 01 01 11 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 10 00 00 00
-a0: 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00
-b0: 00 00 00 00 09 00 14 01 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+If it works, we may try do the same thing from Linux, so you will not need to
+append "pci=nocrs pci=alloc_high"...
 
+Thanks
 
-
-Device where things look OK:
-
-02:00.0 VGA compatible controller: nVidia Corporation GT200GL [Quadro FX 5800] (rev a1) (prog-if 00 [VGA controller])
-        Subsystem: nVidia Corporation Device 0593
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupt: pin A routed to IRQ 16
-        Region 0: Memory at f7000000 (32-bit, non-prefetchable) [size=16M]
-        Region 1: Memory at d0000000 (64-bit, prefetchable) [size=256M]
-        Region 3: Memory at f8000000 (64-bit, non-prefetchable) [size=32M]
-        Region 5: I/O ports at bc00 [size=128]
-        [virtual] Expansion ROM at f6f80000 [disabled] [size=512K]
-        Capabilities: [60] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [78] Express (v2) Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <4us
-                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x16, ASPM L0s L1, Latency L0 <256ns, L1 <1us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 5GT/s, Width x16, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis+
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB
-        Capabilities: [100 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Capabilities: [128 v1] Power Budgeting <?>
-        Capabilities: [600 v1] Vendor Specific Information: ID=0001 Rev=1 Len=024 <?>
-        Kernel driver in use: nvidia
-00: de 10 fd 05 07 00 10 00 a1 00 00 03 00 00 00 00
-10: 00 00 00 f7 0c 00 00 d0 00 00 00 00 04 00 00 f8
-20: 00 00 00 00 01 bc 00 00 00 00 00 00 de 10 93 05
-30: 00 00 00 00 60 00 00 00 00 00 00 00 0b 01 00 00
-40: de 10 93 05 00 00 00 00 00 00 00 00 00 00 00 00
-50: 01 00 00 00 01 00 00 00 ce d6 23 00 00 00 00 00
-60: 01 68 03 00 08 00 00 00 05 78 80 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 10 00 02 00 e0 84 2c 01
-80: 10 29 00 00 02 2d 00 00 08 00 02 01 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 10 00 00 00
-a0: 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-
-
-
-
+Yinghai
