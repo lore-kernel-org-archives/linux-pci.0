@@ -1,103 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:58198 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751999Ab2FLQAb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 12:00:31 -0400
-Message-ID: <4FD7679A.2080800@wwwdotorg.org>
-Date: Tue, 12 Jun 2012 10:00:26 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from thoth.sbs.de ([192.35.17.2]:17154 "EHLO thoth.sbs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753711Ab2FEOil (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jun 2012 10:38:41 -0400
+Message-ID: <4FCE19DA.1070802@siemens.com>
+Date: Tue, 05 Jun 2012 16:38:18 +0200
+From: Jan Kiszka <jan.kiszka@siemens.com>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 05/10] ARM: tegra: Rewrite PCIe support as a driver
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-6-git-send-email-thierry.reding@avionic-design.de> <4FD65E98.4070200@wwwdotorg.org> <20120612064124.GF4040@avionic-0098.adnet.avionic-design.de> <20120612072444.GA8577@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120612072444.GA8577@avionic-0098.mockup.avionic-design.de>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE
+ NIC as broken
+References: <4FBF90E5.8030800@siemens.com>
+In-Reply-To: <4FBF90E5.8030800@siemens.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/2012 01:24 AM, Thierry Reding wrote:
-> * Thierry Reding wrote:
->> AFAICT the even partitioning of the non-prefetchable and 
->> prefetchable memory regions is arbitrary and it could
->> potentially be useful to make it configurable via the DT.
+On 2012-05-25 16:02, Jan Kiszka wrote:
+> According to Alexey, the T310 does not properly support INTx masking as
+> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
+> is masked. Mark this adapter as broken so that pci_intx_mask_supported
+> won't report it as compatible.
 > 
-> So it turns out that this isn't true. But apart from the comments 
-> in the driver I couldn't find any reference to how the prefetch
-> and non-prefetch ranges are partitioned. Judging by the code for
-> Tegra2 this is evenly partitioned among ports 0 and 1 but it would
-> be interesting to know this is done on Tegra3. Is there any way
-> you can find out?
+> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+> ---
 > 
-> It'd also be nice if some better documentation for the PCIe 
-> controller could be made available. The Tegra2 TRM doesn't contain 
-> any of the AFI or PADS registers and while the Tegra3 TRM
-> documents more registers, their offsets are completely missing.
+> Alexey, please test if this catches your case correctly.
 
-I've filed a bug to request better documentation.
+Alexey? Ping for testing.
 
-Looking at our downstream driver, the quoted comment below implies
-that the address space layout is pretty arbitrary and programmable at
-least for Tegra30. The code in function
-tegra_pcie_setup_translations() appears to support this (and is
-executed for both Tegra20 and Tegra30, even though the comment for
-Tegra20 doesn't mention any programmability).
+Jan
 
-Tegra20:
+> 
+>  drivers/pci/pci.c    |    3 +++
+>  drivers/pci/quirks.c |   12 ++++++++++++
+>  include/linux/pci.h  |    2 ++
+>  3 files changed, 17 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f16900..3a1aeb5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2876,6 +2876,9 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
+>  	bool mask_supported = false;
+>  	u16 orig, new;
+>  
+> +	if (dev->broken_intx_masking)
+> +		return false;
+> +
+>  	pci_cfg_access_lock(dev);
+>  
+>  	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 2a75216..151e174 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2929,6 +2929,18 @@ static void __devinit disable_igfx_irq(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+>  
+> +/*
+> + * Some devices may pass our check in pci_intx_mask_supported if
+> + * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
+> + * support this feature.
+> + */
+> +static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
+> +{
+> +	dev->broken_intx_masking = 1;
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010,
+> +			quirk_broken_intx_masking);
+> +
+>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>  			  struct pci_fixup *end)
+>  {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 17b7b5b..c7cfd73 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -324,6 +324,8 @@ struct pci_dev {
+>  	unsigned int    is_hotplug_bridge:1;
+>  	unsigned int    __aer_firmware_first_valid:1;
+>  	unsigned int	__aer_firmware_first:1;
+> +	unsigned int	broken_intx_masking:1;	/* device's INTx masking
+> +						   support is not working */
+>  	pci_dev_flags_t dev_flags;
+>  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+>  
 
-> /*
->  * Tegra2 defines 1GB in the AXI address map for PCIe.
->  *
->  * That address space is split into different regions, with sizes and
->  * offsets as follows:
->  *
->  * 0x80000000 - 0x80003fff - PCI controller registers
->  * 0x80004000 - 0x80103fff - PCI configuration space
->  * 0x80104000 - 0x80203fff - PCI extended configuration space
->  * 0x80203fff - 0x803fffff - unused
->  * 0x80400000 - 0x8040ffff - downstream IO
->  * 0x80410000 - 0x8fffffff - unused
->  * 0x90000000 - 0x9fffffff - non-prefetchable memory
->  * 0xa0000000 - 0xbfffffff - prefetchable memory
->  */
-
-(I guess by "is split", it means the driver sets it up that way, not
-that the HW is fixed that way)
-
-Tegra30:
-
-> /*
->  * AXI address map for the PCIe aperture , defines 1GB in the AXI
->  *  address map for PCIe.
->  *
->  *  That address space is split into different regions, with sizes and
->  *  offsets as follows. Exepct for the Register space, SW is free to slice the
->  *  regions as it chooces.
->  *
->  *  The split below seems to work fine for now.
->  *
->  *  0x0000_0000 to 0x00ff_ffff - Register space          16MB.
->  *  0x0100_0000 to 0x01ff_ffff - Config space            16MB.
->  *  0x0200_0000 to 0x02ff_ffff - Extended config space   16MB.
->  *  0x0300_0000 to 0x03ff_ffff - Downstream IO space
->  *   ... Will be filled with other BARS like MSI/upstream IO etc.
->  *  0x1000_0000 to 0x1fff_ffff - non-prefetchable memory aperture
->  *  0x2000_0000 to 0x3fff_ffff - Prefetchable memory aperture
->  *
->  *  Config and Extended config sizes are choosen to support
->  *  maximum of 256 devices,
->  *  which is good enough for all the current use cases.
->  *
->  */
-
-From
-http://nv-tegra.nvidia.com/gitweb/?p=linux-2.6.git;a=blob;f=arch/arm/mach-tegra/pcie.c;h=b98d4892b5ee46120a9777a969e820a0b5cbb68a;hb=android-tegra-nv-3.1
+-- 
+Siemens AG, Corporate Technology, CT T DE IT 1
+Corporate Competence Center Embedded Linux
