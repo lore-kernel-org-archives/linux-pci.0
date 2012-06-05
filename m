@@ -1,82 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:44909 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885Ab2FFH6w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 03:58:52 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 6 Jun 2012 13:28:47 +0530
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q567wXMc2228514
-	for <linux-pci@vger.kernel.org>; Wed, 6 Jun 2012 13:28:33 +0530
-Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q56DRmwp024602
-	for <linux-pci@vger.kernel.org>; Wed, 6 Jun 2012 23:27:49 +1000
-Date: Wed, 6 Jun 2012 15:58:30 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Ram Pai <linuxram@us.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: One chart on pci bridge and its bus and their children
-Message-ID: <20120606075830.GC17042@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120605032627.GA23271@richard>
- <20120605041146.GD6637@ram-ThinkPad-T61>
- <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
- <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
- <CAE9FiQUCV1+ePfyX7bqOyZ+Wcsj1neCO91MvuM5vNh3+UPERDQ@mail.gmail.com>
- <20120605063538.GE6637@ram-ThinkPad-T61>
- <CAE9FiQV66_eUiQKJc79CMvRA9th8MOinjaVnYKLgpPz_4_pxww@mail.gmail.com>
- <20120606052835.GB17042@richard>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56956 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755665Ab2FESB2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 14:01:28 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20120606052835.GB17042@richard>
+In-Reply-To: <20120605062603.GA21952@richard>
+References: <20120514015536.GA3331@richard>
+	<CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
+	<20120514064615.GB26605@richard>
+	<CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
+	<20120516011833.GA6599@richard>
+	<CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
+	<20120529115900.GA31679@richard>
+	<CAE9FiQWO1C76ppjZF4Lm4FVpQYPRv5ZirGp9iOM3pm-xrm3Epg@mail.gmail.com>
+	<20120604133457.GA2969@richard>
+	<CAE9FiQWw=dMBajvGQy_1KoPbGa1wvER5U81oULbkXCjBzQDRpQ@mail.gmail.com>
+	<20120605062603.GA21952@richard>
+Date: Tue, 5 Jun 2012 11:01:25 -0700
+Message-ID: <CAE9FiQX+HFy65EiYkwerwJ-tGynwjVfpVWcJZjctpeWjhLD7eA@mail.gmail.com>
+Subject: Re: One problem in reassign pci bus number?
+From: Yinghai Lu <yinghai@kernel.org>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed; boundary=047d7b2ee18b8b4c1804c1bd701f
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 06, 2012 at 01:28:35PM +0800, Richard Yang wrote:
->On Tue, Jun 05, 2012 at 12:38:52PM -0700, Yinghai Lu wrote:
->>>
->>> Yinghai,
->>>
->>> is there a reason why this can't be fixed in
->>> pci_create_root_bus() by having
->>>   bus->self = bridge; /* 'bridge' is the pci_device of the corresponding host bridge */
->>>   get_device(&bridge->dev);
+--047d7b2ee18b8b4c1804c1bd701f
+Content-Type: text/plain; charset=ISO-8859-1
+
+On Mon, Jun 4, 2012 at 11:26 PM, Richard Yang
+<weiyang@linux.vnet.ibm.com> wrote:
+> On Mon, Jun 04, 2012 at 04:36:33PM -0700, Yinghai Lu wrote:
 >>
->>self is pointer to pci_dev bridge.
+>>kernel will try to probe in [1,15] at first, and could extend B1 range
+>>to [1, 31] if needed.
+> Hmm... when do you think this branch will be merged to the mainstream?
 >>
->>and for root bus, it is NULL. that mean no pci bridge device related.
->>
->>bridge is device, and have that assigned from host bridge dev, or pci
->>bridge dev.
->>
->>also for virtfn of iov, new bus from there will not have self assigned too.
->>for it even bridge is not assigned.
->>
->>so bridge is just generic way to save bridge (pci, host) device ...
->
-I did a summarize, we have three types of pci_bus.
 
+not sure. could be 3.7
 
-Can we identify the type by following method?
+Bjorn still think that probe_resource is too complicated.
 
-+--------------------+--------------------------------------------------+
-| bus type           |   identification                                 |
-+--------------------+--------------------------------------------------+
-| root_bus           |parent is NULL, bridge point to host_bridge dev   |
-+--------------------+--------------------------------------------------+
-| general_bus        |parent to parent bus, bridge point to the bridge  |
-+--------------------+--------------------------------------------------+
-| iov_bus            |parent to parent bus, bridge point to NULL        |
-+--------------------+--------------------------------------------------+
+So i still need to find some time to simplify it.
+or need to route that attached patch through Andrew or get Ack from
+Andrew or Linus.
 
-Hmm... if we can determine which type a pci_bus is from this criteria. 
-Sounds we don't need the self in pci_bus?
+Thanks
 
--- 
-Richard Yang
-Help you, Help me
+Yinghai
 
+--047d7b2ee18b8b4c1804c1bd701f
+Content-Type: application/octet-stream; name="probe_resource_2.patch"
+Content-Disposition: attachment; filename="probe_resource_2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h339ybjz0
+
+U3ViamVjdDogW1BBVENIXSByZXNvdXJjZXM6IEFkZCBwcm9iZV9yZXNvdXJjZSgpCgpJdCBpcyBj
+aGFuZ2VkIGZyb20gYnVzbl9yZXMgb25seSB2ZXJzaW9uLCBiZWNhdXNlIEJqb3JuIGZvdW5kIHRo
+YXQgdmVyc2lvbgp3YXMgbm90IGhvbGRpbmcgcmVzb3VyY2VfbG9jay4KRXZlbiBpdCBtYXkgYmUg
+b2sgZm9yIGJ1c25fcmVzIG5vdCBob2xkaW5nIHJlc291cmNlX2xvY2suCkl0IHdvdWxkIGJlIGJl
+dHRlciB0byBoYXZlIGl0IHRvIGJlIGdlbmVyaWMgYW5kIHVzZSBsb2NrIGFuZCB3ZSB3b3VsZAp1
+c2UgaXQgZm9yIG90aGVyIHJlc291cmNlcy4KCnByb2JlX3Jlc291cmNlKCkgd2lsbCB0cnkgdG8g
+ZmluZCBzcGVjaWZpZWQgc2l6ZSBvciBtb3JlIGluIHBhcmVudCBidXMuCklmIGNhbiBub3QgZmlu
+ZCBjdXJyZW50IHBhcmVudCByZXNvdXJjZSwgYW5kIGl0IHdpbGwgdHJ5IHRvIGV4cGFuZCBwYXJl
+bnRzCnRvcC4KSWYgc3RpbGwgY2FuIG5vdCBmaW5kIHRoYXQgc3BlY2lmaWVkIG9uIHRvcCwgaXQg
+d2lsbCB0cnkgdG8gcmVkdWNlIHRhcmdldCBzaXplCnVudGlsIGZpbmQgb25lLgoKSXQgd2lsbCBy
+ZXR1cm4gMCwgaWYgaXQgZmluZCBhbnkgcmVzb3VyY2UgdGhhdCBpdCBjb3VsZCB1c2UuCgpSZXR1
+cm5lZCByZXNvdXJjZSBpcyBhbHJlYWR5IHJlZ2lzdGVyZWQgaW4gdGhlIHRyZWUuClNvIGNhbGxl
+ciBzdGlsbCBuZWVkIGNhbGwgcmVwbGFjZV9yZXNvdXJjZSB0byBwdXQgcmVhbCByZXNvdXJjZSBp
+biByZXNvdXJjZSB0cmVlLgoKLXYzOiByZW1vdmUgdHdvIHBhcmFtZXRlcnMgdGhhdCBpcyBmb3Ig
+ZGVidWcgcHVycG9zZS4KLXY0OiBmaXggc3RvcF9mbGFncyBjaGVja2luZy4KClNpZ25lZC1vZmYt
+Ynk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KQ2M6IEFuZHJldyBNb3J0b24gPGFr
+cG1AbGludXgtZm91bmRhdGlvbi5vcmc+CgoKLS0tCiBpbmNsdWRlL2xpbnV4L2lvcG9ydC5oIHwg
+ICAgNyArKwoga2VybmVsL3Jlc291cmNlLmMgICAgICB8ICAxNDcgKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwogMiBmaWxlcyBjaGFuZ2VkLCAxNTQgaW5z
+ZXJ0aW9ucygrKQoKSW5kZXg6IGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L2lvcG9ydC5oCj09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2luY2x1ZGUvbGludXgvaW9wb3J0LmgKKysrIGxpbnV4
+LTIuNi9pbmNsdWRlL2xpbnV4L2lvcG9ydC5oCkBAIC0xNjQsNiArMTY0LDEzIEBAIGV4dGVybiBp
+bnQgYWxsb2NhdGVfcmVzb3VyY2Uoc3RydWN0IHJlc28KIAkJCQkJCSAgICAgICByZXNvdXJjZV9z
+aXplX3QsCiAJCQkJCQkgICAgICAgcmVzb3VyY2Vfc2l6ZV90KSwKIAkJCSAgICAgdm9pZCAqYWxp
+Z25mX2RhdGEpOwordm9pZCByZXNvdXJjZV9zaHJpbmtfcGFyZW50c190b3Aoc3RydWN0IHJlc291
+cmNlICpiX3JlcywKKwkJCQkgbG9uZyBzaXplLCBzdHJ1Y3QgcmVzb3VyY2UgKnBhcmVudF9yZXMp
+Oworc3RydWN0IGRldmljZTsKK2ludCBwcm9iZV9yZXNvdXJjZShzdHJ1Y3QgcmVzb3VyY2UgKmJf
+cmVzLAorCQkJc3RydWN0IHJlc291cmNlICpidXNuX3JlcywKKwkJCXJlc291cmNlX3NpemVfdCBu
+ZWVkZWRfc2l6ZSwgc3RydWN0IHJlc291cmNlICoqcCwKKwkJCWludCBza2lwX25yLCBpbnQgbGlt
+aXQsIGludCBmbGFncyk7CiBzdHJ1Y3QgcmVzb3VyY2UgKmxvb2t1cF9yZXNvdXJjZShzdHJ1Y3Qg
+cmVzb3VyY2UgKnJvb3QsIHJlc291cmNlX3NpemVfdCBzdGFydCk7CiBpbnQgYWRqdXN0X3Jlc291
+cmNlKHN0cnVjdCByZXNvdXJjZSAqcmVzLCByZXNvdXJjZV9zaXplX3Qgc3RhcnQsCiAJCSAgICBy
+ZXNvdXJjZV9zaXplX3Qgc2l6ZSk7CkluZGV4OiBsaW51eC0yLjYva2VybmVsL3Jlc291cmNlLmMK
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcva2VybmVsL3Jlc291cmNlLmMKKysrIGxpbnV4
+LTIuNi9rZXJuZWwvcmVzb3VyY2UuYwpAQCAtMTA2MCw2ICsxMDYwLDE1MyBAQCB2b2lkIF9fcmVs
+ZWFzZV9yZWdpb24oc3RydWN0IHJlc291cmNlICpwCiB9CiBFWFBPUlRfU1lNQk9MKF9fcmVsZWFz
+ZV9yZWdpb24pOwogCitzdGF0aWMgdm9pZCBfX3Jlc291cmNlX2V4dGVuZF9wYXJlbnRzX3RvcChz
+dHJ1Y3QgcmVzb3VyY2UgKmJfcmVzLAorCQkgbG9uZyBzaXplLCBzdHJ1Y3QgcmVzb3VyY2UgKnBh
+cmVudF9yZXMpCit7CisJc3RydWN0IHJlc291cmNlICpyZXMgPSBiX3JlczsKKworCWlmICghc2l6
+ZSkKKwkJcmV0dXJuOworCisJd2hpbGUgKHJlcyAmJiByZXMgIT0gcGFyZW50X3JlcykgeworCQly
+ZXMtPmVuZCArPSBzaXplOworCQlyZXMgPSByZXMtPnBhcmVudDsKKwl9Cit9CisKK3ZvaWQgcmVz
+b3VyY2Vfc2hyaW5rX3BhcmVudHNfdG9wKHN0cnVjdCByZXNvdXJjZSAqYl9yZXMsCisJCSBsb25n
+IHNpemUsIHN0cnVjdCByZXNvdXJjZSAqcGFyZW50X3JlcykKK3sKKwl3cml0ZV9sb2NrKCZyZXNv
+dXJjZV9sb2NrKTsKKwlfX3Jlc291cmNlX2V4dGVuZF9wYXJlbnRzX3RvcChiX3JlcywgLXNpemUs
+IHBhcmVudF9yZXMpOworCXdyaXRlX3VubG9jaygmcmVzb3VyY2VfbG9jayk7Cit9CisKK3N0YXRp
+YyByZXNvdXJjZV9zaXplX3QgX19maW5kX3Jlc190b3BfZnJlZV9zaXplKHN0cnVjdCByZXNvdXJj
+ZSAqcmVzLAorCQkJCQkJIGludCBza2lwX25yKQoreworCXJlc291cmNlX3NpemVfdCBuX3NpemU7
+CisJc3RydWN0IHJlc291cmNlIHRtcF9yZXM7CisKKwkvKgorCSAqICAgZmluZCBvdXQgZnJlZSBu
+dW1iZXIgYmVsb3cgcmVzLT5lbmQgdGhhdCB3ZSBjYW4gdXNlLgorCSAqCXJlcy0+c3RhcnQgdG8g
+cmVzLT5zdGFydCArIHNraXBfbnIgLSAxIGNhbiBub3QgYmUgdXNlZC4KKwkgKi8KKwluX3NpemUg
+PSByZXNvdXJjZV9zaXplKHJlcyk7CisJaWYgKG5fc2l6ZSA8PSBza2lwX25yKQorCQlyZXR1cm4g
+MDsKKworCW5fc2l6ZSAtPSBza2lwX25yOworCW1lbXNldCgmdG1wX3JlcywgMCwgc2l6ZW9mKHN0
+cnVjdCByZXNvdXJjZSkpOworCXdoaWxlIChuX3NpemUgPiAwKSB7CisJCWludCByZXQ7CisKKwkJ
+cmV0ID0gX19hbGxvY2F0ZV9yZXNvdXJjZShyZXMsICZ0bXBfcmVzLCBuX3NpemUsCisJCQlyZXMt
+PmVuZCAtIG5fc2l6ZSArIHNraXBfbnIsIHJlcy0+ZW5kLAorCQkJMSwgTlVMTCwgTlVMTCwgZmFs
+c2UsIGZhbHNlKTsKKwkJaWYgKHJldCA9PSAwKSB7CisJCQlfX3JlbGVhc2VfcmVzb3VyY2UoJnRt
+cF9yZXMpOworCQkJYnJlYWs7CisJCX0KKwkJbl9zaXplLS07CisJfQorCisJcmV0dXJuIG5fc2l6
+ZTsKK30KKworLyoqCisgKiBwcm9iZV9yZXNvdXJjZSAtIFByb2JlIHJlc291cmNlIGluIHBhcmVu
+dCByZXNvdXJjZS4KKyAqIEBiX3JlczogcGFyZW50IHJlc291cmNlIGRlc2NyaXB0b3IKKyAqIEBi
+dXNuX3JlczogcmV0dXJuIHByb2JlZCByZXNvdXJjZQorICogQG5lZWRlZF9zaXplOiB0YXJnZXQg
+c2l6ZQorICogQHA6IHBvaW50ZXIgdG8gZmFyZXN0IHBhcmVudCB0aGF0IHdlIGV4dGVuZCB0aGUg
+dG9wCisgKiBAc2tpcF9ucjogbnVtYmVyIGluIGJfcmVzIHN0YXJ0IHRoYXQgd2UgbmVlZCB0byBz
+a2lwLgorICogQGxpbWl0OiBsb2NhbCBib3VuZGFyeQorICogQHN0b3BfZmxhZ3M6IGZsYWdzIGZv
+ciBzdG9wcGluZyBleHRlbmQgcGFyZW50IHJlcworICoKKyAqIHdpbGwgdHJ5IHRvIGFsbG9jYXRl
+IHJlc291cmNlIGluIGJfcmVzLCBpZiBjYW4gbm90IGZpbmQgdGhlIHJhbmdlCisgKiAgd2lsbCB0
+cnkgdG8gZXh0ZW5kIHBhcmVudCByZXNvdXJjZXMnIHRvcC4KKyAqIGlmIHN0aWxsIGNhbiBub3Qg
+bWFrZSBpdCwgd2lsbCByZWR1Y2UgbmVlZGVkX3NpemUuCisgKi8KK2ludCBwcm9iZV9yZXNvdXJj
+ZShzdHJ1Y3QgcmVzb3VyY2UgKmJfcmVzLAorCQkJIHN0cnVjdCByZXNvdXJjZSAqYnVzbl9yZXMs
+CisJCQkgcmVzb3VyY2Vfc2l6ZV90IG5lZWRlZF9zaXplLCBzdHJ1Y3QgcmVzb3VyY2UgKipwLAor
+CQkJIGludCBza2lwX25yLCBpbnQgbGltaXQsIGludCBzdG9wX2ZsYWdzKQoreworCWludCByZXQg
+PSAtRU5PTUVNOworCXJlc291cmNlX3NpemVfdCBuX3NpemU7CisJc3RydWN0IHJlc291cmNlICpw
+YXJlbnRfcmVzID0gTlVMTDsKKwlyZXNvdXJjZV9zaXplX3QgdG1wID0gYl9yZXMtPmVuZCArIDE7
+CisKK2FnYWluOgorCS8qCisJICogV2UgZmlyc3QgdHJ5IHRvIGFsbG9jYXRlIGJpZ2dlc3QgcmFu
+Z2UgaW4gYl9yZXMgdGhhdAorCSAqICB3ZSBjYW4gdXNlIGluIGJfcmVzIGRpcmVjdGx5LgorCSAq
+ICB3ZSBjYW4gbm90IHVzZSBza2lwX25yIGZyb20gc3RhcnQgb2YgYl9yZXMuCisJICovCisJbl9z
+aXplID0gcmVzb3VyY2Vfc2l6ZShiX3Jlcyk7CisJaWYgKG5fc2l6ZSA+IHNraXBfbnIpCisJCW5f
+c2l6ZSAtPSBza2lwX25yOworCWVsc2UKKwkJbl9zaXplID0gMDsKKwltZW1zZXQoYnVzbl9yZXMs
+IDAsIHNpemVvZihzdHJ1Y3QgcmVzb3VyY2UpKTsKKwl3aGlsZSAobl9zaXplID49IG5lZWRlZF9z
+aXplKSB7CisJCXJldCA9IGFsbG9jYXRlX3Jlc291cmNlKGJfcmVzLCBidXNuX3Jlcywgbl9zaXpl
+LAorCQkJCWJfcmVzLT5zdGFydCArIHNraXBfbnIsIGJfcmVzLT5lbmQsCisJCQkJMSwgTlVMTCwg
+TlVMTCk7CisJCWlmICghcmV0KQorCQkJcmV0dXJuIHJldDsKKwkJbl9zaXplLS07CisJfQorCisJ
+LyogV2UgbmVlZCB0byBleHRlbmQgdGhlIHRvcCBvZiBwYXJlbnQgcmVzb3VyY2VzIHRvIG1lZXQg
+bmVlZGVkX3NpemUgKi8KKworCS8qIGZpbmQgb3V0IGZyZWUgcmFuZ2UgdW5kZXIgdG9wIGF0IGZp
+cnN0ICovCisJd3JpdGVfbG9jaygmcmVzb3VyY2VfbG9jayk7CisJbl9zaXplID0gX19maW5kX3Jl
+c190b3BfZnJlZV9zaXplKGJfcmVzLCBza2lwX25yKTsKKwkvKiBjYW4gbm90IGV4dGVuZCBjcm9z
+cyBsb2NhbCBib3VuZGFyeSAqLworCWlmICgobGltaXQgLSBiX3Jlcy0+ZW5kKSA8IChuZWVkZWRf
+c2l6ZSAtIG5fc2l6ZSkpCisJCWdvdG8gcmVkdWNlX25lZWRlZF9zaXplOworCisJLyogUHJvYmUg
+ZXh0ZW5kZWQgcmFuZ2UgYWJvdmUgdG9wICovCisJbWVtc2V0KGJ1c25fcmVzLCAwLCBzaXplb2Yo
+c3RydWN0IHJlc291cmNlKSk7CisJcGFyZW50X3JlcyA9IGJfcmVzOworCXdoaWxlIChwYXJlbnRf
+cmVzKSB7CisJCXJldCA9IF9fYWxsb2NhdGVfcmVzb3VyY2UocGFyZW50X3JlcywgYnVzbl9yZXMs
+CisJCQkgbmVlZGVkX3NpemUgLSBuX3NpemUsCisJCQkgdG1wLCB0bXAgKyBuZWVkZWRfc2l6ZSAt
+IG5fc2l6ZSAtIDEsCisJCQkgMSwgTlVMTCwgTlVMTCwgZmFsc2UsIGZhbHNlKTsKKwkJaWYgKCFy
+ZXQpIHsKKwkJCS8qIHNhdmUgcGFyZW50X3Jlcywgd2UgbmVlZCBpdCBhcyBzdG9wcGVyIGxhdGVy
+ICovCisJCQkqcCA9IHBhcmVudF9yZXM7CisKKwkJCS8qIHByZXBhcmUgYnVzbl9yZXMgZm9yIHJl
+dHVybiAqLworCQkJX19yZWxlYXNlX3Jlc291cmNlKGJ1c25fcmVzKTsKKwkJCWJ1c25fcmVzLT5z
+dGFydCAtPSBuX3NpemU7CisKKwkJCS8qIGV4dGVuZCBwYXJlbnQgcmVzb3VyY2VzIHRvcCovCisJ
+CQlfX3Jlc291cmNlX2V4dGVuZF9wYXJlbnRzX3RvcChiX3JlcywKKwkJCQkJIG5lZWRlZF9zaXpl
+IC0gbl9zaXplLCBwYXJlbnRfcmVzKTsKKwkJCV9fcmVxdWVzdF9yZXNvdXJjZShiX3JlcywgYnVz
+bl9yZXMpOworCisJCQl3cml0ZV91bmxvY2soJnJlc291cmNlX2xvY2spOworCQkJcmV0dXJuIHJl
+dDsKKwkJfQorCQlpZiAocGFyZW50X3Jlcy0+ZmxhZ3MgJiBzdG9wX2ZsYWdzKQorCQkJYnJlYWs7
+CisJCXBhcmVudF9yZXMgPSBwYXJlbnRfcmVzLT5wYXJlbnQ7CisJfQorCityZWR1Y2VfbmVlZGVk
+X3NpemU6CisJd3JpdGVfdW5sb2NrKCZyZXNvdXJjZV9sb2NrKTsKKwkvKiByZXQgbXVzdCBub3Qg
+YmUgMCBoZXJlICovCisJbmVlZGVkX3NpemUtLTsKKwlpZiAobmVlZGVkX3NpemUpCisJCWdvdG8g
+YWdhaW47CisKKwlyZXR1cm4gcmV0OworfQorCiAvKgogICogTWFuYWdlZCByZWdpb24gcmVzb3Vy
+Y2UKICAqLwo=
+--047d7b2ee18b8b4c1804c1bd701f--
