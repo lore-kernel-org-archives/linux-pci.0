@@ -1,218 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1340650789-3326-1-git-send-email-yinghai@kernel.org>
-References: <1340650789-3326-1-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 25 Jun 2012 14:59:31 -0600
-Message-ID: <CAErSpo4oE8nHmu1KBXSX=YjQGfD89v2fqL=96THz98uZ4Va_rQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI, X86: busnum/node boot command line for pci dev node setting.
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:38946 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753251Ab2FEG0L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 02:26:11 -0400
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 5 Jun 2012 11:56:08 +0530
+Date: Tue, 5 Jun 2012 14:26:03 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>, lenb@kernel.org, x86@kernel.org,
-	Ulrich Drepper <drepper@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: One problem in reassign pci bus number?
+Message-ID: <20120605062603.GA21952@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120514015536.GA3331@richard>
+ <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
+ <20120514064615.GB26605@richard>
+ <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
+ <20120516011833.GA6599@richard>
+ <CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
+ <20120529115900.GA31679@richard>
+ <CAE9FiQWO1C76ppjZF4Lm4FVpQYPRv5ZirGp9iOM3pm-xrm3Epg@mail.gmail.com>
+ <20120604133457.GA2969@richard>
+ <CAE9FiQWw=dMBajvGQy_1KoPbGa1wvER5U81oULbkXCjBzQDRpQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQWw=dMBajvGQy_1KoPbGa1wvER5U81oULbkXCjBzQDRpQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2012 at 12:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Some intel new sandybridge or newer two sockets system do support support numa
-> for pci devices. But BIOS does not provide _PXM under those root bus in DSDT.
+On Mon, Jun 04, 2012 at 04:36:33PM -0700, Yinghai Lu wrote:
+>On Mon, Jun 4, 2012 at 6:34 AM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Tue, May 29, 2012 at 10:14:51AM -0700, Yinghai Lu wrote:
+>>>On Tue, May 29, 2012 at 4:59 AM, Richard Yang
+>>><weiyang@linux.vnet.ibm.com> wrote:
+>>>>
+>>>> I think about this issue again, this behavior of kernel will bring some
+>>>> unconvenience to the user.
+>>>>
+>>>> Do you think the kernel could handle this situation?
+>>>
+>>>in this extreme case, you may need user to do some comprise.
+>>>
+>>>We should always try to use setting from BIOS if it is sane.
+>>>
+>>>Yinghai
+>> Yinghai
+>>
+>>                    +-------+
+>>                    |       | root bridge(0,255)
+>>                    +---+---+
+>>                        |          Bus 0
+>>       -----+-----------+------------------------------+--
+>>            |                                          |
+>>            |                                          |
+>>            |                                          |
+>>       +----+----+                               +-----+-----+
+>>       |         |  B1(1,15)                     |           |B2(32,35)
+>>       +----+----+                               +-----+-----+
+>>            |  Bus 1                                   |    Bus 32
+>>       -----+-----------------------             -----------
+>>                             |
+>>                        +----+----+
+>>                        |         | B3
+>>                        +---------+
+>>
+>> I reread the current code, v3.4, in linus tree,
+>> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+>> And I come up with another condition which will have a problem when
+>> kernel is not given the parameter, pci=assign-busses.
+>>
+>> Same condition as previous:
+>> -------------------------------------------------------------------------------
+>> B1 and B2 works fine with the BIOS and get the bus number assigned.
+>> B3 is not probed by BIOS.
+>>
+>> Difference between the previous example:
+>> -------------------------------------------------------------------------------
+>> In this case, B2 is assigned bus range (32, 35), which has a gap between
+>> B1 number range (1, 15).
+>>
+>> When kernel meets B3 in second pass, B3 will be assigned with bus number
+>> 16. Well, this time the bus number 16 doesn't overlap with bus number of
+>> B2.
+>>
+>> But, the pci_fixup_parent_subordinate_busnr() will not work since the
+>> pci=assign-buses is not passed to kernel.
+>>
+>> So B1's bus window is still (1,15) not (1,16).
+>>
+>> BTW, is this also a extrem case?
 >
-> Add boot command line, so user could have chance to input node info before
-> BIOS guys figure out to add _PXM.
+>that should be handled by busn_alloc branch.
 >
-> Fold fix from Ulrich to use ";" instead of ",".
-> | The problem is the pci= parameter
-> | handling uses ',' to separate parameters and therefore the second PCI
-> | root information, separated by a comma, is interpreted as a new pci=
-> | parameter.
+>kernel will try to probe in [1,15] at first, and could extend B1 range
+>to [1, 31] if needed.
+Hmm... when do you think this branch will be merged to the mainstream?
 >
-> -v3: According to Bjorn and Ingo, change to use "user input first" policy
->     so it could cover wrong _PXM case.
-> -v4: Folded change from Ulrich to record pointer of busnum_node string.
+>Thanks
 >
-> Reported-by: Ulrich Drepper <drepper@gmail.com>
-> Tested-by: Ulrich Drepper <drepper@gmail.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> ---
->  Documentation/kernel-parameters.txt |    5 +++++
->  arch/x86/include/asm/pci_x86.h      |    3 +++
->  arch/x86/pci/acpi.c                 |   22 +++++++++++++---------
->  arch/x86/pci/common.c               |   36 ++++++++++++++++++++++++++++++++++++
->  4 files changed, 57 insertions(+), 9 deletions(-)
->
-> Index: linux-2.6/Documentation/kernel-parameters.txt
-> ===================================================================
-> --- linux-2.6.orig/Documentation/kernel-parameters.txt
-> +++ linux-2.6/Documentation/kernel-parameters.txt
-> @@ -2068,6 +2068,11 @@ bytes respectively. Such letter suffixes
->                                hardware access methods are allowed. Use this
->                                if you experience crashes upon bootup and you
->                                suspect they are caused by the BIOS.
-> +               busnum_node=    [X86] Set node for root bus.
-> +                               Format:
-> +                               <bus>:<node>[;...]
-> +                               Specifies node for bus, will override bios _PXM
-> +                               or probed value from hostbridge.
+>Yinghai
 
-I liked the previous argument format that included "pci".  Now we're
-assuming the only bus type important enough to care about NUMA
-information is PCI.
+-- 
+Richard Yang
+Help you, Help me
 
-This should also work on ia64, which also uses ACPI.  For that matter,
-it'd be nice if it worked on *any* NUMA architecture, though I don't
-see any  PCI NUMA support at all for anything but x86 and ia64.
-
->                conf1           [X86] Force use of PCI Configuration
->                                Mechanism 1.
->                conf2           [X86] Force use of PCI Configuration
-> Index: linux-2.6/arch/x86/pci/common.c
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/pci/common.c
-> +++ linux-2.6/arch/x86/pci/common.c
-> @@ -494,6 +494,39 @@ int __init pcibios_init(void)
->        return 0;
->  }
->
-> +static const char *busnum_node_param;
-> +
-> +static void remember_busnum_node(const char *str)
-> +{
-> +       busnum_node_param = str;
-
-Can you convince me this is safe?  pci_setup() is an early_param, so
-it looks to me like we might be saving a pointer to initdata in this
-call path:
-
-    setup_arch
-      parse_early_param
-        strlcpy(tmp_cmdline, boot_command_line)
-        parse_early_options(__initdata tmp_cmdline)
-          parse_args
-            do_early_param
-              ...
-              pci_setup (early_param)
-                pcibios_setup
-                  remember_busnum_node
-
-And then we use that saved pointer to parse the string at host bridge
-add-time, which might be after initdata has been freed.
-
-> +}
-> +
-> +int get_user_busnum_node(int busnum)
-> +{
-> +       int bus, node, count;
-> +       const char *p = busnum_node_param;
-> +
-> +       if (!p)
-> +               return -1;
-> +
-> +       while (*p) {
-> +               count = 0;
-> +               if (sscanf(p, "%x:%x%n", &bus, &node, &count) != 2) {
-> +                       printk(KERN_ERR "PCI: Can't parse busnum_node input: %s\n",
-> +                                       p);
-> +                       break;
-> +               }
-> +               if (bus == busnum)
-> +                       return node;
-> +               p += count;
-> +               if (*p != ';')
-> +                       break;
-> +               p++;
-> +       }
-> +
-> +       return -1;
-> +}
-> +
->  char * __devinit  pcibios_setup(char *str)
->  {
->        if (!strcmp(str, "off")) {
-> @@ -579,6 +612,9 @@ char * __devinit  pcibios_setup(char *st
->        } else if (!strcmp(str, "nocrs")) {
->                pci_probe |= PCI_ROOT_NO_CRS;
->                return NULL;
-> +       } else if (!strncmp(str, "busnum_node=", 12)) {
-> +               remember_busnum_node(str + 12);
-> +               return NULL;
->        } else if (!strcmp(str, "earlydump")) {
->                pci_early_dump_regs = 1;
->                return NULL;
-> Index: linux-2.6/arch/x86/include/asm/pci_x86.h
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/include/asm/pci_x86.h
-> +++ linux-2.6/arch/x86/include/asm/pci_x86.h
-> @@ -46,6 +46,9 @@ enum pci_bf_sort_state {
->        pci_dmi_bf,
->  };
->
-> +/* pci-common.c */
-> +int get_user_busnum_node(int busnum);
-> +
->  /* pci-i386.c */
->
->  void pcibios_resource_survey(void);
-> Index: linux-2.6/arch/x86/pci/acpi.c
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/pci/acpi.c
-> +++ linux-2.6/arch/x86/pci/acpi.c
-> @@ -453,7 +453,7 @@ struct pci_bus * __devinit pci_acpi_scan
->        struct pci_sysdata *sd;
->        int node;
->  #ifdef CONFIG_ACPI_NUMA
-> -       int pxm;
-> +       int pxm = -1;
->  #endif
->
->        if (domain && !pci_domains_supported) {
-> @@ -463,16 +463,20 @@ struct pci_bus * __devinit pci_acpi_scan
->                return NULL;
->        }
->
-> -       node = -1;
-> +       node = get_user_busnum_node(busnum);
-> +       if (node == -1) {
->  #ifdef CONFIG_ACPI_NUMA
-> -       pxm = acpi_get_pxm(device->handle);
-> -       if (pxm >= 0)
-> -               node = pxm_to_node(pxm);
-> -       if (node != -1)
-> -               set_mp_bus_to_node(busnum, node);
-> -       else
-> -#endif
-> +               pxm = acpi_get_pxm(device->handle);
-> +               if (pxm >= 0)
-> +                       node = pxm_to_node(pxm);
-
-The code above (everything except the calls to set_mp_bus_to_node()
-and get_mp_bus_to_node(), which are x86-specific) should be the same
-between x86 and ia64.  Can you rationalize them?  It'd be better if
-they used the same #ifdefs and the same code structure.
-
-> +               if (node != -1)
-> +                       set_mp_bus_to_node(busnum, node);
-> +               else
-> +                       node = get_mp_bus_to_node(busnum);
-> +#else
->                node = get_mp_bus_to_node(busnum);
-
-I don't understand the set_mp_bus_to_node() and get_mp_bus_to_node()
-definitions.  There are separate x86_64 and x86_32 definitions, and I
-don't know why.  The mp_bus_to_node[] table itself is identical and
-could be merged.  get_mp_bus_to_node(-1) returns -1 on x86_64 but 0 on
-x86_32; this difference seems like a bug.  Only x86_64 looks at
-node_online(node); this difference also seems like a bug.
-
-> +#endif
-> +       }
->
->        if (node != -1 && !node_online(node))
->                node = -1;
-
-Maybe this node_online() check is related to the difference in the
-get_mp_bus_to_node() definitions?
-
-Bjorn
