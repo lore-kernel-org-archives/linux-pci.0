@@ -1,97 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs130.luxsci.com ([72.32.115.17]:59087 "EHLO rs130.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750906Ab2FMIhY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jun 2012 04:37:24 -0400
-Message-ID: <4FD85127.8050301@firmworks.com>
-Date: Tue, 12 Jun 2012 22:36:55 -1000
-From: Mitch Bradley <wmb@firmworks.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:59869 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753179Ab2FEGAR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 02:00:17 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 5 Jun 2012 05:23:12 +1000
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q555PxuS32178294
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 15:26:00 +1000
+Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q555XHSp022048
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 15:33:17 +1000
+Date: Tue, 5 Jun 2012 13:33:15 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: One chart on pci bridge and its bus and their children
+Message-ID: <20120605053315.GA24358@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120605032627.GA23271@richard>
+ <20120605041146.GD6637@ram-ThinkPad-T61>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-References: <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7A36B.9090409@wwwdotorg.org> <4FD7B085.1020006@firmworks.com> <20120613064519.GD31001@avionic-0098.mockup.avionic-design.de> <4FD84133.4060401@firmworks.com> <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de> <4FD849CF.4030009@firmworks.com> <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120605041146.GD6637@ram-ThinkPad-T61>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/12/2012 10:19 PM, Thierry Reding wrote:
-> On Tue, Jun 12, 2012 at 10:05:35PM -1000, Mitch Bradley wrote:
->> On 6/12/2012 9:52 PM, Thierry Reding wrote:
->>> I think the configuration spaces and downstream I/O ranges need to be in the
->>> pcie-controller's reg property because they are remapped and used by the
->>> controller driver, not by the individual ports.
->>>
->>> That's probably not really necessary but rather a result of how the driver
->>> was written. Perhaps the driver should handle them differently instead,
->>> listing the regions in the ranges property of the parent and listing the
->>> corresponding partitions in the ranges properties of the pci child nodes.
->>>
->>> Like in the following, where the ranges property of the ports partition the
->>> ranges passed from the parent evenly:
->>>
->>> 	pcie-controller {
->>> 		compatible = "nvidia,tegra20-pcie";
->>> 		reg =<0x80003000 0x00000800   /* PADS registers */
->>> 		       0x80003800 0x00000200>; /* AFI registers */
->>> 		interrupts =<0 98 0x04   /* controller interrupt */
->>> 			      0 99 0x04>; /* MSI interrupt */
->>> 		status = "disabled";
->>>
->>> 		ranges =<0x80000000 0x80000000 0x00002000   /* 2 root ports */
->>> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
->>> 			  0x80104000 0x80100000 0x00100000   /* extended configuration space */
->>> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
->>> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
->>> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
->>>
->>> 		#address-cells =<1>;
->>> 		#size-cells =<1>;
->>>
->>> 		pci@80000000 {
->>> 			reg =<0x80000000 0x00001000>;
->>> 			status = "disabled";
->>>
->>> 			#address-cells =<3>;
->>> 			#size-cells =<2>;
->>>
->>> 			ranges =<0x80400000 0x80400000 0x00008000   /* I/O */
->>> 				  0x90000000 0x90000000 0x08000000   /* non-prefetchable memory */
->>> 				  0xa0000000 0xa0000000 0x08000000>; /* prefetchable memory */
->>
->> You are on the right track here, but the format of the child-address
->> portion of the above ranges property is incorrect.  Since the child
->> address space is the PCI address space, the child-address portion
->> needs to be 3 cells.  It's not a linear address but rather a triple.
->> The first cell identifies the address type (config, I/O, memory..)
->> and the second and third cells are offsets within that subspace.
->> The second and third cells will typically be 0.  The PCI binding has
->> details.
-
-Also, the size field in ranges is specified according to the child 
-address space, so there must be 2 size cells in the ranges at this 
-level.  Each ranges entry at this level is:
-
-<child_address_space, child_address_high, child_address_low, 
-parent_address, child_size_high, child_size_low>
-
-The above should be:
-
-			ranges =<0x81000000 0 0  0x80400000  0 0x00008000   /* I/O */
-				 0x82000000 0 0  0x90000000  0 0x08000000   /* non-prefetchable memory */
-				 0xc2000000 0 0  0xa0000000  0 0x08000000>; /* prefetchable memory */
-
-
->>
+On Tue, Jun 05, 2012 at 12:11:46PM +0800, Ram Pai wrote:
+>On Tue, Jun 05, 2012 at 11:26:27AM +0800, Richard Yang wrote:
+>> 
+>> All, 
+>> 
+>> I draw a chart on the relationship of bridge/bus/devics.
+>> 
+>> I am not sure it is exact, so please correct me if it is not correct.
 >
-> Okay, I'll need to read up some more.
+>A clearer representation can be found at http://tldp.org/LDP/tlk/dd/pci.html		
+>in section 6.6.1
+Thanks, Ram.
+
+I found I missed one important field in pci_bus.
+
 >
-> Thanks,
-> Thierry
+>> 
+>> BTW, the pci_bus->self, pci_bus->bridge seem to point the same thing.
+>> So this is really necessary to do this?
+>
+>pci_bus->self points to the pci_dev structure, and pci_bus->bridge
+>points to the device structure. Both correspond to the same bridge. BTW: device
+>structure is the basic structure to represent any device in the system,
+>not necessarily pci device.
+>
+>
+>> 
+>>                             Bus 0(pci_bus)                      
+>>                             +--------------------+<----+
+>>                             |                    |     |
+>>                             +--------------------+     |
+>>                                                        |
+>>                                                        |
+>>                              Bridge(pci_dev)           |                     
+>>                             +--------------------+<----|---+--------------+
+>>                             |subordinate(pci_bus)|-+   |   |              |
+>>                             +--------------------+ |   |   |              |
+>>                                                    |   |   |              |
+>>                                                    |   |   |              |
+>>                                                    |   |   |              |
+>>                             Bus 1(pci_bus)         |   |   |              |
+>>                        +--->+-------------------+<-+   |   |              |
+>>                        |    |parent(pci_bus)    |------+   |              |
+>>                        |    +-------------------+          |              |
+>>                        |    |self(pci_dev)      |----------+              |
+>>                        |    |bridge(device)     |                         |
+>>                        |    +-------------------+                         |
+>>                        |    |devices(list_head) |                         |
+>>                        |    +--------+----------+                         |
+>>                        |             |                                    |
+>>                        |      ----+--+---+----                            |
+>>    pci_dev             |          |      |          pci_dev               |
+>>    +---------------+<--|----------+      +--------->+-----------------+   |
+>>    |bus(pci_bus)   |---+                            |bus(pci_bus)     |   |
+>>    +---------------+                                +-----------------+   |
+>>    |dev.parent     |                                |dev.parent       |---+
+>>    +---------------+                                +-----------------+
+
+-- 
+Richard Yang
+Help you, Help me
+
