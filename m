@@ -1,57 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:60410 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755650Ab2FKPGJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 11:06:09 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v2 01/10] PCI: Keep pci_fixup_irqs() around after init
-Date: Mon, 11 Jun 2012 17:05:09 +0200
-Message-Id: <1339427118-32263-2-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:49843 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752156Ab2FEFSq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 01:18:46 -0400
+Received: by dady13 with SMTP id y13so6827525dad.19
+        for <linux-pci@vger.kernel.org>; Mon, 04 Jun 2012 22:18:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
+References: <20120605032627.GA23271@richard>
+	<20120605041146.GD6637@ram-ThinkPad-T61>
+	<CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
+Date: Mon, 4 Jun 2012 22:18:46 -0700
+Message-ID: <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
+Subject: Re: One chart on pci bridge and its bus and their children
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
-Changes in v2:
-- use __devinit annotations
+On Mon, Jun 4, 2012 at 9:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> That's true, but I don't think it answers the question.  If we have:
+>
+>    pci_bus->bridge == pci_bus->self->dev
+>
+> why would we need both "self" and "bridge"?  It would be interesting
+> to try to remove "bridge" and replace uses of it with "self->dev".
 
- drivers/pci/setup-irq.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+then how about root bus?
 
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index eb219a1..f0bcd56 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -18,7 +18,7 @@
- #include <linux/cache.h>
- 
- 
--static void __init
-+static void __devinit
- pdev_fixup_irq(struct pci_dev *dev,
- 	       u8 (*swizzle)(struct pci_dev *, u8 *),
- 	       int (*map_irq)(const struct pci_dev *, u8, u8))
-@@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
- 	pcibios_update_irq(dev, irq);
- }
- 
--void __init
-+void __devinit
- pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 	       int (*map_irq)(const struct pci_dev *, u8, u8))
- {
--- 
-1.7.10.4
+root bus ->self should be NULL.
 
+root bus ->bridge is to the hostbridge->dev.
+
+Yinghai
