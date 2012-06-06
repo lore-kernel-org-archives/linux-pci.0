@@ -1,167 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:64244 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466Ab2FOGNC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 02:13:02 -0400
-Date: Fri, 15 Jun 2012 08:12:36 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Mitch Bradley <wmb@firmworks.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-Message-ID: <20120615061236.GA4081@avionic-0098.mockup.avionic-design.de>
-References: <20120613064519.GD31001@avionic-0098.mockup.avionic-design.de>
- <4FD84133.4060401@firmworks.com>
- <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
- <4FD849CF.4030009@firmworks.com>
- <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
- <4FD85127.8050301@firmworks.com>
- <20120614091905.GA9081@avionic-0098.mockup.avionic-design.de>
- <4FDA2DDA.1030704@wwwdotorg.org>
- <20120614192903.GA2212@avionic-0098.mockup.avionic-design.de>
- <4FDA40A0.4030206@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-In-Reply-To: <4FDA40A0.4030206@wwwdotorg.org>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:8510 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773Ab2FFRch (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 13:32:37 -0400
+Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
+From: Khalid Aziz <khalid.aziz@hp.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+In-Reply-To: <20120606162703.GA6779@srcf.ucam.org>
+References: <20120427190033.GA17588@ldl.usa.hp.com>
+	 <20120606135009.GB1517@srcf.ucam.org> <1338999463.25761.630.camel@lyra>
+	 <20120606162703.GA6779@srcf.ucam.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Jun 2012 11:32:36 -0600
+Message-ID: <1339003956.25761.667.camel@lyra>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, 2012-06-06 at 17:27 +0100, Matthew Garrett wrote:
+> If the qla driver knows that this is safe, then can't this just be done 
+> in the qla driver?
+> 
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+That is one way of doing it. It makes for a safe change but potentially
+leaves out a number of other cases that could be helped by wider scope
+change of disabling Bus Master bit on all PCI devices, until we
+laboriously debug every one of those cases and then add code to disable
+Bus Master bit. Sounds to me like it is not a clear win in either case.
 
-On Thu, Jun 14, 2012 at 01:50:56PM -0600, Stephen Warren wrote:
-> On 06/14/2012 01:29 PM, Thierry Reding wrote:
-> > On Thu, Jun 14, 2012 at 12:30:50PM -0600, Stephen Warren wrote:
-> >> On 06/14/2012 03:19 AM, Thierry Reding wrote:
-> ...
-> >>> #address-cells =3D <1>; #size-cells =3D <1>;
-> >>>=20
-> >>> pci@80000000 {
-> >>=20
-> >> I'm still not convinced that using the address of the port's
-> >> registers is the correct way to represent each port. The port
-> >> index seems much more useful.
-> >>=20
-> >> The main reason here is that there are a lot of registers that
-> >> contain fields for each port - far more than the combination of
-> >> this node's reg and ctrl-offset (which I assume is an address
-> >> offset for just one example of this issue) properties can
-> >> describe. The bit position and bit stride of these fields isn't
-> >> necessarily the same in each register. Do we want a property like
-> >> ctrl-offset for every single type of field in every single shared
-> >> register that describes the location of the relevant data, or
-> >> just a single "port ID" bit that can be applied to anything?
-> >>=20
-> >> (Perhaps this isn't so obvious looking at the TRM since it
-> >> doesn't document all registers, and I'm also looking at the
-> >> Tegra30 documentation too, which might be more exposed to this -
-> >> I haven't correlated all the documentation sources to be sure
-> >> though)
-> >=20
-> > I agree that maybe adding properties for each bit position or
-> > register offset may not work out too well. But I think it still
-> > makes sense to use the base address of the port's registers (see
-> > below). We could of course add some code to determine the index
-> > from the base address at initialization time and reuse the index
-> > where appropriate.
->=20
-> To me, working back from address to ID then using the ID to calculate
-> some other addresses seems far more icky than just calculating all the
-> addresses based off of one ID. But, I suppose this doesn't make a huge
-> practical difference.
+Do we agree that if device shutdown routine cleanly shuts down all I/O,
+clearing PCI Bus Mster bit should be safe? If yes, then we only have to
+deal with broken devices. So the approach could be to disable Bus Master
+bit unless the device ID matches a blacklist which we update as we find
+broken devices. I really don't like the idea of maintaining blacklists
+in the kernel for such things but is that a more practical approach? If
+blacklist does not sound good, maybe we can ask drivers to tell PCI
+subsystem if they are not ok with clearing Bus Master bit and then PCI
+subsystem could skip those devices.
 
-This really depends on the device vs. no device decision below. If we can
-make it work without needing an extra device for it, then using the index
-is certainly better. However, if we instantiate devices from the DT, then
-we have the address anyway and adding the index as a property would be
-redundant and error prone (what happens if somebody sets the index of the
-port at address 0x80000000 to 2?).
+-- 
+Khalid
+====================================================================
+Khalid Aziz                                         Unix Systems Lab
+(970)898-9214                                        Hewlett-Packard
+khalid.aziz@hp.com                                  Fort Collins, CO
 
-> >>> compatible =3D "nvidia,tegra20-pcie-port"; reg =3D <0x80000000=20
-> >>> 0x00001000>; status =3D "disabled";
-> >>>=20
-> >>> #address-cells =3D <3>; #size-cells =3D <2>;
-> >>>=20
-> >>> ranges =3D <0x81000000 0 0 0x80400000 0 0x00008000   /* I/O */=20
-> >>> 0x82000000 0 0 0x90000000 0 0x08000000   /* non-prefetchable
-> >>> memory */ 0xc2000000 0 0 0xa0000000 0 0x08000000>; /*
-> >>> prefetchable memory */
-> >>=20
-> >> The values here appear identical for both ports. Surely they
-> >> should describe just the parts of the overall address space that
-> >> have been assigned/delegated to the individual port/bridge?
-> >=20
-> > They're not identical. Port 0 gets the first half and port 1 gets
-> > the second half of the ranges specified in the parent.
->=20
-> Oh right, I missed some 8s and 0s that looked the same!
->=20
-> >>> While looking into some more code, trying to figure out how to
-> >>> hook this all up with the device tree I ran into a problem. I
-> >>> need to actually create a 'struct device' for each of the
-> >>> ports, so I added the "simple-bus" to the pcie-controller's
-> >>> "compatible" property. Furthermore, each PCI root port now
-> >>> becomes a platform_device, which are supported by a new
-> >>> tegra-pcie-port driver. I'm not sure if "port" is very common
-> >>> in PCI speek, so something like tegra-pcie-bridge (compatible =3D
-> >>> "nvidia,tegra20-pcie-bridge") may be more appropriate?
-> >>=20
-> >> What is it that drives the need for each port to be a 'struct
-> >> device'? The current driver supports 2 host ports, yet there's
-> >> only a single struct device for it. Does the DT code assume a 1:1
-> >> mapping between struct device and DT node that represents the
-> >> child bus? If so, perhaps it'd be better to rework that code to
-> >> accept a DT node as a parameter and call it multiple times,
-> >> rather than accept a struct device as a parameter and hence need
-> >> multiple devices?
-> >=20
-> > It's not so much the DT code, but rather the PCI core and
-> > ultimately the device model that requires it. Each port is
-> > basically a PCI host bridge that provides a root PCI bus and the
-> > device model is used to represent the hierachy of the busses.
-> > Providing just the DT node isn't going to be enough.
->=20
-> But the existing driver works without /any/ devices, let alone one per
-> port.
-
-That doesn't necessarily mean it is correct. The representation of the
-device tree (as in the Linux kernel device tree) isn't quite accurate
-because you're missing the link of the host bridge to the parent PCIe
-controller. It also means that the representation of the kernel device
-tree doesn't match the DT representation.
-
-Additionally, if you look at how PCI busses and devices are matched to
-their respective DT nodes, the code in drivers/pci/of.c provides a
-default implementation of pcibios_get_phb_of_node(), which matches the
-struct pci_bus up with the device_node of the parent device.
-
-If we keep the current implementation that passes NULL as parent to the
-pci_scan_root_bus() function, then we'll have to provide a custom
-implementation of pcibios_get_phb_of_node() which has to go through
-similar hoops as the x86 version (see arch/x86/kernel/devicetree.c).
-That of course will not contribute to improving the current state of
-fragmentation in the PCI subsystem.
-
-Thierry
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/a0lQACgkQZ+BJyKLjJp+dFwCfcrTbO1rz4WRtTNZXO/XSyRmt
-k44AoLGHZyx+ockeQvWHi9Ow15sOo/Ue
-=X1Yq
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
