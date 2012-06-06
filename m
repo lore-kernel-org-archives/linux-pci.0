@@ -1,122 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11833 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753402Ab2FKCrU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 10 Jun 2012 22:47:20 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Zheng Yan <zheng.z.yan@intel.com>
-Subject: [PATCH -v5 2/3] PCIe, PM, Add runtime PM support to PCIe port
-Date: Mon, 11 Jun 2012 10:47:12 +0800
-Message-Id: <1339382833-7928-3-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1339382833-7928-1-git-send-email-ying.huang@intel.com>
-References: <1339382833-7928-1-git-send-email-ying.huang@intel.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:36549 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879Ab2FFQ1H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 12:27:07 -0400
+Date: Wed, 6 Jun 2012 17:27:04 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Khalid Aziz <khalid.aziz@hp.com>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
+Message-ID: <20120606162703.GA6779@srcf.ucam.org>
+References: <20120427190033.GA17588@ldl.usa.hp.com>
+ <20120606135009.GB1517@srcf.ucam.org>
+ <1338999463.25761.630.camel@lyra>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1338999463.25761.630.camel@lyra>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Yan, Zheng" <zheng.z.yan@intel.com>
+On Wed, Jun 06, 2012 at 10:17:43AM -0600, Khalid Aziz wrote:
 
-This patch adds runtime PM support to PCIe port.  This is needed by
-PCIe D3cold support, where PCIe device without ACPI node may be
-powered on/off by PCIe port.
+> That is a good piece of information. I see your concern and agree with
+> it. My take is shutdown method for the drivers will end all active I/O
+> and clear the I/O queue. This should take care of any DMA caused by an
+> I/O request originating in the kernel. For devices like NIC, a DMA can
+> be triggered by an incoming packet and I am trying to stop that by
+> disabling Bus Master bit. This is the issue that was reported on kexec
+> mailing list in July of last year and it involved qla driver. I observed
+> similar problem with kexec on ia64 many years ago and had written a
+> patch to disable Bus Master bit on kexec. This patch was in ia64 tree
+> for some time before it was removed. HP shipped kernels with this patch
+> for many years and those kernels have been in deployment in field for
+> some 7+ years with no problems.
 
-Because runtime suspend is broken for some chipsets, a black list is
-used to disable runtime PM support for these chipsets.
+If the qla driver knows that this is safe, then can't this just be done 
+in the qla driver?
 
-Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
-Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/pci/pci.c              |   10 ++++++++++
- drivers/pci/pcie/portdrv_pci.c |   24 ++++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
-
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1518,6 +1518,16 @@ static void pci_pme_list_scan(struct wor
- 	if (!list_empty(&pci_pme_list)) {
- 		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
- 			if (pme_dev->dev->pme_poll) {
-+				struct pci_dev *bridge;
-+
-+				bridge = pme_dev->dev->bus->self;
-+				/*
-+				 * If bridge is in low power state, the
-+				 * configuration space of subordinate devices
-+				 * may be not accessible
-+				 */
-+				if (bridge && bridge->current_state != PCI_D0)
-+					continue;
- 				pci_pme_wakeup(pme_dev->dev, NULL);
- 			} else {
- 				list_del(&pme_dev->list);
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -11,6 +11,7 @@
- #include <linux/kernel.h>
- #include <linux/errno.h>
- #include <linux/pm.h>
-+#include <linux/pm_runtime.h>
- #include <linux/init.h>
- #include <linux/pcieport_if.h>
- #include <linux/aer.h>
-@@ -99,6 +100,15 @@ static int pcie_port_resume_noirq(struct
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_RUNTIME
-+static int pcie_port_runtime_pm(struct device *dev)
-+{
-+	return 0;
-+}
-+#else
-+#define pcie_port_runtime_pm	NULL
-+#endif
-+
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.suspend	= pcie_port_device_suspend,
- 	.resume		= pcie_port_device_resume,
-@@ -107,6 +117,8 @@ static const struct dev_pm_ops pcie_port
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
- 	.resume_noirq	= pcie_port_resume_noirq,
-+	.runtime_suspend = pcie_port_runtime_pm,
-+	.runtime_resume = pcie_port_runtime_pm,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
-@@ -117,6 +129,14 @@ static const struct dev_pm_ops pcie_port
- #endif /* !PM */
- 
- /*
-+ * PCIe port runtime suspend is broken for some chipsets, so use a
-+ * black list to disable runtime PM for these chipsets.
-+ */
-+static const struct pci_device_id port_runtime_pm_black_list[] = {
-+	{ /* end: all zeroes */ }
-+};
-+
-+/*
-  * pcie_portdrv_probe - Probe PCI-Express port devices
-  * @dev: PCI-Express port device being probed
-  *
-@@ -144,12 +164,16 @@ static int __devinit pcie_portdrv_probe(
- 		return status;
- 
- 	pci_save_state(dev);
-+	if (!pci_match_id(port_runtime_pm_black_list, dev))
-+		pm_runtime_put_noidle(&dev->dev);
- 
- 	return 0;
- }
- 
- static void pcie_portdrv_remove(struct pci_dev *dev)
- {
-+	if (!pci_match_id(port_runtime_pm_black_list, dev))
-+		pm_runtime_get_noresume(&dev->dev);
- 	pcie_port_device_remove(dev);
- 	pci_disable_device(dev);
- }
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
