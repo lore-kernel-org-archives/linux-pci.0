@@ -1,97 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:48739 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754032Ab2FDNfg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2012 09:35:36 -0400
+Received: from e31.co.us.ibm.com ([32.97.110.149]:50925 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327Ab2FFB6k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 21:58:40 -0400
 Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 4 Jun 2012 19:05:33 +0530
-Date: Mon, 4 Jun 2012 21:34:57 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120604133457.GA2969@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120422155202.GA13540@richard>
- <4F95B17B.3030401@redhat.com>
- <20120514015536.GA3331@richard>
- <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
- <20120514064615.GB26605@richard>
- <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
- <20120516011833.GA6599@richard>
- <CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
- <20120529115900.GA31679@richard>
- <CAE9FiQWO1C76ppjZF4Lm4FVpQYPRv5ZirGp9iOM3pm-xrm3Epg@mail.gmail.com>
+	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Tue, 5 Jun 2012 19:58:39 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 8F36619D804E
+	for <linux-pci@vger.kernel.org>; Wed,  6 Jun 2012 01:58:23 +0000 (WET)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q561wNTr256724
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 19:58:24 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q561wMVs017284
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 19:58:23 -0600
+Date: Wed, 6 Jun 2012 09:58:18 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: One chart on pci bridge and its bus and their children
+Message-ID: <20120606015818.GG6637@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <20120605032627.GA23271@richard>
+ <20120605041146.GD6637@ram-ThinkPad-T61>
+ <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
+ <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
+ <CAE9FiQUCV1+ePfyX7bqOyZ+Wcsj1neCO91MvuM5vNh3+UPERDQ@mail.gmail.com>
+ <20120605063538.GE6637@ram-ThinkPad-T61>
+ <4FCE1AA3.5070601@gmail.com>
+ <20120605164019.GF6637@ram-ThinkPad-T61>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQWO1C76ppjZF4Lm4FVpQYPRv5ZirGp9iOM3pm-xrm3Epg@mail.gmail.com>
+In-Reply-To: <20120605164019.GF6637@ram-ThinkPad-T61>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2012 at 10:14:51AM -0700, Yinghai Lu wrote:
->On Tue, May 29, 2012 at 4:59 AM, Richard Yang
-><weiyang@linux.vnet.ibm.com> wrote:
->>
->> I think about this issue again, this behavior of kernel will bring some
->> unconvenience to the user.
->>
->> Do you think the kernel could handle this situation?
->
->in this extreme case, you may need user to do some comprise.
->
->We should always try to use setting from BIOS if it is sane.
->
->Yinghai
-Yinghai
+On Wed, Jun 06, 2012 at 12:40:19AM +0800, Ram Pai wrote:
+> On Tue, Jun 05, 2012 at 10:41:39PM +0800, Jiang Liu wrote:
+> > On 06/05/2012 02:35 PM, Ram Pai wrote:
+> > > On Mon, Jun 04, 2012 at 10:20:51PM -0700, Yinghai Lu wrote:
+> > >> On Mon, Jun 4, 2012 at 10:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > >>> On Mon, Jun 4, 2012 at 9:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > >>>> That's true, but I don't think it answers the question.  If we have:
+> > >>>>
+> > >>>>    pci_bus->bridge == pci_bus->self->dev
+> > >>>>
+> > >>>> why would we need both "self" and "bridge"?  It would be interesting
+> > >>>> to try to remove "bridge" and replace uses of it with "self->dev".
+> > >>>
+> > >>> then how about root bus?
+> > >>>
+> > >>> root bus ->self should be NULL.
+> > >>>
+> > >>> root bus ->bridge is to the hostbridge->dev.
+> > > 
+> > > Yinghai,
+> > > 
+> > > is there a reason why this can't be fixed in
+> > > pci_create_root_bus() by having
+> > >    bus->self = bridge; /* 'bridge' is the pci_device of the corresponding host bridge */
+> > Hi Ram,
+> > 	A host bridge has no associated pci_device because it's out of the
+> > PCI domain. PCI domain only covers the hierarchy starting from the host bridge,
+> > but doesn't include the host bridge itself.
+> 
+> That makes it even easier to kill pci_bus->bridge.
+> 
+> for non-root buses, we can access the bridge's device using
+> bus->self->dev and for root bridges we can silently ignore
+> the bridge's dev since we know that it does not exist; because
+> pci_bus->self is null.
 
-                    +-------+
-                    |       | root bridge(0,255)
-                    +---+---+
-                        |          Bus 0
-       -----+-----------+------------------------------+--
-            |                                          |
-            |                                          |
-            |                                          |
-       +----+----+                               +-----+-----+
-       |         |  B1(1,15)                     |           |B2(32,35)
-       +----+----+                               +-----+-----+
-            |  Bus 1                                   |    Bus 32 
-       -----+-----------------------             -----------
-                             |
-                        +----+----+
-                        |         | B3
-                        +---------+
+hmm..ok. I realize the struct device of the host bridge exists and needs
+to be accessed, even though it is not a pci_device. So killing 
+bus->bridge is not trivial.
 
-I reread the current code, v3.4, in linus tree,
-git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
-And I come up with another condition which will have a problem when
-kernel is not given the parameter, pci=assign-busses.
-
-Same condition as previous:
--------------------------------------------------------------------------------
-B1 and B2 works fine with the BIOS and get the bus number assigned. 
-B3 is not probed by BIOS.
-
-Difference between the previous example:
--------------------------------------------------------------------------------
-In this case, B2 is assigned bus range (32, 35), which has a gap between
-B1 number range (1, 15).
-
-When kernel meets B3 in second pass, B3 will be assigned with bus number
-16. Well, this time the bus number 16 doesn't overlap with bus number of
-B2. 
-
-But, the pci_fixup_parent_subordinate_busnr() will not work since the
-pci=assign-buses is not passed to kernel. 
-
-So B1's bus window is still (1,15) not (1,16).
-
-BTW, is this also a extrem case?
-
--- 
-Richard Yang
-Help you, Help me
+RP
 
