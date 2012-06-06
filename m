@@ -1,46 +1,56 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 27 Jun 2012 15:37:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
+Date: Wed, 6 Jun 2012 13:05:14 +0200
+From: Joerg Roedel <joerg.roedel@amd.com>
 To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	kvm <kvm@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	iommu <iommu@lists.linux-foundation.org>,
-	qemu-devel <qemu-devel@nongnu.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	chrisw <chrisw@sous-sol.org>,
-	"Roedel, Joerg" <Joerg.Roedel@amd.com>, linux-next@vger.kernel.org
-Subject: Re: Request VFIO inclusion in linux-next
-Message-ID: <20120627123733.GA5449@mwanda>
-References: <1340686552.1207.128.camel@bling.home>
+CC: <dwmw2@infradead.org>, <iommu@lists.linux-foundation.org>,
+	<bhelgaas@google.com>, <benh@kernel.crashing.org>, <aik@ozlabs.ru>,
+	<david@gibson.dropbear.id.au>, <konrad.wilk@oracle.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<gregkh@linuxfoundation.org>, <ddutile@redhat.com>,
+	<liuj97@gmail.com>
+Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
+Message-ID: <20120606110514.GG757@amd.com>
+References: <20120530201424.31527.33142.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1340686552.1207.128.camel@bling.home>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120530201424.31527.33142.stgit@bling.home>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2012 at 10:55:52PM -0600, Alex Williamson wrote:
-> Hi,
-> 
-> VFIO has been kicking around for well over a year now and has been
-> posted numerous times for review.  The pre-requirements are finally
-> available in linux-next (or will be in the 20120626 build) so I'd like
-> to request a new branch be included in linux-next with a goal of being
-> accepted into v3.6.
-> 
+On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
+> v2:
+>  - Trickle down changes from pci_get_dma_source() to better handle
+>    PCI device reference counting in IOMMU driver patches
 
-Could you run Sparse over the driver?
-http://lwn.net/Articles/205624/
+Okay, I looked again over the code and looks good for merging to me. The
+IOMMU Groups code depends on changes in the PCI code. We need to work
+out how to merge this.
 
-It reports a bunch of endian problems.  Some are definitely bugs
-like:
-	*prev |= cpu_to_le32((u32)epos << 20);
+Bjorn,
 
-regards,
-dan carpenter
+I need the PCI changes before I can merge the IOMMU Groups code. There
+are two ways that would work for me:
+
+	a) You Ack the PCI patch-set from Alex and I put it into my tree
+	   and merge the IOMMU Group code on-top, or
+	b) You merge the PCI related patch-set into a seperate branch
+	   which you can merge into your next-branch and which I can
+	   pull in to merge IOMMU Groups on-top.
+
+Please let me know what works best for you.
+
+What I would also appreciate are a few more Acks from other IOMMU
+maintainers (David W.?) and from the Power side.
+
+
+Thanks,
+
+	Joerg
+
+-- 
+AMD Operating System Research Center
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
 
