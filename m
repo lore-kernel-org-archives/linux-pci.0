@@ -1,115 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:42860 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761253Ab2FVG6I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:58:08 -0400
-Received: by mail-pz0-f46.google.com with SMTP id y13so1941745dad.19
-        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:58:08 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v10 11/13] x86/PCI: refine __pci_mmcfg_init() for better code readability
-Date: Fri, 22 Jun 2012 14:55:20 +0800
-Message-Id: <1340348122-29021-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
-References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:63046 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757317Ab2FFXSR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 19:18:17 -0400
+MIME-Version: 1.0
+In-Reply-To: <1339023839.25761.764.camel@lyra>
+References: <20120427190033.GA17588@ldl.usa.hp.com>
+	<20120606135009.GB1517@srcf.ucam.org>
+	<1338999463.25761.630.camel@lyra>
+	<20120606162703.GA6779@srcf.ucam.org>
+	<1339003956.25761.667.camel@lyra>
+	<20120606174202.GA8750@srcf.ucam.org>
+	<1339006060.25761.689.camel@lyra>
+	<CAL-B5D3Wda7TV_NBJWEbzJm=0eCs=b-wgGLdJUFRTwP_ewXGGg@mail.gmail.com>
+	<1339023839.25761.764.camel@lyra>
+Date: Wed, 6 Jun 2012 17:18:16 -0600
+Message-ID: <CAL-B5D3_MvP8PG_=4vh9oxgBPbpaoDscw3b5PK5Hr5s0Qk9xrg@mail.gmail.com>
+Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Khalid Aziz <khalid.aziz@hp.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Wed, Jun 6, 2012 at 5:03 PM, Khalid Aziz <khalid.aziz@hp.com> wrote:
+> On Wed, 2012-06-06 at 14:16 -0600, Myron Stowe wrote:
+>> Hay Khalid,
+>>
+>> I've been following this discussion but still do not understand what the
+>> perceived correct fix is for the situation you were originally trying to
+>> circumvent - namely, stopping NIC devices from triggering DMA activity
+>> upon receipt of an incoming packet.
+>>
+>> From the discussion it sounds like a driver, upon shutdown, can end
+>> all active I/O
+>> clearing the I/O queue, and also (?) shut down its DMA engine, and may
+>> also go as far as disabling the Bus Master bit.
+>>
+>> What was occurring in the original issue - was the driver in question not
+>> shutting down its DMA engine for some, possibly valid, reason?
+>>
+>> Thanks,
+>>  Myron
+>
+> Hi Myron,
+>
+> The last driver issue with kexec was reported on kexec mailing list in
+> July of last year and that was with qla driver. From what H Peter Anvin
+> described, the driver left DMA engine running.
+>
+> For the issue I found on an ia64 platform, it was so many years ago that
+> you are now taxing my old and decrepit memory :)
 
-Refine __pci_mmcfg_init() for better code readability.
+Yeah, if it was more than a couple of weeks ago then I'm likely to have
+forgotten myself.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- arch/x86/pci/mmconfig-shared.c |   46 ++++++++++++++++++----------------------
- 1 file changed, 21 insertions(+), 25 deletions(-)
+If you can find it great but don't spend too much time digging.  I just wanted
+some validation of my understanding -
+  o  That drivers must consider both "active I/O" and "DMA" (when
+shutting down),
+  o  That the Bus Master disablement was trying to compensate for a driver not
+quiescing "DMA" as it probably should have (I wasn't sure if these were separate
+capabilities and/or if there was possibly a valid reason for a driver
+leaving "DMA"
+in an enabled state upon shutdown - i.e. Wake on LAN or something similar).
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 332fabd..ffe72b9 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -544,8 +544,6 @@ static void __init pci_mmcfg_reject_broken(int early)
- 	}
- }
- 
--static int __initdata known_bridge;
--
- static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
- 					struct acpi_mcfg_allocation *cfg)
- {
-@@ -617,28 +615,7 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
- 
- static void __init __pci_mmcfg_init(int early)
- {
--	/* MMCONFIG disabled */
--	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
--		return;
--
--	/* MMCONFIG already enabled */
--	if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
--		return;
--
--	/* for late to exit */
--	if (known_bridge)
--		return;
--
--	if (early) {
--		if (pci_mmcfg_check_hostbridge())
--			known_bridge = 1;
--	}
--
--	if (!known_bridge)
--		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
--
- 	pci_mmcfg_reject_broken(early);
--
- 	if (list_empty(&pci_mmcfg_list))
- 		return;
- 
-@@ -660,14 +637,33 @@ static void __init __pci_mmcfg_init(int early)
- 	}
- }
- 
-+static int __initdata known_bridge;
-+
- void __init pci_mmcfg_early_init(void)
- {
--	__pci_mmcfg_init(1);
-+	if (pci_probe & PCI_PROBE_MMCONF) {
-+		if (pci_mmcfg_check_hostbridge())
-+			known_bridge = 1;
-+		else
-+			acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-+		__pci_mmcfg_init(1);
-+	}
- }
- 
- void __init pci_mmcfg_late_init(void)
- {
--	__pci_mmcfg_init(0);
-+	/* MMCONFIG disabled */
-+	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-+		return;
-+
-+	if (known_bridge)
-+		return;
-+
-+	/* MMCONFIG hasn't been enabled yet, try again */
-+	if (pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF) {
-+		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-+		__pci_mmcfg_init(0);
-+	}
- }
- 
- static int __init pci_mmcfg_late_insert_resources(void)
--- 
-1.7.9.5
+Myron
 
+> I am digging through
+> old internal bug reports and will let you know once I find that original
+> bug report.
+>
+> ====================================================================
+> Khalid Aziz                                         Unix Systems Lab
+> (970)898-9214                                        Hewlett-Packard
+> khalid.aziz@hp.com                                  Fort Collins, CO
+>
