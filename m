@@ -1,190 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:58759 "EHLO e8.ny.us.ibm.com"
+Received: from plane.gmane.org ([80.91.229.3]:37613 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756563Ab2F0OtY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Jun 2012 10:49:24 -0400
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Wed, 27 Jun 2012 10:49:22 -0400
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 19C746E8066
-	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 10:49:02 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5REn1Mf050070
-	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 10:49:01 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5RKJmhK003339
-	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 16:19:53 -0400
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
-Cc: yinghai@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH V4 2/2] PCI: minimal alignment for bars of P2P bridges
-Date: Wed, 27 Jun 2012 22:48:45 +0800
-Message-Id: <1340808525-24996-2-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
+	id S1759969Ab2FGTUR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jun 2012 15:20:17 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1SciFb-0008MN-P1
+	for linux-pci@vger.kernel.org; Thu, 07 Jun 2012 21:20:08 +0200
+Received: from dsl001-168-162.bos1.dsl.speakeasy.net ([72.1.168.162])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 07 Jun 2012 21:20:07 +0200
+Received: from tkcarr03873 by dsl001-168-162.bos1.dsl.speakeasy.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 07 Jun 2012 21:20:07 +0200
+To: linux-pci@vger.kernel.org
+From: Tom Carr <tkcarr03873@gmail.com>
+Subject: PCIe rescan not working 
+Date: Thu, 7 Jun 2012 19:16:42 +0000 (UTC)
+Message-ID: <loom.20120607T194858-986@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some powerpc platforms, device BARs need to be assigned to separate
-"segments" of the address space in order for the error isolation and HW
-virtualization mechanisms (EEH) to work properly. Those "segments" have
-a minimum size that can be fairly large (16M). In order to be able to
-use the generic resource assignment code rather than re-inventing our
-own, we chose to group devices by bus. That way, a simple change of the
-minimum alignment requirements of resources assigned to PCI to PCI (P2P)
-bridges is enough to ensure that all BARs for devices below those bridges
-will fit into contiguous sets of segments and there will be no overlap.
+ I wanted to follow up on comment 12836 which was answered by Yinghai Lu with a
+patch that appears to deal with a PCIe rescan issue when there is a switch
+behind a bridge. I am seeing the same failure on the 2 version mentioned in the
+subject. The 3.2 version also has the patch referenced by Yinghai Lu in comment
+12836. Our setup is as follows
 
-This patch provides a way for the host bridge to override the default
-alignment values used by the resource allocation code for that purpose.
+   -----------------    -------------------     -------------------
+   |Intel processor| -> | IDT 6 port switch| -> | unpopulated FPGA |
+   | PCIe root     |    |                  |    |                  |
+   -----------------    -------------------     -------------------
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Reviewed-by: Ram Pai <linuxram@us.ibm.com>
-Reviewed-by: Richard Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/probe.c     |    5 +++++
- drivers/pci/setup-bus.c |   28 +++++++++++++++++++++-------
- include/linux/pci.h     |    8 ++++++++
- 3 files changed, 34 insertions(+), 7 deletions(-)
+ The processor is an i7-2600. I am not 100% certain of the model of the switch
+but I believe it is an IDT PES32NT8BG2 switch being used in P2P mode. The design
+of the project requires that after the system is booted a bitstream with a PCIe
+endpoint will be loaded into the FPGA and rescan will be run to bring the
+endpoint on line. In the drawing above, the switch and FPGA are on a board that
+is plugged into a 4x PCIe connector on the motherboard. The driver being used
+for the switch is the pcieport in conjunction with the shpchp module. I am
+forcing the rescan by using "echo 1 > /sys/bus/pci/rescan".
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 658ac97..a196529 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -431,6 +431,11 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 	if (bridge) {
- 		INIT_LIST_HEAD(&bridge->windows);
- 		bridge->bus = b;
-+
-+		/* Set minimal alignment shift of P2P bridges */
-+		bridge->io_align_shift = PCI_DEFAULT_IO_ALIGN_SHIFT;
-+		bridge->mem_align_shift = PCI_DEFAULT_MEM_ALIGN_SHIFT;
-+		bridge->pmem_align_shift = PCI_DEFAULT_PMEM_ALIGN_SHIFT;
- 	}
- 
- 	return bridge;
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8fa2d4b..caebe98 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -706,10 +706,12 @@ static resource_size_t calculate_memsize(resource_size_t size,
- static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		resource_size_t add_size, struct list_head *realloc_head)
- {
-+	struct pci_host_bridge *phb;
- 	struct pci_dev *dev;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
- 	unsigned long size = 0, size0 = 0, size1 = 0;
- 	resource_size_t children_add_size = 0;
-+	resource_size_t io_align;
- 
- 	if (!b_res)
-  		return;
-@@ -735,13 +737,17 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 				children_add_size += get_res_add_size(realloc_head, r);
- 		}
- 	}
-+
-+	phb = find_pci_host_bridge(bus);
-+	io_align = (1 << phb->io_align_shift);
-+
- 	size0 = calculate_iosize(size, min_size, size1,
--			resource_size(b_res), 4096);
-+			resource_size(b_res), io_align);
- 	if (children_add_size > add_size)
- 		add_size = children_add_size;
- 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
- 		calculate_iosize(size, min_size, add_size + size1,
--			resource_size(b_res), 4096);
-+			resource_size(b_res), io_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window "
-@@ -751,11 +757,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		return;
- 	}
- 	/* Alignment of the IO window is always 4K */
--	b_res->start = 4096;
-+	b_res->start = io_align;
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
-+		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
- 				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
- 				 bus->secondary, bus->subordinate, size1-size0);
-@@ -778,6 +784,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			resource_size_t add_size,
- 			struct list_head *realloc_head)
- {
-+	struct pci_host_bridge *phb;
- 	struct pci_dev *dev;
- 	resource_size_t min_align, align, size, size0, size1;
- 	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
-@@ -785,10 +792,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	struct resource *b_res = find_free_bus_resource(bus, type);
- 	unsigned int mem64_mask = 0;
- 	resource_size_t children_add_size = 0;
-+	int mem_align_shift;
- 
- 	if (!b_res)
- 		return 0;
- 
-+	phb = find_pci_host_bridge(bus);
-+	if (type & IORESOURCE_PREFETCH)
-+		mem_align_shift = phb->pmem_align_shift;
-+	else
-+		mem_align_shift = phb->mem_align_shift;
-+
- 	memset(aligns, 0, sizeof(aligns));
- 	max_order = 0;
- 	size = 0;
-@@ -818,8 +832,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- #endif
- 			/* For bridges size != alignment */
- 			align = pci_resource_alignment(dev, r);
--			order = __ffs(align) - 20;
--			if (order > 11) {
-+			order = __ffs(align) - mem_align_shift;
-+			if (order > (11 - (mem_align_shift - 20))) {
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR "
- 					 "(bad alignment %#llx)\n", i, r,
- 					 (unsigned long long) align);
-@@ -846,7 +860,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	for (order = 0; order <= max_order; order++) {
- 		resource_size_t align1 = 1;
- 
--		align1 <<= (order + 20);
-+		align1 <<= (order + mem_align_shift);
- 
- 		if (!align)
- 			min_align = align1;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2b559f1..879de4e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -376,9 +376,17 @@ struct pci_host_bridge_window {
- 	resource_size_t offset;		/* bus address + offset = CPU address */
- };
- 
-+/* Default shits for P2P I/O and MMIO bar minimal alignment shifts */
-+#define PCI_DEFAULT_IO_ALIGN_SHIFT	12	/* 4KB  */
-+#define PCI_DEFAULT_MEM_ALIGN_SHIFT	20	/* 1MB  */
-+#define PCI_DEFAULT_PMEM_ALIGN_SHIFT	20	/* 1MB */
-+
- struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
-+	int io_align_shift;		/* P2P I/O bar minimal alignment shift  */
-+	int mem_align_shift;		/* P2P MMIO bar minimal alignment shift */
-+	int pmem_align_shift;		/* P2P prefetchable MMIO bar minimal alignment shift */
- 	struct list_head windows;	/* pci_host_bridge_windows */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
--- 
-1.7.9.5
+ From the debug message and kernel messages it appears that the rescan takes
+place with the endpoint being found and added. The probe function for both the
+pcieport driver and customer driver are called. You can see the endpoint using
+lspci but there was no memory assigned to the bars of the new endpoint. The
+kernel messages show that both the switch port and the endpoint failed to have
+memory assigned. As the messages below show
+
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562151] i915 0000:00:02.0: BAR 6: [???
+0x00000000 flags 0x2] has bogus alignment
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562161] pcieport 0000:04:08.0: BAR 14
+can't assign mem (size 0x100000)
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562166] pci 0000:08:00.0: BAR 0: can't
+assign mem (size 0x10000)
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562168] pci 0000:08:00.0: BAR 2: can't
+assign mem (size 0x4000)
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562171] pci 0000:08:00.0: BAR 1: can't
+assign mem (size 0x2000)
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562240] BDS_FPGA_PROBE pdev =
+0xffff880214963000 bus=0x8 devfn=0x0 vend = 0x19aa parent = 0x4
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562260] bds_pcie 0000:08:00.0: PCI INT A
+-> GSI 18 (level, low) -> IRQ 18
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562279] BDS_FPGA Dev 1 0x00000000
+0x00000000 0x00000000 2 0x00000000 0x00000000 0x00000000 3 0x00000000 0x00000000
+0x00000000
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562282] BDS_FPGA enable MSI pin irq 18
+Jun  4 14:04:02 bdsazi1 kernel: [  177.562357] BDS_FPGA enable MSI msi irq 59
+
+
+ The FPGA is attached to the port at bfn 4.8.0 which has a secondary bus of 8.
+If we remove the board and replace it with a board with just and FPGA and no
+switch, the rescan works fine and the endpoint is operational. If we load the
+FPGA and then boot the board everything if fine. The problem is definitely with
+the switch being present with nothing behind it at boot time. There is nothing I
+can find in docs or the code to give a hint as to why memory is not being
+assigned to the switch port which is why the endpoint is not getting memory. I
+have added lots of debug to try to figure out the exact reason why the failure
+is occuring but I have not found it yet. The failure appears to be coming from a
+call to allocate_resource in kernel/resource.c but I am still working on proving
+that. The discussion in 12836 sounded very similar to this problem and I thought
+the patch to 3.2 would solve the problem but it did not. 
+
+ The lspci output for the port follows
+
+04:08.0 PCI bridge: Integrated Device Technology, Inc. Device 8091 (rev 02)
+(prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+                ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
+                <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Bus: primary=04, secondary=08, subordinate=08, sec-latency=0
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
+                <MAbort- <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [40] Express (v2) Downstream Port (Slot-), MSI 00
+		DevCap:	MaxPayload 2048 bytes, PhantFunc 0, Latency L0s <64ns,
+                        L1 <1us
+			ExtTag+ RBE+ FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal-    
+                        Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- 
+                        TransPend-
+		LnkCap:	Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0
+                        <4us, L1 <4us
+			ClockPM- Surprise+ LLActRep+ BwNot+
+		LnkCtl:	ASPM Disabled; Disabled- Retrain- CommClk-
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ 
+                        DLActive- BWMgmt- ABWMgmt-
+		DevCap2: Completion Timeout: Not Supported, TimeoutDis- ARIFwd+
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, 
+                         Selectable
+                         De-emphasis: -6dB
+			 Transmit Margin: Normal Operating Range, 
+                         EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB
+	Capabilities: [c0] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
+                       PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000feeff00c  Data: 4199
+	Capabilities: [100 v2] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+                        RxOF- MalfTLP- ECRC-
+                        UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
+                        RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
+                        RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [200 v1] Virtual Channel
+		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
+		Arb:	Fixed- WRR32- WRR64- WRR128-
+		Ctrl:	ArbSelect=Fixed
+		Status:	InProgress-
+		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+			Arb:	Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
+			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+			Status:	NegoPending- InProgress-
+	Capabilities: [320 v1] Access Control Services
+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+
+                        EgressCtrl+ DirectTrans+
+		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd-
+                        EgressCtrl- DirectTrans-
+	Capabilities: [330 v1] #12
+	Kernel driver in use: pcieport
+	Kernel modules: shpchp
+
+
+ I am sure I am not supply some piece of information that is important so let me
+know what else you need and I will provide it.
+
+
+
+  
+
 
