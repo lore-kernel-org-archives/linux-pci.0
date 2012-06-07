@@ -1,40 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30785 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520Ab2FWHmI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 03:42:08 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 5/5] PCI: add root bus children dev's res to fail list
-Date: Sat, 23 Jun 2012 00:42:05 -0700
-Message-Id: <1340437325-29282-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
+From: Khalid Aziz <khalid.aziz@hp.com>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+In-Reply-To: <87obowxm5s.fsf@xmission.com>
+References: <20120427190033.GA17588@ldl.usa.hp.com>
+	 <20120606135009.GB1517@srcf.ucam.org> <1338999463.25761.630.camel@lyra>
+	 <20120606162703.GA6779@srcf.ucam.org> <1339003956.25761.667.camel@lyra>
+	 <20120606174202.GA8750@srcf.ucam.org> <1339006060.25761.689.camel@lyra>
+	 <87obowxm5s.fsf@xmission.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Jun 2012 08:21:00 -0600
+Message-ID: <1339078860.25761.767.camel@lyra>
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can stop according to try number now and do not need to use root_bus checking
-as stop sign anymore.
+On Wed, 2012-06-06 at 12:42 -0700, Eric W. Biederman wrote:
+> Absent anyone even knowing if there are devices that exist that can not
+> tolerate their bus master bit being flipped when DMA is not ongoing I
+> think the current state of the code is good.  When we find the broken
+> hardware that can not tolerate a standard PCI bit being used in a
+> standard way we can add a flag in the core to avoid doing that.
+> 
+> pci_device_shutdown calls drv->shutdown before calling
+> pci_device_disable.  Which means that only devices that have trouble
+> with this bit being flipped while DMA is ongoing and don't bother
+> to stop their own DMA will have a problem.
+> 
+> As for shifting problems I do think we have shifted the problem in a
+> very positive way.  Now instead of having a random failure at a random
+> location caused by DMA happing at a random moment for no expected reason
+> we have failures happening when we disable or enable a device, which
+> should be much more debugable.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+That is a very good point. Failure at a predictable point is much better
+than random failures with the root cause being elsewhere from the point
+of failure in time and code. This at least gives us a good shot at being
+able to debug buggy hardware and drivers.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 561e41c..bb02b25 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -283,7 +283,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		idx = res - &dev_res->dev->resource[0];
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
--			if (fail_head && !pci_is_root_bus(dev_res->dev->bus)) {
-+			if (fail_head) {
- 				/*
- 				 * if the failed res is for ROM BAR, and it will
- 				 * be enabled later, don't add it to the list
 -- 
-1.7.7
+====================================================================
+Khalid Aziz                                         Unix Systems Lab
+(970)898-9214                                        Hewlett-Packard
+khalid.aziz@hp.com                                  Fort Collins, CO
 
