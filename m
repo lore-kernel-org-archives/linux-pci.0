@@ -1,65 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:33418 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751173Ab2FKVWJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 17:22:09 -0400
-Message-ID: <4FD6617C.4090805@wwwdotorg.org>
-Date: Mon, 11 Jun 2012 15:22:04 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 05/10] ARM: tegra: Rewrite PCIe support as a driver
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-6-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1339427118-32263-6-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1339091004.26976.26.camel@ul30vt>
+Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jan Kiszka <jan.kiszka@web.de>
+Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Date: Thu, 07 Jun 2012 11:43:24 -0600
+In-Reply-To: <4FD0E27B.6060502@web.de>
+References: <20120606212241.6627.98371.stgit@bling.home>
+	  <4FD047A7.6050602@01019freenet.de> <1339088741.26976.19.camel@ul30vt>
+	 <4FD0E27B.6060502@web.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/11/2012 09:05 AM, Thierry Reding wrote:
-> This commit adds a platform device driver for the PCIe controller on
-> Tegra SOCs. Current users of the old code (TrimSlice and Harmony) are
-> converted and now initialize and register a corresponding platform
-> device.
+On Thu, 2012-06-07 at 19:18 +0200, Jan Kiszka wrote:
+> On 2012-06-07 19:05, Alex Williamson wrote:
+> > On Thu, 2012-06-07 at 08:18 +0200, Andreas Hartmann wrote:
+> >> Hello Alex,
+> >>
+> >> what about a module parameter to achieve this behaviour manually by
+> >> the user without recompiling? I fear, there are much more candidates
+> >> out there needing this "feature".
+> > 
+> > Yeah, that's probably a good idea.  For debugging and letting users have
+> > a workaround rather than any kind of regular use.  I'll add a nointxmask
+> > to vfio-pci with a description indicating that if it fixes a device to
+> > report it for quirking.  Thanks,
+> 
+> Isn't this controllable on a per-device base from userspace (or is this
+> what you mean)? That would nicely align to qemu-kvm's pci-assign
+> share_intx property (and may allow to map pci-assign's user-visible
+> interface to a vfio backend one day).
 
-> -static int tegra_pcie_clocks_get(void)
-> +static int tegra_pcie_clocks_get(struct tegra_pcie_info *pcie)
->  {
->  	int err;
->  
-> -	tegra_pcie.pex_clk = clk_get(NULL, "pex");
-> -	if (IS_ERR(tegra_pcie.pex_clk))
-> -		return PTR_ERR(tegra_pcie.pex_clk);
-> +	pcie->pex_clk = clk_get(NULL, "pex");
-> +	if (IS_ERR(pcie->pex_clk))
-> +		return PTR_ERR(pcie->pex_clk);
+No, there's currently no per-device control of this from userspace with
+VFIO.  It wouldn't be hard to make use of flags bits in the ioctls to
+support it, but I don't just want to move the blacklist from the kernel
+out to the user.  Thanks,
 
-While we're changing this, can we convert this to devm_clk_get(), and ...
+Alex
 
-> -	tegra_pcie.regs = ioremap_nocache(TEGRA_PCIE_BASE, PCIE_IOMAP_SZ);
-> -	if (tegra_pcie.regs == NULL) {
-> -		pr_err("PCIE: Failed to map PCI/AFI registers\n");
-> +	regs = request_mem_region(regs->start, resource_size(regs), "PCI/AFI");
-> +	if (regs == NULL) {
-> +		dev_err(&pdev->dev, "failed to request PCI/AFI region: %d\n", err);
-> +		goto err_req_reg;
-> +	}
-> +
-> +	pcie->regs = ioremap_nocache(regs->start, resource_size(regs));
-> +	if (pcie->regs == NULL) {
-> +		dev_err(&pdev->dev, "failed to map PCI/AFI registers\n");
->  		err = -ENOMEM;
->  		goto err_map_reg;
->  	}
-
-... that to devm_request_and_ioremap(). That would allow a bunch of the
-cleanup code to be deleted rather than just modified.
