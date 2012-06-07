@@ -1,75 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:58640 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762003Ab2FVKVX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 06:21:23 -0400
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id DAFE23EE0BC
-	for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 19:21:21 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id B6CE945DE56
-	for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 19:21:21 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 9E78145DE54
-	for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 19:21:21 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 914A41DB804E
-	for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 19:21:21 +0900 (JST)
-Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 4C79C1DB804D
-	for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 19:21:21 +0900 (JST)
-Date: Fri, 22 Jun 2012 19:21:28 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 0/4] acpi, pci: hostbridge hotplug support
-Message-Id: <20120622192128.60b57d14.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <CAE9FiQUn-NhgJkhHXFu4gMi=xzWz06hSVxUJunj25e8gH_xqBw@mail.gmail.com>
-References: <20120621183430.2b84fb53.izumi.taku@jp.fujitsu.com>
-	<CAE9FiQUn-NhgJkhHXFu4gMi=xzWz06hSVxUJunj25e8gH_xqBw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:56641 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754592Ab2FGRCK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jun 2012 13:02:10 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2] PCI: Add Ralink RT2800 broken INTx masking quirk
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com, andihartmann@01019freenet.de
+Date: Thu, 07 Jun 2012 11:01:59 -0600
+Message-ID: <20120607170026.3174.52434.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 21 Jun 2012 11:18:07 -0700
-Yinghai Lu <yinghai@kernel.org> wrote:
+Passes pci_intx_mask_supported test but continues to send interrupts
+as discovered through VFIO-based device assignment.
 
-> On Thu, Jun 21, 2012 at 2:34 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
-> >
-> >  This patchset adds basic code for host bridge hotplug.
-> >
-> >  I assume ACPI container device (ACPI0004) which carries
-> >  hostbridges will be hot-added or hot-removed. In that case
-> >  some codes are now missing for hostbridge hotplug.
-> >  This patchset mainly adds the following:
-> >   - remove hostbridge and devices under it
-> >   - resoruce-assign code for devices under hot-added hostbridge
-> >
-> >  The behavior when you don't try hostbridge hotplug should not change.
-> >
-> >  *[PATCH 1/4] acpi, pci: introduce list for acpi_pci_root drivers
-> >  *[PATCH 2/4] acpi, pci: introduce acpi_root_sem for list manipulation
-> >  *[PATCH 3/4] acpi, pci: add hostbridge removal function
-> >  *[PATCH 4/4] acpi, pci: add resoruce-assign code for devices under
-> >      hot-added hostbridge
-> 
-> Hi, did you check our pci root bus hot plug branch ?
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-pci-root-bus-hotplug
-> 
-> It contain some similar patches from jiang and me.
+http://www.spinics.net/lists/kvm/msg73738.html
 
-  Hi Yinghai,
-  Thank you for your comment.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Tested-by: Andreas Hartmann <andihartmann@01019freenet.de>
+---
 
-  I checked your branch out. It seems to include many work.
-  Is it already scheduled to be merged to Bjorn's tree?
-  If not, should I develop based on your tree?
+v2: context-only respin for Jan's v2 patch
 
-  Best regards, 
-  Taku Izumi <izumi.taku@jp.fujitsu.com>
+Depends on Jan's patch:
+http://www.spinics.net/lists/linux-pci/msg15720.html
+
+ drivers/pci/quirks.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 87b9edd..3681678 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2940,6 +2940,8 @@ static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
+ 			quirk_broken_intx_masking);
++DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
++			quirk_broken_intx_masking);
+ 
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
 
