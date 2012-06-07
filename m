@@ -1,104 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:57105 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757788Ab2FZB0N convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2012 21:26:13 -0400
-Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id A77AC3EE0BB
-	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 10:26:11 +0900 (JST)
-Received: from smail (m2 [127.0.0.1])
-	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 8944B45DE56
-	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 10:26:11 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
-	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 6EE1A45DE50
-	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 10:26:11 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 135B7E78002
-	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 10:26:11 +0900 (JST)
-Received: from g01jpexchyt01.g01.fujitsu.local (g01jpexchyt01.g01.fujitsu.local [10.128.194.40])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id B2F3E1DB803E
-	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 10:26:10 +0900 (JST)
-From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH 2/5] pciehp: Don't enable presence notification while
- surprise removal is not supported.
-Date: Tue, 26 Jun 2012 01:26:10 +0000
-Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A41F453@G01JPEXMBYT03>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
- <1340437325-29282-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340437325-29282-3-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="iso-2022-jp"
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:51500 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756551Ab2FGUb5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2012 16:31:57 -0400
+Received: by dady13 with SMTP id y13so1366234dad.19
+        for <linux-pci@vger.kernel.org>; Thu, 07 Jun 2012 13:31:56 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <loom.20120607T194858-986@post.gmane.org>
+References: <loom.20120607T194858-986@post.gmane.org>
+Date: Thu, 7 Jun 2012 13:31:56 -0700
+Message-ID: <CAE9FiQWau+ko4JiEEjM=2xSH_7FPBr_ZYOm8YGpin2p97=12PQ@mail.gmail.com>
+Subject: Re: PCIe rescan not working
+From: Yinghai Lu <yinghai@kernel.org>
+To: Tom Carr <tkcarr03873@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org
-> [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Yinghai Lu
-> Sent: Saturday, June 23, 2012 4:42 PM
-> To: Bjorn Helgaas
-> Cc: linux-pci@vger.kernel.org; Yinghai Lu
-> Subject: [PATCH 2/5] pciehp: Don't enable presence notification while
-> surprise removal is not supported.
-> 
-> If surprise removal is not supported, that event get dropped later.
-> So there is no point to enable that.
+On Thu, Jun 7, 2012 at 12:16 PM, Tom Carr <tkcarr03873@gmail.com> wrote:
+>  I wanted to follow up on comment 12836 which was answered by Yinghai Lu with a
+> patch that appears to deal with a PCIe rescan issue when there is a switch
+> behind a bridge. I am seeing the same failure on the 2 version mentioned in the
+> subject. The 3.2 version also has the patch referenced by Yinghai Lu in comment
+> 12836. Our setup is as follows
+>
+>   -----------------    -------------------     -------------------
+>   |Intel processor| -> | IDT 6 port switch| -> | unpopulated FPGA |
+>   | PCIe root     |    |                  |    |                  |
+>   -----------------    -------------------     -------------------
+>
+>  The processor is an i7-2600. I am not 100% certain of the model of the switch
+> but I believe it is an IDT PES32NT8BG2 switch being used in P2P mode. The design
+> of the project requires that after the system is booted a bitstream with a PCIe
+> endpoint will be loaded into the FPGA and rescan will be run to bring the
+> endpoint on line. In the drawing above, the switch and FPGA are on a board that
+> is plugged into a 4x PCIe connector on the motherboard. The driver being used
+> for the switch is the pcieport in conjunction with the shpchp module. I am
+> forcing the rescan by using "echo 1 > /sys/bus/pci/rescan".
+>
+>  From the debug message and kernel messages it appears that the rescan takes
+> place with the endpoint being found and added. The probe function for both the
+> pcieport driver and customer driver are called. You can see the endpoint using
+> lspci but there was no memory assigned to the bars of the new endpoint. The
+> kernel messages show that both the switch port and the endpoint failed to have
+> memory assigned. As the messages below show
+>
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562151] i915 0000:00:02.0: BAR 6: [???
+> 0x00000000 flags 0x2] has bogus alignment
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562161] pcieport 0000:04:08.0: BAR 14
+> can't assign mem (size 0x100000)
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562166] pci 0000:08:00.0: BAR 0: can't
+> assign mem (size 0x10000)
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562168] pci 0000:08:00.0: BAR 2: can't
+> assign mem (size 0x4000)
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562171] pci 0000:08:00.0: BAR 1: can't
+> assign mem (size 0x2000)
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562240] BDS_FPGA_PROBE pdev =
+> 0xffff880214963000 bus=0x8 devfn=0x0 vend = 0x19aa parent = 0x4
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562260] bds_pcie 0000:08:00.0: PCI INT A
+> -> GSI 18 (level, low) -> IRQ 18
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562279] BDS_FPGA Dev 1 0x00000000
+> 0x00000000 0x00000000 2 0x00000000 0x00000000 0x00000000 3 0x00000000 0x00000000
+> 0x00000000
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562282] BDS_FPGA enable MSI pin irq 18
+> Jun  4 14:04:02 bdsazi1 kernel: [  177.562357] BDS_FPGA enable MSI msi irq 59
+>
+>
+>  The FPGA is attached to the port at bfn 4.8.0 which has a secondary bus of 8.
+> If we remove the board and replace it with a board with just and FPGA and no
+> switch, the rescan works fine and the endpoint is operational. If we load the
+> FPGA and then boot the board everything if fine. The problem is definitely with
+> the switch being present with nothing behind it at boot time. There is nothing I
+> can find in docs or the code to give a hint as to why memory is not being
+> assigned to the switch port which is why the endpoint is not getting memory. I
+> have added lots of debug to try to figure out the exact reason why the failure
+> is occuring but I have not found it yet. The failure appears to be coming from a
+> call to allocate_resource in kernel/resource.c but I am still working on proving
+> that. The discussion in 12836 sounded very similar to this problem and I thought
+> the patch to 3.2 would solve the problem but it did not.
+>
+>  The lspci output for the port follows
+>
+> 04:08.0 PCI bridge: Integrated Device Technology, Inc. Device 8091 (rev 02)
+> (prog-if 00 [Normal decode])
+>        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>                ParErr- Stepping- SERR- FastB2B- DisINTx+
+>        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
+>                <MAbort- >SERR- <PERR- INTx-
+>        Latency: 0, Cache Line Size: 64 bytes
+>        Bus: primary=04, secondary=08, subordinate=08, sec-latency=0
+>        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
+>                <MAbort- <SERR- <PERR-
+>        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>        Capabilities: [40] Express (v2) Downstream Port (Slot-), MSI 00
+>                DevCap: MaxPayload 2048 bytes, PhantFunc 0, Latency L0s <64ns,
+>                        L1 <1us
+>                        ExtTag+ RBE+ FLReset-
+>                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+>                        Unsupported-
+>                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+>                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+>                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr-
+>                        TransPend-
+>                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0
+>                        <4us, L1 <4us
+>                        ClockPM- Surprise+ LLActRep+ BwNot+
+>                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
+>                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+
+>                        DLActive- BWMgmt- ABWMgmt-
+>                DevCap2: Completion Timeout: Not Supported, TimeoutDis- ARIFwd+
+>                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+>                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-,
+>                         Selectable
+>                         De-emphasis: -6dB
+>                         Transmit Margin: Normal Operating Range,
+>                         EnterModifiedCompliance- ComplianceSOS-
+>                         Compliance De-emphasis: -6dB
+>                LnkSta2: Current De-emphasis Level: -6dB
+>        Capabilities: [c0] Power Management version 3
+>                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+>                       PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>                Address: 00000000feeff00c  Data: 4199
+>        Capabilities: [100 v2] Advanced Error Reporting
+>                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+>                        RxOF- MalfTLP- ECRC-
+>                        UnsupReq- ACSViol-
+>                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+>                        RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
+>                        RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+>        Capabilities: [200 v1] Virtual Channel
+>                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+>                Arb:    Fixed- WRR32- WRR64- WRR128-
+>                Ctrl:   ArbSelect=Fixed
+>                Status: InProgress-
+>                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+>                        Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
+>                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+>                        Status: NegoPending- InProgress-
+>        Capabilities: [320 v1] Access Control Services
+>                ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+
+>                        EgressCtrl+ DirectTrans+
+>                ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd-
+>                        EgressCtrl- DirectTrans-
+>        Capabilities: [330 v1] #12
+>        Kernel driver in use: pcieport
+>        Kernel modules: shpchp
+>
+>
+>  I am sure I am not supply some piece of information that is important so let me
+> know what else you need and I will provide it.
 
-Presence changed event is currently just for printing a kernel message when
-surprise removal is not supported, and I think the message is not so important.
-So I agree this change.
+should be bridge that 04:08.0 is on, does not have big enough range
+after it is booted up.
 
-Acked-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+current pciehp will resize bridge if the bridge resource is not big enough.
 
-> 
-> Also some sick chipset have those bit flip around when the card is not
-> present.
-> and make log full of useless warning.
+please post whole boot log with "debug" and compile the kernel with
+pci debug enabled.
+CONFIG_PCI_DEBUG=y
 
-Is there any other way to avoid this issue other than disabling presence
-changed notification? If we need enabling presence changed event in the
-future, this will happen again. I'm worrying about this.
+also please post
+lspci -vvxxx
+lspci -tv
 
-Regards,
-Kenji Kaneshige
+Thanks
 
-
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c
-> b/drivers/pci/hotplug/pciehp_hpc.c
-> index a960fae..d4fa705 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -808,7 +808,7 @@ int pciehp_get_cur_lnk_width(struct slot *slot,
-> 
->  int pcie_enable_notification(struct controller *ctrl)
->  {
-> -	u16 cmd, mask;
-> +	u16 cmd = 0, mask;
-> 
->  	/*
->  	 * TBD: Power fault detected software notification support.
-> @@ -820,7 +820,8 @@ int pcie_enable_notification(struct controller *ctrl)
->  	 * when it is cleared in the interrupt service routine, and
->  	 * next power fault detected interrupt was notified again.
->  	 */
-> -	cmd = PCI_EXP_SLTCTL_PDCE;
-> +	if (HP_SUPR_RM(ctrl))
-> +		cmd |= PCI_EXP_SLTCTL_PDCE;
->  	if (ATTN_BUTTN(ctrl))
->  		cmd |= PCI_EXP_SLTCTL_ABPE;
->  	if (MRL_SENS(ctrl))
-> --
-> 1.7.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yinghai
