@@ -1,127 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:33259 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751565Ab2FZUdl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 16:33:41 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+55aFzi7tHg=3k8Fmga8XmxFbn6tZLLV97vt67Xx_WtckQo6g@mail.gmail.com>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-	<1340736849-14875-2-git-send-email-yinghai@kernel.org>
-	<CA+55aFzi7tHg=3k8Fmga8XmxFbn6tZLLV97vt67Xx_WtckQo6g@mail.gmail.com>
-Date: Tue, 26 Jun 2012 13:33:40 -0700
-Message-ID: <CAE9FiQVBPoEinWC__9DF-oi8T-78YJRn95J=xXdL2GzNoKoCaQ@mail.gmail.com>
-Subject: Re: [PATCH -v12 01/15] resources: Split out __allocate_resource()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: multipart/mixed; boundary=047d7b339cc18aadad04c3660338
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:48392 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754204Ab2FGRJv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2012 13:09:51 -0400
+Date: Thu, 7 Jun 2012 18:13:05 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Matthew Garrett <mjg@redhat.com>, Khalid Aziz <khalid.aziz@hp.com>,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
+Message-ID: <20120607181305.2c444be6@pyramind.ukuu.org.uk>
+In-Reply-To: <m21ulrjbji.fsf@firstfloor.org>
+References: <20120427190033.GA17588@ldl.usa.hp.com>
+	<20120606135009.GB1517@srcf.ucam.org>
+	<20120606215034.257d7549@pyramind.ukuu.org.uk>
+	<m21ulrjbji.fsf@firstfloor.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b339cc18aadad04c3660338
-Content-Type: text/plain; charset=ISO-8859-1
+> But it also makes my system do kexec successfully for the first time.
+> 
+> Maybe can make it an option.
 
-On Tue, Jun 26, 2012 at 12:01 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Tue, Jun 26, 2012 at 11:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> It will take bool lock, so we could use it in other functions that
->> hold the resource lock already.
->
-> This is too damn ugly.
->
-> These kinds of "conditionally take lock" things are always just bugs
-> waiting to happen. Don't do it.
->
-> Just make the rule be that the caller of the __allocate_resource
-> helper has to hold the lock. Sure, that means that you need to then
-> use split reallocate_resource() into a helper function (ie a static
-> __reallocate_resource() that needs to have the lock taken by the
-> caller too), but dammit, that's definitely the right thing to do
-> anyway.
->
-> These kinds of "bool lock" crap things have to die. They are *wrong*.
-> They are a sign of bad locking rules.
+More useful might be to report which devices have the bus master bit left
+on at the time you tried the kexec, then we might actually find the bug.
 
-You are right, please check updated one.
-
-Thanks
-
-Yinghai
-
---047d7b339cc18aadad04c3660338
-Content-Type: application/octet-stream; name="probe_resource_1.patch"
-Content-Disposition: attachment; filename="probe_resource_1.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h3xfmagc0
-
-U3ViamVjdDogW1BBVENIXSByZXNvdXJjZXM6IFNwbGl0IG91dCBfX2FsbG9jYXRlX3Jlc291cmNl
-KCkKCkl0IHdpbGwgb3V0IGhvbGQgbG9jaywgc28gd2UgY291bGQgdXNlIGl0IGluIG90aGVyIGZ1
-bmN0aW9ucyB0aGF0CmhvbGQgdGhlIHJlc291cmNlIGxvY2sgYWxyZWFkeS4KCi12MjogYWNjb3Jk
-aW5nIHRvIExpbnVzLCB1c2luZyAiYm9vbCBsb2NrIiBhcyBwYXJhbWV0ZXIKICAgICBha2EgImNv
-bmRpdGlvbmFsbHkgdGFrZSBsb2NrIiBpcyAqd3JvbmcqLgoKU2lnbmVkLW9mZi1ieTogWWluZ2hh
-aSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgpDYzogQW5kcmV3IE1vcnRvbiA8YWtwbUBsaW51eC1m
-b3VuZGF0aW9uLm9yZz4KCi0tLQoga2VybmVsL3Jlc291cmNlLmMgfCAgIDQxICsrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgMzMgaW5zZXJ0
-aW9ucygrKSwgOCBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYva2VybmVsL3Jlc291cmNl
-LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcva2VybmVsL3Jlc291cmNlLmMKKysrIGxp
-bnV4LTIuNi9rZXJuZWwvcmVzb3VyY2UuYwpAQCAtNDcwLDcgKzQ3MCw3IEBAIHN0YXRpYyBpbnQg
-ZmluZF9yZXNvdXJjZShzdHJ1Y3QgcmVzb3VyY2UKICAqIEBuZXdzaXplOiBuZXcgc2l6ZSBvZiB0
-aGUgcmVzb3VyY2UgZGVzY3JpcHRvcgogICogQGNvbnN0cmFpbnQ6IHRoZSBzaXplIGFuZCBhbGln
-bm1lbnQgY29uc3RyYWludHMgdG8gYmUgbWV0LgogICovCi1pbnQgcmVhbGxvY2F0ZV9yZXNvdXJj
-ZShzdHJ1Y3QgcmVzb3VyY2UgKnJvb3QsIHN0cnVjdCByZXNvdXJjZSAqb2xkLAorc3RhdGljIGlu
-dCBfX3JlYWxsb2NhdGVfcmVzb3VyY2Uoc3RydWN0IHJlc291cmNlICpyb290LCBzdHJ1Y3QgcmVz
-b3VyY2UgKm9sZCwKIAkJCXJlc291cmNlX3NpemVfdCBuZXdzaXplLAogCQkJc3RydWN0IHJlc291
-cmNlX2NvbnN0cmFpbnQgICpjb25zdHJhaW50KQogewpAQCAtNDc4LDcgKzQ3OCw2IEBAIGludCBy
-ZWFsbG9jYXRlX3Jlc291cmNlKHN0cnVjdCByZXNvdXJjZQogCXN0cnVjdCByZXNvdXJjZSBuZXcg
-PSAqb2xkOwogCXN0cnVjdCByZXNvdXJjZSAqY29uZmxpY3Q7CiAKLQl3cml0ZV9sb2NrKCZyZXNv
-dXJjZV9sb2NrKTsKIAogCWlmICgoZXJyID0gX19maW5kX3Jlc291cmNlKHJvb3QsIG9sZCwgJm5l
-dywgbmV3c2l6ZSwgY29uc3RyYWludCkpKQogCQlnb3RvIG91dDsKQEAgLTUwNCwxMSArNTAzLDIw
-IEBAIGludCByZWFsbG9jYXRlX3Jlc291cmNlKHN0cnVjdCByZXNvdXJjZQogCQlCVUdfT04oY29u
-ZmxpY3QpOwogCX0KIG91dDoKLQl3cml0ZV91bmxvY2soJnJlc291cmNlX2xvY2spOwogCXJldHVy
-biBlcnI7CiB9CitpbnQgcmVhbGxvY2F0ZV9yZXNvdXJjZShzdHJ1Y3QgcmVzb3VyY2UgKnJvb3Qs
-IHN0cnVjdCByZXNvdXJjZSAqb2xkLAorCQkJcmVzb3VyY2Vfc2l6ZV90IG5ld3NpemUsCisJCQlz
-dHJ1Y3QgcmVzb3VyY2VfY29uc3RyYWludCAgKmNvbnN0cmFpbnQpCit7CisJaW50IHJldDsKIAor
-CXdyaXRlX2xvY2soJnJlc291cmNlX2xvY2spOworCXJldCA9IF9fcmVhbGxvY2F0ZV9yZXNvdXJj
-ZShyb290LCBvbGQsIG5ld3NpemUsIGNvbnN0cmFpbnQpOworCXdyaXRlX3VubG9jaygmcmVzb3Vy
-Y2VfbG9jayk7CiAKKwlyZXR1cm4gcmV0OworfQogLyoqCiAgKiBhbGxvY2F0ZV9yZXNvdXJjZSAt
-IGFsbG9jYXRlIGVtcHR5IHNsb3QgaW4gdGhlIHJlc291cmNlIHRyZWUgZ2l2ZW4gcmFuZ2UgJiBh
-bGlnbm1lbnQuCiAgKiAJVGhlIHJlc291cmNlIHdpbGwgYmUgcmVhbGxvY2F0ZWQgd2l0aCBhIG5l
-dyBzaXplIGlmIGl0IHdhcyBhbHJlYWR5IGFsbG9jYXRlZApAQCAtNTIxLDcgKzUyOSw3IEBAIG91
-dDoKICAqIEBhbGlnbmY6IGFsaWdubWVudCBmdW5jdGlvbiwgb3B0aW9uYWwsIGNhbGxlZCBpZiBu
-b3QgTlVMTAogICogQGFsaWduZl9kYXRhOiBhcmJpdHJhcnkgZGF0YSB0byBwYXNzIHRvIHRoZSBA
-YWxpZ25mIGZ1bmN0aW9uCiAgKi8KLWludCBhbGxvY2F0ZV9yZXNvdXJjZShzdHJ1Y3QgcmVzb3Vy
-Y2UgKnJvb3QsIHN0cnVjdCByZXNvdXJjZSAqbmV3LAorc3RhdGljIGludCBfX2FsbG9jYXRlX3Jl
-c291cmNlKHN0cnVjdCByZXNvdXJjZSAqcm9vdCwgc3RydWN0IHJlc291cmNlICpuZXcsCiAJCSAg
-ICAgIHJlc291cmNlX3NpemVfdCBzaXplLCByZXNvdXJjZV9zaXplX3QgbWluLAogCQkgICAgICBy
-ZXNvdXJjZV9zaXplX3QgbWF4LCByZXNvdXJjZV9zaXplX3QgYWxpZ24sCiAJCSAgICAgIHJlc291
-cmNlX3NpemVfdCAoKmFsaWduZikodm9pZCAqLApAQCAtNTQyLDE5ICs1NTAsMzYgQEAgaW50IGFs
-bG9jYXRlX3Jlc291cmNlKHN0cnVjdCByZXNvdXJjZSAqcgogCWNvbnN0cmFpbnQuYWxpZ25mID0g
-YWxpZ25mOwogCWNvbnN0cmFpbnQuYWxpZ25mX2RhdGEgPSBhbGlnbmZfZGF0YTsKIAotCWlmICgg
-bmV3LT5wYXJlbnQgKSB7CisJaWYgKG5ldy0+cGFyZW50KSB7CiAJCS8qIHJlc291cmNlIGlzIGFs
-cmVhZHkgYWxsb2NhdGVkLCB0cnkgcmVhbGxvY2F0aW5nIHdpdGgKIAkJICAgdGhlIG5ldyBjb25z
-dHJhaW50cyAqLwotCQlyZXR1cm4gcmVhbGxvY2F0ZV9yZXNvdXJjZShyb290LCBuZXcsIHNpemUs
-ICZjb25zdHJhaW50KTsKKwkJcmV0dXJuIF9fcmVhbGxvY2F0ZV9yZXNvdXJjZShyb290LCBuZXcs
-IHNpemUsICZjb25zdHJhaW50KTsKIAl9CiAKLQl3cml0ZV9sb2NrKCZyZXNvdXJjZV9sb2NrKTsK
-IAllcnIgPSBmaW5kX3Jlc291cmNlKHJvb3QsIG5ldywgc2l6ZSwgJmNvbnN0cmFpbnQpOwogCWlm
-IChlcnIgPj0gMCAmJiBfX3JlcXVlc3RfcmVzb3VyY2Uocm9vdCwgbmV3KSkKIAkJZXJyID0gLUVC
-VVNZOwotCXdyaXRlX3VubG9jaygmcmVzb3VyY2VfbG9jayk7CisKIAlyZXR1cm4gZXJyOwogfQor
-aW50IGFsbG9jYXRlX3Jlc291cmNlKHN0cnVjdCByZXNvdXJjZSAqcm9vdCwgc3RydWN0IHJlc291
-cmNlICpuZXcsCisJCSAgICAgIHJlc291cmNlX3NpemVfdCBzaXplLCByZXNvdXJjZV9zaXplX3Qg
-bWluLAorCQkgICAgICByZXNvdXJjZV9zaXplX3QgbWF4LCByZXNvdXJjZV9zaXplX3QgYWxpZ24s
-CisJCSAgICAgIHJlc291cmNlX3NpemVfdCAoKmFsaWduZikodm9pZCAqLAorCQkJCQkJY29uc3Qg
-c3RydWN0IHJlc291cmNlICosCisJCQkJCQlyZXNvdXJjZV9zaXplX3QsCisJCQkJCQlyZXNvdXJj
-ZV9zaXplX3QpLAorCQkgICAgICB2b2lkICphbGlnbmZfZGF0YSkKK3sKKwlpbnQgcmV0OworCisJ
-d3JpdGVfbG9jaygmcmVzb3VyY2VfbG9jayk7CisJcmV0ID0gX19hbGxvY2F0ZV9yZXNvdXJjZShy
-b290LCBuZXcsIHNpemUsIG1pbiwgbWF4LCBhbGlnbiwKKwkJCQkgICBhbGlnbmYsIGFsaWduZl9k
-YXRhKTsKKwl3cml0ZV91bmxvY2soJnJlc291cmNlX2xvY2spOworCisJcmV0dXJuIHJldDsKK30K
-IAogRVhQT1JUX1NZTUJPTChhbGxvY2F0ZV9yZXNvdXJjZSk7CiAK
---047d7b339cc18aadad04c3660338--
+Alan
