@@ -1,58 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 05/16] MIPS/PCI: Factor 'pcibios_setup()' out of
-	MIPS/pmc-sierra
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
-	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
-	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
-	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
-Date: Mon, 25 Jun 2012 21:31:30 -0600
-Message-ID: <20120626033130.16434.80126.stgit@amt.stowe>
-In-Reply-To: <20120626033045.16434.17412.stgit@amt.stowe>
-References: <20120626033045.16434.17412.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout0.freenet.de ([195.4.92.90]:58657 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754929Ab2FGGQz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jun 2012 02:16:55 -0400
+Message-ID: <4FD046A5.8080903@01019freenet.de>
+Date: Thu, 07 Jun 2012 08:13:57 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: bjorn.helgaas@hp.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com, andihartmann@01019freenet.de
+Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
+References: <20120606212241.6627.98371.stgit@bling.home>
+In-Reply-To: <20120606212241.6627.98371.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI core provides a generic (__weak) 'pcibios_setup()' routine that
-can be used by all architectures as a default.  Drop MIPS/pmc-sierra's
-architecture specific version in favor of that as it does not need to be
-over-ridden.
-
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
-
- arch/mips/pmc-sierra/yosemite/ht.c |   11 -----------
- 1 files changed, 0 insertions(+), 11 deletions(-)
-
-diff --git a/arch/mips/pmc-sierra/yosemite/ht.c b/arch/mips/pmc-sierra/yosemite/ht.c
-index 63be40e..14dc9c8 100644
---- a/arch/mips/pmc-sierra/yosemite/ht.c
-+++ b/arch/mips/pmc-sierra/yosemite/ht.c
-@@ -395,17 +395,6 @@ void __init pcibios_init(void)
-         pci_scan_bus(3, &titan_pci_ops, NULL);
- }
- 
--/*
-- * for parsing "pci=" kernel boot arguments.
-- */
--char *pcibios_setup(char *str)
--{
--        printk(KERN_INFO "rr: pcibios_setup\n");
--        /* Nothing to do for now.  */
--
--        return str;
--}
--
- unsigned __init int pcibios_assign_all_busses(void)
- {
-         /* We want to use the PCI bus detection done by PMON */
-
+Alex Williamson wrote:
+> Passes pci_intx_mask_supported but continues to send interrupts as
+> discovered through VFIO-based device assignment.
+> 
+> http://www.spinics.net/lists/kvm/msg73738.html
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Tested-by: Andreas Hartmann <andihartmann@01019freenet.de>
+> ---
+> 
+> Depends on Jan's base patch for this quirk: 
+> http://www.spinics.net/lists/linux-pci/msg15516.html
+> 
+> drivers/pci/quirks.c |    2 ++ 1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
+> cbb4358..178f494 100644 --- a/drivers/pci/quirks.c +++
+> b/drivers/pci/quirks.c @@ -2940,6 +2940,8 @@ static void __devinit
+> quirk_broken_intx_masking(struct pci_dev *dev) } 
+> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010, 
+> quirk_broken_intx_masking); +DECLARE_PCI_FIXUP_FINAL(0x1814,
+> 0x0601, /* Ralink RT2800 802.11n PCI */ +
+> quirk_broken_intx_masking);
+> 
+> static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup
+> *f, struct pci_fixup *end)
+> 
