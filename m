@@ -1,93 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:59924 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755503Ab2FODGz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jun 2012 23:06:55 -0400
-Received: by lbbgm6 with SMTP id gm6so2547371lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 14 Jun 2012 20:06:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
-References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 14 Jun 2012 21:06:33 -0600
-Message-ID: <CAErSpo4v_N8MhoCyQMi6vOOipw6Cg8wbMqP2q9FXT+gXjF88iw@mail.gmail.com>
-Subject: Re: [PATCH v7 00/10] PCI, x86: update MMCFG information when
- hot-plugging PCI host bridges
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:54176 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757370Ab2FGVZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jun 2012 17:25:34 -0400
+Message-ID: <1339104327.26976.45.camel@ul30vt>
+Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com
+Date: Thu, 07 Jun 2012 15:25:27 -0600
+In-Reply-To: <201206072101.q57L1LqG003192@mail.maya.org>
+References: <20120606212241.6627.98371.stgit@bling.home>
+	  <4FD047A7.6050602@01019freenet.de> <1339088741.26976.19.camel@ul30vt>
+	 <201206072101.q57L1LqG003192@mail.maya.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 26, 2012 at 3:53 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> This patchset enhance pci_root driver to update MMCFG information when
-> hot-plugging PCI root bridges. It applies to
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next-3.5
->
-> -v2: split into smaller patches and skip updating MMCFG information when
->     MMCFG is disabled
-> -v3: add mmconf_added to simply free path, also make pci_mmconfig_insert()
->     to process extra exist case --- By Yinghai
-> -v4: tune arch_acpi_pci_root_add() to handle a corner case raised by Kenji
-> -v5: address review comments from Bjorn and Taku, also better handle corner
->     cases in arch_acpi_pci_root_add()
-> -v6: get rid of arch_acpi_pci_root_xxx() by using existing hooks
->     add MCFG information for host bridges on demand
->     more corner cases clear up
->     correctly handle condition compilation
->     fix section mismatch issues
->     fix a issue reported by Taku about a BIOS bug
-> -v7: unify log messages
->     remove redundant host bridge resource related log messages
->     fix a issue reported by Taku which breaks pnp resource allocation
->
-> Jiang Liu (10):
->  PCI, x86: split out pci_mmcfg_check_reserved() for code reuse
->  PCI, x86: split out pci_mmconfig_alloc() for code reuse
->  PCI, x86: use RCU list to protect mmconfig list
->  PCI, x86: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
->  PCI, x86: introduce pci_mmconfig_insert()/delete() for PCI root
->    bridge hotplug
->  PCI, ACPI: provide MCFG address for PCI host bridges
->  PCI, x86: update MMCFG information when hot-plugging PCI host bridges
->  PCI, x86: add MMCFG information on demand
->  PCI, x86: simplify pci_mmcfg_late_insert_resources()
->  PCI, x86: get rid of redundant log messages
+On Thu, 2012-06-07 at 23:01 +0200, Andreas Hartmann wrote:
+> Alex Williamson wrote:
+> > On Thu, 2012-06-07 at 08:18 +0200, Andreas Hartmann wrote:
+> >> Hello Alex,
+> >>
+> >> what about a module parameter to achieve this behaviour manually by
+> >> the user without recompiling? I fear, there are much more candidates
+> >> out there needing this "feature".
+> > 
+> > Yeah, that's probably a good idea.  For debugging and letting users have
+> > a workaround rather than any kind of regular use.  I'll add a nointxmask
+> > to vfio-pci with a description indicating that if it fixes a device to
+> > report it for quirking.
+> 
+> That's exactly what I meant.
+> 
+> 
+> May I have please another question? 
+> Unfortunately I can't cleanly unmount filesystems during shutdown with your 
+> kernel (this problem doesn't happen with the patched 3.4 suse kernel).
 
-I applied this to a topic/jiang-mmconfig-v7 branch with minor changes:
+Hmm, are you using my kernel that's based on the next branch?  Could be
+any number of things broken in next.
 
-- I changed uint8_t and uint16_t to the more common u8 and u16.
-- I changed the "not reserved in ACPI motherboard resources" message
-from KERN_ERR to KERN_INFO.
+> I applied your vfio-patches from your git-repository to an openSUSE 3.4 
+> kernel (plus one other to get the patches applied):
+> 
+> iommu_core:_pass_a_user-provided_token_to_fault_handlers.patch
+> 0ca4120cbaeaa2aecdccc5043b309fe1808aae2a.patch [PATCH] pci: Add PCI DMA source ID quirk
+> db47c1f7313ad863818261f62f1babaf0b564e55.patch [PATCH] pci: Add ACS validation utility
+> a89edb6943102d4519860bca5671740c1b7364cc.patch [PATCH] pci: export pci_user functions for use by other drivers
+> 38fdda7327b6cf50c1265a6332e94b97100aa10e.patch [PATCH] pci: Create common pcibios_err_to_errno
+> cb6e045625e5a217df3cebcb4585b40cbcad6c96.patch [PATCH] pci: Misc pci_reg additions
+> c6985f9b501903f5c707a1711fa53dc94c72f999.patch [PATCH] driver core: Add iommu_group tracking to struct device
+> 581187e853620c52e4b78db643161cc3be2f3388.patch [PATCH] iommu: IOMMU Groups
+> 635e48574089f4c8205a2fd7b1d85edd02344fe5.patch [PATCH] amd_iommu: Support IOMMU groups
+> 37f2d6d5217fdd2facd9641b83fde683263adcaf.patch [PATCH] intel-iommu: Support IOMMU groups
+> 351d849a51787140736e04f261ae9db09c980868.patch [PATCH] amd_iommu: Make use of DMA quirks and ACS checks in IOMMU
+> 92eef0a72193ef8504eea10b4ccbdb2e1ee9f4b3.patch [PATCH] intel-iommu: Make use of DMA quirks and ACS checks in IOMMU groups
+> dd2886fe0a8936d649a365162658406e7a18d274.patch [PATCH] iommu: Remove group_mf
+> 6891b9a7d56841e592cfb444a7f4b2b02831f866.patch [PATCH] vfio: VFIO core
+> 51b06ff680d8bc30d1bd627e2dd24641789be55d.patch [PATCH] vfio: Add documentation
+> 4b36b306122a225d33e947e7f9e6d1117a4fb699.patch [PATCH] vfio: Type1 IOMMU implementation
+> 91e4950e482b142dd9ab46f0ec386c5eed9f1470.patch [PATCH] vfio: Add PCI device driver
+> PCI:_Mark_INTx_masking_support_of_Chelsio_T310_10GbE_NIC_as_broken.patch 
+> PCI:_Add_Ralink_RT2800_broken_INTx_masking_quirk.patch 
+> IRQF_ONESHOT.patch"
+> 
+> 
+> The VM does work as expected, but fglrx isn't happy any
+> more (but worked fine with your kernel and works fine, too, with the
+> unpatched suse 3.4 kernel). fglrx says:
 
-Previously, we typically would not see "motherboard resources"
-warnings at all because we didn't check for them during early init,
-and late init returned before checking because MMCONFIG was already
-enabled.  Now, the pci_mmconfig_insert() does the checking that we
-skipped before.
+So you're saying:
 
-Using KERN_ERR would break the graphical boot experience and users
-would complain, we can't do anything to fix it, and MMCONFIG actually
-works fine anyway.  So I don't think there's any point in having them
-be errors.
+kernel built from my tree: fglrx works
+opensuse kernel: fglrx works
+opensuse kernel + above patches: failure below?
 
-I have to say I'm still ambivalent about this.  I really like the fact
-that we track MMCONFIG space on a per-host bridge basis.  But the code
-in the init path is ridiculously, embarrassingly complicated
-(obviously this is not your fault at all).  It took me a couple hours
-to trace through and figure out why my box emits the "motherboard
-resources" warnings when it didn't before.
+> Jun  7 14:21:42 host kernel: [  105.103610] [fglrx:firegl_cail_init] *ERROR* CAIL: CAILInitialize failed, error 1
+> Jun  7 14:21:42 host kernel: [  105.103613] [fglrx:hal_init_asic] *ERROR* Failed to initialize ASIC.
+> Jun  7 14:21:42 host kernel: [  105.103645] [fglrx:firegl_init_pcie] *ERROR* Can not get FB size
+> Jun  7 14:21:42 host kernel: [  105.103653] [fglrx:IRQMGR_alloc_context] *ERROR* IRQMGR_GetExtensionSize returned 0
+> Jun  7 14:21:42 host kernel: [  105.103654] [fglrx:irqmgr_wrap_initialize] *ERROR* Fail to allocate IRQMGR context! 
+> Jun  7 14:21:42 host kernel: [  105.109151] [fglrx:firegl_irq_enable] *ERROR* interrupt source ff000032 is not supported on this hardware (return code = 2)
+> Jun  7 14:21:42 host kernel: [  105.109173] [fglrx:firegl_irq_enable] *ERROR* interrupt source 10000000 is not supported on this hardware (return code = 2)
+> Jun  7 14:21:42 host kernel: [  105.169073] [fglrx:firegl_irq_enable] *ERROR* interrupt source 60000001 is not supported on this hardware (return code = 2)
+> Jun  7 14:21:42 host kernel: [  105.169107] [fglrx:firegl_irq_enable] *ERROR* interrupt source ff00002c is not supported on this hardware (return code = 2)
+> Jun  7 14:21:42 host kernel: [  105.169125] [fglrx:firegl_irq_enable] *ERROR* interrupt source ff00004e is not supported on this hardware (return code = 2)
+> Jun  7 14:21:42 host kernel: [  105.169142] [fglrx:firegl_irq_enable] *ERROR* interrupt source 20000400 is not supported on this hardware (return code = 2)
+> Jun  7 14:21:42 host kernel: [  105.172906] [fglrx:firegl_cmmqs_init] *ERROR* CMMQS init:GAL is not initialized.
+> Jun  7 14:21:42 host kernel: [  105.172909] [fglrx:firegl_cmmqs_createdriver] *ERROR* CMMQS Initialization failed: firegl_cmmqs_createdriver
+> Jun  7 14:21:42 host kernel: [  105.172940] [fglrx:firegl_cmmqs_BIOSControl] *ERROR* CMMQS BIOS Control: CMMQS handle is not valid.
+> Jun  7 14:21:42 host kernel: [  105.172942] [fglrx:firegl_bios_control] *ERROR* CMMQS BIOS Control is failed: firegl_bios_control
+> Jun  7 14:21:42 host kernel: [  105.195648] AMD-Vi: Event logged [IO_PAGE_FAULT device=01:00.0 domain=0x0017 address=0x0000000f00268a00 flags=0x0010]
+> Jun  7 14:21:42 host kernel: [  105.195651] AMD-Vi: Event logged [IO_PAGE_FAULT device=01:00.0 domain=0x0017 address=0x0000000f0026a300 flags=0x0010]
+> ...
+> 
+> Do you have by chance an idea which other patch is missing to get
+> it working again?
 
-I'm going to apply the series because I do think it's a net win.  So
-just consider this as encouragement to simplify the design when you
-can, even if you're not adding functionality.
+Does this happen regardless of whether you've done anything with a VM or
+even loaded the vfio modules?  If so, please bisect the patch set and
+report where it starts to fail.  None of these patches should have any
+effect on existing DMA paths or drivers.  Testing stock v3.4 vs 3.4 +
+patches would also be an interesting exercise.  Thanks,
 
-I'll merge this to my "next" branch tomorrow unless you see any issues
-with the tweaks I made.
+Alex
 
-Bjorn
