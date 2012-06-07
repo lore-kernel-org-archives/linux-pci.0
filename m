@@ -1,57 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 28 Jun 2012 09:44:08 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	kvm <kvm@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	iommu <iommu@lists.linux-foundation.org>,
-	qemu-devel <qemu-devel@nongnu.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	chrisw <chrisw@sous-sol.org>,
-	"Roedel, Joerg" <Joerg.Roedel@amd.com>, linux-next@vger.kernel.org
-Subject: Re: Request VFIO inclusion in linux-next
-Message-ID: <20120628064408.GJ3007@mwanda>
-References: <1340686552.1207.128.camel@bling.home>
- <20120627123733.GA5449@mwanda>
- <1340825003.1207.224.camel@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1340825003.1207.224.camel@bling.home>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:52645 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757300Ab2FGVcT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jun 2012 17:32:19 -0400
+Message-ID: <1339104711.24838.29.camel@pasglop>
+Subject: Re: [PATCH v2 0/2] Add pcibios_device_change_notifier
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Date: Fri, 08 Jun 2012 07:31:51 +1000
+In-Reply-To: <4FD0A257.4070506@jp.fujitsu.com>
+References: <4FBC4C86.9050206@jp.fujitsu.com>
+	 <1338960416.7150.160.camel@pasglop> <4FD0A257.4070506@jp.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 27, 2012 at 01:23:23PM -0600, Alex Williamson wrote:
-> On Wed, 2012-06-27 at 15:37 +0300, Dan Carpenter wrote:
-> > On Mon, Jun 25, 2012 at 10:55:52PM -0600, Alex Williamson wrote:
-> > > Hi,
-> > > 
-> > > VFIO has been kicking around for well over a year now and has been
-> > > posted numerous times for review.  The pre-requirements are finally
-> > > available in linux-next (or will be in the 20120626 build) so I'd like
-> > > to request a new branch be included in linux-next with a goal of being
-> > > accepted into v3.6.
-> > > 
-> > 
-> > Could you run Sparse over the driver?
-> > http://lwn.net/Articles/205624/
-> > 
-> > It reports a bunch of endian problems.  Some are definitely bugs
-> > like:
-> > 	*prev |= cpu_to_le32((u32)epos << 20);
+On Thu, 2012-06-07 at 21:45 +0900, Hiroo Matsumoto wrote:
 > 
-> Done.  Mostly just adding annotation, but it did find a bug or two.
-> Should be cleaned up in tomorrow's next.  Thanks for the report,
+> > Also you seem to add:
+> > 
+> > +               /* Setup OF node pointer in the device */
+> > +               dev->dev.of_node = pci_device_to_OF_node(dev);
+> > 
+> > This shouldn't be needed anymore, the device node should be setup by the
+> > core nowadays. Is this just a remnant of you rebasing an old patch or do
+> > you have a good reason to add this statement ?
 > 
+> No, I don't have a good reason to add this statement.
+> I just tried to make this code be same with pcibios_setup_bus_devices.
+> Thanks for your review and comment. 
 
-Cool.  I have some Smatch fixes as well.  I've updated them to apply
-on top of today's linux-next.
+Unless I'm mistaken, this statement was removed from
+pcibios_setup_bus_devices() recently so I'd say it's a leftover from
+your patch having been originally done on top of an older kernel.
 
-regards,
-dan carpenter
+I won't be back for another week or so but I'll see if I can get things
+tested in the meantime.
+
+Cheers,
+Ben.
+
 
