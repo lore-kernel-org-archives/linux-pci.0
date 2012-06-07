@@ -1,180 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:43067 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744Ab2F1ECH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jun 2012 00:02:07 -0400
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Wed, 27 Jun 2012 22:02:04 -0600
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 310A5C40003
-	for <linux-pci@vger.kernel.org>; Thu, 28 Jun 2012 04:00:51 +0000 (WET)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5S40CQD144318
-	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 22:00:29 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5S3xtUG025137
-	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 21:59:56 -0600
-Date: Thu, 28 Jun 2012 11:59:53 +0800
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, yinghai@kernel.org,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH V4 1/2] PCI: pcibus address to resource converting take
- bus directly
-Message-ID: <20120628035953.GA1637@shangw>
-Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-References: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
- <CAErSpo4u6HKdVqaaiL5=GSWRXiVfyfJ7EsnkAwGz6KvKrqaM=w@mail.gmail.com>
+Received: from mout.web.de ([212.227.17.12]:53389 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751925Ab2FGIgf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jun 2012 04:36:35 -0400
+Message-ID: <4FD066C3.4090008@web.de>
+Date: Thu, 07 Jun 2012 10:30:59 +0200
+From: Jan Kiszka <jan.kiszka@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAErSpo4u6HKdVqaaiL5=GSWRXiVfyfJ7EsnkAwGz6KvKrqaM=w@mail.gmail.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
+Subject: [PATCH v2] PCI: Mark INTx masking support of Chelsio T310 10GbE NIC
+ as broken
+References: <4FBF90E5.8030800@siemens.com> <4FCE19DA.1070802@siemens.com> <4FD0389F.7030400@ozlabs.ru>
+In-Reply-To: <4FD0389F.7030400@ozlabs.ru>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> For allocating resource under bus path, we do have dev pass along,
->> and we could just use bus instead. Also, we'd like to make function
->> find_pci_host_bridge() global so that some platforms (e.g. PPC) can
->> access the pci host bridge directly.
->
->This patch appears to have multiple unrelated changes:
->
->  - change "struct pci_bus *bus" to "struct pci_bus *root_bus"
->  - change find_pci_host_bridge() argument from dev to bus
->  - fiddle with pcibios_bus_to_resource() and pcibios_resource_to_bus()
->
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Leave those questions to Yinghai.
+According to
 
->These should be split out to make your patches easier to review.
->
+http://thread.gmane.org/gmane.comp.emulators.kvm.devel/91388
 
-I will split it for easy review :-)
+the T310 does not properly support INTx masking as it fails to keep the
+PCI_STATUS_INTERRUPT bit updated once the interrupt is masked. Mark this
+adapter as broken so that pci_intx_mask_supported won't report it as
+compatible.
 
->What's the rationale for preferring the pci_bus over the pci_dev?
->
+Tested-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
 
-We probablly need retrieve the pci_host_bridge through pci_bus
-and pci_dev. When converting pci_dev to pci_host_bridge, we can
-simply pass "pci_dev->bus".
+Changes in v2:
+ - Fixed device ID to Alexey's report
+ - Added reference to the original report
 
-Thanks,
-Gavin
+ drivers/pci/pci.c    |    3 +++
+ drivers/pci/quirks.c |   12 ++++++++++++
+ include/linux/pci.h  |    2 ++
+ 3 files changed, 17 insertions(+), 0 deletions(-)
 
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/host-bridge.c |   34 +++++++++++++++++++++-------------
->>  include/linux/pci.h       |    4 ++++
->>  2 files changed, 25 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->> index a68dc61..4ccf477 100644
->> --- a/drivers/pci/host-bridge.c
->> +++ b/drivers/pci/host-bridge.c
->> @@ -9,22 +9,19 @@
->>
->>  #include "pci.h"
->>
->> -static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
->> +static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->>  {
->> -       struct pci_bus *bus;
->> -
->> -       bus = dev->bus;
->>        while (bus->parent)
->>                bus = bus->parent;
->>
->>        return bus;
->>  }
->>
->> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
->> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->>  {
->> -       struct pci_bus *bus = find_pci_root_bus(dev);
->> +       struct pci_bus *root_bus = find_pci_root_bus(bus);
->>
->> -       return to_pci_host_bridge(bus->bridge);
->> +       return to_pci_host_bridge(root_bus->bridge);
->>  }
->>
->>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->> @@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
->>        return res1->start <= res2->start && res1->end >= res2->end;
->>  }
->>
->> -void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
->> -                            struct resource *res)
->> +void __pcibios_resource_to_bus(struct pci_bus *bus,
->> +                                     struct pci_bus_region *region,
->> +                                     struct resource *res)
->>  {
->> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
->> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
->>        struct pci_host_bridge_window *window;
->>        resource_size_t offset = 0;
->>
->> @@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
->>        region->start = res->start - offset;
->>        region->end = res->end - offset;
->>  }
->> +void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
->> +                            struct resource *res)
->> +{
->> +       __pcibios_resource_to_bus(dev->bus, region, res);
->> +}
->>  EXPORT_SYMBOL(pcibios_resource_to_bus);
->>
->>  static bool region_contains(struct pci_bus_region *region1,
->> @@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
->>        return region1->start <= region2->start && region1->end >= region2->end;
->>  }
->>
->> -void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->> -                            struct pci_bus_region *region)
->> +static void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
->> +                                     struct pci_bus_region *region)
->>  {
->> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
->> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
->>        struct pci_host_bridge_window *window;
->>        resource_size_t offset = 0;
->>
->> @@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->>        res->start = region->start + offset;
->>        res->end = region->end + offset;
->>  }
->> +void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->> +                            struct pci_bus_region *region)
->> +{
->> +       __pcibios_bus_to_resource(dev->bus, res, region);
->> +}
->>  EXPORT_SYMBOL(pcibios_bus_to_resource);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index fefb4e1..2b559f1 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -385,6 +385,7 @@ struct pci_host_bridge {
->>  };
->>
->>  #define        to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
->> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
->>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->>                     void (*release_fn)(struct pci_host_bridge *),
->>                     void *release_data);
->> @@ -657,6 +658,9 @@ void pci_fixup_cardbus(struct pci_bus *);
->>
->>  /* Generic PCI functions used internally */
->>
->> +void __pcibios_resource_to_bus(struct pci_bus *bus,
->> +                              struct pci_bus_region *region,
->> +                              struct resource *res);
->>  void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
->>                             struct resource *res);
->>  void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->> --
->> 1.7.9.5
->>
->
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 447e834..9ae517a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2876,6 +2876,9 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
+ 	bool mask_supported = false;
+ 	u16 orig, new;
+ 
++	if (dev->broken_intx_masking)
++		return false;
++
+ 	pci_cfg_access_lock(dev);
+ 
+ 	pci_read_config_word(dev, PCI_COMMAND, &orig);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 2a75216..28804f4 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2929,6 +2929,18 @@ static void __devinit disable_igfx_irq(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+ 
++/*
++ * Some devices may pass our check in pci_intx_mask_supported if
++ * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
++ * support this feature.
++ */
++static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
++{
++	dev->broken_intx_masking = 1;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
++			quirk_broken_intx_masking);
++
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d8c379d..7ea6cf8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -324,6 +324,8 @@ struct pci_dev {
+ 	unsigned int    is_hotplug_bridge:1;
+ 	unsigned int    __aer_firmware_first_valid:1;
+ 	unsigned int	__aer_firmware_first:1;
++	unsigned int	broken_intx_masking:1;	/* device's INTx masking
++						   support is not working */
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
+-- 
+1.7.3.4
