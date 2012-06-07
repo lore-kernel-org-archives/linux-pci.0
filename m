@@ -1,79 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:65390 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964887Ab2FBDai (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2012 23:30:38 -0400
-Message-ID: <4FC988CF.5030602@gmail.com>
-Date: Sat, 02 Jun 2012 11:30:23 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Bill Unruh <unruh@physics.ubc.ca>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	bugzilla-daemon@bugzilla.kernel.org
-Subject: Re: [Bug 43331] Re: Bug on bootup of Linux kernel on Panasonic Toughbook
- S10
-References: <Pine.LNX.4.64.1205311412210.11510@info> <CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com> <Pine.LNX.4.64.1206010915580.26561@info>
-In-Reply-To: <Pine.LNX.4.64.1206010915580.26561@info>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:16356 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933098Ab2FGWJJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jun 2012 18:09:09 -0400
+Message-ID: <1339106941.26976.51.camel@ul30vt>
+Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com
+Date: Thu, 07 Jun 2012 16:09:01 -0600
+In-Reply-To: <4FD1205D.8070501@01019freenet.de>
+References: <20120606212241.6627.98371.stgit@bling.home>
+	   <4FD047A7.6050602@01019freenet.de> <1339088741.26976.19.camel@ul30vt>
+	  <201206072101.q57L1LqG003192@mail.maya.org>
+	 <1339104327.26976.45.camel@ul30vt> <4FD1205D.8070501@01019freenet.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bill and Bjorn,
-	Device 8086:0103 is "2nd Generation Core Processor Family Thermal Management
-Controller" or "Sandy Bridge Thermal Management Controller". And address range 
-0xfed98000-0xfed9ffff has been reserved by motherboard device(PNP0C02). 
-	I guess that BIOS has assigned address "0xfed98000" to 0000:00:04.0 for
-thermal management functionality. The BAR0 of 0000:00:04.0 may be locked down 
-(can't be changed by OS) because the ACPI BIOS may have dependency on the assigned
-address ranges. A ACPI dump may give some help here if convenient.
-	Thanks!
-	Gerry
+On Thu, 2012-06-07 at 23:42 +0200, Andreas Hartmann wrote:
+> Alex Williamson wrote:
+> > On Thu, 2012-06-07 at 23:01 +0200, Andreas Hartmann wrote:
+> >> Alex Williamson wrote:
+> >>> On Thu, 2012-06-07 at 08:18 +0200, Andreas Hartmann wrote:
+> >>>> Hello Alex,
+> >>>>
+> >>>> what about a module parameter to achieve this behaviour manually by
+> >>>> the user without recompiling? I fear, there are much more candidates
+> >>>> out there needing this "feature".
+> >>>
+> >>> Yeah, that's probably a good idea.  For debugging and letting users have
+> >>> a workaround rather than any kind of regular use.  I'll add a nointxmask
+> >>> to vfio-pci with a description indicating that if it fixes a device to
+> >>> report it for quirking.
+> >>
+> >> That's exactly what I meant.
+> >>
+> >>
+> >> May I have please another question? 
+> >> Unfortunately I can't cleanly unmount filesystems during shutdown with your 
+> >> kernel (this problem doesn't happen with the patched 3.4 suse kernel).
+> > 
+> > Hmm, are you using my kernel that's based on the next branch?  Could be
+> > any number of things broken in next.
+> > 
+> >> I applied your vfio-patches from your git-repository to an openSUSE 3.4 
+> >> kernel (plus one other to get the patches applied):
+> >>
+> >> iommu_core:_pass_a_user-provided_token_to_fault_handlers.patch
+> >> 0ca4120cbaeaa2aecdccc5043b309fe1808aae2a.patch [PATCH] pci: Add PCI DMA source ID quirk
+> >> db47c1f7313ad863818261f62f1babaf0b564e55.patch [PATCH] pci: Add ACS validation utility
+> >> a89edb6943102d4519860bca5671740c1b7364cc.patch [PATCH] pci: export pci_user functions for use by other drivers
+> >> 38fdda7327b6cf50c1265a6332e94b97100aa10e.patch [PATCH] pci: Create common pcibios_err_to_errno
+> >> cb6e045625e5a217df3cebcb4585b40cbcad6c96.patch [PATCH] pci: Misc pci_reg additions
+> >> c6985f9b501903f5c707a1711fa53dc94c72f999.patch [PATCH] driver core: Add iommu_group tracking to struct device
+> >> 581187e853620c52e4b78db643161cc3be2f3388.patch [PATCH] iommu: IOMMU Groups
+> >> 635e48574089f4c8205a2fd7b1d85edd02344fe5.patch [PATCH] amd_iommu: Support IOMMU groups
+> >> 37f2d6d5217fdd2facd9641b83fde683263adcaf.patch [PATCH] intel-iommu: Support IOMMU groups
+> >> 351d849a51787140736e04f261ae9db09c980868.patch [PATCH] amd_iommu: Make use of DMA quirks and ACS checks in IOMMU
+> >> 92eef0a72193ef8504eea10b4ccbdb2e1ee9f4b3.patch [PATCH] intel-iommu: Make use of DMA quirks and ACS checks in IOMMU groups
+> >> dd2886fe0a8936d649a365162658406e7a18d274.patch [PATCH] iommu: Remove group_mf
+> >> 6891b9a7d56841e592cfb444a7f4b2b02831f866.patch [PATCH] vfio: VFIO core
+> >> 51b06ff680d8bc30d1bd627e2dd24641789be55d.patch [PATCH] vfio: Add documentation
+> >> 4b36b306122a225d33e947e7f9e6d1117a4fb699.patch [PATCH] vfio: Type1 IOMMU implementation
+> >> 91e4950e482b142dd9ab46f0ec386c5eed9f1470.patch [PATCH] vfio: Add PCI device driver
+> >> PCI:_Mark_INTx_masking_support_of_Chelsio_T310_10GbE_NIC_as_broken.patch 
+> >> PCI:_Add_Ralink_RT2800_broken_INTx_masking_quirk.patch 
+> >> IRQF_ONESHOT.patch"
+> >>
+> >>
+> >> The VM does work as expected, but fglrx isn't happy any
+> >> more (but worked fine with your kernel and works fine, too, with the
+> >> unpatched suse 3.4 kernel). fglrx says:
+> > 
+> > So you're saying:
+> > 
+> > kernel built from my tree: fglrx works
+> > opensuse kernel: fglrx works
+> > opensuse kernel + above patches: failure below?
+> 
+> Exactly.
+> 
+> > 
+> >> Jun  7 14:21:42 host kernel: [  105.103610] [fglrx:firegl_cail_init] *ERROR* CAIL: CAILInitialize failed, error 1
+> >> Jun  7 14:21:42 host kernel: [  105.103613] [fglrx:hal_init_asic] *ERROR* Failed to initialize ASIC.
+> >> Jun  7 14:21:42 host kernel: [  105.103645] [fglrx:firegl_init_pcie] *ERROR* Can not get FB size
+> >> Jun  7 14:21:42 host kernel: [  105.103653] [fglrx:IRQMGR_alloc_context] *ERROR* IRQMGR_GetExtensionSize returned 0
+> >> Jun  7 14:21:42 host kernel: [  105.103654] [fglrx:irqmgr_wrap_initialize] *ERROR* Fail to allocate IRQMGR context! 
+> >> Jun  7 14:21:42 host kernel: [  105.109151] [fglrx:firegl_irq_enable] *ERROR* interrupt source ff000032 is not supported on this hardware (return code = 2)
+> >> Jun  7 14:21:42 host kernel: [  105.109173] [fglrx:firegl_irq_enable] *ERROR* interrupt source 10000000 is not supported on this hardware (return code = 2)
+> >> Jun  7 14:21:42 host kernel: [  105.169073] [fglrx:firegl_irq_enable] *ERROR* interrupt source 60000001 is not supported on this hardware (return code = 2)
+> >> Jun  7 14:21:42 host kernel: [  105.169107] [fglrx:firegl_irq_enable] *ERROR* interrupt source ff00002c is not supported on this hardware (return code = 2)
+> >> Jun  7 14:21:42 host kernel: [  105.169125] [fglrx:firegl_irq_enable] *ERROR* interrupt source ff00004e is not supported on this hardware (return code = 2)
+> >> Jun  7 14:21:42 host kernel: [  105.169142] [fglrx:firegl_irq_enable] *ERROR* interrupt source 20000400 is not supported on this hardware (return code = 2)
+> >> Jun  7 14:21:42 host kernel: [  105.172906] [fglrx:firegl_cmmqs_init] *ERROR* CMMQS init:GAL is not initialized.
+> >> Jun  7 14:21:42 host kernel: [  105.172909] [fglrx:firegl_cmmqs_createdriver] *ERROR* CMMQS Initialization failed: firegl_cmmqs_createdriver
+> >> Jun  7 14:21:42 host kernel: [  105.172940] [fglrx:firegl_cmmqs_BIOSControl] *ERROR* CMMQS BIOS Control: CMMQS handle is not valid.
+> >> Jun  7 14:21:42 host kernel: [  105.172942] [fglrx:firegl_bios_control] *ERROR* CMMQS BIOS Control is failed: firegl_bios_control
+> >> Jun  7 14:21:42 host kernel: [  105.195648] AMD-Vi: Event logged [IO_PAGE_FAULT device=01:00.0 domain=0x0017 address=0x0000000f00268a00 flags=0x0010]
+> >> Jun  7 14:21:42 host kernel: [  105.195651] AMD-Vi: Event logged [IO_PAGE_FAULT device=01:00.0 domain=0x0017 address=0x0000000f0026a300 flags=0x0010]
+> >> ...
+> >>
+> >> Do you have by chance an idea which other patch is missing to get
+> >> it working again?
+> > 
+> > Does this happen regardless of whether you've done anything with a VM or
+> > even loaded the vfio modules?
+> 
+> vfio modules aren't loaded at all at this moment. They cannot be the
+> problem ... . But there are some changes in iommu, too, aren't there?
 
-On 06/02/2012 12:22 AM, Bill Unruh wrote:
-> Attached is a complete dmesg from a bootup of the kernel on the toughbook S10.
+Yes, we're creating the iommu groups.
+
+> >  If so, please bisect the patch set and
+> > report where it starts to fail.  None of these patches should have any
+> > effect on existing DMA paths or drivers.  Testing stock v3.4 vs 3.4 +
+> > patches would also be an interesting exercise. 
 > 
-> 
-> RE the noapic, I have no idea how I can give more information on it, since the
-> crash almost always occurs during the boot process itself, often very early in
-> the process. I will see if I can resurect the dmesg that gets saved, if any,
-> during that process. It is probably also an earlier kernel. I have not dared
-> try my current kernel with noapic, but perhaps I will try.
-> 
-> 
-> 
-> On Fri, 1 Jun 2012, Bjorn Helgaas wrote:
-> 
->> On Thu, May 31, 2012 at 3:39 PM, Bill Unruh <unruh@physics.ubc.ca> wrote:
->>> I am running Mageia 2 kernel 3.3.6-desktop586-2.mga2
->>>
->>> Every time I boot up I get the error messages
->>> pci 0000:00:04.0: BAR 0: error updating (0xdfa00004 != 0xfed98004)
->>
->> Thanks very much for this report.  I opened this bug report to help me
->> keep track of it: https://bugzilla.kernel.org/show_bug.cgi?id=43331
->>
->> The message means that we tried to write address 0xdfa00000 to BAR 0
->> of device 00:04.0 (a "signal processing controller," whatever that
->> is), but when we read the BAR back, we read 0xfed98004 instead.
->> That's an interesting address because it looks a lot like a resource
->> of an ACPI PNP0c02 device:
->>
->>  system 00:0e: [mem 0xfed98000-0xfed9ffff] has been reserved
->>  system 00:0e: Plug and Play ACPI device, IDs PNP0c02 (active)
->>
->> You say your machine runs OK (with "noapic"), but I'm doubtful that
->> 00:04.0 is working -- it doesn't even seem to have a driver bound to
->> it.  I don't know what the device does, but if you're not using it,
->> it's not surprising that you wouldn't notice it being broken.
->>
->> Can you attach the complete dmesg log to the bugzilla?  It will have
->> more details about other devices and the ranges from which we allocate
->> resources for PCI devices.
->>
->> You mention that the machine is not reliable unless you use "noapic".
->> That sounds like a separate bug, but also something it would be good
->> to track down.
->>
-> 
+> Yes, this is the next thing I have to do.
+
+I just pushed a vfio-3.4 branch to my tree at
+git://github.com/awilliam/linux-vfio.git.  Please let me know what you
+find with this.  Thanks,
+
+Alex
+
 
