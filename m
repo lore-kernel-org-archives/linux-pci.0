@@ -1,48 +1,35 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 6 Jun 2012 21:50:34 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: Khalid Aziz <khalid.aziz@hp.com>, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-Message-ID: <20120606215034.257d7549@pyramind.ukuu.org.uk>
-In-Reply-To: <20120606135009.GB1517@srcf.ucam.org>
-References: <20120427190033.GA17588@ldl.usa.hp.com>
-	<20120606135009.GB1517@srcf.ucam.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:17881 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932338Ab2FGRFt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jun 2012 13:05:49 -0400
+Message-ID: <1339088741.26976.19.camel@ul30vt>
+Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com
+Date: Thu, 07 Jun 2012 11:05:41 -0600
+In-Reply-To: <4FD047A7.6050602@01019freenet.de>
+References: <20120606212241.6627.98371.stgit@bling.home>
+	 <4FD047A7.6050602@01019freenet.de>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> This protects against the case where a piece of hardware is continuing 
-> to DMA even after the driver shutdown method has been called? I'm not 
+On Thu, 2012-06-07 at 08:18 +0200, Andreas Hartmann wrote:
+> Hello Alex,
+> 
+> what about a module parameter to achieve this behaviour manually by
+> the user without recompiling? I fear, there are much more candidates
+> out there needing this "feature".
 
-It doesn't. We also have hardware which craps itself if you clear the bus
-mastering bit and we have platforms where the BIOS gets most upset if you
-do that on suspend paths. There are also lots of devices that simply
-ignore the bus mastering bit !
+Yeah, that's probably a good idea.  For debugging and letting users have
+a workaround rather than any kind of regular use.  I'll add a nointxmask
+to vfio-pci with a description indicating that if it fixes a device to
+report it for quirking.  Thanks,
 
-> convinced this is safe. Some Broadcom parts will crash if busmastering 
-> is disabled while they're still performing DMA, and they'll then hang 
-> the bus if reenabled.
+Alex
 
-This is very common, disabling the bus master bit isn't exactly a
-tested or well defined pathway. A lot of device FIFOs will also happily
-belch out their queue when you flip the bit. So it might look like
-progress but it probably isn't.
-
-Unfortunately if you've got a device peeing into memory you need to fix
-the driver, or sometimes the firmware. You can probably use the IOMMU for
-some protection on newer systems.
-
-And then you get things like the CS5520 where disabling bus mastering on
-the IDE controller crashes the machine, and some UMA video devices that
-honour the bit for video fetch.
-
->From the IDE experience you really need to be careful here. Changing the
-default is asking for nasty and weird regressions.
-
-This isn't a fix, its a band aid to cover over broken driver shutdown
-methods. Those driver shutdown methods need fixing.
-
-Alan
