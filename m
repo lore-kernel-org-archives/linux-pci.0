@@ -1,75 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:51065 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840Ab2FKWAo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 18:00:44 -0400
-Received: by lbbgm6 with SMTP id gm6so3163664lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 15:00:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXPHp0Pubs3eQc_TqKFhBvVTwZNDgSuDSBFa8rj31phGQ@mail.gmail.com>
-References: <1338190380-5144-1-git-send-email-jiang.liu@huawei.com>
- <CAE9FiQWTP1PP6hcfJ=ru5J=_dLH+q5oy4-OEg-Ws-2xWkxyGLg@mail.gmail.com>
- <CAErSpo450AHHHm1PgCi+ELrhosuwGSg3BnX_Ff2v4dC1h-v_Pg@mail.gmail.com> <CAE9FiQXPHp0Pubs3eQc_TqKFhBvVTwZNDgSuDSBFa8rj31phGQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 11 Jun 2012 16:00:22 -0600
-Message-ID: <CAErSpo6rZ2VNLhAUhy-TNAq9yOuWZPQxsXGc=Pe0E9UnsSqDow@mail.gmail.com>
-Subject: Re: [PATCH] PCI: export symbol pci_bus_sem to module
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Wu Fengguang <fengguang.wu@intel.com>,
-	Amos Kong <kongjianjun@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:21193 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759742Ab2FGRgy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2012 13:36:54 -0400
+Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
+From: Khalid Aziz <khalid.aziz@hp.com>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+In-Reply-To: <m21ulrjbji.fsf@firstfloor.org>
+References: <20120427190033.GA17588@ldl.usa.hp.com>
+	 <20120606135009.GB1517@srcf.ucam.org>
+	 <20120606215034.257d7549@pyramind.ukuu.org.uk>
+	 <m21ulrjbji.fsf@firstfloor.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Jun 2012 11:36:53 -0600
+Message-ID: <1339090613.25761.888.camel@lyra>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 11, 2012 at 2:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Jun 11, 2012 at 10:43 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Jun 8, 2012 at 12:01 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Mon, May 28, 2012 at 12:33 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->>>> Changeset "9080648 PCI: acpiphp: remove all functions in slot,
->>>> even without ACPI _EJx" introduces pci_bus_sem into the acpiphp
->>>> driver, but pci_bus_sem hasn't been exported to modules yet.
->>>> So export symbol pci_bus_sem to modules, otherwise the acpiphp
->>>> driver can't be built as module any more.
->>>>
->>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>>> Signed-off-by: Jiang Liu <liuj97@gmail.com>
->>>> ---
->>>>  drivers/pci/search.c |    2 ++
->>>>  1 files changed, 2 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
->>>> index 9d75dc8..e0c7a22 100644
->>>> --- a/drivers/pci/search.c
->>>> +++ b/drivers/pci/search.c
->>>> @@ -15,6 +15,8 @@
->>>>  #include "pci.h"
->>>>
->>>>  DECLARE_RWSEM(pci_bus_sem);
->>>> +EXPORT_SYMBOL(pci_bus_sem);
->>>> +
->>>>  /*
->>>>  * find the upstream PCIe-to-PCI bridge of a PCI device
->>>>  * if the device is PCIE, return NULL
->>>
->>> Bjorn,
->>>
->>> can you please fold this one into
->>>
->>> 9080648:
->>> PCI: acpiphp: remove all functions in slot, even without ACPI _EJx
->>>
->>> that commit now is in pci/for-3.6
->>
->> Yes, I'll fix this.  If you don't object, I'll make it
->> EXPORT_SYMBOL_GPL().  I think we'll have more changes in the bus
->> scan/remove paths, and it's possible we'll be able to un-export this
->> in the future.
->
-> yes, it should be EXPORT_SYMBOL_GPL.
+On Thu, 2012-06-07 at 10:07 -0700, Andi Kleen wrote:
+> Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
+> 
+> >> This protects against the case where a piece of hardware is continuing 
+> >> to DMA even after the driver shutdown method has been called? I'm not 
+> >
+> > It doesn't. We also have hardware which craps itself if you clear the bus
+> > mastering bit and we have platforms where the BIOS gets most upset if you
+> > do that on suspend paths. There are also lots of devices that simply
+> > ignore the bus mastering bit !
+> 
+> But it also makes my system do kexec successfully for the first time.
+> 
+> Maybe can make it an option.
+> 
+> n-Andi
+> 
 
-I applied this to my "next" branch, with EXPORT_SYMBOL_GPL.  Thanks!
+Hi Andi,
+
+That makes my day :) It will be very helpful to see which PCI devices
+your system has.
+
+I was thinking about kernel command line option this morning and had
+started looking at reset_devices option to see if I could leverage that
+one in any way.
+
+-- 
+====================================================================
+Khalid Aziz                                         Unix Systems Lab
+(970)898-9214                                        Hewlett-Packard
+khalid.aziz@hp.com                                  Fort Collins, CO
+
