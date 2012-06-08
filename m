@@ -1,71 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:47044 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754019Ab2FCT0p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jun 2012 15:26:45 -0400
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: linux-pci@vger.kernel.org
-Cc: linux-kbuild@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Marek <mmarek@suse.cz>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>
-Subject: [PATCH 4/9] alpha: move PCI fixup hooks from __init to __devinit
-Date: Sun,  3 Jun 2012 20:48:20 +0200
-Message-Id: <1338749305-22558-5-git-send-email-sebastian@breakpoint.cc>
-In-Reply-To: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
-References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+Received: from mga09.intel.com ([134.134.136.24]:62602 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932503Ab2FHIBU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jun 2012 04:01:20 -0400
+From: Xudong Hao <xudong.hao@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, avi@redhat.com, alex.williamson@redhat.com,
+	ddutile@redhat.com, myron.stowe@redhat.com,
+	xiantao.zhang@intel.com, xudong.hao@intel.com
+Subject: [PATCH 2/4] Enable LTR before device is used by driver
+Date: Fri,  8 Jun 2012 16:01:30 +0800
+Message-Id: <1339142492-13625-3-git-send-email-xudong.hao@intel.com>
+In-Reply-To: <1339142492-13625-1-git-send-email-xudong.hao@intel.com>
+References: <1339142492-13625-1-git-send-email-xudong.hao@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The fixups are executed once the pci-device is found which is during
-boot process so __init seems fine as long as the platform does not
-support hotplug.
-However it is possible to remove the PCI bus at run time and have it
-rediscovered again via "echo 1 > /sys/bus/pci/rescan" and this will call
-the fixups again.
+Enable LTR(Latency tolerance reporting) in pci_enable_device(),
+make sure this feature is enabled before the device is used by driver.
 
-Cc: Richard Henderson <rth@twiddle.net>
-Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: Matt Turner <mattst88@gmail.com>
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Xudong Hao <xudong.hao@intel.com>
 ---
- arch/alpha/kernel/pci.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/pci/pci.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 1a62963..026d49f 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -59,15 +59,13 @@ struct pci_controller *pci_isa_hose;
-  * Quirks.
-  */
- 
--static void __init
--quirk_isa_bridge(struct pci_dev *dev)
-+static void __devinit quirk_isa_bridge(struct pci_dev *dev)
- {
- 	dev->class = PCI_CLASS_BRIDGE_ISA << 8;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a70093b..5e5e3ad 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1136,6 +1136,21 @@ int pci_load_and_free_saved_state(struct pci_dev *dev,
  }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82378, quirk_isa_bridge);
+ EXPORT_SYMBOL_GPL(pci_load_and_free_saved_state);
  
--static void __init
--quirk_cypress(struct pci_dev *dev)
-+static void __devinit quirk_cypress(struct pci_dev *dev)
++static void pci_enable_dev_caps(struct pci_dev *dev)
++{
++	/* 
++	 * LTR(Latency tolerance reporting) allows devices to send
++	 * messages to the root complex indicating their latency
++	 * tolerance for snooped & unsnooped memory transactions.
++	 */
++	pci_enable_ltr(dev);
++}
++
++static void pci_disable_dev_caps(struct pci_dev *dev)
++{
++	pci_disable_ltr(dev);
++}
++
+ static int do_pci_enable_device(struct pci_dev *dev, int bars)
  {
- 	/* The Notorious Cy82C693 chip.  */
+ 	int err;
+@@ -1148,6 +1163,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ 		return err;
+ 	pci_fixup_device(pci_fixup_enable, dev);
  
-@@ -106,8 +104,7 @@ quirk_cypress(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CONTAQ, PCI_DEVICE_ID_CONTAQ_82C693, quirk_cypress);
++	/* Enable some device capibility before it's used by driver. */
++	pci_enable_dev_caps(dev);
++
+ 	return 0;
+ }
  
- /* Called for each device after PCI setup is done. */
--static void __init
--pcibios_fixup_final(struct pci_dev *dev)
-+static void __devinit pcibios_fixup_final(struct pci_dev *dev)
- {
- 	unsigned int class = dev->class >> 8;
+@@ -1363,6 +1381,7 @@ static void do_pci_disable_device(struct pci_dev *dev)
+ 	}
  
+ 	pcibios_disable_device(dev);
++	pci_disable_dev_caps(dev);
+ }
+ 
+ /**
 -- 
-1.7.10
+1.5.5
 
