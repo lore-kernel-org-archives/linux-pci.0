@@ -1,47 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [65.55.111.163] ([65.55.111.163]:62555 "EHLO
-	blu0-omc4-s24.blu0.hotmail.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752195Ab2FSVMK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 17:12:10 -0400
-Message-ID: <BLU0-SMTP4409FB70A51AD516797B0B1B7FF0@phx.gbl>
-Date: Tue, 19 Jun 2012 22:11:40 +0100
-From: Rob Allen <ra-kernel@hotmail.co.uk>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:51000 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934520Ab2FHV6l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jun 2012 17:58:41 -0400
+Received: by dady13 with SMTP id y13so2885272dad.19
+        for <linux-pci@vger.kernel.org>; Fri, 08 Jun 2012 14:58:41 -0700 (PDT)
 MIME-Version: 1.0
-To: Ram Pai <linuxram@us.ibm.com>
-CC: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	Clemens Ladisch <clemens@ladisch.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	linux1394-devel@lists.sourceforge.net, linux-pci@vger.kernel.org
-Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
-References: <20120513221357.7574ae79@stein> <4FB0A6F6.9050504@ladisch.de> <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com> <BLU0-SMTP12B809D527F768CCC42B18B7180@phx.gbl> <4FB3B159.2090401@ladisch.de> <BLU0-SMTP47479D78AA811CB0B224ADFB71D0@phx.gbl> <4FBAA3A5.4070200@ladisch.de> <20120524202610.5c561d99@stein> <4FBE8146.1030803@hotmail.co.uk> <BLU0-SMTP435F81F04D60963F0755BA9B70F0@phx.gbl> <20120605025422.GB6637@ram-ThinkPad-T61>
-In-Reply-To: <20120605025422.GB6637@ram-ThinkPad-T61>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CA+NGFTzYNeSUpPVFJJYPTu7U-0PtbiL_8+JfeOsizRW2prgUxw@mail.gmail.com>
+References: <loom.20120607T194858-986@post.gmane.org>
+	<CAE9FiQWau+ko4JiEEjM=2xSH_7FPBr_ZYOm8YGpin2p97=12PQ@mail.gmail.com>
+	<CA+NGFTzYNeSUpPVFJJYPTu7U-0PtbiL_8+JfeOsizRW2prgUxw@mail.gmail.com>
+Date: Fri, 8 Jun 2012 14:58:41 -0700
+Message-ID: <CAE9FiQVavmZckTW5X51F-dmSE13ZHZUDqDgZVvjzYc5qd64GMQ@mail.gmail.com>
+Subject: Re: PCIe rescan not working
+From: Yinghai Lu <yinghai@kernel.org>
+To: Tom Carr <tkcarr03873@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/06/12 03:54, Ram Pai wrote:
-> We need to determine whether the ohci device behaves abnormally if it gets
-> assigned a address other than what is assigned by the BIOS.
->
-> To do that; as Yinghai suggested, lets see the contents of the
-> register with and without the patch.
->
-> output of the following command on a working kernel and a non-working
-> kernel will shed some light.
->
-> lspci -vvxxx -s 0a:09.4
+On Fri, Jun 8, 2012 at 12:07 PM, Tom Carr <tkcarr03873@gmail.com> wrote:
+>> >  I am sure I am not supply some piece of information that is important
+>> > so let me
+>> > know what else you need and I will provide it.
+>>
+>> should be bridge that 04:08.0 is on, does not have big enough range
+>> after it is booted up.
 
-Working kernel:
-https://bugzilla.kernel.org/attachment.cgi?id=73871
+please try:
 
-Non-working kernel:
-https://bugzilla.kernel.org/attachment.cgi?id=73881
+echo 1 > /sys/bus/pci/devices/0000:00:01.2/remove
 
-> also boot messages on a working kernel will also be helpful.
+before
 
-https://bugzilla.kernel.org/attachment.cgi?id=73861
+echo 1 > /sys/bus/pci/rescan
 
-(Sorry for the delay in getting these.)
-
-Thanks,
-Rob
+than should work.
