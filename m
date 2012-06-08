@@ -1,78 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:47434 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754214Ab2FTSDH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 14:03:07 -0400
-Received: by dady13 with SMTP id y13so10145243dad.19
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 11:03:05 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <4FD1DA5B.9040404@01019freenet.de>
+Date: Fri, 08 Jun 2012 12:56:27 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <4FE18A9B.9040501@huawei.com>
-References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
-	<1340111732-6276-7-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQWAPb7S9kBrebnf6nn2KmCL2ohUbukycJPGQLB=11+_pA@mail.gmail.com>
-	<4FE18A9B.9040501@huawei.com>
-Date: Wed, 20 Jun 2012 11:03:05 -0700
-Message-ID: <CAE9FiQXCzFZwbrNsAcUrAXpabdF37c+fkWxB4LYy302gMqhT-g@mail.gmail.com>
-Subject: Re: [PATCH v8 06/12] PCI/ACPI: provide MCFG address for PCI host bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Andreas Hartmann <andihartmann@01019freenet.de>,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com
+Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
+References: <20120606212241.6627.98371.stgit@bling.home>    <4FD047A7.6050602@01019freenet.de> <1339088741.26976.19.camel@ul30vt>   <201206072101.q57L1LqG003192@mail.maya.org>  <1339104327.26976.45.camel@ul30vt> <4FD1205D.8070501@01019freenet.de> <1339106941.26976.51.camel@ul30vt> <4FD15BE1.40004@01019freenet.de>
+In-Reply-To: <4FD15BE1.40004@01019freenet.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 1:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> Hi Yinghai,
->
->        Yes, I'm going to adopt solution two as you suggested.
-> On the other hand, the MMCFG caching is kept due to following
-> considerations:
-> 1) To emit a warning message if MMCFG entries in MCFG table only
-> partially covers buses under a PCI host bridge. Taku reported that
-> he has a system which exhibits such a behavior.
-Interesting.
-that should have one overal checking after _CBA entry is added into
-pci_mmcfg_list.
-We limit root bus bus range after busn_alloc is there.
-aka dump the bus range above mmcfg.
-or user need to disable mmcfg.
+Andreas Hartmann wrote:
+> Alex Williamson wrote:
+[...]
+>> I just pushed a vfio-3.4 branch to my tree at
+>> git://github.com/awilliam/linux-vfio.git.  Please let me know what you
+>> find with this.
+> 
+> Works fine :-) vfio and fglrx and PCIe passthrough.
+
+I rebuild the vfio patch on base of your vfio-3.4 branch and applied it
+with the additional quirks patch to the opensuse kernel 3.4.1 (desktop
+flavor). Now it's working fine with opensuse, too (PCIe passthrough, PCI
+passthrouh and fglrx with a board with AMD chipset 990X)! There have
+been slight differences in the two different ways of creating the
+complete patch for 3.4 which raised the problem.
+
+Downside is (as you already mentioned), that a lot of devices have to be
+unbind to get it working. Would be great, if this could be optimized :-).
+
+Your vfio-3.4 branch helped me a lot!
+
+BTW:
+If anybody is interested, I could attach a complete vfio patch for 3.4.
 
 
-> 2) To cross-check that MMCFG addresses returned by MCFG table and
-> _CBA method are consistent if both are available (though that
-> violates the PCI FW/ACPI specifications).
 
-now we are adding support for pci hostbridge plug. so we should better to stick
-with spec instead of trying to workaround possible FW problem.
-Do spoil them too much.
-
-my point is: MCFG is static. so the range from MCFG can not be changed after
-they pass the sanity checking.
-later if _CBA is trying come again with overlapping, just through that away.
-then if _CBA is good, then just record the range, and later release the range
-according the storage during hostbridge removal.
-
-> 3) In future, we may try to remove MMCFG entry constructed from
-> MCFG table when hot-removing a PCI host bridge. We have some systems
-> which assign a distinguish segment ID for each host bridge. In such
-> a case, it may be reasonable to remove the MMCFG entry when removing
-> a host bridge.
-No, MCFG is static one.
-
-> 4) The MCFG cache should be small under normal cases.
->
->        If you feel it's unnecessary to keep the cache, I will remove
-> it and send out a updated version soon.
-for pci host bridge support, we would touch too much thing, I would
-like to limit
-first round change and keep it simple, and later could optimize it if possible.
-
-Thanks
-
-Yinghai
+Thanks for your great support and patience,
+Andreas
