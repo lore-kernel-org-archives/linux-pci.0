@@ -1,55 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1026 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:12344 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754738Ab2F0TXq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Jun 2012 15:23:46 -0400
-Message-ID: <1340825003.1207.224.camel@bling.home>
-Subject: Re: Request VFIO inclusion in linux-next
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	kvm <kvm@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	iommu <iommu@lists.linux-foundation.org>,
-	qemu-devel <qemu-devel@nongnu.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	chrisw <chrisw@sous-sol.org>,
-	"Roedel, Joerg" <Joerg.Roedel@amd.com>, linux-next@vger.kernel.org
-Date: Wed, 27 Jun 2012 13:23:23 -0600
-In-Reply-To: <20120627123733.GA5449@mwanda>
-References: <1340686552.1207.128.camel@bling.home>
-	 <20120627123733.GA5449@mwanda>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1762050Ab2FHJ6a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jun 2012 05:58:30 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: linux-pci@vger.kernel.org
+Cc: mj@ucw.cz, Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PCIUTILS PATCH] Display whether LTR/OBFF are supported and enabled
+Date: Fri,  8 Jun 2012 13:00:04 +0300
+Message-Id: <1339149604-5653-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-06-27 at 15:37 +0300, Dan Carpenter wrote:
-> On Mon, Jun 25, 2012 at 10:55:52PM -0600, Alex Williamson wrote:
-> > Hi,
-> > 
-> > VFIO has been kicking around for well over a year now and has been
-> > posted numerous times for review.  The pre-requirements are finally
-> > available in linux-next (or will be in the 20120626 build) so I'd like
-> > to request a new branch be included in linux-next with a goal of being
-> > accepted into v3.6.
-> > 
-> 
-> Could you run Sparse over the driver?
-> http://lwn.net/Articles/205624/
-> 
-> It reports a bunch of endian problems.  Some are definitely bugs
-> like:
-> 	*prev |= cpu_to_le32((u32)epos << 20);
+DEVCAP2 and DEVCTL2 capabilities contain information whether LTR and OBFF
+are supported and enabled. Make sure this is displayed to user as well.
 
-Done.  Mostly just adding annotation, but it did find a bug or two.
-Should be cleaned up in tomorrow's next.  Thanks for the report,
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ lib/header.h |    4 ++++
+ ls-caps.c    |   44 ++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 44 insertions(+), 4 deletions(-)
 
-Alex
-
+diff --git a/lib/header.h b/lib/header.h
+index 85b8b9f..b418982 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -845,11 +845,15 @@
+ #define  PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
+ #define  PCI_EXP_RTSTA_PME_PENDING 0x00020000 /* PME is Pending */
+ #define PCI_EXP_DEVCAP2			0x24	/* Device capabilities 2 */
++#define  PCI_EXP_DEVCAP2_LTR		0x0800	/* LTR supported */
++#define  PCI_EXP_DEVCAP2_OBFF(x)	(((x) >> 18) & 3) /* OBFF supported */
+ #define PCI_EXP_DEVCTL2			0x28	/* Device Control */
+ #define  PCI_EXP_DEV2_TIMEOUT_RANGE(x)	((x) & 0xf) /* Completion Timeout Ranges Supported */
+ #define  PCI_EXP_DEV2_TIMEOUT_VALUE(x)	((x) & 0xf) /* Completion Timeout Value */
+ #define  PCI_EXP_DEV2_TIMEOUT_DIS	0x0010	/* Completion Timeout Disable Supported */
+ #define  PCI_EXP_DEV2_ARI		0x0020	/* ARI Forwarding */
++#define  PCI_EXP_DEV2_LTR		0x0400	/* LTR enabled */
++#define  PCI_EXP_DEV2_OBFF(x)		(((x) >> 13) & 3) /* OBFF enabled */
+ #define PCI_EXP_DEVSTA2			0x2a	/* Device Status */
+ #define PCI_EXP_LNKCAP2			0x2c	/* Link Capabilities */
+ #define PCI_EXP_LNKCTL2			0x30	/* Link Control */
+diff --git a/ls-caps.c b/ls-caps.c
+index 4a75ce7..0f6fab3 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -920,24 +920,60 @@ static const char *cap_express_dev2_timeout_value(int type)
+     }
+ }
+ 
++static const char *cap_express_devcap2_obff(int obff)
++{
++  switch (obff)
++    {
++      case 1:
++        return "Via message";
++      case 2:
++        return "Via WAKE#";
++      case 3:
++        return "Via message/WAKE#";
++      default:
++        return "Not Supported";
++    }
++}
++
++static const char *cap_express_devctl2_obff(int obff)
++{
++  switch (obff)
++    {
++      case 0:
++        return "Disabled";
++      case 1:
++        return "Via message A";
++      case 2:
++        return "Via message B";
++      case 3:
++        return "Via WAKE#";
++      default:
++        return "Unknown";
++    }
++}
++
+ static void cap_express_dev2(struct device *d, int where, int type)
+ {
+   u32 l;
+   u16 w;
+ 
+   l = get_conf_long(d, where + PCI_EXP_DEVCAP2);
+-  printf("\t\tDevCap2: Completion Timeout: %s, TimeoutDis%c",
++  printf("\t\tDevCap2: Completion Timeout: %s, TimeoutDis%c, LTR%c, OBFF %s",
+ 	cap_express_dev2_timeout_range(PCI_EXP_DEV2_TIMEOUT_RANGE(l)),
+-	FLAG(l, PCI_EXP_DEV2_TIMEOUT_DIS));
++	FLAG(l, PCI_EXP_DEV2_TIMEOUT_DIS),
++	FLAG(l, PCI_EXP_DEVCAP2_LTR),
++	cap_express_devcap2_obff(PCI_EXP_DEVCAP2_OBFF(l)));
+   if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_DOWNSTREAM)
+     printf(" ARIFwd%c\n", FLAG(l, PCI_EXP_DEV2_ARI));
+   else
+     printf("\n");
+ 
+   w = get_conf_word(d, where + PCI_EXP_DEVCTL2);
+-  printf("\t\tDevCtl2: Completion Timeout: %s, TimeoutDis%c",
++  printf("\t\tDevCtl2: Completion Timeout: %s, TimeoutDis%c, LTR%c, OBFF %s",
+ 	cap_express_dev2_timeout_value(PCI_EXP_DEV2_TIMEOUT_VALUE(w)),
+-	FLAG(w, PCI_EXP_DEV2_TIMEOUT_DIS));
++	FLAG(w, PCI_EXP_DEV2_TIMEOUT_DIS),
++	FLAG(w, PCI_EXP_DEV2_LTR),
++	cap_express_devctl2_obff(PCI_EXP_DEV2_OBFF(w)));
+   if (type == PCI_EXP_TYPE_ROOT_PORT || type == PCI_EXP_TYPE_DOWNSTREAM)
+     printf(" ARIFwd%c\n", FLAG(w, PCI_EXP_DEV2_ARI));
+   else
+-- 
+1.7.9.1
 
