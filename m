@@ -1,64 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:45298 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484Ab2FSC5Q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2012 22:57:16 -0400
-Received: by dady13 with SMTP id y13so7765643dad.19
-        for <linux-pci@vger.kernel.org>; Mon, 18 Jun 2012 19:57:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120619014642.GA2310@ram-ThinkPad-T61>
-References: <20120618050333.GA13469@ram-ThinkPad-T61>
-	<CAE9FiQWwPOgBa5guG1y-xF95nBMwE+TC75E_xcg-N8ZxuPW_XQ@mail.gmail.com>
-	<20120619014642.GA2310@ram-ThinkPad-T61>
-Date: Mon, 18 Jun 2012 19:57:16 -0700
-Message-ID: <CAE9FiQUAGfXppTWwgbCEui9jFd3f75Fi4X-AvUkT0z3TNuqwyw@mail.gmail.com>
-Subject: Re: [RFC PATCH] methods to access resources of a struct pci_dev
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from moutng.kundenserver.de ([212.227.126.186]:52833 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755588Ab2FKPFk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 11:05:40 -0400
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: [PATCH v2 08/10] ARM: tegra: harmony: Initialize regulators from DT
+Date: Mon, 11 Jun 2012 17:05:16 +0200
+Message-Id: <1339427118-32263-9-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 18, 2012 at 6:46 PM, Ram Pai <linuxram@us.ibm.com> wrote:
-> On Mon, Jun 18, 2012 at 11:30:13AM -0700, Yinghai Lu wrote:
->> I have patchset on this, please check
->>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>  for-pci-for-each-res-addon
->>
->
->
-> Amazing, when are you pushing those patches in?  Looks like you have
-> patches for everything :)
->
-> Do you also have patches that change all the places that directly access
-> the ->resource structure?
+Device tree support for the TPS6586x PMU used on Harmony has recently
+been added. This commit adds the required device tree nodes to probe the
+PMU from the device tree.
 
-maybe not. could still have some left over.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 
->
-> Also does Bjorn pull regularly from your tree?  Is making patches
-> against your tree the right approach?
+---
+Changes in v2:
+- new patch
+---
+ arch/arm/boot/dts/tegra-harmony.dts    |   83 ++++++++++++++++++++++++++++++++
+ arch/arm/mach-tegra/board-dt-tegra20.c |    6 ---
+ 2 files changed, 83 insertions(+), 6 deletions(-)
 
-No.
+diff --git a/arch/arm/boot/dts/tegra-harmony.dts b/arch/arm/boot/dts/tegra-harmony.dts
+index f146dbf..c98aa2a 100644
+--- a/arch/arm/boot/dts/tegra-harmony.dts
++++ b/arch/arm/boot/dts/tegra-harmony.dts
+@@ -275,6 +275,89 @@
+ 	i2c@7000d000 {
+ 		status = "okay";
+ 		clock-frequency = <400000>;
++
++		tps6586x@34 {
++			compatible = "ti,tps6586x";
++			reg = <0x34>;
++			interrupts = <0 88 0x4>;
++
++			#gpio-cells = <2>;
++			gpio-controller;
++
++			regulators {
++				sm0 {
++					regulator-min-microvolt = < 725000>;
++					regulator-max-microvolt = <1500000>;
++					regulator-boot-on;
++					regulator-always-on;
++				};
++
++				sm1 {
++					regulator-min-microvolt = < 725000>;
++					regulator-max-microvolt = <1500000>;
++					regulator-boot-on;
++					regulator-always-on;
++				};
++
++				sm2 {
++					regulator-min-microvolt = <3000000>;
++					regulator-max-microvolt = <4550000>;
++					regulator-boot-on;
++					regulator-always-on;
++				};
++
++				ldo0 {
++					regulator-name = "PCIE CLK";
++					regulator-min-microvolt = <3300000>;
++					regulator-max-microvolt = <3300000>;
++				};
++
++				ldo1 {
++					regulator-min-microvolt = < 725000>;
++					regulator-max-microvolt = <1500000>;
++				};
++
++				ldo2 {
++					regulator-min-microvolt = < 725000>;
++					regulator-max-microvolt = <1500000>;
++				};
++
++				ldo3 {
++					regulator-min-microvolt = <1250000>;
++					regulator-max-microvolt = <3300000>;
++				};
++
++				ldo4 {
++					regulator-min-microvolt = <1700000>;
++					regulator-max-microvolt = <2475000>;
++				};
++
++				ldo5 {
++					regulator-min-microvolt = <1250000>;
++					regulator-max-microvolt = <3300000>;
++				};
++
++				ldo6 {
++					regulator-min-microvolt = <1250000>;
++					regulator-max-microvolt = <3300000>;
++				};
++
++				ldo7 {
++					regulator-min-microvolt = <1250000>;
++					regulator-max-microvolt = <3300000>;
++				};
++
++				ldo8 {
++					regulator-min-microvolt = <1250000>;
++					regulator-max-microvolt = <3300000>;
++				};
++
++				ldo9 {
++					regulator-min-microvolt = <1250000>;
++					regulator-max-microvolt = <3300000>;
++				};
++			};
++		};
+ 	};
+ 
+ 	pmc {
+diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
+index 0f29c05..a9a54e6 100644
+--- a/arch/arm/mach-tegra/board-dt-tegra20.c
++++ b/arch/arm/mach-tegra/board-dt-tegra20.c
+@@ -136,12 +136,6 @@ static void __init harmony_init(void)
+ {
+ 	int ret;
+ 
+-	ret = harmony_regulator_init();
+-	if (ret) {
+-		pr_err("harmony_regulator_init() failed: %d\n", ret);
+-		return;
+-	}
+-
+ 	ret = harmony_pcie_init();
+ 	if (ret)
+ 		pr_err("harmony_pcie_init() failed: %d\n", ret);
+-- 
+1.7.10.4
 
-Bjorn will get patches from my branch and have to update change log at least.
-and then into pci/next.
-
-current still have several branch in the waiting list
-for-pci-res-alloc
-for-pci-busn-alloc
-for-pci-root-bus-hotplug
-for-pci-for-each-res-addon
-
-also for-x86-irq and for-iommu are for pci root bus hotplug related too, but
-need to push them to tip pci related get merged.
-
-Current status: for-pci-busn-alloc is pending with
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=patch;h=b00469b377231ebe0b76248ec6d1866b51966c97
-Bjorn thought that is too complicated.
-
-Thanks
-
-Yinghai
