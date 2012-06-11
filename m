@@ -1,92 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v3 3/5] pci: export pci_user functions for use by other drivers
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, konrad.wilk@oracle.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	ddutile@redhat.com, alex.williamson@redhat.com
-Date: Mon, 11 Jun 2012 09:27:19 -0600
-Message-ID: <20120611152718.25959.93716.stgit@bling.home>
-In-Reply-To: <20120611152021.25959.71601.stgit@bling.home>
-References: <20120611152021.25959.71601.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:50371 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454Ab2FKVT5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 17:19:57 -0400
+Message-ID: <4FD660F9.7030807@wwwdotorg.org>
+Date: Mon, 11 Jun 2012 15:19:53 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VFIO PCI support will make use of these for user initiated
-PCI config accesses.
+On 06/11/2012 09:05 AM, Thierry Reding wrote:
+> This commit adds support for message signaled interrupts to the Tegra
+> PCIe controller. Based on code by Krishna Kishore <kthota@nvidia.com>.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
+> diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
 
- drivers/pci/access.c |    6 ++++--
- drivers/pci/pci.h    |    7 -------
- include/linux/pci.h  |    8 ++++++++
- 3 files changed, 12 insertions(+), 9 deletions(-)
+> +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
+...
+> +			irq = irq_find_mapping(pcie->msi->domain, index);
+> +			if (irq) {
+> +				if (test_bit(index, pcie->msi->used))
+> +					generic_handle_irq(irq);
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 2a58164..ba91a7e 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -162,7 +162,8 @@ int pci_user_read_config_##size						\
- 	if (ret > 0)							\
- 		ret = -EINVAL;						\
- 	return ret;							\
--}
-+}									\
-+EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
- 
- /* Returns 0 on success, negative values indicate error. */
- #define PCI_USER_WRITE_CONFIG(size,type)				\
-@@ -181,7 +182,8 @@ int pci_user_write_config_##size					\
- 	if (ret > 0)							\
- 		ret = -EINVAL;						\
- 	return ret;							\
--}
-+}									\
-+EXPORT_SYMBOL_GPL(pci_user_write_config_##size);
- 
- PCI_USER_READ_CONFIG(byte, u8)
- PCI_USER_READ_CONFIG(word, u16)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e494347..f2dcc46 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -86,13 +86,6 @@ static inline bool pci_is_bridge(struct pci_dev *pci_dev)
- 	return !!(pci_dev->subordinate);
- }
- 
--extern int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
--extern int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
--extern int pci_user_read_config_dword(struct pci_dev *dev, int where, u32 *val);
--extern int pci_user_write_config_byte(struct pci_dev *dev, int where, u8 val);
--extern int pci_user_write_config_word(struct pci_dev *dev, int where, u16 val);
--extern int pci_user_write_config_dword(struct pci_dev *dev, int where, u32 val);
--
- struct pci_vpd_ops {
- 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ba51a21..4cb13e59 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -777,6 +777,14 @@ static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
- 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
- }
- 
-+/* user-space driven config access */
-+int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
-+int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
-+int pci_user_read_config_dword(struct pci_dev *dev, int where, u32 *val);
-+int pci_user_write_config_byte(struct pci_dev *dev, int where, u8 val);
-+int pci_user_write_config_word(struct pci_dev *dev, int where, u16 val);
-+int pci_user_write_config_dword(struct pci_dev *dev, int where, u32 val);
-+
- int __must_check pci_enable_device(struct pci_dev *dev);
- int __must_check pci_enable_device_io(struct pci_dev *dev);
- int __must_check pci_enable_device_mem(struct pci_dev *dev);
+This invokes the handler first ...
 
+...
+> +			/* clear the interrupt */
+> +			afi_writel(pcie, 1 << offset, AFI_MSI_VEC0 + i * 4);
+> +			/* see if there's any more pending in this vector */
+> +			reg = afi_readl(pcie, AFI_MSI_VEC0 + i * 4);
+
+... then clears the interrupt status in the PCIe controller. Won't that
+lose interrupts if one is raised between when the handler clears the
+root-cause, and when this code clears the received interrupt status?
+
+> +static int tegra_pcie_disable_msi(struct platform_device *pdev)
+
+Should this free pcie->msi->pages?
+
+Why allocate pcie->msi separately; why not include the fields directly
+into struct tegra_pcie_info *pcie?
