@@ -1,170 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:24231 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753837Ab2FYSVr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2012 14:21:47 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ingo Molnar <mingo@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, lenb@kernel.org,
-	x86@kernel.org
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI, X86: busnum/node boot command line for pci dev node setting.
-Date: Mon, 25 Jun 2012 11:21:45 -0700
-Message-Id: <1340648505-14507-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:14584 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754816Ab2FKPhl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jun 2012 11:37:41 -0400
+Message-ID: <1339429021.24037.8.camel@bling.home>
+Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Joerg Roedel <joerg.roedel@amd.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Woodhouse <dwmw2@infradead.org>
+Cc: iommu@lists.linux-foundation.org, bhelgaas@google.com,
+	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, ddutile@redhat.com, liuj97@gmail.com
+Date: Mon, 11 Jun 2012 09:37:01 -0600
+In-Reply-To: <20120606110514.GG757@amd.com>
+References: <20120530201424.31527.33142.stgit@bling.home>
+	 <20120606110514.GG757@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some intel new sandybridge or newer two sockets system do support support numa
-for pci devices. But BIOS does not provide _PXM under those root bus in DSDT.
+On Wed, 2012-06-06 at 13:05 +0200, Joerg Roedel wrote:
+> On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
+> > v2:
+> >  - Trickle down changes from pci_get_dma_source() to better handle
+> >    PCI device reference counting in IOMMU driver patches
+> 
+> Okay, I looked again over the code and looks good for merging to me.
 
-Add boot command line, so user could have chance to input node info before
-BIOS guys figure out to add _PXM.
+Great, thanks Joerg!
 
-Fold fix from Ulrich to use ";" instead of ",".
-| The problem is the pci= parameter
-| handling uses ',' to separate parameters and therefore the second PCI
-| root information, separated by a comma, is interpreted as a new pci=
-| parameter.
+>  The
+> IOMMU Groups code depends on changes in the PCI code. We need to work
+> out how to merge this.
+> 
+> Bjorn,
+> 
+> I need the PCI changes before I can merge the IOMMU Groups code. There
+> are two ways that would work for me:
+> 
+> 	a) You Ack the PCI patch-set from Alex and I put it into my tree
+> 	   and merge the IOMMU Group code on-top, or
+> 	b) You merge the PCI related patch-set into a seperate branch
+> 	   which you can merge into your next-branch and which I can
+> 	   pull in to merge IOMMU Groups on-top.
+> 
+> Please let me know what works best for you.
 
--v3: According to Bjorn and Ingo, change to use "user input first" policy
-     so it could cover wrong _PXM case.
--v4: Folded change from Ulrich to record pointer of busnum_node string.
+I also poked Bjorn with a minor v3 spin on his series, no change to this
+series.
 
-Reported-by: Ulrich Drepper <drepper@gmail.com>
-Tested-by: Ulrich Drepper <drepper@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> What I would also appreciate are a few more Acks from other IOMMU
+> maintainers (David W.?) and from the Power side.
 
----
- Documentation/kernel-parameters.txt |    5 +++++
- arch/x86/include/asm/pci_x86.h      |    3 +++
- arch/x86/pci/acpi.c                 |   22 +++++++++++++---------
- arch/x86/pci/common.c               |   36 ++++++++++++++++++++++++++++++++++++
- 4 files changed, 57 insertions(+), 9 deletions(-)
+Alexey, BenH, can either of you comment on this series from the POWER
+side?  I know Alexey has an implementation of VFIO/Qemu device
+assignment working on POWER with this series.  David Woodhouse, any
+comments?  Thanks,
 
-Index: linux-2.6/Documentation/kernel-parameters.txt
-===================================================================
---- linux-2.6.orig/Documentation/kernel-parameters.txt
-+++ linux-2.6/Documentation/kernel-parameters.txt
-@@ -2068,6 +2068,11 @@ bytes respectively. Such letter suffixes
- 				hardware access methods are allowed. Use this
- 				if you experience crashes upon bootup and you
- 				suspect they are caused by the BIOS.
-+		busnum_node=    [X86] Set node for root bus.
-+				Format:
-+				<bus>:<node>[;...]
-+				Specifies node for bus, will override bios _PXM
-+				or probed value from hostbridge.
- 		conf1		[X86] Force use of PCI Configuration
- 				Mechanism 1.
- 		conf2		[X86] Force use of PCI Configuration
-Index: linux-2.6/arch/x86/pci/common.c
-===================================================================
---- linux-2.6.orig/arch/x86/pci/common.c
-+++ linux-2.6/arch/x86/pci/common.c
-@@ -494,6 +494,39 @@ int __init pcibios_init(void)
- 	return 0;
- }
- 
-+static const char *busnum_node_param;
-+
-+static void remember_busnum_node(const char *str)
-+{
-+	busnum_node_param = str;
-+}
-+
-+int get_user_busnum_node(int busnum)
-+{
-+	int bus, node, count;
-+	const char *p = busnum_node_param;
-+
-+	if (!p)
-+		return -1;
-+
-+	while (*p) {
-+		count = 0;
-+		if (sscanf(p, "%x:%x%n", &bus, &node, &count) != 2) {
-+			printk(KERN_ERR "PCI: Can't parse busnum_node input: %s\n",
-+					p);
-+			break;
-+		}
-+		if (bus == busnum)
-+			return node;
-+		p += count;
-+		if (*p != ';')
-+			break;
-+		p++;
-+	}
-+
-+	return -1;
-+}
-+
- char * __devinit  pcibios_setup(char *str)
- {
- 	if (!strcmp(str, "off")) {
-@@ -579,6 +612,9 @@ char * __devinit  pcibios_setup(char *st
- 	} else if (!strcmp(str, "nocrs")) {
- 		pci_probe |= PCI_ROOT_NO_CRS;
- 		return NULL;
-+	} else if (!strncmp(str, "busnum_node=", 12)) {
-+		remember_busnum_node(str + 12);
-+		return NULL;
- 	} else if (!strcmp(str, "earlydump")) {
- 		pci_early_dump_regs = 1;
- 		return NULL;
-Index: linux-2.6/arch/x86/include/asm/pci_x86.h
-===================================================================
---- linux-2.6.orig/arch/x86/include/asm/pci_x86.h
-+++ linux-2.6/arch/x86/include/asm/pci_x86.h
-@@ -46,6 +46,9 @@ enum pci_bf_sort_state {
- 	pci_dmi_bf,
- };
- 
-+/* pci-common.c */
-+int get_user_busnum_node(int busnum);
-+
- /* pci-i386.c */
- 
- void pcibios_resource_survey(void);
-Index: linux-2.6/arch/x86/pci/acpi.c
-===================================================================
---- linux-2.6.orig/arch/x86/pci/acpi.c
-+++ linux-2.6/arch/x86/pci/acpi.c
-@@ -453,7 +453,7 @@ struct pci_bus * __devinit pci_acpi_scan
- 	struct pci_sysdata *sd;
- 	int node;
- #ifdef CONFIG_ACPI_NUMA
--	int pxm;
-+	int pxm = -1;
- #endif
- 
- 	if (domain && !pci_domains_supported) {
-@@ -463,16 +463,20 @@ struct pci_bus * __devinit pci_acpi_scan
- 		return NULL;
- 	}
- 
--	node = -1;
-+	node = get_user_busnum_node(busnum);
-+	if (node == -1) {
- #ifdef CONFIG_ACPI_NUMA
--	pxm = acpi_get_pxm(device->handle);
--	if (pxm >= 0)
--		node = pxm_to_node(pxm);
--	if (node != -1)
--		set_mp_bus_to_node(busnum, node);
--	else
--#endif
-+		pxm = acpi_get_pxm(device->handle);
-+		if (pxm >= 0)
-+			node = pxm_to_node(pxm);
-+		if (node != -1)
-+			set_mp_bus_to_node(busnum, node);
-+		else
-+			node = get_mp_bus_to_node(busnum);
-+#else
- 		node = get_mp_bus_to_node(busnum);
-+#endif
-+	}
- 
- 	if (node != -1 && !node_online(node))
- 		node = -1;
+Alex
+
