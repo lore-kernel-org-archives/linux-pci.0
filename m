@@ -1,71 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:40873 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756517Ab2FZMQa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 08:16:30 -0400
-Received: by bkcji2 with SMTP id ji2so4078733bkc.19
-        for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 05:16:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120626015740.GA8128@richard>
-References: <20120620084515.GA22809@richard> <20120626015740.GA8128@richard>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 26 Jun 2012 06:16:08 -0600
-Message-ID: <CAErSpo4_qy59KS1K+t5rU8P95NNR8fB9x-ufe8VB8deGriOZ9A@mail.gmail.com>
-Subject: Re: One question about the useage of pci_dev->resource[]
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Ram Pai <linuxram@us.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from moutng.kundenserver.de ([212.227.17.10]:53309 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755409Ab2FKPF3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 11:05:29 -0400
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: [PATCH v2 00/10] ARM: tegra: Add PCIe device tree support
+Date: Mon, 11 Jun 2012 17:05:08 +0200
+Message-Id: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2012 at 7:57 PM, Richard Yang
-<weiyang@linux.vnet.ibm.com> wrote:
-> On Wed, Jun 20, 2012 at 04:45:15PM +0800, Richard Yang wrote:
->>All,
->>
->>I want to confirm something for the pci_dev->resource[].
->>
->>As in the definition in the pci.h, this resource array is divided into
->>several parts.
->>    0-5  for standard PCI resources
->>    6    for ROM resource
->>    7-10 for bridge resource( if no iov )
->>
->>
->>1. For P2P bridge, 0-5 is left empty?
->>2. If so, in code pci_setup_device(), I think it set the wrong resource.
->>   It call pci_read_bases(dev, 2, PCI_ROM_ADDRESS1), for a p2p bridge.
->>   And in pci_read_bases(), BAR information is retrieved and set to
->>   pci_dev->resource[0|1].
->>3. If pci_setup_device() just set first two resource, the child bus will
->>   point to empty resource.
->>   In pci_alloc_child_bus(), child->resource[0-3] will be point to
->>   bridge->resource[7-10], which is not set in pci_setup_device().
->>4. Another question is, is there any convention for pci_bus->resource[].
->>   [0] for io, [1] for mem, [2] for prefetch?
-> All,
->
-> I go through the code again and find pci_dev->resource[7-10] is used for
-> io/mem base/limit, which is used by the bridge to determine whether it
-> will forward one pci transaction.
->
-> So pci_dev->[0-1] is used by the bridge's driver?
+This patch series adds support for device tree based probing of the PCIe
+controller found on Tegra SoCs.
 
-Per the PCI-to-PCI Bridge spec v1.2, config space for type 1 devices
-(bridges) has two BARs in addition to the I/O, mem, and prefetchable
-mem windows.  These two BARs are optional and can be used for
-device-specific configuration of the bridge itself.  This is unrelated
-to forwarding transactions.  See sec 3.2.5.1.
+Patches 1 and 2 keep the pci_fixup_irqs() and ARM-specific pci_common_init()
+functions around after init. This is required to support driver probe
+deferral, which may cause built-in drivers to be probed after __init data has
+already been freed.
 
-The bridge consumes the address space described by the windows and
-forwards it to its secondary interface.  It also consumes the address
-space described by those BARs, without forwarding it.  Therefore, we
-have to read the BARs to make sure we don't allocate that space to
-anything else.
+Patch 3 allows a driver's probe function to pass per-controller private data
+when calling the pci_common_init() function.
 
-There *could* be device-specific bridge drivers that actually do
-something with those BARs, but I'm not aware of any in Linux.
+Patch 4 is trivial and has already been Acked-by: Stephen Warren before.
 
-Bjorn
+Patch 5 rewrites PCIe support as a driver and switches the Harmony and
+TrimSlice boards to add the proper platform device instead of calling the
+tegra_pcie_init() function. Patch 6 adds MSI support as an IRQ domain.
+
+Patch 7 finally implements device tree support and patches 8, 9 and 10 move
+the Harmony and TrimSlice boards over to use information provided in the DTS
+to probe the PCIe controller.
+
+Thierry
+
+Thierry Reding (10):
+  PCI: Keep pci_fixup_irqs() around after init
+  ARM: pci: Keep pci_common_init() around after init
+  ARM: pci: Allow passing per-controller private data
+  ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+  ARM: tegra: Rewrite PCIe support as a driver
+  ARM: tegra: pcie: Add MSI support
+  ARM: tegra: pcie: Add device tree support
+  ARM: tegra: harmony: Initialize regulators from DT
+  ARM: tegra: harmony: Initialize PCIe from DT
+  ARM: tegra: trimslice: Initialize PCIe from DT
+
+ .../devicetree/bindings/pci/tegra-pcie.txt         |   23 +
+ arch/arm/boot/dts/tegra-harmony.dts                |   98 +++
+ arch/arm/boot/dts/tegra-trimslice.dts              |   20 +
+ arch/arm/boot/dts/tegra20.dtsi                     |    9 +
+ arch/arm/include/asm/mach/pci.h                    |    1 +
+ arch/arm/kernel/bios32.c                           |    7 +-
+ arch/arm/mach-tegra/Kconfig                        |    1 +
+ arch/arm/mach-tegra/board-dt-tegra20.c             |   35 +-
+ arch/arm/mach-tegra/board-harmony-pcie.c           |   38 +-
+ arch/arm/mach-tegra/board-harmony.c                |    1 +
+ arch/arm/mach-tegra/board-harmony.h                |    1 +
+ arch/arm/mach-tegra/board-trimslice.c              |   18 +-
+ arch/arm/mach-tegra/board.h                        |    2 +-
+ arch/arm/mach-tegra/devices.c                      |   32 +
+ arch/arm/mach-tegra/devices.h                      |    1 +
+ arch/arm/mach-tegra/include/mach/iomap.h           |    6 +
+ arch/arm/mach-tegra/include/mach/irqs.h            |    5 +-
+ arch/arm/mach-tegra/include/mach/pci-tegra.h       |   29 +
+ arch/arm/mach-tegra/pcie.c                         |  926 +++++++++++++++-----
+ arch/arm/mach-tegra/pmc.c                          |   16 +
+ arch/arm/mach-tegra/pmc.h                          |    1 +
+ drivers/pci/setup-irq.c                            |    4 +-
+ 22 files changed, 983 insertions(+), 291 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/tegra-pcie.txt
+ create mode 100644 arch/arm/mach-tegra/include/mach/pci-tegra.h
+
+-- 
+1.7.10.4
+
