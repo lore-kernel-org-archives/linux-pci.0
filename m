@@ -1,53 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50141 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932163Ab2F1HFV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Jun 2012 03:05:21 -0400
-Message-ID: <1340866985.20977.62.camel@pasglop>
-Subject: Re: [PATCH V4 1/2] PCI: pcibus address to resource converting take
- bus directly
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, yinghai@kernel.org
-Date: Thu, 28 Jun 2012 17:03:05 +1000
-In-Reply-To: <CAErSpo4u6HKdVqaaiL5=GSWRXiVfyfJ7EsnkAwGz6KvKrqaM=w@mail.gmail.com>
-References: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
-	 <CAErSpo4u6HKdVqaaiL5=GSWRXiVfyfJ7EsnkAwGz6KvKrqaM=w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v3 4/5] pci: Create common pcibios_err_to_errno
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, konrad.wilk@oracle.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Mon, 11 Jun 2012 09:27:33 -0600
+Message-ID: <20120611152733.25959.67354.stgit@bling.home>
+In-Reply-To: <20120611152021.25959.71601.stgit@bling.home>
+References: <20120611152021.25959.71601.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-06-27 at 12:15 -0600, Bjorn Helgaas wrote:
-> 
-> This patch appears to have multiple unrelated changes:
-> 
->   - change "struct pci_bus *bus" to "struct pci_bus *root_bus"
->   - change find_pci_host_bridge() argument from dev to bus
->   - fiddle with pcibios_bus_to_resource() and
-> pcibios_resource_to_bus()
-> 
-> These should be split out to make your patches easier to review.
-> 
-> What's the rationale for preferring the pci_bus over the pci_dev? 
+For returning errors out to non-PCI code.  Re-name xen's version.
 
-We really want to stop doing that crap and put a pointer to the host
-bridge directly in each pci_dev (and maybe pci_bus).
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
 
-We already do that on powerpc via sysdata (pointing to our private
-structure but the plan is to move that toward struct pci_host_bridge
-eventually).
+ drivers/xen/xen-pciback/conf_space.c |    6 +++---
+ include/linux/pci.h                  |   26 ++++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 3 deletions(-)
 
-We'll need host bridge access to deal with resource "offsets" in a few
-more places and having to do a lookup is just a pain.
-
-For example, see my earlier email about the issues with the way we
-calculate the minimum address to assign devices. This is currently
-broken when we have an offset and to fix it we'll probably want to deal
-with offsets all the way down in the resource allocation code.
-
-Cheers,
-Ben.
-
+diff --git a/drivers/xen/xen-pciback/conf_space.c b/drivers/xen/xen-pciback/conf_space.c
+index 30d7be0..46ae0f9 100644
+--- a/drivers/xen/xen-pciback/conf_space.c
++++ b/drivers/xen/xen-pciback/conf_space.c
+@@ -124,7 +124,7 @@ static inline u32 merge_value(u32 val, u32 new_val, u32 new_val_mask,
+ 	return val;
+ }
+ 
+-static int pcibios_err_to_errno(int err)
++static int xen_pcibios_err_to_errno(int err)
+ {
+ 	switch (err) {
+ 	case PCIBIOS_SUCCESSFUL:
+@@ -202,7 +202,7 @@ out:
+ 		       pci_name(dev), size, offset, value);
+ 
+ 	*ret_val = value;
+-	return pcibios_err_to_errno(err);
++	return xen_pcibios_err_to_errno(err);
+ }
+ 
+ int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
+@@ -290,7 +290,7 @@ int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
+ 		}
+ 	}
+ 
+-	return pcibios_err_to_errno(err);
++	return xen_pcibios_err_to_errno(err);
+ }
+ 
+ void xen_pcibk_config_free_dyn_fields(struct pci_dev *dev)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4cb13e59..f43bfef 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -474,6 +474,32 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
+ #define PCIBIOS_SET_FAILED		0x88
+ #define PCIBIOS_BUFFER_TOO_SMALL	0x89
+ 
++/*
++ * Translate above to generic errno for passing back through non-pci.
++ */
++static inline int pcibios_err_to_errno(int err)
++{
++	if (err <= PCIBIOS_SUCCESSFUL)
++		return err; /* Assume already errno */
++
++	switch (err) {
++	case PCIBIOS_FUNC_NOT_SUPPORTED:
++		return -ENOENT;
++	case PCIBIOS_BAD_VENDOR_ID:
++		return -EINVAL;
++	case PCIBIOS_DEVICE_NOT_FOUND:
++		return -ENODEV;
++	case PCIBIOS_BAD_REGISTER_NUMBER:
++		return -EFAULT;
++	case PCIBIOS_SET_FAILED:
++		return -EIO;
++	case PCIBIOS_BUFFER_TOO_SMALL:
++		return -ENOSPC;
++	}
++
++	return -ENOTTY;
++}
++
+ /* Low-level architecture-dependent routines */
+ 
+ struct pci_ops {
 
