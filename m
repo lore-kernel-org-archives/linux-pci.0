@@ -1,85 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:46547 "EHLO e7.ny.us.ibm.com"
+Received: from mx1.redhat.com ([209.132.183.28]:20863 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258Ab2F2Gsr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jun 2012 02:48:47 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Fri, 29 Jun 2012 02:48:46 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5T6m0Vm65405148
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:48:00 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5T6lxUw001746
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 03:48:00 -0300
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
-Cc: bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
-	linuxram@us.ibm.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 6/7] pci: function to retrieve alignment of p2p bars
-Date: Fri, 29 Jun 2012 14:47:49 +0800
-Message-Id: <9229382f79ce3eeb4645160b5349a51bb51db06b.1340949637.git.shangw@linux.vnet.ibm.com>
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+	id S1751369Ab2FKP1m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jun 2012 11:27:42 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v3 2/5] pci: Add ACS validation utility
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, konrad.wilk@oracle.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Mon, 11 Jun 2012 09:27:07 -0600
+Message-ID: <20120611152707.25959.60516.stgit@bling.home>
+In-Reply-To: <20120611152021.25959.71601.stgit@bling.home>
+References: <20120611152021.25959.71601.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch introduces function pci_align_boundary() to retrieve the
-minimal alignment of p2p bars according to the argument.
+In a PCI environment, transactions aren't always required to reach
+the root bus before being re-routed.  Intermediate switches between
+an endpoint and the root bus can redirect DMA back downstream before
+things like IOMMUs have a chance to intervene.  Legacy PCI is always
+susceptible to this as it operates on a shared bus.  PCIe added a
+new capability to describe and control this behavior, Access Control
+Services, or ACS.  The utility function pci_acs_enabled() allows us
+to test the ACS capabilities of an individual devices against a set
+of flags while pci_acs_path_enabled() tests a complete path from
+a given downstream device up to the specified upstream device.  We
+also include the ability to add device specific tests as it's
+likely we'll see devices that do no implement ACS, but want to
+indicate support for various capabilities in this space.
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/host-bridge.c |   24 ++++++++++++++++++++++++
- include/linux/pci.h       |    1 +
- 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 1854a2d..dc9a95e 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -105,3 +105,27 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ drivers/pci/pci.c    |   69 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/quirks.c |   33 ++++++++++++++++++++++++
+ include/linux/pci.h  |   10 +++++++
+ 3 files changed, 111 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 447e834..1ccf7d4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2360,6 +2360,75 @@ void pci_enable_acs(struct pci_dev *dev)
  }
  
- EXPORT_SYMBOL(pcibios_bus_to_resource);
-+
-+resource_size_t pci_align_boundary(struct pci_bus *bus, unsigned long flags)
+ /**
++ * pci_acs_enabled - test ACS against required flags for a given device
++ * @pdev: device to test
++ * @acs_flags: required PCI ACS flags
++ *
++ * Return true if the device supports the provided flags.  Automatically
++ * filters out flags that are not implemented on multifunction devices.
++ */
++bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
 +{
-+	resource_size_t align = 0;
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
++	int pos, ret;
++	u16 ctrl;
 +
-+	flags &= (IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH);
-+	switch (flags) {
-+	case IORESOURCE_IO:
-+		align = (1 << bridge->io_align_shift);
-+		break;
-+	case IORESOURCE_MEM:
-+		align = (1 << bridge->mem_align_shift);
-+		break;
-+	case (IORESOURCE_MEM | IORESOURCE_PREFETCH):
-+		align = (1 << bridge->pmem_align_shift);
-+		break;
-+	default:
-+		printk(KERN_WARNING "%s: invalid flags 0x%lx\n",
-+			__func__, flags);
++	ret = pci_dev_specific_acs_enabled(pdev, acs_flags);
++	if (ret >= 0)
++		return ret > 0;
++
++	if (!pci_is_pcie(pdev))
++		return false;
++
++	/* Filter out flags not applicable to multifunction */
++	if (pdev->multifunction)
++		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
++			      PCI_ACS_EC | PCI_ACS_DT);
++
++	if (pdev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM ||
++	    pdev->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
++	    pdev->multifunction) {
++		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
++		if (!pos)
++			return false;
++
++		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
++		if ((ctrl & acs_flags) != acs_flags)
++			return false;
 +	}
 +
-+	return align;
++	return true;
++}
++
++/**
++ * pci_acs_path_enable - test ACS flags from start to end in a hierarchy
++ * @start: starting downstream device
++ * @end: ending upstream device or NULL to search to the root bus
++ * @acs_flags: required flags
++ *
++ * Walk up a device tree from start to end testing PCI ACS support.  If
++ * any step along the way does not support the required flags, return false.
++ */
++bool pci_acs_path_enabled(struct pci_dev *start,
++			  struct pci_dev *end, u16 acs_flags)
++{
++	struct pci_dev *pdev, *parent = start;
++
++	do {
++		pdev = parent;
++
++		if (!pci_acs_enabled(pdev, acs_flags))
++			return false;
++
++		if (pci_is_root_bus(pdev->bus))
++			return (end == NULL);
++
++		parent = pdev->bus->self;
++	} while (pdev != end);
++
++	return true;
++}
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTD, 4=INTD)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index acd3956..27e2c8f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3230,3 +3230,36 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+ 
+ 	return pci_dev_get(dev);
+ }
++
++static const struct pci_dev_acs_enabled {
++	u16 vendor;
++	u16 device;
++	int (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
++} pci_dev_acs_enabled[] = {
++	{ 0 }
++};
++
++int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
++{
++	const struct pci_dev_acs_enabled *i;
++	int ret;
++
++	/*
++	 * Allow devices that do not expose standard PCIe ACS capabilities
++	 * or control to indicate their support here.  Multi-function express
++	 * devices which do not allow internal peer-to-peer between functions,
++	 * but do not implement PCIe ACS may wish to return true here.
++	 */
++	for (i = pci_dev_acs_enabled; i->acs_enabled; i++) {
++		if ((i->vendor == dev->vendor ||
++		     i->vendor == (u16)PCI_ANY_ID) &&
++		    (i->device == dev->device ||
++		     i->device == (u16)PCI_ANY_ID)) {
++			ret = i->acs_enabled(dev, acs_flags);
++			if (ret >= 0)
++				return ret;
++		}
++	}
++
++	return -ENOTTY;
 +}
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2b2b38d..64523ef 100644
+index 6badba3..ba51a21 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -673,6 +673,7 @@ void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			       struct pci_bus_region *region);
- void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 			     struct pci_bus_region *region);
-+resource_size_t pci_align_boundary(struct pci_bus *bus, unsigned long flags);
- void pcibios_scan_specific_bus(int busn);
- extern struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--- 
-1.7.9.5
+@@ -1487,6 +1487,7 @@ enum pci_fixup_pass {
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ struct pci_dev *pci_get_dma_source(struct pci_dev *dev);
++int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) {}
+@@ -1494,6 +1495,11 @@ static inline struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+ {
+ 	return pci_dev_get(dev);
+ }
++static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
++					       u16 acs_flags)
++{
++	return -ENOTTY;
++}
+ #endif
+ 
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+@@ -1596,7 +1602,9 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
+ }
+ 
+ void pci_request_acs(void);
+-
++bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
++bool pci_acs_path_enabled(struct pci_dev *start,
++			  struct pci_dev *end, u16 acs_flags);
+ 
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+ #define PCI_VPD_LRDT_ID(x)		(x | PCI_VPD_LRDT)
 
