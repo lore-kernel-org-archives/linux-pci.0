@@ -1,49 +1,32 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-From: Khalid Aziz <khalid.aziz@hp.com>
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-In-Reply-To: <87obowxm5s.fsf@xmission.com>
-References: <20120427190033.GA17588@ldl.usa.hp.com>
-	 <20120606135009.GB1517@srcf.ucam.org> <1338999463.25761.630.camel@lyra>
-	 <20120606162703.GA6779@srcf.ucam.org> <1339003956.25761.667.camel@lyra>
-	 <20120606174202.GA8750@srcf.ucam.org> <1339006060.25761.689.camel@lyra>
-	 <87obowxm5s.fsf@xmission.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Jun 2012 08:21:00 -0600
-Message-ID: <1339078860.25761.767.camel@lyra>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:43841 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751110Ab2FKTkN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jun 2012 15:40:13 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1SeATB-0008F9-AC
+	for linux-pci@vger.kernel.org; Mon, 11 Jun 2012 21:40:09 +0200
+Received: from dsl001-168-162.bos1.dsl.speakeasy.net ([72.1.168.162])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 21:40:09 +0200
+Received: from tkcarr03873 by dsl001-168-162.bos1.dsl.speakeasy.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 21:40:09 +0200
+To: linux-pci@vger.kernel.org
+From: Tom Carr <tkcarr03873@gmail.com>
+Subject: Re: PCIe rescan not working
+Date: Mon, 11 Jun 2012 19:37:29 +0000 (UTC)
+Message-ID: <loom.20120611T213534-574@post.gmane.org>
+References: <loom.20120607T194858-986@post.gmane.org> <CAE9FiQWau+ko4JiEEjM=2xSH_7FPBr_ZYOm8YGpin2p97=12PQ@mail.gmail.com> <loom.20120611T205954-871@post.gmane.org>
 Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-06-06 at 12:42 -0700, Eric W. Biederman wrote:
-> Absent anyone even knowing if there are devices that exist that can not
-> tolerate their bus master bit being flipped when DMA is not ongoing I
-> think the current state of the code is good.  When we find the broken
-> hardware that can not tolerate a standard PCI bit being used in a
-> standard way we can add a flag in the core to avoid doing that.
-> 
-> pci_device_shutdown calls drv->shutdown before calling
-> pci_device_disable.  Which means that only devices that have trouble
-> with this bit being flipped while DMA is ongoing and don't bother
-> to stop their own DMA will have a problem.
-> 
-> As for shifting problems I do think we have shifted the problem in a
-> very positive way.  Now instead of having a random failure at a random
-> location caused by DMA happing at a random moment for no expected reason
-> we have failures happening when we disable or enable a device, which
-> should be much more debugable.
+ Sorry, I said /sys/bus/pci/remove. I meant to say 
+/sys/bus/pci/devices/0000:00:01.2/remove
 
-That is a very good point. Failure at a predictable point is much better
-than random failures with the root cause being elsewhere from the point
-of failure in time and code. This at least gives us a good shot at being
-able to debug buggy hardware and drivers.
 
--- 
-====================================================================
-Khalid Aziz                                         Unix Systems Lab
-(970)898-9214                                        Hewlett-Packard
-khalid.aziz@hp.com                                  Fort Collins, CO
 
