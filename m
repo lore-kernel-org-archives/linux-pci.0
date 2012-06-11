@@ -1,169 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 04 Jun 2012 13:17:00 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: [RFC PATCH v1 4/6] PCI, ACPI: update PCI slot information when PCI
- hotplug event happens
-In-reply-to: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:59029 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752278Ab2FKWv1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 18:51:27 -0400
+Received: by lbbgm6 with SMTP id gm6so3187835lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 15:51:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1338960416.7150.160.camel@pasglop>
+References: <4FBC4C86.9050206@jp.fujitsu.com> <1338960416.7150.160.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 11 Jun 2012 16:51:04 -0600
+Message-ID: <CAErSpo79RDid=4m+Q8FZxnhThQ9BAJo4HhtZ8ZQ5rGc1nmvH-w@mail.gmail.com>
+Subject: Re: [PATCH v2 0/2] Add pcibios_device_change_notifier
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alexander Chiang <achiang@hp.com>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-id: <1338787022-400-4-git-send-email-jiang.liu@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain
-References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On Tue, Jun 5, 2012 at 11:26 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2012-05-23 at 11:33 +0900, Hiroo Matsumoto wrote:
+>> This patchset is for PCI hotplug.
+>>
+>>
+>> pcibios_setup_bus_devices which sets DMA and IRQs of PCI device is called
+>> only when boot. DMA setting in probe for PCI driver, like dma_set_mask,
+>> does not work on powerpc platform. So it is need to set DMA and IRQs of
+>> PCI device when hotplug.
+>>
+>> 1. Moving pcibios_setup_bus_devices code to pcibios_device_change_notifier
+>>    which is registered to bus notifier in pcibios_init.
+>> 2. Removing caller and callee of pcibios_setup_bus_devices bus notifier
+>>    works instead of pcibios_setup_bus_devices.
+>> 3. Using this bus notifier for microblaze because microblaze/PCI is similer
+>>    with powerpc/PCI.
+>
+> This makes me a bit nervous (that doesn't mean it's not right, but
+> we need some careful auditing & testing here, which I won't be
+> able to do until I'm back from leave). Mostly due to the change in when
+> we do the work.
+>
+> pcibios_fixup_bus() used to be called early on in the initial scan pass.
+>
+> Your code causes the code to be called -much- later when registering the
+> device with the device model. Are we 100% certain nothing will happen in
+> between that might rely on the stuff being setup already ? It might well
+> be ok, but I want us to triple check that.
 
-Currently the pci_slot driver doesn't update PCI slot information
-when PCI device hotplug event happens, which may cause memory leak
-and returning stale information to user.
+Here's my theory on this: we're setting up DMA and IRQ stuff.  DMA and
+IRQ usage is device-specific, so the core can't do anything with them.
+ Only drivers know how to use them.  Drivers can't find the device
+until it's registered with the device model.  So it seems like it
+should be safe to move it later.  Subject to thinkos and testing in
+the real world, of course :)
 
-So hook the BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events to
-update PCI slot information when PCI hotplug event happens.
+> Now, if we are ok to do the setup that late (basically right before the
+> driver probe() routine gets called), would it make sense to simplify
+> things even further ... and do it from pcibios_enable_device() ? Thus
+> avoiding the notifier business completely or is that pushing it too
+> far ?
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/acpi/pci_slot.c |   84 +++++++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 78 insertions(+), 6 deletions(-)
+Kenji-san actually suggested using pcibios_enable_device() early on,
+and I'm the one who suggested the notifiers instead.  I think I
+suggested that because I was copying the amd_iommu_init_notifier()
+style.
 
-diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
-index e50e31a..22cc00e 100644
---- a/drivers/acpi/pci_slot.c
-+++ b/drivers/acpi/pci_slot.c
-@@ -32,6 +32,7 @@
- #include <linux/acpi.h>
- #include <acpi/acpi_bus.h>
- #include <acpi/acpi_drivers.h>
-+#include <linux/pci-acpi.h>
- #include <linux/dmi.h>
- 
- static bool debug;
-@@ -123,12 +124,7 @@ struct callback_args {
- /*
-  * register_slot
-  *
-- * Called once for each SxFy object in the namespace. Don't worry about
-- * calling pci_create_slot multiple times for the same pci_bus:device,
-- * since each subsequent call simply bumps the refcount on the pci_slot.
-- *
-- * The number of calls to pci_destroy_slot from unregister_slot is
-- * symmetrical.
-+ * Called once for each SxFy object in the namespace.
-  */
- static acpi_status
- register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-@@ -145,6 +141,18 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	if (device < 0)
- 		return AE_OK;
- 
-+	/* Avoid duplicated records for the same slot */
-+	mutex_lock(&slot_list_lock);
-+	list_for_each_entry(slot, &slot_list, list) {
-+		pci_slot = slot->pci_slot;
-+		if (pci_slot && pci_slot->bus == pci_bus &&
-+		    pci_slot->number == device) {
-+			mutex_unlock(&slot_list_lock);
-+			return AE_OK;
-+		}
-+	}
-+	mutex_unlock(&slot_list_lock);
-+
- 	slot = kmalloc(sizeof(*slot), GFP_KERNEL);
- 	if (!slot) {
- 		err("%s: cannot allocate memory\n", __func__);
-@@ -354,17 +362,81 @@ static struct dmi_system_id acpi_pci_slot_dmi_table[] __initdata = {
- 	{}
- };
- 
-+static void acpi_pci_slot_notify_add(struct pci_dev *dev)
-+{
-+	acpi_handle handle;
-+	struct callback_args context;
-+
-+	if (!dev->subordinate)
-+		return;
-+
-+	handle = DEVICE_ACPI_HANDLE(&dev->dev);
-+	context.root_handle = acpi_find_root_bridge_handle(dev);
-+	if (handle && context.root_handle) {
-+		context.pci_bus = dev->subordinate;
-+		context.user_function = register_slot;
-+		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
-+				    register_slot, NULL, &context, NULL);
-+	}
-+}
-+
-+static void acpi_pci_slot_notify_del(struct pci_dev *dev)
-+{
-+	struct acpi_pci_slot *slot, *tmp;
-+	struct pci_bus *bus = dev->subordinate;
-+
-+	if (!bus)
-+		return;
-+
-+	mutex_lock(&slot_list_lock);
-+	list_for_each_entry_safe(slot, tmp, &slot_list, list) {
-+		if (slot->pci_slot && slot->pci_slot->bus == bus) {
-+			list_del(&slot->list);
-+			pci_destroy_slot(slot->pci_slot);
-+			put_device(&bus->dev);
-+			kfree(slot);
-+		}
-+	}
-+	mutex_unlock(&slot_list_lock);
-+}
-+
-+static int acpi_pci_slot_notify_fn(struct notifier_block *nb,
-+				   unsigned long event, void *data)
-+{
-+	struct device *dev = data;
-+
-+	switch (event) {
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		acpi_pci_slot_notify_add(to_pci_dev(dev));
-+		break;
-+	case BUS_NOTIFY_DEL_DEVICE:
-+		acpi_pci_slot_notify_del(to_pci_dev(dev));
-+		break;
-+	default:
-+		return NOTIFY_DONE;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block acpi_pci_slot_notifier = {
-+	.notifier_call = &acpi_pci_slot_notify_fn,
-+};
-+
- static int __init
- acpi_pci_slot_init(void)
- {
- 	dmi_check_system(acpi_pci_slot_dmi_table);
- 	acpi_pci_register_driver(&acpi_pci_slot_driver);
-+	bus_register_notifier(&pci_bus_type, &acpi_pci_slot_notifier);
-+
- 	return 0;
- }
- 
- static void __exit
- acpi_pci_slot_exit(void)
- {
-+	bus_unregister_notifier(&pci_bus_type, &acpi_pci_slot_notifier);
- 	acpi_pci_unregister_driver(&acpi_pci_slot_driver);
- }
- 
--- 
-1.7.1
+But I now think that might have been a mistake.  Notifiers are
+definitely more complicated, and a pcibios_*() hook seems
+straightforward.  It could be in pcibios_enable_device(), though we
+only need it to be called once, and the enable_device() path may be
+called many times, e.g., every time a driver claims it.  My new vote
+is a pcibios_device_add(), with an empty weak definition in
+drivers/pci, and a non-empty definition for microblaze and powerpc.
 
+> Also you seem to add:
+>
+> +               /* Setup OF node pointer in the device */
+> +               dev->dev.of_node = pci_device_to_OF_node(dev);
+>
+> This shouldn't be needed anymore, the device node should be setup by the
+> core nowadays. Is this just a remnant of you rebasing an old patch or do
+> you have a good reason to add this statement ?
 
+It sounds like you want to remove this line in any case, so I'll wait
+for updated patches.
+
+Bjorn
