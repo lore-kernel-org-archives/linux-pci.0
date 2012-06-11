@@ -1,109 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:41904 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483Ab2FKHJb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 03:09:31 -0400
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 11 Jun 2012 12:39:28 +0530
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5B79QCv10486020
-	for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 12:39:26 +0530
-Received: from d28av01.in.ibm.com (loopback [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5BCd1NP009138
-	for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 18:09:01 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+Received: from plane.gmane.org ([80.91.229.3]:43561 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750988Ab2FKTdJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jun 2012 15:33:09 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1SeAMM-0000WY-74
+	for linux-pci@vger.kernel.org; Mon, 11 Jun 2012 21:33:06 +0200
+Received: from dsl001-168-162.bos1.dsl.speakeasy.net ([72.1.168.162])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 21:33:06 +0200
+Received: from tkcarr03873 by dsl001-168-162.bos1.dsl.speakeasy.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 21:33:06 +0200
 To: linux-pci@vger.kernel.org
-Cc: shangw@linux.vnet.ibm.com, Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH] pci: cleanup on confusing variable name for pci_create_root_bus
-Date: Mon, 11 Jun 2012 15:09:18 +0800
-Message-Id: <1339398558-2562-1-git-send-email-weiyang@linux.vnet.ibm.com>
+From: Tom Carr <tkcarr03873@gmail.com>
+Subject: Re: PCIe rescan not working
+Date: Mon, 11 Jun 2012 19:32:56 +0000 (UTC)
+Message-ID: <loom.20120611T205954-871@post.gmane.org>
+References: <loom.20120607T194858-986@post.gmane.org> <CAE9FiQWau+ko4JiEEjM=2xSH_7FPBr_ZYOm8YGpin2p97=12PQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since there are serverail *bridge* in this function, it would be a little
-confusion.
 
-Rename the local variable *bridge* to *host_bridge* for easy reading.
+> please try:
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
----
- drivers/pci/probe.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+> echo 1 > /sys/bus/pci/devices/0000:00:01.2/remove
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5e1ca3c..2cc6eef 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1648,7 +1648,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
- 	int error;
--	struct pci_host_bridge *bridge;
-+	struct pci_host_bridge *host_bridge;
- 	struct pci_bus *b, *b2;
- 	struct device *dev;
- 	struct pci_host_bridge_window *window, *n;
-@@ -1657,8 +1657,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	char bus_addr[64];
- 	char *fmt;
- 
--	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
--	if (!bridge)
-+	host_bridge = kzalloc(sizeof(*host_bridge), GFP_KERNEL);
-+	if (!host_bridge)
- 		return NULL;
- 
- 	b = pci_alloc_bus();
-@@ -1704,8 +1704,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	b->number = b->secondary = bus;
- 
--	bridge->bus = b;
--	INIT_LIST_HEAD(&bridge->windows);
-+	host_bridge->bus = b;
-+	INIT_LIST_HEAD(&host_bridge->windows);
- 
- 	if (parent)
- 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
-@@ -1714,7 +1714,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	/* Add initial resources to the bus */
- 	list_for_each_entry_safe(window, n, resources, list) {
--		list_move_tail(&window->list, &bridge->windows);
-+		list_move_tail(&window->list, &host_bridge->windows);
- 		res = window->res;
- 		offset = window->offset;
- 		pci_bus_add_resource(b, res, 0);
-@@ -1732,7 +1732,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	}
- 
- 	down_write(&pci_bus_sem);
--	list_add_tail(&bridge->list, &pci_host_bridges);
-+	list_add_tail(&host_bridge->list, &pci_host_bridges);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
- 
-@@ -1742,7 +1742,7 @@ class_dev_reg_err:
- 	device_unregister(dev);
- dev_reg_err:
- 	down_write(&pci_bus_sem);
--	list_del(&bridge->list);
-+	list_del(&host_bridge->list);
- 	list_del(&b->node);
- 	up_write(&pci_bus_sem);
- err_out:
-@@ -1750,7 +1750,7 @@ err_out:
- err_dev:
- 	kfree(b);
- err_bus:
--	kfree(bridge);
-+	kfree(host_bridge);
- 	return NULL;
- }
- 
--- 
-1.7.4.1
+> before
+
+> echo 1 > /sys/bus/pci/rescan
+
+>than should work.
+
+Yinghai, sorry about the direct email on Friday, I tried to reply back to the
+newsgroup but the send kept failing. Your suggestion worked but only if there
+were no drivers attached to the endpoints. If I load the driver for the endpoint
+at bus 6.0 and 9.0, then load the empty FPGA at bus 8.0, which is off of 4.8,
+and write 1 to /sys/bus/pci/remove the system crashes. Is there a 
+requirement that all down stream devices be removed? I could not find any such
+requirement in any documentation. Here is the most of the stack trace.
+
+kernel BUG at /mnt/disk2/home/tcarr/work-ubuntu-12.4-patch/drivers/pci/msi.c
+:316!
+invalid opcode: 0000 [#1] SMP
+Modules linked in: bdsfpga(P) bnep rfcomm bluetooth snd_hda_codec_realtek 
+ftdi_sio ppdev snd_hda_intel snd_hda_codec snd_hwdep snd_pcm psmouse serio_raw 
+parport_pc snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq i915 joydev 
+snd_timer snd_seq_device mac_hid usbserial drm_kms_helper snd drm mei(C) 
+i2c_algo_bit video soundcore snd_page_alloc lp parport usbhid hid e1000e 
+floppy
+
+Pid: 74, comm: kworker/u:5 Tainted: P         C O 3.2.0-25-generic-pae #40 To 
+be filled by O.E.M. To be filled by O.E.M./To be filled by O.E.M.
+EIP: 0060:[<c12e28bc>] EFLAGS: 00010286 CPU: 2
+EIP is at free_msi_irqs+0xec/0xf0
+EAX: ea9968c0 EBX: ea996dc0 ECX: fffffffa EDX: 00000000
+ESI: 00000000 EDI: 00000001 EBP: f6c4bec4 ESP: f6c4beb0
+DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+Process kworker/u:5 (pid: 74, ti=f6c4a000 task=f6c58000 task.ti=f6c4a000)
+Stack:
+ f7777800 f7777dc4 00000000 f7777800 ef71f080 f6c4becc c12e39cd f6c4bedc
+ c12cce21 f7764e14 f7776800 f6c4beec c12cce91 f7764e00 f7776800 f6c4befc
+ c12ccddf f7764414 f7774000 f6c4bf0c c12cce91 f7764400 f7774000 f6c4bf1c
+Call Trace:
+ [<c12e39cd>] msi_remove_pci_irq_vectors+0x2d/0x40
+ [<c12cce21>] pci_remove_bus_device+0x61/0xa0
+ [<c12cce91>] pci_remove_behind_bridge+0x31/0x50
+ [<c12ccddf>] pci_remove_bus_device+0x1f/0xa0
+ [<c12cce91>] pci_remove_behind_bridge+0x31/0x50
+ [<c12ccddf>] pci_remove_bus_device+0x1f/0xa0
+ [<c12cce91>] pci_remove_behind_bridge+0x31/0x50
+ [<c12ccddf>] pci_remove_bus_device+0x1f/0xa0
+ [<c12d30bd>] remove_callback+0x1d/0x30
+ [<c11a5ec1>] sysfs_schedule_callback_work+0x11/0x60
+ [<c1074d41>] process_one_work+0x101/0x3a0
+ [<c11a5eb0>] ? sysfs_schedule_callback+0x1e0/0x1e0
+ [<c1075804>] worker_thread+0x124/0x2d0
+ [<c10756e0>] ? manage_workers.isra.27+0x110/0x110
+ [<c107962d>] kthread+0x6d/0x80
+ [<c10795c0>] ? flush_kthread_worker+0x80/0x80
+ [<c15b087e>] kernel_thread_helper+0x6/0x10
+
+If you want to see the whole stack trace, can you tell me what the format of
+the return email should be so I can send an attachement.
+
+
+
 
