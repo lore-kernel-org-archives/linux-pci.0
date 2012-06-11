@@ -1,47 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:63074 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755829Ab2FNKZb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jun 2012 06:25:31 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-Date: Thu, 14 Jun 2012 10:25:09 +0000
-Cc: linux-arm-kernel@lists.infradead.org,
-	Mitch Bradley <wmb@firmworks.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <201206132021.09774.arnd@arndb.de> <20120614083719.GC31283@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120614083719.GC31283@avionic-0098.mockup.avionic-design.de>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:33607 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424Ab2FKVlt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 17:41:49 -0400
+Message-ID: <4FD6661A.1060407@wwwdotorg.org>
+Date: Mon, 11 Jun 2012 15:41:46 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201206141025.09325.arnd@arndb.de>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v2 09/10] ARM: tegra: harmony: Initialize PCIe from DT
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-10-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1339427118-32263-10-git-send-email-thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 14 June 2012, Thierry Reding wrote:
-> > 
-> > I believe you will need an "interrupt-map" property here, to map the host
-> > interrupts to the INTA-INTD lines of the attached devices.
->
-> Legacy interrupts are something I cannot test at all because I have no
-> hardware that supports them.
+On 06/11/2012 09:05 AM, Thierry Reding wrote:
+> With the device tree support in place, probe the PCIe controller from
+> the device tree and remove the corresponding workaround in the board
+> file.
 
-Hmm, I thought all PCIe hardware has to support them when you do not
-enable MSI. What hardware do you have then?
+> diff --git a/arch/arm/boot/dts/tegra-harmony.dts b/arch/arm/boot/dts/tegra-harmony.dts
 
-> > I'm not sure whether we want to have a device_type="pciex" property here.
-> > powerpc and sparc seem to use that information, to distinguish a pcie
-> > bus from pci or cardbus.
-> 
-> That'd be rather useless information given that the Tegra is unlikely to
-> support either PCI or CardBus at some point.
+> +	pci_vdd_reg: fixedregulator@0 {
 
-But the generic code does not know that.
+I think that'd usually just be "regulator@0".
 
-	Arnd
+If you need the "@0" part to differentiate between multiple regulators,
+the node needs a reg property too:
+
+	reg = <0 0>;
+
+although then I wonder about putting the regulator under the root node,
+since the address wouldn't really make sense...
