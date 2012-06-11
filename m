@@ -1,498 +1,272 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11833 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753490Ab2FKCrW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 10 Jun 2012 22:47:22 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Zheng Yan <zheng.z.yan@intel.com>
-Subject: [PATCH -v5 3/3] PCIe, PM, Add PCIe runtime D3cold support
-Date: Mon, 11 Jun 2012 10:47:13 +0800
-Message-Id: <1339382833-7928-4-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1339382833-7928-1-git-send-email-ying.huang@intel.com>
-References: <1339382833-7928-1-git-send-email-ying.huang@intel.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:56231 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755589Ab2FKPFk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 11:05:40 -0400
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Date: Mon, 11 Jun 2012 17:05:15 +0200
+Message-Id: <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds runtime D3cold support to PCIe bus.  D3cold is the
-deepest power saving state for PCIe devices.  Where the main PCIe link
-will be powered off totally, so before the PCIe main link is powered
-on again, you can not access the device, even the configuration space,
-which is still accessible in D3hot.  Because the main PCIe link is not
-available, the PCI PM registers can not be used to put device into/out
-of D3cold state, that will be done by platform logic such as ACPI
-_PR3.
+This commit adds support for instantiating the Tegra PCIe controller
+from a device tree.
 
-To support remote wake up in D3cold, aux power is supplied, and a
-side-band pin: WAKE# is used to notify remote wake up event, the pin
-is usually connected to platform logic such as ACPI GPE.  This is
-quite different with other power saving states, where remote wake up
-is notified via PME message through the PCIe main link.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 
-PCIe devices in plug-in slot usually has no direct platform logic, for
-example, there is usually no ACPI _PR3 for them.  The D3cold support
-for these devices can be done via the PCIe port connected to it.  When
-power on/off the PCIe port, the corresponding PCIe devices are powered
-on/off too.  And the remote wake up event from PCIe device will be
-notified to the corresponding PCIe port.
-
-The PCI subsystem D3cold support and corresponding ACPI platform
-support is implemented in the patch.  Including the support for PCIe
-devices in plug-in slot.
-
-For more information about PCIe D3cold and corresponding ACPI support,
-please refer to:
-
-- PCI Express Base Specification Revision 2.0
-- Advanced Configuration and Power Interface Specification Revision 5.0
-
-Originally-by: Zheng Yan <zheng.z.yan@intel.com>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
 ---
- drivers/pci/pci-acpi.c         |   23 ++++++--
- drivers/pci/pci-driver.c       |   10 +++
- drivers/pci/pci-sysfs.c        |   29 ++++++++++
- drivers/pci/pci.c              |  114 +++++++++++++++++++++++++++++++++++++----
- drivers/pci/pci.h              |    1 
- drivers/pci/pcie/portdrv_pci.c |   44 ++++++++++++++-
- include/linux/pci.h            |   16 ++++-
- 7 files changed, 215 insertions(+), 22 deletions(-)
+Changes in v2:
+- increase compile coverage by using the IS_ENABLED() macro
+- disable node by default
+---
+ .../devicetree/bindings/pci/tegra-pcie.txt         |   23 ++++
+ arch/arm/boot/dts/tegra20.dtsi                     |    9 ++
+ arch/arm/mach-tegra/pcie.c                         |  120 +++++++++++++++++++-
+ 3 files changed, 149 insertions(+), 3 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/tegra-pcie.txt
 
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -48,6 +48,12 @@ static void pci_acpi_wake_dev(acpi_handl
- 	if (event != ACPI_NOTIFY_DEVICE_WAKE || !pci_dev)
- 		return;
- 
-+	if (pci_dev->current_state == PCI_D3cold) {
-+		pci_wakeup_event(pci_dev);
-+		pm_runtime_resume(&pci_dev->dev);
-+		return;
-+	}
+diff --git a/Documentation/devicetree/bindings/pci/tegra-pcie.txt b/Documentation/devicetree/bindings/pci/tegra-pcie.txt
+new file mode 100644
+index 0000000..10bbc40
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/tegra-pcie.txt
+@@ -0,0 +1,23 @@
++NVIDIA Tegra PCIe controller
 +
- 	if (!pci_dev->pm_cap || !pci_dev->pme_support
- 	     || pci_check_pme_status(pci_dev)) {
- 		if (pci_dev->pme_poll)
-@@ -187,10 +193,13 @@ acpi_status pci_acpi_remove_pm_notifier(
- 
- static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
- {
--	int acpi_state;
-+	int acpi_state, d_max;
- 
--	acpi_state = acpi_pm_device_sleep_state(&pdev->dev, NULL,
--						ACPI_STATE_D3);
-+	if (pdev->no_d3cold)
-+		d_max = ACPI_STATE_D3_HOT;
-+	else
-+		d_max = ACPI_STATE_D3_COLD;
-+	acpi_state = acpi_pm_device_sleep_state(&pdev->dev, NULL, d_max);
- 	if (acpi_state < 0)
- 		return PCI_POWER_ERROR;
- 
-@@ -297,7 +306,13 @@ static void acpi_pci_propagate_run_wake(
- 
- static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
- {
--	if (dev->pme_interrupt)
-+	/*
-+	 * Per PCI Express Base Specification Revision 2.0 section
-+	 * 5.3.3.2 Link Wakeup, platform support is needed for D3cold
-+	 * waking up to power on the main link even if there is PME
-+	 * support for D3cold
-+	 */
-+	if (dev->pme_interrupt && !dev->runtime_d3cold)
- 		return 0;
- 
- 	if (!acpi_pm_device_run_wake(&dev->dev, enable))
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1019,10 +1019,13 @@ static int pci_pm_runtime_suspend(struct
- 	if (!pm || !pm->runtime_suspend)
- 		return -ENOSYS;
- 
-+	pci_dev->no_d3cold = false;
- 	error = pm->runtime_suspend(dev);
- 	suspend_report_result(pm->runtime_suspend, error);
- 	if (error)
- 		return error;
-+	if (!pci_dev->d3cold_allowed)
-+		pci_dev->no_d3cold = true;
- 
- 	pci_fixup_device(pci_fixup_suspend, pci_dev);
- 
-@@ -1044,6 +1047,7 @@ static int pci_pm_runtime_suspend(struct
- 
- static int pci_pm_runtime_resume(struct device *dev)
- {
-+	int rc;
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
-@@ -1054,7 +1058,11 @@ static int pci_pm_runtime_resume(struct
- 	__pci_enable_wake(pci_dev, PCI_D0, true, false);
- 	pci_fixup_device(pci_fixup_resume, pci_dev);
- 
--	return pm->runtime_resume(dev);
-+	rc = pm->runtime_resume(dev);
++Required properties:
++- compatible: "nvidia,tegra20-pcie"
++- reg: physical base address and length of the controller's registers
++- interrupts: the interrupt outputs of the controller
 +
-+	pci_dev->runtime_d3cold = false;
++Optional properties:
++- pex-clk-supply: supply voltage for internal reference clock
++- vdd-supply: power supply for controller (1.05V)
 +
-+	return rc;
- }
- 
- static int pci_pm_runtime_idle(struct device *dev)
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -28,6 +28,7 @@
- #include <linux/pci-aspm.h>
- #include <linux/slab.h>
- #include <linux/vgaarb.h>
-+#include <linux/pm_runtime.h>
- #include "pci.h"
- 
- static int sysfs_initialized;	/* = 0 */
-@@ -378,6 +379,31 @@ dev_bus_rescan_store(struct device *dev,
- 
- #endif
- 
-+#if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
-+static ssize_t d3cold_allowed_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	unsigned long val;
++Example:
 +
-+	if (strict_strtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
++	pci@80000000 {
++		compatible = "nvidia,tegra20-pcie",
++		reg = <0x80000000 0x400000   /* PCIe AFI registers */
++		       0x80400000 0x010000>; /* PCI I/O space */
++		interrupts = < 0 98 0x04    /* controller interrupt */
++		               0 99 0x04 >; /* MSI interrupt */
 +
-+	pdev->d3cold_allowed = !!val;
-+	pm_runtime_resume(dev);
-+
-+	return count;
-+}
-+
-+static ssize_t d3cold_allowed_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	return sprintf (buf, "%u\n", pdev->d3cold_allowed);
-+}
-+#endif
-+
- struct device_attribute pci_dev_attrs[] = {
- 	__ATTR_RO(resource),
- 	__ATTR_RO(vendor),
-@@ -402,6 +428,9 @@ struct device_attribute pci_dev_attrs[]
- 	__ATTR(remove, (S_IWUSR|S_IWGRP), NULL, remove_store),
- 	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_rescan_store),
- #endif
-+#if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
-+	__ATTR(d3cold_allowed, 0644, d3cold_allowed_show, d3cold_allowed_store),
-+#endif
- 	__ATTR_NULL,
- };
++		pex-clk-supply = <&ldo0_reg>;
++		vdd-supply = <&pcie_reg>;
++	};
+diff --git a/arch/arm/boot/dts/tegra20.dtsi b/arch/arm/boot/dts/tegra20.dtsi
+index fa56519..b212658 100644
+--- a/arch/arm/boot/dts/tegra20.dtsi
++++ b/arch/arm/boot/dts/tegra20.dtsi
+@@ -199,6 +199,15 @@
+ 		#size-cells = <0>;
+ 	};
  
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -622,7 +622,8 @@ static int pci_raw_set_power_state(struc
- 		dev_info(&dev->dev, "Refused to change power state, "
- 			"currently in D%d\n", dev->current_state);
- 
--	/* According to section 5.4.1 of the "PCI BUS POWER MANAGEMENT
-+	/*
-+	 * According to section 5.4.1 of the "PCI BUS POWER MANAGEMENT
- 	 * INTERFACE SPECIFICATION, REV. 1.2", a device transitioning
- 	 * from D3hot to D0 _may_ perform an internal reset, thereby
- 	 * going to "D0 Uninitialized" rather than "D0 Initialized".
-@@ -654,6 +655,16 @@ void pci_update_current_state(struct pci
- 	if (dev->pm_cap) {
- 		u16 pmcsr;
- 
-+		/*
-+		 * Configuration space is not accessible for device in
-+		 * D3cold, so just keep or set D3cold for safety
-+		 */
-+		if (dev->current_state == PCI_D3cold)
-+			return;
-+		if (state == PCI_D3cold) {
-+			dev->current_state = PCI_D3cold;
-+			return;
-+		}
- 		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
- 		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
- 	} else {
-@@ -694,8 +705,50 @@ static int pci_platform_power_transition
-  */
- static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
- {
--	if (state == PCI_D0)
-+	if (state == PCI_D0) {
- 		pci_platform_power_transition(dev, PCI_D0);
-+		/*
-+		 * Mandatory power management transition delays, see
-+		 * PCI Express Base Specification Revision 2.0 Section
-+		 * 6.6.1: Conventional Reset.  Do not delay for
-+		 * devices powered on/off by corresponding bridge,
-+		 * because have already delayed for the bridge.
-+		 */
-+		if (dev->runtime_d3cold) {
-+			msleep(dev->d3cold_delay);
-+			/*
-+			 * When powering on a bridge from D3cold, the
-+			 * whole hierarchy may be powered on into
-+			 * D0uninitialized state, resume them to give
-+			 * them a chance to suspend again
-+			 */
-+			pci_wakeup_bus(dev->subordinate);
-+		}
-+	}
-+}
-+
-+/**
-+ * __pci_dev_set_current_state - Set current state of a PCI device
-+ * @dev: Device to handle
-+ * @data: pointer to state to be set
-+ */
-+static int __pci_dev_set_current_state(struct pci_dev *dev, void *data)
-+{
-+	pci_power_t state = *(pci_power_t *)data;
-+
-+	dev->current_state = state;
-+	return 0;
-+}
-+
-+/**
-+ * __pci_bus_set_current_state - Walk given bus and set current state of devices
-+ * @bus: Top bus of the subtree to walk.
-+ * @state: state to be set
-+ */
-+static void __pci_bus_set_current_state(struct pci_bus *bus, pci_power_t state)
-+{
-+	if (bus)
-+		pci_walk_bus(bus, __pci_dev_set_current_state, &state);
- }
- 
- /**
-@@ -707,8 +760,15 @@ static void __pci_start_power_transition
-  */
- int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
- {
--	return state >= PCI_D0 ?
--			pci_platform_power_transition(dev, state) : -EINVAL;
-+	int ret;
-+
-+	if (state < PCI_D0)
-+		return -EINVAL;
-+	ret = pci_platform_power_transition(dev, state);
-+	/* Power off the bridge may power off the whole hierarchy */
-+	if (!ret && state == PCI_D3cold)
-+		__pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
- 
-@@ -731,9 +791,13 @@ int pci_set_power_state(struct pci_dev *
- {
- 	int error;
- 
--	/* bound the state we're entering */
--	if (state > PCI_D3hot)
-+	/* D3cold during system suspend/hibernate is not supported */
-+	if (!dev->runtime_d3cold && state > PCI_D3hot)
- 		state = PCI_D3hot;
-+
-+	/* bound the state we're entering */
-+	if (state > PCI_D3cold)
-+		state = PCI_D3cold;
- 	else if (state < PCI_D0)
- 		state = PCI_D0;
- 	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
-@@ -748,10 +812,15 @@ int pci_set_power_state(struct pci_dev *
- 
- 	/* This device is quirked not to be put into D3, so
- 	   don't put it in D3 */
--	if (state == PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
-+	if (state >= PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
- 		return 0;
- 
--	error = pci_raw_set_power_state(dev, state);
-+	/*
-+	 * To put device in D3cold, we put device into D3hot in native
-+	 * way, then put device into D3cold with platform ops
-+	 */
-+	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
-+					PCI_D3hot : state);
- 
- 	if (!__pci_complete_power_transition(dev, state))
- 		error = 0;
-@@ -1498,6 +1567,28 @@ void pci_pme_wakeup_bus(struct pci_bus *
- }
- 
- /**
-+ * pci_wakeup - Wake up a PCI device
-+ * @dev: Device to handle.
-+ * @ign: ignored parameter
-+ */
-+static int pci_wakeup(struct pci_dev *pci_dev, void *ign)
-+{
-+	pci_wakeup_event(pci_dev);
-+	pm_request_resume(&pci_dev->dev);
-+	return 0;
-+}
-+
-+/**
-+ * pci_wakeup_bus - Walk given bus and wake up devices on it
-+ * @bus: Top bus of the subtree to walk.
-+ */
-+void pci_wakeup_bus(struct pci_bus *bus)
-+{
-+	if (bus)
-+		pci_walk_bus(bus, pci_wakeup, NULL);
-+}
-+
-+/**
-  * pci_pme_capable - check the capability of PCI device to generate PME#
-  * @dev: PCI device to handle.
-  * @state: PCI state from which device will issue PME#.
-@@ -1791,12 +1882,16 @@ int pci_finish_runtime_suspend(struct pc
- 	if (target_state == PCI_POWER_ERROR)
- 		return -EIO;
- 
-+	dev->runtime_d3cold = target_state == PCI_D3cold;
-+
- 	__pci_enable_wake(dev, target_state, true, pci_dev_run_wake(dev));
- 
- 	error = pci_set_power_state(dev, target_state);
- 
--	if (error)
-+	if (error) {
- 		__pci_enable_wake(dev, target_state, true, false);
-+		dev->runtime_d3cold = false;
-+	}
- 
- 	return error;
- }
-@@ -1866,6 +1961,7 @@ void pci_pm_init(struct pci_dev *dev)
- 
- 	dev->pm_cap = pm;
- 	dev->d3_delay = PCI_PM_D3_WAIT;
-+	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
- 
- 	dev->d1_support = false;
- 	dev->d2_support = false;
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -70,6 +70,7 @@ extern void pci_update_current_state(str
- extern void pci_disable_enabled_device(struct pci_dev *dev);
- extern int pci_finish_runtime_suspend(struct pci_dev *dev);
- extern int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
-+extern void pci_wakeup_bus(struct pci_bus *bus);
- extern void pci_pm_init(struct pci_dev *dev);
- extern void platform_pci_wakeup_init(struct pci_dev *dev);
- extern void pci_allocate_cap_save_buffers(struct pci_dev *dev);
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -101,12 +101,48 @@ static int pcie_port_resume_noirq(struct
- }
- 
- #ifdef CONFIG_PM_RUNTIME
--static int pcie_port_runtime_pm(struct device *dev)
-+struct d3cold_info {
-+	bool no_d3cold;
-+	unsigned int d3cold_delay;
-+};
-+
-+static int pci_dev_d3cold_info(struct pci_dev *pdev, void *data)
-+{
-+	struct d3cold_info *info = data;
-+
-+	info->d3cold_delay = max_t(unsigned int, pdev->d3cold_delay,
-+				   info->d3cold_delay);
-+	if (pdev->no_d3cold)
-+		info->no_d3cold = true;
-+	return 0;
-+}
-+
-+static int pcie_port_runtime_suspend(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct d3cold_info d3cold_info = {
-+		.no_d3cold	= false,
-+		.d3cold_delay	= PCI_PM_D3_WAIT,
++	pci {
++		compatible = "nvidia,tegra20-pcie";
++		reg = <0x80000000 0x400000   /* PCIe AFI registers */
++		       0x80400000 0x010000>; /* PCI I/O space */
++		interrupts = < 0 98 0x04    /* controller interrupt */
++		               0 99 0x04 >; /* MSI interrupt */
++		status = "disable";
 +	};
 +
-+	/*
-+	 * If any subordinate device disable D3cold, we should not put
-+	 * the port into D3cold.  The D3cold delay of port should be
-+	 * the max of that of all subordinate devices.
-+	 */
-+	pci_walk_bus(pdev->subordinate, pci_dev_d3cold_info, &d3cold_info);
-+	pdev->no_d3cold = d3cold_info.no_d3cold;
-+	pdev->d3cold_delay = d3cold_info.d3cold_delay;
+ 	usb@c5000000 {
+ 		compatible = "nvidia,tegra20-ehci", "usb-ehci";
+ 		reg = <0xc5000000 0x4000>;
+diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
+index 3c8c953..f24923b 100644
+--- a/arch/arm/mach-tegra/pcie.c
++++ b/arch/arm/mach-tegra/pcie.c
+@@ -37,6 +37,8 @@
+ #include <linux/delay.h>
+ #include <linux/export.h>
+ #include <linux/msi.h>
++#include <linux/of.h>
++#include <linux/regulator/consumer.h>
+ 
+ #include <asm/sizes.h>
+ #include <asm/mach/irq.h>
+@@ -242,6 +244,9 @@ struct tegra_pcie_info {
+ 	struct clk		*pll_e;
+ 
+ 	struct tegra_pcie_msi	*msi;
++
++	struct regulator *pex_clk_supply;
++	struct regulator *vdd_supply;
+ };
+ 
+ static inline struct tegra_pcie_info *sys_to_pcie(struct pci_sys_data *sys)
+@@ -1194,6 +1199,99 @@ static int tegra_pcie_disable_msi(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static int tegra_pcie_dt_init(struct platform_device *pdev)
++{
++	struct tegra_pcie_info *pcie = platform_get_drvdata(pdev);
++	int err;
++
++	if (!IS_ERR_OR_NULL(pcie->vdd_supply)) {
++		err = regulator_enable(pcie->vdd_supply);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to enable VDD regulator: %d\n", err);
++			return err;
++		}
++	}
++
++	if (!IS_ERR_OR_NULL(pcie->pex_clk_supply)) {
++		err = regulator_enable(pcie->pex_clk_supply);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to enable pex-clk regulator: %d\n",
++				err);
++			return err;
++		}
++	}
++
 +	return 0;
 +}
 +
-+static int pcie_port_runtime_resume(struct device *dev)
++static int tegra_pcie_dt_exit(struct platform_device *pdev)
++{
++	struct tegra_pcie_info *pcie = platform_get_drvdata(pdev);
++	int err;
++
++	if (!IS_ERR_OR_NULL(pcie->pex_clk_supply)) {
++		err = regulator_disable(pcie->pex_clk_supply);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to disable pex-clk regulator: %d\n",
++				err);
++			return err;
++		}
++	}
++
++	if (!IS_ERR_OR_NULL(pcie->vdd_supply)) {
++		err = regulator_disable(pcie->vdd_supply);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to disable VDD regulator: %d\n", err);
++			return err;
++		}
++	}
++
++	return 0;
++}
++
++static struct tegra_pcie_pdata *tegra_pcie_parse_dt(struct platform_device *pdev)
++{
++	struct tegra_pcie_info *pcie = platform_get_drvdata(pdev);
++	struct device_node *node = pdev->dev.of_node;
++	struct tegra_pcie_pdata *pdata;
++	unsigned int i;
++
++	pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
++	if (!pdata)
++		return NULL;
++
++	pdata->init = tegra_pcie_dt_init;
++	pdata->exit = tegra_pcie_dt_exit;
++
++	if (of_find_property(node, "vdd-supply", NULL)) {
++		pcie->vdd_supply = regulator_get(&pdev->dev, "vdd");
++		if (IS_ERR_OR_NULL(pcie->vdd_supply))
++			return ERR_PTR(-EPROBE_DEFER);
++	}
++
++	if (of_find_property(node, "pex-clk-supply", NULL)) {
++		pcie->pex_clk_supply = regulator_get(&pdev->dev, "pex-clk");
++		if (IS_ERR_OR_NULL(pcie->pex_clk_supply))
++			return ERR_PTR(-EPROBE_DEFER);
++	}
++
++	for (i = 0; i < TEGRA_PCIE_MAX_PORTS; i++)
++		pdata->enable_ports[i] = true;
++
++	return pdata;
++}
++
++#ifdef CONFIG_OF
++static const struct of_device_id tegra_pcie_of_match[] = {
++	{ .compatible = "nvidia,tegra20-pcie", },
++	{ },
++};
++#endif
++
+ static int __devinit tegra_pcie_probe(struct platform_device *pdev)
  {
+ 	struct tegra_pcie_pdata *pdata = pdev->dev.platform_data;
+@@ -1202,9 +1300,6 @@ static int __devinit tegra_pcie_probe(struct platform_device *pdev)
+ 	struct hw_pci hw;
+ 	int err;
+ 
+-	if (!pdata->enable_ports[0] && !pdata->enable_ports[1])
+-		return -ENODEV;
+-
+ 	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+ 	if (!pcie)
+ 		return -ENOMEM;
+@@ -1212,6 +1307,20 @@ static int __devinit tegra_pcie_probe(struct platform_device *pdev)
+ 	platform_set_drvdata(pdev, pcie);
+ 	pcie->dev = &pdev->dev;
+ 
++	if (IS_ENABLED(CONFIG_OF)) {
++		if (!pdata && pdev->dev.of_node) {
++			pdata = tegra_pcie_parse_dt(pdev);
++			if (IS_ERR(pdata))
++				return PTR_ERR(pdata);
++		}
++	}
++
++	if (!pdata)
++		return -ENODEV;
++
++	if (!pdata->enable_ports[0] && !pdata->enable_ports[1])
++		return -ENODEV;
++
+ 	pcibios_min_mem = 0;
+ 
+ 	err = tegra_pcie_get_resources(pdev);
+@@ -1266,6 +1375,7 @@ static int __devinit tegra_pcie_probe(struct platform_device *pdev)
+ 
+ static int __devexit tegra_pcie_remove(struct platform_device *pdev)
+ {
++	struct tegra_pcie_info *pcie = platform_get_drvdata(pdev);
+ 	struct tegra_pcie_pdata *pdata = pdev->dev.platform_data;
+ 	int err;
+ 
+@@ -1285,6 +1395,9 @@ static int __devexit tegra_pcie_remove(struct platform_device *pdev)
+ 			return err;
+ 	}
+ 
++	regulator_put(pcie->pex_clk_supply);
++	regulator_put(pcie->vdd_supply);
++
  	return 0;
  }
- #else
--#define pcie_port_runtime_pm	NULL
-+#define pcie_port_runtime_suspend	NULL
-+#define pcie_port_runtime_resume	NULL
- #endif
  
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
-@@ -117,8 +153,8 @@ static const struct dev_pm_ops pcie_port
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
- 	.resume_noirq	= pcie_port_resume_noirq,
--	.runtime_suspend = pcie_port_runtime_pm,
--	.runtime_resume = pcie_port_runtime_pm,
-+	.runtime_suspend = pcie_port_runtime_suspend,
-+	.runtime_resume = pcie_port_runtime_resume,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -132,9 +132,10 @@ static inline const char *pci_power_name
- 	return pci_power_names[1 + (int) state];
- }
- 
--#define PCI_PM_D2_DELAY	200
--#define PCI_PM_D3_WAIT	10
--#define PCI_PM_BUS_WAIT	50
-+#define PCI_PM_D2_DELAY		200
-+#define PCI_PM_D3_WAIT		10
-+#define PCI_PM_D3COLD_WAIT	100
-+#define PCI_PM_BUS_WAIT		50
- 
- /** The pci_channel state describes connectivity between the CPU and
-  *  the pci device.  If some PCI bus between here and the pci device
-@@ -278,11 +279,18 @@ struct pci_dev {
- 	unsigned int	pme_poll:1;	/* Poll device's PME status bit */
- 	unsigned int	d1_support:1;	/* Low power state D1 is supported */
- 	unsigned int	d2_support:1;	/* Low power state D2 is supported */
--	unsigned int	no_d1d2:1;	/* Only allow D0 and D3 */
-+	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
-+	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
-+	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
- 	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
- 						   decoding during bar sizing */
- 	unsigned int	wakeup_prepared:1;
-+	unsigned int	runtime_d3cold:1;	/* whether go through runtime
-+						   D3cold, not set for devices
-+						   powered on/off by the
-+						   corresponding bridge */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
-+	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
- #ifdef CONFIG_PCIEASPM
- 	struct pcie_link_state	*link_state;	/* ASPM link state. */
+@@ -1292,6 +1405,7 @@ static struct platform_driver tegra_pcie_driver = {
+ 	.driver = {
+ 		.name = "tegra-pcie",
+ 		.owner = THIS_MODULE,
++		.of_match_table = of_match_ptr(tegra_pcie_of_match),
+ 	},
+ 	.probe = tegra_pcie_probe,
+ 	.remove = __devexit_p(tegra_pcie_remove),
+-- 
+1.7.10.4
+
