@@ -1,48 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:53195 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab2FOQzM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 12:55:12 -0400
-Received: by pbbrp8 with SMTP id rp8so5518160pbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2012 09:55:12 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v3 0/5] PCI: Prep for VFIO and IOMMU Groups
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, konrad.wilk@oracle.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Mon, 11 Jun 2012 09:26:42 -0600
+Message-ID: <20120611152021.25959.71601.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5BtQ3dmn4t==ByG+Y=Q7w+wwZ7sw+LJwkSxQG8bKuUzg@mail.gmail.com>
-References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
-	<1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
-	<CAErSpo5BtQ3dmn4t==ByG+Y=Q7w+wwZ7sw+LJwkSxQG8bKuUzg@mail.gmail.com>
-Date: Fri, 15 Jun 2012 09:55:11 -0700
-Message-ID: <CAE9FiQUOtdB3PMgmX8aSRYrinhJGWoUBZGii1aowDBLKTH_LJQ@mail.gmail.com>
-Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 15, 2012 at 8:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> But the code in the init path is ridiculously, embarrassingly complicated ...
->
-> I rest my case.  The current init path is unmaintainable.
->
-> I'll wait for a v8 (or later) with fixes for the build issues
-> Fengguang found and Yinghai's ack.  It will make things somewhat
-> easier for me if you start with my topic/jiang-mmconfig-v7 branch.
+v3:
+ - Small change to device specific ACS check to allow quirk to
+   support yes/no/pass type functionality. (no change to other
+   patches and no trickle down through IOMMU series)
 
-yes. probe/free then install is not good.
+Bjorn, what's needed to get these in?  Thanks,
 
-should make __pci_mmcfg_init() to cache needed stuff for all path, and
-then consume stored
-entry just before scan root bus.
+Alex
 
-Thanks
+v2:
+ - Test that we're not given func 0 before doing lookup
+ - Fix duplicate ricoh quirk
+ - Rename pci_dma_source() to pci_get_dma_source() and make sure
+   we always take a reference for the returned pci_dev.  Add comment
 
-Yinghai
+These last two changes trickle down through the IOMMU series, so
+will generate a v2 there as well.  Thanks,
+
+Alex
+
+v1:
+These are the PCI related patches from the previously submitted
+v2 IOMMU Groups + VFIO series.  I've updated them with Don's
+comments and split them off on their own so that we can hopefully
+make some progress getting these in.  Patches are against 20120529
+linux-next tree.
+
+Patches 1 & 2 provide DMA quirking and ACS checking which will be
+used by IOMMU drivers supporting IOMMU groups.  Patch 3 enables the
+set of pci user config access functions to be called from other
+modules, which will be used by VFIO-pci.  Patch 4 enables a common
+translation of pcibios errors into errno for returning to userspace,
+also to be used by VFIO-pci.  Patch 5 adds additional PCI register
+definitions so we can more easily parse config space for devices in
+VFIO-pci.
+
+These patches, as well as IOMMU group support and VFIO can be
+found in git here:
+
+git://github.com/awilliam/linux-vfio.git (iommu-group-vfio-next-20120529)
+
+Please consider these for 3.5, but I'll settle for any kind of next
+branch.  Thanks,
+
+Alex
+
+---
+
+Alex Williamson (5):
+      pci: Misc pci_reg additions
+      pci: Create common pcibios_err_to_errno
+      pci: export pci_user functions for use by other drivers
+      pci: Add ACS validation utility
+      pci: Add PCI DMA source ID quirk
+
+
+ drivers/pci/access.c                 |    6 +-
+ drivers/pci/pci.c                    |   69 +++++++++++++++++++++
+ drivers/pci/pci.h                    |    7 --
+ drivers/pci/quirks.c                 |   84 +++++++++++++++++++++++++
+ drivers/xen/xen-pciback/conf_space.c |    6 +-
+ include/linux/pci.h                  |   49 ++++++++++++++-
+ include/linux/pci_regs.h             |  113 ++++++++++++++++++++++++++++++----
+ 7 files changed, 309 insertions(+), 25 deletions(-)
