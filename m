@@ -1,65 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:54263 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759814Ab2FGRSy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Jun 2012 13:18:54 -0400
-Message-ID: <4FD0E27B.6060502@web.de>
-Date: Thu, 07 Jun 2012 19:18:51 +0200
-From: Jan Kiszka <jan.kiszka@web.de>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:62009 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711Ab2FKRnd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 13:43:33 -0400
+Received: by lbbgm6 with SMTP id gm6so2991392lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 10:43:31 -0700 (PDT)
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Andreas Hartmann <andihartmann@01019freenet.de>,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
-References: <20120606212241.6627.98371.stgit@bling.home>  <4FD047A7.6050602@01019freenet.de> <1339088741.26976.19.camel@ul30vt>
-In-Reply-To: <1339088741.26976.19.camel@ul30vt>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigEFD92275E50F2B896D89A424"
+In-Reply-To: <CAE9FiQWTP1PP6hcfJ=ru5J=_dLH+q5oy4-OEg-Ws-2xWkxyGLg@mail.gmail.com>
+References: <1338190380-5144-1-git-send-email-jiang.liu@huawei.com> <CAE9FiQWTP1PP6hcfJ=ru5J=_dLH+q5oy4-OEg-Ws-2xWkxyGLg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 11 Jun 2012 10:43:11 -0700
+Message-ID: <CAErSpo450AHHHm1PgCi+ELrhosuwGSg3BnX_Ff2v4dC1h-v_Pg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: export symbol pci_bus_sem to module
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Wu Fengguang <fengguang.wu@intel.com>,
+	Amos Kong <kongjianjun@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigEFD92275E50F2B896D89A424
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On 2012-06-07 19:05, Alex Williamson wrote:
-> On Thu, 2012-06-07 at 08:18 +0200, Andreas Hartmann wrote:
->> Hello Alex,
+On Fri, Jun 8, 2012 at 12:01 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, May 28, 2012 at 12:33 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+>> Changeset "9080648 PCI: acpiphp: remove all functions in slot,
+>> even without ACPI _EJx" introduces pci_bus_sem into the acpiphp
+>> driver, but pci_bus_sem hasn't been exported to modules yet.
+>> So export symbol pci_bus_sem to modules, otherwise the acpiphp
+>> driver can't be built as module any more.
 >>
->> what about a module parameter to achieve this behaviour manually by
->> the user without recompiling? I fear, there are much more candidates
->> out there needing this "feature".
->=20
-> Yeah, that's probably a good idea.  For debugging and letting users hav=
-e
-> a workaround rather than any kind of regular use.  I'll add a nointxmas=
-k
-> to vfio-pci with a description indicating that if it fixes a device to
-> report it for quirking.  Thanks,
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+>> ---
+>>  drivers/pci/search.c |    2 ++
+>>  1 files changed, 2 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+>> index 9d75dc8..e0c7a22 100644
+>> --- a/drivers/pci/search.c
+>> +++ b/drivers/pci/search.c
+>> @@ -15,6 +15,8 @@
+>>  #include "pci.h"
+>>
+>>  DECLARE_RWSEM(pci_bus_sem);
+>> +EXPORT_SYMBOL(pci_bus_sem);
+>> +
+>>  /*
+>>  * find the upstream PCIe-to-PCI bridge of a PCI device
+>>  * if the device is PCIE, return NULL
+>
+> Bjorn,
+>
+> can you please fold this one into
+>
+> 9080648:
+> PCI: acpiphp: remove all functions in slot, even without ACPI _EJx
+>
+> that commit now is in pci/for-3.6
 
-Isn't this controllable on a per-device base from userspace (or is this
-what you mean)? That would nicely align to qemu-kvm's pci-assign
-share_intx property (and may allow to map pci-assign's user-visible
-interface to a vfio backend one day).
+Yes, I'll fix this.  If you don't object, I'll make it
+EXPORT_SYMBOL_GPL().  I think we'll have more changes in the bus
+scan/remove paths, and it's possible we'll be able to un-export this
+in the future.
 
-Jan
-
-
---------------enigEFD92275E50F2B896D89A424
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk/Q4nsACgkQitSsb3rl5xRNewCgkhpnHN2gmRT09/Sf+Y2cWY4G
-DXQAoIUukE33nbaGynPV/cy8J3ypNXYT
-=WJb/
------END PGP SIGNATURE-----
-
---------------enigEFD92275E50F2B896D89A424--
+Bjorn
