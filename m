@@ -1,56 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 03/16] ia64/PCI: Factor 'pcibios_setup' out of ia64
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
-	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
-	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
-	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
-Date: Mon, 25 Jun 2012 21:31:17 -0600
-Message-ID: <20120626033116.16434.6957.stgit@amt.stowe>
-In-Reply-To: <20120626033045.16434.17412.stgit@amt.stowe>
-References: <20120626033045.16434.17412.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:51540 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752911Ab2FLA7s convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jun 2012 20:59:48 -0400
+Received: by lahd3 with SMTP id d3so3151811lah.19
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 17:59:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20120611152021.25959.71601.stgit@bling.home>
+References: <20120611152021.25959.71601.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 11 Jun 2012 18:59:25 -0600
+Message-ID: <CAErSpo434tDtnSOxB_REG2jFNrZL=aZERWTmmK-cdjqM4z6yWg@mail.gmail.com>
+Subject: Re: [PATCH v3 0/5] PCI: Prep for VFIO and IOMMU Groups
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
+	dwmw2@infradead.org, konrad.wilk@oracle.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI core provides a generic (__weak) 'pcibios_setup()' routine that
-can be used by all architectures as a default.  Drop ia64's architecture
-specific version in favor of that as it does not need to be over-ridden.
+On Mon, Jun 11, 2012 at 8:26 AM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> v3:
+>  - Small change to device specific ACS check to allow quirk to
+>   support yes/no/pass type functionality. (no change to other
+>   patches and no trickle down through IOMMU series)
+>
+> Bjorn, what's needed to get these in?  Thanks,
 
-No functional change.
+Sorry for the delay.  I applied these to my "next" branch (headed for
+3.6).  I didn't feel comfortable pushing them towards 3.5 since
+they're not bugfixes, and they haven't been in -next yet.
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
-
- arch/ia64/pci/pci.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
-
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 524df42..e51941f 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -496,15 +496,6 @@ pcibios_align_resource (void *data, const struct resource *res,
- 	return res->start;
- }
- 
--/*
-- * PCI BIOS setup, always defaults to SAL interface
-- */
--char * __init
--pcibios_setup (char *str)
--{
--	return str;
--}
--
- int
- pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
- 		     enum pci_mmap_state mmap_state, int write_combine)
-
+Bjorn
