@@ -1,46 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:45549 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570Ab2FFRmF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 13:42:05 -0400
-Date: Wed, 6 Jun 2012 18:42:02 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Khalid Aziz <khalid.aziz@hp.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-Message-ID: <20120606174202.GA8750@srcf.ucam.org>
-References: <20120427190033.GA17588@ldl.usa.hp.com>
- <20120606135009.GB1517@srcf.ucam.org>
- <1338999463.25761.630.camel@lyra>
- <20120606162703.GA6779@srcf.ucam.org>
- <1339003956.25761.667.camel@lyra>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56128 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132Ab2FLCwZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 22:52:25 -0400
+Received: by lbbgm6 with SMTP id gm6so57738lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 19:52:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1339003956.25761.667.camel@lyra>
+In-Reply-To: <20120601211619.20328.36769.stgit@amt.stowe>
+References: <20120601211619.20328.36769.stgit@amt.stowe>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 11 Jun 2012 19:52:03 -0700
+Message-ID: <CAErSpo5yZdr4dgqjO6O9PSi3XZXfSOHmjjJRemaqAfmpv5WREA@mail.gmail.com>
+Subject: Re: [PATCH 0/4] PCI: PCIe capability structure related cleanup/fixes
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 06, 2012 at 11:32:36AM -0600, Khalid Aziz wrote:
+On Fri, Jun 1, 2012 at 2:16 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> The following series introduces PCI Express 'capability structure'
+> related cleanup, fixes, and optimizations.
+>
+> Patch 1/4 changes pci_ltr_supported() to a static routine.
+>
+> Patch 2/4 removes redundant checking in various PCI Express features as
+> suggested by Bjorn Helgaas in
+> http://marc.info/?l=linux-pci&m=130463494319762&w=2
+>
+> There is a similar idiom in use that could be similarly be re-factored:
+>    if (!pci_is_pcie(dev))
+>        return;
+>
+>    pos = pci_find_ext_capability(dev, ...);
+>    if (!pos)
+>        return;
+>
+> At first it seemed incorrect to remove the redundant call of
+> pci_is_pcie() in these cases as a PCI or PCI-X (< 2.0) device may be
+> involved.  In such cases an "extended capability" list would not exist,
+> as it was not introduced until PCI-X 2.0, and accesses outside of the
+> device's configuration space would be attempted.  However, upon further
+> review of pci_find_ext_capability() it looks as if such accesses would
+> be handled correctly due to the short-circuiting logic involved -
+>
+>    if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
+>        return 0;
+>
+> As such, I'll entertain comments as to whether or not we should also
+> make similar removals of pci_is_pcie() in these cases.
+>
+> Patch 3/4 introduces pci_pcie_cap2() for use in v2 capability related
+> feature code.  The makeup of Express' capability structure varies
+> substantially between v1 and v2.
+>
+> There is still some redundancy in PCIe v2 capabilities checking related
+> to the Latency Tolerance Reporting (LTR) feature routines that likely
+> could be re-factored further; please feel free to respond with ideas.
+>
+> Patch 4/4 makes a minor optimization to the saving and restoring of
+> PCI Express capability structures.
+>
+> Seems like the same type of optimization could be done to remove the
+> 'if (pcie_cap_has_lnkctl(dev->pcie_type, flags))' check.  According to
+> section 7.8 "PCI Express Capability Structure" of the PCI Express 1.0a
+> specification:
+>
+>    "Figure 7-10 details allocation of register fields in the PCI
+>     Express Capability structure. The PCI Express Capabilities,
+>     Device Capabilities, Device Status/Control, Link Capabilities,
+>     and Link Status/Control registers are required for all PCI
+>     Express devices. Endpoints are not required to implement
+>     registers other than those listed above and terminate the
+>     capability structure."
+>
+> There may have been some early Express devices that did not properly
+> follow the specification which required the introduction of
+> 'pcie_cap_has_lnkctl()' so I did not make the additional optimization.
+> ---
+>
+> Myron Stowe (4):
+>      PCI: Remove redundant capabilities checking in pci_{save,restore}_pcie_state
+>      PCI: Add pci_pcie_cap2() check for PCIe feature capabilities >= v2
+>      PCI: Remove redundant checking in PCI Express capability routines
+>      PCI: make pci_ltr_supported static.
 
-> Do we agree that if device shutdown routine cleanly shuts down all I/O,
-> clearing PCI Bus Mster bit should be safe?
+I added Don's acks, made a couple minor changes he suggested, removed
+the static pci_ltr_supported() function declaration (unnecessary,
+AFAICS), and pushed these to:
 
-In the absence of hardware that dislikes the bus master bit ever being 
-disabled, yes. Do we know if hardware is ever tested in that situation?
+  http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/topic/stowe-cap-cleanup
 
-> If yes, then we only have to deal with broken devices. So the approach 
-> could be to disable Bus Master bit unless the device ID matches a 
-> blacklist which we update as we find broken devices. I really don't 
-> like the idea of maintaining blacklists in the kernel for such things 
-> but is that a more practical approach? If blacklist does not sound 
-> good, maybe we can ask drivers to tell PCI subsystem if they are not 
-> ok with clearing Bus Master bit and then PCI subsystem could skip 
-> those devices.
+If everything looks right to you, I'll merge it into "next" tomorrow.
+Thanks for doing this; I think it's some nice cleanup and will make
+things safer and easier to understand.
 
-Or we could just put responsibility on the drivers to ensure that the 
-hardware won't continue doing any DMA, either by shutting down the 
-engines or clearing the bit.
-
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Bjorn
