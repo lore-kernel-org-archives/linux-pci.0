@@ -1,107 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:39553 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751587Ab2FSNSL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:18:11 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v8 01/12] x86/PCI: split out pci_mmcfg_check_reserved() for code reuse
-Date: Tue, 19 Jun 2012 21:15:21 +0800
-Message-ID: <1340111732-6276-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
-References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:15492 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750858Ab2FLEAR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jun 2012 00:00:17 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH] PCI: Fix allnoconfig with PCI DMA source quirk
+To: bhelgaas@google.com, wfg@linux.intel.com
+Cc: linux-pci@vger.kernel.org
+Date: Mon, 11 Jun 2012 22:00:10 -0600
+Message-ID: <20120612035930.11801.98916.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split out pci_mmcfg_check_reserved() for code reuse, which will be used
-when supporting PCI host bridge hotplug.
+When CONFIG_PCI_QUIRKS is not defined we want to keep the reference
+counting the same for callers of pci_get_dma_source.  But I forgot to
+account for !CONFIG_PCI where we then need to make an inline for
+pci_get_dev.  This fixes it.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/x86/pci/mmconfig-shared.c |   51 +++++++++++++++++++--------------------
- 1 files changed, 25 insertions(+), 26 deletions(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 301e325..f799949 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
- 	return valid;
- }
- 
-+static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
-+					      int early)
-+{
-+	if (!early && !acpi_disabled) {
-+		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
-+			return 1;
-+		else
-+			printk(KERN_ERR FW_BUG PREFIX
-+			       "MMCONFIG at %pR not reserved in "
-+			       "ACPI motherboard resources\n",
-+			       &cfg->res);
-+	}
-+
-+	/* Don't try to do this check unless configuration
-+	   type 1 is available. how about type 2 ?*/
-+	if (raw_pci_ops)
-+		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
-+
-+	return 0;
-+}
-+
- static void __init pci_mmcfg_reject_broken(int early)
- {
- 	struct pci_mmcfg_region *cfg;
- 
- 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
--		int valid = 0;
--
--		if (!early && !acpi_disabled) {
--			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
--
--			if (valid)
--				continue;
--			else
--				printk(KERN_ERR FW_BUG PREFIX
--				       "MMCONFIG at %pR not reserved in "
--				       "ACPI motherboard resources\n",
--				       &cfg->res);
-+		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
-+			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
-+			free_all_mmcfg();
-+			return;
- 		}
--
--		/* Don't try to do this check unless configuration
--		   type 1 is available. how about type 2 ?*/
--		if (raw_pci_ops)
--			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
--
--		if (!valid)
--			goto reject;
- 	}
--
--	return;
--
--reject:
--	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
--	free_all_mmcfg();
- }
- 
- static int __initdata known_bridge;
--- 
-1.7.1
+ include/linux/pci.h |    3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 95479cd..35884f27 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1368,6 +1368,9 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+ static inline int pci_domain_nr(struct pci_bus *bus)
+ { return 0; }
+ 
++static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
++{ return NULL; }
++
+ #define dev_is_pci(d) (false)
+ #define dev_is_pf(d) (false)
+ #define dev_num_vf(d) (0)
 
