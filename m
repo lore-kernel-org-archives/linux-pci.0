@@ -1,107 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:30769 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759240Ab2FUJ40 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:56:26 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v9 01/11] x86/PCI: split out pci_mmcfg_check_reserved() for code reuse
-Date: Thu, 21 Jun 2012 17:36:53 +0800
-Message-ID: <1340271423-4352-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
-References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:50714 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753436Ab2FLRXM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 13:23:12 -0400
+Date: Tue, 12 Jun 2012 19:23:01 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-tegra@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
+Message-ID: <20120612172301.GB28010@avionic-0098.adnet.avionic-design.de>
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+ <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
+ <4FD660F9.7030807@wwwdotorg.org>
+ <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
+ <20120612061003.GC4040@avionic-0098.adnet.avionic-design.de>
+ <4FD762E6.2080906@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="oC1+HKm2/end4ao3"
+In-Reply-To: <4FD762E6.2080906@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split out pci_mmcfg_check_reserved() for code reuse, which will be used
-when supporting PCI host bridge hotplug.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/mmconfig-shared.c |   51 +++++++++++++++++++--------------------
- 1 files changed, 25 insertions(+), 26 deletions(-)
+--oC1+HKm2/end4ao3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 301e325..f799949 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
- 	return valid;
- }
- 
-+static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
-+					      int early)
-+{
-+	if (!early && !acpi_disabled) {
-+		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
-+			return 1;
-+		else
-+			printk(KERN_ERR FW_BUG PREFIX
-+			       "MMCONFIG at %pR not reserved in "
-+			       "ACPI motherboard resources\n",
-+			       &cfg->res);
-+	}
-+
-+	/* Don't try to do this check unless configuration
-+	   type 1 is available. how about type 2 ?*/
-+	if (raw_pci_ops)
-+		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
-+
-+	return 0;
-+}
-+
- static void __init pci_mmcfg_reject_broken(int early)
- {
- 	struct pci_mmcfg_region *cfg;
- 
- 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
--		int valid = 0;
--
--		if (!early && !acpi_disabled) {
--			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
--
--			if (valid)
--				continue;
--			else
--				printk(KERN_ERR FW_BUG PREFIX
--				       "MMCONFIG at %pR not reserved in "
--				       "ACPI motherboard resources\n",
--				       &cfg->res);
-+		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
-+			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
-+			free_all_mmcfg();
-+			return;
- 		}
--
--		/* Don't try to do this check unless configuration
--		   type 1 is available. how about type 2 ?*/
--		if (raw_pci_ops)
--			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
--
--		if (!valid)
--			goto reject;
- 	}
--
--	return;
--
--reject:
--	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
--	free_all_mmcfg();
- }
- 
- static int __initdata known_bridge;
--- 
-1.7.1
+* Stephen Warren wrote:
+> On 06/12/2012 12:10 AM, Thierry Reding wrote:
+> > * Thierry Reding wrote:
+> >> * Stephen Warren wrote:
+> >>> On 06/11/2012 09:05 AM, Thierry Reding wrote:
+> > [...]
+> >>>> +static int tegra_pcie_disable_msi(struct platform_device
+> >>>> *pdev)
+> >>>=20
+> >>> Should this free pcie->msi->pages?
+> >>=20
+> >> Yes it should. I actually mention making that change in the
+> >> changelog but in fact didn't.
+> >=20
+> > This is really moot because the driver cannot be built as a module
+> > currently because arch_setup_msi_irq() and arch_teardown_msi_irq()
+> > need to be built-in so tegra_pcie_disable_msi() will be called only
+> > just before the machine is shut down.
+> >=20
+> > Perhaps this is something that should be addressed? Or is it just
+> > not worth the effort?
+>=20
+> Well, if the driver provides a shutdown/removal path at all, it seems
+> like it should be complete. I assume it's trivial to free those pages?
 
+Yes, it's trivial and I'll definitely add it. What I was saying is that
+it doesn't matter really, unless something is done to allow the driver
+to be built as a module. It is also tedious to test the shutdown/removal
+for built-in drivers.
 
+Thierry
+
+--oC1+HKm2/end4ao3
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/XevUACgkQZ+BJyKLjJp/CuQCfYKsY1J1PQg6CsSzfUslv6raG
+IngAnjZ1sLDH0vNAQcy9uCStqQZKRzOF
+=sHu1
+-----END PGP SIGNATURE-----
+
+--oC1+HKm2/end4ao3--
