@@ -1,113 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:65325 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761253Ab2FVG5y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:57:54 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so3169265pbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:57:54 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v10 09/13] x86/PCI: simplify pci_mmcfg_late_insert_resources()
-Date: Fri, 22 Jun 2012 14:55:18 +0800
-Message-Id: <1340348122-29021-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
-References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+Received: from moutng.kundenserver.de ([212.227.126.171]:63221 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751338Ab2FLFsS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 01:48:18 -0400
+Date: Tue, 12 Jun 2012 07:48:11 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-tegra@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v2 09/10] ARM: tegra: harmony: Initialize PCIe from DT
+Message-ID: <20120612054811.GB4040@avionic-0098.adnet.avionic-design.de>
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+ <1339427118-32263-10-git-send-email-thierry.reding@avionic-design.de>
+ <4FD6661A.1060407@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="QKdGvSO+nmPlgiQ/"
+In-Reply-To: <4FD6661A.1060407@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
 
-Reduce redundant code to simplify pci_mmcfg_late_insert_resources().
+--QKdGvSO+nmPlgiQ/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/mmconfig-shared.c |   34 ++++++++--------------------------
- 1 file changed, 8 insertions(+), 26 deletions(-)
+* Stephen Warren wrote:
+> On 06/11/2012 09:05 AM, Thierry Reding wrote:
+> > With the device tree support in place, probe the PCIe controller from
+> > the device tree and remove the corresponding workaround in the board
+> > file.
+>=20
+> > diff --git a/arch/arm/boot/dts/tegra-harmony.dts b/arch/arm/boot/dts/te=
+gra-harmony.dts
+>=20
+> > +	pci_vdd_reg: fixedregulator@0 {
+>=20
+> I think that'd usually just be "regulator@0".
+>=20
+> If you need the "@0" part to differentiate between multiple regulators,
+> the node needs a reg property too:
+>=20
+> 	reg =3D <0 0>;
+>=20
+> although then I wonder about putting the regulator under the root node,
+> since the address wouldn't really make sense...
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 19fc42b..332fabd 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -26,7 +26,6 @@
- #define PREFIX "PCI: "
- 
- /* Indicate if the mmcfg resources have been placed into the resource table. */
--static int __initdata pci_mmcfg_resources_inserted;
- static bool pci_mmcfg_running_state;
- static bool pci_mmcfg_arch_init_failed;
- static DEFINE_MUTEX(pci_mmcfg_lock);
-@@ -373,18 +372,6 @@ static int __init pci_mmcfg_check_hostbridge(void)
- 	return !list_empty(&pci_mmcfg_list);
- }
- 
--static void __init pci_mmcfg_insert_resources(void)
--{
--	struct pci_mmcfg_region *cfg;
--
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		if (!cfg->res.parent)
--			insert_resource(&iomem_resource, &cfg->res);
--
--	/* Mark that the resources have been inserted. */
--	pci_mmcfg_resources_inserted = 1;
--}
--
- static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
- 						 void *data)
- {
-@@ -668,11 +655,7 @@ static void __init __pci_mmcfg_init(int early)
- 	if (pci_mmcfg_arch_init())
- 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
- 	else {
--		/*
--		 * Signal not to attempt to insert mmcfg resources because
--		 * the architecture mmcfg setup could not initialize.
--		 */
--		pci_mmcfg_resources_inserted = 1;
-+		free_all_mmcfg();
- 		pci_mmcfg_arch_init_failed = true;
- 	}
- }
-@@ -689,15 +672,12 @@ void __init pci_mmcfg_late_init(void)
- 
- static int __init pci_mmcfg_late_insert_resources(void)
- {
-+	struct pci_mmcfg_region *cfg;
-+
- 	pci_mmcfg_running_state = true;
- 
--	/*
--	 * If resources are already inserted or we are not using MMCONFIG,
--	 * don't insert the resources.
--	 */
--	if ((pci_mmcfg_resources_inserted == 1) ||
--	    (pci_probe & PCI_PROBE_MMCONF) == 0 ||
--	    list_empty(&pci_mmcfg_list))
-+	/* If we are not using MMCONFIG, don't insert the resources. */
-+	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
- 		return 1;
- 
- 	/*
-@@ -705,7 +685,9 @@ static int __init pci_mmcfg_late_insert_resources(void)
- 	 * marked so it won't cause request errors when __request_region is
- 	 * called.
- 	 */
--	pci_mmcfg_insert_resources();
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		if (!cfg->res.parent)
-+			insert_resource(&iomem_resource, &cfg->res);
- 
- 	return 0;
- }
--- 
-1.7.9.5
+Perhaps we should add a new "regulators" node under the root node to collect
+this kind of regulators that don't fit anywhere else. Looking at the code,
+something like this should work:
 
+	/ {
+		...
+
+		regulators {
+			compatible =3D "simple-bus";
+			#address-cells =3D <1>;
+			#size-cells =3D <0>;
+
+			pci_vdd_reg: regulator@0 {
+				reg =3D <0>;
+			};
+		};
+	};
+
+Thierry
+
+--QKdGvSO+nmPlgiQ/
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/W2BsACgkQZ+BJyKLjJp86AgCgsn2q8bEqIs31iBgl+n/BtA6C
+Yw4AnRO5T0MrQ5q5xZyWCjnDgfZGsuyb
+=JgXL
+-----END PGP SIGNATURE-----
+
+--QKdGvSO+nmPlgiQ/--
