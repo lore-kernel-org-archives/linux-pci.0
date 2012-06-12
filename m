@@ -1,58 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3647 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932224Ab2FUUYr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Jun 2012 16:24:47 -0400
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 2/9] PCI: release temporary reference in
-	__nv_msi_ht_cap_quirk()
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
-	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, linux-kernel@vger.kernel.org
-Date: Thu, 21 Jun 2012 14:24:29 -0600
-Message-ID: <20120621202429.16865.86563.stgit@amt.stowe>
-In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
-References: <20120621202415.16865.6226.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:60308 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753166Ab2FLNQP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 09:16:15 -0400
+Received: by dady13 with SMTP id y13so6854301dad.19
+        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 06:16:14 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: use name pci_release_host_bridge_dev() for host bridge device release fn
+Date: Tue, 12 Jun 2012 21:14:44 +0800
+Message-Id: <1339506884-21606-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__nv_msi_ht_cap_quirk() acquires a temporary reference via
-'pci_get_bus_and_slot()' that is never released.
+From: Jiang Liu <liuj97@gmail.com>
 
-This patch releases the temporary reference.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Rename pci_release_bus_bridge_dev() to pci_release_host_bridge_dev()
+in drivers/pci/probe.c for easy understanding.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
+ drivers/pci/probe.c |   26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
- drivers/pci/quirks.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 9c93558..1a7effa 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2541,15 +2541,18 @@ static void __devinit __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
- 			else
- 				nv_ht_enable_msi_mapping(dev);
- 		}
--		return;
-+		goto out;
- 	}
- 
- 	/* HT MSI is not enabled */
- 	if (found == 1)
--		return;
-+		goto out;
- 
- 	/* Host bridge is not to HT, disable HT MSI mapping on this device */
- 	ht_disable_msi_mapping(dev);
-+
-+out:
-+	pci_dev_put(host_bridge);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0840409..f62dd9b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -473,6 +473,18 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 	return bridge;
  }
  
- static void __devinit nv_msi_ht_cap_quirk_all(struct pci_dev *dev)
++static void pci_release_host_bridge_dev(struct device *dev)
++{
++	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
++
++	if (bridge->release_fn)
++		bridge->release_fn(bridge);
++
++	pci_free_resource_list(&bridge->windows);
++
++	kfree(bridge);
++}
++
+ static unsigned char pcix_bus_speed[] = {
+ 	PCI_SPEED_UNKNOWN,		/* 0 */
+ 	PCI_SPEED_66MHz_PCIX,		/* 1 */
+@@ -1172,18 +1184,6 @@ int pci_cfg_space_size(struct pci_dev *dev)
+ 	return PCI_CFG_SPACE_SIZE;
+ }
+ 
+-static void pci_release_bus_bridge_dev(struct device *dev)
+-{
+-	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
+-
+-	if (bridge->release_fn)
+-		bridge->release_fn(bridge);
+-
+-	pci_free_resource_list(&bridge->windows);
+-
+-	kfree(bridge);
+-}
+-
+ struct pci_dev *alloc_pci_dev(void)
+ {
+ 	struct pci_dev *dev;
+@@ -1658,7 +1658,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		goto err_out;
+ 
+ 	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_bus_bridge_dev;
++	bridge->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+ 	error = device_register(&bridge->dev);
+ 	if (error)
+-- 
+1.7.9.5
 
