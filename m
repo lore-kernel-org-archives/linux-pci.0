@@ -1,59 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:65325 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761253Ab2FVG6B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:58:01 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so3169265pbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:58:01 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v10 10/13] x86/PCI: get rid of redundant log messages
-Date: Fri, 22 Jun 2012 14:55:19 +0800
-Message-Id: <1340348122-29021-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
-References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 12 Jun 2012 08:20:00 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	benh@kernel.crashing.org, aik@ozlabs.ru, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+	dwmw2@infradead.org, david@gibson.dropbear.id.au
+Subject: Re: [PATCH v3 0/5] PCI: Prep for VFIO and IOMMU Groups
+Message-ID: <20120612062000.GA6932@8bytes.org>
+References: <20120611152021.25959.71601.stgit@bling.home>
+ <CAErSpo434tDtnSOxB_REG2jFNrZL=aZERWTmmK-cdjqM4z6yWg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAErSpo434tDtnSOxB_REG2jFNrZL=aZERWTmmK-cdjqM4z6yWg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Hi Bjorn,
 
-For each resource of a PCI host bridge, the arch code and PCI
-code log following messages:
-"pci_root PNP0A08:00: host bridge window [io 0x0000-0x03af]",
-"pci_bus 0000:00: root bus resource [io  0x0000-0x03af]"
+On Mon, Jun 11, 2012 at 06:59:25PM -0600, Bjorn Helgaas wrote:
+> On Mon, Jun 11, 2012 at 8:26 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > v3:
+> >  - Small change to device specific ACS check to allow quirk to
+> >   support yes/no/pass type functionality. (no change to other
+> >   patches and no trickle down through IOMMU series)
+> >
+> > Bjorn, what's needed to get these in?  Thanks,
+> 
+> Sorry for the delay.  I applied these to my "next" branch (headed for
+> 3.6).  I didn't feel comfortable pushing them towards 3.5 since
+> they're not bugfixes, and they haven't been in -next yet.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/acpi.c |    7 -------
- 1 file changed, 7 deletions(-)
+Great. Do you applied them directly to your next branch or do you have
+them in a seperate branch I can pull in to merge the IOMMU Groups
+patches on-top? The later would be really good :)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 912b54b..505acdd 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -314,13 +314,6 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
- 	}
- 
- 	info->res_num++;
--	if (addr.translation_offset)
--		dev_info(&info->bridge->dev, "host bridge window %pR "
--			 "(PCI address [%#llx-%#llx])\n",
--			 res, res->start - addr.translation_offset,
--			 res->end - addr.translation_offset);
--	else
--		dev_info(&info->bridge->dev, "host bridge window %pR\n", res);
- 
- 	return AE_OK;
- }
--- 
-1.7.9.5
+Regards,
+
+	Joerg
+
 
