@@ -1,65 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from info.physics.ubc.ca ([142.103.234.23]:42597 "EHLO
-	info.physics.ubc.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758191Ab2FAREl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2012 13:04:41 -0400
-Date: Fri, 1 Jun 2012 10:04:41 -0700 (PDT)
-From: Bill Unruh <unruh@physics.ubc.ca>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	bugzilla-daemon@bugzilla.kernel.org
-Subject: Re: [Bug 43331] Re: Bug on bootup of Linux kernel on Panasonic
- Toughbook S10
-In-Reply-To: <CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.1206011001330.26561@info>
-References: <Pine.LNX.4.64.1205311412210.11510@info>
- <CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:40815 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876Ab2FLJKI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 05:10:08 -0400
+Received: from albireo.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id 345641C00D7
+	for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 11:10:07 +0200 (CEST)
+Date: Tue, 12 Jun 2012 11:10:06 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PCIUTILS PATCH] Display whether LTR/OBFF are supported and
+ enabled
+Message-ID: <mj+md-20120612.090933.6448.albireo@ucw.cz>
+References: <1339149604-5653-1-git-send-email-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1339149604-5653-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On testing with the current kernel, running without the noapic seems to be
-working, so it might be OK. I will try it for a while and see if I get random
-crashes.
+Hello!
 
+> DEVCAP2 and DEVCTL2 capabilities contain information whether LTR and OBFF
+> are supported and enabled. Make sure this is displayed to user as well.
 
-On Fri, 1 Jun 2012, Bjorn Helgaas wrote:
+Thanks, applied.
 
-> On Thu, May 31, 2012 at 3:39 PM, Bill Unruh <unruh@physics.ubc.ca> wrote:
->> I am running Mageia 2 kernel 3.3.6-desktop586-2.mga2
->>
->> Every time I boot up I get the error messages
->> pci 0000:00:04.0: BAR 0: error updating (0xdfa00004 != 0xfed98004)
->
-> Thanks very much for this report.  I opened this bug report to help me
-> keep track of it: https://bugzilla.kernel.org/show_bug.cgi?id=43331
->
-> The message means that we tried to write address 0xdfa00000 to BAR 0
-> of device 00:04.0 (a "signal processing controller," whatever that
-> is), but when we read the BAR back, we read 0xfed98004 instead.
-> That's an interesting address because it looks a lot like a resource
-> of an ACPI PNP0c02 device:
->
->  system 00:0e: [mem 0xfed98000-0xfed9ffff] has been reserved
->  system 00:0e: Plug and Play ACPI device, IDs PNP0c02 (active)
->
-> You say your machine runs OK (with "noapic"), but I'm doubtful that
-> 00:04.0 is working -- it doesn't even seem to have a driver bound to
-> it.  I don't know what the device does, but if you're not using it,
-> it's not surprising that you wouldn't notice it being broken.
->
-> Can you attach the complete dmesg log to the bugzilla?  It will have
-> more details about other devices and the ranges from which we allocate
-> resources for PCI devices.
->
-> You mention that the machine is not reliable unless you use "noapic".
-> That sounds like a separate bug, but also something it would be good
-> to track down.
->
-
+				Have a nice fortnight
 -- 
-William G. Unruh   |  Canadian Institute for|     Tel: +1(604)822-3273
-Physics&Astronomy  |     Advanced Research  |     Fax: +1(604)822-5324
-UBC, Vancouver,BC  |   Program in Cosmology |     unruh@physics.ubc.ca
-Canada V6T 1Z1     |      and Gravity       |  www.theory.physics.ubc.ca/
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Next lecture on time travel will be held on previous Monday.
