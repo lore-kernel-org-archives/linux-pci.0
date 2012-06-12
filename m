@@ -1,91 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 11/16] sparc/PCI: Factor 'pcibios_setup()' out of sparc
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
-	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
-	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
-	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
-Date: Mon, 25 Jun 2012 21:32:12 -0600
-Message-ID: <20120626033212.16434.95081.stgit@amt.stowe>
-In-Reply-To: <20120626033045.16434.17412.stgit@amt.stowe>
-References: <20120626033045.16434.17412.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.8]:54922 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945Ab2FLGKP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 02:10:15 -0400
+Date: Tue, 12 Jun 2012 08:10:03 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-tegra@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
+Message-ID: <20120612061003.GC4040@avionic-0098.adnet.avionic-design.de>
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+ <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
+ <4FD660F9.7030807@wwwdotorg.org>
+ <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="IpbVkmxF4tDyP/Kb"
+In-Reply-To: <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI core provides a generic (__weak) 'pcibios_setup()' routine
-that can be used by all architectures as a default.  Drop sparc's
-architecture specific version in favor of that as it does not need to be
-over-ridden.
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+--IpbVkmxF4tDyP/Kb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- arch/sparc/kernel/leon_pci.c |    8 --------
- arch/sparc/kernel/pci.c      |    5 -----
- arch/sparc/kernel/pcic.c     |    8 --------
- 3 files changed, 0 insertions(+), 21 deletions(-)
+* Thierry Reding wrote:
+> * Stephen Warren wrote:
+> > On 06/11/2012 09:05 AM, Thierry Reding wrote:
+[...]
+> > > +static int tegra_pcie_disable_msi(struct platform_device *pdev)
+> >=20
+> > Should this free pcie->msi->pages?
+>=20
+> Yes it should. I actually mention making that change in the changelog but
+> in fact didn't.
 
-diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-index 19f5605..21dcda7 100644
---- a/arch/sparc/kernel/leon_pci.c
-+++ b/arch/sparc/kernel/leon_pci.c
-@@ -91,14 +91,6 @@ void __devinit pcibios_fixup_bus(struct pci_bus *pbus)
- 	}
- }
- 
--/*
-- * Other archs parse arguments here.
-- */
--char * __devinit pcibios_setup(char *str)
--{
--	return str;
--}
--
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index fdaf218..3e7fba0 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -747,11 +747,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--char * __devinit pcibios_setup(char *str)
--{
--	return str;
--}
--
- /* Platform support for /proc/bus/pci/X/Y mmap()s. */
- 
- /* If the user uses a host-bridge as the PCI device, he may use
-diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
-index ded3f60..97eb529 100644
---- a/arch/sparc/kernel/pcic.c
-+++ b/arch/sparc/kernel/pcic.c
-@@ -767,14 +767,6 @@ static void watchdog_reset() {
- }
- #endif
- 
--/*
-- * Other archs parse arguments here.
-- */
--char * __devinit pcibios_setup(char *str)
--{
--	return str;
--}
--
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
+This is really moot because the driver cannot be built as a module currently
+because arch_setup_msi_irq() and arch_teardown_msi_irq() need to be built-in
+so tegra_pcie_disable_msi() will be called only just before the machine is
+shut down.
 
+Perhaps this is something that should be addressed? Or is it just not worth
+the effort?
+
+Thierry
+
+--IpbVkmxF4tDyP/Kb
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/W3TsACgkQZ+BJyKLjJp9/VgCfZm9qMDCV84zV85C/EAYGH8zu
+M7EAnifJC7pp+0zesScrgYsH5wz+aVX9
+=8cnZ
+-----END PGP SIGNATURE-----
+
+--IpbVkmxF4tDyP/Kb--
