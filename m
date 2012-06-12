@@ -1,109 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:48292 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759237Ab2FUJ7N convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:7:1>);
-	Thu, 21 Jun 2012 05:59:13 -0400
-Message-Id: <4FE30CBB020000780008B06B@nat28.tlf.novell.com>
-Date: Thu, 21 Jun 2012 10:59:55 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Wei Wang" <wei.wang2@amd.com>,
-	"Jesse Barnes" <jbarnes@virtuousgeek.org>, <ebiederm@xmission.com>
-Cc: "Sherry Hurwitz" <sherry.hurwitz@amd.com>,
-	"Andrew Cooper" <andrew.cooper3@citrix.com>,
-	"Jeremy Fitzhardinge" <jeremy@goop.org>, <stable@kernel.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH] PCI/MSI: don't disable AMD IOMMU MSI on Xen dom0 (was:
- Re: [PATCH V2] amd iommu: re-enable iommu msi if dom0 disabled it)
-References: <4FD72FE4.80009@amd.com>
- <4FD778C802000078000897EF@nat28.tlf.novell.com>
- <4FD76976.2020203@citrix.com>
- <4FD78DE6020000780008986D@nat28.tlf.novell.com> <4FD9D559.9050206@amd.com>
- <4FDA0ECD0200007800089FEA@nat28.tlf.novell.com> <4FDA0028.3090609@amd.com>
-In-Reply-To: <4FDA0028.3090609@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:46305 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753350Ab2FLRIL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 13:08:11 -0400
+Received: by lbbgm6 with SMTP id gm6so542764lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 10:08:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339142492-13625-5-git-send-email-xudong.hao@intel.com>
+References: <1339142492-13625-1-git-send-email-xudong.hao@intel.com> <1339142492-13625-5-git-send-email-xudong.hao@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 12 Jun 2012 11:07:48 -0600
+Message-ID: <CAErSpo6VuffgjUh3nguFH3E8fPmwA2Hj+C+pXZsYN7h_C9M5Kg@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: save/restore max Latency Value for device LTR
+To: Xudong Hao <xudong.hao@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, avi@redhat.com, alex.williamson@redhat.com,
+	ddutile@redhat.com, myron.stowe@redhat.com, xiantao.zhang@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 14.06.12 at 17:15, Wei Wang <wei.wang2@amd.com> wrote:
-> Am 14.06.2012 16:18, schrieb Jan Beulich:
->> Have you at all considered getting this fixed on the kernel side?
->> As I don't have direct access to any AMD IOMMU capable
->> system - can one, other than by enumerating the respective
->> PCI IDs or reading ACPI tables, reasonably easily identify the
->> devices in question (e.g. via vendor/class/sub-class or some
->> such)? That might permit skipping those in the offending kernel
->> code...
-> 
-> AMD IOMMUs (both v1 and v2) uses class id 08 (System Base Peripheral) 
-> and sub class id 06 (IOMMU). Combined with PCI_VENDEOR_ID_AMD, this 
-> should be enough to identify amd iommu device. I could send you a kernel 
-> patch for review using this approach. I would believe that fixing this 
-> issue in 4.2, no matter how, is really important for amd iommu.
+On Fri, Jun 8, 2012 at 2:01 AM, Xudong Hao <xudong.hao@intel.com> wrote:
+> LTR: Save Max snoop/no-snoop Latency Value in pci_save_pcie_state, and restore
+> them in pci_restore_pcie_state.
+>
+> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+> ---
+>  drivers/pci/pci.c   |   71 ++++++++++++++++++++++++++++++++++++++++++++++++---
+>  drivers/pci/probe.c |    5 +++-
+>  2 files changed, 71 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 35127c1..7172f15 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -912,6 +912,54 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
+>                pci_write_config_word(dev, pos + PCI_EXP_SLTCTL2, cap[i++]);
+>  }
+>
+> +#define PCI_LTR_SAVE_REGS      2
+> +
+> +static int pci_save_ltr_value(struct pci_dev *dev)
+> +{
+> +       int i = 0, pos;
+> +       struct pci_cap_saved_state *save_state;
+> +       u16 *cap;
+> +       u16 ctrl;
+> +
+> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
+> +       if (!pos)
+> +               return -ENOTSUPP;
+> +
+> +       /* Check if LTR is eanbled before save value */
+> +       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &ctrl);
 
-As you didn't come forward with anything, here's my first
-take on this:
+This is totally broken.  "pos" is the LTR Extended Capability (spec
+section 7.25).  PCI_EXP_DEVCTL2 is a field in the PCI Express
+Capability structure (section 7.8).
 
-Commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0 ("PCI: msi: Disable msi
-interrupts when we initialize a pci device") caused MSI to get disabled
-on Xen Dom0 despite it having got turned on purposefully by the
-hypervisor. As an immediate band aid, suppress the disabling in this
-specific case.
-
-I don't think, however, that either the original change or this fix are
-really appropriate. The original fix, besides leaving aside the
-presence of a hypervisor like Xen, doesn't deal with all possible
-cases (in particular it has no effect if the secondary kernel was built
-with CONFIG_PCI_MSI unset). And taking into account a hypervisor like
-Xen, the logic like this should probably be skipped altogether (i.e. it
-should be entirely left to the hypervisor, being the entity in control
-of IRQs).
-
-Signed-off-by: Jan Beulich <jbeulich@suse.com>
-Cc: stable@kernel.org 
-
----
- drivers/pci/msi.c       |    7 +++++++
- include/linux/pci_ids.h |    1 +
- 2 files changed, 8 insertions(+)
-
---- 3.5-rc3/drivers/pci/msi.c
-+++ 3.5-rc3-xen-pci-msi-no-iommu-disable/drivers/pci/msi.c
-@@ -20,6 +20,7 @@
- #include <linux/errno.h>
- #include <linux/io.h>
- #include <linux/slab.h>
-+#include <xen/xen.h>
- 
- #include "pci.h"
- #include "msi.h"
-@@ -1022,7 +1023,13 @@ void pci_msi_init_pci_dev(struct pci_dev
- 	/* Disable the msi hardware to avoid screaming interrupts
- 	 * during boot.  This is the power on reset default so
- 	 * usually this should be a noop.
-+	 * But on a Xen host don't do this for IOMMUs which the hypervisor
-+	 * is in control of (and hence has already enabled on purpose).
- 	 */
-+	if (xen_initial_domain()
-+	    && (dev->class >> 8) == PCI_CLASS_SYSTEM_IOMMU
-+	    && dev->vendor == PCI_VENDOR_ID_AMD)
-+		return;
- 	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
- 	if (pos)
- 		msi_set_enable(dev, pos, 0);
---- 3.5-rc3/include/linux/pci_ids.h
-+++ 3.5-rc3-xen-pci-msi-no-iommu-disable/include/linux/pci_ids.h
-@@ -75,6 +75,7 @@
- #define PCI_CLASS_SYSTEM_RTC		0x0803
- #define PCI_CLASS_SYSTEM_PCI_HOTPLUG	0x0804
- #define PCI_CLASS_SYSTEM_SDHCI		0x0805
-+#define PCI_CLASS_SYSTEM_IOMMU		0x0806
- #define PCI_CLASS_SYSTEM_OTHER		0x0880
- 
- #define PCI_BASE_CLASS_INPUT		0x09
-
-
-
+> +       if (!(ctrl & PCI_EXP_LTR_EN))
+> +               return -ENOTSUPP;
+> +
+> +       save_state = pci_find_saved_cap(dev, PCI_EXT_CAP_ID_LTR);
+> +       if (!save_state) {
+> +               dev_err(&dev->dev, "buffer not found in %s\n", __func__);
+> +               return -ENOMEM;
+> +       }
+> +       cap = (u16 *)&save_state->cap.data[0];
+> +
+> +       pci_read_config_word(dev, pos + PCI_LTR_MAX_SNOOP_LAT, &cap[i++]);
+> +       pci_read_config_word(dev, pos + PCI_LTR_MAX_NOSNOOP_LAT, &cap[i++]);
+> +       return 0;
+> +}
+> +
+> +static void pci_restore_ltr_value(struct pci_dev *dev)
+> +{
+> +       int i = 0, pos;
+> +       struct pci_cap_saved_state *save_state;
+> +       u16 *cap;
+> +
+> +       if (!pci_ltr_supported(dev))
+> +               return;
+> +
+> +       save_state = pci_find_saved_cap(dev, PCI_EXT_CAP_ID_LTR);
+> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
+> +       if (!save_state || !pos)
+> +               return;
+> +       cap = (u16 *)&save_state->cap.data[0];
+> +
+> +       pci_write_config_word(dev, pos + PCI_LTR_MAX_SNOOP_LAT, cap[i++]);
+> +       pci_write_config_word(dev, pos + PCI_LTR_MAX_NOSNOOP_LAT, cap[i++]);
+> +}
+>
+>  static int pci_save_pcix_state(struct pci_dev *dev)
+>  {
+> @@ -966,6 +1014,11 @@ pci_save_state(struct pci_dev *dev)
+>                return i;
+>        if ((i = pci_save_pcix_state(dev)) != 0)
+>                return i;
+> +
+> +       if (pci_ltr_supported(dev))
+> +               if ((i = pci_save_ltr_value(dev)) != 0)
+> +                       return i;
+> +
+>        return 0;
+>  }
+>
+> @@ -1034,6 +1087,7 @@ void pci_restore_state(struct pci_dev *dev)
+>        pci_restore_pcix_state(dev);
+>        pci_restore_msi_state(dev);
+>        pci_restore_iov_state(dev);
+> +       pci_restore_ltr_value(dev);
+>
+>        dev->state_saved = false;
+>  }
+> @@ -1955,12 +2009,15 @@ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+>  * @size: requested size of the buffer
+>  */
+>  static int pci_add_cap_save_buffer(
+> -       struct pci_dev *dev, char cap, unsigned int size)
+> +       struct pci_dev *dev, char cap, unsigned int size, bool is_extcap)
+>  {
+>        int pos;
+>        struct pci_cap_saved_state *save_state;
+>
+> -       pos = pci_find_capability(dev, cap);
+> +       if (is_extcap)
+> +               pos = pci_find_ext_capability(dev, cap);
+> +       else
+> +               pos = pci_find_capability(dev, cap);
+>        if (pos <= 0)
+>                return 0;
+>
+> @@ -1984,15 +2041,21 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
+>        int error;
+>
+>        error = pci_add_cap_save_buffer(dev, PCI_CAP_ID_EXP,
+> -                                       PCI_EXP_SAVE_REGS * sizeof(u16));
+> +                                       PCI_EXP_SAVE_REGS * sizeof(u16), 0);
+>        if (error)
+>                dev_err(&dev->dev,
+>                        "unable to preallocate PCI Express save buffer\n");
+>
+> -       error = pci_add_cap_save_buffer(dev, PCI_CAP_ID_PCIX, sizeof(u16));
+> +       error = pci_add_cap_save_buffer(dev, PCI_CAP_ID_PCIX, sizeof(u16), 0);
+>        if (error)
+>                dev_err(&dev->dev,
+>                        "unable to preallocate PCI-X save buffer\n");
+> +
+> +       error = pci_add_cap_save_buffer(dev, PCI_EXT_CAP_ID_LTR,
+> +                                       PCI_LTR_SAVE_REGS * sizeof(u16), 1);
+> +       if (error)
+> +               dev_err(&dev->dev,
+> +                       "unable to preallocate LTR save buffer\n");
+>  }
+>
+>  void pci_free_cap_save_buffers(struct pci_dev *dev)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 658ac97..a6eb509 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1232,7 +1232,10 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>        /* MSI/MSI-X list */
+>        pci_msi_init_pci_dev(dev);
+>
+> -       /* Buffers for saving PCIe and PCI-X capabilities */
+> +       /*
+> +        * Buffers for saving PCIe and PCI-X capabilities
+> +        * and for saving LTR extented capabilities.
+> +        */
+>        pci_allocate_cap_save_buffers(dev);
+>
+>        /* Power Management */
+> --
+> 1.5.5
+>
