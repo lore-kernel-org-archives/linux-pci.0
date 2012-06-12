@@ -1,84 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:42202 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756782Ab2FUBnr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 21:43:47 -0400
-Message-ID: <4FE27ABB.8060206@huawei.com>
-Date: Thu, 21 Jun 2012 09:36:59 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
+Received: from rs130.luxsci.com ([72.32.115.17]:58935 "EHLO rs130.luxsci.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752568Ab2FLTw1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jun 2012 15:52:27 -0400
+Message-ID: <4FD79DE8.90603@firmworks.com>
+Date: Tue, 12 Jun 2012 09:52:08 -1000
+From: Mitch Bradley <wmb@firmworks.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH v8 06/12] PCI/ACPI: provide MCFG address for PCI host
- bridges
-References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com> <1340111732-6276-7-git-send-email-jiang.liu@huawei.com> <CAE9FiQWAPb7S9kBrebnf6nn2KmCL2ohUbukycJPGQLB=11+_pA@mail.gmail.com> <4FE18A9B.9040501@huawei.com> <CAE9FiQXCzFZwbrNsAcUrAXpabdF37c+fkWxB4LYy302gMqhT-g@mail.gmail.com>
-In-Reply-To: <CAE9FiQXCzFZwbrNsAcUrAXpabdF37c+fkWxB4LYy302gMqhT-g@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Stephen Warren <swarren@wwwdotorg.org>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7943E.60302@firmworks.com> <4FD79CAE.9090006@wwwdotorg.org>
+In-Reply-To: <4FD79CAE.9090006@wwwdotorg.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
-	OK, I will send out v9 without the MCFG cache.
-	Thanks!
-	Gerry
-On 2012-6-21 2:03, Yinghai Lu wrote:
-> On Wed, Jun 20, 2012 at 1:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->> Hi Yinghai,
+On 6/12/2012 9:46 AM, Stephen Warren wrote:
+> On 06/12/2012 01:10 PM, Mitch Bradley wrote:
+>> On 6/12/2012 7:20 AM, Thierry Reding wrote:
+> ...
+>>> I came up with the following alternative:
+>>>
+>>> 	pci {
+>>> 		compatible = "nvidia,tegra20-pcie";
+>>> 		reg =<0x80003000 0x00000800   /* PADS registers */
+>>> 		       0x80003800 0x00000200   /* AFI registers */
+>>> 		       0x80004000 0x00100000   /* configuration space */
+>>> 		       0x80104000 0x00100000   /* extended configuration space */
+>>> 		       0x80400000 0x00010000   /* downstream I/O */
+>>> 		       0x90000000 0x10000000   /* non-prefetchable memory */
+>>> 		       0xa0000000 0x10000000>; /* prefetchable memory */
+>>> 		interrupts =<0 98 0x04   /* controller interrupt */
+>>> 		              0 99 0x04>; /* MSI interrupt */
+>>> 		status = "disabled";
+>>>
+>>> 		ranges =<0x80000000 0x80000000 0x00002000   /* 2 root ports */
+>>> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
+>>> 			  0x80104000 0x80104000 0x00100000   /* extended configuration space */
+>>> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
+>>> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
+>>> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
+>>>
+>>> 		#address-cells =<1>;
+>>> 		#size-cells =<1>;
+>>>
+>>> 		port@80000000 {
+>>> 			reg =<0x80000000 0x00001000>;
+>>> 			status = "disabled";
+>>> 		};
+>>>
+>>> 		port@80001000 {
+>>> 			reg =<0x80001000 0x00001000>;
+>>> 			status = "disabled";
+>>> 		};
+>>> 	};
+>>>
+>>> The "ranges" property can probably be cleaned up a bit, but the most
+>>> interesting part is the port@ children, which can simply be enabled in board
+>>> DTS files by setting the status property to "okay". I find that somewhat more
+>>> intuitive to the variant with an "enable-ports" property.
+>>>
+>>> What do you think of this?
 >>
->>        Yes, I'm going to adopt solution two as you suggested.
->> On the other hand, the MMCFG caching is kept due to following
->> considerations:
->> 1) To emit a warning message if MMCFG entries in MCFG table only
->> partially covers buses under a PCI host bridge. Taku reported that
->> he has a system which exhibits such a behavior.
-> Interesting.
-> that should have one overal checking after _CBA entry is added into
-> pci_mmcfg_list.
-> We limit root bus bus range after busn_alloc is there.
-> aka dump the bus range above mmcfg.
-> or user need to disable mmcfg.
-> 
-> 
->> 2) To cross-check that MMCFG addresses returned by MCFG table and
->> _CBA method are consistent if both are available (though that
->> violates the PCI FW/ACPI specifications).
-> 
-> now we are adding support for pci hostbridge plug. so we should better to stick
-> with spec instead of trying to workaround possible FW problem.
-> Do spoil them too much.
-> 
-> my point is: MCFG is static. so the range from MCFG can not be changed after
-> they pass the sanity checking.
-> later if _CBA is trying come again with overlapping, just through that away.
-> then if _CBA is good, then just record the range, and later release the range
-> according the storage during hostbridge removal.
-> 
->> 3) In future, we may try to remove MMCFG entry constructed from
->> MCFG table when hot-removing a PCI host bridge. We have some systems
->> which assign a distinguish segment ID for each host bridge. In such
->> a case, it may be reasonable to remove the MMCFG entry when removing
->> a host bridge.
-> No, MCFG is static one.
-> 
->> 4) The MCFG cache should be small under normal cases.
->>
->>        If you feel it's unnecessary to keep the cache, I will remove
->> it and send out a updated version soon.
-> for pci host bridge support, we would touch too much thing, I would
-> like to limit
-> first round change and keep it simple, and later could optimize it if possible.
-> 
-> Thanks
-> 
-> Yinghai
-> 
-> .
-> 
+>> The problem is that children of a PCI-ish bus have specific expectations
+>> about the parent address format - the standard 3-address-cell PCI
+>> addressing.  So making a PCI bus node - even if it is PCIe - with 1
+>> address cell is a problem.
+>
+> Couldn't you put the #address-cells=<3>  underneath each port node, and
+> put any PCIe devices there rather than under the main PCIe controller
+> node? I'm not sure how the interrupt mapping table etc. would work in
+> that case, but that seems to solve the addressing issue.
 
+Yes, that would work just fine, and in fact would be preferable, if a 
+"root port" is essentially an independent PCI bus.  The parent of those 
+root ports should not be named "pci", though, as it is not in itself a 
+PCI bus.  It could be called "pcis".
 
+>
+>
