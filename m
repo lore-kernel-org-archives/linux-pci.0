@@ -1,107 +1,99 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v12 14/15] PCI: More strict checking of valid range for bridge
-Date: Tue, 26 Jun 2012 11:54:08 -0700
-Message-Id: <1340736849-14875-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.8]:49222 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201Ab2FLFHh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 01:07:37 -0400
+Date: Tue, 12 Jun 2012 07:07:13 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-tegra@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
+Message-ID: <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+ <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
+ <4FD660F9.7030807@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="uZ3hkaAS1mZxFaxD"
+In-Reply-To: <4FD660F9.7030807@wwwdotorg.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found one sick system with two sibling bridge have overlaping range from BIOS.
-00:02.1 bus range is 0x30-0x30
-00:02.2 bus range is 0x30-0x3f, and it have two children under it.
 
-RHEL 6.2 kernel, will just 00:02.1 have child bus 0x30, and bridge 00:02.2 will
-not have.
+--uZ3hkaAS1mZxFaxD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-before this patch, this patchset will have 00:02.1 to have bus 0x30,
-and 00:02.2 will have reallocate range bus 01.
-but 00:02.1 will have scaned at first, so later it will have two fake devices.
+* Stephen Warren wrote:
+> On 06/11/2012 09:05 AM, Thierry Reding wrote:
+> > This commit adds support for message signaled interrupts to the Tegra
+> > PCIe controller. Based on code by Krishna Kishore <kthota@nvidia.com>.
+>=20
+> > diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
+>=20
+> > +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
+> ...
+> > +			irq =3D irq_find_mapping(pcie->msi->domain, index);
+> > +			if (irq) {
+> > +				if (test_bit(index, pcie->msi->used))
+> > +					generic_handle_irq(irq);
+>=20
+> This invokes the handler first ...
+>=20
+> ...
+> > +			/* clear the interrupt */
+> > +			afi_writel(pcie, 1 << offset, AFI_MSI_VEC0 + i * 4);
+> > +			/* see if there's any more pending in this vector */
+> > +			reg =3D afi_readl(pcie, AFI_MSI_VEC0 + i * 4);
+>=20
+> ... then clears the interrupt status in the PCIe controller. Won't that
+> lose interrupts if one is raised between when the handler clears the
+> root-cause, and when this code clears the received interrupt status?
 
-To fix the problem, We need to check with unscaned sibling bridge about range
-overlapping.
-If there is overlapping found, will mark both sides to be broken.
-So we could prevent one side take too big range.
+It certainly doesn't follow the conventional way of clearing the interrupt
+first. I carried this from the original MSI patch, but I'll move the
+interrupt clearing up and retest.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   45 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 44 insertions(+), 1 deletions(-)
+> > +static int tegra_pcie_disable_msi(struct platform_device *pdev)
+>=20
+> Should this free pcie->msi->pages?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 93b61b8..118fe5b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -743,6 +743,48 @@ static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
- 	return ret;
- }
- 
-+static int __devinit pci_bridge_check_busn_broken_with_unscaned(
-+				struct pci_bus *bus,
-+				struct pci_dev *dev,
-+				int secondary, int subordinate)
-+{
-+	u32 buses2;
-+	int broken = 0;
-+	struct pci_dev *dev2;
-+	int secondary2, subordinate2;
-+	int common_start, common_end;
-+
-+	/* need to check with not scaned sibling bridges */
-+	list_for_each_entry(dev2, &bus->devices, bus_list) {
-+		if (dev2->hdr_type != PCI_HEADER_TYPE_BRIDGE &&
-+		    dev2->hdr_type != PCI_HEADER_TYPE_CARDBUS)
-+			continue;
-+		if (dev2->subordinate)
-+			continue;
-+		if (dev2 == dev)
-+			continue;
-+
-+		pci_read_config_dword(dev2, PCI_PRIMARY_BUS, &buses2);
-+		secondary2 = (buses2 >> 8) & 0xFF;
-+		subordinate2 = (buses2 >> 16) & 0xFF;
-+
-+		/* overlapping between them ? */
-+		common_start = max(secondary, secondary2);
-+		common_end = min(subordinate, subordinate2);
-+		if (common_start <= common_end) {
-+			/*
-+			 * Temporarily disable forwarding of the
-+			 * configuration cycles on this sibling bridge
-+			 */
-+			pci_write_config_dword(dev2, PCI_PRIMARY_BUS,
-+					       buses2 & ~0xffffff);
-+			broken = 1;
-+		}
-+	}
-+
-+	return broken;
-+}
-+
- static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
- 				struct pci_dev *dev,
- 				int secondary, int subordinate)
-@@ -763,7 +805,8 @@ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
- 
- 	release_resource(&busn_res);
- 
--	return 0;
-+	return pci_bridge_check_busn_broken_with_unscaned(bus, dev,
-+					secondary, subordinate);
- }
- 
- static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
--- 
-1.7.7
+Yes it should. I actually mention making that change in the changelog but
+in fact didn't.
 
+> Why allocate pcie->msi separately; why not include the fields directly
+> into struct tegra_pcie_info *pcie?
+
+For one I find this easier to read. If this wasn't a separate structure, ea=
+ch
+of the individual fields would get an msi_ prefix anyway so there isn't much
+to be gained from keeping them directly in tegra_pcie_info.
+
+Second, and more importantly, this will keep the size of struct
+tegra_pcie_info smaller if PCI_MSI is not selected because there is just one
+unused pointer instead of five unused fields.
+
+Thierry
+
+--uZ3hkaAS1mZxFaxD
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/WzoEACgkQZ+BJyKLjJp+OqQCfVInBPASxy3NpkrYYAN3uL4tW
+BFsAoILbZcwvoU2Rw+WEEzu7jYkguONm
+=MH6Q
+-----END PGP SIGNATURE-----
+
+--uZ3hkaAS1mZxFaxD--
