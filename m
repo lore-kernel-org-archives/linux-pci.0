@@ -1,40 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:32892 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495Ab2FKT7n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 15:59:43 -0400
-Received: by pbbrp8 with SMTP id rp8so6036033pbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 12:59:43 -0700 (PDT)
+Received: from avon.wwwdotorg.org ([70.85.31.133]:35014 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492Ab2FLFeA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 01:34:00 -0400
+Message-ID: <4FD6D4C6.2080201@wwwdotorg.org>
+Date: Mon, 11 Jun 2012 23:33:58 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <loom.20120611T205954-871@post.gmane.org>
-References: <loom.20120607T194858-986@post.gmane.org>
-	<CAE9FiQWau+ko4JiEEjM=2xSH_7FPBr_ZYOm8YGpin2p97=12PQ@mail.gmail.com>
-	<loom.20120611T205954-871@post.gmane.org>
-Date: Mon, 11 Jun 2012 12:59:43 -0700
-Message-ID: <CAE9FiQWsv+VU_240BgzHhyR5=A+7DkceWR0oNuYgYxi5TwWvyg@mail.gmail.com>
-Subject: Re: PCIe rescan not working
-From: Yinghai Lu <yinghai@kernel.org>
-To: Tom Carr <tkcarr03873@gmail.com>
-Cc: linux-pci@vger.kernel.org
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de> <4FD660F9.7030807@wwwdotorg.org> <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 11, 2012 at 12:32 PM, Tom Carr <tkcarr03873@gmail.com> wrote:
->
-> Yinghai, sorry about the direct email on Friday, I tried to reply back to the
-> newsgroup but the send kept failing. Your suggestion worked but only if there
-> were no drivers attached to the endpoints. If I load the driver for the endpoint
-> at bus 6.0 and 9.0, then load the empty FPGA at bus 8.0, which is off of 4.8,
-> and write 1 to /sys/bus/pci/remove the system crashes. Is there a
-> requirement that all down stream devices be removed? I could not find any such
-> requirement in any documentation. Here is the most of the stack trace.
+On 06/11/2012 11:07 PM, Thierry Reding wrote:
+> * Stephen Warren wrote:
+>> On 06/11/2012 09:05 AM, Thierry Reding wrote:
+>>> This commit adds support for message signaled interrupts to the
+>>> Tegra PCIe controller. Based on code by Krishna Kishore
+>>> <kthota@nvidia.com>.
+...
+>> Why allocate pcie->msi separately; why not include the fields
+>> directly into struct tegra_pcie_info *pcie?
+...
+> Second, and more importantly, this will keep the size of struct 
+> tegra_pcie_info smaller if PCI_MSI is not selected because there is
+> just one unused pointer instead of five unused fields.
 
-can you please try current linus kernel like
-3.4 or 3.5-rc1 ?
-
-looks like there is some stop/remove pci device code bug in old kernel.
-
-Thanks
-
-Yinghai
+Well, you can always ifdef out the structure fields too, right?
