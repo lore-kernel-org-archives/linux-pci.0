@@ -1,83 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:60308 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753166Ab2FLNQP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 09:16:15 -0400
-Received: by dady13 with SMTP id y13so6854301dad.19
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 06:16:14 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: use name pci_release_host_bridge_dev() for host bridge device release fn
-Date: Tue, 12 Jun 2012 21:14:44 +0800
-Message-Id: <1339506884-21606-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:52639 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752555Ab2FLP4U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 11:56:20 -0400
+Received: by lbbgm6 with SMTP id gm6so483282lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 08:56:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120612062000.GA6932@8bytes.org>
+References: <20120611152021.25959.71601.stgit@bling.home> <CAErSpo434tDtnSOxB_REG2jFNrZL=aZERWTmmK-cdjqM4z6yWg@mail.gmail.com>
+ <20120612062000.GA6932@8bytes.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 12 Jun 2012 09:55:59 -0600
+Message-ID: <CAErSpo6J61+XhtEeXdE-5Evhs-SJ4=3iEZDAXGuRi9moAU8KhQ@mail.gmail.com>
+Subject: Re: [PATCH v3 0/5] PCI: Prep for VFIO and IOMMU Groups
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	benh@kernel.crashing.org, aik@ozlabs.ru, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+	dwmw2@infradead.org, david@gibson.dropbear.id.au
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On Tue, Jun 12, 2012 at 12:20 AM, Joerg Roedel <joro@8bytes.org> wrote:
+> Hi Bjorn,
+>
+> On Mon, Jun 11, 2012 at 06:59:25PM -0600, Bjorn Helgaas wrote:
+>> On Mon, Jun 11, 2012 at 8:26 AM, Alex Williamson
+>> <alex.williamson@redhat.com> wrote:
+>> > v3:
+>> >  - Small change to device specific ACS check to allow quirk to
+>> >   support yes/no/pass type functionality. (no change to other
+>> >   patches and no trickle down through IOMMU series)
+>> >
+>> > Bjorn, what's needed to get these in?  Thanks,
+>>
+>> Sorry for the delay.  I applied these to my "next" branch (headed for
+>> 3.6).  I didn't feel comfortable pushing them towards 3.5 since
+>> they're not bugfixes, and they haven't been in -next yet.
+>
+> Great. Do you applied them directly to your next branch or do you have
+> them in a seperate branch I can pull in to merge the IOMMU Groups
+> patches on-top? The later would be really good :)
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Hi Joerg, I have Alex's patches on a separate topic branch.  I folded
+in the pci_get_dev() fix and pushed it to here:
 
-Rename pci_release_bus_bridge_dev() to pci_release_host_bridge_dev()
-in drivers/pci/probe.c for easy understanding.
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+topic/alex-vfio-prep
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/probe.c |   26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+This is also included in my "next" branch.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0840409..f62dd9b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -473,6 +473,18 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 	return bridge;
- }
- 
-+static void pci_release_host_bridge_dev(struct device *dev)
-+{
-+	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-+
-+	if (bridge->release_fn)
-+		bridge->release_fn(bridge);
-+
-+	pci_free_resource_list(&bridge->windows);
-+
-+	kfree(bridge);
-+}
-+
- static unsigned char pcix_bus_speed[] = {
- 	PCI_SPEED_UNKNOWN,		/* 0 */
- 	PCI_SPEED_66MHz_PCIX,		/* 1 */
-@@ -1172,18 +1184,6 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 	return PCI_CFG_SPACE_SIZE;
- }
- 
--static void pci_release_bus_bridge_dev(struct device *dev)
--{
--	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
--
--	if (bridge->release_fn)
--		bridge->release_fn(bridge);
--
--	pci_free_resource_list(&bridge->windows);
--
--	kfree(bridge);
--}
--
- struct pci_dev *alloc_pci_dev(void)
- {
- 	struct pci_dev *dev;
-@@ -1658,7 +1658,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		goto err_out;
- 
- 	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_bus_bridge_dev;
-+	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
- 	error = device_register(&bridge->dev);
- 	if (error)
--- 
-1.7.9.5
-
+Bjorn
