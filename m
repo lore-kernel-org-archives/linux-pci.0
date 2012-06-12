@@ -1,89 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61308 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751012Ab2F1UZ2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Jun 2012 16:25:28 -0400
-Subject: Re: [PATCH 3/9] arm/PCI: move final fixup quirks from __init to
- __devinit
-From: Myron Stowe <mstowe@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
-	linux@arm.linux.org.uk, ralf@linux-mips.org, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, linux-kernel@vger.kernel.org
-In-Reply-To: <CAErSpo5yNxjjBVaTXjAKCY4SfRWj7uXK2cS3BtkugmoF4fYn6g@mail.gmail.com>
-References: <20120621202415.16865.6226.stgit@amt.stowe>
-	 <20120621202435.16865.1340.stgit@amt.stowe>
-	 <CAErSpo5yNxjjBVaTXjAKCY4SfRWj7uXK2cS3BtkugmoF4fYn6g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 28 Jun 2012 14:25:20 -0600
-Message-ID: <1340915120.2411.27.camel@zim.stowe>
-Mime-Version: 1.0
+Received: from avon.wwwdotorg.org ([70.85.31.133]:45480 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753002Ab2FLTq7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 15:46:59 -0400
+Message-ID: <4FD79CAE.9090006@wwwdotorg.org>
+Date: Tue, 12 Jun 2012 13:46:54 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Mitch Bradley <wmb@firmworks.com>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7943E.60302@firmworks.com>
+In-Reply-To: <4FD7943E.60302@firmworks.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2012-06-26 at 16:33 -0600, Bjorn Helgaas wrote:
-> On Thu, Jun 21, 2012 at 2:24 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> > The PCI subsystem's final fixups are executed once during boot, after the
-> > pci-device is found.  As long as the system does not support hot-plug,
-> > specifying __init is fine.
-> >
-> > With hot-plug, either physically based hot-plug events or pseudo hot-plug
-> > events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
-> > PCI bus during run time and have it rediscovered which will require the
-> > call of the fixups again in order for the device to function properly.
-> >
-> > This patch prepares specific quirk(s) for use with hot-plug events.
-> >
-> > Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> > ---
-> >
-> >  arch/arm/mach-iop32x/n2100.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/arch/arm/mach-iop32x/n2100.c b/arch/arm/mach-iop32x/n2100.c
-> > index 5a7ae91..04c4110 100644
-> > --- a/arch/arm/mach-iop32x/n2100.c
-> > +++ b/arch/arm/mach-iop32x/n2100.c
-> > @@ -126,7 +126,7 @@ static struct hw_pci n2100_pci __initdata = {
-> >  * the ->broken_parity_status flag for both ports so that the r8169
-> >  * driver knows it should ignore error interrupts.
-> >  */
-> > -static void n2100_fixup_r8169(struct pci_dev *dev)
-> > +static void __devinit n2100_fixup_r8169(struct pci_dev *dev)
+On 06/12/2012 01:10 PM, Mitch Bradley wrote:
+> On 6/12/2012 7:20 AM, Thierry Reding wrote:
+...
+>> I came up with the following alternative:
+>>
+>> 	pci {
+>> 		compatible = "nvidia,tegra20-pcie";
+>> 		reg = <0x80003000 0x00000800   /* PADS registers */
+>> 		       0x80003800 0x00000200   /* AFI registers */
+>> 		       0x80004000 0x00100000   /* configuration space */
+>> 		       0x80104000 0x00100000   /* extended configuration space */
+>> 		       0x80400000 0x00010000   /* downstream I/O */
+>> 		       0x90000000 0x10000000   /* non-prefetchable memory */
+>> 		       0xa0000000 0x10000000>; /* prefetchable memory */
+>> 		interrupts = <0 98 0x04   /* controller interrupt */
+>> 		              0 99 0x04>; /* MSI interrupt */
+>> 		status = "disabled";
+>>
+>> 		ranges = <0x80000000 0x80000000 0x00002000   /* 2 root ports */
+>> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
+>> 			  0x80104000 0x80104000 0x00100000   /* extended configuration space */
+>> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
+>> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
+>> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
+>>
+>> 		#address-cells = <1>;
+>> 		#size-cells = <1>;
+>>
+>> 		port@80000000 {
+>> 			reg = <0x80000000 0x00001000>;
+>> 			status = "disabled";
+>> 		};
+>>
+>> 		port@80001000 {
+>> 			reg = <0x80001000 0x00001000>;
+>> 			status = "disabled";
+>> 		};
+>> 	};
+>>
+>> The "ranges" property can probably be cleaned up a bit, but the most
+>> interesting part is the port@ children, which can simply be enabled in board
+>> DTS files by setting the status property to "okay". I find that somewhat more
+>> intuitive to the variant with an "enable-ports" property.
+>>
+>> What do you think of this?
 > 
-> These actually move functions from normal text to __devinit, not from
-> __init to __devinit.
+> The problem is that children of a PCI-ish bus have specific expectations
+> about the parent address format - the standard 3-address-cell PCI
+> addressing.  So making a PCI bus node - even if it is PCIe - with 1
+> address cell is a problem.
 
-Yes (as I hang my head sheepishly).  What got me started down this path
-was seeing the recent series by Sabastian Andrzej
-( http://marc.info/?l=linux-pci&m=133875179103880&w=2 ).
-> 
-> That should be safe for most quirks (although enable, suspend, resume,
-> and resume_early quirks can be called after we free initmem, even if
-> we have CONFIG_HOTPLUG=n), but given the discussion about whether we
-> should even bother with __devinit any more, I think I'll hold off on
-> these for now.  If we were to get rid of __devinit, these would all
-> have to revert to being normal text.
-
-Agreed, and I've only recently (after posting this series) became aware
-of James Bottomley's thoughts about __devinit so lets skip these changes
-within the series.  I don't want to start a lot of unnecessary churn if
-we end up just dropping __devinit altogether.
-
-It's the last patch in the series that is of the most interest - trying
-to solve PCI's "final" quirks with respect to hot-plug events and the
-asymmetry I ended up discovering while working that issue.  Wish we
-would have received some feedback from others about that.
-
-Thanks,
- Myron
-
-Thanks,
- Myron
-> 
-> >  {
-> >        if (dev->bus->number == 0 &&
-> >            (dev->devfn == PCI_DEVFN(1, 0) ||
-> >
-
-
+Couldn't you put the #address-cells=<3> underneath each port node, and
+put any PCIe devices there rather than under the main PCIe controller
+node? I'm not sure how the interrupt mapping table etc. would work in
+that case, but that seems to solve the addressing issue.
