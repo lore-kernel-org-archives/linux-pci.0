@@ -1,50 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:33516 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492Ab2FLPvS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 11:51:18 -0400
-Received: by weyu7 with SMTP id u7so2949691wey.19
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 08:51:16 -0700 (PDT)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:33725 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751032Ab2FLCzp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jun 2012 22:55:45 -0400
+Received: by lahd3 with SMTP id d3so3199609lah.19
+        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 19:55:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1339472328.67669.YahooMailNeo@web193202.mail.sg3.yahoo.com>
-References: <1339472328.67669.YahooMailNeo@web193202.mail.sg3.yahoo.com>
-Date: Tue, 12 Jun 2012 08:51:16 -0700
-Message-ID: <CAP6odjhx=nfhc=wwWxoV9iqApK0iC_ahQQcLw=NMS+rZcHBv8Q@mail.gmail.com>
-Subject: Re: Issue in Documentation/PCI/pci.txt file
-From: Grant Grundler <grantgrundler@gmail.com>
-To: Mahendra Ladhe <lml108@yahoo.com>
-Cc: linux-pci@vger.kernel.org
+In-Reply-To: <1339429021.24037.8.camel@bling.home>
+References: <20120530201424.31527.33142.stgit@bling.home> <20120606110514.GG757@amd.com>
+ <1339429021.24037.8.camel@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 11 Jun 2012 19:55:24 -0700
+Message-ID: <CAErSpo6oaGBL7uG4ys7cp=qNP6KK3xgi-_MkmvDULmfpk-+-wA@mail.gmail.com>
+Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joerg.roedel@amd.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org, david@gibson.dropbear.id.au,
+	konrad.wilk@oracle.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	ddutile@redhat.com, liuj97@gmail.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+linux-pci
-
-On Mon, Jun 11, 2012 at 8:38 PM, Mahendra Ladhe <lml108@yahoo.com> wrote:
-> Hello Grant,
->      the Documentation/PCI/pci.txt file in Linux kernel sources has the
-> following line at line number 335.
+On Mon, Jun 11, 2012 at 8:37 AM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Wed, 2012-06-06 at 13:05 +0200, Joerg Roedel wrote:
+>> On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
+>> > v2:
+>> >  - Trickle down changes from pci_get_dma_source() to better handle
+>> >    PCI device reference counting in IOMMU driver patches
+>>
+>> Okay, I looked again over the code and looks good for merging to me.
 >
-> Also see pci_request_selected_regions() below.
+> Great, thanks Joerg!
 >
-> But after this line, there is absolutely no mention of
-> pci_request_selected_regions API in the remaining document.
+>>  The
+>> IOMMU Groups code depends on changes in the PCI code. We need to work
+>> out how to merge this.
+>>
+>> Bjorn,
+>>
+>> I need the PCI changes before I can merge the IOMMU Groups code. There
+>> are two ways that would work for me:
+>>
+>>       a) You Ack the PCI patch-set from Alex and I put it into my tree
+>>          and merge the IOMMU Group code on-top, or
+>>       b) You merge the PCI related patch-set into a seperate branch
+>>          which you can merge into your next-branch and which I can
+>>          pull in to merge IOMMU Groups on-top.
+>>
+>> Please let me know what works best for you.
 
-hi Mahendra,
-Good catch! Thanks for pointing this out.
+Joerg, I put the PCI changes into my "next" branch
+(http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/next).
+ My feeble excuse is that I was on vacation last week, but that's
+pretty lame because this has been hanging for much longer than that.
 
-For now, you can take a look at the comments and examples of use when
-this function was introduced:
-    http://lkml.indiana.edu/hypermail/linux/kernel/0606.0/1167.html
-
-> Could you please rectify this?
-
-I've not looked at the core PCI code in quite a while and I expect
-additional updates are needed. Anyone interested in working on
-updating pci.txt?
-
-If not, I can add something about why one should use
-pci_request_selected_regions() instead of pci_request_regions().
-
-cheers,
-grant
+Bjorn
