@@ -1,48 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:52645 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757300Ab2FGVcT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Jun 2012 17:32:19 -0400
-Message-ID: <1339104711.24838.29.camel@pasglop>
-Subject: Re: [PATCH v2 0/2] Add pcibios_device_change_notifier
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Date: Fri, 08 Jun 2012 07:31:51 +1000
-In-Reply-To: <4FD0A257.4070506@jp.fujitsu.com>
-References: <4FBC4C86.9050206@jp.fujitsu.com>
-	 <1338960416.7150.160.camel@pasglop> <4FD0A257.4070506@jp.fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f174.google.com ([74.125.82.174]:33516 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752492Ab2FLPvS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 11:51:18 -0400
+Received: by weyu7 with SMTP id u7so2949691wey.19
+        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 08:51:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339472328.67669.YahooMailNeo@web193202.mail.sg3.yahoo.com>
+References: <1339472328.67669.YahooMailNeo@web193202.mail.sg3.yahoo.com>
+Date: Tue, 12 Jun 2012 08:51:16 -0700
+Message-ID: <CAP6odjhx=nfhc=wwWxoV9iqApK0iC_ahQQcLw=NMS+rZcHBv8Q@mail.gmail.com>
+Subject: Re: Issue in Documentation/PCI/pci.txt file
+From: Grant Grundler <grantgrundler@gmail.com>
+To: Mahendra Ladhe <lml108@yahoo.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-06-07 at 21:45 +0900, Hiroo Matsumoto wrote:
-> 
-> > Also you seem to add:
-> > 
-> > +               /* Setup OF node pointer in the device */
-> > +               dev->dev.of_node = pci_device_to_OF_node(dev);
-> > 
-> > This shouldn't be needed anymore, the device node should be setup by the
-> > core nowadays. Is this just a remnant of you rebasing an old patch or do
-> > you have a good reason to add this statement ?
-> 
-> No, I don't have a good reason to add this statement.
-> I just tried to make this code be same with pcibios_setup_bus_devices.
-> Thanks for your review and comment. 
++linux-pci
 
-Unless I'm mistaken, this statement was removed from
-pcibios_setup_bus_devices() recently so I'd say it's a leftover from
-your patch having been originally done on top of an older kernel.
+On Mon, Jun 11, 2012 at 8:38 PM, Mahendra Ladhe <lml108@yahoo.com> wrote:
+> Hello Grant,
+>      the Documentation/PCI/pci.txt file in Linux kernel sources has the
+> following line at line number 335.
+>
+> Also see pci_request_selected_regions() below.
+>
+> But after this line, there is absolutely no mention of
+> pci_request_selected_regions API in the remaining document.
 
-I won't be back for another week or so but I'll see if I can get things
-tested in the meantime.
+hi Mahendra,
+Good catch! Thanks for pointing this out.
 
-Cheers,
-Ben.
+For now, you can take a look at the comments and examples of use when
+this function was introduced:
+    http://lkml.indiana.edu/hypermail/linux/kernel/0606.0/1167.html
 
+> Could you please rectify this?
 
+I've not looked at the core PCI code in quite a while and I expect
+additional updates are needed. Anyone interested in working on
+updating pci.txt?
+
+If not, I can add something about why one should use
+pci_request_selected_regions() instead of pci_request_regions().
+
+cheers,
+grant
