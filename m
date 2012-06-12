@@ -1,90 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22648 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755915Ab2FZDcX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Jun 2012 23:32:23 -0400
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 00/16] PCI: Re-factor 'pcibios_setup()'
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
-	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
-	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
-	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
-Date: Mon, 25 Jun 2012 21:30:45 -0600
-Message-ID: <20120626033045.16434.17412.stgit@amt.stowe>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:47893 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751758Ab2FLP2Y convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jun 2012 11:28:24 -0400
+Received: by lahd3 with SMTP id d3so3603557lah.19
+        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 08:28:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4fd6b2f9.DIqCg1uo2Kq4VZd4%wfg@linux.intel.com>
+References: <4fd6b2f9.DIqCg1uo2Kq4VZd4%wfg@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 12 Jun 2012 09:28:03 -0600
+Message-ID: <CAErSpo4J6e=uXwSoh1P_wME5DeetRsBzm=En5C94E+Usu8ce2w@mail.gmail.com>
+Subject: =?windows-1252?Q?Re=3A_include=2Flinux=2Fpci=2Eh=3A1495=3A2=3A_error=3A_implicit_decl?=
+	=?windows-1252?Q?aration_of_function_=91pci=5Fdev=5Fget=92_=5B=2DWerror=3Dimplicit=2Dfunc?=
+	=?windows-1252?Q?tion=2Ddeclaration=5D?=
+To: wfg@linux.intel.com
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, all of the architectures implement their own 'pcibios_setup()'
-routine.  Most of the implementations do nothing so this patch introduces
-a generic (__weak) routine into PCI's core that can be used by all
-architectures as a default.  If necessary, it can then be over-ridden by
-architecture-specific code.
+On Mon, Jun 11, 2012 at 9:09 PM,  <wfg@linux.intel.com> wrote:
+> FYI, kernel build failed on
+>
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+> head:   0c358c16f8154ef47df749e60186f3c835869b0b
+> commit: 470bc5b483f573f3bec802afc32109463e8c99c8 [45/60] PCI: add PCI DMA source ID quirk
+> config: i386-allnoconfig (attached as .config)
+>
+> All related error/warning messages are:
+>
+> include/linux/pci.h: In function ‘pci_get_dma_source’:
+> include/linux/pci.h:1495:2: error: implicit declaration of function ‘pci_dev_get’ [-Werror=implicit-function-declaration]
 
-This series also cleans up 'pcibios_setup()' as necessary to consistently
-use the "__init" section annotation.
-
-Suggested by Bjorn Helgaas -
-http://marc.info/?l=linux-kernel&m=134023745124680&w=2
-
-
-It looks as if there is a bug in the CRIS architecture's version of
-'pcibios_setup()'.  It implements pcibios_setup() such that pci_setup()
-doesn't look for any generic options.  I included the fix for this in this
-series.  If this ends up not being correct - i.e. PCI support for CRIS
-should be dropped - then that specific patch (which I included last in the
-series) can be dropped.
-
-Note: I do not have a cross-compile environment so I have only tested x86.
----
-
-Myron Stowe (16):
-      cris/PCI: Factor 'pcibios_setup()' out of cris
-      xtensa/PCI: Factor 'pcibios_setup()' out of xtensa
-      x86/PCI: adjust section annotations for 'pcibios_setup()'
-      unicore32/PCI: adjust section annotations for 'pcibios_setup()'
-      tile/PCI: Factor 'pcibios_setup()' out of tile
-      sparc/PCI: Factor 'pcibios_setup()' out of sparc
-      sh/PCI: adjust section annotations for 'pcibios_setup()'
-      sh/PCI: Factor 'pcibios_setup()' out of sh
-      powerpc/PCI: Factor 'pcibios_setup()' out of powerpc
-      parisc/PCI: Factor 'pcibios_setup()' out of parisc
-      MIPS/PCI: adjust section annotations for 'pcibios_setup()'
-      MIPS/PCI: Factor 'pcibios_setup()' out of MIPS/pmc-sierra
-      microblaze/PCI: Factor 'pcibios_setup()' out of microblaze
-      ia64/PCI: Factor 'pcibios_setup' out of ia64
-      alpha/PCI: Factor 'pcibios_setup()' out of alpha
-      PCI: Pull 'pcibios_setup' up into PCI's core
-
-
- arch/alpha/kernel/pci.c               |    6 ------
- arch/cris/arch-v32/drivers/pci/bios.c |    5 -----
- arch/ia64/pci/pci.c                   |    9 ---------
- arch/microblaze/pci/pci-common.c      |    5 -----
- arch/mips/pci/pci.c                   |    4 ++--
- arch/mips/pmc-sierra/yosemite/ht.c    |   11 -----------
- arch/mips/txx9/generic/pci.c          |    4 ++--
- arch/parisc/kernel/pci.c              |    5 -----
- arch/powerpc/kernel/pci-common.c      |    5 -----
- arch/sh/drivers/pci/fixups-sdk7786.c  |    4 ++--
- arch/sh/drivers/pci/pci.c             |    5 -----
- arch/sparc/kernel/leon_pci.c          |    8 --------
- arch/sparc/kernel/pci.c               |    5 -----
- arch/sparc/kernel/pcic.c              |    8 --------
- arch/tile/kernel/pci.c                |   10 ----------
- arch/unicore32/kernel/pci.c           |    2 +-
- arch/x86/pci/common.c                 |    2 +-
- arch/xtensa/kernel/pci.c              |    6 ------
- drivers/pci/pci.c                     |   12 ++++++++++++
- include/linux/pci.h                   |    1 +
- 20 files changed, 21 insertions(+), 96 deletions(-)
-
--- 
+I folded in Alex's fix for this.  Will appear in "next" later today.
+Thanks for the report!
