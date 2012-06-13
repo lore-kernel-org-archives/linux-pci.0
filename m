@@ -1,50 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f202.google.com ([209.85.213.202]:48035 "EHLO
-	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932598Ab2FUARF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 20:17:05 -0400
-Received: by yenl3 with SMTP id l3so9519yen.1
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:17:04 -0700 (PDT)
-Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
-	by wpzn3.hot.corp.google.com (Postfix) with ESMTP id C94AB100047
-	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:17:04 -0700 (PDT)
-Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
-	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id 86318180181
-	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:17:04 -0700 (PDT)
-Subject: [PATCH 6/6] PCI: remove useless pcix_set_mmrbc() dev->bus check
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 Jun 2012 18:17:04 -0600
-Message-ID: <20120621001704.4834.58131.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
+Received: from rs130.luxsci.com ([72.32.115.17]:49747 "EHLO rs130.luxsci.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752000Ab2FMHEd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jun 2012 03:04:33 -0400
+Message-ID: <4FD83B6A.4020804@firmworks.com>
+Date: Tue, 12 Jun 2012 21:04:10 -1000
+From: Mitch Bradley <wmb@firmworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7943E.60302@firmworks.com> <4FD79CAE.9090006@wwwdotorg.org> <4FD79DE8.90603@firmworks.com> <20120613055437.GB31001@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20120613055437.GB31001@avionic-0098.mockup.avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For a valid pci_dev, dev->bus != NULL always, so remove this
-unnecessary test.
+On 6/12/2012 7:54 PM, Thierry Reding wrote:
+> * Mitch Bradley wrote:
+>> On 6/12/2012 9:46 AM, Stephen Warren wrote:
+>>> On 06/12/2012 01:10 PM, Mitch Bradley wrote:
+>>>> On 6/12/2012 7:20 AM, Thierry Reding wrote:
+>>> ...
+>>>>> I came up with the following alternative:
+>>>>>
+>>>>> 	pci {
+>>>>> 		compatible = "nvidia,tegra20-pcie";
+>>>>> 		reg =<0x80003000 0x00000800   /* PADS registers */
+>>>>> 		       0x80003800 0x00000200   /* AFI registers */
+>>>>> 		       0x80004000 0x00100000   /* configuration space */
+>>>>> 		       0x80104000 0x00100000   /* extended configuration space */
+>>>>> 		       0x80400000 0x00010000   /* downstream I/O */
+>>>>> 		       0x90000000 0x10000000   /* non-prefetchable memory */
+>>>>> 		       0xa0000000 0x10000000>; /* prefetchable memory */
+>>>>> 		interrupts =<0 98 0x04   /* controller interrupt */
+>>>>> 		              0 99 0x04>; /* MSI interrupt */
+>>>>> 		status = "disabled";
+>>>>>
+>>>>> 		ranges =<0x80000000 0x80000000 0x00002000   /* 2 root ports */
+>>>>> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
+>>>>> 			  0x80104000 0x80104000 0x00100000   /* extended configuration space */
+>>>>> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
+>>>>> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
+>>>>> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
+>>>>>
+>>>>> 		#address-cells =<1>;
+>>>>> 		#size-cells =<1>;
+>>>>>
+>>>>> 		port@80000000 {
+>>>>> 			reg =<0x80000000 0x00001000>;
+>>>>> 			status = "disabled";
+>>>>> 		};
+>>>>>
+>>>>> 		port@80001000 {
+>>>>> 			reg =<0x80001000 0x00001000>;
+>>>>> 			status = "disabled";
+>>>>> 		};
+>>>>> 	};
+>>>>>
+>>>>> The "ranges" property can probably be cleaned up a bit, but the most
+>>>>> interesting part is the port@ children, which can simply be enabled in board
+>>>>> DTS files by setting the status property to "okay". I find that somewhat more
+>>>>> intuitive to the variant with an "enable-ports" property.
+>>>>>
+>>>>> What do you think of this?
+>>>>
+>>>> The problem is that children of a PCI-ish bus have specific expectations
+>>>> about the parent address format - the standard 3-address-cell PCI
+>>>> addressing.  So making a PCI bus node - even if it is PCIe - with 1
+>>>> address cell is a problem.
+>>>
+>>> Couldn't you put the #address-cells=<3>   underneath each port node, and
+>>> put any PCIe devices there rather than under the main PCIe controller
+>>> node? I'm not sure how the interrupt mapping table etc. would work in
+>>> that case, but that seems to solve the addressing issue.
+>>
+>> Yes, that would work just fine, and in fact would be preferable, if
+>> a "root port" is essentially an independent PCI bus.  The parent of
+>> those root ports should not be named "pci", though, as it is not in
+>> itself a PCI bus.  It could be called "pcis".
+>
+> Yes, on Tegra each of the ports provides a separate PCI bus. How about naming
+> the parent "pcie-controller"?
 
-Found by Coverity (CID 101680).
+That seems like a fine name.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b9e93cf..7f1310e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3395,8 +3395,7 @@ int pcix_set_mmrbc(struct pci_dev *dev, int mmrbc)
- 
- 	o = (cmd & PCI_X_CMD_MAX_READ) >> 2;
- 	if (o != v) {
--		if (v > o && dev->bus &&
--		   (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_MMRBC))
-+		if (v > o && (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_MMRBC))
- 			return -EIO;
- 
- 		cmd &= ~PCI_X_CMD_MAX_READ;
-
+> IMO that reflects the nature of the device
+> better, whereas "pcis" would seem more like a "virtual" node for collecting
+> similar children.
+>
+> Thierry
