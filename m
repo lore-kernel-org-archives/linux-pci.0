@@ -1,92 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:59029 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752278Ab2FKWv1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 18:51:27 -0400
-Received: by lbbgm6 with SMTP id gm6so3187835lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 15:51:25 -0700 (PDT)
+Received: from moutng.kundenserver.de ([212.227.126.186]:53305 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731Ab2FMImW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2012 04:42:22 -0400
+Date: Wed, 13 Jun 2012 10:42:06 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Mitch Bradley <wmb@firmworks.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120613084206.GA9607@avionic-0098.mockup.avionic-design.de>
+References: <4FD763C5.3090500@wwwdotorg.org>
+ <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de>
+ <4FD7A36B.9090409@wwwdotorg.org>
+ <4FD7B085.1020006@firmworks.com>
+ <20120613064519.GD31001@avionic-0098.mockup.avionic-design.de>
+ <4FD84133.4060401@firmworks.com>
+ <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
+ <4FD849CF.4030009@firmworks.com>
+ <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
+ <4FD85127.8050301@firmworks.com>
 MIME-Version: 1.0
-In-Reply-To: <1338960416.7150.160.camel@pasglop>
-References: <4FBC4C86.9050206@jp.fujitsu.com> <1338960416.7150.160.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 11 Jun 2012 16:51:04 -0600
-Message-ID: <CAErSpo79RDid=4m+Q8FZxnhThQ9BAJo4HhtZ8ZQ5rGc1nmvH-w@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] Add pcibios_device_change_notifier
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
+In-Reply-To: <4FD85127.8050301@firmworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 5, 2012 at 11:26 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2012-05-23 at 11:33 +0900, Hiroo Matsumoto wrote:
->> This patchset is for PCI hotplug.
->>
->>
->> pcibios_setup_bus_devices which sets DMA and IRQs of PCI device is called
->> only when boot. DMA setting in probe for PCI driver, like dma_set_mask,
->> does not work on powerpc platform. So it is need to set DMA and IRQs of
->> PCI device when hotplug.
->>
->> 1. Moving pcibios_setup_bus_devices code to pcibios_device_change_notifier
->>    which is registered to bus notifier in pcibios_init.
->> 2. Removing caller and callee of pcibios_setup_bus_devices bus notifier
->>    works instead of pcibios_setup_bus_devices.
->> 3. Using this bus notifier for microblaze because microblaze/PCI is similer
->>    with powerpc/PCI.
->
-> This makes me a bit nervous (that doesn't mean it's not right, but
-> we need some careful auditing & testing here, which I won't be
-> able to do until I'm back from leave). Mostly due to the change in when
-> we do the work.
->
-> pcibios_fixup_bus() used to be called early on in the initial scan pass.
->
-> Your code causes the code to be called -much- later when registering the
-> device with the device model. Are we 100% certain nothing will happen in
-> between that might rely on the stuff being setup already ? It might well
-> be ok, but I want us to triple check that.
 
-Here's my theory on this: we're setting up DMA and IRQ stuff.  DMA and
-IRQ usage is device-specific, so the core can't do anything with them.
- Only drivers know how to use them.  Drivers can't find the device
-until it's registered with the device model.  So it seems like it
-should be safe to move it later.  Subject to thinkos and testing in
-the real world, of course :)
+--azLHFNyN32YCQGCU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Now, if we are ok to do the setup that late (basically right before the
-> driver probe() routine gets called), would it make sense to simplify
-> things even further ... and do it from pcibios_enable_device() ? Thus
-> avoiding the notifier business completely or is that pushing it too
-> far ?
+On Tue, Jun 12, 2012 at 10:36:55PM -1000, Mitch Bradley wrote:
+> On 6/12/2012 10:19 PM, Thierry Reding wrote:
+> >On Tue, Jun 12, 2012 at 10:05:35PM -1000, Mitch Bradley wrote:
+> >>On 6/12/2012 9:52 PM, Thierry Reding wrote:
+> >>>I think the configuration spaces and downstream I/O ranges need to be =
+in the
+> >>>pcie-controller's reg property because they are remapped and used by t=
+he
+> >>>controller driver, not by the individual ports.
+> >>>
+> >>>That's probably not really necessary but rather a result of how the dr=
+iver
+> >>>was written. Perhaps the driver should handle them differently instead,
+> >>>listing the regions in the ranges property of the parent and listing t=
+he
+> >>>corresponding partitions in the ranges properties of the pci child nod=
+es.
+> >>>
+> >>>Like in the following, where the ranges property of the ports partitio=
+n the
+> >>>ranges passed from the parent evenly:
+> >>>
+> >>>	pcie-controller {
+> >>>		compatible =3D "nvidia,tegra20-pcie";
+> >>>		reg =3D<0x80003000 0x00000800   /* PADS registers */
+> >>>		       0x80003800 0x00000200>; /* AFI registers */
+> >>>		interrupts =3D<0 98 0x04   /* controller interrupt */
+> >>>			      0 99 0x04>; /* MSI interrupt */
+> >>>		status =3D "disabled";
+> >>>
+> >>>		ranges =3D<0x80000000 0x80000000 0x00002000   /* 2 root ports */
+> >>>			  0x80004000 0x80004000 0x00100000   /* configuration space */
+> >>>			  0x80104000 0x80100000 0x00100000   /* extended configuration spac=
+e */
+> >>>			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
+> >>>			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
+> >>>			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
+> >>>
+> >>>		#address-cells =3D<1>;
+> >>>		#size-cells =3D<1>;
+> >>>
+> >>>		pci@80000000 {
+> >>>			reg =3D<0x80000000 0x00001000>;
+> >>>			status =3D "disabled";
+> >>>
+> >>>			#address-cells =3D<3>;
+> >>>			#size-cells =3D<2>;
+> >>>
+> >>>			ranges =3D<0x80400000 0x80400000 0x00008000   /* I/O */
+> >>>				  0x90000000 0x90000000 0x08000000   /* non-prefetchable memory */
+> >>>				  0xa0000000 0xa0000000 0x08000000>; /* prefetchable memory */
+> >>
+> >>You are on the right track here, but the format of the child-address
+> >>portion of the above ranges property is incorrect.  Since the child
+> >>address space is the PCI address space, the child-address portion
+> >>needs to be 3 cells.  It's not a linear address but rather a triple.
+> >>The first cell identifies the address type (config, I/O, memory..)
+> >>and the second and third cells are offsets within that subspace.
+> >>The second and third cells will typically be 0.  The PCI binding has
+> >>details.
+>=20
+> Also, the size field in ranges is specified according to the child
+> address space, so there must be 2 size cells in the ranges at this
+> level.  Each ranges entry at this level is:
+>=20
+> <child_address_space, child_address_high, child_address_low,
+> parent_address, child_size_high, child_size_low>
+>=20
+> The above should be:
+>=20
+> 			ranges =3D<0x81000000 0 0  0x80400000  0 0x00008000   /* I/O */
+> 				 0x82000000 0 0  0x90000000  0 0x08000000   /* non-prefetchable memor=
+y */
+> 				 0xc2000000 0 0  0xa0000000  0 0x08000000>; /* prefetchable memory */
 
-Kenji-san actually suggested using pcibios_enable_device() early on,
-and I'm the one who suggested the notifiers instead.  I think I
-suggested that because I was copying the amd_iommu_init_notifier()
-style.
+Okay, I think I'm beginning to understand. Thanks.
 
-But I now think that might have been a mistake.  Notifiers are
-definitely more complicated, and a pcibios_*() hook seems
-straightforward.  It could be in pcibios_enable_device(), though we
-only need it to be called once, and the enable_device() path may be
-called many times, e.g., every time a driver claims it.  My new vote
-is a pcibios_device_add(), with an empty weak definition in
-drivers/pci, and a non-empty definition for microblaze and powerpc.
+Thierry
 
-> Also you seem to add:
->
-> +               /* Setup OF node pointer in the device */
-> +               dev->dev.of_node = pci_device_to_OF_node(dev);
->
-> This shouldn't be needed anymore, the device node should be setup by the
-> core nowadays. Is this just a remnant of you rebasing an old patch or do
-> you have a good reason to add this statement ?
+--azLHFNyN32YCQGCU
+Content-Type: application/pgp-signature
 
-It sounds like you want to remove this line in any case, so I'll wait
-for updated patches.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-Bjorn
+iEYEARECAAYFAk/YUl4ACgkQZ+BJyKLjJp8eagCfabQxPZ4R6G6lxx8YtNjDkkul
+apQAoKMutp2++vsN0qDgr86gYeEWg0PG
+=MedJ
+-----END PGP SIGNATURE-----
+
+--azLHFNyN32YCQGCU--
