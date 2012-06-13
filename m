@@ -1,60 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g1t0027.austin.hp.com ([15.216.28.34]:23307 "EHLO
-	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994Ab2FFXEC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 19:04:02 -0400
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-From: Khalid Aziz <khalid.aziz@hp.com>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-In-Reply-To: <CAL-B5D3Wda7TV_NBJWEbzJm=0eCs=b-wgGLdJUFRTwP_ewXGGg@mail.gmail.com>
-References: <20120427190033.GA17588@ldl.usa.hp.com>
-	 <20120606135009.GB1517@srcf.ucam.org> <1338999463.25761.630.camel@lyra>
-	 <20120606162703.GA6779@srcf.ucam.org> <1339003956.25761.667.camel@lyra>
-	 <20120606174202.GA8750@srcf.ucam.org> <1339006060.25761.689.camel@lyra>
-	 <CAL-B5D3Wda7TV_NBJWEbzJm=0eCs=b-wgGLdJUFRTwP_ewXGGg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Jun 2012 17:03:59 -0600
-Message-ID: <1339023839.25761.764.camel@lyra>
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.126.186]:51179 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426Ab2FMITU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2012 04:19:20 -0400
+Date: Wed, 13 Jun 2012 10:19:10 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Mitch Bradley <wmb@firmworks.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
+References: <4FD66410.7090001@wwwdotorg.org>
+ <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de>
+ <4FD763C5.3090500@wwwdotorg.org>
+ <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de>
+ <4FD7A36B.9090409@wwwdotorg.org>
+ <4FD7B085.1020006@firmworks.com>
+ <20120613064519.GD31001@avionic-0098.mockup.avionic-design.de>
+ <4FD84133.4060401@firmworks.com>
+ <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
+ <4FD849CF.4030009@firmworks.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UHN/qo2QbUvPLonB"
+In-Reply-To: <4FD849CF.4030009@firmworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-06-06 at 14:16 -0600, Myron Stowe wrote:
-> Hay Khalid,
-> 
-> I've been following this discussion but still do not understand what the
-> perceived correct fix is for the situation you were originally trying to
-> circumvent - namely, stopping NIC devices from triggering DMA activity
-> upon receipt of an incoming packet.
-> 
-> From the discussion it sounds like a driver, upon shutdown, can end
-> all active I/O
-> clearing the I/O queue, and also (?) shut down its DMA engine, and may
-> also go as far as disabling the Bus Master bit.
-> 
-> What was occurring in the original issue - was the driver in question not
-> shutting down its DMA engine for some, possibly valid, reason?
-> 
-> Thanks,
->  Myron
 
-Hi Myron,
+--UHN/qo2QbUvPLonB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The last driver issue with kexec was reported on kexec mailing list in
-July of last year and that was with qla driver. From what H Peter Anvin
-described, the driver left DMA engine running.
+On Tue, Jun 12, 2012 at 10:05:35PM -1000, Mitch Bradley wrote:
+> On 6/12/2012 9:52 PM, Thierry Reding wrote:
+> >I think the configuration spaces and downstream I/O ranges need to be in=
+ the
+> >pcie-controller's reg property because they are remapped and used by the
+> >controller driver, not by the individual ports.
+> >
+> >That's probably not really necessary but rather a result of how the driv=
+er
+> >was written. Perhaps the driver should handle them differently instead,
+> >listing the regions in the ranges property of the parent and listing the
+> >corresponding partitions in the ranges properties of the pci child nodes.
+> >
+> >Like in the following, where the ranges property of the ports partition =
+the
+> >ranges passed from the parent evenly:
+> >
+> >	pcie-controller {
+> >		compatible =3D "nvidia,tegra20-pcie";
+> >		reg =3D<0x80003000 0x00000800   /* PADS registers */
+> >		       0x80003800 0x00000200>; /* AFI registers */
+> >		interrupts =3D<0 98 0x04   /* controller interrupt */
+> >			      0 99 0x04>; /* MSI interrupt */
+> >		status =3D "disabled";
+> >
+> >		ranges =3D<0x80000000 0x80000000 0x00002000   /* 2 root ports */
+> >			  0x80004000 0x80004000 0x00100000   /* configuration space */
+> >			  0x80104000 0x80100000 0x00100000   /* extended configuration space =
+*/
+> >			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
+> >			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
+> >			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
+> >
+> >		#address-cells =3D<1>;
+> >		#size-cells =3D<1>;
+> >
+> >		pci@80000000 {
+> >			reg =3D<0x80000000 0x00001000>;
+> >			status =3D "disabled";
+> >
+> >			#address-cells =3D<3>;
+> >			#size-cells =3D<2>;
+> >
+> >			ranges =3D<0x80400000 0x80400000 0x00008000   /* I/O */
+> >				  0x90000000 0x90000000 0x08000000   /* non-prefetchable memory */
+> >				  0xa0000000 0xa0000000 0x08000000>; /* prefetchable memory */
+>=20
+> You are on the right track here, but the format of the child-address
+> portion of the above ranges property is incorrect.  Since the child
+> address space is the PCI address space, the child-address portion
+> needs to be 3 cells.  It's not a linear address but rather a triple.
+> The first cell identifies the address type (config, I/O, memory..)
+> and the second and third cells are offsets within that subspace.
+> The second and third cells will typically be 0.  The PCI binding has
+> details.
 
-For the issue I found on an ia64 platform, it was so many years ago that
-you are now taxing my old and decrepit memory :) I am digging through
-old internal bug reports and will let you know once I find that original
-bug report.
+Okay, I'll need to read up some more.
 
-====================================================================
-Khalid Aziz                                         Unix Systems Lab
-(970)898-9214                                        Hewlett-Packard
-khalid.aziz@hp.com                                  Fort Collins, CO
+Thanks,
+Thierry
 
+--UHN/qo2QbUvPLonB
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/YTP4ACgkQZ+BJyKLjJp+ragCaAvi1/euZqJgdaz9vY36B4bVK
+kWUAoI7JovjIWy///PXDG4GoW9h0HS7v
+=63hM
+-----END PGP SIGNATURE-----
+
+--UHN/qo2QbUvPLonB--
