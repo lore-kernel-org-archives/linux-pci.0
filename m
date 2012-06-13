@@ -1,152 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:52833 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.187]:63407 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755588Ab2FKPFk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 11:05:40 -0400
+	with ESMTP id S1751141Ab2FMINL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2012 04:13:11 -0400
+Date: Wed, 13 Jun 2012 10:12:56 +0200
 From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-tegra@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Rob Herring <rob.herring@calxeda.com>,
 	devicetree-discuss@lists.ozlabs.org,
 	Russell King <linux@arm.linux.org.uk>,
 	linux-arm-kernel@lists.infradead.org,
 	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v2 08/10] ARM: tegra: harmony: Initialize regulators from DT
-Date: Mon, 11 Jun 2012 17:05:16 +0200
-Message-Id: <1339427118-32263-9-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+	Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v2 05/10] ARM: tegra: Rewrite PCIe support as a driver
+Message-ID: <20120613081256.GA6528@avionic-0098.mockup.avionic-design.de>
 References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+ <1339427118-32263-6-git-send-email-thierry.reding@avionic-design.de>
+ <4FD65E98.4070200@wwwdotorg.org>
+ <20120612064124.GF4040@avionic-0098.adnet.avionic-design.de>
+ <20120612072444.GA8577@avionic-0098.mockup.avionic-design.de>
+ <4FD7679A.2080800@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="envbJBWh7q8WU6mo"
+In-Reply-To: <4FD7679A.2080800@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Device tree support for the TPS6586x PMU used on Harmony has recently
-been added. This commit adds the required device tree nodes to probe the
-PMU from the device tree.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+--envbJBWh7q8WU6mo
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
----
-Changes in v2:
-- new patch
----
- arch/arm/boot/dts/tegra-harmony.dts    |   83 ++++++++++++++++++++++++++++++++
- arch/arm/mach-tegra/board-dt-tegra20.c |    6 ---
- 2 files changed, 83 insertions(+), 6 deletions(-)
+On Tue, Jun 12, 2012 at 10:00:26AM -0600, Stephen Warren wrote:
+> On 06/12/2012 01:24 AM, Thierry Reding wrote:
+> > * Thierry Reding wrote:
+> >> AFAICT the even partitioning of the non-prefetchable and=20
+> >> prefetchable memory regions is arbitrary and it could
+> >> potentially be useful to make it configurable via the DT.
+> >=20
+> > So it turns out that this isn't true. But apart from the comments=20
+> > in the driver I couldn't find any reference to how the prefetch
+> > and non-prefetch ranges are partitioned. Judging by the code for
+> > Tegra2 this is evenly partitioned among ports 0 and 1 but it would
+> > be interesting to know this is done on Tegra3. Is there any way
+> > you can find out?
+> >=20
+> > It'd also be nice if some better documentation for the PCIe=20
+> > controller could be made available. The Tegra2 TRM doesn't contain=20
+> > any of the AFI or PADS registers and while the Tegra3 TRM
+> > documents more registers, their offsets are completely missing.
+>=20
+> I've filed a bug to request better documentation.
+>=20
+> Looking at our downstream driver, the quoted comment below implies
+> that the address space layout is pretty arbitrary and programmable at
+> least for Tegra30. The code in function
+> tegra_pcie_setup_translations() appears to support this (and is
+> executed for both Tegra20 and Tegra30, even though the comment for
+> Tegra20 doesn't mention any programmability).
+>=20
+> Tegra20:
+>=20
+> > /*
+> >  * Tegra2 defines 1GB in the AXI address map for PCIe.
+> >  *
+> >  * That address space is split into different regions, with sizes and
+> >  * offsets as follows:
+> >  *
+> >  * 0x80000000 - 0x80003fff - PCI controller registers
+> >  * 0x80004000 - 0x80103fff - PCI configuration space
+> >  * 0x80104000 - 0x80203fff - PCI extended configuration space
+> >  * 0x80203fff - 0x803fffff - unused
+> >  * 0x80400000 - 0x8040ffff - downstream IO
+> >  * 0x80410000 - 0x8fffffff - unused
+> >  * 0x90000000 - 0x9fffffff - non-prefetchable memory
+> >  * 0xa0000000 - 0xbfffffff - prefetchable memory
+> >  */
+>=20
+> (I guess by "is split", it means the driver sets it up that way, not
+> that the HW is fixed that way)
+>=20
+> Tegra30:
+>=20
+> > /*
+> >  * AXI address map for the PCIe aperture , defines 1GB in the AXI
+> >  *  address map for PCIe.
+> >  *
+> >  *  That address space is split into different regions, with sizes and
+> >  *  offsets as follows. Exepct for the Register space, SW is free to sl=
+ice the
+> >  *  regions as it chooces.
+> >  *
+> >  *  The split below seems to work fine for now.
+> >  *
+> >  *  0x0000_0000 to 0x00ff_ffff - Register space          16MB.
+> >  *  0x0100_0000 to 0x01ff_ffff - Config space            16MB.
+> >  *  0x0200_0000 to 0x02ff_ffff - Extended config space   16MB.
+> >  *  0x0300_0000 to 0x03ff_ffff - Downstream IO space
+> >  *   ... Will be filled with other BARS like MSI/upstream IO etc.
+> >  *  0x1000_0000 to 0x1fff_ffff - non-prefetchable memory aperture
+> >  *  0x2000_0000 to 0x3fff_ffff - Prefetchable memory aperture
+> >  *
+> >  *  Config and Extended config sizes are choosen to support
+> >  *  maximum of 256 devices,
+> >  *  which is good enough for all the current use cases.
+> >  *
+> >  */
+>=20
+> From
+> http://nv-tegra.nvidia.com/gitweb/?p=3Dlinux-2.6.git;a=3Dblob;f=3Darch/ar=
+m/mach-tegra/pcie.c;h=3Db98d4892b5ee46120a9777a969e820a0b5cbb68a;hb=3Dandro=
+id-tegra-nv-3.1
 
-diff --git a/arch/arm/boot/dts/tegra-harmony.dts b/arch/arm/boot/dts/tegra-harmony.dts
-index f146dbf..c98aa2a 100644
---- a/arch/arm/boot/dts/tegra-harmony.dts
-+++ b/arch/arm/boot/dts/tegra-harmony.dts
-@@ -275,6 +275,89 @@
- 	i2c@7000d000 {
- 		status = "okay";
- 		clock-frequency = <400000>;
-+
-+		tps6586x@34 {
-+			compatible = "ti,tps6586x";
-+			reg = <0x34>;
-+			interrupts = <0 88 0x4>;
-+
-+			#gpio-cells = <2>;
-+			gpio-controller;
-+
-+			regulators {
-+				sm0 {
-+					regulator-min-microvolt = < 725000>;
-+					regulator-max-microvolt = <1500000>;
-+					regulator-boot-on;
-+					regulator-always-on;
-+				};
-+
-+				sm1 {
-+					regulator-min-microvolt = < 725000>;
-+					regulator-max-microvolt = <1500000>;
-+					regulator-boot-on;
-+					regulator-always-on;
-+				};
-+
-+				sm2 {
-+					regulator-min-microvolt = <3000000>;
-+					regulator-max-microvolt = <4550000>;
-+					regulator-boot-on;
-+					regulator-always-on;
-+				};
-+
-+				ldo0 {
-+					regulator-name = "PCIE CLK";
-+					regulator-min-microvolt = <3300000>;
-+					regulator-max-microvolt = <3300000>;
-+				};
-+
-+				ldo1 {
-+					regulator-min-microvolt = < 725000>;
-+					regulator-max-microvolt = <1500000>;
-+				};
-+
-+				ldo2 {
-+					regulator-min-microvolt = < 725000>;
-+					regulator-max-microvolt = <1500000>;
-+				};
-+
-+				ldo3 {
-+					regulator-min-microvolt = <1250000>;
-+					regulator-max-microvolt = <3300000>;
-+				};
-+
-+				ldo4 {
-+					regulator-min-microvolt = <1700000>;
-+					regulator-max-microvolt = <2475000>;
-+				};
-+
-+				ldo5 {
-+					regulator-min-microvolt = <1250000>;
-+					regulator-max-microvolt = <3300000>;
-+				};
-+
-+				ldo6 {
-+					regulator-min-microvolt = <1250000>;
-+					regulator-max-microvolt = <3300000>;
-+				};
-+
-+				ldo7 {
-+					regulator-min-microvolt = <1250000>;
-+					regulator-max-microvolt = <3300000>;
-+				};
-+
-+				ldo8 {
-+					regulator-min-microvolt = <1250000>;
-+					regulator-max-microvolt = <3300000>;
-+				};
-+
-+				ldo9 {
-+					regulator-min-microvolt = <1250000>;
-+					regulator-max-microvolt = <3300000>;
-+				};
-+			};
-+		};
- 	};
- 
- 	pmc {
-diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
-index 0f29c05..a9a54e6 100644
---- a/arch/arm/mach-tegra/board-dt-tegra20.c
-+++ b/arch/arm/mach-tegra/board-dt-tegra20.c
-@@ -136,12 +136,6 @@ static void __init harmony_init(void)
- {
- 	int ret;
- 
--	ret = harmony_regulator_init();
--	if (ret) {
--		pr_err("harmony_regulator_init() failed: %d\n", ret);
--		return;
--	}
--
- 	ret = harmony_pcie_init();
- 	if (ret)
- 		pr_err("harmony_pcie_init() failed: %d\n", ret);
--- 
-1.7.10.4
+While it is apparently true that each region can be split arbitrarily this
+doesn't seem to be true for the partitioning of each region between the
+individual ports.
 
+For instance, while non-prefetchable memory could possibly be mapped either
+to 0x90000000 or to 0xa0000000 with an arbitrary size, the subregion that is
+assigned to port 0 or 1 seems to be fixed. Judging by the code this current=
+ly
+seems to be evenly distributed, but it's not so clear how this behaves when
+port 1 for example is disabled, or how it is distributed on Tegra30 with all
+three ports enabled (split into 3 equally-sized partitions?).
+
+While the upstream driver currently still initializes the I/O and memory
+resources for each port (splitting them into equally-sized partitions), the
+latest downstream driver no longer seems to do so, but instead just
+initializes a global resource for each resource type (tegra_pcie_preinit()).
+
+I hope the improved documentation that you already requested will shed some
+light on this.
+
+Thierry
+
+--envbJBWh7q8WU6mo
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/YS4gACgkQZ+BJyKLjJp8fLwCdEaUQLfNj62MYpcAOD0Z47tG5
+/6oAn1UPr/yptya0OJsQxUBh8P5MXsVE
+=hOQR
+-----END PGP SIGNATURE-----
+
+--envbJBWh7q8WU6mo--
