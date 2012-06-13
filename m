@@ -1,122 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:34603 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752978Ab2FSFU6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Jun 2012 01:20:58 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Zheng Yan <zheng.z.yan@intel.com>
-Subject: [PATCH -v6 2/4] PCIe, PM, Add runtime PM support to PCIe port
-Date: Tue, 19 Jun 2012 13:20:47 +0800
-Message-Id: <1340083249-16266-3-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
-References: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:60118 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340Ab2FMFys (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2012 01:54:48 -0400
+Date: Wed, 13 Jun 2012 07:54:37 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Mitch Bradley <wmb@firmworks.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120613055437.GB31001@avionic-0098.mockup.avionic-design.de>
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+ <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de>
+ <4FD66410.7090001@wwwdotorg.org>
+ <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de>
+ <4FD763C5.3090500@wwwdotorg.org>
+ <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de>
+ <4FD7943E.60302@firmworks.com>
+ <4FD79CAE.9090006@wwwdotorg.org>
+ <4FD79DE8.90603@firmworks.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7ZAtKRhVyVSsbBD2"
+In-Reply-To: <4FD79DE8.90603@firmworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Yan, Zheng" <zheng.z.yan@intel.com>
 
-This patch adds runtime PM support to PCIe port.  This is needed by
-PCIe D3cold support, where PCIe device without ACPI node may be
-powered on/off by PCIe port.
+--7ZAtKRhVyVSsbBD2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Because runtime suspend is broken for some chipsets, a black list is
-used to disable runtime PM support for these chipsets.
+* Mitch Bradley wrote:
+> On 6/12/2012 9:46 AM, Stephen Warren wrote:
+> >On 06/12/2012 01:10 PM, Mitch Bradley wrote:
+> >>On 6/12/2012 7:20 AM, Thierry Reding wrote:
+> >...
+> >>>I came up with the following alternative:
+> >>>
+> >>>	pci {
+> >>>		compatible =3D "nvidia,tegra20-pcie";
+> >>>		reg =3D<0x80003000 0x00000800   /* PADS registers */
+> >>>		       0x80003800 0x00000200   /* AFI registers */
+> >>>		       0x80004000 0x00100000   /* configuration space */
+> >>>		       0x80104000 0x00100000   /* extended configuration space */
+> >>>		       0x80400000 0x00010000   /* downstream I/O */
+> >>>		       0x90000000 0x10000000   /* non-prefetchable memory */
+> >>>		       0xa0000000 0x10000000>; /* prefetchable memory */
+> >>>		interrupts =3D<0 98 0x04   /* controller interrupt */
+> >>>		              0 99 0x04>; /* MSI interrupt */
+> >>>		status =3D "disabled";
+> >>>
+> >>>		ranges =3D<0x80000000 0x80000000 0x00002000   /* 2 root ports */
+> >>>			  0x80004000 0x80004000 0x00100000   /* configuration space */
+> >>>			  0x80104000 0x80104000 0x00100000   /* extended configuration spac=
+e */
+> >>>			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
+> >>>			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
+> >>>			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
+> >>>
+> >>>		#address-cells =3D<1>;
+> >>>		#size-cells =3D<1>;
+> >>>
+> >>>		port@80000000 {
+> >>>			reg =3D<0x80000000 0x00001000>;
+> >>>			status =3D "disabled";
+> >>>		};
+> >>>
+> >>>		port@80001000 {
+> >>>			reg =3D<0x80001000 0x00001000>;
+> >>>			status =3D "disabled";
+> >>>		};
+> >>>	};
+> >>>
+> >>>The "ranges" property can probably be cleaned up a bit, but the most
+> >>>interesting part is the port@ children, which can simply be enabled in=
+ board
+> >>>DTS files by setting the status property to "okay". I find that somewh=
+at more
+> >>>intuitive to the variant with an "enable-ports" property.
+> >>>
+> >>>What do you think of this?
+> >>
+> >>The problem is that children of a PCI-ish bus have specific expectations
+> >>about the parent address format - the standard 3-address-cell PCI
+> >>addressing.  So making a PCI bus node - even if it is PCIe - with 1
+> >>address cell is a problem.
+> >
+> >Couldn't you put the #address-cells=3D<3>  underneath each port node, and
+> >put any PCIe devices there rather than under the main PCIe controller
+> >node? I'm not sure how the interrupt mapping table etc. would work in
+> >that case, but that seems to solve the addressing issue.
+>=20
+> Yes, that would work just fine, and in fact would be preferable, if
+> a "root port" is essentially an independent PCI bus.  The parent of
+> those root ports should not be named "pci", though, as it is not in
+> itself a PCI bus.  It could be called "pcis".
 
-Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
-Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/pci/pci.c              |   10 ++++++++++
- drivers/pci/pcie/portdrv_pci.c |   24 ++++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
+Yes, on Tegra each of the ports provides a separate PCI bus. How about nami=
+ng
+the parent "pcie-controller"? IMO that reflects the nature of the device
+better, whereas "pcis" would seem more like a "virtual" node for collecting
+similar children.
 
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1518,6 +1518,16 @@ static void pci_pme_list_scan(struct wor
- 	if (!list_empty(&pci_pme_list)) {
- 		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
- 			if (pme_dev->dev->pme_poll) {
-+				struct pci_dev *bridge;
-+
-+				bridge = pme_dev->dev->bus->self;
-+				/*
-+				 * If bridge is in low power state, the
-+				 * configuration space of subordinate devices
-+				 * may be not accessible
-+				 */
-+				if (bridge && bridge->current_state != PCI_D0)
-+					continue;
- 				pci_pme_wakeup(pme_dev->dev, NULL);
- 			} else {
- 				list_del(&pme_dev->list);
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -11,6 +11,7 @@
- #include <linux/kernel.h>
- #include <linux/errno.h>
- #include <linux/pm.h>
-+#include <linux/pm_runtime.h>
- #include <linux/init.h>
- #include <linux/pcieport_if.h>
- #include <linux/aer.h>
-@@ -99,6 +100,15 @@ static int pcie_port_resume_noirq(struct
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_RUNTIME
-+static int pcie_port_runtime_pm(struct device *dev)
-+{
-+	return 0;
-+}
-+#else
-+#define pcie_port_runtime_pm	NULL
-+#endif
-+
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.suspend	= pcie_port_device_suspend,
- 	.resume		= pcie_port_device_resume,
-@@ -107,6 +117,8 @@ static const struct dev_pm_ops pcie_port
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
- 	.resume_noirq	= pcie_port_resume_noirq,
-+	.runtime_suspend = pcie_port_runtime_pm,
-+	.runtime_resume = pcie_port_runtime_pm,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
-@@ -117,6 +129,14 @@ static const struct dev_pm_ops pcie_port
- #endif /* !PM */
- 
- /*
-+ * PCIe port runtime suspend is broken for some chipsets, so use a
-+ * black list to disable runtime PM for these chipsets.
-+ */
-+static const struct pci_device_id port_runtime_pm_black_list[] = {
-+	{ /* end: all zeroes */ }
-+};
-+
-+/*
-  * pcie_portdrv_probe - Probe PCI-Express port devices
-  * @dev: PCI-Express port device being probed
-  *
-@@ -144,12 +164,16 @@ static int __devinit pcie_portdrv_probe(
- 		return status;
- 
- 	pci_save_state(dev);
-+	if (!pci_match_id(port_runtime_pm_black_list, dev))
-+		pm_runtime_put_noidle(&dev->dev);
- 
- 	return 0;
- }
- 
- static void pcie_portdrv_remove(struct pci_dev *dev)
- {
-+	if (!pci_match_id(port_runtime_pm_black_list, dev))
-+		pm_runtime_get_noresume(&dev->dev);
- 	pcie_port_device_remove(dev);
- 	pci_disable_device(dev);
- }
+Thierry
+
+--7ZAtKRhVyVSsbBD2
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/YKx0ACgkQZ+BJyKLjJp/JYwCgpXG48eCe74WLWujfZGQSnQ4K
+Gl8AnRbUqD8u/XLAwS0V+lIkcN2gbIG9
+=pqcY
+-----END PGP SIGNATURE-----
+
+--7ZAtKRhVyVSsbBD2--
