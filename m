@@ -1,46 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:57020 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757951Ab2FOVNt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Jun 2012 17:13:49 -0400
-Received: by lahd3 with SMTP id d3so2380599lah.19
-        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2012 14:13:47 -0700 (PDT)
+Received: from moutng.kundenserver.de ([212.227.17.9]:59103 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752849Ab2FMUVh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2012 16:21:37 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Date: Wed, 13 Jun 2012 20:21:08 +0000
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org
+References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <4FD84133.4060401@firmworks.com> <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-In-Reply-To: <20120615163823.GA14302@linux-mips.org>
-References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
- <1338749305-22558-8-git-send-email-sebastian@breakpoint.cc>
- <CAL-B5D1GEMd9TPMqbYBqDuzs5U2jo7ByRg73Z=dPsPcgTSyJJA@mail.gmail.com>
- <CAErSpo77vyUaGTzVNwFGzTHsOapYNFRy_KOvNnXo=jdU2kYLbA@mail.gmail.com> <20120615163823.GA14302@linux-mips.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 15 Jun 2012 15:13:26 -0600
-Message-ID: <CAErSpo5kv_vE9D=AnyVdcXOAQpM6U3dyPpouE-NyNoU98R+syA@mail.gmail.com>
-Subject: Re: [PATCH 7/9] mips: move PCI fixup hooks from __init to __devinit
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	linux-pci@vger.kernel.org, linux-kbuild@vger.kernel.org,
-	Michal Marek <mmarek@suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201206132021.09774.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 15, 2012 at 10:38 AM, Ralf Baechle <ralf@linux-mips.org> wrote:
-> On Fri, Jun 15, 2012 at 10:33:15AM -0600, Bjorn Helgaas wrote:
->
->> > Doesn't the above line also need changed to __devinitdata if the
->> > function itself is being
->> > changed from __init to __devinit?
->>
->> I think so.  And pci_irq[] and piixirqmap[] also need to be moved,
->> since they're referenced by __devinit code.  I fixed these, audited
->> all the other patches, and updated the "next" branch.
->
-> I'm going to patch that up.
+On Wednesday 13 June 2012, Thierry Reding wrote:
+>                 pci@80000000 {
+>                         reg = <0x80000000 0x00001000>;
+>                         status = "disabled";
+> 
+>                         #address-cells = <3>;
+>                         #size-cells = <2>;
+> 
+>                         ranges = <0x80400000 0x80400000 0x00008000   /* I/O */
+>                                   0x90000000 0x90000000 0x08000000   /* non-prefetchable memory */
+>                                   0xa0000000 0xa0000000 0x08000000>; /* prefetchable memory */
+> 
+>                         nvidia,ctrl-offset = <0x0>;
+>                         nvidia,num-lanes = <2>;
+>                 };
+> 
 
-Does this mean you're going to push it through your tree and I should
-remove the mips patch from my "next" branch?  Either way is fine with
-me; currently I'm planning to push all the other arch patches via my
-tree.
+I believe you will need an "interrupt-map" property here, to map the host
+interrupts to the INTA-INTD lines of the attached devices.
 
-Bjorn
+I'm not sure whether we want to have a device_type="pciex" property here.
+powerpc and sparc seem to use that information, to distinguish a pcie
+bus from pci or cardbus.
+
+	Arnd
