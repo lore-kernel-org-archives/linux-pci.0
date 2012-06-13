@@ -1,71 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:37603 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753833Ab2FTUEr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 16:04:47 -0400
+Received: from usmamail.tilera.com ([12.216.194.151]:39468 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755995Ab2FPUhL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2012 16:37:11 -0400
+Message-ID: <201206162037.q5GKbBaU017780@lab-41.internal.tilera.com>
+From: Chris Metcalf <cmetcalf@tilera.com>
+Date: Wed, 13 Jun 2012 14:46:40 -0400
+Subject: [PATCH 2/3] arch/tile: enable ZONE_DMA for tilegx
+In-Reply-To: <201206162036.q5GKacEK017774@lab-41.internal.tilera.com>
+To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120620193438.GB2248@gmail.com>
-References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
- <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
- <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
- <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
- <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
- <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
- <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
- <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
- <CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
- <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com> <20120620193438.GB2248@gmail.com>
-From: Ulrich Drepper <drepper@gmail.com>
-Date: Wed, 20 Jun 2012 16:04:26 -0400
-Message-ID: <CAOPLpQdi-8NZL1rwt3APU_is4GcyGaAN0Vq0T23BMSHob--YYg@mail.gmail.com>
-Subject: Re: SNB PCI root information
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 3:34 PM, Ingo Molnar <mingo@kernel.org> wrote:
-> I mean, if we create a parameter space that tweaks data then why
-> not make it complete and allow *all* firmware data to be
-> (optionally) modified, from the kernel boot line?
+This is required for PCI root complex legacy support and USB OHCI root
+complex support.  With this change tilegx now supports allocating memory
+whose PA fits in 32 bits.
 
-If there is proof that BIOSes get it wrong then just use this small
-additional patch:
+Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+---
+ arch/tile/Kconfig          |    3 +++
+ arch/tile/kernel/pci-dma.c |   15 +++++++++------
+ arch/tile/kernel/setup.c   |   12 +++++++++++-
+ arch/tile/mm/init.c        |   11 +++++------
+ 4 files changed, 28 insertions(+), 13 deletions(-)
 
-
-Signed-off-by: Ulrich Drepper <drepper@gmail.com>
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index fc09c27..7aceb84 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -387,16 +387,16 @@ struct pci_bus * __devinit
-pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 	}
-
--	node = -1;
-+	node = get_mp_bus_to_node(busnum);
- #ifdef CONFIG_ACPI_NUMA
--	pxm = acpi_get_pxm(device->handle);
--	if (pxm >= 0)
--		node = pxm_to_node(pxm);
--	if (node != -1)
--		set_mp_bus_to_node(busnum, node);
--	else
-+	if (node == -1) {
-+		pxm = acpi_get_pxm(device->handle);
-+		if (pxm >= 0)
-+			node = pxm_to_node(pxm);
-+		if (node != -1)
-+			set_mp_bus_to_node(busnum, node);
+diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
+index a5302d3..0ad771f 100644
+--- a/arch/tile/Kconfig
++++ b/arch/tile/Kconfig
+@@ -212,6 +212,9 @@ config HIGHMEM
+ 
+ 	  If unsure, say "true".
+ 
++config ZONE_DMA
++	def_bool y
++
+ # We do not currently support disabling NUMA.
+ config NUMA
+ 	bool # "NUMA Memory Allocation and Scheduler Support"
+diff --git a/arch/tile/kernel/pci-dma.c b/arch/tile/kernel/pci-dma.c
+index 9814d70..edd856a 100644
+--- a/arch/tile/kernel/pci-dma.c
++++ b/arch/tile/kernel/pci-dma.c
+@@ -45,14 +45,17 @@ void *dma_alloc_coherent(struct device *dev,
+ 	gfp |= __GFP_ZERO;
+ 
+ 	/*
+-	 * By forcing NUMA node 0 for 32-bit masks we ensure that the
+-	 * high 32 bits of the resulting PA will be zero.  If the mask
+-	 * size is, e.g., 24, we may still not be able to guarantee a
+-	 * suitable memory address, in which case we will return NULL.
+-	 * But such devices are uncommon.
++	 * If the mask specifies that the memory be in the first 4 GB, then
++	 * we force the allocation to come from the DMA zone.  We also
++	 * force the node to 0 since that's the only node where the DMA
++	 * zone isn't empty.  If the mask size is smaller than 32 bits, we
++	 * may still not be able to guarantee a suitable memory address, in
++	 * which case we will return NULL.  But such devices are uncommon.
+ 	 */
+-	if (dma_mask <= DMA_BIT_MASK(32))
++	if (dma_mask <= DMA_BIT_MASK(32)) {
++		gfp |= GFP_DMA;
+ 		node = 0;
 +	}
+ 
+ 	pg = homecache_alloc_pages_node(node, gfp, order, PAGE_HOME_DMA);
+ 	if (pg == NULL)
+diff --git a/arch/tile/kernel/setup.c b/arch/tile/kernel/setup.c
+index 6d179df..fdde3b6 100644
+--- a/arch/tile/kernel/setup.c
++++ b/arch/tile/kernel/setup.c
+@@ -658,6 +658,8 @@ static void __init zone_sizes_init(void)
+ 	unsigned long zones_size[MAX_NR_ZONES] = { 0 };
+ 	int size = percpu_size();
+ 	int num_cpus = smp_height * smp_width;
++	const unsigned long dma_end = (1UL << (32 - PAGE_SHIFT));
++
+ 	int i;
+ 
+ 	for (i = 0; i < num_cpus; ++i)
+@@ -729,6 +731,14 @@ static void __init zone_sizes_init(void)
+ 		zones_size[ZONE_NORMAL] = end - start;
  #endif
--		node = get_mp_bus_to_node(busnum);
+ 
++		if (start < dma_end) {
++			zones_size[ZONE_DMA] = min(zones_size[ZONE_NORMAL],
++						   dma_end - start);
++			zones_size[ZONE_NORMAL] -= zones_size[ZONE_DMA];
++		} else {
++			zones_size[ZONE_DMA] = 0;
++		}
++
+ 		/* Take zone metadata from controller 0 if we're isolnode. */
+ 		if (node_isset(i, isolnodes))
+ 			NODE_DATA(i)->bdata = &bootmem_node_data[0];
+@@ -738,7 +748,7 @@ static void __init zone_sizes_init(void)
+ 		       PFN_UP(node_percpu[i]));
+ 
+ 		/* Track the type of memory on each node */
+-		if (zones_size[ZONE_NORMAL])
++		if (zones_size[ZONE_NORMAL] || zones_size[ZONE_DMA])
+ 			node_set_state(i, N_NORMAL_MEMORY);
+ #ifdef CONFIG_HIGHMEM
+ 		if (end != start)
+diff --git a/arch/tile/mm/init.c b/arch/tile/mm/init.c
+index a2417a0..ef29d6c 100644
+--- a/arch/tile/mm/init.c
++++ b/arch/tile/mm/init.c
+@@ -733,16 +733,15 @@ static void __init set_non_bootmem_pages_init(void)
+ 	for_each_zone(z) {
+ 		unsigned long start, end;
+ 		int nid = z->zone_pgdat->node_id;
++#ifdef CONFIG_HIGHMEM
+ 		int idx = zone_idx(z);
++#endif
+ 
+ 		start = z->zone_start_pfn;
+-		if (start == 0)
+-			continue;  /* bootmem */
+ 		end = start + z->spanned_pages;
+-		if (idx == ZONE_NORMAL) {
+-			BUG_ON(start != node_start_pfn[nid]);
+-			start = node_free_pfn[nid];
+-		}
++		start = max(start, node_free_pfn[nid]);
++		start = max(start, max_low_pfn);
++
+ #ifdef CONFIG_HIGHMEM
+ 		if (idx == ZONE_HIGHMEM)
+ 			totalhigh_pages += z->spanned_pages;
+-- 
+1.7.10.3
 
- 	if (node != -1 && !node_online(node))
- 		node = -1;
