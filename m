@@ -1,50 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:47438 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753638Ab2FLPkZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 11:40:25 -0400
-Message-ID: <4FD762E6.2080906@wwwdotorg.org>
-Date: Tue, 12 Jun 2012 09:40:22 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de> <4FD660F9.7030807@wwwdotorg.org> <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de> <20120612061003.GC4040@avionic-0098.adnet.avionic-design.de>
-In-Reply-To: <20120612061003.GC4040@avionic-0098.adnet.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 14 Jun 2012 18:18:44 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <liuj97@gmail.com>, Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v1 1/6] PCI: change PCI device management logic to
+ better follow device model
+Message-Id: <20120614181844.760bc0c7.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/2012 12:10 AM, Thierry Reding wrote:
-> * Thierry Reding wrote:
->> * Stephen Warren wrote:
->>> On 06/11/2012 09:05 AM, Thierry Reding wrote:
-> [...]
->>>> +static int tegra_pcie_disable_msi(struct platform_device
->>>> *pdev)
->>> 
->>> Should this free pcie->msi->pages?
->> 
->> Yes it should. I actually mention making that change in the
->> changelog but in fact didn't.
-> 
-> This is really moot because the driver cannot be built as a module
-> currently because arch_setup_msi_irq() and arch_teardown_msi_irq()
-> need to be built-in so tegra_pcie_disable_msi() will be called only
-> just before the machine is shut down.
-> 
-> Perhaps this is something that should be addressed? Or is it just
-> not worth the effort?
 
-Well, if the driver provides a shutdown/removal path at all, it seems
-like it should be complete. I assume it's trivial to free those pages?
+Hi Jiang,
+
+   Looks good for me.
+
+ Best regards,
+ Taku Izumi
+
+On Mon, 04 Jun 2012 13:16:57 +0800
+Jiang Liu <jiang.liu@huawei.com> wrote:
+
+> From: Jiang Liu <liuj97@gmail.com>
+> 
+> According to device model documentation, the way to add/remove device
+> object should be symmetric.
+> 
+> /**
+>  * device_del - delete device from system.
+>  * @dev: device.
+>  *
+>  * This is the first part of the device unregistration
+>  * sequence. This removes the device from the lists we control
+>  * from here, has it removed from the other driver model
+>  * subsystems it was added to in device_add(), and removes it
+>  * from the kobject hierarchy.
+>  *
+>  * NOTE: this should be called manually _iff_ device_add() was
+>  * also called manually.
+>  */
+> 
+> The rule here is to either use
+> 1) device_register()/device_unregister()
+> or
+> 2) device_initialize()/device_add()/device_del()/put_device().
+> 
+> So change PCI core to follow the rule and get rid of the redundant
+> pci_dev_get()/pci_dev_put() pair.
+> 
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  drivers/pci/probe.c  |    1 -
+>  drivers/pci/remove.c |    4 ++--
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 0840409..dacca26 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1294,7 +1294,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  {
+>  	device_initialize(&dev->dev);
+>  	dev->dev.release = pci_release_dev;
+> -	pci_dev_get(dev);
+>  
+>  	dev->dev.dma_mask = &dev->dma_mask;
+>  	dev->dev.dma_parms = &dev->dma_parms;
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 04a4861..6c07bc5 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+>  	if (dev->is_added) {
+>  		pci_proc_detach_device(dev);
+>  		pci_remove_sysfs_dev_files(dev);
+> -		device_unregister(&dev->dev);
+> +		device_del(&dev->dev);
+>  		dev->is_added = 0;
+>  	}
+>  
+> @@ -40,7 +40,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>  	up_write(&pci_bus_sem);
+>  
+>  	pci_free_resources(dev);
+> -	pci_dev_put(dev);
+> +	put_device(&dev->dev);
+>  }
+>  
+>  /**
+> -- 
+> 1.7.1
+> 
+> 
+> 
+
