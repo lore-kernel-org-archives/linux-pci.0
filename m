@@ -1,86 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:46559 "EHLO e7.ny.us.ibm.com"
+Received: from plane.gmane.org ([80.91.229.3]:50880 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751428Ab2F2Gss (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jun 2012 02:48:48 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Fri, 29 Jun 2012 02:48:47 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5T6lvKF400228
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:47:57 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5T6ltcP006825
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:47:56 -0400
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
-Cc: bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
-	linuxram@us.ibm.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 2/7] pci: argument pci_bus for find_pci_host_bridge
-Date: Fri, 29 Jun 2012 14:47:45 +0800
-Message-Id: <c487a34f0968b5583b5b2e53daad23dc9699f85e.1340949637.git.shangw@linux.vnet.ibm.com>
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+	id S1756037Ab2FNNzc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Jun 2012 09:55:32 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1SfAWF-0005zi-B0
+	for linux-pci@vger.kernel.org; Thu, 14 Jun 2012 15:55:27 +0200
+Received: from dsl001-168-162.bos1.dsl.speakeasy.net ([72.1.168.162])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 14 Jun 2012 15:55:27 +0200
+Received: from tkcarr03873 by dsl001-168-162.bos1.dsl.speakeasy.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 14 Jun 2012 15:55:27 +0200
+To: linux-pci@vger.kernel.org
+From: Tom Carr <tkcarr03873@gmail.com>
+Subject: Re: PCIe rescan not working
+Date: Thu, 14 Jun 2012 13:55:13 +0000 (UTC)
+Message-ID: <loom.20120614T154236-959@post.gmane.org>
+References: <loom.20120607T194858-986@post.gmane.org> <CAE9FiQWau+ko4JiEEjM=2xSH_7FPBr_ZYOm8YGpin2p97=12PQ@mail.gmail.com> <loom.20120611T205954-871@post.gmane.org> <CAE9FiQWsv+VU_240BgzHhyR5=A+7DkceWR0oNuYgYxi5TwWvyg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch changes the argument of find_pci_host_bridge() to pci_bus.
+Yinghai Lu <yinghai <at> kernel.org> writes:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
----
- drivers/pci/host-bridge.c |   13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+> 
+> On Mon, Jun 11, 2012 at 12:32 PM, Tom Carr <tkcarr03873 <at> gmail.com> wrote:
+> >
+> > Yinghai, sorry about the direct email on Friday, I tried to reply back to
+> > the
+> > newsgroup but the send kept failing. Your suggestion worked but only if 
+> > there
+> > were no drivers attached to the endpoints. If I load the driver for the
+> > endpoint
+> > at bus 6.0 and 9.0, then load the empty FPGA at bus 8.0, which is off of 
+> > 4.8,
+> > and write 1 to /sys/bus/pci/remove the system crashes. Is there a
+> > requirement that all down stream devices be removed? I could not find any
+> > such
+> > requirement in any documentation. Here is the most of the stack trace.
+> 
+> can you please try current linus kernel like
+> 3.4 or 3.5-rc1 ?
+> 
+> looks like there is some stop/remove pci device code bug in old kernel.
+> 
+> Thanks
+> 
+> Yinghai
+> 
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index c19776a..fc16357 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -9,20 +9,17 @@
- 
- #include "pci.h"
- 
--static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
-+static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
--
--	bus = dev->bus;
- 	while (bus->parent)
- 		bus = bus->parent;
- 
- 	return bus;
- }
- 
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
-+static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
- {
--	struct pci_bus *root_bus = find_pci_root_bus(dev);
-+	struct pci_bus *root_bus = find_pci_root_bus(bus);
- 
- 	return to_pci_host_bridge(root_bus->bridge);
- }
-@@ -43,7 +40,7 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
- void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 			     struct resource *res)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(dev->bus);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -71,7 +68,7 @@ static bool region_contains(struct pci_bus_region *region1,
- void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 			     struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(dev->bus);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
--- 
-1.7.9.5
+Yinghai, thank you for the help. Moving to 3.4 fixed the problem. I am now able
+to load the FPGA and bring the FPGA endpoint online using remove and rescan. I
+was curious if it would be possible to instruct the root complex port to
+allocate enough memory to deal with endpoints that come on line
+after the system is booted. With the solution I have now, the drivers for all
+the endpoints in the PCIe tree starting at the root port 1.2 have to be removed
+which means if they have to stop processing while the rescan is done. Since
+this is an embedded design, the endpoints and the memory they will use does
+not change. If the root could be instructed to allocate enough memory to deal
+with endpoints coming in later then only the switch port connected to the
+endpoint would need to be removed and the other endpoints should be able to 
+continue to function. If you think this is doable and of value to others, I 
+would be willing to make the change and offer it up for consideration.
+
+
 
