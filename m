@@ -1,53 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:34913 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752211Ab2FVVor convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 17:44:47 -0400
-Received: by lbbgm6 with SMTP id gm6so4171256lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 14:44:45 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:40261 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724Ab2FOIZq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 04:25:46 -0400
+Message-ID: <4FDAEE9A.7060706@huawei.com>
+Date: Fri, 15 Jun 2012 16:13:14 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 22 Jun 2012 15:44:25 -0600
-Message-ID: <CAErSpo4tRTzhmcpPR+VD9=-8t8kTo1iZmz7bKmGO=b4VPPGqxA@mail.gmail.com>
-Subject: Re: [PATCH 0/6] Coverity and trivial fixes
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com> <1338026043-3968-9-git-send-email-jiang.liu@huawei.com> <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
+In-Reply-To: <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 6:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> These fix a few issues reported by the Coverity checker and a trivial
-> style issue (__weak).
->
-> Only two should have interesting effects:
->
->  - The OBFF/LTR enable functions should panic without this fix, so
->    I don't think they've ever been tested.
->
->  - The P2P bridge I/O window fix doesn't affect x86, which never uses
->    32-bit I/O decoding.  But other architectures might notice because
->    we incorrectly sign-extended I/O port addresses of 0x80000000 and
->    above.
->
-> I'll wait for comments before putting them in "next" (targeted for 3.6).
-> ---
->
-> Bjorn Helgaas (6):
->      PCI: use __weak consistently
->      PCI: fix upstream P2P bridge checks when enabling OBFF and LTR
->      PCI: fix P2P bridge I/O port window sign extension
->      PCI: shpchp: remove dead code
->      PCI: acpiphp: check whether _ADR evaluation succeeded
->      PCI: remove useless pcix_set_mmrbc() dev->bus check
->
->
->  drivers/pci/hotplug/acpiphp_glue.c |   13 +++++++++----
->  drivers/pci/hotplug/shpchp_ctrl.c  |    3 ---
->  drivers/pci/pci-sysfs.c            |    2 +-
->  drivers/pci/pci.c                  |   15 +++++++--------
->  drivers/pci/probe.c                |   18 ++++++++++--------
->  5 files changed, 27 insertions(+), 24 deletions(-)
+Hi Yinghai,
+	Thanks for your review and comments!
+On 2012-6-15 15:15, Yinghai Lu wrote:
+>> @@ -625,6 +636,13 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
+>>                }
+>>        }
+>>
+>> +       i = entries * sizeof(*cfg_table);
+>> +       pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
+>> +       if (pci_acpi_mcfg_array) {
+>> +               memcpy(pci_acpi_mcfg_array, cfg_table, i);
+>> +               pci_acpi_mcfg_entries = entries;
+>> +       }
+>> +
+> 
+> here cache cfg too early.  should do that after
+> 
+> pci_mmcfg_reject_broken().
+> 
+> otherwise will use mcfg even try to reject that before.
+Good cache, how about the following patch to fix this?
+I'm also preparing an V8 to fix build failure issues reported by Fengguang,
+and also simplify the __pci_mmcfg_init() implementation.
 
-I applied these to my "next" branch.  Let me know if you see any issues.
+---
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 77f0db2..bcd0928 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -623,11 +623,27 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
+                }
+        }
+
+-       i = entries * sizeof(*cfg_table);
+-       pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
+-       if (pci_acpi_mcfg_array) {
+-               memcpy(pci_acpi_mcfg_array, cfg_table, i);
+-               pci_acpi_mcfg_entries = entries;
++       return 0;
++}
++
++static int __init pci_cache_mcfg(struct acpi_table_header *header)
++{
++       unsigned long i;
++       struct acpi_table_mcfg *mcfg;
++       struct acpi_mcfg_allocation *cfg_table;
++
++       if (!header)
++               return -EINVAL;
++
++       i = (header->length - sizeof(struct acpi_table_mcfg));
++       if (i) {
++               pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
++               if (pci_acpi_mcfg_array) {
++                       mcfg = (struct acpi_table_mcfg *)header;
++                       cfg_table = (struct acpi_mcfg_allocation *) &mcfg[1];
++                       memcpy(pci_acpi_mcfg_array, cfg_table, i);
++                       pci_acpi_mcfg_entries = i / sizeof (*cfg_table);
++               }
+        }
+
+        return 0;
+@@ -682,8 +698,11 @@ out:
+         * Free all MCFG entries if ACPI is enabled. MCFG information will
+         * be added back on demand by the pci_root driver later.
+         */
+-       if (!early && !acpi_disabled && !known_bridge && pci_acpi_mcfg_array)
+-               free_all_mmcfg();
++       if (!early && !acpi_disabled && !known_bridge) {
++               acpi_table_parse(ACPI_SIG_MCFG, pci_cache_mcfg);
++               if (pci_acpi_mcfg_array)
++                       free_all_mmcfg();
++       }
+ }
+
+ void __init pci_mmcfg_early_init(void)
+>> @@ -675,6 +693,14 @@ static void __init __pci_mmcfg_init(int early)
+>>                pci_mmcfg_resources_inserted = 1;
+>>                pci_mmcfg_arch_init_failed = true;
+>>        }
+>> +
+>> +out:
+>> +       /*
+>> +        * Free all MCFG entries if ACPI is enabled. MCFG information will
+>> +        * be added back on demand by the pci_root driver later.
+>> +        */
+>> +       if (!early && !acpi_disabled && !known_bridge && pci_acpi_mcfg_array)
+>> +               free_all_mmcfg();
+> 
+> that really change the logic.
+> 
+> looks like it will break mrst/sfi path.
+> 
+> the scan from pci_legacy_init() for mrst/sfi will not have ext_pci_ops
+> set for bus 0.
+> 
+> | int __init pci_subsys_init(void)
+> | {
+> |        /*
+> |         * The init function returns an non zero value when
+> |         * pci_legacy_init should be invoked.
+> |         */
+> |        if (x86_init.pci.init())
+> |                pci_legacy_init();
+> |
+> |        pcibios_fixup_peer_bridges();
+
+On platform with SFI implementation such as Moorsetown, acpi_disabled will
+be set to 1 because there's no ACPI root pointer and acpi initialize will fail.
+And sfi_init() implementation confirms that if acpi is enabled, then sfi will
+be disabled. So I will it won't break SFI/MRST.
+
+void __init sfi_init(void)
+{
+        if (!acpi_disabled)
+                disable_sfi();
+
+        if (sfi_disabled)
+                return;
+}
+
+thanks!
+Gerry
+
