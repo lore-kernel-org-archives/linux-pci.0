@@ -1,67 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:35912 "EHLO e3.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755420Ab2FZDBT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Jun 2012 23:01:19 -0400
-Received: from /spool/local
-	by e3.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Mon, 25 Jun 2012 23:01:18 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 83BFE38C8054
-	for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2012 23:01:16 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5Q31F3n21299276
-	for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2012 23:01:15 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5Q31ELC013609
-	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 00:01:15 -0300
-Date: Tue, 26 Jun 2012 11:01:11 +0800
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, bhelgaas@google.com
-Subject: Re: [PATCH V3 1/2] PCI: retrieve host bridge by PCI bus
-Message-ID: <20120626030111.GA6753@shangw>
-Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-References: <1340593821-19011-1-git-send-email-shangw@linux.vnet.ibm.com>
- <CAE9FiQUE0_niTRmvZ=ROSFKB4HKDFFLjfJC+QeQkTKLMyvxv4g@mail.gmail.com>
- <20120626003020.GA6307@shangw>
- <1340679045.3732.3.camel@pasglop>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:49714 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752078Ab2FOHPT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 03:15:19 -0400
+Received: by dady13 with SMTP id y13so3647002dad.19
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2012 00:15:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1340679045.3732.3.camel@pasglop>
+In-Reply-To: <1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
+	<1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
+Date: Fri, 15 Jun 2012 00:15:18 -0700
+Message-ID: <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
+Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> >> +EXPORT_SYMBOL(pci_bus_host_bridge);
->> 
->> Yinghai, thanks for your time on this :-)
->> 
->> >
->> >why do you need to export it?
->> >
->> 
->> The reason is that we have introduced extra fields to "struct
->> pci_host_bridge"
->> in [PATCH 2/2] and platform want to access those extra fields. 
+On Sat, May 26, 2012 at 2:54 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> This patch changes mmconfig logic on x86 platforms to add MMCFG
+> information on demand instead of adding all MMCFG entries from
+> the ACPI MCFG table at boot time. So only MMCFG address ranges
+> used by active PCI host bridges will be actually mapped.
 >
->But the platform code is built-in, not modular, so it doesn't need
->EXPORT_SYMBOL (additionally even if we wanted to export it we probably
->also want it _GPL only, so EXPORT_SYMBOL_GPL, but I don't think we need
->to).
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  arch/x86/include/asm/pci_x86.h |    5 +++
+>  arch/x86/pci/legacy.c          |    1 +
+>  arch/x86/pci/mmconfig-shared.c |   54 +++++++++++++++++++++++++++++++++++++---
+>  3 files changed, 56 insertions(+), 4 deletions(-)
 >
+> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+> index 3e5f43c..4a1a9aa 100644
+> --- a/arch/x86/include/asm/pci_x86.h
+> +++ b/arch/x86/include/asm/pci_x86.h
+> @@ -142,6 +142,11 @@ extern int __devinit pci_mmconfig_insert(struct device *dev,
+>                                         uint16_t seg, uint8_t start,
+>                                         uint8_t end, phys_addr_t addr);
+>  extern int pci_mmconfig_delete(uint16_t seg, uint8_t start, uint8_t end);
+> +#ifdef CONFIG_ACPI
+> +extern void pci_mmconfig_probe(uint8_t start);
+> +#else
+> +static inline void pci_mmconfig_probe(uint8_t start) { }
+> +#endif
+>  extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+>
+>  extern struct list_head pci_mmcfg_list;
+> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+> index a1df191..e9a2384 100644
+> --- a/arch/x86/pci/legacy.c
+> +++ b/arch/x86/pci/legacy.c
+> @@ -49,6 +49,7 @@ void __devinit pcibios_scan_specific_bus(int busn)
+>                    l != 0x0000 && l != 0xffff) {
+>                        DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+>                        printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
+> +                       pci_mmconfig_probe(busn);
+>                        pci_scan_bus_on_node(busn, &pci_root_ops, node);
+>                        return;
+>                }
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index fa0aa90..e80b5c2 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -19,6 +19,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/mutex.h>
+>  #include <linux/rculist.h>
+> +#include <linux/pci-acpi.h>
+>  #include <asm/e820.h>
+>  #include <asm/pci_x86.h>
+>  #include <asm/acpi.h>
+> @@ -616,6 +617,16 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
+>                        return -ENODEV;
+>                }
+>
+> +               /*
+> +                * MMCFG information for host brideges will be added on demand
+> +                * by pci_root driver if ACPI is enabled. But there are special
+> +                * requirements for devices on segment 0, MMCFG information may
+> +                * be needed for fixing hardware quirks and probing for hidden
+> +                * buses.
+> +                */
+> +               if (!acpi_disabled && cfg->pci_segment)
+> +                       continue;
+> +
+>                if (pci_mmconfig_add(cfg->pci_segment, cfg->start_bus_number,
+>                                   cfg->end_bus_number, cfg->address) == NULL) {
+>                        printk(KERN_WARNING PREFIX
+> @@ -625,6 +636,13 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
+>                }
+>        }
+>
+> +       i = entries * sizeof(*cfg_table);
+> +       pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
+> +       if (pci_acpi_mcfg_array) {
+> +               memcpy(pci_acpi_mcfg_array, cfg_table, i);
+> +               pci_acpi_mcfg_entries = entries;
+> +       }
+> +
 
-Ben, thanks for correcting me :-)
+here cache cfg too early.  should do that after
 
-Let me remove EXPORT_SYMBOL() is next revision.
+pci_mmcfg_reject_broken().
 
->Cheers,
->Ben.
+otherwise will use mcfg even try to reject that before.
+
+>        return 0;
+>  }
+>
+> @@ -634,14 +652,14 @@ static void __init __pci_mmcfg_init(int early)
+>        if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+>                return;
+>
+> -       /* MMCONFIG already enabled */
+> -       if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
+> -               return;
+> -
+>        /* for late to exit */
+>        if (known_bridge)
+>                return;
+>
+> +       /* MMCONFIG already enabled */
+> +       if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
+> +               goto out;
+> +
+>        if (early) {
+>                if (pci_mmcfg_check_hostbridge())
+>                        known_bridge = 1;
+> @@ -675,6 +693,14 @@ static void __init __pci_mmcfg_init(int early)
+>                pci_mmcfg_resources_inserted = 1;
+>                pci_mmcfg_arch_init_failed = true;
+>        }
+> +
+> +out:
+> +       /*
+> +        * Free all MCFG entries if ACPI is enabled. MCFG information will
+> +        * be added back on demand by the pci_root driver later.
+> +        */
+> +       if (!early && !acpi_disabled && !known_bridge && pci_acpi_mcfg_array)
+> +               free_all_mmcfg();
+
+that really change the logic.
+
+looks like it will break mrst/sfi path.
+
+the scan from pci_legacy_init() for mrst/sfi will not have ext_pci_ops
+set for bus 0.
+
+| int __init pci_subsys_init(void)
+| {
+|        /*
+|         * The init function returns an non zero value when
+|         * pci_legacy_init should be invoked.
+|         */
+|        if (x86_init.pci.init())
+|                pci_legacy_init();
+|
+|        pcibios_fixup_peer_bridges();
+
+
+Yinghai
+
+>  }
+>
+>  void __init pci_mmcfg_early_init(void)
+> @@ -809,3 +835,23 @@ int pci_mmconfig_delete(uint16_t seg, uint8_t start, uint8_t end)
+>
+>        return -ENOENT;
+>  }
+> +
+> +/* Probe MMCFG information for PCI bus blind probe */
+> +void __devinit pci_mmconfig_probe(uint8_t start)
+> +{
+> +       int end_bus, temp;
+> +       phys_addr_t addr;
+> +
+> +       if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+> +               return;
+> +
+> +       addr = acpi_pci_root_get_mcfg_addr(NULL, 0, start, &end_bus);
+> +       if (addr && end_bus >= 0 && end_bus <= 255) {
+> +               for (temp = start + 1; temp <= end_bus; temp++)
+> +                       if (pci_find_bus(0, temp))
+> +                               break;
+> +
+> +               temp--;
+> +               pci_mmconfig_insert(NULL, 0, start, (uint8_t)temp, addr);
+> +       }
+> +}
+> --
+> 1.7.1
 >
 >
-
-Thanks,
-Gavin
-
