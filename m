@@ -1,79 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:45480 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753002Ab2FLTq7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 15:46:59 -0400
-Message-ID: <4FD79CAE.9090006@wwwdotorg.org>
-Date: Tue, 12 Jun 2012 13:46:54 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:53195 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355Ab2FOQzM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 12:55:12 -0400
+Received: by pbbrp8 with SMTP id rp8so5518160pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2012 09:55:12 -0700 (PDT)
 MIME-Version: 1.0
-To: Mitch Bradley <wmb@firmworks.com>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7943E.60302@firmworks.com>
-In-Reply-To: <4FD7943E.60302@firmworks.com>
+In-Reply-To: <CAErSpo5BtQ3dmn4t==ByG+Y=Q7w+wwZ7sw+LJwkSxQG8bKuUzg@mail.gmail.com>
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
+	<1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
+	<CAErSpo5BtQ3dmn4t==ByG+Y=Q7w+wwZ7sw+LJwkSxQG8bKuUzg@mail.gmail.com>
+Date: Fri, 15 Jun 2012 09:55:11 -0700
+Message-ID: <CAE9FiQUOtdB3PMgmX8aSRYrinhJGWoUBZGii1aowDBLKTH_LJQ@mail.gmail.com>
+Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/2012 01:10 PM, Mitch Bradley wrote:
-> On 6/12/2012 7:20 AM, Thierry Reding wrote:
-...
->> I came up with the following alternative:
->>
->> 	pci {
->> 		compatible = "nvidia,tegra20-pcie";
->> 		reg = <0x80003000 0x00000800   /* PADS registers */
->> 		       0x80003800 0x00000200   /* AFI registers */
->> 		       0x80004000 0x00100000   /* configuration space */
->> 		       0x80104000 0x00100000   /* extended configuration space */
->> 		       0x80400000 0x00010000   /* downstream I/O */
->> 		       0x90000000 0x10000000   /* non-prefetchable memory */
->> 		       0xa0000000 0x10000000>; /* prefetchable memory */
->> 		interrupts = <0 98 0x04   /* controller interrupt */
->> 		              0 99 0x04>; /* MSI interrupt */
->> 		status = "disabled";
->>
->> 		ranges = <0x80000000 0x80000000 0x00002000   /* 2 root ports */
->> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
->> 			  0x80104000 0x80104000 0x00100000   /* extended configuration space */
->> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
->> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
->> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
->>
->> 		#address-cells = <1>;
->> 		#size-cells = <1>;
->>
->> 		port@80000000 {
->> 			reg = <0x80000000 0x00001000>;
->> 			status = "disabled";
->> 		};
->>
->> 		port@80001000 {
->> 			reg = <0x80001000 0x00001000>;
->> 			status = "disabled";
->> 		};
->> 	};
->>
->> The "ranges" property can probably be cleaned up a bit, but the most
->> interesting part is the port@ children, which can simply be enabled in board
->> DTS files by setting the status property to "okay". I find that somewhat more
->> intuitive to the variant with an "enable-ports" property.
->>
->> What do you think of this?
-> 
-> The problem is that children of a PCI-ish bus have specific expectations
-> about the parent address format - the standard 3-address-cell PCI
-> addressing.  So making a PCI bus node - even if it is PCIe - with 1
-> address cell is a problem.
+On Fri, Jun 15, 2012 at 8:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> But the code in the init path is ridiculously, embarrassingly complicated ...
+>
+> I rest my case.  The current init path is unmaintainable.
+>
+> I'll wait for a v8 (or later) with fixes for the build issues
+> Fengguang found and Yinghai's ack.  It will make things somewhat
+> easier for me if you start with my topic/jiang-mmconfig-v7 branch.
 
-Couldn't you put the #address-cells=<3> underneath each port node, and
-put any PCIe devices there rather than under the main PCIe controller
-node? I'm not sure how the interrupt mapping table etc. would work in
-that case, but that seems to solve the addressing issue.
+yes. probe/free then install is not good.
+
+should make __pci_mmcfg_init() to cache needed stuff for all path, and
+then consume stored
+entry just before scan root bus.
+
+Thanks
+
+Yinghai
