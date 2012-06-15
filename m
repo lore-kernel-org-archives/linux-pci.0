@@ -1,52 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:37994 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757359Ab2FTRSN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 13:18:13 -0400
-Received: by bkcji2 with SMTP id ji2so6428308bkc.19
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 10:18:12 -0700 (PDT)
+Received: from h9.dl5rb.org.uk ([81.2.74.9]:49482 "EHLO h5.dl5rb.org.uk"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752042Ab2FORgQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Jun 2012 13:36:16 -0400
+Date: Fri, 15 Jun 2012 17:38:23 +0100
+From: Ralf Baechle <ralf@linux-mips.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@gmail.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	linux-pci@vger.kernel.org, linux-kbuild@vger.kernel.org,
+	Michal Marek <mmarek@suse.cz>
+Subject: Re: [PATCH 7/9] mips: move PCI fixup hooks from __init to __devinit
+Message-ID: <20120615163823.GA14302@linux-mips.org>
+References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+ <1338749305-22558-8-git-send-email-sebastian@breakpoint.cc>
+ <CAL-B5D1GEMd9TPMqbYBqDuzs5U2jo7ByRg73Z=dPsPcgTSyJJA@mail.gmail.com>
+ <CAErSpo77vyUaGTzVNwFGzTHsOapYNFRy_KOvNnXo=jdU2kYLbA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
-References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
- <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
- <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
- <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
- <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
- <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com> <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 Jun 2012 11:17:52 -0600
-Message-ID: <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
-Subject: Re: SNB PCI root information
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo77vyUaGTzVNwFGzTHsOapYNFRy_KOvNnXo=jdU2kYLbA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 12:20 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Jun 19, 2012 at 5:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> I'm not opposed to something like this, if people think it's useful.
->>
->> This patch sets the node quite early, before we even look at the _PXM
->> information in pci_acpi_scan_root().  That means if the BIOS does
->> supply a _PXM method and the user gives this argument, the
->> user-supplied info is silently overwritten.  To me it would make more
->> sense to handle an option like this *after* we look for _PXM info.
->> That way it could be used to compensate for both missing and incorrect
->> _PXM info.
->
-> yes, we can only let user input and hostbridge touch that array.
->
-> but i'd like to only handle missing _PXM case.
->
-> If the BIOS provide wrong _PXM, that BIOS really should be fixed at first.
+On Fri, Jun 15, 2012 at 10:33:15AM -0600, Bjorn Helgaas wrote:
 
-I don't understand this.  Is there an *advantage* to silently throwing
-away the information the user specified on the command line?  If the
-user goes to the trouble of discovering and using a command line
-argument, I think that user-supplied information should override
-anything the kernel can figure out on its own.  Ulrich, do you have an
-opinion either way?
+> > Doesn't the above line also need changed to __devinitdata if the
+> > function itself is being
+> > changed from __init to __devinit?
+> 
+> I think so.  And pci_irq[] and piixirqmap[] also need to be moved,
+> since they're referenced by __devinit code.  I fixed these, audited
+> all the other patches, and updated the "next" branch.
+
+I'm going to patch that up.
+
+Thanks folks,
+
+  Ralf
