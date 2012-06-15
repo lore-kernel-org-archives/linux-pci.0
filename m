@@ -1,88 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs130.luxsci.com ([72.32.115.17]:58935 "EHLO rs130.luxsci.com"
+Received: from ogre.sisk.pl ([193.178.161.156]:44489 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752568Ab2FLTw1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jun 2012 15:52:27 -0400
-Message-ID: <4FD79DE8.90603@firmworks.com>
-Date: Tue, 12 Jun 2012 09:52:08 -1000
-From: Mitch Bradley <wmb@firmworks.com>
+	id S1756886Ab2FOULn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Jun 2012 16:11:43 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH -v5 1/3] ACPI, PM, Specify lowest allowed state for device sleep state
+Date: Fri, 15 Jun 2012 22:17:00 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, ming.m.lin@intel.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Zheng Yan <zheng.z.yan@intel.com>,
+	Len Brown <lenb@kernel.org>
+References: <1339382833-7928-1-git-send-email-ying.huang@intel.com> <1339382833-7928-2-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1339382833-7928-2-git-send-email-ying.huang@intel.com>
 MIME-Version: 1.0
-To: Stephen Warren <swarren@wwwdotorg.org>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7943E.60302@firmworks.com> <4FD79CAE.9090006@wwwdotorg.org>
-In-Reply-To: <4FD79CAE.9090006@wwwdotorg.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <201206152217.00751.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/12/2012 9:46 AM, Stephen Warren wrote:
-> On 06/12/2012 01:10 PM, Mitch Bradley wrote:
->> On 6/12/2012 7:20 AM, Thierry Reding wrote:
-> ...
->>> I came up with the following alternative:
->>>
->>> 	pci {
->>> 		compatible = "nvidia,tegra20-pcie";
->>> 		reg =<0x80003000 0x00000800   /* PADS registers */
->>> 		       0x80003800 0x00000200   /* AFI registers */
->>> 		       0x80004000 0x00100000   /* configuration space */
->>> 		       0x80104000 0x00100000   /* extended configuration space */
->>> 		       0x80400000 0x00010000   /* downstream I/O */
->>> 		       0x90000000 0x10000000   /* non-prefetchable memory */
->>> 		       0xa0000000 0x10000000>; /* prefetchable memory */
->>> 		interrupts =<0 98 0x04   /* controller interrupt */
->>> 		              0 99 0x04>; /* MSI interrupt */
->>> 		status = "disabled";
->>>
->>> 		ranges =<0x80000000 0x80000000 0x00002000   /* 2 root ports */
->>> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
->>> 			  0x80104000 0x80104000 0x00100000   /* extended configuration space */
->>> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
->>> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
->>> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
->>>
->>> 		#address-cells =<1>;
->>> 		#size-cells =<1>;
->>>
->>> 		port@80000000 {
->>> 			reg =<0x80000000 0x00001000>;
->>> 			status = "disabled";
->>> 		};
->>>
->>> 		port@80001000 {
->>> 			reg =<0x80001000 0x00001000>;
->>> 			status = "disabled";
->>> 		};
->>> 	};
->>>
->>> The "ranges" property can probably be cleaned up a bit, but the most
->>> interesting part is the port@ children, which can simply be enabled in board
->>> DTS files by setting the status property to "okay". I find that somewhat more
->>> intuitive to the variant with an "enable-ports" property.
->>>
->>> What do you think of this?
->>
->> The problem is that children of a PCI-ish bus have specific expectations
->> about the parent address format - the standard 3-address-cell PCI
->> addressing.  So making a PCI bus node - even if it is PCIe - with 1
->> address cell is a problem.
->
-> Couldn't you put the #address-cells=<3>  underneath each port node, and
-> put any PCIe devices there rather than under the main PCIe controller
-> node? I'm not sure how the interrupt mapping table etc. would work in
-> that case, but that seems to solve the addressing issue.
+On Monday, June 11, 2012, Huang Ying wrote:
+> Lower device sleep state can save more power, but has more exit
+> latency too.  Sometimes, to satisfy some power QoS and other
+> requirement, we need to constrain the lowest device sleep state.
+> 
+> In this patch, a parameter to specify lowest allowed state for
+> acpi_pm_device_sleep_state is added.  So that the caller can enforce
+> the constraint via the parameter.
+> 
+> This is needed by PCIe D3cold support, where the lowest power state
+> allowed may be D3_HOT instead of default D3_COLD.
+> 
+> Signed-off-by: Huang Ying <ying.huang@intel.com>
+> Cc: Len Brown <lenb@kernel.org>
 
-Yes, that would work just fine, and in fact would be preferable, if a 
-"root port" is essentially an independent PCI bus.  The parent of those 
-root ports should not be named "pci", though, as it is not in itself a 
-PCI bus.  It could be called "pcis".
+Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
 
->
->
+
+> ---
+>  drivers/acpi/sleep.c       |   24 +++++++++++++++++++-----
+>  drivers/pci/pci-acpi.c     |    3 ++-
+>  drivers/pnp/pnpacpi/core.c |    4 ++--
+>  include/acpi/acpi_bus.h    |    6 +++---
+>  4 files changed, 26 insertions(+), 11 deletions(-)
+> 
+> --- a/drivers/acpi/sleep.c
+> +++ b/drivers/acpi/sleep.c
+> @@ -716,8 +716,9 @@ int acpi_suspend(u32 acpi_state)
+>   *	@dev: device to examine; its driver model wakeup flags control
+>   *		whether it should be able to wake up the system
+>   *	@d_min_p: used to store the upper limit of allowed states range
+> - *	Return value: preferred power state of the device on success, -ENODEV on
+> - *		failure (ie. if there's no 'struct acpi_device' for @dev)
+> + *	@d_max_in: specify the lowest allowed states
+> + *	Return value: preferred power state of the device on success, -ENODEV
+> + *	(ie. if there's no 'struct acpi_device' for @dev) or -EINVAL on failure
+>   *
+>   *	Find the lowest power (highest number) ACPI device power state that
+>   *	device @dev can be in while the system is in the sleep state represented
+> @@ -732,13 +733,15 @@ int acpi_suspend(u32 acpi_state)
+>   *	via @wake.
+>   */
+>  
+> -int acpi_pm_device_sleep_state(struct device *dev, int *d_min_p)
+> +int acpi_pm_device_sleep_state(struct device *dev, int *d_min_p, int d_max_in)
+>  {
+>  	acpi_handle handle = DEVICE_ACPI_HANDLE(dev);
+>  	struct acpi_device *adev;
+>  	char acpi_method[] = "_SxD";
+>  	unsigned long long d_min, d_max;
+>  
+> +	if (d_max_in < ACPI_STATE_D0 || d_max_in > ACPI_STATE_D3)
+> +		return -EINVAL;
+>  	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &adev))) {
+>  		printk(KERN_DEBUG "ACPI handle has no context!\n");
+>  		return -ENODEV;
+> @@ -746,8 +749,10 @@ int acpi_pm_device_sleep_state(struct de
+>  
+>  	acpi_method[2] = '0' + acpi_target_sleep_state;
+>  	/*
+> -	 * If the sleep state is S0, we will return D3, but if the device has
+> -	 * _S0W, we will use the value from _S0W
+> +	 * If the sleep state is S0, the lowest limit from ACPI is D3,
+> +	 * but if the device has _S0W, we will use the value from _S0W
+> +	 * as the lowest limit from ACPI.  Finally, we will constrain
+> +	 * the lowest limit with the specified one.
+>  	 */
+>  	d_min = ACPI_STATE_D0;
+>  	d_max = ACPI_STATE_D3;
+> @@ -791,8 +796,17 @@ int acpi_pm_device_sleep_state(struct de
+>  		}
+>  	}
+>  
+> +	if (d_max_in < d_min)
+> +		return -EINVAL;
+>  	if (d_min_p)
+>  		*d_min_p = d_min;
+> +	/* constrain d_max with specified lowest limit (max number) */
+> +	if (d_max > d_max_in) {
+> +		for (d_max = d_max_in; d_max > d_min; d_max--) {
+> +			if (adev->power.states[d_max].flags.valid)
+> +				break;
+> +		}
+> +	}
+>  	return d_max;
+>  }
+>  #endif /* CONFIG_PM */
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -189,7 +189,8 @@ static pci_power_t acpi_pci_choose_state
+>  {
+>  	int acpi_state;
+>  
+> -	acpi_state = acpi_pm_device_sleep_state(&pdev->dev, NULL);
+> +	acpi_state = acpi_pm_device_sleep_state(&pdev->dev, NULL,
+> +						ACPI_STATE_D3);
+>  	if (acpi_state < 0)
+>  		return PCI_POWER_ERROR;
+>  
+> --- a/drivers/pnp/pnpacpi/core.c
+> +++ b/drivers/pnp/pnpacpi/core.c
+> @@ -170,8 +170,8 @@ static int pnpacpi_suspend(struct pnp_de
+>  	}
+>  
+>  	if (acpi_bus_power_manageable(handle)) {
+> -		int power_state = acpi_pm_device_sleep_state(&dev->dev, NULL);
+> -
+> +		int power_state = acpi_pm_device_sleep_state(&dev->dev, NULL,
+> +							     ACPI_STATE_D3);
+>  		if (power_state < 0)
+>  			power_state = (state.event == PM_EVENT_ON) ?
+>  					ACPI_STATE_D0 : ACPI_STATE_D3;
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -414,13 +414,13 @@ int acpi_enable_wakeup_device_power(stru
+>  int acpi_disable_wakeup_device_power(struct acpi_device *dev);
+>  
+>  #ifdef CONFIG_PM
+> -int acpi_pm_device_sleep_state(struct device *, int *);
+> +int acpi_pm_device_sleep_state(struct device *, int *, int);
+>  #else
+> -static inline int acpi_pm_device_sleep_state(struct device *d, int *p)
+> +static inline int acpi_pm_device_sleep_state(struct device *d, int *p, int m)
+>  {
+>  	if (p)
+>  		*p = ACPI_STATE_D0;
+> -	return ACPI_STATE_D3;
+> +	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3) ? m : ACPI_STATE_D0;
+>  }
+>  #endif
+>  
+> 
+> 
+
