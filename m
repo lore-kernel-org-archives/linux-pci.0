@@ -1,97 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v3 4/5] pci: Create common pcibios_err_to_errno
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, joerg.roedel@amd.com,
-	dwmw2@infradead.org, konrad.wilk@oracle.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	ddutile@redhat.com, alex.williamson@redhat.com
-Date: Mon, 11 Jun 2012 09:27:33 -0600
-Message-ID: <20120611152733.25959.67354.stgit@bling.home>
-In-Reply-To: <20120611152021.25959.71601.stgit@bling.home>
-References: <20120611152021.25959.71601.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46619 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202Ab2FOHQJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 03:16:09 -0400
+Received: by pbbrp8 with SMTP id rp8so4895411pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2012 00:16:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo4v_N8MhoCyQMi6vOOipw6Cg8wbMqP2q9FXT+gXjF88iw@mail.gmail.com>
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
+	<CAErSpo4v_N8MhoCyQMi6vOOipw6Cg8wbMqP2q9FXT+gXjF88iw@mail.gmail.com>
+Date: Fri, 15 Jun 2012 00:16:08 -0700
+Message-ID: <CAE9FiQWTpy4iEfhTiPC4UgCu_+6L0yR6SSFCbvMtHp-Jv7_DFA@mail.gmail.com>
+Subject: Re: [PATCH v7 00/10] PCI, x86: update MMCFG information when
+ hot-plugging PCI host bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For returning errors out to non-PCI code.  Re-name xen's version.
+On Thu, Jun 14, 2012 at 8:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> I have to say I'm still ambivalent about this.  I really like the fact
+> that we track MMCONFIG space on a per-host bridge basis.  But the code
+> in the init path is ridiculously, embarrassingly complicated
+> (obviously this is not your fault at all).  It took me a couple hours
+> to trace through and figure out why my box emits the "motherboard
+> resources" warnings when it didn't before.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
+[PATCH v7 08/10] PCI, x86: add MMCFG information on demand
 
- drivers/xen/xen-pciback/conf_space.c |    6 +++---
- include/linux/pci.h                  |   26 ++++++++++++++++++++++++++
- 2 files changed, 29 insertions(+), 3 deletions(-)
+still have some problem that need to be fixed.
 
-diff --git a/drivers/xen/xen-pciback/conf_space.c b/drivers/xen/xen-pciback/conf_space.c
-index 30d7be0..46ae0f9 100644
---- a/drivers/xen/xen-pciback/conf_space.c
-+++ b/drivers/xen/xen-pciback/conf_space.c
-@@ -124,7 +124,7 @@ static inline u32 merge_value(u32 val, u32 new_val, u32 new_val_mask,
- 	return val;
- }
- 
--static int pcibios_err_to_errno(int err)
-+static int xen_pcibios_err_to_errno(int err)
- {
- 	switch (err) {
- 	case PCIBIOS_SUCCESSFUL:
-@@ -202,7 +202,7 @@ out:
- 		       pci_name(dev), size, offset, value);
- 
- 	*ret_val = value;
--	return pcibios_err_to_errno(err);
-+	return xen_pcibios_err_to_errno(err);
- }
- 
- int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
-@@ -290,7 +290,7 @@ int xen_pcibk_config_write(struct pci_dev *dev, int offset, int size, u32 value)
- 		}
- 	}
- 
--	return pcibios_err_to_errno(err);
-+	return xen_pcibios_err_to_errno(err);
- }
- 
- void xen_pcibk_config_free_dyn_fields(struct pci_dev *dev)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4cb13e59..f43bfef 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -474,6 +474,32 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
- #define PCIBIOS_SET_FAILED		0x88
- #define PCIBIOS_BUFFER_TOO_SMALL	0x89
- 
-+/*
-+ * Translate above to generic errno for passing back through non-pci.
-+ */
-+static inline int pcibios_err_to_errno(int err)
-+{
-+	if (err <= PCIBIOS_SUCCESSFUL)
-+		return err; /* Assume already errno */
-+
-+	switch (err) {
-+	case PCIBIOS_FUNC_NOT_SUPPORTED:
-+		return -ENOENT;
-+	case PCIBIOS_BAD_VENDOR_ID:
-+		return -EINVAL;
-+	case PCIBIOS_DEVICE_NOT_FOUND:
-+		return -ENODEV;
-+	case PCIBIOS_BAD_REGISTER_NUMBER:
-+		return -EFAULT;
-+	case PCIBIOS_SET_FAILED:
-+		return -EIO;
-+	case PCIBIOS_BUFFER_TOO_SMALL:
-+		return -ENOSPC;
-+	}
-+
-+	return -ENOTTY;
-+}
-+
- /* Low-level architecture-dependent routines */
- 
- struct pci_ops {
-
+Yinghai
