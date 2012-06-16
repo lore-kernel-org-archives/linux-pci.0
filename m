@@ -1,68 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:51585 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932777Ab2F1KCg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jun 2012 06:02:36 -0400
-Received: from holger by kruemel.eitzenberger.org with local (Exim 4.69)
-	(envelope-from <holger@eitzenberger.org>)
-	id 1SkBYV-00005Q-L2
-	for linux-pci@vger.kernel.org; Thu, 28 Jun 2012 12:02:31 +0200
-Date: Thu, 28 Jun 2012 12:02:31 +0200
-From: Holger Eitzenberger <holger@eitzenberger.org>
-To: linux-pci@vger.kernel.org
-Subject: pciutils: problem identifying PCI devices uniquely
-Message-ID: <20120628100231.GA21288@mail.eitzenberger.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60617 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755522Ab2FPDDi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 23:03:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+Date: Fri, 15 Jun 2012 20:03:37 -0700
+Message-ID: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+Subject: Re: SNB PCI root information
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ulrich Drepper <drepper@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, jbarnes@virtuousgeek.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Fri, Jun 15, 2012 at 6:57 PM, Ulrich Drepper <drepper@gmail.com> wrote:
+> The PCI roots in multi-socket SNB are part of specific sockets.  This
+> means optimization will need to know which socket the root is part of
+> and therefore which cores have direct access as opposed to over one or
+> more QPI links.
+>
+> I tried to find this information in the /sys filesystem in kernels up
+> to the current upstream kernel.  It seems there is actually nothing
+> like this.
+>
+> There are the files /sys/devices/pci*/*/local_cpus which should
+> contain this information.  For each device we would be able to get the
+> information about the local CPUs.
+>
+> The SPARC OF handling seems to set the field, some Intel drivers seem
+> to try to do it in a different way.
+>
+> The problem I have seen (at least on a Dell R620) is that the
+> dev_to_code() function returns -1 which indicates that no node
+> information is stored.
+>
+> If I understand the code correctly, the numa_node field can be set
+> explicitly but is mostly inherited from the underlying device (bus
+> etc).  Does this mean that the locality information should come from
+> the same place where the PCI root data structure is initialized?
+>
+> This happens, if I'm not mistaken, in the ACPI table parsing.  I've
+> disassembled the DSDT table and didn't find anything like this type of
+> information.  At least I didn't see it.  I also couldn't find anything
+> in the ACPI 5.0 spec.
 
-I have a problem identifying PCI devices (NICs in this case) on some
-hardware.
+yes, you should have _PXM for root bus in DSDT.
 
-In case the questions I have are too stupid please just ignore this
-email.
+>
+>
+> The questions are:
+> a) am I missing something?
+> b) do BIOSes (perhaps from other manufacturers) provide the information?
+> c) can we get this fixed?
 
-While I usually use the bus:device.function to identify the hardware
-this is not possible on some hardware, because the bus numbers are
-changing.  And this is all because the box has 4 slots, and each slot
-can possibly hold one of 3 different types of modules, differing in
-the number of NICs they hold.
+get updated BIOS.
 
-I found out that this is a well known problem, which is due to the
-fact that the different modules have a different number of PCI bridges
-on them.  In my case from 2 to 7 PCI bridges per module.
+> d) can we interpolate the information for platforms where the BIOSes
+> don't have the information?
 
-And then I came across the Chassis Capability (id 04).  On first read
-this sounded as it would solve the problem, making the ID unique again
-if configured properly, irrespective of the actual slot module used.
-Has anyone experience with the Chassis Capability?
+in arch/x86/pci/acpi.c::pci_acpi_scan_root(), we have
 
-In my understanding the Chassis Capability is transparent to the OS,
-the devices can still be identified by bus:device.function, correct?
+        node = -1;
+#ifdef CONFIG_ACPI_NUMA
+        pxm = acpi_get_pxm(device->handle);
+        if (pxm >= 0)
+                node = pxm_to_node(pxm);
+        if (node != -1)
+                set_mp_bus_to_node(busnum, node);
+        else
+#endif
+                node = get_mp_bus_to_node(busnum);
 
-According to the lspci source it should show something like:
+        if (node != -1 && !node_online(node))
+                node = -1;
 
-  Capabilities: [04] Slot ID: 8 slots, First1, chassis 42
+        info = kzalloc(sizeof(*info), GFP_KERNEL);
+        if (!info) {
+                printk(KERN_WARNING "pci_bus %04x:%02x: "
+                       "ignored (out of memory)\n", domain, busnum);
+                return NULL;
+        }
 
-I was unable to find some sample lspci output when googling, a sample
-output would be helpfull as well.
+        sd = &info->sd;
+        sd->domain = domain;
+        sd->node = node;
 
-What I found helpfull, without the Chassis Capability, was a small tool
-I wrote (derived from pciutils/examle.c), which is able to identify
-the devices with a "path walk" from the PCI Root Port to the actual
-device.  So e. g. when specifying:
+So kernel will check _PXM at first, or will use pre-probe host bridge info.
+Now we only have that for amd k8 cpu.
 
- ./example -s '/00:02.0/:05.0/:01.1/:05.1'
+We used to have same for intel IOH nehalem,  and get bless from intel.
+but that get removed at some point.
+I have one local internal similar patch for SNB iio for crossing check
+if BIOS set correctly.
+but I don't think i will try to get blessing from intel to publish it.
 
-In this case '00:02.0' is the Root Port, the other device except the
-last are PCI bridges, specified with a wildcard for the bus number.
+So please get one updated bios from your vendor.
 
-Would this be a feature of interest for pciutils in general?
+or we could add command line to pass those info, just like fake numa interface.
 
-Thanks!
+Thanks
 
- /Holger
-
+Yinghai
