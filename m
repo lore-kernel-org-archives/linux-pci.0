@@ -1,207 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:42886 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706Ab2FSNXY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:23:24 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v8 12/12] x86/PCI: add MMCFG information on demand
-Date: Tue, 19 Jun 2012 21:15:32 +0800
-Message-ID: <1340111732-6276-13-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
-References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:44344 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755961Ab2FPIv3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2012 04:51:29 -0400
+Date: Sat, 16 Jun 2012 10:50:49 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+	Myron Stowe <myron.stowe@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kbuild@vger.kernel.org, Michal Marek <mmarek@suse.cz>
+Subject: Re: [PATCH 7/9] mips: move PCI fixup hooks from __init to __devinit
+Message-ID: <20120616085049.GA2723@breakpoint.cc>
+References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+ <1338749305-22558-8-git-send-email-sebastian@breakpoint.cc>
+ <CAL-B5D1GEMd9TPMqbYBqDuzs5U2jo7ByRg73Z=dPsPcgTSyJJA@mail.gmail.com>
+ <CAErSpo77vyUaGTzVNwFGzTHsOapYNFRy_KOvNnXo=jdU2kYLbA@mail.gmail.com>
+ <20120615163823.GA14302@linux-mips.org>
+ <CAErSpo5kv_vE9D=AnyVdcXOAQpM6U3dyPpouE-NyNoU98R+syA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; x-action=pgp-signed
+In-Reply-To: <CAErSpo5kv_vE9D=AnyVdcXOAQpM6U3dyPpouE-NyNoU98R+syA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch changes mmconfig logic on x86 platforms to add MMCFG
-information on demand instead of adding all MMCFG entries from
-the ACPI MCFG table at boot time. So only MMCFG address ranges
-used by active PCI host bridges will be actually mapped.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
+On Fri, Jun 15, 2012 at 03:13:26PM -0600, Bjorn Helgaas wrote:
+> On Fri, Jun 15, 2012 at 10:38 AM, Ralf Baechle <ralf@linux-mips.org> wrote:
+> > On Fri, Jun 15, 2012 at 10:33:15AM -0600, Bjorn Helgaas wrote:
+> >
+> >> > Doesn't the above line also need changed to __devinitdata if the
+> >> > function itself is being
+> >> > changed from __init to __devinit?
+> >>
+> >> I think so.  And pci_irq[] and piixirqmap[] also need to be moved,
+> >> since they're referenced by __devinit code.  I fixed these, audited
+> >> all the other patches, and updated the "next" branch.
+> >
+> > I'm going to patch that up.
+> 
+> Does this mean you're going to push it through your tree and I should
+> remove the mips patch from my "next" branch?  Either way is fine with
+> me; currently I'm planning to push all the other arch patches via my
+> tree.
 
-v8: this patch is just for RFC now, there still ongoing discussion
-    about creating MMCONFIG information on demand
+Ralf picked up my patch [0] and commited a few fixups on top [1] and a malta
+fixup [2].
 
----
- arch/x86/include/asm/pci_x86.h |    5 +++
- arch/x86/pci/legacy.c          |    1 +
- arch/x86/pci/mmconfig-shared.c |   76 ++++++++++++++++++++++++++++++++++-----
- 3 files changed, 72 insertions(+), 10 deletions(-)
+[0] http://git.linux-mips.org/?p=ralf/linux.git;a=commitdiff;h=184170a613f4bccf4d58a4e73fa5d3a1ee839f38
+[1] http://git.linux-mips.org/?p=ralf/linux.git;a=commitdiff;h=f54d03696bdc1a9457c11ed6ae61e8f001217b25
+[2] http://git.linux-mips.org/?p=ralf/linux.git;a=commitdiff;h=2ec8663f9c03a96f2c328c7c483603c31d62ad37
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index b2652e9..0c0c1a7 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -142,6 +142,11 @@ extern int __devinit pci_mmconfig_insert(struct device *dev,
- 					 u16 seg, u8 start,
- 					 u8 end, phys_addr_t addr);
- extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_MMCONFIG)
-+extern void pci_mmconfig_probe(u8 start);
-+#else
-+static inline void pci_mmconfig_probe(u8 start) { }
-+#endif
- extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
- 
- extern struct list_head pci_mmcfg_list;
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index a1df191..e9a2384 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -49,6 +49,7 @@ void __devinit pcibios_scan_specific_bus(int busn)
- 		    l != 0x0000 && l != 0xffff) {
- 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
- 			printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
-+			pci_mmconfig_probe(busn);
- 			pci_scan_bus_on_node(busn, &pci_root_ops, node);
- 			return;
- 		}
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index f8c967c..330831c 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -459,6 +459,14 @@ static int __ref is_mmconf_reserved(check_reserved_t is_reserved,
- 			break;
- 	}
- 
-+	/*
-+	 * For backward compatibility, we will adjust the MMCONFIG region
-+	 * at boot time if it's only partially reserved by firmware.
-+	 * For PCI host bridge hotplug at runtime, just reject it.
-+	 */
-+	if (pci_mmcfg_running_state && old_size != size)
-+		return 0;
-+
- 	if (size < (16UL<<20) && size != old_size)
- 		return 0;
- 
-@@ -602,6 +610,16 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
- 			return -ENODEV;
- 		}
- 
-+		/*
-+		 * MMCFG information for host brideges will be added on demand
-+		 * by pci_root driver if ACPI is enabled. But there are special
-+		 * requirements for devices on segment 0, MMCFG information may
-+		 * be needed for fixing hardware quirks and probing for hidden
-+		 * buses.
-+		 */
-+		if (!acpi_disabled && cfg->pci_segment)
-+			continue;
-+
- 		if (pci_mmconfig_add(cfg->pci_segment, cfg->start_bus_number,
- 				   cfg->end_bus_number, cfg->address) == NULL) {
- 			printk(KERN_WARNING PREFIX
-@@ -614,7 +632,7 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
- 	return 0;
- }
- 
--static void __init __pci_mmcfg_init(int early)
-+static void __init __pci_mmcfg_init(int early, bool create_on_demand)
- {
- 	pci_mmcfg_reject_broken(early);
- 	if (list_empty(&pci_mmcfg_list))
-@@ -630,6 +648,13 @@ static void __init __pci_mmcfg_init(int early)
- 		}
- 	}
- 
-+	/*
-+	 * Avoid redundant pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap() calls
-+	 * for each MMCONFIG entry if they will be created on demand.
-+	 */
-+	if (create_on_demand)
-+		free_all_mmcfg();
-+
- 	if (pci_mmcfg_arch_init())
- 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
- 	else {
-@@ -647,28 +672,37 @@ void __init pci_mmcfg_early_init(void)
- 			known_bridge = 1;
- 		else
- 			acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
--		__pci_mmcfg_init(1);
-+		__pci_mmcfg_init(1, false);
- 	}
- }
- 
- void __init pci_mmcfg_late_init(void)
- {
-+	bool create_on_demand;
-+
- 	/* MMCONFIG disabled */
- 	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
- 		return;
- 
--	/* MMCONFIG already enabled */
--	if (!(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
--		return;
--
- 	if (known_bridge)
- 		return;
- 
--	acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
--	__pci_mmcfg_init(0);
-+	/*
-+	 * MMCONFIG information will be created on demand by pci_root driver
-+	 * when binding to ACPI host bridge deivces.
-+	 */
-+	create_on_demand = (!acpi_disabled && !acpi_pci_cache_mcfg());
- 
--	if (!(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
--		acpi_pci_cache_mcfg();
-+	/* pci_mmcfg_early_init() fails to setup MMCONFIG, try again. */
-+	if (pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF) {
-+		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-+		__pci_mmcfg_init(0, create_on_demand);
-+	/*
-+	 * Free MMCONFIG information created by pci_mmcfg_early_init()
-+	 * if MMCONFIG information will be created on demand.
-+	 */
-+	} else if (create_on_demand)
-+		free_all_mmcfg();
- }
- 
- static int __init pci_mmcfg_late_insert_resources(void)
-@@ -802,3 +836,25 @@ int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
- 
- 	return -ENOENT;
- }
-+
-+#ifdef	CONFIG_ACPI
-+/* Probe MMCFG information for PCI bus blind probe */
-+void __devinit pci_mmconfig_probe(u8 start)
-+{
-+	int end_bus, temp;
-+	phys_addr_t addr;
-+
-+	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
-+		return;
-+
-+	addr = acpi_pci_root_get_mcfg_addr(NULL, 0, start, &end_bus);
-+	if (addr && end_bus >= 0 && end_bus <= 255) {
-+		for (temp = start + 1; temp <= end_bus; temp++)
-+			if (pci_find_bus(0, temp))
-+				break;
-+
-+		temp--;
-+		pci_mmconfig_insert(NULL, 0, start, (u8) temp, addr);
-+	}
-+}
-+#endif
--- 
-1.7.1
+> Bjorn
 
+Sebastian
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
+iQIcBAEBCAAGBQJP3EjpAAoJEHuW6BYqjPXRNnQP/j6+Dt1fklG3wKYkU+svqhiE
+P7BeOQa4AK+8cPG7o5T1e+F3aNszSu8J/f7d0Y4qSy5u/b1kwNSgochU6fGSTeIt
+jFZM7Yevft4RUU76q5ga1CdRWEVVJ8aex0lbfQs2aEsASndXZNSCkm3KQOXGd+mj
+pwwe3rdiDxKBQJ0QeebpQRym0sUw9hsAaO4XXLJ8d2fVo+rIjJMSKM3bzMzb6GFh
+D3slYMCIYvIXg8+s6Hslv2Wc51oL+FkoASZXx1d7gCK/Utf+WLo30OyQdStC5rsq
+MqVy7+P4cZOKAAq181gX7Jx655ghVrnllJNjtMXgauCu8wjLE5FjIyh5DBz1VzDj
+w7rG7mbRMQz2P+CEmPNQwy6e4pspUh7GgKnc0duTQaPRderi3CN+rQRVdz9bBEDK
+Qtcf+vtReW8fRdcIAqgRcs/JmTgTZLyLeKf0Aa8s0h2SA9TRz/U7lqxf8Mq2zzyq
+TJXLtTtqXekTum11cuxbAUsbfuDCVtuHu648WJu0YS5J3mWEbIg94kULGLKclSy9
+aK3feDiS1kSWonKxr4LZ4pPh452dJl1+1Eq121rnK+IAG2qWSsda4ju8RVxxIHex
+hVhME1x8rkarBEUH2w4Y4aMKCgNbeHIVotnGhzwzYUQXXkZ+43RvQgPeCIkhwYx4
+1cx3lPomgGNN9JIETK6n
+=pKYs
+-----END PGP SIGNATURE-----
