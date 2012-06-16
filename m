@@ -1,65 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:60141 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751701Ab2FLPis (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 11:38:48 -0400
-Message-ID: <4FD76284.5000506@wwwdotorg.org>
-Date: Tue, 12 Jun 2012 09:38:44 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: huang ying <huang.ying.caritas@gmail.com>
+Subject: Re: [PATCH -v5 3/3] PCIe, PM, Add PCIe runtime D3cold support
+Date: Sat, 16 Jun 2012 23:09:01 +0200
+Cc: =?iso-8859-2?q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>,
+	Jesse Barnes <jesse.barnes@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, ming.m.lin@intel.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Zheng Yan <zheng.z.yan@intel.com>
+References: <1339382833-7928-1-git-send-email-ying.huang@intel.com> <201206152321.16913.rjw@sisk.pl> <CAC=cRTOCaMGxyS8pvDzYR55w_QOEbcNjgococfE0NtobAg24Hg@mail.gmail.com>
+In-Reply-To: <CAC=cRTOCaMGxyS8pvDzYR55w_QOEbcNjgococfE0NtobAg24Hg@mail.gmail.com>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 09/10] ARM: tegra: harmony: Initialize PCIe from DT
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-10-git-send-email-thierry.reding@avionic-design.de> <4FD6661A.1060407@wwwdotorg.org> <20120612054811.GB4040@avionic-0098.adnet.avionic-design.de>
-In-Reply-To: <20120612054811.GB4040@avionic-0098.adnet.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <201206162309.02170.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/11/2012 11:48 PM, Thierry Reding wrote:
-> * Stephen Warren wrote:
->> On 06/11/2012 09:05 AM, Thierry Reding wrote:
->>> With the device tree support in place, probe the PCIe
->>> controller from the device tree and remove the corresponding
->>> workaround in the board file.
->> 
->>> diff --git a/arch/arm/boot/dts/tegra-harmony.dts
->>> b/arch/arm/boot/dts/tegra-harmony.dts
->> 
->>> +	pci_vdd_reg: fixedregulator@0 {
->> 
->> I think that'd usually just be "regulator@0".
->> 
->> If you need the "@0" part to differentiate between multiple
->> regulators, the node needs a reg property too:
->> 
->> reg = <0 0>;
->> 
->> although then I wonder about putting the regulator under the root
->> node, since the address wouldn't really make sense...
+On Saturday, June 16, 2012, huang ying wrote:
+> On Sat, Jun 16, 2012 at 5:21 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> [snip]
+> >
+> > > @@ -731,9 +791,13 @@ int pci_set_power_state(struct pci_dev *
+> > >  {
+> > >       int error;
+> > >
+> > > -     /* bound the state we're entering */
+> > > -     if (state > PCI_D3hot)
+> > > +     /* D3cold during system suspend/hibernate is not supported */
+> > > +     if (!dev->runtime_d3cold && state > PCI_D3hot)
+> >
+> > I don't think this is the right place for the dev->runtime_d3cold check,
+> > I've already told you that and haven't heard anything from you causing me
+> > to change my mind.
+> >
+> > If you don't want D3cold to be used during system sleep transitions,
+> > please make sure that D3cold is not passed to pci_set_power_state() in
+> > those cases.
+> >
 > 
-> Perhaps we should add a new "regulators" node under the root node
-> to collect this kind of regulators that don't fit anywhere else.
-> Looking at the code, something like this should work:
+> OK.  Checked pci_set_power_state usage with following command line:
 > 
-> / { ...
+> $ grep 'pci_set_power_state' -r . | grep -v PCI_D3hot | grep -v PCI_D0 |
+> grep -v pci_choose_state
+> $ grep 'pci_set_power_state' -r . | grep -v PCI_D3hot | grep -v PCI_D0 |
+> grep -v pci_choose_state | grep -i d3cold
 > 
-> regulators { compatible = "simple-bus"; #address-cells = <1>; 
-> #size-cells = <0>;
+> Found that, almost all pci_set_power_state usage is:
 > 
-> pci_vdd_reg: regulator@0 { reg = <0>; }; }; };
+> 1) set to PCI_Dx (not PCI_D3cold)
+> 2) set to the state that choosed by pci_choose_state()
+> 3) driver use pci_prepare_to_sleep(), which will call pci_set_power_state()
+> 
+> The only two exceptions are as follow:
+> 
+> ./drivers/misc/cb710/core.c:            pci_set_power_state(pdev,
+> PCI_D3cold);
+> ./arch/x86/pci/mrst.c:  pci_set_power_state(dev, PCI_D3cold);
 
-That seems like a good idea, and there's certainly precedent for doing
-exactly that in other ARM .dts files already.
+Well, no one is supposed to pass PCI_D3cold to pci_set_power_state() before
+the $subject patch, so they should be fixed anyway.
 
-To maintain .dts alphabetical sorting of non-addressed nodes, this new
-node should slot in just before the sound node, near the end of the file.
+> And pci_choose_state() will not return PCI_D3cold for system suspend.
+> 
+> So what do you think about the following solution?
+> 
+> a) Change pci_prepare_to_sleep(), so that it will not put device into
+> PCI_D3cold.
+> b) Change PCI_D3cold to PCI_D3hot in the following two places,
+> 
+> ./drivers/misc/cb710/core.c:            pci_set_power_state(pdev,
+> PCI_D3cold);
+> ./arch/x86/pci/mrst.c:  pci_set_power_state(dev, PCI_D3cold);
+
+Yes, that will do.
+
+Thanks,
+Rafael
