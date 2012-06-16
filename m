@@ -1,68 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 1/4] PCI: make pci_ltr_supported static.
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
-Date: Fri, 01 Jun 2012 15:16:25 -0600
-Message-ID: <20120601211625.20328.37250.stgit@amt.stowe>
-In-Reply-To: <20120601211619.20328.36769.stgit@amt.stowe>
-References: <20120601211619.20328.36769.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:40841 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965Ab2FPJYX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2012 05:24:23 -0400
+Message-ID: <4FDC5084.6090504@huawei.com>
+Date: Sat, 16 Jun 2012 17:23:16 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com> <1338026043-3968-9-git-send-email-jiang.liu@huawei.com> <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com> <4FDB2192.5070709@huawei.com> <CAE9FiQVWhSZBcZM1DXJaN7rsj64YO=OjzOm6XkUqio5fZ5di+w@mail.gmail.com>
+In-Reply-To: <CAE9FiQVWhSZBcZM1DXJaN7rsj64YO=OjzOm6XkUqio5fZ5di+w@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI Express Latency Tolerance Reporting (LTR) feature's
-pci_ltr_supported() routine is currently only used within
-drivers/pci/pci.c so make it static.
+On 2012-6-16 0:51, Yinghai Lu wrote:
+> 
+> still have some problem:
+> pci_mmcfg_check_reserved==>is_mmconf_reserved
+> 
+> will update cfg->end_bus.
+Hi Yinghai,
+	How about following patch for this issue? I guess we need to
+keep current behavior at boot time for backward compatibility, right?
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+@@ -472,6 +472,14 @@ static int __devinit is_mmconf_reserved(check_reserved_t is_reserved,
+                        break;
+        }
+
++       /*
++        * For backward compatibility, we will adjust the MMCONFIG region
++        * at boot time if it's only partially reserved by firmware.
++        * For PCI host bridge hotplug at runtime, just reject it.
++        */
++       if (pci_mmcfg_running_state && old_size != size)
++               return 0;
++
+        if (size < (16UL<<20) && size != old_size)
+                return 0;
+
 ---
 
- drivers/pci/pci.c   |    4 ++--
- include/linux/pci.h |    1 -
- 2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> Thanks
+> 
+> Yinghai
+> 
+> .
+> 
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 447e834..64471b1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -39,6 +39,7 @@ EXPORT_SYMBOL(pci_pci_problems);
- 
- unsigned int pci_pm_d3_delay;
- 
-+static bool pci_ltr_supported(struct pci_dev *dev);
- static void pci_pme_list_scan(struct work_struct *work);
- 
- static LIST_HEAD(pci_pme_list);
-@@ -2169,7 +2170,7 @@ EXPORT_SYMBOL(pci_disable_obff);
-  * RETURNS:
-  * True if @dev supports latency tolerance reporting, false otherwise.
-  */
--bool pci_ltr_supported(struct pci_dev *dev)
-+static bool pci_ltr_supported(struct pci_dev *dev)
- {
- 	int pos;
- 	u32 cap;
-@@ -2185,7 +2186,6 @@ bool pci_ltr_supported(struct pci_dev *dev)
- 
- 	return cap & PCI_EXP_DEVCAP2_LTR;
- }
--EXPORT_SYMBOL(pci_ltr_supported);
- 
- /**
-  * pci_enable_ltr - enable latency tolerance reporting
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d8c379d..b2bec26 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -875,7 +875,6 @@ enum pci_obff_signal_type {
- int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type);
- void pci_disable_obff(struct pci_dev *dev);
- 
--bool pci_ltr_supported(struct pci_dev *dev);
- int pci_enable_ltr(struct pci_dev *dev);
- void pci_disable_ltr(struct pci_dev *dev);
- int pci_set_ltr(struct pci_dev *dev, int snoop_lat_ns, int nosnoop_lat_ns);
 
