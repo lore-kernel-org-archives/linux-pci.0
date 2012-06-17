@@ -1,80 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f202.google.com ([209.85.220.202]:60108 "EHLO
-	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758631Ab2FUAQk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 20:16:40 -0400
-Received: by vcbfl13 with SMTP id fl13so9372vcb.1
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:40 -0700 (PDT)
-Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
-	by wpzn4.hot.corp.google.com (Postfix) with ESMTP id 117751E0043
-	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:39 -0700 (PDT)
-Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
-	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id C349B180181
-	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:38 -0700 (PDT)
-Subject: [PATCH 1/6] PCI: use __weak consistently
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 Jun 2012 18:16:38 -0600
-Message-ID: <20120621001638.4834.10145.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQUDWForfUOkcLt6ZruTmutfhmR7H+Ct8z9zO_rWB1p8Dw@mail.gmail.com>
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
+	<1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
+	<4FDB2192.5070709@huawei.com>
+	<CAE9FiQVWhSZBcZM1DXJaN7rsj64YO=OjzOm6XkUqio5fZ5di+w@mail.gmail.com>
+	<4FDC5084.6090504@huawei.com>
+	<CAE9FiQVp9gyzRppPDu=bbRbOqY=mu1478YUSAJs=t3Cyvpmh+Q@mail.gmail.com>
+	<CAErSpo5q=UJyT=bughbgfGpG19MfnYn6h=X=YFzfUdgLy9KcPg@mail.gmail.com>
+	<CAE9FiQUDWForfUOkcLt6ZruTmutfhmR7H+Ct8z9zO_rWB1p8Dw@mail.gmail.com>
+Date: Sat, 16 Jun 2012 19:55:59 -0600
+Message-ID: <CABhMZUXWRsY7K+__5RtaksVnVHspnw5sShHSjmLjdCMsm-Fvmw@mail.gmail.com>
+Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
+From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-Use "__weak" instead of the gcc-specific "__attribute__ ((weak))"
+On Sat, Jun 16, 2012 at 4:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Jun 16, 2012 at 2:48 PM, Bjorn Helgaas <bhelgaas@google.com> wrot=
+e:
+>>>
+>>> We'd better to make all path share as most code as possible.
+>>> 1. hostbridge scanning during boot -- early, it will check chipset and =
+e820
+>>> 2. MCFG checking during boot -- early, it will check e820
+>>> 3. MCFG checking during boot -- late, it will check acpi pnp
+>>> 4. _CBA checking for hotplug-able pci root bus but it is installed duri=
+ng boot.
+>>> 5. _CBA checking for hotplug-able pci root bus during run time.
+>>>
+>>> please keep mapping for all entries in MCFG table. aka 1, 2, 3.
+>>> I have some local patches that will read ext pci conf space before scan=
+ pci bus.
+>>> please check attached one for nehalem-ioh.
+>>
+>> I don't think it's a requirement that Gerry keep your Nehalem patch
+>> working. =A0Your intel_bus.c is not in the tree and you haven't provided
+>> an explanation for why it should be.
+>>
+>> The only requirement I'm aware of for PCI config access before we
+>> discover the host bridges via ACPI is for segment group 0, bus 0, as
+>> mentioned in ACPI spec 5.0, sec 5.2.3.1, PDF page 143, and I think
+>> that applies only to the first 0x100 bytes of config space. =A0I don't
+>> think there's a requirement for access to the extended configuration
+>> space (bytes 0x100-0xFFF). =A0I do not see a requirement that this
+>> pre-host bridge access happen via MMCONFIG; as far as I can tell, we
+>> can use the legacy 0xCF8/0xCFC mechanism.
+>
+> that one shot for intel host bridge resource discovery before root bus
+> scanning,
+> will need to access registers above 0x100.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci-sysfs.c |    2 +-
- drivers/pci/pci.c       |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+I don't understand what you're saying.  Are you disagreeing with
+something I said above?
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 86c63fe..a0b435f 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1112,7 +1112,7 @@ static struct bin_attribute pcie_config_attr = {
- 	.write = pci_write_config,
- };
- 
--int __attribute__ ((weak)) pcibios_add_platform_entries(struct pci_dev *dev)
-+int __weak pcibios_add_platform_entries(struct pci_dev *dev)
- {
- 	return 0;
- }
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 447e834..8f4a5ea 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1349,7 +1349,7 @@ void pcim_pin_device(struct pci_dev *pdev)
-  * is the default implementation. Architecture implementations can
-  * override this.
-  */
--void __attribute__ ((weak)) pcibios_disable_device (struct pci_dev *dev) {}
-+void __weak pcibios_disable_device (struct pci_dev *dev) {}
- 
- static void do_pci_disable_device(struct pci_dev *dev)
- {
-@@ -1413,8 +1413,8 @@ pci_disable_device(struct pci_dev *dev)
-  * Sets the PCIe reset state for the device. This is the default
-  * implementation. Architecture implementations can override this.
-  */
--int __attribute__ ((weak)) pcibios_set_pcie_reset_state(struct pci_dev *dev,
--							enum pcie_reset_state state)
-+int __weak pcibios_set_pcie_reset_state(struct pci_dev *dev,
-+					enum pcie_reset_state state)
- {
- 	return -EINVAL;
- }
-@@ -3851,7 +3851,7 @@ static void __devinit pci_no_domains(void)
-  * greater than 0xff). This is the default implementation. Architecture
-  * implementations can override this.
-  */
--int __attribute__ ((weak)) pci_ext_cfg_avail(struct pci_dev *dev)
-+int __weak pci_ext_cfg_avail(struct pci_dev *dev)
- {
- 	return 1;
- }
+As far as I know, we can rely on ACPI _CRS completely for host bridge
+resources.  Are there exceptions?  What does "one shot for intel host
+bridge resource discovery" mean?  Are there machines that are broken
+because we don't have intel_bus.c?
 
+> Current MCFG handling have some sanitary checking during probing.
+>
+> Now Jiang is trying to free result and cache it for two MCFG path 2/3.
+> and later use cached and map again for entries from cached entries.
+> but when use those cached entries sanitary of those entries are lost.
+>
+> so choice would be
+> 1. cache all checked MMCFG result and use that later
+> 2. or just leave current MCFG handling alone, just add _CBA support.
+> like Jiang -v4 version.
+
+Choice 2 sounds like a possibility.  I probably encouraged mucking
+around in the current MCFG handling, but if we're not going to
+actually clean anything up, there's not much point in touching it.
