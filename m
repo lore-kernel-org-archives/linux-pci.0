@@ -1,30 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:34692 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754141Ab2FGTLD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2012 15:11:03 -0400
-Date: Thu, 7 Jun 2012 13:11:00 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: One question about the name pcibios_assign_all_busses()
-Message-ID: <20120607191100.GA15600@parisc-linux.org>
-References: <20120607080721.GA18832@richard>
+Received: from mail-qa0-f42.google.com ([209.85.216.42]:53903 "EHLO
+	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305Ab2FRWan (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2012 18:30:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120607080721.GA18832@richard>
+In-Reply-To: <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+ <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com> <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+From: Ulrich Drepper <drepper@gmail.com>
+Date: Mon, 18 Jun 2012 18:30:21 -0400
+Message-ID: <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+Subject: Re: SNB PCI root information
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 07, 2012 at 04:07:21PM +0800, Richard Yang wrote:
-> busses, the ses means?
-> or this is a typo? should be buses?
+On Sat, Jun 16, 2012 at 5:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> If ACPI provides a perfectly usable generic way to describe this
+> topology and the vendor BIOS doesn't bother to use it, I'm not very
+> interested in trying to compensate for that BIOS deficiency by adding
+> a bunch of non-portable CPU-specific gunk to Linux.
 
-Both "buses" and "busses" are correct pluralisations in english.
-See, for example, http://www.chambersharrap.co.uk/chambers/features/chref/chref.py/main?query=bus&title=21st
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+The problem is that all machines get this wrong.  I've tested varies
+models from Dell and HP and none of them have the _PXM entry and the
+local_cpus fields are wrong.  If there is a reasonably sane way to
+compensate for broken BIOSes it should be considered.  We all know how
+good BIOS authors are...
