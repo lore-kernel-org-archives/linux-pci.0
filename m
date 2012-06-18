@@ -1,109 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24814 "EHLO mx1.redhat.com"
+Received: from gate.crashing.org ([63.228.1.57]:44010 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751306Ab2FLQeu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jun 2012 12:34:50 -0400
-Subject: Re: [PATCH 0/4] PCI: PCIe capability structure related
- cleanup/fixes
-From: Myron Stowe <mstowe@redhat.com>
+	id S1753007Ab2FRW6P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Jun 2012 18:58:15 -0400
+Message-ID: <1340060143.2372.50.camel@pasglop>
+Subject: Re: [PATCH v3 1/2] powerpc/PCI: move DMA & IRQ init to device_add()
+ notification path
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xudong.hao@linux.intel.com,
-	ddutile@redhat.com, yu.zhao@intel.com
-In-Reply-To: <CAErSpo5yZdr4dgqjO6O9PSi3XZXfSOHmjjJRemaqAfmpv5WREA@mail.gmail.com>
-References: <20120601211619.20328.36769.stgit@amt.stowe>
-	 <CAErSpo5yZdr4dgqjO6O9PSi3XZXfSOHmjjJRemaqAfmpv5WREA@mail.gmail.com>
+Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
+	Michal Simek <monstr@monstr.eu>,
+	microblaze-uclinux@itee.uq.edu.au, linux-pci@vger.kernel.org,
+	Jesse Larrew <jlarrew@linux.vnet.ibm.com>,
+	jbarnes@virtuousgeek.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linuxppc-dev@lists.ozlabs.org
+Date: Tue, 19 Jun 2012 08:55:43 +1000
+In-Reply-To: <CAErSpo6mbzqMuewBySk5kA8E9RwOVZqOEcnM4Hy541B3pta9SQ@mail.gmail.com>
+References: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com>
+	 <20120523223700.24276.76804.stgit@bhelgaas.mtv.corp.google.com>
+	 <CAErSpo6mbzqMuewBySk5kA8E9RwOVZqOEcnM4Hy541B3pta9SQ@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Jun 2012 10:34:44 -0600
-Message-ID: <1339518884.2415.2.camel@zim.stowe>
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-06-11 at 19:52 -0700, Bjorn Helgaas wrote:
-> On Fri, Jun 1, 2012 at 2:16 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> > The following series introduces PCI Express 'capability structure'
-> > related cleanup, fixes, and optimizations.
-> >
-> > Patch 1/4 changes pci_ltr_supported() to a static routine.
-> >
-> > Patch 2/4 removes redundant checking in various PCI Express features as
-> > suggested by Bjorn Helgaas in
-> > http://marc.info/?l=linux-pci&m=130463494319762&w=2
-> >
-> > There is a similar idiom in use that could be similarly be re-factored:
-> >    if (!pci_is_pcie(dev))
-> >        return;
-> >
-> >    pos = pci_find_ext_capability(dev, ...);
-> >    if (!pos)
-> >        return;
-> >
-> > At first it seemed incorrect to remove the redundant call of
-> > pci_is_pcie() in these cases as a PCI or PCI-X (< 2.0) device may be
-> > involved.  In such cases an "extended capability" list would not exist,
-> > as it was not introduced until PCI-X 2.0, and accesses outside of the
-> > device's configuration space would be attempted.  However, upon further
-> > review of pci_find_ext_capability() it looks as if such accesses would
-> > be handled correctly due to the short-circuiting logic involved -
-> >
-> >    if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
-> >        return 0;
-> >
-> > As such, I'll entertain comments as to whether or not we should also
-> > make similar removals of pci_is_pcie() in these cases.
-> >
-> > Patch 3/4 introduces pci_pcie_cap2() for use in v2 capability related
-> > feature code.  The makeup of Express' capability structure varies
-> > substantially between v1 and v2.
-> >
-> > There is still some redundancy in PCIe v2 capabilities checking related
-> > to the Latency Tolerance Reporting (LTR) feature routines that likely
-> > could be re-factored further; please feel free to respond with ideas.
-> >
-> > Patch 4/4 makes a minor optimization to the saving and restoring of
-> > PCI Express capability structures.
-> >
-> > Seems like the same type of optimization could be done to remove the
-> > 'if (pcie_cap_has_lnkctl(dev->pcie_type, flags))' check.  According to
-> > section 7.8 "PCI Express Capability Structure" of the PCI Express 1.0a
-> > specification:
-> >
-> >    "Figure 7-10 details allocation of register fields in the PCI
-> >     Express Capability structure. The PCI Express Capabilities,
-> >     Device Capabilities, Device Status/Control, Link Capabilities,
-> >     and Link Status/Control registers are required for all PCI
-> >     Express devices. Endpoints are not required to implement
-> >     registers other than those listed above and terminate the
-> >     capability structure."
-> >
-> > There may have been some early Express devices that did not properly
-> > follow the specification which required the introduction of
-> > 'pcie_cap_has_lnkctl()' so I did not make the additional optimization.
-> > ---
-> >
-> > Myron Stowe (4):
-> >      PCI: Remove redundant capabilities checking in pci_{save,restore}_pcie_state
-> >      PCI: Add pci_pcie_cap2() check for PCIe feature capabilities >= v2
-> >      PCI: Remove redundant checking in PCI Express capability routines
-> >      PCI: make pci_ltr_supported static.
+On Mon, 2012-06-18 at 15:06 -0600, Bjorn Helgaas wrote:
+> We're moving the CardBus IRQ config from before pci_bus_add_devices()
+> to after.  I see why you did that: we're proposing to do the powerpc
+> DMA & IRQ setup in pci_bus_add_devices(), so we don't want to have the
+> powerpc IRQ init clobber the CardBus IRQ config.
 > 
-> I added Don's acks, made a couple minor changes he suggested, removed
-> the static pci_ltr_supported() function declaration (unnecessary,
-> AFAICS), and pushed these to:
+> But a driver can claim the device as soon as we call
+> pci_bus_add_devices(), so we're potentially changing dev->irq after a
+> driver has already looked at it, which sounds like a bug.
 > 
->   http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/topic/stowe-cap-cleanup
+> There are only five possibilities for powerpc pci_irq_fixup:
 > 
-> If everything looks right to you, I'll merge it into "next" tomorrow.
-> Thanks for doing this; I think it's some nice cleanup and will make
-> things safer and easier to understand.
+>       ppc47x_pci_irq_fixup
+>       mpc85xx_cds_pci_irq_fixup
+>       maple_pci_irq_fixup
+>       pmac_pci_irq_fixup
+>       rtas_msi_pci_irq_fixup
+> 
+> If these were normal PCI header quirks instead, they could run
+> earlier, and we wouldn't need to move this
+> cardbus_config_irq_and_cls() call.  Is it possible to make these
+> quirks, Ben?
 
-Looks good - thanks to both Don and yourself for the suggestions and
-changes to make the patch headers more comprehensible with respect to
-the capabilities structure versions.
+Wait ... why are those fixups relevant ? They have to run after
+pci_read_irq_line() (which should have been called pcibios_read_irq_line
+really) but that's fine, we call both back to back....
 
-Myron
-> 
-> Bjorn
+The problem has to do with the fact that we setup pdev->irq inside
+pci_bus_add_devices() with the new proposed code (the fixup itself is
+just a detail).
+
+You want cardbus to "quirk" the irq after that's been fixed up... maybe
+that's a case for moving cardbus_config_irq_and_cls() to
+pci_enable_device() ? Or add another hook inside
+pci_bus_add_devices()...
+
+Cheers,
+Ben.
 
 
