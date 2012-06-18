@@ -1,202 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:49714 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752078Ab2FOHPT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 03:15:19 -0400
-Received: by dady13 with SMTP id y13so3647002dad.19
-        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2012 00:15:18 -0700 (PDT)
+Return-Path: <jiang.liu@huawei.com>
+Message-ID: <4FDE827E.30201@huawei.com>
+Date: Mon, 18 Jun 2012 09:21:02 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
-References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
-	<1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
-Date: Fri, 15 Jun 2012 00:15:18 -0700
-Message-ID: <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
+To: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+CC: Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Taku
+ Izumi <izumi.taku@jp.fujitsu.com>,
+        Kenji Kaneshige
+	<kaneshige.kenji@jp.fujitsu.com>,
+        Don Dutile <ddutile@redhat.com>, Yijing
+ Wang <wangyijing@huawei.com>,
+        Keping Chen <chenkeping@huawei.com>, <linux-pci@vger.kernel.org>,
+        Jiang Liu <liuj97@gmail.com>
 Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com> <1338026043-3968-9-git-send-email-jiang.liu@huawei.com> <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com> <4FDB2192.5070709@huawei.com> <CAE9FiQVWhSZBcZM1DXJaN7rsj64YO=OjzOm6XkUqio5fZ5di+w@mail.gmail.com> <4FDC5084.6090504@huawei.com> <CAE9FiQVp9gyzRppPDu=bbRbOqY=mu1478YUSAJs=t3Cyvpmh+Q@mail.gmail.com> <CAErSpo5q=UJyT=bughbgfGpG19MfnYn6h=X=YFzfUdgLy9KcPg@mail.gmail.com> <CAE9FiQUDWForfUOkcLt6ZruTmutfhmR7H+Ct8z9zO_rWB1p8Dw@mail.gmail.com> <CABhMZUXWRsY7K+__5RtaksVnVHspnw5sShHSjmLjdCMsm-Fvmw@mail.gmail.com>
+In-Reply-To: <CABhMZUXWRsY7K+__5RtaksVnVHspnw5sShHSjmLjdCMsm-Fvmw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 26, 2012 at 2:54 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> This patch changes mmconfig logic on x86 platforms to add MMCFG
-> information on demand instead of adding all MMCFG entries from
-> the ACPI MCFG table at boot time. So only MMCFG address ranges
-> used by active PCI host bridges will be actually mapped.
->
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  arch/x86/include/asm/pci_x86.h |    5 +++
->  arch/x86/pci/legacy.c          |    1 +
->  arch/x86/pci/mmconfig-shared.c |   54 +++++++++++++++++++++++++++++++++++++---
->  3 files changed, 56 insertions(+), 4 deletions(-)
->
-> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-> index 3e5f43c..4a1a9aa 100644
-> --- a/arch/x86/include/asm/pci_x86.h
-> +++ b/arch/x86/include/asm/pci_x86.h
-> @@ -142,6 +142,11 @@ extern int __devinit pci_mmconfig_insert(struct device *dev,
->                                         uint16_t seg, uint8_t start,
->                                         uint8_t end, phys_addr_t addr);
->  extern int pci_mmconfig_delete(uint16_t seg, uint8_t start, uint8_t end);
-> +#ifdef CONFIG_ACPI
-> +extern void pci_mmconfig_probe(uint8_t start);
-> +#else
-> +static inline void pci_mmconfig_probe(uint8_t start) { }
-> +#endif
->  extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
->
->  extern struct list_head pci_mmcfg_list;
-> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-> index a1df191..e9a2384 100644
-> --- a/arch/x86/pci/legacy.c
-> +++ b/arch/x86/pci/legacy.c
-> @@ -49,6 +49,7 @@ void __devinit pcibios_scan_specific_bus(int busn)
->                    l != 0x0000 && l != 0xffff) {
->                        DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
->                        printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
-> +                       pci_mmconfig_probe(busn);
->                        pci_scan_bus_on_node(busn, &pci_root_ops, node);
->                        return;
->                }
-> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-> index fa0aa90..e80b5c2 100644
-> --- a/arch/x86/pci/mmconfig-shared.c
-> +++ b/arch/x86/pci/mmconfig-shared.c
-> @@ -19,6 +19,7 @@
->  #include <linux/slab.h>
->  #include <linux/mutex.h>
->  #include <linux/rculist.h>
-> +#include <linux/pci-acpi.h>
->  #include <asm/e820.h>
->  #include <asm/pci_x86.h>
->  #include <asm/acpi.h>
-> @@ -616,6 +617,16 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
->                        return -ENODEV;
->                }
->
-> +               /*
-> +                * MMCFG information for host brideges will be added on demand
-> +                * by pci_root driver if ACPI is enabled. But there are special
-> +                * requirements for devices on segment 0, MMCFG information may
-> +                * be needed for fixing hardware quirks and probing for hidden
-> +                * buses.
-> +                */
-> +               if (!acpi_disabled && cfg->pci_segment)
-> +                       continue;
-> +
->                if (pci_mmconfig_add(cfg->pci_segment, cfg->start_bus_number,
->                                   cfg->end_bus_number, cfg->address) == NULL) {
->                        printk(KERN_WARNING PREFIX
-> @@ -625,6 +636,13 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
->                }
->        }
->
-> +       i = entries * sizeof(*cfg_table);
-> +       pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
-> +       if (pci_acpi_mcfg_array) {
-> +               memcpy(pci_acpi_mcfg_array, cfg_table, i);
-> +               pci_acpi_mcfg_entries = entries;
-> +       }
-> +
+On 2012-6-17 9:55, Bjorn Helgaas wrote:
+> On Sat, Jun 16, 2012 at 4:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Sat, Jun 16, 2012 at 2:48 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>
+>>>> We'd better to make all path share as most code as possible.
+>>>> 1. hostbridge scanning during boot -- early, it will check chipset and e820
+>>>> 2. MCFG checking during boot -- early, it will check e820
+>>>> 3. MCFG checking during boot -- late, it will check acpi pnp
+>>>> 4. _CBA checking for hotplug-able pci root bus but it is installed during boot.
+>>>> 5. _CBA checking for hotplug-able pci root bus during run time.
+>>>>
+>>>> please keep mapping for all entries in MCFG table. aka 1, 2, 3.
+>>>> I have some local patches that will read ext pci conf space before scan pci bus.
+>>>> please check attached one for nehalem-ioh.
+>>>
+>>> I don't think it's a requirement that Gerry keep your Nehalem patch
+>>> working.  Your intel_bus.c is not in the tree and you haven't provided
+>>> an explanation for why it should be.
+>>>
+>>> The only requirement I'm aware of for PCI config access before we
+>>> discover the host bridges via ACPI is for segment group 0, bus 0, as
+>>> mentioned in ACPI spec 5.0, sec 5.2.3.1, PDF page 143, and I think
+>>> that applies only to the first 0x100 bytes of config space.  I don't
+>>> think there's a requirement for access to the extended configuration
+>>> space (bytes 0x100-0xFFF).  I do not see a requirement that this
+>>> pre-host bridge access happen via MMCONFIG; as far as I can tell, we
+>>> can use the legacy 0xCF8/0xCFC mechanism.
+>>
+>> that one shot for intel host bridge resource discovery before root bus
+>> scanning,
+>> will need to access registers above 0x100.
+> 
+> I don't understand what you're saying.  Are you disagreeing with
+> something I said above?
+> 
+> As far as I know, we can rely on ACPI _CRS completely for host bridge
+> resources.  Are there exceptions?  What does "one shot for intel host
+> bridge resource discovery" mean?  Are there machines that are broken
+> because we don't have intel_bus.c?
 
-here cache cfg too early.  should do that after
+I have consulted Bob Moore about this topic before and Bob said that
+they hasn't encountered a system on which the ACPICA has dependency 
+on extended PCI configuration space yet.
 
-pci_mmcfg_reject_broken().
+>> Current MCFG handling have some sanitary checking during probing.
+>>
+>> Now Jiang is trying to free result and cache it for two MCFG path 2/3.
+>> and later use cached and map again for entries from cached entries.
+>> but when use those cached entries sanitary of those entries are lost.
+>>
+>> so choice would be
+>> 1. cache all checked MMCFG result and use that later
+>> 2. or just leave current MCFG handling alone, just add _CBA support.
+>> like Jiang -v4 version.
+> 
+> Choice 2 sounds like a possibility.  I probably encouraged mucking
+> around in the current MCFG handling, but if we're not going to
+> actually clean anything up, there's not much point in touching it.
+I prefer the second choice too. Backward compatibility is really
+important on x86, so don't want to break anything here. I could
+help to split the patch set into two parts: one for root bridge
+hotplug and the other for cleanup. This time we could focus on 
+the first patch to prepare for host bridge hotplug, and have 
+more time to discuss about the cleanup work.
 
-otherwise will use mcfg even try to reject that before.
+On the other hand, BIOS should report MMCONFIG information by _CBA
+if a host bridge supports physical hotplug. So the cleanup only 
+benefits two cases:
+1) BIOS reports MMCONFIG information for hot-pluggable host bridges
+   in MCFG table. This is really a BIOS bug. Currently we have no
+   really x86 platforms in the field which support PCI host bridge
+   hotplug yet. So it may be acceptable for OS to report such bugs
+   and let BIOS people to fix them.
+2) Account MMCONFIG information to specific host bridges. It does
+   give better representation about the MMCONFIG resource usages,
+   but it's on risk of breaking backward compatibilities.
 
->        return 0;
->  }
->
-> @@ -634,14 +652,14 @@ static void __init __pci_mmcfg_init(int early)
->        if ((pci_probe & PCI_PROBE_MMCONF) == 0)
->                return;
->
-> -       /* MMCONFIG already enabled */
-> -       if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
-> -               return;
-> -
->        /* for late to exit */
->        if (known_bridge)
->                return;
->
-> +       /* MMCONFIG already enabled */
-> +       if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
-> +               goto out;
-> +
->        if (early) {
->                if (pci_mmcfg_check_hostbridge())
->                        known_bridge = 1;
-> @@ -675,6 +693,14 @@ static void __init __pci_mmcfg_init(int early)
->                pci_mmcfg_resources_inserted = 1;
->                pci_mmcfg_arch_init_failed = true;
->        }
-> +
-> +out:
-> +       /*
-> +        * Free all MCFG entries if ACPI is enabled. MCFG information will
-> +        * be added back on demand by the pci_root driver later.
-> +        */
-> +       if (!early && !acpi_disabled && !known_bridge && pci_acpi_mcfg_array)
-> +               free_all_mmcfg();
+So should we adopt the second solution here?
 
-that really change the logic.
-
-looks like it will break mrst/sfi path.
-
-the scan from pci_legacy_init() for mrst/sfi will not have ext_pci_ops
-set for bus 0.
-
-| int __init pci_subsys_init(void)
-| {
-|        /*
-|         * The init function returns an non zero value when
-|         * pci_legacy_init should be invoked.
-|         */
-|        if (x86_init.pci.init())
-|                pci_legacy_init();
-|
-|        pcibios_fixup_peer_bridges();
-
-
-Yinghai
-
->  }
->
->  void __init pci_mmcfg_early_init(void)
-> @@ -809,3 +835,23 @@ int pci_mmconfig_delete(uint16_t seg, uint8_t start, uint8_t end)
->
->        return -ENOENT;
->  }
-> +
-> +/* Probe MMCFG information for PCI bus blind probe */
-> +void __devinit pci_mmconfig_probe(uint8_t start)
-> +{
-> +       int end_bus, temp;
-> +       phys_addr_t addr;
-> +
-> +       if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
-> +               return;
-> +
-> +       addr = acpi_pci_root_get_mcfg_addr(NULL, 0, start, &end_bus);
-> +       if (addr && end_bus >= 0 && end_bus <= 255) {
-> +               for (temp = start + 1; temp <= end_bus; temp++)
-> +                       if (pci_find_bus(0, temp))
-> +                               break;
-> +
-> +               temp--;
-> +               pci_mmconfig_insert(NULL, 0, start, (uint8_t)temp, addr);
-> +       }
-> +}
-> --
-> 1.7.1
->
->
+Thanks!
+Gerry
