@@ -1,78 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:62920 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954Ab2FLFlq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 01:41:46 -0400
-Date: Tue, 12 Jun 2012 07:41:31 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
-Message-ID: <20120612054131.GA4040@avionic-0098.adnet.avionic-design.de>
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
- <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
- <4FD660F9.7030807@wwwdotorg.org>
- <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
- <4FD6D4C6.2080201@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="7JfCtLOvnd9MIVvH"
-In-Reply-To: <4FD6D4C6.2080201@wwwdotorg.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1340040703.17272.2.camel@bling.home>
+Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Joerg Roedel <joerg.roedel@amd.com>
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org, bhelgaas@google.com,
+	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, ddutile@redhat.com, liuj97@gmail.com
+Date: Mon, 18 Jun 2012 11:31:43 -0600
+In-Reply-To: <1339429021.24037.8.camel@bling.home>
+References: <20120530201424.31527.33142.stgit@bling.home>
+	 <20120606110514.GG757@amd.com> <1339429021.24037.8.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Anyone?  Alexey & BenH, I know you're familiar with IOMMU groups, please
+give Joerg some kind of indication that you approve of this for POWER.
+David Woodhouse, these patches touch intel-iommu, please ack or comment:
 
---7JfCtLOvnd9MIVvH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+https://lkml.org/lkml/2012/5/30/445
+https://lkml.org/lkml/2012/5/30/450
 
-* Stephen Warren wrote:
-> On 06/11/2012 11:07 PM, Thierry Reding wrote:
-> > * Stephen Warren wrote:
-> >> On 06/11/2012 09:05 AM, Thierry Reding wrote:
-> >>> This commit adds support for message signaled interrupts to the
-> >>> Tegra PCIe controller. Based on code by Krishna Kishore
-> >>> <kthota@nvidia.com>.
-> ...
-> >> Why allocate pcie->msi separately; why not include the fields
-> >> directly into struct tegra_pcie_info *pcie?
-> ...
-> > Second, and more importantly, this will keep the size of struct=20
-> > tegra_pcie_info smaller if PCI_MSI is not selected because there is
-> > just one unused pointer instead of five unused fields.
->=20
-> Well, you can always ifdef out the structure fields too, right?
+Joerg, maybe we can just add CC: to the commit log?  Thanks,
 
-Not if you use the IS_ENABLED() macro. It's supposed to increase compile
-coverage for a trade-off in memory usage because like in this case some
-fields may be unused.
+Alex
 
-I find this very convenient because it prevents situations where build
-errors don't show up until somebody uses the code in an unusual
-configuration. For developers this makes it really easy because they don't
-have to test every possible permutation of configuration options.
+On Mon, 2012-06-11 at 09:37 -0600, Alex Williamson wrote:
+> On Wed, 2012-06-06 at 13:05 +0200, Joerg Roedel wrote:
+> > On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
+> > > v2:
+> > >  - Trickle down changes from pci_get_dma_source() to better handle
+> > >    PCI device reference counting in IOMMU driver patches
+> > 
+> > Okay, I looked again over the code and looks good for merging to me.
+> 
+> Great, thanks Joerg!
+> 
+> >  The
+> > IOMMU Groups code depends on changes in the PCI code. We need to work
+> > out how to merge this.
+> > 
+> > Bjorn,
+> > 
+> > I need the PCI changes before I can merge the IOMMU Groups code. There
+> > are two ways that would work for me:
+> > 
+> > 	a) You Ack the PCI patch-set from Alex and I put it into my tree
+> > 	   and merge the IOMMU Group code on-top, or
+> > 	b) You merge the PCI related patch-set into a seperate branch
+> > 	   which you can merge into your next-branch and which I can
+> > 	   pull in to merge IOMMU Groups on-top.
+> > 
+> > Please let me know what works best for you.
+> 
+> I also poked Bjorn with a minor v3 spin on his series, no change to this
+> series.
+> 
+> > What I would also appreciate are a few more Acks from other IOMMU
+> > maintainers (David W.?) and from the Power side.
+> 
+> Alexey, BenH, can either of you comment on this series from the POWER
+> side?  I know Alexey has an implementation of VFIO/Qemu device
+> assignment working on POWER with this series.  David Woodhouse, any
+> comments?  Thanks,
+> 
+> Alex
 
-Thierry
 
---7JfCtLOvnd9MIVvH
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
 
-iEYEARECAAYFAk/W1osACgkQZ+BJyKLjJp+fMQCeKraIbJ59jPXjIRfBrQRzJUaH
-EDwAn1b4QFBcDFBZQNTaDokBi6/S2N+L
-=ohNf
------END PGP SIGNATURE-----
-
---7JfCtLOvnd9MIVvH--
