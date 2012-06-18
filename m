@@ -1,39 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:47893 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751758Ab2FLP2Y convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jun 2012 11:28:24 -0400
-Received: by lahd3 with SMTP id d3so3603557lah.19
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2012 08:28:23 -0700 (PDT)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:48986 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082Ab2FRSaX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2012 14:30:23 -0400
+Received: by lbbgm6 with SMTP id gm6so4648707lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 18 Jun 2012 11:30:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4fd6b2f9.DIqCg1uo2Kq4VZd4%wfg@linux.intel.com>
-References: <4fd6b2f9.DIqCg1uo2Kq4VZd4%wfg@linux.intel.com>
+In-Reply-To: <20120607170026.3174.52434.stgit@bling.home>
+References: <20120607170026.3174.52434.stgit@bling.home>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 Jun 2012 09:28:03 -0600
-Message-ID: <CAErSpo4J6e=uXwSoh1P_wME5DeetRsBzm=En5C94E+Usu8ce2w@mail.gmail.com>
-Subject: =?windows-1252?Q?Re=3A_include=2Flinux=2Fpci=2Eh=3A1495=3A2=3A_error=3A_implicit_decl?=
-	=?windows-1252?Q?aration_of_function_=91pci=5Fdev=5Fget=92_=5B=2DWerror=3Dimplicit=2Dfunc?=
-	=?windows-1252?Q?tion=2Ddeclaration=5D?=
-To: wfg@linux.intel.com
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Date: Mon, 18 Jun 2012 12:30:01 -0600
+Message-ID: <CAErSpo4hNzsuE6BgMK1okJdvtu-ghkTh8onSy1Zn7ZXg0UPuLQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Add Ralink RT2800 broken INTx masking quirk
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, jan.kiszka@siemens.com,
+	andihartmann@01019freenet.de
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 11, 2012 at 9:09 PM,  <wfg@linux.intel.com> wrote:
-> FYI, kernel build failed on
+On Thu, Jun 7, 2012 at 11:01 AM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> Passes pci_intx_mask_supported test but continues to send interrupts
+> as discovered through VFIO-based device assignment.
 >
-> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-> head:   0c358c16f8154ef47df749e60186f3c835869b0b
-> commit: 470bc5b483f573f3bec802afc32109463e8c99c8 [45/60] PCI: add PCI DMA source ID quirk
-> config: i386-allnoconfig (attached as .config)
+> http://www.spinics.net/lists/kvm/msg73738.html
 >
-> All related error/warning messages are:
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Tested-by: Andreas Hartmann <andihartmann@01019freenet.de>
+> ---
 >
-> include/linux/pci.h: In function ‘pci_get_dma_source’:
-> include/linux/pci.h:1495:2: error: implicit declaration of function ‘pci_dev_get’ [-Werror=implicit-function-declaration]
+> v2: context-only respin for Jan's v2 patch
+>
+> Depends on Jan's patch:
+> http://www.spinics.net/lists/linux-pci/msg15720.html
+>
+>  drivers/pci/quirks.c |    2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 87b9edd..3681678 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2940,6 +2940,8 @@ static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
+>                        quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+> +                       quirk_broken_intx_masking);
+>
+>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>                          struct pci_fixup *end)
+>
 
-I folded in Alex's fix for this.  Will appear in "next" later today.
-Thanks for the report!
+Applied to my "next" branch (as HEADER quirk, not FINAL).  Thanks!
+
+Bjorn
