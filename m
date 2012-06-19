@@ -1,39 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:60584 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760643Ab2FGRIc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Jun 2012 13:08:32 -0400
-From: Andi Kleen <andi@firstfloor.org>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: Khalid Aziz <khalid.aziz@hp.com>, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-References: <20120427190033.GA17588@ldl.usa.hp.com>
-	<20120606135009.GB1517@srcf.ucam.org>
-Date: Thu, 07 Jun 2012 10:08:31 -0700
-In-Reply-To: <20120606135009.GB1517@srcf.ucam.org> (Matthew Garrett's message
-	of "Wed, 6 Jun 2012 14:50:09 +0100")
-Message-ID: <m2wr3jhwxc.fsf@firstfloor.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	Zheng Yan <zheng.z.yan@intel.com>
+Subject: [PATCH -v6 0/4] PCIe, PM, Add PCIe runtime D3cold support
+Date: Tue, 19 Jun 2012 13:20:45 +0800
+Message-Id: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Matthew Garrett <mjg@redhat.com> writes:
->
-> This protects against the case where a piece of hardware is continuing 
-> to DMA even after the driver shutdown method has been called? I'm not 
-> convinced this is safe. Some Broadcom parts will crash if busmastering 
-> is disabled while they're still performing DMA, and they'll then hang 
-> the bus if reenabled. There's also the risk that the hardware will start 
-> DMAing again if it's reenabled after being shut down. It seems like 
-> you're covering over the case where the driver didn't correctly quiesce 
-> the hardware, but you risk triggering other bugs instead.
+Changelog:
 
-One alternative I've been pondering some time is to use AER link reset
-instead. But this is mainly on servers, a lot of clients don't have it.
+v6:
 
--Andi
+- Disable device D3cold during system suspend/hibernate with a new method per Rafeal's comments
 
--- 
-ak@linux.intel.com -- Speaking for myself only
+v5:
+
+- Disable device D3cold during system suspend/hibernate per Rafael's comments
+
+v4:
+
+- Minors fixes based on comments from Rafael
+
+v3:
+
+- Drop device.power.power_must_be_on, use pci_dev.no_d3cold instead
+- Drop device.power.power_off_user, use pci_dev.d3cold_allowed instead
+- Use black list instead of white list in pcie port runtime support per request from Bjorn
+- Various fixes based on comments from Rafael
+
+v2:
+
+- Refreshed based on comments from Rafael
+
+[PATCH -v6 1/4] ACPI, PM, Specify lowest allowed state for device sleep
+[PATCH -v6 2/4] PCIe, PM, Add runtime PM support to PCIe port
+[PATCH -v6 3/4] PCI, PM, Do not call pci_set_power_state with PCI_D3cold
+[PATCH -v6 4/4] PCIe, PM, Add PCIe runtime D3cold support
+
+Best Regards,
+Huang Ying
