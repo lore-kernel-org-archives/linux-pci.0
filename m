@@ -1,140 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs130.luxsci.com ([72.32.115.17]:36500 "EHLO rs130.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752490Ab2FLVLz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jun 2012 17:11:55 -0400
-Message-ID: <4FD7B085.1020006@firmworks.com>
-Date: Tue, 12 Jun 2012 11:11:33 -1000
-From: Mitch Bradley <wmb@firmworks.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:39553 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751587Ab2FSNSL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:18:11 -0400
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v8 01/12] x86/PCI: split out pci_mmcfg_check_reserved() for code reuse
+Date: Tue, 19 Jun 2012 21:15:21 +0800
+Message-ID: <1340111732-6276-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
+References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-To: Stephen Warren <swarren@wwwdotorg.org>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7A36B.9090409@wwwdotorg.org>
-In-Reply-To: <4FD7A36B.9090409@wwwdotorg.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/12/2012 10:15 AM, Stephen Warren wrote:
-> On 06/12/2012 11:20 AM, Thierry Reding wrote:
-> ...
->> I came up with the following alternative:
->>
->> 	pci {
->> 		compatible = "nvidia,tegra20-pcie";
->> 		reg =<0x80003000 0x00000800   /* PADS registers */
->> 		       0x80003800 0x00000200   /* AFI registers */
->> 		       0x80004000 0x00100000   /* configuration space */
->> 		       0x80104000 0x00100000   /* extended configuration space */
->> 		       0x80400000 0x00010000   /* downstream I/O */
->> 		       0x90000000 0x10000000   /* non-prefetchable memory */
->> 		       0xa0000000 0x10000000>; /* prefetchable memory */
->> 		interrupts =<0 98 0x04   /* controller interrupt */
->> 		              0 99 0x04>; /* MSI interrupt */
->> 		status = "disabled";
->>
->> 		ranges =<0x80000000 0x80000000 0x00002000   /* 2 root ports */
->> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
->> 			  0x80104000 0x80104000 0x00100000   /* extended configuration space */
->> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
->> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
->> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
->>
->> 		#address-cells =<1>;
->> 		#size-cells =<1>;
->>
->> 		port@80000000 {
->> 			reg =<0x80000000 0x00001000>;
->> 			status = "disabled";
->> 		};
->>
->> 		port@80001000 {
->> 			reg =<0x80001000 0x00001000>;
->> 			status = "disabled";
->> 		};
->> 	};
->>
->> The "ranges" property can probably be cleaned up a bit, but the most
->> interesting part is the port@ children, which can simply be enabled in board
->> DTS files by setting the status property to "okay". I find that somewhat more
->> intuitive to the variant with an "enable-ports" property.
->>
->> What do you think of this?
->
-> As a general concept, this kind of design seems OK to me.
->
-> The "port" child nodes I think should be named "pci@..." given Mitch's
-> comments, I think.
->
-> The port nodes probably need two entries in reg, given the following in
-> our downstream driver:
->
->>          int rp_offset = 0;
->>          int ctrl_offset = AFI_PEX0_CTRL;
-> ...
->>          for (port = 0; port<  MAX_PCIE_SUPPORTED_PORTS; port++) {
->>                  ctrl_offset += (port * 8);
->>                  rp_offset = (rp_offset + 0x1000) * port;
->>                  if (tegra_pcie.plat_data->port_status[port])
->>                          tegra_pcie_add_port(port, rp_offset, ctrl_offset);
->>          }
->
-> (which actually looks likely to be horribly buggy for port>1 and only
-> accidentally correct for port==1, but anyway...)
->
-> But instead, I'd be tempted to make the top-level node say:
->
-> 	#address-cells =<1>;
-> 	#size-cells =<0>;
->
-> ... so that the child nodes' reg is just the port ID. The parent node
-> can calculate the addresses/offsets of the per-port registers within the
-> PCIe controller's register space based on the ID using code roughly like
-> what I quoted above:
->
-> 	pci@0 {
-> 		reg =<0>;
-> 		status = "disabled";
-> 	};
->
-> 	pci@1 {
-> 		reg =<0>;
-> 		status = "disabled";
-> 	};
-reg = <1> ?
+Split out pci_mmcfg_check_reserved() for code reuse, which will be used
+when supporting PCI host bridge hotplug.
 
->
->
-> That would save having to put 2 entries in the reg, and perhaps remove
-> the need for any ranges property.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   51 +++++++++++++++++++--------------------
+ 1 files changed, 25 insertions(+), 26 deletions(-)
 
-ISTM that having two reg entries, specifying the rp and ctrl registers, 
-is preferable to having code to calculate the addresses.  That makes the 
-code simpler and the device tree more directly descriptive of the 
-hardware layout.  The less "magic" (in this case, the register address 
-calculation), the better.
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 301e325..f799949 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+ 	return valid;
+ }
+ 
++static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
++					      int early)
++{
++	if (!early && !acpi_disabled) {
++		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
++			return 1;
++		else
++			printk(KERN_ERR FW_BUG PREFIX
++			       "MMCONFIG at %pR not reserved in "
++			       "ACPI motherboard resources\n",
++			       &cfg->res);
++	}
++
++	/* Don't try to do this check unless configuration
++	   type 1 is available. how about type 2 ?*/
++	if (raw_pci_ops)
++		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
++
++	return 0;
++}
++
+ static void __init pci_mmcfg_reject_broken(int early)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		int valid = 0;
+-
+-		if (!early && !acpi_disabled) {
+-			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
+-
+-			if (valid)
+-				continue;
+-			else
+-				printk(KERN_ERR FW_BUG PREFIX
+-				       "MMCONFIG at %pR not reserved in "
+-				       "ACPI motherboard resources\n",
+-				       &cfg->res);
++		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
++			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
++			free_all_mmcfg();
++			return;
+ 		}
+-
+-		/* Don't try to do this check unless configuration
+-		   type 1 is available. how about type 2 ?*/
+-		if (raw_pci_ops)
+-			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
+-
+-		if (!valid)
+-			goto reject;
+ 	}
+-
+-	return;
+-
+-reject:
+-	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
+-	free_all_mmcfg();
+ }
+ 
+ static int __initdata known_bridge;
+-- 
+1.7.1
 
->
->
-> I think you also need a property to specify the exact port layout; the
-> Tegra20 controller supports:
->
-> 1 x4 port
-> 2 x2 ports (you can choose to use only 1 of these I assume)
->
-> So just because only 1 of the ports is enabled, doesn't imply it's x4;
-> it could still be x2.
->
-> Tegra30 has more options.
-> _______________________________________________
-> devicetree-discuss mailing list
-> devicetree-discuss@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/devicetree-discuss
->
+
