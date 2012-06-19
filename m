@@ -1,51 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 08/16] powerpc/PCI: Factor 'pcibios_setup()' out of powerpc
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
-	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
-	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
-	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
-Date: Mon, 25 Jun 2012 21:31:51 -0600
-Message-ID: <20120626033151.16434.33099.stgit@amt.stowe>
-In-Reply-To: <20120626033045.16434.17412.stgit@amt.stowe>
-References: <20120626033045.16434.17412.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:34603 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752978Ab2FSFU6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Jun 2012 01:20:58 -0400
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	Zheng Yan <zheng.z.yan@intel.com>
+Subject: [PATCH -v6 2/4] PCIe, PM, Add runtime PM support to PCIe port
+Date: Tue, 19 Jun 2012 13:20:47 +0800
+Message-Id: <1340083249-16266-3-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+References: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI core provides a generic (__weak) 'pcibios_setup()' routine
-that can be used by all architectures as a default.  Drop powerpc's
-architecture specific version in favor of that as it does not need to be
-over-ridden.
+From: "Yan, Zheng" <zheng.z.yan@intel.com>
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+This patch adds runtime PM support to PCIe port.  This is needed by
+PCIe D3cold support, where PCIe device without ACPI node may be
+powered on/off by PCIe port.
+
+Because runtime suspend is broken for some chipsets, a black list is
+used to disable runtime PM support for these chipsets.
+
+Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
+ drivers/pci/pci.c              |   10 ++++++++++
+ drivers/pci/pcie/portdrv_pci.c |   24 ++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
- arch/powerpc/kernel/pci-common.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 8e78e93..bf2306b 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -200,11 +200,6 @@ int pcibios_add_platform_entries(struct pci_dev *pdev)
- 	return device_create_file(&pdev->dev, &dev_attr_devspec);
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1518,6 +1518,16 @@ static void pci_pme_list_scan(struct wor
+ 	if (!list_empty(&pci_pme_list)) {
+ 		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+ 			if (pme_dev->dev->pme_poll) {
++				struct pci_dev *bridge;
++
++				bridge = pme_dev->dev->bus->self;
++				/*
++				 * If bridge is in low power state, the
++				 * configuration space of subordinate devices
++				 * may be not accessible
++				 */
++				if (bridge && bridge->current_state != PCI_D0)
++					continue;
+ 				pci_pme_wakeup(pme_dev->dev, NULL);
+ 			} else {
+ 				list_del(&pme_dev->list);
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -11,6 +11,7 @@
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/pm.h>
++#include <linux/pm_runtime.h>
+ #include <linux/init.h>
+ #include <linux/pcieport_if.h>
+ #include <linux/aer.h>
+@@ -99,6 +100,15 @@ static int pcie_port_resume_noirq(struct
+ 	return 0;
  }
  
--char __devinit *pcibios_setup(char *str)
--{
--	return str;
--}
--
++#ifdef CONFIG_PM_RUNTIME
++static int pcie_port_runtime_pm(struct device *dev)
++{
++	return 0;
++}
++#else
++#define pcie_port_runtime_pm	NULL
++#endif
++
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume		= pcie_port_device_resume,
+@@ -107,6 +117,8 @@ static const struct dev_pm_ops pcie_port
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
+ 	.resume_noirq	= pcie_port_resume_noirq,
++	.runtime_suspend = pcie_port_runtime_pm,
++	.runtime_resume = pcie_port_runtime_pm,
+ };
+ 
+ #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+@@ -117,6 +129,14 @@ static const struct dev_pm_ops pcie_port
+ #endif /* !PM */
+ 
  /*
-  * Reads the interrupt pin to determine if interrupt is use by card.
-  * If the interrupt is used, then gets the interrupt line from the
-
++ * PCIe port runtime suspend is broken for some chipsets, so use a
++ * black list to disable runtime PM for these chipsets.
++ */
++static const struct pci_device_id port_runtime_pm_black_list[] = {
++	{ /* end: all zeroes */ }
++};
++
++/*
+  * pcie_portdrv_probe - Probe PCI-Express port devices
+  * @dev: PCI-Express port device being probed
+  *
+@@ -144,12 +164,16 @@ static int __devinit pcie_portdrv_probe(
+ 		return status;
+ 
+ 	pci_save_state(dev);
++	if (!pci_match_id(port_runtime_pm_black_list, dev))
++		pm_runtime_put_noidle(&dev->dev);
+ 
+ 	return 0;
+ }
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
++	if (!pci_match_id(port_runtime_pm_black_list, dev))
++		pm_runtime_get_noresume(&dev->dev);
+ 	pcie_port_device_remove(dev);
+ 	pci_disable_device(dev);
+ }
