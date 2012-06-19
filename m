@@ -1,109 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out03.mta.xmission.com ([166.70.13.233]:35525 "EHLO
-	out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757537Ab2FFTm3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 15:42:29 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Khalid Aziz <khalid.aziz@hp.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-References: <20120427190033.GA17588@ldl.usa.hp.com>
-	<20120606135009.GB1517@srcf.ucam.org>
-	<1338999463.25761.630.camel@lyra>
-	<20120606162703.GA6779@srcf.ucam.org>
-	<1339003956.25761.667.camel@lyra>
-	<20120606174202.GA8750@srcf.ucam.org>
-	<1339006060.25761.689.camel@lyra>
-Date: Wed, 06 Jun 2012 12:42:07 -0700
-In-Reply-To: <1339006060.25761.689.camel@lyra> (Khalid Aziz's message of "Wed,
-	06 Jun 2012 12:07:40 -0600")
-Message-ID: <87obowxm5s.fsf@xmission.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:34661 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549Ab2FSSe4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 14:34:56 -0400
+Received: by pbbrp8 with SMTP id rp8so10004785pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jun 2012 11:34:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
+In-Reply-To: <1340111732-6276-7-git-send-email-jiang.liu@huawei.com>
+References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
+	<1340111732-6276-7-git-send-email-jiang.liu@huawei.com>
+Date: Tue, 19 Jun 2012 11:34:56 -0700
+Message-ID: <CAE9FiQWAPb7S9kBrebnf6nn2KmCL2ohUbukycJPGQLB=11+_pA@mail.gmail.com>
+Subject: Re: [PATCH v8 06/12] PCI/ACPI: provide MCFG address for PCI host bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Khalid Aziz <khalid.aziz@hp.com> writes:
-
-> On Wed, 2012-06-06 at 18:42 +0100, Matthew Garrett wrote:
->> On Wed, Jun 06, 2012 at 11:32:36AM -0600, Khalid Aziz wrote:
->> 
->> > Do we agree that if device shutdown routine cleanly shuts down all I/O,
->> > clearing PCI Bus Mster bit should be safe?
->> 
->> In the absence of hardware that dislikes the bus master bit ever being 
->> disabled, yes. Do we know if hardware is ever tested in that situation?
+On Tue, Jun 19, 2012 at 6:15 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> This patch provide MCFG address for PCI host bridges, which will
+> be used to support host bridge hotplug.  It gets MCFG address
+> by evaluating _CBA method if available, or by scanning the ACPI
+> MCFG table.
 >
-> I will wait for device vendors to comment on that. I can't claim I have
-> tested more than a few devices that way.
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>
+> v8: add acpi_pci_cache_mcfg() for better readable code and fix a condition
+>    compilation issue
+>
+> ---
+>  arch/x86/pci/mmconfig-shared.c |    4 ++
+>  drivers/acpi/pci_root.c        |   12 ++++++++
+>  drivers/pci/pci-acpi.c         |   60 ++++++++++++++++++++++++++++++++++++++++
+>  include/acpi/acnames.h         |    1 +
+>  include/acpi/acpi_bus.h        |    3 ++
+>  include/linux/pci-acpi.h       |    5 +++
+>  6 files changed, 85 insertions(+), 0 deletions(-)
+>
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index 7d1c6bc..94ed360 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -19,6 +19,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/mutex.h>
+>  #include <linux/rculist.h>
+> +#include <linux/pci-acpi.h>
+>  #include <asm/e820.h>
+>  #include <asm/pci_x86.h>
+>  #include <asm/acpi.h>
+> @@ -675,6 +676,9 @@ static void __init __pci_mmcfg_init(int early)
+>                pci_mmcfg_resources_inserted = 1;
+>                pci_mmcfg_arch_init_failed = true;
+>        }
+> +
+> +       if (!early && !known_bridge)
+> +               acpi_pci_cache_mcfg();
+>  }
+>
+>  void __init pci_mmcfg_early_init(void)
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 7aff631..3ce6a28 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -458,6 +458,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>        acpi_handle handle;
+>        struct acpi_device *child;
+>        u32 flags, base_flags;
+> +       int end_bus = -1;
+>
+>        root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+>        if (!root)
+> @@ -505,6 +506,17 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>        strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>        device->driver_data = root;
+>
+> +       root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle,
+> +               root->segment, (u8) root->secondary.start, &end_bus);
+> +
+> +       /*
+> +        * End bus number for MCFG may be less than root's subordinary
+> +        * bus number with buggy BIOS implementation.
+> +        */
+> +       if (end_bus < 0 || end_bus > root->secondary.end)
+> +               end_bus = root->secondary.end;
+> +       root->mcfg_end_bus = (u8) end_bus;
+> +
+>        /*
+>         * All supported architectures that use ACPI have support for
+>         * PCI domains, so we indicate this in _OSC support capabilities.
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 61e2fef..0c6e0bb 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -162,6 +162,66 @@ acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+>        return remove_pm_notifier(dev, pci_acpi_wake_dev);
+>  }
+>
+> +/* acpi_table_parse() is marked as __init, so cache MCFG info at boot time */
+> +static int pci_acpi_mcfg_entries;
+> +static struct acpi_mcfg_allocation *pci_acpi_mcfg_array;
+> +
+> +static int __init pci_cache_mcfg(struct acpi_table_header *header)
+> +{
+> +       u32 sz;
+> +       void *ptr;
+> +
+> +       if (!header || (header->length <= sizeof(struct acpi_table_mcfg)))
+> +               return -EINVAL;
+> +
+> +       sz = (header->length - sizeof(struct acpi_table_mcfg));
+> +       pci_acpi_mcfg_array = kmalloc(sz, GFP_KERNEL);
+> +       if (!pci_acpi_mcfg_array)
+> +               return -ENOMEM;
+> +
+> +       ptr = (void *)header + sizeof(struct acpi_table_mcfg);
+> +       memcpy(pci_acpi_mcfg_array, ptr, sz);
+> +       pci_acpi_mcfg_entries = sz / sizeof (struct acpi_mcfg_allocation);
+> +
+> +       return 0;
+> +}
 
-Testing is easy.  kexec into a new kernel.  Shrug.  A long standing
-useful kernel feature.  In all other cases I expec the firmware triggers
-a board level reset of the hardware to avoid issues during reboot.
+thought you were agreeing to go through choice 2 without caching MCFG anymore.
 
->> > If yes, then we only have to deal with broken devices. So the approach 
->> > could be to disable Bus Master bit unless the device ID matches a 
->> > blacklist which we update as we find broken devices. I really don't 
->> > like the idea of maintaining blacklists in the kernel for such things 
->> > but is that a more practical approach? If blacklist does not sound 
->> > good, maybe we can ask drivers to tell PCI subsystem if they are not 
->> > ok with clearing Bus Master bit and then PCI subsystem could skip 
->> > those devices.
->> 
->> Or we could just put responsibility on the drivers to ensure that the 
->> hardware won't continue doing any DMA, either by shutting down the 
->> engines or clearing the bit.
+Can you just drop that caching MCFG and only handle _CBA here?
 
-Where the responsibily has squarely been for the last decade, and we
-still have issues in the common case.
+Thanks
 
-> I assume device shutdown routine should stop all I/O and shutting down
-> DMA engine. Disabling Bus Master bit is just an extra measure of safety.
-> I do like the idea of disabling Bus Master bit in device shutdown
-> routine. After all, drivers know their hardware best. On the other hand,
-> it is change to lots of driver code to implement this which means it
-> will end up happening slowly over period of time. I don't mind doing the
-> work up front on a good number of drivers I feel comfortable modifying.
-> I am ok with pulling out code to clear bus master bit from PCI subsystem
-> and replacing it with modified shutdown routines for a few drivers to
-> start with.
-
-Absent anyone even knowing if there are devices that exist that can not
-tolerate their bus master bit being flipped when DMA is not ongoing I
-think the current state of the code is good.  When we find the broken
-hardware that can not tolerate a standard PCI bit being used in a
-standard way we can add a flag in the core to avoid doing that.
-
-pci_device_shutdown calls drv->shutdown before calling
-pci_device_disable.  Which means that only devices that have trouble
-with this bit being flipped while DMA is ongoing and don't bother
-to stop their own DMA will have a problem.
-
-As for shifting problems I do think we have shifted the problem in a
-very positive way.  Now instead of having a random failure at a random
-location caused by DMA happing at a random moment for no expected reason
-we have failures happening when we disable or enable a device, which
-should be much more debugable.
-
-If we encounter devices that can't have their bus master bit disabled at
-all we can move that functionality into the drivers or add some sort of
-flag so that pci_device_shutdown avoids this on real hardware.
-
-> Does any one see any other issues with modifying driver shutdown
-> routines for disabling Bus Master bit? Bjorn, any opinions?
-
-I don't have a problem with moving it all of the way into the drivers
-I just think it might be a little bit silly at this point.
-
-Ultimately I don't see the complaint raised by this thread.  Either
-the drivers for the broadcom devices in questoin are buggy before we
-added the pci_disable_device or those drivers are not buggy.
-
-If we really want to do something to reduce the testing burden and make
-certain things work better in general we need to merge the device
-shutdown and the device remove methods.  Shrug.  People keep getting
-squeamish when I suggest that.
-
-Eric
+Yinghai
