@@ -1,76 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1340040703.17272.2.camel@bling.home>
-Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Joerg Roedel <joerg.roedel@amd.com>
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org, bhelgaas@google.com,
-	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, ddutile@redhat.com, liuj97@gmail.com
-Date: Mon, 18 Jun 2012 11:31:43 -0600
-In-Reply-To: <1339429021.24037.8.camel@bling.home>
-References: <20120530201424.31527.33142.stgit@bling.home>
-	 <20120606110514.GG757@amd.com> <1339429021.24037.8.camel@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:61853 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752565Ab2FSNQB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:16:01 -0400
+Received: by eaak11 with SMTP id k11so1965137eaa.19
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jun 2012 06:16:00 -0700 (PDT)
+MIME-Version: 1.0
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 19 Jun 2012 07:15:39 -0600
+Message-ID: <CAErSpo4BDvognFbn6DZCEGuvf=u4g5HZRHtXb2cPGf2Kzz0tNQ@mail.gmail.com>
+Subject: pcie_bus_configure_settings() use of uninitialized value
+To: Jon Mason <mason@myri.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Anyone?  Alexey & BenH, I know you're familiar with IOMMU groups, please
-give Joerg some kind of indication that you approve of this for POWER.
-David Woodhouse, these patches touch intel-iommu, please ack or comment:
+Hi Jon,
 
-https://lkml.org/lkml/2012/5/30/445
-https://lkml.org/lkml/2012/5/30/450
+Coverity noticed that pcie_bus_configure_settings() can call
+pcie_bus_configure_set() when "smpss" is uninitialized.
 
-Joerg, maybe we can just add CC: to the commit log?  Thanks,
+This might be only a theoretical problem because that can only happen
+if pcie_bus_config is PCIE_BUS_PERFORMANCE, and in that case, I
+*think* we don't care about smpss because pcie_write_mps() ignores the
+mps passed in and always uses dev->pcie_mpss.  But it takes a lot of
+analysis to be certain, and it would be better to make
+pcie_bus_configure_settings() cleaner.
 
-Alex
+Would you mind fixing this up?
 
-On Mon, 2012-06-11 at 09:37 -0600, Alex Williamson wrote:
-> On Wed, 2012-06-06 at 13:05 +0200, Joerg Roedel wrote:
-> > On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
-> > > v2:
-> > >  - Trickle down changes from pci_get_dma_source() to better handle
-> > >    PCI device reference counting in IOMMU driver patches
-> > 
-> > Okay, I looked again over the code and looks good for merging to me.
-> 
-> Great, thanks Joerg!
-> 
-> >  The
-> > IOMMU Groups code depends on changes in the PCI code. We need to work
-> > out how to merge this.
-> > 
-> > Bjorn,
-> > 
-> > I need the PCI changes before I can merge the IOMMU Groups code. There
-> > are two ways that would work for me:
-> > 
-> > 	a) You Ack the PCI patch-set from Alex and I put it into my tree
-> > 	   and merge the IOMMU Group code on-top, or
-> > 	b) You merge the PCI related patch-set into a seperate branch
-> > 	   which you can merge into your next-branch and which I can
-> > 	   pull in to merge IOMMU Groups on-top.
-> > 
-> > Please let me know what works best for you.
-> 
-> I also poked Bjorn with a minor v3 spin on his series, no change to this
-> series.
-> 
-> > What I would also appreciate are a few more Acks from other IOMMU
-> > maintainers (David W.?) and from the Power side.
-> 
-> Alexey, BenH, can either of you comment on this series from the POWER
-> side?  I know Alexey has an implementation of VFIO/Qemu device
-> assignment working on POWER with this series.  David Woodhouse, any
-> comments?  Thanks,
-> 
-> Alex
-
-
-
-
+Thanks,
+  Bjorn
