@@ -1,234 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:36577 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755324Ab2FZSyi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 14:54:38 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:38693 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753289Ab2FSNQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:16:51 -0400
+From: Jiang Liu <jiang.liu@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v12 02/15] resources: Add probe_resource()
-Date: Tue, 26 Jun 2012 11:53:56 -0700
-Message-Id: <1340736849-14875-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v8 07/12] x86/PCI: update MMCFG information when hot-plugging PCI host bridges
+Date: Tue, 19 Jun 2012 21:15:27 +0800
+Message-ID: <1340111732-6276-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
+References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is changed from busn_res only version, because Bjorn found that version
-was not holding resource_lock.
-Even it may be ok for busn_res not holding resource_lock.
-It would be better to have it to be generic and use lock and we may
-use it for other resources.
+This patch enhances x86 arch specific code to update MMCFG information
+when PCI host bridge hotplug event happens.
 
-probe_resource() will try to find specified size or more in parent bus.
-If can not find current parent resource, and it will try to expand parents
-top.
-If still can not find that specified on top, it will try to reduce target size
-until find one.
-
-It will return 0, if it find any resource that could be used.
-
-Returned resource is registered in the tree.
-So caller may need to use replace_resource to put real resource in tree.
-
--v3: remove two parameters that is for debug purpose.
--v4: fix stop_flags checking.
--v5: adjust stop_flags checking position to avoid not needed calling
-	into allocate_resource().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- include/linux/ioport.h |    7 ++
- kernel/resource.c      |  149 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 156 insertions(+), 0 deletions(-)
+ arch/x86/include/asm/pci_x86.h |    1 +
+ arch/x86/pci/acpi.c            |   69 ++++++++++++++++++++++++++++++++++++++++
+ arch/x86/pci/mmconfig-shared.c |    7 +---
+ arch/x86/pci/mmconfig_32.c     |    2 +-
+ arch/x86/pci/mmconfig_64.c     |    2 +-
+ 5 files changed, 73 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 589e0e7..8292e8b 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -156,6 +156,13 @@ extern int allocate_resource(struct resource *root, struct resource *new,
- 						       resource_size_t,
- 						       resource_size_t),
- 			     void *alignf_data);
-+void resource_shrink_parents_top(struct resource *b_res,
-+				 long size, struct resource *parent_res);
-+struct device;
-+int probe_resource(struct resource *b_res,
-+			struct resource *busn_res,
-+			resource_size_t needed_size, struct resource **p,
-+			int skip_nr, int limit, int flags);
- struct resource *lookup_resource(struct resource *root, resource_size_t start);
- int adjust_resource(struct resource *res, resource_size_t start,
- 		    resource_size_t size);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 3f6e522..d5d9aef 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -980,6 +980,155 @@ void __release_region(struct resource *parent, resource_size_t start,
- }
- EXPORT_SYMBOL(__release_region);
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index af5018f..b2652e9 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -100,6 +100,7 @@ struct pci_raw_ops {
+ extern const struct pci_raw_ops *raw_pci_ops;
+ extern const struct pci_raw_ops *raw_pci_ext_ops;
  
-+static void __resource_extend_parents_top(struct resource *b_res,
-+		 long size, struct resource *parent_res)
++extern const struct pci_raw_ops pci_mmcfg;
+ extern const struct pci_raw_ops pci_direct_conf1;
+ extern bool port_cf9_safe;
+ 
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 2bb885a..4e0ed1e 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -4,6 +4,7 @@
+ #include <linux/irq.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/pci-acpi.h>
+ #include <asm/numa.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -13,6 +14,12 @@ struct pci_root_info {
+ 	unsigned int res_num;
+ 	struct resource *res;
+ 	struct pci_sysdata sd;
++#ifdef	CONFIG_PCI_MMCONFIG
++	bool mcfg_added;
++	u16 segment;
++	u8 start_bus;
++	u8 end_bus;
++#endif
+ };
+ 
+ static bool pci_use_crs = true;
+@@ -119,6 +126,61 @@ void __init pci_acpi_crs_quirks(void)
+ 	       pci_use_crs ? "nocrs" : "use_crs");
+ }
+ 
++static int __devinit setup_mcfg_map(struct pci_root_info *info,
++				    u16 seg, u8 start, u8 end,
++				    phys_addr_t addr)
 +{
-+	struct resource *res = b_res;
++#ifdef	CONFIG_PCI_MMCONFIG
++	int result;
++	struct device *dev = &info->bridge->dev;
 +
-+	if (!size)
-+		return;
++	info->start_bus = start;
++	info->end_bus = end;
++	info->mcfg_added = false;
 +
-+	while (res && res != parent_res) {
-+		res->end += size;
-+		res = res->parent;
-+	}
-+}
-+
-+void resource_shrink_parents_top(struct resource *b_res,
-+		 long size, struct resource *parent_res)
-+{
-+	write_lock(&resource_lock);
-+	__resource_extend_parents_top(b_res, -size, parent_res);
-+	write_unlock(&resource_lock);
-+}
-+
-+static resource_size_t __find_res_top_free_size(struct resource *res,
-+						 int skip_nr)
-+{
-+	resource_size_t n_size;
-+	struct resource tmp_res;
-+
-+	/*
-+	 *   find out free number below res->end that we can use.
-+	 *	res->start to res->start + skip_nr - 1 can not be used.
-+	 */
-+	n_size = resource_size(res);
-+	if (n_size <= skip_nr)
++	/* return success if MMCFG is not in use */
++	if (raw_pci_ext_ops && raw_pci_ext_ops != &pci_mmcfg)
 +		return 0;
 +
-+	n_size -= skip_nr;
-+	memset(&tmp_res, 0, sizeof(struct resource));
-+	while (n_size > 0) {
-+		int ret;
-+
-+		ret = __allocate_resource(res, &tmp_res, n_size,
-+			res->end - n_size + skip_nr, res->end,
-+			1, NULL, NULL, false, false);
-+		if (ret == 0) {
-+			__release_resource(&tmp_res);
-+			break;
-+		}
-+		n_size--;
++	if (!(pci_probe & PCI_PROBE_MMCONF)) {
++		/* still could use raw_pci_ops for devices on segment 0 */
++		if (seg)
++			dev_warn(dev,
++				 "MMCONFIG is disabled, can't access extended "
++				 "configuration space under this bridge.\n");
++		return 0;
 +	}
 +
-+	return n_size;
++	result = pci_mmconfig_insert(dev, seg, start, end, addr);
++	if (result == 0) {
++		/* enable MMCFG if it hasn't been enabled yet */
++		if (raw_pci_ext_ops == NULL)
++			raw_pci_ext_ops = &pci_mmcfg;
++		info->mcfg_added = true;
++	} else if (result != -EEXIST && addr) {
++		/*
++		 * Failure in adding MMCFG information is not fatal,
++		 * just can't access [extended] configuration space of
++		 * devices under this host bridge.
++		 */
++		dev_warn(dev, "fail to add MMCONFIG information.\n");
++	}
++#endif
++
++	return 0;
 +}
 +
-+/**
-+ * probe_resource - Probe resource in parent resource.
-+ * @b_res: parent resource descriptor
-+ * @busn_res: return probed resource
-+ * @needed_size: target size
-+ * @p: pointer to farest parent that we extend the top
-+ * @skip_nr: number in b_res start that we need to skip.
-+ * @limit: local boundary
-+ * @stop_flags: flags for stopping extend parent res
-+ *
-+ * will try to allocate resource in b_res, if can not find the range
-+ *  will try to extend parent resources' top.
-+ * if still can not make it, will reduce needed_size.
-+ */
-+int probe_resource(struct resource *b_res,
-+			 struct resource *busn_res,
-+			 resource_size_t needed_size, struct resource **p,
-+			 int skip_nr, int limit, int stop_flags)
++static void teardown_mcfg_map(struct pci_root_info *info)
 +{
-+	int ret = -ENOMEM;
-+	resource_size_t n_size;
-+	struct resource *parent_res = NULL;
-+	resource_size_t tmp = b_res->end + 1;
-+
-+again:
-+	/*
-+	 * We first try to allocate biggest range in b_res that
-+	 *  we can use in b_res directly.
-+	 *  we also need to skip skip_nr from start of b_res.
-+	 */
-+	n_size = resource_size(b_res);
-+	if (n_size > skip_nr)
-+		n_size -= skip_nr;
-+	else
-+		n_size = 0;
-+	memset(busn_res, 0, sizeof(struct resource));
-+	while (n_size >= needed_size) {
-+		ret = allocate_resource(b_res, busn_res, n_size,
-+				b_res->start + skip_nr, b_res->end,
-+				1, NULL, NULL);
-+		if (!ret)
-+			return ret;
-+		n_size--;
++#ifdef	CONFIG_PCI_MMCONFIG
++	if (info->mcfg_added) {
++		pci_mmconfig_delete(info->segment, info->start_bus,
++				    info->end_bus);
++		info->mcfg_added = false;
 +	}
-+
-+	/* Try to extend the top of parent resources to meet needed_size */
-+	write_lock(&resource_lock);
-+
-+	/* b_res could be root bus resource and can not be extended */
-+	if (b_res->flags & stop_flags)
-+		goto reduce_needed_size;
-+
-+	/* find out free range under top at first */
-+	n_size = __find_res_top_free_size(b_res, skip_nr);
-+	/* can not extend cross local boundary */
-+	if ((limit - b_res->end) < (needed_size - n_size))
-+		goto reduce_needed_size;
-+
-+	/* Probe extended range above top */
-+	memset(busn_res, 0, sizeof(struct resource));
-+	parent_res = b_res->parent;
-+	while (parent_res && !(parent_res->flags & stop_flags)) {
-+		ret = __allocate_resource(parent_res, busn_res,
-+			 needed_size - n_size,
-+			 tmp, tmp + needed_size - n_size - 1,
-+			 1, NULL, NULL, false, false);
-+		if (!ret) {
-+			/* save parent_res, we need it as stopper later */
-+			*p = parent_res;
-+
-+			/* prepare busn_res for return */
-+			__release_resource(busn_res);
-+			busn_res->start -= n_size;
-+
-+			/* extend parent resources top */
-+			__resource_extend_parents_top(b_res,
-+					 needed_size - n_size, parent_res);
-+			__request_resource(b_res, busn_res);
-+
-+			write_unlock(&resource_lock);
-+			return ret;
-+		}
-+		parent_res = parent_res->parent;
-+	}
-+
-+reduce_needed_size:
-+	write_unlock(&resource_lock);
-+	/* ret must not be 0 here */
-+	needed_size--;
-+	if (needed_size)
-+		goto again;
-+
-+	return ret;
++#endif
 +}
 +
- /*
-  * Managed region resource
-  */
+ static acpi_status
+ resource_to_addr(struct acpi_resource *resource,
+ 			struct acpi_resource_address64 *addr)
+@@ -331,6 +393,8 @@ static void __release_pci_root_info(struct pci_root_info *info)
+ 
+ 	free_pci_root_info_res(info);
+ 
++	teardown_mcfg_map(info);
++
+ 	kfree(info);
+ }
+ static void release_pci_root_info(struct pci_host_bridge *bridge)
+@@ -438,6 +502,11 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 			x86_pci_root_bus_resources(busnum, &resources);
+ 		}
+ 
++		if (root->mcfg_addr)
++			setup_mcfg_map(info, root->segment,
++				       (u8) root->secondary.start,
++				       root->mcfg_end_bus, root->mcfg_addr);
++
+ 		bus = pci_create_root_bus(NULL, busnum, &pci_root_ops, sd,
+ 					  &resources);
+ 		if (bus) {
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 94ed360..48a9b8c 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -733,7 +733,7 @@ int __devinit pci_mmconfig_insert(struct device *dev,
+ 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+ 		return -ENODEV;
+ 
+-	if (start > end)
++	if (start > end || !addr)
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&pci_mmcfg_lock);
+@@ -759,11 +759,6 @@ int __devinit pci_mmconfig_insert(struct device *dev,
+ 		return rc;
+ 	}
+ 
+-	if (!addr) {
+-		mutex_unlock(&pci_mmcfg_lock);
+-		return -EINVAL;
+-	}
+-
+ 	rc = -EBUSY;
+ 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
+ 	if (cfg == NULL) {
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index a22785d..db63ac2 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -126,7 +126,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-static const struct pci_raw_ops pci_mmcfg = {
++const struct pci_raw_ops pci_mmcfg = {
+ 	.read =		pci_mmcfg_read,
+ 	.write =	pci_mmcfg_write,
+ };
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index 4e05779..34c08dd 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -90,7 +90,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-static const struct pci_raw_ops pci_mmcfg = {
++const struct pci_raw_ops pci_mmcfg = {
+ 	.read =		pci_mmcfg_read,
+ 	.write =	pci_mmcfg_write,
+ };
 -- 
-1.7.7
+1.7.1
+
 
