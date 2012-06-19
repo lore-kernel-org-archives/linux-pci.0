@@ -1,77 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54839 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964869Ab2FAWCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Jun 2012 18:02:32 -0400
-Message-ID: <4FC93BF4.8040207@redhat.com>
-Date: Fri, 01 Jun 2012 18:02:28 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Myron Stowe <myron.stowe@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xudong.hao@linux.intel.com,
-	yu.zhao@intel.com
-Subject: Re: [PATCH 1/4] PCI: make pci_ltr_supported static.
-References: <20120601211619.20328.36769.stgit@amt.stowe> <20120601211625.20328.37250.stgit@amt.stowe>
-In-Reply-To: <20120601211625.20328.37250.stgit@amt.stowe>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Michal Miroslaw <mirq-linux@rere.qmqm.pl>,
+	Jesse Barnes <jesse.barnes@intel.com>
+Subject: [PATCH -v6 3/4] PCI, PM, Do not call pci_set_power_state with PCI_D3cold
+Date: Tue, 19 Jun 2012 13:20:48 +0800
+Message-Id: <1340083249-16266-4-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+References: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/01/2012 05:16 PM, Myron Stowe wrote:
-> The PCI Express Latency Tolerance Reporting (LTR) feature's
-> pci_ltr_supported() routine is currently only used within
-> drivers/pci/pci.c so make it static.
->
-> Signed-off-by: Myron Stowe<myron.stowe@redhat.com>
-> ---
->
-Acked-by: Donald Dutile <ddutile@redhat.com>
+PCI subsystem has not been ready for D3cold support yet.  So
+PCI_D3cold should not be used as parameter for pci_set_power_state.
+This patch is needed for upcoming PCI_D3cold support.
 
->   drivers/pci/pci.c   |    4 ++--
->   include/linux/pci.h |    1 -
->   2 files changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 447e834..64471b1 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -39,6 +39,7 @@ EXPORT_SYMBOL(pci_pci_problems);
->
->   unsigned int pci_pm_d3_delay;
->
-> +static bool pci_ltr_supported(struct pci_dev *dev);
->   static void pci_pme_list_scan(struct work_struct *work);
->
->   static LIST_HEAD(pci_pme_list);
-> @@ -2169,7 +2170,7 @@ EXPORT_SYMBOL(pci_disable_obff);
->    * RETURNS:
->    * True if @dev supports latency tolerance reporting, false otherwise.
->    */
-> -bool pci_ltr_supported(struct pci_dev *dev)
-> +static bool pci_ltr_supported(struct pci_dev *dev)
->   {
->   	int pos;
->   	u32 cap;
-> @@ -2185,7 +2186,6 @@ bool pci_ltr_supported(struct pci_dev *dev)
->
->   	return cap&  PCI_EXP_DEVCAP2_LTR;
->   }
-> -EXPORT_SYMBOL(pci_ltr_supported);
->
->   /**
->    * pci_enable_ltr - enable latency tolerance reporting
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d8c379d..b2bec26 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -875,7 +875,6 @@ enum pci_obff_signal_type {
->   int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type);
->   void pci_disable_obff(struct pci_dev *dev);
->
-> -bool pci_ltr_supported(struct pci_dev *dev);
->   int pci_enable_ltr(struct pci_dev *dev);
->   void pci_disable_ltr(struct pci_dev *dev);
->   int pci_set_ltr(struct pci_dev *dev, int snoop_lat_ns, int nosnoop_lat_ns);
->
+This patch has no functionality change, because pci_set_power_state
+will bound the parameter to PCI_D3hot too.
 
+Cc: Michal Miroslaw <mirq-linux@rere.qmqm.pl>
+Cc: Jesse Barnes <jesse.barnes@intel.com>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ arch/x86/pci/mrst.c       |    2 +-
+ drivers/misc/cb710/core.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+--- a/arch/x86/pci/mrst.c
++++ b/arch/x86/pci/mrst.c
+@@ -264,7 +264,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
+ 
+ static void __devinit mrst_power_off_unused_dev(struct pci_dev *dev)
+ {
+-	pci_set_power_state(dev, PCI_D3cold);
++	pci_set_power_state(dev, PCI_D3hot);
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0801, mrst_power_off_unused_dev);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0809, mrst_power_off_unused_dev);
+--- a/drivers/misc/cb710/core.c
++++ b/drivers/misc/cb710/core.c
+@@ -180,7 +180,7 @@ static int cb710_suspend(struct pci_dev
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+ 	if (state.event & PM_EVENT_SLEEP)
+-		pci_set_power_state(pdev, PCI_D3cold);
++		pci_set_power_state(pdev, PCI_D3hot);
+ 	return 0;
+ }
+ 
