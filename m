@@ -1,53 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30781 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520Ab2FWHmH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 03:42:07 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/5] pciehp: Don't enable presence notification while surprise removal is not supported.
-Date: Sat, 23 Jun 2012 00:42:02 -0700
-Message-Id: <1340437325-29282-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:35182 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754021Ab2FSMgm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 08:36:42 -0400
+Received: by lbbgm6 with SMTP id gm6so5702642lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jun 2012 05:36:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+ <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+ <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+ <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com> <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 19 Jun 2012 06:36:20 -0600
+Message-ID: <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+Subject: Re: SNB PCI root information
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If surprise removal is not supported, that event get dropped later.
-So there is no point to enable that.
+On Mon, Jun 18, 2012 at 5:40 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Jun 18, 2012 at 3:30 PM, Ulrich Drepper <drepper@gmail.com> wrote:
+>> On Sat, Jun 16, 2012 at 5:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> If ACPI provides a perfectly usable generic way to describe this
+>>> topology and the vendor BIOS doesn't bother to use it, I'm not very
+>>> interested in trying to compensate for that BIOS deficiency by adding
+>>> a bunch of non-portable CPU-specific gunk to Linux.
+>>
+>> The problem is that all machines get this wrong.  I've tested varies
+>> models from Dell and HP and none of them have the _PXM entry and the
+>> local_cpus fields are wrong.  If there is a reasonably sane way to
+>> compensate for broken BIOSes it should be considered.  We all know how
+>> good BIOS authors are...
+>
+> please check attached one. and  you may append "pci=busnum_node=00:00,80:01"
+> to change node for root bus.
+> assume you have two root bus: 00, 80
 
-Also some sick chipset have those bit flip around when the card is not present.
-and make log full of useless warning.
+I'm not opposed to something like this, if people think it's useful.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/pciehp_hpc.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index a960fae..d4fa705 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -808,7 +808,7 @@ int pciehp_get_cur_lnk_width(struct slot *slot,
- 
- int pcie_enable_notification(struct controller *ctrl)
- {
--	u16 cmd, mask;
-+	u16 cmd = 0, mask;
- 
- 	/*
- 	 * TBD: Power fault detected software notification support.
-@@ -820,7 +820,8 @@ int pcie_enable_notification(struct controller *ctrl)
- 	 * when it is cleared in the interrupt service routine, and
- 	 * next power fault detected interrupt was notified again.
- 	 */
--	cmd = PCI_EXP_SLTCTL_PDCE;
-+	if (HP_SUPR_RM(ctrl))
-+		cmd |= PCI_EXP_SLTCTL_PDCE;
- 	if (ATTN_BUTTN(ctrl))
- 		cmd |= PCI_EXP_SLTCTL_ABPE;
- 	if (MRL_SENS(ctrl))
--- 
-1.7.7
-
+This patch sets the node quite early, before we even look at the _PXM
+information in pci_acpi_scan_root().  That means if the BIOS does
+supply a _PXM method and the user gives this argument, the
+user-supplied info is silently overwritten.  To me it would make more
+sense to handle an option like this *after* we look for _PXM info.
+That way it could be used to compensate for both missing and incorrect
+_PXM info.
