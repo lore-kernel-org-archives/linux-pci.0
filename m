@@ -1,222 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:52731 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755400Ab2FNJTa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jun 2012 05:19:30 -0400
-Date: Thu, 14 Jun 2012 11:19:06 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Mitch Bradley <wmb@firmworks.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-Message-ID: <20120614091905.GA9081@avionic-0098.mockup.avionic-design.de>
-References: <4FD763C5.3090500@wwwdotorg.org>
- <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de>
- <4FD7A36B.9090409@wwwdotorg.org>
- <4FD7B085.1020006@firmworks.com>
- <20120613064519.GD31001@avionic-0098.mockup.avionic-design.de>
- <4FD84133.4060401@firmworks.com>
- <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
- <4FD849CF.4030009@firmworks.com>
- <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
- <4FD85127.8050301@firmworks.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="UlVJffcvxoiEqYs2"
-In-Reply-To: <4FD85127.8050301@firmworks.com>
+Received: from mga14.intel.com ([143.182.124.37]:34603 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751951Ab2FSFU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Jun 2012 01:20:56 -0400
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	Zheng Yan <zheng.z.yan@intel.com>, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH -v6 1/4] ACPI, PM, Specify lowest allowed state for device sleep state
+Date: Tue, 19 Jun 2012 13:20:46 +0800
+Message-Id: <1340083249-16266-2-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+References: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Lower device sleep state can save more power, but has more exit
+latency too.  Sometimes, to satisfy some power QoS and other
+requirement, we need to constrain the lowest device sleep state.
 
---UlVJffcvxoiEqYs2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In this patch, a parameter to specify lowest allowed state for
+acpi_pm_device_sleep_state is added.  So that the caller can enforce
+the constraint via the parameter.
 
-On Tue, Jun 12, 2012 at 10:36:55PM -1000, Mitch Bradley wrote:
-> On 6/12/2012 10:19 PM, Thierry Reding wrote:
-> >On Tue, Jun 12, 2012 at 10:05:35PM -1000, Mitch Bradley wrote:
-> >>On 6/12/2012 9:52 PM, Thierry Reding wrote:
-> >>>I think the configuration spaces and downstream I/O ranges need to be =
-in the
-> >>>pcie-controller's reg property because they are remapped and used by t=
-he
-> >>>controller driver, not by the individual ports.
-> >>>
-> >>>That's probably not really necessary but rather a result of how the dr=
-iver
-> >>>was written. Perhaps the driver should handle them differently instead,
-> >>>listing the regions in the ranges property of the parent and listing t=
-he
-> >>>corresponding partitions in the ranges properties of the pci child nod=
-es.
-> >>>
-> >>>Like in the following, where the ranges property of the ports partitio=
-n the
-> >>>ranges passed from the parent evenly:
-> >>>
-> >>>	pcie-controller {
-> >>>		compatible =3D "nvidia,tegra20-pcie";
-> >>>		reg =3D<0x80003000 0x00000800   /* PADS registers */
-> >>>		       0x80003800 0x00000200>; /* AFI registers */
-> >>>		interrupts =3D<0 98 0x04   /* controller interrupt */
-> >>>			      0 99 0x04>; /* MSI interrupt */
-> >>>		status =3D "disabled";
-> >>>
-> >>>		ranges =3D<0x80000000 0x80000000 0x00002000   /* 2 root ports */
-> >>>			  0x80004000 0x80004000 0x00100000   /* configuration space */
-> >>>			  0x80104000 0x80100000 0x00100000   /* extended configuration spac=
-e */
-> >>>			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
-> >>>			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
-> >>>			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
-> >>>
-> >>>		#address-cells =3D<1>;
-> >>>		#size-cells =3D<1>;
-> >>>
-> >>>		pci@80000000 {
-> >>>			reg =3D<0x80000000 0x00001000>;
-> >>>			status =3D "disabled";
-> >>>
-> >>>			#address-cells =3D<3>;
-> >>>			#size-cells =3D<2>;
-> >>>
-> >>>			ranges =3D<0x80400000 0x80400000 0x00008000   /* I/O */
-> >>>				  0x90000000 0x90000000 0x08000000   /* non-prefetchable memory */
-> >>>				  0xa0000000 0xa0000000 0x08000000>; /* prefetchable memory */
-> >>
-> >>You are on the right track here, but the format of the child-address
-> >>portion of the above ranges property is incorrect.  Since the child
-> >>address space is the PCI address space, the child-address portion
-> >>needs to be 3 cells.  It's not a linear address but rather a triple.
-> >>The first cell identifies the address type (config, I/O, memory..)
-> >>and the second and third cells are offsets within that subspace.
-> >>The second and third cells will typically be 0.  The PCI binding has
-> >>details.
->=20
-> Also, the size field in ranges is specified according to the child
-> address space, so there must be 2 size cells in the ranges at this
-> level.  Each ranges entry at this level is:
->=20
-> <child_address_space, child_address_high, child_address_low,
-> parent_address, child_size_high, child_size_low>
->=20
-> The above should be:
->=20
-> 			ranges =3D<0x81000000 0 0  0x80400000  0 0x00008000   /* I/O */
-> 				 0x82000000 0 0  0x90000000  0 0x08000000   /* non-prefetchable memor=
-y */
-> 				 0xc2000000 0 0  0xa0000000  0 0x08000000>; /* prefetchable memory */
->=20
->=20
+This is needed by PCIe D3cold support, where the lowest power state
+allowed may be D3_HOT instead of default D3_COLD.
 
-Okay, so the new pcie-controller node looks like this:
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/acpi/sleep.c       |   24 +++++++++++++++++++-----
+ drivers/pci/pci-acpi.c     |    3 ++-
+ drivers/pnp/pnpacpi/core.c |    4 ++--
+ include/acpi/acpi_bus.h    |    6 +++---
+ 4 files changed, 26 insertions(+), 11 deletions(-)
 
-	pcie-controller {
-		compatible =3D "nvidia,tegra20-pcie", "simple-bus";
-		reg =3D <0x80003000 0x00000800   /* PADS registers */
-		       0x80003800 0x00000200   /* AFI registers */
-		       0x80004000 0x00100000   /* configuration space */
-		       0x80104000 0x00100000>; /* extended configuration space */
-		interrupts =3D <0 98 0x04   /* controller interrupt */
-		              0 99 0x04>; /* MSI interrupt */
-		status =3D "disabled";
-
-		ranges =3D <0x80000000 0x80000000 0x00002000   /* 2 root ports */
-			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
-			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
-			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
-
-		#address-cells =3D <1>;
-		#size-cells =3D <1>;
-
-		pci@80000000 {
-			compatible =3D "nvidia,tegra20-pcie-port";
-			reg =3D <0x80000000 0x00001000>;
-			status =3D "disabled";
-
-			#address-cells =3D <3>;
-			#size-cells =3D <2>;
-
-			ranges =3D <0x81000000 0 0 0x80400000 0 0x00008000   /* I/O */
-				  0x82000000 0 0 0x90000000 0 0x08000000   /* non-prefetchable memory */
-				  0xc2000000 0 0 0xa0000000 0 0x08000000>; /* prefetchable memory */
-
-			nvidia,ctrl-offset =3D <0x110>;
-			nvidia,num-lanes =3D <2>;
-		};
-
-		pci@80001000 {
-			compatible =3D "nvidia,tegra20-pcie-port";
-			reg =3D <0x80001000 0x00001000>;
-			status =3D "disabled";
-
-			#address-cells =3D <3>;
-			#size-cells =3D <2>;
-
-			ranges =3D <0x81000000 0 0 0x80408000 0 0x00008000   /* I/O */
-				  0x82000000 0 0 0x98000000 0 0x08000000   /* non-prefetchable memory */
-				  0xc2000000 0 0 0xa8000000 0 0x08000000>; /* prefetchable memory */
-
-			nvidia,ctrl-offset =3D <0x118>;
-			nvidia,num-lanes =3D <2>;
-		};
-	};
-
-While looking into some more code, trying to figure out how to hook this all
-up with the device tree I ran into a problem. I need to actually create a
-'struct device' for each of the ports, so I added the "simple-bus" to the
-pcie-controller's "compatible" property. Furthermore, each PCI root port now
-becomes a platform_device, which are supported by a new tegra-pcie-port
-driver. I'm not sure if "port" is very common in PCI speek, so something li=
-ke
-tegra-pcie-bridge (compatible =3D "nvidia,tegra20-pcie-bridge") may be more
-appropriate?
-
-Using real platform devices is not only more straightforward (each bridge is
-after all a separate parent for the PCI endpoints) but it also has the
-advantage that the bridges are properly hooked up with the device tree. If I
-read the code correctly, passing the 'struct device' to pci_scan_root_bus()
-will allow the PCI core code to set up the proper pointers that allow busses
-and endpoints below each bridge to be matched to the corresponding DT nodes.
-
-However this causes other problems with the initialization of the PCIe
-controller. The translations cannot be setup and the controller shouldn't be
-enabled until after all the ports have been probed because it isn't clear
-which of them are really active and which are not. For the DT case this can
-probably be done by parsing the device tree and collecting the information,
-but for the non-DT case this will probably be more difficult.
-
-To solve this for both cases I could probably use device_for_each_child() a=
-nd
-check that all children have been properly probed before setting up the
-translations and enabling the controller. That leaves the question of how to
-verify that a device has been correctly probed. The easiest would probably =
-be
-to check if dev_get_drvdata() !=3D NULL, but I'm still trying to decide whe=
-ther
-that's too ugly or not. I don't know of any other way to determine that
-probing was successful. In addition it may still be useful to continue if o=
-ne
-of the devices failed to initialize (the link on only one of two enabled
-ports is up).
-
-Thierry
-
---UlVJffcvxoiEqYs2
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/ZrIkACgkQZ+BJyKLjJp9VUACfctmGLalLNVYfIILgqwdCVGUt
-r74AnRiTHWG0qNAkv2dY1Doxkdn037Lh
-=Cdse
------END PGP SIGNATURE-----
-
---UlVJffcvxoiEqYs2--
+--- a/drivers/acpi/sleep.c
++++ b/drivers/acpi/sleep.c
+@@ -716,8 +716,9 @@ int acpi_suspend(u32 acpi_state)
+  *	@dev: device to examine; its driver model wakeup flags control
+  *		whether it should be able to wake up the system
+  *	@d_min_p: used to store the upper limit of allowed states range
+- *	Return value: preferred power state of the device on success, -ENODEV on
+- *		failure (ie. if there's no 'struct acpi_device' for @dev)
++ *	@d_max_in: specify the lowest allowed states
++ *	Return value: preferred power state of the device on success, -ENODEV
++ *	(ie. if there's no 'struct acpi_device' for @dev) or -EINVAL on failure
+  *
+  *	Find the lowest power (highest number) ACPI device power state that
+  *	device @dev can be in while the system is in the sleep state represented
+@@ -732,13 +733,15 @@ int acpi_suspend(u32 acpi_state)
+  *	via @wake.
+  */
+ 
+-int acpi_pm_device_sleep_state(struct device *dev, int *d_min_p)
++int acpi_pm_device_sleep_state(struct device *dev, int *d_min_p, int d_max_in)
+ {
+ 	acpi_handle handle = DEVICE_ACPI_HANDLE(dev);
+ 	struct acpi_device *adev;
+ 	char acpi_method[] = "_SxD";
+ 	unsigned long long d_min, d_max;
+ 
++	if (d_max_in < ACPI_STATE_D0 || d_max_in > ACPI_STATE_D3)
++		return -EINVAL;
+ 	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &adev))) {
+ 		printk(KERN_DEBUG "ACPI handle has no context!\n");
+ 		return -ENODEV;
+@@ -746,8 +749,10 @@ int acpi_pm_device_sleep_state(struct de
+ 
+ 	acpi_method[2] = '0' + acpi_target_sleep_state;
+ 	/*
+-	 * If the sleep state is S0, we will return D3, but if the device has
+-	 * _S0W, we will use the value from _S0W
++	 * If the sleep state is S0, the lowest limit from ACPI is D3,
++	 * but if the device has _S0W, we will use the value from _S0W
++	 * as the lowest limit from ACPI.  Finally, we will constrain
++	 * the lowest limit with the specified one.
+ 	 */
+ 	d_min = ACPI_STATE_D0;
+ 	d_max = ACPI_STATE_D3;
+@@ -791,8 +796,17 @@ int acpi_pm_device_sleep_state(struct de
+ 		}
+ 	}
+ 
++	if (d_max_in < d_min)
++		return -EINVAL;
+ 	if (d_min_p)
+ 		*d_min_p = d_min;
++	/* constrain d_max with specified lowest limit (max number) */
++	if (d_max > d_max_in) {
++		for (d_max = d_max_in; d_max > d_min; d_max--) {
++			if (adev->power.states[d_max].flags.valid)
++				break;
++		}
++	}
+ 	return d_max;
+ }
+ #endif /* CONFIG_PM */
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -189,7 +189,8 @@ static pci_power_t acpi_pci_choose_state
+ {
+ 	int acpi_state;
+ 
+-	acpi_state = acpi_pm_device_sleep_state(&pdev->dev, NULL);
++	acpi_state = acpi_pm_device_sleep_state(&pdev->dev, NULL,
++						ACPI_STATE_D3);
+ 	if (acpi_state < 0)
+ 		return PCI_POWER_ERROR;
+ 
+--- a/drivers/pnp/pnpacpi/core.c
++++ b/drivers/pnp/pnpacpi/core.c
+@@ -170,8 +170,8 @@ static int pnpacpi_suspend(struct pnp_de
+ 	}
+ 
+ 	if (acpi_bus_power_manageable(handle)) {
+-		int power_state = acpi_pm_device_sleep_state(&dev->dev, NULL);
+-
++		int power_state = acpi_pm_device_sleep_state(&dev->dev, NULL,
++							     ACPI_STATE_D3);
+ 		if (power_state < 0)
+ 			power_state = (state.event == PM_EVENT_ON) ?
+ 					ACPI_STATE_D0 : ACPI_STATE_D3;
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -414,13 +414,13 @@ int acpi_enable_wakeup_device_power(stru
+ int acpi_disable_wakeup_device_power(struct acpi_device *dev);
+ 
+ #ifdef CONFIG_PM
+-int acpi_pm_device_sleep_state(struct device *, int *);
++int acpi_pm_device_sleep_state(struct device *, int *, int);
+ #else
+-static inline int acpi_pm_device_sleep_state(struct device *d, int *p)
++static inline int acpi_pm_device_sleep_state(struct device *d, int *p, int m)
+ {
+ 	if (p)
+ 		*p = ACPI_STATE_D0;
+-	return ACPI_STATE_D3;
++	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3) ? m : ACPI_STATE_D0;
+ }
+ #endif
+ 
