@@ -1,233 +1,393 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:56767 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755659Ab2FZMmf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 08:42:35 -0400
-Received: by lbbgm6 with SMTP id gm6so32634lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 05:42:34 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:38138 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753785Ab2FSNQH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:16:07 -0400
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v8 05/12] x86/PCI: add pci_mmconfig_insert()/delete() for PCI root bridge hotplug
+Date: Tue, 19 Jun 2012 21:15:25 +0800
+Message-ID: <1340111732-6276-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
+References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXhGLwSH4gq7L9DrhVAXcDu_NbjLA5QkCDOEqaFO09m7w@mail.gmail.com>
-References: <1340650789-3326-1-git-send-email-yinghai@kernel.org>
- <CAErSpo4oE8nHmu1KBXSX=YjQGfD89v2fqL=96THz98uZ4Va_rQ@mail.gmail.com> <CAE9FiQXhGLwSH4gq7L9DrhVAXcDu_NbjLA5QkCDOEqaFO09m7w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 26 Jun 2012 06:42:12 -0600
-Message-ID: <CAErSpo5Mrti-vtYddQa7qd3Hq9KjcXNpBQTX_F6Zgi0ckYrR7w@mail.gmail.com>
-Subject: Re: [PATCH] PCI, X86: busnum/node boot command line for pci dev node setting.
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>, lenb@kernel.org, x86@kernel.org,
-	Ulrich Drepper <drepper@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2012 at 4:38 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Jun 25, 2012 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Mon, Jun 25, 2012 at 12:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> Some intel new sandybridge or newer two sockets system do support support numa
->>> for pci devices. But BIOS does not provide _PXM under those root bus in DSDT.
->>>
->>> Add boot command line, so user could have chance to input node info before
->>> BIOS guys figure out to add _PXM.
->>>
->>> Fold fix from Ulrich to use ";" instead of ",".
->>> | The problem is the pci= parameter
->>> | handling uses ',' to separate parameters and therefore the second PCI
->>> | root information, separated by a comma, is interpreted as a new pci=
->>> | parameter.
->>>
->>> -v3: According to Bjorn and Ingo, change to use "user input first" policy
->>>     so it could cover wrong _PXM case.
->>> -v4: Folded change from Ulrich to record pointer of busnum_node string.
->>>
->>> Reported-by: Ulrich Drepper <drepper@gmail.com>
->>> Tested-by: Ulrich Drepper <drepper@gmail.com>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>>
->>> ---
->>>  Documentation/kernel-parameters.txt |    5 +++++
->>>  arch/x86/include/asm/pci_x86.h      |    3 +++
->>>  arch/x86/pci/acpi.c                 |   22 +++++++++++++---------
->>>  arch/x86/pci/common.c               |   36 ++++++++++++++++++++++++++++++++++++
->>>  4 files changed, 57 insertions(+), 9 deletions(-)
->>>
->>> Index: linux-2.6/Documentation/kernel-parameters.txt
->>> ===================================================================
->>> --- linux-2.6.orig/Documentation/kernel-parameters.txt
->>> +++ linux-2.6/Documentation/kernel-parameters.txt
->>> @@ -2068,6 +2068,11 @@ bytes respectively. Such letter suffixes
->>>                                hardware access methods are allowed. Use this
->>>                                if you experience crashes upon bootup and you
->>>                                suspect they are caused by the BIOS.
->>> +               busnum_node=    [X86] Set node for root bus.
->>> +                               Format:
->>> +                               <bus>:<node>[;...]
->>> +                               Specifies node for bus, will override bios _PXM
->>> +                               or probed value from hostbridge.
->>
->> I liked the previous argument format that included "pci".  Now we're
->> assuming the only bus type important enough to care about NUMA
->> information is PCI.
->
-> which one?
+Introduce pci_mmconfig_insert()/pci_mmconfig_delete(), which will be used
+to update MMCFG information when supporting PCI root bridge hotplug.
 
-My point is that I think the argument should include the string "pci".
- There are other bus types, and if the argument is only
-"busnum_node=", it's not clear which bus type we're referring to.
+[bhelgaas: KERN_INFO, not KERN_ERR, for missing ACPI PNP0C01/02 reservation]
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
 
->> This should also work on ia64, which also uses ACPI.  For that matter,
->> it'd be nice if it worked on *any* NUMA architecture, though I don't
->> see any  PCI NUMA support at all for anything but x86 and ia64.
->
-> ia64 platform should be well tested with Linux?
+v8: add (cfg->address != addr) in function pci_mmconfig_insert()
 
-If you're suggesting that it's OK to make x86 even more different from
-ia64 simply because this issue hasn't been reported on ia64, I
-disagree.
+---
+ arch/x86/include/asm/pci_x86.h |    4 +
+ arch/x86/pci/mmconfig-shared.c |  223 ++++++++++++++++++++++++++++++++-------
+ 2 files changed, 187 insertions(+), 40 deletions(-)
 
-We have an opportunity to make them more similar, and we should do it.
- Almost all the code in the pci_acpi_scan_root() path is functionally
-the same between x86 and ia64, and someday we should combine them.
-That will be easier if we don't add gratuitous differences.
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index df898ce..af5018f 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -137,6 +137,10 @@ extern int __init pci_mmcfg_arch_init(void);
+ extern void __init pci_mmcfg_arch_free(void);
+ extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
+ extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
++extern int __devinit pci_mmconfig_insert(struct device *dev,
++					 u16 seg, u8 start,
++					 u8 end, phys_addr_t addr);
++extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+ 
+ extern struct list_head pci_mmcfg_list;
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 0ac97d5..7d1c6bc 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -27,6 +27,8 @@
+ 
+ /* Indicate if the mmcfg resources have been placed into the resource table. */
+ static int __initdata pci_mmcfg_resources_inserted;
++static bool pci_mmcfg_running_state;
++static bool pci_mmcfg_arch_init_failed;
+ static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+@@ -91,10 +93,6 @@ static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
+ 		 "PCI MMCONFIG %04x [bus %02x-%02x]", segment, start, end);
+ 	res->name = new->name;
+ 
+-	printk(KERN_INFO PREFIX "MMCONFIG for domain %04x [bus %02x-%02x] at "
+-	       "%pR (base %#lx)\n", segment, start, end, &new->res,
+-	       (unsigned long) addr);
+-
+ 	return new;
+ }
+ 
+@@ -108,6 +106,11 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 		mutex_lock(&pci_mmcfg_lock);
+ 		list_add_sorted(new);
+ 		mutex_unlock(&pci_mmcfg_lock);
++
++		printk(KERN_INFO PREFIX
++		       "MMCONFIG for domain %04x [bus %02x-%02x] at %pR "
++		       "(base %#lx)\n",
++		       segment, start, end, &new->res, (unsigned long)addr);
+ 	}
+ 
+ 	return new;
+@@ -375,14 +378,15 @@ static void __init pci_mmcfg_insert_resources(void)
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		insert_resource(&iomem_resource, &cfg->res);
++		if (!cfg->res.parent)
++			insert_resource(&iomem_resource, &cfg->res);
+ 
+ 	/* Mark that the resources have been inserted. */
+ 	pci_mmcfg_resources_inserted = 1;
+ }
+ 
+-static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
+-					      void *data)
++static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
++						 void *data)
+ {
+ 	struct resource *mcfg_res = data;
+ 	struct acpi_resource_address64 address;
+@@ -418,8 +422,8 @@ static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
+ 	return AE_OK;
+ }
+ 
+-static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
+-		void *context, void **rv)
++static acpi_status __devinit find_mboard_resource(acpi_handle handle, u32 lvl,
++						  void *context, void **rv)
+ {
+ 	struct resource *mcfg_res = context;
+ 
+@@ -432,7 +436,7 @@ static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
+ 	return AE_OK;
+ }
+ 
+-static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
++static int __devinit is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+ {
+ 	struct resource mcfg_res;
+ 
+@@ -451,13 +455,15 @@ static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+ 
+ typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
+ 
+-static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+-				    struct pci_mmcfg_region *cfg, int with_e820)
++static int __ref is_mmconf_reserved(check_reserved_t is_reserved,
++				    struct pci_mmcfg_region *cfg,
++				    struct device *dev, int with_e820)
+ {
+ 	u64 addr = cfg->res.start;
+ 	u64 size = resource_size(&cfg->res);
+ 	u64 old_size = size;
+-	int valid = 0, num_buses;
++	int num_buses;
++	char *method = with_e820 ? "E820" : "ACPI motherboard resources";
+ 
+ 	while (!is_reserved(addr, addr + size, E820_RESERVED)) {
+ 		size >>= 1;
+@@ -465,49 +471,75 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+ 			break;
+ 	}
+ 
+-	if (size >= (16UL<<20) || size == old_size) {
+-		printk(KERN_INFO PREFIX "MMCONFIG at %pR reserved in %s\n",
+-		       &cfg->res,
+-		       with_e820 ? "E820" : "ACPI motherboard resources");
+-		valid = 1;
+-
+-		if (old_size != size) {
+-			/* update end_bus */
+-			cfg->end_bus = cfg->start_bus + ((size>>20) - 1);
+-			num_buses = cfg->end_bus - cfg->start_bus + 1;
+-			cfg->res.end = cfg->res.start +
+-			    PCI_MMCFG_BUS_OFFSET(num_buses) - 1;
+-			snprintf(cfg->name, PCI_MMCFG_RESOURCE_NAME_LEN,
+-				 "PCI MMCONFIG %04x [bus %02x-%02x]",
+-				 cfg->segment, cfg->start_bus, cfg->end_bus);
++	if (size < (16UL<<20) && size != old_size)
++		return 0;
++
++	if (dev)
++		dev_info(dev, "MMCONFIG at %pR reserved in %s\n",
++			 &cfg->res, method);
++	else
++		printk(KERN_INFO PREFIX
++		       "MMCONFIG at %pR reserved in %s\n",
++		       &cfg->res, method);
++
++	if (old_size != size) {
++		/* update end_bus */
++		cfg->end_bus = cfg->start_bus + ((size>>20) - 1);
++		num_buses = cfg->end_bus - cfg->start_bus + 1;
++		cfg->res.end = cfg->res.start +
++		    PCI_MMCFG_BUS_OFFSET(num_buses) - 1;
++		snprintf(cfg->name, PCI_MMCFG_RESOURCE_NAME_LEN,
++			 "PCI MMCONFIG %04x [bus %02x-%02x]",
++			 cfg->segment, cfg->start_bus, cfg->end_bus);
++
++		if (dev)
++			dev_info(dev,
++				"MMCONFIG "
++				"at %pR (base %#lx) (size reduced!)\n",
++				&cfg->res, (unsigned long) cfg->address);
++		else
+ 			printk(KERN_INFO PREFIX
+-			       "MMCONFIG for %04x [bus%02x-%02x] "
+-			       "at %pR (base %#lx) (size reduced!)\n",
+-			       cfg->segment, cfg->start_bus, cfg->end_bus,
+-			       &cfg->res, (unsigned long) cfg->address);
+-		}
++				"MMCONFIG for %04x [bus%02x-%02x] "
++				"at %pR (base %#lx) (size reduced!)\n",
++				cfg->segment, cfg->start_bus, cfg->end_bus,
++				&cfg->res, (unsigned long) cfg->address);
+ 	}
+ 
+-	return valid;
++	return 1;
+ }
+ 
+-static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
+-					      int early)
++static int __ref pci_mmcfg_check_reserved(struct device *dev,
++		  struct pci_mmcfg_region *cfg, int early)
+ {
+ 	if (!early && !acpi_disabled) {
+-		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
++		if (is_mmconf_reserved(is_acpi_reserved, cfg, dev, 0))
+ 			return 1;
++
++		if (dev)
++			dev_info(dev, FW_INFO
++				 "MMCONFIG at %pR not reserved in "
++				 "ACPI motherboard resources\n",
++				 &cfg->res);
+ 		else
+-			printk(KERN_ERR FW_BUG PREFIX
++			printk(KERN_INFO FW_INFO PREFIX
+ 			       "MMCONFIG at %pR not reserved in "
+ 			       "ACPI motherboard resources\n",
+ 			       &cfg->res);
+ 	}
+ 
++	/*
++	 * e820_all_mapped() is marked as __init.
++	 * All entries from ACPI MCFG table have been checked at boot time.
++	 * For MCFG information constructed from hotpluggable host bridge's
++	 * _CBA method, just assume it's reserved.
++	 */
++	if (pci_mmcfg_running_state)
++		return 1;
++
+ 	/* Don't try to do this check unless configuration
+ 	   type 1 is available. how about type 2 ?*/
+ 	if (raw_pci_ops)
+-		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
++		return is_mmconf_reserved(e820_all_mapped, cfg, dev, 1);
+ 
+ 	return 0;
+ }
+@@ -517,7 +549,7 @@ static void __init pci_mmcfg_reject_broken(int early)
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
++		if (pci_mmcfg_check_reserved(NULL, cfg, early) == 0) {
+ 			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
+ 			free_all_mmcfg();
+ 			return;
+@@ -641,6 +673,7 @@ static void __init __pci_mmcfg_init(int early)
+ 		 * the architecture mmcfg setup could not initialize.
+ 		 */
+ 		pci_mmcfg_resources_inserted = 1;
++		pci_mmcfg_arch_init_failed = true;
+ 	}
+ }
+ 
+@@ -656,6 +689,8 @@ void __init pci_mmcfg_late_init(void)
+ 
+ static int __init pci_mmcfg_late_insert_resources(void)
+ {
++	pci_mmcfg_running_state = true;
++
+ 	/*
+ 	 * If resources are already inserted or we are not using MMCONFIG,
+ 	 * don't insert the resources.
+@@ -681,3 +716,111 @@ static int __init pci_mmcfg_late_insert_resources(void)
+  * with other system resources.
+  */
+ late_initcall(pci_mmcfg_late_insert_resources);
++
++/* Add MMCFG information for host bridges */
++int __devinit pci_mmconfig_insert(struct device *dev,
++				  u16 seg, u8 start, u8 end,
++				  phys_addr_t addr)
++{
++	int rc;
++	struct resource *tmp = NULL;
++	struct pci_mmcfg_region *cfg;
++
++	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
++		return -ENODEV;
++
++	if (start > end)
++		return -EINVAL;
++
++	mutex_lock(&pci_mmcfg_lock);
++	cfg = pci_mmconfig_lookup(seg, start);
++	if (cfg) {
++		rc = -EEXIST;
++		if (cfg->address != addr) {
++			dev_err(dev, FW_BUG
++				 "detected address conflict when adding "
++				 "MMCONFIG for domain %04x [bus %02x-%02x],"
++				 " old addr [%#lx], new addr [%#lx].\n",
++				  cfg->segment, cfg->start_bus, cfg->end_bus,
++				  (unsigned long)cfg->address,
++				  (unsigned long)addr);
++			rc = -EINVAL;
++		} else if (cfg->end_bus < end)
++			dev_info(dev, FW_INFO
++				 "MMCONFIG for "
++				 "domain %04x [bus %02x-%02x] "
++				 "only partially covers this bridge\n",
++				  cfg->segment, cfg->start_bus, cfg->end_bus);
++		mutex_unlock(&pci_mmcfg_lock);
++		return rc;
++	}
++
++	if (!addr) {
++		mutex_unlock(&pci_mmcfg_lock);
++		return -EINVAL;
++	}
++
++	rc = -EBUSY;
++	cfg = pci_mmconfig_alloc(seg, start, end, addr);
++	if (cfg == NULL) {
++		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
++		rc = -ENOMEM;
++	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
++		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
++			 &cfg->res);
++	} else {
++		/* Insert resource if it's not in boot stage */
++		if (pci_mmcfg_running_state)
++			tmp = insert_resource_conflict(&iomem_resource,
++						       &cfg->res);
++
++		if (tmp) {
++			dev_warn(dev,
++				 "MMCONFIG %pR conflicts with "
++				 "%s %pR\n",
++				 &cfg->res, tmp->name, tmp);
++		} else if (pci_mmcfg_arch_map(cfg)) {
++			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
++				 &cfg->res);
++		} else {
++			list_add_sorted(cfg);
++			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
++				 &cfg->res, (unsigned long)addr);
++			cfg = NULL;
++			rc = 0;
++		}
++	}
++
++	if (cfg) {
++		if (cfg->res.parent)
++			release_resource(&cfg->res);
++		kfree(cfg);
++	}
++
++	mutex_unlock(&pci_mmcfg_lock);
++
++	return rc;
++}
++
++/* Delete MMCFG information for host bridges */
++int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
++{
++	struct pci_mmcfg_region *cfg;
++
++	mutex_lock(&pci_mmcfg_lock);
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
++		if (cfg->segment == seg && cfg->start_bus == start &&
++		    cfg->end_bus == end) {
++			list_del_rcu(&cfg->list);
++			synchronize_rcu();
++			pci_mmcfg_arch_unmap(cfg);
++			if (cfg->res.parent)
++				release_resource(&cfg->res);
++			mutex_unlock(&pci_mmcfg_lock);
++			kfree(cfg);
++			return 0;
++		}
++	mutex_unlock(&pci_mmcfg_lock);
++
++	return -ENOENT;
++}
+-- 
+1.7.1
 
->>>                conf1           [X86] Force use of PCI Configuration
->>>                                Mechanism 1.
->>>                conf2           [X86] Force use of PCI Configuration
->>> Index: linux-2.6/arch/x86/pci/common.c
->>> ===================================================================
->>> --- linux-2.6.orig/arch/x86/pci/common.c
->>> +++ linux-2.6/arch/x86/pci/common.c
->>> @@ -494,6 +494,39 @@ int __init pcibios_init(void)
->>>        return 0;
->>>  }
->>>
->>> +static const char *busnum_node_param;
->>> +
->>> +static void remember_busnum_node(const char *str)
->>> +{
->>> +       busnum_node_param = str;
->>
->> Can you convince me this is safe?  pci_setup() is an early_param, so
->> it looks to me like we might be saving a pointer to initdata in this
->> call path:
->>
->>    setup_arch
->>      parse_early_param
->>        strlcpy(tmp_cmdline, boot_command_line)
->>        parse_early_options(__initdata tmp_cmdline)
->>          parse_args
->>            do_early_param
->>              ...
->>              pci_setup (early_param)
->>                pcibios_setup
->>                  remember_busnum_node
->>
->> And then we use that saved pointer to parse the string at host bridge
->> add-time, which might be after initdata has been freed.
->
-> ok, that will need one separate buffer.
->
->>
->>> +}
->>> +
->>> +int get_user_busnum_node(int busnum)
->>> +{
->>> +       int bus, node, count;
->>> +       const char *p = busnum_node_param;
->>> +
->>> +       if (!p)
->>> +               return -1;
->>> +
->>> +       while (*p) {
->>> +               count = 0;
->>> +               if (sscanf(p, "%x:%x%n", &bus, &node, &count) != 2) {
->>> +                       printk(KERN_ERR "PCI: Can't parse busnum_node input: %s\n",
->>> +                                       p);
->>> +                       break;
->>> +               }
->>> +               if (bus == busnum)
->>> +                       return node;
->>> +               p += count;
->>> +               if (*p != ';')
->>> +                       break;
->>> +               p++;
->>> +       }
->>> +
->>> +       return -1;
->>> +}
->>> +
->>>  char * __devinit  pcibios_setup(char *str)
->>>  {
->>>        if (!strcmp(str, "off")) {
->>> @@ -579,6 +612,9 @@ char * __devinit  pcibios_setup(char *st
->>>        } else if (!strcmp(str, "nocrs")) {
->>>                pci_probe |= PCI_ROOT_NO_CRS;
->>>                return NULL;
->>> +       } else if (!strncmp(str, "busnum_node=", 12)) {
->>> +               remember_busnum_node(str + 12);
->>> +               return NULL;
->>>        } else if (!strcmp(str, "earlydump")) {
->>>                pci_early_dump_regs = 1;
->>>                return NULL;
->>> Index: linux-2.6/arch/x86/include/asm/pci_x86.h
->>> ===================================================================
->>> --- linux-2.6.orig/arch/x86/include/asm/pci_x86.h
->>> +++ linux-2.6/arch/x86/include/asm/pci_x86.h
->>> @@ -46,6 +46,9 @@ enum pci_bf_sort_state {
->>>        pci_dmi_bf,
->>>  };
->>>
->>> +/* pci-common.c */
->>> +int get_user_busnum_node(int busnum);
->>> +
->>>  /* pci-i386.c */
->>>
->>>  void pcibios_resource_survey(void);
->>> Index: linux-2.6/arch/x86/pci/acpi.c
->>> ===================================================================
->>> --- linux-2.6.orig/arch/x86/pci/acpi.c
->>> +++ linux-2.6/arch/x86/pci/acpi.c
->>> @@ -453,7 +453,7 @@ struct pci_bus * __devinit pci_acpi_scan
->>>        struct pci_sysdata *sd;
->>>        int node;
->>>  #ifdef CONFIG_ACPI_NUMA
->>> -       int pxm;
->>> +       int pxm = -1;
->>>  #endif
->>>
->>>        if (domain && !pci_domains_supported) {
->>> @@ -463,16 +463,20 @@ struct pci_bus * __devinit pci_acpi_scan
->>>                return NULL;
->>>        }
->>>
->>> -       node = -1;
->>> +       node = get_user_busnum_node(busnum);
->>> +       if (node == -1) {
->>>  #ifdef CONFIG_ACPI_NUMA
->>> -       pxm = acpi_get_pxm(device->handle);
->>> -       if (pxm >= 0)
->>> -               node = pxm_to_node(pxm);
->>> -       if (node != -1)
->>> -               set_mp_bus_to_node(busnum, node);
->>> -       else
->>> -#endif
->>> +               pxm = acpi_get_pxm(device->handle);
->>> +               if (pxm >= 0)
->>> +                       node = pxm_to_node(pxm);
->>
->> The code above (everything except the calls to set_mp_bus_to_node()
->> and get_mp_bus_to_node(), which are x86-specific) should be the same
->> between x86 and ia64.  Can you rationalize them?  It'd be better if
->> they used the same #ifdefs and the same code structure.
->
-> this patch does not change set_mp_bus_to_node/get_mp_bus_to_node...
-> only let user_busnum_node override them.
 
-It's true that your patch doesn't change get_mp_bus_to_node().
-However, the code you're changing does use it, and while reviewing
-your patch, I noticed bugs in it.  So I think it's reasonable to fix
-the bugs at the same time.  If you prefer, I can do it, but it will
-take me longer to get around to it.
-
-Bjorn
