@@ -1,77 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:49384 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756899Ab2FPWoL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2012 18:44:11 -0400
-Received: by dady13 with SMTP id y13so5481470dad.19
-        for <linux-pci@vger.kernel.org>; Sat, 16 Jun 2012 15:44:10 -0700 (PDT)
+Received: from rs130.luxsci.com ([72.32.115.17]:59621 "EHLO rs130.luxsci.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754408Ab2FTUTw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Jun 2012 16:19:52 -0400
+Message-ID: <4FE23052.3020702@firmworks.com>
+Date: Wed, 20 Jun 2012 10:19:30 -1000
+From: Mitch Bradley <wmb@firmworks.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5q=UJyT=bughbgfGpG19MfnYn6h=X=YFzfUdgLy9KcPg@mail.gmail.com>
-References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
-	<1338026043-3968-9-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
-	<4FDB2192.5070709@huawei.com>
-	<CAE9FiQVWhSZBcZM1DXJaN7rsj64YO=OjzOm6XkUqio5fZ5di+w@mail.gmail.com>
-	<4FDC5084.6090504@huawei.com>
-	<CAE9FiQVp9gyzRppPDu=bbRbOqY=mu1478YUSAJs=t3Cyvpmh+Q@mail.gmail.com>
-	<CAErSpo5q=UJyT=bughbgfGpG19MfnYn6h=X=YFzfUdgLy9KcPg@mail.gmail.com>
-Date: Sat, 16 Jun 2012 15:44:10 -0700
-Message-ID: <CAE9FiQUDWForfUOkcLt6ZruTmutfhmR7H+Ct8z9zO_rWB1p8Dw@mail.gmail.com>
-Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+References: <4FD84133.4060401@firmworks.com> <20120619133001.GB24138@avionic-0098.mockup.avionic-design.de> <4FE0EFBB.6090206@firmworks.com> <201206201957.39343.arnd@arndb.de>
+In-Reply-To: <201206201957.39343.arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 16, 2012 at 2:48 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> We'd better to make all path share as most code as possible.
->> 1. hostbridge scanning during boot -- early, it will check chipset and e820
->> 2. MCFG checking during boot -- early, it will check e820
->> 3. MCFG checking during boot -- late, it will check acpi pnp
->> 4. _CBA checking for hotplug-able pci root bus but it is installed during boot.
->> 5. _CBA checking for hotplug-able pci root bus during run time.
->>
->> please keep mapping for all entries in MCFG table. aka 1, 2, 3.
->> I have some local patches that will read ext pci conf space before scan pci bus.
->> please check attached one for nehalem-ioh.
+On 6/20/2012 9:57 AM, Arnd Bergmann wrote:
+> On Tuesday 19 June 2012, Mitch Bradley wrote:
 >
-> I don't think it's a requirement that Gerry keep your Nehalem patch
-> working.  Your intel_bus.c is not in the tree and you haven't provided
-> an explanation for why it should be.
+>> Version A - 3 address cells:  In this version, the intermediate address
+>> space has 3 cells:  port#, address type, offset.  Address type is
+>>     0 : root port
+>>     1 : config space
+>>     2 : extended config space
+>>     3 : I/O
+>>     4 : non-prefetchable memory
+>>     5 : prefetchable memory.
+>>
+>> The third cell "offset" is necessary so that the size field has a number
+>> space that can include it.
 >
-> The only requirement I'm aware of for PCI config access before we
-> discover the host bridges via ACPI is for segment group 0, bus 0, as
-> mentioned in ACPI spec 5.0, sec 5.2.3.1, PDF page 143, and I think
-> that applies only to the first 0x100 bytes of config space.  I don't
-> think there's a requirement for access to the extended configuration
-> space (bytes 0x100-0xFFF).  I do not see a requirement that this
-> pre-host bridge access happen via MMCONFIG; as far as I can tell, we
-> can use the legacy 0xCF8/0xCFC mechanism.
+> I agree with Stephen that this is a clever way to encode all the address spaces,
+> very nice!
+>
+>> Version B - 2 address cells:  In this first version, the intermediate
+>> address space has 2 cells:  port#, offset.  The address type (I/O, mem,
+>> etc) is the high digit of in the offset:
+>>      Offset 0....... : Root port
+>>      Offset 1....... : config
+>>      Offset 2....... : extended config
+>>      Offset 3....... : I/O
+>>      Offset 4....... : non-prefetchable memory
+>>      Offset 5....... : prefetchable memory.
+>
+> This is similar to how the PCI binding works internally, but I find that
+> a bit confusing as well, so given those two choices, I'd prefer the first
+> one.
 
-that one shot for intel host bridge resource discovery before root bus
-scanning,
-will need to access registers above 0x100.
+Yeah, version A is my preference too.  It's straightforward and clear.  
+I did the other two
+versions mostly to explore the possibility space.
 
-Current MCFG handling have some sanitary checking during probing.
+>
+>     
+>> Version C - 2 address cells, 0 size cells (!) : In this version we hide the size component in
+>> the intermediate space.  I don't know if that will actually work, but my guess is that it
+>> probably would.  The intermediate address space is like version A with the omission of the
+>> offset field.  The intermediate address just specifies the port number and the address type.
+>
+> My guess is that it doesn't work with the current Linux code that transforms
+> the addresses. I've just recently seen the code complain about any platform
+> device whose parent has #size-cells=0.
+>
+> 	Arnd
+>
 
-Now Jiang is trying to free result and cache it for two MCFG path 2/3.
-and later use cached and map again for entries from cached entries.
-but when use those cached entries sanitary of those entries are lost.
-
-so choice would be
-1. cache all checked MMCFG result and use that later
-2. or just leave current MCFG handling alone, just add _CBA support.
-like Jiang -v4 version.
-
-Thanks
-
-Yinghai
