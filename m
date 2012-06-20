@@ -1,83 +1,68 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v12 09/15] PCI: Kill pci_fixup_parent_subordinate_busnr()
-Date: Tue, 26 Jun 2012 11:54:03 -0700
-Message-Id: <1340736849-14875-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:54936 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752277Ab2FTFqT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Jun 2012 01:46:19 -0400
+Message-ID: <1340171140.28143.72.camel@pasglop>
+Subject: Re: [PATCH v2 1/7] driver core: Add iommu_group tracking to struct
+ device
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: joerg.roedel@amd.com, dwmw2@infradead.org,
+	iommu@lists.linux-foundation.org, bhelgaas@google.com,
+	aik@ozlabs.ru, david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, ddutile@redhat.com, liuj97@gmail.com
+Date: Wed, 20 Jun 2012 15:45:40 +1000
+In-Reply-To: <20120530201840.31527.47813.stgit@bling.home>
+References: <20120530201424.31527.33142.stgit@bling.home>
+	 <20120530201840.31527.47813.stgit@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can safely extend parent top and shrink them by probing them.
+On Wed, 2012-05-30 at 14:18 -0600, Alex Williamson wrote:
+> IOMMU groups allow IOMMU drivers to represent DMA visibility
+> and isolation of devices.  Multiple devices may be grouped
+> together for the purposes of DMA.  Placing a pointer on
+> struct device enable easy access for things like streaming
+> DMA programming and drivers like VFIO.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Don't need that anymore.
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   32 --------------------------------
- 1 files changed, 0 insertions(+), 32 deletions(-)
+> ---
+> 
+>  include/linux/device.h |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/linux/device.h b/include/linux/device.h
+> index 161d962..d0e4d99 100644
+> --- a/include/linux/device.h
+> +++ b/include/linux/device.h
+> @@ -36,6 +36,7 @@ struct subsys_private;
+>  struct bus_type;
+>  struct device_node;
+>  struct iommu_ops;
+> +struct iommu_group;
+>  
+>  struct bus_attribute {
+>  	struct attribute	attr;
+> @@ -687,6 +688,7 @@ struct device {
+>  	const struct attribute_group **groups;	/* optional groups */
+>  
+>  	void	(*release)(struct device *dev);
+> +	struct iommu_group	*iommu_group;
+>  };
+>  
+>  /* Get the wakeup routines, which depend on struct device */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 98a9911..d558316 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -687,22 +687,6 @@ struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *de
- 	return child;
- }
- 
--static void pci_fixup_parent_subordinate_busnr(struct pci_bus *child, int max)
--{
--	struct pci_bus *parent = child->parent;
--
--	/* Attempts to fix that up are really dangerous unless
--	   we're going to re-assign all bus numbers. */
--	if (!pcibios_assign_all_busses())
--		return;
--
--	while (parent->parent && parent->busn_res.end < max) {
--		parent->busn_res.end = max;
--		pci_write_config_byte(parent->self, PCI_SUBORDINATE_BUS, max);
--		parent = parent->parent;
--	}
--}
--
- static void __devinit pci_bus_extend_top(struct pci_bus *parent,
- 		 long size, struct resource *parent_res)
- {
-@@ -943,23 +927,7 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 
- 		if (!is_cardbus) {
- 			child->bridge_ctl = bctl;
--			/*
--			 * Adjust subordinate busnr in parent buses.
--			 * We do this before scanning for children because
--			 * some devices may not be detected if the bios
--			 * was lazy.
--			 */
--			pci_fixup_parent_subordinate_busnr(child, max);
--			/* Now we can scan all subordinate buses... */
- 			max = pci_scan_child_bus(child);
--			/*
--			 * now fix it up again since we have found
--			 * the real value of max.
--			 */
--			pci_fixup_parent_subordinate_busnr(child, max);
--
--		} else {
--			pci_fixup_parent_subordinate_busnr(child, max);
- 		}
- 		/*
- 		 * Set the subordinate bus number to its real value.
--- 
-1.7.7
 
