@@ -1,42 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:35014 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492Ab2FLFeA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 01:34:00 -0400
-Message-ID: <4FD6D4C6.2080201@wwwdotorg.org>
-Date: Mon, 11 Jun 2012 23:33:58 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:44443 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932238Ab2FTTeo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 15:34:44 -0400
+Date: Wed, 20 Jun 2012 21:34:38 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: SNB PCI root information
+Message-ID: <20120620193438.GB2248@gmail.com>
+References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+ <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+ <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+ <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+ <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+ <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+ <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+ <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+ <CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+ <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de> <4FD660F9.7030807@wwwdotorg.org> <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/11/2012 11:07 PM, Thierry Reding wrote:
-> * Stephen Warren wrote:
->> On 06/11/2012 09:05 AM, Thierry Reding wrote:
->>> This commit adds support for message signaled interrupts to the
->>> Tegra PCIe controller. Based on code by Krishna Kishore
->>> <kthota@nvidia.com>.
-...
->> Why allocate pcie->msi separately; why not include the fields
->> directly into struct tegra_pcie_info *pcie?
-...
-> Second, and more importantly, this will keep the size of struct 
-> tegra_pcie_info smaller if PCI_MSI is not selected because there is
-> just one unused pointer instead of five unused fields.
 
-Well, you can always ifdef out the structure fields too, right?
+* Yinghai Lu <yinghai@kernel.org> wrote:
+
+> On Wed, Jun 20, 2012 at 11:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+> > As far as I can tell, here's Yinghai's recommendation:  the 
+> > user argument should not override BIOS _PXM because if the 
+> > BIOS gets the _PXM wrong, the user won't be able to work 
+> > around it with the argument, which will force the vendor to 
+> > fix the BIOS.
+> >
+> > I'm not buying it.  The convention that user-supplied 
+> > arguments always take precedence is useful, easy to 
+> > document, and matches user expectations.  It allows the user 
+> > to work around both missing _PXM and incorrect _PXM.
+> 
+> if the vendor provide _PXM, that _PXM should be right and be 
+> trusted.
+> 
+> if the vendor does not provide _PXM, we can have command line 
+> to input it before user can get one updated BIOS from vendor.
+
+So how about an incorrect _PXM, or a slightly inefficient one? 
+Why shouldn't it be possible for the user to override it?
+
+I mean, if we create a parameter space that tweaks data then why 
+not make it complete and allow *all* firmware data to be 
+(optionally) modified, from the kernel boot line?
+
+Thanks,
+
+	Ingo
