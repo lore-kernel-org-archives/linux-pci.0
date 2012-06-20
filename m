@@ -1,99 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:49222 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201Ab2FLFHh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 01:07:37 -0400
-Date: Tue, 12 Jun 2012 07:07:13 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
-Message-ID: <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
- <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
- <4FD660F9.7030807@wwwdotorg.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:37994 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757359Ab2FTRSN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 13:18:13 -0400
+Received: by bkcji2 with SMTP id ji2so6428308bkc.19
+        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 10:18:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="uZ3hkaAS1mZxFaxD"
-In-Reply-To: <4FD660F9.7030807@wwwdotorg.org>
+In-Reply-To: <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+ <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+ <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+ <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+ <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+ <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com> <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 Jun 2012 11:17:52 -0600
+Message-ID: <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+Subject: Re: SNB PCI root information
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jun 19, 2012 at 12:20 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Jun 19, 2012 at 5:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> I'm not opposed to something like this, if people think it's useful.
+>>
+>> This patch sets the node quite early, before we even look at the _PXM
+>> information in pci_acpi_scan_root().  That means if the BIOS does
+>> supply a _PXM method and the user gives this argument, the
+>> user-supplied info is silently overwritten.  To me it would make more
+>> sense to handle an option like this *after* we look for _PXM info.
+>> That way it could be used to compensate for both missing and incorrect
+>> _PXM info.
+>
+> yes, we can only let user input and hostbridge touch that array.
+>
+> but i'd like to only handle missing _PXM case.
+>
+> If the BIOS provide wrong _PXM, that BIOS really should be fixed at first.
 
---uZ3hkaAS1mZxFaxD
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-* Stephen Warren wrote:
-> On 06/11/2012 09:05 AM, Thierry Reding wrote:
-> > This commit adds support for message signaled interrupts to the Tegra
-> > PCIe controller. Based on code by Krishna Kishore <kthota@nvidia.com>.
->=20
-> > diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
->=20
-> > +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
-> ...
-> > +			irq =3D irq_find_mapping(pcie->msi->domain, index);
-> > +			if (irq) {
-> > +				if (test_bit(index, pcie->msi->used))
-> > +					generic_handle_irq(irq);
->=20
-> This invokes the handler first ...
->=20
-> ...
-> > +			/* clear the interrupt */
-> > +			afi_writel(pcie, 1 << offset, AFI_MSI_VEC0 + i * 4);
-> > +			/* see if there's any more pending in this vector */
-> > +			reg =3D afi_readl(pcie, AFI_MSI_VEC0 + i * 4);
->=20
-> ... then clears the interrupt status in the PCIe controller. Won't that
-> lose interrupts if one is raised between when the handler clears the
-> root-cause, and when this code clears the received interrupt status?
-
-It certainly doesn't follow the conventional way of clearing the interrupt
-first. I carried this from the original MSI patch, but I'll move the
-interrupt clearing up and retest.
-
-> > +static int tegra_pcie_disable_msi(struct platform_device *pdev)
->=20
-> Should this free pcie->msi->pages?
-
-Yes it should. I actually mention making that change in the changelog but
-in fact didn't.
-
-> Why allocate pcie->msi separately; why not include the fields directly
-> into struct tegra_pcie_info *pcie?
-
-For one I find this easier to read. If this wasn't a separate structure, ea=
-ch
-of the individual fields would get an msi_ prefix anyway so there isn't much
-to be gained from keeping them directly in tegra_pcie_info.
-
-Second, and more importantly, this will keep the size of struct
-tegra_pcie_info smaller if PCI_MSI is not selected because there is just one
-unused pointer instead of five unused fields.
-
-Thierry
-
---uZ3hkaAS1mZxFaxD
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/WzoEACgkQZ+BJyKLjJp+OqQCfVInBPASxy3NpkrYYAN3uL4tW
-BFsAoILbZcwvoU2Rw+WEEzu7jYkguONm
-=MH6Q
------END PGP SIGNATURE-----
-
---uZ3hkaAS1mZxFaxD--
+I don't understand this.  Is there an *advantage* to silently throwing
+away the information the user specified on the command line?  If the
+user goes to the trouble of discovering and using a command line
+argument, I think that user-supplied information should override
+anything the kernel can figure out on its own.  Ulrich, do you have an
+opinion either way?
