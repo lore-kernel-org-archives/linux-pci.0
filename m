@@ -1,57 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f202.google.com ([209.85.213.202]:39194 "EHLO
-	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754611Ab2FUAQe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 20:16:34 -0400
-Received: by yenl3 with SMTP id l3so9487yen.1
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:34 -0700 (PDT)
-Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
-	by wpzn4.hot.corp.google.com (Postfix) with ESMTP id E6AAC1E0043
-	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:33 -0700 (PDT)
-Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
-	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id 9D624180181
-	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:33 -0700 (PDT)
-Subject: [PATCH 0/6] Coverity and trivial fixes
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 Jun 2012 18:16:33 -0600
-Message-ID: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:60224 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757227Ab2FTSrA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 14:47:00 -0400
+Received: by lbbgm6 with SMTP id gm6so974086lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 11:46:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+ <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+ <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+ <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+ <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+ <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+ <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+ <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com> <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 Jun 2012 12:46:38 -0600
+Message-ID: <CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+Subject: Re: SNB PCI root information
+To: Ulrich Drepper <drepper@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These fix a few issues reported by the Coverity checker and a trivial
-style issue (__weak).
+On Wed, Jun 20, 2012 at 11:59 AM, Ulrich Drepper <drepper@gmail.com> wrote:
+> On Wed, Jun 20, 2012 at 1:17 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> I don't understand this.  Is there an *advantage* to silently throwing
+>> away the information the user specified on the command line?  If the
+>> user goes to the trouble of discovering and using a command line
+>> argument, I think that user-supplied information should override
+>> anything the kernel can figure out on its own.  Ulrich, do you have an
+>> opinion either way?
+>
+> If the BIOS information we look for would be something generic then we
+> might want to have something to overwrite.  But in this case it's a
+> very specific piece of information which only has one correct value
+> and I'd hope the BIOS writers get it right.
+>
+> Assuming this there *might* be value in having it the way the patch
+> does now.  If the BIOS changes it could in theory also renumber the
+> devices etc.  In this case the kernel command line overwrite values
+> might become wrong while a newly-added _PXM entry might be right.
+> We've seen all kind of things happening on BIOS updates...
+>
+> On the other hand it's easy enough to then remove the kernel command
+> line parameter.  It's also probably more in line with other parameters
+> which overwrite information the kernel determines otherwise
+> automatically.
+>
+> I'd be willing to go with Yinghai's recommendation and give the BIOS
+> writers the benefit of a doubt that they get things right.  If they
+> prove to be incapable again we can still change the option handling to
+> overwrite the kernel setting regardless.
 
-Only two should have interesting effects:
+As far as I can tell, here's Yinghai's recommendation:  the user
+argument should not override BIOS _PXM because if the BIOS gets the
+_PXM wrong, the user won't be able to work around it with the
+argument, which will force the vendor to fix the BIOS.
 
-  - The OBFF/LTR enable functions should panic without this fix, so
-    I don't think they've ever been tested.
+I'm not buying it.  The convention that user-supplied arguments always
+take precedence is useful, easy to document, and matches user
+expectations.  It allows the user to work around both missing _PXM and
+incorrect _PXM.
 
-  - The P2P bridge I/O window fix doesn't affect x86, which never uses
-    32-bit I/O decoding.  But other architectures might notice because
-    we incorrectly sign-extended I/O port addresses of 0x80000000 and
-    above.
-
-I'll wait for comments before putting them in "next" (targeted for 3.6).
----
-
-Bjorn Helgaas (6):
-      PCI: use __weak consistently
-      PCI: fix upstream P2P bridge checks when enabling OBFF and LTR
-      PCI: fix P2P bridge I/O port window sign extension
-      PCI: shpchp: remove dead code
-      PCI: acpiphp: check whether _ADR evaluation succeeded
-      PCI: remove useless pcix_set_mmrbc() dev->bus check
-
-
- drivers/pci/hotplug/acpiphp_glue.c |   13 +++++++++----
- drivers/pci/hotplug/shpchp_ctrl.c  |    3 ---
- drivers/pci/pci-sysfs.c            |    2 +-
- drivers/pci/pci.c                  |   15 +++++++--------
- drivers/pci/probe.c                |   18 ++++++++++--------
- 5 files changed, 27 insertions(+), 24 deletions(-)
-
--- 
 Bjorn
