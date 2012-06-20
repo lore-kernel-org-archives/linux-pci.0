@@ -1,57 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:28309
+	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754452Ab2FTT5b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 15:57:31 -0400
+Message-ID: <4FE22B28.9020402@gmail.com>
+Date: Wed, 20 Jun 2012 21:57:28 +0200
+From: Brice Goglin <brice.goglin@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXi23-mY6p2Dr1EJmukhTSPxvBGtjvQ8wyJYPDS+6o5ZA@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
- <CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
- <CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
- <20120525043651.GA1391@google.com> <CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
- <CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
- <20120525193716.GA8817@google.com> <CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
- <CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
- <CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
- <CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
- <CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
- <4FC50E09.4000204@zytor.com> <CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
- <4FC51D79.6010804@zytor.com> <CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
- <4FC536A5.6020600@zytor.com> <CAE9FiQXi23-mY6p2Dr1EJmukhTSPxvBGtjvQ8wyJYPDS+6o5ZA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 3 Jun 2012 18:05:46 -0700
-Message-ID: <CAErSpo67h_mdZtoEn-W_OOXZ8m7gs3g6Q25kte285ZX=2FKf+A@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	David Miller <davem@davemloft.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: SNB PCI root information
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com> <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com> <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com> <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com> <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com> <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com> <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com> <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com> <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com> <CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com> <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 1, 2012 at 4:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, May 29, 2012 at 1:50 PM, H. Peter Anvin <hpa@zytor.com> wrote:
->>
->> The bus-side address space should not be more than 32 bits no matter
->> what.  As Bjorn indicates, you seem to be mixing up bus and cpu
->> addresses all over the place.
+Le 20/06/2012 21:28, Yinghai Lu a écrit :
+> On Wed, Jun 20, 2012 at 11:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
-> please check update patches that is using converted pci bus address
-> for boundary checking.
+>> As far as I can tell, here's Yinghai's recommendation:  the user
+>> argument should not override BIOS _PXM because if the BIOS gets the
+>> _PXM wrong, the user won't be able to work around it with the
+>> argument, which will force the vendor to fix the BIOS.
+>>
+>> I'm not buying it.  The convention that user-supplied arguments always
+>> take precedence is useful, easy to document, and matches user
+>> expectations.  It allows the user to work around both missing _PXM and
+>> incorrect _PXM.
+> if the vendor provide _PXM, that _PXM should be right and be trusted.
+>
 
-What problem does this fix?  There's significant risk that this
-allocation change  will make us trip over something, so it must fix
-something to make it worth considering.
+I agree that the most common problem is that _PXM is missing. But I've
+seen at least some HP Westmere-EP platforms where _PXM exists but it is
+wrong. Last time we checked, there was no BIOS update, even if we
+reported the bug a while ago.
 
-Steve's problem doesn't count because that's a "pci=nocrs" case that
-will always require special handling.  A general solution is not
-possible without a BIOS change (to describe >4GB apertures) or a
-native host bridge driver (to discover >4GB apertures from the
-hardware).  These patches only make Steve's machine work by accident
--- they make us put the video device above 4GB, and we're just lucky
-that the host bridge claims that region.
+Brice
 
-One possibility is some sort of boot-time option to force a PCI device
-to a specified address.  That would be useful for debugging as well as
-for Steve's machine.
