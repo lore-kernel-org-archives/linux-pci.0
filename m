@@ -1,70 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:54922 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751945Ab2FLGKP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 02:10:15 -0400
-Date: Tue, 12 Jun 2012 08:10:03 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
-Message-ID: <20120612061003.GC4040@avionic-0098.adnet.avionic-design.de>
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
- <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
- <4FD660F9.7030807@wwwdotorg.org>
- <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:48035 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932598Ab2FUARF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 20:17:05 -0400
+Received: by yenl3 with SMTP id l3so9519yen.1
+        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:17:04 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
+	by wpzn3.hot.corp.google.com (Postfix) with ESMTP id C94AB100047
+	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:17:04 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
+	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id 86318180181
+	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:17:04 -0700 (PDT)
+Subject: [PATCH 6/6] PCI: remove useless pcix_set_mmrbc() dev->bus check
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 Jun 2012 18:17:04 -0600
+Message-ID: <20120621001704.4834.58131.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="IpbVkmxF4tDyP/Kb"
-In-Reply-To: <20120612050713.GB3669@avionic-0098.mockup.avionic-design.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+For a valid pci_dev, dev->bus != NULL always, so remove this
+unnecessary test.
 
---IpbVkmxF4tDyP/Kb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Found by Coverity (CID 101680).
 
-* Thierry Reding wrote:
-> * Stephen Warren wrote:
-> > On 06/11/2012 09:05 AM, Thierry Reding wrote:
-[...]
-> > > +static int tegra_pcie_disable_msi(struct platform_device *pdev)
-> >=20
-> > Should this free pcie->msi->pages?
->=20
-> Yes it should. I actually mention making that change in the changelog but
-> in fact didn't.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-This is really moot because the driver cannot be built as a module currently
-because arch_setup_msi_irq() and arch_teardown_msi_irq() need to be built-in
-so tegra_pcie_disable_msi() will be called only just before the machine is
-shut down.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b9e93cf..7f1310e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3395,8 +3395,7 @@ int pcix_set_mmrbc(struct pci_dev *dev, int mmrbc)
+ 
+ 	o = (cmd & PCI_X_CMD_MAX_READ) >> 2;
+ 	if (o != v) {
+-		if (v > o && dev->bus &&
+-		   (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_MMRBC))
++		if (v > o && (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_MMRBC))
+ 			return -EIO;
+ 
+ 		cmd &= ~PCI_X_CMD_MAX_READ;
 
-Perhaps this is something that should be addressed? Or is it just not worth
-the effort?
-
-Thierry
-
---IpbVkmxF4tDyP/Kb
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/W3TsACgkQZ+BJyKLjJp9/VgCfZm9qMDCV84zV85C/EAYGH8zu
-M7EAnifJC7pp+0zesScrgYsH5wz+aVX9
-=8cnZ
------END PGP SIGNATURE-----
-
---IpbVkmxF4tDyP/Kb--
