@@ -1,47 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:58657 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754929Ab2FGGQz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Jun 2012 02:16:55 -0400
-Message-ID: <4FD046A5.8080903@01019freenet.de>
-Date: Thu, 07 Jun 2012 08:13:57 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 3/9] arm/PCI: move final fixup quirks from __init to __devinit
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
+	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, linux-kernel@vger.kernel.org
+Date: Thu, 21 Jun 2012 14:24:35 -0600
+Message-ID: <20120621202435.16865.1340.stgit@amt.stowe>
+In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
+References: <20120621202415.16865.6226.stgit@amt.stowe>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bjorn.helgaas@hp.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	jan.kiszka@siemens.com, andihartmann@01019freenet.de
-Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
-References: <20120606212241.6627.98371.stgit@bling.home>
-In-Reply-To: <20120606212241.6627.98371.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson wrote:
-> Passes pci_intx_mask_supported but continues to send interrupts as
-> discovered through VFIO-based device assignment.
-> 
-> http://www.spinics.net/lists/kvm/msg73738.html
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Tested-by: Andreas Hartmann <andihartmann@01019freenet.de>
-> ---
-> 
-> Depends on Jan's base patch for this quirk: 
-> http://www.spinics.net/lists/linux-pci/msg15516.html
-> 
-> drivers/pci/quirks.c |    2 ++ 1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
-> cbb4358..178f494 100644 --- a/drivers/pci/quirks.c +++
-> b/drivers/pci/quirks.c @@ -2940,6 +2940,8 @@ static void __devinit
-> quirk_broken_intx_masking(struct pci_dev *dev) } 
-> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010, 
-> quirk_broken_intx_masking); +DECLARE_PCI_FIXUP_FINAL(0x1814,
-> 0x0601, /* Ralink RT2800 802.11n PCI */ +
-> quirk_broken_intx_masking);
-> 
-> static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup
-> *f, struct pci_fixup *end)
-> 
+The PCI subsystem's final fixups are executed once during boot, after the
+pci-device is found.  As long as the system does not support hot-plug,
+specifying __init is fine.
+
+With hot-plug, either physically based hot-plug events or pseudo hot-plug
+events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
+PCI bus during run time and have it rediscovered which will require the
+call of the fixups again in order for the device to function properly.
+
+This patch prepares specific quirk(s) for use with hot-plug events.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ arch/arm/mach-iop32x/n2100.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/arch/arm/mach-iop32x/n2100.c b/arch/arm/mach-iop32x/n2100.c
+index 5a7ae91..04c4110 100644
+--- a/arch/arm/mach-iop32x/n2100.c
++++ b/arch/arm/mach-iop32x/n2100.c
+@@ -126,7 +126,7 @@ static struct hw_pci n2100_pci __initdata = {
+  * the ->broken_parity_status flag for both ports so that the r8169
+  * driver knows it should ignore error interrupts.
+  */
+-static void n2100_fixup_r8169(struct pci_dev *dev)
++static void __devinit n2100_fixup_r8169(struct pci_dev *dev)
+ {
+ 	if (dev->bus->number == 0 &&
+ 	    (dev->devfn == PCI_DEVFN(1, 0) ||
+
