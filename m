@@ -1,71 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:50880 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756037Ab2FNNzc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Jun 2012 09:55:32 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1SfAWF-0005zi-B0
-	for linux-pci@vger.kernel.org; Thu, 14 Jun 2012 15:55:27 +0200
-Received: from dsl001-168-162.bos1.dsl.speakeasy.net ([72.1.168.162])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Thu, 14 Jun 2012 15:55:27 +0200
-Received: from tkcarr03873 by dsl001-168-162.bos1.dsl.speakeasy.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Thu, 14 Jun 2012 15:55:27 +0200
-To: linux-pci@vger.kernel.org
-From: Tom Carr <tkcarr03873@gmail.com>
-Subject: Re: PCIe rescan not working
-Date: Thu, 14 Jun 2012 13:55:13 +0000 (UTC)
-Message-ID: <loom.20120614T154236-959@post.gmane.org>
-References: <loom.20120607T194858-986@post.gmane.org> <CAE9FiQWau+ko4JiEEjM=2xSH_7FPBr_ZYOm8YGpin2p97=12PQ@mail.gmail.com> <loom.20120611T205954-871@post.gmane.org> <CAE9FiQWsv+VU_240BgzHhyR5=A+7DkceWR0oNuYgYxi5TwWvyg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from out03.mta.xmission.com ([166.70.13.233]:53460 "EHLO
+	out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755037Ab2FULJE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 07:09:04 -0400
+From: ebiederm@xmission.com (Eric W. Biederman)
+To: "Jan Beulich" <JBeulich@suse.com>
+Cc: "Wei Wang" <wei.wang2@amd.com>,
+	"Jesse Barnes" <jbarnes@virtuousgeek.org>,
+	"Sherry Hurwitz" <sherry.hurwitz@amd.com>,
+	"Andrew Cooper" <andrew.cooper3@citrix.com>,
+	"Jeremy Fitzhardinge" <jeremy@goop.org>, <stable@kernel.org>,
+	"xen-devel\@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<linux-pci@vger.kernel.org>
+References: <4FD72FE4.80009@amd.com>
+	<4FD778C802000078000897EF@nat28.tlf.novell.com>
+	<4FD76976.2020203@citrix.com>
+	<4FD78DE6020000780008986D@nat28.tlf.novell.com>
+	<4FD9D559.9050206@amd.com>
+	<4FDA0ECD0200007800089FEA@nat28.tlf.novell.com>
+	<4FDA0028.3090609@amd.com>
+	<4FE30CBB020000780008B06B@nat28.tlf.novell.com>
+Date: Thu, 21 Jun 2012 04:08:46 -0700
+In-Reply-To: <4FE30CBB020000780008B06B@nat28.tlf.novell.com> (Jan Beulich's
+	message of "Thu, 21 Jun 2012 10:59:55 +0100")
+Message-ID: <8762ak9b29.fsf@xmission.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Subject: Re: [PATCH] PCI/MSI: don't disable AMD IOMMU MSI on Xen dom0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai Lu <yinghai <at> kernel.org> writes:
+"Jan Beulich" <JBeulich@suse.com> writes:
 
-> 
-> On Mon, Jun 11, 2012 at 12:32 PM, Tom Carr <tkcarr03873 <at> gmail.com> wrote:
-> >
-> > Yinghai, sorry about the direct email on Friday, I tried to reply back to
-> > the
-> > newsgroup but the send kept failing. Your suggestion worked but only if 
-> > there
-> > were no drivers attached to the endpoints. If I load the driver for the
-> > endpoint
-> > at bus 6.0 and 9.0, then load the empty FPGA at bus 8.0, which is off of 
-> > 4.8,
-> > and write 1 to /sys/bus/pci/remove the system crashes. Is there a
-> > requirement that all down stream devices be removed? I could not find any
-> > such
-> > requirement in any documentation. Here is the most of the stack trace.
-> 
-> can you please try current linus kernel like
-> 3.4 or 3.5-rc1 ?
-> 
-> looks like there is some stop/remove pci device code bug in old kernel.
-> 
-> Thanks
-> 
-> Yinghai
-> 
+>>>> On 14.06.12 at 17:15, Wei Wang <wei.wang2@amd.com> wrote:
+>> Am 14.06.2012 16:18, schrieb Jan Beulich:
+>>> Have you at all considered getting this fixed on the kernel side?
+>>> As I don't have direct access to any AMD IOMMU capable
+>>> system - can one, other than by enumerating the respective
+>>> PCI IDs or reading ACPI tables, reasonably easily identify the
+>>> devices in question (e.g. via vendor/class/sub-class or some
+>>> such)? That might permit skipping those in the offending kernel
+>>> code...
+>> 
+>> AMD IOMMUs (both v1 and v2) uses class id 08 (System Base Peripheral) 
+>> and sub class id 06 (IOMMU). Combined with PCI_VENDEOR_ID_AMD, this 
+>> should be enough to identify amd iommu device. I could send you a kernel 
+>> patch for review using this approach. I would believe that fixing this 
+>> issue in 4.2, no matter how, is really important for amd iommu.
+>
+> As you didn't come forward with anything, here's my first
+> take on this:
+>
+> Commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0 ("PCI: msi: Disable msi
+> interrupts when we initialize a pci device") caused MSI to get disabled
+> on Xen Dom0 despite it having got turned on purposefully by the
+> hypervisor. As an immediate band aid, suppress the disabling in this
+> specific case.
+>
+> I don't think, however, that either the original change or this fix are
+> really appropriate. The original fix, besides leaving aside the
+> presence of a hypervisor like Xen, doesn't deal with all possible
+> cases (in particular it has no effect if the secondary kernel was built
+> with CONFIG_PCI_MSI unset). And taking into account a hypervisor like
+> Xen, the logic like this should probably be skipped altogether (i.e. it
+> should be entirely left to the hypervisor, being the entity in control
+> of IRQs).
 
-Yinghai, thank you for the help. Moving to 3.4 fixed the problem. I am now able
-to load the FPGA and bring the FPGA endpoint online using remove and rescan. I
-was curious if it would be possible to instruct the root complex port to
-allocate enough memory to deal with endpoints that come on line
-after the system is booted. With the solution I have now, the drivers for all
-the endpoints in the PCIe tree starting at the root port 1.2 have to be removed
-which means if they have to stop processing while the rescan is done. Since
-this is an embedded design, the endpoints and the memory they will use does
-not change. If the root could be instructed to allocate enough memory to deal
-with endpoints coming in later then only the switch port connected to the
-endpoint would need to be removed and the other endpoints should be able to 
-continue to function. If you think this is doable and of value to others, I 
-would be willing to make the change and offer it up for consideration.
+The original fix is fine. Xen dom0 remains insane.  Although perhaps
+some better than Xen dom0 once was.
+
+Why does the dom0 kernel even get any access to pci devices that
+Xen doesn't want it to touch?
+
+As far as I can tell my patch has revealed a design bug in Xen.  If you
+don't want to be messed up by the kernel don't let the kernel touch
+things.  At the very least we need an abstraction much cleaner
+than the patch below.
+
+Eric
 
 
-
+> Signed-off-by: Jan Beulich <jbeulich@suse.com>
+> Cc: stable@kernel.org 
+>
+> ---
+>  drivers/pci/msi.c       |    7 +++++++
+>  include/linux/pci_ids.h |    1 +
+>  2 files changed, 8 insertions(+)
+>
+> --- 3.5-rc3/drivers/pci/msi.c
+> +++ 3.5-rc3-xen-pci-msi-no-iommu-disable/drivers/pci/msi.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/errno.h>
+>  #include <linux/io.h>
+>  #include <linux/slab.h>
+> +#include <xen/xen.h>
+>  
+>  #include "pci.h"
+>  #include "msi.h"
+> @@ -1022,7 +1023,13 @@ void pci_msi_init_pci_dev(struct pci_dev
+>  	/* Disable the msi hardware to avoid screaming interrupts
+>  	 * during boot.  This is the power on reset default so
+>  	 * usually this should be a noop.
+> +	 * But on a Xen host don't do this for IOMMUs which the hypervisor
+> +	 * is in control of (and hence has already enabled on purpose).
+>  	 */
+> +	if (xen_initial_domain()
+> +	    && (dev->class >> 8) == PCI_CLASS_SYSTEM_IOMMU
+> +	    && dev->vendor == PCI_VENDOR_ID_AMD)
+> +		return;
+>  	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
+>  	if (pos)
+>  		msi_set_enable(dev, pos, 0);
+> --- 3.5-rc3/include/linux/pci_ids.h
+> +++ 3.5-rc3-xen-pci-msi-no-iommu-disable/include/linux/pci_ids.h
+> @@ -75,6 +75,7 @@
+>  #define PCI_CLASS_SYSTEM_RTC		0x0803
+>  #define PCI_CLASS_SYSTEM_PCI_HOTPLUG	0x0804
+>  #define PCI_CLASS_SYSTEM_SDHCI		0x0805
+> +#define PCI_CLASS_SYSTEM_IOMMU		0x0806
+>  #define PCI_CLASS_SYSTEM_OTHER		0x0880
+>  
+>  #define PCI_BASE_CLASS_INPUT		0x09
