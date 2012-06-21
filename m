@@ -1,54 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:36040 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759168Ab2FUJeW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:34:22 -0400
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id BFAB73EE0AE
-	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:34:20 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id A5C9645DE58
-	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:34:20 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 9142B45DE56
-	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:34:20 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 857461DB8042
-	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:34:20 +0900 (JST)
-Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 434FC1DB804C
-	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:34:20 +0900 (JST)
-Date: Thu, 21 Jun 2012 18:34:30 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH 0/4] acpi, pci: hostbridge hotplug support
-Message-Id: <20120621183430.2b84fb53.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:44399 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932178Ab2FUUZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Jun 2012 16:25:08 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 6/9] powerpc/PCI: move final fixup quirks from __init to
+	__devinit
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
+	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, linux-kernel@vger.kernel.org
+Date: Thu, 21 Jun 2012 14:24:53 -0600
+Message-ID: <20120621202453.16865.65266.stgit@amt.stowe>
+In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
+References: <20120621202415.16865.6226.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The PCI subsystem's final fixups are executed once during boot, after the
+pci-device is found.  As long as the system does not support hot-plug,
+specifying __init is fine.
 
- This patchset adds basic code for host bridge hotplug.
+With hot-plug, either physically based hot-plug events or pseudo hot-plug
+events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
+PCI bus during run time and have it rediscovered which will require the
+call of the fixups again in order for the device to function properly.
+
+This patch prepares specific quirk(s) for use with hot-plug events.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ arch/powerpc/platforms/powermac/pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
+index 43bbe1b..6b09dd7 100644
+--- a/arch/powerpc/platforms/powermac/pci.c
++++ b/arch/powerpc/platforms/powermac/pci.c
+@@ -1173,7 +1173,7 @@ void __init pmac_pcibios_after_init(void)
+ 	}
+ }
  
- I assume ACPI container device (ACPI0004) which carries
- hostbridges will be hot-added or hot-removed. In that case
- some codes are now missing for hostbridge hotplug.
- This patchset mainly adds the following:
-   - remove hostbridge and devices under it 
-   - resoruce-assign code for devices under hot-added hostbridge
- 
- The behavior when you don't try hostbridge hotplug should not change.
- 
-  *[PATCH 1/4] acpi, pci: introduce list for acpi_pci_root drivers
-  *[PATCH 2/4] acpi, pci: introduce acpi_root_sem for list manipulation
-  *[PATCH 3/4] acpi, pci: add hostbridge removal function
-  *[PATCH 4/4] acpi, pci: add resoruce-assign code for devices under 
-      hot-added hostbridge
--
-Best regards,
-Taku Izumi
+-void pmac_pci_fixup_cardbus(struct pci_dev* dev)
++static void __devinit pmac_pci_fixup_cardbus(struct pci_dev *dev)
+ {
+ 	if (!machine_is(powermac))
+ 		return;
 
