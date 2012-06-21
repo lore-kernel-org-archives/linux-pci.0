@@ -1,70 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 4/4] PCI: Remove redundant capabilities checking in pci_{save,
-	restore}_pcie_state
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
-Date: Fri, 01 Jun 2012 15:16:43 -0600
-Message-ID: <20120601211643.20328.26918.stgit@amt.stowe>
-In-Reply-To: <20120601211619.20328.36769.stgit@amt.stowe>
-References: <20120601211619.20328.36769.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:39194 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754611Ab2FUAQe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 20:16:34 -0400
+Received: by yenl3 with SMTP id l3so9487yen.1
+        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:34 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
+	by wpzn4.hot.corp.google.com (Postfix) with ESMTP id E6AAC1E0043
+	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:33 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
+	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id 9D624180181
+	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:33 -0700 (PDT)
+Subject: [PATCH 0/6] Coverity and trivial fixes
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 Jun 2012 18:16:33 -0600
+Message-ID: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Unlike PCI Express v1's Capabilities Structure, v2's requires the entire
-structure to be implemented.  In v2 structures, register fields that are
-not necessarly implemented, are present but hardwired to 0x0.  These may
-include: Link Capabilities, Status, and Control; Slot Capabilities,
-Status, and Control; Root Capabilities, Status, and Control; and all of
-the '2' (Device, Link, and Slot) Capabilities, Status, and Control
-registers.
+These fix a few issues reported by the Coverity checker and a trivial
+style issue (__weak).
 
-This patch removes the redundant capability checks corresponding to the
-Link 2's and Slot 2's, Capabilities, Status, and Control registers as they
-will be present if Device Capabilities 2's registers are (which explains
-why the macros for each of the three are identical).
+Only two should have interesting effects:
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+  - The OBFF/LTR enable functions should panic without this fix, so
+    I don't think they've ever been tested.
+
+  - The P2P bridge I/O window fix doesn't affect x86, which never uses
+    32-bit I/O decoding.  But other architectures might notice because
+    we incorrectly sign-extended I/O port addresses of 0x80000000 and
+    above.
+
+I'll wait for comments before putting them in "next" (targeted for 3.6).
 ---
 
- drivers/pci/pci.c |   10 ++++------
- 1 files changed, 4 insertions(+), 6 deletions(-)
+Bjorn Helgaas (6):
+      PCI: use __weak consistently
+      PCI: fix upstream P2P bridge checks when enabling OBFF and LTR
+      PCI: fix P2P bridge I/O port window sign extension
+      PCI: shpchp: remove dead code
+      PCI: acpiphp: check whether _ADR evaluation succeeded
+      PCI: remove useless pcix_set_mmrbc() dev->bus check
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 26933ff..f9f8036 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -903,12 +903,11 @@ static int pci_save_pcie_state(struct pci_dev *dev)
- 		pci_read_config_word(dev, pos + PCI_EXP_SLTCTL, &cap[i++]);
- 	if (pcie_cap_has_rtctl(dev->pcie_type, flags))
- 		pci_read_config_word(dev, pos + PCI_EXP_RTCTL, &cap[i++]);
--	if (pcie_cap_has_devctl2(dev->pcie_type, flags))
-+	if (pcie_cap_has_devctl2(dev->pcie_type, flags)) {
- 		pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &cap[i++]);
--	if (pcie_cap_has_lnkctl2(dev->pcie_type, flags))
- 		pci_read_config_word(dev, pos + PCI_EXP_LNKCTL2, &cap[i++]);
--	if (pcie_cap_has_sltctl2(dev->pcie_type, flags))
- 		pci_read_config_word(dev, pos + PCI_EXP_SLTCTL2, &cap[i++]);
-+	}
- 
- 	return 0;
- }
-@@ -936,12 +935,11 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
- 		pci_write_config_word(dev, pos + PCI_EXP_SLTCTL, cap[i++]);
- 	if (pcie_cap_has_rtctl(dev->pcie_type, flags))
- 		pci_write_config_word(dev, pos + PCI_EXP_RTCTL, cap[i++]);
--	if (pcie_cap_has_devctl2(dev->pcie_type, flags))
-+	if (pcie_cap_has_devctl2(dev->pcie_type, flags)) {
- 		pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, cap[i++]);
--	if (pcie_cap_has_lnkctl2(dev->pcie_type, flags))
- 		pci_write_config_word(dev, pos + PCI_EXP_LNKCTL2, cap[i++]);
--	if (pcie_cap_has_sltctl2(dev->pcie_type, flags))
- 		pci_write_config_word(dev, pos + PCI_EXP_SLTCTL2, cap[i++]);
-+	}
- }
- 
- 
 
+ drivers/pci/hotplug/acpiphp_glue.c |   13 +++++++++----
+ drivers/pci/hotplug/shpchp_ctrl.c  |    3 ---
+ drivers/pci/pci-sysfs.c            |    2 +-
+ drivers/pci/pci.c                  |   15 +++++++--------
+ drivers/pci/probe.c                |   18 ++++++++++--------
+ 5 files changed, 27 insertions(+), 24 deletions(-)
+
+-- 
+Bjorn
