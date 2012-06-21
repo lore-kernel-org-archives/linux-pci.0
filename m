@@ -1,131 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:48720 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757942Ab2FZAbL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2012 20:31:11 -0400
-Received: from /spool/local
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Mon, 25 Jun 2012 18:31:10 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 61E963E40047
-	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 00:30:37 +0000 (WET)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5Q0UPpH134264
-	for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2012 18:30:26 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5Q0UOGQ021329
-	for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2012 18:30:25 -0600
-Date: Tue, 26 Jun 2012 08:30:21 +0800
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, bhelgaas@google.com,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH V3 1/2] PCI: retrieve host bridge by PCI bus
-Message-ID: <20120626003020.GA6307@shangw>
-Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-References: <1340593821-19011-1-git-send-email-shangw@linux.vnet.ibm.com>
- <CAE9FiQUE0_niTRmvZ=ROSFKB4HKDFFLjfJC+QeQkTKLMyvxv4g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQUE0_niTRmvZ=ROSFKB4HKDFFLjfJC+QeQkTKLMyvxv4g@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1340237254.28143.201.camel@pasglop>
+Subject: Re: [PATCH v2 2/7] iommu: IOMMU Groups
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: joerg.roedel@amd.com, dwmw2@infradead.org,
+	iommu@lists.linux-foundation.org, bhelgaas@google.com,
+	aik@ozlabs.ru, david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, ddutile@redhat.com, liuj97@gmail.com
+Date: Thu, 21 Jun 2012 10:07:34 +1000
+In-Reply-To: <1340210921.5076.76.camel@bling.home>
+References: <20120530201424.31527.33142.stgit@bling.home>
+	 <20120530201852.31527.23265.stgit@bling.home>
+	 <1340186501.28143.158.camel@pasglop> <1340210921.5076.76.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> With current implementation, there is one function to retrieve
->> the corresponding host bridge (struct pci_host_bridge) according
->> to the given PCI device (struct pci_dev) and that function has
->> been declared as "static". Further, we don't have the public
->> function to retrieve host bridge from PCI bus yet. The function
->> is useful somewhere.
->>
->> The additional information like minimal resource alignment for I/O
->> and MMIO bars of p2p bridges will be put into the PCI host bridge.
->> The patch introduces the public function pci_bus_host_bridge() to
->> retrieve the corresponding PCI host bridge according to the specified
->> PCI bus, then accessing the information regarding the minimal resource
->> alignment for I/O and MMIO bars of p2p bridges.
->>
->> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
->> Reviewed-by: Ram Pai <linuxram@us.ibm.com>
->> Reviewed-by: Richard Yang <weiyang@linux.vnet.ibm.com>
->> Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> ---
->>  drivers/pci/host-bridge.c |   13 +++++++++++++
->>  include/linux/pci.h       |    2 +-
->>  2 files changed, 14 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->> index a68dc61..b95f0ce 100644
->> --- a/drivers/pci/host-bridge.c
->> +++ b/drivers/pci/host-bridge.c
->> @@ -27,6 +27,19 @@ static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
->>        return to_pci_host_bridge(bus->bridge);
->>  }
->>
->> +struct pci_host_bridge *pci_bus_host_bridge(struct pci_bus *bus)
->> +{
->> +       struct pci_bus *b = bus;
->> +
->> +       /* Find the PCI root bus */
->> +       while (b->parent)
->> +               b = b->parent;
->> +
->> +       return to_pci_host_bridge(b->bridge);
->> +}
->> +
->> +EXPORT_SYMBOL(pci_bus_host_bridge);
+On Wed, 2012-06-20 at 10:48 -0600, Alex Williamson wrote:
 
-Yinghai, thanks for your time on this :-)
+> Yes, I was assuming the caller held a reference to the struct device to
+> prevent such a race, looks like I forgot to document that in the
+> comments.  I'll have to think about if we can fix the ordering problem.
+> We can re-order the list_add vs notification, but then we just risk
+> dropping the remove.  Perhaps we need to extend the lock or add another
+> to group {list add, notify add}, {list lookup, remove, notify remove}.
+> I'm not even sure this race is possible though w/ a device reference.
 
->
->why do you need to export it?
->
+Or we put the burden on the callers not to racily add & remove,
+including full completion of related notifiers. Might not even be hard
+(ie might already be the case).
 
-The reason is that we have introduced extra fields to "struct pci_host_bridge"
-in [PATCH 2/2] and platform want to access those extra fields.
+Cheers,
+Ben.
 
-	int io_align_shift;             /* P2P I/O bar minimal alignment shift  */
-	int mem_align_shift;            /* P2P MMIO bar minimal alignment shift */
-	int pmem_align_shift;           /* P2P prefetchable MMIO bar minimal alignment shift */
-
-
->> +
->>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->>                                 void (*release_fn)(struct pci_host_bridge *),
->>                                 void *release_data)
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index fefb4e1..6d5bb1c 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -656,7 +656,7 @@ void pcibios_update_irq(struct pci_dev *, int irq);
->>  void pci_fixup_cardbus(struct pci_bus *);
->>
->>  /* Generic PCI functions used internally */
->> -
->> +struct pci_host_bridge *pci_bus_host_bridge(struct pci_bus *bus);
->>  void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
->>                             struct resource *res);
->>  void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->
->have one patch will change parameter all to bus instead of bridge.
->
->http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=3dc90c8f31e5e6153e1ac9a903189d3013690e80
->
->in that case, we can just make find_pci_host_bridge() global.
->
-
-Yeah, I think your patch meets the requirement: access "struct pci_host_bridge",
-and when will you merge your patch into mainline?
-
-By the way, could you please take your a litle bit time to review [PATCH 2/2]?
-
->Thanks
->
->Yinghai
->
-
-Thanks,
-Gavin
 
