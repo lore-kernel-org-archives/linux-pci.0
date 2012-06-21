@@ -1,40 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:33662 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755175Ab2FZE54 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 00:57:56 -0400
-Received: by yenl2 with SMTP id l2so3467857yen.19
-        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2012 21:57:56 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:51004 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755000Ab2FUCnW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 22:43:22 -0400
 MIME-Version: 1.0
-In-Reply-To: <20120626033158.16434.94698.stgit@amt.stowe>
-References: <20120626033045.16434.17412.stgit@amt.stowe> <20120626033158.16434.94698.stgit@amt.stowe>
-From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-Date: Tue, 26 Jun 2012 13:57:25 +0900
-Message-ID: <CABMQnVJcP+BNMbW+VPNTK7DK=QDse1jwRu43pFV9j81_MueOsg@mail.gmail.com>
-Subject: Re: [PATCH 09/16] sh/PCI: Factor 'pcibios_setup()' out of sh
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
-	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
-	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
-	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <4FE22B28.9020402@gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+	<CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
+	<4FE22B28.9020402@gmail.com>
+Date: Wed, 20 Jun 2012 19:43:22 -0700
+Message-ID: <CAE9FiQUkGCQ0Y=n3i=bq388T8N-vrHP2LtMTFGwry2nA+uppwA@mail.gmail.com>
+Subject: Re: SNB PCI root information
+From: Yinghai Lu <yinghai@kernel.org>
+To: Brice Goglin <brice.goglin@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2012/6/26 Myron Stowe <myron.stowe@redhat.com>:
-> The PCI core provides a generic (__weak) 'pcibios_setup()' routine that can
-> be used by all architectures as a default.  Drop sh's architecture specific
-> version in favor of that as it does not need to be over-ridden.
+On Wed, Jun 20, 2012 at 12:57 PM, Brice Goglin <brice.goglin@gmail.com> wrote:
+> Le 20/06/2012 21:28, Yinghai Lu a écrit :
+>> On Wed, Jun 20, 2012 at 11:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> I agree that the most common problem is that _PXM is missing. But I've
+> seen at least some HP Westmere-EP platforms where _PXM exists but it is
+> wrong. Last time we checked, there was no BIOS update, even if we
+> reported the bug a while ago.
+>
+Do you have boot log or acpi dump?
 
-Tested-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+I suspected that could be other problem. intel system before
+sandbridge does not have IIO.
+they will have ioh instead, and one ioh would connect to two cpu sockets.
+but _PXM for root bus in dsdt only can return one value. Aka it is
+acpi spec limitation.
 
--- 
-Nobuhiro Iwamatsu
+for example, Sun x4800 8 sockets server would have bus 00, 40, 80, c0.
+but _PXM will only return 0, 2, 3, 6.
+
+Thanks
+
+Yinghai
