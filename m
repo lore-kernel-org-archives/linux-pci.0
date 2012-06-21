@@ -1,269 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs130.luxsci.com ([72.32.115.17]:56220 "EHLO rs130.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750982Ab2FMIF4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jun 2012 04:05:56 -0400
-Message-ID: <4FD849CF.4030009@firmworks.com>
-Date: Tue, 12 Jun 2012 22:05:35 -1000
-From: Mitch Bradley <wmb@firmworks.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:36150 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753408Ab2FUQWj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 12:22:39 -0400
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7A36B.9090409@wwwdotorg.org> <4FD7B085.1020006@firmworks.com> <20120613064519.GD31001@avionic-0098.mockup.avionic-design.de> <4FD84133.4060401@firmworks.com> <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAOPLpQeOEPECiq_D7WxYMoWk0AbS8vXLJqhm1EPijGdH52TVvQ@mail.gmail.com>
+References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+ <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+ <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+ <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+ <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+ <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+ <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+ <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+ <CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+ <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
+ <20120620193438.GB2248@gmail.com> <CAE9FiQWUo3uffM4NCUORJXR1pdPaf0E1Sws1hwVNAibHg5_yjQ@mail.gmail.com>
+ <CAE9FiQWKxe9VYvrQy5h4RP2dS7YHHXu4icjC+KPipkRKbsZN1g@mail.gmail.com> <CAOPLpQeOEPECiq_D7WxYMoWk0AbS8vXLJqhm1EPijGdH52TVvQ@mail.gmail.com>
+From: Ulrich Drepper <drepper@gmail.com>
+Date: Thu, 21 Jun 2012 12:22:17 -0400
+Message-ID: <CAOPLpQdLSfHn4=zHVYpZMcw1cHPwtV3He-Sxng_yjGKwdpBK8A@mail.gmail.com>
+Subject: Re: SNB PCI root information
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/12/2012 9:52 PM, Thierry Reding wrote:
-> On Tue, Jun 12, 2012 at 09:28:51PM -1000, Mitch Bradley wrote:
->> On 6/12/2012 8:45 PM, Thierry Reding wrote:
->>> * Mitch Bradley wrote:
->>>> On 6/12/2012 10:15 AM, Stephen Warren wrote:
->>>>> On 06/12/2012 11:20 AM, Thierry Reding wrote:
->>>>> ...
->>>>>> I came up with the following alternative:
->>>>>>
->>>>>> 	pci {
->>>>>> 		compatible = "nvidia,tegra20-pcie";
->>>>>> 		reg =<0x80003000 0x00000800   /* PADS registers */
->>>>>> 		       0x80003800 0x00000200   /* AFI registers */
->>>>>> 		       0x80004000 0x00100000   /* configuration space */
->>>>>> 		       0x80104000 0x00100000   /* extended configuration space */
->>>>>> 		       0x80400000 0x00010000   /* downstream I/O */
->>>>>> 		       0x90000000 0x10000000   /* non-prefetchable memory */
->>>>>> 		       0xa0000000 0x10000000>; /* prefetchable memory */
->>>>>> 		interrupts =<0 98 0x04   /* controller interrupt */
->>>>>> 		              0 99 0x04>; /* MSI interrupt */
->>>>>> 		status = "disabled";
->>>>>>
->>>>>> 		ranges =<0x80000000 0x80000000 0x00002000   /* 2 root ports */
->>>>>> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
->>>>>> 			  0x80104000 0x80104000 0x00100000   /* extended configuration space */
->>>>>> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
->>>>>> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
->>>>>> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
->>>>>>
->>>>>> 		#address-cells =<1>;
->>>>>> 		#size-cells =<1>;
->>>>>>
->>>>>> 		port@80000000 {
->>>>>> 			reg =<0x80000000 0x00001000>;
->>>>>> 			status = "disabled";
->>>>>> 		};
->>>>>>
->>>>>> 		port@80001000 {
->>>>>> 			reg =<0x80001000 0x00001000>;
->>>>>> 			status = "disabled";
->>>>>> 		};
->>>>>> 	};
->>>>>>
->>>>>> The "ranges" property can probably be cleaned up a bit, but the most
->>>>>> interesting part is the port@ children, which can simply be enabled in board
->>>>>> DTS files by setting the status property to "okay". I find that somewhat more
->>>>>> intuitive to the variant with an "enable-ports" property.
->>>>>>
->>>>>> What do you think of this?
->>>>>
->>>>> As a general concept, this kind of design seems OK to me.
->>>>>
->>>>> The "port" child nodes I think should be named "pci@..." given Mitch's
->>>>> comments, I think.
->>>>>
->>>>> The port nodes probably need two entries in reg, given the following in
->>>>> our downstream driver:
->>>>>
->>>>>>          int rp_offset = 0;
->>>>>>          int ctrl_offset = AFI_PEX0_CTRL;
->>>>> ...
->>>>>>          for (port = 0; port<    MAX_PCIE_SUPPORTED_PORTS; port++) {
->>>>>>                  ctrl_offset += (port * 8);
->>>>>>                  rp_offset = (rp_offset + 0x1000) * port;
->>>>>>                  if (tegra_pcie.plat_data->port_status[port])
->>>>>>                          tegra_pcie_add_port(port, rp_offset, ctrl_offset);
->>>>>>          }
->>>>>
->>>>> (which actually looks likely to be horribly buggy for port>1 and only
->>>>> accidentally correct for port==1, but anyway...)
->>>>>
->>>>> But instead, I'd be tempted to make the top-level node say:
->>>>>
->>>>> 	#address-cells =<1>;
->>>>> 	#size-cells =<0>;
->>>>>
->>>>> ... so that the child nodes' reg is just the port ID. The parent node
->>>>> can calculate the addresses/offsets of the per-port registers within the
->>>>> PCIe controller's register space based on the ID using code roughly like
->>>>> what I quoted above:
->>>>>
->>>>> 	pci@0 {
->>>>> 		reg =<0>;
->>>>> 		status = "disabled";
->>>>> 	};
->>>>>
->>>>> 	pci@1 {
->>>>> 		reg =<0>;
->>>>> 		status = "disabled";
->>>>> 	};
->>>> reg =<1>   ?
->>>>
->>>>>
->>>>>
->>>>> That would save having to put 2 entries in the reg, and perhaps remove
->>>>> the need for any ranges property.
->>>>
->>>> ISTM that having two reg entries, specifying the rp and ctrl
->>>> registers, is preferable to having code to calculate the addresses.
->>>> That makes the code simpler and the device tree more directly
->>>> descriptive of the hardware layout.  The less "magic" (in this case,
->>>> the register address calculation), the better.
->>>
->>> The problem with this approach is that since the control registers are
->>> within the AFI register range, both the reg and ranges properties of the
->>> parent would have to include these holes. Furthermore it means that the
->>> controller driver would have to remap the AFI registers in chunks, for the
->>> sole reason of splitting out the controle registers.
->>>
->>> Would it be acceptable to make an exception in this case and use the port's
->>> second reg entry as an offset into the AFI register range instead?
->>
->> How about this:
->>
->>      pcie-controller {
->>          compatible = "nvidia,tegra20-pcie";
->>          reg =<0x80003000 0x00000800   /* PADS registers */
->>                0x80003800 0x00000200>    /* AFI registers */
->>          interrupts =<0 98 0x04   /* controller interrupt */
->>                       0 99 0x04>; /* MSI interrupt */
->>          status = "disabled";
->>
->>          ranges =<0x80000000 0x80000000 0x00002000   /* 2 root ports */
->>                0x80004000 0x80004000 0x00100000   /* configuration space */
->>                0x80104000 0x80104000 0x00100000   /* extended
->> configuration space */
->>                0x80400000 0x80400000 0x00010000   /* downstream I/O */
->>                0x90000000 0x90000000 0x10000000   /* non-prefetchable
->> memory */
->>                0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
+On Thu, Jun 21, 2012 at 8:17 AM, Ulrich Drepper <drepper@gmail.com> wrote:
+> On Wed, Jun 20, 2012 at 11:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> please check -v3, and it will add 40 lines.
 >
-> I think the configuration spaces and downstream I/O ranges need to be in the
-> pcie-controller's reg property because they are remapped and used by the
-> controller driver, not by the individual ports.
+> Won't this version print out something like
 >
-> That's probably not really necessary but rather a result of how the driver
-> was written. Perhaps the driver should handle them differently instead,
-> listing the regions in the ranges property of the parent and listing the
-> corresponding partitions in the ranges properties of the pci child nodes.
->
-> Like in the following, where the ranges property of the ports partition the
-> ranges passed from the parent evenly:
->
-> 	pcie-controller {
-> 		compatible = "nvidia,tegra20-pcie";
-> 		reg =<0x80003000 0x00000800   /* PADS registers */
-> 		       0x80003800 0x00000200>; /* AFI registers */
-> 		interrupts =<0 98 0x04   /* controller interrupt */
-> 			      0 99 0x04>; /* MSI interrupt */
-> 		status = "disabled";
->
-> 		ranges =<0x80000000 0x80000000 0x00002000   /* 2 root ports */
-> 			  0x80004000 0x80004000 0x00100000   /* configuration space */
-> 			  0x80104000 0x80100000 0x00100000   /* extended configuration space */
-> 			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
-> 			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
-> 			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
->
-> 		#address-cells =<1>;
-> 		#size-cells =<1>;
->
-> 		pci@80000000 {
-> 			reg =<0x80000000 0x00001000>;
-> 			status = "disabled";
->
-> 			#address-cells =<3>;
-> 			#size-cells =<2>;
->
-> 			ranges =<0x80400000 0x80400000 0x00008000   /* I/O */
-> 				  0x90000000 0x90000000 0x08000000   /* non-prefetchable memory */
-> 				  0xa0000000 0xa0000000 0x08000000>; /* prefetchable memory */
+>  PCI: unknown option `busnum_node=xx:yy'
 
-You are on the right track here, but the format of the child-address 
-portion of the above ranges property is incorrect.  Since the child 
-address space is the PCI address space, the child-address portion needs 
-to be 3 cells.  It's not a linear address but rather a triple.  The 
-first cell identifies the address type (config, I/O, memory..) and the 
-second and third cells are offsets within that subspace.  The second and 
-third cells will typically be 0.  The PCI binding has details.
+It does.
 
->
->
-> 			nvidia,ctrl-offset =<0x0>;
-> 			nvidia,num-lanes =<2>;
-> 		};
->
-> 		pci@80001000 {
-> 			reg =<0x80001000 0x00001000>;
-> 			status = "disabled";
->
-> 			#address-cells =<3>;
-> 			#size-cells =<2>;
->
-> 			ranges =<0x80408000 0x80408000 0x00008000   /* I/O */
-> 				  0x98000000 0x98000000 0x08000000   /* non-prefetchable memory */
-> 				  0xa8000000 0xa8000000 0x08000000>; /* prefetchable memory */
->
-> 			nvidia,ctrl-offset =<0x8>;
-> 			nvidia,num-lanes =<2>;
-> 		};
-> 	};
->
-> I've also added the new num-lanes property that describes the physical
-> connections of the port. Also the ctrl-offset and num-lanes property are
-> pretty specific to the Tegra PCIe controller, so I've prefixed them with
-> "nvidia,".
->
->>
->>          #address-cells =<1>;
->>          #size-cells =<1>;
->>
->>          pci@80000000 {
->>              reg =<0x80000000 0x00001000>;
->>              ctrl-offset =<0x0>;
->>              status = "disabled";
->>              #address-cells =<3>;  /* Standard for PCI */
->>              #size-cells =<2>;      /* Standard for PCI */
->>              ranges =</* Map from standard PCI child address spaces
->> to linear spaces above */>;
->>          };
->>
->>          pci@80001000 {
->>              reg =<0x80001000 0x00001000>;
->>              ctrl-offset =<0x8>;
->>              status = "disabled";
->>              #address-cells =<3>;  /* Standard for PCI */
->>              #size-cells =<2>;      /* Standard for PCI */
->>              ranges =</* Map from standard PCI child address spaces
->> to linear spaces above */>;
->>          };
->>      };
->>
->> Using ctrl-offset instead of reg avoids any violation of the usual
->> reg semantics.
->
-> Yes, that sounds better.
->
->>
->> Note that the pci subnodes need the full complement of PCI bus node
->> properties.
->>
->>>
->>>
->>> Thierry
->>
+If you apply the following patch on top of your version 3 patch it
+seems to work and is slightly more efficient.
+
+
+Signed-off-by: Ulrich Drepper <drepper@gmail.com>
+
+diff -u b/arch/x86/pci/common.c b/arch/x86/pci/common.c
+--- b/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -494,16 +494,22 @@
+ 	return 0;
+ }
+
++static const char *busnum_node_param;
++
++static void remember_busnum_node(const char *str)
++{
++	busnum_node_param = str;
++}
++
+ int get_user_busnum_node(int busnum)
+ {
+ 	int bus, node, count;
+-	char *p;
++	const char *p;
+
+-	p = strstr(boot_command_line, "busnum_node=");
++	p = busnum_node_param;
+ 	if (!p)
+ 		return -1;
+
+-	p += 12; /* strlen("busnum_node=") */
+ 	while (*p) {
+ 		count = 0;
+ 		if (sscanf(p, "%x:%x%n", &bus, &node, &count) != 2) {
+@@ -607,6 +613,9 @@
+ 	} else if (!strcmp(str, "nocrs")) {
+ 		pci_probe |= PCI_ROOT_NO_CRS;
+ 		return NULL;
++	} else if (!strncmp(str, "busnum_node=", 12)) {
++		remember_busnum_node(str + 12);
++		return NULL;
+ 	} else if (!strcmp(str, "earlydump")) {
+ 		pci_early_dump_regs = 1;
+ 		return NULL;
