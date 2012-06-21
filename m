@@ -1,59 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120621202435.16865.1340.stgit@amt.stowe>
-References: <20120621202415.16865.6226.stgit@amt.stowe> <20120621202435.16865.1340.stgit@amt.stowe>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 26 Jun 2012 16:33:12 -0600
-Message-ID: <CAErSpo5yNxjjBVaTXjAKCY4SfRWj7uXK2cS3BtkugmoF4fYn6g@mail.gmail.com>
-Subject: Re: [PATCH 3/9] arm/PCI: move final fixup quirks from __init to __devinit
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
-	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:38636 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759835Ab2FUXr6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Jun 2012 19:47:58 -0400
+Subject: [PATCH] pci: support alignments upto 8Gb in pbus_size_mem()
+From: Nikhil P Rao <nikhil.rao@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>, nikhil.rao@intel.com
+In-Reply-To: <1340222160.77018.19.camel@localhost.localdomain>
+References: <1340222160.77018.19.camel@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 21 Jun 2012 16:47:57 -0700
+Message-ID: <1340322477.56127.2.camel@localhost.localdomain>
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 2:24 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> The PCI subsystem's final fixups are executed once during boot, after the
-> pci-device is found.  As long as the system does not support hot-plug,
-> specifying __init is fine.
->
-> With hot-plug, either physically based hot-plug events or pseudo hot-plug
-> events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
-> PCI bus during run time and have it rediscovered which will require the
-> call of the fixups again in order for the device to function properly.
->
-> This patch prepares specific quirk(s) for use with hot-plug events.
->
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> ---
->
->  arch/arm/mach-iop32x/n2100.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/arch/arm/mach-iop32x/n2100.c b/arch/arm/mach-iop32x/n2100.c
-> index 5a7ae91..04c4110 100644
-> --- a/arch/arm/mach-iop32x/n2100.c
-> +++ b/arch/arm/mach-iop32x/n2100.c
-> @@ -126,7 +126,7 @@ static struct hw_pci n2100_pci __initdata = {
->  * the ->broken_parity_status flag for both ports so that the r8169
->  * driver knows it should ignore error interrupts.
->  */
-> -static void n2100_fixup_r8169(struct pci_dev *dev)
-> +static void __devinit n2100_fixup_r8169(struct pci_dev *dev)
+I ran into the "disabling BAR .." error message when
+trying to use a 8Gb PCIe card on a system with a BIOS
+that didnt have support for BAR size > 2Gb. This patch fixed
+the problem, but I also see the code reading the IORESOURCE_MEM_64
+flag so I am not sure what the right solution is
 
-These actually move functions from normal text to __devinit, not from
-__init to __devinit.
+Signed-off-by: Nikhil P Rao <nikhil.rao@intel.com>
+---
+ drivers/pci/setup-bus.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-That should be safe for most quirks (although enable, suspend, resume,
-and resume_early quirks can be called after we free initmem, even if
-we have CONFIG_HOTPLUG=n), but given the discussion about whether we
-should even bother with __devinit any more, I think I'll hold off on
-these for now.  If we were to get rid of __devinit, these would all
-have to revert to being normal text.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8fa2d4b..3b3601f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -780,7 +780,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_align, align, size, size0, size1;
+-	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
++	resource_size_t aligns[14];	/* Alignments from 1Mb to 8Gb */
+ 	int order, max_order;
+ 	struct resource *b_res = find_free_bus_resource(bus, type);
+ 	unsigned int mem64_mask = 0;
+@@ -819,7 +819,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* For bridges size != alignment */
+ 			align = pci_resource_alignment(dev, r);
+ 			order = __ffs(align) - 20;
+-			if (order > 11) {
++			if (order >= ARRAY_SIZE(aligns)) {
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR "
+ 					 "(bad alignment %#llx)\n", i, r,
+ 					 (unsigned long long) align);
+-- 
+1.7.1
 
->  {
->        if (dev->bus->number == 0 &&
->            (dev->devfn == PCI_DEVFN(1, 0) ||
->
+
+
