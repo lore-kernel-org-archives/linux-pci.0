@@ -1,47 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:58895 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752995Ab2FLB1m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 21:27:42 -0400
-Received: by lahd3 with SMTP id d3so3163455lah.19
-        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 18:27:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6ybFiBDx6M69HqyPDkU6VQGRe=1yOhH4He5XRje5GBnw@mail.gmail.com>
-References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc> <CAErSpo6ybFiBDx6M69HqyPDkU6VQGRe=1yOhH4He5XRje5GBnw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 11 Jun 2012 19:27:20 -0600
-Message-ID: <CAErSpo62mT5Ng-03G+-Gh1dBvvtdLLhK8EuzdN+UxjObQ=_cdA@mail.gmail.com>
-Subject: Re: Annotate PCI fixups with __devinit instead of __init
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: linux-pci@vger.kernel.org, linux-kbuild@vger.kernel.org,
-	Michal Marek <mmarek@suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nat28.tlf.novell.com ([130.57.49.28]:56523 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757096Ab2FUMGR convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:7:1>);
+	Thu, 21 Jun 2012 08:06:17 -0400
+Message-Id: <4FE32A81020000780008B11B@nat28.tlf.novell.com>
+Date: Thu, 21 Jun 2012 13:06:57 +0100
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Wei Wang" <wei.wang2@amd.com>
+Cc: "SherryHurwitz" <sherry.hurwitz@amd.com>,
+	"Andrew Cooper" <andrew.cooper3@citrix.com>,
+	"Jeremy Fitzhardinge" <jeremy@goop.org>, <stable@kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"KonradRzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<linux-pci@vger.kernel.org>,
+	"Jesse Barnes" <jbarnes@virtuousgeek.org>, <ebiederm@xmission.com>
+Subject: Re: [PATCH] PCI/MSI: don't disable AMD IOMMU MSI on Xen dom0
+References: <4FD72FE4.80009@amd.com>
+ <4FD778C802000078000897EF@nat28.tlf.novell.com>
+ <4FD76976.2020203@citrix.com>
+ <4FD78DE6020000780008986D@nat28.tlf.novell.com> <4FD9D559.9050206@amd.com>
+ <4FDA0ECD0200007800089FEA@nat28.tlf.novell.com> <4FDA0028.3090609@amd.com>
+ <4FE30CBB020000780008B06B@nat28.tlf.novell.com> <4FE303C4.3060705@amd.com>
+In-Reply-To: <4FE303C4.3060705@amd.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 3, 2012 at 7:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sun, Jun 3, 2012 at 11:48 AM, Sebastian Andrzej Siewior
-> <sebastian@breakpoint.cc> wrote:
->> This patch series adds a section missmatch check to modpost which will
->> splat a warning if a PCI fixup routine (declared via
->> DECLARE_PCI_FIXUP_HEADER for instance) is defined in __init. Even if the
->> platform does not support hot-plug, one could remove the PCI bus during
->> run time (soft remove, now HW touching involved) and rediscover it again.
->> The rediscover process will call the PCI-fixups again.
->> This is patch #1. After posting it Bjorn ask for fixing the noisy warnings
->> and this is done by patch #2 to #9.
->
-> These all look good to me.
->
-> There's not a real dependency between #1 and the rest of them, so I
-> propose that I feed #2-9 through the PCI tree and whoever normally
-> handles modpost can take #1.
+>>> On 21.06.12 at 13:21, Wei Wang <wei.wang2@amd.com> wrote:
+> On 06/21/2012 11:59 AM, Jan Beulich wrote:
+>>>>> On 14.06.12 at 17:15, Wei Wang<wei.wang2@amd.com>  wrote:
+>>> Am 14.06.2012 16:18, schrieb Jan Beulich:
+>>>> Have you at all considered getting this fixed on the kernel side?
+>>>> As I don't have direct access to any AMD IOMMU capable
+>>>> system - can one, other than by enumerating the respective
+>>>> PCI IDs or reading ACPI tables, reasonably easily identify the
+>>>> devices in question (e.g. via vendor/class/sub-class or some
+>>>> such)? That might permit skipping those in the offending kernel
+>>>> code...
+>>>
+>>> AMD IOMMUs (both v1 and v2) uses class id 08 (System Base Peripheral)
+>>> and sub class id 06 (IOMMU). Combined with PCI_VENDEOR_ID_AMD, this
+>>> should be enough to identify amd iommu device. I could send you a kernel
+>>> patch for review using this approach. I would believe that fixing this
+>>> issue in 4.2, no matter how, is really important for amd iommu.
+>>
+>> As you didn't come forward with anything, here's my first
+>> take on this:
+> 
+> Hi Jan
+> Thanks a lot for the patch. Actually I plan to send my version today, 
+> which is based on 3.4 pv_ops but looks very similar to yours. So, Acked!
+> 
+> I also evaluated the possibility of hiding iommu device from dom0. I 
+> think the change is no quite a lot, at least, for io based pcicfg 
+> access. A proof-of-concept patch is attached.
 
-I put all these, including #1, in my "next" branch, which should
-appear in v3.6.  If somebody wants to push the modpost change
-separately, I'll remove it, but since nobody objected or stepped up to
-claim it, I just kept them all together.
+This completely hides the device from Dom0, but only when
+config space is accessed via method 1. Did you not see my
+earlier patch doing this for MCFG as well (albeit only disallowing
+writes, so allowing the device to still be seen by Dom0)?
 
-Thanks for doing this work!
+Whether completely hiding the device is actually okay I can't
+easily tell: Would IOMMUs always be either at func 0 of a single-
+unction device, or at a non-zero func of a multi-function one? If
+not, other devices may get hidden implicitly.
 
-Bjorn
+Also I noticed just now that guest_io_read() wouldn't really
+behave correctly when pci_cfg_ok() returned false - it might
+pass back 0xff even for a multi-byte read. I'll send a fix shortly.
+
+Jan
+
+> --- a/xen/arch/x86/traps.c      Thu Jun 21 11:30:59 2012 +0200
+> +++ b/xen/arch/x86/traps.c      Thu Jun 21 13:19:02 2012 +0200
+> @@ -73,6 +73,7 @@
+>   #include <asm/hpet.h>
+>   #include <public/arch-x86/cpuid.h>
+>   #include <xsm/xsm.h>
+> +#include <asm/hvm/svm/amd-iommu-proto.h>
+> 
+>   /*
+>    * opt_nmi: one of 'ignore', 'dom0', or 'fatal'.
+> @@ -1686,10 +1687,19 @@ static int pci_cfg_ok(struct domain *d,
+>   {
+>       uint32_t machine_bdf;
+>       uint16_t start, end;
+> +    struct amd_iommu *iommu;
+> +
+>       if (!IS_PRIV(d))
+>           return 0;
+> 
+>       machine_bdf = (d->arch.pci_cf8 >> 8) & 0xFFFF;
+> +
+> +    for_each_amd_iommu ( iommu )
+> +    {
+> +        if ( machine_bdf == iommu->bdf )
+> +            return 0;
+> +    }
+> +
+>       start = d->arch.pci_cf8 & 0xFF;
+>       end = start + size - 1;
+>       if (xsm_pci_config_permission(d, machine_bdf, start, end, write))
+
+
