@@ -1,84 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:33141 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754452Ab2FTURB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 16:17:01 -0400
-Received: by lbbgm6 with SMTP id gm6so1082067lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 13:16:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOPLpQdi-8NZL1rwt3APU_is4GcyGaAN0Vq0T23BMSHob--YYg@mail.gmail.com>
-References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
- <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
- <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
- <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
- <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
- <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
- <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
- <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
- <CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
- <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
- <20120620193438.GB2248@gmail.com> <CAOPLpQdi-8NZL1rwt3APU_is4GcyGaAN0Vq0T23BMSHob--YYg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 Jun 2012 14:16:38 -0600
-Message-ID: <CAErSpo6AyMqWXU6+jGVEqno-qbjAUmrpcc7=hN-Yo5YCfCvCCg@mail.gmail.com>
-Subject: Re: SNB PCI root information
-To: Ulrich Drepper <drepper@gmail.com>
-Cc: Ingo Molnar <mingo@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:36158 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932375Ab2FUJg5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:36:57 -0400
+Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 171A73EE081
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:36:57 +0900 (JST)
+Received: from smail (m4 [127.0.0.1])
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id F21BB45DE54
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:36:56 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id D8A2045DE51
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:36:56 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id C98501DB803B
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:36:56 +0900 (JST)
+Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 80E72E18004
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:36:56 +0900 (JST)
+Date: Thu, 21 Jun 2012 18:37:06 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH 1/4] acpi, pci: introduce list for acpi_pci_root drivers
+Message-Id: <20120621183706.b5e4417d.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120621183430.2b84fb53.izumi.taku@jp.fujitsu.com>
+References: <20120621183430.2b84fb53.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 2:04 PM, Ulrich Drepper <drepper@gmail.com> wrote:
-> On Wed, Jun 20, 2012 at 3:34 PM, Ingo Molnar <mingo@kernel.org> wrote:
->> I mean, if we create a parameter space that tweaks data then why
->> not make it complete and allow *all* firmware data to be
->> (optionally) modified, from the kernel boot line?
->
-> If there is proof that BIOSes get it wrong then just use this small
-> additional patch:
+Use struct list_head for pci root sub drivers manipulation. This has
+no functional change.
 
-It's not a question of "do BIOSes get this wrong?"  The question is
-"what does a user expect to happen when she supplies
-'pci=busnum_node=00:00,80:01'?"  I contend that the user expects us to
-use that info whether the BIOS gave us correct info, wrong info, or
-nothing at all.
+Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+---
+ drivers/acpi/pci_root.c |   17 +++--------------
+ include/linux/acpi.h    |    2 +-
+ 2 files changed, 4 insertions(+), 15 deletions(-)
 
-Normally I'd be glad to munge this all together myself, but I'm
-feeling a bit swamped, so if anybody wants this, it would help me out
-to get a single complete patch.
+Index: linux/drivers/acpi/pci_root.c
+===================================================================
+--- linux.orig/drivers/acpi/pci_root.c
++++ linux/drivers/acpi/pci_root.c
+@@ -72,8 +72,8 @@ static struct acpi_driver acpi_pci_root_
+ };
+ 
+ static LIST_HEAD(acpi_pci_roots);
++static LIST_HEAD(acpi_pci_drivers);
+ 
+-static struct acpi_pci_driver *sub_driver;
+ static DEFINE_MUTEX(osc_lock);
+ 
+ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+@@ -81,10 +81,7 @@ int acpi_pci_register_driver(struct acpi
+ 	int n = 0;
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr)
+-		pptr = &(*pptr)->next;
+-	*pptr = driver;
++	list_add(&driver->list, &acpi_pci_drivers);
+ 
+ 	if (!driver->add)
+ 		return 0;
+@@ -93,7 +90,6 @@ int acpi_pci_register_driver(struct acpi
+ 		driver->add(root->device->handle);
+ 		n++;
+ 	}
+-
+ 	return n;
+ }
+ 
+@@ -103,14 +99,7 @@ void acpi_pci_unregister_driver(struct a
+ {
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr) {
+-		if (*pptr == driver)
+-			break;
+-		pptr = &(*pptr)->next;
+-	}
+-	BUG_ON(!*pptr);
+-	*pptr = (*pptr)->next;
++	list_del(&driver->list);
+ 
+ 	if (!driver->remove)
+ 		return;
+Index: linux/include/linux/acpi.h
+===================================================================
+--- linux.orig/include/linux/acpi.h
++++ linux/include/linux/acpi.h
+@@ -138,7 +138,7 @@ void acpi_penalize_isa_irq(int irq, int 
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ struct acpi_pci_driver {
+-	struct acpi_pci_driver *next;
++	struct list_head list;
+ 	int (*add)(acpi_handle handle);
+ 	void (*remove)(acpi_handle handle);
+ };
 
-> Signed-off-by: Ulrich Drepper <drepper@gmail.com>
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index fc09c27..7aceb84 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -387,16 +387,16 @@ struct pci_bus * __devinit
-> pci_acpi_scan_root(struct acpi_pci_root *root)
->                return NULL;
->        }
->
-> -       node = -1;
-> +       node = get_mp_bus_to_node(busnum);
->  #ifdef CONFIG_ACPI_NUMA
-> -       pxm = acpi_get_pxm(device->handle);
-> -       if (pxm >= 0)
-> -               node = pxm_to_node(pxm);
-> -       if (node != -1)
-> -               set_mp_bus_to_node(busnum, node);
-> -       else
-> +       if (node == -1) {
-> +               pxm = acpi_get_pxm(device->handle);
-> +               if (pxm >= 0)
-> +                       node = pxm_to_node(pxm);
-> +               if (node != -1)
-> +                       set_mp_bus_to_node(busnum, node);
-> +       }
->  #endif
-> -               node = get_mp_bus_to_node(busnum);
->
->        if (node != -1 && !node_online(node))
->                node = -1;
