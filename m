@@ -1,98 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 2/4] PCI: Remove redundant checking in PCI Express capability
-	routines
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
-Date: Fri, 01 Jun 2012 15:16:31 -0600
-Message-ID: <20120601211631.20328.53913.stgit@amt.stowe>
-In-Reply-To: <20120601211619.20328.36769.stgit@amt.stowe>
-References: <20120601211619.20328.36769.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:37904 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759173Ab2FUJjd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:39:33 -0400
+Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id E5D123EE0BC
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:39:32 +0900 (JST)
+Received: from smail (m1 [127.0.0.1])
+	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id C783245DE5B
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:39:32 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
+	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id AE49245DE56
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:39:32 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 9A0C51DB8050
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:39:32 +0900 (JST)
+Received: from m0000.s.css.fujitsu.com (m0000.s.css.fujitsu.com [10.23.4.183])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 55EB01DB804D
+	for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 18:39:32 +0900 (JST)
+Date: Thu, 21 Jun 2012 18:39:44 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH 4/4] acpi, pci: add resoruce-assign code for devices under
+ hot-added hostbridge
+Message-Id: <20120621183944.a769aabe.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120621183430.2b84fb53.izumi.taku@jp.fujitsu.com>
+References: <20120621183430.2b84fb53.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are a number of redundant pci_is_pcie() checks in various PCI
-Express capabilities related routines like the following:
 
-    if (!pci_is_pcie(dev))
-	return false;
+Devices under hot-added hostbridge have no chance to assign resources
+and to configure them, so this patch adds such code for hot-added 
+hostbridges at acpi_pci_root_start().
 
-    pos = pci_pcie_cap(dev);
-    if (!pos)
-	return false;
-
-The current pci_is_pcie() implementation is merely:
-
-    static inline bool pci_is_pcie(struct pci_dev *dev)
-    {
-        return !!pci_pcie_cap(dev);
-    }
-
-so we can just drop the pci_is_pcie() test in such cases.
-
-Suggested by Bjorn Helgaas in -
-http://marc.info/?l=linux-pci&m=130463494319762&w=2
-
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
 ---
+ drivers/acpi/pci_root.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
- drivers/pci/pci.c |   14 +-------------
- 1 files changed, 1 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 64471b1..ff0beb0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1995,7 +1995,7 @@ void pci_enable_ari(struct pci_dev *dev)
- 		return;
+Index: linux/drivers/acpi/pci_root.c
+===================================================================
+--- linux.orig/drivers/acpi/pci_root.c
++++ linux/drivers/acpi/pci_root.c
+@@ -38,6 +38,7 @@
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_drivers.h>
+ #include <acpi/apei.h>
++#include <linux/pci_hotplug.h>
  
- 	bridge = dev->bus->self;
--	if (!bridge || !pci_is_pcie(bridge))
-+	if (!bridge)
- 		return;
+ #define PREFIX "ACPI: "
  
- 	pos = pci_pcie_cap(bridge);
-@@ -2055,9 +2055,6 @@ void pci_disable_ido(struct pci_dev *dev, unsigned long type)
- 	int pos;
- 	u16 ctrl;
+@@ -644,6 +645,19 @@ end:
+ static int acpi_pci_root_start(struct acpi_device *device)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
++	struct pci_dev *pdev;
++
++	/*
++	 * Devices under hot-added hostbridge have no chance to assign
++	 * resources and to configure them, so do that here
++	 */
++	if (system_state != SYSTEM_BOOTING) {
++		pci_bus_size_bridges(root->bus);
++		pci_bus_assign_resources(root->bus);
++		list_for_each_entry(pdev, &root->bus->devices, bus_list)
++			pci_configure_slot(pdev);
++		pci_enable_bridges(root->bus);
++	}
  
--	if (!pci_is_pcie(dev))
--		return;
--
- 	pos = pci_pcie_cap(dev);
- 	if (!pos)
- 		return;
-@@ -2097,9 +2094,6 @@ int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
- 	u16 ctrl;
- 	int ret;
- 
--	if (!pci_is_pcie(dev))
--		return -ENOTSUPP;
--
- 	pos = pci_pcie_cap(dev);
- 	if (!pos)
- 		return -ENOTSUPP;
-@@ -2150,9 +2144,6 @@ void pci_disable_obff(struct pci_dev *dev)
- 	int pos;
- 	u16 ctrl;
- 
--	if (!pci_is_pcie(dev))
--		return;
--
- 	pos = pci_pcie_cap(dev);
- 	if (!pos)
- 		return;
-@@ -2175,9 +2166,6 @@ static bool pci_ltr_supported(struct pci_dev *dev)
- 	int pos;
- 	u32 cap;
- 
--	if (!pci_is_pcie(dev))
--		return false;
--
- 	pos = pci_pcie_cap(dev);
- 	if (!pos)
- 		return false;
+ 	pci_bus_add_devices(root->bus);
+ 	return 0;
 
