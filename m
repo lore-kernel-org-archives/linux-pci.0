@@ -1,52 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:35182 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754021Ab2FSMgm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 08:36:42 -0400
-Received: by lbbgm6 with SMTP id gm6so5702642lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 19 Jun 2012 05:36:40 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30769 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759240Ab2FUJ40 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:56:26 -0400
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v9 01/11] x86/PCI: split out pci_mmcfg_check_reserved() for code reuse
+Date: Thu, 21 Jun 2012 17:36:53 +0800
+Message-ID: <1340271423-4352-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
-References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
- <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
- <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
- <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com> <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 19 Jun 2012 06:36:20 -0600
-Message-ID: <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
-Subject: Re: SNB PCI root information
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 18, 2012 at 5:40 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Jun 18, 2012 at 3:30 PM, Ulrich Drepper <drepper@gmail.com> wrote:
->> On Sat, Jun 16, 2012 at 5:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> If ACPI provides a perfectly usable generic way to describe this
->>> topology and the vendor BIOS doesn't bother to use it, I'm not very
->>> interested in trying to compensate for that BIOS deficiency by adding
->>> a bunch of non-portable CPU-specific gunk to Linux.
->>
->> The problem is that all machines get this wrong.  I've tested varies
->> models from Dell and HP and none of them have the _PXM entry and the
->> local_cpus fields are wrong.  If there is a reasonably sane way to
->> compensate for broken BIOSes it should be considered.  We all know how
->> good BIOS authors are...
->
-> please check attached one. and  you may append "pci=busnum_node=00:00,80:01"
-> to change node for root bus.
-> assume you have two root bus: 00, 80
+Split out pci_mmcfg_check_reserved() for code reuse, which will be used
+when supporting PCI host bridge hotplug.
 
-I'm not opposed to something like this, if people think it's useful.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   51 +++++++++++++++++++--------------------
+ 1 files changed, 25 insertions(+), 26 deletions(-)
 
-This patch sets the node quite early, before we even look at the _PXM
-information in pci_acpi_scan_root().  That means if the BIOS does
-supply a _PXM method and the user gives this argument, the
-user-supplied info is silently overwritten.  To me it would make more
-sense to handle an option like this *after* we look for _PXM info.
-That way it could be used to compensate for both missing and incorrect
-_PXM info.
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 301e325..f799949 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -474,39 +474,38 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+ 	return valid;
+ }
+ 
++static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
++					      int early)
++{
++	if (!early && !acpi_disabled) {
++		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
++			return 1;
++		else
++			printk(KERN_ERR FW_BUG PREFIX
++			       "MMCONFIG at %pR not reserved in "
++			       "ACPI motherboard resources\n",
++			       &cfg->res);
++	}
++
++	/* Don't try to do this check unless configuration
++	   type 1 is available. how about type 2 ?*/
++	if (raw_pci_ops)
++		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
++
++	return 0;
++}
++
+ static void __init pci_mmcfg_reject_broken(int early)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		int valid = 0;
+-
+-		if (!early && !acpi_disabled) {
+-			valid = is_mmconf_reserved(is_acpi_reserved, cfg, 0);
+-
+-			if (valid)
+-				continue;
+-			else
+-				printk(KERN_ERR FW_BUG PREFIX
+-				       "MMCONFIG at %pR not reserved in "
+-				       "ACPI motherboard resources\n",
+-				       &cfg->res);
++		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
++			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
++			free_all_mmcfg();
++			return;
+ 		}
+-
+-		/* Don't try to do this check unless configuration
+-		   type 1 is available. how about type 2 ?*/
+-		if (raw_pci_ops)
+-			valid = is_mmconf_reserved(e820_all_mapped, cfg, 1);
+-
+-		if (!valid)
+-			goto reject;
+ 	}
+-
+-	return;
+-
+-reject:
+-	printk(KERN_INFO PREFIX "not using MMCONFIG\n");
+-	free_all_mmcfg();
+ }
+ 
+ static int __initdata known_bridge;
+-- 
+1.7.1
+
+
