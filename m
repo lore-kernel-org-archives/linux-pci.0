@@ -1,47 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 3/9] arm/PCI: move final fixup quirks from __init to __devinit
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
-	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, linux-kernel@vger.kernel.org
-Date: Thu, 21 Jun 2012 14:24:35 -0600
-Message-ID: <20120621202435.16865.1340.stgit@amt.stowe>
-In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
-References: <20120621202415.16865.6226.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:39751 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754143Ab2FUCh6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 22:37:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20120620193438.GB2248@gmail.com>
+References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
+	<20120620193438.GB2248@gmail.com>
+Date: Wed, 20 Jun 2012 19:37:57 -0700
+Message-ID: <CAE9FiQWUo3uffM4NCUORJXR1pdPaf0E1Sws1hwVNAibHg5_yjQ@mail.gmail.com>
+Subject: Re: SNB PCI root information
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI subsystem's final fixups are executed once during boot, after the
-pci-device is found.  As long as the system does not support hot-plug,
-specifying __init is fine.
+On Wed, Jun 20, 2012 at 12:34 PM, Ingo Molnar <mingo@kernel.org> wrote:
+>> if the vendor provide _PXM, that _PXM should be right and be
+>> trusted.
+>>
+>> if the vendor does not provide _PXM, we can have command line
+>> to input it before user can get one updated BIOS from vendor.
+>
+> So how about an incorrect _PXM, or a slightly inefficient one?
+> Why shouldn't it be possible for the user to override it?
 
-With hot-plug, either physically based hot-plug events or pseudo hot-plug
-events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
-PCI bus during run time and have it rediscovered which will require the
-call of the fixups again in order for the device to function properly.
+Try to keep the code simple.
 
-This patch prepares specific quirk(s) for use with hot-plug events.
+>
+> I mean, if we create a parameter space that tweaks data then why
+> not make it complete and allow *all* firmware data to be
+> (optionally) modified, from the kernel boot line?
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+that pxm/node for pci device should be consistent with srat table etc,
+so better solution is that BIOS keep them consistent.
 
- arch/arm/mach-iop32x/n2100.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+If BIOS provide _PXM for pci device, the _PXM should have more chance
+to be right.
 
-diff --git a/arch/arm/mach-iop32x/n2100.c b/arch/arm/mach-iop32x/n2100.c
-index 5a7ae91..04c4110 100644
---- a/arch/arm/mach-iop32x/n2100.c
-+++ b/arch/arm/mach-iop32x/n2100.c
-@@ -126,7 +126,7 @@ static struct hw_pci n2100_pci __initdata = {
-  * the ->broken_parity_status flag for both ports so that the r8169
-  * driver knows it should ignore error interrupts.
-  */
--static void n2100_fixup_r8169(struct pci_dev *dev)
-+static void __devinit n2100_fixup_r8169(struct pci_dev *dev)
- {
- 	if (dev->bus->number == 0 &&
- 	    (dev->devfn == PCI_DEVFN(1, 0) ||
+Anyway if you insist that it should cover that wrong case, let me
+check if it could be done simply.
 
+Thanks
+
+Yinghai
