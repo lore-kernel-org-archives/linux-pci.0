@@ -1,146 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([58.251.152.67]:52176 "EHLO
-	szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756252Ab2FDFSr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2012 01:18:47 -0400
-Date: Mon, 04 Jun 2012 13:17:02 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: [RFC PATCH v1 6/6] PCI: update AER configuration when PCI hotplug
- event happens
-In-reply-to: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-id: <1338787022-400-6-git-send-email-jiang.liu@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain
-References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:6438 "EHLO
+	mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755344Ab2FUF41 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 01:56:27 -0400
+Message-ID: <4FE2B788.3070505@gmail.com>
+Date: Thu, 21 Jun 2012 07:56:24 +0200
+From: Brice Goglin <brice.goglin@gmail.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: SNB PCI root information
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com> <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com> <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com> <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com> <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com> <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com> <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com> <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com> <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com> <CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com> <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com> <4FE22B28.9020402@gmail.com> <CAE9FiQUkGCQ0Y=n3i=bq388T8N-vrHP2LtMTFGwry2nA+uppwA@mail.gmail.com>
+In-Reply-To: <CAE9FiQUkGCQ0Y=n3i=bq388T8N-vrHP2LtMTFGwry2nA+uppwA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+Le 21/06/2012 04:43, Yinghai Lu a écrit :
+> On Wed, Jun 20, 2012 at 12:57 PM, Brice Goglin <brice.goglin@gmail.com> wrote:
+>> Le 20/06/2012 21:28, Yinghai Lu a écrit :
+>>> On Wed, Jun 20, 2012 at 11:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> I agree that the most common problem is that _PXM is missing. But I've
+>> seen at least some HP Westmere-EP platforms where _PXM exists but it is
+>> wrong. Last time we checked, there was no BIOS update, even if we
+>> reported the bug a while ago.
+>>
+> Do you have boot log or acpi dump?
+>
+> I suspected that could be other problem. intel system before
+> sandbridge does not have IIO.
+> they will have ioh instead, and one ioh would connect to two cpu sockets.
+> but _PXM for root bus in dsdt only can return one value. Aka it is
+> acpi spec limitation.
 
-The AER driver only configures downstream PCIe devices at driver
-binding time and all hot-added PCIe devices won't be managed by
-the AER driver.  So hook PCI device hotplug events to setup AER
-configuration for hot-added PCIe devices.
+The machines I am talking about have two IOHs (one connected to each
+socket). I only have an old 2.6.27 boot log at hand, I'll ask my admins
+for more. Do you want the 2.6.27 dmesg anyway?
 
-So hook the BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events to
-setup AER configuration for hot-added PCIe devices.
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/pcie/aer/aerdrv.c |   72 ++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 71 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 58ad791..7033410 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -410,6 +410,69 @@ static void aer_error_resume(struct pci_dev *dev)
- 	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
- }
- 
-+static int pci_root_port_aer_support(struct pci_dev *dev)
-+{
-+	int rc, pos;
-+	u32 reg32 = 0;
-+
-+	if (!pci_is_pcie(dev))
-+		return false;
-+
-+	if (!pci_aer_available() || aer_acpi_firmware_first())
-+		return false;
-+
-+	/* Search for root port */
-+	while (dev->pcie_type != PCI_EXP_TYPE_ROOT_PORT) {
-+		dev = dev->bus->self;
-+		if (!dev)
-+			return false;
-+	}
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	if (!pos)
-+		return false;
-+
-+	rc = pci_read_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
-+	if (rc || reg32 == 0xFFFFFFFF)
-+		return false;
-+
-+	if (reg32 & (PCI_ERR_ROOT_CMD_COR_EN |
-+		     PCI_ERR_ROOT_CMD_NONFATAL_EN |
-+		     PCI_ERR_ROOT_CMD_FATAL_EN))
-+		return true;
-+
-+	return false;
-+}
-+
-+static void acpi_pcie_aer_notify_dev(struct pci_dev *dev, bool enable)
-+{
-+	if (pci_root_port_aer_support(dev))
-+		set_device_error_reporting(dev, &enable);
-+}
-+
-+static int acpi_pcie_aer_notify_fn(struct notifier_block *nb,
-+		unsigned long event, void *data)
-+{
-+	struct device *dev = data;
-+
-+	switch (event) {
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		acpi_pcie_aer_notify_dev(to_pci_dev(dev), true);
-+		break;
-+	case BUS_NOTIFY_DEL_DEVICE:
-+		acpi_pcie_aer_notify_dev(to_pci_dev(dev), false);
-+		break;
-+	default:
-+		return NOTIFY_DONE;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block acpi_pcie_aer_notifier = {
-+	.notifier_call = &acpi_pcie_aer_notify_fn,
-+};
-+
- /**
-  * aer_service_init - register AER root service driver
-  *
-@@ -417,9 +480,15 @@ static void aer_error_resume(struct pci_dev *dev)
-  */
- static int __init aer_service_init(void)
- {
-+	int ret;
-+
- 	if (!pci_aer_available() || aer_acpi_firmware_first())
- 		return -ENXIO;
--	return pcie_port_service_register(&aerdriver);
-+	ret = pcie_port_service_register(&aerdriver);
-+	if (!ret)
-+		bus_register_notifier(&pci_bus_type, &acpi_pcie_aer_notifier);
-+
-+	return ret;
- }
- 
- /**
-@@ -429,6 +498,7 @@ static int __init aer_service_init(void)
-  */
- static void __exit aer_service_exit(void)
- {
-+	bus_unregister_notifier(&pci_bus_type, &acpi_pcie_aer_notifier);
- 	pcie_port_service_unregister(&aerdriver);
- }
- 
--- 
-1.7.1
-
+Brice
 
