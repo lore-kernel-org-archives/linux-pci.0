@@ -1,69 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:52137 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755176Ab2FKPF2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 11:05:28 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v2 03/10] ARM: pci: Allow passing per-controller private data
-Date: Mon, 11 Jun 2012 17:05:11 +0200
-Message-Id: <1339427118-32263-4-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 5/9] parisc/PCI: move final fixup quirks from __init to
+	__devinit
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
+	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, linux-kernel@vger.kernel.org
+Date: Thu, 21 Jun 2012 14:24:47 -0600
+Message-ID: <20120621202447.16865.32486.stgit@amt.stowe>
+In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
+References: <20120621202415.16865.6226.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to allow drivers to specify private data for each controller,
-this commit adds a private_data field to the struct hw_pci. This field
-is an array of nr_controllers pointers that will be used to initialize
-the private_data field of the corresponding controller's pci_sys_data
-structure.
+The PCI subsystem's final fixups are executed once during boot, after the
+pci-device is found.  As long as the system does not support hot-plug,
+specifying __init is fine.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+With hot-plug, either physically based hot-plug events or pseudo hot-plug
+events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
+PCI bus during run time and have it rediscovered which will require the
+call of the fixups again in order for the device to function properly.
 
+This patch prepares specific quirk(s) for use with hot-plug events.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
-Changes in v2:
-- new patch
----
- arch/arm/include/asm/mach/pci.h |    1 +
- arch/arm/kernel/bios32.c        |    3 +++
- 2 files changed, 4 insertions(+)
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 26c511f..736cb8d 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -21,6 +21,7 @@ struct hw_pci {
- #endif
- 	struct pci_ops	*ops;
- 	int		nr_controllers;
-+	void		**private_data;
- 	int		(*setup)(int nr, struct pci_sys_data *);
- 	struct pci_bus *(*scan)(int nr, struct pci_sys_data *);
- 	void		(*preinit)(void);
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index c9d28dd..04858c6 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -442,6 +442,9 @@ static void __devinit pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
- 		sys->map_irq = hw->map_irq;
- 		INIT_LIST_HEAD(&sys->resources);
+ drivers/parisc/superio.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/parisc/superio.c b/drivers/parisc/superio.c
+index 5003458..2d24cf2 100644
+--- a/drivers/parisc/superio.c
++++ b/drivers/parisc/superio.c
+@@ -149,8 +149,7 @@ superio_interrupt(int parent_irq, void *devp)
+ }
  
-+		if (hw->private_data)
-+			sys->private_data = hw->private_data[nr];
-+
- 		ret = hw->setup(nr, sys);
- 
- 		if (ret > 0) {
--- 
-1.7.10.4
+ /* Initialize Super I/O device */
+-static void
+-superio_init(struct pci_dev *pcidev)
++static void __devinit superio_init(struct pci_dev *pcidev)
+ {
+ 	struct superio_device *sio = &sio_dev;
+ 	struct pci_dev *pdev = sio->lio_pdev;
 
