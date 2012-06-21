@@ -1,122 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:47042 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754019Ab2FCT0n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jun 2012 15:26:43 -0400
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:37223 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758631Ab2FUAQq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 20:16:46 -0400
+Received: by fat25 with SMTP id 25so2361fat.1
+        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:44 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
+	by hpza10.eem.corp.google.com (Postfix) with ESMTP id 7A37020004E
+	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:44 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
+	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id E5B13180181
+	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:43 -0700 (PDT)
+Subject: [PATCH 2/6] PCI: fix upstream P2P bridge checks when enabling OBFF
+	and LTR
 To: linux-pci@vger.kernel.org
-Cc: linux-kbuild@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Marek <mmarek@suse.cz>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Subject: [PATCH 8/9] powerpc: move PCI fixup hooks from __init to __devinit
-Date: Sun,  3 Jun 2012 20:48:24 +0200
-Message-Id: <1338749305-22558-9-git-send-email-sebastian@breakpoint.cc>
-In-Reply-To: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
-References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 Jun 2012 18:16:43 -0600
+Message-ID: <20120621001643.4834.1430.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The fixups are executed once the pci-device is found which is during
-boot process so __init seems fine as long as the platform does not
-support hotplug.
-However it is possible to remove the PCI bus at run time and have it
-rediscovered again via "echo 1 > /sys/bus/pci/rescan" and this will call
-the fixups again.
+pci_enable_obff() and pci_enable_ltr() incorrectly check "dev->bus" instead
+of "dev->bus->self" to determine whether the upstream device is a P2P
+bridge or a host bridge.  For devices on the root bus, the upstream device
+is a host bridge, "dev->bus != NULL" and "dev->bus->self == NULL", and we
+panic with a null pointer dereference.
 
-Cc: Kumar Gala <galak@kernel.crashing.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+These functions should previously have panicked when called on devices
+supporting OBFF or LTR, so they should be regarded as untested.
+
+Found by Coverity (CID 143038 and CID 143039).
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/powerpc/platforms/85xx/tqm85xx.c    |    2 +-
- arch/powerpc/platforms/86xx/gef_ppc9a.c  |    2 +-
- arch/powerpc/platforms/86xx/gef_sbc310.c |    2 +-
- arch/powerpc/platforms/86xx/gef_sbc610.c |    2 +-
- arch/powerpc/sysdev/fsl_pci.c            |    2 +-
- arch/powerpc/sysdev/mv64x60_pci.c        |    2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/pci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/platforms/85xx/tqm85xx.c b/arch/powerpc/platforms/85xx/tqm85xx.c
-index 4d786c2..3e70a20 100644
---- a/arch/powerpc/platforms/85xx/tqm85xx.c
-+++ b/arch/powerpc/platforms/85xx/tqm85xx.c
-@@ -102,7 +102,7 @@ static void tqm85xx_show_cpuinfo(struct seq_file *m)
- 	seq_printf(m, "PLL setting\t: 0x%x\n", ((phid1 >> 24) & 0x3f));
- }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8f4a5ea..b9e93cf 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2108,7 +2108,7 @@ int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
+ 		return -ENOTSUPP; /* no OBFF support at all */
  
--static void __init tqm85xx_ti1520_fixup(struct pci_dev *pdev)
-+static void __devinit tqm85xx_ti1520_fixup(struct pci_dev *pdev)
- {
- 	unsigned int val;
+ 	/* Make sure the topology supports OBFF as well */
+-	if (dev->bus) {
++	if (dev->bus->self) {
+ 		ret = pci_enable_obff(dev->bus->self, type);
+ 		if (ret)
+ 			return ret;
+@@ -2215,7 +2215,7 @@ int pci_enable_ltr(struct pci_dev *dev)
+ 		return -EINVAL;
  
-diff --git a/arch/powerpc/platforms/86xx/gef_ppc9a.c b/arch/powerpc/platforms/86xx/gef_ppc9a.c
-index 1fca663..563aafa8 100644
---- a/arch/powerpc/platforms/86xx/gef_ppc9a.c
-+++ b/arch/powerpc/platforms/86xx/gef_ppc9a.c
-@@ -164,7 +164,7 @@ static void gef_ppc9a_show_cpuinfo(struct seq_file *m)
- 		gef_ppc9a_get_vme_is_syscon() ? "yes" : "no");
- }
- 
--static void __init gef_ppc9a_nec_fixup(struct pci_dev *pdev)
-+static void __devinit gef_ppc9a_nec_fixup(struct pci_dev *pdev)
- {
- 	unsigned int val;
- 
-diff --git a/arch/powerpc/platforms/86xx/gef_sbc310.c b/arch/powerpc/platforms/86xx/gef_sbc310.c
-index 14e0e576..cc6a91a 100644
---- a/arch/powerpc/platforms/86xx/gef_sbc310.c
-+++ b/arch/powerpc/platforms/86xx/gef_sbc310.c
-@@ -152,7 +152,7 @@ static void gef_sbc310_show_cpuinfo(struct seq_file *m)
- 
- }
- 
--static void __init gef_sbc310_nec_fixup(struct pci_dev *pdev)
-+static void __devinit gef_sbc310_nec_fixup(struct pci_dev *pdev)
- {
- 	unsigned int val;
- 
-diff --git a/arch/powerpc/platforms/86xx/gef_sbc610.c b/arch/powerpc/platforms/86xx/gef_sbc610.c
-index 1638f43..aead6b3 100644
---- a/arch/powerpc/platforms/86xx/gef_sbc610.c
-+++ b/arch/powerpc/platforms/86xx/gef_sbc610.c
-@@ -141,7 +141,7 @@ static void gef_sbc610_show_cpuinfo(struct seq_file *m)
- 	seq_printf(m, "SVR\t\t: 0x%x\n", svid);
- }
- 
--static void __init gef_sbc610_nec_fixup(struct pci_dev *pdev)
-+static void __devinit gef_sbc610_nec_fixup(struct pci_dev *pdev)
- {
- 	unsigned int val;
- 
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index 6073288..edbf794 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -36,7 +36,7 @@
- 
- static int fsl_pcie_bus_fixup, is_mpc83xx_pci;
- 
--static void __init quirk_fsl_pcie_header(struct pci_dev *dev)
-+static void __devinit quirk_fsl_pcie_header(struct pci_dev *dev)
- {
- 	u8 progif;
- 
-diff --git a/arch/powerpc/sysdev/mv64x60_pci.c b/arch/powerpc/sysdev/mv64x60_pci.c
-index b0037ce..364b14d 100644
---- a/arch/powerpc/sysdev/mv64x60_pci.c
-+++ b/arch/powerpc/sysdev/mv64x60_pci.c
-@@ -104,7 +104,7 @@ subsys_initcall(mv64x60_sysfs_init);
- 
- #endif /* CONFIG_SYSFS */
- 
--static void __init mv64x60_pci_fixup_early(struct pci_dev *dev)
-+static void __devinit mv64x60_pci_fixup_early(struct pci_dev *dev)
- {
- 	/*
- 	 * Set the host bridge hdr_type to an invalid value so that
--- 
-1.7.10
+ 	/* Enable upstream ports first */
+-	if (dev->bus) {
++	if (dev->bus->self) {
+ 		ret = pci_enable_ltr(dev->bus->self);
+ 		if (ret)
+ 			return ret;
 
