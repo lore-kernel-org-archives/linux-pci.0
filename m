@@ -1,48 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:47051 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754360Ab2FCT0z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jun 2012 15:26:55 -0400
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: linux-pci@vger.kernel.org
-Cc: linux-kbuild@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Marek <mmarek@suse.cz>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: [PATCH 5/9] arm: move PCI fixup hooks from __init to __devinit
-Date: Sun,  3 Jun 2012 20:48:21 +0200
-Message-Id: <1338749305-22558-6-git-send-email-sebastian@breakpoint.cc>
-In-Reply-To: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
-References: <1338749305-22558-1-git-send-email-sebastian@breakpoint.cc>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:21530 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753648Ab2FUJsG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:48:06 -0400
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v9 10/11] x86, PCI: refine __pci_mmcfg_init() for better code readability
+Date: Thu, 21 Jun 2012 17:37:02 +0800
+Message-ID: <1340271423-4352-11-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The fixups are executed once the pci-device is found which is during
-boot process so __init seems fine as long as the platform does not
-support hotplug.
-However it is possible to remove the PCI bus at run time and have it
-rediscovered again via "echo 1 > /sys/bus/pci/rescan" and this will call
-the fixups again.
+Refine __pci_mmcfg_init() for better code readability.
 
-Cc: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- arch/arm/kernel/bios32.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/x86/pci/mmconfig-shared.c |   46 ++++++++++++++++++---------------------
+ 1 files changed, 21 insertions(+), 25 deletions(-)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 2555250..1c1a0e2 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -253,7 +253,7 @@ static void __devinit pci_fixup_cy82c693(struct pci_dev *dev)
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 332fabd..ffe72b9 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -544,8 +544,6 @@ static void __init pci_mmcfg_reject_broken(int early)
+ 	}
  }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CONTAQ, PCI_DEVICE_ID_CONTAQ_82C693, pci_fixup_cy82c693);
  
--static void __init pci_fixup_it8152(struct pci_dev *dev)
-+static void __devinit pci_fixup_it8152(struct pci_dev *dev)
+-static int __initdata known_bridge;
+-
+ static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+ 					struct acpi_mcfg_allocation *cfg)
  {
- 	int i;
- 	/* fixup for ITE 8152 devices */
+@@ -617,28 +615,7 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
+ 
+ static void __init __pci_mmcfg_init(int early)
+ {
+-	/* MMCONFIG disabled */
+-	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+-		return;
+-
+-	/* MMCONFIG already enabled */
+-	if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
+-		return;
+-
+-	/* for late to exit */
+-	if (known_bridge)
+-		return;
+-
+-	if (early) {
+-		if (pci_mmcfg_check_hostbridge())
+-			known_bridge = 1;
+-	}
+-
+-	if (!known_bridge)
+-		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
+-
+ 	pci_mmcfg_reject_broken(early);
+-
+ 	if (list_empty(&pci_mmcfg_list))
+ 		return;
+ 
+@@ -660,14 +637,33 @@ static void __init __pci_mmcfg_init(int early)
+ 	}
+ }
+ 
++static int __initdata known_bridge;
++
+ void __init pci_mmcfg_early_init(void)
+ {
+-	__pci_mmcfg_init(1);
++	if (pci_probe & PCI_PROBE_MMCONF) {
++		if (pci_mmcfg_check_hostbridge())
++			known_bridge = 1;
++		else
++			acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
++		__pci_mmcfg_init(1);
++	}
+ }
+ 
+ void __init pci_mmcfg_late_init(void)
+ {
+-	__pci_mmcfg_init(0);
++	/* MMCONFIG disabled */
++	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
++		return;
++
++	if (known_bridge)
++		return;
++
++	/* MMCONFIG hasn't been enabled yet, try again */
++	if (pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF) {
++		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
++		__pci_mmcfg_init(0);
++	}
+ }
+ 
+ static int __init pci_mmcfg_late_insert_resources(void)
 -- 
-1.7.10
+1.7.1
+
 
