@@ -1,128 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:58110 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400Ab2FDHtO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2012 03:49:14 -0400
-Date: Mon, 04 Jun 2012 15:44:54 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe ports
- without native PCIe hotplug capability
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Message-id: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:42804 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758523Ab2FUDuF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 23:50:05 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWUo3uffM4NCUORJXR1pdPaf0E1Sws1hwVNAibHg5_yjQ@mail.gmail.com>
+References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
+	<20120620193438.GB2248@gmail.com>
+	<CAE9FiQWUo3uffM4NCUORJXR1pdPaf0E1Sws1hwVNAibHg5_yjQ@mail.gmail.com>
+Date: Wed, 20 Jun 2012 20:50:03 -0700
+Message-ID: <CAE9FiQWKxe9VYvrQy5h4RP2dS7YHHXu4icjC+KPipkRKbsZN1g@mail.gmail.com>
+Subject: Re: SNB PCI root information
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary=047d7b33d6502ab75304c2f369b5
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
-ignore root bridges using PCIe native hotplug) added code that made the
-acpiphp driver completely ignore PCIe root complexes for which the kernel
-had been granted control of the native PCIe hotplug feature by the BIOS
-through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
-"PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
-the constraints to allow acpiphp driver handle non-PCIe bridges under
-such a complex. The constraint needs to be relaxed further to allow
-acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
+--047d7b33d6502ab75304c2f369b5
+Content-Type: text/plain; charset=ISO-8859-1
 
-Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
-switches and may migrate downstream ports among virtual switches.
-To migrate a downstream port from the source virtual switch to the target,
-the port needs to be hot-removed from the source and hot-added into the
-target. pciehp driver can't be used here because there's no slots within
-the virtual PCIe switch. So acpiphp driver is used to support downstream
-port migration. A typical configuration is as below:
-[Root w/o native PCIe HP]
-	[Upstream port of vswitch w/o native PCIe HP]
-		[Downstream port of vswitch w/ native PCIe HP]
-			[PCIe enpoint]
+On Wed, Jun 20, 2012 at 7:37 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jun 20, 2012 at 12:34 PM, Ingo Molnar <mingo@kernel.org> wrote:
+>>> if the vendor provide _PXM, that _PXM should be right and be
+>>> trusted.
+>>>
+>>> if the vendor does not provide _PXM, we can have command line
+>>> to input it before user can get one updated BIOS from vendor.
+>>
+>> So how about an incorrect _PXM, or a slightly inefficient one?
+>> Why shouldn't it be possible for the user to override it?
+>
+> Try to keep the code simple.
+>
+>>
+>> I mean, if we create a parameter space that tweaks data then why
+>> not make it complete and allow *all* firmware data to be
+>> (optionally) modified, from the kernel boot line?
+>
+> that pxm/node for pci device should be consistent with srat table etc,
+> so better solution is that BIOS keep them consistent.
+>
+> If BIOS provide _PXM for pci device, the _PXM should have more chance
+> to be right.
+>
+> Anyway if you insist that it should cover that wrong case, let me
+> check if it could be done simply.
 
-Here acpiphp driver will be used to handle root ports and upstream port
-in the virtual switch, and pciehp driver will be used to handle downstream
-ports in the virtual switch.
+please check -v3, and it will add 40 lines.
 
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+and -v2 is about 25 lines.
 
----
- drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
- 1 files changed, 39 insertions(+), 10 deletions(-)
+Thanks
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 806c44f..4889448 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
- 	.handler = handle_hotplug_event_func,
- };
- 
-+/* Check whether device is managed by native PCIe hotplug driver */
-+static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
-+{
-+	int pos;
-+	u16 reg16;
-+	u32 reg32;
-+	acpi_handle tmp;
-+	struct acpi_pci_root *root;
-+
-+	if (!pci_is_pcie(pdev))
-+		return false;
-+
-+	/* Check whether PCIe port supports native PCIe hotplug */
-+	pos = pci_pcie_cap(pdev);
-+	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
-+	if (!(reg16 & PCI_EXP_FLAGS_SLOT))
-+		return false;
-+	pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP, &reg32);
-+	if (!(reg32 & PCI_EXP_SLTCAP_HPC))
-+		return false;
-+
-+	/*
-+	 * Check whether native PCIe hotplug has been enabled for
-+	 * this PCIe hierarchy.
-+	 */
-+	tmp = acpi_find_root_bridge_handle(pdev);
-+	if (!tmp)
-+		return false;
-+	root = acpi_pci_find_root(tmp);
-+	if (!root)
-+		return false;
-+	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-+		return false;
-+
-+	return true;
-+}
-+
- /* callback routine to register each ACPI PCI slot object */
- static acpi_status
- register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-@@ -133,16 +170,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 		return AE_OK;
- 
- 	pdev = pbus->self;
--	if (pdev && pci_is_pcie(pdev)) {
--		tmp = acpi_find_root_bridge_handle(pdev);
--		if (tmp) {
--			struct acpi_pci_root *root = acpi_pci_find_root(tmp);
--
--			if (root && (root->osc_control_set &
--					OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
--				return AE_OK;
--		}
--	}
-+	if (pdev && device_is_managed_by_native_pciehp(pdev))
-+		return AE_OK;
- 
- 	acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
- 	device = (adr >> 16) & 0xffff;
--- 
-1.7.1
+Yinghai
 
+--047d7b33d6502ab75304c2f369b5
+Content-Type: application/octet-stream; name="busnum_node_v3.patch"
+Content-Disposition: attachment; filename="busnum_node_v3.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h3paiuk40
 
+U3ViamVjdDogW1BBVENIXSBQQ0ksIFg4NjogYnVzbnVtL25vZGUgYm9vdCBjb21tYW5kIGxpbmUg
+Zm9yIHBjaSBkZXYgbm9kZSBzZXR0aW5nLgoKU29tZSBpbnRlbCBuZXcgc2FuZHlicmlkZ2Ugb3Ig
+bmV3ZXIgdHdvIHNvY2tldHMgc3lzdGVtIGRvIHN1cHBvcnQgc3VwcG9ydCBudW1hCmZvciBwY2kg
+ZGV2aWNlcy4gQnV0IEJJT1MgZG9lcyBub3QgcHJvdmlkZSBfUFhNIHVuZGVyIHRob3NlIHJvb3Qg
+YnVzIGluIERTRFQuCgpBZGQgYm9vdCBjb21tYW5kIGxpbmUsIHNvIHVzZXIgY291bGQgaGF2ZSBj
+aGFuY2UgdG8gaW5wdXQgbm9kZSBpbmZvIGJlZm9yZQpCSU9TIGd1eXMgZmlndXJlIG91dCB0byBh
+ZGQgX1BYTS4KCkZvbGQgZml4IGZyb20gVWxyaWNoIHRvIHVzZSAiOyIgaW5zdGVhZCBvZiAiLCIu
+CnwgVGhlIHByb2JsZW0gaXMgdGhlIHBjaT0gcGFyYW1ldGVyCnwgaGFuZGxpbmcgdXNlcyAnLCcg
+dG8gc2VwYXJhdGUgcGFyYW1ldGVycyBhbmQgdGhlcmVmb3JlIHRoZSBzZWNvbmQgUENJCnwgcm9v
+dCBpbmZvcm1hdGlvbiwgc2VwYXJhdGVkIGJ5IGEgY29tbWEsIGlzIGludGVycHJldGVkIGFzIGEg
+bmV3IHBjaT0KfCBwYXJhbWV0ZXIuCgotdjM6IEFjY29yZGluZyB0byBCam9ybiBhbmQgSW5nbywg
+Y2hhbmdlIHRvIHVzZSAidXNlciBpbnB1dCBmaXJzdCIgcG9saWN5CiAgICAgc28gaXQgY291bGQg
+Y292ZXIgd3JvbmcgX1BYTSBjYXNlLgoKUmVwb3J0ZWQtYnk6IFVscmljaCBEcmVwcGVyIDxkcmVw
+cGVyQGdtYWlsLmNvbT4KU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwu
+b3JnPgoKLS0tCiBEb2N1bWVudGF0aW9uL2tlcm5lbC1wYXJhbWV0ZXJzLnR4dCB8ICAgIDUgKysr
+KysKIGFyY2gveDg2L2luY2x1ZGUvYXNtL3BjaV94ODYuaCAgICAgIHwgICAgMyArKysKIGFyY2gv
+eDg2L3BjaS9hY3BpLmMgICAgICAgICAgICAgICAgIHwgICAyMiArKysrKysrKysrKysrLS0tLS0t
+LS0tCiBhcmNoL3g4Ni9wY2kvY29tbW9uLmMgICAgICAgICAgICAgICB8ICAgMjggKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKwogNCBmaWxlcyBjaGFuZ2VkLCA0OSBpbnNlcnRpb25zKCspLCA5
+IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9Eb2N1bWVudGF0aW9uL2tlcm5lbC1wYXJh
+bWV0ZXJzLnR4dAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9Eb2N1bWVudGF0aW9uL2tl
+cm5lbC1wYXJhbWV0ZXJzLnR4dAorKysgbGludXgtMi42L0RvY3VtZW50YXRpb24va2VybmVsLXBh
+cmFtZXRlcnMudHh0CkBAIC0yMTk1LDYgKzIxOTUsMTEgQEAgYnl0ZXMgcmVzcGVjdGl2ZWx5LiBT
+dWNoIGxldHRlciBzdWZmaXhlcwogCQkJCW9ubHkgbG9vayBmb3Igb25lIGRldmljZSBiZWxvdyBh
+IFBDSWUgZG93bnN0cmVhbQogCQkJCXBvcnQuCiAKKwlidXNudW1fbm9kZT0gICAgW1g4Nl0gU2V0
+IG5vZGUgZm9yIHJvb3QgYnVzLgorCQkJRm9ybWF0OgorCQkJPGJ1cz46PG5vZGU+WzsgLi4uXQor
+CQkJU3BlY2lmaWVzIG5vZGUgZm9yIGJ1cywgd2lsbCBvdmVycmlkZSBiaW9zIF9QWE0KKwkJCW9y
+IHByb2JlZCB2YWx1ZSBmcm9tIGhvc3RicmlkZ2UuCiAJcGNpZV9hc3BtPQlbUENJRV0gRm9yY2li
+bHkgZW5hYmxlIG9yIGRpc2FibGUgUENJZSBBY3RpdmUgU3RhdGUgUG93ZXIKIAkJCU1hbmFnZW1l
+bnQuCiAJCW9mZglEaXNhYmxlIEFTUE0uCkluZGV4OiBsaW51eC0yLjYvYXJjaC94ODYvcGNpL2Nv
+bW1vbi5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L3BjaS9jb21tb24u
+YworKysgbGludXgtMi42L2FyY2gveDg2L3BjaS9jb21tb24uYwpAQCAtNDk0LDYgKzQ5NCwzNCBA
+QCBpbnQgX19pbml0IHBjaWJpb3NfaW5pdCh2b2lkKQogCXJldHVybiAwOwogfQogCitpbnQgZ2V0
+X3VzZXJfYnVzbnVtX25vZGUoaW50IGJ1c251bSkKK3sKKwlpbnQgYnVzLCBub2RlLCBjb3VudDsK
+KwljaGFyICpwOworCisJcCA9IHN0cnN0cihib290X2NvbW1hbmRfbGluZSwgImJ1c251bV9ub2Rl
+PSIpOworCWlmICghcCkKKwkJcmV0dXJuIC0xOworCisJcCArPSAxMjsgLyogc3RybGVuKCJidXNu
+dW1fbm9kZT0iKSAqLworCXdoaWxlICgqcCkgeworCQljb3VudCA9IDA7CisJCWlmIChzc2NhbmYo
+cCwgIiV4OiV4JW4iLCAmYnVzLCAmbm9kZSwgJmNvdW50KSAhPSAyKSB7CisJCQlwcmludGsoS0VS
+Tl9FUlIgIlBDSTogQ2FuJ3QgcGFyc2UgYnVzbnVtX25vZGUgaW5wdXQ6ICVzXG4iLAorCQkJCQlw
+KTsKKwkJCWJyZWFrOworCQl9CisJCWlmIChidXMgPT0gYnVzbnVtKQorCQkJcmV0dXJuIG5vZGU7
+CisJCXAgKz0gY291bnQ7CisJCWlmICgqcCAhPSAnOycpCisJCQlicmVhazsKKwkJcCsrOworCX0K
+KworCXJldHVybiAtMTsKK30KKwogY2hhciAqIF9fZGV2aW5pdCAgcGNpYmlvc19zZXR1cChjaGFy
+ICpzdHIpCiB7CiAJaWYgKCFzdHJjbXAoc3RyLCAib2ZmIikpIHsKSW5kZXg6IGxpbnV4LTIuNi9h
+cmNoL3g4Ni9pbmNsdWRlL2FzbS9wY2lfeDg2LmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9y
+aWcvYXJjaC94ODYvaW5jbHVkZS9hc20vcGNpX3g4Ni5oCisrKyBsaW51eC0yLjYvYXJjaC94ODYv
+aW5jbHVkZS9hc20vcGNpX3g4Ni5oCkBAIC00Niw2ICs0Niw5IEBAIGVudW0gcGNpX2JmX3NvcnRf
+c3RhdGUgewogCXBjaV9kbWlfYmYsCiB9OwogCisvKiBwY2ktY29tbW9uLmMgKi8KK2ludCBnZXRf
+dXNlcl9idXNudW1fbm9kZShpbnQgYnVzbnVtKTsKKwogLyogcGNpLWkzODYuYyAqLwogCiB2b2lk
+IHBjaWJpb3NfcmVzb3VyY2Vfc3VydmV5KHZvaWQpOwpJbmRleDogbGludXgtMi42L2FyY2gveDg2
+L3BjaS9hY3BpLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC94ODYvcGNpL2Fj
+cGkuYworKysgbGludXgtMi42L2FyY2gveDg2L3BjaS9hY3BpLmMKQEAgLTQzMyw3ICs0MzMsNyBA
+QCBzdHJ1Y3QgcGNpX2J1cyAqIF9fZGV2aW5pdCBwY2lfYWNwaV9zY2FuCiAJc3RydWN0IHBjaV9z
+eXNkYXRhICpzZDsKIAlpbnQgbm9kZTsKICNpZmRlZiBDT05GSUdfQUNQSV9OVU1BCi0JaW50IHB4
+bTsKKwlpbnQgcHhtID0gLTE7CiAjZW5kaWYKIAogCWlmIChkb21haW4gJiYgIXBjaV9kb21haW5z
+X3N1cHBvcnRlZCkgewpAQCAtNDQzLDE2ICs0NDMsMjAgQEAgc3RydWN0IHBjaV9idXMgKiBfX2Rl
+dmluaXQgcGNpX2FjcGlfc2NhbgogCQlyZXR1cm4gTlVMTDsKIAl9CiAKLQlub2RlID0gLTE7CisJ
+bm9kZSA9IGdldF91c2VyX2J1c251bV9ub2RlKGJ1c251bSk7CisJaWYgKG5vZGUgPT0gLTEpIHsK
+ICNpZmRlZiBDT05GSUdfQUNQSV9OVU1BCi0JcHhtID0gYWNwaV9nZXRfcHhtKGRldmljZS0+aGFu
+ZGxlKTsKLQlpZiAocHhtID49IDApCi0JCW5vZGUgPSBweG1fdG9fbm9kZShweG0pOwotCWlmIChu
+b2RlICE9IC0xKQotCQlzZXRfbXBfYnVzX3RvX25vZGUoYnVzbnVtLCBub2RlKTsKLQllbHNlCi0j
+ZW5kaWYKKwkJcHhtID0gYWNwaV9nZXRfcHhtKGRldmljZS0+aGFuZGxlKTsKKwkJaWYgKHB4bSA+
+PSAwKQorCQkJbm9kZSA9IHB4bV90b19ub2RlKHB4bSk7CisJCWlmIChub2RlICE9IC0xKQorCQkJ
+c2V0X21wX2J1c190b19ub2RlKGJ1c251bSwgbm9kZSk7CisJCWVsc2UKKwkJCW5vZGUgPSBnZXRf
+bXBfYnVzX3RvX25vZGUoYnVzbnVtKTsKKyNlbHNlCiAJCW5vZGUgPSBnZXRfbXBfYnVzX3RvX25v
+ZGUoYnVzbnVtKTsKKyNlbmRpZgorCX0KIAogCWlmIChub2RlICE9IC0xICYmICFub2RlX29ubGlu
+ZShub2RlKSkKIAkJbm9kZSA9IC0xOwo=
+--047d7b33d6502ab75304c2f369b5--
