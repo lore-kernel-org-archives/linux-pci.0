@@ -1,56 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 6 Jun 2012 13:05:14 +0200
-From: Joerg Roedel <joerg.roedel@amd.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: <dwmw2@infradead.org>, <iommu@lists.linux-foundation.org>,
-	<bhelgaas@google.com>, <benh@kernel.crashing.org>, <aik@ozlabs.ru>,
-	<david@gibson.dropbear.id.au>, <konrad.wilk@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<gregkh@linuxfoundation.org>, <ddutile@redhat.com>,
-	<liuj97@gmail.com>
-Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
-Message-ID: <20120606110514.GG757@amd.com>
-References: <20120530201424.31527.33142.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:3647 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932224Ab2FUUYr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Jun 2012 16:24:47 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 2/9] PCI: release temporary reference in
+	__nv_msi_ht_cap_quirk()
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
+	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, linux-kernel@vger.kernel.org
+Date: Thu, 21 Jun 2012 14:24:29 -0600
+Message-ID: <20120621202429.16865.86563.stgit@amt.stowe>
+In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
+References: <20120621202415.16865.6226.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20120530201424.31527.33142.stgit@bling.home>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
-> v2:
->  - Trickle down changes from pci_get_dma_source() to better handle
->    PCI device reference counting in IOMMU driver patches
+__nv_msi_ht_cap_quirk() acquires a temporary reference via
+'pci_get_bus_and_slot()' that is never released.
 
-Okay, I looked again over the code and looks good for merging to me. The
-IOMMU Groups code depends on changes in the PCI code. We need to work
-out how to merge this.
+This patch releases the temporary reference.
 
-Bjorn,
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-I need the PCI changes before I can merge the IOMMU Groups code. There
-are two ways that would work for me:
+ drivers/pci/quirks.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-	a) You Ack the PCI patch-set from Alex and I put it into my tree
-	   and merge the IOMMU Group code on-top, or
-	b) You merge the PCI related patch-set into a seperate branch
-	   which you can merge into your next-branch and which I can
-	   pull in to merge IOMMU Groups on-top.
-
-Please let me know what works best for you.
-
-What I would also appreciate are a few more Acks from other IOMMU
-maintainers (David W.?) and from the Power side.
-
-
-Thanks,
-
-	Joerg
-
--- 
-AMD Operating System Research Center
-
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 9c93558..1a7effa 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2541,15 +2541,18 @@ static void __devinit __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
+ 			else
+ 				nv_ht_enable_msi_mapping(dev);
+ 		}
+-		return;
++		goto out;
+ 	}
+ 
+ 	/* HT MSI is not enabled */
+ 	if (found == 1)
+-		return;
++		goto out;
+ 
+ 	/* Host bridge is not to HT, disable HT MSI mapping on this device */
+ 	ht_disable_msi_mapping(dev);
++
++out:
++	pci_dev_put(host_bridge);
+ }
+ 
+ static void __devinit nv_msi_ht_cap_quirk_all(struct pci_dev *dev)
 
