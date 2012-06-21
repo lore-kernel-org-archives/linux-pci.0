@@ -1,81 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:44339 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813Ab2FSNZo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:25:44 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH v8 00/12] PCI, x86: update MMCFG information when hot-plugging PCI host bridges
-Date: Tue, 19 Jun 2012 21:15:20 +0800
-Message-ID: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-vc0-f202.google.com ([209.85.220.202]:60108 "EHLO
+	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758631Ab2FUAQk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 20:16:40 -0400
+Received: by vcbfl13 with SMTP id fl13so9372vcb.1
+        for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:40 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
+	by wpzn4.hot.corp.google.com (Postfix) with ESMTP id 117751E0043
+	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:39 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
+	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id C349B180181
+	for <linux-pci@vger.kernel.org>; Wed, 20 Jun 2012 17:16:38 -0700 (PDT)
+Subject: [PATCH 1/6] PCI: use __weak consistently
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 Jun 2012 18:16:38 -0600
+Message-ID: <20120621001638.4834.10145.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120621000840.4834.26832.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset enhance pci_root driver to update MMCFG information when
-hot-plugging PCI root bridges. It applies to 
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next-3.5
+Use "__weak" instead of the gcc-specific "__attribute__ ((weak))"
 
--v2: split into smaller patches and skip updating MMCFG information when
-     MMCFG is disabled
--v3: add mmconf_added to simply free path, also make pci_mmconfig_insert()
-     to process extra exist case --- By Yinghai
--v4: tune arch_acpi_pci_root_add() to handle a corner case raised by Kenji
--v5: address review comments from Bjorn and Taku, also better handle corner
-     cases in arch_acpi_pci_root_add()
--v6: get rid of arch_acpi_pci_root_xxx() by using existing hooks
-     add MCFG information for host bridges on demand
-     more corner cases clear up
-     correctly handle condition compilation
-     fix section mismatch issues
-     fix a issue reported by Taku about a BIOS bug
--v7: unify log messages
-     remove redundant host bridge resource related log messages
-     fix a issue reported by Taku which breaks pnp resource allocation
--v8: 1) add acpi_pci_cache_mcfg() in patch "provide MCFG address for PCI host
-     bridges" for better readability and fix a condition compilation issue
-     2) change patch "add MMCFG information on demand" to RFC and fix
-     compilation issues reported by Fengguang
-     3) Add new patch "refine __pci_mmcfg_init() for better code readability"
-      and "mark acpi_sfi_table_parse() as __init", there should no
-      functionality changes.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-sysfs.c |    2 +-
+ drivers/pci/pci.c       |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Jiang Liu (12):
-  x86/PCI: split out pci_mmcfg_check_reserved() for code reuse
-  x86/PCI: split out pci_mmconfig_alloc() for code reuse
-  x86/PCI: use RCU list to protect mmconfig list
-  x86/PCI: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
-  x86/PCI: add pci_mmconfig_insert()/delete() for PCI root bridge
-    hotplug
-  PCI/ACPI: provide MCFG address for PCI host bridges
-  x86/PCI: update MMCFG information when hot-plugging PCI host bridges
-  x86/PCI: simplify pci_mmcfg_late_insert_resources()
-  x86/PCI: get rid of redundant log messages
-  x86/PCI: refine __pci_mmcfg_init() for better code readability
-  ACPI: mark acpi_sfi_table_parse() as __init
-  x86/PCI: add MMCFG information on demand
-
- arch/x86/include/asm/pci_x86.h |   12 ++
- arch/x86/pci/acpi.c            |   76 +++++++-
- arch/x86/pci/legacy.c          |    1 +
- arch/x86/pci/mmconfig-shared.c |  429 +++++++++++++++++++++++++++++-----------
- arch/x86/pci/mmconfig_32.c     |   30 +++-
- arch/x86/pci/mmconfig_64.c     |   37 +++-
- drivers/acpi/pci_root.c        |   12 ++
- drivers/pci/pci-acpi.c         |   60 ++++++
- include/acpi/acnames.h         |    1 +
- include/acpi/acpi_bus.h        |    3 +
- include/linux/pci-acpi.h       |    5 +
- include/linux/sfi_acpi.h       |    4 +-
- 12 files changed, 536 insertions(+), 134 deletions(-)
-
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 86c63fe..a0b435f 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1112,7 +1112,7 @@ static struct bin_attribute pcie_config_attr = {
+ 	.write = pci_write_config,
+ };
+ 
+-int __attribute__ ((weak)) pcibios_add_platform_entries(struct pci_dev *dev)
++int __weak pcibios_add_platform_entries(struct pci_dev *dev)
+ {
+ 	return 0;
+ }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 447e834..8f4a5ea 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1349,7 +1349,7 @@ void pcim_pin_device(struct pci_dev *pdev)
+  * is the default implementation. Architecture implementations can
+  * override this.
+  */
+-void __attribute__ ((weak)) pcibios_disable_device (struct pci_dev *dev) {}
++void __weak pcibios_disable_device (struct pci_dev *dev) {}
+ 
+ static void do_pci_disable_device(struct pci_dev *dev)
+ {
+@@ -1413,8 +1413,8 @@ pci_disable_device(struct pci_dev *dev)
+  * Sets the PCIe reset state for the device. This is the default
+  * implementation. Architecture implementations can override this.
+  */
+-int __attribute__ ((weak)) pcibios_set_pcie_reset_state(struct pci_dev *dev,
+-							enum pcie_reset_state state)
++int __weak pcibios_set_pcie_reset_state(struct pci_dev *dev,
++					enum pcie_reset_state state)
+ {
+ 	return -EINVAL;
+ }
+@@ -3851,7 +3851,7 @@ static void __devinit pci_no_domains(void)
+  * greater than 0xff). This is the default implementation. Architecture
+  * implementations can override this.
+  */
+-int __attribute__ ((weak)) pci_ext_cfg_avail(struct pci_dev *dev)
++int __weak pci_ext_cfg_avail(struct pci_dev *dev)
+ {
+ 	return 1;
+ }
 
