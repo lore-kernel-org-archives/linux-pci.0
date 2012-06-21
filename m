@@ -1,45 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43226 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754415Ab2FTT4A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jun 2012 15:56:00 -0400
-Subject: [PATCH] pci: 64bit resource fix in setup-res.c
-From: Nikhil P Rao <nikhil.rao@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Nikhil P Rao <nikhil.rao@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Jun 2012 12:56:00 -0700
-Message-ID: <1340222160.77018.19.camel@localhost.localdomain>
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 7/9] x86/PCI: move final fixup quirks from __init to __devinit
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
+	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, linux-kernel@vger.kernel.org
+Date: Thu, 21 Jun 2012 14:24:59 -0600
+Message-ID: <20120621202459.16865.43604.stgit@amt.stowe>
+In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
+References: <20120621202415.16865.6226.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-size parameter of _pci_assign_resource() needs to be
-of type resource_size_t rather than int
+The PCI subsystem's final fixups are executed once during boot, after the
+pci-device is found.  As long as the system does not support hot-plug,
+specifying __init is fine.
 
-Signed-off-by: Nikhil P Rao <nikhil.rao@intel.com>
+With hot-plug, either physically based hot-plug events or pseudo hot-plug
+events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
+PCI bus during run time and have it rediscovered which will require the
+call of the fixups again in order for the device to function properly.
+
+This patch prepares specific quirk(s) for use with hot-plug events.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
- drivers/pci/setup-res.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index eea85da..9f6bbec 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -206,7 +206,8 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
- 	return ret;
- }
- 
--static int _pci_assign_resource(struct pci_dev *dev, int resno, int size, resource_size_t min_align)
-+static int _pci_assign_resource(struct pci_dev *dev, int resno,
-+		resource_size_t size, resource_size_t min_align)
+ arch/x86/pci/fixup.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index af8a224..8cefdbe 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -250,7 +250,7 @@ static struct pci_ops quirk_pcie_aspm_ops = {
+  * the root port in an array for fast indexing. Replace the bus ops
+  * with the modified one.
+  */
+-static void pcie_rootport_aspm_quirk(struct pci_dev *pdev)
++static void __devinit pcie_rootport_aspm_quirk(struct pci_dev *pdev)
  {
- 	struct resource *res = dev->resource + resno;
- 	struct pci_bus *bus;
--- 
-1.7.1
-
-
+ 	int cap_base, i;
+ 	struct pci_bus  *pbus;
 
