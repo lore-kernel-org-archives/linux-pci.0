@@ -1,117 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:57151 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755176Ab2FKPFi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 11:05:38 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v2 09/10] ARM: tegra: harmony: Initialize PCIe from DT
-Date: Mon, 11 Jun 2012 17:05:17 +0200
-Message-Id: <1339427118-32263-10-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:23446 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754808Ab2FUJuG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:50:06 -0400
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v9 08/11] x86/PCI: simplify pci_mmcfg_late_insert_resources()
+Date: Thu, 21 Jun 2012 17:37:00 +0800
+Message-ID: <1340271423-4352-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the device tree support in place, probe the PCIe controller from
-the device tree and remove the corresponding workaround in the board
-file.
+Reduce redundant code to simplify pci_mmcfg_late_insert_resources().
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-Changes in v2:
-- new patch
----
- arch/arm/boot/dts/tegra-harmony.dts    |   19 +++++++++++++++++--
- arch/arm/mach-tegra/board-dt-tegra20.c |   14 --------------
- 2 files changed, 17 insertions(+), 16 deletions(-)
+ arch/x86/pci/mmconfig-shared.c |   34 ++++++++--------------------------
+ 1 files changed, 8 insertions(+), 26 deletions(-)
 
-diff --git a/arch/arm/boot/dts/tegra-harmony.dts b/arch/arm/boot/dts/tegra-harmony.dts
-index c98aa2a..1dc907f 100644
---- a/arch/arm/boot/dts/tegra-harmony.dts
-+++ b/arch/arm/boot/dts/tegra-harmony.dts
-@@ -276,7 +276,7 @@
- 		status = "okay";
- 		clock-frequency = <400000>;
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 19fc42b..332fabd 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -26,7 +26,6 @@
+ #define PREFIX "PCI: "
  
--		tps6586x@34 {
-+		pmu: tps6586x@34 {
- 			compatible = "ti,tps6586x";
- 			reg = <0x34>;
- 			interrupts = <0 88 0x4>;
-@@ -306,7 +306,7 @@
- 					regulator-always-on;
- 				};
- 
--				ldo0 {
-+				pci_clk_reg: ldo0 {
- 					regulator-name = "PCIE CLK";
- 					regulator-min-microvolt = <3300000>;
- 					regulator-max-microvolt = <3300000>;
-@@ -364,6 +364,21 @@
- 		nvidia,invert-interrupt;
- 	};
- 
-+	pci_vdd_reg: fixedregulator@0 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "PCIE VDD";
-+		regulator-min-microvolt = <1050000>;
-+		regulator-max-microvolt = <1050000>;
-+		enable-active-high;
-+		gpio = <&pmu 2 0>;
-+	};
-+
-+	pci {
-+		pex-clk-supply = <&pci_clk_reg>;
-+		vdd-supply = <&pci_vdd_reg>;
-+		status = "okay";
-+	};
-+
- 	usb@c5000000 {
- 		status = "okay";
- 	};
-diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
-index a9a54e6..c7b6ae2 100644
---- a/arch/arm/mach-tegra/board-dt-tegra20.c
-+++ b/arch/arm/mach-tegra/board-dt-tegra20.c
-@@ -131,17 +131,6 @@ static void __init trimslice_init(void)
+ /* Indicate if the mmcfg resources have been placed into the resource table. */
+-static int __initdata pci_mmcfg_resources_inserted;
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
+ static DEFINE_MUTEX(pci_mmcfg_lock);
+@@ -373,18 +372,6 @@ static int __init pci_mmcfg_check_hostbridge(void)
+ 	return !list_empty(&pci_mmcfg_list);
  }
- #endif
  
--#ifdef CONFIG_MACH_HARMONY
--static void __init harmony_init(void)
+-static void __init pci_mmcfg_insert_resources(void)
 -{
--	int ret;
+-	struct pci_mmcfg_region *cfg;
 -
--	ret = harmony_pcie_init();
--	if (ret)
--		pr_err("harmony_pcie_init() failed: %d\n", ret);
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		if (!cfg->res.parent)
+-			insert_resource(&iomem_resource, &cfg->res);
+-
+-	/* Mark that the resources have been inserted. */
+-	pci_mmcfg_resources_inserted = 1;
 -}
--#endif
 -
- #ifdef CONFIG_MACH_PAZ00
- static void __init paz00_init(void)
+ static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
+ 						 void *data)
  {
-@@ -156,9 +145,6 @@ static struct {
- #ifdef CONFIG_MACH_TRIMSLICE
- 	{ "compulab,trimslice", trimslice_init },
- #endif
--#ifdef CONFIG_MACH_HARMONY
--	{ "nvidia,harmony", harmony_init },
--#endif
- #ifdef CONFIG_MACH_PAZ00
- 	{ "compal,paz00", paz00_init },
- #endif
+@@ -668,11 +655,7 @@ static void __init __pci_mmcfg_init(int early)
+ 	if (pci_mmcfg_arch_init())
+ 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+ 	else {
+-		/*
+-		 * Signal not to attempt to insert mmcfg resources because
+-		 * the architecture mmcfg setup could not initialize.
+-		 */
+-		pci_mmcfg_resources_inserted = 1;
++		free_all_mmcfg();
+ 		pci_mmcfg_arch_init_failed = true;
+ 	}
+ }
+@@ -689,15 +672,12 @@ void __init pci_mmcfg_late_init(void)
+ 
+ static int __init pci_mmcfg_late_insert_resources(void)
+ {
++	struct pci_mmcfg_region *cfg;
++
+ 	pci_mmcfg_running_state = true;
+ 
+-	/*
+-	 * If resources are already inserted or we are not using MMCONFIG,
+-	 * don't insert the resources.
+-	 */
+-	if ((pci_mmcfg_resources_inserted == 1) ||
+-	    (pci_probe & PCI_PROBE_MMCONF) == 0 ||
+-	    list_empty(&pci_mmcfg_list))
++	/* If we are not using MMCONFIG, don't insert the resources. */
++	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+ 		return 1;
+ 
+ 	/*
+@@ -705,7 +685,9 @@ static int __init pci_mmcfg_late_insert_resources(void)
+ 	 * marked so it won't cause request errors when __request_region is
+ 	 * called.
+ 	 */
+-	pci_mmcfg_insert_resources();
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		if (!cfg->res.parent)
++			insert_resource(&iomem_resource, &cfg->res);
+ 
+ 	return 0;
+ }
 -- 
-1.7.10.4
+1.7.1
+
 
