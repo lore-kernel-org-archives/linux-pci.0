@@ -1,65 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:64643 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754265Ab2FTRLr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 13:11:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
-References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
- <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
- <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
- <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
- <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
- <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com> <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
-From: Ulrich Drepper <drepper@gmail.com>
-Date: Wed, 20 Jun 2012 13:11:26 -0400
-Message-ID: <CAOPLpQe+PE0NLuDuPZ1JuF+8ivr1Y+xF8dNN4y-DXV7endYtFg@mail.gmail.com>
-Subject: Re: SNB PCI root information
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from nat28.tlf.novell.com ([130.57.49.28]:48645 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755104Ab2FUNYA convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:7:1>);
+	Thu, 21 Jun 2012 09:24:00 -0400
+Message-Id: <4FE33CB9020000780008B1C4@nat28.tlf.novell.com>
+Date: Thu, 21 Jun 2012 14:24:41 +0100
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Wei Wang" <wei.wang2@amd.com>
+Cc: "SherryHurwitz" <sherry.hurwitz@amd.com>,
+	"Andrew Cooper" <andrew.cooper3@citrix.com>,
+	"Jeremy Fitzhardinge" <jeremy@goop.org>, <stable@kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"KonradRzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<linux-pci@vger.kernel.org>,
+	"Jesse Barnes" <jbarnes@virtuousgeek.org>, <ebiederm@xmission.com>
+Subject: Re: [PATCH] PCI/MSI: don't disable AMD IOMMU MSI on Xen dom0
+References: <4FD72FE4.80009@amd.com>
+ <4FD778C802000078000897EF@nat28.tlf.novell.com>
+ <4FD76976.2020203@citrix.com>
+ <4FD78DE6020000780008986D@nat28.tlf.novell.com> <4FD9D559.9050206@amd.com>
+ <4FDA0ECD0200007800089FEA@nat28.tlf.novell.com> <4FDA0028.3090609@amd.com>
+ <4FE30CBB020000780008B06B@nat28.tlf.novell.com> <4FE303C4.3060705@amd.com>
+ <4FE32A81020000780008B11B@nat28.tlf.novell.com> <4FE31385.3060502@amd.com>
+ <4FE3337C020000780008B177@nat28.tlf.novell.com> <4FE31D5A.7060701@amd.com>
+In-Reply-To: <4FE31D5A.7060701@amd.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 2:20 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> If the BIOS provide wrong _PXM, that BIOS really should be fixed at first.
+>>> On 21.06.12 at 15:10, Wei Wang <wei.wang2@amd.com> wrote:
+> On 06/21/2012 02:45 PM, Jan Beulich wrote:
+>>>>> On 21.06.12 at 14:28, Wei Wang<wei.wang2@amd.com>  wrote:
+>>> AMD IOMMU is an independent pci-e endpoint, and this function will not
+>>> be used for other purposes other than containing an iommu. So I don't
+>>> see that iommu will share bdf value with other devices.
+>>
+>> The question is not regarding bdf, but regarding whether under
+>> the same seg:bus:dev there might be multiple functions, one of
+>> which is the IOMMU, and if so, whether the IOMMU would be
+>> guaranteed to have a non-zero function number.
+> 
+> In a real system (single or multiple iommu), amd iommu shares the same 
+> device number with north bridge but has function number 2.. (e.g 
+> bus:00.2) Howerver according to spec, it does not guaranteed to have 
+> non-zero function number. So what is the problem you see if iommu uses 
+> fun0 on a multi-func device?
 
-Let's go there when we see BIOSes with the information...
+If it's on func 0 and gets hidden completely (as done by your
+partial patch), other functions won't be found when scanning
+for them (because secondary functions get looked at only
+when func 0 actually exists, as otherwise evaluating the header
+type register is invalid).
 
-In the meantime I tested the patch.  It needs the small modification
-below (iinterdiff-generated).  The problem is the pci= parameter
-handling uses ',' to separate parameters and therefore the second PCI
-root information, separated by a comma, is interpreted as a new pci=
-parameter.  The patch below changes the separator to ';'.  With that I
-get the correct information after boot up.
+Jan
 
-
-Signed-off-by: Ulrich Drepper <drepper@gmail.com>
-
-diff -u b/Documentation/kernel-parameters.txt
-b/Documentation/kernel-parameters.txt
---- b/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2192,7 +2192,7 @@
- 		realloc		same as realloc=on
- 		busnum_node=
- 				Format:
--				<bus>:<node>[, ...]
-+				<bus>:<node>[;...]
- 				Specifies node for bus
- 		noari		do not use PCIe ARI.
- 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
-diff -u b/arch/x86/pci/common.c b/arch/x86/pci/common.c
---- b/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -509,7 +509,7 @@
- 		}
- 		set_mp_bus_to_node(bus, node);
- 		p += count;
--		if (*p != ',')
-+		if (*p != ';')
- 			break;
- 		p++;
- 	}
