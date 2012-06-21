@@ -1,57 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64165 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760177Ab2FUUYk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Jun 2012 16:24:40 -0400
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 1/9] PCI: Remove redundant debug output in pci_do_fixups
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
-	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, linux-kernel@vger.kernel.org
-Date: Thu, 21 Jun 2012 14:24:23 -0600
-Message-ID: <20120621202423.16865.50394.stgit@amt.stowe>
-In-Reply-To: <20120621202415.16865.6226.stgit@amt.stowe>
-References: <20120621202415.16865.6226.stgit@amt.stowe>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:49775 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753356Ab2FUWW0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 18:22:26 -0400
+Received: by pbbrp8 with SMTP id rp8so2705259pbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 15:22:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo5ABBo787gr+FqfvAhU=qQ9a5zgQyg=+HTr5dkigB3-XA@mail.gmail.com>
+References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+	<CAErSpo5ABBo787gr+FqfvAhU=qQ9a5zgQyg=+HTr5dkigB3-XA@mail.gmail.com>
+Date: Thu, 21 Jun 2012 15:22:25 -0700
+Message-ID: <CAE9FiQUcnW9W5q7rqyX+0TmLW=32CrULW7C+bdbzouNPWV3PuA@mail.gmail.com>
+Subject: Re: [PATCH v9 00/11] PCI, x86: update MMCFG information when
+ hot-plugging PCI host bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the boot argument 'initcall_debug' is specified, redundant debug
-output occurs for each device as a quirk is applied:
-  ...
-  pci 0000:00:1a.0: calling quirk_usb_early_handoff+0x0/0x620
-  calling  quirk_usb_early_handoff+0x0/0x620 @ 1 for 0000:00:1a.0
-  pci fixup quirk_usb_early_handoff+0x0/0x620 returned after 32 usecs for 0000:00: 1a.0
-  ...
+On Thu, Jun 21, 2012 at 1:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Jun 21, 2012 at 3:36 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+>> This patchset enhance pci_root driver to update MMCFG information when
+>> hot-plugging PCI root bridges. It applies to
+>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next
+>
+> Yinghai, I'm hoping you will review these.  I'd like to get them into
+> -next soon and you're the main person paying attention to them :)  If
+> you can't, let me know and I'll give it a go myself.
 
-This patch removes the redundancy by eliminating the first debug output
-occurence in the sequence shown above when 'initcall_debug' is specified.
+Hi, Bjorn,
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+Only
 
- drivers/pci/quirks.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+[PATCH v9 07/11] x86/PCI: update MMCFG information when hot-plugging
+PCI host bridges
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index a2d9d33..9c93558 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2953,11 +2953,12 @@ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 		     f->vendor == (u16) PCI_ANY_ID) &&
- 		    (f->device == dev->device ||
- 		     f->device == (u16) PCI_ANY_ID)) {
--			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
- 			if (initcall_debug)
- 				do_one_fixup_debug(f->hook, dev);
--			else
-+			else {
-+				dev_dbg(&dev->dev, "calling %pF\n", f->hook);
- 				f->hook(dev);
-+			}
- 		}
- }
- 
+still have problem with non-0 segment handling on failing path.
 
+So assume us time tonight, and china time friday daytime, Jiang could fix it.
+
+otherwise I will fix it tomorrow morning, then you could merge tomorrow noon.
+
+Thanks
+
+Yinghai
