@@ -1,131 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:53305 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731Ab2FMImW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2012 04:42:22 -0400
-Date: Wed, 13 Jun 2012 10:42:06 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Mitch Bradley <wmb@firmworks.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-Message-ID: <20120613084206.GA9607@avionic-0098.mockup.avionic-design.de>
-References: <4FD763C5.3090500@wwwdotorg.org>
- <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de>
- <4FD7A36B.9090409@wwwdotorg.org>
- <4FD7B085.1020006@firmworks.com>
- <20120613064519.GD31001@avionic-0098.mockup.avionic-design.de>
- <4FD84133.4060401@firmworks.com>
- <20120613075232.GA6139@avionic-0098.mockup.avionic-design.de>
- <4FD849CF.4030009@firmworks.com>
- <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
- <4FD85127.8050301@firmworks.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:41508 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755266Ab2FUTYI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 15:24:08 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
-In-Reply-To: <4FD85127.8050301@firmworks.com>
+In-Reply-To: <4FE2B788.3070505@gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+	<CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
+	<4FE22B28.9020402@gmail.com>
+	<CAE9FiQUkGCQ0Y=n3i=bq388T8N-vrHP2LtMTFGwry2nA+uppwA@mail.gmail.com>
+	<4FE2B788.3070505@gmail.com>
+Date: Thu, 21 Jun 2012 12:24:07 -0700
+Message-ID: <CAE9FiQWBB0JVCLWa40k9qYJXGrv_z=RgspgQW4x2di0uCUFXmA@mail.gmail.com>
+Subject: Re: SNB PCI root information
+From: Yinghai Lu <yinghai@kernel.org>
+To: Brice Goglin <brice.goglin@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Jun 20, 2012 at 10:56 PM, Brice Goglin <brice.goglin@gmail.com> wrote:
+>> I suspected that could be other problem. intel system before
+>> sandbridge does not have IIO.
+>> they will have ioh instead, and one ioh would connect to two cpu sockets.
+>> but _PXM for root bus in dsdt only can return one value. Aka it is
+>> acpi spec limitation.
+>
+> The machines I am talking about have two IOHs (one connected to each
+> socket). I only have an old 2.6.27 boot log at hand, I'll ask my admins
+> for more. Do you want the 2.6.27 dmesg anyway?
+>
 
---azLHFNyN32YCQGCU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+log from 2.6.27 should be good enough for this.
 
-On Tue, Jun 12, 2012 at 10:36:55PM -1000, Mitch Bradley wrote:
-> On 6/12/2012 10:19 PM, Thierry Reding wrote:
-> >On Tue, Jun 12, 2012 at 10:05:35PM -1000, Mitch Bradley wrote:
-> >>On 6/12/2012 9:52 PM, Thierry Reding wrote:
-> >>>I think the configuration spaces and downstream I/O ranges need to be =
-in the
-> >>>pcie-controller's reg property because they are remapped and used by t=
-he
-> >>>controller driver, not by the individual ports.
-> >>>
-> >>>That's probably not really necessary but rather a result of how the dr=
-iver
-> >>>was written. Perhaps the driver should handle them differently instead,
-> >>>listing the regions in the ranges property of the parent and listing t=
-he
-> >>>corresponding partitions in the ranges properties of the pci child nod=
-es.
-> >>>
-> >>>Like in the following, where the ranges property of the ports partitio=
-n the
-> >>>ranges passed from the parent evenly:
-> >>>
-> >>>	pcie-controller {
-> >>>		compatible =3D "nvidia,tegra20-pcie";
-> >>>		reg =3D<0x80003000 0x00000800   /* PADS registers */
-> >>>		       0x80003800 0x00000200>; /* AFI registers */
-> >>>		interrupts =3D<0 98 0x04   /* controller interrupt */
-> >>>			      0 99 0x04>; /* MSI interrupt */
-> >>>		status =3D "disabled";
-> >>>
-> >>>		ranges =3D<0x80000000 0x80000000 0x00002000   /* 2 root ports */
-> >>>			  0x80004000 0x80004000 0x00100000   /* configuration space */
-> >>>			  0x80104000 0x80100000 0x00100000   /* extended configuration spac=
-e */
-> >>>			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
-> >>>			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
-> >>>			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
-> >>>
-> >>>		#address-cells =3D<1>;
-> >>>		#size-cells =3D<1>;
-> >>>
-> >>>		pci@80000000 {
-> >>>			reg =3D<0x80000000 0x00001000>;
-> >>>			status =3D "disabled";
-> >>>
-> >>>			#address-cells =3D<3>;
-> >>>			#size-cells =3D<2>;
-> >>>
-> >>>			ranges =3D<0x80400000 0x80400000 0x00008000   /* I/O */
-> >>>				  0x90000000 0x90000000 0x08000000   /* non-prefetchable memory */
-> >>>				  0xa0000000 0xa0000000 0x08000000>; /* prefetchable memory */
-> >>
-> >>You are on the right track here, but the format of the child-address
-> >>portion of the above ranges property is incorrect.  Since the child
-> >>address space is the PCI address space, the child-address portion
-> >>needs to be 3 cells.  It's not a linear address but rather a triple.
-> >>The first cell identifies the address type (config, I/O, memory..)
-> >>and the second and third cells are offsets within that subspace.
-> >>The second and third cells will typically be 0.  The PCI binding has
-> >>details.
->=20
-> Also, the size field in ranges is specified according to the child
-> address space, so there must be 2 size cells in the ranges at this
-> level.  Each ranges entry at this level is:
->=20
-> <child_address_space, child_address_high, child_address_low,
-> parent_address, child_size_high, child_size_low>
->=20
-> The above should be:
->=20
-> 			ranges =3D<0x81000000 0 0  0x80400000  0 0x00008000   /* I/O */
-> 				 0x82000000 0 0  0x90000000  0 0x08000000   /* non-prefetchable memor=
-y */
-> 				 0xc2000000 0 0  0xa0000000  0 0x08000000>; /* prefetchable memory */
+BIOS _PXM return 0 for both pci root buses?
 
-Okay, I think I'm beginning to understand. Thanks.
+those systems with two IOHs really deserve good BIOS.
 
-Thierry
+Hope we can have more updated machines with open sourced firmware.
 
---azLHFNyN32YCQGCU
-Content-Type: application/pgp-signature
+Thanks
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/YUl4ACgkQZ+BJyKLjJp8eagCfabQxPZ4R6G6lxx8YtNjDkkul
-apQAoKMutp2++vsN0qDgr86gYeEWg0PG
-=MedJ
------END PGP SIGNATURE-----
-
---azLHFNyN32YCQGCU--
+Yinghai
