@@ -1,69 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:61355 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761968Ab2FVNDj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 09:03:39 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-Date: Fri, 22 Jun 2012 13:03:21 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-References: <4FDA2DDA.1030704@wwwdotorg.org> <CAErSpo6vHn3p96o7DSdL28cjapk2UnQ4ZVJ1oH6ksxbqD=Hh-g@mail.gmail.com> <20120622124311.GA21606@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120622124311.GA21606@avionic-0098.mockup.avionic-design.de>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:20468 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759195Ab2FUJrI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:47:08 -0400
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v9 09/11] x86/PCI: get rid of redundant log messages
+Date: Thu, 21 Jun 2012 17:37:01 +0800
+Message-ID: <1340271423-4352-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201206221303.21985.arnd@arndb.de>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 22 June 2012, Thierry Reding wrote:
-> On Fri, Jun 22, 2012 at 05:46:52AM -0600, Bjorn Helgaas wrote:
-> > On Fri, Jun 22, 2012 at 5:00 AM, Thierry Reding
-> > <thierry.reding@avionic-design.de> wrote:
-> > >> Is the bus number aperture included somewhere?  How do we know what
-> > >> bus numbers are available for allocation under each bridge?
-> > >
-> > > Not yet. I don't think DT imposes a bus number allocation on PCI
-> > > bridges. However the matching of DT nodes to PCI bridges is done based
-> > > on the bus number. For that you provide a bus-ranges property which
-> > > defines the bus aperture of the given PCI bridge. The DT matching code
-> > > compares the first cell of this property with the primary bus number of
-> > > the bridge.
-> > 
-> > I don't fully understand this, but I can tell you that things don't
-> > work very well if we don't know the aperture.  We can make
-> > assumptions, like the root bus is 00, and then enumerate everything
-> > reachable from there.  But then all we know is the largest bus number
-> > actually reachable from bus 00, which is usually smaller then the end
-> > of the aperture.  We don't know how many unused bus numbers there are
-> > in the aperture, so we can't safely allocate any for hot-added
-> > devices.
+For each resource of a PCI host bridge, the arch code and PCI
+code log following messages:
+"pci_root PNP0A08:00: host bridge window [io 0x0000-0x03af]",
+"pci_bus 0000:00: root bus resource [io  0x0000-0x03af]"
 
-I believe the assumption today is that all bus numbers are ok on each
-root port, which is usually the case. There was something about a Power
-Mac that faked a single PCI bus number space across both an AGP and
-a PCIe domain in pmac_pci_fixup_u4_of_node(), but I think that is the
-exception.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-Is there any requirement to use a bus aperture on non-PC hardware?
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index f701179..5f778ae 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -295,13 +295,6 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	}
  
-> I think DT support for PCI is lacking in a lot of areas. PowerPC seems
-> to be the only architecture actively setting up busses according to the
-> bus-range property specified in the DT. All other architectures seem to
-> not pre-allocate bus apertures and go with the default instead. From
-> what you say that means hot-plugging is out. Although I don't think the
-> Tegra PCIe controller even supports hot-plugging.
+ 	info->res_num++;
+-	if (addr.translation_offset)
+-		dev_info(&info->bridge->dev, "host bridge window %pR "
+-			 "(PCI address [%#llx-%#llx])\n",
+-			 res, res->start - addr.translation_offset,
+-			 res->end - addr.translation_offset);
+-	else
+-		dev_info(&info->bridge->dev, "host bridge window %pR\n", res);
+ 
+ 	return AE_OK;
+ }
+-- 
+1.7.1
 
-If the default is allowing any bus numbers, and that matches the
-hardware capabilities, I think hot-plugging would work.
 
-	Arnd
