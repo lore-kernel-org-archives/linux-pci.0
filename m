@@ -1,86 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 0/4] PCI: PCIe capability structure related cleanup/fixes
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
-Date: Fri, 01 Jun 2012 15:16:19 -0600
-Message-ID: <20120601211619.20328.36769.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:65325 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761253Ab2FVG5y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:57:54 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so3169265pbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:57:54 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v10 09/13] x86/PCI: simplify pci_mmcfg_late_insert_resources()
+Date: Fri, 22 Jun 2012 14:55:18 +0800
+Message-Id: <1340348122-29021-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following series introduces PCI Express 'capability structure'
-related cleanup, fixes, and optimizations.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Patch 1/4 changes pci_ltr_supported() to a static routine.
+Reduce redundant code to simplify pci_mmcfg_late_insert_resources().
 
-Patch 2/4 removes redundant checking in various PCI Express features as
-suggested by Bjorn Helgaas in
-http://marc.info/?l=linux-pci&m=130463494319762&w=2
-
-There is a similar idiom in use that could be similarly be re-factored:
-    if (!pci_is_pcie(dev))
-	return;
-
-    pos = pci_find_ext_capability(dev, ...);
-    if (!pos)
-	return;
-
-At first it seemed incorrect to remove the redundant call of
-pci_is_pcie() in these cases as a PCI or PCI-X (< 2.0) device may be
-involved.  In such cases an "extended capability" list would not exist,
-as it was not introduced until PCI-X 2.0, and accesses outside of the
-device's configuration space would be attempted.  However, upon further
-review of pci_find_ext_capability() it looks as if such accesses would
-be handled correctly due to the short-circuiting logic involved -
-
-    if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
-	return 0;
-
-As such, I'll entertain comments as to whether or not we should also
-make similar removals of pci_is_pcie() in these cases.
-
-Patch 3/4 introduces pci_pcie_cap2() for use in v2 capability related
-feature code.  The makeup of Express' capability structure varies
-substantially between v1 and v2.
-
-There is still some redundancy in PCIe v2 capabilities checking related
-to the Latency Tolerance Reporting (LTR) feature routines that likely
-could be re-factored further; please feel free to respond with ideas.
-
-Patch 4/4 makes a minor optimization to the saving and restoring of
-PCI Express capability structures.
-
-Seems like the same type of optimization could be done to remove the
-'if (pcie_cap_has_lnkctl(dev->pcie_type, flags))' check.  According to
-section 7.8 "PCI Express Capability Structure" of the PCI Express 1.0a
-specification:
-
-    "Figure 7-10 details allocation of register fields in the PCI
-     Express Capability structure. The PCI Express Capabilities,
-     Device Capabilities, Device Status/Control, Link Capabilities,
-     and Link Status/Control registers are required for all PCI
-     Express devices. Endpoints are not required to implement
-     registers other than those listed above and terminate the
-     capability structure."
-
-There may have been some early Express devices that did not properly
-follow the specification which required the introduction of
-'pcie_cap_has_lnkctl()' so I did not make the additional optimization.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
+ arch/x86/pci/mmconfig-shared.c |   34 ++++++++--------------------------
+ 1 file changed, 8 insertions(+), 26 deletions(-)
 
-Myron Stowe (4):
-      PCI: Remove redundant capabilities checking in pci_{save,restore}_pcie_state
-      PCI: Add pci_pcie_cap2() check for PCIe feature capabilities >= v2
-      PCI: Remove redundant checking in PCI Express capability routines
-      PCI: make pci_ltr_supported static.
-
-
- drivers/pci/pci.c        |   93 ++++++++++++++++++++++++++++------------------
- include/linux/pci.h      |    1 
- include/linux/pci_regs.h |    7 +++
- 3 files changed, 64 insertions(+), 37 deletions(-)
-
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 19fc42b..332fabd 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -26,7 +26,6 @@
+ #define PREFIX "PCI: "
+ 
+ /* Indicate if the mmcfg resources have been placed into the resource table. */
+-static int __initdata pci_mmcfg_resources_inserted;
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
+ static DEFINE_MUTEX(pci_mmcfg_lock);
+@@ -373,18 +372,6 @@ static int __init pci_mmcfg_check_hostbridge(void)
+ 	return !list_empty(&pci_mmcfg_list);
+ }
+ 
+-static void __init pci_mmcfg_insert_resources(void)
+-{
+-	struct pci_mmcfg_region *cfg;
+-
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		if (!cfg->res.parent)
+-			insert_resource(&iomem_resource, &cfg->res);
+-
+-	/* Mark that the resources have been inserted. */
+-	pci_mmcfg_resources_inserted = 1;
+-}
+-
+ static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
+ 						 void *data)
+ {
+@@ -668,11 +655,7 @@ static void __init __pci_mmcfg_init(int early)
+ 	if (pci_mmcfg_arch_init())
+ 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+ 	else {
+-		/*
+-		 * Signal not to attempt to insert mmcfg resources because
+-		 * the architecture mmcfg setup could not initialize.
+-		 */
+-		pci_mmcfg_resources_inserted = 1;
++		free_all_mmcfg();
+ 		pci_mmcfg_arch_init_failed = true;
+ 	}
+ }
+@@ -689,15 +672,12 @@ void __init pci_mmcfg_late_init(void)
+ 
+ static int __init pci_mmcfg_late_insert_resources(void)
+ {
++	struct pci_mmcfg_region *cfg;
++
+ 	pci_mmcfg_running_state = true;
+ 
+-	/*
+-	 * If resources are already inserted or we are not using MMCONFIG,
+-	 * don't insert the resources.
+-	 */
+-	if ((pci_mmcfg_resources_inserted == 1) ||
+-	    (pci_probe & PCI_PROBE_MMCONF) == 0 ||
+-	    list_empty(&pci_mmcfg_list))
++	/* If we are not using MMCONFIG, don't insert the resources. */
++	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+ 		return 1;
+ 
+ 	/*
+@@ -705,7 +685,9 @@ static int __init pci_mmcfg_late_insert_resources(void)
+ 	 * marked so it won't cause request errors when __request_region is
+ 	 * called.
+ 	 */
+-	pci_mmcfg_insert_resources();
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		if (!cfg->res.parent)
++			insert_resource(&iomem_resource, &cfg->res);
+ 
+ 	return 0;
+ }
 -- 
+1.7.9.5
+
