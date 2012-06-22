@@ -1,69 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:62009 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711Ab2FKRnd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 13:43:33 -0400
-Received: by lbbgm6 with SMTP id gm6so2991392lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 10:43:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWTP1PP6hcfJ=ru5J=_dLH+q5oy4-OEg-Ws-2xWkxyGLg@mail.gmail.com>
-References: <1338190380-5144-1-git-send-email-jiang.liu@huawei.com> <CAE9FiQWTP1PP6hcfJ=ru5J=_dLH+q5oy4-OEg-Ws-2xWkxyGLg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 11 Jun 2012 10:43:11 -0700
-Message-ID: <CAErSpo450AHHHm1PgCi+ELrhosuwGSg3BnX_Ff2v4dC1h-v_Pg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: export symbol pci_bus_sem to module
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Wu Fengguang <fengguang.wu@intel.com>,
-	Amos Kong <kongjianjun@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42860 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761373Ab2FVG5W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:57:22 -0400
+Received: by mail-pz0-f46.google.com with SMTP id y13so1941745dad.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:57:22 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@hauwei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
 	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH v10 05/13] x86/PCI: prepare pci_mmcfg_check_reserved() to be called at runtime
+Date: Fri, 22 Jun 2012 14:55:14 +0800
+Message-Id: <1340348122-29021-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 8, 2012 at 12:01 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, May 28, 2012 at 12:33 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->> Changeset "9080648 PCI: acpiphp: remove all functions in slot,
->> even without ACPI _EJx" introduces pci_bus_sem into the acpiphp
->> driver, but pci_bus_sem hasn't been exported to modules yet.
->> So export symbol pci_bus_sem to modules, otherwise the acpiphp
->> driver can't be built as module any more.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Jiang Liu <liuj97@gmail.com>
->> ---
->>  drivers/pci/search.c |    2 ++
->>  1 files changed, 2 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
->> index 9d75dc8..e0c7a22 100644
->> --- a/drivers/pci/search.c
->> +++ b/drivers/pci/search.c
->> @@ -15,6 +15,8 @@
->>  #include "pci.h"
->>
->>  DECLARE_RWSEM(pci_bus_sem);
->> +EXPORT_SYMBOL(pci_bus_sem);
->> +
->>  /*
->>  * find the upstream PCIe-to-PCI bridge of a PCI device
->>  * if the device is PCIE, return NULL
->
-> Bjorn,
->
-> can you please fold this one into
->
-> 9080648:
-> PCI: acpiphp: remove all functions in slot, even without ACPI _EJx
->
-> that commit now is in pci/for-3.6
+From: Jiang Liu <jiang.liu@hauwei.com>
 
-Yes, I'll fix this.  If you don't object, I'll make it
-EXPORT_SYMBOL_GPL().  I think we'll have more changes in the bus
-scan/remove paths, and it's possible we'll be able to un-export this
-in the future.
+From: Jiang Liu <jiang.liu@hauwei.com>
 
-Bjorn
+Prepare function pci_mmcfg_check_reserved() to be called at runtime
+for PCI host bridge hot-plugging
+
+[bhelgaas: KERN_INFO, not KERN_ERR, for missing ACPI PNP0C01/02 reservation]
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/x86/pci/mmconfig-shared.c |  104 ++++++++++++++++++++++++++--------------
+ 1 file changed, 68 insertions(+), 36 deletions(-)
+
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 0ac97d5..15a7abf 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -27,6 +27,7 @@
+ 
+ /* Indicate if the mmcfg resources have been placed into the resource table. */
+ static int __initdata pci_mmcfg_resources_inserted;
++static bool pci_mmcfg_running_state;
+ static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+@@ -375,14 +376,15 @@ static void __init pci_mmcfg_insert_resources(void)
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		insert_resource(&iomem_resource, &cfg->res);
++		if (!cfg->res.parent)
++			insert_resource(&iomem_resource, &cfg->res);
+ 
+ 	/* Mark that the resources have been inserted. */
+ 	pci_mmcfg_resources_inserted = 1;
+ }
+ 
+-static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
+-					      void *data)
++static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
++						 void *data)
+ {
+ 	struct resource *mcfg_res = data;
+ 	struct acpi_resource_address64 address;
+@@ -418,8 +420,8 @@ static acpi_status __init check_mcfg_resource(struct acpi_resource *res,
+ 	return AE_OK;
+ }
+ 
+-static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
+-		void *context, void **rv)
++static acpi_status __devinit find_mboard_resource(acpi_handle handle, u32 lvl,
++						  void *context, void **rv)
+ {
+ 	struct resource *mcfg_res = context;
+ 
+@@ -432,7 +434,7 @@ static acpi_status __init find_mboard_resource(acpi_handle handle, u32 lvl,
+ 	return AE_OK;
+ }
+ 
+-static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
++static int __devinit is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+ {
+ 	struct resource mcfg_res;
+ 
+@@ -451,13 +453,15 @@ static int __init is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+ 
+ typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
+ 
+-static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+-				    struct pci_mmcfg_region *cfg, int with_e820)
++static int __ref is_mmconf_reserved(check_reserved_t is_reserved,
++				    struct pci_mmcfg_region *cfg,
++				    struct device *dev, int with_e820)
+ {
+ 	u64 addr = cfg->res.start;
+ 	u64 size = resource_size(&cfg->res);
+ 	u64 old_size = size;
+-	int valid = 0, num_buses;
++	int num_buses;
++	char *method = with_e820 ? "E820" : "ACPI motherboard resources";
+ 
+ 	while (!is_reserved(addr, addr + size, E820_RESERVED)) {
+ 		size >>= 1;
+@@ -465,49 +469,75 @@ static int __init is_mmconf_reserved(check_reserved_t is_reserved,
+ 			break;
+ 	}
+ 
+-	if (size >= (16UL<<20) || size == old_size) {
+-		printk(KERN_INFO PREFIX "MMCONFIG at %pR reserved in %s\n",
+-		       &cfg->res,
+-		       with_e820 ? "E820" : "ACPI motherboard resources");
+-		valid = 1;
+-
+-		if (old_size != size) {
+-			/* update end_bus */
+-			cfg->end_bus = cfg->start_bus + ((size>>20) - 1);
+-			num_buses = cfg->end_bus - cfg->start_bus + 1;
+-			cfg->res.end = cfg->res.start +
+-			    PCI_MMCFG_BUS_OFFSET(num_buses) - 1;
+-			snprintf(cfg->name, PCI_MMCFG_RESOURCE_NAME_LEN,
+-				 "PCI MMCONFIG %04x [bus %02x-%02x]",
+-				 cfg->segment, cfg->start_bus, cfg->end_bus);
++	if (size < (16UL<<20) && size != old_size)
++		return 0;
++
++	if (dev)
++		dev_info(dev, "MMCONFIG at %pR reserved in %s\n",
++			 &cfg->res, method);
++	else
++		printk(KERN_INFO PREFIX
++		       "MMCONFIG at %pR reserved in %s\n",
++		       &cfg->res, method);
++
++	if (old_size != size) {
++		/* update end_bus */
++		cfg->end_bus = cfg->start_bus + ((size>>20) - 1);
++		num_buses = cfg->end_bus - cfg->start_bus + 1;
++		cfg->res.end = cfg->res.start +
++		    PCI_MMCFG_BUS_OFFSET(num_buses) - 1;
++		snprintf(cfg->name, PCI_MMCFG_RESOURCE_NAME_LEN,
++			 "PCI MMCONFIG %04x [bus %02x-%02x]",
++			 cfg->segment, cfg->start_bus, cfg->end_bus);
++
++		if (dev)
++			dev_info(dev,
++				"MMCONFIG "
++				"at %pR (base %#lx) (size reduced!)\n",
++				&cfg->res, (unsigned long) cfg->address);
++		else
+ 			printk(KERN_INFO PREFIX
+-			       "MMCONFIG for %04x [bus%02x-%02x] "
+-			       "at %pR (base %#lx) (size reduced!)\n",
+-			       cfg->segment, cfg->start_bus, cfg->end_bus,
+-			       &cfg->res, (unsigned long) cfg->address);
+-		}
++				"MMCONFIG for %04x [bus%02x-%02x] "
++				"at %pR (base %#lx) (size reduced!)\n",
++				cfg->segment, cfg->start_bus, cfg->end_bus,
++				&cfg->res, (unsigned long) cfg->address);
+ 	}
+ 
+-	return valid;
++	return 1;
+ }
+ 
+-static int __devinit pci_mmcfg_check_reserved(struct pci_mmcfg_region *cfg,
+-					      int early)
++static int __ref pci_mmcfg_check_reserved(struct device *dev,
++		  struct pci_mmcfg_region *cfg, int early)
+ {
+ 	if (!early && !acpi_disabled) {
+-		if (is_mmconf_reserved(is_acpi_reserved, cfg, 0))
++		if (is_mmconf_reserved(is_acpi_reserved, cfg, dev, 0))
+ 			return 1;
++
++		if (dev)
++			dev_info(dev, FW_INFO
++				 "MMCONFIG at %pR not reserved in "
++				 "ACPI motherboard resources\n",
++				 &cfg->res);
+ 		else
+-			printk(KERN_ERR FW_BUG PREFIX
++			printk(KERN_INFO FW_INFO PREFIX
+ 			       "MMCONFIG at %pR not reserved in "
+ 			       "ACPI motherboard resources\n",
+ 			       &cfg->res);
+ 	}
+ 
++	/*
++	 * e820_all_mapped() is marked as __init.
++	 * All entries from ACPI MCFG table have been checked at boot time.
++	 * For MCFG information constructed from hotpluggable host bridge's
++	 * _CBA method, just assume it's reserved.
++	 */
++	if (pci_mmcfg_running_state)
++		return 1;
++
+ 	/* Don't try to do this check unless configuration
+ 	   type 1 is available. how about type 2 ?*/
+ 	if (raw_pci_ops)
+-		return is_mmconf_reserved(e820_all_mapped, cfg, 1);
++		return is_mmconf_reserved(e820_all_mapped, cfg, dev, 1);
+ 
+ 	return 0;
+ }
+@@ -517,7 +547,7 @@ static void __init pci_mmcfg_reject_broken(int early)
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		if (pci_mmcfg_check_reserved(cfg, early) == 0) {
++		if (pci_mmcfg_check_reserved(NULL, cfg, early) == 0) {
+ 			printk(KERN_INFO PREFIX "not using MMCONFIG\n");
+ 			free_all_mmcfg();
+ 			return;
+@@ -656,6 +686,8 @@ void __init pci_mmcfg_late_init(void)
+ 
+ static int __init pci_mmcfg_late_insert_resources(void)
+ {
++	pci_mmcfg_running_state = true;
++
+ 	/*
+ 	 * If resources are already inserted or we are not using MMCONFIG,
+ 	 * don't insert the resources.
+-- 
+1.7.9.5
+
