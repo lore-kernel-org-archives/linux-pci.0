@@ -1,64 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:33725 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751032Ab2FLCzp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jun 2012 22:55:45 -0400
-Received: by lahd3 with SMTP id d3so3199609lah.19
-        for <linux-pci@vger.kernel.org>; Mon, 11 Jun 2012 19:55:44 -0700 (PDT)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:51818 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755654Ab2FVQyr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 12:54:47 -0400
+Received: by lbbgm6 with SMTP id gm6so3827663lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 09:54:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1339429021.24037.8.camel@bling.home>
-References: <20120530201424.31527.33142.stgit@bling.home> <20120606110514.GG757@amd.com>
- <1339429021.24037.8.camel@bling.home>
+In-Reply-To: <4FE44BEA.5030101@gmail.com>
+References: <20120621183430.2b84fb53.izumi.taku@jp.fujitsu.com>
+ <CAE9FiQUn-NhgJkhHXFu4gMi=xzWz06hSVxUJunj25e8gH_xqBw@mail.gmail.com>
+ <20120622192128.60b57d14.izumi.taku@jp.fujitsu.com> <4FE44BEA.5030101@gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 11 Jun 2012 19:55:24 -0700
-Message-ID: <CAErSpo6oaGBL7uG4ys7cp=qNP6KK3xgi-_MkmvDULmfpk-+-wA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joerg.roedel@amd.com>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org, david@gibson.dropbear.id.au,
-	konrad.wilk@oracle.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	ddutile@redhat.com, liuj97@gmail.com
+Date: Fri, 22 Jun 2012 10:54:25 -0600
+Message-ID: <CAErSpo6-nKFDTT_J=Ae61aVvxTkyn+FoQ_XGVEH=gyjS4_JAWQ@mail.gmail.com>
+Subject: Re: [PATCH 0/4] acpi, pci: hostbridge hotplug support
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 11, 2012 at 8:37 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Wed, 2012-06-06 at 13:05 +0200, Joerg Roedel wrote:
->> On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
->> > v2:
->> >  - Trickle down changes from pci_get_dma_source() to better handle
->> >    PCI device reference counting in IOMMU driver patches
+On Fri, Jun 22, 2012 at 4:41 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> On 06/22/2012 06:21 PM, Taku Izumi wrote:
+>> On Thu, 21 Jun 2012 11:18:07 -0700
+>> Yinghai Lu <yinghai@kernel.org> wrote:
 >>
->> Okay, I looked again over the code and looks good for merging to me.
->
-> Great, thanks Joerg!
->
->>  The
->> IOMMU Groups code depends on changes in the PCI code. We need to work
->> out how to merge this.
+>>> On Thu, Jun 21, 2012 at 2:34 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>>>>
+>>>>  This patchset adds basic code for host bridge hotplug.
+>>>>
+>>>>  I assume ACPI container device (ACPI0004) which carries
+>>>>  hostbridges will be hot-added or hot-removed. In that case
+>>>>  some codes are now missing for hostbridge hotplug.
+>>>>  This patchset mainly adds the following:
+>>>>   - remove hostbridge and devices under it
+>>>>   - resoruce-assign code for devices under hot-added hostbridge
+>>>>
+>>>>  The behavior when you don't try hostbridge hotplug should not change.
+>>>>
+>>>>  *[PATCH 1/4] acpi, pci: introduce list for acpi_pci_root drivers
+>>>>  *[PATCH 2/4] acpi, pci: introduce acpi_root_sem for list manipulation
+>>>>  *[PATCH 3/4] acpi, pci: add hostbridge removal function
+>>>>  *[PATCH 4/4] acpi, pci: add resoruce-assign code for devices under
+>>>>      hot-added hostbridge
+>>>
+>>> Hi, did you check our pci root bus hot plug branch ?
+>>>
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>> for-pci-root-bus-hotplug
+>>>
+>>> It contain some similar patches from jiang and me.
 >>
->> Bjorn,
+>>   Hi Yinghai,
+>>   Thank you for your comment.
 >>
->> I need the PCI changes before I can merge the IOMMU Groups code. There
->> are two ways that would work for me:
->>
->>       a) You Ack the PCI patch-set from Alex and I put it into my tree
->>          and merge the IOMMU Group code on-top, or
->>       b) You merge the PCI related patch-set into a seperate branch
->>          which you can merge into your next-branch and which I can
->>          pull in to merge IOMMU Groups on-top.
->>
->> Please let me know what works best for you.
+>>   I checked your branch out. It seems to include many work.
+>>   Is it already scheduled to be merged to Bjorn's tree?
+>>   If not, should I develop based on your tree?
+> Hi Taku,
+> I think the target is to merge those changes into Bjorn gate in near future,
+> so it would be better to base on Yinghai's gate.
 
-Joerg, I put the PCI changes into my "next" branch
-(http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/next).
- My feeble excuse is that I was on vacation last week, but that's
-pretty lame because this has been hanging for much longer than that.
+As you can probably tell, I'm falling behind in getting things merged.
+ If you can agree among yourselves on which series is preferable *and*
+spend some time reviewing each other's patches and adding
+"Reviewed-by", that would help me out be resolving some of the issues.
 
 Bjorn
