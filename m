@@ -1,70 +1,143 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42860 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761351Ab2FVG5P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:57:15 -0400
+Received: by mail-pz0-f46.google.com with SMTP id y13so1941745dad.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:57:15 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v12 00/15] PCI: allocate pci bus num range for unassigned bridge busn
-Date: Tue, 26 Jun 2012 11:53:54 -0700
-Message-Id: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v10 04/13] x86/PCI: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
+Date: Fri, 22 Jun 2012 14:55:13 +0800
+Message-Id: <1340348122-29021-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-busn_res already in next. and this patchset will
-will try to allocate busn range from the tree
+From: Jiang Liu <jiang.liu@huawei.com>
 
-could be found at:
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
+Introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap(), which will be used
+when supporting PCI root bridge hotplug.
 
--v2: according to Jesse, split to more small patches.
--v3: address some request from Bjorn. like make use %pR for busn_res debug print
-        out, and move the comment change with code change.
--v4: fixes the problem about rescan that Bjorn found.
--v5: add /proc/iobusn that is requested by Bjorn.
-     remove old workaround from pciehp.
-     add rescan_bridge for pci bridge in /sys
--v6: remove global iobusn_resource, and every root bus's busn_res will be root
-     of children buses' busn_res.
-     pc cardbus change is tested by pcmcia maintainter.
--v7: remove pci_scan_root_bus_max requested by Bjorn and Jesse.
--v8: rebase on top other patches with arch/x86/pci/bus_numa.c changes
-     also only include busn_res related changes.
--v9: Add busn into pci_root_info, and add it to resources list and pass it
-     to pci_create_root_bus.
--v11: convert busn_res probe to generic probe_resource with resource lock holding
-     add more strict checking about not scaned peer bridges.
--v12: updated after busn_resource changes.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/include/asm/pci_x86.h |    2 ++
+ arch/x86/pci/mmconfig_32.c     |   15 +++++++++++++++
+ arch/x86/pci/mmconfig_64.c     |   38 ++++++++++++++++++++++++++------------
+ 3 files changed, 43 insertions(+), 12 deletions(-)
 
-Yinghai Lu (15):
-  resources: Split out __allocate_resource()
-  resources: Add probe_resource()
-  resources: Replace registered resource in tree.
-  PCI: Add pci_bus_extend/shrink_top()
-  PCI: Probe safe range that we can use for unassigned bridge.
-  PCI: Add pci_bus_replace_busn_res()
-  PCI: Allocate bus range instead of use max blindly
-  PCI: Strict checking of valid range for bridge
-  PCI: Kill pci_fixup_parent_subordinate_busnr()
-  PCI: Seperate child bus scanning to two passes overall
-  pcmcia: Remove workaround for fixing pci parent bus subordinate
-  PCI: Double checking setting for bus register and bus struct.
-  PCI, pciehp: Remove not needed bus number range checking
-  PCI: More strict checking of valid range for bridge
-  PCI: Don't shrink too much for hotplug bridge
-
- drivers/pci/hotplug-pci.c     |   12 +--
- drivers/pci/probe.c           |  351 +++++++++++++++++++++++++++++++----------
- drivers/pcmcia/yenta_socket.c |   75 ---------
- include/linux/ioport.h        |    8 +
- kernel/resource.c             |  200 +++++++++++++++++++++++-
- 5 files changed, 472 insertions(+), 174 deletions(-)
-
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index b3a5317..df898ce 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -135,6 +135,8 @@ struct pci_mmcfg_region {
+ 
+ extern int __init pci_mmcfg_arch_init(void);
+ extern void __init pci_mmcfg_arch_free(void);
++extern int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
++extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+ 
+ extern struct list_head pci_mmcfg_list;
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5dad04a..a22785d 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -141,3 +141,18 @@ int __init pci_mmcfg_arch_init(void)
+ void __init pci_mmcfg_arch_free(void)
+ {
+ }
++
++int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	return 0;
++}
++
++void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	unsigned long flags;
++
++	/* Invalidate the cached mmcfg map entry. */
++	raw_spin_lock_irqsave(&pci_config_lock, flags);
++	mmcfg_last_accessed_device = 0;
++	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++}
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index acc48c5..ebefea5 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -95,7 +95,7 @@ static const struct pci_raw_ops pci_mmcfg = {
+ 	.write =	pci_mmcfg_write,
+ };
+ 
+-static void __iomem * __init mcfg_ioremap(struct pci_mmcfg_region *cfg)
++static void __iomem * __devinit mcfg_ioremap(struct pci_mmcfg_region *cfg)
+ {
+ 	void __iomem *addr;
+ 	u64 start, size;
+@@ -114,16 +114,14 @@ int __init pci_mmcfg_arch_init(void)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		cfg->virt = mcfg_ioremap(cfg);
+-		if (!cfg->virt) {
+-			printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
+-			       &cfg->res);
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		if (pci_mmcfg_arch_map(cfg)) {
+ 			pci_mmcfg_arch_free();
+ 			return 0;
+ 		}
+-	}
++
+ 	raw_pci_ext_ops = &pci_mmcfg;
++
+ 	return 1;
+ }
+ 
+@@ -131,10 +129,26 @@ void __init pci_mmcfg_arch_free(void)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+-		if (cfg->virt) {
+-			iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
+-			cfg->virt = NULL;
+-		}
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		pci_mmcfg_arch_unmap(cfg);
++}
++
++int __devinit pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	cfg->virt = mcfg_ioremap(cfg);
++	if (!cfg->virt) {
++		printk(KERN_ERR PREFIX "can't map MMCONFIG at %pR\n",
++		       &cfg->res);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	if (cfg && cfg->virt) {
++		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
++		cfg->virt = NULL;
+ 	}
+ }
 -- 
-1.7.7
+1.7.9.5
 
