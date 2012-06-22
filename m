@@ -1,55 +1,221 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Michal Miroslaw <mirq-linux@rere.qmqm.pl>,
-	Jesse Barnes <jesse.barnes@intel.com>
-Subject: [PATCH -v6 3/4] PCI, PM, Do not call pci_set_power_state with PCI_D3cold
-Date: Tue, 19 Jun 2012 13:20:48 +0800
-Message-Id: <1340083249-16266-4-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
-References: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42860 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761185Ab2FVG5I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:57:08 -0400
+Received: by mail-pz0-f46.google.com with SMTP id y13so1941745dad.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:57:08 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v10 03/13] x86/PCI: use RCU list to protect mmconfig list
+Date: Fri, 22 Jun 2012 14:55:12 +0800
+Message-Id: <1340348122-29021-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI subsystem has not been ready for D3cold support yet.  So
-PCI_D3cold should not be used as parameter for pci_set_power_state.
-This patch is needed for upcoming PCI_D3cold support.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-This patch has no functionality change, because pci_set_power_state
-will bound the parameter to PCI_D3hot too.
+Use RCU list to protect mmconfig list from dynamic change
+when supporting PCI host bridge hotplug.
 
-Cc: Michal Miroslaw <mirq-linux@rere.qmqm.pl>
-Cc: Jesse Barnes <jesse.barnes@intel.com>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/pci/mrst.c       |    2 +-
- drivers/misc/cb710/core.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ arch/x86/pci/mmconfig-shared.c |   18 ++++++++++++------
+ arch/x86/pci/mmconfig_32.c     |   13 +++++++++++--
+ arch/x86/pci/mmconfig_64.c     |   13 +++++++++++--
+ 3 files changed, 34 insertions(+), 10 deletions(-)
 
---- a/arch/x86/pci/mrst.c
-+++ b/arch/x86/pci/mrst.c
-@@ -264,7 +264,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 5e2cd2a..0ac97d5 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -17,6 +17,8 @@
+ #include <linux/bitmap.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/mutex.h>
++#include <linux/rculist.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <asm/acpi.h>
+@@ -25,6 +27,7 @@
  
- static void __devinit mrst_power_off_unused_dev(struct pci_dev *dev)
- {
--	pci_set_power_state(dev, PCI_D3cold);
-+	pci_set_power_state(dev, PCI_D3hot);
+ /* Indicate if the mmcfg resources have been placed into the resource table. */
+ static int __initdata pci_mmcfg_resources_inserted;
++static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
+@@ -45,20 +48,20 @@ static __init void free_all_mmcfg(void)
+ 		pci_mmconfig_remove(cfg);
  }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0801, mrst_power_off_unused_dev);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0809, mrst_power_off_unused_dev);
---- a/drivers/misc/cb710/core.c
-+++ b/drivers/misc/cb710/core.c
-@@ -180,7 +180,7 @@ static int cb710_suspend(struct pci_dev
- 	pci_save_state(pdev);
- 	pci_disable_device(pdev);
- 	if (state.event & PM_EVENT_SLEEP)
--		pci_set_power_state(pdev, PCI_D3cold);
-+		pci_set_power_state(pdev, PCI_D3hot);
+ 
+-static __init void list_add_sorted(struct pci_mmcfg_region *new)
++static __devinit void list_add_sorted(struct pci_mmcfg_region *new)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	/* keep list sorted by segment and starting bus number */
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
+ 		if (cfg->segment > new->segment ||
+ 		    (cfg->segment == new->segment &&
+ 		     cfg->start_bus >= new->start_bus)) {
+-			list_add_tail(&new->list, &cfg->list);
++			list_add_tail_rcu(&new->list, &cfg->list);
+ 			return;
+ 		}
+ 	}
+-	list_add_tail(&new->list, &pci_mmcfg_list);
++	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
+ }
+ 
+ static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
+@@ -101,8 +104,11 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	struct pci_mmcfg_region *new;
+ 
+ 	new = pci_mmconfig_alloc(segment, start, end, addr);
+-	if (new)
++	if (new) {
++		mutex_lock(&pci_mmcfg_lock);
+ 		list_add_sorted(new);
++		mutex_unlock(&pci_mmcfg_lock);
++	}
+ 
+ 	return new;
+ }
+@@ -111,7 +117,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
+ {
+ 	struct pci_mmcfg_region *cfg;
+ 
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+ 		if (cfg->segment == segment &&
+ 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
+ 			return cfg;
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5372e86..5dad04a 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/init.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ #include <acpi/acpi.h>
+@@ -60,9 +61,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -80,6 +84,7 @@ err:		*value = -1;
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
  	return 0;
  }
+@@ -93,9 +98,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if ((bus > 255) || (devfn > 255) || (reg > 4095))
+ 		return -EINVAL;
  
++	rcu_read_lock();
+ 	base = get_base_addr(seg, bus, devfn);
+-	if (!base)
++	if (!base) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	raw_spin_lock_irqsave(&pci_config_lock, flags);
+ 
+@@ -113,6 +121,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		break;
+ 	}
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index 915a493..acc48c5 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -9,6 +9,7 @@
+ #include <linux/init.h>
+ #include <linux/acpi.h>
+ #include <linux/bitmap.h>
++#include <linux/rcupdate.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -34,9 +35,12 @@ err:		*value = -1;
+ 		return -EINVAL;
+ 	}
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		goto err;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -49,6 +53,7 @@ err:		*value = -1;
+ 		*value = mmio_config_readl(addr + reg);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+@@ -62,9 +67,12 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+ 		return -EINVAL;
+ 
++	rcu_read_lock();
+ 	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr)
++	if (!addr) {
++		rcu_read_unlock();
+ 		return -EINVAL;
++	}
+ 
+ 	switch (len) {
+ 	case 1:
+@@ -77,6 +85,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		mmio_config_writel(addr + reg, value);
+ 		break;
+ 	}
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
+-- 
+1.7.9.5
+
