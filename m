@@ -1,82 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28692 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759229Ab2FUJyX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:54:23 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v9 02/11] x86/PCI: split out pci_mmconfig_alloc() for code reuse
-Date: Thu, 21 Jun 2012 17:36:54 +0800
-Message-ID: <1340271423-4352-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
-References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:57402 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754538Ab2FVUlg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 16:41:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4FE4D7B7.8000004@gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
+	<4FE22B28.9020402@gmail.com>
+	<CAE9FiQUkGCQ0Y=n3i=bq388T8N-vrHP2LtMTFGwry2nA+uppwA@mail.gmail.com>
+	<4FE2B788.3070505@gmail.com>
+	<CAE9FiQWBB0JVCLWa40k9qYJXGrv_z=RgspgQW4x2di0uCUFXmA@mail.gmail.com>
+	<4FE41B3E.7080609@gmail.com>
+	<CAE9FiQWB-=qRQfJS=95a+L_N32bZ97MCdW3voDCNSCbVcCnERQ@mail.gmail.com>
+	<4FE4D7B7.8000004@gmail.com>
+Date: Fri, 22 Jun 2012 13:41:35 -0700
+Message-ID: <CAE9FiQUOWjLz86JZQrN-v1PdKfLAV022CPrjeArmYM5bRD+drA@mail.gmail.com>
+Subject: Re: SNB PCI root information
+From: Yinghai Lu <yinghai@kernel.org>
+To: Brice Goglin <brice.goglin@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split out pci_mmconfig_alloc() for code reuse, which will be used
-when supporting PCI root bridge hotplug.
+On Fri, Jun 22, 2012 at 1:38 PM, Brice Goglin <brice.goglin@gmail.com> wrote:
+> Le 22/06/2012 19:28, Yinghai Lu a écrit :
+>> On Fri, Jun 22, 2012 at 12:14 AM, Brice Goglin <brice.goglin@gmail.com> wrote:
+>>
+>>>> BIOS _PXM return 0 for both pci root buses?
+>>>>
+>>> Here's dmesg.
+>>> I can't say for sure whether _PXM returns 0 since I don't know how to
+>>> read all this :) But Linux puts the first socket cpumap in
+>>> /sys/bus/pci/devices/*/local_cpus (and that's wrong according to the
+>>> motherboard manual and according to the performance we see).
+>>>
+>> hi, looks like you system bios does not provide _PXM for the root bus.
+>>
+>
+> So why does Linux say that all buses are close to socket 0 instead of
+> close to everything as usual?
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/mmconfig-shared.c |   19 +++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
+        if (bus && node != -1) {
+#ifdef CONFIG_ACPI_NUMA
+                if (pxm >= 0)
+                        dev_printk(KERN_DEBUG, &bus->dev,
+                                   "on NUMA node %d (pxm %d)\n", node, pxm);
+#else
+                dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n", node);
+#endif
+        }
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index f799949..5e2cd2a 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -61,8 +61,9 @@ static __init void list_add_sorted(struct pci_mmcfg_region *new)
- 	list_add_tail(&new->list, &pci_mmcfg_list);
- }
- 
--static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
--							int end, u64 addr)
-+static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
-+							     int start,
-+							     int end, u64 addr)
- {
- 	struct pci_mmcfg_region *new;
- 	struct resource *res;
-@@ -79,8 +80,6 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
- 	new->start_bus = start;
- 	new->end_bus = end;
- 
--	list_add_sorted(new);
--
- 	res = &new->res;
- 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
- 	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
-@@ -96,6 +95,18 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
- 	return new;
- }
- 
-+static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-+							int end, u64 addr)
-+{
-+	struct pci_mmcfg_region *new;
-+
-+	new = pci_mmconfig_alloc(segment, start, end, addr);
-+	if (new)
-+		list_add_sorted(new);
-+
-+	return new;
-+}
-+
- struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
- {
- 	struct pci_mmcfg_region *cfg;
--- 
-1.7.1
+so can you boot with "debug ignore_loglevel" ?
 
+Thanks
 
+Yinghai
