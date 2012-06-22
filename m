@@ -1,60 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:47299 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756093Ab2FVR2U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 13:28:20 -0400
+Message-ID: <4FE4AB2F.8090402@wwwdotorg.org>
+Date: Fri, 22 Jun 2012 11:28:15 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <1340418231-10134-1-git-send-email-ying.huang@intel.com>
-References: <1340418231-10134-1-git-send-email-ying.huang@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 23 Jun 2012 15:26:52 -0600
-Message-ID: <CAErSpo7DxKLJC4p1n1YS3HNpjdeXvYTLL-_tkWqu_2yWokLttw@mail.gmail.com>
-Subject: Re: [PATCH -v7 0/4] PCIe, PM, Add PCIe runtime D3cold support
-To: Huang Ying <ying.huang@intel.com>
-Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Zheng Yan <zheng.z.yan@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+References: <4FD85127.8050301@firmworks.com> <20120614091905.GA9081@avionic-0098.mockup.avionic-design.de> <4FDA2DDA.1030704@wwwdotorg.org> <20120614192903.GA2212@avionic-0098.mockup.avionic-design.de> <4FDA40A0.4030206@wwwdotorg.org> <20120615061236.GA4081@avionic-0098.mockup.avionic-design.de> <20120619133001.GB24138@avionic-0098.mockup.avionic-design.de> <4FE0EFBB.6090206@firmworks.com> <20120621064722.GA1122@avionic-0098.mockup.avionic-design.de> <CAErSpo6Bpfqm-0yGiBOXEhF4kD3PTDYvWVr0babLZ4GkBLXJiA@mail.gmail.com> <20120622110038.GA15212@avionic-0098.mockup.avionic-design.de> <4FE4A4B3.9010200@wwwdotorg.org>
+In-Reply-To: <4FE4A4B3.9010200@wwwdotorg.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 22, 2012 at 8:23 PM, Huang Ying <ying.huang@intel.com> wrote:
-> Changelog:
->
-> v7:
->
-> - Rebased on pci.git next branch
->
-> v6:
->
-> - Disable device D3cold during system suspend/hibernate with a new method per Rafeal's comments
->
-> v5:
->
-> - Disable device D3cold during system suspend/hibernate per Rafael's comments
->
-> v4:
->
-> - Minors fixes based on comments from Rafael
->
-> v3:
->
-> - Drop device.power.power_must_be_on, use pci_dev.no_d3cold instead
-> - Drop device.power.power_off_user, use pci_dev.d3cold_allowed instead
-> - Use black list instead of white list in pcie port runtime support per request from Bjorn
-> - Various fixes based on comments from Rafael
->
-> v2:
->
-> - Refreshed based on comments from Rafael
->
-> [PATCH -v7 1/4] ACPI, PM, Specify lowest allowed state for device sleep
-> [PATCH -v7 2/4] PCIe, PM, Add runtime PM support to PCIe port
-> [PATCH -v7 3/4] PCI, do not call pci_set_power_state with PCI_D3cold
-> [PATCH -v7 4/4] PCIe, PM, Add PCIe runtime D3cold support
+On 06/22/2012 11:00 AM, Stephen Warren wrote:
+> On 06/22/2012 05:00 AM, Thierry Reding wrote:
+> ...
+>> Stephen: can you try to find out whether the Tegra PCIe controller 
+>> indeed implements ECAM, or if this scheme is actually just a
+>> proprietary variant?
+> 
+> Sure. I have added this request to the bug I filed requesting more
+> complete PCIe host documentation.
 
-I merged this to my "next" branch and pushed it.  Thanks!
-
-I reworded some of the [4/4] changelog -- check it over and make sure
-it still makes sense:
-
-http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commit;h=448bd857d48e69b33ef323739dc6d8ca20d4cda7
-
-Bjorn
+I've received unofficial confirmation that we do indeed implement a
+non-standard/non-ECAM mapping, and what's in our driver matches our HW.
