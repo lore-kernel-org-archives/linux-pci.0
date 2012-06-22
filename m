@@ -1,62 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v12 13/15] PCI, pciehp: Remove not needed bus number range checking
-Date: Tue, 26 Jun 2012 11:54:07 -0700
-Message-Id: <1340736849-14875-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:36368 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756229Ab2FVRNm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 13:13:42 -0400
+Received: by lbbgm6 with SMTP id gm6so3848973lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 10:13:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201206221653.31817.arnd@arndb.de>
+References: <4FDA2DDA.1030704@wwwdotorg.org> <201206221303.21985.arnd@arndb.de>
+ <CAErSpo56=S2oQ0usYfH28T0178SQUBD=5jqmcKWCT6M5WUQF6g@mail.gmail.com> <201206221653.31817.arnd@arndb.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 22 Jun 2012 11:13:19 -0600
+Message-ID: <CAErSpo5dj99iHW0WNEABPR1OO2yS=BwNezOivu6_7Go8sKyjsQ@mail.gmail.com>
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found hotplug adding one EM with bridge fail, bios only leave one bus range
- for slot.
+On Fri, Jun 22, 2012 at 10:53 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 22 June 2012, Bjorn Helgaas wrote:
+>> The requirement (if there is one) isn't anything related to PC-ness.
+>> I just don't understand how things can actually work if two host
+>> bridges both claim the same bus number.  If we do a config read to
+>> that bus, both bridges should claim it and turn it into config cycles
+>> on their respective root buses, and we should get two responses.  I
+>> would expect the second response to cause an "unexpected response"
+>> machine check or similar.
+>
+> But each PCI domain has its own config space, so if you do a config
+> read for one bus, it's always relative to the domain.
 
-[ 1169.621444] pciehp: No bus number available for hot-added bridge 0000:55:00.0
-[ 1169.633277] pcieport 0000:40:03.0: PCI bridge to [bus 55-55]
-
-With busn_res tracking and allocating, we don't need that checking anymore.
-
-Parent bridges' bus number will be extended safely.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug-pci.c |   12 +-----------
- 1 files changed, 1 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
-index 6258dc2..2221a27 100644
---- a/drivers/pci/hotplug-pci.c
-+++ b/drivers/pci/hotplug-pci.c
-@@ -7,18 +7,8 @@
- int __ref pci_hp_add_bridge(struct pci_dev *dev)
- {
- 	struct pci_bus *parent = dev->bus;
--	int pass, busnr, start = parent->busn_res.start;
--	int end = parent->busn_res.end;
-+	int pass, busnr = parent->busn_res.start;
- 
--	for (busnr = start; busnr <= end; busnr++) {
--		if (!pci_find_bus(pci_domain_nr(parent), busnr))
--			break;
--	}
--	if (busnr-- > end) {
--		printk(KERN_ERR "No bus number available for hot-added bridge %s\n",
--				pci_name(dev));
--		return -1;
--	}
- 	for (pass = 0; pass < 2; pass++)
- 		busnr = pci_scan_bridge(parent, dev, busnr, pass);
- 	if (!dev->subordinate)
--- 
-1.7.7
-
+Oh, I see!  I totally missed the fact that each host bridge was in its
+own domain.  If each has its own domain, then the bus number aperture
+can certainly be [bus 00-ff] and there's no problem.
