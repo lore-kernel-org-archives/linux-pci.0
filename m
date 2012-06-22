@@ -1,60 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:39751 "EHLO
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:65325 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754143Ab2FUCh6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 22:37:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120620193438.GB2248@gmail.com>
-References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
-	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
-	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
-	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
-	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
-	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
-	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
-	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
-	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
-	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
-	<20120620193438.GB2248@gmail.com>
-Date: Wed, 20 Jun 2012 19:37:57 -0700
-Message-ID: <CAE9FiQWUo3uffM4NCUORJXR1pdPaf0E1Sws1hwVNAibHg5_yjQ@mail.gmail.com>
-Subject: Re: SNB PCI root information
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	with ESMTP id S1760330Ab2FVG4o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:56:44 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so3169265pbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:56:44 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v10 00/13] x86/PCI: update MMCFG information when hot-plugging PCI host bridges
+Date: Fri, 22 Jun 2012 14:55:09 +0800
+Message-Id: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 12:34 PM, Ingo Molnar <mingo@kernel.org> wrote:
->> if the vendor provide _PXM, that _PXM should be right and be
->> trusted.
->>
->> if the vendor does not provide _PXM, we can have command line
->> to input it before user can get one updated BIOS from vendor.
->
-> So how about an incorrect _PXM, or a slightly inefficient one?
-> Why shouldn't it be possible for the user to override it?
+This patchset enhance pci_root driver to update MMCFG information when
+hot-plugging PCI root bridges. It applies to 
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next
 
-Try to keep the code simple.
+-v2: split into smaller patches and skip updating MMCFG information when
+     MMCFG is disabled
+-v3: add mmconf_added to simply free path, also make pci_mmconfig_insert()
+     to process extra exist case --- By Yinghai
+-v4: tune arch_acpi_pci_root_add() to handle a corner case raised by Kenji
+-v5: address review comments from Bjorn and Taku, also better handle corner
+     cases in arch_acpi_pci_root_add()
+-v6: get rid of arch_acpi_pci_root_xxx() by using existing hooks
+     add MCFG information for host bridges on demand
+     more corner cases clear up
+     correctly handle condition compilation
+     fix section mismatch issues
+     fix a issue reported by Taku about a BIOS bug
+-v7: unify log messages
+     remove redundant host bridge resource related log messages
+     fix a issue reported by Taku which breaks pnp resource allocation
+-v8: 1) add acpi_pci_cache_mcfg() in patch "provide MCFG address for PCI host
+     bridges" for better readability and fix a condition compilation issue
+     2) change patch "add MMCFG information on demand" to RFC and fix
+     compilation issues reported by Fengguang
+     3) Add new patch "refine __pci_mmcfg_init() for better code readability"
+      and "mark acpi_sfi_table_parse() as __init", there should no
+      functionality changes.
+-v9: changes from v7 (redo v8)
+     Redo v8 to remove MCFG caching logic according to Yinghai's suggestion.
+     1) remove patch "add MMCFG information on demand" and MCFG caching logic
+     2) Add new patch "refine __pci_mmcfg_init() for better code readability"
+      and "mark acpi_sfi_table_parse() as __init", there should no
+      functionality changes.
+-v10: changes from v9
+     1) merge pci_mmcfg_arch_map/unmap with pci_mmcfg_arch_init/free
+     2) add better error handling in patch "update MMCFG information when
+     hot-plugging PCI host bridges"
+     3) split patch "add pci_mmconfig_insert()/delete() for PCI root bridge
+     hotplug" into two patches for easy review
+     4) add patch "x86/PCI: use pr_level() to replace printk(KERN_LEVEL)"
 
->
-> I mean, if we create a parameter space that tweaks data then why
-> not make it complete and allow *all* firmware data to be
-> (optionally) modified, from the kernel boot line?
+Jiang Liu (13):
+  x86/PCI: split out pci_mmcfg_check_reserved() for code reuse
+  x86/PCI: split out pci_mmconfig_alloc() for code reuse
+  x86/PCI: use RCU list to protect mmconfig list
+  x86/PCI: introduce pci_mmcfg_arch_map()/pci_mmcfg_arch_unmap()
+  x86/PCI: prepare pci_mmcfg_check_reserved() to be called at runtime
+  x86/PCI: add pci_mmconfig_insert()/delete() for PCI root bridge
+    hotplug
+  PCI/ACPI: provide MCFG address for PCI host bridges
+  x86/PCI: update MMCFG information when hot-plugging PCI host bridges
+  x86/PCI: simplify pci_mmcfg_late_insert_resources()
+  x86/PCI: get rid of redundant log messages
+  x86/PCI: refine __pci_mmcfg_init() for better code readability
+  ACPI: mark acpi_sfi_table_parse() as __init
+  x86/PCI: use pr_level() to replace printk(KERN_LEVEL)
 
-that pxm/node for pci device should be consistent with srat table etc,
-so better solution is that BIOS keep them consistent.
+ arch/x86/include/asm/pci_x86.h |    7 +
+ arch/x86/pci/acpi.c            |  100 +++++++++--
+ arch/x86/pci/mmconfig-shared.c |  361 +++++++++++++++++++++++++++-------------
+ arch/x86/pci/mmconfig_32.c     |   30 +++-
+ arch/x86/pci/mmconfig_64.c     |   53 ++++--
+ drivers/acpi/pci_root.c        |    2 +
+ drivers/pci/pci-acpi.c         |   14 ++
+ include/acpi/acnames.h         |    1 +
+ include/acpi/acpi_bus.h        |    1 +
+ include/linux/pci-acpi.h       |    1 +
+ include/linux/sfi_acpi.h       |    4 +-
+ 11 files changed, 427 insertions(+), 147 deletions(-)
 
-If BIOS provide _PXM for pci device, the _PXM should have more chance
-to be right.
+-- 
+1.7.9.5
 
-Anyway if you insist that it should cover that wrong case, let me
-check if it could be done simply.
-
-Thanks
-
-Yinghai
