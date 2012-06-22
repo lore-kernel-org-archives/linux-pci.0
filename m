@@ -1,58 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:50371 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454Ab2FKVT5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 17:19:57 -0400
-Message-ID: <4FD660F9.7030807@wwwdotorg.org>
-Date: Mon, 11 Jun 2012 15:19:53 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:40638 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753274Ab2FVSVT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 14:21:19 -0400
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 06/10] ARM: tegra: pcie: Add MSI support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1339427118-32263-7-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <20120622121523.4DF5911F873@bugzilla.kernel.org>
+References: <bug-41622-5873@https.bugzilla.kernel.org/> <20120622121523.4DF5911F873@bugzilla.kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 22 Jun 2012 11:20:57 -0700
+Message-ID: <CA+55aFxKDZaCq-GP2LJpLnDKc=Zd1pmnr8Rq7bBXH9eGuyiyew@mail.gmail.com>
+Subject: Re: [Bug 41622] [REGRESSION][BISECTED] Notebook crashes upon
+ detecting the PCI subsystem with kernels >= 2.6.24-rc7
+To: bugzilla-daemon@bugzilla.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/11/2012 09:05 AM, Thierry Reding wrote:
-> This commit adds support for message signaled interrupts to the Tegra
-> PCIe controller. Based on code by Krishna Kishore <kthota@nvidia.com>.
+On Fri, Jun 22, 2012 at 5:15 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>
+> If, on the other hand, I apply the patch mentioned in comment #17 of this bug
+> report, then everything boots and works OK (for suitable values of "OK).
 
-> diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
+Gaah. These emails always happen at the most inconvenient time.
 
-> +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
-...
-> +			irq = irq_find_mapping(pcie->msi->domain, index);
-> +			if (irq) {
-> +				if (test_bit(index, pcie->msi->used))
-> +					generic_handle_irq(irq);
+Maybe we should just try that patch in
 
-This invokes the handler first ...
+   https://bugzilla.kernel.org/show_bug.cgi?id=41622#c17
 
-...
-> +			/* clear the interrupt */
-> +			afi_writel(pcie, 1 << offset, AFI_MSI_VEC0 + i * 4);
-> +			/* see if there's any more pending in this vector */
-> +			reg = afi_readl(pcie, AFI_MSI_VEC0 + i * 4);
+but it really needs to happen early in a merge window. We didn't do
+that for 3.2, maybe we can do it for 3.6?
 
-... then clears the interrupt status in the PCIe controller. Won't that
-lose interrupts if one is raised between when the handler clears the
-root-cause, and when this code clears the received interrupt status?
+Bjorn, what do you think? Sizing up transparent bridges really is a
+bit unnecessary.
 
-> +static int tegra_pcie_disable_msi(struct platform_device *pdev)
+Although I really don't see what the difference there is any more.
+Yinghai noticed that the prefetchability of the cardbus bridge
+changed, but the commit that changed that apparently made no
+difference. What other changes does the transparent bridge sizing
+cause?
 
-Should this free pcie->msi->pages?
-
-Why allocate pcie->msi separately; why not include the fields directly
-into struct tegra_pcie_info *pcie?
+                        Linus
