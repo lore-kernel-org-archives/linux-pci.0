@@ -1,360 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:56275 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800Ab2FGMyz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2012 08:54:55 -0400
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 4482A3EE0AE
-	for <linux-pci@vger.kernel.org>; Thu,  7 Jun 2012 21:54:53 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 2861845DEA6
-	for <linux-pci@vger.kernel.org>; Thu,  7 Jun 2012 21:54:53 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 1219A45DE7E
-	for <linux-pci@vger.kernel.org>; Thu,  7 Jun 2012 21:54:53 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 0644D1DB803C
-	for <linux-pci@vger.kernel.org>; Thu,  7 Jun 2012 21:54:53 +0900 (JST)
-Received: from m002.s.css.fujitsu.com (m002.s.css.fujitsu.com [10.23.4.32])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id B48301DB803B
-	for <linux-pci@vger.kernel.org>; Thu,  7 Jun 2012 21:54:52 +0900 (JST)
-Message-ID: <4FD0A561.8010206@jp.fujitsu.com>
-Date: Thu, 07 Jun 2012 21:58:09 +0900
-From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:36055 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751553Ab2FVXKJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Jun 2012 19:10:09 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH -v6 0/4] PCIe, PM, Add PCIe runtime D3cold support
+Date: Sat, 23 Jun 2012 01:15:33 +0200
+Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Zheng Yan <zheng.z.yan@intel.com>
+References: <1340083249-16266-1-git-send-email-ying.huang@intel.com> <CAErSpo4Hd7__n=Ffxk5be1SwVbPZ5PdkaeX4sbAV886PCjSJtg@mail.gmail.com>
+In-Reply-To: <CAErSpo4Hd7__n=Ffxk5be1SwVbPZ5PdkaeX4sbAV886PCjSJtg@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michal Simek <monstr@monstr.eu>,
-	microblaze-uclinux@itee.uq.edu.au, linux-pci@vger.kernel.org,
-	Jesse Larrew <jlarrew@linux.vnet.ibm.com>,
-	jbarnes@virtuousgeek.org,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v3 1/2] powerpc/PCI: move DMA & IRQ init to device_add()
- notification path
-References: <20120523222635.24276.80023.stgit@bhelgaas.mtv.corp.google.com> <20120523223700.24276.76804.stgit@bhelgaas.mtv.corp.google.com> <1337914811.16119.7.camel@pasglop> <CAErSpo6W28r4f5pJmZr=ofUAaffiUtOqgXWeabGpr+DmKw+Z+g@mail.gmail.com>
-In-Reply-To: <CAErSpo6W28r4f5pJmZr=ofUAaffiUtOqgXWeabGpr+DmKw+Z+g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201206230115.33210.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for your rapid modification about function name and comments.
-As Ben said, I want to check that my patch does not cause problems.
-I have no complain about my patch being in 3.6 branch (or lately).
-I appreciate your time and effort.
-
-
-Regards.
-
-Hiroo MATSUMOTO
-
-> On Thu, May 24, 2012 at 9:00 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
->> On Wed, 2012-05-23 at 16:37 -0600, Bjorn Helgaas wrote:
->>> From: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
->>>
->>> PowerPC initialized DMA and IRQ information in the pci_scan_child_bus()
->>> -> pcibios_fixup_bus() path.  Some hotplug drivers use that path, but
->>> others don't, e.g., pciehp, so sometimes hot-added devices are only
->>> partly initialized.
->>>
->>> This patch moves that initialization from pcibios_fixup_bus() to a new
->>> pci_bus_notify() called in the pci_bus_add_device() -> device_add() path.
->>> That means the initialization happens the same way for all PCI devices,
->>> whether they are present at boot or hot-added later.
->>>
->>> Note that powerpc was the only user of pci_fixup_cardbus(), which was
->>> used to do this same setup for cardbus devices.  That's no longer
->>> needed because this setup will now be done in the same device_add()
->>> notification path as all other PCI devices.
->> Hrm. That will require a good deal of testing... Unfortunately I'm out
->> for a few weeks getting some surgery and then recovering...
->>
->> Our PCI code has ancient roots and I wouldn't be surprised if that
->> change breaks subtle assumptions made here or there, we'd need to test
->> at least on a good range of macs and ibm hotplug stuff.
+On Saturday, June 23, 2012, Bjorn Helgaas wrote:
+> On Mon, Jun 18, 2012 at 11:20 PM, Huang Ying <ying.huang@intel.com> wrote:
+> > Changelog:
+> >
+> > v6:
+> >
+> > - Disable device D3cold during system suspend/hibernate with a new method per Rafeal's comments
+> >
+> > v5:
+> >
+> > - Disable device D3cold during system suspend/hibernate per Rafael's comments
+> >
+> > v4:
+> >
+> > - Minors fixes based on comments from Rafael
+> >
+> > v3:
+> >
+> > - Drop device.power.power_must_be_on, use pci_dev.no_d3cold instead
+> > - Drop device.power.power_off_user, use pci_dev.d3cold_allowed instead
+> > - Use black list instead of white list in pcie port runtime support per request from Bjorn
+> > - Various fixes based on comments from Rafael
+> >
+> > v2:
+> >
+> > - Refreshed based on comments from Rafael
+> >
+> > [PATCH -v6 1/4] ACPI, PM, Specify lowest allowed state for device sleep
+> > [PATCH -v6 2/4] PCIe, PM, Add runtime PM support to PCIe port
+> > [PATCH -v6 3/4] PCI, PM, Do not call pci_set_power_state with PCI_D3cold
+> > [PATCH -v6 4/4] PCIe, PM, Add PCIe runtime D3cold support
 > 
-> OK.  Are you worried about cardbus in particular?
+> What kernel is this series based on?  Patch 4/4 doesn't apply to my
+> tree.  This hunk fails because I don't have the "Some devices mustn't
+> be in D3 ..." context:
+
+I think it's based on an ACPI patch that didn't go in due to the problem
+with the Len's tree.
+
+Huang, can you please resend the series along with that patch?
+
+Rafael
+
+
+> @@ -1754,6 +1841,10 @@ int pci_prepare_to_sleep(struct pci_dev
+>         if (target_state == PCI_POWER_ERROR)
+>                 return -EIO;
 > 
-> This is headed for the 3.6, not 3.5, so we should have plenty of time.
->  As soon as everything for the current merge window gets merged and
-> -next is ready for the next batch, I'll put this in there.
-> 
->>> Typical failure of a hot-added e1000e device prior to this change:
->>>
->>>     # echo 1 > /sys/bus/pci/slots/1/power
->>>     <snip>
->>>     e1000e 0000:03:00.0: enabling device (0000 -> 0002)
->>>     e1000e 0000:03:00.0: No usable DMA configuration, aborting
->>>     e1000e: probe of 0000:03:00.0 failed with error -5
->>>
->>> Successful initialization after this change:
->>>
->>>     # echo 1 > /sys/bus/pci/slots/1/power
->>>     <snip>
->>>     e1000e 0000:03:00.0: enabling device (0000 -> 0002)
->>>     irq: irq 6 on host /soc@ffe00000/msi@41600 mapped to virtual irq 27
->>>     e1000e 0000:03:00.0: eth0: (PCI Express:2.5GT/s:Width x1) 00:15:17:bf:c0:c9
->>>     e1000e 0000:03:00.0: eth0: Intel(R) PRO/1000 Network Connection
->>>     e1000e 0000:03:00.0: eth0: MAC: 1, PHY: 4, PBA No: D50861-003
->>>
->>> [bhelgaas: changelog, notifier name, registration can be __init]
->>> CC: Dominik Brodowski <linux@dominikbrodowski.net>
->>> Signed-off-by: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
->>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>> ---
->>>  arch/powerpc/include/asm/pci.h             |    2 -
->>>  arch/powerpc/kernel/pci-common.c           |   87 ++++++++++++++--------------
->>>  arch/powerpc/kernel/pci_32.c               |    2 +
->>>  arch/powerpc/kernel/pci_64.c               |    2 +
->>>  arch/powerpc/kernel/pci_of_scan.c          |    1
->>>  arch/powerpc/platforms/pseries/pci_dlpar.c |    1
->>>  drivers/pci/pci.c                          |    5 --
->>>  drivers/pcmcia/cardbus.c                   |    3 -
->>>  include/linux/pci.h                        |    3 -
->>>  9 files changed, 49 insertions(+), 57 deletions(-)
->>>
->>> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
->>> index 6653f27..d6a36a4 100644
->>> --- a/arch/powerpc/include/asm/pci.h
->>> +++ b/arch/powerpc/include/asm/pci.h
->>> @@ -183,10 +183,10 @@ extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
->>>                                resource_size_t *start, resource_size_t *end);
->>>
->>>  extern resource_size_t pcibios_io_space_offset(struct pci_controller *hose);
->>> -extern void pcibios_setup_bus_devices(struct pci_bus *bus);
->>>  extern void pcibios_setup_bus_self(struct pci_bus *bus);
->>>  extern void pcibios_setup_phb_io_space(struct pci_controller *hose);
->>>  extern void pcibios_scan_phb(struct pci_controller *hose);
->>> +extern void pcibios_setup_bus_notifier(void);
->>>
->>>  #endif       /* __KERNEL__ */
->>>  #endif /* __ASM_POWERPC_PCI_H */
->>> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->>> index 7320f36..41b39ba 100644
->>> --- a/arch/powerpc/kernel/pci-common.c
->>> +++ b/arch/powerpc/kernel/pci-common.c
->>> @@ -1009,40 +1009,6 @@ void __devinit pcibios_setup_bus_self(struct pci_bus *bus)
->>>               ppc_md.pci_dma_bus_setup(bus);
->>>  }
->>>
->>> -void __devinit pcibios_setup_bus_devices(struct pci_bus *bus)
->>> -{
->>> -     struct pci_dev *dev;
->>> -
->>> -     pr_debug("PCI: Fixup bus devices %d (%s)\n",
->>> -              bus->number, bus->self ? pci_name(bus->self) : "PHB");
->>> -
->>> -     list_for_each_entry(dev, &bus->devices, bus_list) {
->>> -             /* Cardbus can call us to add new devices to a bus, so ignore
->>> -              * those who are already fully discovered
->>> -              */
->>> -             if (dev->is_added)
->>> -                     continue;
->>> -
->>> -             /* Fixup NUMA node as it may not be setup yet by the generic
->>> -              * code and is needed by the DMA init
->>> -              */
->>> -             set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
->>> -
->>> -             /* Hook up default DMA ops */
->>> -             set_dma_ops(&dev->dev, pci_dma_ops);
->>> -             set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
->>> -
->>> -             /* Additional platform DMA/iommu setup */
->>> -             if (ppc_md.pci_dma_dev_setup)
->>> -                     ppc_md.pci_dma_dev_setup(dev);
->>> -
->>> -             /* Read default IRQs and fixup if necessary */
->>> -             pci_read_irq_line(dev);
->>> -             if (ppc_md.pci_irq_fixup)
->>> -                     ppc_md.pci_irq_fixup(dev);
->>> -     }
->>> -}
->>> -
->>>  void pcibios_set_master(struct pci_dev *dev)
->>>  {
->>>       /* No special bus mastering setup handling */
->>> @@ -1059,19 +1025,9 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
->>>
->>>       /* Now fixup the bus bus */
->>>       pcibios_setup_bus_self(bus);
->>> -
->>> -     /* Now fixup devices on that bus */
->>> -     pcibios_setup_bus_devices(bus);
->>>  }
->>>  EXPORT_SYMBOL(pcibios_fixup_bus);
->>>
->>> -void __devinit pci_fixup_cardbus(struct pci_bus *bus)
->>> -{
->>> -     /* Now fixup devices on that bus */
->>> -     pcibios_setup_bus_devices(bus);
->>> -}
->>> -
->>> -
->>>  static int skip_isa_ioresource_align(struct pci_dev *dev)
->>>  {
->>>       if (pci_has_flag(PCI_CAN_SKIP_ISA_ALIGN) &&
->>> @@ -1685,6 +1641,49 @@ void __devinit pcibios_scan_phb(struct pci_controller *hose)
->>>       }
->>>  }
->>>
->>> +static int pci_bus_notify(struct notifier_block *nb, unsigned long action,
->>> +                       void *data)
->>> +{
->>> +     struct pci_dev *dev = to_pci_dev(data);
->>> +
->>> +     switch (action) {
->>> +     case BUS_NOTIFY_ADD_DEVICE:
->>> +             /* Setup OF node pointer in the device */
->>> +             dev->dev.of_node = pci_device_to_OF_node(dev);
->>> +
->>> +             /* Fixup NUMA node as it may not be setup yet by the generic
->>> +              * code and is needed by the DMA init
->>> +              */
->>> +             set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
->>> +
->>> +             /* Hook up default DMA ops */
->>> +             set_dma_ops(&dev->dev, pci_dma_ops);
->>> +             set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
->>> +
->>> +             /* Additional platform DMA/iommu setup */
->>> +             if (ppc_md.pci_dma_dev_setup)
->>> +                     ppc_md.pci_dma_dev_setup(dev);
->>> +
->>> +             /* Read default IRQs and fixup if necessary */
->>> +             pci_read_irq_line(dev);
->>> +             if (ppc_md.pci_irq_fixup)
->>> +                     ppc_md.pci_irq_fixup(dev);
->>> +
->>> +             break;
->>> +     }
->>> +
->>> +     return 0;
->>> +}
->>> +
->>> +static struct notifier_block device_nb = {
->>> +     .notifier_call = pci_bus_notify,
->>> +};
->>> +
->>> +void __init pcibios_setup_bus_notifier(void)
->>> +{
->>> +     bus_register_notifier(&pci_bus_type, &device_nb);
->>> +}
->>> +
->>>  static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
->>>  {
->>>       int i, class = dev->class >> 8;
->>> diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
->>> index 4b06ec5..640cc35 100644
->>> --- a/arch/powerpc/kernel/pci_32.c
->>> +++ b/arch/powerpc/kernel/pci_32.c
->>> @@ -231,6 +231,8 @@ static int __init pcibios_init(void)
->>>
->>>       printk(KERN_INFO "PCI: Probing PCI hardware\n");
->>>
->>> +     pcibios_setup_bus_notifier();
->>> +
->>>       if (pci_has_flag(PCI_REASSIGN_ALL_BUS))
->>>               pci_assign_all_buses = 1;
->>>
->>> diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
->>> index 4ff190f..8b212d3 100644
->>> --- a/arch/powerpc/kernel/pci_64.c
->>> +++ b/arch/powerpc/kernel/pci_64.c
->>> @@ -48,6 +48,8 @@ static int __init pcibios_init(void)
->>>
->>>       printk(KERN_INFO "PCI: Probing PCI hardware\n");
->>>
->>> +     pcibios_setup_bus_notifier();
->>> +
->>>       /* For now, override phys_mem_access_prot. If we need it,g
->>>        * later, we may move that initialization to each ppc_md
->>>        */
->>> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
->>> index ae5ea5e..eb09eca 100644
->>> --- a/arch/powerpc/kernel/pci_of_scan.c
->>> +++ b/arch/powerpc/kernel/pci_of_scan.c
->>> @@ -333,7 +333,6 @@ static void __devinit __of_scan_bus(struct device_node *node,
->>>        */
->>>       if (!rescan_existing)
->>>               pcibios_setup_bus_self(bus);
->>> -     pcibios_setup_bus_devices(bus);
->>>
->>>       /* Now scan child busses */
->>>       list_for_each_entry(dev, &bus->devices, bus_list) {
->>> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
->>> index 3ccebc8..0b1b6b3 100644
->>> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
->>> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
->>> @@ -120,7 +120,6 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
->>>               num = pci_scan_slot(bus, PCI_DEVFN(slotno, 0));
->>>               if (!num)
->>>                       return;
->>> -             pcibios_setup_bus_devices(bus);
->>>               max = bus->busn_res.start;
->>>               for (pass=0; pass < 2; pass++)
->>>                       list_for_each_entry(dev, &bus->devices, bus_list) {
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 15d442a..43e0a4f 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -3789,11 +3789,6 @@ int __attribute__ ((weak)) pci_ext_cfg_avail(struct pci_dev *dev)
->>>       return 1;
->>>  }
->>>
->>> -void __weak pci_fixup_cardbus(struct pci_bus *bus)
->>> -{
->>> -}
->>> -EXPORT_SYMBOL(pci_fixup_cardbus);
->>> -
->>>  static int __init pci_setup(char *str)
->>>  {
->>>       while (str) {
->>> diff --git a/drivers/pcmcia/cardbus.c b/drivers/pcmcia/cardbus.c
->>> index 24caeaf..a980691 100644
->>> --- a/drivers/pcmcia/cardbus.c
->>> +++ b/drivers/pcmcia/cardbus.c
->>> @@ -71,7 +71,6 @@ int __ref cb_alloc(struct pcmcia_socket *s)
->>>       unsigned int max, pass;
->>>
->>>       s->functions = pci_scan_slot(bus, PCI_DEVFN(0, 0));
->>> -     pci_fixup_cardbus(bus);
->>>
->>>       max = bus->busn_res.start;
->>>       for (pass = 0; pass < 2; pass++)
->>> @@ -85,7 +84,6 @@ int __ref cb_alloc(struct pcmcia_socket *s)
->>>        */
->>>       pci_bus_size_bridges(bus);
->>>       pci_bus_assign_resources(bus);
->>> -     cardbus_config_irq_and_cls(bus, s->pci_irq);
->>>
->>>       /* socket specific tune function */
->>>       if (s->tune_bridge)
->>> @@ -93,6 +91,7 @@ int __ref cb_alloc(struct pcmcia_socket *s)
->>>
->>>       pci_enable_bridges(bus);
->>>       pci_bus_add_devices(bus);
->>> +     cardbus_config_irq_and_cls(bus, s->pci_irq);
->>>
->>>       return 0;
->>>  }
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index a0e2d7f..3924c02 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->>> @@ -651,9 +651,6 @@ resource_size_t pcibios_align_resource(void *, const struct resource *,
->>>                               resource_size_t);
->>>  void pcibios_update_irq(struct pci_dev *, int irq);
->>>
->>> -/* Weak but can be overriden by arch */
->>> -void pci_fixup_cardbus(struct pci_bus *);
->>> -
->>>  /* Generic PCI functions used internally */
->>>
->>>  void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
->>
+> +       /* D3cold during system suspend/hibernate is not supported */
+> +       if (target_state > PCI_D3hot)
+> +               target_state = PCI_D3hot;
+> +
+>         /* Some devices mustn't be in D3 during system sleep */
+>         if (target_state == PCI_D3hot &&
+>                         (dev->dev_flags & PCI_DEV_FLAGS_NO_D3_DURING_SLEEP))
 > 
 > 
 
