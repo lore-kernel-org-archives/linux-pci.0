@@ -1,113 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:54329 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731Ab2FEFE5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 01:04:57 -0400
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:49220 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245Ab2FVWN1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 18:13:27 -0400
+Received: by lbbgm6 with SMTP id gm6so4199757lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 15:13:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7ivA4NpTv8jT=sxe9qAEZZ89qm6km+WBGq1UZK1Uhz8A@mail.gmail.com>
-References: <1337754877-19759-1-git-send-email-yinghai@kernel.org>
-	<CAE9FiQXx_x9M5ncLk4DyL8heYQTcsHZt2JofFMjPfUd4mympeA@mail.gmail.com>
-	<CAE9FiQX=ECg5BmKm7B2ua_rZ6bOsceeHNsfFQRWBbNZx+8sBfw@mail.gmail.com>
-	<20120525043651.GA1391@google.com>
-	<CAE9FiQXvYH4zCqp_uOb2nw7jvm8B=q3yx1tCjJUT+PkdymYEuw@mail.gmail.com>
-	<CAE9FiQW0rm2_sKdSCWs3TfatJB9yHwvmvt9_vBYMtOq_YBbmfw@mail.gmail.com>
-	<20120525193716.GA8817@google.com>
-	<CAE9FiQWrZaBpT1fzC_-mSBfDd4AKGrdGomPxVNSU-SFPrVNvOw@mail.gmail.com>
-	<CAErSpo7d+zn-qgWKcbro7yneXRtmZQCOHi+kiGzYUTfs+aiF4g@mail.gmail.com>
-	<CAE9FiQUWWO75WP3gYRwYbyO_ZiWwyjKnzMxOGhfjY4H98w2Hbw@mail.gmail.com>
-	<CAErSpo46fCCFCijNfMzGYP__pP6hkPFurMS=1=wSAZsg5z0-Lg@mail.gmail.com>
-	<CAE9FiQWUrkKEpLmEn9kzkKOtEtX7-R8shdVSKGgSyHezKpzJCw@mail.gmail.com>
-	<4FC50E09.4000204@zytor.com>
-	<CAE9FiQUtio=dut3A9+jCcsgUWEeNYcpqLP6RpqGOZUfPPAtHWw@mail.gmail.com>
-	<4FC51D79.6010804@zytor.com>
-	<CAE9FiQUWMAdU5jtKfq1_=1E-574gW-Afo8Pby49mUFQYFrs9Pw@mail.gmail.com>
-	<4FC536A5.6020600@zytor.com>
-	<CAE9FiQXi23-mY6p2Dr1EJmukhTSPxvBGtjvQ8wyJYPDS+6o5ZA@mail.gmail.com>
-	<CAErSpo67h_mdZtoEn-W_OOXZ8m7gs3g6Q25kte285ZX=2FKf+A@mail.gmail.com>
-	<CAE9FiQV7jpBWkcXy2vgixnxx2fhid28Wj0iHAhGkVVdQn6epNQ@mail.gmail.com>
-	<CAErSpo7ivA4NpTv8jT=sxe9qAEZZ89qm6km+WBGq1UZK1Uhz8A@mail.gmail.com>
-Date: Mon, 4 Jun 2012 22:04:57 -0700
-Message-ID: <CAE9FiQWbET=awz9o=6JBwonv_obe5KzRPNXjowNtFWrN3_4T_w@mail.gmail.com>
-Subject: Re: [PATCH 02/11] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	David Miller <davem@davemloft.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Steven Newbury <steve@snewbury.org.uk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+References: <1340083249-16266-1-git-send-email-ying.huang@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 22 Jun 2012 16:13:05 -0600
+Message-ID: <CAErSpo4Hd7__n=Ffxk5be1SwVbPZ5PdkaeX4sbAV886PCjSJtg@mail.gmail.com>
+Subject: Re: [PATCH -v6 0/4] PCIe, PM, Add PCIe runtime D3cold support
+To: Huang Ying <ying.huang@intel.com>
+Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zheng Yan <zheng.z.yan@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 4, 2012 at 9:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jun 4, 2012 at 7:37 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Sun, Jun 3, 2012 at 6:05 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Fri, Jun 1, 2012 at 4:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> On Tue, May 29, 2012 at 1:50 PM, H. Peter Anvin <hpa@zytor.com> wrote:
->>>>>
->>>>> The bus-side address space should not be more than 32 bits no matter
->>>>> what.  As Bjorn indicates, you seem to be mixing up bus and cpu
->>>>> addresses all over the place.
->>>>
->>>> please check update patches that is using converted pci bus address
->>>> for boundary checking.
->>>
->>> What problem does this fix?  There's significant risk that this
->>> allocation change  will make us trip over something, so it must fix
->>> something to make it worth considering.
->>
->> If we do not enable that, we would not find the problem.
+On Mon, Jun 18, 2012 at 11:20 PM, Huang Ying <ying.huang@intel.com> wrote:
+> Changelog:
 >
-> Sorry, that didn't make any sense to me.  I'm hoping you will point us
-> to a bug report that is fixed by this patch.
-
-current it only help Steve's test case.
-
+> v6:
 >
->> On one my test setup that _CRS does state 64bit resource range,
->> but when I clear some device resource manually and let kernel allocate
->> high, just then find out those devices does not work with drivers.
->> It turns out _CRS have more big range than what the chipset setting states.
->> with fixing in BIOS, allocate high is working now on that platform.
+> - Disable device D3cold during system suspend/hibernate with a new method per Rafeal's comments
 >
-> I didn't understand this either, sorry.  Are you saying that this
-> patch helps us work around a BIOS defect?
-
-Help us find out one BIOS defect.
-
+> v5:
 >
->> yeah, how about
->>
->> pci=alloc_high
->>
->> and default to disabled ?
+> - Disable device D3cold during system suspend/hibernate per Rafael's comments
 >
-> I was actually thinking of something more specific, e.g., a way to
-> place one device at an exact address.  I've implemented that a couple
-> times already for testing various things.  But maybe a more general
-> option like "pci=alloc_high" would make sense, too.
-
-yeah.
-
+> v4:
 >
-....
-> Linux has a long history of allocating bottom-up.  Windows has a long
-> history of allocating top-down.  You're proposing a third alternative,
-> allocating bottom-up starting at 4GB for 64-bit BARs.  If we change
-> this area, I would prefer something that follows Windows because I
-> think it will be closer to what's been tested by Windows.  Do you
-> think your alternative is better?
+> - Minors fixes based on comments from Rafael
+>
+> v3:
+>
+> - Drop device.power.power_must_be_on, use pci_dev.no_d3cold instead
+> - Drop device.power.power_off_user, use pci_dev.d3cold_allowed instead
+> - Use black list instead of white list in pcie port runtime support per request from Bjorn
+> - Various fixes based on comments from Rafael
+>
+> v2:
+>
+> - Refreshed based on comments from Rafael
+>
+> [PATCH -v6 1/4] ACPI, PM, Specify lowest allowed state for device sleep
+> [PATCH -v6 2/4] PCIe, PM, Add runtime PM support to PCIe port
+> [PATCH -v6 3/4] PCI, PM, Do not call pci_set_power_state with PCI_D3cold
+> [PATCH -v6 4/4] PCIe, PM, Add PCIe runtime D3cold support
 
-hope we can figure out how windows is making it work.
+What kernel is this series based on?  Patch 4/4 doesn't apply to my
+tree.  This hunk fails because I don't have the "Some devices mustn't
+be in D3 ..." context:
 
-Steve, Can you check if Windows is working with your test case ?
+@@ -1754,6 +1841,10 @@ int pci_prepare_to_sleep(struct pci_dev
+        if (target_state == PCI_POWER_ERROR)
+                return -EIO;
 
-If it works, we may try do the same thing from Linux, so you will not need to
-append "pci=nocrs pci=alloc_high"...
-
-Thanks
-
-Yinghai
++       /* D3cold during system suspend/hibernate is not supported */
++       if (target_state > PCI_D3hot)
++               target_state = PCI_D3hot;
++
+        /* Some devices mustn't be in D3 during system sleep */
+        if (target_state == PCI_D3hot &&
+                        (dev->dev_flags & PCI_DEV_FLAGS_NO_D3_DURING_SLEEP))
