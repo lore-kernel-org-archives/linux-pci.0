@@ -1,37 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:16749 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751921Ab2FWHmI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 03:42:08 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 0/5] PCI: hotplug related misc patches
-Date: Sat, 23 Jun 2012 00:42:00 -0700
-Message-Id: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:55662 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756138Ab2FVRAk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 13:00:40 -0400
+Message-ID: <4FE4A4B3.9010200@wwwdotorg.org>
+Date: Fri, 22 Jun 2012 11:00:35 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+References: <4FD85127.8050301@firmworks.com> <20120614091905.GA9081@avionic-0098.mockup.avionic-design.de> <4FDA2DDA.1030704@wwwdotorg.org> <20120614192903.GA2212@avionic-0098.mockup.avionic-design.de> <4FDA40A0.4030206@wwwdotorg.org> <20120615061236.GA4081@avionic-0098.mockup.avionic-design.de> <20120619133001.GB24138@avionic-0098.mockup.avionic-design.de> <4FE0EFBB.6090206@firmworks.com> <20120621064722.GA1122@avionic-0098.mockup.avionic-design.de> <CAErSpo6Bpfqm-0yGiBOXEhF4kD3PTDYvWVr0babLZ4GkBLXJiA@mail.gmail.com> <20120622110038.GA15212@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20120622110038.GA15212@avionic-0098.mockup.avionic-design.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-minor changes that should be safe for 3.6
+On 06/22/2012 05:00 AM, Thierry Reding wrote:
+...
+> Stephen: can you try to find out whether the Tegra PCIe controller 
+> indeed implements ECAM, or if this scheme is actually just a
+> proprietary variant?
 
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-next
-
-Yinghai Lu (5):
-  PCI, acpiphp: remove not used res_lock
-  pciehp: Don't enable presence notification while surprise removal is
-    not supported.
-  PCI, acpiphp: Merge acpiphp_debug and debug
-  PCI, acpiphp: add is_hotplug_bridge detection
-  PCI: add root bus children dev's res to fail list
-
- drivers/pci/hotplug/acpiphp.h      |    4 +---
- drivers/pci/hotplug/acpiphp_core.c |    7 ++-----
- drivers/pci/hotplug/acpiphp_glue.c |   30 ++++++++++++++++++++++++++----
- drivers/pci/hotplug/pciehp_hpc.c   |    5 +++--
- drivers/pci/setup-bus.c            |    2 +-
- 5 files changed, 33 insertions(+), 15 deletions(-)
-
--- 
-1.7.7
-
+Sure. I have added this request to the bug I filed requesting more
+complete PCIe host documentation.
