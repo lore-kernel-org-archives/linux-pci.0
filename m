@@ -1,71 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:50302 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139Ab2FNLG6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jun 2012 07:06:58 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-Date: Thu, 14 Jun 2012 11:06:48 +0000
-Cc: linux-arm-kernel@lists.infradead.org,
-	Mitch Bradley <wmb@firmworks.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <201206141025.09325.arnd@arndb.de> <20120614103127.GA15904@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120614103127.GA15904@avionic-0098.mockup.avionic-design.de>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:40910 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755794Ab2FVR25 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 13:28:57 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201206141106.49142.arnd@arndb.de>
+In-Reply-To: <4FE41B3E.7080609@gmail.com>
+References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
+	<CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
+	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
+	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
+	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
+	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
+	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
+	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
+	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
+	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
+	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
+	<4FE22B28.9020402@gmail.com>
+	<CAE9FiQUkGCQ0Y=n3i=bq388T8N-vrHP2LtMTFGwry2nA+uppwA@mail.gmail.com>
+	<4FE2B788.3070505@gmail.com>
+	<CAE9FiQWBB0JVCLWa40k9qYJXGrv_z=RgspgQW4x2di0uCUFXmA@mail.gmail.com>
+	<4FE41B3E.7080609@gmail.com>
+Date: Fri, 22 Jun 2012 10:28:56 -0700
+Message-ID: <CAE9FiQWB-=qRQfJS=95a+L_N32bZ97MCdW3voDCNSCbVcCnERQ@mail.gmail.com>
+Subject: Re: SNB PCI root information
+From: Yinghai Lu <yinghai@kernel.org>
+To: Brice Goglin <brice.goglin@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 14 June 2012, Thierry Reding wrote:
-> On Thu, Jun 14, 2012 at 10:25:09AM +0000, Arnd Bergmann wrote:
-> > On Thursday 14 June 2012, Thierry Reding wrote:
-> > > > 
-> > > > I believe you will need an "interrupt-map" property here, to map the host
-> > > > interrupts to the INTA-INTD lines of the attached devices.
-> > >
-> > > Legacy interrupts are something I cannot test at all because I have no
-> > > hardware that supports them.
-> > 
-> > Hmm, I thought all PCIe hardware has to support them when you do not
-> > enable MSI. What hardware do you have then?
-> 
-> The TEC (Tamonten Evaluation Carrier) has an FPGA which is connected to one
-> of the Tegra PCIe ports and it only supports MSIs.
+On Fri, Jun 22, 2012 at 12:14 AM, Brice Goglin <brice.goglin@gmail.com> wrote:
 
-Ah, I see. FPGA based devices often have incomplete PCI support so that
-explains why you can't test it. The board also appears to have a
-PCIe mini port though, so anything that you could plug in there should
-also support LSI interrupts.
+>> BIOS _PXM return 0 for both pci root buses?
+>>
+>
+> Here's dmesg.
+> I can't say for sure whether _PXM returns 0 since I don't know how to
+> read all this :) But Linux puts the first socket cpumap in
+> /sys/bus/pci/devices/*/local_cpus (and that's wrong according to the
+> motherboard manual and according to the performance we see).
+>
 
-> > > > I'm not sure whether we want to have a device_type="pciex" property here.
-> > > > powerpc and sparc seem to use that information, to distinguish a pcie
-> > > > bus from pci or cardbus.
-> > > 
-> > > That'd be rather useless information given that the Tegra is unlikely to
-> > > support either PCI or CardBus at some point.
-> > 
-> > But the generic code does not know that.
-> 
-> True. Still there's not much generic code on ARM, so maybe it'd be better to
-> add it along with the corresponding code?
+hi, looks like you system bios does not provide _PXM for the root bus.
 
-I hope we can make the PCI host probing architecture independent one day,
-instead of each architecture implementing their own. I'd say better put
-that property in there so we don't have to change it in case the future
-generic code will need it. It is part of the binding at
-http://www.openfirmware.org/1275/bindings/pci/pci-express.txt after all.
+Thanks
 
-Note that we should generally not make /code/ be written with the
-anticipation of a future extension, but anything that concerns interfaces
-to code outside of the kernel (firmware or user space) is best written
-in a conservative way to allow later changes.
-
-	Arnd
+Yinghai
