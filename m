@@ -1,87 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:36150 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408Ab2FUQWj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 12:22:39 -0400
+Received: from moutng.kundenserver.de ([212.227.17.10]:61355 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761968Ab2FVNDj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 09:03:39 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Date: Fri, 22 Jun 2012 13:03:21 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+References: <4FDA2DDA.1030704@wwwdotorg.org> <CAErSpo6vHn3p96o7DSdL28cjapk2UnQ4ZVJ1oH6ksxbqD=Hh-g@mail.gmail.com> <20120622124311.GA21606@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20120622124311.GA21606@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-In-Reply-To: <CAOPLpQeOEPECiq_D7WxYMoWk0AbS8vXLJqhm1EPijGdH52TVvQ@mail.gmail.com>
-References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
- <CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
- <CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
- <CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
- <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
- <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
- <CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
- <CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
- <CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
- <CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
- <20120620193438.GB2248@gmail.com> <CAE9FiQWUo3uffM4NCUORJXR1pdPaf0E1Sws1hwVNAibHg5_yjQ@mail.gmail.com>
- <CAE9FiQWKxe9VYvrQy5h4RP2dS7YHHXu4icjC+KPipkRKbsZN1g@mail.gmail.com> <CAOPLpQeOEPECiq_D7WxYMoWk0AbS8vXLJqhm1EPijGdH52TVvQ@mail.gmail.com>
-From: Ulrich Drepper <drepper@gmail.com>
-Date: Thu, 21 Jun 2012 12:22:17 -0400
-Message-ID: <CAOPLpQdLSfHn4=zHVYpZMcw1cHPwtV3He-Sxng_yjGKwdpBK8A@mail.gmail.com>
-Subject: Re: SNB PCI root information
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201206221303.21985.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 8:17 AM, Ulrich Drepper <drepper@gmail.com> wrote:
-> On Wed, Jun 20, 2012 at 11:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> please check -v3, and it will add 40 lines.
->
-> Won't this version print out something like
->
->  PCI: unknown option `busnum_node=xx:yy'
+On Friday 22 June 2012, Thierry Reding wrote:
+> On Fri, Jun 22, 2012 at 05:46:52AM -0600, Bjorn Helgaas wrote:
+> > On Fri, Jun 22, 2012 at 5:00 AM, Thierry Reding
+> > <thierry.reding@avionic-design.de> wrote:
+> > >> Is the bus number aperture included somewhere?  How do we know what
+> > >> bus numbers are available for allocation under each bridge?
+> > >
+> > > Not yet. I don't think DT imposes a bus number allocation on PCI
+> > > bridges. However the matching of DT nodes to PCI bridges is done based
+> > > on the bus number. For that you provide a bus-ranges property which
+> > > defines the bus aperture of the given PCI bridge. The DT matching code
+> > > compares the first cell of this property with the primary bus number of
+> > > the bridge.
+> > 
+> > I don't fully understand this, but I can tell you that things don't
+> > work very well if we don't know the aperture.  We can make
+> > assumptions, like the root bus is 00, and then enumerate everything
+> > reachable from there.  But then all we know is the largest bus number
+> > actually reachable from bus 00, which is usually smaller then the end
+> > of the aperture.  We don't know how many unused bus numbers there are
+> > in the aperture, so we can't safely allocate any for hot-added
+> > devices.
 
-It does.
+I believe the assumption today is that all bus numbers are ok on each
+root port, which is usually the case. There was something about a Power
+Mac that faked a single PCI bus number space across both an AGP and
+a PCIe domain in pmac_pci_fixup_u4_of_node(), but I think that is the
+exception.
 
-If you apply the following patch on top of your version 3 patch it
-seems to work and is slightly more efficient.
+Is there any requirement to use a bus aperture on non-PC hardware?
+ 
+> I think DT support for PCI is lacking in a lot of areas. PowerPC seems
+> to be the only architecture actively setting up busses according to the
+> bus-range property specified in the DT. All other architectures seem to
+> not pre-allocate bus apertures and go with the default instead. From
+> what you say that means hot-plugging is out. Although I don't think the
+> Tegra PCIe controller even supports hot-plugging.
 
+If the default is allowing any bus numbers, and that matches the
+hardware capabilities, I think hot-plugging would work.
 
-Signed-off-by: Ulrich Drepper <drepper@gmail.com>
-
-diff -u b/arch/x86/pci/common.c b/arch/x86/pci/common.c
---- b/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -494,16 +494,22 @@
- 	return 0;
- }
-
-+static const char *busnum_node_param;
-+
-+static void remember_busnum_node(const char *str)
-+{
-+	busnum_node_param = str;
-+}
-+
- int get_user_busnum_node(int busnum)
- {
- 	int bus, node, count;
--	char *p;
-+	const char *p;
-
--	p = strstr(boot_command_line, "busnum_node=");
-+	p = busnum_node_param;
- 	if (!p)
- 		return -1;
-
--	p += 12; /* strlen("busnum_node=") */
- 	while (*p) {
- 		count = 0;
- 		if (sscanf(p, "%x:%x%n", &bus, &node, &count) != 2) {
-@@ -607,6 +613,9 @@
- 	} else if (!strcmp(str, "nocrs")) {
- 		pci_probe |= PCI_ROOT_NO_CRS;
- 		return NULL;
-+	} else if (!strncmp(str, "busnum_node=", 12)) {
-+		remember_busnum_node(str + 12);
-+		return NULL;
- 	} else if (!strcmp(str, "earlydump")) {
- 		pci_early_dump_regs = 1;
- 		return NULL;
+	Arnd
