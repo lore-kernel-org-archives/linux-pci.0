@@ -1,66 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:41325 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750809Ab2FZEjo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jun 2012 00:39:44 -0400
-Message-ID: <1340685471.3732.4.camel@pasglop>
-Subject: Re: [PATCH 08/16] powerpc/PCI: Factor 'pcibios_setup()' out of
- powerpc
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
-	jejb@parisc-linux.org, deller@gmx.de, paulus@samba.org,
-	lethal@linux-sh.org, davem@davemloft.net, cmetcalf@tilera.com,
-	gxt@mprc.pku.edu.cn, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
-Date: Tue, 26 Jun 2012 14:37:51 +1000
-In-Reply-To: <20120626033151.16434.33099.stgit@amt.stowe>
-References: <20120626033045.16434.17412.stgit@amt.stowe>
-	 <20120626033151.16434.33099.stgit@amt.stowe>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.17.9]:51001 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756014Ab2FVQxs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 12:53:48 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Date: Fri, 22 Jun 2012 16:53:31 +0000
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Yinghai Lu <yinghai@kernel.org>
+References: <4FDA2DDA.1030704@wwwdotorg.org> <201206221303.21985.arnd@arndb.de> <CAErSpo56=S2oQ0usYfH28T0178SQUBD=5jqmcKWCT6M5WUQF6g@mail.gmail.com>
+In-Reply-To: <CAErSpo56=S2oQ0usYfH28T0178SQUBD=5jqmcKWCT6M5WUQF6g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201206221653.31817.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-06-25 at 21:31 -0600, Myron Stowe wrote:
-> The PCI core provides a generic (__weak) 'pcibios_setup()' routine
-> that can be used by all architectures as a default.  Drop powerpc's
-> architecture specific version in favor of that as it does not need to be
-> over-ridden.
-> 
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+On Friday 22 June 2012, Bjorn Helgaas wrote:
+> The requirement (if there is one) isn't anything related to PC-ness.
+> I just don't understand how things can actually work if two host
+> bridges both claim the same bus number.  If we do a config read to
+> that bus, both bridges should claim it and turn it into config cycles
+> on their respective root buses, and we should get two responses.  I
+> would expect the second response to cause an "unexpected response"
+> machine check or similar.
 
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> ---
+But each PCI domain has its own config space, so if you do a config
+read for one bus, it's always relative to the domain.
 
->  arch/powerpc/kernel/pci-common.c |    5 -----
->  1 files changed, 0 insertions(+), 5 deletions(-)
-> 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 8e78e93..bf2306b 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -200,11 +200,6 @@ int pcibios_add_platform_entries(struct pci_dev *pdev)
->  	return device_create_file(&pdev->dev, &dev_attr_devspec);
->  }
->  
-> -char __devinit *pcibios_setup(char *str)
-> -{
-> -	return str;
-> -}
-> -
->  /*
->   * Reads the interrupt pin to determine if interrupt is use by card.
->   * If the interrupt is used, then gets the interrupt line from the
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The part that is specific to PCs is that they don't have PCI domains
+normally.
 
-
+	Arnd
