@@ -1,114 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:40251 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753855Ab2FLPoK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 11:44:10 -0400
-Message-ID: <4FD763C5.3090500@wwwdotorg.org>
-Date: Tue, 12 Jun 2012 09:44:05 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de>
-In-Reply-To: <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42860 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761253Ab2FVG6I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:58:08 -0400
+Received: by mail-pz0-f46.google.com with SMTP id y13so1941745dad.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:58:08 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v10 11/13] x86/PCI: refine __pci_mmcfg_init() for better code readability
+Date: Fri, 22 Jun 2012 14:55:20 +0800
+Message-Id: <1340348122-29021-12-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/2012 12:21 AM, Thierry Reding wrote:
-> * Stephen Warren wrote:
->> On 06/11/2012 09:05 AM, Thierry Reding wrote:
->>> This commit adds support for instantiating the Tegra PCIe
->>> controller from a device tree.
->> 
->>> +++ b/Documentation/devicetree/bindings/pci/tegra-pcie.txt
->> 
->> Can we please name this nvidia,tegra20-pcie.txt to match the
->> naming of all the other Tegra bindings.
-> 
-> Yes, will do.
-> 
->>> +Required properties: +- compatible: "nvidia,tegra20-pcie" +-
->>> reg: physical base address and length of the controller's
->>> registers
->> 
->> Since there's more than one range now, that should specify how
->> many entries are required and what they represent.
-> 
-> Okay.
-> 
->>> +Optional properties: +- pex-clk-supply: supply voltage for
->>> internal reference clock +- vdd-supply: power supply for
->>> controller (1.05V)
->> 
->> Those shouldn't be optional. If the board has no regulator, the
->> board's .dts should provide a fixed always-on regulator that
->> those properties can refer to, so that the driver can always
->> get() those regulators.
-> 
-> That'll add more dummy regulators and I don't think sprinkling them
-> across the DTS is going to work very well. Maybe collecting them
-> under a top-level "regulators" node is a good option. If you have a
-> better alternative, I'm all open for it.
-> 
->>> diff --git a/arch/arm/boot/dts/tegra20.dtsi
->>> b/arch/arm/boot/dts/tegra20.dtsi
->> 
->>> +	pci {
->> ...
->>> +		status = "disable";
->> 
->> That should be "disabled"; sorry for providing a bad example.
-> 
-> Yes.
-> 
->>> diff --git a/arch/arm/mach-tegra/pcie.c
->>> b/arch/arm/mach-tegra/pcie.c
->> 
->>> +static struct tegra_pcie_pdata *tegra_pcie_parse_dt(struct
->>> platform_device *pdev)
->> 
->>> +	if (of_find_property(node, "vdd-supply", NULL)) {
->> 
->> As mentioned above, that if statement should be removed, since
->> the regulators shouldn't be optional.
-> 
-> Okay.
-> 
->>> +		pcie->vdd_supply = regulator_get(&pdev->dev, "vdd");
->> 
->> Those could be devm_regulator_get(). Then tegra_pcie_remove()
->> wouldn't have to put() them.
-> 
-> Okay.
-> 
->>> +	for (i = 0; i < TEGRA_PCIE_MAX_PORTS; i++) +
->>> pdata->enable_ports[i] = true;
->> 
->> Shouldn't the DT indicate which ports are used? I assume there's
->> some reason that the existing driver allows that to be
->> configured, rather than always enabling all ports. At least,
->> enumeration time wasted on non-existent ports springs to mind,
->> and perhaps attempting to enable port 1 when port 0 is x4 and
->> using all the lanes would cause errors in port 0?
-> 
-> Yes, that's been on my mind as well. I'm not sure about the best
-> binding for this. Perhaps something like:
-> 
-> pci { enable-ports = <0 1 2>; };
-> 
-> Would do?
+From: Jiang Liu <jiang.liu@huawei.com>
 
-That seems reasonable, although since the property is presumably
-something specific to the Tegra PCIe binding, not generic, I think it
-should be nvidia,enable-ports.
+Refine __pci_mmcfg_init() for better code readability.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   46 ++++++++++++++++++----------------------
+ 1 file changed, 21 insertions(+), 25 deletions(-)
+
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 332fabd..ffe72b9 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -544,8 +544,6 @@ static void __init pci_mmcfg_reject_broken(int early)
+ 	}
+ }
+ 
+-static int __initdata known_bridge;
+-
+ static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+ 					struct acpi_mcfg_allocation *cfg)
+ {
+@@ -617,28 +615,7 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
+ 
+ static void __init __pci_mmcfg_init(int early)
+ {
+-	/* MMCONFIG disabled */
+-	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+-		return;
+-
+-	/* MMCONFIG already enabled */
+-	if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
+-		return;
+-
+-	/* for late to exit */
+-	if (known_bridge)
+-		return;
+-
+-	if (early) {
+-		if (pci_mmcfg_check_hostbridge())
+-			known_bridge = 1;
+-	}
+-
+-	if (!known_bridge)
+-		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
+-
+ 	pci_mmcfg_reject_broken(early);
+-
+ 	if (list_empty(&pci_mmcfg_list))
+ 		return;
+ 
+@@ -660,14 +637,33 @@ static void __init __pci_mmcfg_init(int early)
+ 	}
+ }
+ 
++static int __initdata known_bridge;
++
+ void __init pci_mmcfg_early_init(void)
+ {
+-	__pci_mmcfg_init(1);
++	if (pci_probe & PCI_PROBE_MMCONF) {
++		if (pci_mmcfg_check_hostbridge())
++			known_bridge = 1;
++		else
++			acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
++		__pci_mmcfg_init(1);
++	}
+ }
+ 
+ void __init pci_mmcfg_late_init(void)
+ {
+-	__pci_mmcfg_init(0);
++	/* MMCONFIG disabled */
++	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
++		return;
++
++	if (known_bridge)
++		return;
++
++	/* MMCONFIG hasn't been enabled yet, try again */
++	if (pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF) {
++		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
++		__pci_mmcfg_init(0);
++	}
+ }
+ 
+ static int __init pci_mmcfg_late_insert_resources(void)
+-- 
+1.7.9.5
+
