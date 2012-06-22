@@ -1,109 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:38946 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753251Ab2FEG0L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 02:26:11 -0400
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 5 Jun 2012 11:56:08 +0530
-Date: Tue, 5 Jun 2012 14:26:03 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: One problem in reassign pci bus number?
-Message-ID: <20120605062603.GA21952@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120514015536.GA3331@richard>
- <CAE9FiQUjxH+LWy2zbbL6TVQSMZ44i9grFBZf0ZZQFPEWRKANMw@mail.gmail.com>
- <20120514064615.GB26605@richard>
- <CAE9FiQUuHFoEXMz_Va+FOGnqEbi9=cnnoSB+h7Ug2e4Y2sFTGQ@mail.gmail.com>
- <20120516011833.GA6599@richard>
- <CAE9FiQVUcYu-KM8fBs3zO5ZnL9jxHmJSN6-Ue5-kdC-niM6=Jw@mail.gmail.com>
- <20120529115900.GA31679@richard>
- <CAE9FiQWO1C76ppjZF4Lm4FVpQYPRv5ZirGp9iOM3pm-xrm3Epg@mail.gmail.com>
- <20120604133457.GA2969@richard>
- <CAE9FiQWw=dMBajvGQy_1KoPbGa1wvER5U81oULbkXCjBzQDRpQ@mail.gmail.com>
+Received: from moutng.kundenserver.de ([212.227.17.8]:50442 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762193Ab2FVOCg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 10:02:36 -0400
+Date: Fri, 22 Jun 2012 16:02:10 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Mitch Bradley <wmb@firmworks.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120622140210.GA32097@avionic-0098.mockup.avionic-design.de>
+References: <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
+ <20120622110403.GA15710@avionic-0098.mockup.avionic-design.de>
+ <20120622132253.GA30704@avionic-0098.mockup.avionic-design.de>
+ <201206221348.39346.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQWw=dMBajvGQy_1KoPbGa1wvER5U81oULbkXCjBzQDRpQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="KsGdsel6WgEHnImy"
+In-Reply-To: <201206221348.39346.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 04, 2012 at 04:36:33PM -0700, Yinghai Lu wrote:
->On Mon, Jun 4, 2012 at 6:34 AM, Richard Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Tue, May 29, 2012 at 10:14:51AM -0700, Yinghai Lu wrote:
->>>On Tue, May 29, 2012 at 4:59 AM, Richard Yang
->>><weiyang@linux.vnet.ibm.com> wrote:
->>>>
->>>> I think about this issue again, this behavior of kernel will bring some
->>>> unconvenience to the user.
->>>>
->>>> Do you think the kernel could handle this situation?
->>>
->>>in this extreme case, you may need user to do some comprise.
->>>
->>>We should always try to use setting from BIOS if it is sane.
->>>
->>>Yinghai
->> Yinghai
->>
->>                    +-------+
->>                    |       | root bridge(0,255)
->>                    +---+---+
->>                        |          Bus 0
->>       -----+-----------+------------------------------+--
->>            |                                          |
->>            |                                          |
->>            |                                          |
->>       +----+----+                               +-----+-----+
->>       |         |  B1(1,15)                     |           |B2(32,35)
->>       +----+----+                               +-----+-----+
->>            |  Bus 1                                   |    Bus 32
->>       -----+-----------------------             -----------
->>                             |
->>                        +----+----+
->>                        |         | B3
->>                        +---------+
->>
->> I reread the current code, v3.4, in linus tree,
->> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
->> And I come up with another condition which will have a problem when
->> kernel is not given the parameter, pci=assign-busses.
->>
->> Same condition as previous:
->> -------------------------------------------------------------------------------
->> B1 and B2 works fine with the BIOS and get the bus number assigned.
->> B3 is not probed by BIOS.
->>
->> Difference between the previous example:
->> -------------------------------------------------------------------------------
->> In this case, B2 is assigned bus range (32, 35), which has a gap between
->> B1 number range (1, 15).
->>
->> When kernel meets B3 in second pass, B3 will be assigned with bus number
->> 16. Well, this time the bus number 16 doesn't overlap with bus number of
->> B2.
->>
->> But, the pci_fixup_parent_subordinate_busnr() will not work since the
->> pci=assign-buses is not passed to kernel.
->>
->> So B1's bus window is still (1,15) not (1,16).
->>
->> BTW, is this also a extrem case?
->
->that should be handled by busn_alloc branch.
->
->kernel will try to probe in [1,15] at first, and could extend B1 range
->to [1, 31] if needed.
-Hmm... when do you think this branch will be merged to the mainstream?
->
->Thanks
->
->Yinghai
 
--- 
-Richard Yang
-Help you, Help me
+--KsGdsel6WgEHnImy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, Jun 22, 2012 at 01:48:39PM +0000, Arnd Bergmann wrote:
+> On Friday 22 June 2012, Thierry Reding wrote:
+> > > It seems like this isn't working properly. For some reason both the r=
+eg
+> > > property of pci@0 and pci@1 are translated to the same parent address
+> > > 0x80000000. I'll have to investigate where exactly this goes wrong.
+> >=20
+> > So it turns out that while of_read_number() can actually read any number
+> > of cells, only the two least significant are kept because it returns a
+> > u64. Since of_bus_default_map() uses of_read_number() the addresses
+> > <0 0 0> and <1 0 0> are in fact the same. I'm not sure how best to solve
+> > this. I'm not aware of a 128 bit integer type in the kernel, so I guess
+> > the better alternative would be to fix of_bus_default_map() to cope with
+> > #address-cells > 2 properly.
+>=20
+> of_translate_address should get it right. Which codes uses of_read_number=
+()?
+> Can it be converted to use of_translate_address()?
+
+Actually this is from of_translate_address(). The calling sequence looks
+like this:
+
+	of_address_to_resource()
+	  __of_address_to_resource()
+	    of_translate_address()
+	      __of_translate_address()
+	        of_translate_one()
+	          of_bus_default_map()
+	            of_read_number()
+
+Thierry
+
+--KsGdsel6WgEHnImy
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJP5HrhAAoJEN0jrNd/PrOhpSoP/2dJqBOz5dAHlOYm5bO6JKCn
+T8EmkjimgPc9auk4L1+x9g+eZxsRBK3RLrvAEzxREEf6H/aVmFA3mejKkPkYAzrW
+bG97ZCwwc7lKtgEpRxvcKpUie0dJ+q4RxGG4jra77NJHa/kiuCMsx7NyLArHnFby
+9+TiB1db1G/5D8yigkTac2tugNIyaNozHwgtQpGUTBklhz7q+cwDvCwT5LeAivuS
+wdjGuleY2RMAA++gIQV1efdWmRUXxitHz1sciVLv8I7E7LHwnCSD4OWS6rMChfht
+tZoKT64kZS+OKWZaxwAXiZSHHaSljA1ihhYnXBNWzD1UWXQUY0F19diphUyKqbu3
+Tk1T+ebqco/teh7wm9nRy0w9/BmA2O/UPaoeihTAxYR6vxJQ7RV3dps4NQArKiCW
+0xXDenjQ7Cjam+0e+jQOeZ73V3+dgoa2pWOBHYXuZ5AkLk6y2d5vSY5OKRoEHyIY
+pOqujRVETTuExSyrZyzNYViykgYYaHVQvLPiodoXvJVdwC4TRS2dUw8N1ObHVRaW
+Zh//IAGKjDI7CUvv8GxOHloatKT69jxyxAnBb73lonr2VUNATaWDADims6rdN/8i
+8tzPOjU8Q3wSRQ3KgfVxd04BHR1xbUN65QKDvx6rc0WHL4RwJ8rP/nd5Cm3o0iIq
+1N1enH8GljdveLxzRzla
+=3yXM
+-----END PGP SIGNATURE-----
+
+--KsGdsel6WgEHnImy--
