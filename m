@@ -1,56 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:50452 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752967Ab2FTIvY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2012 04:51:24 -0400
-Message-ID: <4FE18EEF.6070409@huawei.com>
-Date: Wed, 20 Jun 2012 16:50:55 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:65325 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761253Ab2FVG6B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:58:01 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so3169265pbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:58:01 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH v8 10/12] x86/PCI: refine __pci_mmcfg_init() for better
- code readability
-References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com> <1340111732-6276-11-git-send-email-jiang.liu@huawei.com> <CAE9FiQUmv310OQg4dJSSrkg79av6kz38EYiNoRTzHRjGVyLzZQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQUmv310OQg4dJSSrkg79av6kz38EYiNoRTzHRjGVyLzZQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v10 10/13] x86/PCI: get rid of redundant log messages
+Date: Fri, 22 Jun 2012 14:55:19 +0800
+Message-Id: <1340348122-29021-11-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-6-20 2:31, Yinghai Lu wrote:
-> 
-> looks like MCFG is not cached when the entries is reserved through e820.
-> but it is cached when entries is reserved through ACPI ...
-> 
-> Please check if it is possible just not cache MCFG.
-OOPS, my bad. The right logic should be
-void __init pci_mmcfg_late_init(void)
-{
-        /* MMCONFIG disabled */
-        if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-                return;
+From: Jiang Liu <jiang.liu@huawei.com>
 
-        if (known_bridge)
-                return;
+For each resource of a PCI host bridge, the arch code and PCI
+code log following messages:
+"pci_root PNP0A08:00: host bridge window [io 0x0000-0x03af]",
+"pci_bus 0000:00: root bus resource [io  0x0000-0x03af]"
 
-        /* MMCONFIG hasn't been enabled yet */
-        if (pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF) {
-                acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-                __pci_mmcfg_init(0);
-        }
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |    7 -------
+ 1 file changed, 7 deletions(-)
 
-        if (!(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
-                acpi_pci_cache_mcfg();
-}
-
-Will send out a patch once we decide whether we should keep the MCFG cache.
-
-Thanks!
-Gerry
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 912b54b..505acdd 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -314,13 +314,6 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	}
+ 
+ 	info->res_num++;
+-	if (addr.translation_offset)
+-		dev_info(&info->bridge->dev, "host bridge window %pR "
+-			 "(PCI address [%#llx-%#llx])\n",
+-			 res, res->start - addr.translation_offset,
+-			 res->end - addr.translation_offset);
+-	else
+-		dev_info(&info->bridge->dev, "host bridge window %pR\n", res);
+ 
+ 	return AE_OK;
+ }
+-- 
+1.7.9.5
 
