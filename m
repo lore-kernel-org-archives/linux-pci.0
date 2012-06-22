@@ -1,182 +1,274 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:65228 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762071Ab2FVNXA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 09:23:00 -0400
+Date: Fri, 22 Jun 2012 15:22:53 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Mitch Bradley <wmb@firmworks.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120622132253.GA30704@avionic-0098.mockup.avionic-design.de>
+References: <20120613081910.GB6528@avionic-0098.mockup.avionic-design.de>
+ <4FD85127.8050301@firmworks.com>
+ <20120614091905.GA9081@avionic-0098.mockup.avionic-design.de>
+ <4FDA2DDA.1030704@wwwdotorg.org>
+ <20120614192903.GA2212@avionic-0098.mockup.avionic-design.de>
+ <4FDA40A0.4030206@wwwdotorg.org>
+ <20120615061236.GA4081@avionic-0098.mockup.avionic-design.de>
+ <20120619133001.GB24138@avionic-0098.mockup.avionic-design.de>
+ <4FE0EFBB.6090206@firmworks.com>
+ <20120622110403.GA15710@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-In-Reply-To: <1340736849-14875-3-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-	<1340736849-14875-3-git-send-email-yinghai@kernel.org>
-Date: Tue, 26 Jun 2012 15:07:04 -0700
-Message-ID: <CAE9FiQVrUbEzopKfeoQZFNdNszLN96brC+rYuGXQCfZvpi_ETQ@mail.gmail.com>
-Subject: Re: [PATCH -v12 02/15] resources: Add probe_resource()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Content-Type: multipart/mixed; boundary=047d7b33d6508e675204c3675197
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="bp/iNruPH9dso1Pn"
+In-Reply-To: <20120622110403.GA15710@avionic-0098.mockup.avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b33d6508e675204c3675197
-Content-Type: text/plain; charset=ISO-8859-1
+
+--bp/iNruPH9dso1Pn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 26, 2012 at 11:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> It is changed from busn_res only version, because Bjorn found that versio=
-n
-> was not holding resource_lock.
-> Even it may be ok for busn_res not holding resource_lock.
-> It would be better to have it to be generic and use lock and we may
-> use it for other resources.
->
-> probe_resource() will try to find specified size or more in parent bus.
-> If can not find current parent resource, and it will try to expand parent=
-s
-> top.
-> If still can not find that specified on top, it will try to reduce target=
- size
-> until find one.
->
-> It will return 0, if it find any resource that could be used.
->
-> Returned resource is registered in the tree.
-> So caller may need to use replace_resource to put real resource in tree.
->
-> -v3: remove two parameters that is for debug purpose.
-> -v4: fix stop_flags checking.
-> -v5: adjust stop_flags checking position to avoid not needed calling
-> =A0 =A0 =A0 =A0into allocate_resource().
+On Fri, Jun 22, 2012 at 01:04:03PM +0200, Thierry Reding wrote:
+> On Tue, Jun 19, 2012 at 11:31:39AM -1000, Mitch Bradley wrote:
+> > On 6/19/2012 3:30 AM, Thierry Reding wrote:
+> > >On Fri, Jun 15, 2012 at 08:12:36AM +0200, Thierry Reding wrote:
+> > >>On Thu, Jun 14, 2012 at 01:50:56PM -0600, Stephen Warren wrote:
+> > >>>On 06/14/2012 01:29 PM, Thierry Reding wrote:
+> > >>>>On Thu, Jun 14, 2012 at 12:30:50PM -0600, Stephen Warren wrote:
+> > >>>>>On 06/14/2012 03:19 AM, Thierry Reding wrote:
+> > >>>...
+> > >>>>>>#address-cells =3D <1>; #size-cells =3D <1>;
+> > >>>>>>
+> > >>>>>>pci@80000000 {
+> > >>>>>
+> > >>>>>I'm still not convinced that using the address of the port's
+> > >>>>>registers is the correct way to represent each port. The port
+> > >>>>>index seems much more useful.
+> > >>>>>
+> > >>>>>The main reason here is that there are a lot of registers that
+> > >>>>>contain fields for each port - far more than the combination of
+> > >>>>>this node's reg and ctrl-offset (which I assume is an address
+> > >>>>>offset for just one example of this issue) properties can
+> > >>>>>describe. The bit position and bit stride of these fields isn't
+> > >>>>>necessarily the same in each register. Do we want a property like
+> > >>>>>ctrl-offset for every single type of field in every single shared
+> > >>>>>register that describes the location of the relevant data, or
+> > >>>>>just a single "port ID" bit that can be applied to anything?
+> > >>>>>
+> > >>>>>(Perhaps this isn't so obvious looking at the TRM since it
+> > >>>>>doesn't document all registers, and I'm also looking at the
+> > >>>>>Tegra30 documentation too, which might be more exposed to this -
+> > >>>>>I haven't correlated all the documentation sources to be sure
+> > >>>>>though)
+> > >>>>
+> > >>>>I agree that maybe adding properties for each bit position or
+> > >>>>register offset may not work out too well. But I think it still
+> > >>>>makes sense to use the base address of the port's registers (see
+> > >>>>below). We could of course add some code to determine the index
+> > >>>>from the base address at initialization time and reuse the index
+> > >>>>where appropriate.
+> > >>>
+> > >>>To me, working back from address to ID then using the ID to calculate
+> > >>>some other addresses seems far more icky than just calculating all t=
+he
+> > >>>addresses based off of one ID. But, I suppose this doesn't make a hu=
+ge
+> > >>>practical difference.
+> > >>
+> > >>This really depends on the device vs. no device decision below. If we=
+ can
+> > >>make it work without needing an extra device for it, then using the i=
+ndex
+> > >>is certainly better. However, if we instantiate devices from the DT, =
+then
+> > >>we have the address anyway and adding the index as a property would be
+> > >>redundant and error prone (what happens if somebody sets the index of=
+ the
+> > >>port at address 0x80000000 to 2?).
+> > >
+> > >An additional problem with this is that we'd have to add the following
+> > >to the pcie-controller node:
+> > >
+> > >	#address-cells =3D <1>;
+> > >	#size-cells =3D <0>;
+> > >
+> > >This will conflict with the "ranges" property, because suddenly we can
+> > >no longer map the regions properly. Maybe Mitch can comment on whether
+> > >this is possible or not?
+> > >
+> > >To make it clearer what I'm talking about, here's the DT snippet again
+> > >(with the compatible property removed from the pci@ nodes because they
+> > >are no longer probed by a driver, the "simple-bus" removed from the
+> > >pcie-controller node's compatible property removed and its #address-
+> > >and #size-cells properties adjusted as described above).
+> > >
+> > >	pcie-controller {
+> > >		compatible =3D "nvidia,tegra20-pcie";
+> > >		reg =3D <0x80003000 0x00000800   /* PADS registers */
+> > >		       0x80003800 0x00000200   /* AFI registers */
+> > >		       0x80004000 0x00100000   /* configuration space */
+> > >		       0x80104000 0x00100000>; /* extended configuration space */
+> > >		interrupts =3D <0 98 0x04   /* controller interrupt */
+> > >			      0 99 0x04>; /* MSI interrupt */
+> > >		status =3D "disabled";
+> > >
+> > >		ranges =3D <0x80000000 0x80000000 0x00002000   /* 2 root ports */
+> > >			  0x80400000 0x80400000 0x00010000   /* downstream I/O */
+> > >			  0x90000000 0x90000000 0x10000000   /* non-prefetchable memory */
+> > >			  0xa0000000 0xa0000000 0x10000000>; /* prefetchable memory */
+> > >
+> > >		#address-cells =3D <1>;
+> > >		#size-cells =3D <0>;
+> > >
+> > >		pci@0 {
+> > >			reg =3D <2>;
+> > >			status =3D "disabled";
+> > >
+> > >			#address-cells =3D <3>;
+> > >			#size-cells =3D <2>;
+> > >
+> > >			ranges =3D <0x81000000 0 0 0x80400000 0 0x00008000   /* I/O */
+> > >				  0x82000000 0 0 0x90000000 0 0x08000000   /* non-prefetchable mem=
+ory */
+> > >				  0xc2000000 0 0 0xa0000000 0 0x08000000>; /* prefetchable memory =
+*/
+> > >
+> > >			nvidia,ctrl-offset =3D <0x110>;
+> > >			nvidia,num-lanes =3D <2>;
+> > >		};
+> > >
+> > >		pci@1 {
+> > >			reg =3D <1>;
+> > >			status =3D "disabled";
+> > >
+> > >			#address-cells =3D <3>;
+> > >			#size-cells =3D <2>;
+> > >
+> > >			ranges =3D <0x81000000 0 0 0x80408000 0 0x00008000   /* I/O */
+> > >				  0x82000000 0 0 0x98000000 0 0x08000000   /* non-prefetchable mem=
+ory */
+> > >				  0xc2000000 0 0 0xa8000000 0 0x08000000>; /* prefetchable memory =
+*/
+> > >
+> > >			nvidia,ctrl-offset =3D <0x118>;
+> > >			nvidia,num-lanes =3D <2>;
+> > >		};
+> > >	};
+> > >
+> > >AIUI none of the ranges properties are valid anymore, because the bus
+> > >represented by pcie-controller no longer reflects the truth, namely th=
+at
+> > >it translates the CPU address space to the PCI address space.
+> > >
+> >=20
+> > I think you can use a small-integer port number as an address by
+> > defining the intermediate address space properly, and using
+> > appropriate ranges above and below.  Here's a swag at how that would
+> > look.
+> >=20
+> > I present three versions, using different choices for the
+> > intermediate address space encoding.  The intermediate address space
+> > may seem somewhat artificial, in that it decouples the "linear pass
+> > through of ranges" between the lower PCI address space and the upper
+> > CPU address space.  But in another sense, it accurately reflects
+> > that fact that the bus bridge "slices and dices" that linear address
+> > space into non-contiguous pieces.
+> >=20
+> > Note that I'm also fixing a problem that I neglected to mention
+> > earlier - namely the fact that config space is part of the child PCI
+> > address space so it must be passed through.
+> >=20
+> > Version A - 3 address cells:  In this version, the intermediate
+> > address space has 3 cells:  port#, address type, offset.  Address
+> > type is
+> >   0 : root port
+> >   1 : config space
+> >   2 : extended config space
+> >   3 : I/O
+> >   4 : non-prefetchable memory
+> >   5 : prefetchable memory.
+> >=20
+> > The third cell "offset" is necessary so that the size field has a
+> > number space that can include it.
+> >=20
+> > 	pcie-controller {
+> > 		compatible =3D "nvidia,tegra20-pcie";
+> > 		reg =3D <0x80003000 0x00000800   /* PADS registers */
+> > 		       0x80003800 0x00000200>; /* extended configuration space */
+> > 		interrupts =3D <0 98 0x04   /* controller interrupt */
+> > 			      0 99 0x04>; /* MSI interrupt */
+> > 		status =3D "disabled";
+> >=20
+> > 		ranges =3D <0 0 0  0x80000000 0x00001000   /* Root port 0 */
+> > 			  0 1 0  0x80004000 0x00080000   /* Port 0 config space */
+> > 			  0 2 0  0x80104000 0x00080000   /* Port 0 ext config space *
+> > 			  0 3 0  0x80400000 0x00008000   /* Port 0 downstream I/O */
+> > 			  0 4 0  0x90000000 0x08000000   /* Port 0 non-prefetchable memory */
+> > 			  0 5 0  0xa0000000 0x08000000   /* Port 0 prefetchable memory */
+> >=20
+> > 			  1 0 0  0x80001000 0x00001000   /* Root port 1 */
+> > 			  1 1 0  0x80004000 0x00080000   /* Port 1 config space */
+> > 			  1 2 0  0x80184000 0x00080000   /* Port 1 ext config space */
+> > 			  1 3 0  0x80408000 0x00010000   /* Port 1 downstream I/O */
+> > 			  1 4 0  0x98000000 0x08000000   /* Port 1 non-prefetchable memory */
+> > 			  1 5 0  0xa0000000 0x08000000>; /* Port 1 prefetchable memory */
+> >=20
+> > 		#address-cells =3D <3>;
+> > 		#size-cells =3D <1>;
+> >=20
+> > 		pci@0 {
+> > 			reg =3D <0 0 0 0x1000>;
+> [...]
+> > 		};
+> >=20
+> > 		pci@1 {
+> > 			reg =3D <1 0 0 0x1000>;
+> [...]
+> > 		};
+>=20
+> It seems like this isn't working properly. For some reason both the reg
+> property of pci@0 and pci@1 are translated to the same parent address
+> 0x80000000. I'll have to investigate where exactly this goes wrong.
 
-please check attached one that is updated after first patch with
-__allocate_resource changes.
-except this one and first one are changed. left ones are not needed to
-be updated.
-So i'm not going to resend them.
+So it turns out that while of_read_number() can actually read any number
+of cells, only the two least significant are kept because it returns a
+u64. Since of_bus_default_map() uses of_read_number() the addresses
+<0 0 0> and <1 0 0> are in fact the same. I'm not sure how best to solve
+this. I'm not aware of a 128 bit integer type in the kernel, so I guess
+the better alternative would be to fix of_bus_default_map() to cope with
+#address-cells > 2 properly.
 
-the git branch does get updated.
+Thierry
 
-Thanks
+--bp/iNruPH9dso1Pn
+Content-Type: application/pgp-signature
 
-Yinghai
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
---047d7b33d6508e675204c3675197
-Content-Type: application/octet-stream; name="probe_resource_2.patch"
-Content-Disposition: attachment; filename="probe_resource_2.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h3xiweu70
+iQIcBAEBAgAGBQJP5HGtAAoJEN0jrNd/PrOh+34QAJLQBInjzCUKF41AaMFQXAwu
+RfV6tgXTvke5UDCuEYc9RWMyjP5e9KyjpSOMeD8TS5iAPEa5haOnw9wzbWkP45o+
+okZ3cDNXqb32P1jLNn/MYKycPmbNuNH06750oestPSkonXnodOzSqoqkXjUjXGPB
+ecfQ9ixtp6iUBLX7ax6dt8thlVxcYulGrc7Z7Y8JkgdwklA3xwyE64lw7ueF5G3j
+L+oZNOOuudWmBZvhzNadv627mBZ25uCtGlxO9DIEl6I04SZFV5VTsYXtKHsjKgla
+FjYwToFllfyiJskN4nT4t+BMHuzq2k5cvEB1tOIYu/NhYRTo8CwCdhfYybYEJWKw
+I1m/MGTK/qltLUXxirTjO8TqL5YfVbpTPDThj5jA3DEwmKSGWxGQAGHfVYSfrBSN
+nOm0fF3iIC1hurgEb2FqVx8dg+y1KkxCuPv3Gv8WRgVFbSKt9KKW8LKrVdWsuRc8
+w9tjozycmzczOvCj57uEjiVrKX/3bNqwDwYpE9fhD11KlrNqdciHU/p9i1tnVJUU
+KJ/4Mg3sc4RaFLt+IxW/OMJOMIO5ipuUeXccMLGiJ8x9jXnDq/wbHHdLyM+yWTK8
+D81DTxHWOEudLNTe/XC5tCZWm10YnPfCukRNr8ybFAnIhfLq4mXOfiN5T+H9ZWje
+pi4gEi6flf/I+Y/vy7ps
+=VCZN
+-----END PGP SIGNATURE-----
 
-U3ViamVjdDogW1BBVENIXSByZXNvdXJjZXM6IEFkZCBwcm9iZV9yZXNvdXJjZSgpCgpJdCBpcyBj
-aGFuZ2VkIGZyb20gYnVzbl9yZXMgb25seSB2ZXJzaW9uLCBiZWNhdXNlIEJqb3JuIGZvdW5kIHRo
-YXQgdmVyc2lvbgp3YXMgbm90IGhvbGRpbmcgcmVzb3VyY2VfbG9jay4KRXZlbiBpdCBtYXkgYmUg
-b2sgZm9yIGJ1c25fcmVzIG5vdCBob2xkaW5nIHJlc291cmNlX2xvY2suCkl0IHdvdWxkIGJlIGJl
-dHRlciB0byBoYXZlIGl0IHRvIGJlIGdlbmVyaWMgYW5kIHVzZSBsb2NrIGFuZCB3ZSBtYXkKdXNl
-IGl0IGZvciBvdGhlciByZXNvdXJjZXMuCgpwcm9iZV9yZXNvdXJjZSgpIHdpbGwgdHJ5IHRvIGZp
-bmQgc3BlY2lmaWVkIHNpemUgb3IgbW9yZSBpbiBwYXJlbnQgYnVzLgpJZiBjYW4gbm90IGZpbmQg
-Y3VycmVudCBwYXJlbnQgcmVzb3VyY2UsIGFuZCBpdCB3aWxsIHRyeSB0byBleHBhbmQgcGFyZW50
-cwp0b3AuCklmIHN0aWxsIGNhbiBub3QgZmluZCB0aGF0IHNwZWNpZmllZCBvbiB0b3AsIGl0IHdp
-bGwgdHJ5IHRvIHJlZHVjZSB0YXJnZXQgc2l6ZQp1bnRpbCBmaW5kIG9uZS4KCkl0IHdpbGwgcmV0
-dXJuIDAsIGlmIGl0IGZpbmQgYW55IHJlc291cmNlIHRoYXQgY291bGQgYmUgdXNlZC4KClJldHVy
-bmVkIHJlc291cmNlIGlzIHJlZ2lzdGVyZWQgaW4gdGhlIHRyZWUuClNvIGNhbGxlciBtYXkgbmVl
-ZCB0byB1c2UgcmVwbGFjZV9yZXNvdXJjZSB0byBwdXQgcmVhbCByZXNvdXJjZSBpbiB0cmVlLgoK
-LXYzOiByZW1vdmUgdHdvIHBhcmFtZXRlcnMgdGhhdCBpcyBmb3IgZGVidWcgcHVycG9zZS4KLXY0
-OiBmaXggc3RvcF9mbGFncyBjaGVja2luZy4KLXY1OiBhZGp1c3Qgc3RvcF9mbGFncyBjaGVja2lu
-ZyBwb3NpdGlvbiB0byBhdm9pZCBub3QgbmVlZGVkIGNhbGxpbmcKCWludG8gYWxsb2NhdGVfcmVz
-b3VyY2UoKS4KLXY2OiB1c2UgdXBkYXRlZCBfX2FsbG9jYXRlX3Jlc291cmNlLgoKU2lnbmVkLW9m
-Zi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgpDYzogQW5kcmV3IE1vcnRvbiA8
-YWtwbUBsaW51eC1mb3VuZGF0aW9uLm9yZz4KCi0tLQogaW5jbHVkZS9saW51eC9pb3BvcnQuaCB8
-ICAgIDcgKysKIGtlcm5lbC9yZXNvdXJjZS5jICAgICAgfCAgMTQ5ICsrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKIDIgZmlsZXMgY2hhbmdlZCwgMTU2IGlu
-c2VydGlvbnMoKykKCkluZGV4OiBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9pb3BvcnQuaAo9PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9pbmNsdWRlL2xpbnV4L2lvcG9ydC5oCisrKyBsaW51
-eC0yLjYvaW5jbHVkZS9saW51eC9pb3BvcnQuaApAQCAtMTU2LDYgKzE1NiwxMyBAQCBleHRlcm4g
-aW50IGFsbG9jYXRlX3Jlc291cmNlKHN0cnVjdCByZXNvCiAJCQkJCQkgICAgICAgcmVzb3VyY2Vf
-c2l6ZV90LAogCQkJCQkJICAgICAgIHJlc291cmNlX3NpemVfdCksCiAJCQkgICAgIHZvaWQgKmFs
-aWduZl9kYXRhKTsKK3ZvaWQgcmVzb3VyY2Vfc2hyaW5rX3BhcmVudHNfdG9wKHN0cnVjdCByZXNv
-dXJjZSAqYl9yZXMsCisJCQkJIGxvbmcgc2l6ZSwgc3RydWN0IHJlc291cmNlICpwYXJlbnRfcmVz
-KTsKK3N0cnVjdCBkZXZpY2U7CitpbnQgcHJvYmVfcmVzb3VyY2Uoc3RydWN0IHJlc291cmNlICpi
-X3JlcywKKwkJCXN0cnVjdCByZXNvdXJjZSAqYnVzbl9yZXMsCisJCQlyZXNvdXJjZV9zaXplX3Qg
-bmVlZGVkX3NpemUsIHN0cnVjdCByZXNvdXJjZSAqKnAsCisJCQlpbnQgc2tpcF9uciwgaW50IGxp
-bWl0LCBpbnQgZmxhZ3MpOwogc3RydWN0IHJlc291cmNlICpsb29rdXBfcmVzb3VyY2Uoc3RydWN0
-IHJlc291cmNlICpyb290LCByZXNvdXJjZV9zaXplX3Qgc3RhcnQpOwogaW50IGFkanVzdF9yZXNv
-dXJjZShzdHJ1Y3QgcmVzb3VyY2UgKnJlcywgcmVzb3VyY2Vfc2l6ZV90IHN0YXJ0LAogCQkgICAg
-cmVzb3VyY2Vfc2l6ZV90IHNpemUpOwpJbmRleDogbGludXgtMi42L2tlcm5lbC9yZXNvdXJjZS5j
-Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2tlcm5lbC9yZXNvdXJjZS5jCisrKyBsaW51
-eC0yLjYva2VybmVsL3Jlc291cmNlLmMKQEAgLTk4OSw2ICs5ODksMTU1IEBAIHZvaWQgX19yZWxl
-YXNlX3JlZ2lvbihzdHJ1Y3QgcmVzb3VyY2UgKnAKIH0KIEVYUE9SVF9TWU1CT0woX19yZWxlYXNl
-X3JlZ2lvbik7CiAKK3N0YXRpYyB2b2lkIF9fcmVzb3VyY2VfZXh0ZW5kX3BhcmVudHNfdG9wKHN0
-cnVjdCByZXNvdXJjZSAqYl9yZXMsCisJCSBsb25nIHNpemUsIHN0cnVjdCByZXNvdXJjZSAqcGFy
-ZW50X3JlcykKK3sKKwlzdHJ1Y3QgcmVzb3VyY2UgKnJlcyA9IGJfcmVzOworCisJaWYgKCFzaXpl
-KQorCQlyZXR1cm47CisKKwl3aGlsZSAocmVzICYmIHJlcyAhPSBwYXJlbnRfcmVzKSB7CisJCXJl
-cy0+ZW5kICs9IHNpemU7CisJCXJlcyA9IHJlcy0+cGFyZW50OworCX0KK30KKwordm9pZCByZXNv
-dXJjZV9zaHJpbmtfcGFyZW50c190b3Aoc3RydWN0IHJlc291cmNlICpiX3JlcywKKwkJIGxvbmcg
-c2l6ZSwgc3RydWN0IHJlc291cmNlICpwYXJlbnRfcmVzKQoreworCXdyaXRlX2xvY2soJnJlc291
-cmNlX2xvY2spOworCV9fcmVzb3VyY2VfZXh0ZW5kX3BhcmVudHNfdG9wKGJfcmVzLCAtc2l6ZSwg
-cGFyZW50X3Jlcyk7CisJd3JpdGVfdW5sb2NrKCZyZXNvdXJjZV9sb2NrKTsKK30KKworc3RhdGlj
-IHJlc291cmNlX3NpemVfdCBfX2ZpbmRfcmVzX3RvcF9mcmVlX3NpemUoc3RydWN0IHJlc291cmNl
-ICpyZXMsCisJCQkJCQkgaW50IHNraXBfbnIpCit7CisJcmVzb3VyY2Vfc2l6ZV90IG5fc2l6ZTsK
-KwlzdHJ1Y3QgcmVzb3VyY2UgdG1wX3JlczsKKworCS8qCisJICogICBmaW5kIG91dCBmcmVlIG51
-bWJlciBiZWxvdyByZXMtPmVuZCB0aGF0IHdlIGNhbiB1c2UuCisJICoJcmVzLT5zdGFydCB0byBy
-ZXMtPnN0YXJ0ICsgc2tpcF9uciAtIDEgY2FuIG5vdCBiZSB1c2VkLgorCSAqLworCW5fc2l6ZSA9
-IHJlc291cmNlX3NpemUocmVzKTsKKwlpZiAobl9zaXplIDw9IHNraXBfbnIpCisJCXJldHVybiAw
-OworCisJbl9zaXplIC09IHNraXBfbnI7CisJbWVtc2V0KCZ0bXBfcmVzLCAwLCBzaXplb2Yoc3Ry
-dWN0IHJlc291cmNlKSk7CisJd2hpbGUgKG5fc2l6ZSA+IDApIHsKKwkJaW50IHJldDsKKworCQly
-ZXQgPSBfX2FsbG9jYXRlX3Jlc291cmNlKHJlcywgJnRtcF9yZXMsIG5fc2l6ZSwKKwkJCXJlcy0+
-ZW5kIC0gbl9zaXplICsgc2tpcF9uciwgcmVzLT5lbmQsCisJCQkxLCBOVUxMLCBOVUxMKTsKKwkJ
-aWYgKHJldCA9PSAwKSB7CisJCQlfX3JlbGVhc2VfcmVzb3VyY2UoJnRtcF9yZXMpOworCQkJYnJl
-YWs7CisJCX0KKwkJbl9zaXplLS07CisJfQorCisJcmV0dXJuIG5fc2l6ZTsKK30KKworLyoqCisg
-KiBwcm9iZV9yZXNvdXJjZSAtIFByb2JlIHJlc291cmNlIGluIHBhcmVudCByZXNvdXJjZS4KKyAq
-IEBiX3JlczogcGFyZW50IHJlc291cmNlIGRlc2NyaXB0b3IKKyAqIEBidXNuX3JlczogcmV0dXJu
-IHByb2JlZCByZXNvdXJjZQorICogQG5lZWRlZF9zaXplOiB0YXJnZXQgc2l6ZQorICogQHA6IHBv
-aW50ZXIgdG8gZmFyZXN0IHBhcmVudCB0aGF0IHdlIGV4dGVuZCB0aGUgdG9wCisgKiBAc2tpcF9u
-cjogbnVtYmVyIGluIGJfcmVzIHN0YXJ0IHRoYXQgd2UgbmVlZCB0byBza2lwLgorICogQGxpbWl0
-OiBsb2NhbCBib3VuZGFyeQorICogQHN0b3BfZmxhZ3M6IGZsYWdzIGZvciBzdG9wcGluZyBleHRl
-bmQgcGFyZW50IHJlcworICoKKyAqIHdpbGwgdHJ5IHRvIGFsbG9jYXRlIHJlc291cmNlIGluIGJf
-cmVzLCBpZiBjYW4gbm90IGZpbmQgdGhlIHJhbmdlCisgKiAgd2lsbCB0cnkgdG8gZXh0ZW5kIHBh
-cmVudCByZXNvdXJjZXMnIHRvcC4KKyAqIGlmIHN0aWxsIGNhbiBub3QgbWFrZSBpdCwgd2lsbCBy
-ZWR1Y2UgbmVlZGVkX3NpemUuCisgKi8KK2ludCBwcm9iZV9yZXNvdXJjZShzdHJ1Y3QgcmVzb3Vy
-Y2UgKmJfcmVzLAorCQkJIHN0cnVjdCByZXNvdXJjZSAqYnVzbl9yZXMsCisJCQkgcmVzb3VyY2Vf
-c2l6ZV90IG5lZWRlZF9zaXplLCBzdHJ1Y3QgcmVzb3VyY2UgKipwLAorCQkJIGludCBza2lwX25y
-LCBpbnQgbGltaXQsIGludCBzdG9wX2ZsYWdzKQoreworCWludCByZXQgPSAtRU5PTUVNOworCXJl
-c291cmNlX3NpemVfdCBuX3NpemU7CisJc3RydWN0IHJlc291cmNlICpwYXJlbnRfcmVzID0gTlVM
-TDsKKwlyZXNvdXJjZV9zaXplX3QgdG1wID0gYl9yZXMtPmVuZCArIDE7CisKK2FnYWluOgorCS8q
-CisJICogV2UgZmlyc3QgdHJ5IHRvIGFsbG9jYXRlIGJpZ2dlc3QgcmFuZ2UgaW4gYl9yZXMgdGhh
-dAorCSAqICB3ZSBjYW4gdXNlIGluIGJfcmVzIGRpcmVjdGx5LgorCSAqICB3ZSBhbHNvIG5lZWQg
-dG8gc2tpcCBza2lwX25yIGZyb20gc3RhcnQgb2YgYl9yZXMuCisJICovCisJbl9zaXplID0gcmVz
-b3VyY2Vfc2l6ZShiX3Jlcyk7CisJaWYgKG5fc2l6ZSA+IHNraXBfbnIpCisJCW5fc2l6ZSAtPSBz
-a2lwX25yOworCWVsc2UKKwkJbl9zaXplID0gMDsKKwltZW1zZXQoYnVzbl9yZXMsIDAsIHNpemVv
-ZihzdHJ1Y3QgcmVzb3VyY2UpKTsKKwl3aGlsZSAobl9zaXplID49IG5lZWRlZF9zaXplKSB7CisJ
-CXJldCA9IGFsbG9jYXRlX3Jlc291cmNlKGJfcmVzLCBidXNuX3Jlcywgbl9zaXplLAorCQkJCWJf
-cmVzLT5zdGFydCArIHNraXBfbnIsIGJfcmVzLT5lbmQsCisJCQkJMSwgTlVMTCwgTlVMTCk7CisJ
-CWlmICghcmV0KQorCQkJcmV0dXJuIHJldDsKKwkJbl9zaXplLS07CisJfQorCisJLyogVHJ5IHRv
-IGV4dGVuZCB0aGUgdG9wIG9mIHBhcmVudCByZXNvdXJjZXMgdG8gbWVldCBuZWVkZWRfc2l6ZSAq
-LworCXdyaXRlX2xvY2soJnJlc291cmNlX2xvY2spOworCisJLyogYl9yZXMgY291bGQgYmUgcm9v
-dCBidXMgcmVzb3VyY2UgYW5kIGNhbiBub3QgYmUgZXh0ZW5kZWQgKi8KKwlpZiAoYl9yZXMtPmZs
-YWdzICYgc3RvcF9mbGFncykKKwkJZ290byByZWR1Y2VfbmVlZGVkX3NpemU7CisKKwkvKiBmaW5k
-IG91dCBmcmVlIHJhbmdlIHVuZGVyIHRvcCBhdCBmaXJzdCAqLworCW5fc2l6ZSA9IF9fZmluZF9y
-ZXNfdG9wX2ZyZWVfc2l6ZShiX3Jlcywgc2tpcF9ucik7CisJLyogY2FuIG5vdCBleHRlbmQgY3Jv
-c3MgbG9jYWwgYm91bmRhcnkgKi8KKwlpZiAoKGxpbWl0IC0gYl9yZXMtPmVuZCkgPCAobmVlZGVk
-X3NpemUgLSBuX3NpemUpKQorCQlnb3RvIHJlZHVjZV9uZWVkZWRfc2l6ZTsKKworCS8qIFByb2Jl
-IGV4dGVuZGVkIHJhbmdlIGFib3ZlIHRvcCAqLworCW1lbXNldChidXNuX3JlcywgMCwgc2l6ZW9m
-KHN0cnVjdCByZXNvdXJjZSkpOworCXBhcmVudF9yZXMgPSBiX3Jlcy0+cGFyZW50OworCXdoaWxl
-IChwYXJlbnRfcmVzICYmICEocGFyZW50X3Jlcy0+ZmxhZ3MgJiBzdG9wX2ZsYWdzKSkgeworCQly
-ZXQgPSBfX2FsbG9jYXRlX3Jlc291cmNlKHBhcmVudF9yZXMsIGJ1c25fcmVzLAorCQkJIG5lZWRl
-ZF9zaXplIC0gbl9zaXplLAorCQkJIHRtcCwgdG1wICsgbmVlZGVkX3NpemUgLSBuX3NpemUgLSAx
-LAorCQkJIDEsIE5VTEwsIE5VTEwpOworCQlpZiAoIXJldCkgeworCQkJLyogc2F2ZSBwYXJlbnRf
-cmVzLCB3ZSBuZWVkIGl0IGFzIHN0b3BwZXIgbGF0ZXIgKi8KKwkJCSpwID0gcGFyZW50X3JlczsK
-KworCQkJLyogcHJlcGFyZSBidXNuX3JlcyBmb3IgcmV0dXJuICovCisJCQlfX3JlbGVhc2VfcmVz
-b3VyY2UoYnVzbl9yZXMpOworCQkJYnVzbl9yZXMtPnN0YXJ0IC09IG5fc2l6ZTsKKworCQkJLyog
-ZXh0ZW5kIHBhcmVudCByZXNvdXJjZXMgdG9wICovCisJCQlfX3Jlc291cmNlX2V4dGVuZF9wYXJl
-bnRzX3RvcChiX3JlcywKKwkJCQkJIG5lZWRlZF9zaXplIC0gbl9zaXplLCBwYXJlbnRfcmVzKTsK
-KwkJCV9fcmVxdWVzdF9yZXNvdXJjZShiX3JlcywgYnVzbl9yZXMpOworCisJCQl3cml0ZV91bmxv
-Y2soJnJlc291cmNlX2xvY2spOworCQkJcmV0dXJuIHJldDsKKwkJfQorCQlwYXJlbnRfcmVzID0g
-cGFyZW50X3Jlcy0+cGFyZW50OworCX0KKworcmVkdWNlX25lZWRlZF9zaXplOgorCXdyaXRlX3Vu
-bG9jaygmcmVzb3VyY2VfbG9jayk7CisJLyogcmV0IG11c3Qgbm90IGJlIDAgaGVyZSAqLworCW5l
-ZWRlZF9zaXplLS07CisJaWYgKG5lZWRlZF9zaXplKQorCQlnb3RvIGFnYWluOworCisJcmV0dXJu
-IHJldDsKK30KKwogLyoKICAqIE1hbmFnZWQgcmVnaW9uIHJlc291cmNlCiAgKi8K
---047d7b33d6508e675204c3675197--
+--bp/iNruPH9dso1Pn--
