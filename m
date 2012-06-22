@@ -1,65 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14584 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754816Ab2FKPhl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jun 2012 11:37:41 -0400
-Message-ID: <1339429021.24037.8.camel@bling.home>
-Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Joerg Roedel <joerg.roedel@amd.com>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Cc: iommu@lists.linux-foundation.org, bhelgaas@google.com,
-	david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, ddutile@redhat.com, liuj97@gmail.com
-Date: Mon, 11 Jun 2012 09:37:01 -0600
-In-Reply-To: <20120606110514.GG757@amd.com>
-References: <20120530201424.31527.33142.stgit@bling.home>
-	 <20120606110514.GG757@amd.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60304 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755653Ab2FVRdo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 13:33:44 -0400
+Received: by pbbrp8 with SMTP id rp8so3830161pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 22 Jun 2012 10:33:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1340348122-29021-14-git-send-email-jiang.liu@huawei.com>
+References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+	<1340348122-29021-14-git-send-email-jiang.liu@huawei.com>
+Date: Fri, 22 Jun 2012 10:33:43 -0700
+Message-ID: <CAE9FiQUvksHYHVaZUn1Je7MiLibB=mkpXZ0mxyuqrWAq6Wr_bg@mail.gmail.com>
+Subject: Re: [PATCH v10 13/13] x86/PCI: use pr_level() to replace printk(KERN_LEVEL)
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-06-06 at 13:05 +0200, Joerg Roedel wrote:
-> On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
-> > v2:
-> >  - Trickle down changes from pci_get_dma_source() to better handle
-> >    PCI device reference counting in IOMMU driver patches
-> 
-> Okay, I looked again over the code and looks good for merging to me.
+On Thu, Jun 21, 2012 at 11:55 PM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Jiang Liu <jiang.liu@huawei.com>
+>
+> Script checkpatch.pl recommends to replace printk(KERN_LVL) with pr_lvl(),
+> so do it.
+>
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
 
-Great, thanks Joerg!
+for 1-13
 
->  The
-> IOMMU Groups code depends on changes in the PCI code. We need to work
-> out how to merge this.
-> 
-> Bjorn,
-> 
-> I need the PCI changes before I can merge the IOMMU Groups code. There
-> are two ways that would work for me:
-> 
-> 	a) You Ack the PCI patch-set from Alex and I put it into my tree
-> 	   and merge the IOMMU Group code on-top, or
-> 	b) You merge the PCI related patch-set into a seperate branch
-> 	   which you can merge into your next-branch and which I can
-> 	   pull in to merge IOMMU Groups on-top.
-> 
-> Please let me know what works best for you.
+Reviewed-by: Yinghai Lu <yinghai@kernel.org>
 
-I also poked Bjorn with a minor v3 spin on his series, no change to this
-series.
+Thanks
 
-> What I would also appreciate are a few more Acks from other IOMMU
-> maintainers (David W.?) and from the Power side.
-
-Alexey, BenH, can either of you comment on this series from the POWER
-side?  I know Alexey has an implementation of VFIO/Qemu device
-assignment working on POWER with this series.  David Woodhouse, any
-comments?  Thanks,
-
-Alex
-
+Yinghai
