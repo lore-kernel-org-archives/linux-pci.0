@@ -1,58 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:53969 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755593Ab2FKPFl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jun 2012 11:05:41 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v2 02/10] ARM: pci: Keep pci_common_init() around after init
-Date: Mon, 11 Jun 2012 17:05:10 +0200
-Message-Id: <1339427118-32263-3-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42860 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760367Ab2FVG5A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2012 02:57:00 -0400
+Received: by dady13 with SMTP id y13so1941745dad.19
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 23:57:00 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v10 02/13] x86/PCI: split out pci_mmconfig_alloc() for code reuse
+Date: Fri, 22 Jun 2012 14:55:11 +0800
+Message-Id: <1340348122-29021-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
+References: <1340348122-29021-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+From: Jiang Liu <jiang.liu@huawei.com>
 
----
-Changes in v2:
-- use __devinit annotations
----
- arch/arm/kernel/bios32.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Split out pci_mmconfig_alloc() for code reuse, which will be used
+when supporting PCI root bridge hotplug.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 2555250..c9d28dd 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -423,7 +423,7 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 	return irq;
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/mmconfig-shared.c |   19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index f799949..5e2cd2a 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -61,8 +61,9 @@ static __init void list_add_sorted(struct pci_mmcfg_region *new)
+ 	list_add_tail(&new->list, &pci_mmcfg_list);
  }
  
--static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
-+static void __devinit pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+-static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+-							int end, u64 addr)
++static __devinit struct pci_mmcfg_region *pci_mmconfig_alloc(int segment,
++							     int start,
++							     int end, u64 addr)
  {
- 	struct pci_sys_data *sys = NULL;
- 	int ret;
-@@ -472,7 +472,7 @@ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
- 	}
+ 	struct pci_mmcfg_region *new;
+ 	struct resource *res;
+@@ -79,8 +80,6 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	new->start_bus = start;
+ 	new->end_bus = end;
+ 
+-	list_add_sorted(new);
+-
+ 	res = &new->res;
+ 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
+ 	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
+@@ -96,6 +95,18 @@ static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+ 	return new;
  }
  
--void __init pci_common_init(struct hw_pci *hw)
-+void __devinit pci_common_init(struct hw_pci *hw)
++static __init struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
++							int end, u64 addr)
++{
++	struct pci_mmcfg_region *new;
++
++	new = pci_mmconfig_alloc(segment, start, end, addr);
++	if (new)
++		list_add_sorted(new);
++
++	return new;
++}
++
+ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
  {
- 	struct pci_sys_data *sys;
- 	LIST_HEAD(head);
+ 	struct pci_mmcfg_region *cfg;
 -- 
-1.7.10.4
+1.7.9.5
 
