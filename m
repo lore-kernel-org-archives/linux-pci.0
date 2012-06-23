@@ -1,60 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:36849 "EHLO
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30783 "EHLO
 	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758744Ab2FZSzO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 14:55:14 -0400
+	with ESMTP id S1751838Ab2FWHmI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 03:42:08 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v12 06/15] PCI: Add pci_bus_replace_busn_res()
-Date: Tue, 26 Jun 2012 11:54:00 -0700
-Message-Id: <1340736849-14875-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/5] PCI, acpiphp: add is_hotplug_bridge detection
+Date: Sat, 23 Jun 2012 00:42:04 -0700
+Message-Id: <1340437325-29282-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will use replace_resource to put bus's busn_res in the resource tree.
+When system support hotplug bridge with children hotplug slots, we need to make sure
+that parent bridge get preallocated resource so later when device is plugged into
+children slot, those children devices will get resource allocated.
 
+We do not meet this problem, because for pcie hotplug card, when acpiphp is used,
+pci_scan_bridge will set that for us when detect hotplug bit in slot cap.
+
+Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Jason Baron <jbaron@redhat.com>
 ---
- drivers/pci/probe.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
+ 1 files changed, 26 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 75bca6f..7498502 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -660,6 +660,21 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	return child;
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ad6fd66..0f2b72d 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -783,6 +783,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+ 	}
  }
  
-+static void pci_bus_replace_busn_res(struct pci_bus *b,
-+					 struct resource *busn_res)
++static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
 +{
-+	struct resource *res = &b->busn_res;
++	struct acpiphp_func *func;
 +
-+	/* busn_res must be registered already*/
-+	if (!busn_res->parent)
++	if (!dev->subordinate)
 +		return;
 +
-+	replace_resource(busn_res, res);
++	/* quirk, or pcie could set it already */
++	if (dev->is_hotplug_bridge)
++		return;
 +
-+	dev_printk(KERN_DEBUG, &b->dev, "busn_res: %pR is updated under %pR\n",
-+			res, res->parent);
++	if (PCI_SLOT(dev->devfn) != slot->device)
++		return;
++
++	list_for_each_entry(func, &slot->funcs, sibling) {
++		if (PCI_FUNC(dev->devfn) == func->function) {
++			/* check if this bridge has ejectable slots */
++			if ((detect_ejectable_slots(func->handle) > 0))
++				dev->is_hotplug_bridge = 1;
++			break;
++		}
++	}
 +}
-+
- struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev, int busnr)
- {
- 	struct pci_bus *child;
+ /**
+  * enable_device - enable, configure a slot
+  * @slot: slot to be enabled
+@@ -817,8 +840,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+ 			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+ 				max = pci_scan_bridge(bus, dev, max, pass);
+-				if (pass && dev->subordinate)
++				if (pass && dev->subordinate) {
++					check_hotplug_bridge(slot, dev);
+ 					pci_bus_size_bridges(dev->subordinate);
++				}
+ 			}
+ 		}
+ 	}
 -- 
 1.7.7
 
