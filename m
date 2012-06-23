@@ -1,71 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:31399
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751443Ab2FLQF3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jun 2012 12:05:29 -0400
-Date: Tue, 12 Jun 2012 18:04:27 +0200
-From: Joerg Roedel <joerg.roedel@amd.com>
+Received: from mga01.intel.com ([192.55.52.88]:11162 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755082Ab2FWCX6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Jun 2012 22:23:58 -0400
+From: Huang Ying <ying.huang@intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joerg Roedel <joro@8bytes.org>, <aik@ozlabs.ru>,
-	<benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<dwmw2@infradead.org>, <david@gibson.dropbear.id.au>
-Subject: Re: [PATCH v3 0/5] PCI: Prep for VFIO and IOMMU Groups
-Message-ID: <20120612160427.GE2624@amd.com>
-References: <20120611152021.25959.71601.stgit@bling.home>
- <CAErSpo434tDtnSOxB_REG2jFNrZL=aZERWTmmK-cdjqM4z6yWg@mail.gmail.com>
- <20120612062000.GA6932@8bytes.org>
- <CAErSpo6J61+XhtEeXdE-5Evhs-SJ4=3iEZDAXGuRi9moAU8KhQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <CAErSpo6J61+XhtEeXdE-5Evhs-SJ4=3iEZDAXGuRi9moAU8KhQ@mail.gmail.com>
+Cc: ming.m.lin@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	Zheng Yan <zheng.z.yan@intel.com>
+Subject: [PATCH -v7 2/4] PCIe, PM, Add runtime PM support to PCIe port
+Date: Sat, 23 Jun 2012 10:23:49 +0800
+Message-Id: <1340418231-10134-3-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1340418231-10134-1-git-send-email-ying.huang@intel.com>
+References: <1340418231-10134-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: "Yan, Zheng" <zheng.z.yan@intel.com>
 
-On Tue, Jun 12, 2012 at 09:55:59AM -0600, Bjorn Helgaas wrote:
-> On Tue, Jun 12, 2012 at 12:20 AM, Joerg Roedel <joro@8bytes.org> wrote:
-> > Hi Bjorn,
-> >
-> > On Mon, Jun 11, 2012 at 06:59:25PM -0600, Bjorn Helgaas wrote:
-> >> On Mon, Jun 11, 2012 at 8:26 AM, Alex Williamson
-> >> <alex.williamson@redhat.com> wrote:
-> >> > v3:
-> >> >  - Small change to device specific ACS check to allow quirk to
-> >> >   support yes/no/pass type functionality. (no change to other
-> >> >   patches and no trickle down through IOMMU series)
-> >> >
-> >> > Bjorn, what's needed to get these in?  Thanks,
-> >>
-> >> Sorry for the delay.  I applied these to my "next" branch (headed for
-> >> 3.6).  I didn't feel comfortable pushing them towards 3.5 since
-> >> they're not bugfixes, and they haven't been in -next yet.
-> >
-> > Great. Do you applied them directly to your next branch or do you have
-> > them in a seperate branch I can pull in to merge the IOMMU Groups
-> > patches on-top? The later would be really good :)
-> 
-> Hi Joerg, I have Alex's patches on a separate topic branch.  I folded
-> in the pci_get_dev() fix and pushed it to here:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-> topic/alex-vfio-prep
-> 
-> This is also included in my "next" branch.
+This patch adds runtime PM support to PCIe port.  This is needed by
+PCIe D3cold support, where PCIe device without ACPI node may be
+powered on/off by PCIe port.
 
+Because runtime suspend is broken for some chipsets, a black list is
+used to disable runtime PM support for these chipsets.
 
-Great, thanks. I will pull in this branch and apply Alex' IOMMU group
-code on-top.
+Signed-off-by: Zheng Yan <zheng.z.yan@intel.com>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/pci/pci.c              |   10 ++++++++++
+ drivers/pci/pcie/portdrv_pci.c |   24 ++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
-
-	Joerg
-
--- 
-AMD Operating System Research Center
-
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
-
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1480,6 +1480,16 @@ static void pci_pme_list_scan(struct wor
+ 	if (!list_empty(&pci_pme_list)) {
+ 		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
+ 			if (pme_dev->dev->pme_poll) {
++				struct pci_dev *bridge;
++
++				bridge = pme_dev->dev->bus->self;
++				/*
++				 * If bridge is in low power state, the
++				 * configuration space of subordinate devices
++				 * may be not accessible
++				 */
++				if (bridge && bridge->current_state != PCI_D0)
++					continue;
+ 				pci_pme_wakeup(pme_dev->dev, NULL);
+ 			} else {
+ 				list_del(&pme_dev->list);
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -11,6 +11,7 @@
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/pm.h>
++#include <linux/pm_runtime.h>
+ #include <linux/init.h>
+ #include <linux/pcieport_if.h>
+ #include <linux/aer.h>
+@@ -99,6 +100,15 @@ static int pcie_port_resume_noirq(struct
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_RUNTIME
++static int pcie_port_runtime_pm(struct device *dev)
++{
++	return 0;
++}
++#else
++#define pcie_port_runtime_pm	NULL
++#endif
++
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume		= pcie_port_device_resume,
+@@ -107,6 +117,8 @@ static const struct dev_pm_ops pcie_port
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
+ 	.resume_noirq	= pcie_port_resume_noirq,
++	.runtime_suspend = pcie_port_runtime_pm,
++	.runtime_resume = pcie_port_runtime_pm,
+ };
+ 
+ #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+@@ -117,6 +129,14 @@ static const struct dev_pm_ops pcie_port
+ #endif /* !PM */
+ 
+ /*
++ * PCIe port runtime suspend is broken for some chipsets, so use a
++ * black list to disable runtime PM for these chipsets.
++ */
++static const struct pci_device_id port_runtime_pm_black_list[] = {
++	{ /* end: all zeroes */ }
++};
++
++/*
+  * pcie_portdrv_probe - Probe PCI-Express port devices
+  * @dev: PCI-Express port device being probed
+  *
+@@ -144,12 +164,16 @@ static int __devinit pcie_portdrv_probe(
+ 		return status;
+ 
+ 	pci_save_state(dev);
++	if (!pci_match_id(port_runtime_pm_black_list, dev))
++		pm_runtime_put_noidle(&dev->dev);
+ 
+ 	return 0;
+ }
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
++	if (!pci_match_id(port_runtime_pm_black_list, dev))
++		pm_runtime_get_noresume(&dev->dev);
+ 	pcie_port_device_remove(dev);
+ 	pci_disable_device(dev);
+ }
