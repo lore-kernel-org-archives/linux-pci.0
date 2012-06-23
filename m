@@ -1,68 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:54936 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752277Ab2FTFqT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jun 2012 01:46:19 -0400
-Message-ID: <1340171140.28143.72.camel@pasglop>
-Subject: Re: [PATCH v2 1/7] driver core: Add iommu_group tracking to struct
- device
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: joerg.roedel@amd.com, dwmw2@infradead.org,
-	iommu@lists.linux-foundation.org, bhelgaas@google.com,
-	aik@ozlabs.ru, david@gibson.dropbear.id.au, konrad.wilk@oracle.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, ddutile@redhat.com, liuj97@gmail.com
-Date: Wed, 20 Jun 2012 15:45:40 +1000
-In-Reply-To: <20120530201840.31527.47813.stgit@bling.home>
-References: <20120530201424.31527.33142.stgit@bling.home>
-	 <20120530201840.31527.47813.stgit@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30785 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520Ab2FWHmI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 03:42:08 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/5] PCI: add root bus children dev's res to fail list
+Date: Sat, 23 Jun 2012 00:42:05 -0700
+Message-Id: <1340437325-29282-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-05-30 at 14:18 -0600, Alex Williamson wrote:
-> IOMMU groups allow IOMMU drivers to represent DMA visibility
-> and isolation of devices.  Multiple devices may be grouped
-> together for the purposes of DMA.  Placing a pointer on
-> struct device enable easy access for things like streaming
-> DMA programming and drivers like VFIO.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+We can stop according to try number now and do not need to use root_bus checking
+as stop sign anymore.
 
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> ---
-> 
->  include/linux/device.h |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index 161d962..d0e4d99 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -36,6 +36,7 @@ struct subsys_private;
->  struct bus_type;
->  struct device_node;
->  struct iommu_ops;
-> +struct iommu_group;
->  
->  struct bus_attribute {
->  	struct attribute	attr;
-> @@ -687,6 +688,7 @@ struct device {
->  	const struct attribute_group **groups;	/* optional groups */
->  
->  	void	(*release)(struct device *dev);
-> +	struct iommu_group	*iommu_group;
->  };
->  
->  /* Get the wakeup routines, which depend on struct device */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 561e41c..bb02b25 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -283,7 +283,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		idx = res - &dev_res->dev->resource[0];
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+-			if (fail_head && !pci_is_root_bus(dev_res->dev->bus)) {
++			if (fail_head) {
+ 				/*
+ 				 * if the failed res is for ROM BAR, and it will
+ 				 * be enabled later, don't add it to the list
+-- 
+1.7.7
 
