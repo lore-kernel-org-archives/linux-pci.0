@@ -1,95 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:58215 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937Ab2FLE7w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2012 00:59:52 -0400
-Date: Tue, 12 Jun 2012 06:59:37 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 05/10] ARM: tegra: Rewrite PCIe support as a driver
-Message-ID: <20120612045937.GA3669@avionic-0098.mockup.avionic-design.de>
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de>
- <1339427118-32263-6-git-send-email-thierry.reding@avionic-design.de>
- <4FD6617C.4090805@wwwdotorg.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:38380 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754650Ab2FWVgC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 17:36:02 -0400
+Received: by lbbgm6 with SMTP id gm6so5023207lbb.19
+        for <linux-pci@vger.kernel.org>; Sat, 23 Jun 2012 14:36:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="45Z9DzgjV8m4Oswq"
-In-Reply-To: <4FD6617C.4090805@wwwdotorg.org>
+In-Reply-To: <4FE4AB2F.8090402@wwwdotorg.org>
+References: <4FD85127.8050301@firmworks.com> <20120614091905.GA9081@avionic-0098.mockup.avionic-design.de>
+ <4FDA2DDA.1030704@wwwdotorg.org> <20120614192903.GA2212@avionic-0098.mockup.avionic-design.de>
+ <4FDA40A0.4030206@wwwdotorg.org> <20120615061236.GA4081@avionic-0098.mockup.avionic-design.de>
+ <20120619133001.GB24138@avionic-0098.mockup.avionic-design.de>
+ <4FE0EFBB.6090206@firmworks.com> <20120621064722.GA1122@avionic-0098.mockup.avionic-design.de>
+ <CAErSpo6Bpfqm-0yGiBOXEhF4kD3PTDYvWVr0babLZ4GkBLXJiA@mail.gmail.com>
+ <20120622110038.GA15212@avionic-0098.mockup.avionic-design.de>
+ <4FE4A4B3.9010200@wwwdotorg.org> <4FE4AB2F.8090402@wwwdotorg.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 23 Jun 2012 15:35:40 -0600
+Message-ID: <CAErSpo4UNaRea6F2xtZv++P3deS9h9rZdHeVRyaX_hFm7Gbxfg@mail.gmail.com>
+Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Jun 22, 2012 at 11:28 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+> On 06/22/2012 11:00 AM, Stephen Warren wrote:
+>> On 06/22/2012 05:00 AM, Thierry Reding wrote:
+>> ...
+>>> Stephen: can you try to find out whether the Tegra PCIe controller
+>>> indeed implements ECAM, or if this scheme is actually just a
+>>> proprietary variant?
+>>
+>> Sure. I have added this request to the bug I filed requesting more
+>> complete PCIe host documentation.
+>
+> I've received unofficial confirmation that we do indeed implement a
+> non-standard/non-ECAM mapping, and what's in our driver matches our HW.
 
---45Z9DzgjV8m4Oswq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Interesting.  A generic ECAM/MMCONFIG solution might still be worth
+thinking about.  We could easily have a hook to encapsulate the
+address mapping function, while still sharing the resource management
+(request_region(), etc).  Not any kind of requirement for the current
+patch series, of course, just possible future work.
 
-* Stephen Warren wrote:
-> On 06/11/2012 09:05 AM, Thierry Reding wrote:
-> > This commit adds a platform device driver for the PCIe controller on
-> > Tegra SOCs. Current users of the old code (TrimSlice and Harmony) are
-> > converted and now initialize and register a corresponding platform
-> > device.
->=20
-> > -static int tegra_pcie_clocks_get(void)
-> > +static int tegra_pcie_clocks_get(struct tegra_pcie_info *pcie)
-> >  {
-> >  	int err;
-> > =20
-> > -	tegra_pcie.pex_clk =3D clk_get(NULL, "pex");
-> > -	if (IS_ERR(tegra_pcie.pex_clk))
-> > -		return PTR_ERR(tegra_pcie.pex_clk);
-> > +	pcie->pex_clk =3D clk_get(NULL, "pex");
-> > +	if (IS_ERR(pcie->pex_clk))
-> > +		return PTR_ERR(pcie->pex_clk);
->=20
-> While we're changing this, can we convert this to devm_clk_get(), and ...
-
-Will do.
-
-> > -	tegra_pcie.regs =3D ioremap_nocache(TEGRA_PCIE_BASE, PCIE_IOMAP_SZ);
-> > -	if (tegra_pcie.regs =3D=3D NULL) {
-> > -		pr_err("PCIE: Failed to map PCI/AFI registers\n");
-> > +	regs =3D request_mem_region(regs->start, resource_size(regs), "PCI/AF=
-I");
-> > +	if (regs =3D=3D NULL) {
-> > +		dev_err(&pdev->dev, "failed to request PCI/AFI region: %d\n", err);
-> > +		goto err_req_reg;
-> > +	}
-> > +
-> > +	pcie->regs =3D ioremap_nocache(regs->start, resource_size(regs));
-> > +	if (pcie->regs =3D=3D NULL) {
-> > +		dev_err(&pdev->dev, "failed to map PCI/AFI registers\n");
-> >  		err =3D -ENOMEM;
-> >  		goto err_map_reg;
-> >  	}
->=20
-> ... that to devm_request_and_ioremap(). That would allow a bunch of the
-> cleanup code to be deleted rather than just modified.
-
-Yes, I'll fix that up as well.
-
-Thierry
-
---45Z9DzgjV8m4Oswq
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/WzLkACgkQZ+BJyKLjJp9LsgCgkd2RUHoQ3x28GMcYJKhFCGW9
-ULQAn119Zd8JXGN/WKk/ayq06qrwl3w3
-=IU8W
------END PGP SIGNATURE-----
-
---45Z9DzgjV8m4Oswq--
+Bjorn
