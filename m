@@ -1,66 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:56502 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258Ab2F2GsA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jun 2012 02:48:00 -0400
-Received: from /spool/local
-	by e5.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Fri, 29 Jun 2012 02:47:59 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5T6lvsc400230
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:47:57 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5T6lu2H001102
-	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 03:47:57 -0300
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
-Cc: bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
-	linuxram@us.ibm.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 3/7] pci: make find_pci_host_bridge global
-Date: Fri, 29 Jun 2012 14:47:46 +0800
-Message-Id: <5cc19d49348943cd7986fa74558e3b82cc60de73.1340949637.git.shangw@linux.vnet.ibm.com>
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30781 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520Ab2FWHmH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 03:42:07 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/5] pciehp: Don't enable presence notification while surprise removal is not supported.
+Date: Sat, 23 Jun 2012 00:42:02 -0700
+Message-Id: <1340437325-29282-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch makes function find_pci_host_bridge() global so that the
-platforms (e.g. PPC) can access pci_host_bridge.
+If surprise removal is not supported, that event get dropped later.
+So there is no point to enable that.
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Also some sick chipset have those bit flip around when the card is not present.
+and make log full of useless warning.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host-bridge.c |    2 +-
- include/linux/pci.h       |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/hotplug/pciehp_hpc.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index fc16357..a43d393 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -17,7 +17,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- 	return bus;
- }
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index a960fae..d4fa705 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -808,7 +808,7 @@ int pciehp_get_cur_lnk_width(struct slot *slot,
  
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+ int pcie_enable_notification(struct controller *ctrl)
  {
- 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+-	u16 cmd, mask;
++	u16 cmd = 0, mask;
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fefb4e1..615ac90 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -385,6 +385,7 @@ struct pci_host_bridge {
- };
- 
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
- void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 		     void (*release_fn)(struct pci_host_bridge *),
- 		     void *release_data);
+ 	/*
+ 	 * TBD: Power fault detected software notification support.
+@@ -820,7 +820,8 @@ int pcie_enable_notification(struct controller *ctrl)
+ 	 * when it is cleared in the interrupt service routine, and
+ 	 * next power fault detected interrupt was notified again.
+ 	 */
+-	cmd = PCI_EXP_SLTCTL_PDCE;
++	if (HP_SUPR_RM(ctrl))
++		cmd |= PCI_EXP_SLTCTL_PDCE;
+ 	if (ATTN_BUTTN(ctrl))
+ 		cmd |= PCI_EXP_SLTCTL_ABPE;
+ 	if (MRL_SENS(ctrl))
 -- 
-1.7.9.5
+1.7.7
 
