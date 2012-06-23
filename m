@@ -1,41 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:34963 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760160Ab2FUURg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 16:17:36 -0400
-Message-ID: <4FE3815C.8030505@wwwdotorg.org>
-Date: Thu, 21 Jun 2012 14:17:32 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 08/10] ARM: tegra: harmony: Initialize regulators from
- DT
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-9-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1339427118-32263-9-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from rcsinet15.oracle.com ([148.87.113.117]:30788 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799Ab2FWHmJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 03:42:09 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/5] PCI, acpiphp: Merge acpiphp_debug and debug
+Date: Sat, 23 Jun 2012 00:42:03 -0700
+Message-Id: <1340437325-29282-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/11/2012 09:05 AM, Thierry Reding wrote:
-> Device tree support for the TPS6586x PMU used on Harmony has recently
-> been added. This commit adds the required device tree nodes to probe the
-> PMU from the device tree.
+Should not have two, just remove debug, and use module_param_named
+instead.
 
-> diff --git a/arch/arm/boot/dts/tegra-harmony.dts b/arch/arm/boot/dts/tegra-harmony.dts
+Also change acpiphp_debug to bool.
 
-> +		tps6586x@34 {
-> +			compatible = "ti,tps6586x";
-> +			reg = <0x34>;
-> +			interrupts = <0 88 0x4>;
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/hotplug/acpiphp.h      |    2 +-
+ drivers/pci/hotplug/acpiphp_core.c |    7 ++-----
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-I believe that should be interrupt 86 not 88.
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index 6b58ed0..a1afb5b 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -205,6 +205,6 @@ extern u8 acpiphp_get_latch_status (struct acpiphp_slot *slot);
+ extern u8 acpiphp_get_adapter_status (struct acpiphp_slot *slot);
+ 
+ /* variables */
+-extern int acpiphp_debug;
++extern bool acpiphp_debug;
+ 
+ #endif /* _ACPIPHP_H */
+diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+index aa41631..96316b7 100644
+--- a/drivers/pci/hotplug/acpiphp_core.c
++++ b/drivers/pci/hotplug/acpiphp_core.c
+@@ -47,8 +47,7 @@
+ /* name size which is used for entries in pcihpfs */
+ #define SLOT_NAME_SIZE  21              /* {_SUN} */
+ 
+-static bool debug;
+-int acpiphp_debug;
++bool acpiphp_debug;
+ 
+ /* local variables */
+ static int num_slots;
+@@ -62,7 +61,7 @@ MODULE_AUTHOR(DRIVER_AUTHOR);
+ MODULE_DESCRIPTION(DRIVER_DESC);
+ MODULE_LICENSE("GPL");
+ MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
+-module_param(debug, bool, 0644);
++module_param_named(debug, acpiphp_debug, bool, 0644);
+ 
+ /* export the attention callback registration methods */
+ EXPORT_SYMBOL_GPL(acpiphp_register_attention);
+@@ -379,8 +378,6 @@ static int __init acpiphp_init(void)
+ 	if (acpi_pci_disabled)
+ 		return 0;
+ 
+-	acpiphp_debug = debug;
+-
+ 	/* read all the ACPI info from the system */
+ 	return init_acpi();
+ }
+-- 
+1.7.7
+
