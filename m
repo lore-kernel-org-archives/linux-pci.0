@@ -1,58 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:20468 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759195Ab2FUJrI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:47:08 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v9 09/11] x86/PCI: get rid of redundant log messages
-Date: Thu, 21 Jun 2012 17:37:01 +0800
-Message-ID: <1340271423-4352-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
-References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:57119 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753130Ab2FXCre convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 22:47:34 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo7DxKLJC4p1n1YS3HNpjdeXvYTLL-_tkWqu_2yWokLttw@mail.gmail.com>
+References: <1340418231-10134-1-git-send-email-ying.huang@intel.com>
+	<CAErSpo7DxKLJC4p1n1YS3HNpjdeXvYTLL-_tkWqu_2yWokLttw@mail.gmail.com>
+Date: Sun, 24 Jun 2012 10:47:33 +0800
+Message-ID: <CAC=cRTO1LFzWWCXLGXvtLdwWKUjV9Z4r=shE6UN8UAW1PnZHag@mail.gmail.com>
+Subject: Re: [PATCH -v7 0/4] PCIe, PM, Add PCIe runtime D3cold support
+From: huang ying <huang.ying.caritas@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Huang Ying <ying.huang@intel.com>, ming.m.lin@intel.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zheng Yan <zheng.z.yan@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For each resource of a PCI host bridge, the arch code and PCI
-code log following messages:
-"pci_root PNP0A08:00: host bridge window [io 0x0000-0x03af]",
-"pci_bus 0000:00: root bus resource [io  0x0000-0x03af]"
+On Sun, Jun 24, 2012 at 5:26 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jun 22, 2012 at 8:23 PM, Huang Ying <ying.huang@intel.com> wrote:
+>> Changelog:
+>>
+>> v7:
+>>
+>> - Rebased on pci.git next branch
+>>
+>> v6:
+>>
+>> - Disable device D3cold during system suspend/hibernate with a new method per Rafeal's comments
+>>
+>> v5:
+>>
+>> - Disable device D3cold during system suspend/hibernate per Rafael's comments
+>>
+>> v4:
+>>
+>> - Minors fixes based on comments from Rafael
+>>
+>> v3:
+>>
+>> - Drop device.power.power_must_be_on, use pci_dev.no_d3cold instead
+>> - Drop device.power.power_off_user, use pci_dev.d3cold_allowed instead
+>> - Use black list instead of white list in pcie port runtime support per request from Bjorn
+>> - Various fixes based on comments from Rafael
+>>
+>> v2:
+>>
+>> - Refreshed based on comments from Rafael
+>>
+>> [PATCH -v7 1/4] ACPI, PM, Specify lowest allowed state for device sleep
+>> [PATCH -v7 2/4] PCIe, PM, Add runtime PM support to PCIe port
+>> [PATCH -v7 3/4] PCI, do not call pci_set_power_state with PCI_D3cold
+>> [PATCH -v7 4/4] PCIe, PM, Add PCIe runtime D3cold support
+>
+> I merged this to my "next" branch and pushed it.  Thanks!
+>
+> I reworded some of the [4/4] changelog -- check it over and make sure
+> it still makes sense:
+>
+> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commit;h=448bd857d48e69b33ef323739dc6d8ca20d4cda7
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/acpi.c |    7 -------
- 1 files changed, 0 insertions(+), 7 deletions(-)
+Thanks.  Your version is much better than my original one.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index f701179..5f778ae 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -295,13 +295,6 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
- 	}
- 
- 	info->res_num++;
--	if (addr.translation_offset)
--		dev_info(&info->bridge->dev, "host bridge window %pR "
--			 "(PCI address [%#llx-%#llx])\n",
--			 res, res->start - addr.translation_offset,
--			 res->end - addr.translation_offset);
--	else
--		dev_info(&info->bridge->dev, "host bridge window %pR\n", res);
- 
- 	return AE_OK;
- }
--- 
-1.7.1
-
-
+Best Regards,
+Huang Ying
