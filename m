@@ -1,31 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:48392 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754204Ab2FGRJv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2012 13:09:51 -0400
-Date: Thu, 7 Jun 2012 18:13:05 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Matthew Garrett <mjg@redhat.com>, Khalid Aziz <khalid.aziz@hp.com>,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-Message-ID: <20120607181305.2c444be6@pyramind.ukuu.org.uk>
-In-Reply-To: <m21ulrjbji.fsf@firstfloor.org>
-References: <20120427190033.GA17588@ldl.usa.hp.com>
-	<20120606135009.GB1517@srcf.ucam.org>
-	<20120606215034.257d7549@pyramind.ukuu.org.uk>
-	<m21ulrjbji.fsf@firstfloor.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from e37.co.us.ibm.com ([32.97.110.158]:51020 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040Ab2FYDKm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Jun 2012 23:10:42 -0400
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Sun, 24 Jun 2012 21:10:41 -0600
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id B63D1C90063
+	for <linux-pci@vger.kernel.org>; Sun, 24 Jun 2012 23:10:30 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5P3AWxF180390
+	for <linux-pci@vger.kernel.org>; Sun, 24 Jun 2012 23:10:32 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5P8fNmO015968
+	for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2012 04:41:24 -0400
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH V3 2/2] PCI: minimal alignment for bars of P2P bridges
+Date: Mon, 25 Jun 2012 11:10:20 +0800
+Message-Id: <1340593821-19011-2-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1340593821-19011-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1340593821-19011-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> But it also makes my system do kexec successfully for the first time.
-> 
-> Maybe can make it an option.
+On some powerpc platforms, device BARs need to be assigned to separate
+"segments" of the address space in order for the error isolation and HW
+virtualization mechanisms (EEH) to work properly. Those "segments" have
+a minimum size that can be fairly large (16M). In order to be able to
+use the generic resource assignment code rather than re-inventing our
+own, we chose to group devices by bus. That way, a simple change of the
+minimum alignment requirements of resources assigned to PCI to PCI (P2P)
+bridges is enough to ensure that all BARs for devices below those bridges
+will fit into contiguous sets of segments and there will be no overlap.
 
-More useful might be to report which devices have the bus master bit left
-on at the time you tried the kexec, then we might actually find the bug.
+This patch provides a way for the host bridge to override the default
+alignment values used by the resource allocation code for that purpose.
 
-Alan
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Reviewed-by: Ram Pai <linuxram@us.ibm.com>
+Reviewed-by: Richard Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/probe.c     |    5 +++++
+ drivers/pci/setup-bus.c |   28 +++++++++++++++++++++-------
+ include/linux/pci.h     |    8 ++++++++
+ 3 files changed, 34 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 658ac97..a196529 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -431,6 +431,11 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 	if (bridge) {
+ 		INIT_LIST_HEAD(&bridge->windows);
+ 		bridge->bus = b;
++
++		/* Set minimal alignment shift of P2P bridges */
++		bridge->io_align_shift = PCI_DEFAULT_IO_ALIGN_SHIFT;
++		bridge->mem_align_shift = PCI_DEFAULT_MEM_ALIGN_SHIFT;
++		bridge->pmem_align_shift = PCI_DEFAULT_PMEM_ALIGN_SHIFT;
+ 	}
+ 
+ 	return bridge;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8fa2d4b..7c3e90d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -706,10 +706,12 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		resource_size_t add_size, struct list_head *realloc_head)
+ {
++	struct pci_host_bridge *phb;
+ 	struct pci_dev *dev;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+ 	unsigned long size = 0, size0 = 0, size1 = 0;
+ 	resource_size_t children_add_size = 0;
++	resource_size_t io_align;
+ 
+ 	if (!b_res)
+  		return;
+@@ -735,13 +737,17 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 				children_add_size += get_res_add_size(realloc_head, r);
+ 		}
+ 	}
++
++	phb = pci_bus_host_bridge(bus);
++	io_align = (1 << phb->io_align_shift);
++
+ 	size0 = calculate_iosize(size, min_size, size1,
+-			resource_size(b_res), 4096);
++			resource_size(b_res), io_align);
+ 	if (children_add_size > add_size)
+ 		add_size = children_add_size;
+ 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+ 		calculate_iosize(size, min_size, add_size + size1,
+-			resource_size(b_res), 4096);
++			resource_size(b_res), io_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window "
+@@ -751,11 +757,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		return;
+ 	}
+ 	/* Alignment of the IO window is always 4K */
+-	b_res->start = 4096;
++	b_res->start = io_align;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
++		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+ 				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
+ 				 bus->secondary, bus->subordinate, size1-size0);
+@@ -778,6 +784,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			resource_size_t add_size,
+ 			struct list_head *realloc_head)
+ {
++	struct pci_host_bridge *phb;
+ 	struct pci_dev *dev;
+ 	resource_size_t min_align, align, size, size0, size1;
+ 	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
+@@ -785,10 +792,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	struct resource *b_res = find_free_bus_resource(bus, type);
+ 	unsigned int mem64_mask = 0;
+ 	resource_size_t children_add_size = 0;
++	int mem_align_shift;
+ 
+ 	if (!b_res)
+ 		return 0;
+ 
++	phb = pci_bus_host_bridge(bus);
++	if (type & IORESOURCE_PREFETCH)
++		mem_align_shift = phb->pmem_align_shift;
++	else
++		mem_align_shift = phb->mem_align_shift;
++
+ 	memset(aligns, 0, sizeof(aligns));
+ 	max_order = 0;
+ 	size = 0;
+@@ -818,8 +832,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ #endif
+ 			/* For bridges size != alignment */
+ 			align = pci_resource_alignment(dev, r);
+-			order = __ffs(align) - 20;
+-			if (order > 11) {
++			order = __ffs(align) - mem_align_shift;
++			if (order > (11 - (mem_align_shift - 20))) {
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR "
+ 					 "(bad alignment %#llx)\n", i, r,
+ 					 (unsigned long long) align);
+@@ -846,7 +860,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	for (order = 0; order <= max_order; order++) {
+ 		resource_size_t align1 = 1;
+ 
+-		align1 <<= (order + 20);
++		align1 <<= (order + mem_align_shift);
+ 
+ 		if (!align)
+ 			min_align = align1;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6d5bb1c..ed55e58 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -376,9 +376,17 @@ struct pci_host_bridge_window {
+ 	resource_size_t offset;		/* bus address + offset = CPU address */
+ };
+ 
++/* Default shits for P2P I/O and MMIO bar minimal alignment shifts */
++#define PCI_DEFAULT_IO_ALIGN_SHIFT	12	/* 4KB  */
++#define PCI_DEFAULT_MEM_ALIGN_SHIFT	20	/* 1MB  */
++#define PCI_DEFAULT_PMEM_ALIGN_SHIFT	20	/* 1MB */
++
+ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
++	int io_align_shift;		/* P2P I/O bar minimal alignment shift  */
++	int mem_align_shift;		/* P2P MMIO bar minimal alignment shift */
++	int pmem_align_shift;		/* P2P prefetchable MMIO bar minimal alignment shift */
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+-- 
+1.7.9.5
+
