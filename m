@@ -1,69 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:45173 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773Ab2FFSHm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2012 14:07:42 -0400
-Subject: Re: [PATCH] Disable Bus Master on PCI device shutdown
-From: Khalid Aziz <khalid.aziz@hp.com>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-In-Reply-To: <20120606174202.GA8750@srcf.ucam.org>
-References: <20120427190033.GA17588@ldl.usa.hp.com>
-	 <20120606135009.GB1517@srcf.ucam.org> <1338999463.25761.630.camel@lyra>
-	 <20120606162703.GA6779@srcf.ucam.org> <1339003956.25761.667.camel@lyra>
-	 <20120606174202.GA8750@srcf.ucam.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Jun 2012 12:07:40 -0600
-Message-ID: <1339006060.25761.689.camel@lyra>
-Mime-Version: 1.0
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:36854 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472Ab2FYWzN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2012 18:55:13 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXhGLwSH4gq7L9DrhVAXcDu_NbjLA5QkCDOEqaFO09m7w@mail.gmail.com>
+References: <1340650789-3326-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo4oE8nHmu1KBXSX=YjQGfD89v2fqL=96THz98uZ4Va_rQ@mail.gmail.com>
+	<CAE9FiQXhGLwSH4gq7L9DrhVAXcDu_NbjLA5QkCDOEqaFO09m7w@mail.gmail.com>
+Date: Mon, 25 Jun 2012 15:55:12 -0700
+Message-ID: <CAE9FiQVhL+5y9n7n8JkPMwdTd-N14rcOc7Sm_5WHN+w8nVg-4Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI, X86: busnum/node boot command line for pci dev node setting.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ingo Molnar <mingo@kernel.org>, lenb@kernel.org, x86@kernel.org,
+	Ulrich Drepper <drepper@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary=047d7b33d650e71ce604c353df4a
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-06-06 at 18:42 +0100, Matthew Garrett wrote:
-> On Wed, Jun 06, 2012 at 11:32:36AM -0600, Khalid Aziz wrote:
-> 
-> > Do we agree that if device shutdown routine cleanly shuts down all I/O,
-> > clearing PCI Bus Mster bit should be safe?
-> 
-> In the absence of hardware that dislikes the bus master bit ever being 
-> disabled, yes. Do we know if hardware is ever tested in that situation?
+--047d7b33d650e71ce604c353df4a
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-I will wait for device vendors to comment on that. I can't claim I have
-tested more than a few devices that way.
+On Mon, Jun 25, 2012 at 3:38 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Jun 25, 2012 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrot=
+e:
+>>
+>> Can you convince me this is safe? =A0pci_setup() is an early_param, so
+>> it looks to me like we might be saving a pointer to initdata in this
+>> call path:
+>>
+>> =A0 =A0setup_arch
+>> =A0 =A0 =A0parse_early_param
+>> =A0 =A0 =A0 =A0strlcpy(tmp_cmdline, boot_command_line)
+>> =A0 =A0 =A0 =A0parse_early_options(__initdata tmp_cmdline)
+>> =A0 =A0 =A0 =A0 =A0parse_args
+>> =A0 =A0 =A0 =A0 =A0 =A0do_early_param
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0...
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0pci_setup (early_param)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pcibios_setup
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0remember_busnum_node
+>>
+>> And then we use that saved pointer to parse the string at host bridge
+>> add-time, which might be after initdata has been freed.
+>
+> ok, that will need one separate buffer.
 
-> 
-> > If yes, then we only have to deal with broken devices. So the approach 
-> > could be to disable Bus Master bit unless the device ID matches a 
-> > blacklist which we update as we find broken devices. I really don't 
-> > like the idea of maintaining blacklists in the kernel for such things 
-> > but is that a more practical approach? If blacklist does not sound 
-> > good, maybe we can ask drivers to tell PCI subsystem if they are not 
-> > ok with clearing Bus Master bit and then PCI subsystem could skip 
-> > those devices.
-> 
-> Or we could just put responsibility on the drivers to ensure that the 
-> hardware won't continue doing any DMA, either by shutting down the 
-> engines or clearing the bit.
-> 
+could used saved_command_line directly.
 
-I assume device shutdown routine should stop all I/O and shutting down
-DMA engine. Disabling Bus Master bit is just an extra measure of safety.
-I do like the idea of disabling Bus Master bit in device shutdown
-routine. After all, drivers know their hardware best. On the other hand,
-it is change to lots of driver code to implement this which means it
-will end up happening slowly over period of time. I don't mind doing the
-work up front on a good number of drivers I feel comfortable modifying.
-I am ok with pulling out code to clear bus master bit from PCI subsystem
-and replacing it with modified shutdown routines for a few drivers to
-start with.
+also do we need to include this one to upsteam ?
 
-Does any one see any other issues with modifying driver shutdown
-routines for disabling Bus Master bit? Bjorn, any opinions?
+Thanks
 
-====================================================================
-Khalid Aziz                                         Unix Systems Lab
-(970)898-9214                                        Hewlett-Packard
-khalid.aziz@hp.com                                  Fort Collins, CO
+Yinghai
 
+--047d7b33d650e71ce604c353df4a
+Content-Type: application/octet-stream; name="busnum_node_v3_x.patch"
+Content-Disposition: attachment; filename="busnum_node_v3_x.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h3w59eg50
+
+U3ViamVjdDogW1BBVENIXSBQQ0ksIFg4NjogYnVzbnVtL25vZGUgYm9vdCBjb21tYW5kIGxpbmUg
+Zm9yIHBjaSBkZXYgbm9kZSBzZXR0aW5nLgoKU29tZSBpbnRlbCBuZXcgc2FuZHlicmlkZ2Ugb3Ig
+bmV3ZXIgdHdvIHNvY2tldHMgc3lzdGVtIGRvIHN1cHBvcnQgc3VwcG9ydCBudW1hCmZvciBwY2kg
+ZGV2aWNlcy4gQnV0IEJJT1MgZG9lcyBub3QgcHJvdmlkZSBfUFhNIHVuZGVyIHRob3NlIHJvb3Qg
+YnVzIGluIERTRFQuCgpBZGQgYm9vdCBjb21tYW5kIGxpbmUsIHNvIHVzZXIgY291bGQgaGF2ZSBj
+aGFuY2UgdG8gaW5wdXQgbm9kZSBpbmZvIGJlZm9yZQpCSU9TIGd1eXMgZmlndXJlIG91dCB0byBh
+ZGQgX1BYTS4KCkZvbGQgZml4IGZyb20gVWxyaWNoIHRvIHVzZSAiOyIgaW5zdGVhZCBvZiAiLCIu
+CnwgVGhlIHByb2JsZW0gaXMgdGhlIHBjaT0gcGFyYW1ldGVyCnwgaGFuZGxpbmcgdXNlcyAnLCcg
+dG8gc2VwYXJhdGUgcGFyYW1ldGVycyBhbmQgdGhlcmVmb3JlIHRoZSBzZWNvbmQgUENJCnwgcm9v
+dCBpbmZvcm1hdGlvbiwgc2VwYXJhdGVkIGJ5IGEgY29tbWEsIGlzIGludGVycHJldGVkIGFzIGEg
+bmV3IHBjaT0KfCBwYXJhbWV0ZXIuCgotdjM6IEFjY29yZGluZyB0byBCam9ybiBhbmQgSW5nbywg
+Y2hhbmdlIHRvIHVzZSAidXNlciBpbnB1dCBmaXJzdCIgcG9saWN5CiAgICAgc28gaXQgY291bGQg
+Y292ZXIgd3JvbmcgX1BYTSBjYXNlLgotdjU6IHJldmVydCBiYWNrIHRvIC12MywgYW5kIGNoYW5n
+ZSB0byB1c2Ugc2F2ZWRfY29tbWFuZF9saW5lLgoKClJlcG9ydGVkLWJ5OiBVbHJpY2ggRHJlcHBl
+ciA8ZHJlcHBlckBnbWFpbC5jb20+ClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlA
+a2VybmVsLm9yZz4KCi0tLQogRG9jdW1lbnRhdGlvbi9rZXJuZWwtcGFyYW1ldGVycy50eHQgfCAg
+ICA1ICsrKysrCiBhcmNoL3g4Ni9pbmNsdWRlL2FzbS9wY2lfeDg2LmggICAgICB8ICAgIDMgKysr
+CiBhcmNoL3g4Ni9wY2kvYWNwaS5jICAgICAgICAgICAgICAgICB8ICAgMjIgKysrKysrKysrKysr
+Ky0tLS0tLS0tLQogYXJjaC94ODYvcGNpL2NvbW1vbi5jICAgICAgICAgICAgICAgfCAgIDI4ICsr
+KysrKysrKysrKysrKysrKysrKysrKysrKysKIDQgZmlsZXMgY2hhbmdlZCwgNDkgaW5zZXJ0aW9u
+cygrKSwgOSBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvRG9jdW1lbnRhdGlvbi9rZXJu
+ZWwtcGFyYW1ldGVycy50eHQKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvRG9jdW1lbnRh
+dGlvbi9rZXJuZWwtcGFyYW1ldGVycy50eHQKKysrIGxpbnV4LTIuNi9Eb2N1bWVudGF0aW9uL2tl
+cm5lbC1wYXJhbWV0ZXJzLnR4dApAQCAtMjE5NSw2ICsyMTk1LDExIEBAIGJ5dGVzIHJlc3BlY3Rp
+dmVseS4gU3VjaCBsZXR0ZXIgc3VmZml4ZXMKIAkJCQlvbmx5IGxvb2sgZm9yIG9uZSBkZXZpY2Ug
+YmVsb3cgYSBQQ0llIGRvd25zdHJlYW0KIAkJCQlwb3J0LgogCisJYnVzbnVtX25vZGU9ICAgIFtY
+ODZdIFNldCBub2RlIGZvciByb290IGJ1cy4KKwkJCUZvcm1hdDoKKwkJCTxidXM+Ojxub2RlPls7
+IC4uLl0KKwkJCVNwZWNpZmllcyBub2RlIGZvciBidXMsIHdpbGwgb3ZlcnJpZGUgYmlvcyBfUFhN
+CisJCQlvciBwcm9iZWQgdmFsdWUgZnJvbSBob3N0YnJpZGdlLgogCXBjaWVfYXNwbT0JW1BDSUVd
+IEZvcmNpYmx5IGVuYWJsZSBvciBkaXNhYmxlIFBDSWUgQWN0aXZlIFN0YXRlIFBvd2VyCiAJCQlN
+YW5hZ2VtZW50LgogCQlvZmYJRGlzYWJsZSBBU1BNLgpJbmRleDogbGludXgtMi42L2FyY2gveDg2
+L3BjaS9jb21tb24uYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3g4Ni9wY2kv
+Y29tbW9uLmMKKysrIGxpbnV4LTIuNi9hcmNoL3g4Ni9wY2kvY29tbW9uLmMKQEAgLTQ5NCw2ICs0
+OTQsMzQgQEAgaW50IF9faW5pdCBwY2liaW9zX2luaXQodm9pZCkKIAlyZXR1cm4gMDsKIH0KIAor
+aW50IGdldF91c2VyX2J1c251bV9ub2RlKGludCBidXNudW0pCit7CisJaW50IGJ1cywgbm9kZSwg
+Y291bnQ7CisJY2hhciAqcDsKKworCXAgPSBzdHJzdHIoc2F2ZWRfY29tbWFuZF9saW5lLCAiYnVz
+bnVtX25vZGU9Iik7CisJaWYgKCFwKQorCQlyZXR1cm4gLTE7CisKKwlwICs9IDEyOyAvKiBzdHJs
+ZW4oImJ1c251bV9ub2RlPSIpICovCisJd2hpbGUgKCpwKSB7CisJCWNvdW50ID0gMDsKKwkJaWYg
+KHNzY2FuZihwLCAiJXg6JXglbiIsICZidXMsICZub2RlLCAmY291bnQpICE9IDIpIHsKKwkJCXBy
+aW50ayhLRVJOX0VSUiAiUENJOiBDYW4ndCBwYXJzZSBidXNudW1fbm9kZSBpbnB1dDogJXNcbiIs
+CisJCQkJCXApOworCQkJYnJlYWs7CisJCX0KKwkJaWYgKGJ1cyA9PSBidXNudW0pCisJCQlyZXR1
+cm4gbm9kZTsKKwkJcCArPSBjb3VudDsKKwkJaWYgKCpwICE9ICc7JykKKwkJCWJyZWFrOworCQlw
+Kys7CisJfQorCisJcmV0dXJuIC0xOworfQorCiBjaGFyICogX19kZXZpbml0ICBwY2liaW9zX3Nl
+dHVwKGNoYXIgKnN0cikKIHsKIAlpZiAoIXN0cmNtcChzdHIsICJvZmYiKSkgewpJbmRleDogbGlu
+dXgtMi42L2FyY2gveDg2L2luY2x1ZGUvYXNtL3BjaV94ODYuaAo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51
+eC0yLjYub3JpZy9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9wY2lfeDg2LmgKKysrIGxpbnV4LTIuNi9h
+cmNoL3g4Ni9pbmNsdWRlL2FzbS9wY2lfeDg2LmgKQEAgLTQ2LDYgKzQ2LDkgQEAgZW51bSBwY2lf
+YmZfc29ydF9zdGF0ZSB7CiAJcGNpX2RtaV9iZiwKIH07CiAKKy8qIHBjaS1jb21tb24uYyAqLwor
+aW50IGdldF91c2VyX2J1c251bV9ub2RlKGludCBidXNudW0pOworCiAvKiBwY2ktaTM4Ni5jICov
+CiAKIHZvaWQgcGNpYmlvc19yZXNvdXJjZV9zdXJ2ZXkodm9pZCk7CkluZGV4OiBsaW51eC0yLjYv
+YXJjaC94ODYvcGNpL2FjcGkuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3g4
+Ni9wY2kvYWNwaS5jCisrKyBsaW51eC0yLjYvYXJjaC94ODYvcGNpL2FjcGkuYwpAQCAtNDMzLDcg
+KzQzMyw3IEBAIHN0cnVjdCBwY2lfYnVzICogX19kZXZpbml0IHBjaV9hY3BpX3NjYW4KIAlzdHJ1
+Y3QgcGNpX3N5c2RhdGEgKnNkOwogCWludCBub2RlOwogI2lmZGVmIENPTkZJR19BQ1BJX05VTUEK
+LQlpbnQgcHhtOworCWludCBweG0gPSAtMTsKICNlbmRpZgogCiAJaWYgKGRvbWFpbiAmJiAhcGNp
+X2RvbWFpbnNfc3VwcG9ydGVkKSB7CkBAIC00NDMsMTYgKzQ0MywyMCBAQCBzdHJ1Y3QgcGNpX2J1
+cyAqIF9fZGV2aW5pdCBwY2lfYWNwaV9zY2FuCiAJCXJldHVybiBOVUxMOwogCX0KIAotCW5vZGUg
+PSAtMTsKKwlub2RlID0gZ2V0X3VzZXJfYnVzbnVtX25vZGUoYnVzbnVtKTsKKwlpZiAobm9kZSA9
+PSAtMSkgewogI2lmZGVmIENPTkZJR19BQ1BJX05VTUEKLQlweG0gPSBhY3BpX2dldF9weG0oZGV2
+aWNlLT5oYW5kbGUpOwotCWlmIChweG0gPj0gMCkKLQkJbm9kZSA9IHB4bV90b19ub2RlKHB4bSk7
+Ci0JaWYgKG5vZGUgIT0gLTEpCi0JCXNldF9tcF9idXNfdG9fbm9kZShidXNudW0sIG5vZGUpOwot
+CWVsc2UKLSNlbmRpZgorCQlweG0gPSBhY3BpX2dldF9weG0oZGV2aWNlLT5oYW5kbGUpOworCQlp
+ZiAocHhtID49IDApCisJCQlub2RlID0gcHhtX3RvX25vZGUocHhtKTsKKwkJaWYgKG5vZGUgIT0g
+LTEpCisJCQlzZXRfbXBfYnVzX3RvX25vZGUoYnVzbnVtLCBub2RlKTsKKwkJZWxzZQorCQkJbm9k
+ZSA9IGdldF9tcF9idXNfdG9fbm9kZShidXNudW0pOworI2Vsc2UKIAkJbm9kZSA9IGdldF9tcF9i
+dXNfdG9fbm9kZShidXNudW0pOworI2VuZGlmCisJfQogCiAJaWYgKG5vZGUgIT0gLTEgJiYgIW5v
+ZGVfb25saW5lKG5vZGUpKQogCQlub2RlID0gLTE7Cg==
+--047d7b33d650e71ce604c353df4a--
