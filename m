@@ -1,112 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:42381 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813Ab2FSNYP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:24:15 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v8 08/12] x86/PCI: simplify pci_mmcfg_late_insert_resources()
-Date: Tue, 19 Jun 2012 21:15:28 +0800
-Message-ID: <1340111732-6276-9-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
-References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:55461 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755965Ab2FYUyr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Jun 2012 16:54:47 -0400
+Subject: Re: [PATCH] pci: support alignments upto 8Gb in pbus_size_mem()
+From: Nikhil P Rao <nikhil.rao@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+In-Reply-To: <CAErSpo7AWQCofnTRhtMKVP3pm_BDq9v+axGpide0RbmignsV9A@mail.gmail.com>
+References: <1340222160.77018.19.camel@localhost.localdomain>
+	 <1340322477.56127.2.camel@localhost.localdomain>
+	 <CAErSpo7AWQCofnTRhtMKVP3pm_BDq9v+axGpide0RbmignsV9A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 25 Jun 2012 13:54:47 -0700
+Message-ID: <1340657687.36341.178.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reduce redundant code to simplify pci_mmcfg_late_insert_resources().
+On Sat, 2012-06-23 at 12:15 -0600, Bjorn Helgaas wrote:
+> On Thu, Jun 21, 2012 at 5:47 PM, Nikhil P Rao <nikhil.rao@intel.com> wrote:
+> > I ran into the "disabling BAR .." error message when
+> > trying to use a 8Gb PCIe card on a system with a BIOS
+> > that didnt have support for BAR size > 2Gb.
+> 
+> So the BIOS left the 8Gb BAR unassigned, and you got the "disabling
+> BAR ... (bad alignment)" message when Linux tried to enable it?
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Yes.
+
+> How do we know 8Gb is the correct new limit?  Are we going to be
+> fixing this again when we see a 16Gb or a 32Gb BAR?  Do we need a
+> better algorithm that doesn't have a limit like this?
+> 
+
+The original error message seems applicable to 32bit archs. and not to
+64 bit archs. How about the patch below - is aligns[44] (256bytes more)
+acceptable ?
+
+
+From: Nikhil P Rao <nikhil.rao@intel.com>
+Date: Mon, 25 Jun 2012 13:33:55 -0700
+Subject: [PATCH] pci: fix resource size check
+
+Support a PCI BAR alignment of > 2Gb, the original check was
+only applicable to 32 bit kernels,
+
+Signed-off-by: Nikhil P Rao <nikhil.rao@intel.com>
 ---
- arch/x86/pci/mmconfig-shared.c |   34 ++++++++--------------------------
- 1 files changed, 8 insertions(+), 26 deletions(-)
+ drivers/pci/setup-bus.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 48a9b8c..870ed3f 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -27,7 +27,6 @@
- #define PREFIX "PCI: "
- 
- /* Indicate if the mmcfg resources have been placed into the resource table. */
--static int __initdata pci_mmcfg_resources_inserted;
- static bool pci_mmcfg_running_state;
- static bool pci_mmcfg_arch_init_failed;
- static DEFINE_MUTEX(pci_mmcfg_lock);
-@@ -374,18 +373,6 @@ static int __init pci_mmcfg_check_hostbridge(void)
- 	return !list_empty(&pci_mmcfg_list);
- }
- 
--static void __init pci_mmcfg_insert_resources(void)
--{
--	struct pci_mmcfg_region *cfg;
--
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		if (!cfg->res.parent)
--			insert_resource(&iomem_resource, &cfg->res);
--
--	/* Mark that the resources have been inserted. */
--	pci_mmcfg_resources_inserted = 1;
--}
--
- static acpi_status __devinit check_mcfg_resource(struct acpi_resource *res,
- 						 void *data)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8fa2d4b..9f8d9ea 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -780,7 +780,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
  {
-@@ -669,11 +656,7 @@ static void __init __pci_mmcfg_init(int early)
- 	if (pci_mmcfg_arch_init())
- 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
- 	else {
--		/*
--		 * Signal not to attempt to insert mmcfg resources because
--		 * the architecture mmcfg setup could not initialize.
--		 */
--		pci_mmcfg_resources_inserted = 1;
-+		free_all_mmcfg();
- 		pci_mmcfg_arch_init_failed = true;
- 	}
- 
-@@ -693,15 +676,12 @@ void __init pci_mmcfg_late_init(void)
- 
- static int __init pci_mmcfg_late_insert_resources(void)
- {
-+	struct pci_mmcfg_region *cfg;
-+
- 	pci_mmcfg_running_state = true;
- 
--	/*
--	 * If resources are already inserted or we are not using MMCONFIG,
--	 * don't insert the resources.
--	 */
--	if ((pci_mmcfg_resources_inserted == 1) ||
--	    (pci_probe & PCI_PROBE_MMCONF) == 0 ||
--	    list_empty(&pci_mmcfg_list))
-+	/* If we are not using MMCONFIG, don't insert the resources. */
-+	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
- 		return 1;
- 
- 	/*
-@@ -709,7 +689,9 @@ static int __init pci_mmcfg_late_insert_resources(void)
- 	 * marked so it won't cause request errors when __request_region is
- 	 * called.
- 	 */
--	pci_mmcfg_insert_resources();
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		if (!cfg->res.parent)
-+			insert_resource(&iomem_resource, &cfg->res);
- 
- 	return 0;
- }
+ 	struct pci_dev *dev;
+ 	resource_size_t min_align, align, size, size0, size1;
+-	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
++	resource_size_t aligns[44];	/* Alignments from 1Mb to 2^63 */
+ 	int order, max_order;
+ 	struct resource *b_res = find_free_bus_resource(bus, type);
+ 	unsigned int mem64_mask = 0;
+@@ -819,7 +819,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* For bridges size != alignment */
+ 			align = pci_resource_alignment(dev, r);
+ 			order = __ffs(align) - 20;
+-			if (order > 11) {
++			if ((sizeof(size_t) == 4 && order > 11) ||
++					(sizeof(size_t) == 8 && order > 43)) {
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR "
+ 					 "(bad alignment %#llx)\n", i, r,
+ 					 (unsigned long long) align);
 -- 
 1.7.1
-
 
