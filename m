@@ -1,106 +1,133 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 14 Jun 2012 18:18:44 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jiang Liu <liuj97@gmail.com>, Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v1 1/6] PCI: change PCI device management logic to
- better follow device model
-Message-Id: <20120614181844.760bc0c7.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
-References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	linux-pcmcia@lists.infradead.org
+Subject: [PATCH -v12 11/15] pcmcia: Remove workaround for fixing pci parent bus subordinate
+Date: Tue, 26 Jun 2012 11:54:05 -0700
+Message-Id: <1340736849-14875-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Now pci busn allocation code is there, and it will preallocate bus number and it
+will make sure parent buses subordinate is right.
 
-Hi Jiang,
+So remove workaround here.
 
-   Looks good for me.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: linux-pcmcia@lists.infradead.org
+---
+ drivers/pcmcia/yenta_socket.c |   75 -----------------------------------------
+ 1 files changed, 0 insertions(+), 75 deletions(-)
 
- Best regards,
- Taku Izumi
-
-On Mon, 04 Jun 2012 13:16:57 +0800
-Jiang Liu <jiang.liu@huawei.com> wrote:
-
-> From: Jiang Liu <liuj97@gmail.com>
-> 
-> According to device model documentation, the way to add/remove device
-> object should be symmetric.
-> 
-> /**
->  * device_del - delete device from system.
->  * @dev: device.
->  *
->  * This is the first part of the device unregistration
->  * sequence. This removes the device from the lists we control
->  * from here, has it removed from the other driver model
->  * subsystems it was added to in device_add(), and removes it
->  * from the kobject hierarchy.
->  *
->  * NOTE: this should be called manually _iff_ device_add() was
->  * also called manually.
->  */
-> 
-> The rule here is to either use
-> 1) device_register()/device_unregister()
-> or
-> 2) device_initialize()/device_add()/device_del()/put_device().
-> 
-> So change PCI core to follow the rule and get rid of the redundant
-> pci_dev_get()/pci_dev_put() pair.
-> 
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  drivers/pci/probe.c  |    1 -
->  drivers/pci/remove.c |    4 ++--
->  2 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 0840409..dacca26 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1294,7 +1294,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
->  	device_initialize(&dev->dev);
->  	dev->dev.release = pci_release_dev;
-> -	pci_dev_get(dev);
->  
->  	dev->dev.dma_mask = &dev->dma_mask;
->  	dev->dev.dma_parms = &dev->dma_parms;
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 04a4861..6c07bc5 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
->  	if (dev->is_added) {
->  		pci_proc_detach_device(dev);
->  		pci_remove_sysfs_dev_files(dev);
-> -		device_unregister(&dev->dev);
-> +		device_del(&dev->dev);
->  		dev->is_added = 0;
->  	}
->  
-> @@ -40,7 +40,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
->  	up_write(&pci_bus_sem);
->  
->  	pci_free_resources(dev);
-> -	pci_dev_put(dev);
-> +	put_device(&dev->dev);
->  }
->  
->  /**
-> -- 
-> 1.7.1
-> 
-> 
-> 
+diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
+index 667678d..7e42bb4 100644
+--- a/drivers/pcmcia/yenta_socket.c
++++ b/drivers/pcmcia/yenta_socket.c
+@@ -1064,79 +1064,6 @@ static void yenta_config_init(struct yenta_socket *socket)
+ 	config_writew(socket, CB_BRIDGE_CONTROL, bridge);
+ }
+ 
+-/**
+- * yenta_fixup_parent_bridge - Fix subordinate bus# of the parent bridge
+- * @cardbus_bridge: The PCI bus which the CardBus bridge bridges to
+- *
+- * Checks if devices on the bus which the CardBus bridge bridges to would be
+- * invisible during PCI scans because of a misconfigured subordinate number
+- * of the parent brige - some BIOSes seem to be too lazy to set it right.
+- * Does the fixup carefully by checking how far it can go without conflicts.
+- * See http://bugzilla.kernel.org/show_bug.cgi?id=2944 for more information.
+- */
+-static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
+-{
+-	struct list_head *tmp;
+-	unsigned char upper_limit;
+-	/*
+-	 * We only check and fix the parent bridge: All systems which need
+-	 * this fixup that have been reviewed are laptops and the only bridge
+-	 * which needed fixing was the parent bridge of the CardBus bridge:
+-	 */
+-	struct pci_bus *bridge_to_fix = cardbus_bridge->parent;
+-
+-	/* Check bus numbers are already set up correctly: */
+-	if (bridge_to_fix->busn_res.end >= cardbus_bridge->busn_res.end)
+-		return; /* The subordinate number is ok, nothing to do */
+-
+-	if (!bridge_to_fix->parent)
+-		return; /* Root bridges are ok */
+-
+-	/* stay within the limits of the bus range of the parent: */
+-	upper_limit = bridge_to_fix->parent->busn_res.end;
+-
+-	/* check the bus ranges of all silbling bridges to prevent overlap */
+-	list_for_each(tmp, &bridge_to_fix->parent->children) {
+-		struct pci_bus *silbling = pci_bus_b(tmp);
+-		/*
+-		 * If the silbling has a higher secondary bus number
+-		 * and it's secondary is equal or smaller than our
+-		 * current upper limit, set the new upper limit to
+-		 * the bus number below the silbling's range:
+-		 */
+-		if (silbling->busn_res.start > bridge_to_fix->busn_res.end
+-		    && silbling->busn_res.start <= upper_limit)
+-			upper_limit = silbling->busn_res.start - 1;
+-	}
+-
+-	/* Show that the wanted subordinate number is not possible: */
+-	if (cardbus_bridge->busn_res.end > upper_limit)
+-		dev_printk(KERN_WARNING, &cardbus_bridge->dev,
+-			   "Upper limit for fixing this "
+-			   "bridge's parent bridge: #%02x\n", upper_limit);
+-
+-	/* If we have room to increase the bridge's subordinate number, */
+-	if (bridge_to_fix->busn_res.end < upper_limit) {
+-
+-		/* use the highest number of the hidden bus, within limits */
+-		unsigned char subordinate_to_assign =
+-			min_t(int, cardbus_bridge->busn_res.end, upper_limit);
+-
+-		dev_printk(KERN_INFO, &bridge_to_fix->dev,
+-			   "Raising subordinate bus# of parent "
+-			   "bus (#%02x) from #%02x to #%02x\n",
+-			   bridge_to_fix->number,
+-			   (int)bridge_to_fix->busn_res.end, subordinate_to_assign);
+-
+-		/* Save the new subordinate in the bus struct of the bridge */
+-		bridge_to_fix->busn_res.end = subordinate_to_assign;
+-
+-		/* and update the PCI config space with the new subordinate */
+-		pci_write_config_byte(bridge_to_fix->self,
+-			PCI_SUBORDINATE_BUS, bridge_to_fix->busn_res.end);
+-	}
+-}
+-
+ /*
+  * Initialize a cardbus controller. Make sure we have a usable
+  * interrupt, and that we can map the cardbus area. Fill in the
+@@ -1257,8 +1184,6 @@ static int __devinit yenta_probe(struct pci_dev *dev, const struct pci_device_id
+ 	dev_printk(KERN_INFO, &dev->dev,
+ 		   "Socket status: %08x\n", cb_readl(socket, CB_SOCKET_STATE));
+ 
+-	yenta_fixup_parent_bridge(dev->subordinate);
+-
+ 	/* Register it with the pcmcia layer.. */
+ 	ret = pcmcia_register_socket(&socket->socket);
+ 	if (ret == 0) {
+-- 
+1.7.7
 
