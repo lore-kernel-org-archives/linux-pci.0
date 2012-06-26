@@ -1,59 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:16747 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799Ab2FWHmI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 03:42:08 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/5] PCI, acpiphp: remove not used res_lock
-Date: Sat, 23 Jun 2012 00:42:01 -0700
-Message-Id: <1340437325-29282-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v12 15/15] PCI: Don't shrink too much for hotplug bridge
+Date: Tue, 26 Jun 2012 11:54:09 -0700
+Message-Id: <1340736849-14875-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
+
+Otherwise may have problem later if we plug pcie cards with bridges.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/hotplug/acpiphp.h      |    2 --
- drivers/pci/hotplug/acpiphp_glue.c |    3 ---
- 2 files changed, 0 insertions(+), 5 deletions(-)
+ drivers/pci/probe.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index 7722108..6b58ed0 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -89,8 +89,6 @@ struct acpiphp_bridge {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 118fe5b..f66f1b1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -811,6 +811,7 @@ static int __devinit pci_bridge_check_busn_broken(struct pci_bus *bus,
  
- 	/* PCI-to-PCI bridge device */
- 	struct pci_dev *pci_dev;
--
--	spinlock_t res_lock;
- };
- 
- 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 395c67d..ad6fd66 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -396,8 +396,6 @@ static void add_host_bridge(acpi_handle *handle)
- 
- 	bridge->pci_bus = root->bus;
- 
--	spin_lock_init(&bridge->res_lock);
--
- 	init_bridge_misc(bridge);
- }
- 
-@@ -430,7 +428,6 @@ static void add_p2p_bridge(acpi_handle *handle)
- 	 * (which we access during module unload).
- 	 */
- 	get_device(&bridge->pci_bus->dev);
--	spin_lock_init(&bridge->res_lock);
- 
- 	init_bridge_misc(bridge);
- 	return;
+ static unsigned int __devinit __pci_scan_child_bus(struct pci_bus *bus,
+ 						 int pass);
++#define HOTPLUG_BRIDGE_RESERVE_BUSNR 8
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
+@@ -1019,6 +1020,11 @@ int __devinit pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
++		if (dev->is_hotplug_bridge && child->busn_res.end > max &&
++		   (max - child->busn_res.start) < HOTPLUG_BRIDGE_RESERVE_BUSNR)
++			max = min_t(int, child->busn_res.start +
++					 HOTPLUG_BRIDGE_RESERVE_BUSNR,
++				    child->busn_res.end);
+ 		shrink_size = (int)child->busn_res.end - max;
+ 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
+ 		pci_bus_update_busn_res_end(child, max);
 -- 
 1.7.7
 
