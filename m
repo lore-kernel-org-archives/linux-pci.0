@@ -1,107 +1,233 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:56523 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757096Ab2FUMGR convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:7:1>);
-	Thu, 21 Jun 2012 08:06:17 -0400
-Message-Id: <4FE32A81020000780008B11B@nat28.tlf.novell.com>
-Date: Thu, 21 Jun 2012 13:06:57 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Wei Wang" <wei.wang2@amd.com>
-Cc: "SherryHurwitz" <sherry.hurwitz@amd.com>,
-	"Andrew Cooper" <andrew.cooper3@citrix.com>,
-	"Jeremy Fitzhardinge" <jeremy@goop.org>, <stable@kernel.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"KonradRzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<linux-pci@vger.kernel.org>,
-	"Jesse Barnes" <jbarnes@virtuousgeek.org>, <ebiederm@xmission.com>
-Subject: Re: [PATCH] PCI/MSI: don't disable AMD IOMMU MSI on Xen dom0
-References: <4FD72FE4.80009@amd.com>
- <4FD778C802000078000897EF@nat28.tlf.novell.com>
- <4FD76976.2020203@citrix.com>
- <4FD78DE6020000780008986D@nat28.tlf.novell.com> <4FD9D559.9050206@amd.com>
- <4FDA0ECD0200007800089FEA@nat28.tlf.novell.com> <4FDA0028.3090609@amd.com>
- <4FE30CBB020000780008B06B@nat28.tlf.novell.com> <4FE303C4.3060705@amd.com>
-In-Reply-To: <4FE303C4.3060705@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56767 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755659Ab2FZMmf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 08:42:35 -0400
+Received: by lbbgm6 with SMTP id gm6so32634lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 05:42:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXhGLwSH4gq7L9DrhVAXcDu_NbjLA5QkCDOEqaFO09m7w@mail.gmail.com>
+References: <1340650789-3326-1-git-send-email-yinghai@kernel.org>
+ <CAErSpo4oE8nHmu1KBXSX=YjQGfD89v2fqL=96THz98uZ4Va_rQ@mail.gmail.com> <CAE9FiQXhGLwSH4gq7L9DrhVAXcDu_NbjLA5QkCDOEqaFO09m7w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 26 Jun 2012 06:42:12 -0600
+Message-ID: <CAErSpo5Mrti-vtYddQa7qd3Hq9KjcXNpBQTX_F6Zgi0ckYrR7w@mail.gmail.com>
+Subject: Re: [PATCH] PCI, X86: busnum/node boot command line for pci dev node setting.
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>, lenb@kernel.org, x86@kernel.org,
+	Ulrich Drepper <drepper@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 21.06.12 at 13:21, Wei Wang <wei.wang2@amd.com> wrote:
-> On 06/21/2012 11:59 AM, Jan Beulich wrote:
->>>>> On 14.06.12 at 17:15, Wei Wang<wei.wang2@amd.com>  wrote:
->>> Am 14.06.2012 16:18, schrieb Jan Beulich:
->>>> Have you at all considered getting this fixed on the kernel side?
->>>> As I don't have direct access to any AMD IOMMU capable
->>>> system - can one, other than by enumerating the respective
->>>> PCI IDs or reading ACPI tables, reasonably easily identify the
->>>> devices in question (e.g. via vendor/class/sub-class or some
->>>> such)? That might permit skipping those in the offending kernel
->>>> code...
+On Mon, Jun 25, 2012 at 4:38 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Jun 25, 2012 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Mon, Jun 25, 2012 at 12:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> Some intel new sandybridge or newer two sockets system do support support numa
+>>> for pci devices. But BIOS does not provide _PXM under those root bus in DSDT.
 >>>
->>> AMD IOMMUs (both v1 and v2) uses class id 08 (System Base Peripheral)
->>> and sub class id 06 (IOMMU). Combined with PCI_VENDEOR_ID_AMD, this
->>> should be enough to identify amd iommu device. I could send you a kernel
->>> patch for review using this approach. I would believe that fixing this
->>> issue in 4.2, no matter how, is really important for amd iommu.
+>>> Add boot command line, so user could have chance to input node info before
+>>> BIOS guys figure out to add _PXM.
+>>>
+>>> Fold fix from Ulrich to use ";" instead of ",".
+>>> | The problem is the pci= parameter
+>>> | handling uses ',' to separate parameters and therefore the second PCI
+>>> | root information, separated by a comma, is interpreted as a new pci=
+>>> | parameter.
+>>>
+>>> -v3: According to Bjorn and Ingo, change to use "user input first" policy
+>>>     so it could cover wrong _PXM case.
+>>> -v4: Folded change from Ulrich to record pointer of busnum_node string.
+>>>
+>>> Reported-by: Ulrich Drepper <drepper@gmail.com>
+>>> Tested-by: Ulrich Drepper <drepper@gmail.com>
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>>
+>>> ---
+>>>  Documentation/kernel-parameters.txt |    5 +++++
+>>>  arch/x86/include/asm/pci_x86.h      |    3 +++
+>>>  arch/x86/pci/acpi.c                 |   22 +++++++++++++---------
+>>>  arch/x86/pci/common.c               |   36 ++++++++++++++++++++++++++++++++++++
+>>>  4 files changed, 57 insertions(+), 9 deletions(-)
+>>>
+>>> Index: linux-2.6/Documentation/kernel-parameters.txt
+>>> ===================================================================
+>>> --- linux-2.6.orig/Documentation/kernel-parameters.txt
+>>> +++ linux-2.6/Documentation/kernel-parameters.txt
+>>> @@ -2068,6 +2068,11 @@ bytes respectively. Such letter suffixes
+>>>                                hardware access methods are allowed. Use this
+>>>                                if you experience crashes upon bootup and you
+>>>                                suspect they are caused by the BIOS.
+>>> +               busnum_node=    [X86] Set node for root bus.
+>>> +                               Format:
+>>> +                               <bus>:<node>[;...]
+>>> +                               Specifies node for bus, will override bios _PXM
+>>> +                               or probed value from hostbridge.
 >>
->> As you didn't come forward with anything, here's my first
->> take on this:
-> 
-> Hi Jan
-> Thanks a lot for the patch. Actually I plan to send my version today, 
-> which is based on 3.4 pv_ops but looks very similar to yours. So, Acked!
-> 
-> I also evaluated the possibility of hiding iommu device from dom0. I 
-> think the change is no quite a lot, at least, for io based pcicfg 
-> access. A proof-of-concept patch is attached.
+>> I liked the previous argument format that included "pci".  Now we're
+>> assuming the only bus type important enough to care about NUMA
+>> information is PCI.
+>
+> which one?
 
-This completely hides the device from Dom0, but only when
-config space is accessed via method 1. Did you not see my
-earlier patch doing this for MCFG as well (albeit only disallowing
-writes, so allowing the device to still be seen by Dom0)?
+My point is that I think the argument should include the string "pci".
+ There are other bus types, and if the argument is only
+"busnum_node=", it's not clear which bus type we're referring to.
 
-Whether completely hiding the device is actually okay I can't
-easily tell: Would IOMMUs always be either at func 0 of a single-
-unction device, or at a non-zero func of a multi-function one? If
-not, other devices may get hidden implicitly.
+>> This should also work on ia64, which also uses ACPI.  For that matter,
+>> it'd be nice if it worked on *any* NUMA architecture, though I don't
+>> see any  PCI NUMA support at all for anything but x86 and ia64.
+>
+> ia64 platform should be well tested with Linux?
 
-Also I noticed just now that guest_io_read() wouldn't really
-behave correctly when pci_cfg_ok() returned false - it might
-pass back 0xff even for a multi-byte read. I'll send a fix shortly.
+If you're suggesting that it's OK to make x86 even more different from
+ia64 simply because this issue hasn't been reported on ia64, I
+disagree.
 
-Jan
+We have an opportunity to make them more similar, and we should do it.
+ Almost all the code in the pci_acpi_scan_root() path is functionally
+the same between x86 and ia64, and someday we should combine them.
+That will be easier if we don't add gratuitous differences.
 
-> --- a/xen/arch/x86/traps.c      Thu Jun 21 11:30:59 2012 +0200
-> +++ b/xen/arch/x86/traps.c      Thu Jun 21 13:19:02 2012 +0200
-> @@ -73,6 +73,7 @@
->   #include <asm/hpet.h>
->   #include <public/arch-x86/cpuid.h>
->   #include <xsm/xsm.h>
-> +#include <asm/hvm/svm/amd-iommu-proto.h>
-> 
->   /*
->    * opt_nmi: one of 'ignore', 'dom0', or 'fatal'.
-> @@ -1686,10 +1687,19 @@ static int pci_cfg_ok(struct domain *d,
->   {
->       uint32_t machine_bdf;
->       uint16_t start, end;
-> +    struct amd_iommu *iommu;
-> +
->       if (!IS_PRIV(d))
->           return 0;
-> 
->       machine_bdf = (d->arch.pci_cf8 >> 8) & 0xFFFF;
-> +
-> +    for_each_amd_iommu ( iommu )
-> +    {
-> +        if ( machine_bdf == iommu->bdf )
-> +            return 0;
-> +    }
-> +
->       start = d->arch.pci_cf8 & 0xFF;
->       end = start + size - 1;
->       if (xsm_pci_config_permission(d, machine_bdf, start, end, write))
+>>>                conf1           [X86] Force use of PCI Configuration
+>>>                                Mechanism 1.
+>>>                conf2           [X86] Force use of PCI Configuration
+>>> Index: linux-2.6/arch/x86/pci/common.c
+>>> ===================================================================
+>>> --- linux-2.6.orig/arch/x86/pci/common.c
+>>> +++ linux-2.6/arch/x86/pci/common.c
+>>> @@ -494,6 +494,39 @@ int __init pcibios_init(void)
+>>>        return 0;
+>>>  }
+>>>
+>>> +static const char *busnum_node_param;
+>>> +
+>>> +static void remember_busnum_node(const char *str)
+>>> +{
+>>> +       busnum_node_param = str;
+>>
+>> Can you convince me this is safe?  pci_setup() is an early_param, so
+>> it looks to me like we might be saving a pointer to initdata in this
+>> call path:
+>>
+>>    setup_arch
+>>      parse_early_param
+>>        strlcpy(tmp_cmdline, boot_command_line)
+>>        parse_early_options(__initdata tmp_cmdline)
+>>          parse_args
+>>            do_early_param
+>>              ...
+>>              pci_setup (early_param)
+>>                pcibios_setup
+>>                  remember_busnum_node
+>>
+>> And then we use that saved pointer to parse the string at host bridge
+>> add-time, which might be after initdata has been freed.
+>
+> ok, that will need one separate buffer.
+>
+>>
+>>> +}
+>>> +
+>>> +int get_user_busnum_node(int busnum)
+>>> +{
+>>> +       int bus, node, count;
+>>> +       const char *p = busnum_node_param;
+>>> +
+>>> +       if (!p)
+>>> +               return -1;
+>>> +
+>>> +       while (*p) {
+>>> +               count = 0;
+>>> +               if (sscanf(p, "%x:%x%n", &bus, &node, &count) != 2) {
+>>> +                       printk(KERN_ERR "PCI: Can't parse busnum_node input: %s\n",
+>>> +                                       p);
+>>> +                       break;
+>>> +               }
+>>> +               if (bus == busnum)
+>>> +                       return node;
+>>> +               p += count;
+>>> +               if (*p != ';')
+>>> +                       break;
+>>> +               p++;
+>>> +       }
+>>> +
+>>> +       return -1;
+>>> +}
+>>> +
+>>>  char * __devinit  pcibios_setup(char *str)
+>>>  {
+>>>        if (!strcmp(str, "off")) {
+>>> @@ -579,6 +612,9 @@ char * __devinit  pcibios_setup(char *st
+>>>        } else if (!strcmp(str, "nocrs")) {
+>>>                pci_probe |= PCI_ROOT_NO_CRS;
+>>>                return NULL;
+>>> +       } else if (!strncmp(str, "busnum_node=", 12)) {
+>>> +               remember_busnum_node(str + 12);
+>>> +               return NULL;
+>>>        } else if (!strcmp(str, "earlydump")) {
+>>>                pci_early_dump_regs = 1;
+>>>                return NULL;
+>>> Index: linux-2.6/arch/x86/include/asm/pci_x86.h
+>>> ===================================================================
+>>> --- linux-2.6.orig/arch/x86/include/asm/pci_x86.h
+>>> +++ linux-2.6/arch/x86/include/asm/pci_x86.h
+>>> @@ -46,6 +46,9 @@ enum pci_bf_sort_state {
+>>>        pci_dmi_bf,
+>>>  };
+>>>
+>>> +/* pci-common.c */
+>>> +int get_user_busnum_node(int busnum);
+>>> +
+>>>  /* pci-i386.c */
+>>>
+>>>  void pcibios_resource_survey(void);
+>>> Index: linux-2.6/arch/x86/pci/acpi.c
+>>> ===================================================================
+>>> --- linux-2.6.orig/arch/x86/pci/acpi.c
+>>> +++ linux-2.6/arch/x86/pci/acpi.c
+>>> @@ -453,7 +453,7 @@ struct pci_bus * __devinit pci_acpi_scan
+>>>        struct pci_sysdata *sd;
+>>>        int node;
+>>>  #ifdef CONFIG_ACPI_NUMA
+>>> -       int pxm;
+>>> +       int pxm = -1;
+>>>  #endif
+>>>
+>>>        if (domain && !pci_domains_supported) {
+>>> @@ -463,16 +463,20 @@ struct pci_bus * __devinit pci_acpi_scan
+>>>                return NULL;
+>>>        }
+>>>
+>>> -       node = -1;
+>>> +       node = get_user_busnum_node(busnum);
+>>> +       if (node == -1) {
+>>>  #ifdef CONFIG_ACPI_NUMA
+>>> -       pxm = acpi_get_pxm(device->handle);
+>>> -       if (pxm >= 0)
+>>> -               node = pxm_to_node(pxm);
+>>> -       if (node != -1)
+>>> -               set_mp_bus_to_node(busnum, node);
+>>> -       else
+>>> -#endif
+>>> +               pxm = acpi_get_pxm(device->handle);
+>>> +               if (pxm >= 0)
+>>> +                       node = pxm_to_node(pxm);
+>>
+>> The code above (everything except the calls to set_mp_bus_to_node()
+>> and get_mp_bus_to_node(), which are x86-specific) should be the same
+>> between x86 and ia64.  Can you rationalize them?  It'd be better if
+>> they used the same #ifdefs and the same code structure.
+>
+> this patch does not change set_mp_bus_to_node/get_mp_bus_to_node...
+> only let user_busnum_node override them.
 
+It's true that your patch doesn't change get_mp_bus_to_node().
+However, the code you're changing does use it, and while reviewing
+your patch, I noticed bugs in it.  So I think it's reasonable to fix
+the bugs at the same time.  If you prefer, I can do it, but it will
+take me longer to get around to it.
 
+Bjorn
