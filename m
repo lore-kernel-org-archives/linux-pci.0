@@ -1,40 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46619 "EHLO
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58864 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753202Ab2FOHQJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 03:16:09 -0400
-Received: by pbbrp8 with SMTP id rp8so4895411pbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2012 00:16:08 -0700 (PDT)
+	with ESMTP id S1757943Ab2FZPno (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 11:43:44 -0400
+Message-ID: <4FE9D8AC.6010809@twiddle.net>
+Date: Tue, 26 Jun 2012 08:43:40 -0700
+From: Richard Henderson <rth@twiddle.net>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4v_N8MhoCyQMi6vOOipw6Cg8wbMqP2q9FXT+gXjF88iw@mail.gmail.com>
-References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
-	<CAErSpo4v_N8MhoCyQMi6vOOipw6Cg8wbMqP2q9FXT+gXjF88iw@mail.gmail.com>
-Date: Fri, 15 Jun 2012 00:16:08 -0700
-Message-ID: <CAE9FiQWTpy4iEfhTiPC4UgCu_+6L0yR6SSFCbvMtHp-Jv7_DFA@mail.gmail.com>
-Subject: Re: [PATCH v7 00/10] PCI, x86: update MMCFG information when
- hot-plugging PCI host bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Myron Stowe <myron.stowe@redhat.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com,
+	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
+	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
+	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
+	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
+	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
+	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/16] alpha/PCI: Factor 'pcibios_setup()' out of alpha
+References: <20120626033045.16434.17412.stgit@amt.stowe> <20120626033109.16434.92644.stgit@amt.stowe>
+In-Reply-To: <20120626033109.16434.92644.stgit@amt.stowe>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 14, 2012 at 8:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I have to say I'm still ambivalent about this.  I really like the fact
-> that we track MMCONFIG space on a per-host bridge basis.  But the code
-> in the init path is ridiculously, embarrassingly complicated
-> (obviously this is not your fault at all).  It took me a couple hours
-> to trace through and figure out why my box emits the "motherboard
-> resources" warnings when it didn't before.
+On 06/25/2012 08:31 PM, Myron Stowe wrote:
+> The PCI core provides a generic (__weak) 'pcibios_setup()' routine
+> that can be used by all architectures as a default.  Drop alpha's
+> architecture specific version in favor of that as it does not need to be
+> over-ridden.
+> 
+> No functional change.
+> 
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
+> 
+>  arch/alpha/kernel/pci.c |    6 ------
+>  1 files changed, 0 insertions(+), 6 deletions(-)
 
-[PATCH v7 08/10] PCI, x86: add MMCFG information on demand
+Acked-by: Richard Henderson <rth@twiddle.net>
 
-still have some problem that need to be fixed.
 
-Yinghai
+r~
