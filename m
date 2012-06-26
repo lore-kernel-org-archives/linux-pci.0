@@ -1,57 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from db3ehsobe001.messaging.microsoft.com ([213.199.154.139]:24203
-	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751088Ab2FYL3g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2012 07:29:36 -0400
-Date: Mon, 25 Jun 2012 13:29:34 +0200
-From: Joerg Roedel <joerg.roedel@amd.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: <dwmw2@infradead.org>, <iommu@lists.linux-foundation.org>,
-	<bhelgaas@google.com>, <benh@kernel.crashing.org>, <aik@ozlabs.ru>,
-	<david@gibson.dropbear.id.au>, <konrad.wilk@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<gregkh@linuxfoundation.org>, <ddutile@redhat.com>,
-	<liuj97@gmail.com>
-Subject: Re: [PATCH v2 0/7] IOMMU: Groups support
-Message-ID: <20120625112934.GU2624@amd.com>
-References: <20120530201424.31527.33142.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20120530201424.31527.33142.stgit@bling.home>
+Received: from acsinet15.oracle.com ([141.146.126.227]:29988 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758842Ab2FZSzA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 14:55:00 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v12 05/15] PCI: Probe safe range that we can use for unassigned bridge.
+Date: Tue, 26 Jun 2012 11:53:59 -0700
+Message-Id: <1340736849-14875-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2012 at 02:18:29PM -0600, Alex Williamson wrote:
-> Alex Williamson (7):
->       iommu: Remove group_mf
->       intel-iommu: Make use of DMA quirks and ACS checks in IOMMU groups
->       amd_iommu: Make use of DMA quirks and ACS checks in IOMMU groups
->       intel-iommu: Support IOMMU groups
->       amd_iommu: Support IOMMU groups
->       iommu: IOMMU Groups
->       driver core: Add iommu_group tracking to struct device
-> 
-> 
->  .../ABI/testing/sysfs-kernel-iommu_groups          |   14 
->  Documentation/kernel-parameters.txt                |    1 
->  arch/ia64/include/asm/iommu.h                      |    2 
->  arch/ia64/kernel/pci-dma.c                         |    1 
->  arch/x86/include/asm/iommu.h                       |    1 
->  arch/x86/kernel/pci-dma.c                          |   11 
->  drivers/iommu/amd_iommu.c                          |   70 ++
->  drivers/iommu/intel-iommu.c                        |   89 ++-
->  drivers/iommu/iommu.c                              |  578 +++++++++++++++++++-
->  include/linux/device.h                             |    2 
->  include/linux/iommu.h                              |  104 +++-
->  11 files changed, 767 insertions(+), 106 deletions(-)
->  create mode 100644 Documentation/ABI/testing/sysfs-kernel-iommu_groups
+Try to allocate from parent bus busn_res. If we can not find any big enough,
+will try to extend parent bus top. even the extending is through allocating,
+after allocating will pad the range to parent buses top.
 
-Applied and pushed all of them. Thanks a lot, Alex.
+When extending happens, We will record the parent_res, so could use it as
+stopper for really extend/shrink top later.
 
+-v4: Use generic probe_resource()
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 44c42ae..75bca6f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -717,6 +717,34 @@ static void __devinit pci_bus_shrink_top(struct pci_bus *parent,
+ 	pci_bus_extend_top(parent, -size, parent_res);
+ }
+ 
++static int __devinit pci_bridge_probe_busn_res(struct pci_bus *bus,
++			 struct pci_dev *dev, struct resource *busn_res,
++			 resource_size_t needed_size, struct resource **p)
++{
++	int ret;
++	int old_size = resource_size(&bus->busn_res);
++	int skip_nr = 1;
++	int domain_limit = 0xff;
++	int stop_flags = IORESOURCE_PCI_FIXED;
++
++	ret = probe_resource(&bus->busn_res, busn_res, needed_size,
++			p, skip_nr, domain_limit, stop_flags);
++
++	if (ret)
++		return ret;
++
++	busn_res->flags = IORESOURCE_BUS;
++
++	if (*p) {
++		/* extend parent bus top*/
++		int new_size = resource_size(&bus->busn_res);
++
++		pci_bus_extend_top(bus, new_size - old_size, *p);
++	}
++
++	return ret;
++}
++
+ /*
+  * If it's a bridge, configure it and scan the bus behind it.
+  * For CardBus bridges, we don't scan behind as the devices will
 -- 
-AMD Operating System Research Center
-
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+1.7.7
 
