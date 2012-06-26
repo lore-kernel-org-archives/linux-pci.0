@@ -1,91 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50341 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751664Ab2FKXY6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jun 2012 19:24:58 -0400
-Message-ID: <1339457081.9220.35.camel@pasglop>
-Subject: Re: [PATCH v2 0/2] Add pcibios_device_change_notifier
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Date: Tue, 12 Jun 2012 09:24:41 +1000
-In-Reply-To: <CAErSpo79RDid=4m+Q8FZxnhThQ9BAJo4HhtZ8ZQ5rGc1nmvH-w@mail.gmail.com>
-References: <4FBC4C86.9050206@jp.fujitsu.com>
-	 <1338960416.7150.160.camel@pasglop>
-	 <CAErSpo79RDid=4m+Q8FZxnhThQ9BAJo4HhtZ8ZQ5rGc1nmvH-w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120621202435.16865.1340.stgit@amt.stowe>
+References: <20120621202415.16865.6226.stgit@amt.stowe> <20120621202435.16865.1340.stgit@amt.stowe>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 26 Jun 2012 16:33:12 -0600
+Message-ID: <CAErSpo5yNxjjBVaTXjAKCY4SfRWj7uXK2cS3BtkugmoF4fYn6g@mail.gmail.com>
+Subject: Re: [PATCH 3/9] arm/PCI: move final fixup quirks from __init to __devinit
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
+	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-06-11 at 16:51 -0600, Bjorn Helgaas wrote:
+On Thu, Jun 21, 2012 at 2:24 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> The PCI subsystem's final fixups are executed once during boot, after the
+> pci-device is found.  As long as the system does not support hot-plug,
+> specifying __init is fine.
+>
+> With hot-plug, either physically based hot-plug events or pseudo hot-plug
+> events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
+> PCI bus during run time and have it rediscovered which will require the
+> call of the fixups again in order for the device to function properly.
+>
+> This patch prepares specific quirk(s) for use with hot-plug events.
+>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
+>
+>  arch/arm/mach-iop32x/n2100.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/arch/arm/mach-iop32x/n2100.c b/arch/arm/mach-iop32x/n2100.c
+> index 5a7ae91..04c4110 100644
+> --- a/arch/arm/mach-iop32x/n2100.c
+> +++ b/arch/arm/mach-iop32x/n2100.c
+> @@ -126,7 +126,7 @@ static struct hw_pci n2100_pci __initdata = {
+>  * the ->broken_parity_status flag for both ports so that the r8169
+>  * driver knows it should ignore error interrupts.
+>  */
+> -static void n2100_fixup_r8169(struct pci_dev *dev)
+> +static void __devinit n2100_fixup_r8169(struct pci_dev *dev)
 
-> > This makes me a bit nervous (that doesn't mean it's not right, but
-> > we need some careful auditing & testing here, which I won't be
-> > able to do until I'm back from leave). Mostly due to the change in when
-> > we do the work.
-> >
-> > pcibios_fixup_bus() used to be called early on in the initial scan pass.
-> >
-> > Your code causes the code to be called -much- later when registering the
-> > device with the device model. Are we 100% certain nothing will happen in
-> > between that might rely on the stuff being setup already ? It might well
-> > be ok, but I want us to triple check that.
-> 
-> Here's my theory on this: we're setting up DMA and IRQ stuff.  DMA and
-> IRQ usage is device-specific, so the core can't do anything with them.
->  Only drivers know how to use them.  Drivers can't find the device
-> until it's registered with the device model.  So it seems like it
-> should be safe to move it later.  Subject to thinkos and testing in
-> the real world, of course :)
+These actually move functions from normal text to __devinit, not from
+__init to __devinit.
 
-I am aware of that and that's why I say "might well be ok" :-) But this
-is old code and you know what can happen in there ... might be a quirk
-here or a piece of platform code there trying to fixup the IRQ for
-example ... before we set it up. That sort of thing.
+That should be safe for most quirks (although enable, suspend, resume,
+and resume_early quirks can be called after we free initmem, even if
+we have CONFIG_HOTPLUG=n), but given the discussion about whether we
+should even bother with __devinit any more, I think I'll hold off on
+these for now.  If we were to get rid of __devinit, these would all
+have to revert to being normal text.
 
-I should be allright, but I want to test, which I won't be able to do
-properly before I'm back at work next week.
-
-> > Now, if we are ok to do the setup that late (basically right before the
-> > driver probe() routine gets called), would it make sense to simplify
-> > things even further ... and do it from pcibios_enable_device() ? Thus
-> > avoiding the notifier business completely or is that pushing it too
-> > far ?
-> 
-> Kenji-san actually suggested using pcibios_enable_device() early on,
-> and I'm the one who suggested the notifiers instead.  I think I
-> suggested that because I was copying the amd_iommu_init_notifier()
-> style.
-> 
-> But I now think that might have been a mistake.  Notifiers are
-> definitely more complicated, and a pcibios_*() hook seems
-> straightforward.  It could be in pcibios_enable_device(), though we
-> only need it to be called once, and the enable_device() path may be
-> called many times, e.g., every time a driver claims it.  My new vote
-> is a pcibios_device_add(), with an empty weak definition in
-> drivers/pci, and a non-empty definition for microblaze and powerpc.
-
-Would it be called before or after the notifiers ? I wonder... if others
-already use the notifiers maybe we should stick to it. I only suggested
-pcibios_enable_device() because it's already there.
-
-> > Also you seem to add:
-> >
-> > +               /* Setup OF node pointer in the device */
-> > +               dev->dev.of_node = pci_device_to_OF_node(dev);
-> >
-> > This shouldn't be needed anymore, the device node should be setup by the
-> > core nowadays. Is this just a remnant of you rebasing an old patch or do
-> > you have a good reason to add this statement ?
-> 
-> It sounds like you want to remove this line in any case, so I'll wait
-> for updated patches.
-
-Cheers,
-Ben.
-
-
+>  {
+>        if (dev->bus->number == 0 &&
+>            (dev->devfn == PCI_DEVFN(1, 0) ||
+>
