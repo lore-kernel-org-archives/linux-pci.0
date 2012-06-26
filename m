@@ -1,40 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:55876 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760408Ab2FUVUS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 17:20:18 -0400
-Received: by pbbrp8 with SMTP id rp8so2643163pbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 14:20:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5ABBo787gr+FqfvAhU=qQ9a5zgQyg=+HTr5dkigB3-XA@mail.gmail.com>
-References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
-	<CAErSpo5ABBo787gr+FqfvAhU=qQ9a5zgQyg=+HTr5dkigB3-XA@mail.gmail.com>
-Date: Thu, 21 Jun 2012 14:20:18 -0700
-Message-ID: <CAE9FiQVLWx0J9F2h6frYfY3Y1pQaHnb=2YB8qKyB+OANewkvgw@mail.gmail.com>
-Subject: Re: [PATCH v9 00/11] PCI, x86: update MMCFG information when
- hot-plugging PCI host bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from gate.crashing.org ([63.228.1.57]:41231 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755891Ab2FZCu6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Jun 2012 22:50:58 -0400
+Message-ID: <1340679045.3732.3.camel@pasglop>
+Subject: Re: [PATCH V3 1/2] PCI: retrieve host bridge by PCI bus
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, bhelgaas@google.com
+Date: Tue, 26 Jun 2012 12:50:45 +1000
+In-Reply-To: <20120626003020.GA6307@shangw>
+References: <1340593821-19011-1-git-send-email-shangw@linux.vnet.ibm.com>
+	 <CAE9FiQUE0_niTRmvZ=ROSFKB4HKDFFLjfJC+QeQkTKLMyvxv4g@mail.gmail.com>
+	 <20120626003020.GA6307@shangw>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 1:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Jun 21, 2012 at 3:36 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->> This patchset enhance pci_root driver to update MMCFG information when
->> hot-plugging PCI root bridges. It applies to
->> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next
->
-> Yinghai, I'm hoping you will review these.  I'd like to get them into
-> -next soon and you're the main person paying attention to them :)  If
-> you can't, let me know and I'll give it a go myself.
+On Tue, 2012-06-26 at 08:30 +0800, Gavin Shan wrote:
+> >> +EXPORT_SYMBOL(pci_bus_host_bridge);
+> 
+> Yinghai, thanks for your time on this :-)
+> 
+> >
+> >why do you need to export it?
+> >
+> 
+> The reason is that we have introduced extra fields to "struct
+> pci_host_bridge"
+> in [PATCH 2/2] and platform want to access those extra fields. 
 
-ok, I will check them today.
+But the platform code is built-in, not modular, so it doesn't need
+EXPORT_SYMBOL (additionally even if we wanted to export it we probably
+also want it _GPL only, so EXPORT_SYMBOL_GPL, but I don't think we need
+to).
 
-Yinghai
+Cheers,
+Ben.
+
+
