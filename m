@@ -1,35 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17881 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932338Ab2FGRFt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Jun 2012 13:05:49 -0400
-Message-ID: <1339088741.26976.19.camel@ul30vt>
-Subject: Re: [PATCH] PCI: Add Ralink RT2800 broken INTx masking quirk
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	jan.kiszka@siemens.com
-Date: Thu, 07 Jun 2012 11:05:41 -0600
-In-Reply-To: <4FD047A7.6050602@01019freenet.de>
-References: <20120606212241.6627.98371.stgit@bling.home>
-	 <4FD047A7.6050602@01019freenet.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44643 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754063Ab2FZS3E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 14:29:04 -0400
+Received: by pbbrp8 with SMTP id rp8so420478pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 11:29:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120626003020.GA6307@shangw>
+References: <1340593821-19011-1-git-send-email-shangw@linux.vnet.ibm.com>
+	<CAE9FiQUE0_niTRmvZ=ROSFKB4HKDFFLjfJC+QeQkTKLMyvxv4g@mail.gmail.com>
+	<20120626003020.GA6307@shangw>
+Date: Tue, 26 Jun 2012 11:29:04 -0700
+Message-ID: <CAE9FiQWcZTCsdGQmHO6rwL-U07LVH6F0psWQqApzv1mbNg_j4A@mail.gmail.com>
+Subject: Re: [PATCH V3 1/2] PCI: retrieve host bridge by PCI bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
+	bhelgaas@google.com, benh@kernel.crashing.org
+Content-Type: multipart/mixed; boundary=047d7b339cc1f0a6b404c3644519
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-06-07 at 08:18 +0200, Andreas Hartmann wrote:
-> Hello Alex,
-> 
-> what about a module parameter to achieve this behaviour manually by
-> the user without recompiling? I fear, there are much more candidates
-> out there needing this "feature".
+--047d7b339cc1f0a6b404c3644519
+Content-Type: text/plain; charset=ISO-8859-1
 
-Yeah, that's probably a good idea.  For debugging and letting users have
-a workaround rather than any kind of regular use.  I'll add a nointxmask
-to vfio-pci with a description indicating that if it fixes a device to
-report it for quirking.  Thanks,
+On Mon, Jun 25, 2012 at 5:30 PM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+> Yeah, I think your patch meets the requirement: access "struct pci_host_bridge",
+> and when will you merge your patch into mainline?
 
-Alex
+not sure.
 
+but i extract that patch as attached.
+and with that could make your first patch only make find_pci_host_bridge()
+global.
+
+>
+> By the way, could you please take your a litle bit time to review [PATCH 2/2]?
+>
+
+ok, will look at that.
+
+Thanks
+
+Yinghai
+
+--047d7b339cc1f0a6b404c3644519
+Content-Type: application/octet-stream;
+	name="pcibus_addr_converting_bus.patch"
+Content-Disposition: attachment; filename="pcibus_addr_converting_bus.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h3xb4yzi0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IHBjaWJ1cyBhZGRyZXNzIHRvIHJlc291cmNlIGNvbnZlcnRp
+bmcgdGFrZSBidXMgZGlyZWN0bHkKCkZvciBhbGxvY2F0aW5nIHJlc291cmNlIHVuZGVyIGJ1cyBw
+YXRoLCB3ZSBkbyBoYXZlIGRldiBwYXNzIGFsb25nLCBhbmQgd2UKY291bGQganVzdCB1c2UgYnVz
+IGluc3RlYWQuCgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+
+CgotLS0KIGRyaXZlcnMvcGNpL2hvc3QtYnJpZGdlLmMgfCAgIDM0ICsrKysrKysrKysrKysrKysr
+KysrKy0tLS0tLS0tLS0tLS0KIGluY2x1ZGUvbGludXgvcGNpLmggICAgICAgfCAgICAzICsrKwog
+MiBmaWxlcyBjaGFuZ2VkLCAyNCBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKCkluZGV4
+OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvaG9zdC1icmlkZ2UuYwo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51
+eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9ob3N0LWJyaWRnZS5jCisrKyBsaW51eC0yLjYvZHJpdmVy
+cy9wY2kvaG9zdC1icmlkZ2UuYwpAQCAtOSwyMiArOSwxOSBAQAogCiAjaW5jbHVkZSAicGNpLmgi
+CiAKLXN0YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqZmluZF9wY2lfcm9vdF9idXMoc3RydWN0IHBjaV9k
+ZXYgKmRldikKK3N0YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqZmluZF9wY2lfcm9vdF9idXMoc3RydWN0
+IHBjaV9idXMgKmJ1cykKIHsKLQlzdHJ1Y3QgcGNpX2J1cyAqYnVzOwotCi0JYnVzID0gZGV2LT5i
+dXM7CiAJd2hpbGUgKGJ1cy0+cGFyZW50KQogCQlidXMgPSBidXMtPnBhcmVudDsKIAogCXJldHVy
+biBidXM7CiB9CiAKLXN0YXRpYyBzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpmaW5kX3BjaV9ob3N0
+X2JyaWRnZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQorc3RhdGljIHN0cnVjdCBwY2lfaG9zdF9icmlk
+Z2UgKmZpbmRfcGNpX2hvc3RfYnJpZGdlKHN0cnVjdCBwY2lfYnVzICpidXMpCiB7Ci0Jc3RydWN0
+IHBjaV9idXMgKmJ1cyA9IGZpbmRfcGNpX3Jvb3RfYnVzKGRldik7CisJc3RydWN0IHBjaV9idXMg
+KnJvb3RfYnVzID0gZmluZF9wY2lfcm9vdF9idXMoYnVzKTsKIAotCXJldHVybiB0b19wY2lfaG9z
+dF9icmlkZ2UoYnVzLT5icmlkZ2UpOworCXJldHVybiB0b19wY2lfaG9zdF9icmlkZ2Uocm9vdF9i
+dXMtPmJyaWRnZSk7CiB9CiAKIHZvaWQgcGNpX3NldF9ob3N0X2JyaWRnZV9yZWxlYXNlKHN0cnVj
+dCBwY2lfaG9zdF9icmlkZ2UgKmJyaWRnZSwKQEAgLTQwLDEwICszNywxMSBAQCBzdGF0aWMgYm9v
+bCByZXNvdXJjZV9jb250YWlucyhzdHJ1Y3QgcmVzCiAJcmV0dXJuIHJlczEtPnN0YXJ0IDw9IHJl
+czItPnN0YXJ0ICYmIHJlczEtPmVuZCA+PSByZXMyLT5lbmQ7CiB9CiAKLXZvaWQgcGNpYmlvc19y
+ZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV9kZXYgKmRldiwgc3RydWN0IHBjaV9idXNfcmVnaW9u
+ICpyZWdpb24sCi0JCQkgICAgIHN0cnVjdCByZXNvdXJjZSAqcmVzKQordm9pZCBfX3BjaWJpb3Nf
+cmVzb3VyY2VfdG9fYnVzKHN0cnVjdCBwY2lfYnVzICpidXMsCisJCQkJICAgICAgc3RydWN0IHBj
+aV9idXNfcmVnaW9uICpyZWdpb24sCisJCQkJICAgICAgc3RydWN0IHJlc291cmNlICpyZXMpCiB7
+Ci0Jc3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqYnJpZGdlID0gZmluZF9wY2lfaG9zdF9icmlkZ2Uo
+ZGV2KTsKKwlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlkZ2UgPSBmaW5kX3BjaV9ob3N0X2Jy
+aWRnZShidXMpOwogCXN0cnVjdCBwY2lfaG9zdF9icmlkZ2Vfd2luZG93ICp3aW5kb3c7CiAJcmVz
+b3VyY2Vfc2l6ZV90IG9mZnNldCA9IDA7CiAKQEAgLTYwLDYgKzU4LDExIEBAIHZvaWQgcGNpYmlv
+c19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV8KIAlyZWdpb24tPnN0YXJ0ID0gcmVzLT5zdGFy
+dCAtIG9mZnNldDsKIAlyZWdpb24tPmVuZCA9IHJlcy0+ZW5kIC0gb2Zmc2V0OwogfQordm9pZCBw
+Y2liaW9zX3Jlc291cmNlX3RvX2J1cyhzdHJ1Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3QgcGNpX2J1
+c19yZWdpb24gKnJlZ2lvbiwKKwkJCSAgICAgc3RydWN0IHJlc291cmNlICpyZXMpCit7CisJX19w
+Y2liaW9zX3Jlc291cmNlX3RvX2J1cyhkZXYtPmJ1cywgcmVnaW9uLCByZXMpOworfQogRVhQT1JU
+X1NZTUJPTChwY2liaW9zX3Jlc291cmNlX3RvX2J1cyk7CiAKIHN0YXRpYyBib29sIHJlZ2lvbl9j
+b250YWlucyhzdHJ1Y3QgcGNpX2J1c19yZWdpb24gKnJlZ2lvbjEsCkBAIC02OCwxMCArNzEsMTAg
+QEAgc3RhdGljIGJvb2wgcmVnaW9uX2NvbnRhaW5zKHN0cnVjdCBwY2lfYgogCXJldHVybiByZWdp
+b24xLT5zdGFydCA8PSByZWdpb24yLT5zdGFydCAmJiByZWdpb24xLT5lbmQgPj0gcmVnaW9uMi0+
+ZW5kOwogfQogCi12b2lkIHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKHN0cnVjdCBwY2lfZGV2ICpk
+ZXYsIHN0cnVjdCByZXNvdXJjZSAqcmVzLAotCQkJICAgICBzdHJ1Y3QgcGNpX2J1c19yZWdpb24g
+KnJlZ2lvbikKK3N0YXRpYyB2b2lkIF9fcGNpYmlvc19idXNfdG9fcmVzb3VyY2Uoc3RydWN0IHBj
+aV9idXMgKmJ1cywgc3RydWN0IHJlc291cmNlICpyZXMsCisJCQkJICAgICAgc3RydWN0IHBjaV9i
+dXNfcmVnaW9uICpyZWdpb24pCiB7Ci0Jc3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqYnJpZGdlID0g
+ZmluZF9wY2lfaG9zdF9icmlkZ2UoZGV2KTsKKwlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlk
+Z2UgPSBmaW5kX3BjaV9ob3N0X2JyaWRnZShidXMpOwogCXN0cnVjdCBwY2lfaG9zdF9icmlkZ2Vf
+d2luZG93ICp3aW5kb3c7CiAJcmVzb3VyY2Vfc2l6ZV90IG9mZnNldCA9IDA7CiAKQEAgLTkzLDQg
+Kzk2LDkgQEAgdm9pZCBwY2liaW9zX2J1c190b19yZXNvdXJjZShzdHJ1Y3QgcGNpXwogCXJlcy0+
+c3RhcnQgPSByZWdpb24tPnN0YXJ0ICsgb2Zmc2V0OwogCXJlcy0+ZW5kID0gcmVnaW9uLT5lbmQg
+KyBvZmZzZXQ7CiB9Cit2b2lkIHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKHN0cnVjdCBwY2lfZGV2
+ICpkZXYsIHN0cnVjdCByZXNvdXJjZSAqcmVzLAorCQkJICAgICBzdHJ1Y3QgcGNpX2J1c19yZWdp
+b24gKnJlZ2lvbikKK3sKKwlfX3BjaWJpb3NfYnVzX3RvX3Jlc291cmNlKGRldi0+YnVzLCByZXMs
+IHJlZ2lvbik7Cit9CiBFWFBPUlRfU1lNQk9MKHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKTsKSW5k
+ZXg6IGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIu
+Ni5vcmlnL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3Bj
+aS5oCkBAIC02ODYsNiArNjg2LDkgQEAgdm9pZCBwY2lfZml4dXBfY2FyZGJ1cyhzdHJ1Y3QgcGNp
+X2J1cyAqKQogCiAvKiBHZW5lcmljIFBDSSBmdW5jdGlvbnMgdXNlZCBpbnRlcm5hbGx5ICovCiAK
+K3ZvaWQgX19wY2liaW9zX3Jlc291cmNlX3RvX2J1cyhzdHJ1Y3QgcGNpX2J1cyAqYnVzLAorCQkJ
+ICAgICAgIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiAqcmVnaW9uLAorCQkJICAgICAgIHN0cnVjdCBy
+ZXNvdXJjZSAqcmVzKTsKIHZvaWQgcGNpYmlvc19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV9k
+ZXYgKmRldiwgc3RydWN0IHBjaV9idXNfcmVnaW9uICpyZWdpb24sCiAJCQkgICAgIHN0cnVjdCBy
+ZXNvdXJjZSAqcmVzKTsKIHZvaWQgcGNpYmlvc19idXNfdG9fcmVzb3VyY2Uoc3RydWN0IHBjaV9k
+ZXYgKmRldiwgc3RydWN0IHJlc291cmNlICpyZXMsCg==
+--047d7b339cc1f0a6b404c3644519--
