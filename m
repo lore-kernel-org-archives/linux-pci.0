@@ -1,86 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v12 03/15] resources: Replace registered resource in tree.
-Date: Tue, 26 Jun 2012 11:53:57 -0700
-Message-Id: <1340736849-14875-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mprc.pku.edu.cn ([162.105.203.9]:47033 "EHLO mprc.pku.edu.cn"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751293Ab2FZGe4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jun 2012 02:34:56 -0400
+From: guanxuetao@mprc.pku.edu.cn
+Message-ID: <50477.162.105.203.8.1340694078.squirrel@mprc.pku.edu.cn>
+In-Reply-To: <20120626033225.16434.26282.stgit@amt.stowe>
+References: <20120626033045.16434.17412.stgit@amt.stowe>
+    <20120626033225.16434.26282.stgit@amt.stowe>
+Date: Tue, 26 Jun 2012 15:01:18 +0800 (CST)
+Subject: Re: [PATCH 13/16] unicore32/PCI: adjust section annotations for
+     'pcibios_setup()'
+To: "Myron Stowe" <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com,
+	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
+	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
+	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
+	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
+	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
+	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
+	linux-kernel@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;charset=gb2312
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We could have one resource inserted in tree at first during probing.
+> Make pcibios_setup() consistently use the "__init" section annotation.
+>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 
-Later we need to put real resource into the tree.
+Acked-by: Guan Xuetao <gxt@mprc.pku.edu.cn>
 
-So try to hold the lock to swap them.
-
--v2: make it more generic to handle old one with children or no parent.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
----
- include/linux/ioport.h |    1 +
- kernel/resource.c      |   25 +++++++++++++++++++++++++
- 2 files changed, 26 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 8292e8b..cbf3480 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -163,6 +163,7 @@ int probe_resource(struct resource *b_res,
- 			struct resource *busn_res,
- 			resource_size_t needed_size, struct resource **p,
- 			int skip_nr, int limit, int flags);
-+void replace_resource(struct resource *old_res, struct resource *new_res);
- struct resource *lookup_resource(struct resource *root, resource_size_t start);
- int adjust_resource(struct resource *res, resource_size_t start,
- 		    resource_size_t size);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index d5d9aef..8da0e76 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -1129,6 +1129,31 @@ reduce_needed_size:
- 	return ret;
- }
- 
-+/* replace old with new in the resource tree */
-+void replace_resource(struct resource *old, struct resource *new)
-+{
-+	struct resource *parent, *tmp, *p;
-+
-+	write_lock(&resource_lock);
-+	new->start = old->start;
-+	new->end = old->end;
-+	new->flags = old->flags;
-+
-+	p = old->child;
-+	while (p) {
-+		tmp = p;
-+		p = p->sibling;
-+		__release_resource(tmp);
-+		__request_resource(new, tmp);
-+	}
-+	parent = old->parent;
-+	if (parent) {
-+		__release_resource(old);
-+		__request_resource(parent, new);
-+	}
-+	write_unlock(&resource_lock);
-+}
-+
- /*
-  * Managed region resource
-  */
--- 
-1.7.7
 
