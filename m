@@ -1,34 +1,36 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from linux-sh.org ([111.68.239.195]:51906 "EHLO linux-sh.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757744Ab2FZFxb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jun 2012 01:53:31 -0400
+Date: Tue, 26 Jun 2012 14:51:29 +0900
+From: Paul Mundt <lethal@linux-sh.org>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com,
+	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
+	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
+	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
+	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
+	paulus@samba.org, davem@davemloft.net, cmetcalf@tilera.com,
+	gxt@mprc.pku.edu.cn, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, x86@kernel.org, chris@zankel.net,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 09/16] sh/PCI: Factor 'pcibios_setup()' out of sh
+Message-ID: <20120626055129.GF24033@linux-sh.org>
+References: <20120626033045.16434.17412.stgit@amt.stowe>
+ <20120626033158.16434.94698.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVBPoEinWC__9DF-oi8T-78YJRn95J=xXdL2GzNoKoCaQ@mail.gmail.com>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
- <1340736849-14875-2-git-send-email-yinghai@kernel.org> <CA+55aFzi7tHg=3k8Fmga8XmxFbn6tZLLV97vt67Xx_WtckQo6g@mail.gmail.com>
- <CAE9FiQVBPoEinWC__9DF-oi8T-78YJRn95J=xXdL2GzNoKoCaQ@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 26 Jun 2012 13:43:54 -0700
-Message-ID: <CA+55aFzUttojDJOy38N4cFyj7+XPggdrMBsd5vxHJ033eWPbpg@mail.gmail.com>
-Subject: Re: [PATCH -v12 01/15] resources: Split out __allocate_resource()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120626033158.16434.94698.stgit@amt.stowe>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 26, 2012 at 1:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->
-> You are right, please check updated one.
+On Mon, Jun 25, 2012 at 09:31:58PM -0600, Myron Stowe wrote:
+> The PCI core provides a generic (__weak) 'pcibios_setup()' routine that can
+> be used by all architectures as a default.  Drop sh's architecture specific
+> version in favor of that as it does not need to be over-ridden.
+> 
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 
-I think you can now also remove the "goto out" and in
-__reallocate_resource() and replace it with a "return err;" instead.
-
-But yeah, this looks fine.
-
-             Linus
+Acked-by: Paul Mundt <lethal@linux-sh.org>
