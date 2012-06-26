@@ -1,148 +1,182 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:40261 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724Ab2FOIZq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2012 04:25:46 -0400
-Message-ID: <4FDAEE9A.7060706@huawei.com>
-Date: Fri, 15 Jun 2012 16:13:14 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
-References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com> <1338026043-3968-9-git-send-email-jiang.liu@huawei.com> <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
-In-Reply-To: <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1340736849-14875-3-git-send-email-yinghai@kernel.org>
+References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+	<1340736849-14875-3-git-send-email-yinghai@kernel.org>
+Date: Tue, 26 Jun 2012 15:07:04 -0700
+Message-ID: <CAE9FiQVrUbEzopKfeoQZFNdNszLN96brC+rYuGXQCfZvpi_ETQ@mail.gmail.com>
+Subject: Re: [PATCH -v12 02/15] resources: Add probe_resource()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Content-Type: multipart/mixed; boundary=047d7b33d6508e675204c3675197
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
-	Thanks for your review and comments!
-On 2012-6-15 15:15, Yinghai Lu wrote:
->> @@ -625,6 +636,13 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
->>                }
->>        }
->>
->> +       i = entries * sizeof(*cfg_table);
->> +       pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
->> +       if (pci_acpi_mcfg_array) {
->> +               memcpy(pci_acpi_mcfg_array, cfg_table, i);
->> +               pci_acpi_mcfg_entries = entries;
->> +       }
->> +
-> 
-> here cache cfg too early.  should do that after
-> 
-> pci_mmcfg_reject_broken().
-> 
-> otherwise will use mcfg even try to reject that before.
-Good cache, how about the following patch to fix this?
-I'm also preparing an V8 to fix build failure issues reported by Fengguang,
-and also simplify the __pci_mmcfg_init() implementation.
+--047d7b33d6508e675204c3675197
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
----
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 77f0db2..bcd0928 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -623,11 +623,27 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
-                }
-        }
+On Tue, Jun 26, 2012 at 11:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> It is changed from busn_res only version, because Bjorn found that versio=
+n
+> was not holding resource_lock.
+> Even it may be ok for busn_res not holding resource_lock.
+> It would be better to have it to be generic and use lock and we may
+> use it for other resources.
+>
+> probe_resource() will try to find specified size or more in parent bus.
+> If can not find current parent resource, and it will try to expand parent=
+s
+> top.
+> If still can not find that specified on top, it will try to reduce target=
+ size
+> until find one.
+>
+> It will return 0, if it find any resource that could be used.
+>
+> Returned resource is registered in the tree.
+> So caller may need to use replace_resource to put real resource in tree.
+>
+> -v3: remove two parameters that is for debug purpose.
+> -v4: fix stop_flags checking.
+> -v5: adjust stop_flags checking position to avoid not needed calling
+> =A0 =A0 =A0 =A0into allocate_resource().
 
--       i = entries * sizeof(*cfg_table);
--       pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
--       if (pci_acpi_mcfg_array) {
--               memcpy(pci_acpi_mcfg_array, cfg_table, i);
--               pci_acpi_mcfg_entries = entries;
-+       return 0;
-+}
-+
-+static int __init pci_cache_mcfg(struct acpi_table_header *header)
-+{
-+       unsigned long i;
-+       struct acpi_table_mcfg *mcfg;
-+       struct acpi_mcfg_allocation *cfg_table;
-+
-+       if (!header)
-+               return -EINVAL;
-+
-+       i = (header->length - sizeof(struct acpi_table_mcfg));
-+       if (i) {
-+               pci_acpi_mcfg_array = kmalloc(i, GFP_KERNEL);
-+               if (pci_acpi_mcfg_array) {
-+                       mcfg = (struct acpi_table_mcfg *)header;
-+                       cfg_table = (struct acpi_mcfg_allocation *) &mcfg[1];
-+                       memcpy(pci_acpi_mcfg_array, cfg_table, i);
-+                       pci_acpi_mcfg_entries = i / sizeof (*cfg_table);
-+               }
-        }
+please check attached one that is updated after first patch with
+__allocate_resource changes.
+except this one and first one are changed. left ones are not needed to
+be updated.
+So i'm not going to resend them.
 
-        return 0;
-@@ -682,8 +698,11 @@ out:
-         * Free all MCFG entries if ACPI is enabled. MCFG information will
-         * be added back on demand by the pci_root driver later.
-         */
--       if (!early && !acpi_disabled && !known_bridge && pci_acpi_mcfg_array)
--               free_all_mmcfg();
-+       if (!early && !acpi_disabled && !known_bridge) {
-+               acpi_table_parse(ACPI_SIG_MCFG, pci_cache_mcfg);
-+               if (pci_acpi_mcfg_array)
-+                       free_all_mmcfg();
-+       }
- }
+the git branch does get updated.
 
- void __init pci_mmcfg_early_init(void)
->> @@ -675,6 +693,14 @@ static void __init __pci_mmcfg_init(int early)
->>                pci_mmcfg_resources_inserted = 1;
->>                pci_mmcfg_arch_init_failed = true;
->>        }
->> +
->> +out:
->> +       /*
->> +        * Free all MCFG entries if ACPI is enabled. MCFG information will
->> +        * be added back on demand by the pci_root driver later.
->> +        */
->> +       if (!early && !acpi_disabled && !known_bridge && pci_acpi_mcfg_array)
->> +               free_all_mmcfg();
-> 
-> that really change the logic.
-> 
-> looks like it will break mrst/sfi path.
-> 
-> the scan from pci_legacy_init() for mrst/sfi will not have ext_pci_ops
-> set for bus 0.
-> 
-> | int __init pci_subsys_init(void)
-> | {
-> |        /*
-> |         * The init function returns an non zero value when
-> |         * pci_legacy_init should be invoked.
-> |         */
-> |        if (x86_init.pci.init())
-> |                pci_legacy_init();
-> |
-> |        pcibios_fixup_peer_bridges();
+Thanks
 
-On platform with SFI implementation such as Moorsetown, acpi_disabled will
-be set to 1 because there's no ACPI root pointer and acpi initialize will fail.
-And sfi_init() implementation confirms that if acpi is enabled, then sfi will
-be disabled. So I will it won't break SFI/MRST.
+Yinghai
 
-void __init sfi_init(void)
-{
-        if (!acpi_disabled)
-                disable_sfi();
+--047d7b33d6508e675204c3675197
+Content-Type: application/octet-stream; name="probe_resource_2.patch"
+Content-Disposition: attachment; filename="probe_resource_2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h3xiweu70
 
-        if (sfi_disabled)
-                return;
-}
-
-thanks!
-Gerry
-
+U3ViamVjdDogW1BBVENIXSByZXNvdXJjZXM6IEFkZCBwcm9iZV9yZXNvdXJjZSgpCgpJdCBpcyBj
+aGFuZ2VkIGZyb20gYnVzbl9yZXMgb25seSB2ZXJzaW9uLCBiZWNhdXNlIEJqb3JuIGZvdW5kIHRo
+YXQgdmVyc2lvbgp3YXMgbm90IGhvbGRpbmcgcmVzb3VyY2VfbG9jay4KRXZlbiBpdCBtYXkgYmUg
+b2sgZm9yIGJ1c25fcmVzIG5vdCBob2xkaW5nIHJlc291cmNlX2xvY2suCkl0IHdvdWxkIGJlIGJl
+dHRlciB0byBoYXZlIGl0IHRvIGJlIGdlbmVyaWMgYW5kIHVzZSBsb2NrIGFuZCB3ZSBtYXkKdXNl
+IGl0IGZvciBvdGhlciByZXNvdXJjZXMuCgpwcm9iZV9yZXNvdXJjZSgpIHdpbGwgdHJ5IHRvIGZp
+bmQgc3BlY2lmaWVkIHNpemUgb3IgbW9yZSBpbiBwYXJlbnQgYnVzLgpJZiBjYW4gbm90IGZpbmQg
+Y3VycmVudCBwYXJlbnQgcmVzb3VyY2UsIGFuZCBpdCB3aWxsIHRyeSB0byBleHBhbmQgcGFyZW50
+cwp0b3AuCklmIHN0aWxsIGNhbiBub3QgZmluZCB0aGF0IHNwZWNpZmllZCBvbiB0b3AsIGl0IHdp
+bGwgdHJ5IHRvIHJlZHVjZSB0YXJnZXQgc2l6ZQp1bnRpbCBmaW5kIG9uZS4KCkl0IHdpbGwgcmV0
+dXJuIDAsIGlmIGl0IGZpbmQgYW55IHJlc291cmNlIHRoYXQgY291bGQgYmUgdXNlZC4KClJldHVy
+bmVkIHJlc291cmNlIGlzIHJlZ2lzdGVyZWQgaW4gdGhlIHRyZWUuClNvIGNhbGxlciBtYXkgbmVl
+ZCB0byB1c2UgcmVwbGFjZV9yZXNvdXJjZSB0byBwdXQgcmVhbCByZXNvdXJjZSBpbiB0cmVlLgoK
+LXYzOiByZW1vdmUgdHdvIHBhcmFtZXRlcnMgdGhhdCBpcyBmb3IgZGVidWcgcHVycG9zZS4KLXY0
+OiBmaXggc3RvcF9mbGFncyBjaGVja2luZy4KLXY1OiBhZGp1c3Qgc3RvcF9mbGFncyBjaGVja2lu
+ZyBwb3NpdGlvbiB0byBhdm9pZCBub3QgbmVlZGVkIGNhbGxpbmcKCWludG8gYWxsb2NhdGVfcmVz
+b3VyY2UoKS4KLXY2OiB1c2UgdXBkYXRlZCBfX2FsbG9jYXRlX3Jlc291cmNlLgoKU2lnbmVkLW9m
+Zi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgpDYzogQW5kcmV3IE1vcnRvbiA8
+YWtwbUBsaW51eC1mb3VuZGF0aW9uLm9yZz4KCi0tLQogaW5jbHVkZS9saW51eC9pb3BvcnQuaCB8
+ICAgIDcgKysKIGtlcm5lbC9yZXNvdXJjZS5jICAgICAgfCAgMTQ5ICsrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKIDIgZmlsZXMgY2hhbmdlZCwgMTU2IGlu
+c2VydGlvbnMoKykKCkluZGV4OiBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9pb3BvcnQuaAo9PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9pbmNsdWRlL2xpbnV4L2lvcG9ydC5oCisrKyBsaW51
+eC0yLjYvaW5jbHVkZS9saW51eC9pb3BvcnQuaApAQCAtMTU2LDYgKzE1NiwxMyBAQCBleHRlcm4g
+aW50IGFsbG9jYXRlX3Jlc291cmNlKHN0cnVjdCByZXNvCiAJCQkJCQkgICAgICAgcmVzb3VyY2Vf
+c2l6ZV90LAogCQkJCQkJICAgICAgIHJlc291cmNlX3NpemVfdCksCiAJCQkgICAgIHZvaWQgKmFs
+aWduZl9kYXRhKTsKK3ZvaWQgcmVzb3VyY2Vfc2hyaW5rX3BhcmVudHNfdG9wKHN0cnVjdCByZXNv
+dXJjZSAqYl9yZXMsCisJCQkJIGxvbmcgc2l6ZSwgc3RydWN0IHJlc291cmNlICpwYXJlbnRfcmVz
+KTsKK3N0cnVjdCBkZXZpY2U7CitpbnQgcHJvYmVfcmVzb3VyY2Uoc3RydWN0IHJlc291cmNlICpi
+X3JlcywKKwkJCXN0cnVjdCByZXNvdXJjZSAqYnVzbl9yZXMsCisJCQlyZXNvdXJjZV9zaXplX3Qg
+bmVlZGVkX3NpemUsIHN0cnVjdCByZXNvdXJjZSAqKnAsCisJCQlpbnQgc2tpcF9uciwgaW50IGxp
+bWl0LCBpbnQgZmxhZ3MpOwogc3RydWN0IHJlc291cmNlICpsb29rdXBfcmVzb3VyY2Uoc3RydWN0
+IHJlc291cmNlICpyb290LCByZXNvdXJjZV9zaXplX3Qgc3RhcnQpOwogaW50IGFkanVzdF9yZXNv
+dXJjZShzdHJ1Y3QgcmVzb3VyY2UgKnJlcywgcmVzb3VyY2Vfc2l6ZV90IHN0YXJ0LAogCQkgICAg
+cmVzb3VyY2Vfc2l6ZV90IHNpemUpOwpJbmRleDogbGludXgtMi42L2tlcm5lbC9yZXNvdXJjZS5j
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2tlcm5lbC9yZXNvdXJjZS5jCisrKyBsaW51
+eC0yLjYva2VybmVsL3Jlc291cmNlLmMKQEAgLTk4OSw2ICs5ODksMTU1IEBAIHZvaWQgX19yZWxl
+YXNlX3JlZ2lvbihzdHJ1Y3QgcmVzb3VyY2UgKnAKIH0KIEVYUE9SVF9TWU1CT0woX19yZWxlYXNl
+X3JlZ2lvbik7CiAKK3N0YXRpYyB2b2lkIF9fcmVzb3VyY2VfZXh0ZW5kX3BhcmVudHNfdG9wKHN0
+cnVjdCByZXNvdXJjZSAqYl9yZXMsCisJCSBsb25nIHNpemUsIHN0cnVjdCByZXNvdXJjZSAqcGFy
+ZW50X3JlcykKK3sKKwlzdHJ1Y3QgcmVzb3VyY2UgKnJlcyA9IGJfcmVzOworCisJaWYgKCFzaXpl
+KQorCQlyZXR1cm47CisKKwl3aGlsZSAocmVzICYmIHJlcyAhPSBwYXJlbnRfcmVzKSB7CisJCXJl
+cy0+ZW5kICs9IHNpemU7CisJCXJlcyA9IHJlcy0+cGFyZW50OworCX0KK30KKwordm9pZCByZXNv
+dXJjZV9zaHJpbmtfcGFyZW50c190b3Aoc3RydWN0IHJlc291cmNlICpiX3JlcywKKwkJIGxvbmcg
+c2l6ZSwgc3RydWN0IHJlc291cmNlICpwYXJlbnRfcmVzKQoreworCXdyaXRlX2xvY2soJnJlc291
+cmNlX2xvY2spOworCV9fcmVzb3VyY2VfZXh0ZW5kX3BhcmVudHNfdG9wKGJfcmVzLCAtc2l6ZSwg
+cGFyZW50X3Jlcyk7CisJd3JpdGVfdW5sb2NrKCZyZXNvdXJjZV9sb2NrKTsKK30KKworc3RhdGlj
+IHJlc291cmNlX3NpemVfdCBfX2ZpbmRfcmVzX3RvcF9mcmVlX3NpemUoc3RydWN0IHJlc291cmNl
+ICpyZXMsCisJCQkJCQkgaW50IHNraXBfbnIpCit7CisJcmVzb3VyY2Vfc2l6ZV90IG5fc2l6ZTsK
+KwlzdHJ1Y3QgcmVzb3VyY2UgdG1wX3JlczsKKworCS8qCisJICogICBmaW5kIG91dCBmcmVlIG51
+bWJlciBiZWxvdyByZXMtPmVuZCB0aGF0IHdlIGNhbiB1c2UuCisJICoJcmVzLT5zdGFydCB0byBy
+ZXMtPnN0YXJ0ICsgc2tpcF9uciAtIDEgY2FuIG5vdCBiZSB1c2VkLgorCSAqLworCW5fc2l6ZSA9
+IHJlc291cmNlX3NpemUocmVzKTsKKwlpZiAobl9zaXplIDw9IHNraXBfbnIpCisJCXJldHVybiAw
+OworCisJbl9zaXplIC09IHNraXBfbnI7CisJbWVtc2V0KCZ0bXBfcmVzLCAwLCBzaXplb2Yoc3Ry
+dWN0IHJlc291cmNlKSk7CisJd2hpbGUgKG5fc2l6ZSA+IDApIHsKKwkJaW50IHJldDsKKworCQly
+ZXQgPSBfX2FsbG9jYXRlX3Jlc291cmNlKHJlcywgJnRtcF9yZXMsIG5fc2l6ZSwKKwkJCXJlcy0+
+ZW5kIC0gbl9zaXplICsgc2tpcF9uciwgcmVzLT5lbmQsCisJCQkxLCBOVUxMLCBOVUxMKTsKKwkJ
+aWYgKHJldCA9PSAwKSB7CisJCQlfX3JlbGVhc2VfcmVzb3VyY2UoJnRtcF9yZXMpOworCQkJYnJl
+YWs7CisJCX0KKwkJbl9zaXplLS07CisJfQorCisJcmV0dXJuIG5fc2l6ZTsKK30KKworLyoqCisg
+KiBwcm9iZV9yZXNvdXJjZSAtIFByb2JlIHJlc291cmNlIGluIHBhcmVudCByZXNvdXJjZS4KKyAq
+IEBiX3JlczogcGFyZW50IHJlc291cmNlIGRlc2NyaXB0b3IKKyAqIEBidXNuX3JlczogcmV0dXJu
+IHByb2JlZCByZXNvdXJjZQorICogQG5lZWRlZF9zaXplOiB0YXJnZXQgc2l6ZQorICogQHA6IHBv
+aW50ZXIgdG8gZmFyZXN0IHBhcmVudCB0aGF0IHdlIGV4dGVuZCB0aGUgdG9wCisgKiBAc2tpcF9u
+cjogbnVtYmVyIGluIGJfcmVzIHN0YXJ0IHRoYXQgd2UgbmVlZCB0byBza2lwLgorICogQGxpbWl0
+OiBsb2NhbCBib3VuZGFyeQorICogQHN0b3BfZmxhZ3M6IGZsYWdzIGZvciBzdG9wcGluZyBleHRl
+bmQgcGFyZW50IHJlcworICoKKyAqIHdpbGwgdHJ5IHRvIGFsbG9jYXRlIHJlc291cmNlIGluIGJf
+cmVzLCBpZiBjYW4gbm90IGZpbmQgdGhlIHJhbmdlCisgKiAgd2lsbCB0cnkgdG8gZXh0ZW5kIHBh
+cmVudCByZXNvdXJjZXMnIHRvcC4KKyAqIGlmIHN0aWxsIGNhbiBub3QgbWFrZSBpdCwgd2lsbCBy
+ZWR1Y2UgbmVlZGVkX3NpemUuCisgKi8KK2ludCBwcm9iZV9yZXNvdXJjZShzdHJ1Y3QgcmVzb3Vy
+Y2UgKmJfcmVzLAorCQkJIHN0cnVjdCByZXNvdXJjZSAqYnVzbl9yZXMsCisJCQkgcmVzb3VyY2Vf
+c2l6ZV90IG5lZWRlZF9zaXplLCBzdHJ1Y3QgcmVzb3VyY2UgKipwLAorCQkJIGludCBza2lwX25y
+LCBpbnQgbGltaXQsIGludCBzdG9wX2ZsYWdzKQoreworCWludCByZXQgPSAtRU5PTUVNOworCXJl
+c291cmNlX3NpemVfdCBuX3NpemU7CisJc3RydWN0IHJlc291cmNlICpwYXJlbnRfcmVzID0gTlVM
+TDsKKwlyZXNvdXJjZV9zaXplX3QgdG1wID0gYl9yZXMtPmVuZCArIDE7CisKK2FnYWluOgorCS8q
+CisJICogV2UgZmlyc3QgdHJ5IHRvIGFsbG9jYXRlIGJpZ2dlc3QgcmFuZ2UgaW4gYl9yZXMgdGhh
+dAorCSAqICB3ZSBjYW4gdXNlIGluIGJfcmVzIGRpcmVjdGx5LgorCSAqICB3ZSBhbHNvIG5lZWQg
+dG8gc2tpcCBza2lwX25yIGZyb20gc3RhcnQgb2YgYl9yZXMuCisJICovCisJbl9zaXplID0gcmVz
+b3VyY2Vfc2l6ZShiX3Jlcyk7CisJaWYgKG5fc2l6ZSA+IHNraXBfbnIpCisJCW5fc2l6ZSAtPSBz
+a2lwX25yOworCWVsc2UKKwkJbl9zaXplID0gMDsKKwltZW1zZXQoYnVzbl9yZXMsIDAsIHNpemVv
+ZihzdHJ1Y3QgcmVzb3VyY2UpKTsKKwl3aGlsZSAobl9zaXplID49IG5lZWRlZF9zaXplKSB7CisJ
+CXJldCA9IGFsbG9jYXRlX3Jlc291cmNlKGJfcmVzLCBidXNuX3Jlcywgbl9zaXplLAorCQkJCWJf
+cmVzLT5zdGFydCArIHNraXBfbnIsIGJfcmVzLT5lbmQsCisJCQkJMSwgTlVMTCwgTlVMTCk7CisJ
+CWlmICghcmV0KQorCQkJcmV0dXJuIHJldDsKKwkJbl9zaXplLS07CisJfQorCisJLyogVHJ5IHRv
+IGV4dGVuZCB0aGUgdG9wIG9mIHBhcmVudCByZXNvdXJjZXMgdG8gbWVldCBuZWVkZWRfc2l6ZSAq
+LworCXdyaXRlX2xvY2soJnJlc291cmNlX2xvY2spOworCisJLyogYl9yZXMgY291bGQgYmUgcm9v
+dCBidXMgcmVzb3VyY2UgYW5kIGNhbiBub3QgYmUgZXh0ZW5kZWQgKi8KKwlpZiAoYl9yZXMtPmZs
+YWdzICYgc3RvcF9mbGFncykKKwkJZ290byByZWR1Y2VfbmVlZGVkX3NpemU7CisKKwkvKiBmaW5k
+IG91dCBmcmVlIHJhbmdlIHVuZGVyIHRvcCBhdCBmaXJzdCAqLworCW5fc2l6ZSA9IF9fZmluZF9y
+ZXNfdG9wX2ZyZWVfc2l6ZShiX3Jlcywgc2tpcF9ucik7CisJLyogY2FuIG5vdCBleHRlbmQgY3Jv
+c3MgbG9jYWwgYm91bmRhcnkgKi8KKwlpZiAoKGxpbWl0IC0gYl9yZXMtPmVuZCkgPCAobmVlZGVk
+X3NpemUgLSBuX3NpemUpKQorCQlnb3RvIHJlZHVjZV9uZWVkZWRfc2l6ZTsKKworCS8qIFByb2Jl
+IGV4dGVuZGVkIHJhbmdlIGFib3ZlIHRvcCAqLworCW1lbXNldChidXNuX3JlcywgMCwgc2l6ZW9m
+KHN0cnVjdCByZXNvdXJjZSkpOworCXBhcmVudF9yZXMgPSBiX3Jlcy0+cGFyZW50OworCXdoaWxl
+IChwYXJlbnRfcmVzICYmICEocGFyZW50X3Jlcy0+ZmxhZ3MgJiBzdG9wX2ZsYWdzKSkgeworCQly
+ZXQgPSBfX2FsbG9jYXRlX3Jlc291cmNlKHBhcmVudF9yZXMsIGJ1c25fcmVzLAorCQkJIG5lZWRl
+ZF9zaXplIC0gbl9zaXplLAorCQkJIHRtcCwgdG1wICsgbmVlZGVkX3NpemUgLSBuX3NpemUgLSAx
+LAorCQkJIDEsIE5VTEwsIE5VTEwpOworCQlpZiAoIXJldCkgeworCQkJLyogc2F2ZSBwYXJlbnRf
+cmVzLCB3ZSBuZWVkIGl0IGFzIHN0b3BwZXIgbGF0ZXIgKi8KKwkJCSpwID0gcGFyZW50X3JlczsK
+KworCQkJLyogcHJlcGFyZSBidXNuX3JlcyBmb3IgcmV0dXJuICovCisJCQlfX3JlbGVhc2VfcmVz
+b3VyY2UoYnVzbl9yZXMpOworCQkJYnVzbl9yZXMtPnN0YXJ0IC09IG5fc2l6ZTsKKworCQkJLyog
+ZXh0ZW5kIHBhcmVudCByZXNvdXJjZXMgdG9wICovCisJCQlfX3Jlc291cmNlX2V4dGVuZF9wYXJl
+bnRzX3RvcChiX3JlcywKKwkJCQkJIG5lZWRlZF9zaXplIC0gbl9zaXplLCBwYXJlbnRfcmVzKTsK
+KwkJCV9fcmVxdWVzdF9yZXNvdXJjZShiX3JlcywgYnVzbl9yZXMpOworCisJCQl3cml0ZV91bmxv
+Y2soJnJlc291cmNlX2xvY2spOworCQkJcmV0dXJuIHJldDsKKwkJfQorCQlwYXJlbnRfcmVzID0g
+cGFyZW50X3Jlcy0+cGFyZW50OworCX0KKworcmVkdWNlX25lZWRlZF9zaXplOgorCXdyaXRlX3Vu
+bG9jaygmcmVzb3VyY2VfbG9jayk7CisJLyogcmV0IG11c3Qgbm90IGJlIDAgaGVyZSAqLworCW5l
+ZWRlZF9zaXplLS07CisJaWYgKG5lZWRlZF9zaXplKQorCQlnb3RvIGFnYWluOworCisJcmV0dXJu
+IHJldDsKK30KKwogLyoKICAqIE1hbmFnZWQgcmVnaW9uIHJlc291cmNlCiAgKi8K
+--047d7b33d6508e675204c3675197--
