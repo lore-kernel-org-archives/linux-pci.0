@@ -1,232 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18407 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933280Ab2FAV6y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Jun 2012 17:58:54 -0400
-Message-ID: <4FC93B1A.6030800@redhat.com>
-Date: Fri, 01 Jun 2012 17:58:50 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:40873 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756517Ab2FZMQa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 08:16:30 -0400
+Received: by bkcji2 with SMTP id ji2so4078733bkc.19
+        for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 05:16:28 -0700 (PDT)
 MIME-Version: 1.0
-To: Myron Stowe <myron.stowe@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xudong.hao@linux.intel.com,
-	yu.zhao@intel.com
-Subject: Re: [PATCH 3/4] PCI: Add pci_pcie_cap2() check for PCIe feature	capabilities
- >= v2
-References: <20120601211619.20328.36769.stgit@amt.stowe> <20120601211637.20328.108.stgit@amt.stowe>
-In-Reply-To: <20120601211637.20328.108.stgit@amt.stowe>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20120626015740.GA8128@richard>
+References: <20120620084515.GA22809@richard> <20120626015740.GA8128@richard>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 26 Jun 2012 06:16:08 -0600
+Message-ID: <CAErSpo4_qy59KS1K+t5rU8P95NNR8fB9x-ufe8VB8deGriOZ9A@mail.gmail.com>
+Subject: Re: One question about the useage of pci_dev->resource[]
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Ram Pai <linuxram@us.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/01/2012 05:16 PM, Myron Stowe wrote:
-> This patch resolves potential issues when accessing PCI Express
-> capability structures.  The makeup of Express' capability structure
-> varies substantially between v1 and v2:
+On Mon, Jun 25, 2012 at 7:57 PM, Richard Yang
+<weiyang@linux.vnet.ibm.com> wrote:
+> On Wed, Jun 20, 2012 at 04:45:15PM +0800, Richard Yang wrote:
+>>All,
+>>
+>>I want to confirm something for the pci_dev->resource[].
+>>
+>>As in the definition in the pci.h, this resource array is divided into
+>>several parts.
+>>    0-5  for standard PCI resources
+>>    6    for ROM resource
+>>    7-10 for bridge resource( if no iov )
+>>
+>>
+>>1. For P2P bridge, 0-5 is left empty?
+>>2. If so, in code pci_setup_device(), I think it set the wrong resource.
+>>   It call pci_read_bases(dev, 2, PCI_ROM_ADDRESS1), for a p2p bridge.
+>>   And in pci_read_bases(), BAR information is retrieved and set to
+>>   pci_dev->resource[0|1].
+>>3. If pci_setup_device() just set first two resource, the child bus will
+>>   point to empty resource.
+>>   In pci_alloc_child_bus(), child->resource[0-3] will be point to
+>>   bridge->resource[7-10], which is not set in pci_setup_device().
+>>4. Another question is, is there any convention for pci_bus->resource[].
+>>   [0] for io, [1] for mem, [2] for prefetch?
+> All,
 >
->      PCI Express 1.0 and 1.1 base neither requires the endpoint to
->      implement the entire PCIe capability structure nor specifies
->      default values of registers that are not implemented by the
->      device.  Its capability version is 1.
+> I go through the code again and find pci_dev->resource[7-10] is used for
+> io/mem base/limit, which is used by the bridge to determine whether it
+> will forward one pci transaction.
 >
->      PCIe 1.1 Capability Structure Expansion ECN, PCIe 2.0, 2.1, and
->      3.0 added additional registers to the structure and require all
->      registers to be either implemented or hardwired to 0.  Their PCIe
->      capability version is 2.
->
-> Due to the differences in the capability structures, code dealing with
-> capability features must be careful not to access the additional
-> registers introduced with v2 unless the device is specifically known to
-> be a v2 capable device.  Otherwise, attempts to access non-existant
-> registers will occur.  This is a subtle issue that is hard to track down
-> when it occurs (and it has - see commit 864d296cf94).
->
-> To try and help mitigate such occurrances, this patch introduces
-> pci_pcie_cap2() which is similar to pci_pcie_cap() but also checks
-> that the PCIe capability version is>= 2.  pci_pcie_cap2() should be
-> used for qualifying PCIe capability features introduced after v1.
->
-> Suggested by Don Dutile.
->
-Acked by him too!
-... except one nit...
+> So pci_dev->[0-1] is used by the bridge's driver?
 
-I would change the comment "is a PCIe v2 feature" to "is a PCIe cap v2 list feature"
-so no one confuses spec version with a specific cap-struct version.
+Per the PCI-to-PCI Bridge spec v1.2, config space for type 1 devices
+(bridges) has two BARs in addition to the I/O, mem, and prefetchable
+mem windows.  These two BARs are optional and can be used for
+device-specific configuration of the bridge itself.  This is unrelated
+to forwarding transactions.  See sec 3.2.5.1.
 
-but I wouldn't hold up this patch for this nit.
+The bridge consumes the address space described by the windows and
+forwards it to its secondary interface.  It also consumes the address
+space described by those BARs, without forwarding it.  Therefore, we
+have to read the BARs to make sure we don't allocate that space to
+anything else.
 
-> Signed-off-by: Myron Stowe<myron.stowe@redhat.com>
-> ---
->
->   drivers/pci/pci.c        |   65 +++++++++++++++++++++++++++++++++++-----------
->   include/linux/pci_regs.h |    7 +++++
->   2 files changed, 57 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ff0beb0..26933ff 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -279,6 +279,38 @@ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap)
->   }
->
->   /**
-> + * pci_pcie_cap2 - query for devices' PCI_CAP_ID_EXP v2 capability structure
-> + * @dev: PCI device to check
-> + *
-> + * Like pci_pcie_cap() but also checks that the PCIe capability version is
-> + *>= 2.  Note that v1 capability structures could be sparse in that not
-> + * all register fields were required.  v2 requires the entire structure to
-> + * be present size wise, while still allowing for non-implemented registers
-> + * to exist but they must be hardwired to 0.
-> + *
-> + * Due to the differences in the versions of capability structures, one
-> + * must be careful not to try and access non-existant registers that may
-> + * exist in early versions - v1 - of Express devices.
-> + *
-> + * Returns the offset of the PCIe capability structure as long as the
-> + * capability version is>= 2; otherwise 0 is returned.
-> + */
-> +static int pci_pcie_cap2(struct pci_dev *dev)
-> +{
-> +	u16 flags;
-> +	int pos;
-> +
-> +	pos = pci_pcie_cap(dev);
-> +	if (pos) {
-> +		pci_read_config_word(dev, pos + PCI_EXP_FLAGS,&flags);
-> +		if ((flags&  PCI_EXP_FLAGS_VERS)<  2)
-> +			pos = 0;
-> +	}
-> +
-> +	return pos;
-> +}
-> +
-> +/**
->    * pci_find_ext_capability - Find an extended capability
->    * @dev: PCI device to query
->    * @cap: capability code
-> @@ -1984,7 +2016,7 @@ void pci_enable_ari(struct pci_dev *dev)
->   {
->   	int pos;
->   	u32 cap;
-> -	u16 flags, ctrl;
-> +	u16 ctrl;
->   	struct pci_dev *bridge;
->
->   	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
-> @@ -1998,13 +2030,9 @@ void pci_enable_ari(struct pci_dev *dev)
->   	if (!bridge)
->   		return;
->
-> -	pos = pci_pcie_cap(bridge);
-> -	if (!pos)
-> -		return;
-> -
->   	/* ARI is a PCIe v2 feature */
-> -	pci_read_config_word(bridge, pos + PCI_EXP_FLAGS,&flags);
-> -	if ((flags&  PCI_EXP_FLAGS_VERS)<  2)
-> +	pos = pci_pcie_cap2(bridge);
-> +	if (!pos)
->   		return;
->
->   	pci_read_config_dword(bridge, pos + PCI_EXP_DEVCAP2,&cap);
-> @@ -2019,7 +2047,7 @@ void pci_enable_ari(struct pci_dev *dev)
->   }
->
->   /**
-> - * pci_enable_ido - enable ID-based ordering on a device
-> + * pci_enable_ido - enable ID-based Ordering on a device
->    * @dev: the PCI device
->    * @type: which types of IDO to enable
->    *
-> @@ -2032,7 +2060,8 @@ void pci_enable_ido(struct pci_dev *dev, unsigned long type)
->   	int pos;
->   	u16 ctrl;
->
-> -	pos = pci_pcie_cap(dev);
-> +	/* ID-based Ordering is a PCIe v2 feature */
-> +	pos = pci_pcie_cap2(dev);
->   	if (!pos)
->   		return;
->
-> @@ -2055,7 +2084,8 @@ void pci_disable_ido(struct pci_dev *dev, unsigned long type)
->   	int pos;
->   	u16 ctrl;
->
-> -	pos = pci_pcie_cap(dev);
-> +	/* ID-based Ordering is a PCIe v2 feature */
-> +	pos = pci_pcie_cap2(dev);
->   	if (!pos)
->   		return;
->
-> @@ -2094,7 +2124,8 @@ int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
->   	u16 ctrl;
->   	int ret;
->
-> -	pos = pci_pcie_cap(dev);
-> +	/* OBFF is a PCIe v2 feature */
-> +	pos = pci_pcie_cap2(dev);
->   	if (!pos)
->   		return -ENOTSUPP;
->
-> @@ -2144,7 +2175,8 @@ void pci_disable_obff(struct pci_dev *dev)
->   	int pos;
->   	u16 ctrl;
->
-> -	pos = pci_pcie_cap(dev);
-> +	/* OBFF is a PCIe v2 feature */
-> +	pos = pci_pcie_cap2(dev);
->   	if (!pos)
->   		return;
->
-> @@ -2166,7 +2198,8 @@ static bool pci_ltr_supported(struct pci_dev *dev)
->   	int pos;
->   	u32 cap;
->
-> -	pos = pci_pcie_cap(dev);
-> +	/* LTR is a PCIe v2 feature */
-> +	pos = pci_pcie_cap2(dev);
->   	if (!pos)
->   		return false;
->
-> @@ -2194,7 +2227,8 @@ int pci_enable_ltr(struct pci_dev *dev)
->   	if (!pci_ltr_supported(dev))
->   		return -ENOTSUPP;
->
-> -	pos = pci_pcie_cap(dev);
-> +	/* LTR is a PCIe v2 feature */
-> +	pos = pci_pcie_cap2(dev);
->   	if (!pos)
->   		return -ENOTSUPP;
->
-> @@ -2229,7 +2263,8 @@ void pci_disable_ltr(struct pci_dev *dev)
->   	if (!pci_ltr_supported(dev))
->   		return;
->
-> -	pos = pci_pcie_cap(dev);
-> +	/* LTR is a PCIe v2 feature */
-> +	pos = pci_pcie_cap2(dev);
->   	if (!pos)
->   		return;
->
-> diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-> index 4b608f5..bc1b54d 100644
-> --- a/include/linux/pci_regs.h
-> +++ b/include/linux/pci_regs.h
-> @@ -507,6 +507,13 @@
->   #define PCI_EXP_RTSTA		32	/* Root Status */
->   #define PCI_EXP_RTSTA_PME	0x10000 /* PME status */
->   #define PCI_EXP_RTSTA_PENDING	0x20000 /* PME pending */
-> +/*
-> + * Note that the following PCI Express 'Capability Structure' registers
-> + * were introduced with 'Capability Version' 0x2 (v2).  These registers
-> + * do not exist, and thus should not be attempted to be accesses, by
-> + * PCI Express v1 devices (see pci_pcie_cap2() for use in qualifying
-> + * PCI Express v2 capability related features).
-> + */
->   #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
->   #define  PCI_EXP_DEVCAP2_ARI	0x20	/* Alternative Routing-ID */
->   #define  PCI_EXP_DEVCAP2_LTR	0x800	/* Latency tolerance reporting */
->
+There *could* be device-specific bridge drivers that actually do
+something with those BARs, but I'm not aware of any in Linux.
 
+Bjorn
