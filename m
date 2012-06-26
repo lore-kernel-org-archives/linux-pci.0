@@ -1,38 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:33662 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755175Ab2FZE54 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 00:57:56 -0400
+Received: by yenl2 with SMTP id l2so3467857yen.19
+        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2012 21:57:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1339142492-13625-1-git-send-email-xudong.hao@intel.com>
-References: <1339142492-13625-1-git-send-email-xudong.hao@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Jun 2012 10:31:19 -0700
-Message-ID: <CAErSpo5DHQv0wuipPWGd5nwzui1C3-ucWCuppe0Zpww55u4pxQ@mail.gmail.com>
-Subject: Re: [PATCH 0/4] PCI: Enable LTR/OBFF before device is used by driver
-To: Xudong Hao <xudong.hao@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, avi@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, myron.stowe@redhat.com, xiantao.zhang@intel.com
+In-Reply-To: <20120626033158.16434.94698.stgit@amt.stowe>
+References: <20120626033045.16434.17412.stgit@amt.stowe> <20120626033158.16434.94698.stgit@amt.stowe>
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Date: Tue, 26 Jun 2012 13:57:25 +0900
+Message-ID: <CABMQnVJcP+BNMbW+VPNTK7DK=QDse1jwRu43pFV9j81_MueOsg@mail.gmail.com>
+Subject: Re: [PATCH 09/16] sh/PCI: Factor 'pcibios_setup()' out of sh
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com,
+	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
+	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
+	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
+	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
+	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
+	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 8, 2012 at 1:01 AM, Xudong Hao <xudong.hao@intel.com> wrote:
-> The series of patches enable LTR and OBFF before device is used by driver, and
-> introduce a couple of functions to save/restore LTR latency value.
+2012/6/26 Myron Stowe <myron.stowe@redhat.com>:
+> The PCI core provides a generic (__weak) 'pcibios_setup()' routine that can
+> be used by all architectures as a default.  Drop sh's architecture specific
+> version in favor of that as it does not need to be over-ridden.
 >
-> Patch 1/4 introduce new function pci_obff_supported() as pci_ltr_support().
->
-> Patch 2/4 enable LTR(Latency tolerance reporting) before device is used by
-> driver.
->
-> Patch 3/4 enable OBFF(optimized buffer flush/fill) before device is used by
-> driver.
->
-> Patch 4/4 introduce a couple of functions pci_save_ltr_value() and
-> pci_restore_ltr_value() to save and restore LTR latency value, while device is
-> reset.
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 
-We need some justification for these patches.  Why do we want them?
-Do they improve performance?  Reduce power consumption?  How have they
-been tested?  How can we be confident that these features work
-correctly on hardware in the field?  Should or could the BIOS enable
-them itself, based on OEM testing and desire to support these
-features?
+Tested-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+
+-- 
+Nobuhiro Iwamatsu
