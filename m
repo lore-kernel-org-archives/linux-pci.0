@@ -1,126 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:44087 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754592Ab2FGMLi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Jun 2012 08:11:38 -0400
-Received: from /spool/local
-	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Thu, 7 Jun 2012 08:11:37 -0400
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 276526E8057
-	for <linux-pci@vger.kernel.org>; Thu,  7 Jun 2012 08:10:35 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q57CAYPj162386
-	for <linux-pci@vger.kernel.org>; Thu, 7 Jun 2012 08:10:34 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q57HfQkD021377
-	for <linux-pci@vger.kernel.org>; Thu, 7 Jun 2012 13:41:27 -0400
-Date: Thu, 7 Jun 2012 21:10:24 +0900
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] rename the local variable *bridge* to *host_bridge* in
- pci_create_root_bus.
-Message-ID: <20120607121024.GA4377@shangw>
-Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-References: <20120607021137.GA6802@richard>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120607021137.GA6802@richard>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQVBPoEinWC__9DF-oi8T-78YJRn95J=xXdL2GzNoKoCaQ@mail.gmail.com>
+References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+ <1340736849-14875-2-git-send-email-yinghai@kernel.org> <CA+55aFzi7tHg=3k8Fmga8XmxFbn6tZLLV97vt67Xx_WtckQo6g@mail.gmail.com>
+ <CAE9FiQVBPoEinWC__9DF-oi8T-78YJRn95J=xXdL2GzNoKoCaQ@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 26 Jun 2012 13:43:54 -0700
+Message-ID: <CA+55aFzUttojDJOy38N4cFyj7+XPggdrMBsd5vxHJ033eWPbpg@mail.gmail.com>
+Subject: Re: [PATCH -v12 01/15] resources: Split out __allocate_resource()
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->Since there are serverail *bridge* in this function, it would be a
->little confusion.
->        
->Rename it for easy reading.
+On Tue, Jun 26, 2012 at 1:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
 >
->
+> You are right, please check updated one.
 
-At least, you missed "Signed-off-by" here :-)
+I think you can now also remove the "goto out" and in
+__reallocate_resource() and replace it with a "return err;" instead.
 
-> drivers/pci/probe.c |   18 +++++++++---------
-> 1 files changed, 9 insertions(+), 9 deletions(-)
->
->diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->index 5e1ca3c..2cc6eef 100644
->--- a/drivers/pci/probe.c
->+++ b/drivers/pci/probe.c
->@@ -1648,7 +1648,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> {
-> 	int error;
->-	struct pci_host_bridge *bridge;
->+	struct pci_host_bridge *host_bridge;
-> 	struct pci_bus *b, *b2;
-> 	struct device *dev;
-> 	struct pci_host_bridge_window *window, *n;
->@@ -1657,8 +1657,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> 	char bus_addr[64];
-> 	char *fmt;
->
->-	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
->-	if (!bridge)
->+	host_bridge = kzalloc(sizeof(*host_bridge), GFP_KERNEL);
->+	if (!host_bridge)
-> 		return NULL;
->
-> 	b = pci_alloc_bus();
->@@ -1704,8 +1704,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->
-> 	b->number = b->secondary = bus;
->
->-	bridge->bus = b;
->-	INIT_LIST_HEAD(&bridge->windows);
->+	host_bridge->bus = b;
->+	INIT_LIST_HEAD(&host_bridge->windows);
->
-> 	if (parent)
-> 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
->@@ -1714,7 +1714,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->
-> 	/* Add initial resources to the bus */
-> 	list_for_each_entry_safe(window, n, resources, list) {
->-		list_move_tail(&window->list, &bridge->windows);
->+		list_move_tail(&window->list, &host_bridge->windows);
-> 		res = window->res;
-> 		offset = window->offset;
-> 		pci_bus_add_resource(b, res, 0);
->@@ -1732,7 +1732,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> 	}
->
-> 	down_write(&pci_bus_sem);
->-	list_add_tail(&bridge->list, &pci_host_bridges);
->+	list_add_tail(&host_bridge->list, &pci_host_bridges);
-> 	list_add_tail(&b->node, &pci_root_buses);
-> 	up_write(&pci_bus_sem);
->
->@@ -1742,7 +1742,7 @@ class_dev_reg_err:
-> 	device_unregister(dev);
-> dev_reg_err:
-> 	down_write(&pci_bus_sem);
->-	list_del(&bridge->list);
->+	list_del(&host_bridge->list);
-> 	list_del(&b->node);
-> 	up_write(&pci_bus_sem);
-> err_out:
->@@ -1750,7 +1750,7 @@ err_out:
-> err_dev:
-> 	kfree(b);
-> err_bus:
->-	kfree(bridge);
->+	kfree(host_bridge);
-> 	return NULL;
-> }
->
->-- 
->1.7.4.1
->
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+But yeah, this looks fine.
 
+             Linus
