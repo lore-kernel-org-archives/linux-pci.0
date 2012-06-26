@@ -1,134 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:60536 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827Ab2FDIYK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2012 04:24:10 -0400
-Message-ID: <4FCC708C.7030004@jp.fujitsu.com>
-Date: Mon, 04 Jun 2012 17:23:40 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
- ports without native PCIe hotplug capability
-References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v12 00/15] PCI: allocate pci bus num range for unassigned bridge busn
+Date: Tue, 26 Jun 2012 11:53:54 -0700
+Message-Id: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Acked-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+busn_res already in next. and this patchset will
+will try to allocate busn range from the tree
 
-Regards,
-Kenji Kaneshige
+could be found at:
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-busn-alloc
 
+-v2: according to Jesse, split to more small patches.
+-v3: address some request from Bjorn. like make use %pR for busn_res debug print
+        out, and move the comment change with code change.
+-v4: fixes the problem about rescan that Bjorn found.
+-v5: add /proc/iobusn that is requested by Bjorn.
+     remove old workaround from pciehp.
+     add rescan_bridge for pci bridge in /sys
+-v6: remove global iobusn_resource, and every root bus's busn_res will be root
+     of children buses' busn_res.
+     pc cardbus change is tested by pcmcia maintainter.
+-v7: remove pci_scan_root_bus_max requested by Bjorn and Jesse.
+-v8: rebase on top other patches with arch/x86/pci/bus_numa.c changes
+     also only include busn_res related changes.
+-v9: Add busn into pci_root_info, and add it to resources list and pass it
+     to pci_create_root_bus.
+-v11: convert busn_res probe to generic probe_resource with resource lock holding
+     add more strict checking about not scaned peer bridges.
+-v12: updated after busn_resource changes.
 
-(2012/06/04 16:44), Jiang Liu wrote:
-> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
-> ignore root bridges using PCIe native hotplug) added code that made the
-> acpiphp driver completely ignore PCIe root complexes for which the kernel
-> had been granted control of the native PCIe hotplug feature by the BIOS
-> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
-> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
-> the constraints to allow acpiphp driver handle non-PCIe bridges under
-> such a complex. The constraint needs to be relaxed further to allow
-> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
-> 
-> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
-> switches and may migrate downstream ports among virtual switches.
-> To migrate a downstream port from the source virtual switch to the target,
-> the port needs to be hot-removed from the source and hot-added into the
-> target. pciehp driver can't be used here because there's no slots within
-> the virtual PCIe switch. So acpiphp driver is used to support downstream
-> port migration. A typical configuration is as below:
-> [Root w/o native PCIe HP]
-> 	[Upstream port of vswitch w/o native PCIe HP]
-> 		[Downstream port of vswitch w/ native PCIe HP]
-> 			[PCIe enpoint]
-> 
-> Here acpiphp driver will be used to handle root ports and upstream port
-> in the virtual switch, and pciehp driver will be used to handle downstream
-> ports in the virtual switch.
-> 
-> Acked-by: Rafael J. Wysocki<rjw@sisk.pl>
-> Signed-off-by: Jiang Liu<liuj97@gmail.com>
-> 
-> ---
->   drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
->   1 files changed, 39 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 806c44f..4889448 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
->   	.handler = handle_hotplug_event_func,
->   };
-> 
-> +/* Check whether device is managed by native PCIe hotplug driver */
-> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
-> +{
-> +	int pos;
-> +	u16 reg16;
-> +	u32 reg32;
-> +	acpi_handle tmp;
-> +	struct acpi_pci_root *root;
-> +
-> +	if (!pci_is_pcie(pdev))
-> +		return false;
-> +
-> +	/* Check whether PCIe port supports native PCIe hotplug */
-> +	pos = pci_pcie_cap(pdev);
-> +	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS,&reg16);
-> +	if (!(reg16&  PCI_EXP_FLAGS_SLOT))
-> +		return false;
-> +	pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP,&reg32);
-> +	if (!(reg32&  PCI_EXP_SLTCAP_HPC))
-> +		return false;
-> +
-> +	/*
-> +	 * Check whether native PCIe hotplug has been enabled for
-> +	 * this PCIe hierarchy.
-> +	 */
-> +	tmp = acpi_find_root_bridge_handle(pdev);
-> +	if (!tmp)
-> +		return false;
-> +	root = acpi_pci_find_root(tmp);
-> +	if (!root)
-> +		return false;
-> +	if (!(root->osc_control_set&  OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> +		return false;
-> +
-> +	return true;
-> +}
-> +
->   /* callback routine to register each ACPI PCI slot object */
->   static acpi_status
->   register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-> @@ -133,16 +170,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
->   		return AE_OK;
-> 
->   	pdev = pbus->self;
-> -	if (pdev&&  pci_is_pcie(pdev)) {
-> -		tmp = acpi_find_root_bridge_handle(pdev);
-> -		if (tmp) {
-> -			struct acpi_pci_root *root = acpi_pci_find_root(tmp);
-> -
-> -			if (root&&  (root->osc_control_set&
-> -					OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> -				return AE_OK;
-> -		}
-> -	}
-> +	if (pdev&&  device_is_managed_by_native_pciehp(pdev))
-> +		return AE_OK;
-> 
->   	acpi_evaluate_integer(handle, "_ADR", NULL,&adr);
->   	device = (adr>>  16)&  0xffff;
+Yinghai Lu (15):
+  resources: Split out __allocate_resource()
+  resources: Add probe_resource()
+  resources: Replace registered resource in tree.
+  PCI: Add pci_bus_extend/shrink_top()
+  PCI: Probe safe range that we can use for unassigned bridge.
+  PCI: Add pci_bus_replace_busn_res()
+  PCI: Allocate bus range instead of use max blindly
+  PCI: Strict checking of valid range for bridge
+  PCI: Kill pci_fixup_parent_subordinate_busnr()
+  PCI: Seperate child bus scanning to two passes overall
+  pcmcia: Remove workaround for fixing pci parent bus subordinate
+  PCI: Double checking setting for bus register and bus struct.
+  PCI, pciehp: Remove not needed bus number range checking
+  PCI: More strict checking of valid range for bridge
+  PCI: Don't shrink too much for hotplug bridge
+
+ drivers/pci/hotplug-pci.c     |   12 +--
+ drivers/pci/probe.c           |  351 +++++++++++++++++++++++++++++++----------
+ drivers/pcmcia/yenta_socket.c |   75 ---------
+ include/linux/ioport.h        |    8 +
+ kernel/resource.c             |  200 +++++++++++++++++++++++-
+ 5 files changed, 472 insertions(+), 174 deletions(-)
+
+-- 
+1.7.7
 
