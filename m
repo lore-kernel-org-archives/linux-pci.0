@@ -1,73 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:41505 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083Ab2FWSQC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jun 2012 14:16:02 -0400
-Received: by lbbgm6 with SMTP id gm6so4922688lbb.19
-        for <linux-pci@vger.kernel.org>; Sat, 23 Jun 2012 11:16:00 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:65453 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755729Ab2FZSDv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 14:03:51 -0400
+Received: by pbbrp8 with SMTP id rp8so392312pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 11:03:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1340322477.56127.2.camel@localhost.localdomain>
-References: <1340222160.77018.19.camel@localhost.localdomain> <1340322477.56127.2.camel@localhost.localdomain>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 23 Jun 2012 12:15:39 -0600
-Message-ID: <CAErSpo7AWQCofnTRhtMKVP3pm_BDq9v+axGpide0RbmignsV9A@mail.gmail.com>
-Subject: Re: [PATCH] pci: support alignments upto 8Gb in pbus_size_mem()
-To: Nikhil P Rao <nikhil.rao@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
+In-Reply-To: <4A338DB2991D2A44B9A44B8718AECF650A41F453@G01JPEXMBYT03>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+	<1340437325-29282-3-git-send-email-yinghai@kernel.org>
+	<4A338DB2991D2A44B9A44B8718AECF650A41F453@G01JPEXMBYT03>
+Date: Tue, 26 Jun 2012 11:03:49 -0700
+Message-ID: <CAE9FiQXPNn-NnspnCGAK9rs1FvcAtw_KPL5nbBYisL0_=VqRzw@mail.gmail.com>
+Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
+ surprise removal is not supported.
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 5:47 PM, Nikhil P Rao <nikhil.rao@intel.com> wrote:
-> I ran into the "disabling BAR .." error message when
-> trying to use a 8Gb PCIe card on a system with a BIOS
-> that didnt have support for BAR size > 2Gb.
+On Mon, Jun 25, 2012 at 6:26 PM, Kaneshige, Kenji
+<kaneshige.kenji@jp.fujitsu.com> wrote:
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org
+>> [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Yinghai Lu
+>> Sent: Saturday, June 23, 2012 4:42 PM
+>> To: Bjorn Helgaas
+>> Cc: linux-pci@vger.kernel.org; Yinghai Lu
+>> Subject: [PATCH 2/5] pciehp: Don't enable presence notification while
+>> surprise removal is not supported.
+>>
+>> If surprise removal is not supported, that event get dropped later.
+>> So there is no point to enable that.
+>
+> Presence changed event is currently just for printing a kernel message when
+> surprise removal is not supported, and I think the message is not so important.
+> So I agree this change.
+>
+> Acked-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 
-So the BIOS left the 8Gb BAR unassigned, and you got the "disabling
-BAR ... (bad alignment)" message when Linux tried to enable it?
+Thanks
 
-How do we know 8Gb is the correct new limit?  Are we going to be
-fixing this again when we see a 16Gb or a 32Gb BAR?  Do we need a
-better algorithm that doesn't have a limit like this?
+>
+>>
+>> Also some sick chipset have those bit flip around when the card is not
+>> present.
+>> and make log full of useless warning.
+>
+> Is there any other way to avoid this issue other than disabling presence
+> changed notification? If we need enabling presence changed event in the
+> future, this will happen again. I'm worrying about this.
 
- This patch fixed
-> the problem, but I also see the code reading the IORESOURCE_MEM_64
-> flag so I am not sure what the right solution is
->
-> Signed-off-by: Nikhil P Rao <nikhil.rao@intel.com>
-> ---
->  drivers/pci/setup-bus.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 8fa2d4b..3b3601f 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -780,7 +780,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  {
->        struct pci_dev *dev;
->        resource_size_t min_align, align, size, size0, size1;
-> -       resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
-> +       resource_size_t aligns[14];     /* Alignments from 1Mb to 8Gb */
->        int order, max_order;
->        struct resource *b_res = find_free_bus_resource(bus, type);
->        unsigned int mem64_mask = 0;
-> @@ -819,7 +819,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->                        /* For bridges size != alignment */
->                        align = pci_resource_alignment(dev, r);
->                        order = __ffs(align) - 20;
-> -                       if (order > 11) {
-> +                       if (order >= ARRAY_SIZE(aligns)) {
->                                dev_warn(&dev->dev, "disabling BAR %d: %pR "
->                                         "(bad alignment %#llx)\n", i, r,
->                                         (unsigned long long) align);
-> --
-> 1.7.1
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+could be fixed from HW change and CPLD change.
+
+Thanks
+
+Yinghai
