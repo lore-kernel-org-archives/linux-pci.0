@@ -1,73 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:40190 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753927Ab2FEOcW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 10:32:22 -0400
-Received: by pbbrp8 with SMTP id rp8so7531237pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 05 Jun 2012 07:32:22 -0700 (PDT)
-Message-ID: <4FCE186B.5050005@gmail.com>
-Date: Tue, 05 Jun 2012 22:32:11 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ram Pai <linuxram@us.ibm.com>, linux-pci@vger.kernel.org,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: One chart on pci bridge and its bus and their children
-References: <20120605032627.GA23271@richard> <20120605041146.GD6637@ram-ThinkPad-T61> <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com> <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com> <20120605060202.GC24358@richard>
-In-Reply-To: <20120605060202.GC24358@richard>
+In-Reply-To: <20120621202423.16865.50394.stgit@amt.stowe>
+References: <20120621202415.16865.6226.stgit@amt.stowe> <20120621202423.16865.50394.stgit@amt.stowe>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 26 Jun 2012 16:26:52 -0600
+Message-ID: <CAErSpo7+KoNNXcYBLm8C9M3RctugjzcTB6dbyeLD7R+7Jkeb1w@mail.gmail.com>
+Subject: Re: [PATCH 1/9] PCI: Remove redundant debug output in pci_do_fixups
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
+	ralf@linux-mips.org, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/05/2012 02:02 PM, Richard Yang wrote:
-> On Mon, Jun 04, 2012 at 10:18:46PM -0700, Yinghai Lu wrote:
->> On Mon, Jun 4, 2012 at 9:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> That's true, but I don't think it answers the question.  If we have:
->>>
->>>    pci_bus->bridge == pci_bus->self->dev
->>>
->>> why would we need both "self" and "bridge"?  It would be interesting
->>> to try to remove "bridge" and replace uses of it with "self->dev".
->>
->> then how about root bus?
->>
->> root bus ->self should be NULL.
->>
->> root bus ->bridge is to the hostbridge->dev.
->>
->> Yinghai
-> 
-> Agree, root_pci_bus->self is NULL, and root_pci_bus->bridge point to a
-> solo device structure, not in hostbridge. 
-> 
-> BTW, if the dev is the hostbrige->dev, why not pci_host_bridge contain a
-> field "dev"?
-> 
-> And, why root bus differs with other bus a lot?
-> Both root bus and other bus use self/bridge point to the "PCI BRIDGE"
-> device.
-> I think we can determine whether this is a root bus by bus->parent?
-Hi Richard,
+On Thu, Jun 21, 2012 at 2:24 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> When the boot argument 'initcall_debug' is specified, redundant debug
+> output occurs for each device as a quirk is applied:
+>  ...
+>  pci 0000:00:1a.0: calling quirk_usb_early_handoff+0x0/0x620
+>  calling  quirk_usb_early_handoff+0x0/0x620 @ 1 for 0000:00:1a.0
+>  pci fixup quirk_usb_early_handoff+0x0/0x620 returned after 32 usecs for 0000:00: 1a.0
+>  ...
+>
+> This patch removes the redundancy by eliminating the first debug output
+> occurence in the sequence shown above when 'initcall_debug' is specified.
 
-There's fundamental difference between root bridge and pci bridge.  
+Here's what I don't like about this: adding "initcall_debug" *removes*
+some output.  My expectation is that it would only *add* output.
 
-A PCI bridge is a PCI to PCI bridge. It's presented as a PCI device
-on the primary bus and hosts the secondary bus. So the secondary bus is
-associated with the PCI device on the primary bus through pci_bus->self
-and pci_bus->device.
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
+>
+>  drivers/pci/quirks.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index a2d9d33..9c93558 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2953,11 +2953,12 @@ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>                     f->vendor == (u16) PCI_ANY_ID) &&
+>                    (f->device == dev->device ||
+>                     f->device == (u16) PCI_ANY_ID)) {
+> -                       dev_dbg(&dev->dev, "calling %pF\n", f->hook);
+>                        if (initcall_debug)
+>                                do_one_fixup_debug(f->hook, dev);
+> -                       else
+> +                       else {
+> +                               dev_dbg(&dev->dev, "calling %pF\n", f->hook);
+>                                f->hook(dev);
 
-A root bridge is a system bus to PCI bus bridge, which connects PCI domain
-to system bus domain. The primary side is the system bus and the secondary
-side is a PCI bus, so there's a PCI bus associated with a root bridge, 
-but there's no PCI device for the root bridge because it's primary side
-is system bus, out of the PCI domain.
+This part isn't something you changed, but I also think it's a bit
+ugly that we have two possible call sites for the quirk: either inside
+do_one_fixup_debug() or directly in pci_do_fixups().  I wonder if this
+could be restructured a bit in the style of initcall_debug_start() and
+initcall_debug_report(), so we could have this:
 
-pci_bus->bridge is a common abstraction of the device associated with
-a PCI bus, no matter it's a host bridge or P2P bridge. So we don't need
-to distinguish between host bridge and pci bridge when we want to hold
-a reference to the device associated with a PCI bus.
+    ktime_t calltime;
 
-Thanks!
-Gerry
+    calltime = initcall_debug_start(dev);
+    f->hook(dev);
+    initcall_debug_report(dev, calltime);
+
+where initcall_debug_report() would only print something when
+initcall_debug is enabled.
+
+> +                       }
+>                }
+>  }
