@@ -1,57 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:41508 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755266Ab2FUTYI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 15:24:08 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:45608 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756907Ab2FZDcZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Jun 2012 23:32:25 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 01/16] PCI: Pull 'pcibios_setup' up into PCI's core
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com,
+	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
+	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
+	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
+	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
+	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
+	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
+	linux-kernel@vger.kernel.org
+Date: Mon, 25 Jun 2012 21:30:57 -0600
+Message-ID: <20120626033057.16434.48634.stgit@amt.stowe>
+In-Reply-To: <20120626033045.16434.17412.stgit@amt.stowe>
+References: <20120626033045.16434.17412.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <4FE2B788.3070505@gmail.com>
-References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
-	<CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
-	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
-	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
-	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
-	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
-	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
-	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
-	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
-	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
-	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
-	<4FE22B28.9020402@gmail.com>
-	<CAE9FiQUkGCQ0Y=n3i=bq388T8N-vrHP2LtMTFGwry2nA+uppwA@mail.gmail.com>
-	<4FE2B788.3070505@gmail.com>
-Date: Thu, 21 Jun 2012 12:24:07 -0700
-Message-ID: <CAE9FiQWBB0JVCLWa40k9qYJXGrv_z=RgspgQW4x2di0uCUFXmA@mail.gmail.com>
-Subject: Re: SNB PCI root information
-From: Yinghai Lu <yinghai@kernel.org>
-To: Brice Goglin <brice.goglin@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 10:56 PM, Brice Goglin <brice.goglin@gmail.com> wrote:
->> I suspected that could be other problem. intel system before
->> sandbridge does not have IIO.
->> they will have ioh instead, and one ioh would connect to two cpu sockets.
->> but _PXM for root bus in dsdt only can return one value. Aka it is
->> acpi spec limitation.
->
-> The machines I am talking about have two IOHs (one connected to each
-> socket). I only have an old 2.6.27 boot log at hand, I'll ask my admins
-> for more. Do you want the 2.6.27 dmesg anyway?
->
+Currently, all of the architectures implement their own 'pcibios_setup()'
+routine.  Most of the implementations do nothing so this patch introduces
+a generic (__weak) routine into PCI's core that can be used by all
+architectures as a default.  If necessary, it can be over-ridden by
+architecture-specific code.
 
-log from 2.6.27 should be good enough for this.
+No functional change.
 
-BIOS _PXM return 0 for both pci root buses?
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-those systems with two IOHs really deserve good BIOS.
+ drivers/pci/pci.c   |   12 ++++++++++++
+ include/linux/pci.h |    1 +
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-Hope we can have more updated machines with open sourced firmware.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 77cb54a..0f6d472 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2671,6 +2671,18 @@ static void __pci_set_master(struct pci_dev *dev, bool enable)
+ }
+ 
+ /**
++ * pcibios_setup - process "pci=" kernel boot arguments
++ * @str: string used to pass in "pci=" kernel boot arguments
++ *
++ * Process kernel boot arguments.  This is the default implementation.
++ * Architecture specific implementations can override this as necessary.
++ */
++char * __weak __init pcibios_setup(char *str)
++{
++	return str;
++}
++
++/**
+  * pcibios_set_master - enable PCI bus-mastering for device dev
+  * @dev: the PCI device to enable
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fefb4e1..fdcff0e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -644,6 +644,7 @@ extern int no_pci_devices(void);
+ 
+ void pcibios_fixup_bus(struct pci_bus *);
+ int __must_check pcibios_enable_device(struct pci_dev *, int mask);
++/* Architecture specific versions may override this (weak) */
+ char *pcibios_setup(char *str);
+ 
+ /* Used only when drivers/pci/setup.c is used */
 
-Thanks
-
-Yinghai
