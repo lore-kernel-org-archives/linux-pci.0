@@ -1,72 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:58924 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756892Ab2FPVs4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 16 Jun 2012 17:48:56 -0400
-Received: by lahd3 with SMTP id d3so2787625lah.19
-        for <linux-pci@vger.kernel.org>; Sat, 16 Jun 2012 14:48:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVp9gyzRppPDu=bbRbOqY=mu1478YUSAJs=t3Cyvpmh+Q@mail.gmail.com>
-References: <1338026043-3968-1-git-send-email-jiang.liu@huawei.com>
- <1338026043-3968-9-git-send-email-jiang.liu@huawei.com> <CAE9FiQVHBE7pvaC5aCk-7q_pU3mxSoo5JapQkjG80DcnW16ZxA@mail.gmail.com>
- <4FDB2192.5070709@huawei.com> <CAE9FiQVWhSZBcZM1DXJaN7rsj64YO=OjzOm6XkUqio5fZ5di+w@mail.gmail.com>
- <4FDC5084.6090504@huawei.com> <CAE9FiQVp9gyzRppPDu=bbRbOqY=mu1478YUSAJs=t3Cyvpmh+Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 16 Jun 2012 15:48:33 -0600
-Message-ID: <CAErSpo5q=UJyT=bughbgfGpG19MfnYn6h=X=YFzfUdgLy9KcPg@mail.gmail.com>
-Subject: Re: [PATCH v7 08/10] PCI, x86: add MMCFG information on demand
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from acsinet15.oracle.com ([141.146.126.227]:29810 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758728Ab2FZSyi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 14:54:38 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH -v12 01/15] resources: Split out __allocate_resource()
+Date: Tue, 26 Jun 2012 11:53:55 -0700
+Message-Id: <1340736849-14875-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 16, 2012 at 2:08 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sat, Jun 16, 2012 at 2:23 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->> On 2012-6-16 0:51, Yinghai Lu wrote:
->>>
->>> still have some problem:
->>> pci_mmcfg_check_reserved==>is_mmconf_reserved
->>>
->>> will update cfg->end_bus.
->> Hi Yinghai,
->>        How about following patch for this issue? I guess we need to
->> keep current behavior at boot time for backward compatibility, right?
->
-> We'd better to make all path share as most code as possible.
-> 1. hostbridge scanning during boot -- early, it will check chipset and e820
-> 2. MCFG checking during boot -- early, it will check e820
-> 3. MCFG checking during boot -- late, it will check acpi pnp
-> 4. _CBA checking for hotplug-able pci root bus but it is installed during boot.
-> 5. _CBA checking for hotplug-able pci root bus during run time.
->
-> please keep mapping for all entries in MCFG table. aka 1, 2, 3.
-> I have some local patches that will read ext pci conf space before scan pci bus.
-> please check attached one for nehalem-ioh.
+It will take bool lock, so we could use it in other functions that
+hold the resource lock already.
 
-I don't think it's a requirement that Gerry keep your Nehalem patch
-working.  Your intel_bus.c is not in the tree and you haven't provided
-an explanation for why it should be.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+ kernel/resource.c |   26 +++++++++++++++++++++-----
+ 1 files changed, 21 insertions(+), 5 deletions(-)
 
-The only requirement I'm aware of for PCI config access before we
-discover the host bridges via ACPI is for segment group 0, bus 0, as
-mentioned in ACPI spec 5.0, sec 5.2.3.1, PDF page 143, and I think
-that applies only to the first 0x100 bytes of config space.  I don't
-think there's a requirement for access to the extended configuration
-space (bytes 0x100-0xFFF).  I do not see a requirement that this
-pre-host bridge access happen via MMCONFIG; as far as I can tell, we
-can use the legacy 0xCF8/0xCFC mechanism.
+diff --git a/kernel/resource.c b/kernel/resource.c
+index dc8b477..3f6e522 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -521,14 +521,14 @@ out:
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
+  */
+-int allocate_resource(struct resource *root, struct resource *new,
++static int __allocate_resource(struct resource *root, struct resource *new,
+ 		      resource_size_t size, resource_size_t min,
+ 		      resource_size_t max, resource_size_t align,
+ 		      resource_size_t (*alignf)(void *,
+ 						const struct resource *,
+ 						resource_size_t,
+ 						resource_size_t),
+-		      void *alignf_data)
++		      void *alignf_data, bool lock)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -542,19 +542,35 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
+ 
+-	if ( new->parent ) {
++	if (new->parent && lock) {
+ 		/* resource is already allocated, try reallocating with
+ 		   the new constraints */
+ 		return reallocate_resource(root, new, size, &constraint);
+ 	}
+ 
+-	write_lock(&resource_lock);
++	if (lock)
++		write_lock(&resource_lock);
+ 	err = find_resource(root, new, size, &constraint);
+ 	if (err >= 0 && __request_resource(root, new))
+ 		err = -EBUSY;
+-	write_unlock(&resource_lock);
++	if (lock)
++		write_unlock(&resource_lock);
+ 	return err;
+ }
++int allocate_resource(struct resource *root, struct resource *new,
++		      resource_size_t size, resource_size_t min,
++		      resource_size_t max, resource_size_t align,
++		      resource_size_t (*alignf)(void *,
++						const struct resource *,
++						resource_size_t,
++						resource_size_t),
++		      void *alignf_data)
++{
++	bool lock = true;
++
++	return __allocate_resource(root, new, size, min, max, align,
++				   alignf, alignf_data, lock);
++}
+ 
+ EXPORT_SYMBOL(allocate_resource);
+ 
+-- 
+1.7.7
 
-> for case 4, 5: only need to add one bool in acpi_pci_root to record if
-> mmconf list and mapping is touched.
->
-> Thanks
->
-> Yinghai
