@@ -1,72 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:54164 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799Ab2FZFr6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 01:47:58 -0400
-Received: by weyu7 with SMTP id u7so3309934wey.19
-        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2012 22:47:57 -0700 (PDT)
-Message-ID: <4FE94D08.7040603@monstr.eu>
-Date: Tue, 26 Jun 2012 07:47:52 +0200
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:57512 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757862Ab2FZB5t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2012 21:57:49 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 26 Jun 2012 07:27:46 +0530
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5Q1vgtQ11272458
+	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 07:27:42 +0530
+Received: from d28av02.in.ibm.com (loopback [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5Q7SKQt017597
+	for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2012 17:28:21 +1000
+Date: Tue, 26 Jun 2012 09:57:40 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Ram Pai <linuxram@us.ibm.com>
+Subject: Re: One question about the useage of pci_dev->resource[]
+Message-ID: <20120626015740.GA8128@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120620084515.GA22809@richard>
 MIME-Version: 1.0
-To: Myron Stowe <myron.stowe@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, ralf@linux-mips.org,
-	yasutake.koichi@jp.panasonic.com, jejb@parisc-linux.org,
-	deller@gmx.de, benh@kernel.crashing.org, paulus@samba.org,
-	lethal@linux-sh.org, davem@davemloft.net, cmetcalf@tilera.com,
-	gxt@mprc.pku.edu.cn, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 04/16] microblaze/PCI: Factor 'pcibios_setup()' out of
- microblaze
-References: <20120626033045.16434.17412.stgit@amt.stowe> <20120626033123.16434.47270.stgit@amt.stowe>
-In-Reply-To: <20120626033123.16434.47270.stgit@amt.stowe>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120620084515.GA22809@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/26/2012 05:31 AM, Myron Stowe wrote:
-> The PCI core provides a generic (__weak) 'pcibios_setup()' routine that
-> can be used by all architectures as a default.  Drop microblaze's
-> architecture specific version in favor of that as it does not need to be
-> over-ridden.
+On Wed, Jun 20, 2012 at 04:45:15PM +0800, Richard Yang wrote:
+>All,
 >
-> Signed-off-by: Myron Stowe<myron.stowe@redhat.com>
-> ---
+>I want to confirm something for the pci_dev->resource[].
 >
->   arch/microblaze/pci/pci-common.c |    5 -----
->   1 files changed, 0 insertions(+), 5 deletions(-)
+>As in the definition in the pci.h, this resource array is divided into
+>several parts.
+>    0-5  for standard PCI resources
+>    6    for ROM resource
+>    7-10 for bridge resource( if no iov )
 >
-> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-> index ed22bfc..7b510ae 100644
-> --- a/arch/microblaze/pci/pci-common.c
-> +++ b/arch/microblaze/pci/pci-common.c
-> @@ -192,11 +192,6 @@ void pcibios_set_master(struct pci_dev *dev)
->   	/* No special bus mastering setup handling */
->   }
 >
-> -char __devinit *pcibios_setup(char *str)
-> -{
-> -	return str;
-> -}
-> -
->   /*
->    * Reads the interrupt pin to determine if interrupt is use by card.
->    * If the interrupt is used, then gets the interrupt line from the
->
+>1. For P2P bridge, 0-5 is left empty?
+>2. If so, in code pci_setup_device(), I think it set the wrong resource.
+>   It call pci_read_bases(dev, 2, PCI_ROM_ADDRESS1), for a p2p bridge. 
+>   And in pci_read_bases(), BAR information is retrieved and set to
+>   pci_dev->resource[0|1].
+>3. If pci_setup_device() just set first two resource, the child bus will
+>   point to empty resource.
+>   In pci_alloc_child_bus(), child->resource[0-3] will be point to
+>   bridge->resource[7-10], which is not set in pci_setup_device().
+>4. Another question is, is there any convention for pci_bus->resource[].
+>   [0] for io, [1] for mem, [2] for prefetch?
+All,
 
-Acked-by: Michal Simek <monstr@monstr.eu>
+I go through the code again and find pci_dev->resource[7-10] is used for
+io/mem base/limit, which is used by the bridge to determine whether it
+will forward one pci transaction.
 
-Thanks,
-Michal
+So pci_dev->[0-1] is used by the bridge's driver?
 
+If not exact, please correct me:)
+
+>
+>-- 
+>Richard Yang
+>Help you, Help me
 
 -- 
-Michal Simek, Ing. (M.Eng)
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
-Microblaze U-BOOT custodian
+Richard Yang
+Help you, Help me
+
