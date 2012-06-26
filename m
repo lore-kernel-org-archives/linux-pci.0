@@ -1,53 +1,66 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 06/16] MIPS/PCI: adjust section annotations for
+	'pcibios_setup()'
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com,
+	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
+	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
+	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
+	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
+	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
+	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
+	linux-kernel@vger.kernel.org
+Date: Mon, 25 Jun 2012 21:31:37 -0600
+Message-ID: <20120626033137.16434.79166.stgit@amt.stowe>
+In-Reply-To: <20120626033045.16434.17412.stgit@amt.stowe>
+References: <20120626033045.16434.17412.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdX_XYQLs7gmzYS=dNmXxkQQiU3GBNW5b6EZso9bia5JqQ@mail.gmail.com>
-References: <201204072316.q37NGv8d019280@farm-0023.internal.tilera.com>
-	<201204072319.q37NJlNp019384@farm-0023.internal.tilera.com>
-	<CAMuHMdX_XYQLs7gmzYS=dNmXxkQQiU3GBNW5b6EZso9bia5JqQ@mail.gmail.com>
-Date: Tue, 19 Jun 2012 13:07:30 -0700
-Message-ID: <CAE9FiQUBh-cWnQ4MQ2Cy_BH3wn0+9GV+9AfrV-zHD0nHh3T2mA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] arch/tile: tilegx PCI root complex support
-From: Yinghai Lu <yinghai@kernel.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Chris Metcalf <cmetcalf@tilera.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>, Jiri Kosina <jkosina@suse.cz>,
-	Joe Perches <joe@perches.com>,
-	David Howells <dhowells@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 12:50 PM, Geert Uytterhoeven
-<geert@linux-m68k.org> wrote:
-> Hi Chris,
->
-> On Sat, Apr 7, 2012 at 11:10 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
->> This change implements PCIe root complex support for tilegx using
->> the kernel support layer for accessing the TRIO hardware shim.
->
->> --- /dev/null
->> +++ b/arch/tile/kernel/pci_gx.c
->
->> +               bus = pci_scan_bus(0, controller->ops, controller);
->> +               controller->root_bus = bus;
->> +               controller->last_busno = bus->subordinate;
->
-> As of commit 3527ed81ca01bbaf09df952e68528377a9cd092f
-> ("PCI: remove secondary/subordinate in struct pci_bus") in linux-next, the
-> "subordinate" field no longer exists:
->
-> http://kisskb.ellerman.id.au/kisskb/buildresult/6546355/
-> arch/tile/kernel/pci_gx.c:852:31: error: 'struct pci_bus' has no
-> member named 'subordinate'
-> make[3]: *** [arch/tile/kernel/pci_gx.o] Error 1
+Make pcibios_setup() consistently use the "__init" section annotation.
 
-could changed to be
-                   contoller->last_busno = bus->busn.end;
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-Thanks
+ arch/mips/pci/pci.c          |    4 ++--
+ arch/mips/txx9/generic/pci.c |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Yinghai
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 271e8c4..0e111d2 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -348,9 +348,9 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 		vma->vm_end - vma->vm_start, vma->vm_page_prot);
+ }
+ 
+-char * (*pcibios_plat_setup)(char *str) __devinitdata;
++char * (*pcibios_plat_setup)(char *str) __initdata;
+ 
+-char *__devinit pcibios_setup(char *str)
++char *__init pcibios_setup(char *str)
+ {
+ 	if (pcibios_plat_setup)
+ 		return pcibios_plat_setup(str);
+diff --git a/arch/mips/txx9/generic/pci.c b/arch/mips/txx9/generic/pci.c
+index 682efb0..f028e3d 100644
+--- a/arch/mips/txx9/generic/pci.c
++++ b/arch/mips/txx9/generic/pci.c
+@@ -398,9 +398,9 @@ int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return txx9_board_vec->pci_map_irq(dev, slot, pin);
+ }
+ 
+-char * (*txx9_board_pcibios_setup)(char *str) __devinitdata;
++char * (*txx9_board_pcibios_setup)(char *str) __initdata;
+ 
+-char *__devinit txx9_pcibios_setup(char *str)
++char *__init txx9_pcibios_setup(char *str)
+ {
+ 	if (txx9_board_pcibios_setup && !txx9_board_pcibios_setup(str))
+ 		return NULL;
+
