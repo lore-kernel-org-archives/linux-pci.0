@@ -1,160 +1,51 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 04 Jun 2012 13:17:01 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-Subject: [RFC PATCH v1 5/6] PCI, ACPI: update ACPI hotplug slot information
- when PCI hotplug event happens
-In-reply-to: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Alex Chiang <achiang@hp.com>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-id: <1338787022-400-5-git-send-email-jiang.liu@huawei.com>
-MIME-version: 1.0
-Content-type: text/plain
-References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 08/16] powerpc/PCI: Factor 'pcibios_setup()' out of powerpc
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com,
+	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
+	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
+	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
+	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
+	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
+	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
+	linux-kernel@vger.kernel.org
+Date: Mon, 25 Jun 2012 21:31:51 -0600
+Message-ID: <20120626033151.16434.33099.stgit@amt.stowe>
+In-Reply-To: <20120626033045.16434.17412.stgit@amt.stowe>
+References: <20120626033045.16434.17412.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+The PCI core provides a generic (__weak) 'pcibios_setup()' routine
+that can be used by all architectures as a default.  Drop powerpc's
+architecture specific version in favor of that as it does not need to be
+over-ridden.
 
-Currently the acpiphp driver fails to update hotplug slot information under
-several conditions, such as:
-1) The bridge device is removed through /sys/bus/pci/devices/.../remove
-2) The bridge device is added/removed by PCI hotplug driver other than the
-   acpiphp driver itself. For example, if an IO expansion box with ACPI
-   hotplug slots available is hot-added by the pciehp driver, all ACPI
-   hotplug slots won't be discovered by the acpiphp driver.
-
-So hook the BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events to
-update ACPI hotplug slot information when PCI hotplug event happens.
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   64 ++++++++++++++++++++++++++++++++++--
- 1 files changed, 61 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 73af337..44d055c 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -61,6 +61,7 @@ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
- static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
-+static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle);
- 
- /* callback routine to check for the existence of a pci dock device */
- static acpi_status
-@@ -377,7 +378,7 @@ static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
- 
- 
- /* allocate and initialize host bridge data structure */
--static void add_host_bridge(acpi_handle *handle)
-+static void add_host_bridge(acpi_handle handle)
- {
- 	struct acpiphp_bridge *bridge;
- 	struct acpi_pci_root *root = acpi_pci_find_root(handle);
-@@ -396,12 +397,14 @@ static void add_host_bridge(acpi_handle *handle)
- 	init_bridge_misc(bridge);
+ arch/powerpc/kernel/pci-common.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 8e78e93..bf2306b 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -200,11 +200,6 @@ int pcibios_add_platform_entries(struct pci_dev *pdev)
+ 	return device_create_file(&pdev->dev, &dev_attr_devspec);
  }
  
+-char __devinit *pcibios_setup(char *str)
+-{
+-	return str;
+-}
 -
- /* allocate and initialize PCI-to-PCI bridge data structure */
--static void add_p2p_bridge(acpi_handle *handle)
-+static void add_p2p_bridge(acpi_handle handle)
- {
- 	struct acpiphp_bridge *bridge;
- 
-+	if (acpiphp_handle_to_bridge(handle))
-+		return;
-+
- 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
- 	if (bridge == NULL) {
- 		err("out of memory\n");
-@@ -1419,6 +1422,58 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	return AE_OK ;
- }
- 
-+static void acpiphp_hp_notify_add(struct pci_dev *dev)
-+{
-+	acpi_handle handle = DEVICE_ACPI_HANDLE(&dev->dev);
-+
-+	if (!dev->subordinate || !handle)
-+		return;
-+
-+	/* check if this bridge has ejectable slots */
-+	if (detect_ejectable_slots(handle) > 0) {
-+		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
-+		add_p2p_bridge(handle);
-+	}
-+}
-+
-+static void acpiphp_hp_notify_del(struct pci_dev *dev)
-+{
-+	struct acpiphp_bridge *bridge, *tmp;
-+	struct pci_bus *bus = dev->subordinate;
-+
-+	if (!bus)
-+		return;
-+
-+	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
-+		if (bridge->pci_bus == bus) {
-+			cleanup_bridge(bridge);
-+			break;
-+		}
-+}
-+
-+static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
-+				 unsigned long event, void *data)
-+{
-+	struct device *dev = data;
-+
-+	switch (event) {
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		acpiphp_hp_notify_add(to_pci_dev(dev));
-+		break;
-+	case BUS_NOTIFY_DEL_DEVICE:
-+		acpiphp_hp_notify_del(to_pci_dev(dev));
-+		break;
-+	default:
-+		return NOTIFY_DONE;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block acpi_pci_hp_notifier = {
-+	.notifier_call = &acpi_pci_hp_notify_fn,
-+};
-+
- static struct acpi_pci_driver acpi_pci_hp_driver = {
- 	.add =		add_bridge,
- 	.remove =	remove_bridge,
-@@ -1439,6 +1494,8 @@ int __init acpiphp_glue_init(void)
- 	else
- 		acpi_pci_register_driver(&acpi_pci_hp_driver);
- 
-+	bus_register_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
-+
- 	return 0;
- }
- 
-@@ -1450,6 +1507,7 @@ int __init acpiphp_glue_init(void)
-  */
- void  acpiphp_glue_exit(void)
- {
-+	bus_unregister_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
- 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
- }
- 
--- 
-1.7.1
-
+ /*
+  * Reads the interrupt pin to determine if interrupt is use by card.
+  * If the interrupt is used, then gets the interrupt line from the
 
