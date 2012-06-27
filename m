@@ -1,36 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:54075 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760135Ab2FUUGW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 16:06:22 -0400
-Received: by bkcji2 with SMTP id ji2so977564bkc.19
-        for <linux-pci@vger.kernel.org>; Thu, 21 Jun 2012 13:06:21 -0700 (PDT)
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:64291 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080Ab2F0Oc2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jun 2012 10:32:28 -0400
+Received: by eeit10 with SMTP id t10so387014eei.19
+        for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 07:32:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
-References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <20120627140641.2187711F8B0@bugzilla.kernel.org>
+References: <bug-15362-41252@https.bugzilla.kernel.org/> <20120627140641.2187711F8B0@bugzilla.kernel.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 21 Jun 2012 14:06:01 -0600
-Message-ID: <CAErSpo5ABBo787gr+FqfvAhU=qQ9a5zgQyg=+HTr5dkigB3-XA@mail.gmail.com>
-Subject: Re: [PATCH v9 00/11] PCI, x86: update MMCFG information when
- hot-plugging PCI host bridges
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org
+Date: Wed, 27 Jun 2012 08:32:06 -0600
+Message-ID: <CAErSpo4T5rBwoE7X2h1-CG9GoEPzXO+_1R7YVyv8wiL2qZW+XA@mail.gmail.com>
+Subject: Re: [Bug 15362] MPT Fusion SCSI drives no longer appear - suspect PCI
+ bus scan bug
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 3:36 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> This patchset enhance pci_root driver to update MMCFG information when
-> hot-plugging PCI root bridges. It applies to
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next
+> I do still plan to work on bisecting this.
 
-Yinghai, I'm hoping you will review these.  I'd like to get them into
--next soon and you're the main person paying attention to them :)  If
-you can't, let me know and I'll give it a go myself.
+Can you also attach a dmesg log from a current kernel, e.g., 3.4 or
+newer?  We now print a lot more information during PCI enumeration.
 
-Bjorn
+But I guess the problem is that 2.6.26 finds devices in domains 1 and
+2, while 2.6.32 does not.  I think MMCONFIG is the only config access
+method we have for domains other than 0.  That suggests that MMCONFIG
+used to work but doesn't any more.  The dmesg logs claim that we're
+not using MMCONFIG in either 2.6.26 or 2.6.32 though, so I don't know
+why we found anything in 2.6.26.
