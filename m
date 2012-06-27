@@ -1,217 +1,190 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 3/4] PCI: Add pci_pcie_cap2() check for PCIe feature
-	capabilities >= v2
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xudong.hao@linux.intel.com, ddutile@redhat.com, yu.zhao@intel.com
-Date: Fri, 01 Jun 2012 15:16:37 -0600
-Message-ID: <20120601211637.20328.108.stgit@amt.stowe>
-In-Reply-To: <20120601211619.20328.36769.stgit@amt.stowe>
-References: <20120601211619.20328.36769.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:58759 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756563Ab2F0OtY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Jun 2012 10:49:24 -0400
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Wed, 27 Jun 2012 10:49:22 -0400
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 19C746E8066
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 10:49:02 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5REn1Mf050070
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 10:49:01 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5RKJmhK003339
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 16:19:53 -0400
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
+Cc: yinghai@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH V4 2/2] PCI: minimal alignment for bars of P2P bridges
+Date: Wed, 27 Jun 2012 22:48:45 +0800
+Message-Id: <1340808525-24996-2-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch resolves potential issues when accessing PCI Express
-capability structures.  The makeup of Express' capability structure
-varies substantially between v1 and v2:
+On some powerpc platforms, device BARs need to be assigned to separate
+"segments" of the address space in order for the error isolation and HW
+virtualization mechanisms (EEH) to work properly. Those "segments" have
+a minimum size that can be fairly large (16M). In order to be able to
+use the generic resource assignment code rather than re-inventing our
+own, we chose to group devices by bus. That way, a simple change of the
+minimum alignment requirements of resources assigned to PCI to PCI (P2P)
+bridges is enough to ensure that all BARs for devices below those bridges
+will fit into contiguous sets of segments and there will be no overlap.
 
-    PCI Express 1.0 and 1.1 base neither requires the endpoint to
-    implement the entire PCIe capability structure nor specifies
-    default values of registers that are not implemented by the
-    device.  Its capability version is 1.
+This patch provides a way for the host bridge to override the default
+alignment values used by the resource allocation code for that purpose.
 
-    PCIe 1.1 Capability Structure Expansion ECN, PCIe 2.0, 2.1, and
-    3.0 added additional registers to the structure and require all
-    registers to be either implemented or hardwired to 0.  Their PCIe
-    capability version is 2.
-
-Due to the differences in the capability structures, code dealing with
-capability features must be careful not to access the additional
-registers introduced with v2 unless the device is specifically known to
-be a v2 capable device.  Otherwise, attempts to access non-existant
-registers will occur.  This is a subtle issue that is hard to track down
-when it occurs (and it has - see commit 864d296cf94).
-
-To try and help mitigate such occurrances, this patch introduces
-pci_pcie_cap2() which is similar to pci_pcie_cap() but also checks
-that the PCIe capability version is >= 2.  pci_pcie_cap2() should be
-used for qualifying PCIe capability features introduced after v1.
-
-Suggested by Don Dutile.
-
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Reviewed-by: Ram Pai <linuxram@us.ibm.com>
+Reviewed-by: Richard Yang <weiyang@linux.vnet.ibm.com>
 ---
+ drivers/pci/probe.c     |    5 +++++
+ drivers/pci/setup-bus.c |   28 +++++++++++++++++++++-------
+ include/linux/pci.h     |    8 ++++++++
+ 3 files changed, 34 insertions(+), 7 deletions(-)
 
- drivers/pci/pci.c        |   65 +++++++++++++++++++++++++++++++++++-----------
- include/linux/pci_regs.h |    7 +++++
- 2 files changed, 57 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ff0beb0..26933ff 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -279,6 +279,38 @@ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap)
- }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 658ac97..a196529 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -431,6 +431,11 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 	if (bridge) {
+ 		INIT_LIST_HEAD(&bridge->windows);
+ 		bridge->bus = b;
++
++		/* Set minimal alignment shift of P2P bridges */
++		bridge->io_align_shift = PCI_DEFAULT_IO_ALIGN_SHIFT;
++		bridge->mem_align_shift = PCI_DEFAULT_MEM_ALIGN_SHIFT;
++		bridge->pmem_align_shift = PCI_DEFAULT_PMEM_ALIGN_SHIFT;
+ 	}
  
- /**
-+ * pci_pcie_cap2 - query for devices' PCI_CAP_ID_EXP v2 capability structure
-+ * @dev: PCI device to check
-+ *
-+ * Like pci_pcie_cap() but also checks that the PCIe capability version is
-+ * >= 2.  Note that v1 capability structures could be sparse in that not
-+ * all register fields were required.  v2 requires the entire structure to
-+ * be present size wise, while still allowing for non-implemented registers
-+ * to exist but they must be hardwired to 0.
-+ *
-+ * Due to the differences in the versions of capability structures, one
-+ * must be careful not to try and access non-existant registers that may
-+ * exist in early versions - v1 - of Express devices.
-+ *
-+ * Returns the offset of the PCIe capability structure as long as the
-+ * capability version is >= 2; otherwise 0 is returned.
-+ */
-+static int pci_pcie_cap2(struct pci_dev *dev)
-+{
-+	u16 flags;
-+	int pos;
-+
-+	pos = pci_pcie_cap(dev);
-+	if (pos) {
-+		pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &flags);
-+		if ((flags & PCI_EXP_FLAGS_VERS) < 2)
-+			pos = 0;
-+	}
-+
-+	return pos;
-+}
-+
-+/**
-  * pci_find_ext_capability - Find an extended capability
-  * @dev: PCI device to query
-  * @cap: capability code
-@@ -1984,7 +2016,7 @@ void pci_enable_ari(struct pci_dev *dev)
+ 	return bridge;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8fa2d4b..caebe98 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -706,10 +706,12 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		resource_size_t add_size, struct list_head *realloc_head)
  {
- 	int pos;
- 	u32 cap;
--	u16 flags, ctrl;
-+	u16 ctrl;
- 	struct pci_dev *bridge;
++	struct pci_host_bridge *phb;
+ 	struct pci_dev *dev;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+ 	unsigned long size = 0, size0 = 0, size1 = 0;
+ 	resource_size_t children_add_size = 0;
++	resource_size_t io_align;
  
- 	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
-@@ -1998,13 +2030,9 @@ void pci_enable_ari(struct pci_dev *dev)
- 	if (!bridge)
+ 	if (!b_res)
+  		return;
+@@ -735,13 +737,17 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 				children_add_size += get_res_add_size(realloc_head, r);
+ 		}
+ 	}
++
++	phb = find_pci_host_bridge(bus);
++	io_align = (1 << phb->io_align_shift);
++
+ 	size0 = calculate_iosize(size, min_size, size1,
+-			resource_size(b_res), 4096);
++			resource_size(b_res), io_align);
+ 	if (children_add_size > add_size)
+ 		add_size = children_add_size;
+ 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+ 		calculate_iosize(size, min_size, add_size + size1,
+-			resource_size(b_res), 4096);
++			resource_size(b_res), io_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window "
+@@ -751,11 +757,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
  		return;
+ 	}
+ 	/* Alignment of the IO window is always 4K */
+-	b_res->start = 4096;
++	b_res->start = io_align;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
++		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+ 				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
+ 				 bus->secondary, bus->subordinate, size1-size0);
+@@ -778,6 +784,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			resource_size_t add_size,
+ 			struct list_head *realloc_head)
+ {
++	struct pci_host_bridge *phb;
+ 	struct pci_dev *dev;
+ 	resource_size_t min_align, align, size, size0, size1;
+ 	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
+@@ -785,10 +792,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	struct resource *b_res = find_free_bus_resource(bus, type);
+ 	unsigned int mem64_mask = 0;
+ 	resource_size_t children_add_size = 0;
++	int mem_align_shift;
  
--	pos = pci_pcie_cap(bridge);
--	if (!pos)
--		return;
--
- 	/* ARI is a PCIe v2 feature */
--	pci_read_config_word(bridge, pos + PCI_EXP_FLAGS, &flags);
--	if ((flags & PCI_EXP_FLAGS_VERS) < 2)
-+	pos = pci_pcie_cap2(bridge);
-+	if (!pos)
- 		return;
+ 	if (!b_res)
+ 		return 0;
  
- 	pci_read_config_dword(bridge, pos + PCI_EXP_DEVCAP2, &cap);
-@@ -2019,7 +2047,7 @@ void pci_enable_ari(struct pci_dev *dev)
- }
++	phb = find_pci_host_bridge(bus);
++	if (type & IORESOURCE_PREFETCH)
++		mem_align_shift = phb->pmem_align_shift;
++	else
++		mem_align_shift = phb->mem_align_shift;
++
+ 	memset(aligns, 0, sizeof(aligns));
+ 	max_order = 0;
+ 	size = 0;
+@@ -818,8 +832,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ #endif
+ 			/* For bridges size != alignment */
+ 			align = pci_resource_alignment(dev, r);
+-			order = __ffs(align) - 20;
+-			if (order > 11) {
++			order = __ffs(align) - mem_align_shift;
++			if (order > (11 - (mem_align_shift - 20))) {
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR "
+ 					 "(bad alignment %#llx)\n", i, r,
+ 					 (unsigned long long) align);
+@@ -846,7 +860,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	for (order = 0; order <= max_order; order++) {
+ 		resource_size_t align1 = 1;
  
- /**
-- * pci_enable_ido - enable ID-based ordering on a device
-+ * pci_enable_ido - enable ID-based Ordering on a device
-  * @dev: the PCI device
-  * @type: which types of IDO to enable
-  *
-@@ -2032,7 +2060,8 @@ void pci_enable_ido(struct pci_dev *dev, unsigned long type)
- 	int pos;
- 	u16 ctrl;
+-		align1 <<= (order + 20);
++		align1 <<= (order + mem_align_shift);
  
--	pos = pci_pcie_cap(dev);
-+	/* ID-based Ordering is a PCIe v2 feature */
-+	pos = pci_pcie_cap2(dev);
- 	if (!pos)
- 		return;
+ 		if (!align)
+ 			min_align = align1;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2b559f1..879de4e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -376,9 +376,17 @@ struct pci_host_bridge_window {
+ 	resource_size_t offset;		/* bus address + offset = CPU address */
+ };
  
-@@ -2055,7 +2084,8 @@ void pci_disable_ido(struct pci_dev *dev, unsigned long type)
- 	int pos;
- 	u16 ctrl;
- 
--	pos = pci_pcie_cap(dev);
-+	/* ID-based Ordering is a PCIe v2 feature */
-+	pos = pci_pcie_cap2(dev);
- 	if (!pos)
- 		return;
- 
-@@ -2094,7 +2124,8 @@ int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
- 	u16 ctrl;
- 	int ret;
- 
--	pos = pci_pcie_cap(dev);
-+	/* OBFF is a PCIe v2 feature */
-+	pos = pci_pcie_cap2(dev);
- 	if (!pos)
- 		return -ENOTSUPP;
- 
-@@ -2144,7 +2175,8 @@ void pci_disable_obff(struct pci_dev *dev)
- 	int pos;
- 	u16 ctrl;
- 
--	pos = pci_pcie_cap(dev);
-+	/* OBFF is a PCIe v2 feature */
-+	pos = pci_pcie_cap2(dev);
- 	if (!pos)
- 		return;
- 
-@@ -2166,7 +2198,8 @@ static bool pci_ltr_supported(struct pci_dev *dev)
- 	int pos;
- 	u32 cap;
- 
--	pos = pci_pcie_cap(dev);
-+	/* LTR is a PCIe v2 feature */
-+	pos = pci_pcie_cap2(dev);
- 	if (!pos)
- 		return false;
- 
-@@ -2194,7 +2227,8 @@ int pci_enable_ltr(struct pci_dev *dev)
- 	if (!pci_ltr_supported(dev))
- 		return -ENOTSUPP;
- 
--	pos = pci_pcie_cap(dev);
-+	/* LTR is a PCIe v2 feature */
-+	pos = pci_pcie_cap2(dev);
- 	if (!pos)
- 		return -ENOTSUPP;
- 
-@@ -2229,7 +2263,8 @@ void pci_disable_ltr(struct pci_dev *dev)
- 	if (!pci_ltr_supported(dev))
- 		return;
- 
--	pos = pci_pcie_cap(dev);
-+	/* LTR is a PCIe v2 feature */
-+	pos = pci_pcie_cap2(dev);
- 	if (!pos)
- 		return;
- 
-diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-index 4b608f5..bc1b54d 100644
---- a/include/linux/pci_regs.h
-+++ b/include/linux/pci_regs.h
-@@ -507,6 +507,13 @@
- #define PCI_EXP_RTSTA		32	/* Root Status */
- #define PCI_EXP_RTSTA_PME	0x10000 /* PME status */
- #define PCI_EXP_RTSTA_PENDING	0x20000 /* PME pending */
-+/*
-+ * Note that the following PCI Express 'Capability Structure' registers
-+ * were introduced with 'Capability Version' 0x2 (v2).  These registers
-+ * do not exist, and thus should not be attempted to be accesses, by
-+ * PCI Express v1 devices (see pci_pcie_cap2() for use in qualifying
-+ * PCI Express v2 capability related features).
-+ */
- #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
- #define  PCI_EXP_DEVCAP2_ARI	0x20	/* Alternative Routing-ID */
- #define  PCI_EXP_DEVCAP2_LTR	0x800	/* Latency tolerance reporting */
++/* Default shits for P2P I/O and MMIO bar minimal alignment shifts */
++#define PCI_DEFAULT_IO_ALIGN_SHIFT	12	/* 4KB  */
++#define PCI_DEFAULT_MEM_ALIGN_SHIFT	20	/* 1MB  */
++#define PCI_DEFAULT_PMEM_ALIGN_SHIFT	20	/* 1MB */
++
+ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
++	int io_align_shift;		/* P2P I/O bar minimal alignment shift  */
++	int mem_align_shift;		/* P2P MMIO bar minimal alignment shift */
++	int pmem_align_shift;		/* P2P prefetchable MMIO bar minimal alignment shift */
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+-- 
+1.7.9.5
 
