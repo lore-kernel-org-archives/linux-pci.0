@@ -1,59 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:54335 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754144Ab2FMQUJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2012 12:20:09 -0400
-Message-ID: <4FD8BDB4.5070000@wwwdotorg.org>
-Date: Wed, 13 Jun 2012 10:20:04 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 07/10] ARM: tegra: pcie: Add device tree support
-References: <1339427118-32263-1-git-send-email-thierry.reding@avionic-design.de> <1339427118-32263-8-git-send-email-thierry.reding@avionic-design.de> <4FD66410.7090001@wwwdotorg.org> <20120612062124.GE4040@avionic-0098.adnet.avionic-design.de> <4FD763C5.3090500@wwwdotorg.org> <20120612172041.GA28010@avionic-0098.adnet.avionic-design.de> <4FD7A36B.9090409@wwwdotorg.org> <20120613063422.GC31001@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120613063422.GC31001@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e31.co.us.ibm.com ([32.97.110.149]:53112 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472Ab2F0QCR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jun 2012 12:02:17 -0400
+Received: from /spool/local
+	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Wed, 27 Jun 2012 10:02:15 -0600
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id C3727C9231E
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 10:49:00 -0400 (EDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5REmtKx7995536
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 10:48:56 -0400
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5REmrP9013279
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 08:48:54 -0600
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
+Cc: yinghai@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH V4 1/2] PCI: pcibus address to resource converting take bus directly
+Date: Wed, 27 Jun 2012 22:48:44 +0800
+Message-Id: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/13/2012 12:34 AM, Thierry Reding wrote:
-> * Stephen Warren wrote:
-...
->> I think you also need a property to specify the exact port
->> layout; the Tegra20 controller supports:
->> 
->> 1 x4 port 2 x2 ports (you can choose to use only 1 of these I
->> assume)
->> 
->> So just because only 1 of the ports is enabled, doesn't imply
->> it's x4; it could still be x2.
->> 
->> Tegra30 has more options.
-> 
-> Both the upstream and downstream drivers currently hard-code this
-> to dual and 411 (I assume that means 1x4, 2x1?) configurations for
-> Tegra20 and Tegra30 respectively. Unfortunately the register
-> AFI_PCIE_CONFIG isn't documented on Tegra20 at all and for Tegra30
-> lists only the valid configurations (see 28.4.1.5 PCIe CONFIG) but
-> not the corresponding encodings.
-> 
-> Maybe a good name for the new property would be "num-lanes". I also
-> wonder if this property would be better off in the parent node,
-> which would make it easier to check for valid configurations.
-> Otherwise the code would have to collect the settings of all the
-> ports and check if the combination is valid. Then again, having
-> num-lanes in the parent with one cell for each controller isn't
-> very nice if each controller can be individually disabled.
+For allocating resource under bus path, we do have dev pass along,
+and we could just use bus instead. Also, we'd like to make function
+find_pci_host_bridge() global so that some platforms (e.g. PPC) can
+access the pci host bridge directly.
 
-Indeed, since the register that controls this is in the main register
-set rather than the per-port register set, it does seem like a good
-idea to put the property in the main node, not the per-port node.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host-bridge.c |   34 +++++++++++++++++++++-------------
+ include/linux/pci.h       |    4 ++++
+ 2 files changed, 25 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..4ccf477 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -9,22 +9,19 @@
+ 
+ #include "pci.h"
+ 
+-static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
++static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus;
+-
+-	bus = dev->bus;
+ 	while (bus->parent)
+ 		bus = bus->parent;
+ 
+ 	return bus;
+ }
+ 
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus = find_pci_root_bus(dev);
++	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ 
+-	return to_pci_host_bridge(bus->bridge);
++	return to_pci_host_bridge(root_bus->bridge);
+ }
+ 
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+@@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+ 	return res1->start <= res2->start && res1->end >= res2->end;
+ }
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
++void __pcibios_resource_to_bus(struct pci_bus *bus,
++				      struct pci_bus_region *region,
++				      struct resource *res)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 	region->start = res->start - offset;
+ 	region->end = res->end - offset;
+ }
++void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
++			     struct resource *res)
++{
++	__pcibios_resource_to_bus(dev->bus, region, res);
++}
+ EXPORT_SYMBOL(pcibios_resource_to_bus);
+ 
+ static bool region_contains(struct pci_bus_region *region1,
+@@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
++static void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
++				      struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 	res->start = region->start + offset;
+ 	res->end = region->end + offset;
+ }
++void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++			     struct pci_bus_region *region)
++{
++	__pcibios_bus_to_resource(dev->bus, res, region);
++}
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fefb4e1..2b559f1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -385,6 +385,7 @@ struct pci_host_bridge {
+ };
+ 
+ #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
+@@ -657,6 +658,9 @@ void pci_fixup_cardbus(struct pci_bus *);
+ 
+ /* Generic PCI functions used internally */
+ 
++void __pcibios_resource_to_bus(struct pci_bus *bus,
++			       struct pci_bus_region *region,
++			       struct resource *res);
+ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 			     struct resource *res);
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-- 
+1.7.9.5
+
