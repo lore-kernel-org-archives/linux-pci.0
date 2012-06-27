@@ -1,80 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55461 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755965Ab2FYUyr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Jun 2012 16:54:47 -0400
-Subject: Re: [PATCH] pci: support alignments upto 8Gb in pbus_size_mem()
-From: Nikhil P Rao <nikhil.rao@intel.com>
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:53008 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159Ab2F0CW6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2012 22:22:58 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 27 Jun 2012 07:52:55 +0530
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5R2MrAk10355098
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 07:52:53 +0530
+Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5R7q9Sc010253
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 17:52:10 +1000
+Date: Wed, 27 Jun 2012 10:22:51 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-In-Reply-To: <CAErSpo7AWQCofnTRhtMKVP3pm_BDq9v+axGpide0RbmignsV9A@mail.gmail.com>
-References: <1340222160.77018.19.camel@localhost.localdomain>
-	 <1340322477.56127.2.camel@localhost.localdomain>
-	 <CAErSpo7AWQCofnTRhtMKVP3pm_BDq9v+axGpide0RbmignsV9A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 25 Jun 2012 13:54:47 -0700
-Message-ID: <1340657687.36341.178.camel@localhost.localdomain>
-Mime-Version: 1.0
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Ram Pai <linuxram@us.ibm.com>
+Subject: Re: One question about the useage of pci_dev->resource[]
+Message-ID: <20120627022250.GA14772@richard>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <20120620084515.GA22809@richard>
+ <20120626015740.GA8128@richard>
+ <CAErSpo4_qy59KS1K+t5rU8P95NNR8fB9x-ufe8VB8deGriOZ9A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAErSpo4_qy59KS1K+t5rU8P95NNR8fB9x-ufe8VB8deGriOZ9A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2012-06-23 at 12:15 -0600, Bjorn Helgaas wrote:
-> On Thu, Jun 21, 2012 at 5:47 PM, Nikhil P Rao <nikhil.rao@intel.com> wrote:
-> > I ran into the "disabling BAR .." error message when
-> > trying to use a 8Gb PCIe card on a system with a BIOS
-> > that didnt have support for BAR size > 2Gb.
-> 
-> So the BIOS left the 8Gb BAR unassigned, and you got the "disabling
-> BAR ... (bad alignment)" message when Linux tried to enable it?
+On Tue, Jun 26, 2012 at 06:16:08AM -0600, Bjorn Helgaas wrote:
+>On Mon, Jun 25, 2012 at 7:57 PM, Richard Yang
+><weiyang@linux.vnet.ibm.com> wrote:
+>> On Wed, Jun 20, 2012 at 04:45:15PM +0800, Richard Yang wrote:
+>>>All,
+>>>
+>>>I want to confirm something for the pci_dev->resource[].
+>>>
+>>>As in the definition in the pci.h, this resource array is divided into
+>>>several parts.
+>>>    0-5  for standard PCI resources
+>>>    6    for ROM resource
+>>>    7-10 for bridge resource( if no iov )
+>>>
+>>>
+>>>1. For P2P bridge, 0-5 is left empty?
+>>>2. If so, in code pci_setup_device(), I think it set the wrong resource.
+>>>   It call pci_read_bases(dev, 2, PCI_ROM_ADDRESS1), for a p2p bridge.
+>>>   And in pci_read_bases(), BAR information is retrieved and set to
+>>>   pci_dev->resource[0|1].
+>>>3. If pci_setup_device() just set first two resource, the child bus will
+>>>   point to empty resource.
+>>>   In pci_alloc_child_bus(), child->resource[0-3] will be point to
+>>>   bridge->resource[7-10], which is not set in pci_setup_device().
+>>>4. Another question is, is there any convention for pci_bus->resource[].
+>>>   [0] for io, [1] for mem, [2] for prefetch?
+>> All,
+>>
+>> I go through the code again and find pci_dev->resource[7-10] is used for
+>> io/mem base/limit, which is used by the bridge to determine whether it
+>> will forward one pci transaction.
+>>
+>> So pci_dev->[0-1] is used by the bridge's driver?
+>
+>Per the PCI-to-PCI Bridge spec v1.2, config space for type 1 devices
+>(bridges) has two BARs in addition to the I/O, mem, and prefetchable
+>mem windows.  These two BARs are optional and can be used for
+>device-specific configuration of the bridge itself.  This is unrelated
+>to forwarding transactions.  See sec 3.2.5.1.
+>
+>The bridge consumes the address space described by the windows and
+>forwards it to its secondary interface.  It also consumes the address
+>space described by those BARs, without forwarding it.  Therefore, we
+>have to read the BARs to make sure we don't allocate that space to
+>anything else.
+>
+>There *could* be device-specific bridge drivers that actually do
+>something with those BARs, but I'm not aware of any in Linux.
+Thanks for your confirmation. :-)
+>
+>Bjorn
 
-Yes.
-
-> How do we know 8Gb is the correct new limit?  Are we going to be
-> fixing this again when we see a 16Gb or a 32Gb BAR?  Do we need a
-> better algorithm that doesn't have a limit like this?
-> 
-
-The original error message seems applicable to 32bit archs. and not to
-64 bit archs. How about the patch below - is aligns[44] (256bytes more)
-acceptable ?
-
-
-From: Nikhil P Rao <nikhil.rao@intel.com>
-Date: Mon, 25 Jun 2012 13:33:55 -0700
-Subject: [PATCH] pci: fix resource size check
-
-Support a PCI BAR alignment of > 2Gb, the original check was
-only applicable to 32 bit kernels,
-
-Signed-off-by: Nikhil P Rao <nikhil.rao@intel.com>
----
- drivers/pci/setup-bus.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8fa2d4b..9f8d9ea 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -780,7 +780,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_align, align, size, size0, size1;
--	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
-+	resource_size_t aligns[44];	/* Alignments from 1Mb to 2^63 */
- 	int order, max_order;
- 	struct resource *b_res = find_free_bus_resource(bus, type);
- 	unsigned int mem64_mask = 0;
-@@ -819,7 +819,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			/* For bridges size != alignment */
- 			align = pci_resource_alignment(dev, r);
- 			order = __ffs(align) - 20;
--			if (order > 11) {
-+			if ((sizeof(size_t) == 4 && order > 11) ||
-+					(sizeof(size_t) == 8 && order > 43)) {
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR "
- 					 "(bad alignment %#llx)\n", i, r,
- 					 (unsigned long long) align);
 -- 
-1.7.1
+Richard Yang
+Help you, Help me
 
