@@ -1,131 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:62114 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752858Ab2FSSbj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 14:31:39 -0400
-Received: by pbbrp8 with SMTP id rp8so10001076pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 19 Jun 2012 11:31:39 -0700 (PDT)
+Received: from e35.co.us.ibm.com ([32.97.110.153]:43067 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744Ab2F1ECH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jun 2012 00:02:07 -0400
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Wed, 27 Jun 2012 22:02:04 -0600
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 310A5C40003
+	for <linux-pci@vger.kernel.org>; Thu, 28 Jun 2012 04:00:51 +0000 (WET)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5S40CQD144318
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 22:00:29 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5S3xtUG025137
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2012 21:59:56 -0600
+Date: Thu, 28 Jun 2012 11:59:53 +0800
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, yinghai@kernel.org,
+	benh@kernel.crashing.org
+Subject: Re: [PATCH V4 1/2] PCI: pcibus address to resource converting take
+ bus directly
+Message-ID: <20120628035953.GA1637@shangw>
+Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
+References: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
+ <CAErSpo4u6HKdVqaaiL5=GSWRXiVfyfJ7EsnkAwGz6KvKrqaM=w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1340111732-6276-11-git-send-email-jiang.liu@huawei.com>
-References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
-	<1340111732-6276-11-git-send-email-jiang.liu@huawei.com>
-Date: Tue, 19 Jun 2012 11:31:38 -0700
-Message-ID: <CAE9FiQUmv310OQg4dJSSrkg79av6kz38EYiNoRTzHRjGVyLzZQ@mail.gmail.com>
-Subject: Re: [PATCH v8 10/12] x86/PCI: refine __pci_mmcfg_init() for better
- code readability
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAErSpo4u6HKdVqaaiL5=GSWRXiVfyfJ7EsnkAwGz6KvKrqaM=w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 6:15 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> Refine __pci_mmcfg_init() for better code readability.
+>> For allocating resource under bus path, we do have dev pass along,
+>> and we could just use bus instead. Also, we'd like to make function
+>> find_pci_host_bridge() global so that some platforms (e.g. PPC) can
+>> access the pci host bridge directly.
 >
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  arch/x86/pci/mmconfig-shared.c |   51 ++++++++++++++++++---------------------
->  1 files changed, 24 insertions(+), 27 deletions(-)
+>This patch appears to have multiple unrelated changes:
 >
-> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-> index 870ed3f..f8c967c 100644
-> --- a/arch/x86/pci/mmconfig-shared.c
-> +++ b/arch/x86/pci/mmconfig-shared.c
-> @@ -545,8 +545,6 @@ static void __init pci_mmcfg_reject_broken(int early)
->        }
->  }
+>  - change "struct pci_bus *bus" to "struct pci_bus *root_bus"
+>  - change find_pci_host_bridge() argument from dev to bus
+>  - fiddle with pcibios_bus_to_resource() and pcibios_resource_to_bus()
 >
-> -static int __initdata known_bridge;
-> -
->  static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
->                                        struct acpi_mcfg_allocation *cfg)
->  {
-> @@ -618,28 +616,7 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
->
->  static void __init __pci_mmcfg_init(int early)
->  {
-> -       /* MMCONFIG disabled */
-> -       if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-> -               return;
-> -
-> -       /* MMCONFIG already enabled */
-> -       if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
-> -               return;
-> -
-> -       /* for late to exit */
-> -       if (known_bridge)
-> -               return;
-> -
-> -       if (early) {
-> -               if (pci_mmcfg_check_hostbridge())
-> -                       known_bridge = 1;
-> -       }
-> -
-> -       if (!known_bridge)
-> -               acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-> -
->        pci_mmcfg_reject_broken(early);
-> -
->        if (list_empty(&pci_mmcfg_list))
->                return;
->
-> @@ -659,19 +636,39 @@ static void __init __pci_mmcfg_init(int early)
->                free_all_mmcfg();
->                pci_mmcfg_arch_init_failed = true;
->        }
-> -
-> -       if (!early && !known_bridge)
-> -               acpi_pci_cache_mcfg();
->  }
->
-> +static int __initdata known_bridge;
-> +
->  void __init pci_mmcfg_early_init(void)
->  {
-> -       __pci_mmcfg_init(1);
-> +       if (pci_probe & PCI_PROBE_MMCONF) {
-> +               if (pci_mmcfg_check_hostbridge())
-> +                       known_bridge = 1;
-> +               else
-> +                       acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-> +               __pci_mmcfg_init(1);
-> +       }
->  }
->
->  void __init pci_mmcfg_late_init(void)
->  {
-> +       /* MMCONFIG disabled */
-> +       if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-> +               return;
-> +
-> +       /* MMCONFIG already enabled */
-> +       if (!(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
-> +               return;
-> +
-> +       if (known_bridge)
-> +               return;
-> +
-> +       acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
->        __pci_mmcfg_init(0);
-> +
-> +       if (!(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
-> +               acpi_pci_cache_mcfg();
->  }
->
->  static int __init pci_mmcfg_late_insert_resources(void)
 
-looks like MCFG is not cached when the entries is reserved through e820.
-but it is cached when entries is reserved through ACPI ...
+Leave those questions to Yinghai.
 
-Please check if it is possible just not cache MCFG.
+>These should be split out to make your patches easier to review.
+>
 
-Thanks
+I will split it for easy review :-)
 
-Yinghai
+>What's the rationale for preferring the pci_bus over the pci_dev?
+>
+
+We probablly need retrieve the pci_host_bridge through pci_bus
+and pci_dev. When converting pci_dev to pci_host_bridge, we can
+simply pass "pci_dev->bus".
+
+Thanks,
+Gavin
+
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/host-bridge.c |   34 +++++++++++++++++++++-------------
+>>  include/linux/pci.h       |    4 ++++
+>>  2 files changed, 25 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>> index a68dc61..4ccf477 100644
+>> --- a/drivers/pci/host-bridge.c
+>> +++ b/drivers/pci/host-bridge.c
+>> @@ -9,22 +9,19 @@
+>>
+>>  #include "pci.h"
+>>
+>> -static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+>> +static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>>  {
+>> -       struct pci_bus *bus;
+>> -
+>> -       bus = dev->bus;
+>>        while (bus->parent)
+>>                bus = bus->parent;
+>>
+>>        return bus;
+>>  }
+>>
+>> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+>> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>>  {
+>> -       struct pci_bus *bus = find_pci_root_bus(dev);
+>> +       struct pci_bus *root_bus = find_pci_root_bus(bus);
+>>
+>> -       return to_pci_host_bridge(bus->bridge);
+>> +       return to_pci_host_bridge(root_bus->bridge);
+>>  }
+>>
+>>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>> @@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+>>        return res1->start <= res2->start && res1->end >= res2->end;
+>>  }
+>>
+>> -void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>> -                            struct resource *res)
+>> +void __pcibios_resource_to_bus(struct pci_bus *bus,
+>> +                                     struct pci_bus_region *region,
+>> +                                     struct resource *res)
+>>  {
+>> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+>> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+>>        struct pci_host_bridge_window *window;
+>>        resource_size_t offset = 0;
+>>
+>> @@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>>        region->start = res->start - offset;
+>>        region->end = res->end - offset;
+>>  }
+>> +void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>> +                            struct resource *res)
+>> +{
+>> +       __pcibios_resource_to_bus(dev->bus, region, res);
+>> +}
+>>  EXPORT_SYMBOL(pcibios_resource_to_bus);
+>>
+>>  static bool region_contains(struct pci_bus_region *region1,
+>> @@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
+>>        return region1->start <= region2->start && region1->end >= region2->end;
+>>  }
+>>
+>> -void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>> -                            struct pci_bus_region *region)
+>> +static void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+>> +                                     struct pci_bus_region *region)
+>>  {
+>> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+>> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+>>        struct pci_host_bridge_window *window;
+>>        resource_size_t offset = 0;
+>>
+>> @@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>>        res->start = region->start + offset;
+>>        res->end = region->end + offset;
+>>  }
+>> +void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>> +                            struct pci_bus_region *region)
+>> +{
+>> +       __pcibios_bus_to_resource(dev->bus, res, region);
+>> +}
+>>  EXPORT_SYMBOL(pcibios_bus_to_resource);
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index fefb4e1..2b559f1 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -385,6 +385,7 @@ struct pci_host_bridge {
+>>  };
+>>
+>>  #define        to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+>> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
+>>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>>                     void (*release_fn)(struct pci_host_bridge *),
+>>                     void *release_data);
+>> @@ -657,6 +658,9 @@ void pci_fixup_cardbus(struct pci_bus *);
+>>
+>>  /* Generic PCI functions used internally */
+>>
+>> +void __pcibios_resource_to_bus(struct pci_bus *bus,
+>> +                              struct pci_bus_region *region,
+>> +                              struct resource *res);
+>>  void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>>                             struct resource *res);
+>>  void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>> --
+>> 1.7.9.5
+>>
+>
+
