@@ -1,68 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:42899 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706Ab2FSNX0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 09:23:26 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Feng Tang <feng.tang@intel.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v8 11/12] ACPI: mark acpi_sfi_table_parse() as __init
-Date: Tue, 19 Jun 2012 21:15:31 +0800
-Message-ID: <1340111732-6276-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
-References: <1340111732-6276-1-git-send-email-jiang.liu@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gate.crashing.org ([63.228.1.57]:50141 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932163Ab2F1HFV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jun 2012 03:05:21 -0400
+Message-ID: <1340866985.20977.62.camel@pasglop>
+Subject: Re: [PATCH V4 1/2] PCI: pcibus address to resource converting take
+ bus directly
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, yinghai@kernel.org
+Date: Thu, 28 Jun 2012 17:03:05 +1000
+In-Reply-To: <CAErSpo4u6HKdVqaaiL5=GSWRXiVfyfJ7EsnkAwGz6KvKrqaM=w@mail.gmail.com>
+References: <1340808525-24996-1-git-send-email-shangw@linux.vnet.ibm.com>
+	 <CAErSpo4u6HKdVqaaiL5=GSWRXiVfyfJ7EsnkAwGz6KvKrqaM=w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mark function acpi_sfi_table_parse() as __init to avoid warning messages:
-WARNING: vmlinux.o(.text+0x4cd2d2): Section mismatch in reference from the
-function acpi_sfi_table_parse.clone.0() to the function
-.init.text:pci_parse_mcfg()
+On Wed, 2012-06-27 at 12:15 -0600, Bjorn Helgaas wrote:
+> 
+> This patch appears to have multiple unrelated changes:
+> 
+>   - change "struct pci_bus *bus" to "struct pci_bus *root_bus"
+>   - change find_pci_host_bridge() argument from dev to bus
+>   - fiddle with pcibios_bus_to_resource() and
+> pcibios_resource_to_bus()
+> 
+> These should be split out to make your patches easier to review.
+> 
+> What's the rationale for preferring the pci_bus over the pci_dev? 
 
-Function acpi_sfi_table_parse() calls acpi_table_parse() and pci_parse_mcfg(),
-which are both marked as __init. And currently acpi_sfi_table_parse() is used
-by MMCONFIG to scan MCFG table at boot time only, so it's safe to mark
-acpi_sfi_table_parse() as __init.
+We really want to stop doing that crap and put a pointer to the host
+bridge directly in each pci_dev (and maybe pci_bus).
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- include/linux/sfi_acpi.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+We already do that on powerpc via sysdata (pointing to our private
+structure but the plan is to move that toward struct pci_host_bridge
+eventually).
 
-diff --git a/include/linux/sfi_acpi.h b/include/linux/sfi_acpi.h
-index c4a5a8c..631af63 100644
---- a/include/linux/sfi_acpi.h
-+++ b/include/linux/sfi_acpi.h
-@@ -66,7 +66,7 @@ extern int sfi_acpi_table_parse(char *signature, char *oem_id,
- 				char *oem_table_id,
- 				int (*handler)(struct acpi_table_header *));
- 
--static inline int acpi_sfi_table_parse(char *signature,
-+static inline int __init acpi_sfi_table_parse(char *signature,
- 				int (*handler)(struct acpi_table_header *))
- {
- 	if (!acpi_table_parse(signature, handler))
-@@ -83,7 +83,7 @@ static inline int sfi_acpi_table_parse(char *signature, char *oem_id,
- 	return -1;
- }
- 
--static inline int acpi_sfi_table_parse(char *signature,
-+static inline int __init acpi_sfi_table_parse(char *signature,
- 				int (*handler)(struct acpi_table_header *))
- {
- 	return acpi_table_parse(signature, handler);
--- 
-1.7.1
+We'll need host bridge access to deal with resource "offsets" in a few
+more places and having to do a lookup is just a pain.
+
+For example, see my earlier email about the issues with the way we
+calculate the minimum address to assign devices. This is currently
+broken when we have an offset and to fix it we'll probably want to deal
+with offsets all the way down in the resource allocation code.
+
+Cheers,
+Ben.
 
 
