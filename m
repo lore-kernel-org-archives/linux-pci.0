@@ -1,118 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:55182 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750847Ab2FGFOQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2012 01:14:16 -0400
-Received: by dady13 with SMTP id y13so337784dad.19
-        for <linux-pci@vger.kernel.org>; Wed, 06 Jun 2012 22:14:15 -0700 (PDT)
-Message-ID: <4FD0389F.7030400@ozlabs.ru>
-Date: Thu, 07 Jun 2012 15:14:07 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-MIME-Version: 1.0
-To: Jan Kiszka <jan.kiszka@siemens.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Alexander Graf <agraf@suse.de>, kvm <kvm@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Mark INTx masking support of Chelsio T310 10GbE
- NIC as broken
-References: <4FBF90E5.8030800@siemens.com> <4FCE19DA.1070802@siemens.com>
-In-Reply-To: <4FCE19DA.1070802@siemens.com>
-Content-Type: text/plain; charset=KOI8-R
+Received: from mx1.redhat.com ([209.132.183.28]:61308 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751012Ab2F1UZ2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jun 2012 16:25:28 -0400
+Subject: Re: [PATCH 3/9] arm/PCI: move final fixup quirks from __init to
+ __devinit
+From: Myron Stowe <mstowe@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	linux@arm.linux.org.uk, ralf@linux-mips.org, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, linux-kernel@vger.kernel.org
+In-Reply-To: <CAErSpo5yNxjjBVaTXjAKCY4SfRWj7uXK2cS3BtkugmoF4fYn6g@mail.gmail.com>
+References: <20120621202415.16865.6226.stgit@amt.stowe>
+	 <20120621202435.16865.1340.stgit@amt.stowe>
+	 <CAErSpo5yNxjjBVaTXjAKCY4SfRWj7uXK2cS3BtkugmoF4fYn6g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 28 Jun 2012 14:25:20 -0600
+Message-ID: <1340915120.2411.27.camel@zim.stowe>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/06/12 00:38, Jan Kiszka wrote:
-> On 2012-05-25 16:02, Jan Kiszka wrote:
->> According to Alexey, the T310 does not properly support INTx masking as
->> it fails to keep the PCI_STATUS_INTERRUPT bit updated once the interrupt
->> is masked. Mark this adapter as broken so that pci_intx_mask_supported
->> won't report it as compatible.
->>
->> Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
->> ---
->>
->> Alexey, please test if this catches your case correctly.
+On Tue, 2012-06-26 at 16:33 -0600, Bjorn Helgaas wrote:
+> On Thu, Jun 21, 2012 at 2:24 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> > The PCI subsystem's final fixups are executed once during boot, after the
+> > pci-device is found.  As long as the system does not support hot-plug,
+> > specifying __init is fine.
+> >
+> > With hot-plug, either physically based hot-plug events or pseudo hot-plug
+> > events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
+> > PCI bus during run time and have it rediscovered which will require the
+> > call of the fixups again in order for the device to function properly.
+> >
+> > This patch prepares specific quirk(s) for use with hot-plug events.
+> >
+> > Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> > ---
+> >
+> >  arch/arm/mach-iop32x/n2100.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/arch/arm/mach-iop32x/n2100.c b/arch/arm/mach-iop32x/n2100.c
+> > index 5a7ae91..04c4110 100644
+> > --- a/arch/arm/mach-iop32x/n2100.c
+> > +++ b/arch/arm/mach-iop32x/n2100.c
+> > @@ -126,7 +126,7 @@ static struct hw_pci n2100_pci __initdata = {
+> >  * the ->broken_parity_status flag for both ports so that the r8169
+> >  * driver knows it should ignore error interrupts.
+> >  */
+> > -static void n2100_fixup_r8169(struct pci_dev *dev)
+> > +static void __devinit n2100_fixup_r8169(struct pci_dev *dev)
 > 
-> Alexey? Ping for testing.
+> These actually move functions from normal text to __devinit, not from
+> __init to __devinit.
 
-
-Sorry, was in vacation and then a bit busy.
-Yes, that works, thanks. It just a device ID is wrong, should be 0x0030 rather than 0x0010 in your patch - may be 0x10 is broken too, I do not know, mine is 0x30 :)
-
-Here:
-
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010,
->> +			quirk_broken_intx_masking);
-
-
-
-
+Yes (as I hang my head sheepishly).  What got me started down this path
+was seeing the recent series by Sabastian Andrzej
+( http://marc.info/?l=linux-pci&m=133875179103880&w=2 ).
 > 
-> Jan
+> That should be safe for most quirks (although enable, suspend, resume,
+> and resume_early quirks can be called after we free initmem, even if
+> we have CONFIG_HOTPLUG=n), but given the discussion about whether we
+> should even bother with __devinit any more, I think I'll hold off on
+> these for now.  If we were to get rid of __devinit, these would all
+> have to revert to being normal text.
+
+Agreed, and I've only recently (after posting this series) became aware
+of James Bottomley's thoughts about __devinit so lets skip these changes
+within the series.  I don't want to start a lot of unnecessary churn if
+we end up just dropping __devinit altogether.
+
+It's the last patch in the series that is of the most interest - trying
+to solve PCI's "final" quirks with respect to hot-plug events and the
+asymmetry I ended up discovering while working that issue.  Wish we
+would have received some feedback from others about that.
+
+Thanks,
+ Myron
+
+Thanks,
+ Myron
 > 
->>
->>  drivers/pci/pci.c    |    3 +++
->>  drivers/pci/quirks.c |   12 ++++++++++++
->>  include/linux/pci.h  |    2 ++
->>  3 files changed, 17 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 8f16900..3a1aeb5 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -2876,6 +2876,9 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
->>  	bool mask_supported = false;
->>  	u16 orig, new;
->>  
->> +	if (dev->broken_intx_masking)
->> +		return false;
->> +
->>  	pci_cfg_access_lock(dev);
->>  
->>  	pci_read_config_word(dev, PCI_COMMAND, &orig);
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 2a75216..151e174 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -2929,6 +2929,18 @@ static void __devinit disable_igfx_irq(struct pci_dev *dev)
->>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
->>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
->>  
->> +/*
->> + * Some devices may pass our check in pci_intx_mask_supported if
->> + * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
->> + * support this feature.
->> + */
->> +static void __devinit quirk_broken_intx_masking(struct pci_dev *dev)
->> +{
->> +	dev->broken_intx_masking = 1;
->> +}
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0010,
->> +			quirk_broken_intx_masking);
->> +
->>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->>  			  struct pci_fixup *end)
->>  {
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 17b7b5b..c7cfd73 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -324,6 +324,8 @@ struct pci_dev {
->>  	unsigned int    is_hotplug_bridge:1;
->>  	unsigned int    __aer_firmware_first_valid:1;
->>  	unsigned int	__aer_firmware_first:1;
->> +	unsigned int	broken_intx_masking:1;	/* device's INTx masking
->> +						   support is not working */
->>  	pci_dev_flags_t dev_flags;
->>  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
->>  
-> 
+> >  {
+> >        if (dev->bus->number == 0 &&
+> >            (dev->devfn == PCI_DEVFN(1, 0) ||
+> >
 
 
--- 
-Alexey
