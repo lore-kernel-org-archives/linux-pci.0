@@ -1,98 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:44659 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755483Ab2F1JpW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jun 2012 05:45:22 -0400
+Received: by gglu4 with SMTP id u4so1658343ggl.19
+        for <linux-pci@vger.kernel.org>; Thu, 28 Jun 2012 02:45:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAOPLpQdLSfHn4=zHVYpZMcw1cHPwtV3He-Sxng_yjGKwdpBK8A@mail.gmail.com>
-References: <CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
-	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
-	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
-	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
-	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
-	<CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
-	<CAErSpo4x8+M6hGAqJR2rjGEGk2AnnZfJkmaJrJedzhnKiRf2qw@mail.gmail.com>
-	<CAOPLpQchY4gMYaw-Ew5uujD9JCu==VLjQ7Z_OjrT6akTgX4+iA@mail.gmail.com>
-	<CAErSpo6JWKoFcbsLnyzPGXLKssobfudjcYMvYzfEpYZ-bzCHPg@mail.gmail.com>
-	<CAE9FiQWOUZhUQYc66ceG5EMWQ0uO7L3odh0+XwRsLV2Bza2ZpQ@mail.gmail.com>
-	<20120620193438.GB2248@gmail.com>
-	<CAE9FiQWUo3uffM4NCUORJXR1pdPaf0E1Sws1hwVNAibHg5_yjQ@mail.gmail.com>
-	<CAE9FiQWKxe9VYvrQy5h4RP2dS7YHHXu4icjC+KPipkRKbsZN1g@mail.gmail.com>
-	<CAOPLpQeOEPECiq_D7WxYMoWk0AbS8vXLJqhm1EPijGdH52TVvQ@mail.gmail.com>
-	<CAOPLpQdLSfHn4=zHVYpZMcw1cHPwtV3He-Sxng_yjGKwdpBK8A@mail.gmail.com>
-Date: Thu, 21 Jun 2012 11:11:20 -0700
-Message-ID: <CAE9FiQVncAVLGNDQYxGBxid=_PpLbzouGELHumnqvQ9_d1v3SA@mail.gmail.com>
-Subject: Re: SNB PCI root information
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ulrich Drepper <drepper@gmail.com>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <1340782554-9865-1-git-send-email-airlied@gmail.com>
+References: <1340782554-9865-1-git-send-email-airlied@gmail.com>
+Date: Thu, 28 Jun 2012 10:45:21 +0100
+Message-ID: <CAPM=9tys7x5CmK-nrETA93B-9xS1uschZSgrb14-a9k9s_DNMA@mail.gmail.com>
+Subject: Re: [PATCH 1/3] pci_regs: define LNKSTA2 pcie cap + bits.
+From: Dave Airlie <airlied@gmail.com>
+To: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 9:22 AM, Ulrich Drepper <drepper@gmail.com> wrote:
-> On Thu, Jun 21, 2012 at 8:17 AM, Ulrich Drepper <drepper@gmail.com> wrote:
->> On Wed, Jun 20, 2012 at 11:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> please check -v3, and it will add 40 lines.
->>
->> Won't this version print out something like
->>
->>  PCI: unknown option `busnum_node=xx:yy'
+On Wed, Jun 27, 2012 at 8:35 AM, Dave Airlie <airlied@gmail.com> wrote:
+> From: Dave Airlie <airlied@redhat.com>
 >
-> It does.
+> We need these for detecting the max link speed for drm drivers.
 
-yes, but only when you have pci=busnum_node...
+Hi Bjorn,
 
-i changed grammar to only "busnum_node=..."
+Can you ack this patch so I can carry it in the drm-next tree? we need
+these regs for getting the PCIE v2/v3 supported link speeds.
+
+Thanks,
+Dave.
 
 >
-> If you apply the following patch on top of your version 3 patch it
-> seems to work and is slightly more efficient.
+> Signed-off-by: Dave Airlie <airlied@redhat.com>
+> ---
+>  include/linux/pci_regs.h |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
 >
+> diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
+> index 4b608f5..7f04132 100644
+> --- a/include/linux/pci_regs.h
+> +++ b/include/linux/pci_regs.h
+> @@ -521,6 +521,11 @@
+>  #define  PCI_EXP_OBFF_MSGA_EN  0x2000  /* OBFF enable with Message type A */
+>  #define  PCI_EXP_OBFF_MSGB_EN  0x4000  /* OBFF enable with Message type B */
+>  #define  PCI_EXP_OBFF_WAKE_EN  0x6000  /* OBFF using WAKE# signaling */
+> +#define PCI_EXP_LNKCAP2                44      /* Link Capability 2 */
+> +#define  PCI_EXP_LNKCAP2_SLS_2_5GB 0x01        /* Current Link Speed 2.5GT/s */
+> +#define  PCI_EXP_LNKCAP2_SLS_5_0GB 0x02        /* Current Link Speed 5.0GT/s */
+> +#define  PCI_EXP_LNKCAP2_SLS_8_0GB 0x04        /* Current Link Speed 8.0GT/s */
+> +#define  PCI_EXP_LNKCAP2_CROSSLINK 0x100 /* Crosslink supported */
+>  #define PCI_EXP_LNKCTL2                48      /* Link Control 2 */
+>  #define PCI_EXP_SLTCTL2                56      /* Slot Control 2 */
 >
-> Signed-off-by: Ulrich Drepper <drepper@gmail.com>
+> --
+> 1.7.7.6
 >
-> diff -u b/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> --- b/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -494,16 +494,22 @@
->        return 0;
->  }
->
-> +static const char *busnum_node_param;
-> +
-> +static void remember_busnum_node(const char *str)
-> +{
-> +       busnum_node_param = str;
-> +}
-> +
->  int get_user_busnum_node(int busnum)
->  {
->        int bus, node, count;
-> -       char *p;
-> +       const char *p;
->
-> -       p = strstr(boot_command_line, "busnum_node=");
-> +       p = busnum_node_param;
->        if (!p)
->                return -1;
->
-> -       p += 12; /* strlen("busnum_node=") */
->        while (*p) {
->                count = 0;
->                if (sscanf(p, "%x:%x%n", &bus, &node, &count) != 2) {
-> @@ -607,6 +613,9 @@
->        } else if (!strcmp(str, "nocrs")) {
->                pci_probe |= PCI_ROOT_NO_CRS;
->                return NULL;
-> +       } else if (!strncmp(str, "busnum_node=", 12)) {
-> +               remember_busnum_node(str + 12);
-> +               return NULL;
->        } else if (!strcmp(str, "earlydump")) {
->                pci_early_dump_regs = 1;
->                return NULL;
-
-Yes, that would be better.
-
-Thanks
-
-Yinghai
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/dri-devel
