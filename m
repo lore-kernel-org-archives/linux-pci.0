@@ -1,44 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:41787 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753064Ab2FSSUL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2012 14:20:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
-References: <CAOPLpQfUm-2ENkbnYfXEn1nf9FHnaRk3aqQTSTBWb-CsfCUCFA@mail.gmail.com>
-	<CAE9FiQU=Uvj_OFYQLdddf8j59vE7D0aE9cdNZv7P8_Rn7=MmUQ@mail.gmail.com>
-	<CAErSpo57H_ZD_-Z8z9vD3c50My4Rejtc9gXXrxGxDtQomYmrSA@mail.gmail.com>
-	<CAOPLpQeJTfB2UNy3O9FgRCyZb=LyMqd0SOsz7qDM0Ur_sfeNhg@mail.gmail.com>
-	<CAE9FiQVzKr+nyBh=8-v+HEDF=7JqN2CqdTNx1=LHTq=c_OyZvg@mail.gmail.com>
-	<CAErSpo40SDii6PTNisAnsn6SoB7SzPUGztWAg9vaZZv+ByQsPw@mail.gmail.com>
-Date: Tue, 19 Jun 2012 11:20:10 -0700
-Message-ID: <CAE9FiQVDnS9n28GQrKVVTU7GiMtJZLFN1T9vmOm5oSysvMEVhQ@mail.gmail.com>
-Subject: Re: SNB PCI root information
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:44134 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932554Ab2F1Jzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jun 2012 05:55:35 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ulrich Drepper <drepper@gmail.com>, jbarnes@virtuousgeek.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	lenb@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH] PCI / PM: Restore the original behavior of pci_set_power_state()
+Date: Thu, 28 Jun 2012 12:01:02 +0200
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Linux PM mailing list <linux-pm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-pci" <linux-pci@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201206281201.02414.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 5:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> I'm not opposed to something like this, if people think it's useful.
->
-> This patch sets the node quite early, before we even look at the _PXM
-> information in pci_acpi_scan_root().  That means if the BIOS does
-> supply a _PXM method and the user gives this argument, the
-> user-supplied info is silently overwritten.  To me it would make more
-> sense to handle an option like this *after* we look for _PXM info.
-> That way it could be used to compensate for both missing and incorrect
-> _PXM info.
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
-yes, we can only let user input and hostbridge touch that array.
+Commit cc2893b6 (PCI: Ensure we re-enable devices on resume)
+addressed the problem with USB not being powered after resume on
+recent Lenovo machines, but it did that in a suboptimal way.
+Namely, it should have changed the relevant code paths only,
+which are pci_pm_resume_noirq() and pci_pm_restore_noirq() supposed
+to restore the device's power and standard configuration registers
+after system resume from suspend or hibernation.  Instead, however,
+it modified pci_set_power_state() which is executed in several
+other situations too.  That resulted in some undesirable effects,
+like attempting to change a device's power state in the same way
+multiple times in a row (up to as many as 4 times in a row in the
+snd_hda_intel driver).
 
-but i'd like to only handle missing _PXM case.
+Fix the bug addressed by commit cc2893b6 in an alternative way,
+by forcibly powering up all devices in pci_pm_default_resume_early(),
+which is called by pci_pm_resume_noirq() and pci_pm_restore_noirq()
+to restore the device's power and standard configuration registers,
+and modifying pci_pm_runtime_resume() to avoid the forcible power-up
+if not necessary.  Then, revert the changes made by commit cc2893b6
+to make the confusion introduced by it go away.
 
-If the BIOS provide wrong _PXM, that BIOS really should be fixed at first.
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/pci/pci-driver.c |   14 ++++++++------
+ drivers/pci/pci.c        |   19 ++++++++++++++++++-
+ drivers/pci/pci.h        |    1 +
+ 3 files changed, 27 insertions(+), 7 deletions(-)
 
-Yinghai
+Index: linux/drivers/pci/pci.c
+===================================================================
+--- linux.orig/drivers/pci/pci.c
++++ linux/drivers/pci/pci.c
+@@ -662,6 +662,19 @@ void pci_update_current_state(struct pci
+ }
+ 
+ /**
++ * pci_power_up - Put the given device into D0 forcibly
++ * @dev: PCI device to power up
++ */
++void pci_power_up(struct pci_dev *dev)
++{
++	if (platform_pci_power_manageable(dev))
++		platform_pci_set_power_state(dev, PCI_D0);
++
++	pci_raw_set_power_state(dev, PCI_D0);
++	pci_update_current_state(dev, PCI_D0);
++}
++
++/**
+  * pci_platform_power_transition - Use platform to change device power state
+  * @dev: PCI device to handle.
+  * @state: State to put the device into.
+@@ -707,7 +720,7 @@ static void __pci_start_power_transition
+  */
+ int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
+ {
+-	return state >= PCI_D0 ?
++	return state > PCI_D0 ?
+ 			pci_platform_power_transition(dev, state) : -EINVAL;
+ }
+ EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
+@@ -744,6 +757,10 @@ int pci_set_power_state(struct pci_dev *
+ 		 */
+ 		return 0;
+ 
++	/* Check if we're already there */
++	if (dev->current_state == state)
++		return 0;
++
+ 	__pci_start_power_transition(dev, state);
+ 
+ 	/* This device is quirked not to be put into D3, so
+Index: linux/drivers/pci/pci-driver.c
+===================================================================
+--- linux.orig/drivers/pci/pci-driver.c
++++ linux/drivers/pci/pci-driver.c
+@@ -459,16 +459,17 @@ static int pci_restore_standard_config(s
+ 	return 0;
+ }
+ 
++#endif
++
++#ifdef CONFIG_PM_SLEEP
++
+ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+ {
+-	pci_restore_standard_config(pci_dev);
++	pci_power_up(pci_dev);
++	pci_restore_state(pci_dev);
+ 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+ }
+ 
+-#endif
+-
+-#ifdef CONFIG_PM_SLEEP
+-
+ /*
+  * Default "suspend" method for devices that have no driver provided suspend,
+  * or not even a driver at all (second part).
+@@ -1050,7 +1051,8 @@ static int pci_pm_runtime_resume(struct
+ 	if (!pm || !pm->runtime_resume)
+ 		return -ENOSYS;
+ 
+-	pci_pm_default_resume_early(pci_dev);
++	pci_restore_standard_config(pci_dev);
++ 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+ 	__pci_enable_wake(pci_dev, PCI_D0, true, false);
+ 	pci_fixup_device(pci_fixup_resume, pci_dev);
+ 
+Index: linux/drivers/pci/pci.h
+===================================================================
+--- linux.orig/drivers/pci/pci.h
++++ linux/drivers/pci/pci.h
+@@ -67,6 +67,7 @@ struct pci_platform_pm_ops {
+ 
+ extern int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
+ extern void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
++extern void pci_power_up(struct pci_dev *dev);
+ extern void pci_disable_enabled_device(struct pci_dev *dev);
+ extern int pci_finish_runtime_suspend(struct pci_dev *dev);
+ extern int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
