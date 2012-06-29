@@ -1,114 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:21530 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753648Ab2FUJsG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2012 05:48:06 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v9 10/11] x86, PCI: refine __pci_mmcfg_init() for better code readability
-Date: Thu, 21 Jun 2012 17:37:02 +0800
-Message-ID: <1340271423-4352-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
-References: <1340271423-4352-1-git-send-email-jiang.liu@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:48136 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751529Ab2F2GsF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Jun 2012 02:48:05 -0400
+Received: from /spool/local
+	by e2.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Fri, 29 Jun 2012 02:48:05 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5T6m1GT9830866
+	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:48:01 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5TCIqbo011746
+	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 08:18:53 -0400
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
+Cc: bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
+	linuxram@us.ibm.com, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 7/7] pci: resource assignment based on p2p alignment
+Date: Fri, 29 Jun 2012 14:47:50 +0800
+Message-Id: <4a82175568f1ed2ca4e5c1842365943ebf261931.1340949637.git.shangw@linux.vnet.ibm.com>
+In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine __pci_mmcfg_init() for better code readability.
+The patch changes function pbus_size_io() and pbus_size_mem() to
+do resource (I/O, memory and prefetchable memory) reassignment
+based on the minimal alignments from the p2p bridge.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
 ---
- arch/x86/pci/mmconfig-shared.c |   46 ++++++++++++++++++---------------------
- 1 files changed, 21 insertions(+), 25 deletions(-)
+ drivers/pci/setup-bus.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 332fabd..ffe72b9 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -544,8 +544,6 @@ static void __init pci_mmcfg_reject_broken(int early)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8fa2d4b..52b60af 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -710,6 +710,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+ 	unsigned long size = 0, size0 = 0, size1 = 0;
+ 	resource_size_t children_add_size = 0;
++	resource_size_t io_align;
+ 
+ 	if (!b_res)
+  		return;
+@@ -735,13 +736,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 				children_add_size += get_res_add_size(realloc_head, r);
+ 		}
  	}
- }
- 
--static int __initdata known_bridge;
--
- static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
- 					struct acpi_mcfg_allocation *cfg)
- {
-@@ -617,28 +615,7 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
- 
- static void __init __pci_mmcfg_init(int early)
- {
--	/* MMCONFIG disabled */
--	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
--		return;
--
--	/* MMCONFIG already enabled */
--	if (!early && !(pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF))
--		return;
--
--	/* for late to exit */
--	if (known_bridge)
--		return;
--
--	if (early) {
--		if (pci_mmcfg_check_hostbridge())
--			known_bridge = 1;
--	}
--
--	if (!known_bridge)
--		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
--
- 	pci_mmcfg_reject_broken(early);
--
- 	if (list_empty(&pci_mmcfg_list))
++
++	io_align = pci_align_boundary(bus, IORESOURCE_IO);
+ 	size0 = calculate_iosize(size, min_size, size1,
+-			resource_size(b_res), 4096);
++			resource_size(b_res), io_align);
+ 	if (children_add_size > add_size)
+ 		add_size = children_add_size;
+ 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+ 		calculate_iosize(size, min_size, add_size + size1,
+-			resource_size(b_res), 4096);
++			resource_size(b_res), io_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window "
+@@ -751,11 +754,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
  		return;
- 
-@@ -660,14 +637,33 @@ static void __init __pci_mmcfg_init(int early)
  	}
- }
+ 	/* Alignment of the IO window is always 4K */
+-	b_res->start = 4096;
++	b_res->start = io_align;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
++		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+ 				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
+ 				 bus->secondary, bus->subordinate, size1-size0);
+@@ -785,10 +788,15 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	struct resource *b_res = find_free_bus_resource(bus, type);
+ 	unsigned int mem64_mask = 0;
+ 	resource_size_t children_add_size = 0;
++	resource_size_t mem_align;
++	int mem_align_shift;
  
-+static int __initdata known_bridge;
-+
- void __init pci_mmcfg_early_init(void)
- {
--	__pci_mmcfg_init(1);
-+	if (pci_probe & PCI_PROBE_MMCONF) {
-+		if (pci_mmcfg_check_hostbridge())
-+			known_bridge = 1;
-+		else
-+			acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-+		__pci_mmcfg_init(1);
-+	}
- }
+ 	if (!b_res)
+ 		return 0;
  
- void __init pci_mmcfg_late_init(void)
- {
--	__pci_mmcfg_init(0);
-+	/* MMCONFIG disabled */
-+	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-+		return;
++	mem_align = pci_align_boundary(bus, type);
++	mem_align_shift = __ffs(mem_align);
 +
-+	if (known_bridge)
-+		return;
-+
-+	/* MMCONFIG hasn't been enabled yet, try again */
-+	if (pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF) {
-+		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-+		__pci_mmcfg_init(0);
-+	}
- }
+ 	memset(aligns, 0, sizeof(aligns));
+ 	max_order = 0;
+ 	size = 0;
+@@ -818,8 +826,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ #endif
+ 			/* For bridges size != alignment */
+ 			align = pci_resource_alignment(dev, r);
+-			order = __ffs(align) - 20;
+-			if (order > 11) {
++			order = __ffs(align) - mem_align_shift;
++			if (order > (11 - (mem_align_shift - 20))) {
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR "
+ 					 "(bad alignment %#llx)\n", i, r,
+ 					 (unsigned long long) align);
+@@ -846,7 +854,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	for (order = 0; order <= max_order; order++) {
+ 		resource_size_t align1 = 1;
  
- static int __init pci_mmcfg_late_insert_resources(void)
+-		align1 <<= (order + 20);
++		align1 <<= (order + mem_align_shift);
+ 
+ 		if (!align)
+ 			min_align = align1;
 -- 
-1.7.1
-
+1.7.9.5
 
