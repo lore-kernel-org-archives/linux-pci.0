@@ -1,66 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:40871 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161Ab2FEGlN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2012 02:41:13 -0400
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:46547 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751258Ab2F2Gsr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Jun 2012 02:48:47 -0400
 Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 5 Jun 2012 05:43:40 +1000
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q555sl0F62324952
-	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 15:54:48 +1000
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q55624wM001483
-	for <linux-pci@vger.kernel.org>; Tue, 5 Jun 2012 16:02:05 +1000
-Date: Tue, 5 Jun 2012 14:02:02 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: One chart on pci bridge and its bus and their children
-Message-ID: <20120605060202.GC24358@richard>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <20120605032627.GA23271@richard>
- <20120605041146.GD6637@ram-ThinkPad-T61>
- <CAErSpo5ZcPLZmT0aM7H1ynpq-ZOQeAoL2omZBvZLciYWifgWog@mail.gmail.com>
- <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE9FiQUtSAh8XZub8ZKs_i+P8qKrG18o21RWXoTiF9sx8Z7U2A@mail.gmail.com>
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Fri, 29 Jun 2012 02:48:46 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q5T6m0Vm65405148
+	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 02:48:00 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q5T6lxUw001746
+	for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2012 03:48:00 -0300
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
+Cc: bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
+	linuxram@us.ibm.com, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 6/7] pci: function to retrieve alignment of p2p bars
+Date: Fri, 29 Jun 2012 14:47:49 +0800
+Message-Id: <9229382f79ce3eeb4645160b5349a51bb51db06b.1340949637.git.shangw@linux.vnet.ibm.com>
+In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 04, 2012 at 10:18:46PM -0700, Yinghai Lu wrote:
->On Mon, Jun 4, 2012 at 9:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> That's true, but I don't think it answers the question.  If we have:
->>
->>    pci_bus->bridge == pci_bus->self->dev
->>
->> why would we need both "self" and "bridge"?  It would be interesting
->> to try to remove "bridge" and replace uses of it with "self->dev".
->
->then how about root bus?
->
->root bus ->self should be NULL.
->
->root bus ->bridge is to the hostbridge->dev.
->
->Yinghai
+The patch introduces function pci_align_boundary() to retrieve the
+minimal alignment of p2p bars according to the argument.
 
-Agree, root_pci_bus->self is NULL, and root_pci_bus->bridge point to a
-solo device structure, not in hostbridge. 
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+---
+ drivers/pci/host-bridge.c |   24 ++++++++++++++++++++++++
+ include/linux/pci.h       |    1 +
+ 2 files changed, 25 insertions(+)
 
-BTW, if the dev is the hostbrige->dev, why not pci_host_bridge contain a
-field "dev"?
-
-And, why root bus differs with other bus a lot?
-Both root bus and other bus use self/bridge point to the "PCI BRIDGE"
-device.
-I think we can determine whether this is a root bus by bus->parent?
-
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 1854a2d..dc9a95e 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -105,3 +105,27 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ }
+ 
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
++
++resource_size_t pci_align_boundary(struct pci_bus *bus, unsigned long flags)
++{
++	resource_size_t align = 0;
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
++
++	flags &= (IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH);
++	switch (flags) {
++	case IORESOURCE_IO:
++		align = (1 << bridge->io_align_shift);
++		break;
++	case IORESOURCE_MEM:
++		align = (1 << bridge->mem_align_shift);
++		break;
++	case (IORESOURCE_MEM | IORESOURCE_PREFETCH):
++		align = (1 << bridge->pmem_align_shift);
++		break;
++	default:
++		printk(KERN_WARNING "%s: invalid flags 0x%lx\n",
++			__func__, flags);
++	}
++
++	return align;
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2b2b38d..64523ef 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -673,6 +673,7 @@ void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			       struct pci_bus_region *region);
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region);
++resource_size_t pci_align_boundary(struct pci_bus *bus, unsigned long flags);
+ void pcibios_scan_specific_bus(int busn);
+ extern struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
