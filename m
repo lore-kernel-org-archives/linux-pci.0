@@ -1,51 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:36224 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754526Ab2G3VaE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2012 17:30:04 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH] PCI, pciehp: turn on link again after power off the slot
-Date: Mon, 30 Jul 2012 14:29:57 -0700
-Message-Id: <1343683797-19017-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:3190 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750732Ab2GBEOk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Jul 2012 00:14:40 -0400
+Message-ID: <1341202460.1207.384.camel@bling.home>
+Subject: Re: Request VFIO inclusion in linux-next
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	kvm <kvm@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	iommu <iommu@lists.linux-foundation.org>,
+	qemu-devel <qemu-devel@nongnu.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	chrisw <chrisw@sous-sol.org>,
+	"Roedel, Joerg" <Joerg.Roedel@amd.com>, linux-next@vger.kernel.org
+Date: Sun, 01 Jul 2012 22:14:20 -0600
+In-Reply-To: <4FF11855.2060605@ozlabs.ru>
+References: <1340686552.1207.128.camel@bling.home>
+	 <20120627123733.GA5449@mwanda> <4FF11855.2060605@ozlabs.ru>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During debugging hotplug surpise support, found slot status reg does not report
-present status anymore after removing the card. That present bit
-does not get cleared even that card is removed. So no interrupt is generated
-later after reinsert the card.
+On Mon, 2012-07-02 at 13:41 +1000, Alexey Kardashevskiy wrote:
+> On 27/06/12 22:37, Dan Carpenter wrote:
+> > On Mon, Jun 25, 2012 at 10:55:52PM -0600, Alex Williamson wrote:
+> >> Hi,
+> >>
+> >> VFIO has been kicking around for well over a year now and has been
+> >> posted numerous times for review.  The pre-requirements are finally
+> >> available in linux-next (or will be in the 20120626 build) so I'd like
+> >> to request a new branch be included in linux-next with a goal of being
+> >> accepted into v3.6.
+> >>
+> > 
+> > Could you run Sparse over the driver?
+> > http://lwn.net/Articles/205624/
+> > 
+> > It reports a bunch of endian problems.  Some are definitely bugs
+> > like:
+> > 	*prev |= cpu_to_le32((u32)epos << 20);
+> 
+> 
+> What is wrong here?
 
-That problem is caused by commit:
-| commit 2debd9289997fc5d1c0043b41201a8b40d5e11d0
-|
-|    PCI: pciehp: Disable/enable link during slot power off/on
+I believe the only thing wrong here was that prev was a u32* instead of
+a __le32*.  The new version in my tree has much better endian annotation
+after going through all the sparse errors.  The only bug I found in the
+cleanup was the handling of rbar.  It was missing the le32_to_cpu as we
+copied it out of vconfig.  This is later used with
+pci_user_write_config_dword, so it needs to be in native endian.
+Thanks,
 
-Try turn on link after power off.
-With the fix present bit will report correctly, also still avoid the aer
-during the power off.
+Alex
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: stable@vger.kernel.org
-
----
- drivers/pci/hotplug/pciehp_hpc.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -631,6 +631,8 @@ int pciehp_power_off_slot(struct slot *
- 	slot_cmd = POWER_OFF;
- 	cmd_mask = PCI_EXP_SLTCTL_PCC;
- 	retval = pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
-+	/* need to enable link again for present bit report */
-+	pciehp_link_enable(ctrl);
- 	if (retval) {
- 		ctrl_err(ctrl, "Write command failed!\n");
- 		return retval;
