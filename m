@@ -1,66 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:57554
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753869Ab2GQDBU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 23:01:20 -0400
-From: Liu Shengzhou-B36685 <B36685@freescale.com>
-To: Wood Scott-B07421 <B07421@freescale.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [PATCH 1/2 v2] PCI: Add PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ to
- enable non MSI/INTx interrupt
-Date: Tue, 17 Jul 2012 03:01:15 +0000
-Message-ID: <3F453DDFF675A64A89321A1F35281021770E00@039-SN1MPN1-003.039d.mgd.msft.net>
-References: <1342409487-28256-1-git-send-email-Shengzhou.Liu@freescale.com>
- <50043790.6090605@freescale.com>
-In-Reply-To: <50043790.6090605@freescale.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61675 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818Ab2GCIzZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 04:55:25 -0400
+Received: by pbbrp8 with SMTP id rp8so8913330pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 03 Jul 2012 01:55:25 -0700 (PDT)
+From: AceLan Kao <acelan.kao@canonical.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: Quirk for ASUS S3 issue
+Date: Tue,  3 Jul 2012 16:55:09 +0800
+Message-Id: <1341305709-8943-1-git-send-email-acelan.kao@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogV29vZCBTY290dC1CMDc0
-MjENCj4gU2VudDogTW9uZGF5LCBKdWx5IDE2LCAyMDEyIDExOjQ3IFBNDQo+IFRvOiBMaXUgU2hl
-bmd6aG91LUIzNjY4NQ0KPiBDYzogYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgtcGNpQHZnZXIu
-a2VybmVsLm9yZzsgbGludXhwcGMtDQo+IGRldkBsaXN0cy5vemxhYnMub3JnDQo+IFN1YmplY3Q6
-IFJlOiBbUEFUQ0ggMS8yIHYyXSBQQ0k6IEFkZCBQQ0lfREVWX0ZMQUdTX1VTRV9OT05fTVNJX0lO
-VFhfSVJRIHRvDQo+IGVuYWJsZSBub24gTVNJL0lOVHggaW50ZXJydXB0DQo+IA0KPiBPbiAwNy8x
-NS8yMDEyIDEwOjMxIFBNLCBTaGVuZ3pob3UgTGl1IHdyb3RlOg0KPiA+IE9uIHNvbWUgcGxhdGZv
-cm1zLCBpbiBSQyBtb2RlLCByb290IHBvcnQgaGFzIG5laXRoZXIgTVNJL01TSS1YIG5vcg0KPiA+
-IElOVHggaW50ZXJydXB0IGdlbmVyYXRlZCwgd2hpY2ggYXJlIGF2YWlsYWJsZSBvbmx5IGluIEVQ
-IG1vZGUgb24gdGhvc2UNCj4gcGxhdGZvcm0uDQo+ID4gSW4gdGhpcyBjYXNlLCB3ZSB0cnkgdG8g
-dXNlIG90aGVyIGludGVycnVwdCBmb3IgcG9ydCBzZXJ2aWNlIGRyaXZlciB0bw0KPiA+IGhhdmUg
-QUVSLCBIb3QtcGx1ZywgZXRjLCBzZXJ2aWNlcyB0byB3b3JrLg0KPiA+DQo+ID4gU2lnbmVkLW9m
-Zi1ieTogU2hlbmd6aG91IExpdSA8U2hlbmd6aG91LkxpdUBmcmVlc2NhbGUuY29tPg0KPiA+IC0t
-LQ0KPiA+IHYyOiBzZXBhcmF0ZWQgcGxhdGZvcm0tc3BlY2lmaWMgcGFydCB0byBhcmNoL3Bvd2Vy
-cGMvc3lzZGV2Lg0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL3BjaWUvcG9ydGRydl9jb3JlLmMgfCAg
-IDEwICsrKysrKysrLS0NCj4gPiAgZHJpdmVycy9wY2kvcXVpcmtzLmMgICAgICAgICAgICB8ICAg
-IDkgKysrKysrKysrDQo+ID4gIGluY2x1ZGUvbGludXgvcGNpLmggICAgICAgICAgICAgfCAgICA1
-ICsrKysrDQo+ID4gIDMgZmlsZXMgY2hhbmdlZCwgMjIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlv
-bnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29y
-ZS5jDQo+ID4gYi9kcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29yZS5jIGluZGV4IDc1OTE1YjMu
-LjgzN2FkMTUgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvcGNpZS9wb3J0ZHJ2X2NvcmUu
-Yw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRydl9jb3JlLmMNCj4gPiBAQCAtMjEy
-LDggKzIxMiwxNCBAQCBzdGF0aWMgaW50IGluaXRfc2VydmljZV9pcnFzKHN0cnVjdCBwY2lfZGV2
-ICpkZXYsIGludA0KPiAqaXJxcywgaW50IG1hc2spDQo+ID4gIAlpZiAoIXBjaWVfcG9ydF9lbmFi
-bGVfbXNpeChkZXYsIGlycXMsIG1hc2spKQ0KPiA+ICAJCXJldHVybiAwOw0KPiA+DQo+ID4gLQkv
-KiBXZSdyZSBub3QgZ29pbmcgdG8gdXNlIE1TSS1YLCBzbyB0cnkgTVNJIGFuZCBmYWxsIGJhY2sg
-dG8gSU5UeCAqLw0KPiA+IC0JaWYgKCFwY2lfZW5hYmxlX21zaShkZXYpIHx8IGRldi0+cGluKQ0K
-PiA+ICsJLyoNCj4gPiArCSAqIFdlJ3JlIG5vdCBnb2luZyB0byB1c2UgTVNJLVgsIHNvIHRyeSBN
-U0kgYW5kIGZhbGwgYmFjayB0byBJTlR4Lg0KPiA+ICsJICogRXZlbnR1YWxseSwgaWYgbmVpdGhl
-ciBNU0kvTVNJLVggbm9yIElOVHggYXZhaWxhYmxlLCB0cnkgb3RoZXINCj4gPiArCSAqIGludGVy
-cnVwdC4gKE9uIHNvbWUgcGxhdGZvcm1zLCByb290IHBvcnQgZG9lc24ndCBzdXBwb3J0IGdlbmVy
-YXRpbmcNCj4gPiArCSAqIE1TSS9NU0ktWC9JTlR4IGluIFJDIG1vZGUpDQo+ID4gKwkgKi8NCj4g
-PiArCWlmICghcGNpX2VuYWJsZV9tc2koZGV2KSB8fCBkZXYtPnBpbiB8fCAoKGRldi0+ZGV2X2Zs
-YWdzICYNCj4gPiArCQkJUENJX0RFVl9GTEFHU19VU0VfTk9OX01TSV9JTlRYX0lSUSkgJiYgZGV2
-LT5pcnEpKQ0KPiA+ICAJCWlycSA9IGRldi0+aXJxOw0KPiANCj4gSSBkaWRuJ3Qgc2VlIGEgcmVz
-cG9uc2Ugb24gdGhlIHF1ZXN0aW9uIGFib3V0IHdoYXQgd291bGQgaGFwcGVuIGlmIHdlIGRpZCB0
-aGlzDQo+IHVuY29uZGl0aW9uYWxseSAoaS5lLiBqdXN0IHMvZGV2LT5waW4vZGV2LT5pcnEvIGlu
-IHRoZSBvcmlnaW5hbCBjb2RlKS4gIFdlDQo+IHNob3VsZCBhdm9pZCBpbnRyb2R1Y2luZyBmbGFn
-cyBsaWtlIHRoaXMgdW5sZXNzIHRoZXJlJ3MgYSBnb29kIHJlYXNvbi4NCj4gDQo+IE1heWJlIHN1
-Ym1pdCBhIHBhdGNoIHRoYXQgZG9lcyBpdCB1bmNvbmRpdGlvbmFsbHksIGFuZCBzZWUgaWYgdGhh
-dCBkcmF3cyBhDQo+IGNvbXBsYWludC4NCj4gDQo+IC1TY290dA0KW1NoZW5nemhvdV0gDQpXZWxs
-LCB0aGUgcGF0Y2ggd2l0aG91dCBmbGFnIGNvbmRpdGlvbiBoYXZlIGJlZW4gcG9zdGVkIHRvIGRy
-YXcgbW9yZSBjb21tZW50cy4NCg==
+Some of ASUS machines have problem to enter S3.
+The root cause of this issue is result from the the BIOS will try to
+disable USBs which was already disabled by driver.
+BIOS will to check the EHCI command register, if it's not zero, then
+BIOS will think the USB is not disabled yet, so it will try to disable
+USB again.
+To resolve this, we should clear the EHCI command register before
+entering S3. And this does no harm to the system, since it'll switch
+off the power after enter S3, so the value in memory is not important
+at all.
+
+Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+---
+ drivers/pci/quirks.c    |   15 +++++++++++++++
+ include/linux/pci_ids.h |    2 ++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 194b243a..684cd1f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2955,6 +2955,21 @@ static void __devinit asus_ehci_no_d3(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c26, asus_ehci_no_d3);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
+ 
++/*
++ * ASUS BIOS will check EHCI command register to see if USB if disabled
++ * or not. BIOS will try to disable USB if the command register is not
++ * cleared. But, actually, USB is disabled by the driver while entering S3,
++ * so it'll hang in BIOS when it try to disable USB.
++ * Since it's going to enter S3, so it does no harm to clear the command
++ * register.
++ */
++static void asus_clear_pci_command(struct pci_dev *dev)
++{
++	pci_write_config_word(dev, PCI_COMMAND, 0);
++}
++DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON_EHCI, asus_clear_memory_bit);
++DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_EHCI, asus_clear_memory_bit);
++
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
+ {
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ab741b0..e79c469 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -216,6 +216,7 @@
+ #define PCI_DEVICE_ID_ATI_68800		0x4158
+ #define PCI_DEVICE_ID_ATI_215CT222	0x4354
+ #define PCI_DEVICE_ID_ATI_210888CX	0x4358
++#define PCI_DEVICE_ID_ATI_EHCI		0x4396
+ #define PCI_DEVICE_ID_ATI_215ET222	0x4554
+ /* Mach64 / Rage */
+ #define PCI_DEVICE_ID_ATI_215GB		0x4742
+@@ -553,6 +554,7 @@
+ #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
+ #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
+ #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
++#define PCI_DEVICE_ID_AMD_HUDSON_EHCI	0x7808
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS	0x780b
+ #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
+ #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+-- 
+1.7.9.5
 
