@@ -1,85 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [216.32.181.185] ([216.32.181.185]:5977 "EHLO
-	ch1outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753227Ab2GILLI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 07:11:08 -0400
-From: Shengzhou Liu <Shengzhou.Liu@freescale.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	Shengzhou Liu <Shengzhou.Liu@freescale.com>
-Subject: [PATCH] PCI: Add pcie_irq=other to enable non MSI/INTx interrupt for port service driver
-Date: Mon, 9 Jul 2012 18:49:30 +0800
-Message-ID: <1341830970-12779-1-git-send-email-Shengzhou.Liu@freescale.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:34686 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755336Ab2GCP7h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 11:59:37 -0400
+Received: by lbbgm6 with SMTP id gm6so9692276lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 03 Jul 2012 08:59:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo7NiCsuM+UxveZbYxNsCiStMH5SLZ8EdFzJ7EduB306OQ@mail.gmail.com>
+References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7NiCsuM+UxveZbYxNsCiStMH5SLZ8EdFzJ7EduB306OQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 3 Jul 2012 09:59:15 -0600
+Message-ID: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
+ ports without native PCIe hotplug capability
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms, in RC mode, root port has neither MSI/MSI-X nor INTx
-interrupt generated, which are available only in EP mode on those platform.
-In this case, we try to use other interrupt if supported (i.e. there is the
-shared error interrupt on platform P1010, P3041, P4080, etc) to have AER,
-Hot-plug, etc, services to work.
+On Mon, Jul 2, 2012 at 10:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jun 4, 2012 at 1:44 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+>> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
+>> ignore root bridges using PCIe native hotplug) added code that made the
+>> acpiphp driver completely ignore PCIe root complexes for which the kernel
+>> had been granted control of the native PCIe hotplug feature by the BIOS
+>> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
+>> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
+>> the constraints to allow acpiphp driver handle non-PCIe bridges under
+>> such a complex. The constraint needs to be relaxed further to allow
+>> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
+>>
+>> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
+>> switches and may migrate downstream ports among virtual switches.
+>> To migrate a downstream port from the source virtual switch to the target,
+>> the port needs to be hot-removed from the source and hot-added into the
+>> target. pciehp driver can't be used here because there's no slots within
+>> the virtual PCIe switch. So acpiphp driver is used to support downstream
+>> port migration. A typical configuration is as below:
+>> [Root w/o native PCIe HP]
+>>         [Upstream port of vswitch w/o native PCIe HP]
+>>                 [Downstream port of vswitch w/ native PCIe HP]
+>>                         [PCIe enpoint]
+>>
+>> Here acpiphp driver will be used to handle root ports and upstream port
+>> in the virtual switch, and pciehp driver will be used to handle downstream
+>> ports in the virtual switch.
+>>
+>> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+>> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+>>
+>> ---
+>>  drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
+>>  1 files changed, 39 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> index 806c44f..4889448 100644
+>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
+>>         .handler = handle_hotplug_event_func,
+>>  };
+>>
+>> +/* Check whether device is managed by native PCIe hotplug driver */
+>> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
+>> +{
+>> +       int pos;
+>> +       u16 reg16;
+>> +       u32 reg32;
+>> +       acpi_handle tmp;
+>> +       struct acpi_pci_root *root;
+>> +
+>> +       if (!pci_is_pcie(pdev))
+>> +               return false;
+>> +
+>> +       /* Check whether PCIe port supports native PCIe hotplug */
+>> +       pos = pci_pcie_cap(pdev);
+>
+> Add "if (!pos) return false;" here and you can drop the "if
+> (!pci_is_pcie())" test above.
+>
+>> +       pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+>> +       if (!(reg16 & PCI_EXP_FLAGS_SLOT))
+>
+> I think this is unsafe.  Per the PCIe v3.0 spec, sec 7.8.2 on p648,
+> the "Slot Implemented" bit is undefined except for Downstream Ports,
+> so we're using an undefined bit to decide whether to read
+> PCI_EXP_SLTCAP.
+>
+> If the device has a v1 PCIe Capability, it is not required to even
+> implement PCI_EXP_SLTCAP, so we could be reading garbage out of an
+> unrelated capability.  This is in sec 7.8, p363, of the v1.1 PCIe
+> spec.  I think v3.0 of the spec is dangerously incomplete because it
+> doesn't include enough information to handle the v1 PCIe Capability
+> correctly.
+>
+> There's a fair amount of work to fix this.  I started doing it, but
+> decided I didn't have time to complete it.  Here's what I think we
+> (and by "we," I'm afraid I mean "you" :)) should do:
+>
+>   - Add a "u16 pcie_flags" field in struct pci_dev and save the "PCI
+> Express Capabilities Register" there in set_pcie_port_type().  All
+> fields in that register are read-only, so it should be safe to cache
+> it.
+>   - Remove pcie_type from struct pci_dev and replace it with a
+> pcie_type() inline that extracts it from pcie_flags.
+>   - Rework the pcie_cap_has_*() macros in drivers/pci/pci.c to take a
+> struct pci_dev * and use pcie_flags instead of type and flags.  This
+> will remove the need for callers to read the flags themselves.
+>   - Move the pcie_cap_has_*() macros to include/linux/pci_reg.h so
+> they can be shared.
+>   - Audit all uses of the Link registers (PCI_EXP_LNKCAP,
+> PCI_EXP_LNKCTL, PCI_EXP_LNKSTA), Slot registers (PCI_EXP_SLTCAP,
+> PCI_EXP_SLTCTL, PCI_EXP_SLTSTA), and Root registers (PCI_EXP_RTCAP,
+> PCI_EXP_RTCTL, PCI_EXP_RTSTA) to make sure the register exists, either
+> by using pcie_cap_has_*() or some other knowledge of the device.
 
-Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
----
- Documentation/kernel-parameters.txt |    4 ++++
- drivers/pci/pcie/portdrv_core.c     |   19 +++++++++++++++++++
- 2 files changed, 23 insertions(+), 0 deletions(-)
+Thinking about this some more, this still leaves the callers
+responsible for using pcie_cap_has_*(), which feels pretty
+error-prone.
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index a92c5eb..af97c81 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2218,6 +2218,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 		nomsi	Do not use MSI for native PCIe PME signaling (this makes
- 			all PCIe root ports use INTx for all services).
- 
-+	pcie_irq=	[PCIE] Native PCIe root port interrupt options:
-+		other	Try to use other interrupt when root port has
-+			neither MSI/MSI-X nor INTx support.
-+
- 	pcmv=		[HW,PCMCIA] BadgePAD 4
- 
- 	pd.		[PARIDE]
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 75915b3..653679e 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -30,6 +30,17 @@ static int __init pciehp_setup(char *str)
- }
- __setup("pcie_hp=", pciehp_setup);
- 
-+bool port_other_interrupt_enabled;
-+
-+static int __init portservice_setup(char *str)
-+{
-+	if (!strncmp(str, "other", 5))
-+		port_other_interrupt_enabled = true;
-+
-+	return 1;
-+}
-+__setup("pcie_irq=", portservice_setup);
-+
- /**
-  * release_pcie_device - free PCI Express port service device structure
-  * @dev: Port service device to release
-@@ -216,6 +227,14 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- 	if (!pci_enable_msi(dev) || dev->pin)
- 		irq = dev->irq;
- 
-+	/*
-+	 * On some platforms, root port has neither MSI/MSI-X nor INTx
-+	 * interrupt support in RC mode, so try to use other interrupt(i.e.
-+	 * shared interrupt if supported).
-+	 */
-+	else if (port_other_interrupt_enabled && dev->irq)
-+		irq = dev->irq;
-+
-  no_msi:
- 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
- 		irqs[i] = irq;
--- 
-1.6.4
+I wonder if it'd be worth adding interfaces like:
 
+  pcie_cap_read_word(const struct pci_dev *, int where, u16 *val);
+  pcie_cap_read_dword(const struct pci_dev *, int where, u32 *val);
+  pcie_cap_write_word(const struct pci_dev *, int where, u16 val);
+  pcie_cap_write_dword(const struct pci_dev *, int where, u32 val);
 
+We might be able to encapsulate the v1/v2 differences inside these, e.g.,
+
+  int pcie_cap_read_word(const struct pci_dev *dev, int where, u16 *val)
+  {
+      int pos;
+
+      pos = pci_pcie_cap(dev);
+      if (!pos)
+          return -EINVAL;
+
+      switch (where) {
+      case PCI_EXP_FLAGS:
+      case PCI_EXP_DEVCTL:
+      case PCI_EXP_DEVSTA:
+          return pci_read_config_word(dev, pos + where, val);
+      case PCI_EXP_LNKCTL:
+      case PCI_EXP_LNKSTA:
+          if (pcie_cap_has_lnkctl(dev))
+              return pci_read_config_word(dev, pos + where, val);
+          else {
+              *val = 0;
+              return 0;
+          }
+      case PCI_EXP_SLTCTL:
+      case PCI_EXP_SLTSTA:
+          if (pcie_cap_has_sltctl(dev))
+              return pci_read_config_word(dev, pos + where, val);
+          else {
+              *val = 0;
+              if (where == PCI_EXP_SLTSTA && dev->pcie_type ==
+PCI_EXP_TYPE_DOWNSTREAM)
+                  *val = PCI_EXP_SLTSTA_PDS;
+              return 0;
+      ...
+      };
+      return -EINVAL;
+  }
+
+Any thoughts?
