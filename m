@@ -1,73 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64698 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751133Ab2GaNud (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 Jul 2012 09:50:33 -0400
-Message-ID: <5017E29F.9010609@redhat.com>
-Date: Tue, 31 Jul 2012 09:50:23 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:52921 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735Ab2GCHB3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 03:01:29 -0400
+Received: from /spool/local
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Tue, 3 Jul 2012 01:01:28 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 3327A19D804A
+	for <linux-pci@vger.kernel.org>; Tue,  3 Jul 2012 07:01:23 +0000 (WET)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6371E0V176852
+	for <linux-pci@vger.kernel.org>; Tue, 3 Jul 2012 01:01:14 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6371AET017022
+	for <linux-pci@vger.kernel.org>; Tue, 3 Jul 2012 01:01:13 -0600
+Date: Tue, 3 Jul 2012 15:01:06 +0800
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
+	bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
+	linuxram@us.ibm.com
+Subject: Re: [PATCH V5 0/7] minimal alignment for p2p bars
+Message-ID: <20120703070106.GA13892@shangw>
+Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
+References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Bjorn Mork <bjorn@mork.no>
-Subject: Re: [RFC] PCI/PM: Add ABI document for sysfs file d3cold_allowed
-References: <1343376454-28520-1-git-send-email-ying.huang@intel.com>	 <5016CC75.3050806@redhat.com> <1343704341.2591.8.camel@yhuang-dev>
-In-Reply-To: <1343704341.2591.8.camel@yhuang-dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/30/2012 11:12 PM, Huang Ying wrote:
-> Hi, Don,
->
-> Thanks for your comments.
->
-> On Mon, 2012-07-30 at 14:03 -0400, Don Dutile wrote:
->> On 07/27/2012 04:07 AM, Huang Ying wrote:
->>> This patch adds ABI document for the following sysfs file:
->>>
->>> /sys/bus/pci/devices/.../d3cold_allowed
->>>
->>> Signed-off-by: Huang Ying<ying.huang@intel.com>
->>> ---
->>>    Documentation/ABI/testing/sysfs-bus-pci |   12 ++++++++++++
->>>    1 file changed, 12 insertions(+)
->>>
->>> --- a/Documentation/ABI/testing/sysfs-bus-pci
->>> +++ b/Documentation/ABI/testing/sysfs-bus-pci
->>> @@ -210,3 +210,15 @@ Users:
->>>    		firmware assigned instance number of the PCI
->>>    		device that can help in understanding the firmware
->>>    		intended order of the PCI device.
->>> +
->>> +What:		/sys/bus/pci/devices/.../d3cold_allowed
->>> +Date:		July 2012
->>> +Contact:	Huang Ying<ying.huang@intel.com>
->>> +Description:
->>> +		d3cold_allowed is bit to control whether the corresponding PCI
->>> +		device can be put into D3Cold state.  If it is cleared, the
->>> +		device will never be put into D3Cold state.  If it is set, the
->>> +		device may be put into D3Cold state if other requirement are
->> did you mean 'requirements' here? -------------------------------^
->> or is there only 1 other requirement?
->
-> I mean requirements here.
->
->>
->>> +		satisfied too.  Reading this attribute will show the current
->>> +		value of d3cold_allowed bit.  Writting this attribute will set
->> spell checker says 'Writing' --------------------^
->
-> Sorry about my poor English and I should have spell checked it before
-> sending out.
->
-no problem!  I figured since you were making the extra
-effort to add the documentation, we might as well make it clear.
-Thanks for the update.
+Hi Bjorn,
 
-> Best Regards,
-> Huang Ying
+Could you please review it when you have time?
+
+Thanks,
+Gavin
+
+>v1 -> v2:
+>	* Shorten the varaible names so that they looks more short.
+>	* Changelog adjustment so that they looks more meaningful.
 >
+>v2 -> v3:
+>	* Rebase to 3.5.RC4
+>
+>v3 -> v4:
+>	* Merge Yinghai's patches.
+>
+>v3 -> v4:
+>	* Split patch for easy review.
+>	* Add function to retrieve the minimal alignment of p2p bridge. 
+>
+>Lu Yinghai(3):
+>  pci: change variable name for find_pci_host_bridge
+>  pci: argument pci_bus for find_pci_host_bridge
+>  pci: fiddle with conversion of pci and CPU address
+>
+>Gavin Shan(4)
+>  pci: make find_pci_host_bridge global
+>  pci: minimal alignment for bars of P2P bridges
+>  pci: function to retrieve alignment of p2p bars
+>  pci: resource assignment based on p2p alignment
+>
+> drivers/pci/host-bridge.c |   59 ++++++++++++++++++++++++++++++++++++---------
+> drivers/pci/probe.c       |    5 ++++
+> drivers/pci/setup-bus.c   |   22 +++++++++++------
+> include/linux/pci.h       |   15 +++++++++++-
+> 4 files changed, 81 insertions(+), 20 deletions(-)
+>
+>Thanks,
+>Gavin
 >
 
