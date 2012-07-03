@@ -1,59 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:60109 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751254Ab2GSSOo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2012 14:14:44 -0400
-Message-ID: <50084E8B.3070508@gmx.de>
-Date: Thu, 19 Jul 2012 20:14:35 +0200
-From: =?ISO-8859-1?Q?Malte_Schr=F6der?= <maltesch@gmx.de>
-MIME-Version: 1.0
+Received: from netrider.rowland.org ([192.131.102.5]:50331 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752539Ab2GCURi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 16:17:38 -0400
+Date: Tue, 3 Jul 2012 16:17:37 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Galen Seitz <galens@seitzassoc.com>
-Subject: Re: PCI ACPI/IRQ-routing broken on H77 chipset + Ivy Bridge (kernel
- 3.5-rc7 and earlier)
-References: <5002BC55.3050107@gmx.de> <201207152225.49154.rjw@sisk.pl> <CAErSpo6Ka6XBakVZH7ge-==XY86FrOHP_dqGoa+zAFNgnnnFTA@mail.gmail.com>
-In-Reply-To: <CAErSpo6Ka6XBakVZH7ge-==XY86FrOHP_dqGoa+zAFNgnnnFTA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+cc: AceLan Kao <acelan.kao@canonical.com>, <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] PCI: Quirk for ASUS S3 issue
+In-Reply-To: <CAErSpo61zd1Lv9s3CaTNTnmYemkhM=a8Lw_2bm4V=1GipJgzSw@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1207031605350.29825-100000@netrider.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16.07.2012 18:14, Bjorn Helgaas wrote:
+On Tue, 3 Jul 2012, Bjorn Helgaas wrote:
 
-> [CC +tglx]
+> On Tue, Jul 3, 2012 at 2:55 AM, AceLan Kao <acelan.kao@canonical.com> wrote:
+> > Some of ASUS machines have problem to enter S3.
 > 
-> On Sun, Jul 15, 2012 at 2:25 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> CC-ing linux-pci and Bjorn.
->>
->> On Sunday, July 15, 2012, Malte Schröder wrote:
->>> Hello,
->>> this is yet another try to get someone to look at this ;)
->>>
->>> I can't get PCI-devices to work on my DH77KC mainboard. I tested this
->>> using an AVM B1 ISDN card, a Fritz!PCI card and an old 3Com 905c NIC.
->>> I attached some dumps in case it helps. The CPU is a Core i7 3770.
->>>
->>> PCI hardware is detected by the kernel, but it gives IRQ errors. Using
->>> irqpoll allows the PCI card to somewhat work, but it is unreliable.
->>>
->>> There are some reports in Intel's support forums that also report
->>> PCI-problems with this mainboard, but Intel doesn't seem to be
->>> interested. So I hope this is something that is fixable on the kernel side.
->>>
->>> If there is more information needed, please let me know.
->>>
+> This should include a specific description of the problem the user
+> sees.  From the code comment, it something like "Attempt to suspend
+> some ASUS systems causes hang.  Power cycle required to recover."
+> might be appropriate.
+> 
+> The quirk you added is not specific to ASUS, though, so it must be
+> something that's safe on every system using the AMD and ATI devices
+> you specified.  I don't know whether that's the case.
+
+Is this the same bug as the one addressed by commit c2fb8a3fa255 (USB: 
+add NO_D3_DURING_SLEEP flag and revert 151b61284776be2)?
+
+That bug seemed to occur only when the affected systems were put into 
+S3 sleep while an EHCI controller was in power level D3.
 
 
-I was pointed to https://bugzilla.kernel.org/show_bug.cgi?id=43238.
-I tried the modifications to the DSDT that where proposed there and
-voilà, the 3c905c started to work :)
-So it seems Intel messed up their ACPI-stuff really bad for this
-mainboard. I plan to do more testing during the weekend.
+> > The root cause of this issue is result from the the BIOS will try to
+> > disable USBs which was already disabled by driver.
+> > BIOS will to check the EHCI command register, if it's not zero, then
 
--- 
-Gruß
-Malte Schröder
----------------------------------------------------------------------
-MalteSch@gmx.de
+You don't mean "EHCI command register"; you mean "the EHCI controller's 
+PCI COMMAND register".  The EHCI command register is a completely 
+different register; it's part of the memory-mapped interface rather 
+than the PCI config space.
+
+> > BIOS will think the USB is not disabled yet, so it will try to disable
+> > USB again.
+
+How do you know this?
+
+Why should disabling an already-disabled USB controller cause the
+system to hang?
+
+> > To resolve this, we should clear the EHCI command register before
+> > entering S3. And this does no harm to the system, since it'll switch
+
+Is there any reason not to clear the PCI COMMAND register of every PCI 
+USB host controller when entering S3?
+
+> > off the power after enter S3, so the value in memory is not important
+> > at all.
+> 
+> System RAM is preserved in the S3 state (ACPI spec sec 7.3.4.4), so I
+> don't know how to interpret this statement.
+> 
+> Please include a bugzilla or problem report URL if you have one.
+> 
+> I'm not a USB or suspend/resume expert, so please get folks like Alan
+> Stern and Rafael Wysocki to take a look at this (cc'd).
+
+This really has nothing to do with USB, except the fact that the 
+affected parts are USB host controllers.  It's entirely a PCI issue.
+
+> Please read the comment at the top of pci_ids.h; I don't think you
+> need to change that file.
+> 
+> > Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+> > ---
+> >  drivers/pci/quirks.c    |   15 +++++++++++++++
+> >  include/linux/pci_ids.h |    2 ++
+> >  2 files changed, 17 insertions(+)
+> >
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 194b243a..684cd1f 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -2955,6 +2955,21 @@ static void __devinit asus_ehci_no_d3(struct pci_dev *dev)
+> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c26, asus_ehci_no_d3);
+> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
+> >
+> > +/*
+> > + * ASUS BIOS will check EHCI command register to see if USB if disabled
+> > + * or not. BIOS will try to disable USB if the command register is not
+> > + * cleared. But, actually, USB is disabled by the driver while entering S3,
+> > + * so it'll hang in BIOS when it try to disable USB.
+
+Why does the system hang?  There should be no problem clearing the PCI 
+COMMAND register even while the controller is in D3.
+
+Does the BIOS try to access the memory-mapped registers while disabling 
+the controller?
+
+> > + * Since it's going to enter S3, so it does no harm to clear the command
+> > + * register.
+> > + */
+> > +static void asus_clear_pci_command(struct pci_dev *dev)
+> > +{
+> > +       pci_write_config_word(dev, PCI_COMMAND, 0);
+> > +}
+> > +DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON_EHCI, asus_clear_memory_bit);
+> > +DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_EHCI, asus_clear_memory_bit);
+
+Why not do this for all EHCI controllers?  Or even all PCI devices?
+
+Alan Stern
+
