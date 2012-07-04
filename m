@@ -1,123 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:36891 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756026Ab2GLUUg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jul 2012 16:20:36 -0400
-Received: by lbbgm6 with SMTP id gm6so4723357lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 12 Jul 2012 13:20:34 -0700 (PDT)
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:56599 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750715Ab2GDEGy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2012 00:06:54 -0400
+Received: by vcbf11 with SMTP id f11so4656637vcb.19
+        for <linux-pci@vger.kernel.org>; Tue, 03 Jul 2012 21:06:53 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQU1NkYr2jPFoRazYyniRK0TnjXsyLnALA8muaf3F04-pg@mail.gmail.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
- <1340437325-29282-3-git-send-email-yinghai@kernel.org> <CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
- <20120711162120.GA17988@google.com> <CAE9FiQUeJ3fyjamtxgx=_PeZC0Qdofx5ou8Gbg_ikSGTCbC06g@mail.gmail.com>
- <CAErSpo4nrhBg7SSknmtG=Ss+UGmUJthQ7EBuedNFdyV0PUQuxQ@mail.gmail.com>
- <CAE9FiQVbaYszsqq6WYENQu18a52m2fD9svtdFV2y4DeDnYWJcA@mail.gmail.com>
- <CAErSpo7f1hvQ2sg8TTu-d2dy1ST8xNEfR0odESihQtRh=KMi5A@mail.gmail.com>
- <CAE9FiQU3RbdnBssTT6tiGP9GjtyLHBbdaor2qF=26d8WLf72cw@mail.gmail.com>
- <CAErSpo6rEcu3gwScEDxJ7DXzeMpT4DBGgAyhNE9qpPo4wEMouw@mail.gmail.com>
- <CAE9FiQXTjEqLLGx=EzxoWNqKTPF+g4=PNMiiTLkdUyf0LX-JUg@mail.gmail.com>
- <CAErSpo4=W7kejZ9BsUeZfu5R0=R8tzq5+q96aOX+VbOsOY6CLw@mail.gmail.com> <CAE9FiQU1NkYr2jPFoRazYyniRK0TnjXsyLnALA8muaf3F04-pg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 12 Jul 2012 14:20:12 -0600
-Message-ID: <CAErSpo7LvGcKm2touq5OpbxPx0XyRbg2B+DMtVigcqqN9uPgcA@mail.gmail.com>
-Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
- surprise removal is not supported.
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+In-Reply-To: <20120704121639.d3949763.izumi.taku@jp.fujitsu.com>
+References: <20120702134901.83708415.izumi.taku@jp.fujitsu.com>
+	<20120704121639.d3949763.izumi.taku@jp.fujitsu.com>
+Date: Tue, 3 Jul 2012 21:06:53 -0700
+Message-ID: <CAE9FiQXJF09N+2-YJsN7_QWjB8k+2f5BhEvFgaPiqyN+the59A@mail.gmail.com>
+Subject: Re: [PATCH 2/2] pci: reserve extra bus resource for hotplug bridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 6:05 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Jul 11, 2012 at 3:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Tue, Jul 3, 2012 at 8:16 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
 >
->> If we *do* want to change something there, I don't like the proposal
->> above any better.  It's still basically saying "presence detect is
->> only reliable when X is set" when X is not clearly related to presence
->> detect.
->>
->> I think it's better to disable the presence detect interrupt
->> completely if it's not reliable, as your original patch did.  My
->> complaint with that is that HP_SUPR_RM() doesn't seem like the right
->> test for "the interrupt is not reliable."
+> Currently I/O ports and I/O memory resources are reserved for
+> hotplug bridges and we can tune their size by using hpiosize
+> and hpmemsize boot option.
 >
-> ok.
+> This patch extends feature so that we can reserve additional
+> bus number resources for hotplug bridges and tune it by
+> using "hpbussize" option.
 >
->>
->> Having a "Presence Detect State" bit and an interrupt that tells you
->> when it changed is only meaningful if that bit gives you useful
->> information.  If hardware supplies that bit but it toggles all the
->> time when the slot is empty because it's hooked up to link training
->> attempts, that just means the hardware screwed up.  The hardware
->> *should* have included some logic to filter out the attempts and
->> toggle the bit only when a card is actually added or removed.  I
->> believe the functionality of "Presence Detect State" is logically
->> independent of "Hot-Plug Surprise" and "Attention Button Present."
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> ---
+>  Documentation/kernel-parameters.txt |    4 ++++
+>  drivers/pci/pci.c                   |    6 +++++-
+>  drivers/pci/probe.c                 |    4 ++++
+>  include/linux/pci.h                 |    1 +
+>  4 files changed, 14 insertions(+), 1 deletion(-)
 >
-> the cpu vendor already agreed that is out of spec for that.
+> Index: linux/drivers/pci/pci.c
+> ===================================================================
+> --- linux.orig/drivers/pci/pci.c        2012-06-26 14:37:22.000000000 +0900
+> +++ linux/drivers/pci/pci.c     2012-07-04 10:00:50.708002757 +0900
+> @@ -74,9 +74,11 @@ unsigned long pci_cardbus_mem_size = DEF
 >
->>
->> So if we want to disable the "Presence Detect Changed" interrupt,
->> that's fine, but I think we should do it based on a quirk or
->> blacklist, or based on the fact that we have no need for it.  One
->> reason to want the interrupt is if "Hot-Plug Surprise" is set,
->> indicating that an adapter might be removed without notice, and if
->> that's the only reason, we could use your original patch.
+>  #define DEFAULT_HOTPLUG_IO_SIZE                (256)
+>  #define DEFAULT_HOTPLUG_MEM_SIZE       (2*1024*1024)
+> -/* pci=hpmemsize=nnM,hpiosize=nn can override this */
+> +#define DEFAULT_HOTPLUG_BUS_SIZE       (0)
+> +/* pci=hpmemsize=nnM,hpiosize=nn,hpbussize=n can override this */
+>  unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
+>  unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
+> +unsigned int pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
 >
-> no,  with that patch, we will not get interrupt for present bit change
-> for non-hotplug-surprise
-> case.
+>  enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
 >
->> But if we
->> do, I think we should change interrupt_event_handler() to look
->> something like this:
->>
->>     case INT_PRESENCE_ON:
+> @@ -4022,6 +4024,8 @@ static int __init pci_setup(char *str)
+>                                 pci_hotplug_io_size = memparse(str + 9, &str);
+>                         } else if (!strncmp(str, "hpmemsize=", 10)) {
+>                                 pci_hotplug_mem_size = memparse(str + 10, &str);
+> +                       } else if (!strncmp(str, "hpbussize=", 10)) {
+> +                               pci_hotplug_bus_size = memparse(str + 10, &str);
+>                         } else if (!strncmp(str, "pcie_bus_tune_off", 17)) {
+>                                 pcie_bus_config = PCIE_BUS_TUNE_OFF;
+>                         } else if (!strncmp(str, "pcie_bus_safe", 13)) {
+> Index: linux/drivers/pci/probe.c
+> ===================================================================
+> --- linux.orig/drivers/pci/probe.c      2012-06-26 14:37:22.000000000 +0900
+> +++ linux/drivers/pci/probe.c   2012-07-04 10:00:50.718002632 +0900
+> @@ -867,6 +867,10 @@ int __devinit pci_scan_bridge(struct pci
+>                 /*
+>                  * Set the subordinate bus number to its real value.
+>                  */
+> +               if (dev->is_hotplug_bridge) {
+> +                       if (max + pci_hotplug_bus_size < child->busn_res.end)
+> +                               max += pci_hotplug_bus_size;
+> +               }
 
-        ctrl_info(ctrl, "adapter now present\n");
+again, that adding is not safe.
 
->>         if (!ATTN_BUTTN(ctrl))
->>             handle_surprise_event(p_slot);  /* omit this if you don't
->> think it's useful */
->>         break;
->>     case INT_PRESENCE_OFF:
+please drop this one now.
 
-        ctrl_warn(ctrl, "adapter removed unexpectedly\n");
+or you can prepare one against busn_alloc and I put new version in the
+busn_alloc branch.
 
->>         handle_surprise_event(p_slot);
->>         break;
->
-> yes, this one should be good. and it is enhancement.
+Thanks
 
-When we don't have an attention button, I don't know that it's a good
-idea to automatically power up a new card.  I was thinking about
-things like ExpressCard, where the standard usage model probably *is*
-"plug in the card and it automatically starts working, no button press
-or software UI required."  But my guess is that ExpressCard would not
-be handled by pciehp, would it?
-
-The pciehp flow seems to be basically the same as SHPC, and the
-Standard Hot-Plug Controller spec, rev 1.0, sec 2.5, has a flow of
-hot-add without an attention button.  It shows:
-
-  1) User selects empty, disabled slot and opens MRL
-  2) Adapter insertion:
-      2a) User inserts add-in-card
-      2b) User closes MRL
-      2c) User attaches cables
-  3) User requests via software UI that slot be enabled
-
-We'll get the Presence Detect interrupt at step 2a, before the user
-can close the MRL or attach cables.  I don't know if it's a good thing
-to power-on the slot and attach the driver while this is happening.
-It certainly doesn't seem to follow the intent of the spec.
-
->> If you did make a change like this, I propose (as a separate patch)
->> passing info->event_type into handle_surprise_event().  We've already
->> read the "Presence Detect State" bit, so there's no need for
->> handle_surprise_event() to do it again.
->
-> ok. will prepare patches for that.
->
-> Yinghai
+Yinghai
