@@ -1,49 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH -v2 4/8] alpha/PCI: Move final fixup quirks from __init to
-	__devinit
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	yinghai@kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 09 Jul 2012 15:36:21 -0600
-Message-ID: <20120709213621.8975.97156.stgit@amt.stowe>
-In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
-References: <20120709213554.8975.60552.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58680 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753541Ab2GDIeQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2012 04:34:16 -0400
+Received: by pbbrp8 with SMTP id rp8so10694040pbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 04 Jul 2012 01:34:15 -0700 (PDT)
+From: AceLan Kao <acelan.kao@canonical.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: Quirk for ASUS S3 issue
+Date: Wed,  4 Jul 2012 16:34:11 +0800
+Message-Id: <1341390851-22099-1-git-send-email-acelan.kao@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI subsystem's final fixups are executed once during boot, after the
-pci-device is found.  As long as the system does not support hot-plug,
-specifying __init is fine.
+Attempt to suspend some ASUS systems causes hang. Power cycle required
+to recover.
+The root cause of this issue is result from the the BIOS will try to
+disable USB which is already disabled by the driver.
+BIOS will check the EHCI controller's PCI COMMAND register,
+if it's not zero, then BIOS will think the USB is not disabled yet,
+so it will try to disable USB again, and then hang in the BIOS code.
+To resolve this, we should clear the EHCI controller's PCI COMMAND
+register before entering S3. And this does no harm to the system,
+since it'll switch off the power after enter S3, and the value in the
+register will be reset by BIOS after wakeup.
 
-With hot-plug, either physically based hot-plug events or pseudo hot-plug
-events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
-PCI bus during run time and have it rediscovered which will require the
-call of the fixups again in order for the device to function properly.
+Resolves-bug: https://bugzilla.kernel.org/show_bug.cgi?id=43064
+BugLink: http://bugs.launchpad.net/bugs/951143
 
-This patch prepares specific quirk(s) for use with hot-plug events.
-
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
 ---
+ drivers/pci/quirks.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
- arch/alpha/kernel/pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 1a62963..a4681fe 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -106,7 +106,7 @@ quirk_cypress(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CONTAQ, PCI_DEVICE_ID_CONTAQ_82C693, quirk_cypress);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 194b243a..d1bb4db 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2955,6 +2955,25 @@ static void __devinit asus_ehci_no_d3(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c26, asus_ehci_no_d3);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
  
- /* Called for each device after PCI setup is done. */
--static void __init
-+static void __devinit
- pcibios_fixup_final(struct pci_dev *dev)
++/*
++ * ASUS BIOS will check the EHCI controller's PCI COMMAND register to see
++ * if the value is all zero. If not, BIOS will think the USB is not disabled
++ * and will try to disable USB. But, actually, USB is disabled by the driver
++ * while entering S3, so it'll hang in BIOS when it try to disable USB.
++ * Since it's going to enter S3, so it does no harm to clear the EHCI
++ * controller's PCI COMMAND register. And the value of the PCI COMMAND
++ * register value will be restored correctly after S3.
++ */
++static void asus_clear_pci_command(struct pci_dev *dev)
++{
++	if (dev->subsystem_vendor != PCI_VENDOR_ID_ASUSTEK)
++		return;
++
++	pci_write_config_word(dev, PCI_COMMAND, 0);
++}
++DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_AMD, 0x7808, asus_clear_memory_bit);
++DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_ATI, 0x4396, asus_clear_memory_bit);
++
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
  {
- 	unsigned int class = dev->class >> 8;
+-- 
+1.7.9.5
 
