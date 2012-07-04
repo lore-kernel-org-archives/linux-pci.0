@@ -1,38 +1,37 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Malte =?iso-8859-2?q?Schr=F6der?= <maltesch@gmx.de>
-Subject: Re: PCI ACPI/IRQ-routing broken on H77 chipset + Ivy Bridge (kernel 3.5-rc7 and earlier)
-Date: Sun, 15 Jul 2012 22:25:48 +0200
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <5002BC55.3050107@gmx.de>
-In-Reply-To: <5002BC55.3050107@gmx.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:44869 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972Ab2GDGdX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2012 02:33:23 -0400
+Received: by ghrr11 with SMTP id r11so6127619ghr.19
+        for <linux-pci@vger.kernel.org>; Tue, 03 Jul 2012 23:33:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201207152225.49154.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
+Date: Wed, 4 Jul 2012 12:03:22 +0530
+Message-ID: <CAJkVMNoYYb3vpP1T5Sq3nmzpwLJUG7oRxUyX5=M9byQQjW1aew@mail.gmail.com>
+Subject: 64 bit address to a pcie card
+From: sumit chaudhary <flyingbee.linux@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CC-ing linux-pci and Bjorn.
+Hi,
+I have a 64 bit PCIe card that is connected to 64 bit PC running
+ubuntu (Linux ubuntu 3.0.0-12-generic #20-Ubuntu SMP Fri Oct 7
+14:56:25 UTC 2011 x86_64 x86_64 x86_64 GNU/Linux). Linux enumerate
+this PCIe card and assign 64 bit addresses to 64 bit BARS.
 
-On Sunday, July 15, 2012, Malte Schröder wrote:
-> Hello,
-> this is yet another try to get someone to look at this ;)
-> 
-> I can't get PCI-devices to work on my DH77KC mainboard. I tested this
-> using an AVM B1 ISDN card, a Fritz!PCI card and an old 3Com 905c NIC.
-> I attached some dumps in case it helps. The CPU is a Core i7 3770.
-> 
-> PCI hardware is detected by the kernel, but it gives IRQ errors. Using
-> irqpoll allows the PCI card to somewhat work, but it is unreliable.
-> 
-> There are some reports in Intel's support forums that also report
-> PCI-problems with this mainboard, but Intel doesn't seem to be
-> interested. So I hope this is something that is fixable on the kernel side.
-> 
-> If there is more information needed, please let me know.
-> 
-> 
-> 
+Problem is that higher 4 bytes of these addresses are zero, even if
+they are 64 bit address
+they lies in 32 bit range.
 
+Is it somehow possible to assign real 64 bit addresses ?
+
+This is lspci output on my ubuntu PC.
+
+Region 0: Memory at fddff000 (64-bit, non-prefetchable) [size=4K]
+Region 2: Memory at fd000000 (64-bit, prefetchable) [size=8M]
+Region 4: Memory at fc800000 (64-bit, prefetchable) [size=8M]
+
+Regards,
+Flyingbee.
