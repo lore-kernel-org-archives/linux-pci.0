@@ -1,179 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:55720
-	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754236Ab2GNQnZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jul 2012 12:43:25 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: kernel-janitors@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 5/6] drivers/pci/hotplug: ensure a consistent return value in error case
-Date: Sat, 14 Jul 2012 18:43:07 +0200
-Message-Id: <1342284188-19176-6-git-send-email-Julia.Lawall@lip6.fr>
-In-Reply-To: <1342284188-19176-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1342284188-19176-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:43070 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933382Ab2GDIGs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2012 04:06:48 -0400
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 6AC1D3EE0C1
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:06:46 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 4783E45DEB7
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:06:46 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 22D8145DEB4
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:06:46 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 0C03D1DB8040
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:06:46 +0900 (JST)
+Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id B9DAB1DB803C
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:06:45 +0900 (JST)
+Date: Wed, 4 Jul 2012 17:06:37 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH 1/7] x86, PCI: Fix non acpi path pci_sysdata leaking with
+ release_fn
+Message-Id: <20120704170637.e1fd77f5.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120704170345.07cd0ad7.izumi.taku@jp.fujitsu.com>
+References: <20120704170345.07cd0ad7.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+From: Yinghai Lu <yinghai@kernel.org>
 
-Typically, the return value desired for the failure of a function with an
-integer return value is a negative integer.  In these cases, the return
-value is sometimes a negative integer and sometimes 0, due to a subsequent
-initialization of the return variable within the loop.
-
-A simplified version of the semantic match that finds this problem is:
-(http://coccinelle.lip6.fr/)
-
-//<smpl>
-@r exists@
-identifier ret;
-position p;
-constant C;
-expression e1,e3,e4;
-statement S;
-@@
-
-ret = -C
-... when != ret = e3
-    when any
-if@p (...) S
-... when any
-if (\(ret != 0\|ret < 0\|ret > 0\) || ...) { ... return ...; }
-... when != ret = e3
-    when any
-*if@p (...)
-{
-  ... when != ret = e4
-  return ret;
-}
-//</smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+    x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
+    
+    Non acpi path, or root is not probed from acpi, during root bus removal
+    will get warning about leaking from pci_scan_bus_on_node.
+    
+    Fix it with setting pci_host_bridge release function.
+    
+    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
 ---
- drivers/pci/hotplug/cpqphp_core.c    |   14 ++++++++++----
- drivers/pci/hotplug/pcihp_skeleton.c |   14 ++++++++++----
- drivers/pci/hotplug/shpchp_core.c    |   14 ++++++++++----
- 3 files changed, 30 insertions(+), 12 deletions(-)
+ arch/x86/pci/common.c |   17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
-index 187a199..c8eaeb4 100644
---- a/drivers/pci/hotplug/cpqphp_core.c
-+++ b/drivers/pci/hotplug/cpqphp_core.c
-@@ -611,7 +611,7 @@ static int ctrl_slot_setup(struct controller *ctrl,
- 	u32 tempdword;
- 	char name[SLOT_NAME_SIZE];
- 	void __iomem *slot_entry= NULL;
--	int result = -ENOMEM;
-+	int result;
+Index: linux/arch/x86/pci/common.c
+===================================================================
+--- linux.orig/arch/x86/pci/common.c	2012-07-04 09:54:52.159485283 +0900
++++ linux/arch/x86/pci/common.c	2012-07-04 09:54:59.788389907 +0900
+@@ -634,17 +634,19 @@ int pci_ext_cfg_avail(struct pci_dev *de
+ 		return 0;
+ }
  
- 	dbg("%s\n", __func__);
++static void release_pci_sysdata(struct pci_host_bridge *bridge)
++{
++	struct pci_sysdata *sd = bridge->release_data;
++
++	kfree(sd);
++}
++
+ struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
+ {
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus = NULL;
+ 	struct pci_sysdata *sd;
  
-@@ -623,19 +623,25 @@ static int ctrl_slot_setup(struct controller *ctrl,
- 
- 	while (number_of_slots) {
- 		slot = kzalloc(sizeof(*slot), GFP_KERNEL);
--		if (!slot)
-+		if (!slot) {
-+			result = -ENOMEM;
- 			goto error;
-+		}
- 
- 		slot->hotplug_slot = kzalloc(sizeof(*(slot->hotplug_slot)),
- 						GFP_KERNEL);
--		if (!slot->hotplug_slot)
-+		if (!slot->hotplug_slot) {
-+			result = -ENOMEM;
- 			goto error_slot;
-+		}
- 		hotplug_slot = slot->hotplug_slot;
- 
- 		hotplug_slot->info = kzalloc(sizeof(*(hotplug_slot->info)),
- 							GFP_KERNEL);
--		if (!hotplug_slot->info)
-+		if (!hotplug_slot->info) {
-+			result = -ENOMEM;
- 			goto error_hpslot;
-+		}
- 		hotplug_slot_info = hotplug_slot->info;
- 
- 		slot->ctrl = ctrl;
-diff --git a/drivers/pci/hotplug/pcihp_skeleton.c b/drivers/pci/hotplug/pcihp_skeleton.c
-index b20ceaa..1f00b93 100644
---- a/drivers/pci/hotplug/pcihp_skeleton.c
-+++ b/drivers/pci/hotplug/pcihp_skeleton.c
-@@ -252,7 +252,7 @@ static int __init init_slots(void)
- 	struct slot *slot;
- 	struct hotplug_slot *hotplug_slot;
- 	struct hotplug_slot_info *info;
--	int retval = -ENOMEM;
-+	int retval;
- 	int i;
- 
- 	/*
-@@ -261,17 +261,23 @@ static int __init init_slots(void)
- 	 */
- 	for (i = 0; i < num_slots; ++i) {
- 		slot = kzalloc(sizeof(*slot), GFP_KERNEL);
--		if (!slot)
-+		if (!slot) {
-+			retval = -ENOMEM;
- 			goto error;
-+		}
- 
- 		hotplug_slot = kzalloc(sizeof(*hotplug_slot), GFP_KERNEL);
--		if (!hotplug_slot)
-+		if (!hotplug_slot) {
-+			retval = -ENOMEM;
- 			goto error_slot;
-+		}
- 		slot->hotplug_slot = hotplug_slot;
- 
- 		info = kzalloc(sizeof(*info), GFP_KERNEL);
--		if (!info)
-+		if (!info) {
-+			retval = -ENOMEM;
- 			goto error_hpslot;
-+		}
- 		hotplug_slot->info = info;
- 
- 		slot->number = i;
-diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-index 7414fd9..b6de307 100644
---- a/drivers/pci/hotplug/shpchp_core.c
-+++ b/drivers/pci/hotplug/shpchp_core.c
-@@ -99,22 +99,28 @@ static int init_slots(struct controller *ctrl)
- 	struct hotplug_slot *hotplug_slot;
- 	struct hotplug_slot_info *info;
- 	char name[SLOT_NAME_SIZE];
--	int retval = -ENOMEM;
-+	int retval;
- 	int i;
- 
- 	for (i = 0; i < ctrl->num_slots; i++) {
- 		slot = kzalloc(sizeof(*slot), GFP_KERNEL);
--		if (!slot)
-+		if (!slot) {
-+			retval = -ENOMEM;
- 			goto error;
-+		}
- 
- 		hotplug_slot = kzalloc(sizeof(*hotplug_slot), GFP_KERNEL);
--		if (!hotplug_slot)
-+		if (!hotplug_slot) {
-+			retval = -ENOMEM;
- 			goto error_slot;
-+		}
- 		slot->hotplug_slot = hotplug_slot;
- 
- 		info = kzalloc(sizeof(*info), GFP_KERNEL);
--		if (!info)
-+		if (!info) {
-+			retval = -ENOMEM;
- 			goto error_hpslot;
-+		}
- 		hotplug_slot->info = info;
- 
- 		slot->hp_slot = i;
+-	/*
+-	 * Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+ 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+ 	if (!sd) {
+ 		printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busno);
+@@ -654,7 +656,10 @@ struct pci_bus * __devinit pci_scan_bus_
+ 	x86_pci_root_bus_resources(busno, &resources);
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+ 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
+-	if (!bus) {
++	if (bus)
++		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
++					release_pci_sysdata, sd);
++	else {
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
+ 	}
 
