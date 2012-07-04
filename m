@@ -1,103 +1,229 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:63676 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751882Ab2HAGgB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 02:36:01 -0400
-Date: Wed, 1 Aug 2012 08:35:45 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
-Message-ID: <20120801063545.GA26791@avionic-0098.adnet.avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
- <50180547.9040603@wwwdotorg.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56414 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752876Ab2GDSHe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2012 14:07:34 -0400
+Received: by lbbgm6 with SMTP id gm6so11542061lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 04 Jul 2012 11:07:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="yrj/dFKFPuw6o+aM"
-In-Reply-To: <50180547.9040603@wwwdotorg.org>
+In-Reply-To: <4FF34CEF.3090400@redhat.com>
+References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo7NiCsuM+UxveZbYxNsCiStMH5SLZ8EdFzJ7EduB306OQ@mail.gmail.com>
+ <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com> <4FF34CEF.3090400@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 4 Jul 2012 12:07:11 -0600
+Message-ID: <CAErSpo7=BzPX87qgKS_xkJg4o8BGDan-o7D9NqRiqKvH0kLjfQ@mail.gmail.com>
+Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
+ ports without native PCIe hotplug capability
+To: Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jul 3, 2012 at 1:50 PM, Don Dutile <ddutile@redhat.com> wrote:
+> On 07/03/2012 11:59 AM, Bjorn Helgaas wrote:
+>>
+>> On Mon, Jul 2, 2012 at 10:16 PM, Bjorn Helgaas<bhelgaas@google.com>
+>> wrote:
+>>>
+>>> On Mon, Jun 4, 2012 at 1:44 AM, Jiang Liu<jiang.liu@huawei.com>  wrote:
+>>>>
+>>>> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make
+>>>> acpiphp
+>>>> ignore root bridges using PCIe native hotplug) added code that made the
+>>>> acpiphp driver completely ignore PCIe root complexes for which the
+>>>> kernel
+>>>> had been granted control of the native PCIe hotplug feature by the BIOS
+>>>> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
+>>>> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
+>>>> the constraints to allow acpiphp driver handle non-PCIe bridges under
+>>>> such a complex. The constraint needs to be relaxed further to allow
+>>>> acpiphp driver to hanlde PCIe ports without native PCIe hotplug
+>>>> capability.
+>>>>
+>>>> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
+>>>> switches and may migrate downstream ports among virtual switches.
+>>>> To migrate a downstream port from the source virtual switch to the
+>>>> target,
+>>>> the port needs to be hot-removed from the source and hot-added into the
+>>>> target. pciehp driver can't be used here because there's no slots within
+>>>> the virtual PCIe switch. So acpiphp driver is used to support downstream
+>>>> port migration. A typical configuration is as below:
+>>>> [Root w/o native PCIe HP]
+>>>>          [Upstream port of vswitch w/o native PCIe HP]
+>>>>                  [Downstream port of vswitch w/ native PCIe HP]
+>>>>                          [PCIe enpoint]
+>>>>
+>>>> Here acpiphp driver will be used to handle root ports and upstream port
+>>>> in the virtual switch, and pciehp driver will be used to handle
+>>>> downstream
+>>>> ports in the virtual switch.
+>>>>
+>>>> Acked-by: Rafael J. Wysocki<rjw@sisk.pl>
+>>>> Signed-off-by: Jiang Liu<liuj97@gmail.com>
+>>>>
+>>>> ---
+>>>>   drivers/pci/hotplug/acpiphp_glue.c |   49
+>>>> ++++++++++++++++++++++++++++-------
+>>>>   1 files changed, 39 insertions(+), 10 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c
+>>>> b/drivers/pci/hotplug/acpiphp_glue.c
+>>>> index 806c44f..4889448 100644
+>>>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>>>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>>>> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops
+>>>> = {
+>>>>          .handler = handle_hotplug_event_func,
+>>>>   };
+>>>>
+>>>> +/* Check whether device is managed by native PCIe hotplug driver */
+>>>> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
+>>>> +{
+>>>> +       int pos;
+>>>> +       u16 reg16;
+>>>> +       u32 reg32;
+>>>> +       acpi_handle tmp;
+>>>> +       struct acpi_pci_root *root;
+>>>> +
+>>>> +       if (!pci_is_pcie(pdev))
+>>>> +               return false;
+>>>> +
+>>>> +       /* Check whether PCIe port supports native PCIe hotplug */
+>>>> +       pos = pci_pcie_cap(pdev);
+>>>
+>>>
+>>> Add "if (!pos) return false;" here and you can drop the "if
+>>> (!pci_is_pcie())" test above.
+>>>
+>>>> +       pci_read_config_word(pdev, pos + PCI_EXP_FLAGS,&reg16);
+>>>> +       if (!(reg16&  PCI_EXP_FLAGS_SLOT))
+>>>
+>>>
+>>> I think this is unsafe.  Per the PCIe v3.0 spec, sec 7.8.2 on p648,
+>>> the "Slot Implemented" bit is undefined except for Downstream Ports,
+>>> so we're using an undefined bit to decide whether to read
+>>> PCI_EXP_SLTCAP.
+>>>
+>>> If the device has a v1 PCIe Capability, it is not required to even
+>>> implement PCI_EXP_SLTCAP, so we could be reading garbage out of an
+>>> unrelated capability.  This is in sec 7.8, p363, of the v1.1 PCIe
+>>> spec.  I think v3.0 of the spec is dangerously incomplete because it
+>>> doesn't include enough information to handle the v1 PCIe Capability
+>>> correctly.
+>>>
+>>> There's a fair amount of work to fix this.  I started doing it, but
+>>> decided I didn't have time to complete it.  Here's what I think we
+>>> (and by "we," I'm afraid I mean "you" :)) should do:
+>>>
+>>>    - Add a "u16 pcie_flags" field in struct pci_dev and save the "PCI
+>>> Express Capabilities Register" there in set_pcie_port_type().  All
+>>> fields in that register are read-only, so it should be safe to cache
+>>> it.
+>>>    - Remove pcie_type from struct pci_dev and replace it with a
+>>> pcie_type() inline that extracts it from pcie_flags.
+>>>    - Rework the pcie_cap_has_*() macros in drivers/pci/pci.c to take a
+>>> struct pci_dev * and use pcie_flags instead of type and flags.  This
+>>> will remove the need for callers to read the flags themselves.
+>>>    - Move the pcie_cap_has_*() macros to include/linux/pci_reg.h so
+>>> they can be shared.
+>>>    - Audit all uses of the Link registers (PCI_EXP_LNKCAP,
+>>> PCI_EXP_LNKCTL, PCI_EXP_LNKSTA), Slot registers (PCI_EXP_SLTCAP,
+>>> PCI_EXP_SLTCTL, PCI_EXP_SLTSTA), and Root registers (PCI_EXP_RTCAP,
+>>> PCI_EXP_RTCTL, PCI_EXP_RTSTA) to make sure the register exists, either
+>>> by using pcie_cap_has_*() or some other knowledge of the device.
+>>
+>>
+>> Thinking about this some more, this still leaves the callers
+>> responsible for using pcie_cap_has_*(), which feels pretty
+>> error-prone.
+>>
+>> I wonder if it'd be worth adding interfaces like:
+>>
+>>    pcie_cap_read_word(const struct pci_dev *, int where, u16 *val);
+>>    pcie_cap_read_dword(const struct pci_dev *, int where, u32 *val);
+>>    pcie_cap_write_word(const struct pci_dev *, int where, u16 val);
+>>    pcie_cap_write_dword(const struct pci_dev *, int where, u32 val);
+>>
+>
+> I like your thinking!
+>
+>
+>> We might be able to encapsulate the v1/v2 differences inside these, e.g.,
+>>
+>>    int pcie_cap_read_word(const struct pci_dev *dev, int where, u16 *val)
+>>    {
+>>        int pos;
+>>
+>>        pos = pci_pcie_cap(dev);
+>>        if (!pos)
+>>            return -EINVAL;
+>>
+> may want to change read value to 0 just in case callers are doing rtn value
+> check and just value-read mask & go.  I believe for all the
+> optional/version'd
+> registers below, non-existent regs are required to be rtn-zero if not
+> implemented.
 
---yrj/dFKFPuw6o+aM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Generally I prefer that if a function returns failure, it doesn't
+modify the parameters passed by reference, but in this case, I think
+you're right that we should set *val to zero to begin with.  It will
+simplify the following code somewhat, too.
 
-On Tue, Jul 31, 2012 at 10:18:15AM -0600, Stephen Warren wrote:
-> On 07/26/2012 01:55 PM, Thierry Reding wrote:
-> > This patch series adds support for device tree based probing of the PCIe
-> > controller found on Tegra SoCs.
->=20
-> Thierry,
->=20
-> I think one thing that would help here would be to split up this series
-> into one per subsystem, and to get all the dependencies merged by the
-> respective maintainers. Preferably, each subsystem would export a stable
-> branch (perhaps consisting of just these patches) that I can then merge
-> into the Tegra tree and use as a basis for the PCIe driver itself.
-> Hopefully this approach will get more traction on all the non-Tegra
-> changes. Does that sound like a good plan?
+Note that most non-implemented registers should read as zero, but Slot
+Status of Downstream Ports is an exception (spec v3.0, sec 7.8, line
+25).
 
-I don't understand. The series is already split up into per-subsystem
-patches. I just didn't want to post them separately so everybody on Cc
-would be able to see the big picture and the reason why the patch was
-required.
+>>        switch (where) {
+>>        case PCI_EXP_FLAGS:
+>>        case PCI_EXP_DEVCTL:
+>>        case PCI_EXP_DEVSTA:
+>>            return pci_read_config_word(dev, pos + where, val);
+>>        case PCI_EXP_LNKCTL:
+>>        case PCI_EXP_LNKSTA:
+>>            if (pcie_cap_has_lnkctl(dev))
+>>                return pci_read_config_word(dev, pos + where, val);
+>>            else {
+>>                *val = 0;
+>>                return 0;
+>>            }
+>>        case PCI_EXP_SLTCTL:
+>>        case PCI_EXP_SLTSTA:
+>>            if (pcie_cap_has_sltctl(dev))
+>>                return pci_read_config_word(dev, pos + where, val);
+>>            else {
+>>                *val = 0;
+>>                if (where == PCI_EXP_SLTSTA&&  dev->pcie_type ==
+>>
+>> PCI_EXP_TYPE_DOWNSTREAM)
+>>                    *val = PCI_EXP_SLTSTA_PDS;
+>>                return 0;
+>>        ...
+>>        };
+>>        return -EINVAL;
+>>    }
+>>
+>> Any thoughts?
+>
+>
+> only one is that 'cap' is overused in PCI space, just like 'domain' in
+> various kernel subsystems.  cap could be 'cap list structure'
+> or a specific 'capability'.  I wish we had a better TLA for 'cap' and what
+> it refers to. ... but that's my pet peeve...
 
-> Or, I can just take it all through the Tegra tree, but I'll definitely
-> need acks on all/most of the non-Tegra patches, since although the
-> patches themselves are quite small, I'd like to be sure that maintainers
-> are OK with the conceptual changes, like initializing PCI controllers
-> later than at present etc.
+I agree, 'cap' is overused and confusing.  Even "PCI Express
+Capability Structure" as used in the spec seems slightly confusing to
+me.  The existing pci_find_capability() interfaces spell out 'cap';
+maybe we should, too.  Here are some possibilities, starting with my
+current favorite:
 
-Taking the patches through the individual trees should be fine. Only so
-far other subsystem maintainers haven't commented on this.
-
-As to when the PCI controller is initialized, there really aren't many
-options. On Harmony (and TEC, which in this respect, and others, is very
-similar) the VDD is supplied by a GPIO of the PMU, so it is currently
-necessary to probe it at least after the PMU. And unless we want to
-work around these issues using different initcall ordering we need to
-rely on deferred probing, which turns out to be done after the init
-phase often (always?).
-
-Also I had been toying with making the Tegra PCIe driver work as a
-module, but that doesn't work currently with MSI support. However it
-might be nice to allow MSI controllers to register at runtime generally,
-which wouldn't be all that difficult to do I think. Of course somebody
-more knowledgeable may disagree.
-
-Thierry
-
---yrj/dFKFPuw6o+aM
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQGM5BAAoJEN0jrNd/PrOhMMsP/jXL0GKN5NUE7OdHFwUV/DrX
-05Qvq8qUl/K61phGiq8Q1hw6HSZJPBcX5ROaIVwvtu21CDCULnO5XOXAdGx3pP0y
-gwzdPF/BL1AWsRFbtwu4wV0PpYeG+x0mNuZ3K04zKJc2qXtcgonNPFBG47cdJw+N
-BaeslBXB//3Dh+QBMMvRE+mTnV81YsavdZTxfhonNjziCvwGYU/qbGh1C6cQpoHy
-nhvVYnx7y2yDFe3dndDOE5XeeuhFSFzT6E6/eBXWkhKhVSDvf9me8CUuRtnWToXX
-3bWwgysu+J5KvggtH4nva3qK4VUdoAW7came4i0+gAwBp+mZM5wewDR5hqTor4EG
-AfBF4y30S9+/b4hIrtW17uBqeuEPFaw76rteRA7QIGtbY19suPXAtMrWFeV6HzvT
-TDnFO6kRU2pf3CUkDkXGloMd9ZdRZixTyH5X6CzCF29qUj+AUfctuQdkxM/7q/sH
-v55Xdts8y0MVV+1WC68NvDZ8u6rqvycbWPlxfCsgAO9t1siGhn14cRwRc82BAl5J
-7kiIVM0ea/RrBeSz2WLIInCfjgPXik/VN02Imi98wlyShRT3yobwORqmCfBfNEA2
-HIWAycTaMNjSz0McvENffc0YTlSzY+krKiAlEfe3jJk+x0ewWvbXQ8Rf4N52MBaH
-z2Uqv+g94+PkJXSasFnU
-=lXfK
------END PGP SIGNATURE-----
-
---yrj/dFKFPuw6o+aM--
+  pci_pcie_capability_read_word()
+  pci_pcie_cap_read_word()  (extension of existing pci_pcie_cap() idea)
+  pci_express_cap_read_word()
