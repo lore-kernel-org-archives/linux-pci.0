@@ -1,201 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2435 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751947Ab2GPSiR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Jul 2012 14:38:17 -0400
-Date: Mon, 16 Jul 2012 11:38:16 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: chetan loke <loke.chetan@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20120716183816.GH9598@jonmason-lab>
-References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
- <CAAsGZS5uMArBVa+Rog1H60FVfKq84eqt5G2dvafDWXTP-RdiwQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAAsGZS5uMArBVa+Rog1H60FVfKq84eqt5G2dvafDWXTP-RdiwQ@mail.gmail.com>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:58571 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756016Ab2GDDNm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 23:13:42 -0400
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 907623EE0BC
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:13:41 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 52E6645DE50
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:13:41 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 2FFF445DD78
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:13:41 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 1D0FF1DB803C
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:13:41 +0900 (JST)
+Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id C50E41DB8038
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:13:40 +0900 (JST)
+Date: Wed, 4 Jul 2012 12:13:30 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH] pci: reserve extra bus number resource for hotplug
+ bridge
+Message-Id: <20120704121330.e107c191.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <CAE9FiQWOWaQyJHcOfWF5eRMD_cf523zUo8S_kSofWuQynpoQ+w@mail.gmail.com>
+References: <20120702134901.83708415.izumi.taku@jp.fujitsu.com>
+	<CAE9FiQUb1rtLYAWZ=iMok+FGsJh7NcRGxGoD8eLLEOrKQsWsHw@mail.gmail.com>
+	<20120703173316.7bf169cf.izumi.taku@jp.fujitsu.com>
+	<CAE9FiQWOWaQyJHcOfWF5eRMD_cf523zUo8S_kSofWuQynpoQ+w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 16, 2012 at 12:49:39PM -0400, chetan loke wrote:
-> Hi Jon,
-> 
-> On Fri, Jul 13, 2012 at 5:44 PM, Jon Mason <jon.mason@intel.com> wrote:
-> 
-> Just a few minor comments/questions:
-> 
-> ....
-> 
-> > +struct ntb_transport_qp {
-> > +       struct ntb_device *ndev;
-> > +
-> > +       bool client_ready;
-> > +       bool qp_link;
-> > +       u8 qp_num;      /* Only 64 QP's are allowed.  0-63 */
-> > +
-> > +       void (*tx_handler) (struct ntb_transport_qp *qp);
-> > +       struct tasklet_struct tx_work;
-> 
-> Is it ok to rename the following vars for convenience sake?
-> 
-> > +       struct list_head txq;
-> tx_pend_q - (pending_queue) or tx_out_q - (outstanding_queue) - or
-> pick any new string you like - other than a mono-syllable definition
-> 
-> > +       struct list_head txc;
-> tx_compl_q - completion queue
-> 
-> > +       struct list_head txe;
-> tx_avail_e - available entry queue
-> 
-> 
-> > +       spinlock_t txq_lock;
-> > +       spinlock_t txc_lock;
-> > +       spinlock_t txe_lock;
-> 
-> then match the variants accordingly.
-> 
-> > +       struct list_head rxq;
-> > +       struct list_head rxc;
-> > +       struct list_head rxe;
-> > +       spinlock_t rxq_lock;
-> > +       spinlock_t rxc_lock;
-> > +       spinlock_t rxe_lock;
-> 
-> similarly the rx-counterpart
+On Tue, 3 Jul 2012 11:16:45 -0700
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Are they difficult to understand?  I can change them, but it seems rather moot since you seemed to immediately understand the logic behind the names.
+> On Tue, Jul 3, 2012 at 1:33 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> >
+> > Hi Yinghai,
+> > Thank you for your comment.
+> >
+> > On Mon, 2 Jul 2012 13:51:59 -0700
+> > Yinghai Lu <yinghai@kernel.org> wrote:
+> >
+> >> On Sun, Jul 1, 2012 at 9:49 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> >> >
+> >> > Currently I/O ports and I/O memory resources are reserved for
+> >> > hotplug bridges and we can tune their size by using hpiosize
+> >> > and hpmemsize boot option.
+> >> >
+> >> > This patch extends feature so that we can reserve additional
+> >> > bus number resources for hotplug bridges and tune it by
+> >> > using "hpbussize" option.
+> >> >
+> >> > This patch also adds missing document for "hpiosize" and
+> >> > "hpmemsize" option.
+> >> >
+> >> > Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> >> > ---
+> >> >  Documentation/kernel-parameters.txt |   10 ++++++++++
+> >> >  drivers/pci/pci.c                   |    6 +++++-
+> >> >  drivers/pci/probe.c                 |    4 ++++
+> >> >  include/linux/pci.h                 |    1 +
+> >> >  4 files changed, 20 insertions(+), 1 deletion(-)
+> >> >
+> >> > Index: linux/drivers/pci/pci.c
+> >> > ===================================================================
+> >> > --- linux.orig/drivers/pci/pci.c
+> >> > +++ linux/drivers/pci/pci.c
+> >> > Index: linux/drivers/pci/probe.c
+> >> > ===================================================================
+> >> > --- linux.orig/drivers/pci/probe.c
+> >> > +++ linux/drivers/pci/probe.c
+> >> > @@ -865,6 +865,10 @@ int __devinit pci_scan_bridge(struct pci
+> >> >                 /*
+> >> >                  * Set the subordinate bus number to its real value.
+> >> >                  */
+> >> > +               if (dev->is_hotplug_bridge) {
+> >> > +                       if (max + pci_hotplug_bus_size < child->busn_res.end)
+> >> > +                               max += pci_hotplug_bus_size;
+> >> > +               }
+> >> >                 pci_bus_update_busn_res_end(child, max);
+> >> >                 pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
+> ...
+> >   I don't think this feature conflicts with your feature.
+> >   Even if we can reallocate bus number automatically, I'd like to
+> >   avoid that situation preferably, so I'd like to keep bus number
+> >   resource for hotplug bridge in advance.
+> >
+> >   Can't you agree with me?
+> >
+> 
+> that add may not be safe, before busn_alloc patchset, that
+> busn_res.end should be 0xff.
+> so you add extra bus range that could overlap other bridge.
+> 
+> after busn_alloc patchset:
+> 
+>                 /*
+>                  * Set the subordinate bus number to its real value.
+>                  */
+>                 if (dev->is_hotplug_bridge && child->busn_res.end > max &&
+>                    (max - child->busn_res.start) < HOTPLUG_BRIDGE_RESERVE_BUSNR)
+>                         max = min_t(int, child->busn_res.start +
+>                                          HOTPLUG_BRIDGE_RESERVE_BUSNR,
+>                                     child->busn_res.end);
+>                 shrink_size = (int)child->busn_res.end - max;
+>                 pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
+>                 pci_bus_update_busn_res_end(child, max);
+> 
+> and it will try to shrink less to preserve more space for later usage.
+> now
+> 
+> #define HOTPLUG_BRIDGE_RESERVE_BUSNR 8
+> 
+> so I assume that you want that value to be changeable via command line?
 
-> 
-> 
-> ..................
-> 
-> > +static void ntb_tx_copy_task(struct ntb_transport_qp *qp,
-> > +                            struct ntb_queue_entry *entry,
-> > +                            void *offset)
-> > +{
-> > +       struct ntb_payload_header *hdr = offset;
-> > +       int rc;
-> > +
-> > +       offset += sizeof(struct ntb_payload_header);
-> > +       memcpy_toio(offset, entry->buf, entry->len);
-> > +
-> > +       hdr->len = entry->len;
-> > +       hdr->ver = qp->tx_pkts;
-> > +
-> > +       /* Ensure that the data is fully copied out before setting the flag */
-> > +       wmb();
-> > +       hdr->flags = entry->flags | DESC_DONE_FLAG;
-> > +
-> > +       rc = ntb_ring_sdb(qp->ndev, qp->qp_num);
-> > +       if (rc)
-> > +               pr_err("%s: error ringing db %d\n", __func__, qp->qp_num);
-> > +
-> > +       if (entry->len > 0) {
-> 
-> how do you interpret this len variable and decide if it's a good/bad completion?
+ Yes. After busn_alloc patchset is merged, "hpbussize" option should work 
+ as you said.
 
-The length of 0 is for messages from the remote system, which currently only consists of a "link down" message notifying the local system to no longer send any messages to the remote side.
+-- 
+Taku Izumi <izumi.taku@jp.fujitsu.com>
 
-> 
-> > +               qp->tx_bytes += entry->len;
-> > +
-> > +               /* Add fully transmitted data to completion queue */
-> > +               ntb_list_add_tail(&qp->txc_lock, &entry->entry, &qp->txc);
-> > +
-> > +               if (qp->tx_handler)
-> > +                       qp->tx_handler(qp);
-> > +       } else
-> > +               ntb_list_add_tail(&qp->txe_lock, &entry->entry, &qp->txe);
-> 
-> I could be wrong but how is the original skb handled if the code path
-> goes in the else clause?
-
-There is no skb is the length is zero.  Since the only client is virtual ethernet, it will always be > 60.  However, I should add a sanity check for 0 length in tx_enqueue.
-
-> Also, in the else clause, how about a ntb_list_add_head rather than a _tail.
-
-Why add to the head, it was just used?
-
-> > +
-> > +static int ntb_process_tx(struct ntb_transport_qp *qp,
-> > +                         struct ntb_queue_entry *entry)
-> > +{
-> > +       struct ntb_payload_header *hdr;
-> > +       void *offset;
-> > +
-> > +       offset = qp->tx_offset;
-> > +       hdr = offset;
-> > +
-> > +       pr_debug("%lld - offset %p, tx %p, entry len %d flags %x buff %p\n",
-> > +                qp->tx_pkts, offset, qp->tx_offset, entry->len, entry->flags,
-> > +                entry->buf);
-> > +       if (hdr->flags) {
-> > +               ntb_list_add_head(&qp->txq_lock, &entry->entry, &qp->txq);
-> > +               qp->tx_ring_full++;
-> > +               return -EAGAIN;
-> > +       }
-> > +
-> > +       if (entry->len > transport_mtu) {
-> > +               pr_err("Trying to send pkt size of %d\n", entry->len);
-> > +               entry->flags = HW_ERROR_FLAG;
-> > +
-> > +               ntb_list_add_tail(&qp->txc_lock, &entry->entry, &qp->txc);
-> > +
-> > +               if (qp->tx_handler)
-> > +                       qp->tx_handler(qp);
-> > +
-> > +               return 0;
-> > +       }
-> > +
-> > +       ntb_tx_copy_task(qp, entry, offset);
-> 
-> what happens when ntb_sdb_ring returns an error? would you still want
-> to increment tx_pkts below?
-
-It's not fatal if the remote side isn't notified.  It will hurt latency, since the next packet would be the one that triggers the next interrupt.  Also, the only way it could ever fail would be if it was an invalid interrupt bit being set, which should never happen.
-
-> > +
-> > +       qp->tx_offset =
-> > +           (qp->tx_offset +
-> > +            ((transport_mtu + sizeof(struct ntb_payload_header)) * 2) >=
-> > +            qp->tx_mw_end) ? qp->tx_mw_begin : qp->tx_offset + transport_mtu +
-> > +           sizeof(struct ntb_payload_header);
-> > +
-> > +       qp->tx_pkts++;
-> > +
-> > +       return 0;
-> > +}
-> > +
-> 
-> ........................
-> 
-> 
-> > +void *ntb_transport_tx_dequeue(struct ntb_transport_qp *qp, unsigned int *len)
-> > +{
-> > +       struct ntb_queue_entry *entry;
-> > +       void *buf;
-> > +
-> > +       if (!qp)
-> > +               return NULL;
-> > +
-> > +       entry = ntb_list_rm_head(&qp->txc_lock, &qp->txc);
-> > +       if (!entry)
-> > +               return NULL;
-> > +
-> > +       buf = entry->callback_data;
-> > +       if (entry->flags != HW_ERROR_FLAG)
-> > +               *len = entry->len;
-> > +       else
-> > +               *len = -EIO;
-> > +
-> > +       ntb_list_add_tail(&qp->txe_lock, &entry->entry, &qp->txe);
-> 
-> how about a ntb_list_add_head?
-
-Is there a benefit to adding to the head versus tail?  It makes more sense to me to pull from the head and add to the tail.
-
-> 
-> 
-> Chetan Loke
