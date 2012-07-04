@@ -1,180 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61207 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755804Ab2GNFzK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 14 Jul 2012 01:55:10 -0400
-Date: Fri, 13 Jul 2012 22:55:09 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC 2/2] net: Add support for NTB virtual ethernet device
-Message-ID: <20120714055508.GC4808@jonmason-lab>
-References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
- <1342215900-3358-2-git-send-email-jon.mason@intel.com>
- <20120713170826.09210b80@nehalam.linuxnetplumber.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120713170826.09210b80@nehalam.linuxnetplumber.net>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:58649 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756016Ab2GDDPw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 23:15:52 -0400
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 976BE3EE0B6
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:15:51 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 7D63A45DEA6
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:15:51 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 6561745DE9E
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:15:51 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 5726B1DB803B
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:15:51 +0900 (JST)
+Received: from m005.s.css.fujitsu.com (m005.s.css.fujitsu.com [10.23.4.35])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 14B741DB8038
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 12:15:51 +0900 (JST)
+Date: Wed, 4 Jul 2012 12:15:45 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH 1/2] pci: add missing document for hpiosize and hpmemsize
+ option
+Message-Id: <20120704121545.6e1b2992.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120702134901.83708415.izumi.taku@jp.fujitsu.com>
+References: <20120702134901.83708415.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 13, 2012 at 05:08:26PM -0700, Stephen Hemminger wrote:
-> On Fri, 13 Jul 2012 14:45:00 -0700
-> Jon Mason <jon.mason@intel.com> wrote:
-> 
-> > A virtual ethernet device that uses the NTB transport API to send/receive data.
-> > 
-> > Signed-off-by: Jon Mason <jon.mason@intel.com>
-> > ---
-> >  drivers/net/Kconfig      |    4 +
-> >  drivers/net/Makefile     |    1 +
-> >  drivers/net/ntb_netdev.c |  411 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  3 files changed, 416 insertions(+), 0 deletions(-)
-> >  create mode 100644 drivers/net/ntb_netdev.c
-> 
-> 
-> > +static void ntb_get_drvinfo(__attribute__((unused)) struct net_device *dev,
-> > +			    struct ethtool_drvinfo *info)
-> > +{
-> > +	strlcpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
-> > +	strlcpy(info->version, NTB_NETDEV_VER, sizeof(info->version));
-> > +}
-> > +
-> > +static const char ntb_nic_stats[][ETH_GSTRING_LEN] = {
-> > +	"rx_packets", "rx_bytes", "rx_errors", "rx_dropped", "rx_length_errors",
-> > +	"rx_frame_errors", "rx_fifo_errors",
-> > +	"tx_packets", "tx_bytes", "tx_errors", "tx_dropped",
-> > +};
-> > +
-> > +static int ntb_get_stats_count(__attribute__((unused)) struct net_device *dev)
-> > +{
-> > +	return ARRAY_SIZE(ntb_nic_stats);
-> > +}
-> > +
-> > +static int ntb_get_sset_count(struct net_device *dev, int sset)
-> > +{
-> > +	switch (sset) {
-> > +	case ETH_SS_STATS:
-> > +		return ntb_get_stats_count(dev);
-> > +	default:
-> > +		return -EOPNOTSUPP;
-> > +	}
-> > +}
-> > +
-> > +static void ntb_get_strings(__attribute__((unused)) struct net_device *dev,
-> > +			    u32 sset, u8 *data)
-> > +{
-> > +	switch (sset) {
-> > +	case ETH_SS_STATS:
-> > +		memcpy(data, *ntb_nic_stats, sizeof(ntb_nic_stats));
-> > +	}
-> > +}
-> > +
-> > +static void
-> > +ntb_get_ethtool_stats(struct net_device *dev,
-> > +		      __attribute__((unused)) struct ethtool_stats *stats,
-> > +		      u64 *data)
-> > +{
-> > +	int i = 0;
-> > +
-> > +	data[i++] = dev->stats.rx_packets;
-> > +	data[i++] = dev->stats.rx_bytes;
-> > +	data[i++] = dev->stats.rx_errors;
-> > +	data[i++] = dev->stats.rx_dropped;
-> > +	data[i++] = dev->stats.rx_length_errors;
-> > +	data[i++] = dev->stats.rx_frame_errors;
-> > +	data[i++] = dev->stats.rx_fifo_errors;
-> > +	data[i++] = dev->stats.tx_packets;
-> > +	data[i++] = dev->stats.tx_bytes;
-> > +	data[i++] = dev->stats.tx_errors;
-> > +	data[i++] = dev->stats.tx_dropped;
-> > +}
-> 
-> These statistics add no value over existing network stats.
-> Don't implement ethtool stats unless device has something more
-> interesting to say.
 
-Fair enough
+This patch adds missinc document for "hpiosize" and "hpmemsize"
+option.
 
-> 
-> > +static const struct ethtool_ops ntb_ethtool_ops = {
-> > +	.get_drvinfo = ntb_get_drvinfo,
-> > +	.get_sset_count = ntb_get_sset_count,
-> > +	.get_strings = ntb_get_strings,
-> > +	.get_ethtool_stats = ntb_get_ethtool_stats,
-> > +	.get_link = ethtool_op_get_link,
-> > +};
-> 
-> If you want to implement bonding or bridging then implementing
-> get_settings would help.
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ Documentation/kernel-parameters.txt |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Will do.
+Index: linux/Documentation/kernel-parameters.txt
+===================================================================
+--- linux.orig/Documentation/kernel-parameters.txt	2012-06-26 14:37:24.000000000 +0900
++++ linux/Documentation/kernel-parameters.txt	2012-07-04 10:00:58.822901307 +0900
+@@ -2168,6 +2168,12 @@ bytes respectively. Such letter suffixes
+ 		cbmemsize=nn[KMG]	The fixed amount of bus space which is
+ 				reserved for the CardBus bridge's memory
+ 				window. The default value is 64 megabytes.
++		hpiosize	The fixed amount of bus space which is
++				reserved for hotplug bridge's IO window.
++				The default value is 256 bytes.
++		hpmemsize	The fixed amount of bus space which is
++				reserved for hotplug bridge's memory window.
++				The default value is 2 megabytes.
+ 		resource_alignment=
+ 				Format:
+ 				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
 
-> > +static int __init ntb_netdev_init_module(void)
-> > +{
-> > +	struct ntb_netdev *dev;
-> > +	int rc;
-> > +
-> > +	pr_info("%s: Probe\n", KBUILD_MODNAME);
-> 
-> Useless message
-
-True, will remove.
-
-Thanks for the comments!
- 
-> > +	netdev = alloc_etherdev(sizeof(struct ntb_netdev));
-> > +	if (!netdev)
-> > +		return -ENOMEM;
-> > +
-> > +	dev = netdev_priv(netdev);
-> > +	dev->ndev = netdev;
-> > +	netdev->features = NETIF_F_HIGHDMA;
-> > +
-> > +	netdev->hw_features = netdev->features;
-> > +	netdev->watchdog_timeo = msecs_to_jiffies(NTB_TX_TIMEOUT_MS);
-> > +
-> > +	random_ether_addr(netdev->perm_addr);
-> > +	memcpy(netdev->dev_addr, netdev->perm_addr, netdev->addr_len);
-> > +
-> > +	netdev->netdev_ops = &ntb_netdev_ops;
-> > +	SET_ETHTOOL_OPS(netdev, &ntb_ethtool_ops);
-> > +
-> > +	dev->qp = ntb_transport_create_queue(ntb_netdev_rx_handler,
-> > +					     ntb_netdev_tx_handler,
-> > +					     ntb_netdev_event_handler);
-> > +	if (!dev->qp) {
-> > +		rc = -EIO;
-> > +		goto err;
-> > +	}
-> > +
-> > +	netdev->mtu = ntb_transport_max_size(dev->qp) - ETH_HLEN;
-> > +
-> > +	rc = register_netdev(netdev);
-> > +	if (rc)
-> > +		goto err1;
-> > +
-> > +	pr_info("%s: %s created\n", KBUILD_MODNAME, netdev->name);
-> > +	return 0;
-> > +
-> > +err1:
-> > +	ntb_transport_free_queue(dev->qp);
-> > +err:
-> > +	free_netdev(netdev);
-> > +	return rc;
-> > +}
-> > +module_init(ntb_netdev_init_module);
-> > +
-> > +static void __exit ntb_netdev_exit_module(void)
-> > +{
-> > +	struct ntb_netdev *dev = netdev_priv(netdev);
-> > +
-> > +	unregister_netdev(netdev);
-> > +	ntb_transport_free_queue(dev->qp);
-> > +	free_netdev(netdev);
-> > +
-> > +	pr_info("%s: Driver removed\n", KBUILD_MODNAME);
-> > +}
-> > +module_exit(ntb_netdev_exit_module);
-> 
