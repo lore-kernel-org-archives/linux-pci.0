@@ -1,73 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:43776 "EHLO
-	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752134Ab2GTUBR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2012 16:01:17 -0400
-Message-ID: <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: Re: New commands to configure IOV features
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Chris Friesen <chris.friesen@genband.com>
-CC: Don Dutile <ddutile@redhat.com>,
-	David Miller <davem@davemloft.net>, <yuvalmin@broadcom.com>,
-	<gregory.v.rose@intel.com>, <netdev@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Date: Fri, 20 Jul 2012 21:01:13 +0100
-In-Reply-To: <5009B186.6000806@genband.com>
-References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>
-			<5005D45D.1040302@genband.com>
-		 <20120717.141153.46613285253481776.davem@davemloft.net>
-		 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
-	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
-	 <5009B186.6000806@genband.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from blu0-omc4-s15.blu0.hotmail.com ([65.55.111.154]:13097 "EHLO
+	blu0-omc4-s15.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750829Ab2GETxJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 15:53:09 -0400
+Message-ID: <BLU0-SMTP4072281F8943F14DE4E72B1B7EF0@phx.gbl>
+Date: Thu, 5 Jul 2012 20:53:00 +0100
+From: Rob Allen <ra-kernel@hotmail.co.uk>
 MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: linuxram@us.ibm.com, stefanr@s5r6.in-berlin.de, clemens@ladisch.de,
+	linux1394-devel@lists.sourceforge.net, linux-pci@vger.kernel.org
+Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
+References: <20120513221357.7574ae79@stein> <4FB0A6F6.9050504@ladisch.de> <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com> <BLU0-SMTP12B809D527F768CCC42B18B7180@phx.gbl> <4FB3B159.2090401@ladisch.de> <BLU0-SMTP47479D78AA811CB0B224ADFB71D0@phx.gbl> <4FBAA3A5.4070200@ladisch.de> <20120524202610.5c561d99@stein> <4FBE8146.1030803@hotmail.co.uk> <BLU0-SMTP435F81F04D60963F0755BA9B70F0@phx.gbl> <20120605025422.GB6637@ram-ThinkPad-T61> <BLU0-SMTP4409FB70A51AD516797B0B1B7FF0@phx.gbl> <BAY153-W382DF41517C8EA770817E4B7EB0@phx.gbl> <CAE9FiQXbo984cn-oXOZHZ6pbH4TsxZyKCwT3Fu5g_OJxGw4UZg@mail.gmail.com>
+In-Reply-To: <CAE9FiQXbo984cn-oXOZHZ6pbH4TsxZyKCwT3Fu5g_OJxGw4UZg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-07-20 at 13:29 -0600, Chris Friesen wrote:
-> On 07/20/2012 11:42 AM, Ben Hutchings wrote:
-> >
-> > The ethtool API is typically used for net device operations that can be
-> > largely devolved to individual drivers, and which the network stack can
-> > mostly ignore (though offload features are an historical exception to
-> > this).  It started with Ethernet link settings, but many operations are
-> > applicable (and implemented by) other types of network device.
-> 
-> That (potentially) accounts for all network devices, but it leaves all 
-> the other devices that could export virtual functions.
-> 
-> Why should I need to use a different API to enable virtual functions on 
-> my network device and my storage controller?
+On 01/07/12 21:56, Yinghai Lu wrote:
+> working one:
+> 	Region 0: Memory at d0402000 (32-bit, non-prefetchable) [size=4K]
+> 	Region 1: Memory at d0403000 (32-bit, non-prefetchable) [size=2K]
+> not working one:
+> 	Region 0: Memory at d0401000 (32-bit, non-prefetchable) [disabled] [size=4K]
+> 	Region 1: Memory at d0403000 (32-bit, non-prefetchable) [disabled] [size=2K]
+>
+> can not understand why could make a difference.
+>
+> please try boot with pci=resource_alignment=13@a0:09.4
 
-Indeed; I was merely making the point that it would be quite valid to
-use that means for setting VF network parameters for any network device
-that supports IOV.
+I tried it with both the working and non-working kernels. No change in 
+overall behaviour: working still works, non-working still hangs. I 
+checked the memory layouts with lspci, and in each case they were 
+identical to those quoted above.
 
-> (And why should "ethtool" or "ip" care that it's a virtual function?)
+Do you need any log output from those? Is there anything else I can do?
 
-VFs may be assigned to a guest which is not fully trusted by the
-hypervisor or privileged domain.  (This can sometimes be true for PFs
-too, depending on the capabilities of the hypervisor and guest OS.)
-Some configuration may therefore need to be done via a trusted PF.
-
-> What Don and I are suggesting is that the concept of virtual functions 
-> is a PCI thing, so it should be dealt with at the PCI layer.  Regardless 
-> of the type of device the export of virtual functions is conceptually 
-> the same thing, so it should use the same API.
-> 
-> Once the device exists, then domain-specific APIs would be used to 
-> configure it the same way that they would configure a physical device.
-
-To an extent, but not entirely.
-
-Currently, the assigned MAC address and (optional) VLAN tag for each
-networking VF are configured via the PF net device (though this is done
-though the rtnetlink API rather than ethtool).
-
-Ben.
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+Thanks,
+Rob
