@@ -1,59 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:59725 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753909Ab2GXQfS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2012 12:35:18 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 12/32] PCI/ARM: use PCIe capabilities access functions to simplify implementation
-Date: Wed, 25 Jul 2012 00:31:24 +0800
-Message-Id: <1343147504-25891-13-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <201207052357.44494.rjw@sisk.pl>
+References: <201206281201.02414.rjw@sisk.pl> <CAErSpo7yM3p7+pGuvhBMMsffGTVKF77=MCgfiN1OYr2sB259JA@mail.gmail.com>
+ <201207052357.44494.rjw@sisk.pl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 5 Jul 2012 16:31:17 -0600
+Message-ID: <CAErSpo4ngEgbcSq=hR6WXq8700a95sGLvMu=SnU+phi1tr6FzA@mail.gmail.com>
+Subject: Re: [PATCH] PCI / PM: Restore the original behavior of pci_set_power_state()
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Linux PM mailing list <linux-pm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Huang Ying <ying.huang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Thu, Jul 5, 2012 at 3:57 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, July 05, 2012, Bjorn Helgaas wrote:
+>> On Thu, Jun 28, 2012 at 4:01 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > From: Rafael J. Wysocki <rjw@sisk.pl>
+>> >
+>> > Commit cc2893b6 (PCI: Ensure we re-enable devices on resume)
+>> > addressed the problem with USB not being powered after resume on
+>> > recent Lenovo machines, but it did that in a suboptimal way.
+>> > Namely, it should have changed the relevant code paths only,
+>> > which are pci_pm_resume_noirq() and pci_pm_restore_noirq() supposed
+>> > to restore the device's power and standard configuration registers
+>> > after system resume from suspend or hibernation.  Instead, however,
+>> > it modified pci_set_power_state() which is executed in several
+>> > other situations too.  That resulted in some undesirable effects,
+>> > like attempting to change a device's power state in the same way
+>> > multiple times in a row (up to as many as 4 times in a row in the
+>> > snd_hda_intel driver).
+>> >
+>> > Fix the bug addressed by commit cc2893b6 in an alternative way,
+>> > by forcibly powering up all devices in pci_pm_default_resume_early(),
+>> > which is called by pci_pm_resume_noirq() and pci_pm_restore_noirq()
+>> > to restore the device's power and standard configuration registers,
+>> > and modifying pci_pm_runtime_resume() to avoid the forcible power-up
+>> > if not necessary.  Then, revert the changes made by commit cc2893b6
+>> > to make the confusion introduced by it go away.
+>> >
+>> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+>> > ---
+>> >  drivers/pci/pci-driver.c |   14 ++++++++------
+>> >  drivers/pci/pci.c        |   19 ++++++++++++++++++-
+>> >  drivers/pci/pci.h        |    1 +
+>> >  3 files changed, 27 insertions(+), 7 deletions(-)
+>> >
+>> > Index: linux/drivers/pci/pci.c
+>> > ===================================================================
+>> > --- linux.orig/drivers/pci/pci.c
+>> > +++ linux/drivers/pci/pci.c
+>> > @@ -662,6 +662,19 @@ void pci_update_current_state(struct pci
+>> >  }
+>> >
+>> >  /**
+>> > + * pci_power_up - Put the given device into D0 forcibly
+>> > + * @dev: PCI device to power up
+>> > + */
+>> > +void pci_power_up(struct pci_dev *dev)
+>> > +{
+>> > +       if (platform_pci_power_manageable(dev))
+>> > +               platform_pci_set_power_state(dev, PCI_D0);
+>> > +
+>> > +       pci_raw_set_power_state(dev, PCI_D0);
+>> > +       pci_update_current_state(dev, PCI_D0);
+>> > +}
+>> > +
+>> > +/**
+>> >   * pci_platform_power_transition - Use platform to change device power state
+>> >   * @dev: PCI device to handle.
+>> >   * @state: State to put the device into.
+>> > @@ -707,7 +720,7 @@ static void __pci_start_power_transition
+>> >   */
+>> >  int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
+>> >  {
+>> > -       return state >= PCI_D0 ?
+>> > +       return state > PCI_D0 ?
+>> >                         pci_platform_power_transition(dev, state) : -EINVAL;
+>>
+>> This hunk conflicted with Huang's D3_COLD patches.  I fixed it up; can
+>> you check and make sure I did it correctly?
+>>
+>> I pushed the resolution to here:
+>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git on the
+>> pci/rafael-pci_set_power_state-rebase branch.
+>
+> Yes, it looks good.  The point is to make __pci_complete_power_transition()
+> return the error code for PCI_DO too.
 
-Use PCIe capabilities access functions to simplify PCIe ARM implementation.
+Applied to my "next" branch and pushed, thanks a lot!
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- arch/arm/mach-tegra/pcie.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
-index 0e09137..e41e64d 100644
---- a/arch/arm/mach-tegra/pcie.c
-+++ b/arch/arm/mach-tegra/pcie.c
-@@ -368,16 +368,15 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
- static void __devinit tegra_pcie_relax_enable(struct pci_dev *dev)
- {
- 	u16 val16;
--	int pos = pci_find_capability(dev, PCI_CAP_ID_EXP);
- 
--	if (pos <= 0) {
-+	if (!pci_is_pcie(dev)) {
- 		dev_err(&dev->dev, "skipping relaxed ordering fixup\n");
- 		return;
- 	}
- 
--	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &val16);
-+	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &val16);
- 	val16 |= PCI_EXP_DEVCTL_RELAX_EN;
--	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, val16);
-+	pci_pcie_capability_write_word(dev, PCI_EXP_DEVCTL, val16);
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
- 
--- 
-1.7.9.5
-
+Bjorn
