@@ -1,62 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:49539 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755366Ab2GaQCW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 12:02:22 -0400
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:55083 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103Ab2GEVaN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 17:30:13 -0400
+Received: by lbbgm6 with SMTP id gm6so13537999lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 05 Jul 2012 14:30:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
-	<1343607994-32415-2-git-send-email-jon.mason@intel.com>
-	<CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
-	<20120730181542.GA987@jonmason-lab>
-	<CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
-Date: Tue, 31 Jul 2012 12:02:20 -0400
-Message-ID: <CAAsGZS5kOyQ5FQ7Jg3HxOmmPNYS+F6XcB-_3tm=rcgDV7wAvRQ@mail.gmail.com>
-Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
-From: chetan loke <loke.chetan@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jon Mason <jon.mason@intel.com>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	Dave Jiang <dave.jiang@intel.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <201206281201.02414.rjw@sisk.pl>
+References: <201206281201.02414.rjw@sisk.pl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 5 Jul 2012 15:29:51 -0600
+Message-ID: <CAErSpo7yM3p7+pGuvhBMMsffGTVKF77=MCgfiN1OYr2sB259JA@mail.gmail.com>
+Subject: Re: [PATCH] PCI / PM: Restore the original behavior of pci_set_power_state()
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Linux PM mailing list <linux-pm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Huang Ying <ying.huang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2012 at 9:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jul 30, 2012 at 12:15 PM, Jon Mason <jon.mason@intel.com> wrote:
->>
->> I've tried to make it all generic enough that non-Intel NTBs should plug in with
->> minimal changes to ntb_hw.c.  If their design is too divergent, then a slight
->> redesign of ntb_hw.c might be necessary.  But from what I've seen of other
->> designs on the internet, they appear to be extremely similar.  The transport and
->> client drivers were written with the hardware abstracted away as much as
->> possible to prevent the need to modify it for different hardware.  If there is
->> anything which is Intel hardware specific, I'd be happy to change it to make it
->> more generic.
+On Thu, Jun 28, 2012 at 4:01 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rjw@sisk.pl>
 >
-> That makes sense from a technical point of view, but I think it's
-> going to cause maintenance issues.  For example, assume PLX NTB
-> support is added.  Will PLX be happy about having to convince you to
-> accept changes?  Will Intel be happy about having to release a new
+> Commit cc2893b6 (PCI: Ensure we re-enable devices on resume)
+> addressed the problem with USB not being powered after resume on
+> recent Lenovo machines, but it did that in a suboptimal way.
+> Namely, it should have changed the relevant code paths only,
+> which are pci_pm_resume_noirq() and pci_pm_restore_noirq() supposed
+> to restore the device's power and standard configuration registers
+> after system resume from suspend or hibernation.  Instead, however,
+> it modified pci_set_power_state() which is executed in several
+> other situations too.  That resulted in some undesirable effects,
+> like attempting to change a device's power state in the same way
+> multiple times in a row (up to as many as 4 times in a row in the
+> snd_hda_intel driver).
+>
+> Fix the bug addressed by commit cc2893b6 in an alternative way,
+> by forcibly powering up all devices in pci_pm_default_resume_early(),
+> which is called by pci_pm_resume_noirq() and pci_pm_restore_noirq()
+> to restore the device's power and standard configuration registers,
+> and modifying pci_pm_runtime_resume() to avoid the forcible power-up
+> if not necessary.  Then, revert the changes made by commit cc2893b6
+> to make the confusion introduced by it go away.
+>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> ---
+>  drivers/pci/pci-driver.c |   14 ++++++++------
+>  drivers/pci/pci.c        |   19 ++++++++++++++++++-
+>  drivers/pci/pci.h        |    1 +
+>  3 files changed, 27 insertions(+), 7 deletions(-)
+>
+> Index: linux/drivers/pci/pci.c
+> ===================================================================
+> --- linux.orig/drivers/pci/pci.c
+> +++ linux/drivers/pci/pci.c
+> @@ -662,6 +662,19 @@ void pci_update_current_state(struct pci
+>  }
+>
+>  /**
+> + * pci_power_up - Put the given device into D0 forcibly
+> + * @dev: PCI device to power up
+> + */
+> +void pci_power_up(struct pci_dev *dev)
+> +{
+> +       if (platform_pci_power_manageable(dev))
+> +               platform_pci_set_power_state(dev, PCI_D0);
+> +
+> +       pci_raw_set_power_state(dev, PCI_D0);
+> +       pci_update_current_state(dev, PCI_D0);
+> +}
+> +
+> +/**
+>   * pci_platform_power_transition - Use platform to change device power state
+>   * @dev: PCI device to handle.
+>   * @state: State to put the device into.
+> @@ -707,7 +720,7 @@ static void __pci_start_power_transition
+>   */
+>  int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
+>  {
+> -       return state >= PCI_D0 ?
+> +       return state > PCI_D0 ?
+>                         pci_platform_power_transition(dev, state) : -EINVAL;
 
-Do you mean convince Intel? Well, if we think of ntb as the class
-driver then the onus is on the community to vet the changes and NOT
-intel.
-And since this is the first NTB part for which the support is
-introduced the class driver design could be a moving target. As
-someone else mentioned, the async/sync tx-dma is another hook that
-could change the class driver's design.
+This hunk conflicted with Huang's D3_COLD patches.  I fixed it up; can
+you check and make sure I did it correctly?
 
+I pushed the resolution to here:
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git on the
+pci/rafael-pci_set_power_state-rebase branch.
 
-> driver for their hardware just to incorporate a PLX bug fix?  Will
-> users of PLX hardware accept a new driver release that only benefits
-> Intel users?
+Bjorn
 
-May be till the class driver is stable, the client(intel/PLX) drivers
-might have to be modified.  This is a cue for other vendors to
-chime-in and review this design?
-Just thinking if this could sit in staging for some time(so that
-others get a chance to review/suggest changes as well) and then get
-promoted out of staging.
-
-Chetan Loke
+>  }
+>  EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
+> @@ -744,6 +757,10 @@ int pci_set_power_state(struct pci_dev *
+>                  */
+>                 return 0;
+>
+> +       /* Check if we're already there */
+> +       if (dev->current_state == state)
+> +               return 0;
+> +
+>         __pci_start_power_transition(dev, state);
+>
+>         /* This device is quirked not to be put into D3, so
+> Index: linux/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux.orig/drivers/pci/pci-driver.c
+> +++ linux/drivers/pci/pci-driver.c
+> @@ -459,16 +459,17 @@ static int pci_restore_standard_config(s
+>         return 0;
+>  }
+>
+> +#endif
+> +
+> +#ifdef CONFIG_PM_SLEEP
+> +
+>  static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+>  {
+> -       pci_restore_standard_config(pci_dev);
+> +       pci_power_up(pci_dev);
+> +       pci_restore_state(pci_dev);
+>         pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>  }
+>
+> -#endif
+> -
+> -#ifdef CONFIG_PM_SLEEP
+> -
+>  /*
+>   * Default "suspend" method for devices that have no driver provided suspend,
+>   * or not even a driver at all (second part).
+> @@ -1050,7 +1051,8 @@ static int pci_pm_runtime_resume(struct
+>         if (!pm || !pm->runtime_resume)
+>                 return -ENOSYS;
+>
+> -       pci_pm_default_resume_early(pci_dev);
+> +       pci_restore_standard_config(pci_dev);
+> +       pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>         __pci_enable_wake(pci_dev, PCI_D0, true, false);
+>         pci_fixup_device(pci_fixup_resume, pci_dev);
+>
+> Index: linux/drivers/pci/pci.h
+> ===================================================================
+> --- linux.orig/drivers/pci/pci.h
+> +++ linux/drivers/pci/pci.h
+> @@ -67,6 +67,7 @@ struct pci_platform_pm_ops {
+>
+>  extern int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
+>  extern void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
+> +extern void pci_power_up(struct pci_dev *dev);
+>  extern void pci_disable_enabled_device(struct pci_dev *dev);
+>  extern int pci_finish_runtime_suspend(struct pci_dev *dev);
+>  extern int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
