@@ -1,125 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gw1.transmode.se ([195.58.98.146]:64459 "EHLO gw1.transmode.se"
+Received: from ogre.sisk.pl ([193.178.161.156]:55179 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754465Ab2GRNHN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jul 2012 09:07:13 -0400
-In-Reply-To: <CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
-References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>	<CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
-	<OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se>	<CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
-	<OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se> <CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
-Subject: Re: PICe hotplug problems
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, yhlu.kernel@gmail.com
-Message-ID: <OF85CC1E00.6E804B96-ONC1257A3F.00477FD2-C1257A3F.0048111D@transmode.se>
-From: Joakim Tjernlund <joakim.tjernlund@transmode.se>
-Date: Wed, 18 Jul 2012 15:07:09 +0200
+	id S1756214Ab2GEVwM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Jul 2012 17:52:12 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI / PM: Restore the original behavior of pci_set_power_state()
+Date: Thu, 5 Jul 2012 23:57:44 +0200
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Linux PM mailing list <linux-pm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	Huang Ying <ying.huang@intel.com>
+References: <201206281201.02414.rjw@sisk.pl> <CAErSpo7yM3p7+pGuvhBMMsffGTVKF77=MCgfiN1OYr2sB259JA@mail.gmail.com>
+In-Reply-To: <CAErSpo7yM3p7+pGuvhBMMsffGTVKF77=MCgfiN1OYr2sB259JA@mail.gmail.com>
 MIME-Version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201207052357.44494.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-yhlu.kernel@gmail.com wrote on 2012/07/11 03:33:05:
->
-> On Tue, Jul 10, 2012 at 6:07 PM, Joakim Tjernlund
-> <joakim.tjernlund@transmode.se> wrote:
-> > yhlu.kernel@gmail.com wrote on 2012/07/11 00:09:00:
->
-> >> No. Can you compile lspci util as static and run it ?
+On Thursday, July 05, 2012, Bjorn Helgaas wrote:
+> On Thu, Jun 28, 2012 at 4:01 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rjw@sisk.pl>
 > >
-> > That wasn't so hard so here:
+> > Commit cc2893b6 (PCI: Ensure we re-enable devices on resume)
+> > addressed the problem with USB not being powered after resume on
+> > recent Lenovo machines, but it did that in a suboptimal way.
+> > Namely, it should have changed the relevant code paths only,
+> > which are pci_pm_resume_noirq() and pci_pm_restore_noirq() supposed
+> > to restore the device's power and standard configuration registers
+> > after system resume from suspend or hibernation.  Instead, however,
+> > it modified pci_set_power_state() which is executed in several
+> > other situations too.  That resulted in some undesirable effects,
+> > like attempting to change a device's power state in the same way
+> > multiple times in a row (up to as many as 4 times in a row in the
+> > snd_hda_intel driver).
 > >
-> > root@P2020RDB ~ # ./lspci  -vvxxx
-> > 00:00.0 Class 0604: Device 1957:0079 (rev 21)
-> >         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >         Latency: 0, Cache Line Size: 32 bytes
-> >         Region 0: Memory at <ignored> (32-bit, non-prefetchable)
-> >         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-> >         I/O behind bridge: 00000000-00000fff
-> >         Memory behind bridge: 80000000-9fffffff
-> >         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-> >         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-> >                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> >         Capabilities: [44] Power Management version 2
-> >                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-> >                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-> >         Capabilities: [4c] Express (v1) Root Port (Slot-), MSI 00
-> >                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-> >                         ExtTag- RBE- FLReset-
-> >                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-> >                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-> >                         MaxPayload 128 bytes, MaxReadReq 512 bytes
-> >                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-> >                 LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 <2us, L1 unlimited
-> >                         ClockPM- Surprise- LLActRep- BwNot-
-> >                 LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
-> >                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> >                 LnkSta: Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
-> >                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-> >                 RootCap: CRSVisible-
-> >                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
->
-> There is no slot cap etc, so pciehp will not be loaded.
-> the power of you child device can not be turned off/on.
->
-> Not sure if can use link off/on make the clock effective.
->
-> You can turn off and on the pcie link like following:
->
-> 1. remove the child device
->      echo 1 > /sys/..../0000:01:00.0/remove
-> 2. disable link
->      echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
-> 3. enable link
->      echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
-> 4. rescan the pci bus.
->      echo 1 > /sys/..../0000:00:00.0/rescan_bridge
->
-> please check link disable patch at
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-pci-pcie-link
->
-> | Subject: [PATCH] PCI: Add link_disable in /sysfs for pcie device
-> |
-> | Found PCIe cards from one vendor, will not respond to scan from bridge,
-> | if we change bus number setting in bridge device.
-> |
-> | Have to do link disable/enable on the pcie root port.
-> |
-> |  So try to expose link disable bit of pcie link control register. We can use
-> |  echo 1 > /sys/..../link_disable
-> |  echo 0 > /sys/..../link_disable
-> | to bring the pcie device back to respond to scan.
+> > Fix the bug addressed by commit cc2893b6 in an alternative way,
+> > by forcibly powering up all devices in pci_pm_default_resume_early(),
+> > which is called by pci_pm_resume_noirq() and pci_pm_restore_noirq()
+> > to restore the device's power and standard configuration registers,
+> > and modifying pci_pm_runtime_resume() to avoid the forcible power-up
+> > if not necessary.  Then, revert the changes made by commit cc2893b6
+> > to make the confusion introduced by it go away.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > ---
+> >  drivers/pci/pci-driver.c |   14 ++++++++------
+> >  drivers/pci/pci.c        |   19 ++++++++++++++++++-
+> >  drivers/pci/pci.h        |    1 +
+> >  3 files changed, 27 insertions(+), 7 deletions(-)
+> >
+> > Index: linux/drivers/pci/pci.c
+> > ===================================================================
+> > --- linux.orig/drivers/pci/pci.c
+> > +++ linux/drivers/pci/pci.c
+> > @@ -662,6 +662,19 @@ void pci_update_current_state(struct pci
+> >  }
+> >
+> >  /**
+> > + * pci_power_up - Put the given device into D0 forcibly
+> > + * @dev: PCI device to power up
+> > + */
+> > +void pci_power_up(struct pci_dev *dev)
+> > +{
+> > +       if (platform_pci_power_manageable(dev))
+> > +               platform_pci_set_power_state(dev, PCI_D0);
+> > +
+> > +       pci_raw_set_power_state(dev, PCI_D0);
+> > +       pci_update_current_state(dev, PCI_D0);
+> > +}
+> > +
+> > +/**
+> >   * pci_platform_power_transition - Use platform to change device power state
+> >   * @dev: PCI device to handle.
+> >   * @state: State to put the device into.
+> > @@ -707,7 +720,7 @@ static void __pci_start_power_transition
+> >   */
+> >  int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
+> >  {
+> > -       return state >= PCI_D0 ?
+> > +       return state > PCI_D0 ?
+> >                         pci_platform_power_transition(dev, state) : -EINVAL;
+> 
+> This hunk conflicted with Huang's D3_COLD patches.  I fixed it up; can
+> you check and make sure I did it correctly?
+> 
+> I pushed the resolution to here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git on the
+> pci/rafael-pci_set_power_state-rebase branch.
 
-Sorry for the delay, got pulled into some high prio stuff.
+Yes, it looks good.  The point is to make __pci_complete_power_transition()
+return the error code for PCI_DO too.
 
-Anyhow, I have backported your patch to 3.4 as we cannot upgrade easily and
-I cannot make it work. I do
-
-# > echo 1 > /sys/devices/pci0000:00/0000:00:00.0/pcie_link_disable
-# > echo 0 > /sys/devices/pci0000:00/0000:00:00.0/pcie_link_disable
-# > echo 1 > /sys/devices/pci0000:00/0000:00:00.0/rescan
-
-# > lspci
-00:00.0 Class 0604: Device 1957:0079 (rev 21)
-
-#> dmesg
-pcieport 0000:00:00.0: pcie_link_disable_set: lnk_ctrl = 18
-pcieport 0000:00:00.0: pcie_link_disable_set: lnk_ctrl = 8
-
-find /sys -name pcie_link_disable
-find /sys -name remove
-find /sys -name rescan
-
-shows
-/sys/devices/pci0000:00/0000:00:00.0/pcie_link_disable
-/sys/devices/pci0000:00/0000:00:00.0/remove
-/sys/bus/pci/rescan
-/sys/devices/pci0000:00/0000:00:00.0/rescan
-/sys/devices/pci0000:00/0000:00:00.0/pci_bus/0000:01/rescan
-/sys/devices/pci0000:00/pci_bus/0000:00/rescan
-
-so something is missing, but what?
-
- Jocke
-
+Thanks,
+Rafael
